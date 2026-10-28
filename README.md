@@ -7,7 +7,7 @@
 **Malfunction desk for buildings and technical assets — malfunction reports only, never emergency calls.**
 
 [![CI](https://github.com/icem0/StoerDesk/actions/workflows/check.yml/badge.svg)](https://github.com/icem0/StoerDesk/actions/workflows/check.yml)
-[![Node](https://img.shields.io/badge/node-%E2%89%A5%2022.12-brightgreen)](https://nodejs.org)
+[![Docker](https://img.shields.io/badge/install-docker%20compose-blue)](docs/DEPLOYMENT.md)
 [![Postgres](https://img.shields.io/badge/postgres-16-blue)](https://www.postgresql.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![status: v0.1](https://img.shields.io/badge/status-v0.1%20foundation-orange)](CHANGELOG.md)
@@ -33,9 +33,65 @@ on-call shift and recorded in a traceable audit trail. Emergency service dispatc
 - **Tickets** with an immutable event log (audit trail)
 - **Objects and assets** as the reference point of every report
 - **On-call and escalation** based on shift schedules and pg-boss jobs
-- **Notifications** through an outbox (e-mail, later web push)
 - **Dashboard and statistics** for evaluation and malfunction trends
 - **Offline support**: Dexie in the browser, sync with quarantine on conflicts
+
+## Installation (Docker Compose)
+
+Docker Compose is the supported way to run StörDesk — Docker is the only
+prerequisite. Database, migrations, API and web frontend come up as one stack;
+every value is read from `.env`, the compose file is never edited.
+
+```bash
+git clone https://github.com/icem0/StoerDesk.git
+cd StoerDesk
+npm run env:create                # writes .env with generated secrets
+docker compose up -d --build
+```
+
+`npm run env:create` is a plain Node script (no `npm install` needed, Node ≥ 22.12).
+Without Node on the host, write the two required secrets into `.env` yourself — the
+stack refuses to start without them:
+
+```bash
+{
+  echo "POSTGRES_PASSWORD=$(openssl rand -hex 18)"
+  echo "SESSION_SECRET=$(openssl rand -hex 32)"
+  echo "SEED_ADMIN_PASSWORD=$(openssl rand -hex 12)"
+  echo "BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main"
+} > .env
+docker compose up -d
+```
+
+`BUILD_CONTEXT` decides where the images are built from: `.` builds from the local
+checkout (the default in [`.env.example`](.env.example)), a Git URL lets a deployment
+panel such as Arcane build straight from the repository
+([Arcane setup](docs/DEPLOYMENT.md#arcane)).
+
+Then open **http://localhost:8080**. The API is reached through the web frontend
+(nginx proxies `/api/`); its own port stays internal.
+
+| Service         | URL                                 |
+| --------------- | ----------------------------------- |
+| Web (PWA)       | http://localhost:8080               |
+| API (proxied)   | http://localhost:8080/api/v1/health |
+| Frontend health | http://localhost:8080/healthz       |
+
+Services, volumes, backups, HTTPS and troubleshooting:
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+```bash
+docker compose ps                # status of all services
+docker compose logs -f api       # API log
+docker compose down              # stops the stack, keeps the volumes
+docker compose down -v           # stops the stack and DELETES all data
+```
+
+Periodic database dumps run as an opt-in profile:
+
+```bash
+docker compose --profile backup up -d
+```
 
 ## Architecture
 
@@ -48,73 +104,64 @@ and [`docs/REPO-MAP.md`](docs/REPO-MAP.md):
 | `apps/api`        | Fastify, Drizzle, PostgreSQL 16, pg-boss                   | Source of truth: tickets, RBAC, outbox     |
 | `packages/shared` | Zod schemas, types, permissions, i18n resources            | Contracts shared by web and API            |
 
+The Compose stack consists of `db` (PostgreSQL 16), `migrate` (Drizzle migrations,
+then exits), `api` (Fastify) and `web` (nginx: PWA + reverse proxy), plus the
+optional `backup` service.
+
 Conventions across the code base: UUID v7 for ids, server time as the authoritative
 clock, errors as `{ code, params }` (never translated text on the wire), structured
 Pino logs, no monetary amounts. **The code base is English** — identifiers, comments
 and developer docs; only user-facing text is multilingual via i18n (`de` default,
 `en` complete).
 
+## Notifications and integrations
+
+**No notification channel is integrated yet** — the current release sends nothing
+out, no mail, no push, no messaging. Notifications are designed to run through an
+outbox in the API, but the channels themselves are not implemented as a running
+feature.
+
+Connected to **existing** systems, integration is possible by design — StörDesk
+never ships its own notification servers:
+
+- a **webhook** to whatever downstream system you already run,
+- an existing **ntfy** server, **Matrix** homeserver, **Signal** bridge, **mail**
+  server or Telegram bot.
+
+Nothing of that is part of a release today; each channel would be delivered as its
+own work package from [`work-packages/`](work-packages/). Do not configure or expect
+working notifications in the current stack.
+
 ## Status
 
 The environment is in place — the specification is implemented work package by work
-package (currently WP-M1-01 to WP-M1-03, see [`CHANGELOG.md`](CHANGELOG.md)).
+package (currently WP-M1-01 to WP-M1-04, see [`CHANGELOG.md`](CHANGELOG.md)).
 
 - Specification: [`specs/`](specs/) (16 chapters)
 - Work plan: [`work-packages/`](work-packages/) (M1, M2)
 - Decisions: [`docs/DECISIONS.md`](docs/DECISIONS.md) and `docs/DECISIONS/`
 
-## Quickstart
+Domain logic (auth, tickets, objects, on-call, notifications, UI) is created **only**
+as the implementation of a work package — package by package, never in bulk.
 
-Prerequisites: Node.js ≥ 22.12, Docker (for the local database only).
+## Local development
+
+For development only the database runs in Docker, API and web run on the host
+(watch mode, hot reload):
 
 ```bash
 npm install
-npm run env:create                              # writes .env with generated secrets
+npm run env:create
 docker compose -f docker-compose.dev.yml up -d db
 npm run db:migrate -w @stoerdesk/api
 npm run dev
 ```
-
-Then:
 
 | Service | URL                                 |
 | ------- | ----------------------------------- |
 | Web     | http://localhost:5173               |
 | API     | http://localhost:3000               |
 | Health  | http://localhost:3000/api/v1/health |
-
-Closer to production, with all services:
-
-```bash
-npm run env:create              # writes .env with generated secrets
-docker compose up -d --build
-```
-
-## Deployment
-
-The whole system runs as one Docker Compose stack — database, migrations, API,
-web frontend and the optional notification channels:
-
-| Service   | Profile  | Purpose                                    |
-| --------- | -------- | ------------------------------------------ |
-| `db`      | —        | PostgreSQL 16, source of truth             |
-| `migrate` | —        | applies the Drizzle migrations, then exits |
-| `api`     | —        | Fastify API                                |
-| `web`     | —        | nginx: PWA + reverse proxy for `/api/`     |
-| `backup`  | `backup` | periodic `pg_dump`                         |
-
-```bash
-docker compose up -d --build                              # core stack
-docker compose --profile backup up -d                    # + database dumps
-```
-
-Everything is configured through `.env` (see [`.env.example`](.env.example)),
-so the compose file never has to be edited. Volumes, backups, the notification
-channels and troubleshooting: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-
-Deployment panels (Arcane) build the images straight from the repository: the
-compose file uses a Git build context by default, so the panel finds the
-`Dockerfile` on its own. See [Arcane](docs/DEPLOYMENT.md#arcane).
 
 ## Tooling
 
