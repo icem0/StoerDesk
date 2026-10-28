@@ -167,8 +167,30 @@ npm run dev
 
 ## Arcane
 
-Arcane deploys Compose projects. The project must be linked to this repository
-with a **Git Sync** (pull direction):
+Arcane deploys Compose projects and builds the images from the project folder.
+There are two ways to get the `Dockerfile` into that build.
+
+### Option A — build context from Git (recommended)
+
+Set one variable in the project environment (Arcane: project → `.env`):
+
+```
+BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main
+```
+
+Arcane then clones the repository itself for every build, finds the `Dockerfile`
+inside it and builds the images from that clone. The project folder only needs
+the compose file — no checkout, no sync of the other files. The repository is
+public, so no credentials are needed; a repository registered under
+_Customization → Git Repositories_ with the same URL is reused for its
+credentials.
+
+`BUILD_CONTEXT` defaults to `.`, which builds from the project folder — the
+normal case for `docker compose up --build` on a developer machine.
+
+### Option B — sync the whole repository
+
+Use a **Git Sync** (pull direction):
 
 1. **Customization → Git Repositories**: add
    `https://github.com/icem0/StoerDesk.git` (public repository, an SSH key or
@@ -214,6 +236,8 @@ Check on the host whether the checkout is complete:
 ```bash
 docker exec arcane ls -la /app/data/projects/stoerdesk   # Dockerfile must exist
 ```
+
+### Environment
 
 The project `.env` needs at least `POSTGRES_PASSWORD` and `SESSION_SECRET`
 (values from `npm run env:create`); the compose file refuses to start without
