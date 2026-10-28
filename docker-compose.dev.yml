@@ -1,22 +1,28 @@
 name: stoerdesk-dev
 
+# Local development: only the database. The API and the web app run on the
+# host via "npm run dev" and read the same .env file as the production stack.
+
 services:
   db:
-    image: postgres:16-alpine
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-stoerdesk}
       POSTGRES_USER: ${POSTGRES_USER:-stoerdesk}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stoerdesk}
+      TZ: ${TZ:-Europe/Berlin}
     ports:
       - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - pgdata-dev:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-stoerdesk} -d ${POSTGRES_DB:-stoerdesk}']
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 5s
 
 volumes:
   pgdata-dev:
+    name: ${COMPOSE_PROJECT_NAME:-stoerdesk}_pgdata_dev

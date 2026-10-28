@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+# One version tag per commit: v0.0.1, v0.0.2, ... (patch bump).
+# Prints the commit feedback line after every successful commit.
+
+GIT_DIR=$(git rev-parse --git-dir)
+
+# History rewriting must not create per-commit tags.
+if [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; then
+  exit 0
+fi
+
+# HEAD already tagged - do not double-tag the same commit.
+if [ -n "$(git tag --points-at HEAD)" ]; then
+  exit 0
+fi
+
+latest=$(git for-each-ref --sort=-creatordate --count=1 --format='%(refname:short)' refs/tags)
+if [ -z "$latest" ]; then
+  next="v0.0.1"
+else
+  base=${latest#v}
+  major=${base%%.*}
+  rest=${base#*.}
+  minor=${rest%%.*}
+  patch=${rest##*.}
+  next="v$major.$minor.$((patch + 1))"
+fi
+
+if git tag "$next" >/dev/null 2>&1; then
+  short=$(git rev-parse --short HEAD)
+  echo "commit $short successful - version $next (run 'git push --follow-tags' to share it)"
+fi
+
+exit 0

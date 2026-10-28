@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 
 import postgres from 'postgres'
 
-import { loadEnv } from '../../../config/env'
+import { loadDotEnvFile, loadEnv } from '../../../config/env'
 
 export const migrationsFolder = fileURLToPath(new URL('../../migrations', import.meta.url))
 
@@ -47,7 +47,9 @@ async function probe(url: string) {
  * database is reused. Without a reachable database the tests are skipped.
  */
 export async function openTestDatabase(): Promise<TestDatabaseHandle> {
-  const baseUrl = process.env.TEST_DATABASE_URL ?? loadEnv().DATABASE_URL
+  loadDotEnvFile()
+  const env = loadEnv()
+  const baseUrl = env.TEST_DATABASE_URL === '' ? env.DATABASE_URL : env.TEST_DATABASE_URL
 
   try {
     await probe(baseUrl)

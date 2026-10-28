@@ -69,7 +69,7 @@ Prerequisites: Node.js ≥ 22.12, Docker (for the local database only).
 
 ```bash
 npm install
-cp .env.example .env
+npm run env:create                              # writes .env with generated secrets
 docker compose -f docker-compose.dev.yml up -d db
 npm run db:migrate -w @stoerdesk/api
 npm run dev
@@ -86,8 +86,38 @@ Then:
 Closer to production, with all services:
 
 ```bash
+npm run env:create              # writes .env with generated secrets
 docker compose up -d --build
 ```
+
+## Deployment
+
+The whole system runs as one Docker Compose stack — database, migrations, API,
+web frontend and the optional notification channels:
+
+| Service      | Profile         | Purpose                                    |
+| ------------ | --------------- | ------------------------------------------ |
+| `db`         | —               | PostgreSQL 16, source of truth             |
+| `migrate`    | —               | applies the Drizzle migrations, then exits |
+| `api`        | —               | Fastify API                                |
+| `web`        | —               | nginx: PWA + reverse proxy for `/api/`     |
+| `ntfy`       | `notifications` | push notifications                         |
+| `signal-cli` | `signal`        | Signal bridge                              |
+| `matrix`     | `matrix`        | Matrix homeserver (Synapse)                |
+| `backup`     | `backup`        | periodic `pg_dump`                         |
+
+```bash
+docker compose up -d --build                              # core stack
+docker compose --profile notifications up -d              # + ntfy
+docker compose --profile signal up -d                    # + Signal
+docker compose --profile matrix up -d                    # + Matrix
+docker compose --profile backup up -d                    # + database dumps
+```
+
+Everything is configured through `.env` (see [`.env.example`](.env.example)),
+so the compose file never has to be edited. Volumes, backups, the Signal and
+Matrix setup and troubleshooting:
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Tooling
 
@@ -101,6 +131,8 @@ docker compose up -d --build
 | `npm run test` / `test:run` | Vitest in all workspaces                                         |
 | `npm run i18n:check`        | de/en key parity and referenced keys                             |
 | `npm run format`            | Prettier                                                         |
+| `npm run env:create`        | creates `.env` from `.env.example` with generated secrets        |
+| `npm run matrix:create-bot` | creates the Matrix notification bot and room                     |
 | `npm run db:migrate`        | apply migrations (`-w @stoerdesk/api`)                           |
 | `npm run db:generate`       | create a new Drizzle migration                                   |
 | `npm run spec:split`        | mirrors originals in `docs/material/` into `specs/`              |

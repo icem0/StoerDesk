@@ -2,8 +2,10 @@ import { fileURLToPath } from 'node:url'
 
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 
-import { loadEnv } from '../config/env'
+import { loadDotEnvFile, loadEnv } from '../config/env'
 import { createDatabase } from './client'
+
+loadDotEnvFile()
 
 const migrationsFolder = fileURLToPath(new URL('./migrations', import.meta.url))
 

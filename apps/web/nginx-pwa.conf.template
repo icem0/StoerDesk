@@ -4,6 +4,9 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Uploads of the report form (photos).
+    client_max_body_size ${UPLOAD_MAX_BYTES};
+
     gzip on;
     gzip_types text/plain text/css application/json application/javascript application/wasm image/svg+xml;
 
@@ -18,8 +21,14 @@ server {
         try_files $uri =404;
     }
 
+    location = /healthz {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 'ok';
+    }
+
     location /api/ {
-        proxy_pass http://api:3000;
+        proxy_pass ${API_UPSTREAM};
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

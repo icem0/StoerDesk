@@ -113,6 +113,23 @@ and IDE support.
   (e.g. `feat(web): WP-M1-09 admin ui users and roles`).
 - `commitlint` enforces the format and the sign-off (Husky hook `commit-msg`).
 
+## Versioning (one tag per commit)
+
+- The project is versioned as `v0.0.1`, `v0.0.2`, `v0.0.3`, ... — **every commit
+  gets the next patch version** as a git tag. The tag is the version of record;
+  the `version` fields in the `package.json` files are kept at the current release
+  line and do not need to be bumped per commit.
+- The Husky hook `.husky/post-commit` does this automatically: it reads the latest
+  reachable tag, bumps the patch number and tags the new commit (rebase/cherry-pick
+  and already-tagged HEADs are skipped, no double tags).
+- After every successful commit the hook prints
+  `commit <short-hash> successful - version v0.0.N (run 'git push --follow-tags' to share it)`.
+  **After each commit, report that success line and the version number to the user.**
+- Tags are never pushed automatically; use `git push --follow-tags` (or `git push --tags`).
+- If the hook did not run (e.g. `--no-verify` or a tool bypassing hooks), the next
+  commit's hook catches up by tagging from the latest tag; do not hand-create tags
+  unless correcting that.
+
 ## Todo list (mandatory)
 
 From three sub-steps onwards keep a todo list via `todowrite`:

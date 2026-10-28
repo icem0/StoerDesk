@@ -1,12 +1,12 @@
 {
   "name": "@stoerdesk/api",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node --import tsx src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@stoerdesk/shared=../../packages/shared/src/index.ts --outfile=dist/index.js --sourcemap",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@stoerdesk/shared=../../packages/shared/src/index.ts --outfile=dist/index.js --sourcemap && esbuild src/db/migrate.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@stoerdesk/shared=../../packages/shared/src/index.ts --outfile=dist/db/migrate.js --sourcemap && node scripts/copy-migrations.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest",
     "test:run": "vitest run",

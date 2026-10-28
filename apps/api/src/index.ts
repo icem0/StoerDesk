@@ -4,7 +4,9 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 
-import { loadEnv } from './config/env'
+import { corsOrigins, loadDotEnvFile, loadEnv } from './config/env'
+
+loadDotEnvFile()
 
 export async function buildServer() {
   const env = loadEnv()
@@ -13,11 +15,12 @@ export async function buildServer() {
     logger: {
       level: env.API_LOG_LEVEL,
     },
+    trustProxy: env.TRUST_PROXY,
   })
 
   await app.register(helmet)
   await app.register(cors, {
-    origin: env.CORS_ORIGIN,
+    origin: corsOrigins(env),
     credentials: true,
   })
   await app.register(cookie)
