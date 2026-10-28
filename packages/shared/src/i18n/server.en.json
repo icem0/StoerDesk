@@ -1,1 +1,6 @@
-{}
+{
+  "sample": {
+    "greeting": "Server ready",
+    "items": "{{count}} items"
+  }
+}

@@ -82,18 +82,32 @@ function listSourceFiles(dir: string): string[] {
   return entries
 }
 
-function collectReferencedKeys(): string[] {
-  const pattern = /\bt\(\s*['"]([a-zA-Z0-9_.-]+)['"]/g
-  const referenced = new Set<string>()
+const DEFAULT_NAMESPACE = 'common'
 
-  for (const file of listSourceFiles(join(repoRoot, 'apps/web/src'))) {
-    const content = readFileSync(file, 'utf8')
-    for (const match of content.matchAll(pattern)) {
-      const key = match[1]
-      if (key) {
-        referenced.add(key)
-      }
+function fileDefaultNamespace(content: string): string {
+  return content.match(/\buseTranslation\(\s*['"]([a-zA-Z0-9_-]+)['"]/)?.[1] ?? DEFAULT_NAMESPACE
+}
+
+function collectReferencedKeys(content: string): string[] {
+  const pattern = /\bt\(\s*['"]([a-zA-Z0-9_.:-]+)['"]([^)]*)/g
+  const optionPattern = /\bns:\s*['"]([a-zA-Z0-9_-]+)['"]/
+  const referenced = new Set<string>()
+  const fileDefault = fileDefaultNamespace(content)
+
+  for (const match of content.matchAll(pattern)) {
+    const rawKey = match[1]
+    const options = match[2] ?? ''
+    if (!rawKey || options.includes('defaultValue')) {
+      continue
     }
+
+    const namespace =
+      rawKey.includes(':') === true
+        ? rawKey.slice(0, rawKey.indexOf(':'))
+        : (optionPattern.exec(options)?.[1] ?? fileDefault)
+    const key = rawKey.includes(':') === true ? rawKey.slice(rawKey.indexOf(':') + 1) : rawKey
+
+    referenced.add(`${namespace}:${key}`)
   }
 
   return [...referenced]
@@ -131,10 +145,11 @@ for (const key of enShared.keys()) {
 
 const known = new Set([...deWeb.keys(), ...enWeb.keys()])
 
-for (const key of collectReferencedKeys()) {
-  const [namespace] = key.includes(':') ? key.split(':') : ['common']
-  if (!known.has(`${namespace}:${key}`)) {
-    problems.push(`referenced key not found: ${key}`)
+for (const file of listSourceFiles(join(repoRoot, 'apps/web/src'))) {
+  for (const key of collectReferencedKeys(readFileSync(file, 'utf8'))) {
+    if (!known.has(key)) {
+      problems.push(`referenced key not found: ${key} (${relative(repoRoot, file)})`)
+    }
   }
 }
 

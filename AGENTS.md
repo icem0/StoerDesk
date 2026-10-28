@@ -4,13 +4,15 @@ Rules for every coding agent and developer working on **StörDesk**.
 
 ## Current status
 
-**Implemented so far: WP-M1-01, WP-M1-02, WP-M1-03.** The repository contains:
+**Implemented so far: WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04.** The repository contains:
 
 - the specification in `specs/` (one placeholder file per chapter),
 - the work plan in `work-packages/` (M1, M2),
 - the environment (monorepo, configuration, skeleton, CI, Docker),
 - the Drizzle base schema with migration `0000_base_tables` (`users`, `sessions`,
   `groups`, `user_groups`, `settings`; UUID v7 via `gen_uuid_v7()`, see ADR-0002),
+- the i18n skeleton (web i18next setup + `locales/{de,en}`, shared server `t()`,
+  `scripts/i18n-check.ts`, active `i18next/no-literal-string` lint rule),
 - the documentation in `docs/`.
 
 Domain logic (auth, tickets, objects, on-call, notifications, UI) is created only as

@@ -15,8 +15,8 @@ Abhängigkeiten: Header `depends-on: WP-XX-YY, ...`
 
 ## Status
 
-> **Aktueller Stand:** Umgesetzt sind **WP-M1-01**, **WP-M1-02** und **WP-M1-03**
-> (Fundament, Compose, Drizzle-Grundtabellen). Die übrigen WP sind unveränderte
-> Arbeitsplanung und werden erst nach Freigabe umgesetzt — WP für WP, nicht gesammelt.
-> Ein WP gilt erst als erledigt, wenn Code, Tests, Lint, Typecheck und Doku stimmen
-> und der dazugehörige Commit gepusht ist.
+> **Current state:** implemented are **WP-M1-01**, **WP-M1-02**, **WP-M1-03** and
+> **WP-M1-04** (foundation, Compose, Drizzle base tables, i18n skeleton). The remaining
+> WPs are unchanged working plans and are only implemented after approval — WP by WP,
+> never in bulk. A WP counts as done only when code, tests, lint, typecheck and docs
+> agree and the corresponding commit is pushed.
