@@ -58,14 +58,14 @@ stack refuses to start without them:
   echo "POSTGRES_PASSWORD=$(openssl rand -hex 18)"
   echo "SESSION_SECRET=$(openssl rand -hex 32)"
   echo "SEED_ADMIN_PASSWORD=$(openssl rand -hex 12)"
-  echo "BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main"
 } > .env
 docker compose up -d
 ```
 
-`BUILD_CONTEXT` decides where the images are built from: `.` builds from the local
-checkout (the default in [`.env.example`](.env.example)), a Git URL lets a deployment
-panel such as Arcane build straight from the repository
+The images are built from the repository by default
+(`IMAGE_BUILD_CONTEXT`, see [`.env.example`](.env.example)). Set it to `.` to build
+from the local checkout instead. A deployment panel such as Arcane clones the
+repository itself and therefore always finds the `Dockerfile`
 ([Arcane setup](docs/DEPLOYMENT.md#arcane)).
 
 Then open **http://localhost:8080**. The API is reached through the web frontend

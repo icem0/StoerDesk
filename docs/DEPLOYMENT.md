@@ -153,7 +153,7 @@ The compose file therefore uses a **Git build context** by default:
 
 ```yaml
 build:
-  context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+  context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
 ```
 
 Arcane clones the repository itself for every build, finds the `Dockerfile`
@@ -167,14 +167,23 @@ Every built service carries `pull_policy: build`. Without it a panel treats the
 `image:` of the service as a finished image, keeps the old one and deploys
 stale code — the fix for a bug would never reach the running container.
 
+> **Important:** leave `IMAGE_BUILD_CONTEXT` empty in the project `.env`. A
+> value of `.` makes the panel build from the project folder, which holds only
+> the compose file, and the build fails with
+> `dockerfile not found: stat /app/data/projects/<project>/Dockerfile`.
+> The default is the Git URL, so the panel fetches the repository itself.
+
 Override the context if the deployment runs from a fork or a tag:
 
 ```
-BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#v0.0.6
+IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#v0.0.6
 ```
 
-On a developer machine `.env` sets `BUILD_CONTEXT=.`, so
-`docker compose up -d --build` builds from the local checkout.
+A developer machine builds from the working tree with the override file:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+```
 
 ### Deploying in Arcane
 

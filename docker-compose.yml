@@ -38,7 +38,7 @@ services:
   # Applies the Drizzle migrations once, before the API starts.
   migrate:
     build:
-      context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+      context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: api
     image: stoerdesk-api:latest
     # Always rebuild: the panel must not deploy a stale image.
@@ -77,7 +77,7 @@ services:
 
   api:
     build:
-      context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+      context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: api
     image: stoerdesk-api:latest
     # Always rebuild: the panel must not deploy a stale image.
@@ -134,7 +134,7 @@ services:
 
   web:
     build:
-      context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+      context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: web
     image: stoerdesk-web:latest
     # Always rebuild: the panel must not deploy a stale image.

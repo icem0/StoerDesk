@@ -1,0 +1,20 @@
+# Local override — builds the images from the working tree instead of the
+# repository. Use it together with the main compose file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+#
+# The file name is deliberately not "docker-compose.override.yml": a deployment
+# panel must never pick it up automatically.
+
+services:
+  migrate:
+    build:
+      context: .
+
+  api:
+    build:
+      context: .
+
+  web:
+    build:
+      context: .
