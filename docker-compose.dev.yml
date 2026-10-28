@@ -1,0 +1,22 @@
+name: stoerdesk-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stoerdesk}
+      POSTGRES_USER: ${POSTGRES_USER:-stoerdesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stoerdesk}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-stoerdesk} -d ${POSTGRES_DB:-stoerdesk}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata-dev:

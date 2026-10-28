@@ -1,0 +1,30 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+node_modules
+dist
+dist-ssr
+coverage
+playwright-report
+test-results
+
+# Umgebung
+.env
+.env.*
+!.env.example
+
+# Lokale Daten
+data/
+data/uploads
+server/var/
+
+# Husky
+.husky/_
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
