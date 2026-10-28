@@ -28,7 +28,7 @@ const generatedSecrets = {
 /** Values that are derived from other values. */
 function derivedValues(secrets) {
   const url = (host) =>
-    `postgres://${secrets.POSTGRES_USER}:${secrets.POSTGRES_PASSWORD}@${host}:5432/${secrets.POSTGRES_DB}`
+    `postgres://${encodeURIComponent(secrets.POSTGRES_USER)}:${encodeURIComponent(secrets.POSTGRES_PASSWORD)}@${host}:5432/${secrets.POSTGRES_DB}`
 
   return {
     DATABASE_URL: url('localhost'),

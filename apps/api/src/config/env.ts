@@ -17,6 +17,12 @@ const envSchema = z.object({
   API_HOST: z.string().default('0.0.0.0'),
   API_PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.string().default('postgres://stoerdesk:stoerdesk@localhost:5432/stoerdesk'),
+  /** Database host. Together with the other DATABASE_* parts it replaces DATABASE_URL. */
+  DATABASE_HOST: z.string().default(''),
+  DATABASE_PORT: z.coerce.number().int().positive().default(5432),
+  DATABASE_NAME: z.string().default('stoerdesk'),
+  DATABASE_USER: z.string().default('stoerdesk'),
+  DATABASE_PASSWORD: z.string().default(''),
   /** Postgres used by the integration tests, falls back to DATABASE_URL. */
   TEST_DATABASE_URL: z.string().default(''),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
@@ -102,6 +108,37 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   }
 
   return env
+}
+
+/**
+ * Encodes a credential for the userinfo part of a URL.
+ *
+ * `encodeURIComponent` leaves `!'()*` untouched; they are valid in a URL but
+ * are escaped here so the result is unambiguous everywhere.
+ */
+function encodeCredential(value: string): string {
+  return encodeURIComponent(value).replace(
+    /[!'()*]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+  )
+}
+
+/**
+ * Connection URL of the database.
+ *
+ * The parts win over `DATABASE_URL` as soon as `DATABASE_HOST` is set: the
+ * container stack passes them and the credentials are URL-encoded here, so a
+ * password with characters like `#`, `@` or `!` works.
+ */
+export function databaseConnectionUrl(env: Env): string {
+  if (env.DATABASE_HOST === '') {
+    return env.DATABASE_URL
+  }
+
+  const user = encodeCredential(env.DATABASE_USER)
+  const password = env.DATABASE_PASSWORD === '' ? '' : `:${encodeCredential(env.DATABASE_PASSWORD)}`
+
+  return `postgres://${user}${password}@${env.DATABASE_HOST}:${env.DATABASE_PORT}/${env.DATABASE_NAME}`
 }
 
 /** Origins allowed by the CORS middleware (comma-separated list). */

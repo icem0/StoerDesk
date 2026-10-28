@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 
 import postgres from 'postgres'
 
-import { loadDotEnvFile, loadEnv } from '../../../config/env'
+import { databaseConnectionUrl, loadDotEnvFile, loadEnv } from '../../../config/env'
 
 export const migrationsFolder = fileURLToPath(new URL('../../migrations', import.meta.url))
 
@@ -49,7 +49,7 @@ async function probe(url: string) {
 export async function openTestDatabase(): Promise<TestDatabaseHandle> {
   loadDotEnvFile()
   const env = loadEnv()
-  const baseUrl = env.TEST_DATABASE_URL === '' ? env.DATABASE_URL : env.TEST_DATABASE_URL
+  const baseUrl = env.TEST_DATABASE_URL === '' ? databaseConnectionUrl(env) : env.TEST_DATABASE_URL
 
   try {
     await probe(baseUrl)
