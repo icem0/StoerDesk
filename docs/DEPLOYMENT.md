@@ -163,6 +163,10 @@ repository is public, so no credentials are needed; a repository registered
 under _Customization → Git Repositories_ with the same URL is reused for its
 credentials.
 
+Every built service carries `pull_policy: build`. Without it a panel treats the
+`image:` of the service as a finished image, keeps the old one and deploys
+stale code — the fix for a bug would never reach the running container.
+
 Override the context if the deployment runs from a fork or a tag:
 
 ```

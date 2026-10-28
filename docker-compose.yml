@@ -41,6 +41,8 @@ services:
       context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: api
     image: stoerdesk-api:latest
+    # Always rebuild: the panel must not deploy a stale image.
+    pull_policy: build
     restart: 'no'
     command: ['node', 'apps/api/dist/db/migrate.js']
     env_file:
@@ -51,6 +53,8 @@ services:
       # The connection parts are passed instead of a URL: the API encodes the
       # credentials, so a password with special characters works.
       DATABASE_HOST: db
+      # The .env file of the host points at localhost; the container uses the parts above.
+      DATABASE_URL: ''
       DATABASE_PORT: 5432
       DATABASE_NAME: ${POSTGRES_DB:-stoerdesk}
       DATABASE_USER: ${POSTGRES_USER:-stoerdesk}
@@ -76,6 +80,8 @@ services:
       context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: api
     image: stoerdesk-api:latest
+    # Always rebuild: the panel must not deploy a stale image.
+    pull_policy: build
     restart: unless-stopped
     env_file:
       - path: .env
@@ -90,6 +96,8 @@ services:
       # The connection parts are passed instead of a URL: the API encodes the
       # credentials, so a password with special characters works.
       DATABASE_HOST: db
+      # The .env file of the host points at localhost; the container uses the parts above.
+      DATABASE_URL: ''
       DATABASE_PORT: 5432
       DATABASE_NAME: ${POSTGRES_DB:-stoerdesk}
       DATABASE_USER: ${POSTGRES_USER:-stoerdesk}
@@ -129,6 +137,8 @@ services:
       context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: web
     image: stoerdesk-web:latest
+    # Always rebuild: the panel must not deploy a stale image.
+    pull_policy: build
     restart: unless-stopped
     environment:
       API_UPSTREAM: http://api:${API_PORT:-3000}
