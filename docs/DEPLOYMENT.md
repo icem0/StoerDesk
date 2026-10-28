@@ -165,6 +165,60 @@ npm run dev
 | API     | http://localhost:3000               |
 | Health  | http://localhost:3000/api/v1/health |
 
+## Arcane
+
+Arcane deploys Compose projects. The project must be linked to this repository
+with a **Git Sync** (pull direction):
+
+1. **Customization → Git Repositories**: add
+   `https://github.com/icem0/StoerDesk.git` (public repository, an SSH key or
+   token is optional).
+2. **Environments → Git Syncs → Add Sync** (or _Projects → Create Project →
+   From Git Repo_):
+   - Direction: **Pull**
+   - Sync name: `stoerdesk`
+   - Repository: _StoerDesk_, Branch: `main`
+   - Compose File Path: `docker-compose.yml`
+   - **Sync Files: on**
+3. **Sync from Git**, then deploy the project.
+
+**Sync Files** is the critical switch. Without it Arcane copies only the compose
+file into the project folder, the build context stays empty and the build fails
+with
+
+```
+failed to prepare project images for deploy: dockerfile not found:
+stat /app/data/projects/stoerdesk/Dockerfile: no such file or directory
+```
+
+With _Sync Files_ the whole folder of the compose file — the repository root —
+is copied, so `Dockerfile`, `apps/` and `packages/` are available as build
+context. The same sync can be imported as JSON on the **Git Syncs** page:
+
+```json
+[
+  {
+    "syncName": "stoerdesk",
+    "gitRepo": "StoerDesk",
+    "branch": "main",
+    "dockerComposePath": "docker-compose.yml",
+    "autoSync": true,
+    "syncInterval": 5,
+    "syncDirectory": true
+  }
+]
+```
+
+Check on the host whether the checkout is complete:
+
+```bash
+docker exec arcane ls -la /app/data/projects/stoerdesk   # Dockerfile must exist
+```
+
+The project `.env` needs at least `POSTGRES_PASSWORD` and `SESSION_SECRET`
+(values from `npm run env:create`); the compose file refuses to start without
+them.
+
 ## Troubleshooting
 
 ```bash
