@@ -24,6 +24,13 @@ Versionierung basiert auf [Semantic Versioning](https://semver.org/lang/de/).
 - WP-M1-03: Migrationstest (ohne DB) und Integrationstest gegen eine echte Postgres-16-Datenbank
   (`TEST_DATABASE_URL`, leere Wegwerf-Datenbank pro Lauf, Skip ohne erreichbare DB).
 
+### Changed
+
+- Sprachregel verschärft: Code, Kommentare, Testnamen, Commit-Messages und
+  Entwickler-Doku sind durchgängig Englisch; die App bleibt mehrsprachig
+  (`de` Default, `en` vollständig) — UI-Texte ausschließlich über i18n-Keys.
+- README und `AGENTS.md` auf Englisch umgestellt.
+
 ### Abweichungen
 
 - WP-M1-01: `npm run check` nutzt die Workspace-Typechecks statt eines `tsc --noEmit` über

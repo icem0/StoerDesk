@@ -20,6 +20,8 @@ docker compose -f docker-compose.dev.yml up -d db
 
 - Feature-Branches von `main`: `feat/wp-m1-09-admin-ui`, `fix/…`, `docs/…`.
 - **Conventional Commits**: `feat(web): …`, `fix(api): …`, `docs(spec): …`, `chore(repo): …`.
+- **Sprache**: Commit-Messages, Quellcode, Kommentare und Testnamen auf Englisch;
+  sichtbare UI-Texte nur über i18n-Keys (siehe `AGENTS.md`).
 - **Ein Work Package = ein Commit.** Der Commit-Betreff nennt das WP:
   `feat(web): WP-M1-09 admin ui users and roles`.
 - **DCO**: Commits werden mit `git commit -s` signiert. Der `commit-msg`-Hook

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# ---------- Basis ----------
+# ---------- Base ----------
 FROM node:22-alpine AS base
 WORKDIR /app
 ENV CI=true

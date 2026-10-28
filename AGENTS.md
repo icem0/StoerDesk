@@ -1,132 +1,138 @@
 # AGENTS
 
-Regeln für alle Coding-Agents und Entwickler, die an **StörDesk** arbeiten.
+Rules for every coding agent and developer working on **StörDesk**.
 
-## Aktueller Stand
+## Current status
 
-**Umgesetzt sind die Grundlagen: WP-M1-01, WP-M1-02, WP-M1-03.** Das Repository enthält:
+**Implemented so far: WP-M1-01, WP-M1-02, WP-M1-03.** The repository contains:
 
-- die Spezifikation in `specs/` (Platzhalter je Kapitel),
-- die Arbeitsplanung in `work-packages/` (M1, M2),
-- die Umgebung (Monorepo, Konfiguration, Skelett, CI, Docker),
-- das Drizzle-Grundschema mit Migration `0000_base_tables` (`users`, `sessions`,
-  `groups`, `user_groups`, `settings`; UUID v7 über `gen_uuid_v7()`, siehe ADR-0002),
-- die Dokumentation in `docs/`.
+- the specification in `specs/` (one placeholder file per chapter),
+- the work plan in `work-packages/` (M1, M2),
+- the environment (monorepo, configuration, skeleton, CI, Docker),
+- the Drizzle base schema with migration `0000_base_tables` (`users`, `sessions`,
+  `groups`, `user_groups`, `settings`; UUID v7 via `gen_uuid_v7()`, see ADR-0002),
+- the documentation in `docs/`.
 
-Fachlogik (Auth, Tickets, Objekte, Oncall, Benachrichtigungen, UI) entsteht ausschließlich
-als Umsetzung eines Work Packages aus `work-packages/` — WP für WP, nicht gesammelt.
+Domain logic (auth, tickets, objects, on-call, notifications, UI) is created only as
+the implementation of a work package from `work-packages/` — package by package,
+never in bulk.
 
-## Architektur
+## Architecture
 
-- **Monorepo** mit npm-Workspaces: `apps/*`, `packages/*`.
+- **Monorepo** with npm workspaces: `apps/*`, `packages/*`.
 - **Web** (`apps/web`): React + Vite PWA, i18next, TanStack Query, Tailwind, Dexie.
-  Mobile-first, offline-fähig; installierbar als PWA.
+  Mobile-first and offline-capable; installable as a PWA.
 - **API** (`apps/api`): Fastify + Drizzle + PostgreSQL + pg-boss.
-  Quelle der Wahrheit ist die Datenbank; Tickets laufen über eine State-Machine,
-  Benachrichtigungen über eine Outbox, Zeitaufgaben über pg-boss-Jobs.
-- **Shared** (`packages/shared`): Zod-Schemas, Typen, Permission-Konstanten,
-  i18n-Ressourcen. Kein eigener Build-Schritt — Quellpaket.
+  The database is the source of truth; tickets run through a state machine,
+  notifications through an outbox, scheduled tasks through pg-boss jobs.
+- **Shared** (`packages/shared`): Zod schemas, types, permission constants,
+  i18n resources. No build step of its own — source package.
 
-## Konventionen
+## Conventions
 
-- **Sprache**: Code, Identifier und Kommentare auf Englisch. UI-Texte über
-  i18n-Keys (DE Default, EN Referenz). Commit-Messages auf Englisch.
-- **Fehler**: `{ code, params }` — niemals übersetzter Text im Protokoll/API-Payload.
-- **Logging**: Pino, strukturiert, keine PII im Klartext.
-- **Geldbeträge**: keine — StörDesk führt keine Beträge (anders als Lagerprojekte).
-- **IDs**: UUID (UUID v7 als Default in der DB), keine laufenden Nummern.
-- **Zeitstempel**: Server-Zeit ist maßgeblich.
-- **Typen**: TypeScript strict. Kein `any` (Warnung), kein ungetypter Code.
-- **Tests**: Vitest für Unit/Integration, Playwright für E2E.
+- **Language — English everywhere.** Code, identifiers, comments, JSDoc, test names,
+  error and log messages, commit messages, and developer documentation are English.
+  The repository itself (README, `AGENTS.md`, `docs/`) is English as well.
+  User-facing text is the only exception: it is multilingual and never hard-coded —
+  always via i18n keys (see the i18n section).
+- **Errors**: `{ code, params }` — never translated text in logs or API payloads.
+- **Logging**: Pino, structured, no PII in plain text.
+- **Money amounts**: none — StörDesk does not track amounts (unlike warehouse projects).
+- **IDs**: UUID (UUID v7 as the database default), no sequential numbers.
+- **Timestamps**: server time is authoritative.
+- **Types**: TypeScript strict. No `any` (warning), no untyped code.
+- **Tests**: Vitest for unit/integration, Playwright for E2E.
 
-## Datenmodell-Lehren (aus der Spezifikation)
+## Data model lessons (from the specification)
 
-- **Bestand-Logik**: nicht anwendbar — StörDesk verwaltet keine Bestände.
-- **Änderungen sind nachvollziehbar**: Ticket-Events sind unveränderlich, Korrekturen
-  erfolgen durch neue Events (Audit).
-- **Quarantäne**: Sync-Fehler, die nicht automatisch auflösbar sind, werden isoliert
-  und blockieren nicht die Bearbeitung.
+- **Stock logic**: not applicable — StörDesk manages no stock.
+- **Changes stay traceable**: ticket events are immutable, corrections are new
+  events (audit trail).
+- **Quarantine**: sync errors that cannot be resolved automatically are isolated
+  and never block processing.
 
-## Qualität
+## Quality
 
-Nach jeder Änderung sind auszuführen:
+Run after every change:
 
 ```bash
 npm run check
 ```
 
-Das umfasst:
+Which covers:
 
-1. `npm run typecheck --workspaces --if-present` — TypeScript je Workspace
-   (Web und API haben getrennte `tsconfig.json` wegen unterschiedlicher Libs).
-2. `eslint .` — Flat Config in `eslint.config.js`.
-3. `vitest run` — Vitest-Projekte je Workspace.
-4. `npm run i18n:check` — Parität de/en und referenzierte Keys.
+1. `npm run typecheck --workspaces --if-present` — TypeScript per workspace
+   (web and API keep separate `tsconfig.json` files because they need different libs).
+2. `eslint .` — flat config in `eslint.config.js`.
+3. `vitest run` — one Vitest project per workspace.
+4. `npm run i18n:check` — de/en key parity and referenced keys.
 
-Ergänzend nach Bedarf:
+Additionally when needed:
 
 ```bash
-npm run build      # Web + API bauen
+npm run build      # build web + API
 npm run format     # Prettier
 ```
 
-**Abweichung zu WP-M1-01**: Das Root-Skript `check` nutzt die Workspace-Typechecks
-statt eines einzelnen `tsc --noEmit` über alle Pakete, weil API (Node) und Web
-(DOM) unterschiedliche `lib`-Sets benötigen. Die Root-`tsconfig.json` bleibt für
-Editor und IDE-Support bestehen.
+**Deviation from WP-M1-01**: the root `check` script uses the per-workspace typechecks
+instead of a single `tsc --noEmit` across all packages, because the API (Node) and
+web (DOM) need different `lib` sets. The root `tsconfig.json` remains for editor
+and IDE support.
 
-## Datenbank und Tests
+## Database and tests
 
-- Postgres 16 lokal: `docker compose -f docker-compose.dev.yml up -d db`
-  (Zugangsdaten wie in `.env.example`).
-- Migrationen: `npm run db:migrate -w @stoerdesk/api`, Schema-Anpassungen mit
-  `npm run db:generate -w @stoerdesk/api` (drizzle-kit, Ausgabeordner `src/db/migrations`).
-- API-Integrationstests laufen gegen eine echte Datenbank über `TEST_DATABASE_URL`
-  (Fallback `DATABASE_URL`). Ist die Datenbank nicht erreichbar, werden diese Tests
-  übersprungen und `npm run check` bleibt grün — die Tests ersetzen also kein DB-Setup,
-  prüfen aber Migration, Constraints und `gen_uuid_v7()`.
+- Local Postgres 16: `docker compose -f docker-compose.dev.yml up -d db`
+  (credentials as in `.env.example`).
+- Migrations: `npm run db:migrate -w @stoerdesk/api`; adapt the schema with
+  `npm run db:generate -w @stoerdesk/api` (drizzle-kit, output folder `src/db/migrations`).
+- API integration tests run against a real database via `TEST_DATABASE_URL`
+  (fallback `DATABASE_URL`). If the database is unreachable these tests are skipped
+  and `npm run check` stays green — they do not replace a database setup, but they do
+  verify the migration, the constraints and `gen_uuid_v7()`.
 
 ## i18n
 
-- Namespaces Web: `common`, `errors`, `validation`, `ticket`, `object`, `oncall`,
+- Web namespaces: `common`, `errors`, `validation`, `ticket`, `object`, `oncall`,
   `stats`, `settings`.
-- `de` ist Default und Referenz, `en` muss vollständig sein.
-- Keine Literal-Strings in JSX (`i18next/no-literal-string`).
-- Neue Namespace-Datei → in `apps/web/src/i18n/index.ts` registrieren, sonst
-  schlägt `npm run i18n:check` fehl.
+- `de` is the default and the reference locale, `en` must be complete
+  (the app is multilingual; the code base is English).
+- No literal strings in JSX (`i18next/no-literal-string`).
+- New namespace file → register it in `apps/web/src/i18n/index.ts`, otherwise
+  `npm run i18n:check` fails.
 
 ## Commits
 
-- **Conventional Commits** sind Pflicht: `feat(web): ...`, `fix(api): ...`,
-  `docs(spec): ...`, `chore(repo): ...`.
-- Erlaubte Typen: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+- **Conventional Commits** are mandatory: `feat(web): ...`, `fix(api): ...`,
+  `docs(spec): ...`, `chore(repo): ...` — subjects and bodies in English.
+- Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
   `build`, `ci`, `chore`, `revert`.
-- **DCO**: Jede Commit-Message endet mit `Signed-off-by: <name> <email>` (`git commit -s`).
-- **Ein Work Package = ein Commit.** Der Betreff benennt das WP
-  (z. B. `feat(web): WP-M1-09 admin ui users and roles`).
-- `commitlint` prüft Format und Sign-off (Husky-Hook `commit-msg`).
+- **DCO**: every commit message ends with `Signed-off-by: <name> <email>` (`git commit -s`).
+- **One work package = one commit.** The subject names the work package
+  (e.g. `feat(web): WP-M1-09 admin ui users and roles`).
+- `commitlint` enforces the format and the sign-off (Husky hook `commit-msg`).
 
-## Todo-Liste (Pflicht)
+## Todo list (mandatory)
 
-Ab drei Teilschritten wird eine Todo-Liste via `todowrite` geführt:
+From three sub-steps onwards keep a todo list via `todowrite`:
 
-- alle Schritte zu Beginn als `pending` anlegen,
-- genau ein Schritt `in_progress` zur Zeit,
-- `completed` erst nach tatsächlicher Verifikation (Lint/Test/Build wirklich gelaufen),
-- blockierte Schritte bleiben `in_progress` und benennen den Blocker,
-- vor der Abschluss-Antwort keine `pending`/`in_progress` ohne ausdrückliche Nennung.
+- create all steps as `pending` at the start,
+- exactly one step `in_progress` at a time,
+- `completed` only after real verification (lint/test/build actually ran),
+- blocked steps stay `in_progress` and name the blocker,
+- before the final answer no `pending`/`in_progress` left without an explicit mention.
 
-## Struktur-Disziplin
+## Structure discipline
 
-- Verzeichnisstruktur, Modulübersicht und Konventionen stehen in `docs/REPO-MAP.md`
-  (max. 200 Zeilen) und werden **nach jedem Work Package** aktualisiert.
-- Neue Module werden in der Modul-Tabelle mit Zweck und öffentlicher API eingetragen.
-- Keine Dateien außerhalb der vorgesehenen Bereiche anlegen; `docs/material/` nimmt
-  gelieferte Originale auf, `specs/` die daraus gespiegelten Kapitel.
+- Directory structure, module overview and conventions live in `docs/REPO-MAP.md`
+  (max. 200 lines) and are updated **after every work package**.
+- New modules are added to the module table with purpose and public API.
+- Do not create files outside the designated areas; `docs/material/` holds the
+  supplied originals, `specs/` holds the chapters mirrored from them.
 
-## Datenschutz und Sicherheit
+## Data protection and security
 
-- Keine Secrets im Repository. `.env` ist ignoriert, `.env.example` ist die Vorlage.
-- Keine PII in Logs, Tests oder Fixtures.
-- 112-Hinweis: auf Meldeformular und Aufklebern sichtbar halten
-  (siehe README und `specs/06-report-form.md`).
+- No secrets in the repository. `.env` is ignored, `.env.example` is the template.
+- No PII in logs, tests or fixtures.
+- Emergency notice: the 112/110 hint must stay visible on the report form and on the
+  printed stickers (see README and `specs/06-report-form.md`). StörDesk accepts
+  malfunction reports only — it is never an emergency call path.

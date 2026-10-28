@@ -15,7 +15,7 @@ export default defineConfig({
       manifest: {
         name: 'StörDesk',
         short_name: 'StörDesk',
-        description: 'Störungsdesk – Störungen melden und bearbeiten',
+        description: 'Malfunction desk — report and track malfunctions',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',

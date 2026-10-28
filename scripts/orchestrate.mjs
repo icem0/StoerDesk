@@ -25,7 +25,7 @@ for (const step of steps) {
   results.push({ name: step.name, code })
 }
 
-console.log('\n=== Zusammenfassung ===')
+console.log('\n=== summary ===')
 
 for (const result of results) {
   console.log(`${result.code === 0 ? 'OK  ' : 'FAIL'}  ${result.name}`)

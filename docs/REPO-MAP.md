@@ -60,7 +60,8 @@ scripts/                        Orchestrierung, Split-Spec, i18n:check
 
 ## Konventionen (Kurzfassung, Details in specs/00)
 
-- Sprache: Code/Kommentare EN, UI über i18n-Keys (DE Default, EN Referenz).
+- Sprache: Code, Kommentare und Entwickler-Doku durchgängig EN; UI-Texte über i18n-Keys
+  (`de` Default, `en` vollständig) — die App ist mehrsprachig, die Codebasis ist englisch.
 - Fehler: `{ code, params }`, nie übersetzter Text.
 - Logging: Pino, strukturiert, keine PII im Klartext.
 - Tests: Vitest für Unit, Playwright für E2E.

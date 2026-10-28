@@ -1,25 +1,26 @@
-## Was wird geändert?
+## What changes?
 
-<!-- Bezug zum Work Package, z. B. WP-M1-09 -->
+<!-- link to the work package, e.g. WP-M1-09 -->
 
-## Art der Änderung
+## Type of change
 
-- [ ] Bugfix
-- [ ] neue Funktion
-- [ ] Refactoring / Technik
-- [ ] Dokumentation
-- [ ] Konfiguration / CI
+- [ ] bugfix
+- [ ] feature
+- [ ] refactor / technology
+- [ ] documentation
+- [ ] configuration / CI
 
-## Checkliste
+## Checklist
 
-- [ ] `npm run check` läuft grün (Typecheck, Lint, Tests, i18n:check)
-- [ ] `npm run build` läuft grün (falls Build-Artefakte betroffen)
-- [ ] Neue i18n-Keys in **de** und **en** ergänzt
-- [ ] Keine Literal-Strings in JSX
-- [ ] Keine personenbezogenen Daten in Logs, Tests oder Fixtures
-- [ ] Keine Secrets oder `.env` im Commit
-- [ ] `docs/REPO-MAP.md` aktualisiert (falls neue Module entstanden sind)
+- [ ] `npm run check` is green (typecheck, lint, tests, i18n:check)
+- [ ] `npm run build` is green (if build artefacts are affected)
+- [ ] commit message and code comments are English
+- [ ] new i18n keys added in **de** and **en**
+- [ ] no literal strings in JSX
+- [ ] no personal data in logs, tests or fixtures
+- [ ] no secrets or `.env` in the commit
+- [ ] `docs/REPO-MAP.md` updated (if new modules were created)
 
-## Hinweise für Reviewer
+## Notes for reviewers
 
-<!-- Was soll gezielt geprüft werden? -->
+<!-- what should be reviewed specifically? -->

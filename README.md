@@ -4,66 +4,68 @@
 
 # StörDesk
 
-**Störungsdesk für Objekte und Anlagen — nur Störungsmeldungen, keine Notrufe.**
+**Malfunction desk for buildings and technical assets — malfunction reports only, never emergency calls.**
 
-[![CI](https://github.com/StoerDesk/StoerDesk/actions/workflows/check.yml/badge.svg)](https://github.com/StoerDesk/StoerDesk/actions/workflows/check.yml)
+[![CI](https://github.com/icem0/StoerDesk/actions/workflows/check.yml/badge.svg)](https://github.com/icem0/StoerDesk/actions/workflows/check.yml)
 [![Node](https://img.shields.io/badge/node-%E2%89%A5%2022.12-brightgreen)](https://nodejs.org)
 [![Postgres](https://img.shields.io/badge/postgres-16-blue)](https://www.postgresql.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
-[![status: v0.1](https://img.shields.io/badge/status-v0.1%20Grundlage-orange)](CHANGELOG.md)
+[![status: v0.1](https://img.shields.io/badge/status-v0.1%20foundation-orange)](CHANGELOG.md)
 
 </div>
 
 > [!IMPORTANT]
-> **Nur Störungsmeldungen — kein Notruf.** StörDesk nimmt ausschließlich Meldungen über
-> Störungen, Defekte und Schäden ohne Gefahr für Menschen an. Bei akuter Gefahr für
-> Menschen, Feuer, Austritt von Gefahrstoffen oder medizinischen Notfällen **sofort 112**
-> (Feuerwehr/Rettungsdienst) bzw. **110** (Polizei) wählen — der Hinweis ist auf
-> Meldeformular und Aufklebern vorgesehen (siehe [`specs/06-report-form.md`](specs/06-report-form.md)).
+> **Malfunction reports only — not an emergency call path.** StörDesk accepts reports
+> about faults, defects and damage with no danger to people. In case of acute danger to
+> humans, fire, escaping hazardous substances or medical emergencies **call 112**
+> (fire brigade / ambulance) or **110** (police) immediately — that hint is part of the
+> report form and of the printed stickers (see [`specs/06-report-form.md`](specs/06-report-form.md)).
 
-## Worum geht es
+## What it is about
 
-StörDesk ist ein Web-System für Hausmeister, Facility-Management-Teams und
-Technikdienste: **technische Störungen** an Objekten und Anlagen werden strukturiert
-gemeldet, über eine State-Machine als Ticket bearbeitet, an die richtige Oncall-Schicht
-eskaliert und nachvollziehbar protokolliert. Nicht gemeint sind Einsatzmeldungen von
-Feuerwehr, Rettungsdienst oder Polizei.
+StörDesk is a web system for caretakers, facility management teams and technical
+services. **Technical malfunctions** in buildings and assets are reported in a
+structured way, handled as tickets through a state machine, escalated to the right
+on-call shift and recorded in a traceable audit trail. Emergency service dispatch
+(fire brigade, ambulance, police) is out of scope by design.
 
-- **Meldeformular** für Meldende (auch ohne Login, offline-fähig als PWA)
-- **Tickets** mit unveränderlichem Event-Protokoll (Audit)
-- **Objekte und Anlagen** als Bezugspunkt jeder Störung
-- **Oncall und Eskalation** über Schichtpläne und pg-boss-Jobs
-- **Benachrichtigungen** über eine Outbox (E-Mail, später Web Push)
-- **Dashboard und Statistiken** für Auswertung und Störungstrends
-- **Offline-Fähigkeit**: Dexie im Browser, Sync mit Quarantäne bei Konflikten
+- **Report form** for reporters (works without login, offline-capable as a PWA)
+- **Tickets** with an immutable event log (audit trail)
+- **Objects and assets** as the reference point of every report
+- **On-call and escalation** based on shift schedules and pg-boss jobs
+- **Notifications** through an outbox (e-mail, later web push)
+- **Dashboard and statistics** for evaluation and malfunction trends
+- **Offline support**: Dexie in the browser, sync with quarantine on conflicts
 
-## Architektur
+## Architecture
 
-Monorepo mit npm-Workspaces — Details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-und [`docs/REPO-MAP.md`](docs/REPO-MAP.md):
+Monorepo with npm workspaces — details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+and [`docs/REPO-MAP.md`](docs/REPO-MAP.md):
 
-| Paket             | Stack                                                      | Zweck                                      |
+| Package           | Stack                                                      | Purpose                                    |
 | ----------------- | ---------------------------------------------------------- | ------------------------------------------ |
-| `apps/web`        | React + Vite PWA, i18next, TanStack Query, Tailwind, Dexie | Mobile-first, installierbar, offline-fähig |
-| `apps/api`        | Fastify, Drizzle, PostgreSQL 16, pg-boss                   | Quelle der Wahrheit: Tickets, RBAC, Outbox |
-| `packages/shared` | Zod-Schemas, Typen, Permissions, i18n-Ressourcen           | gemeinsam genutzte Verträge                |
+| `apps/web`        | React + Vite PWA, i18next, TanStack Query, Tailwind, Dexie | Mobile-first, installable, offline-capable |
+| `apps/api`        | Fastify, Drizzle, PostgreSQL 16, pg-boss                   | Source of truth: tickets, RBAC, outbox     |
+| `packages/shared` | Zod schemas, types, permissions, i18n resources            | Contracts shared by web and API            |
 
-Durchgängige Konventionen: UUID v7 für IDs, Server-Zeit als maßgebliche Zeit,
-Fehler als `{ code, params }` (niemals übersetzt im Protokoll), strukturierte
-Logs mit Pino, keine Geldbeträge.
+Conventions across the code base: UUID v7 for ids, server time as the authoritative
+clock, errors as `{ code, params }` (never translated text on the wire), structured
+Pino logs, no monetary amounts. **The code base is English** — identifiers, comments
+and developer docs; only user-facing text is multilingual via i18n (`de` default,
+`en` complete).
 
 ## Status
 
-Die Umgebung ist eingerichtet — **Umsetzung** der Spezifikation erfolgt WP für WP
-(aktuell: WP-M1-01 bis WP-M1-03, siehe [`CHANGELOG.md`](CHANGELOG.md)).
+The environment is in place — the specification is implemented work package by work
+package (currently WP-M1-01 to WP-M1-03, see [`CHANGELOG.md`](CHANGELOG.md)).
 
-- Spezifikation: [`specs/`](specs/) (16 Kapitel)
-- Arbeitsplanung: [`work-packages/`](work-packages/) (M1, M2)
-- Entscheidungen: [`docs/DECISIONS.md`](docs/DECISIONS.md) und `docs/DECISIONS/`
+- Specification: [`specs/`](specs/) (16 chapters)
+- Work plan: [`work-packages/`](work-packages/) (M1, M2)
+- Decisions: [`docs/DECISIONS.md`](docs/DECISIONS.md) and `docs/DECISIONS/`
 
-## Schnellstart
+## Quickstart
 
-Voraussetzungen: Node.js ≥ 22.12, Docker (nur für die lokale Datenbank).
+Prerequisites: Node.js ≥ 22.12, Docker (for the local database only).
 
 ```bash
 npm install
@@ -73,59 +75,61 @@ npm run db:migrate -w @stoerdesk/api
 npm run dev
 ```
 
-Danach:
+Then:
 
-| Dienst | URL                                 |
-| ------ | ----------------------------------- |
-| Web    | http://localhost:5173               |
-| API    | http://localhost:3000               |
-| Health | http://localhost:3000/api/v1/health |
+| Service | URL                                 |
+| ------- | ----------------------------------- |
+| Web     | http://localhost:5173               |
+| API     | http://localhost:3000               |
+| Health  | http://localhost:3000/api/v1/health |
 
-Produktionsnah mit allen Diensten:
+Closer to production, with all services:
 
 ```bash
 docker compose up -d --build
 ```
 
-## Werkzeuge
+## Tooling
 
-| Kommando                    | Wirkung                                                         |
-| --------------------------- | --------------------------------------------------------------- |
-| `npm run dev`               | startet Web und API im Watch-Modus                              |
-| `npm run build`             | baut Web (Vite) und API (esbuild)                               |
-| `npm run check`             | Typecheck, ESLint, Vitest, `i18n:check` — nach jeder Änderung   |
-| `npm run typecheck`         | TypeScript strict je Workspace                                  |
-| `npm run lint` / `lint:fix` | ESLint (flat config)                                            |
-| `npm run test` / `test:run` | Vitest in allen Workspaces                                      |
-| `npm run i18n:check`        | Key-Parität de/en und referenzierte Keys                        |
-| `npm run format`            | Prettier                                                        |
-| `npm run db:migrate`        | Migrationen einspielen (`-w @stoerdesk/api`)                    |
-| `npm run db:generate`       | neue Drizzle-Migration erzeugen                                 |
-| `npm run spec:split`        | zerlegt gelieferte Originale aus `docs/material/` nach `specs/` |
+| Command                     | Effect                                                           |
+| --------------------------- | ---------------------------------------------------------------- |
+| `npm run dev`               | starts web and API in watch mode                                 |
+| `npm run build`             | builds web (Vite) and API (esbuild)                              |
+| `npm run check`             | typecheck, ESLint, Vitest, `i18n:check` — run after every change |
+| `npm run typecheck`         | strict TypeScript per workspace                                  |
+| `npm run lint` / `lint:fix` | ESLint (flat config)                                             |
+| `npm run test` / `test:run` | Vitest in all workspaces                                         |
+| `npm run i18n:check`        | de/en key parity and referenced keys                             |
+| `npm run format`            | Prettier                                                         |
+| `npm run db:migrate`        | apply migrations (`-w @stoerdesk/api`)                           |
+| `npm run db:generate`       | create a new Drizzle migration                                   |
+| `npm run spec:split`        | mirrors originals in `docs/material/` into `specs/`              |
 
-API-Integrationstests laufen gegen eine echte Datenbank über `TEST_DATABASE_URL`
-(Fallback `DATABASE_URL`); ohne erreichbare Datenbank werden sie übersprungen.
+API integration tests run against a real database via `TEST_DATABASE_URL`
+(fallback `DATABASE_URL`); without a reachable database they are skipped.
 
-## Mitwirken
+## Contributing
 
-Bevor du Code schreibst: Lies [`CONTRIBUTING.md`](CONTRIBUTING.md) und
-[`AGENTS.md`](AGENTS.md). Kurz gefasst:
+Before writing code, read [`CONTRIBUTING.md`](CONTRIBUTING.md) and
+[`AGENTS.md`](AGENTS.md). In short:
 
-1. Fachlogik entsteht **nur** als Umsetzung eines Work Packages aus `work-packages/`.
-2. Conventional Commits mit DCO Sign-off (`git commit -s`), **ein WP pro Commit**.
-3. Nach jeder Änderung: `npm run check`.
-4. `docs/REPO-MAP.md` nach jedem WP aktualisieren.
-5. UI-Texte ausschließlich über i18n-Keys (`de` Default, `en` vollständig).
+1. Domain logic is created **only** as the implementation of a work package from
+   `work-packages/`.
+2. Conventional Commits with DCO sign-off (`git commit -s`), in English,
+   **one work package per commit**.
+3. After every change: `npm run check`.
+4. Update `docs/REPO-MAP.md` after every work package.
+5. UI text exclusively via i18n keys (`de` default, `en` complete); code, comments
+   and docs stay English.
 
-Beitragsverhalten: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+Code of conduct: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
-## Datenschutz und Sicherheit
+## Data protection and security
 
-Melde- und Ticktdaten enthalten Personenbezug (Name, Kontakt, Standort).
-Grundlagen in [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) und
-[`SECURITY.md`](SECURITY.md). Keine Secrets im Repository, keine PII in Logs,
-Tests oder Fixtures.
+Report and ticket data contain personal data (name, contact, location).
+Foundations in [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) and [`SECURITY.md`](SECURITY.md).
+No secrets in the repository, no PII in logs, tests or fixtures.
 
-## Lizenz
+## License
 
-MIT — siehe [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

@@ -1,19 +1,19 @@
 ---
 
-name: Sicherheitslücke
-description: Sicherheitslücke melden (nicht als öffentliches Issue!)
+name: Security
+description: Report a vulnerability (never as a public issue!)
 labels: ['security']
 body:
 
 - type: markdown
   attributes:
   value: |
-  Bitte **nicht** als öffentliches Issue melden.
-  Nutze den in `SECURITY.md` beschriebenen Meldeweg.
-  Dieses Formular dient nur der internen Koordination.
+  Please do **not** report this as a public issue.
+  Use the reporting channel described in `SECURITY.md`.
+  This form only supports internal coordination.
 - type: textarea
   id: summary
   attributes:
-  label: Kurzbeschreibung
+  label: Short summary
   validations:
   required: true

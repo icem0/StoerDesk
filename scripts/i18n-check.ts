@@ -105,13 +105,13 @@ const [deWeb, enWeb] = [collectWebKeys('de'), collectWebKeys('en')]
 
 for (const key of deWeb.keys()) {
   if (!enWeb.has(key)) {
-    problems.push(`fehlt in en: ${key} (${deWeb.get(key)})`)
+    problems.push(`missing in en: ${key} (${deWeb.get(key)})`)
   }
 }
 
 for (const key of enWeb.keys()) {
   if (!deWeb.has(key)) {
-    problems.push(`fehlt in de: ${key} (${enWeb.get(key)})`)
+    problems.push(`missing in de: ${key} (${enWeb.get(key)})`)
   }
 }
 
@@ -119,13 +119,13 @@ const [deShared, enShared] = [collectSharedKeys('de'), collectSharedKeys('en')]
 
 for (const key of deShared.keys()) {
   if (!enShared.has(key)) {
-    problems.push(`fehlt in en: ${key} (${deShared.get(key)})`)
+    problems.push(`missing in en: ${key} (${deShared.get(key)})`)
   }
 }
 
 for (const key of enShared.keys()) {
   if (!deShared.has(key)) {
-    problems.push(`fehlt in de: ${key} (${enShared.get(key)})`)
+    problems.push(`missing in de: ${key} (${enShared.get(key)})`)
   }
 }
 
@@ -134,12 +134,12 @@ const known = new Set([...deWeb.keys(), ...enWeb.keys()])
 for (const key of collectReferencedKeys()) {
   const [namespace] = key.includes(':') ? key.split(':') : ['common']
   if (!known.has(`${namespace}:${key}`)) {
-    problems.push(`referenzierter Key nicht gefunden: ${key}`)
+    problems.push(`referenced key not found: ${key}`)
   }
 }
 
 if (problems.length > 0) {
-  console.error('i18n:check fehlgeschlagen:')
+  console.error('i18n:check failed:')
   for (const problem of problems) {
     console.error(`  - ${problem}`)
   }
@@ -147,5 +147,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `i18n:check ok (${deWeb.size + deShared.size} Schlüssel in de, ${enWeb.size + enShared.size} in en)`,
+  `i18n:check ok (${deWeb.size + deShared.size} keys in de, ${enWeb.size + enShared.size} keys in en)`,
 )

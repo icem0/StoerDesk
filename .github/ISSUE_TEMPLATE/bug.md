@@ -1,35 +1,35 @@
 ---
 
 name: Bug
-description: Fehler in StörDesk melden
+description: Report a malfunction in StörDesk
 labels: ['bug']
 body:
 
 - type: markdown
   attributes:
   value: |
-  StörDesk ist **kein** Notrufweg. Bei akuter Gefahr: **112** / **110**.
+  StörDesk is **not** an emergency call path. In case of acute danger: **112** / **110**.
 - type: textarea
-  id: was
+  id: what
   attributes:
-  label: Was ist passiert?
-  description: Was wurde erwartet, was ist stattdessen eingetreten?
+  label: What happened?
+  description: What did you expect, and what happened instead?
   validations:
   required: true
 - type: textarea
   id: repro
   attributes:
-  label: Reproduktion
-  description: Schritte, mit denen der Fehler reproduzierbar ist.
+  label: Reproduction
+  description: Steps that reproduce the malfunction.
   validations:
   required: true
 - type: input
   id: env
   attributes:
-  label: Umgebung
-  placeholder: Version/Commit, Browser, Gerät
+  label: Environment
+  placeholder: version/commit, browser, device
 - type: textarea
   id: logs
   attributes:
-  label: Logs oder Screenshots
-  description: Bitte keine personenbezogenen Daten anhängen.
+  label: Logs or screenshots
+  description: Please do not attach any personal data.
