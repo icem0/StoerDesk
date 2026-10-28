@@ -1,10 +1,12 @@
-import { cpSync, mkdirSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { cp, mkdir } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const apiRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const source = resolve(apiRoot, 'src/db/migrations')
-const target = resolve(apiRoot, 'dist/db/migrations')
+const workspace = join(dirname(fileURLToPath(import.meta.url)), '..')
+const source = join(workspace, 'src', 'db', 'migrations')
+const target = join(workspace, 'dist', 'db', 'migrations')
 
-mkdirSync(dirname(target), { recursive: true })
-cpSync(source, target, { recursive: true })
+await mkdir(dirname(target), { recursive: true })
+await cp(source, target, { recursive: true })
+
+console.log(`copied migrations to ${target}`)

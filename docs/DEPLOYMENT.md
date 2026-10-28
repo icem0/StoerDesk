@@ -24,29 +24,19 @@ docker compose down -v      # stops the stack and DELETES all data
 
 ## Services
 
-| Service      | Profile         | Purpose                                    |
-| ------------ | --------------- | ------------------------------------------ |
-| `db`         | —               | PostgreSQL 16, source of truth             |
-| `migrate`    | —               | applies the Drizzle migrations, then exits |
-| `api`        | —               | Fastify API on port 3000                   |
-| `web`        | —               | nginx: PWA + reverse proxy for `/api/`     |
-| `ntfy`       | `notifications` | push notifications (web, desktop, mobile)  |
-| `signal-cli` | `signal`        | Signal bridge (JSON-RPC over HTTP)         |
-| `matrix`     | `matrix`        | Matrix homeserver (Synapse)                |
-| `backup`     | `backup`        | periodic `pg_dump` into the backup volume  |
-
-Profiles are independent and can be combined:
-
-```bash
-docker compose --profile notifications --profile matrix up -d
-```
+| Service   | Profile  | Purpose                                    |
+| --------- | -------- | ------------------------------------------ |
+| `db`      | —        | PostgreSQL 16, source of truth             |
+| `migrate` | —        | applies the Drizzle migrations, then exits |
+| `api`     | —        | Fastify API on port 3000                   |
+| `web`     | —        | nginx: PWA + reverse proxy for `/api/`     |
+| `backup`  | `backup` | periodic `pg_dump` into the backup volume  |
 
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.
 `npm run env:create` copies the template to `.env` and replaces the secrets
-(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`,
-`SYNAPSE_REGISTRATION_SHARED_SECRET`) with random values. The generated
+(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`) with random values. The generated
 password is URL-safe, so it can be used inside a connection URL.
 
 The file is read by:
@@ -67,14 +57,11 @@ docker compose up -d --force-recreate api
 All state lives in named Docker volumes, so the data survives
 `docker compose down` and container restarts.
 
-| Volume        | Content                                       | Variable             |
-| ------------- | --------------------------------------------- | -------------------- |
-| `pgdata`      | database cluster, roles, all tickets          | `PGDATA_VOLUME`      |
-| `uploads`     | photos uploaded via the report form           | `UPLOADS_VOLUME`     |
-| `ntfy-cache`  | message cache of the ntfy server              | `NTFY_DATA_VOLUME`   |
-| `signal-data` | account keys of the Signal number             | `SIGNAL_DATA_VOLUME` |
-| `matrix-data` | homeserver database, media store, signing key | `MATRIX_DATA_VOLUME` |
-| `backups`     | compressed database dumps                     | `BACKUP_VOLUME`      |
+| Volume    | Content                              | Variable         |
+| --------- | ------------------------------------ | ---------------- |
+| `pgdata`  | database cluster, roles, all tickets | `PGDATA_VOLUME`  |
+| `uploads` | photos uploaded via the report form  | `UPLOADS_VOLUME` |
+| `backups` | compressed database dumps            | `BACKUP_VOLUME`  |
 
 The volume names are configurable via `.env`, so several installations can run
 side by side on one host. To inspect or copy data out of a volume:
@@ -101,41 +88,35 @@ gunzip -c stoerdesk-20260101T120000Z.sql.gz | \
 
 ## Notifications
 
+StörDesk ships no notification servers. Every channel talks to an instance that
+already exists; a channel stays disabled while its address is empty.
+
+| Channel  | Variables                                                                      |
+| -------- | ------------------------------------------------------------------------------ |
+| e-mail   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`            |
+| ntfy     | `NTFY_URL`, `NTFY_PUBLIC_URL`, `NTFY_TOPIC`                                    |
+| Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                       |
+| Signal   | `SIGNAL_CLI_URL`, `SIGNAL_SOURCE_NUMBER`, `SIGNAL_RECIPIENTS`                  |
+| Matrix   | `MATRIX_HOMESERVER`, `MATRIX_USER_ID`, `MATRIX_ROOM_ID`, `MATRIX_ACCESS_TOKEN` |
+
 ### ntfy
 
-```bash
-docker compose --profile notifications up -d
-```
-
-Set `NTFY_TOPIC` in `.env` and `NTFY_URL=http://ntfy` for the API. The
-browser subscribes to `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}`.
+Set `NTFY_URL` to the server the API publishes to and `NTFY_PUBLIC_URL` to the
+address the browser subscribes to. The browser listens on
+`${NTFY_PUBLIC_URL}/${NTFY_TOPIC}`.
 
 ### Signal
 
-signal-cli needs a phone number that receives SMS or a phone call. Register it
-once:
-
-```bash
-docker compose --profile signal run --rm signal-cli -a +49123456789 register
-docker compose --profile signal run --rm signal-cli -a +49123456789 verify <CODE>
-```
-
-Then set `SIGNAL_SOURCE_NUMBER` and `SIGNAL_RECIPIENTS` in `.env` and start the
-stack. The API talks to the bridge via JSON-RPC (`/api/v1/rpc`); the account
-keys stay in the `signal-data` volume.
+`SIGNAL_CLI_URL` points to an existing signal-cli bridge (JSON-RPC over HTTP).
+The bridge owns the registered number; `SIGNAL_SOURCE_NUMBER` names it and
+`SIGNAL_RECIPIENTS` lists the recipients of new-ticket notifications.
 
 ### Matrix
 
-Synapse creates its homeserver configuration on the first start. Register the
-notification bot and create a room for the notifications:
-
-```bash
-docker compose --profile matrix up -d
-npm run matrix:create-bot
-```
-
-The script prints `MATRIX_ACCESS_TOKEN` and `MATRIX_ROOM_ID`; add both to
-`.env`. Invite further recipients to the room from any Matrix client.
+`MATRIX_HOMESERVER` points to an existing homeserver. Create a user there, log
+in with it and copy the access token into `MATRIX_ACCESS_TOKEN`; the Matrix ID
+of that user is `MATRIX_USER_ID`. `MATRIX_ROOM_ID` is the room the
+notifications are sent to.
 
 ## HTTPS
 
@@ -168,29 +149,30 @@ npm run dev
 ## Arcane
 
 Arcane deploys Compose projects and builds the images from the project folder.
-There are two ways to get the `Dockerfile` into that build.
+The compose file therefore uses a **Git build context** by default:
 
-### Option A — build context from Git (recommended)
-
-Set one variable in the project environment (Arcane: project → `.env`):
-
-```
-BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main
+```yaml
+build:
+  context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
 ```
 
-Arcane then clones the repository itself for every build, finds the `Dockerfile`
-inside it and builds the images from that clone. The project folder only needs
-the compose file — no checkout, no sync of the other files. The repository is
-public, so no credentials are needed; a repository registered under
-_Customization → Git Repositories_ with the same URL is reused for its
+Arcane clones the repository itself for every build, finds the `Dockerfile`
+inside the clone and builds the images from it. The project folder only needs
+the compose file — no checkout of the other files, no `Sync Files`. The
+repository is public, so no credentials are needed; a repository registered
+under _Customization → Git Repositories_ with the same URL is reused for its
 credentials.
 
-`BUILD_CONTEXT` defaults to `.`, which builds from the project folder — the
-normal case for `docker compose up --build` on a developer machine.
+Override the context if the deployment runs from a fork or a tag:
 
-### Option B — sync the whole repository
+```
+BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#v0.0.6
+```
 
-Use a **Git Sync** (pull direction):
+On a developer machine `.env` sets `BUILD_CONTEXT=.`, so
+`docker compose up -d --build` builds from the local checkout.
+
+### Deploying in Arcane
 
 1. **Customization → Git Repositories**: add
    `https://github.com/icem0/StoerDesk.git` (public repository, an SSH key or
@@ -201,12 +183,13 @@ Use a **Git Sync** (pull direction):
    - Sync name: `stoerdesk`
    - Repository: _StoerDesk_, Branch: `main`
    - Compose File Path: `docker-compose.yml`
-   - **Sync Files: on**
+   - **Sync Files: on** — recommended, it makes the sources visible in the
+     project folder; the build works without it thanks to the Git context
 3. **Sync from Git**, then deploy the project.
 
-**Sync Files** is the critical switch. Without it Arcane copies only the compose
-file into the project folder, the build context stays empty and the build fails
-with
+Without _Sync Files_ Arcane copies only the compose file into the project
+folder. With the Git build context that is enough, because Arcane fetches the
+repository itself. With a local build context (`.`) the build fails with
 
 ```
 failed to prepare project images for deploy: dockerfile not found:

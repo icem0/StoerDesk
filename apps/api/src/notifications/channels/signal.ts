@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
 export interface SignalConfig {
-  /** Base URL of the signal-cli JSON-RPC bridge, e.g. http://signal-cli:8080 */
+  /** Base URL of an existing signal-cli JSON-RPC bridge, e.g. https://signal.example.org */
   url: string
   /** Own number of the bridge, e.g. +49123456789 */
   source: string

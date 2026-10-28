@@ -23,7 +23,6 @@
     "check": "npm run typecheck --workspaces --if-present && eslint . && vitest run && npm run i18n:check",
     "i18n:check": "tsx scripts/i18n-check.ts",
     "env:create": "node scripts/create-env.mjs",
-    "matrix:create-bot": "node scripts/create-matrix-bot.mjs",
     "spec:split": "node scripts/split-spec.mjs",
     "orchestrate": "node scripts/orchestrate.mjs",
     "prepare": "husky"

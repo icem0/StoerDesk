@@ -4,9 +4,6 @@
 # This file never has to be edited for a deployment.
 #
 #   docker compose up -d --build                 # core stack (db, migrate, api, web)
-#   docker compose --profile notifications up -d # + ntfy
-#   docker compose --profile signal up -d       # + signal-cli bridge
-#   docker compose --profile matrix up -d       # + Matrix homeserver
 #   docker compose --profile backup up -d       # + periodic database dumps
 #
 # Profiles are independent and can be combined.
@@ -41,8 +38,9 @@ services:
   # Applies the Drizzle migrations once, before the API starts.
   migrate:
     build:
-      context: ${BUILD_CONTEXT:-.}
+      context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: api
+    image: stoerdesk-api:latest
     restart: 'no'
     command: ['node', 'apps/api/dist/db/migrate.js']
     env_file:
@@ -51,6 +49,9 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-stoerdesk}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stoerdesk}
+      # The API validates the whole environment at startup, so the migration job
+      # needs the same secrets as the API service.
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is missing - run "npm run env:create"}
       API_LOG_LEVEL: ${API_LOG_LEVEL:-info}
       TZ: ${TZ:-Europe/Berlin}
     depends_on:
@@ -66,8 +67,9 @@ services:
 
   api:
     build:
-      context: ${BUILD_CONTEXT:-.}
+      context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: api
+    image: stoerdesk-api:latest
     restart: unless-stopped
     env_file:
       - path: .env
@@ -112,8 +114,9 @@ services:
 
   web:
     build:
-      context: ${BUILD_CONTEXT:-.}
+      context: ${BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
       target: web
+    image: stoerdesk-web:latest
     restart: unless-stopped
     environment:
       API_UPSTREAM: http://api:${API_PORT:-3000}
@@ -140,102 +143,6 @@ services:
         max-file: '3'
     networks:
       - backend
-      - frontend
-
-  # Push notifications via ntfy (profile "notifications").
-  ntfy:
-    image: ${NTFY_IMAGE:-binwiederhier/ntfy:latest}
-    profiles:
-      - notifications
-    restart: unless-stopped
-    command: ['serve']
-    environment:
-      NTFY_BASE_URL: ${NTFY_PUBLIC_URL:-http://localhost:2586}
-      NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
-      NTFY_AUTH_DEFAULT_ACCESS: ${NTFY_AUTH_DEFAULT_ACCESS:-read-write}
-      NTFY_BEHIND_PROXY: 'true'
-      TZ: ${TZ:-Europe/Berlin}
-    volumes:
-      - ntfy-cache:/var/lib/ntfy
-    ports:
-      - '${NTFY_PORT:-2586}:80'
-    healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O- http://127.0.0.1/v1/health || exit 1']
-      interval: 30s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-    networks:
-      - backend
-      - frontend
-
-  # Signal bridge (profile "signal").
-  #
-  # signal-cli speaks JSON-RPC over HTTP; the API posts to
-  # ${SIGNAL_CLI_URL}/api/v1/rpc. The number has to be registered once:
-  #   docker compose --profile signal run --rm signal-cli -a +49... register
-  signal-cli:
-    image: ${SIGNAL_CLI_IMAGE:-ghcr.io/asamk/signal-cli:latest}
-    profiles:
-      - signal
-    restart: unless-stopped
-    command: ['-a', '${SIGNAL_SOURCE_NUMBER:-}', 'daemon', '--http=0.0.0.0:8080']
-    environment:
-      TZ: ${TZ:-Europe/Berlin}
-    volumes:
-      - signal-data:/var/lib/signal-cli
-    ports:
-      - '${SIGNAL_CLI_PORT:-8080}:8080'
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-    networks:
-      - backend
-
-  # Matrix homeserver (profile "matrix").
-  #
-  # The notification bot is created with `npm run matrix:create-bot`, which
-  # prints MATRIX_ACCESS_TOKEN and MATRIX_ROOM_ID for the .env file.
-  matrix:
-    image: ${SYNAPSE_IMAGE:-matrixdotorg/synapse:latest}
-    profiles:
-      - matrix
-    restart: unless-stopped
-    environment:
-      SYNAPSE_SERVER_NAME: ${SYNAPSE_SERVER_NAME:-matrix.localhost}
-      SYNAPSE_REPORT_STATS: 'no'
-      SYNAPSE_ENABLE_REGISTRATION: 'false'
-      SYNAPSE_REGISTRATION_SHARED_SECRET: ${SYNAPSE_REGISTRATION_SHARED_SECRET:-}
-      SYNAPSE_NO_TLS: 'true'
-      TZ: ${TZ:-Europe/Berlin}
-    volumes:
-      - matrix-data:/data
-    ports:
-      - '${MATRIX_PORT:-8008}:8008'
-    healthcheck:
-      test:
-        - CMD
-        - python3
-        - -c
-        - "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8008/_matrix/client/versions',timeout=5)"
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-    networks:
-      - backend
-      - frontend
 
   # Periodic database dumps into the backup volume (profile "backup").
   backup:
@@ -284,21 +191,10 @@ volumes:
   # Uploaded photos of the report form.
   uploads:
     name: ${UPLOADS_VOLUME:-stoerdesk_uploads}
-  # ntfy message cache.
-  ntfy-cache:
-    name: ${NTFY_DATA_VOLUME:-stoerdesk_ntfy}
-  # signal-cli account data (keys of the registered number).
-  signal-data:
-    name: ${SIGNAL_DATA_VOLUME:-stoerdesk_signal}
-  # Synapse homeserver: database, media store, signing key.
-  matrix-data:
-    name: ${MATRIX_DATA_VOLUME:-stoerdesk_matrix}
   # Compressed database dumps.
   backups:
     name: ${BACKUP_VOLUME:-stoerdesk_backups}
 
 networks:
-  # Database, API and notification bridges.
+  # Database, API and web frontend.
   backend: {}
-  # Services that are published to the host.
-  frontend: {}

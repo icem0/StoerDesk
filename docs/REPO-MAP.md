@@ -40,7 +40,7 @@ packages/
 specs/                          Spec Slices (aus PFLICHTENHEFT.md)
 work-packages/                  Work Packages, ein Markdown pro WP
 docs/                           ARCHITECTURE, COMPLIANCE, DECISIONS (ADR), GLOSSARY, I18N, REPO-MAP, DEPLOYMENT
-scripts/                        Orchestrierung, Split-Spec, i18n:check, create-env, create-matrix-bot
+scripts/                        Orchestrierung, Split-Spec, i18n:check, create-env
 Dockerfile                      Multi-stage image build (targets: api, web)
 ```
 
@@ -66,10 +66,9 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `apps/api/src/notifications/channels/matrix.ts` | sendet über die Matrix Client-Server-API | `sendMatrixNotification(config, message, fetch?)` |
 | `apps/api/src/notifications/channels/index.ts` | aktivierte Kanäle aus der Umgebung ermitteln | `configuredChannels(env): NotificationChannel[]` |
 | `Dockerfile` | Multi-stage image build, targets `api` and `web` | `docker build --target api .` |
-| `docker-compose.yml` | kompletter Stack: db, migrate, api, web, ntfy, signal-cli, matrix, backup | `docker compose up -d --build` |
+| `docker-compose.yml` | kompletter Stack: db, migrate, api, web, backup | `docker compose up -d --build` |
 | `apps/web/nginx-pwa.conf.template` | nginx-Konfiguration (PWA, `/api/`-Proxy auf `${API_UPSTREAM}`) | — |
 | `scripts/create-env.mjs` | erzeugt `.env` aus `.env.example` mit generierten Secrets | via `npm run env:create` |
-| `scripts/create-matrix-bot.mjs` | registriert den Matrix-Bot und legt den Raum an | via `npm run matrix:create-bot` |
 | `docs/DEPLOYMENT.md` | deployment: compose stack, volumes, backups, Signal/Matrix | — |
 
 ## Konventionen (Kurzfassung, Details in specs/00)
@@ -89,7 +88,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > **WP-M1-04** (i18n skeleton: web i18next setup + locales, shared server `t()`,
 > `i18n:check`, active `i18next/no-literal-string` lint rule).
 > The compose stack runs the whole system (db, migrate, api, web) and the optional
-> notification channels (`ntfy`, `signal`, `matrix`, `backup`) from one `.env`;
+> notification channels (external ntfy, signal, matrix, mail) from one `.env`;
 > `npm run env:create` generates it with random secrets.
 > API and Web contain no domain logic yet; only the `common` namespace has real keys,
 > the remaining namespaces are intentionally empty. Every further work package follows

@@ -23,15 +23,14 @@ Versionierung basiert auf [Semantic Versioning](https://semver.org/lang/de/).
   `gen_uuid_v7()` (ADR-0002), Migration `0000_base_tables`, Drizzle-Client mit Schema.
 - WP-M1-03: Migrationstest (ohne DB) und Integrationstest gegen eine echte Postgres-16-Datenbank
   (`TEST_DATABASE_URL`, leere Wegwerf-Datenbank pro Lauf, Skip ohne erreichbare DB).
-- Kompletter Compose-Stack: `db`, `migrate`, `api`, `web` sowie die Profile `notifications`
-  (ntfy), `signal` (signal-cli), `matrix` (Synapse) und `backup` (`pg_dump`).
+- Kompletter Compose-Stack: `db`, `migrate`, `api`, `web` sowie das optionale Profil `backup` (`pg_dump`).
 - `.env.example` mit allen Variablen und Erklärungen; `npm run env:create` erzeugt daraus
   eine `.env` mit generierten Secrets — die Compose-Datei muss nie angefasst werden.
-- Persistente Volumes für Datenbank, Uploads, ntfy-Cache, Signal-Account, Matrix-Homeserver
-  und Backups; alle Volumennamen sind konfigurierbar.
-- Notification-Kanäle Signal (JSON-RPC über signal-cli) und Matrix (Client-Server-API)
-  mit API-Clients und Tests; `npm run matrix:create-bot` legt Bot und Raum an.
-- `docs/DEPLOYMENT.md`: Deployment, Volumes, Backups/Restore, Signal- und Matrix-Setup.
+- Persistente Volumes für Datenbank, Uploads und Backups; alle Volumennamen sind konfigurierbar.
+- Notification-Kanäle sprechen ausschließlich mit vorhandenen Instanzen (ntfy-Server,
+  signal-cli-Bridge, Matrix-Homeserver, SMTP, Telegram) — StörDesk bringt keine eigenen
+  Benachrichtigungsserver mit; ein Kanal bleibt deaktiviert, solange seine Adresse leer ist.
+- `docs/DEPLOYMENT.md`: Deployment, Volumes, Backups/Restore, Notification-Kanäle.
 
 ### Changed
 

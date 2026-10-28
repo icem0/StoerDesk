@@ -1,9 +1,9 @@
 export interface MatrixConfig {
-  /** Base URL of the Matrix homeserver, e.g. http://matrix:8008 */
+  /** Base URL of an existing Matrix homeserver, e.g. https://matrix.org */
   homeserver: string
-  /** Room ID, e.g. !abcdef:matrix.localhost */
+  /** Room ID, e.g. !abcdef:example.org */
   roomId: string
-  /** Access token of the notification bot */
+  /** Access token of the sending user */
   accessToken: string
 }
 
