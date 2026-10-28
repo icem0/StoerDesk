@@ -14,7 +14,7 @@ if [ -n "$(git tag --points-at HEAD)" ]; then
   exit 0
 fi
 
-latest=$(git for-each-ref --sort=-creatordate --count=1 --format='%(refname:short)' refs/tags)
+latest=$(git tag --list 'v*.*.*' | sort -V | tail -n 1)
 if [ -z "$latest" ]; then
   next="v0.0.1"
 else
