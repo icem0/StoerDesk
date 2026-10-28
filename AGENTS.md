@@ -4,15 +4,17 @@ Regeln für alle Coding-Agents und Entwickler, die an **StörDesk** arbeiten.
 
 ## Aktueller Stand
 
-**Es wird nichts implementiert.** Das Repository enthält derzeit:
+**Umgesetzt sind die Grundlagen: WP-M1-01, WP-M1-02, WP-M1-03.** Das Repository enthält:
 
 - die Spezifikation in `specs/` (Platzhalter je Kapitel),
 - die Arbeitsplanung in `work-packages/` (M1, M2),
 - die Umgebung (Monorepo, Konfiguration, Skelett, CI, Docker),
+- das Drizzle-Grundschema mit Migration `0000_base_tables` (`users`, `sessions`,
+  `groups`, `user_groups`, `settings`; UUID v7 über `gen_uuid_v7()`, siehe ADR-0002),
 - die Dokumentation in `docs/`.
 
-Fachlogik entsteht ausschließlich als Umsetzung eines Work Packages aus
-`work-packages/` — WP für WP, nicht gesammelt.
+Fachlogik (Auth, Tickets, Objekte, Oncall, Benachrichtigungen, UI) entsteht ausschließlich
+als Umsetzung eines Work Packages aus `work-packages/` — WP für WP, nicht gesammelt.
 
 ## Architektur
 
@@ -72,6 +74,17 @@ npm run format     # Prettier
 statt eines einzelnen `tsc --noEmit` über alle Pakete, weil API (Node) und Web
 (DOM) unterschiedliche `lib`-Sets benötigen. Die Root-`tsconfig.json` bleibt für
 Editor und IDE-Support bestehen.
+
+## Datenbank und Tests
+
+- Postgres 16 lokal: `docker compose -f docker-compose.dev.yml up -d db`
+  (Zugangsdaten wie in `.env.example`).
+- Migrationen: `npm run db:migrate -w @stoerdesk/api`, Schema-Anpassungen mit
+  `npm run db:generate -w @stoerdesk/api` (drizzle-kit, Ausgabeordner `src/db/migrations`).
+- API-Integrationstests laufen gegen eine echte Datenbank über `TEST_DATABASE_URL`
+  (Fallback `DATABASE_URL`). Ist die Datenbank nicht erreichbar, werden diese Tests
+  übersprungen und `npm run check` bleibt grün — die Tests ersetzen also kein DB-Setup,
+  prüfen aber Migration, Constraints und `gen_uuid_v7()`.
 
 ## i18n
 

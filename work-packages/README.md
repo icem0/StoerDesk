@@ -15,7 +15,8 @@ Abhängigkeiten: Header `depends-on: WP-XX-YY, ...`
 
 ## Status
 
-> **Aktueller Stand:** Es wird **nichts implementiert**. Die WP-Dateien sind die
-> verbindliche Arbeitsplanung. Die Umsetzung eines WP erfolgt erst nach Freigabe.
+> **Aktueller Stand:** Umgesetzt sind **WP-M1-01**, **WP-M1-02** und **WP-M1-03**
+> (Fundament, Compose, Drizzle-Grundtabellen). Die übrigen WP sind unveränderte
+> Arbeitsplanung und werden erst nach Freigabe umgesetzt — WP für WP, nicht gesammelt.
 > Ein WP gilt erst als erledigt, wenn Code, Tests, Lint, Typecheck und Doku stimmen
 > und der dazugehörige Commit gepusht ist.

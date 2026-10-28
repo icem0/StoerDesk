@@ -30,6 +30,7 @@ Format: eine Datei pro Entscheidung in `docs/DECISIONS/`, Nummerierung fortlaufe
 
 ## Index
 
-| ADR                                                   | Titel                       | Status   |
-| ----------------------------------------------------- | --------------------------- | -------- |
-| [ADR-0001](DECISIONS/0001-monorepo-und-workspaces.md) | Monorepo mit npm-Workspaces | accepted |
+| ADR                                                    | Titel                                 | Status   |
+| ------------------------------------------------------ | ------------------------------------- | -------- |
+| [ADR-0001](DECISIONS/0001-monorepo-und-workspaces.md)  | Monorepo mit npm-Workspaces           | accepted |
+| [ADR-0002](DECISIONS/0002-uuid-v7-in-der-datenbank.md) | UUID v7 als Primärschlüssel in der DB | accepted |
