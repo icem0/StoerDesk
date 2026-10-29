@@ -182,6 +182,10 @@ From three sub-steps onwards keep a todo list via `todowrite`:
 ## Data protection and security
 
 - No secrets in the repository. `.env` is ignored, `.env.example` is the template.
+- **GitHub push credentials**: the fine-grained PAT lives in the git credential
+  store — file `~/.git-credentials` (helper `store`, host `github.com`, user
+  `icem0`), set up once per environment. Push with `git push --follow-tags`.
+  Never write the token itself into the repository, docs, logs or commits.
 - No PII in logs, tests or fixtures.
 - Emergency notice: the 112 hint must stay visible on the report form and on the
   printed stickers (see README and `specs/06-report-form.md`). StörDesk accepts
