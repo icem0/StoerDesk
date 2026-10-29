@@ -15,7 +15,8 @@ work package first. Never implement a feature that has no work package.
 ## Current status
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
-WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06, WP-M1-07, WP-M1-07b.**
+WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06, WP-M1-07, WP-M1-07b,
+WP-M1-08.**
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -32,6 +33,12 @@ The repository contains:
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
   `GET /api/v1/me`; sessions as random tokens with a SHA-256 hash in `sessions`),
+- the permission guard (`apps/api/src/auth/requirePermission.ts`:
+  `loadEffectivePermissions` = role union plus explicit allows minus explicit
+  denials, cached per request; `requirePermission(database, ...keys)` with OR
+  semantics — `401 session_invalid` for anonymous calls, `403 forbidden` without a
+  match; `login` and `/me` return the `permissions` keys; the probe route
+  `/api/v1/_test/require-permission/:keys` exists only when `NODE_ENV=test`),
 - the documentation in `docs/`.
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as

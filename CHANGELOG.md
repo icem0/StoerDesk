@@ -123,9 +123,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   format (`work-packages/m1/08-require-permission.md`) — it now names its four
   source files (guard, `/me` route, `index.ts`, shared `me` schema), the read set,
   the interfaces and the required test cases.
+- WP-M1-08: effective permissions and the only enforcement point of the API in
+  `apps/api/src/auth/requirePermission.ts` — `loadEffectivePermissions` resolves
+  the union of the role permissions plus the explicit `allow` rows of
+  `user_permissions` and drops every key with a `deny` row (denial wins,
+  `specs/01-rbac.md` §3.2) as two queries, returning sorted catalog keys through
+  `isPermissionKey`. `effectivePermissions(request, database)` caches that promise
+  on the request, so several guards in one request mean one resolution while a
+  role or permission change still acts without a new login.
+- WP-M1-08: `requirePermission(database, ...keys)` preHandler factory with OR
+  semantics — `401 { code: 'session_invalid' }` without a session (authentication
+  before authorization), `403 { code: 'forbidden', params: {} }` without a
+  matching key, unknown keys never match. `permissionProbeRoutes` registers
+  `GET /api/v1/_test/require-permission/:keys` (comma-separated keys) in
+  `src/index.ts` only when `NODE_ENV=test`; verified `404` in development.
+- WP-M1-08: `meResponseSchema` gains the effective `permissions` array, so login
+  and `GET /api/v1/me` answer role keys plus permission keys; the integration spec
+  `apps/api/src/auth/__tests__/requirePermission.integration.spec.ts` covers
+  anonymous `401`, admin role, a user without any role `403`, OR semantics through
+  an explicit allow, an explicit denial beating the whole admin union, the sorted
+  `permissions` in `/me` and an unknown key.
 
 ### Changed
 
+- WP-M1-08: `POST /api/v1/auth/login` answers the same user object as
+  `GET /api/v1/me` — the shared `meResponseSchema` now requires `permissions`, so
+  the UI needs no second round trip to know what to show.
 - Language rule tightened: code, comments, test names, commit messages and
   developer documentation are English; the app stays multilingual (`de` default,
   `en` complete) and UI text uses i18n keys only.

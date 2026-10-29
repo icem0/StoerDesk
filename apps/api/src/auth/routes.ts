@@ -4,6 +4,7 @@ import { loginRequestSchema, meResponseSchema } from '@stoerdesk/shared'
 
 import { users } from '../db/schema'
 import { verifyPassword } from './password'
+import { effectivePermissions, loadEffectivePermissions } from './requirePermission'
 import {
   createSession,
   destroySession,
@@ -77,10 +78,17 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
       )
 
       const roles = await loadUserRoleKeys(database, account.id)
+      const permissions = await loadEffectivePermissions(database, account.id)
 
       return reply.code(200).send(
         meResponseSchema.parse({
-          user: { id: account.id, email: account.email, locale: account.locale, roles },
+          user: {
+            id: account.id,
+            email: account.email,
+            locale: account.locale,
+            roles,
+            permissions,
+          },
         }),
       )
     },
@@ -98,7 +106,12 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
     return reply.code(204).send()
   })
 
-  app.get('/api/v1/me', { preHandler: [requireUser] }, async (request) =>
-    meResponseSchema.parse({ user: request.user }),
-  )
+  // `requireUser` already answered 401 for an anonymous request, so `request.user`
+  // is set here; the permissions come from the same request-scoped resolution the
+  // guards use (`specs/01-rbac.md` §3.7).
+  app.get('/api/v1/me', { preHandler: [requireUser] }, async (request) => {
+    const permissions = await effectivePermissions(request, database)
+
+    return meResponseSchema.parse({ user: { ...request.user, permissions } })
+  })
 }

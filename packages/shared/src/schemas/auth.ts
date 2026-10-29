@@ -15,8 +15,10 @@ export const loginRequestSchema = z.object({
 export type LoginRequest = z.infer<typeof loginRequestSchema>
 
 /**
- * Response shape of `GET /api/v1/me`. Roles are role keys, never translated text;
- * the effective `permissions` array is added with WP-M1-08.
+ * Response shape of `GET /api/v1/me` and of a successful login. Roles are role
+ * keys, `permissions` the effective permission keys of `specs/01-rbac.md` §3.2
+ * (role union, plus explicit allows, minus explicit denials) — keys only, never
+ * translated text.
  */
 export const meResponseSchema = z.object({
   user: z.object({
@@ -24,6 +26,7 @@ export const meResponseSchema = z.object({
     email: z.email(),
     locale: z.enum(['de', 'en']),
     roles: z.array(z.string().min(1)),
+    permissions: z.array(z.string().min(1)),
   }),
 })
 

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http'
 
+import { PERMISSION_KEYS } from '@stoerdesk/shared'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
@@ -170,22 +171,33 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json()).toEqual({ code: 'session_invalid', params: {} })
     })
 
-    it('returns the user and its role keys for /me with the session cookie', async () => {
+    it('returns the user, its role keys and its effective permissions for /me', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/me',
         headers: { cookie: sessionCookie },
       })
+      const body = response.json<{
+        user?: {
+          id?: string
+          email?: string
+          locale?: string
+          roles?: string[]
+          permissions?: string[]
+        }
+      }>()
 
       expect(response.statusCode).toBe(200)
-      expect(response.json()).toEqual({
-        user: {
-          id: userId,
-          email: 'login@example.org',
-          locale: 'de',
-          roles: ['admin'],
-        },
+      expect(body.user).toMatchObject({
+        id: userId,
+        email: 'login@example.org',
+        locale: 'de',
+        roles: ['admin'],
       })
+
+      // The admin role holds the whole catalog (`specs/01-rbac.md` §3.3).
+      expect(body.user?.permissions).toEqual(expect.arrayContaining(PERMISSION_KEYS))
+      expect(body.user?.permissions).toHaveLength(PERMISSION_KEYS.length)
     })
 
     it('clears the cookie on logout and drops the session row', async () => {

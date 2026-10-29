@@ -94,11 +94,24 @@ an explicit `deny` beats the `admin` role union, and `/me` lists the sorted
 
 ## Handoff
 
-- Files changed: the four files above plus `apps/api/src/auth/__tests__/`
-  requirePermission integration spec and the bookkeeping outside `files-write`
+- Files changed: the four files above plus
+  `apps/api/src/auth/__tests__/requirePermission.integration.spec.ts` (new) and
+  `apps/api/src/auth/__tests__/authRoutes.integration.spec.ts` (the `/me` case now
+  asserts the `permissions` array), plus the bookkeeping outside `files-write`
   (`docs/REPO-MAP.md`, `AGENTS.md`, `CHANGELOG.md`, `work-packages/README.md`)
-- Interfaces added: as listed above
-- Deviation: (fill in after implementation)
-- Verified: (fill in — database available or tests skipped)
-- Follow-up WP: WP-M1-09 (admin UI users and roles) uses `requirePermission` on
-  every route it adds
+- Interfaces added: `loadEffectivePermissions`, `effectivePermissions`,
+  `requirePermission`, `permissionProbeRoutes`, the `request.effectivePermissions`
+  augmentation and `PermissionProbeOptions`
+- Deviation: the internal check lives in `checkPermission(database, keys, request,
+reply)`, because a `preHandlerHookHandler` takes three arguments and the probe
+  needs to call it directly; `requirePermission` is only the factory around it.
+  `meResponseSchema` is shared by login and `/me`, so login answers `permissions`
+  too — recorded in `CHANGELOG.md` under Changed.
+- Verified: `npm run check` green against a local PostgreSQL 16 (`TEST_DATABASE_URL`)
+  — 15 files / 96 tests, 7 of them new; the dev container has no Docker, so the
+  stack itself was not rebuilt. Live check with the seeded administrator:
+  `POST /api/v1/auth/login` → `200`, `roles: ['admin']`, 37 permission keys;
+  `GET /api/v1/me` → `200`, 37 keys sorted; the probe route answers `404` while
+  `NODE_ENV=development`.
+- Follow-up WP: WP-M1-09 (admin UI users and roles) puts `requirePermission` on
+  every route it adds and needs `usePermission` in `apps/web`

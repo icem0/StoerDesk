@@ -27,7 +27,7 @@ one is rewritten into the small-model format before implementation.
 > start order, binding plan anchor, repeatable Docker smoke test
 > `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`). The smoke run
 > itself is proven by CI, because the development container has no Docker.
-> In Phase 1 **WP-M1-01** until **WP-M1-07b** are implemented (foundation, Compose,
+> In Phase 1 **WP-M1-01** until **WP-M1-08** are implemented (foundation, Compose,
 > Drizzle base tables, i18n skeleton, RBAC tables + system role seed, bootstrap
 > administrator seed with Argon2id, session core: token, token hash in `sessions`,
 > delete-on-read of expired rows, cookie options, plus the auth HTTP layer:
@@ -39,10 +39,11 @@ one is rewritten into the small-model format before implementation.
 > the `requireUser` preHandler and the login/logout/me routes with the login rate
 > limit). `specs/01-rbac.md` gained §3.6 (session and `me`) for them.
 > `specs/01-rbac.md` also gained §3.7 (permission guard) and **WP-M1-08**
-> (`08-require-permission.md`) was rewritten into the small-model format: effective
-> permissions (role union, plus allows, minus denials), the per-request cache,
-> `requirePermission` with OR semantics, `permissions` in `/me` and the probe route
-> that exists only when `NODE_ENV=test`. It is the next package to implement.
+> (`08-require-permission.md`) was rewritten into the small-model format and is
+> implemented as well: effective permissions (role union, plus allows, minus
+> denials) cached per request, `requirePermission` with OR semantics, the
+> `permissions` array in login and `/me`, and the probe route that exists only when
+> `NODE_ENV=test`.
 > The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
