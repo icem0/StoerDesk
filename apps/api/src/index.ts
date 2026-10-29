@@ -4,9 +4,19 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 
+import { authRoutes } from './auth/routes'
+import { sessionPlugin } from './auth/sessionPlugin'
 import { corsOrigins, loadDotEnvFile, loadEnv } from './config/env'
+import { createDatabase } from './db/client'
 
 loadDotEnvFile()
+
+/** Error shape the routes of this API answer with: `{ code, params }`, never text. */
+type EnvelopeError = Error & {
+  statusCode?: number
+  code?: string
+  params?: Record<string, unknown>
+}
 
 export async function buildServer() {
   const env = loadEnv()
@@ -18,6 +28,13 @@ export async function buildServer() {
     trustProxy: env.TRUST_PROXY,
   })
 
+  // The pool belongs to the server, so `app.close()` always releases it.
+  const { client, database } = createDatabase()
+
+  app.addHook('onClose', async () => {
+    await client.end({ timeout: 5 })
+  })
+
   await app.register(helmet)
   await app.register(cors, {
     origin: corsOrigins(env),
@@ -27,7 +44,38 @@ export async function buildServer() {
   await app.register(rateLimit, {
     max: env.RATE_LIMIT_MAX,
     timeWindow: env.RATE_LIMIT_WINDOW,
+    // The plugin throws whatever the builder returns, so it has to be an Error —
+    // the envelope itself is produced by the error handler below.
+    errorResponseBuilder: (_request, context) => {
+      const error = new Error('rate limit exceeded') as EnvelopeError
+      error.statusCode = context.statusCode
+      error.code = 'rate_limited'
+      error.params = { window: env.RATE_LIMIT_WINDOW }
+
+      return error
+    },
   })
+
+  // Same error envelope as every route: code plus params, never translated text.
+  app.setErrorHandler((error, request, reply) => {
+    const envelope = error as EnvelopeError
+
+    if (envelope.code === undefined) {
+      request.log.error({ err: error }, 'request failed')
+
+      return reply.send(error)
+    }
+
+    request.log.warn({ code: envelope.code, statusCode: envelope.statusCode ?? 500 })
+
+    return reply
+      .code(envelope.statusCode ?? 500)
+      .send({ code: envelope.code, params: envelope.params ?? {} })
+  })
+
+  // The session hook has to run before the routes that read `request.user`.
+  await app.register(sessionPlugin, { database, env })
+  await app.register(authRoutes, { database, env })
 
   app.get('/api/v1/health', async () => ({ status: 'ok' }))
 

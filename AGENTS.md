@@ -15,8 +15,8 @@ work package first. Never implement a feature that has no work package.
 ## Current status
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
-WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06, WP-M1-07.** The repository
-contains:
+WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06, WP-M1-07, WP-M1-07b.**
+The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
   (placeholder chapters stay authoritative from `PLAN.md` until filled),
@@ -27,9 +27,14 @@ contains:
   `groups`, `user_groups`, `settings`; UUID v7 via `gen_uuid_v7()`, see ADR-0002),
 - the i18n skeleton (web i18next setup + `locales/{de,en}`, shared server `t()`,
   `scripts/i18n-check.ts`, active `i18next/no-literal-string` lint rule),
+- the RBAC layer (permission catalog and `DEFAULT_ROLES` in `packages/shared`,
+  migration `0001_rbac_tables`, `seed-rbac.ts`/`seed-base.ts`, Argon2id hashing),
+- the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
+  `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
+  `GET /api/v1/me`; sessions as random tokens with a SHA-256 hash in `sessions`),
 - the documentation in `docs/`.
 
-Domain logic (auth, tickets, objects, on-call, notifications, UI) is created only as
+Further domain logic (tickets, objects, on-call, notifications, UI) is created only as
 the implementation of a work package from `work-packages/` — package by package,
 never in bulk.
 

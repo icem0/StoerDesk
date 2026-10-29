@@ -103,6 +103,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `meResponseSchema` (`id`, `email`, `locale`, role keys); unit tests for token, hash
   and cookie attributes, plus the integration spec for create/load/expiry/logout,
   inactive account and role keys.
+- WP-M1-07b: auth HTTP layer in `apps/api/src/auth/` — `sessionPlugin.ts` decorates
+  `request.user` from the `session` cookie (`onRequest`, roles read per request) and
+  exports the preHandler `requireUser` (`401` `session_invalid`); `routes.ts` serves
+  `POST /api/v1/auth/login` (Argon2id verify, decoy hash for unknown e-mails so the
+  response time does not leak accounts, one `401 invalid_credentials` for unknown,
+  wrong-password and deactivated logins, route-level rate limit `5` per minute and
+  IP), `POST /api/v1/auth/logout` (`204`, session row deleted, cookie cleared) and
+  `GET /api/v1/me`. `src/index.ts` owns the database pool (`onClose` releases it),
+  registers the plugin and the routes, and maps thrown envelope errors to
+  `{ code, params }` — `@fastify/rate-limit` throws the builder result, so the
+  `429 rate_limited` body needs that handler. New API dependency `fastify-plugin`.
 
 ### Changed
 
@@ -134,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Not implemented (by design)
 
-- All domain logic (auth, tickets, objects, on-call, notifications, UI).
+- All domain logic (tickets, objects, on-call, notifications, UI).
   Implementation happens only as a work package from `work-packages/` — so far
-  WP-M1-01 to WP-M1-04 (foundation and base data model) are implemented.
+  WP-M1-01 to WP-M1-07b (foundation, base data model, RBAC, seeds, session core and
+  the auth HTTP layer) are implemented.

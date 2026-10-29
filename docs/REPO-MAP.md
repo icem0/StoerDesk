@@ -17,7 +17,7 @@ apps/
 │   └── ...
 ├── api/                        Fastify + Drizzle + pg-boss
 │   ├── src/
-│   │   ├── auth/               Session, Passwort, requirePermission
+│   │   ├── auth/               Session, Passwort, Login/Logout/`me`, requirePermission
 │   │   ├── tickets/            Routes, Service, State-Machine, Audit
 │   │   ├── objects/            Routes, Service, QR, CSV
 │   │   ├── oncall/             Routes, Service, Slot-Berechnung, Tausch
@@ -57,6 +57,8 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `apps/api/src/auth/password.ts`                     | Argon2id-Hashing (PHC-Format) und Verify ohne Throw bei kaputtem Hash (WP-M1-06)                                                  | `hashPassword(plain)`, `verifyPassword(storedHash, plain)`, `PASSWORD_HASH_OPTIONS`                                                               |
 | `apps/api/src/auth/session.ts`                      | Session-Kern: 256-Bit-Token, SHA-256-`token_hash`, loadSession mit Delete-on-Read abgelaufener Zeilen, Cookie-Optionen (WP-M1-07) | `SESSION_COOKIE_NAME`, `createSession`, `loadSession`, `destroySession`, `loadUserRoleKeys`, `sessionCookieOptions`, `hashSessionToken`           |
 | `packages/shared/src/schemas/auth.ts`               | Zod-Schemas für Login-Payload und `/me`-Antwort (WP-M1-07)                                                                        | `loginRequestSchema`, `meResponseSchema`, `LoginRequest`, `MeResponse`, `AuthUser`                                                                |
+| `apps/api/src/auth/sessionPlugin.ts`                | `fastify-plugin`: liest das `session`-Cookie und setzt `request.user`; PreHandler für authentifizierte Routes (WP-M1-07b)         | `sessionPlugin`, `requireUser` (`401 { code: 'session_invalid' }`), `AuthPluginOptions`                                                           |
+| `apps/api/src/auth/routes.ts`                       | Login (Argon2id, Decoy-Hash, Rate-Limit `5`/min/IP), Logout und `/me`; Fehler immer als `{ code, params }` (WP-M1-07b)            | `authRoutes` — `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/me`                                                            |
 | `apps/api/src/db/migrations/0000_base_tables.sql`   | Basistabellen und Funktion `gen_uuid_v7()` (ADR-0002)                                                                             | —                                                                                                                                                 |
 | `apps/api/src/db/migrations/0001_rbac_tables.sql`   | RBAC-Tabellen, Check `effect IN ('allow','deny')`, Trigger `protect_system_roles()` (WP-M1-05)                                    | —                                                                                                                                                 |
 | `apps/api/src/db/__tests__/helpers/testDatabase.ts` | leere Test-Datenbank (Fallback: angegebene DB), Skip ohne erreichbare DB                                                          | `openTestDatabase(): Promise<TestDatabaseHandle>`                                                                                                 |
@@ -114,15 +116,20 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > **WP-M1-07** (session core in `src/auth/session.ts`: random token, SHA-256 token
 > hash in `sessions`, `loadSession` with delete-on-read of expired rows and inactive
 > accounts, role keys per request, cookie options; shared `loginRequestSchema` and
-> `meResponseSchema`). The HTTP layer (plugin, login/logout/me routes) is WP-M1-07b.
+> `meResponseSchema`),
+> **WP-M1-07b** (auth HTTP layer: `sessionPlugin` decorating `request.user` plus the
+> `requireUser` preHandler, login/logout/me routes with the `5`-per-minute login rate
+> limit, and the `{ code, params }` envelope for `429 rate_limited` through the error
+> handler in `src/index.ts`).
 > The compose stack runs the whole system (db, api, web) and the optional
 > notification channels (external ntfy, signal, matrix, mail) from one `.env`;
 > `npm run env:create` generates it with random secrets. The default build context
 > is the local checkout; deployment panels set `IMAGE_BUILD_CONTEXT` to the Git URL.
 > `PLAN.md` is the binding build plan, and `work-packages/m0` holds the Phase 0
-> startability work packages. API and Web still have no request handlers and no UI
-> beyond the shell; the API holds the schema, the seeds, the session core and the
-> notification channel adapters only. Only the
+> startability work packages. The Web app still has no UI beyond the shell; the API
+> serves `/api/v1/health` and the auth routes only, and holds the schema, the seeds,
+> the session core and the
+> notification channel adapters. Only the
 > `common` namespace has real keys, the remaining namespaces are intentionally
 > empty. Every further work package follows individually after approval from
 > `work-packages/`.

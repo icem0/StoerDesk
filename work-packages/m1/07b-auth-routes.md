@@ -104,6 +104,11 @@ which must be reported.
   `work-packages/README.md`)
 - Interfaces added: `sessionPlugin`, `requireUser`, `authRoutes` and the three
   session routes
+- Deviation: the dependency `fastify-plugin` was added (`apps/api/package.json`), and
+  the rate-limit `errorResponseBuilder` has to return an `Error` carrying
+  `statusCode`/`code`/`params` — `@fastify/rate-limit` v11 _throws_ the builder value,
+  so `src/index.ts` gained a `setErrorHandler` that renders the `{ code, params }`
+  envelope
 - Verified against the running server: `POST /api/v1/auth/login` then
   `GET /api/v1/me` with the cookie
 - Follow-up WP: WP-M1-08 (`requirePermission`, effective permissions, then
