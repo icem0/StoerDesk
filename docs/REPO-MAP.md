@@ -63,6 +63,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `apps/api/src/db/migrations/0001_rbac_tables.sql`   | RBAC-Tabellen, Check `effect IN ('allow','deny')`, Trigger `protect_system_roles()` (WP-M1-05)                                                                                        | —                                                                                                                                                 |
 | `apps/api/src/db/__tests__/helpers/testDatabase.ts` | leere Test-Datenbank (Fallback: angegebene DB), Skip ohne erreichbare DB                                                                                                              | `openTestDatabase(): Promise<TestDatabaseHandle>`                                                                                                 |
 | `apps/api/src/auth/requirePermission.ts`            | effective permissions (role union plus allows, minus every denial) cached per request, OR-linked guard, probe route only in `NODE_ENV=test` (WP-M1-08)                                | `loadEffectivePermissions`, `effectivePermissions`, `requirePermission(database, ...keys)`, `permissionProbeRoutes`                               |
+| `apps/api/src/admin/users.ts`                       | Admin-User-API: read users/role keys, create users with Argon2id password and role links, update mutable fields, guards for last active admin (WP-M1-09)                              | `adminUsersRoutes` — `GET /api/v1/users`, `POST /api/v1/users`, `PATCH /api/v1/users/:id`                                                          |
 | `apps/api/src/tickets/state-machine.ts` (geplant)   | `transitionTicket(ticketId, event, actor, payload)` — prüft Übergänge, schreibt Event                                                                                                 | `transitionTicket(...): Promise<Ticket>`                                                                                                          |
 | `packages/shared/src/permissions.ts`                | Permission-Katalog (37 Keys) und `DEFAULT_ROLES` — Single Source of Truth (WP-M1-05)                                                                                                  | `PERMISSIONS`, `PERMISSION_KEYS`, `DEFAULT_ROLES`, `SYSTEM_ROLE_KEYS`, `isPermissionKey`                                                          |
 | `packages/shared/src/i18n/`                         | server translations and seed resource files (`server.*`, `seed.*`) (WP-M1-04)                                                                                                         | `t(locale, key, params): string`                                                                                                                  |
@@ -120,16 +121,20 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > **WP-M1-07b** (auth HTTP layer: `sessionPlugin` decorating `request.user` plus the
 > `requireUser` preHandler, login/logout/me routes with the `5`-per-minute login rate
 > limit, and the `{ code, params }` envelope for `429 rate_limited` through the error
-> handler in `src/index.ts`).
+> handler in `src/index.ts`),
+> **WP-M1-08** (effective permissions, `requirePermission` with OR semantics and the
+> test-only probe route) and **WP-M1-09** (admin users API: list users with role
+> keys, create users with Argon2id hashes and role links, update mutable user fields
+> and role links, with guards for duplicate e-mail, unknown role keys and the last
+> active admin).
 > The compose stack runs the whole system (db, api, web) and the optional
 > notification channels (external ntfy, signal, matrix, mail) from one `.env`;
 > `npm run env:create` generates it with random secrets. The default build context
 > is the local checkout; deployment panels set `IMAGE_BUILD_CONTEXT` to the Git URL.
 > `PLAN.md` is the binding build plan, and `work-packages/m0` holds the Phase 0
 > startability work packages. The Web app still has no UI beyond the shell; the API
-> serves `/api/v1/health` and the auth routes only, and holds the schema, the seeds,
-> the session core and the
-> notification channel adapters. Only the
+> serves `/api/v1/health`, the auth routes and the admin users routes, and holds the
+> schema, the seeds, the session core and the notification channel adapters. Only the
 > `common` namespace has real keys, the remaining namespaces are intentionally
 > empty. Every further work package follows individually after approval from
 > `work-packages/`.

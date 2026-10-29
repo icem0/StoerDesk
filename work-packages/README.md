@@ -44,6 +44,13 @@ one is rewritten into the small-model format before implementation.
 > denials) cached per request, `requirePermission` with OR semantics, the
 > `permissions` array in login and `/me`, and the probe route that exists only when
 > `NODE_ENV=test`.
+> **WP-M1-09** (`09-admin-users-roles-ui.md`) was rewritten into the small-model
+> format and split. The first package is implemented as the admin users API:
+> `GET`, `POST` and `PATCH /api/v1/users` with `user.read` / `user.write` guards,
+> shared user schemas, Argon2id password hashing, transactional role links,
+> duplicate e-mail and unknown role key errors, and a last-active-admin guard. The
+> role API, `usePermission`, the admin users UI and the admin roles UI move to
+> WP-M1-09b–WP-M1-09d.
 > The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;

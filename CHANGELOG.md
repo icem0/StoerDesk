@@ -123,6 +123,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   format (`work-packages/m1/08-require-permission.md`) — it now names its four
   source files (guard, `/me` route, `index.ts`, shared `me` schema), the read set,
   the interfaces and the required test cases.
+- WP-M1-09 (plan): the legacy admin UI package was rewritten into the small-model
+  format and split. WP-M1-09 now covers only the admin user API; the role API,
+  `usePermission`, the admin users UI and the admin roles UI become follow-up
+  packages WP-M1-09b–WP-M1-09d.
 - WP-M1-08: effective permissions and the only enforcement point of the API in
   `apps/api/src/auth/requirePermission.ts` — `loadEffectivePermissions` resolves
   the union of the role permissions plus the explicit `allow` rows of
@@ -143,6 +147,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   anonymous `401`, admin role, a user without any role `403`, OR semantics through
   an explicit allow, an explicit denial beating the whole admin union, the sorted
   `permissions` in `/me` and an unknown key.
+- WP-M1-09: admin users API in `apps/api/src/admin/users.ts` —
+  `GET /api/v1/users` answers user summaries with role keys,
+  `POST /api/v1/users` creates a normalized account with an Argon2id hash and
+  inserts the requested `user_roles` links in one transaction, and
+  `PATCH /api/v1/users/:id` updates locale, active flag, password hash and role
+  links. The routes are guarded by `user.read` or `user.write`; duplicate e-mail
+  answers `409 email_taken`, unknown role keys answer `422 unknown_role_key`, and
+  the last active `admin` cannot be deactivated or un-roled. Shared user Zod
+  schemas live in `packages/shared/src/schemas/user.ts`; the integration spec
+  `apps/api/src/admin/__tests__/users.integration.spec.ts` covers permission
+  guards, list/create/update responses, duplicate handling and the last-admin
+  lockout guard.
 
 ### Changed
 

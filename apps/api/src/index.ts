@@ -4,6 +4,7 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 
+import { adminUsersRoutes } from './admin/users'
 import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
@@ -77,6 +78,7 @@ export async function buildServer() {
   // The session hook has to run before the routes that read `request.user`.
   await app.register(sessionPlugin, { database, env })
   await app.register(authRoutes, { database, env })
+  await app.register(adminUsersRoutes, { database })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
   // or production (`specs/01-rbac.md` §3.7).

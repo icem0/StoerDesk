@@ -16,7 +16,7 @@ work package first. Never implement a feature that has no work package.
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
 WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06, WP-M1-07, WP-M1-07b,
-WP-M1-08.**
+WP-M1-08, WP-M1-09.**
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -39,6 +39,12 @@ The repository contains:
   semantics — `401 session_invalid` for anonymous calls, `403 forbidden` without a
   match; `login` and `/me` return the `permissions` keys; the probe route
   `/api/v1/_test/require-permission/:keys` exists only when `NODE_ENV=test`),
+- the admin users API (`apps/api/src/admin/users.ts`: `GET`, `POST` and
+  `PATCH /api/v1/users`, guarded by `user.read` or `user.write`; shared user
+  schemas in `packages/shared/src/schemas/user.ts`; Argon2id password hashing on
+  create/update, transactional role assignment, duplicate e-mail and unknown role
+  key errors, and a guard that does not deactivate or un-role the last active
+  admin),
 - the documentation in `docs/`.
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as
