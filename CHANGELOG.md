@@ -51,6 +51,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   its own volumes and web port `3180`, checks `/healthz` and `/api/v1/health`,
   asserts that the API publishes no host port and removes everything again. Runs
   as the CI job `docker-smoke`, which skips on runners without Docker.
+- `specs/01-rbac.md`: filled RBAC slice (chapters 3 + 4.1) — role model, effective
+  permission rule, 37-key catalog, role–permission matrix and the RBAC tables,
+  taken from `PLAN.md` §5/§6.
+- WP-M1-05: permission catalog of 37 keys plus `DEFAULT_ROLES` for the five system
+  roles in `packages/shared/src/permissions.ts`; RBAC tables `roles`,
+  `permissions`, `role_permissions`, `user_roles`, `user_permissions` with
+  migration `0001_rbac_tables` and the `protect_system_roles()` trigger that
+  blocks `DELETE` of system roles.
+- WP-M1-05: idempotent seed `apps/api/src/db/seed-rbac.ts`
+  (`npx tsx src/db/seed-rbac.ts`) — upserts the catalog and the five system roles,
+  rewrites their grants, leaves custom roles and `user_permissions` untouched.
+- WP-M1-05: catalog/`DEFAULT_ROLES` unit tests and the integration spec
+  `apps/api/src/db/__tests__/rbac.integration.spec.ts`; the CI `check` job now
+  provides PostgreSQL 16 as a service, so the database integration tests run
+  instead of skipping.
 
 ### Changed
 

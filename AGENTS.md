@@ -15,7 +15,7 @@ work package first. Never implement a feature that has no work package.
 ## Current status
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
-WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04.** The repository contains:
+WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05.** The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
   (placeholder chapters stay authoritative from `PLAN.md` until filled),

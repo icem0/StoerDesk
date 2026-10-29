@@ -77,7 +77,10 @@ With a reachable database (`TEST_DATABASE_URL`) the new integration spec must ru
 pass, including the second idempotent seed run. Without a database it is skipped and
 the skip must be reported, not silently accepted: run the migration and
 `npx tsx src/db/seed-rbac.ts` twice against a real PostgreSQL 16 and report both
-outputs.
+outputs. This dev container has no PostgreSQL of its own: locally the specs ran
+against PGlite (WASM PostgreSQL behind a TCP socket, engine 18) as a stand-in, and
+PostgreSQL 16 itself is covered by the `check` job, which now provides a
+`postgres:16-alpine` service.
 
 ## Handoff
 
@@ -89,5 +92,7 @@ outputs.
 - Follow-up WP: WP-M1-06 base seeds (admin user needs Argon2id, not installed yet)
 - Resolved: the legacy document's `object_groups` table is dropped — `PLAN.md` §6 has
   no object grouping and no work package asks for it
-- Verified: report exactly which of the acceptance commands ran against a real
-  database and which only skipped
+- Verified: `npm run check` and `npm run build` green (41 tests passed, the two
+  database specs skip without a database). Against a real PostgreSQL the chain
+  `0000` + `0001` applied to an empty database and `npx tsx src/db/seed-rbac.ts`
+  ran twice with identical output: 5 roles, 37 permissions, 91 grants.

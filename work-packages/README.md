@@ -26,13 +26,14 @@ is rewritten into the small-model format before implementation.
 > start order, binding plan anchor, repeatable Docker smoke test
 > `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`). The smoke run
 > itself is proven by CI, because the development container has no Docker.
-> In Phase 1 **WP-M1-01**, **WP-M1-02**, **WP-M1-03** and **WP-M1-04** are
-> implemented (foundation, Compose, Drizzle base tables, i18n skeleton). The next
-> package is **WP-M1-05** (RBAC tables + seeds); it is still a legacy document and
-> is rewritten into the small-model format first, and `specs/01-rbac.md` is still a
-> placeholder. The remaining WPs are working plans and are implemented only after
-> approval — WP by WP, never in bulk. A WP counts as done only when code, tests,
-> lint, typecheck and docs agree and the corresponding commit is pushed.
+> In Phase 1 **WP-M1-01** until **WP-M1-05** are implemented (foundation, Compose,
+> Drizzle base tables, i18n skeleton, RBAC tables + system role seed). The next
+> package is **WP-M1-06** (base seeds: admin user, example objects/systems, standard
+> texts); it is still a legacy document and is rewritten into the small-model format
+> first, and its spec slices `specs/02-data-model.md` and `specs/00-conventions.md`
+> are still placeholders. The remaining WPs are working plans and are implemented
+> only after approval — WP by WP, never in bulk. A WP counts as done only when code,
+> tests, lint, typecheck and docs agree and the corresponding commit is pushed.
 
 ## Validation
 
