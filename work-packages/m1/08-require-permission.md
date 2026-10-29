@@ -1,6 +1,6 @@
 # WP-M1-08: requirePermission-Middleware
 
-depends-on: WP-M1-07
+depends-on: WP-M1-07b
 milestone: m1
 
 ## Ziel
@@ -9,7 +9,7 @@ Fastify preHandler, lädt effektive Permissions (Union Rollen, minus user_permis
 
 ## Spec-Referenzen
 
-- specs/01-rbac.md §3.7
+- specs/01-rbac.md §3.2, §3.6
 
 ## Aufgabe
 

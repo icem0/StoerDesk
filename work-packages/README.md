@@ -12,13 +12,13 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test                         | 4   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 12  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 13  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
-`WP-M1-06` and `WP-M2-00`. The remaining `m1` and `m2` documents are legacy plans:
-they stay valid as scope descriptions, but each one is rewritten into the small-model
-format before implementation.
+`WP-M1-06`, `WP-M1-07`, `WP-M1-07b` and `WP-M2-00`. The remaining `m1` and `m2`
+documents are legacy plans: they stay valid as scope descriptions, but each one is
+rewritten into the small-model format before implementation.
 
 ## Status
 
@@ -30,8 +30,12 @@ format before implementation.
 > In Phase 1 **WP-M1-01** until **WP-M1-06** are implemented (foundation, Compose,
 > Drizzle base tables, i18n skeleton, RBAC tables + system role seed, bootstrap
 > administrator seed with Argon2id). The next package is **WP-M1-07** (login,
-> session cookie, `/api/v1/me`); it is still a legacy document and is rewritten into
-> the small-model format first. The example objects, systems and standard texts that
+> session cookie, `/api/v1/me`); it was rewritten into the small-model format and
+> split into **WP-M1-07** (shared login/me schemas, session core: token, token hash,
+> `sessions` table, cookie options) and **WP-M1-07b** (`sessionPlugin`, the
+> `requireUser` preHandler and the login/logout/me routes with the login rate limit), because the legacy document would have written six source files
+> (`PLAN.md` §17: max. 3–4). `specs/01-rbac.md` gained §3.6 (session and `me`) for
+> them. The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
 > `WP-M2-01` now depends on WP-M2-00 and WP-M2-00 waits for a filled

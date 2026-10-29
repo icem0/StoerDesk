@@ -81,6 +81,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `text_templates` tables and the demo data moved to the new
   `work-packages/m2/00-core-tables-seed.md` (WP-M2-00, phase 2 per `PLAN.md` §16),
   and WP-M2-01 now depends on it.
+- `specs/01-rbac.md` §3.6: session and `me` endpoint decisions for WP-M1-07, taken
+  from `PLAN.md` §4 (Auth) and §15 (Security) — cookie name/attributes, token hash
+  in `sessions.token_hash`, single `401` for unknown e-mail/wrong password/inactive
+  accounts, login rate limit, delete-on-read of expired rows, the `me` payload and
+  the phase 1 CSRF stance.
+- WP-M1-07 (plan): the legacy auth package was rewritten into the small-model format
+  and split, because it would have written six source files (`PLAN.md` §17 allows
+  3–4): **WP-M1-07** keeps the shared login/me schemas and the session core, the new
+  **WP-M1-07b** (`work-packages/m1/07b-auth-routes.md`) holds the session plugin, the
+  `requireUser` preHandler and the login/logout/me routes. WP-M1-08 now depends on
+  WP-M1-07b and references §3.2/§3.6 instead of the non-existent §3.7.
 
 ### Changed
 
