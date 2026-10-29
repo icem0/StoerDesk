@@ -68,14 +68,15 @@ such as Arcane can clone the repository itself by setting `IMAGE_BUILD_CONTEXT` 
 the Git URL; the panel then always finds the `Dockerfile`
 ([Arcane setup](docs/DEPLOYMENT.md#arcane)).
 
-Then open **http://localhost:8080**. The API is reached through the web frontend
-(nginx proxies `/api/`); its own port stays internal.
+Then open **http://localhost:3080**. The API is reached through the web frontend
+(nginx proxies `/api/`); its own port stays internal. The web port is configurable
+through `WEB_PORT` (default `3080`, chosen because `8080` collides with many tools).
 
 | Service         | URL                                 |
 | --------------- | ----------------------------------- |
-| Web (PWA)       | http://localhost:8080               |
-| API (proxied)   | http://localhost:8080/api/v1/health |
-| Frontend health | http://localhost:8080/healthz       |
+| Web (PWA)       | http://localhost:3080               |
+| API (proxied)   | http://localhost:3080/api/v1/health |
+| Frontend health | http://localhost:3080/healthz       |
 
 Services, volumes, backups, HTTPS and troubleshooting:
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).

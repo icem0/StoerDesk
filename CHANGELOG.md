@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   work packages that fit a 64k–128k context model.
 - Phase 0 work packages in `work-packages/m0/` for local startability, Compose
   resilience, plan anchoring and a Docker smoke test.
+- `docker-compose.debug.yml`: optional override that publishes the API host port
+  for direct curl and monitoring.
 
 ### Changed
 
@@ -57,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   even while the API is starting or failing.
 - The emergency notice uses 112 only; no other emergency number is part of the
   product text.
+- The production stack publishes only the web port (`WEB_PORT`): `api` and `db`
+  stay on the internal `backend` network, so they cannot collide with ports of
+  other projects on the same Docker host. `API_PUBLISHED_PORT` and
+  `API_BIND_ADDRESS` apply to the debug override only.
 
 ### Deviations
 

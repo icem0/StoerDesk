@@ -12,8 +12,9 @@ npm run env:create          # writes .env with generated secrets
 docker compose up -d --build
 ```
 
-Open <http://localhost:8080>. The UI proxies `/api/` to the API; the API is also
-published on `127.0.0.1:3000` for direct monitoring and curl.
+Open <http://localhost:3080> (`WEB_PORT`). The UI proxies `/api/` to the API; the
+API itself publishes no host port — it is reachable only inside the internal
+`backend` network (see [Networking](#networking)).
 
 ```bash
 docker compose ps           # status of all services
@@ -24,12 +25,12 @@ docker compose down -v      # stops the stack and DELETES all data
 
 ## Services
 
-| Service  | Profile  | Purpose                                            |
-| -------- | -------- | -------------------------------------------------- |
-| `db`     | —        | PostgreSQL 16, source of truth                     |
-| `api`    | —        | Fastify API on port 3000; runs migrations on start |
-| `web`    | —        | nginx: PWA + reverse proxy for `/api/`             |
-| `backup` | `backup` | periodic `pg_dump` into the backup volume          |
+| Service  | Profile  | Host port  | Purpose                                            |
+| -------- | -------- | ---------- | -------------------------------------------------- |
+| `db`     | —        | none       | PostgreSQL 16, source of truth                     |
+| `api`    | —        | none       | Fastify API on port 3000; runs migrations on start |
+| `web`    | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
+| `backup` | `backup` | none       | periodic `pg_dump` into the backup volume          |
 
 The `web` container starts independently of the API: nginx resolves the API
 host per request, so the UI is reachable while the API is starting or
@@ -121,6 +122,38 @@ The bridge owns the registered number; `SIGNAL_SOURCE_NUMBER` names it and
 in with it and copy the access token into `MATRIX_ACCESS_TOKEN`; the Matrix ID
 of that user is `MATRIX_USER_ID`. `MATRIX_ROOM_ID` is the room the
 notifications are sent to.
+
+## Networking
+
+All services share the internal Compose network `backend`. Only the web
+frontend publishes a host port (`WEB_PORT`); the API and Postgres stay
+unpublished and are reached by container name (`http://api:3000`, `db:5432`).
+The nginx of the web container proxies `/api/` to the API, so the browser never
+needs an API port. That keeps the stack free of host-port collisions with other
+projects on the same Docker host.
+
+Health of the whole chain is checked through the web frontend:
+
+```bash
+curl -fsS http://localhost:3080/healthz          # nginx alive
+curl -fsS http://localhost:3080/api/v1/health    # nginx -> API -> database
+```
+
+Direct access to the API is opt-in for debugging and monitoring:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+curl -fsS http://127.0.0.1:3000/api/v1/health
+```
+
+`API_PUBLISHED_PORT` and `API_BIND_ADDRESS` apply only to that override; the
+production stack never publishes the API. Inside a running stack the API is
+also reachable without any published port:
+
+```bash
+docker compose exec api node -e \
+  "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>r.json()).then(console.log)"
+```
 
 ## HTTPS
 
@@ -271,3 +304,20 @@ docker compose run --rm api    # start the API manually (runs migrations first)
 If the API restarts, the log usually names the invalid variable — the
 configuration is validated at startup and the process exits with the name of
 the offending variable.
+
+### `port is already allocated`
+
+```
+Bind for 0.0.0.0:3080 failed: port is already allocated
+```
+
+Only the web frontend occupies a host port. Move it to a free one, e.g.
+`WEB_PORT=3081` (and adapt `CORS_ORIGIN`). The API and the database publish no
+port, so they cannot cause this error — if it names an API port, a debug
+override (`docker-compose.debug.yml`) or a stale container of an older
+deployment is still running:
+
+```bash
+docker ps --filter publish=3000      # who holds the port
+docker compose down                  # removes the old stack's containers
+```

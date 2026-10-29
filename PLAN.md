@@ -91,6 +91,7 @@ of the product text.
 | Jobs            | `pg-boss` in PostgreSQL; no Redis                                                                         |
 | Push            | Web Push with VAPID; external Matrix, Signal, ntfy, SMTP, Telegram                                        |
 | Deployment      | Docker Compose: `db`, `api`, `web`, optional `backup`; migrations run inside the `api` container at start |
+| Network         | internal `backend` network; only `web` publishes a host port, `api` and `db` stay unpublished             |
 | Reverse proxy   | nginx in the web container; TLS is provided by an external proxy                                          |
 | Tests           | Vitest for unit/integration, Playwright for E2E                                                           |
 
@@ -608,10 +609,14 @@ Phase 0 and every Docker-related WP additionally:
 docker compose config
 docker compose build
 docker compose up -d
-curl -fsS http://localhost:8080/healthz
-curl -fsS http://localhost:8080/api/v1/health
+curl -fsS http://localhost:3080/healthz
+curl -fsS http://localhost:3080/api/v1/health
 docker compose down
 ```
+
+The stack publishes only the web port (`WEB_PORT`). A work package must not
+publish an API or database host port; direct API access for curl or monitoring
+goes through the optional override `docker-compose.debug.yml`.
 
 Database integration tests use `TEST_DATABASE_URL`; CI provides PostgreSQL 16.
 A WP is not done when tests are skipped because no database is available.

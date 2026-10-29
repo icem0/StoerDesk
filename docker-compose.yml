@@ -61,15 +61,18 @@ services:
       DATABASE_USER: ${POSTGRES_USER:-stoerdesk}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is missing - run "npm run env:create"}
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is missing - run "npm run env:create"}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3080}
       UPLOAD_DIR: /data/uploads
       UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
       TZ: ${TZ:-Europe/Berlin}
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - '${API_BIND_ADDRESS:-127.0.0.1}:${API_PUBLISHED_PORT:-3000}:${API_PORT:-3000}'
+    # No published host port: `web` reaches the API over the internal `backend`
+    # network (API_UPSTREAM). Direct access for curl/monitoring is opt-in with
+    # docker-compose.debug.yml.
+    expose:
+      - '${API_PORT:-3000}'
     volumes:
       - uploads:/data/uploads
     healthcheck:
@@ -104,7 +107,7 @@ services:
       NGINX_ENVSUBST_FILTER: ^(API|UPLOAD)_
       TZ: ${TZ:-Europe/Berlin}
     ports:
-      - '${WEB_BIND_ADDRESS:-0.0.0.0}:${WEB_PORT:-8080}:80'
+      - '${WEB_BIND_ADDRESS:-0.0.0.0}:${WEB_PORT:-3080}:80'
     # Intentionally independent of the API: nginx resolves the API per request,
     # so the UI is reachable while the API is starting or temporarily down.
     healthcheck:

@@ -50,10 +50,10 @@ interfaces:
 ```bash
 docker compose config
 docker compose up -d --build
-curl -fsS http://localhost:8080/healthz
-curl -fsS http://localhost:8080/api/v1/health
+curl -fsS http://localhost:3080/healthz
+curl -fsS http://localhost:3080/api/v1/health
 docker compose stop api
-curl -fsS http://localhost:8080/healthz
+curl -fsS http://localhost:3080/healthz
 docker compose start api
 docker compose down
 ```
