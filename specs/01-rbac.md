@@ -1,12 +1,13 @@
 # 01 — RBAC (roles and permissions)
 
 **Chapter:** 3 + 4.1
-**Scope:** ~170 lines
-**Status:** taken from `PLAN.md` §5/§6 and reviewed for WP-M1-05
+**Scope:** ~200 lines
+**Status:** taken from `PLAN.md` §5/§6 and reviewed for WP-M1-05; §3.6 from
+`PLAN.md` §4/§15 and reviewed for WP-M1-07
 
 > The source of this slice is `PLAN.md` §5 (roles, permission categories) and §6
-> (tables). Chapter numbers stay stable. Details that `PLAN.md` settled are marked
-> **(plan)**.
+> (tables); §3.6 comes from `PLAN.md` §4 (Auth) and §15 (Security). Chapter
+> numbers stay stable. Details that `PLAN.md` settled are marked **(plan)**.
 
 ## 3 — Roles and permissions
 
@@ -139,6 +140,25 @@ API guard and the UI all read the **same** source.
   (SQLSTATE `P0001`). Service-level guards arrive with WP-M1-09.
 - Role changes are not audited in phase 1; an audit event for role and permission
   edits arrives with the admin UI (WP-M1-09).
+
+### 3.6 Session and the `me` endpoint
+
+Reviewed for WP-M1-07, taken from `PLAN.md` §4 (Auth) and §15 (Security).
+
+| Concern               | Decision                                                                                                                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cookie                | name `session`, value = 256-bit random token (base64url), `httpOnly`, `SameSite` from `COOKIE_SAME_SITE` (default `lax`), `Secure` from `COOKIE_SECURE`, `Path=/`, `Max-Age` = `SESSION_TTL_HOURS`                   |
+| `sessions.token_hash` | SHA-256 of the token as hex — the token itself is never stored, the unique index makes a stolen row unusable as a cookie **(plan)**                                                                                  |
+| Cookie signature      | none: the database lookup is authoritative, `SESSION_SECRET` is not used by sessions                                                                                                                                 |
+| Login                 | e-mail trimmed and lower case (as in the base seed), `verifyPassword`; unknown e-mail, wrong password and `active = false` all answer the same `401` with `{ code: 'invalid_credentials' }` — no account enumeration |
+| Rate limit            | login route: 5 requests per minute per IP, then `429` (`PLAN.md` §15)                                                                                                                                                |
+| `loadSession`         | one query over `sessions ⋈ users` filtered by token hash and `expires_at > now`; expired rows are deleted on read; inactive users count as no session → `401` with `{ code: 'session_invalid' }`                     |
+| `request.user`        | set per request by the session plugin: `{ id, email, locale, roles }` (role keys, read from the database every request, see §3.2); otherwise unset                                                                   |
+| `GET /api/v1/me`      | `200` with `{ user: { id, email, locale, roles } }`, never translated text                                                                                                                                           |
+| Effective permissions | resolved by the service function of WP-M1-08 (§3.2); `/me` gains the `permissions` array with that package                                                                                                           |
+| Logout                | deletes the session row, clears the cookie, answers `204` also without a session                                                                                                                                     |
+| CSRF                  | phase 1 relies on `SameSite=Lax` plus the JSON-only API (`PLAN.md` §15); token-based CSRF stays an open decision                                                                                                     |
+| Session cleanup       | expired rows are removed on read; a scheduled purge job arrives with the pg-boss jobs package                                                                                                                        |
 
 ## 4.1 — Tables (RBAC)
 
