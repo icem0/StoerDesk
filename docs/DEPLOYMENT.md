@@ -31,6 +31,11 @@ docker compose down -v      # stops the stack and DELETES all data
 | `web`    | —        | nginx: PWA + reverse proxy for `/api/`             |
 | `backup` | `backup` | periodic `pg_dump` into the backup volume          |
 
+The `web` container starts independently of the API: nginx resolves the API
+host per request, so the UI is reachable while the API is starting or
+temporarily down. Until the API answers, `/api/` returns 502 while `/healthz`
+still returns 200.
+
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.

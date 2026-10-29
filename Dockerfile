@@ -31,7 +31,9 @@ COPY --from=api-build /app/apps/api/dist apps/api/dist
 RUN mkdir -p /data/uploads && chown -R node:node /data
 USER node
 EXPOSE 3000
-CMD ["node", "apps/api/dist/index.js"]
+# Apply pending migrations, then start the server. Running it here keeps the
+# schema up to date without a separate migration container.
+CMD ["sh", "-c", "node apps/api/dist/db/migrate.js && exec node apps/api/dist/index.js"]
 
 # ---------- Web ----------
 FROM base AS web-build
@@ -41,6 +43,12 @@ COPY apps/web apps/web
 RUN npm run build --workspace @stoerdesk/web
 
 FROM nginx:1.27-alpine AS web
+# Defaults for deployment panels that do not pass the compose environment; the
+# compose file overrides both. The filter keeps nginx variables such as $host
+# untouched during the template rendering (docker-entrypoint.d/20-envsubst).
+ENV API_UPSTREAM=http://api:3000 \
+    UPLOAD_MAX_BYTES=10485760 \
+    NGINX_ENVSUBST_FILTER=^(API|UPLOAD)_
 # The rendered template replaces the default server of the image.
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY apps/web/nginx-pwa.conf.template /etc/nginx/templates/default.conf.template

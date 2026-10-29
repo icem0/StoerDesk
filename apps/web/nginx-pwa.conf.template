@@ -10,6 +10,12 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript application/wasm image/svg+xml;
 
+    # Docker's embedded DNS. The API host is resolved per request (see the
+    # $api_upstream variable below), so nginx starts even when the API
+    # container is not on the network yet — a deployment panel may create the
+    # services one by one. Until the API is reachable /api/ answers 502.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
@@ -28,7 +34,11 @@ server {
     }
 
     location /api/ {
-        proxy_pass ${API_UPSTREAM};
+        # A variable keeps the host resolution out of the startup phase. There
+        # is no URI part, so the original request URI (including "/api/") is
+        # passed to the API unchanged.
+        set $api_upstream ${API_UPSTREAM};
+        proxy_pass $api_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

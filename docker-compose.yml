@@ -81,7 +81,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 30s
     logging:
       driver: json-file
       options:
@@ -105,9 +105,8 @@ services:
       TZ: ${TZ:-Europe/Berlin}
     ports:
       - '${WEB_BIND_ADDRESS:-0.0.0.0}:${WEB_PORT:-8080}:80'
-    depends_on:
-      api:
-        condition: service_healthy
+    # Intentionally independent of the API: nginx resolves the API per request,
+    # so the UI is reachable while the API is starting or temporarily down.
     healthcheck:
       test: ['CMD-SHELL', 'wget -q -O- http://127.0.0.1/healthz || exit 1']
       interval: 30s
