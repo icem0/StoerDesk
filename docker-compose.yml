@@ -3,7 +3,7 @@
 # Everything is configured through `.env` (create it with `npm run env:create`).
 # This file never has to be edited for a deployment.
 #
-#   docker compose up -d --build                 # core stack (db, migrate, api, web)
+#   docker compose up -d --build                 # core stack (db, api, web)
 #   docker compose --profile backup up -d       # + periodic database dumps
 #
 # Profiles are independent and can be combined.
@@ -35,57 +35,15 @@ services:
     networks:
       - backend
 
-  # Applies the Drizzle migrations once, before the API starts.
-  migrate:
-    build:
-      context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
-      target: api
-    image: stoerdesk-api:latest
-    # Always rebuild: the panel must not deploy a stale image.
-    pull_policy: build
-    restart: 'no'
-    command: ['node', 'apps/api/dist/db/migrate.js']
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      NODE_ENV: production
-      # The connection parts are passed instead of a URL: the API encodes the
-      # credentials, so a password with special characters works.
-      DATABASE_HOST: db
-      # The .env file of the host points at localhost; the container uses the parts above.
-      DATABASE_URL: ''
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${POSTGRES_DB:-stoerdesk}
-      DATABASE_USER: ${POSTGRES_USER:-stoerdesk}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is missing - run "npm run env:create"}
-      # The API validates the whole environment at startup, so the migration job
-      # needs the same secrets as the API service.
-      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is missing - run "npm run env:create"}
-      API_LOG_LEVEL: ${API_LOG_LEVEL:-info}
-      TZ: ${TZ:-Europe/Berlin}
-    depends_on:
-      db:
-        condition: service_healthy
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-    networks:
-      - backend
-
+  # Applies pending Drizzle migrations at start (Dockerfile CMD), then serves.
   api:
     build:
-      context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+      context: ${IMAGE_BUILD_CONTEXT:-.}
       target: api
     image: stoerdesk-api:latest
-    # Always rebuild: the panel must not deploy a stale image.
-    pull_policy: build
     restart: unless-stopped
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
       NODE_ENV: production
       API_HOST: 0.0.0.0
@@ -110,8 +68,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
+    ports:
+      - '${API_BIND_ADDRESS:-127.0.0.1}:${API_PUBLISHED_PORT:-3000}:${API_PORT:-3000}'
     volumes:
       - uploads:/data/uploads
     healthcheck:
@@ -134,11 +92,9 @@ services:
 
   web:
     build:
-      context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+      context: ${IMAGE_BUILD_CONTEXT:-.}
       target: web
     image: stoerdesk-web:latest
-    # Always rebuild: the panel must not deploy a stale image.
-    pull_policy: build
     restart: unless-stopped
     environment:
       API_UPSTREAM: http://api:${API_PORT:-3000}

@@ -62,10 +62,10 @@ stack refuses to start without them:
 docker compose up -d
 ```
 
-The images are built from the repository by default
-(`IMAGE_BUILD_CONTEXT`, see [`.env.example`](.env.example)). Set it to `.` to build
-from the local checkout instead. A deployment panel such as Arcane clones the
-repository itself and therefore always finds the `Dockerfile`
+The images are built from the local checkout by default
+(`IMAGE_BUILD_CONTEXT=.`, see [`.env.example`](.env.example)). A deployment panel
+such as Arcane can clone the repository itself by setting `IMAGE_BUILD_CONTEXT` to
+the Git URL; the panel then always finds the `Dockerfile`
 ([Arcane setup](docs/DEPLOYMENT.md#arcane)).
 
 Then open **http://localhost:8080**. The API is reached through the web frontend
@@ -104,9 +104,9 @@ and [`docs/REPO-MAP.md`](docs/REPO-MAP.md):
 | `apps/api`        | Fastify, Drizzle, PostgreSQL 16, pg-boss                   | Source of truth: tickets, RBAC, outbox     |
 | `packages/shared` | Zod schemas, types, permissions, i18n resources            | Contracts shared by web and API            |
 
-The Compose stack consists of `db` (PostgreSQL 16), `migrate` (Drizzle migrations,
-then exits), `api` (Fastify) and `web` (nginx: PWA + reverse proxy), plus the
-optional `backup` service.
+The Compose stack consists of `db` (PostgreSQL 16), `api` (Fastify, applies pending
+migrations at start) and `web` (nginx: PWA + reverse proxy), plus the optional
+`backup` service.
 
 Conventions across the code base: UUID v7 for ids, server time as the authoritative
 clock, errors as `{ code, params }` (never translated text on the wire), structured

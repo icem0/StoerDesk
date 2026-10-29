@@ -12,8 +12,8 @@ npm run env:create          # writes .env with generated secrets
 docker compose up -d --build
 ```
 
-Open <http://localhost:8080>. The API is only reachable via the web frontend
-(`/api/` is proxied by nginx); its own port stays on `127.0.0.1`.
+Open <http://localhost:8080>. The UI proxies `/api/` to the API; the API is also
+published on `127.0.0.1:3000` for direct monitoring and curl.
 
 ```bash
 docker compose ps           # status of all services
@@ -24,13 +24,12 @@ docker compose down -v      # stops the stack and DELETES all data
 
 ## Services
 
-| Service   | Profile  | Purpose                                    |
-| --------- | -------- | ------------------------------------------ |
-| `db`      | —        | PostgreSQL 16, source of truth             |
-| `migrate` | —        | applies the Drizzle migrations, then exits |
-| `api`     | —        | Fastify API on port 3000                   |
-| `web`     | —        | nginx: PWA + reverse proxy for `/api/`     |
-| `backup`  | `backup` | periodic `pg_dump` into the backup volume  |
+| Service  | Profile  | Purpose                                            |
+| -------- | -------- | -------------------------------------------------- |
+| `db`     | —        | PostgreSQL 16, source of truth                     |
+| `api`    | —        | Fastify API on port 3000; runs migrations on start |
+| `web`    | —        | nginx: PWA + reverse proxy for `/api/`             |
+| `backup` | `backup` | periodic `pg_dump` into the backup volume          |
 
 ## Configuration
 
@@ -148,30 +147,36 @@ npm run dev
 
 ## Arcane
 
-Arcane deploys Compose projects and builds the images from the project folder.
-The compose file therefore uses a **Git build context** by default:
+The compose file builds from the local checkout by default:
 
 ```yaml
 build:
-  context: ${IMAGE_BUILD_CONTEXT:-https://github.com/icem0/StoerDesk.git#main}
+  context: ${IMAGE_BUILD_CONTEXT:-.}
 ```
 
-Arcane clones the repository itself for every build, finds the `Dockerfile`
+That is the right default for a normal `git clone` and for a developer machine.
+A deployment panel that only copies the compose file into its project folder
+must set the Git URL instead:
+
+```
+IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main
+```
+
+Arcane then clones the repository itself for every build, finds the `Dockerfile`
 inside the clone and builds the images from it. The project folder only needs
 the compose file — no checkout of the other files, no `Sync Files`. The
 repository is public, so no credentials are needed; a repository registered
 under _Customization → Git Repositories_ with the same URL is reused for its
 credentials.
 
-Every built service carries `pull_policy: build`. Without it a panel treats the
-`image:` of the service as a finished image, keeps the old one and deploys
-stale code — the fix for a bug would never reach the running container.
+Always deploy with `--build` (or an equivalent panel setting) so a changed
+source tree produces a fresh image. The compose file intentionally does not set
+`pull_policy: build`; older Compose versions do not understand it.
 
-> **Important:** leave `IMAGE_BUILD_CONTEXT` empty in the project `.env`. A
-> value of `.` makes the panel build from the project folder, which holds only
-> the compose file, and the build fails with
+> **Important:** in Arcane set `IMAGE_BUILD_CONTEXT` to the Git URL. With the
+> default `.` the panel builds from the project folder; if that folder holds
+> only the compose file, the build fails with
 > `dockerfile not found: stat /app/data/projects/<project>/Dockerfile`.
-> The default is the Git URL, so the panel fetches the repository itself.
 
 Override the context if the deployment runs from a fork or a tag:
 
@@ -179,7 +184,13 @@ Override the context if the deployment runs from a fork or a tag:
 IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#v0.0.6
 ```
 
-A developer machine builds from the working tree with the override file:
+A developer machine builds from the working tree without an override file:
+
+```bash
+docker compose up -d --build
+```
+
+The explicit override file remains available:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
@@ -196,13 +207,17 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
    - Sync name: `stoerdesk`
    - Repository: _StoerDesk_, Branch: `main`
    - Compose File Path: `docker-compose.yml`
-   - **Sync Files: on** — recommended, it makes the sources visible in the
-     project folder; the build works without it thanks to the Git context
-3. **Sync from Git**, then deploy the project.
+   - **Sync Files: on** — recommended; it copies `Dockerfile`, `apps/` and
+     `packages/` into the project folder, so the default local build works
+3. In the project `.env`, set
+   `IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main` if
+   _Sync Files_ is off.
+4. **Sync from Git**, then deploy the project.
 
 Without _Sync Files_ Arcane copies only the compose file into the project
-folder. With the Git build context that is enough, because Arcane fetches the
-repository itself. With a local build context (`.`) the build fails with
+folder. The Git build context is then required, because Arcane fetches the
+repository itself. With the default local context (`.`) and no synced sources,
+the build fails with
 
 ```
 failed to prepare project images for deploy: dockerfile not found:
@@ -243,9 +258,9 @@ them.
 
 ```bash
 docker compose config          # shows the resolved configuration
-docker compose ps -a           # includes exited services such as "migrate"
+docker compose ps -a           # shows all services, including stopped ones
 docker compose logs db api     # logs of several services
-docker compose run --rm api node apps/api/dist/index.js   # start the API manually
+docker compose run --rm api    # start the API manually (runs migrations first)
 ```
 
 If the API restarts, the log usually names the invalid variable — the
