@@ -1,6 +1,6 @@
 # WP-M2-01: Objektliste CRUD (API)
 
-depends-on: WP-M1-09
+depends-on: WP-M2-00
 milestone: m2
 
 ## Ziel
