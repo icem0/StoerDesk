@@ -14,12 +14,14 @@ work package first. Never implement a feature that has no work package.
 
 ## Current status
 
-**Implemented so far: WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04.** The repository contains:
+**Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
+WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04.** The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
   (placeholder chapters stay authoritative from `PLAN.md` until filled),
-- the work plan in `work-packages/` (M0 planned, M1, M2),
-- the environment (monorepo, configuration, skeleton, CI, Docker),
+- the work plan in `work-packages/` (M0, M1, M2 — M0 finished, M1 partially),
+- the environment (monorepo, configuration, skeleton, CI, Docker, and the
+  repeatable smoke test `scripts/docker-smoke.sh` run by the CI job `docker-smoke`),
 - the Drizzle base schema with migration `0000_base_tables` (`users`, `sessions`,
   `groups`, `user_groups`, `settings`; UUID v7 via `gen_uuid_v7()`, see ADR-0002),
 - the i18n skeleton (web i18next setup + `locales/{de,en}`, shared server `t()`,

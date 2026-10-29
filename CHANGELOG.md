@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resilience, plan anchoring and a Docker smoke test.
 - `docker-compose.debug.yml`: optional override that publishes the API host port
   for direct curl and monitoring.
+- `scripts/docker-smoke.sh` (WP-M0-04): repeatable Docker smoke test — builds the
+  images from the checkout, starts the stack in an isolated Compose project with
+  its own volumes and web port `3180`, checks `/healthz` and `/api/v1/health`,
+  asserts that the API publishes no host port and removes everything again. Runs
+  as the CI job `docker-smoke`, which skips on runners without Docker.
 
 ### Changed
 
@@ -71,6 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`eslint.config.js`) instead of `.eslintrc.cjs`.
 - WP-M1-03: the first migration uses drizzle-kit's number `0000` instead of
   `0001`; exactly one migration exists.
+- WP-M0-04: the acceptance command `sh scripts/docker-smoke.sh` was not executed
+  locally because the development container has no Docker; verified with `sh -n`
+  and `npm run check`, the CI job `docker-smoke` runs the real smoke test.
 
 ### Not implemented (by design)
 

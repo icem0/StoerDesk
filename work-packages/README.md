@@ -21,12 +21,18 @@ is rewritten into the small-model format before implementation.
 
 ## Status
 
-> **Current state:** implemented are **WP-M1-01**, **WP-M1-02**, **WP-M1-03** and
-> **WP-M1-04** (foundation, Compose, Drizzle base tables, i18n skeleton). Phase 0
-> is planned in `m0`; its first two WPs fix local startability. The remaining WPs
-> are working plans and are implemented only after approval — WP by WP, never in
-> bulk. A WP counts as done only when code, tests, lint, typecheck and docs agree
-> and the corresponding commit is pushed.
+> **Current state:** **Phase 0 is complete** — **WP-M0-01**, **WP-M0-02**,
+> **WP-M0-03** and **WP-M0-04** are implemented (local startability, resilient
+> start order, binding plan anchor, repeatable Docker smoke test
+> `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`). The smoke run
+> itself is proven by CI, because the development container has no Docker.
+> In Phase 1 **WP-M1-01**, **WP-M1-02**, **WP-M1-03** and **WP-M1-04** are
+> implemented (foundation, Compose, Drizzle base tables, i18n skeleton). The next
+> package is **WP-M1-05** (RBAC tables + seeds); it is still a legacy document and
+> is rewritten into the small-model format first, and `specs/01-rbac.md` is still a
+> placeholder. The remaining WPs are working plans and are implemented only after
+> approval — WP by WP, never in bulk. A WP counts as done only when code, tests,
+> lint, typecheck and docs agree and the corresponding commit is pushed.
 
 ## Validation
 

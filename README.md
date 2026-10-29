@@ -88,6 +88,15 @@ docker compose down              # stops the stack, keeps the volumes
 docker compose down -v           # stops the stack and DELETES all data
 ```
 
+A repeatable smoke test builds the images from the current checkout, starts the
+core stack, checks both health endpoints and removes the project with its volumes
+again. It uses its own Compose project, its own volumes and its own web port
+(`3180`), so a running developer stack on `3080` is untouched:
+
+```bash
+sh scripts/docker-smoke.sh       # needs Docker + Compose plugin; exits 0 when healthy
+```
+
 Periodic database dumps run as an opt-in profile:
 
 ```bash

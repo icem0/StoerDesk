@@ -18,6 +18,8 @@ files-write:
 
 - .github/workflows/check.yml
 - scripts/docker-smoke.sh
+- README.md
+- docs/REPO-MAP.md
 
 interfaces:
 
@@ -49,9 +51,22 @@ sh scripts/docker-smoke.sh
 Expected: exit 0; the script prints both health responses and removes the
 temporary Compose project.
 
+Implementation notes: the run is isolated (project `stoerdesk-smoke`, own volume
+names, published host port `3180` only — the API and the database stay on the
+internal `backend` network) and uses a throw-away project directory with a
+copy of `.env.example`, so neither the repository `.env` nor the volumes of a
+developer stack are touched. On a machine without Docker the script cannot run;
+the CI job is then the only executed acceptance and the limitation is reported in
+the handoff.
+
 ## Handoff
 
-- Files changed: `.github/workflows/check.yml`, `scripts/docker-smoke.sh`
+- Files changed: `.github/workflows/check.yml`, `scripts/docker-smoke.sh`,
+  `README.md`, `docs/REPO-MAP.md` — plus the repository bookkeeping that stays
+  outside `files-write`: `AGENTS.md`, `CHANGELOG.md`, `work-packages/README.md`
 - Interfaces added: `scripts/docker-smoke.sh`
 - Follow-up WP: Phase 1 foundation
-- Open question: whether the CI runner has Docker
+- Resolved: GitHub-hosted `ubuntu-latest` runners provide Docker; the job detects
+  a usable Docker and skips on runners without it
+- Verified locally: `sh -n` and `npm run check` only (no Docker in the dev
+  container) — the smoke run itself is proven by the CI job
