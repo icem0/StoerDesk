@@ -27,15 +27,16 @@ rewritten into the small-model format before implementation.
 > start order, binding plan anchor, repeatable Docker smoke test
 > `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`). The smoke run
 > itself is proven by CI, because the development container has no Docker.
-> In Phase 1 **WP-M1-01** until **WP-M1-06** are implemented (foundation, Compose,
+> In Phase 1 **WP-M1-01** until **WP-M1-07** are implemented (foundation, Compose,
 > Drizzle base tables, i18n skeleton, RBAC tables + system role seed, bootstrap
-> administrator seed with Argon2id). The next package is **WP-M1-07** (login,
-> session cookie, `/api/v1/me`); it was rewritten into the small-model format and
-> split into **WP-M1-07** (shared login/me schemas, session core: token, token hash,
-> `sessions` table, cookie options) and **WP-M1-07b** (`sessionPlugin`, the
-> `requireUser` preHandler and the login/logout/me routes with the login rate limit), because the legacy document would have written six source files
-> (`PLAN.md` §17: max. 3–4). `specs/01-rbac.md` gained §3.6 (session and `me`) for
-> them. The example objects, systems and standard texts that
+> administrator seed with Argon2id, session core: token, token hash in `sessions`,
+> delete-on-read of expired rows, cookie options). The legacy auth package was
+> rewritten into the small-model format and split, because it would have written six
+> source files (`PLAN.md` §17: max. 3–4): **WP-M1-07** (implemented — shared login/me
+> schemas and the session core) and the next package **WP-M1-07b** (`sessionPlugin`,
+> the `requireUser` preHandler and the login/logout/me routes with the login rate
+> limit). `specs/01-rbac.md` gained §3.6 (session and `me`) for them.
+> The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
 > `WP-M2-01` now depends on WP-M2-00 and WP-M2-00 waits for a filled

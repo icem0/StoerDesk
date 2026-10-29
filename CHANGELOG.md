@@ -92,6 +92,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M1-07b** (`work-packages/m1/07b-auth-routes.md`) holds the session plugin, the
   `requireUser` preHandler and the login/logout/me routes. WP-M1-08 now depends on
   WP-M1-07b and references §3.2/§3.6 instead of the non-existent §3.7.
+- WP-M1-07: session core `apps/api/src/auth/session.ts` — the cookie holds a 256-bit
+  base64url token, the database holds only its SHA-256 hash in `sessions.token_hash`;
+  `createSession`, `loadSession`, `destroySession`, `loadUserRoleKeys` (role keys read
+  per request) and `sessionCookieOptions` from `COOKIE_SECURE`/`COOKIE_SAME_SITE` with
+  `httpOnly` always on. Expired rows are deleted on read, and a session of a
+  deactivated account is no session at all.
+- WP-M1-07: shared auth schemas `packages/shared/src/schemas/auth.ts` —
+  `loginRequestSchema` (normalized e-mail, capped password length) and
+  `meResponseSchema` (`id`, `email`, `locale`, role keys); unit tests for token, hash
+  and cookie attributes, plus the integration spec for create/load/expiry/logout,
+  inactive account and role keys.
 
 ### Changed
 
