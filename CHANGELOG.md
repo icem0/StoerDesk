@@ -1,53 +1,73 @@
 # Changelog
 
-Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+All notable changes to this project are documented in this file.
 
-Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
-Versionierung basiert auf [Semantic Versioning](https://semver.org/lang/de/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
 ### Added
 
-- Monorepo-Gerüst mit npm-Workspaces (`apps/web`, `apps/api`, `packages/shared`).
-- Konfiguration: TypeScript strict, ESLint (Flat Config, i18next-Regel), Prettier,
-  Vitest (Root + je Workspace), Husky, commitlint.
-- Skripte: `npm run check`, `npm run i18n:check`, `npm run spec:split`, `npm run orchestrate`.
-- Docker-Setup: `Dockerfile` (Targets `api`, `web`), `docker-compose.yml`,
+- Monorepo skeleton with npm workspaces (`apps/web`, `apps/api`, `packages/shared`).
+- Configuration: TypeScript strict, ESLint (flat config, i18next rule), Prettier,
+  Vitest (root and per workspace), Husky, commitlint.
+- Scripts: `npm run check`, `npm run i18n:check`, `npm run spec:split`,
+  `npm run orchestrate`, `npm run wp:check`.
+- Docker setup: `Dockerfile` (targets `api`, `web`), `docker-compose.yml`,
   `docker-compose.dev.yml`, `.env.example`.
 - CI: `.github/workflows/check.yml` (Node 22, `npm ci`, `npm run check`).
-- Spezifikationsstruktur `specs/` (17 Kapiteldateien), Arbeitspakete `work-packages/m1`
-  (12) und `work-packages/m2` (10), Dokumentation `docs/` inkl. REPO-MAP und ADR-0001.
-- WP-M1-03: Drizzle-Basisschema `apps/api/src/db/schema.ts` mit `users`, `sessions`,
-  `groups`, `user_groups`, `settings`; UUID v7 als serverseitiger Default über die Funktion
-  `gen_uuid_v7()` (ADR-0002), Migration `0000_base_tables`, Drizzle-Client mit Schema.
-- WP-M1-03: Migrationstest (ohne DB) und Integrationstest gegen eine echte Postgres-16-Datenbank
-  (`TEST_DATABASE_URL`, leere Wegwerf-Datenbank pro Lauf, Skip ohne erreichbare DB).
-- Kompletter Compose-Stack: `db`, `migrate`, `api`, `web` sowie das optionale Profil `backup` (`pg_dump`).
-- `.env.example` mit allen Variablen und Erklärungen; `npm run env:create` erzeugt daraus
-  eine `.env` mit generierten Secrets — die Compose-Datei muss nie angefasst werden.
-- Persistente Volumes für Datenbank, Uploads und Backups; alle Volumennamen sind konfigurierbar.
-- Notification-Kanäle sprechen ausschließlich mit vorhandenen Instanzen (ntfy-Server,
-  signal-cli-Bridge, Matrix-Homeserver, SMTP, Telegram) — StörDesk bringt keine eigenen
-  Benachrichtigungsserver mit; ein Kanal bleibt deaktiviert, solange seine Adresse leer ist.
-- `docs/DEPLOYMENT.md`: Deployment, Volumes, Backups/Restore, Notification-Kanäle.
+- Specification structure `specs/` (17 chapter files), work packages
+  `work-packages/m1` (12) and `work-packages/m2` (10), documentation `docs/`
+  including REPO-MAP and ADR-0001.
+- WP-M1-03: Drizzle base schema `apps/api/src/db/schema.ts` with `users`,
+  `sessions`, `groups`, `user_groups`, `settings`; UUID v7 as server-side default
+  via `gen_uuid_v7()` (ADR-0002), migration `0000_base_tables`, Drizzle client.
+- WP-M1-03: migration test (without DB) and integration test against a real
+  PostgreSQL 16 database (`TEST_DATABASE_URL`, disposable database per run,
+  skipped without a reachable DB).
+- Complete Compose stack: `db`, `api`, `web` and the optional `backup` profile
+  (`pg_dump`).
+- `.env.example` with every variable and explanation; `npm run env:create`
+  creates `.env` with generated secrets, so the Compose file never has to be
+  edited.
+- Persistent volumes for database, uploads and backups; all volume names are
+  configurable.
+- Notification channels talk only to existing instances (ntfy server,
+  signal-cli bridge, Matrix homeserver, SMTP, Telegram); StörDesk ships no
+  notification servers. A channel stays disabled while its address is empty.
+- `docs/DEPLOYMENT.md`: deployment, volumes, backups/restore, notification
+  channels.
+- `PLAN.md`: binding build plan with scope, stack decisions, phases, small-model
+  work-package limits, acceptance summary and open decisions.
+- `docs/WP-TEMPLATE.md` and `scripts/wp-check.mjs`: template and validation for
+  work packages that fit a 64k–128k context model.
+- Phase 0 work packages in `work-packages/m0/` for local startability, Compose
+  resilience, plan anchoring and a Docker smoke test.
 
 ### Changed
 
-- Sprachregel verschärft: Code, Kommentare, Testnamen, Commit-Messages und
-  Entwickler-Doku sind durchgängig Englisch; die App bleibt mehrsprachig
-  (`de` Default, `en` vollständig) — UI-Texte ausschließlich über i18n-Keys.
-- README und `AGENTS.md` auf Englisch umgestellt.
+- Language rule tightened: code, comments, test names, commit messages and
+  developer documentation are English; the app stays multilingual (`de` default,
+  `en` complete) and UI text uses i18n keys only.
+- README and `AGENTS.md` switched to English.
+- Default image build context is now the local checkout (`.`). Deployment panels
+  that clone the repository themselves set `IMAGE_BUILD_CONTEXT` to the Git URL.
+- The web container no longer waits for a healthy API, so the UI is reachable
+  even while the API is starting or failing.
+- The emergency notice uses 112 only; no other emergency number is part of the
+  product text.
 
-### Abweichungen
+### Deviations
 
-- WP-M1-01: `npm run check` nutzt die Workspace-Typechecks statt eines `tsc --noEmit` über
-  alle Pakete (siehe AGENTS.md); ESLint als Flat Config (`eslint.config.js`) statt `.eslintrc.cjs`.
-- WP-M1-03: die erste Migration trägt die von drizzle-kit vergebene Nummer `0000` statt `0001`;
-  es ist genau eine Migration vorhanden.
+- WP-M1-01: `npm run check` uses per-workspace typechecks instead of a single
+  `tsc --noEmit` across all packages (see `AGENTS.md`); ESLint uses a flat config
+  (`eslint.config.js`) instead of `.eslintrc.cjs`.
+- WP-M1-03: the first migration uses drizzle-kit's number `0000` instead of
+  `0001`; exactly one migration exists.
 
-### Noch nicht umgesetzt (by design)
+### Not implemented (by design)
 
-- Sämtliche Fachlogik (Auth, Tickets, Objekte, Oncall, Benachrichtigungen, UI).
-  Die Umsetzung erfolgt ausschließlich als Work Package aus `work-packages/` —
-  bisher sind nur WP-M1-01 bis WP-M1-03 (Fundament und Datenmodell-Grundtabellen) umgesetzt.
+- All domain logic (auth, tickets, objects, on-call, notifications, UI).
+  Implementation happens only as a work package from `work-packages/` — so far
+  WP-M1-01 to WP-M1-04 (foundation and base data model) are implemented.

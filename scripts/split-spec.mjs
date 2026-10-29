@@ -65,8 +65,11 @@ function splitChapters(markdown) {
 }
 
 if (!existsSync(sourcePath)) {
-  console.log(`Keine Quelle gefunden: ${sourcePath} — nichts zu splitten.`)
-  process.exit(0)
+  console.error(`split-spec: source not found: ${sourcePath}`)
+  console.error(
+    'PLAN.md is the binding plan; specs/ is maintained from it or from the supplied original.',
+  )
+  process.exit(1)
 }
 
 const markdown = readFileSync(sourcePath, 'utf8')
@@ -91,4 +94,4 @@ for (const entry of mapping) {
   written += 1
 }
 
-console.log(`split-spec: ${written} Spec-Dateien aus ${sourcePath} aktualisiert.`)
+console.log(`split-spec: ${written} spec files updated from ${sourcePath}.`)

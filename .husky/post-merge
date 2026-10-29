@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# A merge commit is created by git merge, not by git commit, so post-commit does
+# not run for it. Reuse the same versioning logic.
+sh "$(dirname "$0")/post-commit"

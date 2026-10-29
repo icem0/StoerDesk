@@ -2,12 +2,23 @@
 
 Rules for every coding agent and developer working on **StörDesk**.
 
+## Build plan anchor
+
+**`PLAN.md` is the binding entry point.** Read it before any work package.
+It contains the scope, stack decisions, phases, work-package limits and the
+current open decisions. `specs/` holds the expanded slices; a spec slice wins
+over `PLAN.md` only after it has been reviewed and contains real content.
+
+If `PLAN.md` and an older work package disagree, stop and update the plan or the
+work package first. Never implement a feature that has no work package.
+
 ## Current status
 
 **Implemented so far: WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04.** The repository contains:
 
-- the specification in `specs/` (one placeholder file per chapter),
-- the work plan in `work-packages/` (M1, M2),
+- the binding build plan in `PLAN.md` and the expanded slices in `specs/`
+  (placeholder chapters stay authoritative from `PLAN.md` until filled),
+- the work plan in `work-packages/` (M0 planned, M1, M2),
 - the environment (monorepo, configuration, skeleton, CI, Docker),
 - the Drizzle base schema with migration `0000_base_tables` (`users`, `sessions`,
   `groups`, `user_groups`, `settings`; UUID v7 via `gen_uuid_v7()`, see ADR-0002),
@@ -68,6 +79,7 @@ Which covers:
 2. `eslint .` — flat config in `eslint.config.js`.
 3. `vitest run` — one Vitest project per workspace.
 4. `npm run i18n:check` — de/en key parity and referenced keys.
+5. `npm run wp:check` — work-package size, context budget and required fields.
 
 Additionally when needed:
 
@@ -113,15 +125,33 @@ and IDE support.
   (e.g. `feat(web): WP-M1-09 admin ui users and roles`).
 - `commitlint` enforces the format and the sign-off (Husky hook `commit-msg`).
 
+## Work package size (small models)
+
+Work packages are written for small coding models (64k–128k context). A WP that
+cannot be finished in one model run is split before implementation.
+
+- One WP = one commit = one model run.
+- Max. 3–4 changed source files (tests and fixtures excluded), about 300 changed
+  lines, max. 6 source files read.
+- WP document max. 120 lines; referenced spec excerpt max. 200 lines.
+- Context target 12–20k tokens, hard limit 30k for 64k models; 25–40k target and
+  60k hard limit for 128k models.
+- Every WP declares `depends-on`, `context-budget`, `spec`, `files-read`,
+  `files-write`, `interfaces`, `non-goals`, `acceptance` and `handoff`.
+- Template: `docs/WP-TEMPLATE.md`. Validate with `npm run wp:check`.
+- Do not mix database, service, API and UI layers in one WP unless the vertical
+  slice stays inside the file and line limits.
+
 ## Versioning (one tag per commit)
 
 - The project is versioned as `v0.0.1`, `v0.0.2`, `v0.0.3`, ... — **every commit
   gets the next patch version** as a git tag. The tag is the version of record;
   the `version` fields in the `package.json` files are kept at the current release
   line and do not need to be bumped per commit.
-- The Husky hook `.husky/post-commit` does this automatically: it reads the latest
-  reachable tag, bumps the patch number and tags the new commit (rebase/cherry-pick
-  and already-tagged HEADs are skipped, no double tags).
+- The Husky hook `.husky/post-commit` does this automatically: it reads the highest
+  existing version tag, bumps the patch number and tags the new commit. `.husky/post-merge`
+  applies the same logic to merge commits (git merge does not trigger post-commit).
+  Rebases and already-tagged HEADs are skipped, no double tags.
 - After every successful commit the hook prints
   `commit <short-hash> successful - version v0.0.N (run 'git push --follow-tags' to share it)`.
   **After each commit, report that success line and the version number to the user.**
@@ -146,12 +176,14 @@ From three sub-steps onwards keep a todo list via `todowrite`:
   (max. 200 lines) and are updated **after every work package**.
 - New modules are added to the module table with purpose and public API.
 - Do not create files outside the designated areas; `docs/material/` holds the
-  supplied originals, `specs/` holds the chapters mirrored from them.
+  supplied originals, `specs/` holds the expanded slices (mirrored from the
+  supplied original or from `PLAN.md` when the original is missing).
 
 ## Data protection and security
 
 - No secrets in the repository. `.env` is ignored, `.env.example` is the template.
 - No PII in logs, tests or fixtures.
-- Emergency notice: the 112/110 hint must stay visible on the report form and on the
+- Emergency notice: the 112 hint must stay visible on the report form and on the
   printed stickers (see README and `specs/06-report-form.md`). StörDesk accepts
-  malfunction reports only — it is never an emergency call path.
+  malfunction reports only — it is never an emergency call path. Do not add other
+  emergency numbers to product text.

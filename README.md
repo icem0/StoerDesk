@@ -18,8 +18,8 @@
 > **Malfunction reports only — not an emergency call path.** StörDesk accepts reports
 > about faults, defects and damage with no danger to people. In case of acute danger to
 > humans, fire, escaping hazardous substances or medical emergencies **call 112**
-> (fire brigade / ambulance) or **110** (police) immediately — that hint is part of the
-> report form and of the printed stickers (see [`specs/06-report-form.md`](specs/06-report-form.md)).
+> (fire brigade / ambulance) immediately — that hint is part of the report form and of
+> the printed stickers (see [`specs/06-report-form.md`](specs/06-report-form.md)).
 
 ## What it is about
 
@@ -134,11 +134,12 @@ working notifications in the current stack.
 
 ## Status
 
-The environment is in place — the specification is implemented work package by work
+The environment is in place — the plan is implemented work package by work
 package (currently WP-M1-01 to WP-M1-04, see [`CHANGELOG.md`](CHANGELOG.md)).
 
-- Specification: [`specs/`](specs/) (16 chapters)
-- Work plan: [`work-packages/`](work-packages/) (M1, M2)
+- Build plan: [`PLAN.md`](PLAN.md) (binding scope, stack, phases, WP limits)
+- Expanded slices: [`specs/`](specs/) (17 chapters; placeholders fall back to `PLAN.md`)
+- Work plan: [`work-packages/`](work-packages/) (M0, M1, M2)
 - Decisions: [`docs/DECISIONS.md`](docs/DECISIONS.md) and `docs/DECISIONS/`
 
 Domain logic (auth, tickets, objects, on-call, notifications, UI) is created **only**
