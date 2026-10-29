@@ -160,6 +160,19 @@ Reviewed for WP-M1-07, taken from `PLAN.md` §4 (Auth) and §15 (Security).
 | CSRF                  | phase 1 relies on `SameSite=Lax` plus the JSON-only API (`PLAN.md` §15); token-based CSRF stays an open decision                                                                                                     |
 | Session cleanup       | expired rows are removed on read; a scheduled purge job arrives with the pg-boss jobs package                                                                                                                        |
 
+### 3.7 Permission guard
+
+Reviewed for WP-M1-08, taken from §3.2 and `PLAN.md` §5.
+
+| Concern               | Decision                                                                                                                                                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service function      | `loadEffectivePermissions(database, userId)` — union of the role permissions plus explicit `allow` rows, minus every explicit `deny` row; returns sorted catalog keys (`PermissionKey[]`), never text. Two queries: role union, then the `user_permissions` overrides **(plan)** |
+| Per-request cache     | the promise is cached on the request (`request.effectivePermissions`), so several guards in one request resolve once, not once per query; no cross-request cache — a change acts without a new login (§3.2)                                                                 |
+| Guard                 | `requirePermission(database, ...keys)` preHandler with OR semantics; anonymous → `401 { code: 'session_invalid' }`, no match → `403 { code: 'forbidden', params: {} }`                                                                                                       |
+| `GET /api/v1/me`      | gains `permissions` (the sorted effective keys) next to `roles`, still no translated text                                                                                                                                                                                     |
+| Probe route           | `GET /api/v1/_test/require-permission/:keys` (comma-separated keys) registered only when `NODE_ENV=test`, so the guard is testable over HTTP; never registered in `development` or `production` **(plan)**                                                                    |
+| UI side               | `usePermission` reads the `permissions` array of `/me`; hiding is cosmetic, the server stays the only enforcement point (§3.2)                                                                                                                                                |
+
 ## 4.1 — Tables (RBAC)
 
 All tables use UUID v7 primary keys (ADR-0002) and UTC timestamps; join tables use

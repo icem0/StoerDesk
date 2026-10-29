@@ -114,6 +114,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   registers the plugin and the routes, and maps thrown envelope errors to
   `{ code, params }` — `@fastify/rate-limit` throws the builder result, so the
   `429 rate_limited` body needs that handler. New API dependency `fastify-plugin`.
+- `specs/01-rbac.md` §3.7: permission guard decisions for WP-M1-08 — the effective
+  permission service (role union plus allows minus denials, denial wins), the
+  per-request cache, `requirePermission` with OR semantics and its `401`/`403`
+  codes, the `permissions` array in `/me`, and the probe route that is registered
+  only when `NODE_ENV=test`.
+- WP-M1-08 (plan): the legacy guard package was rewritten into the small-model
+  format (`work-packages/m1/08-require-permission.md`) — it now names its four
+  source files (guard, `/me` route, `index.ts`, shared `me` schema), the read set,
+  the interfaces and the required test cases.
 
 ### Changed
 

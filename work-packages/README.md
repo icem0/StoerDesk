@@ -16,9 +16,9 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
-`WP-M1-06`, `WP-M1-07`, `WP-M1-07b` and `WP-M2-00`. The remaining `m1` and `m2`
-documents are legacy plans: they stay valid as scope descriptions, but each one is
-rewritten into the small-model format before implementation.
+`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08` and `WP-M2-00`. The remaining `m1`
+and `m2` documents are legacy plans: they stay valid as scope descriptions, but each
+one is rewritten into the small-model format before implementation.
 
 ## Status
 
@@ -38,6 +38,11 @@ rewritten into the small-model format before implementation.
 > schemas and the session core) and **WP-M1-07b** (implemented — `sessionPlugin`,
 > the `requireUser` preHandler and the login/logout/me routes with the login rate
 > limit). `specs/01-rbac.md` gained §3.6 (session and `me`) for them.
+> `specs/01-rbac.md` also gained §3.7 (permission guard) and **WP-M1-08**
+> (`08-require-permission.md`) was rewritten into the small-model format: effective
+> permissions (role union, plus allows, minus denials), the per-request cache,
+> `requirePermission` with OR semantics, `permissions` in `/me` and the probe route
+> that exists only when `NODE_ENV=test`. It is the next package to implement.
 > The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
