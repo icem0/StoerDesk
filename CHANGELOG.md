@@ -66,6 +66,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `apps/api/src/db/__tests__/rbac.integration.spec.ts`; the CI `check` job now
   provides PostgreSQL 16 as a service, so the database integration tests run
   instead of skipping.
+- WP-M1-06: Argon2id password hashing in `apps/api/src/auth/password.ts`
+  (`hashPassword`, `verifyPassword` — a malformed stored hash never throws) with
+  the `argon2` library, whose prebuilds cover glibc and musl, so the
+  `node:22-alpine` API image needs no compiler toolchain.
+- WP-M1-06: idempotent bootstrap administrator `apps/api/src/db/seed-base.ts`
+  (`npx tsx src/db/seed-base.ts`) from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`,
+  linked to the system role `admin`; existing accounts keep their password hash,
+  locale and `active` flag, and the CLI output never contains an e-mail or a
+  password. `SEED_ADMIN_*` is validated as a pair (valid e-mail, password of at
+  least 12 characters) and documented in `.env.example`; seed order is
+  migrate → `seed-rbac` → `seed-base`.
+- WP-M1-06 (plan): the legacy WP-M1-06 scope was split — the `objects`, `systems`,
+  `text_templates` tables and the demo data moved to the new
+  `work-packages/m2/00-core-tables-seed.md` (WP-M2-00, phase 2 per `PLAN.md` §16),
+  and WP-M2-01 now depends on it.
 
 ### Changed
 

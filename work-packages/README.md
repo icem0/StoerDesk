@@ -13,11 +13,12 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test                         | 4   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 12  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 10  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
-`m0` uses the small-model format (`format: small-model`). The `m1` and `m2`
-documents are legacy plans: they stay valid as scope descriptions, but each one
-is rewritten into the small-model format before implementation.
+`m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
+`WP-M1-06` and `WP-M2-00`. The remaining `m1` and `m2` documents are legacy plans:
+they stay valid as scope descriptions, but each one is rewritten into the small-model
+format before implementation.
 
 ## Status
 
@@ -26,12 +27,15 @@ is rewritten into the small-model format before implementation.
 > start order, binding plan anchor, repeatable Docker smoke test
 > `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`). The smoke run
 > itself is proven by CI, because the development container has no Docker.
-> In Phase 1 **WP-M1-01** until **WP-M1-05** are implemented (foundation, Compose,
-> Drizzle base tables, i18n skeleton, RBAC tables + system role seed). The next
-> package is **WP-M1-06** (base seeds: admin user, example objects/systems, standard
-> texts); it is still a legacy document and is rewritten into the small-model format
-> first, and its spec slices `specs/02-data-model.md` and `specs/00-conventions.md`
-> are still placeholders. The remaining WPs are working plans and are implemented
+> In Phase 1 **WP-M1-01** until **WP-M1-06** are implemented (foundation, Compose,
+> Drizzle base tables, i18n skeleton, RBAC tables + system role seed, bootstrap
+> administrator seed with Argon2id). The next package is **WP-M1-07** (login,
+> session cookie, `/api/v1/me`); it is still a legacy document and is rewritten into
+> the small-model format first. The example objects, systems and standard texts that
+> the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
+> (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
+> `WP-M2-01` now depends on WP-M2-00 and WP-M2-00 waits for a filled
+> `specs/02-data-model.md`. The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
 

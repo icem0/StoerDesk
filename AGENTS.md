@@ -15,7 +15,7 @@ work package first. Never implement a feature that has no work package.
 ## Current status
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
-WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05.** The repository contains:
+WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06.** The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
   (placeholder chapters stay authoritative from `PLAN.md` until filled),
@@ -101,6 +101,9 @@ and IDE support.
   (credentials as in `.env.example`).
 - Migrations: `npm run db:migrate -w @stoerdesk/api`; adapt the schema with
   `npm run db:generate -w @stoerdesk/api` (drizzle-kit, output folder `src/db/migrations`).
+- Seeds are idempotent and ordered: `npx tsx src/db/seed-rbac.ts`, then
+  `npx tsx src/db/seed-base.ts` (bootstrap administrator from `SEED_ADMIN_EMAIL` /
+  `SEED_ADMIN_PASSWORD`). Seed output never contains an e-mail or a password.
 - API integration tests run against a real database via `TEST_DATABASE_URL`
   (fallback `DATABASE_URL`). If the database is unreachable these tests are skipped
   and `npm run check` stays green — they do not replace a database setup, but they do

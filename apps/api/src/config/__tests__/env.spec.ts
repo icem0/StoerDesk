@@ -36,3 +36,56 @@ describe('databaseConnectionUrl', () => {
     expect(databaseConnectionUrl(env)).toBe('postgres://stoerdesk@db:5432/stoerdesk')
   })
 })
+
+describe('bootstrap administrator seed contract', () => {
+  it('accepts an empty seed pair', () => {
+    expect(() => loadEnv({ SEED_ADMIN_EMAIL: '', SEED_ADMIN_PASSWORD: '' })).not.toThrow()
+  })
+
+  it('requires both seed values together', () => {
+    expect(() => loadEnv({ SEED_ADMIN_PASSWORD: 'a-long-enough-password' })).toThrow(
+      /SEED_ADMIN_EMAIL is required/,
+    )
+    expect(() => loadEnv({ SEED_ADMIN_EMAIL: 'admin@example.org' })).toThrow(
+      /SEED_ADMIN_PASSWORD is required/,
+    )
+  })
+
+  it('rejects a malformed e-mail address', () => {
+    expect(() =>
+      loadEnv({
+        SEED_ADMIN_EMAIL: 'not-an-email',
+        SEED_ADMIN_PASSWORD: 'a-long-enough-password',
+      }),
+    ).toThrow(/SEED_ADMIN_EMAIL must be a valid e-mail address/)
+  })
+
+  it('rejects a seed password shorter than 12 characters', () => {
+    expect(() =>
+      loadEnv({ SEED_ADMIN_EMAIL: 'admin@example.org', SEED_ADMIN_PASSWORD: 'short12' }),
+    ).toThrow(/SEED_ADMIN_PASSWORD must be at least 12 characters/)
+  })
+
+  it('names the variable in the error but never the seed value', () => {
+    const secret = 'unique-seed-value-1'
+
+    try {
+      loadEnv({ SEED_ADMIN_EMAIL: 'not-an-email', SEED_ADMIN_PASSWORD: secret })
+      expect.unreachable('the seed pair was accepted')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+
+      expect(message).toContain('SEED_ADMIN_EMAIL')
+      expect(message).not.toContain(secret)
+    }
+  })
+
+  it('accepts a complete seed pair', () => {
+    expect(() =>
+      loadEnv({
+        SEED_ADMIN_EMAIL: 'admin@example.org',
+        SEED_ADMIN_PASSWORD: 'a-long-enough-password',
+      }),
+    ).not.toThrow()
+  })
+})
