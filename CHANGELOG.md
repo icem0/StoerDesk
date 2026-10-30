@@ -167,6 +167,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
+  `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
+  requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth
+  routes, the admin users routes) from what is still planned (public report route,
+  ticket state machine, notification outbox, pg-boss jobs, Dexie working copy), the
+  permission source of truth is corrected to `packages/shared/src/permissions.ts`,
+  and the locale table states `de` as default and reference while `en` must be
+  complete.
 - WP-M1-10: `CONTRIBUTING.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md` are English
   now, and `CODE_OF_CONDUCT.md` carries the full Contributor Covenant 2.1 text
   instead of a paraphrase; the last German step name in
@@ -218,6 +226,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - WP-M1-10b: while adding the `.github/ISSUE_TEMPLATE/` entry, the German
   drizzle-kit comment in `.prettierignore` was translated — `AGENTS.md` requires
   English everywhere.
+- WP-M1-10c: the glossary names each term in English and keeps the German UI label in
+  parentheses (`Objekt`, `Anlage`, `Rolle`), so the vocabulary of the German product
+  text stays findable from English developer documentation.
 
 ### Not implemented (by design)
 

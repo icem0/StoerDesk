@@ -3,10 +3,10 @@
 Wird nach jedem Work Package aktualisiert. Max. 200 Zeilen.
 Ein Satz pro Modul. Verzeichnisstruktur nur bis Ebene 3.
 
-> Deviation (WP-M1-10): this map and the `docs/` placeholders (`ARCHITECTURE`,
-> `COMPLIANCE`, `GLOSSARY`, `I18N`, `DECISIONS` plus the ADRs) are still partly
-> German, which breaks the English rule of `AGENTS.md`. Normalization is the scope
-> of WP-M1-10c, WP-M1-10d and WP-M1-11.
+> Deviation (WP-M1-10, WP-M1-10c): the four `docs/` placeholders (`ARCHITECTURE`,
+> `COMPLIANCE`, `GLOSSARY`, `I18N`) are English now. This map and `docs/DECISIONS.md`
+> with the ADRs in `docs/DECISIONS/` are still partly German, which breaks the English
+> rule of `AGENTS.md`. Normalization is the scope of WP-M1-10d and WP-M1-11.
 
 ## Struktur
 
@@ -139,7 +139,9 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > active admin), **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
 > `SECURITY.md`, `CODE_OF_CONDUCT.md` with the Contributor Covenant 2.1 text — plus the
 > English CI step name) and **WP-M1-10b** (the GitHub issue forms for bug, feature and
-> security are valid GitHub issue forms again, with the 112-only emergency notice).
+> security are valid GitHub issue forms again, with the 112-only emergency notice) and
+> **WP-M1-10c** (`docs/ARCHITECTURE.md`, `docs/COMPLIANCE.md`, `docs/GLOSSARY.md` and
+> `docs/I18N.md` are English).
 > The compose stack runs the whole system (db, api, web) and the optional
 > notification channels (external ntfy, signal, matrix, mail) from one `.env`;
 > `npm run env:create` generates it with random secrets. The default build context

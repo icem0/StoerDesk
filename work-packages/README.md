@@ -12,7 +12,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 14  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 15  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
@@ -60,7 +60,9 @@ one is rewritten into the small-model format before implementation.
 > (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`). The broken issue forms go
 > to **WP-M1-10b** (implemented — the three `.github/ISSUE_TEMPLATE/` forms are valid
 > GitHub issue forms again, with the 112-only emergency notice, and are ignored by
-> Prettier), the German `docs/` placeholders to **WP-M1-10c** and the German
+> Prettier), the German `docs/` placeholders to **WP-M1-10c** (implemented —
+> `docs/ARCHITECTURE.md`, `docs/COMPLIANCE.md`, `docs/GLOSSARY.md` and `docs/I18N.md`
+> are English and separate the live routes from the planned modules) and the German
 > ADRs to **WP-M1-10d**.
 > The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
