@@ -80,22 +80,7 @@ jobs:
         if: steps.docker.outputs.available == 'true'
         run: sh scripts/docker-smoke.sh
 
-  playwright:
-    name: Playwright (E2E)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-
-      - name: Install
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: E2E
-        run: npm run test:run --workspace @stoerdesk/web
+  # No Playwright job yet: the repository has no playwright.config and no E2E
+  # specs. The former `playwright` job only re-ran the web unit tests with an
+  # installed Chromium, so it was pure CI minutes. It comes back with the first
+  # real E2E work package (WP-M1-11/WP-M1-12).

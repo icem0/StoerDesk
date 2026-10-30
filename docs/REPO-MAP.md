@@ -46,7 +46,7 @@ PLAN.md                         Binding build plan (scope, stack, phases, WP lim
 specs/                          Expanded specification slices (PLAN.md wins while a slice is a placeholder)
 work-packages/                  Work packages, one Markdown file per WP (m0, m1, m2)
 docs/                           ARCHITECTURE, COMPLIANCE, DECISIONS (ADR), GLOSSARY, I18N, REPO-MAP, DEPLOYMENT, WP-TEMPLATE
-.github/workflows/              CI: check (quality, Docker smoke, E2E) and publish images (GHCR)
+.github/workflows/              CI: check (quality, Docker smoke) and publish images (GHCR)
 .github/ISSUE_TEMPLATE/         GitHub issue forms: bug, feature, security (valid YAML, 112-only notice)
 scripts/                        Orchestration, split-spec, i18n:check, create-env, wp-check, docker-smoke
 Dockerfile                      Multi-stage image build (targets: api, web)

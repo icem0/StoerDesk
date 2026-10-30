@@ -2,9 +2,10 @@ name: publish images
 
 # The resolved version is unknown when the run starts, so this label carries the
 # trigger and the source branch of the calling `check` run. GitHub Actions has no
-# substring() function, so no short SHA here; the still open
-# `Resolve version tag` step renames the run to `publish <version>` as soon as the tag
-# is known (WP-M1-10f).
+# substring() function, so no short SHA here. On `workflow_dispatch` runs the
+# `Resolve version tag` step renames the run to `publish <version>`; on
+# `workflow_run` runs the token is read-only and the version shows in the job
+# names and the job summary instead (WP-M1-10f).
 run-name: publish images · ${{ github.event_name }} · ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
 
 on:
@@ -19,16 +20,21 @@ on:
         required: true
         type: string
 
-# `actions: write` lets the version job rename the run to `publish <version>`;
-# the rename step is `continue-on-error: true`, so a missing scope never breaks
-# the publish (WP-M1-10f).
+# `actions: write` lets the version job rename the run to `publish <version>`.
+# Note: on `workflow_run` triggers GitHub hands out a read-only GITHUB_TOKEN that
+# cannot be elevated, so the rename only takes effect on `workflow_dispatch`
+# runs; there the version is carried by the job names and the job summary.
+# The rename step is `continue-on-error: true`, so it never breaks the publish.
 permissions:
   contents: read
   packages: write
   actions: write
 
+# One global publish queue: consecutive pushes would otherwise build images in
+# parallel and a slower run of an older commit could overwrite `latest`
+# afterwards. Runs queue behind each other (max two waiting), never cancel.
 concurrency:
-  group: build-and-push-${{ github.event.workflow_run.head_sha || github.sha }}
+  group: publish-queue
   cancel-in-progress: false
 
 env:
@@ -67,8 +73,9 @@ jobs:
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       # The run label cannot carry the version when the run starts, so the
-      # resolved tag is written into the run name here. Guarded, because a
-      # missing `actions: write` scope must never break the publish.
+      # resolved tag is written into the run name here. This only succeeds on
+      # `workflow_dispatch` runs — on `workflow_run` triggers the GITHUB_TOKEN is
+      # read-only — and is guarded, so it never breaks the publish.
       - name: Name the run after the version
         continue-on-error: true
         env:
