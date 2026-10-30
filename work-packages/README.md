@@ -12,14 +12,15 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 17  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 19  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
-`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-10`, `WP-M1-10b`,
-`WP-M1-10c`, `WP-M1-10e`, `WP-M1-10f` and `WP-M2-00`. The remaining `m1`
-and `m2` documents are legacy plans: they stay valid as scope descriptions, but each
-one is rewritten into the small-model format before implementation.
+`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-10`,
+`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f` and `WP-M2-00`. The
+remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
+descriptions, but each one is rewritten into the small-model format before
+implementation.
 
 ## Status
 
@@ -54,6 +55,12 @@ one is rewritten into the small-model format before implementation.
 > duplicate e-mail and unknown role key errors, and a last-active-admin guard. The
 > role API, `usePermission`, the admin users UI and the admin roles UI move to
 > WP-M1-09b–WP-M1-09d.
+> **WP-M1-09b** (`09b-role-api.md`) is implemented as the admin roles API:
+> `GET /api/v1/roles` plus `POST`, `PATCH` and `DELETE /api/v1/roles/:key` with
+> `role.read` / `role.write` guards, shared role schemas, catalog-validated
+> permission keys and the service-level guards of `specs/01-rbac.md` §3.5 — seeded
+> system roles answer `409 system_role_protected`, a role still held by users
+> `409 role_in_use`. `specs/01-rbac.md` gained §3.8 for it.
 > **WP-M1-10** (`10-ci-workflow.md`) was rewritten into the small-model format and
 > shrunk: its CI, `LICENSE`, `README.md`, `CHANGELOG.md`, `dependabot.yml` and PR
 > template items are already delivered (WP-M1-01, the deployment commits, WP-M0-05),
@@ -86,19 +93,19 @@ running phase are implemented in numeric order before the next phase starts.
 | WP        | Content                                                 | Status      | WP file |
 | --------- | ------------------------------------------------------- | ----------- | ------- |
 | WP-M1-10f | traceable CI run, job and step names                    | in-progress | yes     |
-| WP-M1-09b | role API: role CRUD and permission assignment           | open        | no      |
 | WP-M1-09c | `usePermission` and the admin users UI                  | open        | no      |
 | WP-M1-09d | admin roles UI                                          | open        | no      |
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | open        | no      |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open        | no      |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open        | yes     |
 | WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned     | yes     |
 | WP-M1-12  | Playwright smoke test "login as admin works"            | planned     | yes     |
 
 `WP-M1-10f` is partially delivered — the `run-name` labels and the workflow rename are
 implemented, the remaining steps are the `Not done yet in this WP` list in
 `work-packages/m1/10f-ci-run-naming.md`.
-`WP-M1-09b`–`WP-M1-09e` and `WP-M1-10d` are announced only: the WP file column says
-`no`, so writing the document is the first step of that work package.
+`WP-M1-09c`–`WP-M1-09e` are announced only: the WP file column says `no`, so writing
+the document is the first step of that work package. `WP-M1-10d` has its document
+(`10d-adrs-english.md`) but no implementation yet.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
 "login as admin works" cannot be tested.
 

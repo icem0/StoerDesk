@@ -164,6 +164,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `apps/api/src/admin/__tests__/users.integration.spec.ts` covers permission
   guards, list/create/update responses, duplicate handling and the last-admin
   lockout guard.
+- WP-M1-09b: admin role API in `apps/api/src/admin/roles.ts` —
+  `GET /api/v1/roles` (`role.read`) answers every role with `isSystem`, its sorted
+  `permissionKeys` and `userCount`, `POST /api/v1/roles` creates a custom role
+  (`is_system = false`) with de-duplicated catalog keys,
+  `PATCH /api/v1/roles/:key` replaces the grant set and `DELETE /api/v1/roles/:key`
+  removes an unused custom role (`role_permissions` cascade). The write routes are
+  guarded by `role.write`; unknown permission keys answer
+  `422 unknown_permission_key`, an existing or reserved key `409 role_key_taken`, a
+  seeded system role `409 system_role_protected` (the service-level guard of
+  `specs/01-rbac.md` §3.5, the DB trigger stays the backstop) and a role still held
+  by users `409 role_in_use`. Shared role schemas live in
+  `packages/shared/src/schemas/role.ts`, `specs/01-rbac.md` gained §3.8; the
+  integration spec `apps/api/src/admin/__tests__/roles.integration.spec.ts` covers
+  the guards, the seeded grant counts, create/replace/delete, the protected system
+  roles and that a replaced grant set acts in `GET /api/v1/me` without a new login.
 - WP-M1-10e: follow-up closure rule — `AGENTS.md` gained the section
   _Open follow-ups (mandatory closure)_ (a split creates its child WP files in the
   same commit, open items are collected with
@@ -255,6 +270,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - All domain logic (tickets, objects, on-call, notifications, UI).
   Implementation happens only as a work package from `work-packages/` — so far
-  WP-M1-01 to WP-M1-09 (foundation, base data model, RBAC, seeds, session core,
-  the auth HTTP layer, the permission guard and the admin users API) are
+  WP-M1-01 to WP-M1-09b (foundation, base data model, RBAC, seeds, session core,
+  the auth HTTP layer, the permission guard and the admin users and roles APIs) are
   implemented.

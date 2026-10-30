@@ -16,9 +16,9 @@ work package first. Never implement a feature that has no work package.
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04, WP-M0-05
 (Phase 0 complete) and WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05,
-WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-10, WP-M1-10b, WP-M1-10c,
+WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-10, WP-M1-10b, WP-M1-10c,
 WP-M1-10e.**
-The open phase 1 items (WP-M1-09b–WP-M1-09e, WP-M1-10d, WP-M1-10f, WP-M1-11,
+The open phase 1 items (WP-M1-09c–WP-M1-09e, WP-M1-10d, WP-M1-10f, WP-M1-11,
 WP-M1-12) are listed in the `Open follow-ups` table of `work-packages/README.md` and
 in `PLAN.md` §16.
 The repository contains:
@@ -51,6 +51,13 @@ The repository contains:
   create/update, transactional role assignment, duplicate e-mail and unknown role
   key errors, and a guard that does not deactivate or un-role the last active
   admin),
+- the admin roles API (`apps/api/src/admin/roles.ts`: `GET /api/v1/roles` plus
+  `POST`, `PATCH` and `DELETE /api/v1/roles/:key`, guarded by `role.read` or
+  `role.write`; shared role schemas in `packages/shared/src/schemas/role.ts`; only
+  custom roles are writable — seeded system roles answer `409` with
+  `system_role_protected`, a role still held by users `409 role_in_use`, an unknown or
+  reserved key `409 role_key_taken`, a key outside the catalog `422` with
+  `unknown_permission_key`),
 - the documentation in `docs/`.
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as

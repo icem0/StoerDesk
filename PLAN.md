@@ -552,7 +552,8 @@ when its exit criteria and its acceptance tests pass.
 ### Current state and open backlog
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
-**WP-M1-10e**; the table below is the backlog of record (mirrored and kept current in
+**WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**; the table below is the
+backlog of record (mirrored and kept current in
 `work-packages/README.md`, enforced by the `AGENTS.md` rule _Open follow-ups
 (mandatory closure)_ — open items of a phase are finished in numeric order before the
 next phase starts).
@@ -560,7 +561,6 @@ next phase starts).
 | WP        | Content                                      | Status      |
 | --------- | -------------------------------------------- | ----------- |
 | WP-M1-10f | traceable CI run, job and step names         | in-progress |
-| WP-M1-09b | role API (role CRUD, permission assignment)  | open        |
 | WP-M1-09c | `usePermission` plus admin users UI          | open        |
 | WP-M1-09d | admin roles UI                               | open        |
 | WP-M1-09e | login form, logout and route guard (web)     | open        |

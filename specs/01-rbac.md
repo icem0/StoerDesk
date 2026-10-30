@@ -26,8 +26,8 @@ report form (`/m/<qr_token>`). Authenticated users hold exactly one of five role
 
 All five are **system roles** (`roles.is_system = true`). They are created by the
 seed from `packages/shared/src/permissions.ts`, cannot be deleted, and their
-permission set is rewritten on every seed run. Custom (non-system) roles are out
-of scope for phase 1 and stay untouched by the seed. **(plan)**
+permission set is rewritten on every seed run. Custom (non-system) roles are never
+created or changed by the seed; they arrive through the role API (§3.8). **(plan)**
 
 ### 3.2 Permission model
 
@@ -137,7 +137,7 @@ API guard and the UI all read the **same** source.
   the seed.
 - A database trigger blocks `DELETE` on roles with `is_system = true`, so `admin`
   cannot be lost: the trigger raises the message `system_role_protected`
-  (SQLSTATE `P0001`). Service-level guards arrive with WP-M1-09.
+  (SQLSTATE `P0001`). The service-level guards are part of the role API (§3.8).
 - Role changes are not audited in phase 1; an audit event for role and permission
   edits arrives with the admin UI (WP-M1-09).
 
@@ -164,14 +164,34 @@ Reviewed for WP-M1-07, taken from `PLAN.md` §4 (Auth) and §15 (Security).
 
 Reviewed for WP-M1-08, taken from §3.2 and `PLAN.md` §5.
 
-| Concern               | Decision                                                                                                                                                                                                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Service function      | `loadEffectivePermissions(database, userId)` — union of the role permissions plus explicit `allow` rows, minus every explicit `deny` row; returns sorted catalog keys (`PermissionKey[]`), never text. Two queries: role union, then the `user_permissions` overrides **(plan)** |
-| Per-request cache     | the promise is cached on the request (`request.effectivePermissions`), so several guards in one request resolve once, not once per query; no cross-request cache — a change acts without a new login (§3.2)                                                                 |
-| Guard                 | `requirePermission(database, ...keys)` preHandler with OR semantics; anonymous → `401 { code: 'session_invalid' }`, no match → `403 { code: 'forbidden', params: {} }`                                                                                                       |
-| `GET /api/v1/me`      | gains `permissions` (the sorted effective keys) next to `roles`, still no translated text; the login answer uses the same schema, so it carries them too **(plan)**                                              |
-| Probe route           | `GET /api/v1/_test/require-permission/:keys` (comma-separated keys) registered only when `NODE_ENV=test`, so the guard is testable over HTTP; never registered in `development` or `production` **(plan)**                                                                    |
-| UI side               | `usePermission` reads the `permissions` array of `/me`; hiding is cosmetic, the server stays the only enforcement point (§3.2)                                                                                                                                                |
+| Concern           | Decision                                                                                                                                                                                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service function  | `loadEffectivePermissions(database, userId)` — union of the role permissions plus explicit `allow` rows, minus every explicit `deny` row; returns sorted catalog keys (`PermissionKey[]`), never text. Two queries: role union, then the `user_permissions` overrides **(plan)** |
+| Per-request cache | the promise is cached on the request (`request.effectivePermissions`), so several guards in one request resolve once, not once per query; no cross-request cache — a change acts without a new login (§3.2)                                                                      |
+| Guard             | `requirePermission(database, ...keys)` preHandler with OR semantics; anonymous → `401 { code: 'session_invalid' }`, no match → `403 { code: 'forbidden', params: {} }`                                                                                                           |
+| `GET /api/v1/me`  | gains `permissions` (the sorted effective keys) next to `roles`, still no translated text; the login answer uses the same schema, so it carries them too **(plan)**                                                                                                              |
+| Probe route       | `GET /api/v1/_test/require-permission/:keys` (comma-separated keys) registered only when `NODE_ENV=test`, so the guard is testable over HTTP; never registered in `development` or `production` **(plan)**                                                                       |
+| UI side           | `usePermission` reads the `permissions` array of `/me`; hiding is cosmetic, the server stays the only enforcement point (§3.2)                                                                                                                                                   |
+
+### 3.8 Role API
+
+Reviewed for WP-M1-09b, taken from §3.1, §3.4, §3.5 and `PLAN.md` §16. The role API
+is the only runtime path that creates or changes roles; the seed stays the authority
+for the five system roles (§3.1, §3.5).
+
+| Concern                             | Decision                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity                            | `roles.key` addresses a role in routes and payloads — keys are unique (§4.1) and are what the seed, the guard and the UI use; the UUID stays internal **(plan)**                                                                                                                                           |
+| `GET /api/v1/roles` (`role.read`)   | all roles ordered by key with `key`, `isSystem`, the sorted `permissionKeys` and `userCount` (holders from `user_roles`); keys only, never translated text **(plan)**                                                                                                                                      |
+| `POST /api/v1/roles` (`role.write`) | creates a **custom** role (`is_system = false`): `key` matches `^[a-z][a-z0-9_]{1,63}$`, `permissionKeys` de-duplicated; an existing or reserved key answers `409 { code: 'role_key_taken' }`; `201` with the role summary **(plan)**                                                                      |
+| Permission validation               | every key must be in the catalog (`isPermissionKey`, §3.4) before anything is written: `422 { code: 'unknown_permission_key', params: { fields: ['permissionKeys'], permissionKeys } }` **(plan)**                                                                                                         |
+| `PATCH /api/v1/roles/:key`          | replaces `permissionKeys` when supplied; `key` and `isSystem` are immutable; a system role answers `409 { code: 'system_role_protected' }` because its grant set is rewritten by every seed run (§3.1), an unknown role `404 { code: 'role_not_found' }` **(plan)**                                        |
+| `DELETE /api/v1/roles/:key`         | custom roles only — system roles `409 system_role_protected` (the service guard of §3.5, the `protect_system_roles` trigger stays the backstop), a role still held by users `409 { code: 'role_in_use', params: { fields: ['key'], userCount } }`; success `204` and `role_permissions` cascade **(plan)** |
+| Effect                              | grants are resolved per request (§3.2), so a changed role acts on the next request without a new login — asserted through `GET /api/v1/me` **(plan)**                                                                                                                                                      |
+| Body and path errors                | parsed manually like the user API: `400 { code: 'invalid_request', params: { fields } }` with field paths, never e-mail addresses or secrets **(plan)**                                                                                                                                                    |
+
+Out of scope: per-user `user_permissions` overrides over HTTP (the table stays
+seed-only), role renames, role copying and any audit trail (§3.5).
 
 ## 4.1 — Tables (RBAC)
 

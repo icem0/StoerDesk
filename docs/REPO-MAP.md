@@ -64,6 +64,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `apps/api/src/auth/password.ts`                     | Argon2id-Hashing (PHC-Format) und Verify ohne Throw bei kaputtem Hash (WP-M1-06)                                                                                                      | `hashPassword(plain)`, `verifyPassword(storedHash, plain)`, `PASSWORD_HASH_OPTIONS`                                                               |
 | `apps/api/src/auth/session.ts`                      | Session-Kern: 256-Bit-Token, SHA-256-`token_hash`, loadSession mit Delete-on-Read abgelaufener Zeilen, Cookie-Optionen (WP-M1-07)                                                     | `SESSION_COOKIE_NAME`, `createSession`, `loadSession`, `destroySession`, `loadUserRoleKeys`, `sessionCookieOptions`, `hashSessionToken`           |
 | `packages/shared/src/schemas/auth.ts`               | Zod-Schemas für Login-Payload und `/me`-Antwort (WP-M1-07)                                                                                                                            | `loginRequestSchema`, `meResponseSchema`, `LoginRequest`, `MeResponse`, `AuthUser`                                                                |
+| `packages/shared/src/schemas/role.ts`               | Zod schemas for the admin role API: role key slug, permission keys, role summary and list response (WP-M1-09b)                                                                        | `roleKeySchema`, `roleSummarySchema`, `roleListResponseSchema`, `createRoleRequestSchema`, `updateRoleRequestSchema`                              |
 | `apps/api/src/auth/sessionPlugin.ts`                | `fastify-plugin`: liest das `session`-Cookie und setzt `request.user`; PreHandler für authentifizierte Routes (WP-M1-07b)                                                             | `sessionPlugin`, `requireUser` (`401 { code: 'session_invalid' }`), `AuthPluginOptions`                                                           |
 | `apps/api/src/auth/routes.ts`                       | Login (Argon2id, Decoy-Hash, Rate-Limit `5`/min/IP), Logout und `/me`; Fehler immer als `{ code, params }`; Login und `/me` liefern Rollen- und Permission-Keys (WP-M1-07b, WP-M1-08) | `authRoutes` — `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/me`                                                            |
 | `apps/api/src/db/migrations/0000_base_tables.sql`   | Basistabellen und Funktion `gen_uuid_v7()` (ADR-0002)                                                                                                                                 | —                                                                                                                                                 |
@@ -71,6 +72,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `apps/api/src/db/__tests__/helpers/testDatabase.ts` | leere Test-Datenbank (Fallback: angegebene DB), Skip ohne erreichbare DB                                                                                                              | `openTestDatabase(): Promise<TestDatabaseHandle>`                                                                                                 |
 | `apps/api/src/auth/requirePermission.ts`            | effective permissions (role union plus allows, minus every denial) cached per request, OR-linked guard, probe route only in `NODE_ENV=test` (WP-M1-08)                                | `loadEffectivePermissions`, `effectivePermissions`, `requirePermission(database, ...keys)`, `permissionProbeRoutes`                               |
 | `apps/api/src/admin/users.ts`                       | Admin-User-API: read users/role keys, create users with Argon2id password and role links, update mutable fields, guards for last active admin (WP-M1-09)                              | `adminUsersRoutes` — `GET /api/v1/users`, `POST /api/v1/users`, `PATCH /api/v1/users/:id`                                                         |
+| `apps/api/src/admin/roles.ts`                       | Admin role API: roles with permission keys and user counts, create a custom role, replace its grant set, delete an unused role; seeded system roles are guarded (WP-M1-09b)           | `adminRolesRoutes` — `GET /api/v1/roles`, `POST /api/v1/roles`, `PATCH /api/v1/roles/:key`, `DELETE /api/v1/roles/:key`                           |
 | `apps/api/src/tickets/state-machine.ts` (geplant)   | `transitionTicket(ticketId, event, actor, payload)` — prüft Übergänge, schreibt Event                                                                                                 | `transitionTicket(...): Promise<Ticket>`                                                                                                          |
 | `packages/shared/src/permissions.ts`                | Permission-Katalog (37 Keys) und `DEFAULT_ROLES` — Single Source of Truth (WP-M1-05)                                                                                                  | `PERMISSIONS`, `PERMISSION_KEYS`, `DEFAULT_ROLES`, `SYSTEM_ROLE_KEYS`, `isPermissionKey`                                                          |
 | `packages/shared/src/i18n/`                         | server translations and seed resource files (`server.*`, `seed.*`) (WP-M1-04)                                                                                                         | `t(locale, key, params): string`                                                                                                                  |
@@ -136,7 +138,10 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > test-only probe route) and **WP-M1-09** (admin users API: list users with role
 > keys, create users with Argon2id hashes and role links, update mutable user fields
 > and role links, with guards for duplicate e-mail, unknown role keys and the last
-> active admin), **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
+> active admin), **WP-M1-09b** (admin roles API: roles with permission keys and user
+> count, create custom roles, replace grant sets, delete unused custom roles, with
+> service guards for seeded system roles and roles still held by users),
+> **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
 > `SECURITY.md`, `CODE_OF_CONDUCT.md` with the Contributor Covenant 2.1 text — plus the
 > English CI step name) and **WP-M1-10b** (the GitHub issue forms for bug, feature and
 > security are valid GitHub issue forms again, with the 112-only emergency notice) and
@@ -148,7 +153,8 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > is the local checkout; deployment panels set `IMAGE_BUILD_CONTEXT` to the Git URL.
 > `PLAN.md` is the binding build plan, and `work-packages/m0` holds the Phase 0
 > startability work packages. The Web app still has no UI beyond the shell; the API
-> serves `/api/v1/health`, the auth routes and the admin users routes, and holds the
+> serves `/api/v1/health`, the auth routes, the admin users routes and the admin roles
+> routes, and holds the
 > schema, the seeds, the session core and the notification channel adapters. Only the
 > `common` namespace has real keys, the remaining namespaces are intentionally
 > empty. Every further work package follows individually after approval from
