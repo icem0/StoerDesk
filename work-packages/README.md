@@ -96,7 +96,9 @@ implementation.
 > the legacy plan was rewritten into the small-model format and `docs/REPO-MAP.md` is now
 > English throughout, lists every phase 1 module once, and matches the directory tree
 > (168 lines, limit 200). With that every `docs/` file is English, so no language deviation
-> is left. `WP-M1-12` is the only open phase 1 item.
+> is left. `WP-M1-12` implements the phase 1 exit criterion — its Playwright smoke test
+> passes against a real throwaway database in German and in English, and phase 1 is closed
+> once this commit is pushed; phase 2 starts with WP-M2-00.
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
@@ -119,7 +121,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | done                    | yes     |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | done                    | yes     |
 | WP-M1-11  | `docs/REPO-MAP.md` English and current                  | done                    | yes     |
-| WP-M1-12  | Playwright smoke test "login as admin works"            | planned                 | yes     |
+| WP-M1-12  | Playwright smoke test "login as admin works"            | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -154,6 +156,9 @@ and `apps/web/src/routes/index.tsx`, which the old table missed), the convention
 and the implementation status; 168 lines.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
 "login as admin works" cannot be tested.
+`WP-M1-12` is done — its smoke E2E runs in a real browser against a real database,
+and phase 1 backlog is closed: every item in the table is `done`, and phase 2
+starts with WP-M2-00.
 
 ## Validation
 

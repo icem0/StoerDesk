@@ -20,10 +20,11 @@ WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-09c, WP-M1-0
 WP-M1-09e, WP-M1-10, WP-M1-10b, WP-M1-10c,
 WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h) plus the
 CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new"), the
-documentation follow-up **WP-M1-10d** (English ADRs and decision index) and the
-documentation follow-up **WP-M1-11** (English, current repository map).
-The only open phase 1 item (WP-M1-12) is listed in the `Open follow-ups` table of
-`work-packages/README.md` and in `PLAN.md` §16.
+documentation follow-up **WP-M1-10d** (English ADRs and decision index), the
+documentation follow-up **WP-M1-11** (English, current repository map) and the
+phase 1 closing package **WP-M1-12** (Playwright smoke test "login as admin works").
+**Phase 1 is closed** — the `Open follow-ups` table of `work-packages/README.md` and
+`PLAN.md` §16 hold no open phase 1 item anymore, phase 2 starts with WP-M2-00.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -80,7 +81,14 @@ The repository contains:
   and the decisions (`DECISIONS.md` with the index and the ADRs `DECISIONS/0001` and
   `DECISIONS/0002`) are English, and `REPO-MAP.md` is English too — its structure tree, its
   module table (one row per module: purpose plus public API) and its status section describe
-  the state after WP-M1-11 and are updated after every work package.
+  the state after WP-M1-12 and are updated after every work package,
+- the smoke E2E (`apps/web/e2e/auth.spec.ts` plus `apps/web/playwright.config.ts`): Chromium
+  logs in as the seeded administrator in German and in English, asserts `GET /api/v1/me`
+  with role `admin` and opens `/admin/users`. `scripts/e2e-check.mjs` creates the throwaway
+  database `stoerdesk_e2e_<run>` (`TEST_DATABASE_URL`, fallback `DATABASE_URL`), runs
+  migrations and both seeds into it, runs Playwright and drops it again; `npm run test:e2e`
+  is the last gate of `npm run check`, and the `check` CI job installs Chromium because that
+  job already provides the Postgres-16 service.
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as
 the implementation of a work package from `work-packages/` — package by package,
@@ -136,6 +144,9 @@ Which covers:
 3. `vitest run` — one Vitest project per workspace.
 4. `npm run i18n:check` — de/en key parity and referenced keys.
 5. `npm run wp:check` — work-package size, context budget and required fields.
+6. `npm run test:e2e` — Playwright smoke test on a throwaway database (`WP-M1-12`);
+   without a reachable database or without a startable browser it prints one notice and
+   stays green locally, but in CI (`CI=true`) a missing prerequisite is an error.
 
 Additionally when needed:
 
@@ -206,6 +217,12 @@ and IDE support.
   (fallback `DATABASE_URL`). If the database is unreachable these tests are skipped
   and `npm run check` stays green — they do not replace a database setup, but they do
   verify the migration, the constraints and `gen_uuid_v7()`.
+- The E2E (`npm run test:e2e`) uses the same connection to create its own throwaway
+  database `stoerdesk_e2e_<run>`, migrates and seeds it and drops it again — it never
+  writes into a shared database, and it skips when the account may not `CREATE DATABASE`.
+  The bundled Playwright Chromium is a glibc build: in a musl container (this Alpine
+  development container) point `E2E_CHROMIUM_PATH` at a distribution browser, e.g.
+  `E2E_CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e`.
 
 ## i18n
 

@@ -138,7 +138,7 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 > missing API, `PLAN.md` anchored, Docker smoke test with the CI job `docker-smoke`,
 > versioned GHCR images after a green `check`).
 >
-> **Phase 1 through WP-M1-11**: WP-M1-01 monorepo and tooling, WP-M1-02 Compose plus
+> **Phase 1 (through WP-M1-12)**: WP-M1-01 monorepo and tooling, WP-M1-02 Compose plus
 > `.env.example`, WP-M1-03 Drizzle base schema and `0000_base_tables`, WP-M1-04 i18n
 > skeleton, WP-M1-05 RBAC tables with `0001_rbac_tables` and `seed-rbac.ts`, WP-M1-06
 > `password.ts` and `seed-base.ts`, WP-M1-07 session core and shared auth schemas,
@@ -148,9 +148,9 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 > WP-M1-10/10b/10c English governance files, issue forms and `docs/` placeholders,
 > WP-M1-10e the follow-up closure rule, WP-M1-10f/10h/10i the tag-triggered CI chain with
 > versioned run names and the dispatched publish run, WP-M1-10d the English ADRs and
-> WP-M1-11 this map. Open: **WP-M1-12** (Playwright smoke test "login as admin works"),
-> the last item of the phase 1 backlog — the backlog of record is the table
-> _Open follow-ups_ in `work-packages/README.md` and `PLAN.md` §16.
+> WP-M1-11 this map. Done: **WP-M1-12** (Playwright smoke test "login as admin works"),
+> closes the phase 1 backlog — no open phase 1 item remains; the backlog of record is the
+> table _Open follow-ups_ in `work-packages/README.md` and `PLAN.md` §16.
 >
 > What the running system already does: the Compose stack serves db, api and web from one
 > `.env` (`npm run env:create` generates it), the API answers `/api/v1/health`, the auth

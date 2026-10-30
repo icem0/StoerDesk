@@ -31,6 +31,29 @@ export const namespaces = [
 
 export type Namespace = (typeof namespaces)[number]
 
+export const supportedLanguages = ['de', 'en'] as const
+
+/**
+ * Key the i18next language detector caches a chosen language under. The app has no
+ * language switcher yet (`specs/13-ui.md` is still a placeholder), but without this
+ * preference the `en` bundle would never be reachable in a running app — the WP-M1-12
+ * smoke test asserts the English UI, and a later switcher writes exactly this key.
+ */
+const storedLanguageKey = 'i18nextLng'
+
+/** `de` stays the default and the reference locale; a broken storage never breaks init. */
+function initialLanguage(): string {
+  try {
+    const stored = globalThis.localStorage?.getItem(storedLanguageKey)
+
+    return stored !== null && (supportedLanguages as readonly string[]).includes(stored)
+      ? stored
+      : 'de'
+  } catch {
+    return 'de'
+  }
+}
+
 void i18n.use(initReactI18next).init({
   resources: {
     de: {
@@ -54,9 +77,9 @@ void i18n.use(initReactI18next).init({
       settings: settingsEn,
     },
   },
-  lng: 'de',
+  lng: initialLanguage(),
   fallbackLng: 'de',
-  supportedLngs: ['de', 'en'],
+  supportedLngs: [...supportedLanguages],
   defaultNS: 'common',
   ns: [...namespaces],
   interpolation: {

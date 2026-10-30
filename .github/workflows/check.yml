@@ -57,7 +57,13 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Quality gates (typecheck, lint, tests, i18n, wp)
+      # WP-M1-12: the last gate of `npm run check` is the Playwright smoke test, so the
+      # browser belongs into this job — it already provides the Postgres-16 service whose
+      # account the E2E runner uses to create its own throwaway database.
+      - name: Install Chromium for the E2E smoke test
+        run: npx playwright install --with-deps chromium
+
+      - name: Quality gates (typecheck, lint, tests, i18n, wp, e2e)
         run: npm run check
         env:
           # The database integration tests need a reachable PostgreSQL 16; the
@@ -163,7 +169,9 @@ jobs:
             echo "- inputs: \`mode=check\`, \`version=${VERSION}\`, \`notes=${NOTES}\`"
           } >>"$GITHUB_STEP_SUMMARY"
 
-  # No Playwright job yet: the repository has no playwright.config and no E2E
-  # specs. The former `playwright` job only re-ran the web unit tests with an
-  # installed Chromium, so it was pure CI minutes. It comes back with the first
-  # real E2E work package (WP-M1-11/WP-M1-12).
+  # The Playwright smoke test of WP-M1-12 runs inside the `check` job, not in a job of its
+  # own: it needs the same Postgres-16 service, and `npm run test:e2e` is the last gate of
+  # `npm run check`, so one job carries both prerequisites and the publish chain above
+  # needs nothing new. The runner creates a throwaway database per run and skips with one
+  # notice when a prerequisite is missing — in CI nothing is missing, so the two E2E tests
+  # really run here.

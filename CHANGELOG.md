@@ -220,9 +220,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cosmetic only, `requirePermission` stays the enforcement point. `App.tsx` shows the
   signed-in e-mail, the admin links and the logout button. All strings live in the `common`
   namespace under `auth.*` (de and en complete: 80 keys each).
+- WP-M1-12: Playwright smoke E2E — `apps/web/e2e/auth.spec.ts` runs the phase 1 exit
+  criterion "login as admin works" in Chromium, once with the German UI and once with the
+  English one: login form of the seeded bootstrap administrator, the signed-in shell,
+  `GET /api/v1/me` answering role `admin` plus `user.read`, and `/admin/users` with the
+  seeded row and its role cell. `apps/web/playwright.config.ts` starts the API and the Vite
+  dev server (only the dev server proxies `/api`; the nginx path is the Docker smoke test)
+  on the E2E-only ports 3174/5174. `scripts/e2e-check.mjs` creates the throwaway database
+  `stoerdesk_e2e_<run>` from `TEST_DATABASE_URL`, runs the migrations and both seeds against
+  it, runs Playwright and drops it again; missing prerequisites produce one notice and a
+  green gate locally, in CI (`CI=true`) they are an error. `npm run test:e2e` is the last
+  gate of `npm run check`, and the `check` job installs Chromium with
+  `npx playwright install --with-deps chromium` — no extra CI job, because that job already
+  provides the Postgres-16 service. `E2E_CHROMIUM_PATH` selects a distribution browser in
+  containers that cannot run the bundled build.
 
 ### Changed
 
+- WP-M1-12: `apps/web/src/i18n/index.ts` reads the stored language preference
+  (`i18nextLng`, only `de`/`en`) as the initial language, with `de` still the default and
+  the reference locale and a broken storage never breaking init. Without it the `en` bundle
+  was unreachable in a running app, so no English test could exist; a later language
+  switcher UI writes exactly this key. `npm run check` gained the sixth gate `test:e2e`, and
+  the `check` job step is named `Quality gates (typecheck, lint, tests, i18n, wp, e2e)`.
 - WP-M1-10f (completed): `build.yml` closes the CI naming rule — `permissions:
 actions: write`, the job `Resolve version tag` gained the guarded step
   `Name the run after the version` (`gh api --method PATCH` renames the run to
@@ -373,11 +393,22 @@ images` runs of finished pull request runs are gone, and the check↔publish lin
 - WP-M1-10c: the glossary names each term in English and keeps the German UI label in
   parentheses (`Objekt`, `Anlage`, `Rolle`), so the vocabulary of the German product
   text stays findable from English developer documentation.
+- WP-M1-12: the bundled Playwright Chromium is a glibc build and cannot start in this
+  Alpine (musl) development container, so the two tests ran locally against the
+  distribution browser — `E2E_CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e`
+  printed `2 passed` after `prepared throwaway database …` and `dropped throwaway
+  database …`. Without that variable the runner prints its skip notice and `npm run check`
+  stays green, which is why the CI job installs the browser and reports the real run.
+- WP-M1-12: the legacy WP document `work-packages/m1/12-smoke-e2e.md` was rewritten into
+  the small-model format, and its four-line task list gained the ten-line stored-language
+  read in `apps/web/src/i18n/index.ts`: the acceptance demands an EN test, and the app had
+  no path to the `en` bundle.
 
 ### Not implemented (by design)
 
 - All domain logic (tickets, objects, on-call, notifications, UI).
   Implementation happens only as a work package from `work-packages/` — so far
-  WP-M1-01 to WP-M1-09b (foundation, base data model, RBAC, seeds, session core,
-  the auth HTTP layer, the permission guard and the admin users and roles APIs) are
+  WP-M1-01 to WP-M1-12 (foundation, base data model, RBAC, seeds, session core,
+  the auth HTTP layer, the permission guard, the admin users and roles APIs with their
+  UI, the CI chain and the Playwright smoke test) are
   implemented.

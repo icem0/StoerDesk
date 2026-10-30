@@ -566,7 +566,7 @@ next phase starts).
 | WP-M1-10i | publish run label carries the commit subject | done   |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | done   |
 | WP-M1-11  | `docs/REPO-MAP.md` English and current       | done   |
-| WP-M1-12  | Playwright smoke test "login as admin works" | open   |
+| WP-M1-12  | Playwright smoke test "login as admin works" | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -579,8 +579,7 @@ payload other than a dispatch carries free text. WP-M1-10d closed the English ru
 decisions: `docs/DECISIONS.md` with its template and both ADRs are English. WP-M1-11 closed
 it for the map: `docs/REPO-MAP.md` is English throughout, its tree shows the phase 1
 folders plus the planned ones, and its module table names every phase 1 module with purpose
-and public API — no language deviation is left in `docs/`. Phase 2
-starts after the phase 1 backlog is closed, i.e. after WP-M1-12.
+and public API — no language deviation is left in `docs/`. Phase 2 starts with WP-M2-00 after WP-M1-12 closes the phase 1 backlog.
 
 ## 17. Work package rules for small models
 
