@@ -122,6 +122,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | done                    | yes     |
 | WP-M1-11  | `docs/REPO-MAP.md` English and current                  | done                    | yes     |
 | WP-M1-12  | Playwright smoke test "login as admin works"            | done                    | yes     |
+| WP-M1-13  | UI layout shell with header and navigation              | done                    | yes     |
+| WP-M1-14  | base seed keeps an existing administrator untouched     | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -156,8 +158,16 @@ and `apps/web/src/routes/index.tsx`, which the old table missed), the convention
 and the implementation status; 168 lines.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
 "login as admin works" cannot be tested.
-`WP-M1-12` is done — its smoke E2E runs in a real browser against a real database,
-and phase 1 backlog is closed: every item in the table is `done`, and phase 2
+`WP-M1-12` is done — its smoke E2E runs in a real browser against a real database.
+`WP-M1-13` is done — the app has a layout shell (`apps/web/src/components/Shell.tsx`)
+with a sticky header, a left navigation for the admin routes and a centred main area;
+it reuses the existing `common` keys, so no locale file changed.
+`WP-M1-14` is done — it repairs the base seed, which commit 82a9fc7 had broken: the
+insert uses `onConflictDoNothing` again and the status is decided by looking the user
+up before the insert, so an existing administrator keeps its `password_hash`, `locale`
+and `active` and the second run reports `existing`. The red `check` runs
+v0.0.58 … v0.0.61 were caused by that commit; v0.0.62 is green.
+The phase 1 backlog is closed: every item in the table is `done`, and phase 2
 starts with WP-M2-00.
 
 ## Validation

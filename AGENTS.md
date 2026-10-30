@@ -21,8 +21,10 @@ WP-M1-09e, WP-M1-10, WP-M1-10b, WP-M1-10c,
 WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h) plus the
 CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new"), the
 documentation follow-up **WP-M1-10d** (English ADRs and decision index), the
-documentation follow-up **WP-M1-11** (English, current repository map) and the
-phase 1 closing package **WP-M1-12** (Playwright smoke test "login as admin works").
+documentation follow-up **WP-M1-11** (English, current repository map), the
+phase 1 closing package **WP-M1-12** (Playwright smoke test "login as admin works"),
+the UI package **WP-M1-13** (layout shell with header and navigation) and the
+seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched).
 **Phase 1 is closed** — the `Open follow-ups` table of `work-packages/README.md` and
 `PLAN.md` §16 hold no open phase 1 item anymore, phase 2 starts with WP-M2-00.
 The repository contains:

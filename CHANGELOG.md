@@ -234,6 +234,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `npx playwright install --with-deps chromium` — no extra CI job, because that job already
   provides the Postgres-16 service. `E2E_CHROMIUM_PATH` selects a distribution browser in
   containers that cannot run the bundled build.
+- WP-M1-13: UI layout shell — `apps/web/src/components/Shell.tsx` wraps the app in a sticky
+  header (app title, signed-in account, logout button), a left navigation with the admin
+  routes and a centred main area; the shell shows the login form while `/me` answers `401`.
+  `App.tsx` renders the shell, the admin routes are nested below `/` so the shell wraps them,
+  and the shell reuses the existing `common` keys (`app.title`, `auth.signedInAs`,
+  `auth.links.*`) — no locale file changed.
+- WP-M1-14: the base seed keeps an existing administrator untouched again — the bootstrap
+  insert uses `onConflictDoNothing` on `users.email` and the status `created`/`existing` is
+  decided by looking the user up before the insert. The Argon2id hash is only computed when
+  a row is really inserted. The role link to `admin` is still repaired on every run.
 
 ### Changed
 
@@ -365,6 +375,13 @@ images` runs of finished pull request runs are gone, and the check↔publish lin
 
 ### Fixed
 
+- WP-M1-14: the base seed broke the contract of `work-packages/m1/06-seeds-base.md` §4 in
+  commit 82a9fc7 — a re-run overwrote the `password_hash` of an existing administrator,
+  although the seed must never reset a changed password, and the status was derived from
+  `inserted.length === 1`, which PostgreSQL `RETURNING` also reports for an upsert, so the
+  second run claimed `created` instead of `existing`. The failing assertion in
+  `seed-base.integration.spec.ts` encoded the specified behaviour. This fixes the red
+  `check` runs v0.0.58 … v0.0.61.
 - WP-M0-05: the Docker smoke test no longer treats the internal `expose: 3000`
   of the API as a published host port; `docker compose port` reports it as
   `:0`, so only a real non-zero public port fails the guard.

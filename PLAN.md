@@ -567,6 +567,8 @@ next phase starts).
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | done   |
 | WP-M1-11  | `docs/REPO-MAP.md` English and current       | done   |
 | WP-M1-12  | Playwright smoke test "login as admin works" | done   |
+| WP-M1-13  | UI layout shell with header and navigation   | done   |
+| WP-M1-14  | base seed keeps an existing admin untouched  | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -579,7 +581,13 @@ payload other than a dispatch carries free text. WP-M1-10d closed the English ru
 decisions: `docs/DECISIONS.md` with its template and both ADRs are English. WP-M1-11 closed
 it for the map: `docs/REPO-MAP.md` is English throughout, its tree shows the phase 1
 folders plus the planned ones, and its module table names every phase 1 module with purpose
-and public API — no language deviation is left in `docs/`. Phase 2 starts with WP-M2-00 after WP-M1-12 closes the phase 1 backlog.
+and public API — no language deviation is left in `docs/`. WP-M1-13 gave the app a layout
+shell (`apps/web/src/components/Shell.tsx`) with a sticky header, a left navigation and a
+centred main area; it reuses the existing `common` i18n keys. WP-M1-14 repaired the base
+seed, which commit 82a9fc7 had broken: the insert uses `onConflictDoNothing` again and the
+status is decided before the insert, so an existing administrator keeps its `password_hash`,
+`locale` and `active` — that fix turned the red `check` runs v0.0.58 … v0.0.61 green.
+Phase 2 starts with WP-M2-00.
 
 ## 17. Work package rules for small models
 
