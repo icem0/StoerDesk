@@ -138,31 +138,34 @@ and IDE support.
 
 - After a completed work package, commit with the Husky hooks and push with
   `git push --follow-tags`. Do not finish a WP with an unpushed commit.
-- **Run naming (WP-M1-10g):** every commit carries one version tag, and the CI
-  labels carry it. The `check` workflow starts as
-  `check · <ref> · <event>` and its job `Resolve version tag` renames that run to
-  the version tag of the commit (`v0.0.NN`) — a `push`-triggered run has a writable
-  `GITHUB_TOKEN`, so the rename works there. The `publish images` workflow derives
-  its label from the calling run: `publish <title of the check run> · <branch>`, so
-  an automatic publish run starts as `publish v0.0.NN · main`. A `workflow_run`
-  run can never rename itself — GitHub hands out a read-only `GITHUB_TOKEN` that
-  `permissions:` cannot elevate — which is why the version is resolved in `check`.
-  GitHub Actions expressions have no `substring()`, so no short SHA ever fits a
-  label. Publish job names (`Publish <service> image <version>`) and their job
-  summaries (image names, tags, version, source SHA, source run URL) stay the
-  second carrier. `workflow_dispatch` runs of `build.yml` label themselves
-  `publish images · dispatch · <ref> · <version>` from the `version` input. All
-  publish runs share one serialising concurrency group (`publish-queue`), so a
-  slower build of an older commit can never overwrite `latest` afterwards.
-- After the push, wait for the GitHub Actions `check` run of the pushed HEAD.
-  The `publish images` workflow starts only after `check` succeeded and publishes
-  the versioned `api` and `web` images to GHCR.
+- **Run names are fixed at the start (WP-M1-10h):** GitHub has no REST endpoint that
+  renames a workflow run — the workflow-runs API offers rerun, cancel, delete, logs and
+  timing only — so a label can never be corrected afterwards and the version has to be
+  in the event payload when the run starts. That payload carries a version only for a
+  **tag push**, which is why the quality gates hang on the tag: `check.yml` triggers on
+  `push: tags: ['v[0-9]*']` (plus `pull_request`) and its
+  `run-name: ${{ github.ref_name }}` titles that run `v0.0.NN`. `build.yml` inherits the
+  title of the calling run, so an automatic publish run starts as `publish v0.0.NN`; a
+  `workflow_dispatch` run titles itself `publish images · dispatch · <ref> · <version>`.
+  Publish job names (`Publish <service> image <version>`) and their job summaries (image
+  names, tags, version, source SHA, source run URL) are the second carrier. GitHub
+  Actions expressions have no `substring()`, so no short SHA ever fits a label. All
+  publish runs share one serialising concurrency group (`publish-queue`), so a slower
+  build of an older commit can never overwrite `latest` afterwards.
+- **Consequence of the tag trigger:** a commit pushed **without** its tag (hook bypassed
+  with `--no-verify`, or a hand-created commit) starts no quality-gate run and publishes
+  nothing. The one-tag-per-commit rule of `## Versioning` is a build precondition: after
+  every commit read the `commit <hash> successful - version v0.0.NN` line of the Husky
+  hook, and never push a commit that did not print it.
+- After the push, wait for the `check` run titled `v0.0.NN` and for its
+  `publish images` follow-up run: that workflow starts only when the check run ended
+  green and publishes the versioned `api` and `web` images to GHCR.
 - A WP is complete only when `check` and `publish images` are green (or a job is
   skipped by design). If a job fails, read the failing log, fix it in a new
   commit and push again.
-- Report the run titles (the version-named `check` run `v0.0.NN` and the publish
-  run `publish v0.0.NN · main`), the version tag, commit hash, run URL and the
-  final conclusion to the user. A green `npm run check` locally is not a
+- Report the run titles (the `check` run `v0.0.NN` and the publish run
+  `publish v0.0.NN`), the version tag, commit hash, run URL and the final conclusion to
+  the user. A green `npm run check` locally is not a
   substitute for the CI result:
   it does not run `scripts/docker-smoke.sh`, and this development container has
   no Docker.

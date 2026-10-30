@@ -236,17 +236,25 @@ actions: write`, the job `Resolve version tag` gained the guarded step
   web unit tests with an installed Chromium. It comes back with WP-M1-12. All publish
   runs now share one serialising concurrency group (`publish-queue`), so a slower build
   of an older commit can no longer overwrite `latest`.
-- WP-M1-10g: run names of the publish chain are versioned. The assumption of
-  WP-M1-10f that `build.yml` can rename its own run never held for automatic runs: a
-  `workflow_run`-triggered run receives a read-only `GITHUB_TOKEN`, so the guarded
-  rename step swallowed a `403` and every automatic publish run carried the same
-  `publish images · workflow_run · main` label. `check.yml` gained `permissions:
-actions: write` and the job `Resolve version tag`, which resolves the version tag of
-  the commit and renames its own run to `v0.0.NN` (a `push`-triggered token is
-  writable); `build.yml` builds its `run-name` from that title and starts as
-  `publish v0.0.NN · main` (`publish images · dispatch · <ref> · <version>` for a
-  manual run). The dead rename step and the `actions: write` permission moved out of
-  `build.yml`, and `AGENTS.md` states the corrected rule.
+- WP-M1-10g (superseded by WP-M1-10h): attempted to version the run names by letting
+  `check.yml` rename its own run through `gh api --method PATCH
+actions/runs/<run_id>`. It never took effect: the run stayed `check · main · push` and
+  the publish run inherited that plain title as `publish check · main · push · main`
+  (runs 41034256724 and 41034380131). Two wrong assumptions — see WP-M1-10h.
+- WP-M1-10h: the quality gates hang on the version tag. **A workflow run cannot be renamed
+  at all**: the REST reference of the workflow-runs API lists rerun, cancel, delete, logs,
+  approvals and timing only, and the PATCH call of WP-M1-10g answers `404` (hidden by
+  `continue-on-error: true` since WP-M1-10f). A label therefore has to be right when the run
+  starts, and the only payload carrying the version is a tag push — which `git push
+--follow-tags` produces for every commit. `check.yml` triggers on
+  `push: tags: ['v[0-9]*']` (plus `pull_request` and `workflow_dispatch`) instead of
+  `push: branches: [main]`, its `run-name` is `github.ref_name` so the run is titled
+  `v0.0.NN`, and the dead `Resolve version tag` rename job plus `actions: write` are gone.
+  `build.yml` drops the `branches: [main]` filter of its `workflow_run` trigger, gates the
+  version job on `workflow_run.event == 'push'` so pull request runs never publish, and its
+  `run-name` is `publish <title of the calling check run>` → `publish v0.0.NN`. Consequence:
+  a commit pushed without its tag gets no quality-gate run, so the one-tag-per-commit rule
+  is now a build precondition in `AGENTS.md`.
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
   requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth

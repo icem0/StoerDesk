@@ -1,7 +1,7 @@
 # WP-M1-10g: versioned CI run names for the publish chain
 
 format: small-model
-status: done
+status: overtaken by WP-M1-10h
 depends-on: WP-M1-10f
 phase: 1
 context-budget: 20k tokens
@@ -91,8 +91,12 @@ the next `check` run is named `v0.0.NN` while its publish run starts as
   `build.yml`
 - Deviation from WP-M1-10f: that package's rename step in `build.yml` never worked for
   automatic runs (read-only `GITHUB_TOKEN` on `workflow_run` triggers) and is removed
-- Verified: pending — the naming only proves itself on the next push
+- Verified: **failed in CI** — the tag is never pushed alone, it travels with the commit
+  in `git push --follow-tags`, so the `check` run of the push event starts before the tag
+  ref is visible; the `Resolve version tag` job of the run `check · main · push` of commit
+  `a90e0c4` found no tag and left the label untouched. `build.yml` inherited that plain
+  title and produced `publish check · main · push · main`
+  (`https://github.com/icem0/StoerDesk/actions/runs/41034380131`)
 - Follow-up WP: WP-M1-09e (`09e-login-form-guard.md`), WP-M1-10d, WP-M1-11, WP-M1-12
-- Open question: whether `workflow_run.display_title` in the event payload follows the API
-  rename — if the publish run still shows `publish check · main · push`, switch the
-  expression to `github.event.workflow_run.name`
+- Overtaken by WP-M1-10h
+- Open question: none

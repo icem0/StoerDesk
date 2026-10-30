@@ -1,19 +1,21 @@
 name: publish images
 
-# The version of a `workflow_run` run is inherited from the `check` run that triggered
-# it: that run renamed itself to its version tag, where the token is writable. A
-# `workflow_run` run cannot rename itself — GitHub hands out a read-only GITHUB_TOKEN
-# here — so the version has to be in the label from the first second (WP-M1-10g).
+# The `check` run of a version tag push is titled `v0.0.NN` and this workflow inherits
+# that title, so an automatic publish run starts as `publish v0.0.NN`. A run name can
+# never be changed after the start - GitHub has no REST endpoint for it - so the version
+# has to come from the payload of the calling run (WP-M1-10h).
 # GitHub Actions expressions have no substring(), so no short SHA ever fits a label.
 # One line on purpose: a folded scalar would keep the newlines of deeper-indented
 # continuation lines and put them into the label.
-run-name: ${{ github.event_name == 'workflow_run' && format('publish {0} · {1}', github.event.workflow_run.display_title, github.event.workflow_run.head_branch) || format('publish images · dispatch · {0} · {1}', github.ref_name, github.event.inputs.version) }}
+run-name: ${{ github.event_name == 'workflow_run' && format('publish {0}', github.event.workflow_run.display_title) || format('publish images · dispatch · {0} · {1}', github.ref_name, github.event.inputs.version) }}
 
 on:
+  # No branch filter: the calling `check` run comes from a version tag push, whose source
+  # ref is the tag, not `main`. The version job gates on the trigger event of that run,
+  # so a finished pull request run never publishes.
   workflow_run:
     workflows: ['check']
     types: [completed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -42,7 +44,9 @@ env:
 jobs:
   version:
     name: Resolve version tag
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Only the check run of a version tag push publishes: `workflow_run` fires for every
+    # completed run of the `check` workflow, pull request runs included.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}

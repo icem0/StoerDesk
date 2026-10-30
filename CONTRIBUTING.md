@@ -38,9 +38,11 @@ npm run check
 ```
 
 Typecheck, lint, tests, `i18n:check` and `wp:check` must be green. Run
-`npm run build` as well when build artefacts are affected. After the push, wait
-for the GitHub Actions `check` run — the `publish images` workflow publishes the
-versioned images only after `check` succeeded.
+`npm run build` as well when build artefacts are affected. Push with
+`git push --follow-tags`: the quality gates are triggered by the **tag** of the commit, so
+a commit without its tag starts no CI. After the push, wait for the `check` run titled
+`v0.0.NN` — the `publish images` run `publish v0.0.NN` publishes the versioned images only
+after that run succeeded.
 
 ## Pull requests
 

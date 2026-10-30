@@ -52,10 +52,9 @@ self-describing without changing what they do.
 2. `build.yml`: rename the workflow display name to `publish images` (file name stays
    `build.yml`), add `run-name: publish images · <event> · <ref>` and add
    `actions: write` to `permissions`.
-3. `build.yml`: rename the `version` job to `Resolve version tag` and add a step
-   `Name the run after the version` that patches the run name to
-   `publish <version>` with `gh api`, guarded by `continue-on-error: true`
-   so a missing permission can never break the publish.
+3. `build.yml`: rename the `version` job to `Resolve version tag` and add a guarded step
+   `Name the run after the version` that patches the run name to `publish <version>`
+   with `gh api` (`continue-on-error: true`), so a missing permission cannot break it.
 4. `build.yml`: name the publish job `Publish ${{ matrix.service }} image <version>`,
    rename the step `Build and push` to `Build and push image`, and append the image
    names, tags, version, source SHA and source run URL to `$GITHUB_STEP_SUMMARY` in a
@@ -88,8 +87,7 @@ npm run check
 Expected: Prettier reports no reformat, both workflow files contain exactly one
 `run-name`, `npm run check` is green, and the pushed commit's runs are labelled
 `check · main · push` (with jobs, not a file-name run) and
-`publish images · workflow_run · main`; the publishing run renames itself to
-`publish <version>` once the not yet implemented step exists.
+`publish images · workflow_run · main`.
 
 ## Handoff
 
@@ -106,14 +104,16 @@ rest; the WP is now done.
   workflow _file_, with zero jobs (`v0.0.40`). YAML parsing passes anyway, so the command
   above does not catch it — only a real push proves a `run-name:`. The labels now carry
   no short SHA.
-- Done in this completion: `build.yml` now has `permissions: actions: write`, the
-  job `Resolve version tag`, the guarded `Name the run after the version` step
-  (`gh api --method PATCH`, `continue-on-error: true`), the job name
-  `Publish <service> image <version>`, the step `Build and push image` and the
-  `Write image summary` step (image names, tags, version, source SHA and source
-  run URL in `$GITHUB_STEP_SUMMARY`); `AGENTS.md` states the run-naming rule and
-  `CONTRIBUTING.md` speaks of `publish images`
+- Done in this completion: the job name `Publish <service> image <version>`, the step
+  `Build and push image` and the `Write image summary` step (image names, tags, version,
+  source SHA and source run URL in `$GITHUB_STEP_SUMMARY`); `AGENTS.md` states the
+  run-naming rule and `CONTRIBUTING.md` speaks of `publish images`
 - Deviation: the file stays `build.yml` although the display name is `publish images` —
   renaming the file would break the Actions history links
+- **Correction by WP-M1-10h:** the `Name the run after the version` step added here together
+  with `permissions: actions: write` never worked. GitHub has no REST endpoint that renames
+  a run — a real `gh api --method PATCH /repos/<repo>/actions/runs/<run_id>` answers `404`,
+  and the guard swallowed it in every run. Removed in WP-M1-10h, where the version reaches
+  the label through the tag-push trigger and the inherited `run-name`.
 - Follow-up WP: WP-M1-09c…WP-M1-09e, WP-M1-10d, WP-M1-11, WP-M1-12
 - Open question: none
