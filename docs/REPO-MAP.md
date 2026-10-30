@@ -152,7 +152,10 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > schema, the seeds, the session core and the notification channel adapters. Only the
 > `common` namespace has real keys, the remaining namespaces are intentionally
 > empty. Every further work package follows individually after approval from
-> `work-packages/`.
+> `work-packages/`. Since WP-M1-10e the open follow-ups of a phase are tracked in the
+> `Open follow-ups` table of `work-packages/README.md` and in `PLAN.md` §16
+> (_Current state and open backlog_); the rule is the `AGENTS.md` section
+> _Open follow-ups (mandatory closure)_.
 >
 > API integration tests run against a real Postgres-16 database
 > (`TEST_DATABASE_URL`, see `.env.example`); the CI `check` job provides that

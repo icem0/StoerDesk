@@ -16,7 +16,11 @@ work package first. Never implement a feature that has no work package.
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04, WP-M0-05
 (Phase 0 complete) and WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05,
-WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09.**
+WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-10, WP-M1-10b, WP-M1-10c,
+WP-M1-10e.**
+The open phase 1 items (WP-M1-09b–WP-M1-09e, WP-M1-10d, WP-M1-10f, WP-M1-11,
+WP-M1-12) are listed in the `Open follow-ups` table of `work-packages/README.md` and
+in `PLAN.md` §16.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -182,6 +186,27 @@ cannot be finished in one model run is split before implementation.
 - Template: `docs/WP-TEMPLATE.md`. Validate with `npm run wp:check`.
 - Do not mix database, service, API and UI layers in one WP unless the vertical
   slice stays inside the file and line limits.
+
+## Open follow-ups (mandatory closure)
+
+Split follow-ups are easy to lose: until now an announced follow-up existed only as a
+`Follow-up WP:` line, so WP-M1-09b–WP-M1-09d were overtaken by WP-M1-10, WP-M1-10b
+and WP-M1-10c. These rules close that hole.
+
+- **A split creates files, not sentences.** When a WP is split, the child WP documents
+  (`work-packages/<phase>/<nr><suffix>-<slug>.md`) are created **in the same commit**
+  as the parent rewrite. A `Follow-up WP:` line without a WP file is a defect, not a
+  backlog entry.
+- **Collect before starting.** Before implementing a WP run
+  `git grep -n "Follow-up WP:\|Open question:" -- work-packages/<phase>/`
+  and report the open items, so nothing announced stays unnoticed.
+- **Numeric order, same phase.** The open items of the running phase are implemented
+  in numeric order (…b, …c, …d, …e, then the plain numbers) **before** the next phase
+  starts. A phase is closed only when every follow-up of that phase is implemented or
+  explicitly cancelled with a reason in the parent WP's `## Handoff`.
+- **One backlog of record.** The `Open follow-ups` table in `work-packages/README.md`
+  is the backlog; the status prose there and the `## Current status` section here are
+  history. Update the table in the commit that adds, starts or finishes an item.
 
 ## Versioning (one tag per commit)
 

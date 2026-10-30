@@ -164,6 +164,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `apps/api/src/admin/__tests__/users.integration.spec.ts` covers permission
   guards, list/create/update responses, duplicate handling and the last-admin
   lockout guard.
+- WP-M1-10e: follow-up closure rule — `AGENTS.md` gained the section
+  _Open follow-ups (mandatory closure)_ (a split creates its child WP files in the
+  same commit, open items are collected with
+  `git grep -n "Follow-up WP:\|Open question:" -- work-packages/<phase>/` before a WP
+  starts and are implemented in numeric order before the next phase), `PLAN.md` §16
+  gained the subsection _Current state and open backlog_,
+  `work-packages/README.md` gained the `Open follow-ups` table as the backlog of
+  record, and `docs/WP-TEMPLATE.md` gained the `status:` field plus the split-child
+  handoff rule. This closes the hole that let WP-M1-09b–WP-M1-09d be overtaken by
+  WP-M1-10, WP-M1-10b and WP-M1-10c.
 
 ### Changed
 

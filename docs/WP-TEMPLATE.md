@@ -1,6 +1,7 @@
 # WP-XX-YY: Short imperative title
 
 format: small-model
+status: planned
 depends-on: —
 phase: 0
 context-budget: 18k tokens
@@ -56,5 +57,7 @@ after it.
 
 - Files changed:
 - Interfaces added:
-- Follow-up WP:
+- Verified:
+- Follow-up WP: every announced follow-up needs its own WP file, created in the same
+  commit as this handoff (`AGENTS.md`, _Open follow-ups (mandatory closure)_)
 - Open question (if any):

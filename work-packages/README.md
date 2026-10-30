@@ -12,11 +12,12 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 15  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 16  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
-`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08` and `WP-M2-00`. The remaining `m1`
+`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-10`, `WP-M1-10b`,
+`WP-M1-10c`, `WP-M1-10e` and `WP-M2-00`. The remaining `m1`
 and `m2` documents are legacy plans: they stay valid as scope descriptions, but each
 one is rewritten into the small-model format before implementation.
 
@@ -68,9 +69,35 @@ one is rewritten into the small-model format before implementation.
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
 > `WP-M2-01` now depends on WP-M2-00 and WP-M2-00 waits for a filled
-> `specs/02-data-model.md`. The remaining WPs are working plans and are implemented
+> `specs/02-data-model.md`. **WP-M1-10e** (`10e-follow-up-closure-rule.md`) is
+> implemented as the governance rule _Open follow-ups (mandatory closure)_ in
+> `AGENTS.md`, the _Current state and open backlog_ subsection in `PLAN.md` §16 and
+> the table below. The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
+
+## Open follow-ups
+
+The table is the machine-readable backlog of record (rule: `AGENTS.md`
+_Open follow-ups (mandatory closure)_). The status prose above is history only.
+Update a row in the commit that adds, starts or finishes the item. Open items of the
+running phase are implemented in numeric order before the next phase starts.
+
+| WP        | Content                                                 | Status  | WP file |
+| --------- | ------------------------------------------------------- | ------- | ------- |
+| WP-M1-10f | traceable CI run, job and step names                    | open    | no      |
+| WP-M1-09b | role API: role CRUD and permission assignment           | open    | no      |
+| WP-M1-09c | `usePermission` and the admin users UI                  | open    | no      |
+| WP-M1-09d | admin roles UI                                          | open    | no      |
+| WP-M1-09e | login form, logout button and route guard in `apps/web` | open    | no      |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open    | no      |
+| WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned | yes     |
+| WP-M1-12  | Playwright smoke test "login as admin works"            | planned | yes     |
+
+`WP-M1-09b`–`WP-M1-09e` and `WP-M1-10d`/`WP-M1-10f` are announced only: the WP file
+column says `no`, so writing them is the first step of that work package.
+`WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
+"login as admin works" cannot be tested.
 
 ## Validation
 
