@@ -40,6 +40,44 @@
         "unknown_role_key": "Unbekannte Rolle in der Auswahl.",
         "unknown": "Speichern fehlgeschlagen."
       }
+    },
+    "roles": {
+      "title": "Rollenverwaltung",
+      "loading": "Lädt …",
+      "sessionNotice": "Die Rollenverwaltung benötigt eine gültige Anmeldung.",
+      "forbiddenNotice": "Keine Berechtigung für die Rollenverwaltung.",
+      "systemHint": "Systemrollen stammen aus dem Seed und sind schreibgeschützt.",
+      "table": {
+        "key": "Schlüssel",
+        "kind": "Art",
+        "permissions": "Berechtigungen",
+        "users": "Benutzer",
+        "actions": "Aktionen"
+      },
+      "system": "System",
+      "custom": "benutzerdefiniert",
+      "readOnly": "schreibgeschützt",
+      "createTitle": "Rolle anlegen",
+      "editTitle": "Rolle {{key}} bearbeiten",
+      "create": "Anlegen",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "delete": "Löschen",
+      "fields": {
+        "key": "Schlüssel",
+        "permissionsLabel": "Berechtigungen"
+      },
+      "errors": {
+        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+        "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+        "role_not_found": "Rolle nicht gefunden.",
+        "role_key_taken": "Dieser Rollenschlüssel ist bereits vergeben.",
+        "system_role_protected": "Systemrollen sind geschützt – ihre Rechte setzt der Seed.",
+        "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
+        "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
+        "unknown": "Speichern fehlgeschlagen."
+      }
     }
   }
 }

@@ -28,6 +28,12 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     ...init,
   })
 
+  if (response.status === 204) {
+    // `DELETE /api/v1/roles/:key` answers 204 without a body (WP-M1-09d), so there is
+    // nothing to parse — the caller only cares that the request succeeded.
+    return undefined as T
+  }
+
   if (!response.ok) {
     // The API always answers errors as `{ code, params }` (AGENTS.md); a body that
     // is not JSON degrades to a status-only ApiError instead of throwing again.

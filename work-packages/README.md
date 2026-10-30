@@ -12,11 +12,12 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 19  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 22  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
-`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-10`,
+`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
+`WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f` and `WP-M2-00`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
@@ -61,6 +62,11 @@ implementation.
 > permission keys and the service-level guards of `specs/01-rbac.md` §3.5 — seeded
 > system roles answer `409 system_role_protected`, a role still held by users
 > `409 role_in_use`. `specs/01-rbac.md` gained §3.8 for it.
+> **WP-M1-09c** (`09c-users-ui.md`) and **WP-M1-09d** (`09d-roles-ui.md`) are implemented as
+> the admin UI on top of those APIs: `useMe`/`usePermission` in `apps/web/src/auth`, the
+> `UsersPage` at `/admin/users` and the `RolesPage` at `/admin/roles` — role table with grant
+> counts and user counts, create/edit/delete for custom roles, a permission checkbox grid
+> built from `PERMISSION_KEYS`, and seeded system roles read-only.
 > **WP-M1-10** (`10-ci-workflow.md`) was rewritten into the small-model format and
 > shrunk: its CI, `LICENSE`, `README.md`, `CHANGELOG.md`, `dependabot.yml` and PR
 > template items are already delivered (WP-M1-01, the deployment commits, WP-M0-05),
@@ -94,8 +100,8 @@ running phase are implemented in numeric order before the next phase starts.
 | --------- | ------------------------------------------------------- | ------- | ------- |
 | WP-M1-10f | traceable CI run, job and step names                    | done    | yes     |
 | WP-M1-09c | `usePermission` and the admin users UI                  | done    | yes     |
-| WP-M1-09d | admin roles UI                                          | open    | no      |
-| WP-M1-09e | login form, logout button and route guard in `apps/web` | open    | no      |
+| WP-M1-09d | admin roles UI                                          | done    | yes     |
+| WP-M1-09e | login form, logout button and route guard in `apps/web` | open    | yes     |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open    | yes     |
 | WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned | yes     |
 | WP-M1-12  | Playwright smoke test "login as admin works"            | planned | yes     |
@@ -104,8 +110,11 @@ running phase are implemented in numeric order before the next phase starts.
 rename and the named jobs, steps and image summaries of both workflows are in place.
 `WP-M1-09c` is implemented — `useMe`/`usePermission` in `apps/web/src/auth`,
 `UsersPage` at `/admin/users` and the `settings` namespace fixtures.
-`WP-M1-09d` and `WP-M1-09e` are announced only: the WP file column says `no`, so writing
-the document is the first step of that work package. `WP-M1-10d` has its document
+`WP-M1-09d` is implemented — `RolesPage` at `/admin/roles` on top of the role API, the
+`settings:admin.roles.*` fixtures and the `204` handling of `apiFetch`.
+`WP-M1-09e` has its document (`09e-login-form-guard.md`, created while WP-M1-09d was
+finished — an announced follow-up without a WP file is a defect) but no implementation yet.
+`WP-M1-10d` has its document
 (`10d-adrs-english.md`) but no implementation yet.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
 "login as admin works" cannot be tested.

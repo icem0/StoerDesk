@@ -199,6 +199,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   parses the `{ code, params }` error body into `ApiError`, so `email_taken`,
   `last_admin` and the other codes map to `settings:admin.users.errors.*` keys.
   All page text lives in the `settings` namespace (de and en complete).
+- WP-M1-09d: admin roles UI in `apps/web/src/admin/roles-page.tsx` — `RolesPage` at route
+  `/admin/roles` lists roles (key, system or custom, permission count, user count) for
+  `role.read`; `role.write` adds a create form (key plus the `PERMISSION_KEYS` checkbox
+  grid), a per-row grant editor PATCHing `/api/v1/roles/:key` and a delete button, while
+  seeded system roles stay read-only because the seed rewrites their grants. `apiFetch`
+  answers `204 No Content` with `undefined` instead of throwing on the empty body, so
+  `DELETE /api/v1/roles/:key` works. The role error codes map to
+  `settings:admin.roles.errors.*` keys (de and en complete). The announced follow-up
+  WP-M1-09e got its work-package document
+  `work-packages/m1/09e-login-form-guard.md`.
 
 ### Changed
 

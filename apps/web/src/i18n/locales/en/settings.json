@@ -40,6 +40,44 @@
         "unknown_role_key": "Unknown role in the selection.",
         "unknown": "Saving failed."
       }
+    },
+    "roles": {
+      "title": "Role management",
+      "loading": "Loading …",
+      "sessionNotice": "Role management requires a valid sign-in.",
+      "forbiddenNotice": "No permission for role management.",
+      "systemHint": "System roles come from the seed and are read-only.",
+      "table": {
+        "key": "Key",
+        "kind": "Kind",
+        "permissions": "Permissions",
+        "users": "Users",
+        "actions": "Actions"
+      },
+      "system": "system",
+      "custom": "custom",
+      "readOnly": "read-only",
+      "createTitle": "Create role",
+      "editTitle": "Edit role {{key}}",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "fields": {
+        "key": "Key",
+        "permissionsLabel": "Permissions"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "role_not_found": "Role not found.",
+        "role_key_taken": "This role key is already taken.",
+        "system_role_protected": "System roles are protected – the seed rewrites their grants.",
+        "role_in_use": "Users still hold this role.",
+        "unknown_permission_key": "Unknown permission in the selection.",
+        "unknown": "Saving failed."
+      }
     }
   }
 }
