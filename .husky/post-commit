@@ -26,7 +26,7 @@ else
   next="v$major.$minor.$((patch + 1))"
 fi
 
-if git tag "$next" >/dev/null 2>&1; then
+if git tag -a "$next" -m "$next" >/dev/null 2>&1; then
   short=$(git rev-parse --short HEAD)
   echo "commit $short successful - version $next (run 'git push --follow-tags' to share it)"
 fi

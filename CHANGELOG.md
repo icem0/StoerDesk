@@ -51,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   its own volumes and web port `3180`, checks `/healthz` and `/api/v1/health`,
   asserts that the API publishes no host port and removes everything again. Runs
   as the CI job `docker-smoke`, which skips on runners without Docker.
+- WP-M0-05: `.github/workflows/build.yml` (`build and push`) publishes the
+  versioned `api` and `web` images to GHCR after the `check` workflow succeeded;
+  it requires an exact `vMAJOR.MINOR.PATCH` tag at the pushed commit and tags the
+  images with the version, the version without `v`, the commit SHA and `latest`
+  on `main`.
 - `specs/01-rbac.md`: filled RBAC slice (chapters 3 + 4.1) — role model, effective
   permission rule, 37-key catalog, role–permission matrix and the RBAC tables,
   taken from `PLAN.md` §5/§6.
@@ -179,6 +184,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   stay on the internal `backend` network, so they cannot collide with ports of
   other projects on the same Docker host. `API_PUBLISHED_PORT` and
   `API_BIND_ADDRESS` apply to the debug override only.
+
+### Fixed
+
+- WP-M0-05: the Docker smoke test no longer treats the internal `expose: 3000`
+  of the API as a published host port; only a non-empty public port from
+  `docker compose port` fails the guard.
+- WP-M0-05: version tags are now annotated, so `git push --follow-tags`
+  actually publishes them and the `build and push` workflow can resolve the
+  version of the pushed commit.
 
 ### Deviations
 

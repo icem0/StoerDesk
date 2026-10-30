@@ -63,8 +63,11 @@ compose build
 compose up -d
 
 # --- 3b. only the web frontend publishes a host port ---
-if compose port api 3000 >/dev/null 2>&1; then
-  printf 'api publishes a host port - it must stay on the internal network\n' >&2
+# `compose port` also matches `expose` entries without a host binding; only a
+# non-empty public port means the API is reachable from outside the network.
+api_public_port=$(compose port api 3000 2>/dev/null || true)
+if [ -n "$api_public_port" ]; then
+  printf 'api publishes a host port (%s) - it must stay on the internal network\n' "$api_public_port" >&2
   exit 1
 fi
 printf 'no api host port (internal backend network)\n'

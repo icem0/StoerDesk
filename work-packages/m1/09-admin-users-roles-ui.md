@@ -109,13 +109,10 @@ counts as done.
 
 ## Handoff
 
-- Files changed: the four source files above, the integration spec and the
-  bookkeeping outside `files-write`
+- Files changed: the four source files above, the integration spec and the bookkeeping outside `files-write`
 - Interfaces added: shared user schemas, `adminUsersRoutes` and the user routes
-- Deviation: PATCH always refreshes `updated_at`; password hashing happens before
-  the transaction after body validation
+- Deviation: PATCH always refreshes `updated_at`; password hashing happens before the transaction after body validation
 - Verified: `npm run check` green against PostgreSQL 16 — 16 files, 104 tests,
   8 new admin-user cases
-- Follow-up WP: WP-M1-09b (roles API), WP-M1-09c (`usePermission` and users UI),
-  WP-M1-09d (roles UI)
+- Follow-up WP: WP-M1-09b (roles API), WP-M1-09c (`usePermission` and users UI), WP-M1-09d (roles UI)
 - Open question: phase 1 needs a login form UI before the WP-M1-12 smoke test

@@ -14,9 +14,9 @@ work package first. Never implement a feature that has no work package.
 
 ## Current status
 
-**Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04 (Phase 0 complete) and
-WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05, WP-M1-06, WP-M1-07, WP-M1-07b,
-WP-M1-08, WP-M1-09.**
+**Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04, WP-M0-05
+(Phase 0 complete) and WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05,
+WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09.**
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -24,6 +24,8 @@ The repository contains:
 - the work plan in `work-packages/` (M0, M1, M2 — M0 finished, M1 partially),
 - the environment (monorepo, configuration, skeleton, CI, Docker, and the
   repeatable smoke test `scripts/docker-smoke.sh` run by the CI job `docker-smoke`),
+- the image pipeline (`.github/workflows/build.yml`) that publishes the versioned
+  `api` and `web` images to GHCR after the `check` workflow succeeded,
 - the Drizzle base schema with migration `0000_base_tables` (`users`, `sessions`,
   `groups`, `user_groups`, `settings`; UUID v7 via `gen_uuid_v7()`, see ADR-0002),
 - the i18n skeleton (web i18next setup + `locales/{de,en}`, shared server `t()`,
@@ -114,6 +116,21 @@ instead of a single `tsc --noEmit` across all packages, because the API (Node) a
 web (DOM) need different `lib` sets. The root `tsconfig.json` remains for editor
 and IDE support.
 
+## CI after push
+
+- After a completed work package, commit with the Husky hooks and push with
+  `git push --follow-tags`. Do not finish a WP with an unpushed commit.
+- After the push, wait for the GitHub Actions `check` run of the pushed HEAD.
+  The `build and push` workflow starts only after `check` succeeded and publishes
+  the versioned `api` and `web` images to GHCR.
+- A WP is complete only when `check` and `build and push` are green (or a job is
+  skipped by design). If a job fails, read the failing log, fix it in a new
+  commit and push again.
+- Report the version tag, commit hash, run URL and the final conclusion to the
+  user. A green `npm run check` locally is not a substitute for the CI result:
+  it does not run `scripts/docker-smoke.sh`, and this development container has
+  no Docker.
+
 ## Database and tests
 
 - Local Postgres 16: `docker compose -f docker-compose.dev.yml up -d db`
@@ -173,9 +190,11 @@ cannot be finished in one model run is split before implementation.
   the `version` fields in the `package.json` files are kept at the current release
   line and do not need to be bumped per commit.
 - The Husky hook `.husky/post-commit` does this automatically: it reads the highest
-  existing version tag, bumps the patch number and tags the new commit. `.husky/post-merge`
-  applies the same logic to merge commits (git merge does not trigger post-commit).
-  Rebases and already-tagged HEADs are skipped, no double tags.
+  existing version tag, bumps the patch number and creates an **annotated** tag on
+  the new commit. `.husky/post-merge` applies the same logic to merge commits
+  (git merge does not trigger post-commit). Rebases and already-tagged HEADs are
+  skipped, no double tags. Annotated tags are required so `git push --follow-tags`
+  actually publishes them.
 - After every successful commit the hook prints
   `commit <short-hash> successful - version v0.0.N (run 'git push --follow-tags' to share it)`.
   **After each commit, report that success line and the version number to the user.**

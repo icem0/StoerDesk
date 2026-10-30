@@ -11,7 +11,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
-| [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test                         | 4   |
+| [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 13  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
@@ -23,10 +23,12 @@ one is rewritten into the small-model format before implementation.
 ## Status
 
 > **Current state:** **Phase 0 is complete** — **WP-M0-01**, **WP-M0-02**,
-> **WP-M0-03** and **WP-M0-04** are implemented (local startability, resilient
-> start order, binding plan anchor, repeatable Docker smoke test
-> `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`). The smoke run
-> itself is proven by CI, because the development container has no Docker.
+> **WP-M0-03**, **WP-M0-04** and **WP-M0-05** are implemented (local startability,
+> resilient start order, binding plan anchor, repeatable Docker smoke test
+> `scripts/docker-smoke.sh` with the guarded CI job `docker-smoke`, and the
+> `build and push` workflow that publishes versioned GHCR images after `check`).
+> The smoke run itself is proven by CI, because the development container has no
+> Docker.
 > In Phase 1 **WP-M1-01** until **WP-M1-08** are implemented (foundation, Compose,
 > Drizzle base tables, i18n skeleton, RBAC tables + system role seed, bootstrap
 > administrator seed with Argon2id, session core: token, token hash in `sessions`,
