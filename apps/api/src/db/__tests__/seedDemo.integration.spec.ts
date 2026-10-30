@@ -97,7 +97,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('keeps an edited translation on every later run', async () => {
-      const [template] = await db
+      const templateRows = await db
         .select({ id: textTemplates.id })
         .from(textTemplates)
         .where(eq(textTemplates.key, 'bma.false_alarm'))
@@ -108,7 +108,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .set({ text: 'edited by the administrator' })
         .where(
           and(
-            eq(textTemplateTranslations.templateId, onlyRow([template], 'template').id),
+            eq(textTemplateTranslations.templateId, onlyRow(templateRows, 'template').id),
             eq(textTemplateTranslations.locale, 'de'),
           ),
         )
@@ -137,20 +137,24 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('rejects an unknown system type and an unsupported locale', async () => {
-      const [object] = await db.select({ id: objects.id }).from(objects).limit(1)
+      const objectRows = await db.select({ id: objects.id }).from(objects).limit(1)
 
       await expect(
         db
           .insert(systems)
-          .values({ objectId: onlyRow([object], 'object').id, type: 'ELEVATOR', label: 'nope' }),
+          .values({
+            objectId: onlyRow(objectRows, 'object').id,
+            type: 'ELEVATOR',
+            label: 'nope',
+          }),
       ).rejects.toThrow()
 
-      const [template] = await db.select({ id: textTemplates.id }).from(textTemplates).limit(1)
+      const templateRows = await db.select({ id: textTemplates.id }).from(textTemplates).limit(1)
 
       await expect(
         db
           .insert(textTemplateTranslations)
-          .values({ templateId: onlyRow([template], 'template').id, locale: 'fr', text: 'non' }),
+          .values({ templateId: onlyRow(templateRows, 'template').id, locale: 'fr', text: 'non' }),
       ).rejects.toThrow()
     })
 
