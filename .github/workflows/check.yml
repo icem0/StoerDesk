@@ -94,6 +94,7 @@ jobs:
   # because a run name is fixed when its run starts (WP-M1-10i).
   publish-dispatch:
     name: Dispatch publish run
+    runs-on: ubuntu-latest
     needs: [check, docker-smoke]
     if: ${{ github.event_name == 'push' && needs.check.result == 'success' && needs.docker-smoke.result == 'success' }}
     permissions:

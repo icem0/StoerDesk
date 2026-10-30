@@ -93,6 +93,12 @@ its job `Dispatch publish run` is green, and the publish run starts as
 - Verified: `npm run check` green locally; YAML parsed with `js-yaml`; the `head_sha` fact
   above read from the Actions API for runs `41036498730`/`41036613222` (`v0.0.49`) and the
   run of `v0.0.50`. CI proof (new run titles) is due with the next tag push.
+- Deviation caught by CI: the first push (`v0.0.52`) produced two `check` runs titled
+  `.github/workflows/check.yml` with **zero jobs** — the new job had no `runs-on`, so the
+  Actions schema rejected the whole file and an invalid workflow also ignores its trigger
+  filters, which is why the branch push started a run too. `js-yaml` only checks YAML
+  syntax, not the Actions schema, so a local parse is not enough: every job needs
+  `runs-on` and a `steps` list before the push.
 - Accepted side effect: a publish run is no longer a `workflow_run` child of the check run;
   the link lives in the `source_run` input and both job summaries instead. A pull request
   run never dispatches (the `if` gates on `push`), so the empty `publish images` runs of

@@ -279,7 +279,12 @@ actions/runs/<run_id>`. It never took effect: the run stayed `check · main · p
   `publish <version> · manual · <ref>`), checks that the tag at HEAD equals the requested
   `version`, and moves `latest` only for `mode=check`. Side effect: the empty `publish
 images` runs of finished pull request runs are gone, and the check↔publish link now lives
-  in the `source_run` input and both job summaries.
+  in the `source_run` input and both job summaries. Lesson from the first push: a job
+  without `runs-on` fails the Actions schema and with it the whole file — the run then has
+  zero jobs, is titled with the workflow path and ignores its trigger filters, so one
+  `git push --follow-tags` produced two failed `check` runs. `js-yaml` only validates YAML
+  syntax, so the fix push was preceded by a `js-yaml` pass over both workflows that asserts
+  `runs-on`, a non-empty `steps` list and resolvable `needs` for every job.
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
   requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth
