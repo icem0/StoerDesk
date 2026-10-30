@@ -199,6 +199,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - WP-M0-05: version tags are now annotated, so `git push --follow-tags`
   actually publishes them and the `build and push` workflow can resolve the
   version of the pushed commit.
+- WP-M1-10b: the three GitHub issue forms in `.github/ISSUE_TEMPLATE/` render as
+  forms again — they had no closing front-matter delimiter and no nested
+  indentation for `attributes` and `validations`, so GitHub showed them as plain
+  text. The emergency notice in `bug.md` and `feature.md` names 112 only (no 110),
+  and `.prettierignore` keeps Prettier from rewriting the form YAML.
 
 ### Deviations
 
@@ -210,6 +215,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - WP-M0-04: the acceptance command `sh scripts/docker-smoke.sh` was not executed
   locally because the development container has no Docker; verified with `sh -n`
   and `npm run check`, the CI job `docker-smoke` runs the real smoke test.
+- WP-M1-10b: while adding the `.github/ISSUE_TEMPLATE/` entry, the German
+  drizzle-kit comment in `.prettierignore` was translated — `AGENTS.md` requires
+  English everywhere.
 
 ### Not implemented (by design)
 

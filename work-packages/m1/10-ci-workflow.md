@@ -116,4 +116,4 @@ green — a local `npm run check` alone is not enough.
   the project name `StörDesk` contains `ö`
 - Follow-up WP: WP-M1-10b (issue forms), WP-M1-10c (English docs), WP-M1-10d
   (English ADRs), WP-M1-11 (repo map, incl. its German text)
-- Open question: do the issue templates keep the police number 110, or only 112?
+- Open question: resolved by WP-M1-10b — the issue forms name 112 only, no 110

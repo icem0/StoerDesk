@@ -47,6 +47,7 @@ specs/                          Expanded specification slices (PLAN.md wins whil
 work-packages/                  Work packages, one Markdown file per WP (m0, m1, m2)
 docs/                           ARCHITECTURE, COMPLIANCE, DECISIONS (ADR), GLOSSARY, I18N, REPO-MAP, DEPLOYMENT, WP-TEMPLATE
 .github/workflows/              CI: check (quality, Docker smoke, E2E) and build and push (GHCR)
+.github/ISSUE_TEMPLATE/         GitHub issue forms: bug, feature, security (valid YAML, 112-only notice)
 scripts/                        Orchestration, split-spec, i18n:check, create-env, wp-check, docker-smoke
 Dockerfile                      Multi-stage image build (targets: api, web)
 ```
@@ -86,6 +87,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `scripts/wp-check.mjs`                              | Validates small-model WPs (size, context, fields)                                                                                                                                     | via `npm run wp:check`                                                                                                                            |
 | `scripts/docker-smoke.sh`                           | wiederholbarer Docker-Smoke-Test: Stack isoliert hochfahren, beide Health-Endpoints pruefen, abbauen (WP-M0-04)                                                                       | `sh scripts/docker-smoke.sh`, CI-Job `docker-smoke`                                                                                               |
 | `.github/workflows/build.yml`                       | baut und pusht die versionierten `api`/`web`-Images nach GHCR, sobald `check` auf `main` erfolgreich war (WP-M0-05)                                                                   | `build and push`, `ghcr.io/<owner>/stoerdesk-{api,web}:<version>`                                                                                 |
+| `.github/ISSUE_TEMPLATE/{bug,feature,security}.md`  | GitHub issue forms with valid front matter and the 112-only emergency notice (WP-M1-10b)                                                                                              | issue types and labels `bug`, `feature`, `security`                                                                                               |
 | `Dockerfile`                                        | Multi-stage image build, targets `api` and `web`                                                                                                                                      | `docker build --target api .`                                                                                                                     |
 | `docker-compose.yml`                                | complete stack: db, api, web, optional backup                                                                                                                                         | `docker compose up -d --build`                                                                                                                    |
 | `docker-compose.debug.yml`                          | opt-in override: publishes the API host port only                                                                                                                                     | `docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d`                                                                          |
@@ -134,7 +136,10 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > test-only probe route) and **WP-M1-09** (admin users API: list users with role
 > keys, create users with Argon2id hashes and role links, update mutable user fields
 > and role links, with guards for duplicate e-mail, unknown role keys and the last
-> active admin).
+> active admin), **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
+> `SECURITY.md`, `CODE_OF_CONDUCT.md` with the Contributor Covenant 2.1 text — plus the
+> English CI step name) and **WP-M1-10b** (the GitHub issue forms for bug, feature and
+> security are valid GitHub issue forms again, with the 112-only emergency notice).
 > The compose stack runs the whole system (db, api, web) and the optional
 > notification channels (external ntfy, signal, matrix, mail) from one `.env`;
 > `npm run env:create` generates it with random secrets. The default build context
