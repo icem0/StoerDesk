@@ -107,11 +107,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-10g | versioned run names for the publish chain               | superseded by WP-M1-10h | yes     |
 | WP-M1-10h | CI on the version tag, version carried by the run name  | done                    | yes     |
 | WP-M1-10i | publish run label carries one line of "what is new"     | done                    | yes     |
-| WP-M1-10i | publish run label carries one line of "what is new"     | done                    | yes     |
 | WP-M1-09c | `usePermission` and the admin users UI                  | done                    | yes     |
 | WP-M1-09d | admin roles UI                                          | done                    | yes     |
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | done                    | yes     |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open                    | yes     |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | done                    | yes     |
 | WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned                 | yes     |
 | WP-M1-12  | Playwright smoke test "login as admin works"            | planned                 | yes     |
 
@@ -136,8 +135,10 @@ only a dispatch with `mode=check` moves `latest`.
 the session state in the shell, and the `common:auth.*` fixtures (de and en complete). The
 document `09e-login-form-guard.md` had been created while WP-M1-09d was finished — an announced
 follow-up without a WP file is a defect.
-`WP-M1-10d` has its document
-(`10d-adrs-english.md`) but no implementation yet.
+`WP-M1-10d` is implemented — `docs/DECISIONS.md` (format note, template, index) and
+ADR-0002 are English, the ADR slugs and ADR-0001 were already English from the
+work-in-progress commit `b573fb5`, and the deviation note of `docs/REPO-MAP.md` now names
+only the map itself as German.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
 "login as admin works" cannot be tested.
 

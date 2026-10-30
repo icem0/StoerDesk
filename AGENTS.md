@@ -19,8 +19,9 @@ work package first. Never implement a feature that has no work package.
 WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-09c, WP-M1-09d,
 WP-M1-09e, WP-M1-10, WP-M1-10b, WP-M1-10c,
 WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h) plus the
-CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new").
-The open phase 1 items (WP-M1-10d, WP-M1-11,
+CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new") and the
+documentation follow-up **WP-M1-10d** (English ADRs and decision index).
+The open phase 1 items (WP-M1-11,
 WP-M1-12) are listed in the `Open follow-ups` table of `work-packages/README.md` and
 in `PLAN.md` §16.
 The repository contains:
@@ -75,7 +76,9 @@ The repository contains:
   shows the signed-in e-mail, the admin links and the logout button; unknown credentials,
   wrong password and an inactive account all render the same `common:auth.errors.invalid_credentials`
   notice, `429` renders `rate_limited`),
-- the documentation in `docs/`.
+- the documentation in `docs/`: `ARCHITECTURE.md`, `COMPLIANCE.md`, `GLOSSARY.md`, `I18N.md`
+  and the decisions (`DECISIONS.md` with the index and the ADRs `DECISIONS/0001` and
+  `DECISIONS/0002`) are English; only `REPO-MAP.md` is still partly German (WP-M1-11).
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as
 the implementation of a work package from `work-packages/` — package by package,

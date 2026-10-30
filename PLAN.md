@@ -553,8 +553,8 @@ when its exit criteria and its acceptance tests pass.
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 **WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,
-**WP-M1-09d**, **WP-M1-09e**, **WP-M1-10f**, **WP-M1-10h** and
-**WP-M1-10i** (WP-M1-10g was superseded by WP-M1-10h); the table below is the
+**WP-M1-09d**, **WP-M1-09e**, **WP-M1-10f**, **WP-M1-10h**, **WP-M1-10i** and
+**WP-M1-10d** (WP-M1-10g was superseded by WP-M1-10h); the table below is the
 backlog of record (mirrored and kept current in
 `work-packages/README.md`, enforced by the `AGENTS.md` rule _Open follow-ups
 (mandatory closure)_ — open items of a phase are finished in numeric order before the
@@ -564,7 +564,7 @@ next phase starts).
 | --------- | -------------------------------------------- | ------ |
 | WP-M1-09e | login form, logout and route guard (web)     | done   |
 | WP-M1-10i | publish run label carries the commit subject | done   |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | open   |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | done   |
 | WP-M1-11  | `docs/REPO-MAP.md` normalized to English     | open   |
 | WP-M1-12  | Playwright smoke test "login as admin works" | open   |
 
@@ -575,8 +575,10 @@ self-describing: the green `check` run of a version tag ends with the job
 `Dispatch publish run`, which starts `build.yml` through `workflow_dispatch` with the
 version and the commit subject as inputs, so that run is titled
 `publish v0.0.NN · <commit subject>` — a run label is fixed when the run starts and no
-payload other than a dispatch carries free text. Phase 2 starts after the phase 1
-backlog is closed.
+payload other than a dispatch carries free text. WP-M1-10d closed the English rule for the
+decisions: `docs/DECISIONS.md` with its template and both ADRs are English, so only
+`docs/REPO-MAP.md` itself is still partly German and is normalized by WP-M1-11. Phase 2
+starts after the phase 1 backlog is closed.
 
 ## 17. Work package rules for small models
 

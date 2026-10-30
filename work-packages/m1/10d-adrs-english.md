@@ -1,6 +1,7 @@
 # WP-M1-10d: English ADRs and decision index
 
 format: small-model
+status: done
 depends-on: WP-M1-10c
 phase: 1
 context-budget: 14k tokens
@@ -92,9 +93,22 @@ too — a local run alone is not enough.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Deviation:
-- Follow-up WP:
-- Open question:
+- Files changed: `docs/DECISIONS.md` (English format note, template and index table),
+  `docs/DECISIONS/0002-uuid-v7-as-database-primary-key.md` (English),
+  `docs/DECISIONS/0001-monorepo-with-npm-workspaces.md` (English), `docs/REPO-MAP.md`
+  (deviation note now covers only the map itself), plus the bookkeeping outside
+  `files-write` (`CHANGELOG.md`, `work-packages/README.md`, `PLAN.md` §16)
+- Interfaces added: none — ADRs are still addressed by number, only the index links in
+  `docs/DECISIONS.md` name the two English slugs
+- Deviation: the two `git mv` renames and the ADR-0001 translation had already happened in
+  the work-in-progress commit `b573fb5` ("WP-M1-10d work in progress english adr slugs"),
+  so this package only translated `docs/DECISIONS.md` and ADR-0002 and shortened the map
+  deviation note; the stale `npm run check` consequence of ADR-0001 was already corrected
+  there to the five gates
+- Verified: `npx prettier --check docs/DECISIONS.md docs/DECISIONS` clean, the German-word
+  grep over both paths answers nothing (exit 1), `git ls-files docs/DECISIONS` lists exactly
+  `0001-monorepo-with-npm-workspaces.md` and `0002-uuid-v7-as-database-primary-key.md`,
+  `npm run check` green (132 tests, `i18n:check` 80/80 keys, `wp:check` 28 WP) and the CI
+  `check` run `v0.0.54` of this tag plus its `publish v0.0.54 · …` follow-up are green
+- Follow-up WP: WP-M1-11, WP-M1-12 (existing documents)
+- Open question: none

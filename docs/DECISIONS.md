@@ -1,36 +1,36 @@
 # Architecture Decision Records (ADR)
 
-Format: eine Datei pro Entscheidung in `docs/DECISIONS/`, Nummerierung fortlaufend.
+Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 
-## Vorlage
+## Template
 
 ```markdown
-# ADR-NNNN: Titel
+# ADR-NNNN: Title
 
 - Status: proposed | accepted | superseded by ADR-XXXX
-- Datum: JJJJ-MM-TT
-- Beteiligte: <Rollen>
+- Date: YYYY-MM-DD
+- Stakeholders: <roles>
 
-## Kontext
+## Context
 
-<Ausgangslage, Randbedingungen>
+<Starting point, constraints>
 
-## Entscheidung
+## Decision
 
-<Was wird entschieden>
+<What is decided>
 
-## Alternativen
+## Alternatives
 
-<Welche Alternativen wurden verworfen und warum>
+<Which alternatives were rejected and why>
 
-## Konsequenzen
+## Consequences
 
-<Positiv/Negativ, Follow-up>
+<Positive/negative, follow-up>
 ```
 
 ## Index
 
-| ADR                                                           | Titel                                 | Status   |
-| ------------------------------------------------------------- | ------------------------------------- | -------- |
-| [ADR-0001](DECISIONS/0001-monorepo-with-npm-workspaces.md)    | Monorepo mit npm-Workspaces           | accepted |
-| [ADR-0002](DECISIONS/0002-uuid-v7-as-database-primary-key.md) | UUID v7 als Primärschlüssel in der DB | accepted |
+| ADR                                                           | Title                               | Status   |
+| ------------------------------------------------------------- | ----------------------------------- | -------- |
+| [ADR-0001](DECISIONS/0001-monorepo-with-npm-workspaces.md)    | Monorepo with npm workspaces        | accepted |
+| [ADR-0002](DECISIONS/0002-uuid-v7-as-database-primary-key.md) | UUID v7 as the database primary key | accepted |

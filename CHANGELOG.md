@@ -285,6 +285,19 @@ images` runs of finished pull request runs are gone, and the check↔publish lin
   `git push --follow-tags` produced two failed `check` runs. `js-yaml` only validates YAML
   syntax, so the fix push was preceded by a `js-yaml` pass over both workflows that asserts
   `runs-on`, a non-empty `steps` list and resolvable `needs` for every job.
+- WP-M1-10d: `docs/DECISIONS.md` and the ADRs are English, as the language rule of
+  `AGENTS.md` requires. The index titles the records "Monorepo with npm workspaces" and
+  "UUID v7 as the database primary key", the template block asks for `Status`, `Date` and
+  `Stakeholders` above `Context`, `Decision`, `Alternatives` and `Consequences`, and
+  ADR-0002 keeps every technical statement: Postgres 16 has no `uuidv7()` (that arrives
+  with Postgres 18), migration `0000_base_tables` provides `gen_uuid_v7()` (48-bit
+  millisecond timestamp, version 7, RFC 9562 variant bits, random remainder) written as
+  `CREATE OR REPLACE` and declared `VOLATILE`, the four rejected alternatives, and the
+  caveat that the ticket timeline follows event timestamps and event sequences rather than
+  IDs. The English slugs and the ADR-0001 translation had already landed in the
+  work-in-progress commit `b573fb5`, so the German remainder was the index, the template
+  and ADR-0002. `docs/REPO-MAP.md` shrinks its deviation note to the map itself, which
+  WP-M1-11 normalizes.
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
   requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth
