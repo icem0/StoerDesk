@@ -16,9 +16,10 @@ work package first. Never implement a feature that has no work package.
 
 **Implemented so far: WP-M0-01, WP-M0-02, WP-M0-03, WP-M0-04, WP-M0-05
 (Phase 0 complete) and WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05,
-WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-09c, WP-M1-09d, WP-M1-10, WP-M1-10b, WP-M1-10c,
-WP-M1-10e, WP-M1-10f.**
-The open phase 1 items (WP-M1-09e, WP-M1-10d, WP-M1-11,
+WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-09c, WP-M1-09d,
+WP-M1-09e, WP-M1-10, WP-M1-10b, WP-M1-10c,
+WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h).
+The open phase 1 items (WP-M1-10d, WP-M1-11,
 WP-M1-12) are listed in the `Open follow-ups` table of `work-packages/README.md` and
 in `PLAN.md` §16.
 The repository contains:
@@ -65,6 +66,14 @@ The repository contains:
   (grant counts, user counts), create/edit/delete for custom roles, a `PERMISSION_KEYS`
   checkbox grid and seeded system roles read-only; all texts from the `settings` namespace,
   `apiFetch` answers `204` with `undefined`),
+- the session UI (`apps/web/src/auth/login-form.tsx`: `LoginForm` posts
+  `/api/v1/auth/login` and writes the `MeResponse` into the `['me']` cache, `LogoutButton`
+  posts `/api/v1/auth/logout` and invalidates `['me']`/`['users']`/`['roles']`;
+  `apps/web/src/auth/require-session.tsx`: `RequireSession` shows loading text, the login form
+  or the children — both `/admin/*` routes are children of that guarded route; `App.tsx`
+  shows the signed-in e-mail, the admin links and the logout button; unknown credentials,
+  wrong password and an inactive account all render the same `common:auth.errors.invalid_credentials`
+  notice, `429` renders `rate_limited`),
 - the documentation in `docs/`.
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as

@@ -81,6 +81,8 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `apps/web/src/auth/usePermission.ts`                | `useMe` (TanStack query on `['me']`) and `usePermission` with the OR semantics of the server guard — hiding is cosmetic (WP-M1-09c)                                                        | `useMe()`, `usePermission(...keys): boolean`                                                                                                      |
 | `apps/web/src/admin/users-page.tsx`                 | admin users UI at `/admin/users`: user table for `user.read`, create form and per-row editing for `user.write`, texts from the `settings` namespace (WP-M1-09c)                            | `UsersPage`                                                                                                                                       |
 | `apps/web/src/admin/roles-page.tsx`                 | admin roles UI at `/admin/roles`: role table with grant and user counts for `role.read`, create/grant-editor/delete for custom roles with `role.write`, system roles read-only (WP-M1-09d) | `RolesPage`                                                                                                                                       |
+| `apps/web/src/auth/login-form.tsx`                  | login form (`POST /v1/auth/login`, one notice for every failed credential) and logout button (`POST /v1/auth/logout`, invalidates `me`/`users`/`roles`) (WP-M1-09e)                        | `LoginForm`, `LogoutButton`                                                                                                                       |
+| `apps/web/src/auth/require-session.tsx`             | route guard around the `/admin/*` routes: loading text, `LoginForm` while `/me` answers 401, otherwise the children — cosmetic next to the server guard (WP-M1-09e)                        | `RequireSession({ children })`                                                                                                                    |
 | `apps/web/src/lib/api.ts`                           | `apiFetch` with `credentials: 'include'`, `{ code, params }` error body parsed into `ApiError`, `204` answers `undefined` (WP-M1-09c, WP-M1-09d)                                           | `apiFetch<T>(path, init?)`, `ApiError`, `apiBaseUrl`                                                                                              |
 | `apps/api/src/config/env.ts`                        | Zod-Schema der gesamten Umgebung, inkl. Notification-Kanäle (WP-M1-02)                                                                                                                     | `loadEnv(source?)`, `loadDotEnvFile()`, `corsOrigins(env)`, `signalRecipients(env)`                                                               |
 | `apps/api/src/config/env-file.ts`                   | findet die `.env` der Repository-Wurzel                                                                                                                                                    | `findEnvFile(): string \| undefined`                                                                                                              |
@@ -148,7 +150,10 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > **WP-M1-09c** (web side: `useMe`/`usePermission` in `apps/web/src/auth/usePermission.ts`
 > and the `UsersPage` admin users UI at `/admin/users`) and **WP-M1-09d** (the `RolesPage`
 > admin roles UI at `/admin/roles` on top of the role API — custom roles writable, seeded
-> system roles read-only),
+> system roles read-only) and **WP-M1-09e** (`LoginForm` and `LogoutButton` in
+> `apps/web/src/auth/login-form.tsx`, the `RequireSession` guard as the parent route of both
+> `/admin/*` routes, the signed-in state in `App.tsx` and the `common:auth.*` fixtures —
+> the phase 1 exit criterion "login as admin works" is reachable and WP-M1-12 can drive it),
 > **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
 > `SECURITY.md`, `CODE_OF_CONDUCT.md` with the Contributor Covenant 2.1 text — plus the
 > English CI step name) and **WP-M1-10b** (the GitHub issue forms for bug, feature and
@@ -160,7 +165,8 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > `npm run env:create` generates it with random secrets. The default build context
 > is the local checkout; deployment panels set `IMAGE_BUILD_CONTEXT` to the Git URL.
 > `PLAN.md` is the binding build plan, and `work-packages/m0` holds the Phase 0
-> startability work packages. The Web app has the shell, the admin users page at
+> startability work packages. The Web app has the shell with its session state, the login
+> form, the admin users page at
 > `/admin/users` and the admin roles page at `/admin/roles`; the API serves
 > `/api/v1/health`, the auth routes, the admin users routes and the admin roles
 > routes, and holds the

@@ -67,6 +67,11 @@ implementation.
 > `UsersPage` at `/admin/users` and the `RolesPage` at `/admin/roles` — role table with grant
 > counts and user counts, create/edit/delete for custom roles, a permission checkbox grid
 > built from `PERMISSION_KEYS`, and seeded system roles read-only.
+> **WP-M1-09e** (`09e-login-form-guard.md`) closes the open login-UI question of WP-M1-07 and
+> WP-M1-09: `LoginForm` and `LogoutButton` in `apps/web/src/auth/login-form.tsx`, the
+> `RequireSession` guard wrapping both `/admin/*` routes, the signed-in state in the shell and
+> the `common:auth.*` fixtures — the phase 1 exit criterion "login as admin works" is now
+> reachable and WP-M1-12 can drive it.
 > **WP-M1-10** (`10-ci-workflow.md`) was rewritten into the small-model format and
 > shrunk: its CI, `LICENSE`, `README.md`, `CHANGELOG.md`, `dependabot.yml` and PR
 > template items are already delivered (WP-M1-01, the deployment commits, WP-M0-05),
@@ -103,7 +108,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-10h | CI on the version tag, version carried by the run name  | done                    | yes     |
 | WP-M1-09c | `usePermission` and the admin users UI                  | done                    | yes     |
 | WP-M1-09d | admin roles UI                                          | done                    | yes     |
-| WP-M1-09e | login form, logout button and route guard in `apps/web` | open                    | yes     |
+| WP-M1-09e | login form, logout button and route guard in `apps/web` | done                    | yes     |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open                    | yes     |
 | WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned                 | yes     |
 | WP-M1-12  | Playwright smoke test "login as admin works"            | planned                 | yes     |
@@ -119,8 +124,11 @@ saw the tag either, because `git push --follow-tags` pushes tag and commit in on
 `UsersPage` at `/admin/users` and the `settings` namespace fixtures.
 `WP-M1-09d` is implemented — `RolesPage` at `/admin/roles` on top of the role API, the
 `settings:admin.roles.*` fixtures and the `204` handling of `apiFetch`.
-`WP-M1-09e` has its document (`09e-login-form-guard.md`, created while WP-M1-09d was
-finished — an announced follow-up without a WP file is a defect) but no implementation yet.
+`WP-M1-09e` is implemented — `LoginForm` and `LogoutButton` in `apps/web/src/auth/login-form.tsx`,
+`RequireSession` in `apps/web/src/auth/require-session.tsx` guarding the two `/admin/*` routes,
+the session state in the shell, and the `common:auth.*` fixtures (de and en complete). The
+document `09e-login-form-guard.md` had been created while WP-M1-09d was finished — an announced
+follow-up without a WP file is a defect.
 `WP-M1-10d` has its document
 (`10d-adrs-english.md`) but no implementation yet.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion

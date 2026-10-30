@@ -209,6 +209,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings:admin.roles.errors.*` keys (de and en complete). The announced follow-up
   WP-M1-09e got its work-package document
   `work-packages/m1/09e-login-form-guard.md`.
+- WP-M1-09e: session UI in `apps/web/src/auth` — `LoginForm` posts `/api/v1/auth/login` through
+  `useMutation` + `apiFetch<MeResponse>` and writes the response into the `['me']` cache, so the
+  guarded area swaps without a second round-trip; unknown e-mail, wrong password and a
+  deactivated account all render the same `common:auth.errors.invalid_credentials` notice
+  (no account enumeration), a `429` renders `rate_limited`. `LogoutButton` posts
+  `/api/v1/auth/logout` and invalidates `['me']`, `['users']` and `['roles']`.
+  `RequireSession({ children })` is the parent route of both `/admin/*` routes: loading text
+  while `/me` is pending, the login form while it answers `401`, otherwise the children —
+  cosmetic only, `requirePermission` stays the enforcement point. `App.tsx` shows the
+  signed-in e-mail, the admin links and the logout button. All strings live in the `common`
+  namespace under `auth.*` (de and en complete: 80 keys each).
 
 ### Changed
 

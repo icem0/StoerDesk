@@ -1,7 +1,7 @@
 # WP-M1-09e: login form, logout button and route guard in apps/web
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M1-07b, WP-M1-09c
 phase: 1
 context-budget: 24k tokens
@@ -93,8 +93,17 @@ Expected: all green; `i18n:check` reports the new `common:auth.*` keys complete 
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/auth/login-form.tsx` (`LoginForm`, `LogoutButton`),
+  `apps/web/src/auth/require-session.tsx` (`RequireSession`), `apps/web/src/routes/index.tsx`
+  (the two `/admin/*` routes became children of one guarded parent route), `apps/web/src/App.tsx`
+  (shell shows the session), `apps/web/src/i18n/locales/{de,en}/common.json` (`auth.*`),
+  `docs/REPO-MAP.md`, `work-packages/README.md`
+- Interfaces added: `LoginForm`, `LogoutButton`, `RequireSession({ children })`,
+  `common:auth.{title,loading,submit,logout,invalidHint,signedInAs,fields.*,links.*,errors.*}`
+- Deviation: none — the guarded parent route uses `<Outlet />`, so `UsersPage` and `RolesPage`
+  stayed untouched; the login response is written into the `['me']` cache and additionally
+  invalidated, so the guarded area swaps without a second round-trip
+- Verified: `npm run check` green — 132 tests, 10 in `apps/web/src/auth` (3 `usePermission`,
+  4 `LoginForm`, 3 `RequireSession`), `i18n:check` 80 de / 80 en keys
 - Follow-up WP: WP-M1-10d, WP-M1-11, WP-M1-12
 - Open question: none

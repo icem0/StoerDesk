@@ -2,5 +2,28 @@
   "app": {
     "title": "StörDesk",
     "setupNotice": "Environment is set up. Implementation follows after specification approval."
+  },
+  "auth": {
+    "title": "Sign in",
+    "loading": "Loading …",
+    "submit": "Sign in",
+    "logout": "Sign out",
+    "invalidHint": "Enter a valid e-mail and password.",
+    "signedInAs": "Signed in as {{email}}",
+    "fields": {
+      "email": "E-mail",
+      "password": "Password"
+    },
+    "links": {
+      "users": "User administration",
+      "roles": "Role administration"
+    },
+    "errors": {
+      "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
+      "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
+      "invalid_request": "The sign-in data is incomplete or malformed.",
+      "session_invalid": "The session has expired. Please sign in again.",
+      "unknown": "Sign-in is not possible right now. Please try again later."
+    }
   }
 }

@@ -553,7 +553,7 @@ when its exit criteria and its acceptance tests pass.
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 **WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,
-**WP-M1-09d**, **WP-M1-10f** and
+**WP-M1-09d**, **WP-M1-09e**, **WP-M1-10f** and
 **WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h); the table below is the
 backlog of record (mirrored and kept current in
 `work-packages/README.md`, enforced by the `AGENTS.md` rule _Open follow-ups
@@ -562,14 +562,15 @@ next phase starts).
 
 | WP        | Content                                      | Status |
 | --------- | -------------------------------------------- | ------ |
-| WP-M1-09e | login form, logout and route guard (web)     | open   |
+| WP-M1-09e | login form, logout and route guard (web)     | done   |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | open   |
 | WP-M1-11  | `docs/REPO-MAP.md` normalized to English     | open   |
 | WP-M1-12  | Playwright smoke test "login as admin works" | open   |
 
-Phase 1 cannot exit before WP-M1-09e exists: the exit criterion "login as admin
-works" needs a login form, and `apps/web` renders a placeholder only. Phase 2 starts
-after the phase 1 backlog is closed.
+WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
+guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
+reachable by hand and can be asserted by WP-M1-12. Phase 2 starts after the phase 1
+backlog is closed.
 
 ## 17. Work package rules for small models
 
