@@ -29,7 +29,24 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   })
 
   if (!response.ok) {
-    throw new ApiError({ status: response.status })
+    // The API always answers errors as `{ code, params }` (AGENTS.md); a body that
+    // is not JSON degrades to a status-only ApiError instead of throwing again.
+    let code: string | undefined
+    let params: Record<string, string | number> | undefined
+
+    try {
+      const body = (await response.json()) as {
+        code?: string
+        params?: Record<string, string | number>
+      }
+      code = typeof body.code === 'string' ? body.code : undefined
+      params = typeof body.params === 'object' && body.params !== null ? body.params : undefined
+    } catch {
+      code = undefined
+      params = undefined
+    }
+
+    throw new ApiError({ status: response.status, code, params })
   }
 
   return (await response.json()) as T

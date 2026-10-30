@@ -189,6 +189,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   record, and `docs/WP-TEMPLATE.md` gained the `status:` field plus the split-child
   handoff rule. This closes the hole that let WP-M1-09b–WP-M1-09d be overtaken by
   WP-M1-10, WP-M1-10b and WP-M1-10c.
+- WP-M1-09c: admin users UI in `apps/web/src/admin/users-page.tsx` —
+  `UsersPage` at route `/admin/users` lists users (e-mail, locale, active state,
+  role keys) for `user.read` and offers a create form plus per-row editing
+  (locale, active, role keys, optional new password) for `user.write`, using the
+  role list of `GET /api/v1/roles` for the checkboxes. `apps/web/src/auth/usePermission.ts`
+  adds `useMe` (query on `['me']`) and `usePermission` with the OR semantics of the
+  server guard; hiding is cosmetic, the API stays the enforcement point. `apiFetch`
+  parses the `{ code, params }` error body into `ApiError`, so `email_taken`,
+  `last_admin` and the other codes map to `settings:admin.users.errors.*` keys.
+  All page text lives in the `settings` namespace (de and en complete).
 
 ### Changed
 

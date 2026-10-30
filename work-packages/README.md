@@ -93,7 +93,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP        | Content                                                 | Status  | WP file |
 | --------- | ------------------------------------------------------- | ------- | ------- |
 | WP-M1-10f | traceable CI run, job and step names                    | done    | yes     |
-| WP-M1-09c | `usePermission` and the admin users UI                  | open    | no      |
+| WP-M1-09c | `usePermission` and the admin users UI                  | done    | yes     |
 | WP-M1-09d | admin roles UI                                          | open    | no      |
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | open    | no      |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open    | yes     |
@@ -102,7 +102,9 @@ running phase are implemented in numeric order before the next phase starts.
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
-`WP-M1-09c`–`WP-M1-09e` are announced only: the WP file column says `no`, so writing
+`WP-M1-09c` is implemented — `useMe`/`usePermission` in `apps/web/src/auth`,
+`UsersPage` at `/admin/users` and the `settings` namespace fixtures.
+`WP-M1-09d` and `WP-M1-09e` are announced only: the WP file column says `no`, so writing
 the document is the first step of that work package. `WP-M1-10d` has its document
 (`10d-adrs-english.md`) but no implementation yet.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion

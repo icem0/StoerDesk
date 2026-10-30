@@ -1,1 +1,45 @@
-{}
+{
+  "admin": {
+    "users": {
+      "title": "User management",
+      "loading": "Loading …",
+      "sessionNotice": "User management requires a valid sign-in.",
+      "forbiddenNotice": "No permission for user management.",
+      "table": {
+        "email": "E-mail",
+        "locale": "Language",
+        "active": "Active",
+        "roles": "Roles",
+        "actions": "Actions"
+      },
+      "active": "active",
+      "inactive": "inactive",
+      "createTitle": "Create user",
+      "editTitle": "Edit user",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "fields": {
+        "email": "E-mail",
+        "password": "Password",
+        "passwordNew": "New password (optional)",
+        "locale": "Language",
+        "activeLabel": "Active",
+        "rolesLabel": "Roles"
+      },
+      "locales": {
+        "de": "German",
+        "en": "English"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "email_taken": "This e-mail address is already in use.",
+        "last_admin": "The last active administrator cannot be deactivated or saved without a role.",
+        "unknown_role_key": "Unknown role in the selection.",
+        "unknown": "Saving failed."
+      }
+    }
+  }
+}

@@ -1,1 +1,45 @@
-{}
+{
+  "admin": {
+    "users": {
+      "title": "Benutzerverwaltung",
+      "loading": "Lädt …",
+      "sessionNotice": "Die Benutzerverwaltung benötigt eine gültige Anmeldung.",
+      "forbiddenNotice": "Keine Berechtigung für die Benutzerverwaltung.",
+      "table": {
+        "email": "E-Mail",
+        "locale": "Sprache",
+        "active": "Aktiv",
+        "roles": "Rollen",
+        "actions": "Aktionen"
+      },
+      "active": "aktiv",
+      "inactive": "inaktiv",
+      "createTitle": "Benutzer anlegen",
+      "editTitle": "Benutzer bearbeiten",
+      "create": "Anlegen",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "fields": {
+        "email": "E-Mail",
+        "password": "Passwort",
+        "passwordNew": "Neues Passwort (optional)",
+        "locale": "Sprache",
+        "activeLabel": "Aktiv",
+        "rolesLabel": "Rollen"
+      },
+      "locales": {
+        "de": "Deutsch",
+        "en": "English"
+      },
+      "errors": {
+        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+        "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+        "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
+        "last_admin": "Der letzte aktive Administrator darf nicht deaktiviert oder ohne Rolle gespeichert werden.",
+        "unknown_role_key": "Unbekannte Rolle in der Auswahl.",
+        "unknown": "Speichern fehlgeschlagen."
+      }
+    }
+  }
+}

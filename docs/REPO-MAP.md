@@ -78,7 +78,8 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `packages/shared/src/i18n/`                         | server translations and seed resource files (`server.*`, `seed.*`) (WP-M1-04)                                                                                                         | `t(locale, key, params): string`                                                                                                                  |
 | `apps/web/src/i18n/index.ts`                        | i18next setup, 8 namespaces, `de` default, bundled locales (WP-M1-04)                                                                                                                 | `i18n`, `namespaces`, `Namespace`                                                                                                                 |
 | `scripts/i18n-check.ts`                             | de/en key parity + all `t()` keys in `apps/web/src` must exist (WP-M1-04)                                                                                                             | via `npm run i18n:check`                                                                                                                          |
-| `apps/web/src/lib/usePermission.ts` (geplant)       | Hook für UI-Ausblendung                                                                                                                                                               | `usePermission(key: string): boolean`                                                                                                             |
+| `apps/web/src/auth/usePermission.ts`                | `useMe` (TanStack query on `['me']`) and `usePermission` with the OR semantics of the server guard — hiding is cosmetic (WP-M1-09c)                                                   | `useMe()`, `usePermission(...keys): boolean`                                                                                                      |
+| `apps/web/src/admin/users-page.tsx`                 | admin users UI at `/admin/users`: user table for `user.read`, create form and per-row editing for `user.write`, texts from the `settings` namespace (WP-M1-09c)                       | `UsersPage`                                                                                                                                       |
 | `apps/api/src/config/env.ts`                        | Zod-Schema der gesamten Umgebung, inkl. Notification-Kanäle (WP-M1-02)                                                                                                                | `loadEnv(source?)`, `loadDotEnvFile()`, `corsOrigins(env)`, `signalRecipients(env)`                                                               |
 | `apps/api/src/config/env-file.ts`                   | findet die `.env` der Repository-Wurzel                                                                                                                                               | `findEnvFile(): string \| undefined`                                                                                                              |
 | `apps/api/src/notifications/channels/signal.ts`     | sendet über den signal-cli JSON-RPC-Bridge                                                                                                                                            | `sendSignalNotification(config, message, fetch?)`                                                                                                 |
@@ -141,6 +142,8 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > active admin), **WP-M1-09b** (admin roles API: roles with permission keys and user
 > count, create custom roles, replace grant sets, delete unused custom roles, with
 > service guards for seeded system roles and roles still held by users),
+> **WP-M1-09c** (web side: `useMe`/`usePermission` in `apps/web/src/auth/usePermission.ts`
+> and the `UsersPage` admin users UI at `/admin/users`),
 > **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
 > `SECURITY.md`, `CODE_OF_CONDUCT.md` with the Contributor Covenant 2.1 text — plus the
 > English CI step name) and **WP-M1-10b** (the GitHub issue forms for bug, feature and
@@ -152,12 +155,13 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > `npm run env:create` generates it with random secrets. The default build context
 > is the local checkout; deployment panels set `IMAGE_BUILD_CONTEXT` to the Git URL.
 > `PLAN.md` is the binding build plan, and `work-packages/m0` holds the Phase 0
-> startability work packages. The Web app still has no UI beyond the shell; the API
-> serves `/api/v1/health`, the auth routes, the admin users routes and the admin roles
+> startability work packages. The Web app has the shell and the admin users page at
+> `/admin/users`; the API serves `/api/v1/health`, the auth routes, the admin users
+> routes and the admin roles
 > routes, and holds the
-> schema, the seeds, the session core and the notification channel adapters. Only the
-> `common` namespace has real keys, the remaining namespaces are intentionally
-> empty. Every further work package follows individually after approval from
+> schema, the seeds, the session core and the notification channel adapters. The
+> `common` and `settings` namespaces have real keys, the remaining namespaces are
+> intentionally empty. Every further work package follows individually after approval from
 > `work-packages/`. Since WP-M1-10e the open follow-ups of a phase are tracked in the
 > `Open follow-ups` table of `work-packages/README.md` and in `PLAN.md` §16
 > (_Current state and open backlog_); the rule is the `AGENTS.md` section
