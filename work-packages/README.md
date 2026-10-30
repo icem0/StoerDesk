@@ -90,19 +90,18 @@ _Open follow-ups (mandatory closure)_). The status prose above is history only.
 Update a row in the commit that adds, starts or finishes the item. Open items of the
 running phase are implemented in numeric order before the next phase starts.
 
-| WP        | Content                                                 | Status      | WP file |
-| --------- | ------------------------------------------------------- | ----------- | ------- |
-| WP-M1-10f | traceable CI run, job and step names                    | in-progress | yes     |
-| WP-M1-09c | `usePermission` and the admin users UI                  | open        | no      |
-| WP-M1-09d | admin roles UI                                          | open        | no      |
-| WP-M1-09e | login form, logout button and route guard in `apps/web` | open        | no      |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open        | yes     |
-| WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned     | yes     |
-| WP-M1-12  | Playwright smoke test "login as admin works"            | planned     | yes     |
+| WP        | Content                                                 | Status  | WP file |
+| --------- | ------------------------------------------------------- | ------- | ------- |
+| WP-M1-10f | traceable CI run, job and step names                    | done    | yes     |
+| WP-M1-09c | `usePermission` and the admin users UI                  | open    | no      |
+| WP-M1-09d | admin roles UI                                          | open    | no      |
+| WP-M1-09e | login form, logout button and route guard in `apps/web` | open    | no      |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | open    | yes     |
+| WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned | yes     |
+| WP-M1-12  | Playwright smoke test "login as admin works"            | planned | yes     |
 
-`WP-M1-10f` is partially delivered — the `run-name` labels and the workflow rename are
-implemented, the remaining steps are the `Not done yet in this WP` list in
-`work-packages/m1/10f-ci-run-naming.md`.
+`WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
+rename and the named jobs, steps and image summaries of both workflows are in place.
 `WP-M1-09c`–`WP-M1-09e` are announced only: the WP file column says `no`, so writing
 the document is the first step of that work package. `WP-M1-10d` has its document
 (`10d-adrs-english.md`) but no implementation yet.

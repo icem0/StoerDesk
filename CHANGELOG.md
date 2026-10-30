@@ -192,6 +192,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- WP-M1-10f (completed): `build.yml` closes the CI naming rule — `permissions:
+actions: write`, the job `Resolve version tag` gained the guarded step
+  `Name the run after the version` (`gh api --method PATCH` renames the run to
+  `publish <version>`, `continue-on-error: true`), the publish jobs are named
+  `Publish <service> image <version>`, the step `Build and push image` and the new
+  `Write image summary` step write image names, tags, version, source SHA and
+  source run URL into the job summary. `AGENTS.md` states the run-naming rule and
+  `CONTRIBUTING.md` speaks of `publish images`.
 - WP-M1-10f (partial): CI runs are self-describing now. `check.yml` gained
   `run-name: check · <ref> · <event>` and the step names `Quality gates
 (typecheck, lint, tests, i18n, wp)` and `Build web and API artifacts (no publish)`.

@@ -46,7 +46,7 @@ PLAN.md                         Binding build plan (scope, stack, phases, WP lim
 specs/                          Expanded specification slices (PLAN.md wins while a slice is a placeholder)
 work-packages/                  Work packages, one Markdown file per WP (m0, m1, m2)
 docs/                           ARCHITECTURE, COMPLIANCE, DECISIONS (ADR), GLOSSARY, I18N, REPO-MAP, DEPLOYMENT, WP-TEMPLATE
-.github/workflows/              CI: check (quality, Docker smoke, E2E) and build and push (GHCR)
+.github/workflows/              CI: check (quality, Docker smoke, E2E) and publish images (GHCR)
 .github/ISSUE_TEMPLATE/         GitHub issue forms: bug, feature, security (valid YAML, 112-only notice)
 scripts/                        Orchestration, split-spec, i18n:check, create-env, wp-check, docker-smoke
 Dockerfile                      Multi-stage image build (targets: api, web)
@@ -88,7 +88,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 | `docs/WP-TEMPLATE.md`                               | Small-model work-package template                                                                                                                                                     | `npm run wp:check`                                                                                                                                |
 | `scripts/wp-check.mjs`                              | Validates small-model WPs (size, context, fields)                                                                                                                                     | via `npm run wp:check`                                                                                                                            |
 | `scripts/docker-smoke.sh`                           | wiederholbarer Docker-Smoke-Test: Stack isoliert hochfahren, beide Health-Endpoints pruefen, abbauen (WP-M0-04)                                                                       | `sh scripts/docker-smoke.sh`, CI-Job `docker-smoke`                                                                                               |
-| `.github/workflows/build.yml`                       | baut und pusht die versionierten `api`/`web`-Images nach GHCR, sobald `check` auf `main` erfolgreich war (WP-M0-05)                                                                   | `build and push`, `ghcr.io/<owner>/stoerdesk-{api,web}:<version>`                                                                                 |
+| `.github/workflows/build.yml`                       | baut und pusht die versionierten `api`/`web`-Images nach GHCR, sobald `check` auf `main` erfolgreich war (WP-M0-05)                                                                   | `publish images`, `ghcr.io/<owner>/stoerdesk-{api,web}:<version>`                                                                                 |
 | `.github/ISSUE_TEMPLATE/{bug,feature,security}.md`  | GitHub issue forms with valid front matter and the 112-only emergency notice (WP-M1-10b)                                                                                              | issue types and labels `bug`, `feature`, `security`                                                                                               |
 | `Dockerfile`                                        | Multi-stage image build, targets `api` and `web`                                                                                                                                      | `docker build --target api .`                                                                                                                     |
 | `docker-compose.yml`                                | complete stack: db, api, web, optional backup                                                                                                                                         | `docker compose up -d --build`                                                                                                                    |
@@ -112,7 +112,7 @@ Dockerfile                      Multi-stage image build (targets: api, web)
 > checkout), **WP-M0-02** (web starts without a healthy API), **WP-M0-03** (binding
 > `PLAN.md` + small-model work packages) and **WP-M0-04** (repeatable Docker smoke
 > test `scripts/docker-smoke.sh` + guarded CI job `docker-smoke`) and **WP-M0-05**
-> (`build and push` workflow: versioned `api`/`web` images in GHCR after `check`).
+> (`publish images` workflow: versioned `api`/`web` images in GHCR after `check`).
 > **WP-M1-01** (monorepo, tooling), **WP-M1-02** (Docker Compose, `.env.example`),
 > **WP-M1-03** (Drizzle base schema `users`, `sessions`, `groups`, `user_groups`, `settings`
 > with migration `0000_base_tables` and `gen_uuid_v7()`),

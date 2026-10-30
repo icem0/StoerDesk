@@ -131,14 +131,22 @@ and IDE support.
 
 - After a completed work package, commit with the Husky hooks and push with
   `git push --follow-tags`. Do not finish a WP with an unpushed commit.
+- **Run naming:** every workflow sets a `run-name` naming trigger and ref
+  (`check · <ref> · <event>`, `publish images · <event> · <branch>`). GitHub
+  Actions expressions have no `substring()`, so no short SHA ever fits a label.
+  The `publish images` workflow renames its own run to `publish <version>`
+  (the `Resolve version tag` job via `gh api` with `actions: write` and
+  `continue-on-error: true`), and every publish job writes the image names,
+  tags, version, source SHA and source run URL into its job summary.
 - After the push, wait for the GitHub Actions `check` run of the pushed HEAD.
-  The `build and push` workflow starts only after `check` succeeded and publishes
+  The `publish images` workflow starts only after `check` succeeded and publishes
   the versioned `api` and `web` images to GHCR.
-- A WP is complete only when `check` and `build and push` are green (or a job is
+- A WP is complete only when `check` and `publish images` are green (or a job is
   skipped by design). If a job fails, read the failing log, fix it in a new
   commit and push again.
-- Report the version tag, commit hash, run URL and the final conclusion to the
-  user. A green `npm run check` locally is not a substitute for the CI result:
+- Report the renamed run titles, the version tag, commit hash, run URL and the
+  final conclusion to the user. A green `npm run check` locally is not a
+  substitute for the CI result:
   it does not run `scripts/docker-smoke.sh`, and this development container has
   no Docker.
 

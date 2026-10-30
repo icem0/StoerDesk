@@ -1,7 +1,7 @@
 # WP-M1-10f: Traceable CI run, job and step names
 
 format: small-model
-status: in-progress
+status: done
 depends-on: WP-M1-10e, WP-M0-05, WP-M1-10
 phase: 1
 context-budget: 18k tokens
@@ -93,7 +93,8 @@ Expected: Prettier reports no reformat, both workflow files contain exactly one
 
 ## Handoff
 
-Partial slice: status `in-progress`, the remainder is listed below and stays tracked.
+Split slice: the run labels landed first (`in-progress`), this commit closes the
+rest; the WP is now done.
 
 - Files changed (run labels): both workflow files, this document, `CHANGELOG.md`,
   `work-packages/README.md` and `PLAN.md` §16
@@ -105,14 +106,14 @@ Partial slice: status `in-progress`, the remainder is listed below and stays tra
   workflow _file_, with zero jobs (`v0.0.40`). YAML parsing passes anyway, so the command
   above does not catch it — only a real push proves a `run-name:`. The labels now carry
   no short SHA.
-- Not done in this WP: `build.yml` still needs `permissions: actions: write`, the
-  `Resolve version tag` job name, the `Name the run after the version` step
-  (`gh api --method PATCH`, `continue-on-error: true`, whose token scope on a private repo
-  is unresolved), the `Publish <service> image <version>` job name, the
-  `Build and push image` step name and the `Write image summary` step; the `AGENTS.md`
-  naming rule and the `CONTRIBUTING.md` wording are pending too
+- Done in this completion: `build.yml` now has `permissions: actions: write`, the
+  job `Resolve version tag`, the guarded `Name the run after the version` step
+  (`gh api --method PATCH`, `continue-on-error: true`), the job name
+  `Publish <service> image <version>`, the step `Build and push image` and the
+  `Write image summary` step (image names, tags, version, source SHA and source
+  run URL in `$GITHUB_STEP_SUMMARY`); `AGENTS.md` states the run-naming rule and
+  `CONTRIBUTING.md` speaks of `publish images`
 - Deviation: the file stays `build.yml` although the display name is `publish images` —
   renaming the file would break the Actions history links
-- Follow-up WP: the rest of WP-M1-10f, then WP-M1-09c…WP-M1-09e, WP-M1-10d, WP-M1-11,
-  WP-M1-12
+- Follow-up WP: WP-M1-09c…WP-M1-09e, WP-M1-10d, WP-M1-11, WP-M1-12
 - Open question: none

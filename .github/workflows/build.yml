@@ -19,9 +19,13 @@ on:
         required: true
         type: string
 
+# `actions: write` lets the version job rename the run to `publish <version>`;
+# the rename step is `continue-on-error: true`, so a missing scope never breaks
+# the publish (WP-M1-10f).
 permissions:
   contents: read
   packages: write
+  actions: write
 
 concurrency:
   group: build-and-push-${{ github.event.workflow_run.head_sha || github.sha }}
@@ -33,7 +37,7 @@ env:
 
 jobs:
   version:
-    name: Resolve version
+    name: Resolve version tag
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
@@ -62,8 +66,22 @@ jobs:
           echo "tag=${version#v}" >> "$GITHUB_OUTPUT"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      # The run label cannot carry the version when the run starts, so the
+      # resolved tag is written into the run name here. Guarded, because a
+      # missing `actions: write` scope must never break the publish.
+      - name: Name the run after the version
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_LABEL: publish ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh api --method PATCH \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -f name="$RUN_LABEL"
+
   publish:
-    name: Publish ${{ matrix.service }} image
+    name: Publish ${{ matrix.service }} image ${{ needs.version.outputs.version }}
     needs: version
     runs-on: ubuntu-latest
     strategy:
@@ -110,7 +128,7 @@ jobs:
             echo "TAGS"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build and push
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -125,3 +143,26 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+      # Every publish run states in its job summary which images exist now, so the
+      # run list plus the summary answers "which version produced which image".
+      - name: Write image summary
+        env:
+          SERVICE: ${{ matrix.service }}
+          VERSION: ${{ needs.version.outputs.version }}
+          SHA: ${{ needs.version.outputs.sha }}
+          TAGS: ${{ steps.tags.outputs.tags }}
+          SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          source_run="${SOURCE_RUN:-${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}}"
+          {
+            echo "## ${SERVICE} image ${VERSION}"
+            echo ""
+            echo "- source SHA: \`${SHA}\`"
+            echo "- source run: <${source_run}>"
+            echo "- published tags:"
+            while IFS= read -r line; do
+              echo "  - \`${line}\`"
+            done <<< "$TAGS"
+          } >> "$GITHUB_STEP_SUMMARY"

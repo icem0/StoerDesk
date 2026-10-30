@@ -39,7 +39,7 @@ npm run check
 
 Typecheck, lint, tests, `i18n:check` and `wp:check` must be green. Run
 `npm run build` as well when build artefacts are affected. After the push, wait
-for the GitHub Actions `check` run — the `build and push` workflow publishes the
+for the GitHub Actions `check` run — the `publish images` workflow publishes the
 versioned images only after `check` succeeded.
 
 ## Pull requests
