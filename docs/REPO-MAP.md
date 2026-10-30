@@ -3,6 +3,11 @@
 Wird nach jedem Work Package aktualisiert. Max. 200 Zeilen.
 Ein Satz pro Modul. Verzeichnisstruktur nur bis Ebene 3.
 
+> Deviation (WP-M1-10): this map and the `docs/` placeholders (`ARCHITECTURE`,
+> `COMPLIANCE`, `GLOSSARY`, `I18N`, `DECISIONS` plus the ADRs) are still partly
+> German, which breaks the English rule of `AGENTS.md`. Normalization is the scope
+> of WP-M1-10c, WP-M1-10d and WP-M1-11.
+
 ## Struktur
 
 ```

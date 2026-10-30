@@ -34,8 +34,7 @@ interfaces:
   Conventional Commits + DCO, one WP = one commit, `npm run check` before push and
   the PR process
 - `SECURITY.md` states: no public issues for vulnerabilities, private reporting
-  channel, supported versions, operator notes (the 112 notice stays on the form and
-  the stickers); the 112-only emergency wording is unchanged everywhere
+  channel, supported versions and operator notes; the 112 wording stays unchanged
 
 ## Task
 
@@ -57,9 +56,8 @@ so GitHub does not render them; also ignore `.github/ISSUE_TEMPLATE/` in
    PR template references the WP.
 
 2. `.github/workflows/check.yml`: rename the single German step name
-   `Playwright-Browser installieren` to English. Job, services, steps and the
-   chromium install stay exactly as they are — the Playwright job stays an
-   accepted placeholder until the real E2E of WP-M1-12 exists.
+   `Playwright-Browser installieren` to English; everything else in that job stays
+   as it is — the Playwright job remains a placeholder until the E2E of WP-M1-12.
 
 3. `CONTRIBUTING.md`: full English rewrite of the existing content. Keep the
    requirements, setup commands, branching and commit rules (Conventional Commits,
@@ -100,7 +98,7 @@ npm run lint
 npm run i18n:check
 npm run wp:check
 npx prettier --check .github CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md
-git grep -lI -P '[äöüÄÖÜß]' -- CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md .github/workflows
+git grep -nI -i -E '\b(und|der|die|mit|nicht|bitte|siehe|für|bei)\b' -- CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md .github/workflows
 ```
 
 Expected: lint, i18n and wp:check green, Prettier reports no reformat, the last
@@ -111,9 +109,11 @@ green — a local `npm run check` alone is not enough.
 
 - Files changed: the four files above, plus `CHANGELOG.md` and `docs/REPO-MAP.md`
 - Interfaces added: none (documentation and one CI step name)
-- Deviation: `SECURITY.md` no longer names a `SECURITY_CONTACT` variable, because
-  `.env.example` does not define one
-- Follow-up WP: WP-M1-10b (issue forms), WP-M1-10c (English docs),
-  WP-M1-10d (English ADRs), WP-M1-11 (repo map, incl. its German text)
-- Open question: should the issue templates keep the police number 110, or only 112
-  like the product text?
+- Verified: `npm run check` green — 16 files, 104 tests; the German-word grep and
+  the Prettier check report nothing
+- Deviation: `SECURITY.md` no longer names a `SECURITY_CONTACT` variable that
+  `.env.example` does not define, and the text check looks for German words because
+  the project name `StörDesk` contains `ö`
+- Follow-up WP: WP-M1-10b (issue forms), WP-M1-10c (English docs), WP-M1-10d
+  (English ADRs), WP-M1-11 (repo map, incl. its German text)
+- Open question: do the issue templates keep the police number 110, or only 112?

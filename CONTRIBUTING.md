@@ -1,12 +1,12 @@
 # Contributing
 
-Danke für Beiträge an StörDesk.
+Thanks for contributing to StörDesk.
 
-## Voraussetzungen
+## Requirements
 
 - Node.js ≥ 22.12
 - npm ≥ 11
-- Docker (für Postgres 16 lokal)
+- Docker (for a local PostgreSQL 16)
 
 ## Setup
 
@@ -16,34 +16,40 @@ cp .env.example .env
 docker compose -f docker-compose.dev.yml up -d db
 ```
 
-## Branching und Commits
+## Branches and commits
 
-- Feature-Branches von `main`: `feat/wp-m1-09-admin-ui`, `fix/…`, `docs/…`.
-- **Conventional Commits**: `feat(web): …`, `fix(api): …`, `docs(spec): …`, `chore(repo): …`.
-- **Sprache**: Commit-Messages, Quellcode, Kommentare und Testnamen auf Englisch;
-  sichtbare UI-Texte nur über i18n-Keys (siehe `AGENTS.md`).
-- **Ein Work Package = ein Commit.** Der Commit-Betreff nennt das WP:
-  `feat(web): WP-M1-09 admin ui users and roles`.
-- **DCO**: Commits werden mit `git commit -s` signiert. Der `commit-msg`-Hook
-  (commitlint) prüft Conventional-Commit-Format und Sign-off.
+- Feature branches from `main`: `feat/wp-m1-09-admin-ui`, `fix/…`, `docs/…`.
+- **Conventional Commits**: `feat(web): …`, `fix(api): …`, `docs(spec): …`,
+  `chore(repo): …` — subject and body in English.
+- **Language**: code, identifiers, comments, test names, commit messages and
+  developer documentation are English; visible UI text only through i18n keys
+  (see `AGENTS.md`).
+- **One work package = one commit.** The commit subject names the work package:
+  `feat(api): WP-M1-09 admin users API`.
+- **DCO**: sign every commit with `git commit -s`. The `commit-msg` hook
+  (commitlint) checks the Conventional Commit format and the sign-off.
+- **Version tags**: the `post-commit` hook creates the next annotated patch tag
+  (`v0.0.N`) on the new commit; tags are published with `git push --follow-tags`.
 
-## Vor dem Push
+## Before pushing
 
 ```bash
 npm run check
 ```
 
-Typecheck, Lint, Tests und i18n:check müssen grün sein. `npm run build` zusätzlich,
-wenn Build-Artefakte betroffen sind.
+Typecheck, lint, tests, `i18n:check` and `wp:check` must be green. Run
+`npm run build` as well when build artefacts are affected. After the push, wait
+for the GitHub Actions `check` run — the `build and push` workflow publishes the
+versioned images only after `check` succeeded.
 
-## Pull Requests
+## Pull requests
 
-- PR-Beschreibung mit Bezug auf das umgesetzte Work Package.
-- Verknüpfung mit dem Issue/WP, falls vorhanden.
-- Screenshots bei UI-Änderungen, DE und EN.
-- Reviewer: mindestens eine Freigabe, bevor gemergt wird.
+- PR description with a link to the implemented work package.
+- Reference the issue or work package when one exists.
+- Screenshots for UI changes, in German and in English.
+- At least one review before merging.
 
-## Verhalten
+## Code of conduct and security
 
-Melde Fehler und Verhaltensregeln in `CODE_OF_CONDUCT.md`.
-Sicherheitslücken **nicht** als öffentliches Issue melden — siehe `SECURITY.md`.
+Behavioral expectations are in `CODE_OF_CONDUCT.md`. Report vulnerabilities **not**
+as a public issue — see `SECURITY.md`.

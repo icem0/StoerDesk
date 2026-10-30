@@ -167,6 +167,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- WP-M1-10: `CONTRIBUTING.md`, `SECURITY.md` and `CODE_OF_CONDUCT.md` are English
+  now, and `CODE_OF_CONDUCT.md` carries the full Contributor Covenant 2.1 text
+  instead of a paraphrase; the last German step name in
+  `.github/workflows/check.yml` is English too. `SECURITY.md` no longer points at a
+  `SECURITY_CONTACT` variable that `.env.example` does not define — the reporting
+  channel is the operator of the instance or a private GitHub report.
 - WP-M1-08: `POST /api/v1/auth/login` answers the same user object as
   `GET /api/v1/me` — the shared `meResponseSchema` now requires `permissions`, so
   the UI needs no second round trip to know what to show.
@@ -209,5 +215,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - All domain logic (tickets, objects, on-call, notifications, UI).
   Implementation happens only as a work package from `work-packages/` — so far
-  WP-M1-01 to WP-M1-07b (foundation, base data model, RBAC, seeds, session core and
-  the auth HTTP layer) are implemented.
+  WP-M1-01 to WP-M1-09 (foundation, base data model, RBAC, seeds, session core,
+  the auth HTTP layer, the permission guard and the admin users API) are
+  implemented.

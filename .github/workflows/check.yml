@@ -87,7 +87,7 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Playwright-Browser installieren
+      - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: E2E
