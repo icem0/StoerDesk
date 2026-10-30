@@ -4,9 +4,9 @@ format: small-model
 depends-on: WP-M1-12
 phase: 2
 context-budget: 25k tokens
-spec: PLAN.md §6 (`objects`, `systems`, `text_templates`,
-`text_template_translations`, index list) — **blocked until `specs/02-data-model.md`
-is filled from PLAN.md §6 and reviewed**; until then PLAN.md §6 is authoritative
+spec: `specs/02-data-model.md` §4.2–§4.6 (filled from `PLAN.md` §6 and
+reviewed 2026-10-30; the `object_no` decision is §4.3.1), plus `PLAN.md` §3
+(localized seed data)
 spec-lines: 60
 
 files-read:
@@ -93,5 +93,7 @@ service) is the executed acceptance.
 - Interfaces added: four tables, `seedDemo`, `STANDARD_TEXTS`
 - Follow-up WP: WP-M2-01 object CRUD (its `depends-on` is this WP), WP-M2-02 QR
   generation fills `objects.qr_token`
-- Open question to settle in the spec slice: whether `object_no` is user input or a
-  generated value — decide in `specs/02-data-model.md`, do not improvise in code
+- Open question resolved in the spec slice (`specs/02-data-model.md` §4.3.1):
+  `object_no` is user input, required, unique case-insensitively, format
+  `^[A-Z0-9][A-Z0-9_-]{0,31}$` (e.g. `12345_01`); no number pool table — the
+  object list is the maintained table; tickets link by UUID foreign key
