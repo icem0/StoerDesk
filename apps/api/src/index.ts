@@ -11,6 +11,8 @@ import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
 import { corsOrigins, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
+import { seedBaseUser } from './db/seed-base'
+import { seedRbac } from './db/seed-rbac'
 
 loadDotEnvFile()
 
@@ -98,6 +100,17 @@ const invokedDirectly =
 
 if (invokedDirectly) {
   const env = loadEnv()
+  const { client, database } = createDatabase()
+
+  // Bootstrap RBAC and the initial administrator on direct start, so a fresh
+  // deployment has a working admin account without a manual seed step.
+  await seedRbac(database)
+  await seedBaseUser(database, {
+    email: env.SEED_ADMIN_EMAIL,
+    password: env.SEED_ADMIN_PASSWORD,
+  })
+  await client.end({ timeout: 5 })
+
   const app = await buildServer()
   await app.listen({ host: env.API_HOST, port: env.API_PORT })
 }
