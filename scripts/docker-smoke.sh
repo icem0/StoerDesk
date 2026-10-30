@@ -63,14 +63,19 @@ compose build
 compose up -d
 
 # --- 3b. only the web frontend publishes a host port ---
-# `compose port` also matches `expose` entries without a host binding; only a
-# non-empty public port means the API is reachable from outside the network.
+# `compose port` also matches `expose` entries without a host binding; it then
+# prints an empty host with port 0 (`:0`). Only a real, non-zero published port
+# means the API is reachable from outside the network.
 api_public_port=$(compose port api 3000 2>/dev/null || true)
-if [ -n "$api_public_port" ]; then
-  printf 'api publishes a host port (%s) - it must stay on the internal network\n' "$api_public_port" >&2
-  exit 1
-fi
-printf 'no api host port (internal backend network)\n'
+case "$api_public_port" in
+  ''|*:0)
+    printf 'no api host port (internal backend network)\n'
+    ;;
+  *)
+    printf 'api publishes a host port (%s) - it must stay on the internal network\n' "$api_public_port" >&2
+    exit 1
+    ;;
+esac
 
 # --- 4. health: the API is reached through the nginx proxy of the web container
 wait_for() {

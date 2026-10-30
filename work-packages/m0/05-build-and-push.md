@@ -33,8 +33,8 @@ interfaces:
 ## Task
 
 1. Fix the Docker smoke guard: `docker compose port` also matches `expose`
-   entries without a host binding, so only a non-empty public port may fail the
-   check.
+   entries without a host binding and reports them as `:0`, so only a real
+   non-zero public port may fail the check.
 2. Add `.github/workflows/build.yml`: run after a successful `check` workflow on
    `main`, resolve the exact `vMAJOR.MINOR.PATCH` tag at the checked-out commit,
    build the `api` and `web` targets and push them to GHCR.

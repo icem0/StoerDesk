@@ -188,8 +188,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - WP-M0-05: the Docker smoke test no longer treats the internal `expose: 3000`
-  of the API as a published host port; only a non-empty public port from
-  `docker compose port` fails the guard.
+  of the API as a published host port; `docker compose port` reports it as
+  `:0`, so only a real non-zero public port fails the guard.
 - WP-M0-05: version tags are now annotated, so `git push --follow-tags`
   actually publishes them and the `build and push` workflow can resolve the
   version of the pushed commit.
