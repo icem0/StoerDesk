@@ -149,6 +149,8 @@ jobs:
           target: ${{ matrix.service }}
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            VITE_APP_VERSION=${{ needs.version.outputs.version }}
           labels: |
             org.opencontainers.image.title=StoerDesk ${{ matrix.service }}
             org.opencontainers.image.version=${{ needs.version.outputs.version }}

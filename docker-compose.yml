@@ -97,6 +97,8 @@ services:
     build:
       context: ${IMAGE_BUILD_CONTEXT:-.}
       target: web
+      args:
+        VITE_APP_VERSION: ${VITE_APP_VERSION}
     image: stoerdesk-web:latest
     restart: unless-stopped
     environment:

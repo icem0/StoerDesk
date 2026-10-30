@@ -55,10 +55,14 @@ export async function seedBaseUser(
       throw new Error('seed-base: rbac_seed_missing')
     }
 
+    const passwordHash = await hashPassword(password)
     const inserted = await tx
       .insert(schema.users)
-      .values({ email, passwordHash: await hashPassword(password) })
-      .onConflictDoNothing({ target: schema.users.email })
+      .values({ email, passwordHash })
+      .onConflictDoUpdate({
+        target: schema.users.email,
+        set: { passwordHash },
+      })
       .returning({ id: schema.users.id })
 
     const [user] =

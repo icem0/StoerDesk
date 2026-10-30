@@ -37,6 +37,8 @@ CMD ["sh", "-c", "node apps/api/dist/db/migrate.js && exec node apps/api/dist/in
 
 # ---------- Web ----------
 FROM base AS web-build
+ARG VITE_APP_VERSION=dev
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
 COPY tsconfig.base.json ./
 COPY packages/shared packages/shared
 COPY apps/web apps/web
