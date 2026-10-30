@@ -1,4 +1,12 @@
-name: build and push
+name: publish images
+
+# The resolved version is unknown when the run starts, so this label carries the
+# trigger and the source branch; the `Resolve version tag` job renames the run to
+# `publish <version> · <short sha>` as soon as the tag is known.
+run-name: >-
+  publish images · ${{ github.event_name }} ·
+  ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+  · ${{ github.event_name == 'workflow_run' && substring(github.event.workflow_run.head_sha, 0, 7) || substring(github.sha, 0, 7) }}
 
 on:
   workflow_run:

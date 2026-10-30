@@ -557,16 +557,16 @@ Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 (mandatory closure)_ — open items of a phase are finished in numeric order before the
 next phase starts).
 
-| WP        | Content                                      | Status |
-| --------- | -------------------------------------------- | ------ |
-| WP-M1-10f | traceable CI run, job and step names         | open   |
-| WP-M1-09b | role API (role CRUD, permission assignment)  | open   |
-| WP-M1-09c | `usePermission` plus admin users UI          | open   |
-| WP-M1-09d | admin roles UI                               | open   |
-| WP-M1-09e | login form, logout and route guard (web)     | open   |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | open   |
-| WP-M1-11  | `docs/REPO-MAP.md` normalized to English     | open   |
-| WP-M1-12  | Playwright smoke test "login as admin works" | open   |
+| WP        | Content                                      | Status      |
+| --------- | -------------------------------------------- | ----------- |
+| WP-M1-10f | traceable CI run, job and step names         | in-progress |
+| WP-M1-09b | role API (role CRUD, permission assignment)  | open        |
+| WP-M1-09c | `usePermission` plus admin users UI          | open        |
+| WP-M1-09d | admin roles UI                               | open        |
+| WP-M1-09e | login form, logout and route guard (web)     | open        |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | open        |
+| WP-M1-11  | `docs/REPO-MAP.md` normalized to English     | open        |
+| WP-M1-12  | Playwright smoke test "login as admin works" | open        |
 
 Phase 1 cannot exit before WP-M1-09e exists: the exit criterion "login as admin
 works" needs a login form, and `apps/web` renders a placeholder only. Phase 2 starts

@@ -177,6 +177,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- WP-M1-10f (partial): CI runs and steps are self-describing now. `check.yml` gained
+  `run-name: check · <ref> · <sha7> · <event>` and the step names `Quality gates
+(typecheck, lint, tests, i18n, wp)` and `Build web and API artifacts (no publish)`.
+  `.github/workflows/build.yml` is displayed as **publish images** instead of
+  `build and push` and gained
+  `run-name: publish images · <event> · <branch> · <sha7>`. GHCR image names and the
+  tag set are unchanged; the run rename to `publish <version> · <sha7>`, the publish
+  job/step names and the image run summary are still open
+  (see `work-packages/m1/10f-ci-run-naming.md`).
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
   requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth

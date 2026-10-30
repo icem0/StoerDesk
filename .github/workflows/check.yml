@@ -1,5 +1,10 @@
 name: check
 
+# Every run says what it checks: branch or PR, short SHA and the trigger.
+run-name: >-
+  check · ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+  · ${{ substring(github.sha, 0, 7) }} · ${{ github.event_name }}
+
 on:
   push:
     branches:
@@ -42,14 +47,14 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Check
+      - name: Quality gates (typecheck, lint, tests, i18n, wp)
         run: npm run check
         env:
           # The database integration tests need a reachable PostgreSQL 16; the
           # account may create its own throwaway databases (see AGENTS.md).
           TEST_DATABASE_URL: postgres://stoerdesk:ci-stoerdesk@localhost:5432/stoerdesk
 
-      - name: Build
+      - name: Build web and API artifacts (no publish)
         run: npm run build
 
   docker-smoke:
