@@ -26,12 +26,15 @@ phase 1 closing package **WP-M1-12** (Playwright smoke test "login as admin work
 the UI package **WP-M1-13** (layout shell with header and navigation) and the
 seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched).
 **Phase 1 is closed** — the `Open follow-ups` table of `work-packages/README.md` and
-`PLAN.md` §16 hold no open phase 1 item anymore, phase 2 starts with WP-M2-00.
+`PLAN.md` §16 hold no open phase 1 item anymore. **Phase 2 has started**:
+`specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed (the `object_no`
+decision is §4.3.1: user input, required, unique case-insensitively, `_` allowed, e.g.
+`12345_01`), and **WP-M2-00** is implemented.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
   (placeholder chapters stay authoritative from `PLAN.md` until filled),
-- the work plan in `work-packages/` (M0, M1, M2 — M0 finished, M1 partially),
+- the work plan in `work-packages/` (M0, M1, M2 — M0 and M1 finished, M2 started),
 - the environment (monorepo, configuration, skeleton, CI, Docker, and the
   repeatable smoke test `scripts/docker-smoke.sh` run by the CI job `docker-smoke`),
 - the image pipeline (`.github/workflows/build.yml`) that publishes the versioned
@@ -42,6 +45,14 @@ The repository contains:
   `scripts/i18n-check.ts`, active `i18next/no-literal-string` lint rule),
 - the RBAC layer (permission catalog and `DEFAULT_ROLES` in `packages/shared`,
   migration `0001_rbac_tables`, `seed-rbac.ts`/`seed-base.ts`, Argon2id hashing),
+- the core object tables of WP-M2-00 (migration `0002_core_object_tables`:
+  `objects` with user-input `object_no` unique over `lower(object_no)`, nullable
+  `qr_token`, `systems` with the `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/
+  `SONSTIGE` type check and an object FK `ON DELETE CASCADE`, `text_templates`
+  plus `text_template_translations` with composite key and `de`/`en` check;
+  `apps/api/src/db/seed-demo.ts` seeds three example objects with one `BMA` each
+  and the nine localized `STANDARD_TEXTS` from `packages/shared/src/seed/`,
+  idempotent over natural keys and never overwriting edits),
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
   `GET /api/v1/me`; sessions as random tokens with a SHA-256 hash in `sessions`),

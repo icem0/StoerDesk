@@ -98,7 +98,11 @@ implementation.
 > (168 lines, limit 200). With that every `docs/` file is English, so no language deviation
 > is left. `WP-M1-12` implements the phase 1 exit criterion — its Playwright smoke test
 > passes against a real throwaway database in German and in English, and phase 1 is closed
-> once this commit is pushed; phase 2 starts with WP-M2-00.
+> once this commit is pushed; phase 2 has started with **WP-M2-00** — implemented: the four
+> core object tables behind migration `0002_core_object_tables`, the localized
+> `STANDARD_TEXTS` in `packages/shared/src/seed/` and the idempotent `seed-demo.ts`;
+> `specs/02-data-model.md` was filled from `PLAN.md` §6 and reviewed (`object_no` is user
+> input, unique over `lower(object_no)`, `_` allowed — `specs/02-data-model.md` §4.3.1).
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
@@ -124,6 +128,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-12  | Playwright smoke test "login as admin works"            | done                    | yes     |
 | WP-M1-13  | UI layout shell with header and navigation              | done                    | yes     |
 | WP-M1-14  | base seed keeps an existing administrator untouched     | done                    | yes     |
+| WP-M2-00  | core object tables and demo seed                        | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -167,8 +172,13 @@ insert uses `onConflictDoNothing` again and the status is decided by looking the
 up before the insert, so an existing administrator keeps its `password_hash`, `locale`
 and `active` and the second run reports `existing`. The red `check` runs
 v0.0.58 … v0.0.61 were caused by that commit; v0.0.62 is green.
-The phase 1 backlog is closed: every item in the table is `done`, and phase 2
-starts with WP-M2-00.
+The phase 1 backlog is closed: every item in the table is `done`.
+`WP-M2-00` is done — on top of the reviewed `specs/02-data-model.md` (the `object_no`
+decision is §4.3.1: user input, unique over `lower(object_no)`, `_` allowed) it added the
+four core object tables, migration `0002_core_object_tables`, the localized
+`STANDARD_TEXTS` in `packages/shared/src/seed/` and the idempotent `seed-demo.ts`.
+WP-M2-01 (object CRUD API) is the next phase 2 package and is rewritten into the
+small-model format before its implementation.
 
 ## Validation
 

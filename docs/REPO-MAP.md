@@ -40,6 +40,7 @@ packages/
     ├── src/
     │   ├── permissions.ts       permission catalog + DEFAULT_ROLES (single source)
     │   ├── schemas/             auth.ts, user.ts, role.ts (Zod, shared by api + web)
+    │   ├── seed/                standard-texts.ts — localized BMA texts (WP-M2-00)
     │   ├── i18n/                t.ts + server.{de,en}.json, seed.{de,en}.json
     │   └── index.ts             barrel export
     └── ...
@@ -74,6 +75,9 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 | `apps/api/src/db/seed-base.ts`                                | idempotent bootstrap administrator from `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, linked to the role `admin`; an existing user keeps its `password_hash`, `locale` and `active` (WP-M1-06, WP-M1-14)                   | `seedBaseUser(database, credentials): Promise<BaseSeedResult>`, `SeedAdminCredentials`                                                                        |
 | `apps/api/src/db/migrations/0000_base_tables.sql`             | base tables and the function `gen_uuid_v7()` (ADR-0002)                                                                                                                                                                             | —                                                                                                                                                             |
 | `apps/api/src/db/migrations/0001_rbac_tables.sql`             | RBAC tables, `effect IN ('allow','deny')` check, trigger `protect_system_roles()` (WP-M1-05)                                                                                                                                        | —                                                                                                                                                             |
+| `apps/api/src/db/migrations/0002_core_object_tables.sql`      | `objects` (unique `lower(object_no)`), `systems` (type check), `text_templates`, `text_template_translations` (locale check) plus indexes (WP-M2-00)                                                                                 | —                                                                                                                                                             |
+| `apps/api/src/db/seed-demo.ts`                                | idempotent demo seed: three example objects with one `BMA` system each and the nine standard text templates in `de` and `en`; natural keys decide existence, edits survive, `qr_token` stays NULL (WP-M2-00)                        | `seedDemo(database): Promise<DemoSeedResult>`                                                                                                                 |
+| `packages/shared/src/seed/standard-texts.ts`                  | the nine localized BMA standard texts as seed resource, never German literals in API code (WP-M2-00)                                                                                                                                | `STANDARD_TEXTS`, `STANDARD_TEXT_KEYS`, `StandardText`, `StandardTextKey`, `StandardTextLocale`                                                               |
 | `apps/api/src/db/__tests__/helpers/testDatabase.ts`           | empty disposable test database (fallback: the given URL), skips when no database is reachable                                                                                                                                       | `openTestDatabase(): Promise<TestDatabaseHandle>`                                                                                                             |
 | `apps/api/src/auth/password.ts`                               | Argon2id hashing (PHC format) and verify that never throws on a broken hash (WP-M1-06)                                                                                                                                              | `hashPassword(plain)`, `verifyPassword(storedHash, plain)`, `PASSWORD_HASH_OPTIONS`                                                                           |
 | `apps/api/src/auth/session.ts`                                | session core: 256-bit token, SHA-256 `token_hash`, `loadSession` with delete-on-read of expired rows and inactive accounts, cookie options (WP-M1-07)                                                                               | `SESSION_COOKIE_NAME`, `createSession`, `loadSession`, `destroySession`, `loadUserRoleKeys`, `sessionCookieOptions`, `hashSessionToken`                       |
@@ -157,6 +161,11 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 > **WP-M1-13** (the layout shell with header and navigation) and **WP-M1-14** (the base
 > seed keeps an existing administrator untouched). No open phase 1 item remains; the backlog
 > of record is the table _Open follow-ups_ in `work-packages/README.md` and `PLAN.md` §16.
+>
+> **Phase 2 started**: `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed
+> (the `object_no` decision §4.3.1: user input, unique case-insensitively, `_` allowed), and
+> **WP-M2-00** put the four core object tables behind migration `0002_core_object_tables`,
+> with the demo seed `seed-demo.ts` and the shared `STANDARD_TEXTS`.
 >
 > What the running system already does: the Compose stack serves db, api and web from one
 > `.env` (`npm run env:create` generates it), the API answers `/api/v1/health`, the auth

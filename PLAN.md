@@ -569,6 +569,7 @@ next phase starts).
 | WP-M1-12  | Playwright smoke test "login as admin works" | done   |
 | WP-M1-13  | UI layout shell with header and navigation   | done   |
 | WP-M1-14  | base seed keeps an existing admin untouched  | done   |
+| WP-M2-00  | core object tables and demo seed             | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -587,7 +588,13 @@ centred main area; it reuses the existing `common` i18n keys. WP-M1-14 repaired 
 seed, which commit 82a9fc7 had broken: the insert uses `onConflictDoNothing` again and the
 status is decided before the insert, so an existing administrator keeps its `password_hash`,
 `locale` and `active` — that fix turned the red `check` runs v0.0.58 … v0.0.61 green.
-Phase 2 starts with WP-M2-00.
+Phase 2 has started: `specs/02-data-model.md` was filled from §6 and reviewed, and it
+settles the `object_no` question of WP-M2-00 (§4.3.1 — user input, required, unique over
+`lower(object_no)`, `_` allowed, e.g. `12345_01`; no pool table, the object list is the
+maintained table, tickets link by UUID foreign key). WP-M2-00 put the four core object
+tables behind migration `0002_core_object_tables`, added the localized `STANDARD_TEXTS` in
+`packages/shared/src/seed/` and the idempotent `seed-demo.ts` (three example objects with
+one `BMA` each, nine templates in `de` and `en`, a second run is a no-op).
 
 ## 17. Work package rules for small models
 

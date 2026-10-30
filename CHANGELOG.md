@@ -244,6 +244,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   insert uses `onConflictDoNothing` on `users.email` and the status `created`/`existing` is
   decided by looking the user up before the insert. The Argon2id hash is only computed when
   a row is really inserted. The role link to `admin` is still repaired on every run.
+- WP-M2-00: core object tables — migration `0002_core_object_tables` adds `objects`
+  (user-input `object_no`, unique over `lower(object_no)`, address, contact, nullable
+  `qr_token`, `external_id`, `active`, `notes`), `systems` (object FK with `ON DELETE
+  CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`, own
+  optional `qr_token`), `text_templates` and `text_template_translations` (composite key,
+  `de`/`en` check) with the indexes of `specs/02-data-model.md` §4.6.
+- WP-M2-00: demo seed `apps/api/src/db/seed-demo.ts` (`npx tsx src/db/seed-demo.ts`) —
+  three example objects with one `BMA` system each plus the nine standard text templates
+  from the new localized resource `STANDARD_TEXTS` in `packages/shared/src/seed/`;
+  idempotent over the natural keys and never overwrites edits, the CLI prints counts only.
+- `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed: the object list is the
+  maintained table, `object_no` is user input, unique case-insensitively, format
+  `^[A-Z0-9][A-Z0-9_-]{0,31}$` (e.g. `12345_01`), tickets link by UUID foreign key, and
+  external referencing (CSV, object API, stickers) uses `object_no`.
 
 ### Changed
 

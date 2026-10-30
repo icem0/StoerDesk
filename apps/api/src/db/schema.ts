@@ -171,6 +171,103 @@ export const userPermissions = pgTable(
   ],
 )
 
+/**
+ * Core object tables (`specs/02-data-model.md` §4.3–§4.6). The object list is
+ * the maintained list of maintenance objects; `object_no` is the user input
+ * natural key, unique case-insensitively through a `lower()` index (§4.3.1).
+ * Internal links use the UUID primary key, external referencing uses
+ * `object_no`. `qr_token` stays NULL until WP-M2-02 fills it.
+ */
+export const objects = pgTable(
+  'objects',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    objectNo: text('object_no').notNull(),
+    name: text('name').notNull(),
+    street: text('street'),
+    houseNumber: text('house_number'),
+    postalCode: text('postal_code'),
+    city: text('city'),
+    contactName: text('contact_name'),
+    contactPhone: text('contact_phone'),
+    contactEmail: text('contact_email'),
+    qrToken: text('qr_token'),
+    externalId: text('external_id'),
+    active: boolean('active').notNull().default(true),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('objects_object_no_lower_key').on(sql`lower(${table.objectNo})`),
+    uniqueIndex('objects_qr_token_key').on(table.qrToken),
+    index('objects_name_idx').on(table.name),
+    index('objects_active_idx').on(table.active),
+  ],
+)
+
+export const SYSTEM_TYPES = ['BMA', 'LICHTRUF', 'RWA', 'EMA', 'SPRACHALARM', 'SONSTIGE'] as const
+
+const systemTypeCheckSql = sql.raw(SYSTEM_TYPES.map((type) => `'${type}'`).join(', '))
+
+/** Maintenance subsystems of an object (`specs/02-data-model.md` §4.4). */
+export const systems = pgTable(
+  'systems',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    objectId: uuid('object_id')
+      .notNull()
+      .references(() => objects.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    label: text('label').notNull(),
+    qrToken: text('qr_token'),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('systems_qr_token_key').on(table.qrToken),
+    index('systems_object_id_idx').on(table.objectId),
+    index('systems_type_idx').on(table.type),
+    check('systems_type_check', sql`${table.type} IN (${systemTypeCheckSql})`),
+  ],
+)
+
+/**
+ * Localized standard texts of the report form
+ * (`specs/02-data-model.md` §4.5). The `de`/`en` content comes from
+ * `STANDARD_TEXTS` in `@stoerdesk/shared`, never from literals in API code.
+ */
+export const textTemplates = pgTable(
+  'text_templates',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    key: text('key').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('text_templates_key_key').on(table.key)],
+)
+
+export const textTemplateTranslations = pgTable(
+  'text_template_translations',
+  {
+    templateId: uuid('template_id')
+      .notNull()
+      .references(() => textTemplates.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    text: text('text').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.templateId, table.locale],
+      name: 'text_template_translations_pk',
+    }),
+    check('text_template_translations_locale_check', sql`${table.locale} IN ('de', 'en')`),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -182,3 +279,10 @@ export type Permission = typeof permissions.$inferSelect
 export type RolePermission = typeof rolePermissions.$inferSelect
 export type UserRole = typeof userRoles.$inferSelect
 export type UserPermission = typeof userPermissions.$inferSelect
+export type MaintenanceObject = typeof objects.$inferSelect
+export type NewMaintenanceObject = typeof objects.$inferInsert
+export type System = typeof systems.$inferSelect
+export type NewSystem = typeof systems.$inferInsert
+export type SystemType = (typeof SYSTEM_TYPES)[number]
+export type TextTemplate = typeof textTemplates.$inferSelect
+export type TextTemplateTranslation = typeof textTemplateTranslations.$inferSelect
