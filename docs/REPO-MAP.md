@@ -1,189 +1,168 @@
-# Repository Map
+# Repository map
 
-Wird nach jedem Work Package aktualisiert. Max. 200 Zeilen.
-Ein Satz pro Modul. Verzeichnisstruktur nur bis Ebene 3.
+Updated after every work package. Max. 200 lines, one sentence per module, directory
+tree down to level 3 only. The columns are the contract: a new module gets exactly one
+row here with its purpose and its public API (rule: `AGENTS.md` _Structure discipline_).
 
-> Deviation (WP-M1-10, WP-M1-10c, WP-M1-10d): the `docs/` placeholders (`ARCHITECTURE`,
-> `COMPLIANCE`, `GLOSSARY`, `I18N`) and the decisions (`docs/DECISIONS.md` plus the ADRs in
-> `docs/DECISIONS/`) are English now. Only this map is still partly German, which breaks
-> the English rule of `AGENTS.md`; normalizing it is the scope of WP-M1-11.
-
-## Struktur
+## Structure
 
 ```
 apps/
-├── web/                        React + Vite PWA, i18next, TanStack Query, Tailwind
+├── web/                         React + Vite PWA: i18next, TanStack Query, Tailwind
 │   ├── src/
-│   │   ├── components/         Wiederverwendbare UI-Komponenten (Button, Dialog, Badge)
-│   │   ├── features/           Feature-Ordner (tickets, objects, oncall, stats, settings)
-│   │   ├── i18n/               i18next-Setup, locales/{de,en}/{ns}.json
-│   │   ├── lib/                API-Client, Hooks (usePermission, useLocale), Utils
-│   │   └── routes/             React-Router-Definitionen
-│   └── ...
-├── api/                        Fastify + Drizzle + pg-boss
+│   │   ├── admin/               UsersPage, RolesPage — the guarded admin screens
+│   │   ├── auth/                LoginForm, LogoutButton, RequireSession, usePermission
+│   │   ├── components/          shared UI primitives (empty until the first UI WP)
+│   │   ├── features/            tickets, objects, oncall, stats, settings (planned)
+│   │   ├── i18n/                i18next setup + locales/{de,en}/<ns>.json
+│   │   ├── lib/                 apiFetch client (credentials, ApiError)
+│   │   ├── routes/              react-router route table
+│   │   ├── App.tsx, main.tsx    shell and React root
+│   │   └── styles.css           Tailwind entry
+│   └── nginx-pwa.conf.template  PWA nginx config, /api/ proxy to ${API_UPSTREAM}
+├── api/                         Fastify + Drizzle + postgres-js + pg-boss
 │   ├── src/
-│   │   ├── auth/               Session, Passwort, Login/Logout/`me`, requirePermission
-│   │   ├── tickets/            Routes, Service, State-Machine, Audit
-│   │   ├── objects/            Routes, Service, QR, CSV
-│   │   ├── oncall/             Routes, Service, Slot-Berechnung, Tausch
-│   │   ├── notifications/      Outbox, Worker, Kanäle
-│   │   ├── stats/              Queries, materialisierte Views
-│   │   ├── admin/              Users, Roles, Settings, API-Keys
-│   │   ├── jobs/               pg-boss-Jobs (Timer, Eskalation, Reminder)
-│   │   └── db/                 Drizzle-Schema, Migrationen, Client, Seeds, Integrationstests
-│   └── ...
+│   │   ├── index.ts             buildServer: plugins, error envelope, health route
+│   │   ├── admin/               users.ts, roles.ts — admin HTTP layer
+│   │   ├── auth/                password, session, sessionPlugin, routes, guard
+│   │   ├── config/              env schema (Zod), .env lookup
+│   │   ├── db/                  schema, client, migrate, seeds, migrations/, __tests__/
+│   │   ├── notifications/       channels/{index,signal,matrix} (ntfy, SMTP, Telegram,
+│   │   │                        Web Push adapters planned)
+│   │   └── tickets|objects|oncall|stats|jobs/   planned, empty until their WP
+│   ├── scripts/                 copy-migrations.mjs (ships .sql into dist)
+│   └── drizzle.config.ts        drizzle-kit: schema, out src/db/migrations
 └── ...
 
 packages/
-└── shared/                     Zod-Schemas, Typen, i18n-Ressourcen, Permission-Konstanten
+└── shared/                      source package, no build step
     ├── src/
-    │   ├── permissions.ts      Permission-Konstanten (Single Source of Truth)
-    │   ├── schemas/            Zod-Schemas pro Domäne
-    │   └── i18n/               server.{de,en}.json, seed.{de,en}.json
+    │   ├── permissions.ts       permission catalog + DEFAULT_ROLES (single source)
+    │   ├── schemas/             auth.ts, user.ts, role.ts (Zod, shared by api + web)
+    │   ├── i18n/                t.ts + server.{de,en}.json, seed.{de,en}.json
+    │   └── index.ts             barrel export
     └── ...
 
-PLAN.md                         Binding build plan (scope, stack, phases, WP limits)
-specs/                          Expanded specification slices (PLAN.md wins while a slice is a placeholder)
-work-packages/                  Work packages, one Markdown file per WP (m0, m1, m2)
-docs/                           ARCHITECTURE, COMPLIANCE, DECISIONS (ADR), GLOSSARY, I18N, REPO-MAP, DEPLOYMENT, WP-TEMPLATE
-.github/workflows/              CI: check (quality, Docker smoke) and publish images (GHCR)
-.github/ISSUE_TEMPLATE/         GitHub issue forms: bug, feature, security (valid YAML, 112-only notice)
-scripts/                        Orchestration, split-spec, i18n:check, create-env, wp-check, docker-smoke
-Dockerfile                      Multi-stage image build (targets: api, web)
+PLAN.md                          binding build plan (scope, stack, phases, WP limits)
+specs/                           expanded slices 00–16 (a placeholder defers to PLAN.md)
+work-packages/                   one Markdown file per WP (m0, m1, m2) + README backlog
+docs/                            ARCHITECTURE, COMPLIANCE, DECISIONS + DECISIONS/ (ADRs),
+                                 DEPLOYMENT, GLOSSARY, I18N, REPO-MAP, WP-TEMPLATE, SYSTEMPROMPT,
+                                 material/ (supplied originals)
+.github/workflows/               check.yml (quality gates, tag trigger) + build.yml (GHCR)
+.github/ISSUE_TEMPLATE/          issue forms: bug, feature, security (112-only notice)
+.husky/                          pre-commit (lint), commit-msg (DCO), post-commit/post-merge
+                                 (annotated version tag per commit)
+scripts/                         create-env, docker-smoke, i18n-check, orchestrate,
+                                 split-spec, wp-check
+Dockerfile                       multi-stage image build (targets api, web)
+docker-compose.yml               full stack: db, api, web, optional backup profile
+docker-compose.{dev,local,debug}.yml  local database, local build, host port override
+AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELOG.md, LICENSE
 ```
 
-## Module (Stand nach jedem WP aktualisieren)
+## Modules (update after every WP)
 
-| Modul                                               | Zweck                                                                                                                                                                                                                                                                   | Öffentliche API                                                                                                                                         |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/api/src/db/schema.ts`                         | Drizzle-Schema: Basistabellen + RBAC-Tabellen, UUID v7 als Default (WP-M1-03, WP-M1-05)                                                                                                                                                                                 | `users`, `sessions`, `groups`, `userGroups`, `settings`, `roles`, `permissions`, `rolePermissions`, `userRoles`, `userPermissions`, `uuidDefault`       |
-| `apps/api/src/db/client.ts`                         | Pool und Drizzle-Instanz (postgres-js) inkl. Schema für Relations                                                                                                                                                                                                       | `createDatabase(url?): { client, database }`                                                                                                            |
-| `apps/api/src/db/migrate.ts`                        | wendet die Migrationen aus `src/db/migrations` an                                                                                                                                                                                                                       | `runMigrations(): Promise<void>`                                                                                                                        |
-| `apps/api/src/db/seed-rbac.ts`                      | idempotenter Seed von Permission-Katalog, fünf Systemrollen und deren Grants (WP-M1-05)                                                                                                                                                                                 | `seedRbac(database): Promise<{ roles, permissions, rolePermissions }>`                                                                                  |
-| `apps/api/src/db/seed-base.ts`                      | idempotenter Bootstrap-Admin aus `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, verknüpft mit der Rolle `admin` (WP-M1-06)                                                                                                                                                   | `seedBaseUser(database, credentials): Promise<BaseSeedResult>`, `SeedAdminCredentials`                                                                  |
-| `apps/api/src/auth/password.ts`                     | Argon2id-Hashing (PHC-Format) und Verify ohne Throw bei kaputtem Hash (WP-M1-06)                                                                                                                                                                                        | `hashPassword(plain)`, `verifyPassword(storedHash, plain)`, `PASSWORD_HASH_OPTIONS`                                                                     |
-| `apps/api/src/auth/session.ts`                      | Session-Kern: 256-Bit-Token, SHA-256-`token_hash`, loadSession mit Delete-on-Read abgelaufener Zeilen, Cookie-Optionen (WP-M1-07)                                                                                                                                       | `SESSION_COOKIE_NAME`, `createSession`, `loadSession`, `destroySession`, `loadUserRoleKeys`, `sessionCookieOptions`, `hashSessionToken`                 |
-| `packages/shared/src/schemas/auth.ts`               | Zod-Schemas für Login-Payload und `/me`-Antwort (WP-M1-07)                                                                                                                                                                                                              | `loginRequestSchema`, `meResponseSchema`, `LoginRequest`, `MeResponse`, `AuthUser`                                                                      |
-| `packages/shared/src/schemas/role.ts`               | Zod schemas for the admin role API: role key slug, permission keys, role summary and list response (WP-M1-09b)                                                                                                                                                          | `roleKeySchema`, `roleSummarySchema`, `roleListResponseSchema`, `createRoleRequestSchema`, `updateRoleRequestSchema`                                    |
-| `apps/api/src/auth/sessionPlugin.ts`                | `fastify-plugin`: liest das `session`-Cookie und setzt `request.user`; PreHandler für authentifizierte Routes (WP-M1-07b)                                                                                                                                               | `sessionPlugin`, `requireUser` (`401 { code: 'session_invalid' }`), `AuthPluginOptions`                                                                 |
-| `apps/api/src/auth/routes.ts`                       | Login (Argon2id, Decoy-Hash, Rate-Limit `5`/min/IP), Logout und `/me`; Fehler immer als `{ code, params }`; Login und `/me` liefern Rollen- und Permission-Keys (WP-M1-07b, WP-M1-08)                                                                                   | `authRoutes` — `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/me`                                                                  |
-| `apps/api/src/db/migrations/0000_base_tables.sql`   | Basistabellen und Funktion `gen_uuid_v7()` (ADR-0002)                                                                                                                                                                                                                   | —                                                                                                                                                       |
-| `apps/api/src/db/migrations/0001_rbac_tables.sql`   | RBAC-Tabellen, Check `effect IN ('allow','deny')`, Trigger `protect_system_roles()` (WP-M1-05)                                                                                                                                                                          | —                                                                                                                                                       |
-| `apps/api/src/db/__tests__/helpers/testDatabase.ts` | leere Test-Datenbank (Fallback: angegebene DB), Skip ohne erreichbare DB                                                                                                                                                                                                | `openTestDatabase(): Promise<TestDatabaseHandle>`                                                                                                       |
-| `apps/api/src/auth/requirePermission.ts`            | effective permissions (role union plus allows, minus every denial) cached per request, OR-linked guard, probe route only in `NODE_ENV=test` (WP-M1-08)                                                                                                                  | `loadEffectivePermissions`, `effectivePermissions`, `requirePermission(database, ...keys)`, `permissionProbeRoutes`                                     |
-| `apps/api/src/admin/users.ts`                       | Admin-User-API: read users/role keys, create users with Argon2id password and role links, update mutable fields, guards for last active admin (WP-M1-09)                                                                                                                | `adminUsersRoutes` — `GET /api/v1/users`, `POST /api/v1/users`, `PATCH /api/v1/users/:id`                                                               |
-| `apps/api/src/admin/roles.ts`                       | Admin role API: roles with permission keys and user counts, create a custom role, replace its grant set, delete an unused role; seeded system roles are guarded (WP-M1-09b)                                                                                             | `adminRolesRoutes` — `GET /api/v1/roles`, `POST /api/v1/roles`, `PATCH /api/v1/roles/:key`, `DELETE /api/v1/roles/:key`                                 |
-| `apps/api/src/tickets/state-machine.ts` (geplant)   | `transitionTicket(ticketId, event, actor, payload)` — prüft Übergänge, schreibt Event                                                                                                                                                                                   | `transitionTicket(...): Promise<Ticket>`                                                                                                                |
-| `packages/shared/src/permissions.ts`                | Permission-Katalog (37 Keys) und `DEFAULT_ROLES` — Single Source of Truth (WP-M1-05)                                                                                                                                                                                    | `PERMISSIONS`, `PERMISSION_KEYS`, `DEFAULT_ROLES`, `SYSTEM_ROLE_KEYS`, `isPermissionKey`                                                                |
-| `packages/shared/src/i18n/`                         | server translations and seed resource files (`server.*`, `seed.*`) (WP-M1-04)                                                                                                                                                                                           | `t(locale, key, params): string`                                                                                                                        |
-| `apps/web/src/i18n/index.ts`                        | i18next setup, 8 namespaces, `de` default, bundled locales (WP-M1-04)                                                                                                                                                                                                   | `i18n`, `namespaces`, `Namespace`                                                                                                                       |
-| `scripts/i18n-check.ts`                             | de/en key parity + all `t()` keys in `apps/web/src` must exist (WP-M1-04)                                                                                                                                                                                               | via `npm run i18n:check`                                                                                                                                |
-| `apps/web/src/auth/usePermission.ts`                | `useMe` (TanStack query on `['me']`) and `usePermission` with the OR semantics of the server guard — hiding is cosmetic (WP-M1-09c)                                                                                                                                     | `useMe()`, `usePermission(...keys): boolean`                                                                                                            |
-| `apps/web/src/admin/users-page.tsx`                 | admin users UI at `/admin/users`: user table for `user.read`, create form and per-row editing for `user.write`, texts from the `settings` namespace (WP-M1-09c)                                                                                                         | `UsersPage`                                                                                                                                             |
-| `apps/web/src/admin/roles-page.tsx`                 | admin roles UI at `/admin/roles`: role table with grant and user counts for `role.read`, create/grant-editor/delete for custom roles with `role.write`, system roles read-only (WP-M1-09d)                                                                              | `RolesPage`                                                                                                                                             |
-| `apps/web/src/auth/login-form.tsx`                  | login form (`POST /v1/auth/login`, one notice for every failed credential) and logout button (`POST /v1/auth/logout`, invalidates `me`/`users`/`roles`) (WP-M1-09e)                                                                                                     | `LoginForm`, `LogoutButton`                                                                                                                             |
-| `apps/web/src/auth/require-session.tsx`             | route guard around the `/admin/*` routes: loading text, `LoginForm` while `/me` answers 401, otherwise the children — cosmetic next to the server guard (WP-M1-09e)                                                                                                     | `RequireSession({ children })`                                                                                                                          |
-| `apps/web/src/lib/api.ts`                           | `apiFetch` with `credentials: 'include'`, `{ code, params }` error body parsed into `ApiError`, `204` answers `undefined` (WP-M1-09c, WP-M1-09d)                                                                                                                        | `apiFetch<T>(path, init?)`, `ApiError`, `apiBaseUrl`                                                                                                    |
-| `apps/api/src/config/env.ts`                        | Zod-Schema der gesamten Umgebung, inkl. Notification-Kanäle (WP-M1-02)                                                                                                                                                                                                  | `loadEnv(source?)`, `loadDotEnvFile()`, `corsOrigins(env)`, `signalRecipients(env)`                                                                     |
-| `apps/api/src/config/env-file.ts`                   | findet die `.env` der Repository-Wurzel                                                                                                                                                                                                                                 | `findEnvFile(): string \| undefined`                                                                                                                    |
-| `apps/api/src/notifications/channels/signal.ts`     | sendet über den signal-cli JSON-RPC-Bridge                                                                                                                                                                                                                              | `sendSignalNotification(config, message, fetch?)`                                                                                                       |
-| `apps/api/src/notifications/channels/matrix.ts`     | sendet über die Matrix Client-Server-API                                                                                                                                                                                                                                | `sendMatrixNotification(config, message, fetch?)`                                                                                                       |
-| `apps/api/src/notifications/channels/index.ts`      | aktivierte Kanäle aus der Umgebung ermitteln                                                                                                                                                                                                                            | `configuredChannels(env): NotificationChannel[]`                                                                                                        |
-| `PLAN.md`                                           | Binding scope, stack, phases and WP limits                                                                                                                                                                                                                              | entry point for every agent                                                                                                                             |
-| `docs/WP-TEMPLATE.md`                               | Small-model work-package template                                                                                                                                                                                                                                       | `npm run wp:check`                                                                                                                                      |
-| `scripts/wp-check.mjs`                              | Validates small-model WPs (size, context, fields)                                                                                                                                                                                                                       | via `npm run wp:check`                                                                                                                                  |
-| `scripts/docker-smoke.sh`                           | wiederholbarer Docker-Smoke-Test: Stack isoliert hochfahren, beide Health-Endpoints pruefen, abbauen (WP-M0-04)                                                                                                                                                         | `sh scripts/docker-smoke.sh`, CI-Job `docker-smoke`                                                                                                     |
-| `.github/workflows/build.yml`                       | baut und pusht die versionierten `api`/`web`-Images nach GHCR; gestartet wird der Lauf vom Job `Dispatch publish run` des grünen `check`-Laufs (REST-Dispatch mit `version`/`notes`/`source_run`/`mode`); PR-Läufe veröffentlichen nie (WP-M0-05, WP-M1-10h, WP-M1-10i) | `publish images`, Run-Name `publish v0.0.NN · <Commit-Subject>`, `latest` nur bei `mode=check`, `ghcr.io/<owner>/stoerdesk-{api,web}:<version>`         |
-| `.github/workflows/check.yml`                       | Qualitätstore (typecheck, lint, tests, i18n, wp) mit Postgres-16-Service und Docker-Smoke-Job; Trigger ist der Push des Version-Tags statt des Branch-Push; hängt am Ende den Publish-Lauf an (WP-M1-10h, WP-M1-10i)                                                    | Run-Name `v0.0.NN` (PR: `check · <branch> · pull_request`), Required Checks `Typecheck, Lint, Tests, i18n`, `Docker smoke test`, `Dispatch publish run` |
-| `.github/ISSUE_TEMPLATE/{bug,feature,security}.md`  | GitHub issue forms with valid front matter and the 112-only emergency notice (WP-M1-10b)                                                                                                                                                                                | issue types and labels `bug`, `feature`, `security`                                                                                                     |
-| `Dockerfile`                                        | Multi-stage image build, targets `api` and `web`                                                                                                                                                                                                                        | `docker build --target api .`                                                                                                                           |
-| `docker-compose.yml`                                | complete stack: db, api, web, optional backup                                                                                                                                                                                                                           | `docker compose up -d --build`                                                                                                                          |
-| `docker-compose.debug.yml`                          | opt-in override: publishes the API host port only                                                                                                                                                                                                                       | `docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d`                                                                                |
-| `apps/web/nginx-pwa.conf.template`                  | nginx-Konfiguration (PWA, `/api/`-Proxy auf `${API_UPSTREAM}`)                                                                                                                                                                                                          | —                                                                                                                                                       |
-| `scripts/create-env.mjs`                            | erzeugt `.env` aus `.env.example` mit generierten Secrets                                                                                                                                                                                                               | via `npm run env:create`                                                                                                                                |
-| `docs/DEPLOYMENT.md`                                | deployment: compose stack, volumes, backups, Signal/Matrix                                                                                                                                                                                                              | —                                                                                                                                                       |
+| Module                                                        | Purpose                                                                                                                                                                                                                             | Public API                                                                                                                                                    |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/api/src/index.ts`                                       | Fastify bootstrap: helmet, CORS with `corsOrigins`, cookie, rate limit with the `rate_limited` envelope, session/auth/admin routes, probe route only in `NODE_ENV=test`, `/api/v1/health`                                           | `buildServer()`                                                                                                                                               |
+| `apps/api/src/db/schema.ts`                                   | Drizzle schema: base tables + RBAC tables, UUID v7 default (WP-M1-03, WP-M1-05)                                                                                                                                                     | `users`, `sessions`, `groups`, `userGroups`, `settings`, `roles`, `permissions`, `rolePermissions`, `userRoles`, `userPermissions`, `uuidDefault`             |
+| `apps/api/src/db/client.ts`                                   | postgres-js pool plus Drizzle instance                                                                                                                                                                                              | `createDatabase(url?): { client, database }`, `Database`                                                                                                      |
+| `apps/api/src/db/migrate.ts`                                  | applies the migrations in `src/db/migrations`                                                                                                                                                                                       | `runMigrations(): Promise<void>`                                                                                                                              |
+| `apps/api/src/db/seed-rbac.ts`                                | idempotent seed of the permission catalog, the five system roles and their grants (WP-M1-05)                                                                                                                                        | `seedRbac(database): Promise<{ roles, permissions, rolePermissions }>`                                                                                        |
+| `apps/api/src/db/seed-base.ts`                                | idempotent bootstrap administrator from `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, linked to the role `admin` (WP-M1-06)                                                                                                             | `seedBaseUser(database, credentials): Promise<BaseSeedResult>`, `SeedAdminCredentials`                                                                        |
+| `apps/api/src/db/migrations/0000_base_tables.sql`             | base tables and the function `gen_uuid_v7()` (ADR-0002)                                                                                                                                                                             | —                                                                                                                                                             |
+| `apps/api/src/db/migrations/0001_rbac_tables.sql`             | RBAC tables, `effect IN ('allow','deny')` check, trigger `protect_system_roles()` (WP-M1-05)                                                                                                                                        | —                                                                                                                                                             |
+| `apps/api/src/db/__tests__/helpers/testDatabase.ts`           | empty disposable test database (fallback: the given URL), skips when no database is reachable                                                                                                                                       | `openTestDatabase(): Promise<TestDatabaseHandle>`                                                                                                             |
+| `apps/api/src/auth/password.ts`                               | Argon2id hashing (PHC format) and verify that never throws on a broken hash (WP-M1-06)                                                                                                                                              | `hashPassword(plain)`, `verifyPassword(storedHash, plain)`, `PASSWORD_HASH_OPTIONS`                                                                           |
+| `apps/api/src/auth/session.ts`                                | session core: 256-bit token, SHA-256 `token_hash`, `loadSession` with delete-on-read of expired rows and inactive accounts, cookie options (WP-M1-07)                                                                               | `SESSION_COOKIE_NAME`, `createSession`, `loadSession`, `destroySession`, `loadUserRoleKeys`, `sessionCookieOptions`, `hashSessionToken`                       |
+| `apps/api/src/auth/sessionPlugin.ts`                          | `fastify-plugin` that reads the session cookie into `request.user` plus the preHandler for authenticated routes (WP-M1-07b)                                                                                                         | `sessionPlugin`, `requireUser` (`401 { code: 'session_invalid' }`), `AuthPluginOptions`                                                                       |
+| `apps/api/src/auth/routes.ts`                                 | login (Argon2id, decoy hash, rate limit `5`/min/IP), logout and `/me`; errors always `{ code, params }`; login and `/me` return role and permission keys (WP-M1-07b, WP-M1-08)                                                      | `authRoutes` — `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/me`                                                                        |
+| `apps/api/src/auth/requirePermission.ts`                      | effective permissions (role union plus allows, minus every denial) cached per request, OR-linked guard, probe route only in `NODE_ENV=test` (WP-M1-08)                                                                              | `loadEffectivePermissions`, `effectivePermissions`, `requirePermission(database, ...keys)`, `permissionProbeRoutes`                                           |
+| `apps/api/src/admin/users.ts`                                 | admin users API: list users with role keys, create with Argon2id hash and role links, update mutable fields; guards for duplicate e-mail, unknown role keys, last active admin (WP-M1-09)                                           | `adminUsersRoutes` — `GET /api/v1/users`, `POST /api/v1/users`, `PATCH /api/v1/users/:id`                                                                     |
+| `apps/api/src/admin/roles.ts`                                 | admin roles API: roles with permission keys and user counts, create a custom role, replace its grant set, delete an unused role; seeded system roles are guarded (WP-M1-09b)                                                        | `adminRolesRoutes` — `GET /api/v1/roles`, `POST /api/v1/roles`, `PATCH /api/v1/roles/:key`, `DELETE /api/v1/roles/:key`                                       |
+| `apps/api/src/config/env.ts`                                  | Zod schema of the whole environment including the notification channels (WP-M1-02)                                                                                                                                                  | `loadEnv(source?)`, `loadDotEnvFile()`, `corsOrigins(env)`, `signalRecipients(env)`                                                                           |
+| `apps/api/src/config/env-file.ts`                             | finds the `.env` of the repository root                                                                                                                                                                                             | `findEnvFile(): string \| undefined`                                                                                                                          |
+| `apps/api/src/notifications/channels/index.ts`                | resolves the channels whose environment variables are all set — currently Signal and Matrix, an unset address disables a channel instead of failing at startup                                                                      | `configuredChannels(env): NotificationChannel[]`, `NotificationChannel`, `NotificationMessage`                                                                |
+| `apps/api/src/notifications/channels/signal.ts`               | sends over the signal-cli JSON-RPC bridge                                                                                                                                                                                           | `sendSignalNotification(config, message, fetch?)`                                                                                                             |
+| `apps/api/src/notifications/channels/matrix.ts`               | sends over the Matrix client-server API                                                                                                                                                                                             | `sendMatrixNotification(config, message, fetch?)`                                                                                                             |
+| `apps/api/drizzle.config.ts`                                  | drizzle-kit configuration: schema `src/db/schema.ts`, output `src/db/migrations`                                                                                                                                                    | `npm run db:generate -w @stoerdesk/api`, `npm run db:studio -w @stoerdesk/api`                                                                                |
+| `apps/api/scripts/copy-migrations.mjs`                        | copies `src/db/migrations` into `dist/db/migrations` so the built image can migrate                                                                                                                                                 | API build step                                                                                                                                                |
+| `packages/shared/src/permissions.ts`                          | permission catalog (37 keys) and `DEFAULT_ROLES` — single source of truth (WP-M1-05)                                                                                                                                                | `PERMISSIONS`, `PERMISSION_KEYS`, `DEFAULT_ROLES`, `SYSTEM_ROLE_KEYS`, `isPermissionKey`                                                                      |
+| `packages/shared/src/schemas/auth.ts`                         | Zod schemas for the login payload and the `/me` answer (WP-M1-07)                                                                                                                                                                   | `loginRequestSchema`, `meResponseSchema`, `LoginRequest`, `MeResponse`, `AuthUser`                                                                            |
+| `packages/shared/src/schemas/user.ts`                         | Zod schemas of the admin users API: summary, list, create, update (WP-M1-09)                                                                                                                                                        | `userSummarySchema`, `userListResponseSchema`, `createUserRequestSchema`, `updateUserRequestSchema`, `userLocaleSchema`                                       |
+| `packages/shared/src/schemas/role.ts`                         | Zod schemas of the admin roles API: key slug, permission keys, summary, list (WP-M1-09b)                                                                                                                                            | `roleKeySchema`, `roleSummarySchema`, `roleListResponseSchema`, `createRoleRequestSchema`, `updateRoleRequestSchema`                                          |
+| `packages/shared/src/i18n/t.ts`                               | server-side `t()` over `server.{de,en}.json` and `seed.{de,en}.json`, `{ param }` interpolation (WP-M1-04)                                                                                                                          | `t(locale, key, params?): string`, `ServerLocale`, `TranslationParams`                                                                                        |
+| `apps/web/src/i18n/index.ts`                                  | i18next setup: 8 namespaces, `de` default, bundled locales (WP-M1-04)                                                                                                                                                               | `i18n`, `namespaces`, `Namespace`                                                                                                                             |
+| `scripts/i18n-check.ts`                                       | de/en key parity plus every `t()` key used in `apps/web/src` must exist (WP-M1-04)                                                                                                                                                  | via `npm run i18n:check`                                                                                                                                      |
+| `apps/web/src/lib/api.ts`                                     | `apiFetch` with `credentials: 'include'`, `{ code, params }` bodies parsed into `ApiError`, `204` answers `undefined` (WP-M1-09c, WP-M1-09d)                                                                                        | `apiFetch<T>(path, init?)`, `ApiError`, `apiBaseUrl`                                                                                                          |
+| `apps/web/src/auth/usePermission.ts`                          | `useMe` (TanStack Query on `['me']`) and `usePermission` with the OR semantics of the server guard — hiding is cosmetic (WP-M1-09c)                                                                                                 | `useMe()`, `usePermission(...keys): boolean`                                                                                                                  |
+| `apps/web/src/auth/login-form.tsx`                            | login form (`POST /v1/auth/login`, one notice for every failed credential) and logout button (`POST /v1/auth/logout`, invalidates `me`/`users`/`roles`) (WP-M1-09e)                                                                 | `LoginForm`, `LogoutButton`                                                                                                                                   |
+| `apps/web/src/auth/require-session.tsx`                       | route guard around both `/admin/*` routes: loading text, `LoginForm` while `/me` answers 401, otherwise the children — cosmetic next to the server guard (WP-M1-09e)                                                                | `RequireSession({ children })`                                                                                                                                |
+| `apps/web/src/admin/users-page.tsx`                           | admin users UI at `/admin/users`: table for `user.read`, create form and per-row editing for `user.write`, texts from the `settings` namespace (WP-M1-09c)                                                                          | `UsersPage`                                                                                                                                                   |
+| `apps/web/src/admin/roles-page.tsx`                           | admin roles UI at `/admin/roles`: table with grant and user counts for `role.read`, create/grant editor/delete for custom roles with `role.write`, system roles read-only (WP-M1-09d)                                               | `RolesPage`                                                                                                                                                   |
+| `apps/web/src/routes/index.tsx`                               | react-router route table: `/` shell plus `/admin/users` and `/admin/roles` inside the `RequireSession` parent route (WP-M1-09e)                                                                                                     | `router`                                                                                                                                                      |
+| `apps/web/src/App.tsx`                                        | shell on `/`: signed-in e-mail, admin links, `LogoutButton` (WP-M1-09e)                                                                                                                                                             | `App`                                                                                                                                                         |
+| `apps/web/src/main.tsx`                                       | React root: `StrictMode`, `QueryClientProvider`, `I18nextProvider`, `RouterProvider`                                                                                                                                                | entry point (`index.html`)                                                                                                                                    |
+| `apps/web/nginx-pwa.conf.template`                            | nginx config for the PWA image, `/api/` proxied to `${API_UPSTREAM}`                                                                                                                                                                | —                                                                                                                                                             |
+| `PLAN.md`                                                     | binding scope, stack, phases and WP limits                                                                                                                                                                                          | entry point for every agent                                                                                                                                   |
+| `specs/`                                                      | expanded specification slices (chapters 00–16)                                                                                                                                                                                      | read before implementing a WP                                                                                                                                 |
+| `docs/WP-TEMPLATE.md`                                         | small-model work-package template                                                                                                                                                                                                   | `npm run wp:check`                                                                                                                                            |
+| `scripts/wp-check.mjs`                                        | validates small-model WPs (size, context, fields)                                                                                                                                                                                   | via `npm run wp:check`                                                                                                                                        |
+| `scripts/create-env.mjs`                                      | writes `.env` from `.env.example` with generated secrets                                                                                                                                                                            | via `npm run env:create`                                                                                                                                      |
+| `scripts/docker-smoke.sh`                                     | repeatable Docker smoke test: isolated stack up, both health endpoints, teardown (WP-M0-04)                                                                                                                                         | `sh scripts/docker-smoke.sh`, CI job `docker-smoke`                                                                                                           |
+| `scripts/orchestrate.mjs`, `scripts/split-spec.mjs`           | agent orchestration helper, mirror of `specs/` from the supplied originals                                                                                                                                                          | via `npm run orchestrate`, `npm run spec:split`                                                                                                               |
+| `.github/workflows/check.yml`                                 | quality gates (typecheck, lint, tests, i18n, wp) with a Postgres-16 service plus the Docker smoke job; triggered by the version tag push; ends with `Dispatch publish run` (WP-M1-10, WP-M1-10h, WP-M1-10i)                         | run name `v0.0.NN` (PR: `check · <branch> · pull_request`), required checks `Typecheck`, `Lint`, `Tests`, `i18n`, `Docker smoke test`, `Dispatch publish run` |
+| `.github/workflows/build.yml`                                 | builds and pushes the versioned `api`/`web` images to GHCR; started by the job `Dispatch publish run` of a green `check` run (inputs `version`/`notes`/`source_run`/`mode`); PR runs never publish (WP-M0-05, WP-M1-10h, WP-M1-10i) | `publish images`, run name `publish v0.0.NN · <commit subject>`, `latest` only with `mode=check`, `ghcr.io/<owner>/stoerdesk-{api,web}:<version>`             |
+| `.github/ISSUE_TEMPLATE/{bug,feature,security}.md`            | GitHub issue forms with valid front matter and the 112-only emergency notice (WP-M1-10b)                                                                                                                                            | issue types and labels `bug`, `feature`, `security`                                                                                                           |
+| `.husky/{pre-commit,commit-msg,post-commit,post-merge}`       | lint before commit, Conventional Commits plus DCO check, annotated version tag on every commit (one tag per commit)                                                                                                                 | `commit <hash> successful - version v0.0.N`, push with `git push --follow-tags`                                                                               |
+| `Dockerfile`                                                  | multi-stage image build, targets `api` and `web`                                                                                                                                                                                    | `docker build --target api .`                                                                                                                                 |
+| `docker-compose.yml` + `docker-compose.{dev,local,debug}.yml` | full stack (db, api, web, optional backup) from one `.env`; dev = local Postgres, local = build from checkout, debug = publishes the API host port                                                                                  | `docker compose up -d --build`, `docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d`                                                      |
+| `docs/DECISIONS.md` + `docs/DECISIONS/000{1,2}-*.md`          | decision index and the ADRs (monorepo with npm workspaces, UUID v7 as database primary key) (WP-M1-10d)                                                                                                                             | —                                                                                                                                                             |
+| `docs/{ARCHITECTURE,COMPLIANCE,GLOSSARY,I18N,DEPLOYMENT}.md`  | English documentation: module boundaries, data protection, terminology, i18n rules, deployment with volumes/backups/channels (WP-M1-10c)                                                                                            | —                                                                                                                                                             |
+| `docs/SYSTEMPROMPT.md`, `docs/material/`                      | supplied project system prompt and the supplied originals (images, source documents)                                                                                                                                                | read-only input                                                                                                                                               |
 
-## Konventionen (Kurzfassung, Details in specs/00)
+## Conventions (short form, details in `specs/00-conventions.md` and `AGENTS.md`)
 
-- Sprache: Code, Kommentare und Entwickler-Doku durchgängig EN; UI-Texte über i18n-Keys
-  (`de` Default, `en` vollständig) — die App ist mehrsprachig, die Codebasis ist englisch.
-- Fehler: `{ code, params }`, nie übersetzter Text.
-- Logging: Pino, strukturiert, keine PII im Klartext.
-- Tests: Vitest für Unit, Playwright für E2E.
-- Commits: Conventional Commits, `-s` (DCO).
+- Language: code, comments, logs and developer documentation in English; user-facing text
+  only through i18n keys (`de` default, `en` complete).
+- Errors: `{ code, params }`, never translated text in logs or payloads.
+- Logging: Pino, structured, no PII in plain text.
+- IDs: UUID (UUID v7 as database default), timestamps are server time.
+- Tests: Vitest per workspace, Playwright for E2E (WP-M1-12).
+- Commits: Conventional Commits, `Signed-off-by` (DCO), one WP = one commit = one tag.
 
 ## Implementation status
 
-> Implemented: **Phase 0 is complete** — **WP-M0-01** (images build from the local
-> checkout), **WP-M0-02** (web starts without a healthy API), **WP-M0-03** (binding
-> `PLAN.md` + small-model work packages) and **WP-M0-04** (repeatable Docker smoke
-> test `scripts/docker-smoke.sh` + guarded CI job `docker-smoke`) and **WP-M0-05**
-> (`publish images` workflow: versioned `api`/`web` images in GHCR after `check`).
-> **WP-M1-01** (monorepo, tooling), **WP-M1-02** (Docker Compose, `.env.example`),
-> **WP-M1-03** (Drizzle base schema `users`, `sessions`, `groups`, `user_groups`, `settings`
-> with migration `0000_base_tables` and `gen_uuid_v7()`),
-> **WP-M1-04** (i18n skeleton: web i18next setup + locales, shared server `t()`,
-> `i18n:check`, active `i18next/no-literal-string` lint rule),
-> **WP-M1-05** (RBAC: 37-key permission catalog + `DEFAULT_ROLES` in shared, tables
-> `roles`, `permissions`, `role_permissions`, `user_roles`, `user_permissions` with
-> migration `0001_rbac_tables`, the `protect_system_roles()` trigger and the
-> idempotent seed `src/db/seed-rbac.ts`),
-> **WP-M1-06** (base seed: Argon2id hashing in `src/auth/password.ts`, idempotent
-> bootstrap administrator from `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` in
-> `src/db/seed-base.ts`, linked to the system role `admin`; seed order migrate →
-> `seed-rbac` → `seed-base`),
-> **WP-M1-07** (session core in `src/auth/session.ts`: random token, SHA-256 token
-> hash in `sessions`, `loadSession` with delete-on-read of expired rows and inactive
-> accounts, role keys per request, cookie options; shared `loginRequestSchema` and
-> `meResponseSchema`),
-> **WP-M1-07b** (auth HTTP layer: `sessionPlugin` decorating `request.user` plus the
-> `requireUser` preHandler, login/logout/me routes with the `5`-per-minute login rate
-> limit, and the `{ code, params }` envelope for `429 rate_limited` through the error
-> handler in `src/index.ts`),
-> **WP-M1-08** (effective permissions, `requirePermission` with OR semantics and the
-> test-only probe route) and **WP-M1-09** (admin users API: list users with role
-> keys, create users with Argon2id hashes and role links, update mutable user fields
-> and role links, with guards for duplicate e-mail, unknown role keys and the last
-> active admin), **WP-M1-09b** (admin roles API: roles with permission keys and user
-> count, create custom roles, replace grant sets, delete unused custom roles, with
-> service guards for seeded system roles and roles still held by users),
-> **WP-M1-09c** (web side: `useMe`/`usePermission` in `apps/web/src/auth/usePermission.ts`
-> and the `UsersPage` admin users UI at `/admin/users`) and **WP-M1-09d** (the `RolesPage`
-> admin roles UI at `/admin/roles` on top of the role API — custom roles writable, seeded
-> system roles read-only) and **WP-M1-09e** (`LoginForm` and `LogoutButton` in
-> `apps/web/src/auth/login-form.tsx`, the `RequireSession` guard as the parent route of both
-> `/admin/*` routes, the signed-in state in `App.tsx` and the `common:auth.*` fixtures —
-> the phase 1 exit criterion "login as admin works" is reachable and WP-M1-12 can drive it),
-> **WP-M1-10** (English governance files — `CONTRIBUTING.md`,
-> `SECURITY.md`, `CODE_OF_CONDUCT.md` with the Contributor Covenant 2.1 text — plus the
-> English CI step name) and **WP-M1-10b** (the GitHub issue forms for bug, feature and
-> security are valid GitHub issue forms again, with the 112-only emergency notice) and
-> **WP-M1-10c** (`docs/ARCHITECTURE.md`, `docs/COMPLIANCE.md`, `docs/GLOSSARY.md` and
-> `docs/I18N.md` are English).
-> The compose stack runs the whole system (db, api, web) and the optional
-> notification channels (external ntfy, signal, matrix, mail) from one `.env`;
-> `npm run env:create` generates it with random secrets. The default build context
-> is the local checkout; deployment panels set `IMAGE_BUILD_CONTEXT` to the Git URL.
-> `PLAN.md` is the binding build plan, and `work-packages/m0` holds the Phase 0
-> startability work packages. The Web app has the shell with its session state, the login
-> form, the admin users page at
-> `/admin/users` and the admin roles page at `/admin/roles`; the API serves
-> `/api/v1/health`, the auth routes, the admin users routes and the admin roles
-> routes, and holds the
-> schema, the seeds, the session core and the notification channel adapters. The
-> `common` and `settings` namespaces have real keys, the remaining namespaces are
-> intentionally empty. Every further work package follows individually after approval from
-> `work-packages/`. Since WP-M1-10e the open follow-ups of a phase are tracked in the
-> `Open follow-ups` table of `work-packages/README.md` and in `PLAN.md` §16
-> (_Current state and open backlog_); the rule is the `AGENTS.md` section
-> _Open follow-ups (mandatory closure)_.
+> **Phase 0 complete**: WP-M0-01 … WP-M0-05 (images build from the checkout, web survives a
+> missing API, `PLAN.md` anchored, Docker smoke test with the CI job `docker-smoke`,
+> versioned GHCR images after a green `check`).
 >
-> API integration tests run against a real Postgres-16 database
-> (`TEST_DATABASE_URL`, see `.env.example`); the CI `check` job provides that
-> database as a service, so the integration specs run in CI instead of skipping.
-> Without a reachable local database they are skipped and `npm run check` stays
-> green — then the CI job is the executed acceptance. The Docker smoke test replaces
-> the manual Phase 0 gate: the CI job `docker-smoke` builds the stack and curls both
-> health endpoints; on a machine without Docker (such as this dev container) only the
-> CI job proves it, locally `sh -n scripts/docker-smoke.sh` and `npm run check` are
-> what is available.
+> **Phase 1 through WP-M1-11**: WP-M1-01 monorepo and tooling, WP-M1-02 Compose plus
+> `.env.example`, WP-M1-03 Drizzle base schema and `0000_base_tables`, WP-M1-04 i18n
+> skeleton, WP-M1-05 RBAC tables with `0001_rbac_tables` and `seed-rbac.ts`, WP-M1-06
+> `password.ts` and `seed-base.ts`, WP-M1-07 session core and shared auth schemas,
+> WP-M1-07b `sessionPlugin` and the login/logout/me routes, WP-M1-08 `requirePermission`,
+> WP-M1-09 admin users API, WP-M1-09b admin roles API, WP-M1-09c users UI with
+> `usePermission`, WP-M1-09d roles UI, WP-M1-09e login form, logout and `RequireSession`,
+> WP-M1-10/10b/10c English governance files, issue forms and `docs/` placeholders,
+> WP-M1-10e the follow-up closure rule, WP-M1-10f/10h/10i the tag-triggered CI chain with
+> versioned run names and the dispatched publish run, WP-M1-10d the English ADRs and
+> WP-M1-11 this map. Open: **WP-M1-12** (Playwright smoke test "login as admin works"),
+> the last item of the phase 1 backlog — the backlog of record is the table
+> _Open follow-ups_ in `work-packages/README.md` and `PLAN.md` §16.
+>
+> What the running system already does: the Compose stack serves db, api and web from one
+> `.env` (`npm run env:create` generates it), the API answers `/api/v1/health`, the auth
+> routes, the admin users routes and the admin roles routes, and holds the schema, the
+> seeds, the session core and the notification channel adapters. The web app has the shell,
+> the login form and both admin pages at `/admin/users` and `/admin/roles`. The `common` and
+> `settings` namespaces carry real keys, the rest are intentionally empty. `tickets/`,
+> `objects/`, `oncall/`, `stats/` and `jobs/` are empty on purpose until their work package
+> exists.
+>
+> API integration tests need a real Postgres 16 (`TEST_DATABASE_URL`); CI provides it as a
+> service, without a reachable local database they skip and `npm run check` stays green.
+> The Docker smoke test runs only in the CI job `docker-smoke`, because this development
+> container has no Docker — there `sh -n scripts/docker-smoke.sh` plus `npm run check` is
+> all that can be proven locally.

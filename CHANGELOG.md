@@ -285,6 +285,19 @@ images` runs of finished pull request runs are gone, and the check↔publish lin
   `git push --follow-tags` produced two failed `check` runs. `js-yaml` only validates YAML
   syntax, so the fix push was preceded by a `js-yaml` pass over both workflows that asserts
   `runs-on`, a non-empty `steps` list and resolvable `needs` for every job.
+- WP-M1-11: `docs/REPO-MAP.md` is English and current through phase 1, which closes the
+  deviation note that WP-M1-10, WP-M1-10c and WP-M1-10d carried. The tree now shows the
+  folders phase 1 actually created (`apps/web/src/{admin,auth,lib,routes}`,
+  `apps/api/src/{admin,auth,config,notifications}`) and marks the folders that are still
+  empty on purpose (`components/`, `features/*`, `tickets|objects|oncall|stats|jobs`). The
+  module table gained the rows that were missing: `apps/api/src/index.ts` (`buildServer` with
+  the `{ code, params }` error envelope and `/api/v1/health`),
+  `packages/shared/src/schemas/user.ts`, `packages/shared/src/i18n/t.ts`,
+  `apps/web/src/routes/index.tsx`, `apps/web/src/App.tsx` and `main.tsx`,
+  `apps/api/drizzle.config.ts`, `apps/api/scripts/copy-migrations.mjs`, the Husky hooks with
+  the one-tag-per-commit rule, the three Compose overrides, the ADR files and the governance
+  documents. The map is 168 lines (limit 200) and the legacy WP document
+  `work-packages/m1/11-repo-map.md` was rewritten into the small-model format.
 - WP-M1-10d: `docs/DECISIONS.md` and the ADRs are English, as the language rule of
   `AGENTS.md` requires. The index titles the records "Monorepo with npm workspaces" and
   "UUID v7 as the database primary key", the template block asks for `Status`, `Date` and

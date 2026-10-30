@@ -18,7 +18,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
-`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`, `WP-M1-10i` and `WP-M2-00`. The
+`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
+`WP-M1-10i`, `WP-M1-11` and `WP-M2-00`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -90,7 +91,13 @@ implementation.
 > `specs/02-data-model.md`. **WP-M1-10e** (`10e-follow-up-closure-rule.md`) is
 > implemented as the governance rule _Open follow-ups (mandatory closure)_ in
 > `AGENTS.md`, the _Current state and open backlog_ subsection in `PLAN.md` §16 and
-> the table below. The remaining WPs are working plans and are implemented
+> the table below. **WP-M1-10d** (`10d-adrs-english.md`) is implemented — `docs/DECISIONS.md`
+> and both ADRs are English — and **WP-M1-11** (`11-repo-map.md`) is implemented as well:
+> the legacy plan was rewritten into the small-model format and `docs/REPO-MAP.md` is now
+> English throughout, lists every phase 1 module once, and matches the directory tree
+> (168 lines, limit 200). With that every `docs/` file is English, so no language deviation
+> is left. `WP-M1-12` is the only open phase 1 item.
+> The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
 
@@ -111,7 +118,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-09d | admin roles UI                                          | done                    | yes     |
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | done                    | yes     |
 | WP-M1-10d | English ADRs and `docs/DECISIONS.md`                    | done                    | yes     |
-| WP-M1-11  | `docs/REPO-MAP.md` normalized to English                | planned                 | yes     |
+| WP-M1-11  | `docs/REPO-MAP.md` English and current                  | done                    | yes     |
 | WP-M1-12  | Playwright smoke test "login as admin works"            | planned                 | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
@@ -139,6 +146,12 @@ follow-up without a WP file is a defect.
 ADR-0002 are English, the ADR slugs and ADR-0001 were already English from the
 work-in-progress commit `b573fb5`, and the deviation note of `docs/REPO-MAP.md` now names
 only the map itself as German.
+`WP-M1-11` is implemented — the legacy plan was rewritten into the small-model format and
+`docs/REPO-MAP.md` is English throughout: tree down to level 3 with the phase 1 folders and
+the still-empty planned folders marked, one module row per existing module (including
+`apps/api/src/index.ts`, `packages/shared/src/schemas/user.ts`, `packages/shared/src/i18n/t.ts`
+and `apps/web/src/routes/index.tsx`, which the old table missed), the conventions short form
+and the implementation status; 168 lines.
 `WP-M1-12` needs `WP-M1-09e`, otherwise the phase 1 exit criterion
 "login as admin works" cannot be tested.
 

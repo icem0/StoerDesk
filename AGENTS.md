@@ -19,11 +19,11 @@ work package first. Never implement a feature that has no work package.
 WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-09c, WP-M1-09d,
 WP-M1-09e, WP-M1-10, WP-M1-10b, WP-M1-10c,
 WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h) plus the
-CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new") and the
-documentation follow-up **WP-M1-10d** (English ADRs and decision index).
-The open phase 1 items (WP-M1-11,
-WP-M1-12) are listed in the `Open follow-ups` table of `work-packages/README.md` and
-in `PLAN.md` §16.
+CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new"), the
+documentation follow-up **WP-M1-10d** (English ADRs and decision index) and the
+documentation follow-up **WP-M1-11** (English, current repository map).
+The only open phase 1 item (WP-M1-12) is listed in the `Open follow-ups` table of
+`work-packages/README.md` and in `PLAN.md` §16.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -78,7 +78,9 @@ The repository contains:
   notice, `429` renders `rate_limited`),
 - the documentation in `docs/`: `ARCHITECTURE.md`, `COMPLIANCE.md`, `GLOSSARY.md`, `I18N.md`
   and the decisions (`DECISIONS.md` with the index and the ADRs `DECISIONS/0001` and
-  `DECISIONS/0002`) are English; only `REPO-MAP.md` is still partly German (WP-M1-11).
+  `DECISIONS/0002`) are English, and `REPO-MAP.md` is English too — its structure tree, its
+  module table (one row per module: purpose plus public API) and its status section describe
+  the state after WP-M1-11 and are updated after every work package.
 
 Further domain logic (tickets, objects, on-call, notifications, UI) is created only as
 the implementation of a work package from `work-packages/` — package by package,
