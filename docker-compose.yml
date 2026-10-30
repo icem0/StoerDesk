@@ -101,6 +101,7 @@ services:
     restart: unless-stopped
     environment:
       API_UPSTREAM: http://api:${API_PORT:-3000}
+      VITE_APP_VERSION: ${VITE_APP_VERSION}
       UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
       # Only substitute API_* and UPLOAD_* variables in the nginx template,
       # never nginx variables such as $host or $remote_addr.

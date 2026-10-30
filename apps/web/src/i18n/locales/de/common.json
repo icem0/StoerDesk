@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "StörDesk",
-    "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation."
+    "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
+    "version": "Version"
   },
   "auth": {
     "title": "Anmeldung",

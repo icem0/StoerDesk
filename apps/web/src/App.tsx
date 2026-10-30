@@ -7,6 +7,7 @@ import { useMe } from './auth/usePermission'
 export function App() {
   const { t } = useTranslation('common')
   const me = useMe()
+  const version = import.meta.env.VITE_APP_VERSION ?? 'dev'
 
   return (
     <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
@@ -27,6 +28,9 @@ export function App() {
             </Link>
           </nav>
           <LogoutButton />
+          <p className="text-xs text-slate-500 mt-3">
+            {t('app.version')}: {version}
+          </p>
         </section>
       ) : null}
     </main>

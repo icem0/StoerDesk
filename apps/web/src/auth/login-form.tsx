@@ -58,67 +58,75 @@ export function LoginForm() {
   })
 
   return (
-    <form
-      className="mt-4 flex max-w-sm flex-col gap-3"
-      onSubmit={(event) => {
-        event.preventDefault()
-        // Client-side parse only produces the field hint; the server normalizes and
-        // validates the same schema again (`specs/01-rbac.md` §3.6).
-        const parsed = loginRequestSchema.safeParse(values)
+    <div className="min-h-[60vh] flex items-center justify-center px-4">
+      <form
+        className="max-w-sm w-full flex flex-col gap-4 p-6 rounded-lg border border-slate-700 bg-slate-900/50 shadow-lg"
+        onSubmit={(event) => {
+          event.preventDefault()
+          // Client-side parse only produces the field hint; the server normalizes and
+          // validates the same schema again (`specs/01-rbac.md` §3.6).
+          const parsed = loginRequestSchema.safeParse(values)
 
-        if (!parsed.success) {
-          setFieldsInvalid(true)
+          if (!parsed.success) {
+            setFieldsInvalid(true)
 
-          return
-        }
+            return
+          }
 
-        setFieldsInvalid(false)
-        mutation.mutate(parsed.data)
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t('auth.title')}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('auth.fields.email')}
-        <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          type="email"
-          name="email"
-          autoComplete="username"
-          required
-          value={values.email}
-          onChange={(event) => setValues({ ...values, email: event.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('auth.fields.password')}
-        <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          required
-          value={values.password}
-          onChange={(event) => setValues({ ...values, password: event.target.value })}
-        />
-      </label>
-      {fieldsInvalid ? (
-        <p role="alert" className="text-sm text-amber-300">
-          {t('auth.invalidHint')}
-        </p>
-      ) : null}
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-400">
-          {errorMessage(t, mutation.error)}
-        </p>
-      ) : null}
-      <button
-        className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-        type="submit"
-        disabled={mutation.isPending}
+          setFieldsInvalid(false)
+          mutation.mutate(parsed.data)
+        }}
       >
-        {t('auth.submit')}
-      </button>
-    </form>
+        <h2 className="text-lg font-semibold text-center">{t('auth.title')}</h2>
+        <div className="flex flex-col gap-1 text-sm">
+          <label htmlFor="login-email" className="text-sm">
+            {t('auth.fields.email')}
+          </label>
+          <input
+            id="login-email"
+            className="rounded bg-slate-950 p-2 text-slate-100"
+            type="email"
+            name="email"
+            autoComplete="username"
+            required
+            value={values.email}
+            onChange={(event) => setValues({ ...values, email: event.target.value })}
+          />
+        </div>
+        <div className="flex flex-col gap-1 text-sm">
+          <label htmlFor="login-password" className="text-sm">
+            {t('auth.fields.password')}
+          </label>
+          <input
+            id="login-password"
+            className="rounded bg-slate-950 p-2 text-slate-100"
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            required
+            value={values.password}
+            onChange={(event) => setValues({ ...values, password: event.target.value })}
+          />
+        </div>
+        {fieldsInvalid ? (
+          <p role="alert" className="text-sm text-amber-300 text-center">
+            {t('auth.invalidHint')}
+          </p>
+        ) : null}
+        {mutation.isError ? (
+          <p role="alert" className="text-sm text-red-400 text-center">
+            {errorMessage(t, mutation.error)}
+          </p>
+        ) : null}
+        <button
+          className="rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50 w-full"
+          type="submit"
+          disabled={mutation.isPending}
+        >
+          {t('auth.submit')}
+        </button>
+      </form>
+    </div>
   )
 }
 
