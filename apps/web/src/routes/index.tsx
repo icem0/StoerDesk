@@ -1,4 +1,4 @@
-import { Outlet, createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router-dom'
 
 import { App } from '../App'
 import { RolesPage } from '../admin/roles-page'
@@ -9,24 +9,22 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
-  },
-  {
-    // WP-M1-09e: the admin routes share one session guard, the pages themselves stay
-    // unchanged. `RequireSession` only shortens the path to the same 401/403 the server
-    // guard already answers (`specs/01-rbac.md` §3.2).
-    element: (
-      <RequireSession>
-        <Outlet />
-      </RequireSession>
-    ),
     children: [
       {
         path: '/admin/users',
-        element: <UsersPage />,
+        element: (
+          <RequireSession>
+            <UsersPage />
+          </RequireSession>
+        ),
       },
       {
         path: '/admin/roles',
-        element: <RolesPage />,
+        element: (
+          <RequireSession>
+            <RolesPage />
+          </RequireSession>
+        ),
       },
     ],
   },
