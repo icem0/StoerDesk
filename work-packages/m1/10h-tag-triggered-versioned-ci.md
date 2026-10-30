@@ -91,6 +91,14 @@ titled `v0.0.NN` and its publish run `publish v0.0.NN` — without any rename st
 - Interfaces added: tag-push trigger for the quality gates, version-carried run labels
 - Deviation: WP-M1-10g is overtaken — its rename job was dead code (no such REST
   endpoint); its document is marked accordingly
-- Verified: pending — proven by the run titles of the next push
+- Verified: run `v0.0.49` (`https://github.com/icem0/StoerDesk/actions/runs/41036498730`,
+  `head_branch: v0.0.49`) and its publish run `publish v0.0.49`
+  (`https://github.com/icem0/StoerDesk/actions/runs/41036613222`, jobs
+  `Resolve version tag`, `Publish api image v0.0.49`, `Publish web image v0.0.49`) are both
+  green for commit `b13e9d4`; the required status check `Typecheck, Lint, Tests, i18n` is
+  reported on the commit although the run was started by the tag push
+- Accepted side effect: `workflow_run` also fires for finished `pull_request` runs of the
+  `check` workflow, so those produce a `publish images` run with every job skipped — the
+  version job gates them out, no image is built
 - Follow-up WP: WP-M1-09e (`09e-login-form-guard.md`), WP-M1-10d, WP-M1-11, WP-M1-12
 - Open question: none
