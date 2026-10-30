@@ -53,6 +53,13 @@ one is rewritten into the small-model format before implementation.
 > duplicate e-mail and unknown role key errors, and a last-active-admin guard. The
 > role API, `usePermission`, the admin users UI and the admin roles UI move to
 > WP-M1-09b–WP-M1-09d.
+> **WP-M1-10** (`10-ci-workflow.md`) was rewritten into the small-model format and
+> shrunk: its CI, `LICENSE`, `README.md`, `CHANGELOG.md`, `dependabot.yml` and PR
+> template items are already delivered (WP-M1-01, the deployment commits, WP-M0-05),
+> so it now covers only the English CI step name and the German governance files
+> (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`). The broken issue forms go
+> to **WP-M1-10b**, the German `docs/` placeholders to **WP-M1-10c** and the German
+> ADRs to **WP-M1-10d**.
 > The example objects, systems and standard texts that
 > the legacy WP-M1-06 also listed moved to the new **WP-M2-00**
 > (`00-core-tables-seed.md`), because `PLAN.md` §16 puts objects in phase 2;
