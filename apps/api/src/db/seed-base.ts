@@ -24,6 +24,16 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
+function onlyRow<T>(rows: T[], what: string): T {
+  const [row] = rows
+
+  if (!row) {
+    throw new Error(`seed-base: ${what}_missing`)
+  }
+
+  return row
+}
+
 /**
  * Idempotent bootstrap of the first administrator (`specs/01-rbac.md` §3.1).
  *
@@ -55,27 +65,31 @@ export async function seedBaseUser(
       throw new Error('seed-base: rbac_seed_missing')
     }
 
-    const passwordHash = await hashPassword(password)
-    const inserted = await tx
-      .insert(schema.users)
-      .values({ email, passwordHash })
-      .onConflictDoUpdate({
-        target: schema.users.email,
-        set: { passwordHash },
-      })
-      .returning({ id: schema.users.id })
+    // The status is decided before the insert: PostgreSQL `RETURNING` also returns
+    // the updated row of an upsert, so `onConflictDoUpdate` cannot tell `created`
+    // from `existing`. The user is looked up by e-mail first.
+    const existing = await tx
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.email, email))
+      .limit(1)
 
-    const [user] =
-      inserted.length === 1
-        ? inserted
-        : await tx
-            .select({ id: schema.users.id })
-            .from(schema.users)
-            .where(eq(schema.users.email, email))
-            .limit(1)
+    const [alreadyThere] = existing
+
+    let user = alreadyThere
 
     if (user === undefined) {
-      throw new Error('seed-base: bootstrap_user_missing')
+      // Argon2id is expensive, so the hash is only computed for a real insert.
+      const passwordHash = await hashPassword(password)
+
+      user = onlyRow(
+        await tx
+          .insert(schema.users)
+          .values({ email, passwordHash })
+          .onConflictDoNothing({ target: schema.users.email })
+          .returning({ id: schema.users.id }),
+        'bootstrap_user',
+      )
     }
 
     await tx
@@ -83,7 +97,7 @@ export async function seedBaseUser(
       .values({ userId: user.id, roleId: adminRole.id })
       .onConflictDoNothing()
 
-    return { status: inserted.length === 1 ? 'created' : 'existing' }
+    return { status: alreadyThere === undefined ? 'created' : 'existing' }
   })
 }
 
