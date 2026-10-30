@@ -2,7 +2,9 @@ name: check
 
 # Every run says what it checks: branch or PR and the trigger. GitHub Actions has no
 # substring() function, so the SHA is not part of the label — the run list already
-# shows the commit and its subject names the work package.
+# shows the commit and its subject names the work package. On `main` the job
+# `Resolve version tag` replaces this label with the version tag of the commit, and
+# the publish workflow inherits that label (WP-M1-10g).
 run-name: >-
   check · ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
   · ${{ github.event_name }}
@@ -14,11 +16,48 @@ on:
   pull_request:
   workflow_dispatch:
 
+# `actions: write` lets the version job rename this run to its version tag. A
+# `push`-triggered run gets a writable GITHUB_TOKEN, unlike the `workflow_run`
+# triggered publish workflow, which inherits the version from this run's label.
+permissions:
+  contents: read
+  actions: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  version:
+    name: Resolve version tag
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      # Every commit of this repository carries one version tag (Husky hook), so the
+      # run of that commit is named after it. GitHub Actions expressions have no
+      # substring(), so the tag cannot be read out of the context - it is resolved
+      # with git here. Without a tag the plain label stays.
+      - name: Name the run after the version tag
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [ -z "$version" ]; then
+            echo "No vMAJOR.MINOR.PATCH tag at HEAD - keeping the plain run label."
+            exit 0
+          fi
+          gh api --method PATCH \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -f name="$version"
+
   check:
     name: Typecheck, Lint, Tests, i18n
     runs-on: ubuntu-latest

@@ -12,13 +12,13 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 22  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 23  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
-`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f` and `WP-M2-00`. The
+`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g` and `WP-M2-00`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -99,6 +99,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP        | Content                                                 | Status  | WP file |
 | --------- | ------------------------------------------------------- | ------- | ------- |
 | WP-M1-10f | traceable CI run, job and step names                    | done    | yes     |
+| WP-M1-10g | versioned run names for the publish chain               | done    | yes     |
 | WP-M1-09c | `usePermission` and the admin users UI                  | done    | yes     |
 | WP-M1-09d | admin roles UI                                          | done    | yes     |
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | open    | yes     |
@@ -108,6 +109,11 @@ running phase are implemented in numeric order before the next phase starts.
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
+`WP-M1-10g` corrects one assumption of `WP-M1-10f`: a `workflow_run`-triggered run gets a
+read-only `GITHUB_TOKEN`, so the publish run never renamed itself and all automatic publish
+runs carried the same label. Now the `check` run (push trigger, writable token) renames
+itself to the version tag of its commit and `build.yml` builds its `run-name` from the
+title of that calling run.
 `WP-M1-09c` is implemented — `useMe`/`usePermission` in `apps/web/src/auth`,
 `UsersPage` at `/admin/users` and the `settings` namespace fixtures.
 `WP-M1-09d` is implemented — `RolesPage` at `/admin/roles` on top of the role API, the

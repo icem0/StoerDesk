@@ -1,12 +1,13 @@
 name: publish images
 
-# The resolved version is unknown when the run starts, so this label carries the
-# trigger and the source branch of the calling `check` run. GitHub Actions has no
-# substring() function, so no short SHA here. On `workflow_dispatch` runs the
-# `Resolve version tag` step renames the run to `publish <version>`; on
-# `workflow_run` runs the token is read-only and the version shows in the job
-# names and the job summary instead (WP-M1-10f).
-run-name: publish images · ${{ github.event_name }} · ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+# The version of a `workflow_run` run is inherited from the `check` run that triggered
+# it: that run renamed itself to its version tag, where the token is writable. A
+# `workflow_run` run cannot rename itself — GitHub hands out a read-only GITHUB_TOKEN
+# here — so the version has to be in the label from the first second (WP-M1-10g).
+# GitHub Actions expressions have no substring(), so no short SHA ever fits a label.
+# One line on purpose: a folded scalar would keep the newlines of deeper-indented
+# continuation lines and put them into the label.
+run-name: ${{ github.event_name == 'workflow_run' && format('publish {0} · {1}', github.event.workflow_run.display_title, github.event.workflow_run.head_branch) || format('publish images · dispatch · {0} · {1}', github.ref_name, github.event.inputs.version) }}
 
 on:
   workflow_run:
@@ -20,15 +21,12 @@ on:
         required: true
         type: string
 
-# `actions: write` lets the version job rename the run to `publish <version>`.
-# Note: on `workflow_run` triggers GitHub hands out a read-only GITHUB_TOKEN that
-# cannot be elevated, so the rename only takes effect on `workflow_dispatch`
-# runs; there the version is carried by the job names and the job summary.
-# The rename step is `continue-on-error: true`, so it never breaks the publish.
+# The publish run only reads the repository and writes packages: the run label is
+# already correct when the run starts, because the version is inherited from the
+# calling `check` run or given by the `version` input of a dispatch run.
 permissions:
   contents: read
   packages: write
-  actions: write
 
 # One global publish queue: consecutive pushes would otherwise build images in
 # parallel and a slower run of an older commit could overwrite `latest`
@@ -71,21 +69,6 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=${version#v}" >> "$GITHUB_OUTPUT"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      # The run label cannot carry the version when the run starts, so the
-      # resolved tag is written into the run name here. This only succeeds on
-      # `workflow_dispatch` runs — on `workflow_run` triggers the GITHUB_TOKEN is
-      # read-only — and is guarded, so it never breaks the publish.
-      - name: Name the run after the version
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_LABEL: publish ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          gh api --method PATCH \
-            "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            -f name="$RUN_LABEL"
 
   publish:
     name: Publish ${{ matrix.service }} image ${{ needs.version.outputs.version }}

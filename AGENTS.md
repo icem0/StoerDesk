@@ -138,26 +138,31 @@ and IDE support.
 
 - After a completed work package, commit with the Husky hooks and push with
   `git push --follow-tags`. Do not finish a WP with an unpushed commit.
-- **Run naming:** every workflow sets a `run-name` naming trigger and ref
-  (`check · <ref> · <event>`, `publish images · <event> · <branch>`). GitHub
-  Actions expressions have no `substring()`, so no short SHA ever fits a label.
-  The `publish images` workflow renames its own run to `publish <version>` only
-  on `workflow_dispatch` runs — on `workflow_run` triggers GitHub hands out a
-  read-only `GITHUB_TOKEN` that `permissions:` cannot elevate, so there the
-  version lives in the publish job names and the job summaries. Every publish
-  job writes the image names, tags, version, source SHA and source run URL into
-  its job summary. All publish runs share one serialising concurrency group
-  (`publish-queue`), so a slower build of an older commit can never overwrite
-  `latest` afterwards.
+- **Run naming (WP-M1-10g):** every commit carries one version tag, and the CI
+  labels carry it. The `check` workflow starts as
+  `check · <ref> · <event>` and its job `Resolve version tag` renames that run to
+  the version tag of the commit (`v0.0.NN`) — a `push`-triggered run has a writable
+  `GITHUB_TOKEN`, so the rename works there. The `publish images` workflow derives
+  its label from the calling run: `publish <title of the check run> · <branch>`, so
+  an automatic publish run starts as `publish v0.0.NN · main`. A `workflow_run`
+  run can never rename itself — GitHub hands out a read-only `GITHUB_TOKEN` that
+  `permissions:` cannot elevate — which is why the version is resolved in `check`.
+  GitHub Actions expressions have no `substring()`, so no short SHA ever fits a
+  label. Publish job names (`Publish <service> image <version>`) and their job
+  summaries (image names, tags, version, source SHA, source run URL) stay the
+  second carrier. `workflow_dispatch` runs of `build.yml` label themselves
+  `publish images · dispatch · <ref> · <version>` from the `version` input. All
+  publish runs share one serialising concurrency group (`publish-queue`), so a
+  slower build of an older commit can never overwrite `latest` afterwards.
 - After the push, wait for the GitHub Actions `check` run of the pushed HEAD.
   The `publish images` workflow starts only after `check` succeeded and publishes
   the versioned `api` and `web` images to GHCR.
 - A WP is complete only when `check` and `publish images` are green (or a job is
   skipped by design). If a job fails, read the failing log, fix it in a new
   commit and push again.
-- Report the run titles (for automatic publish runs the versioned publish job
-  names), the version tag, commit hash, run URL and the final conclusion to the
-  user. A green `npm run check` locally is not a
+- Report the run titles (the version-named `check` run `v0.0.NN` and the publish
+  run `publish v0.0.NN · main`), the version tag, commit hash, run URL and the
+  final conclusion to the user. A green `npm run check` locally is not a
   substitute for the CI result:
   it does not run `scripts/docker-smoke.sh`, and this development container has
   no Docker.

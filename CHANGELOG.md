@@ -231,6 +231,22 @@ actions: write`, the job `Resolve version tag` gained the guarded step
   GHCR image names and the tag set are unchanged; the run rename to `publish <version>`,
   the publish job/step names and the image run summary are still open
   (see `work-packages/m1/10f-ci-run-naming.md`).
+- CI housekeeping (no work package): the `playwright` job of `check.yml` was removed —
+  the repository has no `playwright.config` and no E2E spec, so the job only re-ran the
+  web unit tests with an installed Chromium. It comes back with WP-M1-12. All publish
+  runs now share one serialising concurrency group (`publish-queue`), so a slower build
+  of an older commit can no longer overwrite `latest`.
+- WP-M1-10g: run names of the publish chain are versioned. The assumption of
+  WP-M1-10f that `build.yml` can rename its own run never held for automatic runs: a
+  `workflow_run`-triggered run receives a read-only `GITHUB_TOKEN`, so the guarded
+  rename step swallowed a `403` and every automatic publish run carried the same
+  `publish images · workflow_run · main` label. `check.yml` gained `permissions:
+actions: write` and the job `Resolve version tag`, which resolves the version tag of
+  the commit and renames its own run to `v0.0.NN` (a `push`-triggered token is
+  writable); `build.yml` builds its `run-name` from that title and starts as
+  `publish v0.0.NN · main` (`publish images · dispatch · <ref> · <version>` for a
+  manual run). The dead rename step and the `actions: write` permission moved out of
+  `build.yml`, and `AGENTS.md` states the corrected rule.
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
   requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth

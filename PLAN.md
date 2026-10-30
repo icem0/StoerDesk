@@ -552,8 +552,9 @@ when its exit criteria and its acceptance tests pass.
 ### Current state and open backlog
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
-**WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c** and
-**WP-M1-09d**; the table below is the
+**WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,
+**WP-M1-09d**, **WP-M1-10f** and
+**WP-M1-10g**; the table below is the
 backlog of record (mirrored and kept current in
 `work-packages/README.md`, enforced by the `AGENTS.md` rule _Open follow-ups
 (mandatory closure)_ — open items of a phase are finished in numeric order before the
