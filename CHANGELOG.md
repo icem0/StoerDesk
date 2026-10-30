@@ -177,14 +177,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- WP-M1-10f (partial): CI runs and steps are self-describing now. `check.yml` gained
-  `run-name: check · <ref> · <sha7> · <event>` and the step names `Quality gates
+- WP-M1-10f (partial): CI runs are self-describing now. `check.yml` gained
+  `run-name: check · <ref> · <event>` and the step names `Quality gates
 (typecheck, lint, tests, i18n, wp)` and `Build web and API artifacts (no publish)`.
   `.github/workflows/build.yml` is displayed as **publish images** instead of
-  `build and push` and gained
-  `run-name: publish images · <event> · <branch> · <sha7>`. GHCR image names and the
-  tag set are unchanged; the run rename to `publish <version> · <sha7>`, the publish
-  job/step names and the image run summary are still open
+  `build and push` and gained `run-name: publish images · <event> · <source branch>`.
+  The first attempt used `${{ substring(github.sha, 0, 7) }}` in both labels — GitHub
+  Actions has no `substring()` function, so the push produced four runs named after the
+  workflow file that failed instantly with zero jobs; the labels carry no short SHA now.
+  GHCR image names and the tag set are unchanged; the run rename to `publish <version>`,
+  the publish job/step names and the image run summary are still open
   (see `work-packages/m1/10f-ci-run-naming.md`).
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`

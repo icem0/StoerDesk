@@ -1,9 +1,11 @@
 name: check
 
-# Every run says what it checks: branch or PR, short SHA and the trigger.
+# Every run says what it checks: branch or PR and the trigger. GitHub Actions has no
+# substring() function, so the SHA is not part of the label — the run list already
+# shows the commit and its subject names the work package.
 run-name: >-
   check · ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
-  · ${{ substring(github.sha, 0, 7) }} · ${{ github.event_name }}
+  · ${{ github.event_name }}
 
 on:
   push:

@@ -1,12 +1,11 @@
 name: publish images
 
 # The resolved version is unknown when the run starts, so this label carries the
-# trigger and the source branch; the `Resolve version tag` job renames the run to
-# `publish <version> · <short sha>` as soon as the tag is known.
-run-name: >-
-  publish images · ${{ github.event_name }} ·
-  ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
-  · ${{ github.event_name == 'workflow_run' && substring(github.event.workflow_run.head_sha, 0, 7) || substring(github.sha, 0, 7) }}
+# trigger and the source branch of the calling `check` run. GitHub Actions has no
+# substring() function, so no short SHA here; the still open
+# `Resolve version tag` step renames the run to `publish <version>` as soon as the tag
+# is known (WP-M1-10f).
+run-name: publish images · ${{ github.event_name }} · ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
 
 on:
   workflow_run:
