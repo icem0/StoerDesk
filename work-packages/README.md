@@ -12,13 +12,13 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 24  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 25  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
-`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h` and `WP-M2-00`. The
+`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`, `WP-M1-10i` and `WP-M2-00`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -106,6 +106,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-10f | traceable CI run, job and step names                    | done                    | yes     |
 | WP-M1-10g | versioned run names for the publish chain               | superseded by WP-M1-10h | yes     |
 | WP-M1-10h | CI on the version tag, version carried by the run name  | done                    | yes     |
+| WP-M1-10i | publish run label carries one line of "what is new"     | done                    | yes     |
+| WP-M1-10i | publish run label carries one line of "what is new"     | done                    | yes     |
 | WP-M1-09c | `usePermission` and the admin users UI                  | done                    | yes     |
 | WP-M1-09d | admin roles UI                                          | done                    | yes     |
 | WP-M1-09e | login form, logout button and route guard in `apps/web` | done                    | yes     |
@@ -120,6 +122,11 @@ cannot — GitHub offers no such endpoint (the call answers `404`), and its `che
 saw the tag either, because `git push --follow-tags` pushes tag and commit in one go.
 `WP-M1-10h` hangs the quality gates on the version tag push instead, so `run-name` renders
 `v0.0.NN` from the first second and the publish run inherits that title as `publish v0.0.NN`.
+`WP-M1-10i` adds the second half of that label: a `workflow_run` payload can only carry the
+title of the calling run, so the green `check` run now ends with `Dispatch publish run`, which
+starts `build.yml` through the `workflow_dispatch` REST endpoint with the version and the
+commit subject as inputs — the publish run is titled `publish v0.0.NN · <commit subject>`, and
+only a dispatch with `mode=check` moves `latest`.
 `WP-M1-09c` is implemented — `useMe`/`usePermission` in `apps/web/src/auth`,
 `UsersPage` at `/admin/users` and the `settings` namespace fixtures.
 `WP-M1-09d` is implemented — `RolesPage` at `/admin/roles` on top of the role API, the

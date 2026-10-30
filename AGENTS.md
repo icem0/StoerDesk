@@ -18,7 +18,8 @@ work package first. Never implement a feature that has no work package.
 (Phase 0 complete) and WP-M1-01, WP-M1-02, WP-M1-03, WP-M1-04, WP-M1-05,
 WP-M1-06, WP-M1-07, WP-M1-07b, WP-M1-08, WP-M1-09, WP-M1-09b, WP-M1-09c, WP-M1-09d,
 WP-M1-09e, WP-M1-10, WP-M1-10b, WP-M1-10c,
-WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h).
+WP-M1-10e, WP-M1-10f, WP-M1-10h** (WP-M1-10g was superseded by WP-M1-10h) plus the
+CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new").
 The open phase 1 items (WP-M1-10d, WP-M1-11,
 WP-M1-12) are listed in the `Open follow-ups` table of `work-packages/README.md` and
 in `PLAN.md` §16.
@@ -147,18 +148,24 @@ and IDE support.
 
 - After a completed work package, commit with the Husky hooks and push with
   `git push --follow-tags`. Do not finish a WP with an unpushed commit.
-- **Run names are fixed at the start (WP-M1-10h):** GitHub has no REST endpoint that
-  renames a workflow run — the workflow-runs API offers rerun, cancel, delete, logs and
-  timing only — so a label can never be corrected afterwards and the version has to be
-  in the event payload when the run starts. That payload carries a version only for a
-  **tag push**, which is why the quality gates hang on the tag: `check.yml` triggers on
-  `push: tags: ['v[0-9]*']` (plus `pull_request`) and its
-  `run-name: ${{ github.ref_name }}` titles that run `v0.0.NN`. `build.yml` inherits the
-  title of the calling run, so an automatic publish run starts as `publish v0.0.NN`; a
-  `workflow_dispatch` run titles itself `publish images · dispatch · <ref> · <version>`.
-  Publish job names (`Publish <service> image <version>`) and their job summaries (image
-  names, tags, version, source SHA, source run URL) are the second carrier. GitHub
-  Actions expressions have no `substring()`, so no short SHA ever fits a label. All
+- **Run names are fixed at the start (WP-M1-10h, note added by WP-M1-10i):** GitHub has no
+  REST endpoint that renames a workflow run — the workflow-runs API offers rerun, cancel,
+  delete, logs and timing only — so a label can never be corrected afterwards and the text
+  has to be in the event payload when the run starts. A **tag push** payload carries the
+  version (`github.ref_name`) but no usable single-line text: its `head_commit.message` is
+  the whole multiline commit message (verified — the run's `head_sha` is the commit, not the
+  annotated tag object), and Actions expressions have no `substring()`, so no short SHA or
+  first line ever fits a label. That is why the quality gates hang on the tag
+  (`check.yml` triggers on `push: tags: ['v[0-9]*']` plus `pull_request`,
+  `run-name: ${{ github.ref_name }}` → run title `v0.0.NN`) while the publish run is
+  **dispatched**: the `Dispatch publish run` job of a green tag `check` run calls
+  `POST /repos/<repo>/actions/workflows/build.yml/dispatches` with the inputs `version`,
+  `notes`, `source_run` and `mode=check`, because a `workflow_dispatch` payload is the only
+  one that carries free text. `build.yml` titles itself `publish <version> · <notes>`, i.e.
+  `publish v0.0.NN · <commit subject>`; a manual run leaves `notes` empty and titles itself
+  `publish <version> · manual · <ref>`. `latest` moves only for `mode=check`. Publish job
+  names (`Publish <service> image <version>`) and their job summaries (what is new, publisher,
+  image names, tags, version, source SHA, source run URL) are the second carrier. All
   publish runs share one serialising concurrency group (`publish-queue`), so a slower
   build of an older commit can never overwrite `latest` afterwards.
 - **Consequence of the tag trigger:** a commit pushed **without** its tag (hook bypassed
@@ -167,13 +174,15 @@ and IDE support.
   every commit read the `commit <hash> successful - version v0.0.NN` line of the Husky
   hook, and never push a commit that did not print it.
 - After the push, wait for the `check` run titled `v0.0.NN` and for its
-  `publish images` follow-up run: that workflow starts only when the check run ended
-  green and publishes the versioned `api` and `web` images to GHCR.
+  `publish v0.0.NN · <commit subject>` follow-up run: that run is started by the
+  `Dispatch publish run` job at the end of a green check run and publishes the versioned
+  `api` and `web` images to GHCR.
 - A WP is complete only when `check` and `publish images` are green (or a job is
   skipped by design). If a job fails, read the failing log, fix it in a new
   commit and push again.
 - Report the run titles (the `check` run `v0.0.NN` and the publish run
-  `publish v0.0.NN`), the version tag, commit hash, run URL and the final conclusion to
+  `publish v0.0.NN · <commit subject>`), the version tag, commit hash, run URL and the
+  final conclusion to
   the user. A green `npm run check` locally is not a
   substitute for the CI result:
   it does not run `scripts/docker-smoke.sh`, and this development container has

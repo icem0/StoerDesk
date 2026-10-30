@@ -266,6 +266,20 @@ actions/runs/<run_id>`. It never took effect: the run stayed `check · main · p
   `run-name` is `publish <title of the calling check run>` → `publish v0.0.NN`. Consequence:
   a commit pushed without its tag gets no quality-gate run, so the one-tag-per-commit rule
   is now a build precondition in `AGENTS.md`.
+- WP-M1-10i: the publish run label says what is new. A `workflow_run` payload only carries
+  the title of the calling run, so `publish v0.0.NN` was the ceiling, and no Actions
+  expression can turn `head_commit.message` of a tag push into one line (that field is the
+  whole multiline commit message — verified through the Actions API: the runs of `v0.0.49`
+  and `v0.0.50` carry the commit SHAs `b13e9d4`/`ca4c948` as `head_sha`, while the annotated
+  tag objects are different SHAs). The green `check` run of a tag now ends with the job
+  `Dispatch publish run`, which posts a `workflow_dispatch` event for `build.yml` with the
+  inputs `version`, `notes` (the commit subject), `source_run` and `mode=check` — the only
+  payload that carries usable free text. `build.yml` triggers on `workflow_dispatch` alone,
+  titles itself `publish <version> · <notes>` (manual runs:
+  `publish <version> · manual · <ref>`), checks that the tag at HEAD equals the requested
+  `version`, and moves `latest` only for `mode=check`. Side effect: the empty `publish
+images` runs of finished pull request runs are gone, and the check↔publish link now lives
+  in the `source_run` input and both job summaries.
 - WP-M1-10c: the four `docs/` placeholders `ARCHITECTURE.md`, `COMPLIANCE.md`,
   `GLOSSARY.md` and `I18N.md` are English now, as the language rule of `AGENTS.md`
   requires. `ARCHITECTURE.md` separates what is live (`/api/v1/health`, the auth

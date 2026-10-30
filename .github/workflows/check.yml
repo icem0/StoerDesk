@@ -5,7 +5,11 @@ name: check
 # changed after the start (GitHub has no REST endpoint for it), so the version has to be
 # in the label from the first second - the tag ref is the only place where the event
 # payload carries it. GitHub Actions expressions have no substring(), so no short SHA
-# ever fits a label. The publish run inherits this title (WP-M1-10h).
+# ever fits a label.
+# The publish run no longer inherits this title: a `workflow_run` payload only carries the
+# title of the calling run, so it could never say more than `publish v0.0.NN`. This run
+# dispatches `build.yml` itself and hands the version plus one line of "what is new" over
+# as `workflow_dispatch` inputs - the only payload that carries usable free text (WP-M1-10i).
 run-name: ${{ github.event_name == 'pull_request' && format('check · {0} · pull_request', github.head_ref) || github.ref_name }}
 
 on:
@@ -83,6 +87,80 @@ jobs:
       - name: Smoke test
         if: steps.docker.outputs.available == 'true'
         run: sh scripts/docker-smoke.sh
+
+  # Every gate of this workflow has to be listed in `needs`: this job is the only way a
+  # publish run ever starts, and it only ever starts for a version tag push whose gates
+  # were green. The label of that publish run is decided by the inputs handed over here,
+  # because a run name is fixed when its run starts (WP-M1-10i).
+  publish-dispatch:
+    name: Dispatch publish run
+    needs: [check, docker-smoke]
+    if: ${{ github.event_name == 'push' && needs.check.result == 'success' && needs.docker-smoke.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve version and one-line note
+        id: note
+        env:
+          REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [ "$version" != "$REF" ]; then
+            echo "Tag $REF does not point at $(git rev-parse --short HEAD)." >&2
+            echo "Commit with the Husky hook and push with: git push --follow-tags" >&2
+            exit 1
+          fi
+          # The commit subject is the one line of "what is new": one work package per
+          # commit makes it a Conventional Commit subject, never longer than the
+          # commitlint header limit and never multiline.
+          note=$(git log -1 --pretty=%s | tr -d '\r\n' | cut -c1-72)
+          if [ -z "$note" ]; then
+            echo "Commit $(git rev-parse --short HEAD) has no subject." >&2
+            exit 1
+          fi
+          {
+            echo "version=$version"
+            echo "note=$note"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Start the publish run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.note.outputs.version }}
+          NOTES: ${{ steps.note.outputs.note }}
+          SOURCE_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          jq -cn \
+            --arg ref "$VERSION" \
+            --arg version "$VERSION" \
+            --arg notes "$NOTES" \
+            --arg source_run "$SOURCE_RUN" \
+            '{ref: $ref, inputs: {version: $version, notes: $notes, source_run: $source_run, mode: "check"}}' |
+            gh api --method POST \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/build.yml/dispatches" \
+              --input -
+
+      - name: Document the dispatch in the run summary
+        env:
+          VERSION: ${{ steps.note.outputs.version }}
+          NOTES: ${{ steps.note.outputs.note }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Publish run dispatched"
+            echo ""
+            echo "- version: \`${VERSION}\`"
+            echo "- run label: \`publish ${VERSION} · ${NOTES}\`"
+            echo "- inputs: \`mode=check\`, \`version=${VERSION}\`, \`notes=${NOTES}\`"
+          } >>"$GITHUB_STEP_SUMMARY"
 
   # No Playwright job yet: the repository has no playwright.config and no E2E
   # specs. The former `playwright` job only re-ran the web unit tests with an

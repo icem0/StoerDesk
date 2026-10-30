@@ -1,31 +1,47 @@
 name: publish images
 
-# The `check` run of a version tag push is titled `v0.0.NN` and this workflow inherits
-# that title, so an automatic publish run starts as `publish v0.0.NN`. A run name can
-# never be changed after the start - GitHub has no REST endpoint for it - so the version
-# has to come from the payload of the calling run (WP-M1-10h).
-# GitHub Actions expressions have no substring(), so no short SHA ever fits a label.
+# A run name is fixed when the run starts and can never be changed afterwards, and the
+# only event payload that carries usable free text is a `workflow_dispatch` input: a tag
+# push payload carries the whole multiline commit message, a `workflow_run` payload only
+# the title of the calling run. So the green `check` run of a version tag push dispatches
+# this workflow itself (its job `Dispatch publish run`) and hands over the version plus the
+# commit subject as the one line of "what is new" - that run is titled
+# `publish v0.0.NN · <commit subject>`. A manual run leaves `notes` empty and titles itself
+# `publish <version> · manual · <ref>` (WP-M1-10i).
 # One line on purpose: a folded scalar would keep the newlines of deeper-indented
 # continuation lines and put them into the label.
-run-name: ${{ github.event_name == 'workflow_run' && format('publish {0}', github.event.workflow_run.display_title) || format('publish images · dispatch · {0} · {1}', github.ref_name, github.event.inputs.version) }}
+run-name: ${{ github.event.inputs.notes != '' && format('publish {0} · {1}', github.event.inputs.version, github.event.inputs.notes) || format('publish {0} · {1} · {2}', github.event.inputs.version, github.event.inputs.mode, github.ref_name) }}
 
 on:
-  # No branch filter: the calling `check` run comes from a version tag push, whose source
-  # ref is the tag, not `main`. The version job gates on the trigger event of that run,
-  # so a finished pull request run never publishes.
-  workflow_run:
-    workflows: ['check']
-    types: [completed]
+  # Reached from two directions: the `check` run of a version tag push dispatches with
+  # `mode=check` and the version of that tag, a person dispatches with `mode=manual`.
+  # Only a `check` run may move `latest`, so an ad hoc republish never rewrites it.
   workflow_dispatch:
     inputs:
       version:
         description: Version tag to publish, for example v0.0.32
         required: true
         type: string
+      notes:
+        description: One line about what is new - only used for the run label
+        required: false
+        default: ''
+      source_run:
+        description: URL of the check run that dispatched this run
+        required: false
+        default: ''
+      mode:
+        description: Who authorised this publish
+        required: true
+        type: choice
+        options:
+          - manual
+          - check
+        default: manual
 
 # The publish run only reads the repository and writes packages: the run label is
-# already correct when the run starts, because the version is inherited from the
-# calling `check` run or given by the `version` input of a dispatch run.
+# already correct when the run starts, because the version and the note arrive as the
+# `version` and `notes` inputs of the dispatch that started it.
 permissions:
   contents: read
   packages: write
@@ -44,9 +60,6 @@ env:
 jobs:
   version:
     name: Resolve version tag
-    # Only the check run of a version tag push publishes: `workflow_run` fires for every
-    # completed run of the `check` workflow, pull request runs included.
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -56,18 +69,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.event.inputs.version }}
+          ref: ${{ github.event.inputs.version }}
           fetch-depth: 0
           fetch-tags: true
 
       - name: Resolve version tag
         id: version
+        env:
+          REQUESTED: ${{ github.event.inputs.version }}
         run: |
           set -euo pipefail
           version=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
           if [ -z "$version" ]; then
             echo "No vMAJOR.MINOR.PATCH tag at HEAD." >&2
             echo "Commit with the Husky hook and push with: git push --follow-tags" >&2
+            exit 1
+          fi
+          if [ "$version" != "$REQUESTED" ]; then
+            echo "Requested $REQUESTED, but that commit carries $version." >&2
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -107,7 +126,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           TAG: ${{ needs.version.outputs.tag }}
           SHA: ${{ needs.version.outputs.sha }}
-          EVENT_NAME: ${{ github.event_name }}
+          MODE: ${{ github.event.inputs.mode }}
         run: |
           set -euo pipefail
           image="${REGISTRY}/${IMAGE_OWNER}/stoerdesk-${SERVICE}"
@@ -116,7 +135,7 @@ jobs:
             echo "${image}:${VERSION}"
             echo "${image}:${TAG}"
             echo "${image}:sha-${SHA}"
-            if [ "$EVENT_NAME" = "workflow_run" ]; then
+            if [ "$MODE" = "check" ]; then
               echo "${image}:latest"
             fi
             echo "TAGS"
@@ -138,21 +157,28 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
-      # Every publish run states in its job summary which images exist now, so the
-      # run list plus the summary answers "which version produced which image".
+      # Every publish run states in its job summary which images exist now and which line
+      # of "what is new" its label carries, so the run list plus the summary answers
+      # "which version produced which image".
       - name: Write image summary
         env:
           SERVICE: ${{ matrix.service }}
           VERSION: ${{ needs.version.outputs.version }}
           SHA: ${{ needs.version.outputs.sha }}
           TAGS: ${{ steps.tags.outputs.tags }}
-          SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
+          MODE: ${{ github.event.inputs.mode }}
+          NOTES: ${{ github.event.inputs.notes }}
+          SOURCE_RUN: ${{ github.event.inputs.source_run }}
         run: |
           set -euo pipefail
           source_run="${SOURCE_RUN:-${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}}"
           {
             echo "## ${SERVICE} image ${VERSION}"
             echo ""
+            if [ -n "${NOTES}" ]; then
+              echo "- what is new: ${NOTES}"
+            fi
+            echo "- published by: \`${MODE:-manual}\`"
             echo "- source SHA: \`${SHA}\`"
             echo "- source run: <${source_run}>"
             echo "- published tags:"
