@@ -19,6 +19,7 @@ import {
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects, systems } from '../db/schema'
+import { generateQrToken, qrRoutes } from './qr'
 
 /**
  * Object list API (`specs/08-objects-api.md` §9.1).
@@ -197,6 +198,7 @@ export async function createObject(
           contactEmail: input.contactEmail ?? null,
           externalId: input.externalId ?? null,
           notes: input.notes ?? null,
+          qrToken: generateQrToken(),
         })
         .returning()
 
@@ -414,6 +416,8 @@ export const objectRoutes = fp<ObjectRouteOptions>(
         return reply.code(204).send()
       },
     )
+
+    await app.register(qrRoutes, { database })
   },
   { name: 'stoerdesk-objects' },
 )

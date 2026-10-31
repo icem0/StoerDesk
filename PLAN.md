@@ -571,6 +571,8 @@ next phase starts).
 | WP-M1-14  | base seed keeps an existing admin untouched  | done   |
 | WP-M2-00  | core object tables and demo seed             | done   |
 | WP-M2-01  | object list CRUD API                         | done   |
+| WP-M2-02  | QR generation, regeneration, resolution      | done   |
+| WP-M2-02b | QR demo tokens and scheduled cleanup          | open   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -603,6 +605,13 @@ tables behind migration `0002_core_object_tables`, added the localized `STANDARD
 one `BMA` each, nine templates in `de` and `en`, a second run is a no-op). WP-M2-01 added
 the object list CRUD API (`/api/v1/objects` with search/filter, system sync and soft
 delete) on top of those tables; `specs/08-objects-api.md` §9.1 now carries that contract.
+WP-M2-02 filled §9.2 and §4.7 for QR tokens and implemented the QR layer: create now
+generates a 22-character `base64url` token, migration `0003_old_qr_tokens` stores retired
+tokens, `POST /api/v1/objects/:objectNo/regenerate-qr` rotates and retires them (30 days,
+or immediately with `blockOldToken`), and public `GET /api/v1/public/qr/:token` resolves
+current/retired active tokens for `/m/:token`. The daily pg-boss cleanup and the
+demo-seed token backfill are the open follow-up **WP-M2-02b**; it is created before this
+commit and must run before the next phase item.
 
 ## 17. Work package rules for small models
 

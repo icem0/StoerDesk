@@ -19,6 +19,9 @@ export const OBJECT_SYSTEM_TYPES = [
 
 export const objectSystemTypeSchema = z.enum(OBJECT_SYSTEM_TYPES)
 
+/** QR tokens are 22 URL-safe characters from 128 random bits (WP-M2-02). */
+export const qrTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{22}$/)
+
 export const objectNoSchema = z
   .string()
   .trim()
@@ -68,6 +71,7 @@ export const objectSummarySchema = z.object({
   externalId: z.string().nullable(),
   active: z.boolean(),
   notes: z.string().nullable(),
+  qrToken: qrTokenSchema.nullable(),
   systems: z.array(objectSystemSummarySchema),
 })
 
@@ -80,6 +84,31 @@ export const objectListQuerySchema = z.object({
   active: z.enum(['true', 'false', 'all']).default('true'),
   city: z.string().trim().max(120).optional(),
   systemType: objectSystemTypeSchema.optional(),
+})
+
+export const regenerateQrRequestSchema = z.object({
+  blockOldToken: z.boolean().default(false),
+})
+
+export const regenerateQrResponseSchema = z.object({
+  qrToken: qrTokenSchema,
+})
+
+/** Public object subset of the QR resolution; no contact or internal fields. */
+export const publicQrObjectSchema = z.object({
+  objectNo: objectNoSchema,
+  name: z.string(),
+  street: z.string().nullable(),
+  houseNumber: z.string().nullable(),
+  postalCode: z.string().nullable(),
+  city: z.string().nullable(),
+  systems: z.array(objectSystemSummarySchema),
+})
+
+export const qrResolveResponseSchema = z.object({
+  token: qrTokenSchema,
+  redirected: z.boolean(),
+  object: publicQrObjectSchema,
 })
 
 const objectFields = {
@@ -124,3 +153,7 @@ export type ObjectListResponse = z.infer<typeof objectListResponseSchema>
 export type ObjectListQuery = z.infer<typeof objectListQuerySchema>
 export type CreateObjectRequest = z.infer<typeof createObjectRequestSchema>
 export type UpdateObjectRequest = z.infer<typeof updateObjectRequestSchema>
+export type RegenerateQrRequest = z.infer<typeof regenerateQrRequestSchema>
+export type RegenerateQrResponse = z.infer<typeof regenerateQrResponseSchema>
+export type PublicQrObject = z.infer<typeof publicQrObjectSchema>
+export type QrResolveResponse = z.infer<typeof qrResolveResponseSchema>

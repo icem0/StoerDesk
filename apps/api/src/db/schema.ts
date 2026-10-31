@@ -233,6 +233,29 @@ export const systems = pgTable(
 )
 
 /**
+ * Retired QR tokens (`specs/02-data-model.md` §4.7, WP-M2-02). A regenerated
+ * object token keeps redirecting through this table until `expires_at`; the
+ * daily pg-boss job of WP-M2-02b deletes expired rows.
+ */
+export const oldQrTokens = pgTable(
+  'old_qr_tokens',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    objectId: uuid('object_id')
+      .notNull()
+      .references(() => objects.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    expiresAt: timestamp('expires_at', timestampOptions).notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('old_qr_tokens_token_key').on(table.token),
+    index('old_qr_tokens_object_id_idx').on(table.objectId),
+    index('old_qr_tokens_expires_at_idx').on(table.expiresAt),
+  ],
+)
+
+/**
  * Localized standard texts of the report form
  * (`specs/02-data-model.md` §4.5). The `de`/`en` content comes from
  * `STANDARD_TEXTS` in `@stoerdesk/shared`, never from literals in API code.

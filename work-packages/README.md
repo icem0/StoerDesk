@@ -19,7 +19,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
-`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M2-00` and `WP-M2-01`. The
+`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02` and
+`WP-M2-02b`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -105,7 +106,13 @@ implementation.
 > input, unique over `lower(object_no)`, `_` allowed — `specs/02-data-model.md` §4.3.1).
 > **WP-M2-01** adds the object list CRUD API (`/api/v1/objects` with search/filter,
 > system sync and soft delete); `specs/08-objects-api.md` §9.1 was filled and reviewed
-> for it. The remaining WPs are working plans and are implemented
+> for it. **WP-M2-02** is implemented as the QR token layer: `apps/api/src/objects/qr.ts`
+> generates the 22-character token on create, `POST /:objectNo/regenerate-qr` retires the
+> old token in `old_qr_tokens` (migration `0003_old_qr_tokens`) for 30 days or immediately,
+> and public `GET /api/v1/public/qr/:token` resolves current and retired active tokens;
+> `specs/08-objects-api.md` §9.2 and `specs/02-data-model.md` §4.7 carry the contract.
+> The daily pg-boss cleanup and demo-seed token backfill are split into **WP-M2-02b**.
+> The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
 
@@ -132,6 +139,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-14  | base seed keeps an existing administrator untouched     | done                    | yes     |
 | WP-M2-00  | core object tables and demo seed                        | done                    | yes     |
 | WP-M2-01  | object list CRUD API                                    | done                    | yes     |
+| WP-M2-02  | QR generation, regeneration, public resolution          | done                    | yes     |
+| WP-M2-02b | QR demo tokens and daily pg-boss cleanup                | open                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
@@ -189,9 +198,14 @@ four core object tables, migration `0002_core_object_tables`, the localized
 answers `GET`, `GET /:objectNo`, `POST`, `PATCH /:objectNo` and `DELETE /:objectNo` under
 `/api/v1/objects`, guarded by `object.read`/`object.write`/`object.delete`; the list
 supports search and the `active`/`city`/`systemType` filters, PATCH syncs systems by id,
-and DELETE is a soft delete (`active = false`). WP-M2-02 (QR generation and regeneration)
-is the next phase 2 package and is rewritten into the small-model format before its
-implementation.
+and DELETE is a soft delete (`active = false`). `WP-M2-02` is done — `qr.ts` generates
+22-character `base64url` tokens on create, `POST /:objectNo/regenerate-qr` (guarded by
+`object.regenerate_qr`) moves the old token to `old_qr_tokens` with `expires_at = now +
+30 days` (`blockOldToken: true` blocks it now), and public `GET /api/v1/public/qr/:token`
+resolves current and retired active tokens for the web route `/m/:token`. The split child
+`WP-M2-02b` is open because the parent must stay inside the four-source-file budget: it
+adds the demo-seed token backfill, `deleteExpiredQrTokens` and the daily pg-boss cleanup
+started only from the direct API start.
 
 ## Validation
 

@@ -266,6 +266,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `422 object_no_taken`. The shared Zod schemas live in
   `packages/shared/src/schemas/object.ts`, and `specs/08-objects-api.md` §9.1 is filled
   from `PLAN.md` §11.
+- WP-M2-02: QR tokens — `POST /api/v1/objects` now generates a 22-character
+  `base64url` token, migration `0003_old_qr_tokens` adds `old_qr_tokens`
+  (`token` unique, `expires_at`, object FK cascade),
+  `POST /api/v1/objects/:objectNo/regenerate-qr` rotates it and retires the old
+  token for 30 days (`blockOldToken: true` blocks it immediately), and the public
+  `GET /api/v1/public/qr/:token` resolves current and retired active tokens for
+  the web route `/m/:token`. `apps/api/src/objects/qr.ts` owns the routes and
+  `generateQrToken()`; the object summary carries `qrToken`. The daily pg-boss
+  cleanup and the demo-seed token backfill are WP-M2-02b.
 
 ### Changed
 

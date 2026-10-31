@@ -31,8 +31,11 @@ the login screen and on every guarded page).
 `PLAN.md` §16 hold no open phase 1 item anymore. **Phase 2 has started**:
 `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed (the `object_no`
 decision is §4.3.1: user input, required, unique case-insensitively, `_` allowed, e.g.
-`12345_01`), **WP-M2-00** is implemented, and **WP-M2-01** provides the object
-list CRUD API (`/api/v1/objects`, soft delete, search/filter and system sync).
+`12345_01`), **WP-M2-00** is implemented, **WP-M2-01** provides the object
+list CRUD API (`/api/v1/objects`, soft delete, search/filter and system sync) and
+**WP-M2-02** adds QR generation, regeneration with retired tokens and public token
+resolution; the daily pg-boss cleanup and demo-seed token backfill are the open
+follow-up **WP-M2-02b**.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -61,7 +64,13 @@ The repository contains:
   `POST`, `PATCH /:objectNo` and `DELETE /:objectNo` under `/api/v1/objects`, guarded
   by `object.read`/`object.write`/`object.delete`; search over number, name, street,
   city and external id, filters `active`/`city`/`systemType`, systems synced by id,
-  soft delete sets `active=false`, duplicate numbers answer `422 object_no_taken`),
+  soft delete sets `active=false`, duplicate numbers answer `422 object_no_taken`,
+- the QR token layer of WP-M2-02 (`apps/api/src/objects/qr.ts`, shared schemas, migration
+  `0003_old_qr_tokens`): create generates a 22-character `base64url` token,
+  `POST /:objectNo/regenerate-qr` (guarded by `object.regenerate_qr`) moves the old token
+  to `old_qr_tokens` with `expires_at = now + 30 days` (`blockOldToken` blocks it now),
+  and the public `GET /api/v1/public/qr/:token` resolves current/retired active tokens;
+  object summaries carry `qrToken`,
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
   `GET /api/v1/me`; sessions as random tokens with a SHA-256 hash in `sessions`),
