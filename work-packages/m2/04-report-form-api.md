@@ -1,7 +1,7 @@
 # WP-M2-04: Ticket tables and ticket number counter
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-02, WP-M2-02b
 phase: 2
 context-budget: 20k tokens
@@ -104,7 +104,13 @@ before the migration exists and passes after it. `npm run db:migrate` applies
   meta snapshots, the new integration spec, and the bookkeeping (`CHANGELOG.md`,
   `AGENTS.md`, `PLAN.md` §16, `docs/REPO-MAP.md`, `work-packages/README.md`)
 - Interfaces added: four tables, `next_ticket_no()`, `ticket_events_append_only`
-- Verified:
+- Verified: `npm run check` green on 2026-10-31 (29 test files, 169 tests; the new
+  `ticketTables.integration.spec.ts` ran 6 tests against a throwaway database and
+  `npm run db:migrate` applied `0004_ticket_tables` to a fresh database). The
+  append-only trigger needed one correction found by that test: a `BEFORE DELETE`
+  trigger also fires for the `ON DELETE CASCADE` of the ticket, so the function now
+  lets `pg_trigger_depth() > 1` through and only blocks a direct `DELETE`;
+  `specs/02-data-model.md` §4.9 documents that exception.
 - Follow-up WP: `04b-public-report-api.md` and `04c-report-photo-upload.md`
   (created with this rewrite)
 - Open question: none

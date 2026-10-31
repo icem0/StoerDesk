@@ -292,9 +292,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `<origin>/m/<qr_token>` (`qrcode.react`, SVG), the object name, the object number, the
   report call and the 112 notice of `PLAN.md` §2; an object with a `NULL` token prints
   without a QR. `apps/web/src/styles.css` carries the mm print geometry, the chosen
-  format writes one `@page` rule, and header, nav, toolbar and checklist are
-  `print:hidden`. No API route and no PDF endpoint were added — the browser print path is
-  the primary path of `PLAN.md` §4/§11.
+   format writes one `@page` rule, and header, nav, toolbar and checklist are
+   `print:hidden`. No API route and no PDF endpoint were added — the browser print path is
+   the primary path of `PLAN.md` §4/§11.
+- WP-M2-04 (spec preparation): `specs/06-report-form.md` chapter 7 and
+  `specs/02-data-model.md` §4.8–§4.11 are filled from `PLAN.md` §6/§10 and reviewed —
+  the report endpoint contract, the ticket tables, the `ST-<year>-NNNN` counter and the
+  note that the rate limit per IP and per QR token is the existing WP-M2-07.
+- WP-M2-04 (work packages): the legacy `work-packages/m2/04-report-form-api.md` is
+  rewritten into the small-model format and split into **WP-M2-04** (tables, counter,
+  append-only trigger), **WP-M2-04b** (`04b-public-report-api.md`, public
+  `POST /api/v1/public/tickets` with `client_uuid` idempotency) and **WP-M2-04c**
+  (`04c-report-photo-upload.md`, photo files).
+- WP-M2-04: ticket schema — migration `0004_ticket_tables` adds `tickets` (UUID v7
+  `id`, `ticket_no` default `next_ticket_no()` producing `ST-<year>-NNNN` over the
+  per-year row of `ticket_no_counters`, object FK `ON DELETE RESTRICT`, system FK
+  `ON DELETE SET NULL`, checks over the `NEW`…`CANCELLED` statuses, the
+  `low`…`critical` priorities and the `QR`/`INTERNAL`/`API` sources, `fault_template_keys`
+  as `text[]`, the timestamps `reported_at`/`received_at`/`deadline_at`, `clock_skewed`,
+  `suspected_spam`, the reporter contact fields and the unique `client_uuid`,
+  `status_token` and `ticket_no`, plus the `parent_ticket_id` self FK), the append-only
+  `ticket_events` (no `updated_at`, `payload` jsonb, trigger
+  `ticket_events_is_append_only` raising `ticket_event_append_only` on a direct
+  `UPDATE`/`DELETE` while the ticket's own `ON DELETE CASCADE` passes through
+  `pg_trigger_depth() > 1`) and `ticket_photos` (unique `file_path` relative to
+  `UPLOAD_DIR`, `image/jpeg`/`image/png` check). Drizzle tables `tickets`,
+  `ticketEvents`, `ticketPhotos`, `ticketNoCounters` plus their inferred types in
+  `apps/api/src/db/schema.ts`. `apps/api/src/db/__tests__/ticketTables.integration.spec.ts`
+  proves the counter under five concurrent inserts, the unique `client_uuid`, the checks,
+  the append-only rule, the `RESTRICT`/`SET NULL` behaviour and the cascade. No route,
+  no service and no shared schema yet — that is WP-M2-04b and WP-M2-04c.
 
 
 ### Changed

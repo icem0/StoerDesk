@@ -29,6 +29,13 @@
       "when": 1793445436477,
       "tag": "0003_old_qr_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793453803298,
+      "tag": "0004_ticket_tables",
+      "breakpoints": true
     }
   ]
 }

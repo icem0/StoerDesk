@@ -203,7 +203,10 @@ from the timestamp the server actually trusts.
 Corrections are new events, never edits (`AGENTS.md`, _Changes stay
 traceable_). The trigger `ticket_events_append_only` blocks `UPDATE` and
 `DELETE` and raises `ticket_event_append_only` — the same mechanism as
-`protect_system_roles` in migration 0001 **(plan, §15 Audit)**.
+`protect_system_roles` in migration 0001 **(plan, §15 Audit)**. The one allowed
+`DELETE` is the `ON DELETE CASCADE` of the ticket itself, recognised through
+`pg_trigger_depth() > 1`: a trail never outlives its ticket, and there is no
+path that removes single events.
 
 ### 4.10 `ticket_photos` — photo metadata (WP-M2-04c)
 

@@ -574,6 +574,7 @@ next phase starts).
 | WP-M2-02  | QR generation, regeneration, resolution      | done   |
 | WP-M2-02b | QR demo tokens and scheduled cleanup         | done   |
 | WP-M2-03  | printable QR sticker sheets (web print)      | done   |
+| WP-M2-04  | ticket tables, events, photos, counter       | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -622,6 +623,13 @@ prints A6 or A4 sheets through `window.print()` — every card carries the `qrco
 QR of `<origin>/m/<token>`, the object name, the object number, the report call and the
 112 notice — and the selected format writes the matching `@page` rule in
 `apps/web/src/styles.css`; `specs/08-objects-api.md` §9.3 carries that contract.
+**WP-M2-04** put the ticket schema behind migration `0004_ticket_tables`: `tickets`
+(object FK `ON DELETE RESTRICT`, unique `ticket_no`/`client_uuid`/`status_token`, the
+status/priority/source checks of §7/§13, `reported_at`/`received_at`/`deadline_at`,
+`clock_skewed`, `suspected_spam`, `parent_ticket_id`), the append-only `ticket_events`
+trail, the `ticket_photos` metadata and `ticket_no_counters` behind the `next_ticket_no()`
+column default (`ST-<year>-NNNN`). Its split children **WP-M2-04b** (public report
+endpoint, `specs/06-report-form.md` §7) and **WP-M2-04c** (photo upload) are next.
 
 ## 17. Work package rules for small models
 

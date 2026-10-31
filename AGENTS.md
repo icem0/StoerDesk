@@ -38,7 +38,11 @@ resolution, and its follow-up **WP-M2-02b** adds the demo-seed token backfill pl
 daily pg-boss cleanup of expired retired tokens. **WP-M2-03** adds the printable QR
 sticker sheets of the web app (`/objects/stickers`, A6/A4 print view, the 112 notice on
 every card) — rewritten from the legacy PDF plan, because `PLAN.md` §4/§11 make the
-browser print path the primary one and a PDF download optional.
+browser print path the primary one and a PDF download optional. **WP-M2-04** adds the
+ticket schema behind migration `0004_ticket_tables` (`tickets` with the `next_ticket_no()`
+default, the append-only `ticket_events`, `ticket_photos` and `ticket_no_counters`) —
+rewritten from the legacy report-form plan and split, so **WP-M2-04b** (public report
+endpoint) and **WP-M2-04c** (photo upload) follow.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -92,7 +96,19 @@ The repository contains:
   report call and the 112 notice (`object:sticker.emergencyNotice`), and a `NULL` token
   prints `object:sticker.noToken` instead of a QR; the mm geometry is in
   `apps/web/src/styles.css`, the selected format writes one `@page` rule and header, nav,
-  toolbar and checklist are `print:hidden` — no API route, no PDF endpoint,
+   toolbar and checklist are `print:hidden` — no API route, no PDF endpoint,
+
+- the ticket schema of WP-M2-04 (migration `0004_ticket_tables`): `tickets` with
+   `ticket_no` default `next_ticket_no()` (`ST-<year>-NNNN` over the per-year row in
+   `ticket_no_counters`), object FK `ON DELETE RESTRICT`, system FK `ON DELETE SET NULL`,
+   checks over `NEW`…`CANCELLED` / `low`…`critical` / `QR`/`INTERNAL`/`API`, unique
+   `ticket_no`, `client_uuid` (idempotency) and `status_token`, plus the `parent_ticket_id`
+   self FK; `ticket_events` is append-only through the trigger
+   `ticket_events_is_append_only` (a direct `UPDATE`/`DELETE` raises
+   `ticket_event_append_only`, the ticket's own cascade passes on
+   `pg_trigger_depth() > 1`); `ticket_photos` stores the metadata of the upload volume
+   with a `image/jpeg`/`image/png` check — no route and no shared schema yet
+   (WP-M2-04b/WP-M2-04c),
 
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,

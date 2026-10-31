@@ -161,3 +161,46 @@ describe('rbac schema', () => {
     ])
   })
 })
+
+describe('migration 0004 ticket tables', () => {
+  const sql = readMigration('0004_ticket_tables')
+
+  it.each(['tickets', 'ticket_events', 'ticket_photos', 'ticket_no_counters'])(
+    'creates table %s',
+    (table) => {
+      expect(sql).toContain(`CREATE TABLE "${table}"`)
+    },
+  )
+
+  it('defines next_ticket_no() before the tickets table that defaults to it', () => {
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION next_ticket_no()')
+    expect(sql.indexOf('CREATE OR REPLACE FUNCTION next_ticket_no()')).toBeLessThan(
+      sql.indexOf('CREATE TABLE "tickets"'),
+    )
+    expect(sql).toContain('"ticket_no" text DEFAULT next_ticket_no() NOT NULL')
+    expect(sql).toContain("RETURN 'ST-' || report_year || '-' || lpad(allocated::text, 4, '0');")
+  })
+
+  it('protects ticket_events with an append-only trigger', () => {
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION ticket_events_append_only()')
+    expect(sql).toContain("RAISE EXCEPTION 'ticket_event_append_only: %', OLD.type")
+    expect(sql).toContain('IF TG_OP = \'DELETE\' AND pg_trigger_depth() > 1 THEN')
+    expect(sql).toContain('CREATE TRIGGER ticket_events_is_append_only')
+    expect(sql).toContain('BEFORE UPDATE OR DELETE ON "ticket_events"')
+  })
+
+  it('keeps the report attached to its object and softens the other links', () => {
+    expect(sql).toContain(
+      'FOREIGN KEY ("object_id") REFERENCES "public"."objects"("id") ON DELETE restrict',
+    )
+    expect(sql).toContain(
+      'FOREIGN KEY ("system_id") REFERENCES "public"."systems"("id") ON DELETE set null',
+    )
+    expect(sql).toContain(
+      'FOREIGN KEY ("ticket_id") REFERENCES "public"."tickets"("id") ON DELETE cascade',
+    )
+    expect(sql).toContain('CREATE UNIQUE INDEX "tickets_client_uuid_key"')
+    expect(sql).toContain(`CHECK ("tickets"."source" IN ('QR', 'INTERNAL', 'API'))`)
+    expect(sql).toContain(`CHECK ("ticket_photos"."mime_type" IN ('image/jpeg', 'image/png'))`)
+  })
+})

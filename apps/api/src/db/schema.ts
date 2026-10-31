@@ -1,8 +1,10 @@
 import { sql } from 'drizzle-orm'
 import {
+  type AnyPgColumn,
   boolean,
   check,
   index,
+  integer,
   jsonb,
   pgTable,
   primaryKey,
@@ -291,6 +293,157 @@ export const textTemplateTranslations = pgTable(
   ],
 )
 
+/** Status values of the ticket state machine (`PLAN.md` §7). */
+export const TICKET_STATUSES = [
+  'NEW',
+  'IN_REVIEW',
+  'WORK_ORDER_CREATED',
+  'OFFERED',
+  'ASSIGNED',
+  'ACCEPTED',
+  'ACKNOWLEDGED',
+  'CLOSED',
+  'CANCELLED',
+] as const
+
+export const TICKET_PRIORITIES = ['low', 'normal', 'high', 'critical'] as const
+
+/** Report source, used by the statistics of `PLAN.md` §13. */
+export const TICKET_SOURCES = ['QR', 'INTERNAL', 'API'] as const
+
+export const TICKET_EVENT_ACTOR_KINDS = ['user', 'public', 'system'] as const
+
+export const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png'] as const
+
+const checkList = (values: readonly string[]) =>
+  sql.raw(values.map((value) => `'${value}'`).join(', '))
+
+/**
+ * Yearly counter of `ticket_no` (`specs/02-data-model.md` §4.11). One row per
+ * calendar year, allocated by the `next_ticket_no()` function of migration 0004,
+ * which is also the column default of `tickets.ticket_no`. The number is a
+ * readable key, not an invoice number: a rolled back transaction may leave a gap.
+ */
+export const ticketNoCounters = pgTable('ticket_no_counters', {
+  year: integer('year').primaryKey(),
+  nextValue: integer('next_value').notNull(),
+})
+
+/**
+ * One malfunction report (`specs/02-data-model.md` §4.8`). The public report
+ * endpoint of WP-M2-04b writes the first row; every later state change is a new
+ * `ticket_events` row, never a rewrite of the history. Status and priority values
+ * are English in code and database, the labels come from i18n (`PLAN.md` §7).
+ */
+export const tickets = pgTable(
+  'tickets',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketNo: text('ticket_no').notNull().default(sql`next_ticket_no()`),
+    /** Objects are only soft-deleted, so a report never loses its object. */
+    objectId: uuid('object_id')
+      .notNull()
+      .references(() => objects.id, { onDelete: 'restrict' }),
+    /** The object sync of WP-M2-01 deletes system rows; the report keeps the object. */
+    systemId: uuid('system_id').references(() => systems.id, { onDelete: 'set null' }),
+    status: text('status').notNull().default('NEW'),
+    priority: text('priority').notNull().default('normal'),
+    title: text('title'),
+    description: text('description'),
+    /** `text_templates.key` values — machine keys, never translated text. */
+    faultTemplateKeys: text('fault_template_keys').array().notNull().default(sql`'{}'::text[]`),
+    source: text('source').notNull().default('QR'),
+    reportedAt: timestamp('reported_at', timestampOptions).notNull(),
+    receivedAt: timestamp('received_at', timestampOptions).notNull().defaultNow(),
+    clockSkewed: boolean('clock_skewed').notNull().default(false),
+    deadlineAt: timestamp('deadline_at', timestampOptions).notNull(),
+    reporterName: text('reporter_name'),
+    reporterPhone: text('reporter_phone'),
+    reporterEmail: text('reporter_email'),
+    /** Idempotency key of the offline outbox replay — unique over all tickets. */
+    clientUuid: uuid('client_uuid'),
+    statusToken: text('status_token'),
+    suspectedSpam: boolean('suspected_spam').notNull().default(false),
+    parentTicketId: uuid('parent_ticket_id').references((): AnyPgColumn => tickets.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('tickets_ticket_no_key').on(table.ticketNo),
+    uniqueIndex('tickets_client_uuid_key').on(table.clientUuid),
+    uniqueIndex('tickets_status_token_key').on(table.statusToken),
+    index('tickets_object_id_reported_at_idx').on(table.objectId, table.reportedAt),
+    index('tickets_status_idx').on(table.status),
+    index('tickets_parent_ticket_id_idx').on(table.parentTicketId),
+    check('tickets_status_check', sql`${table.status} IN (${checkList(TICKET_STATUSES)})`),
+    check('tickets_priority_check', sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`),
+    check('tickets_source_check', sql`${table.source} IN (${checkList(TICKET_SOURCES)})`),
+  ],
+)
+
+/**
+ * Append-only audit trail (`specs/02-data-model.md` §4.9, `PLAN.md` §15 Audit).
+ * There is deliberately no check on `type`: later phases add event types without
+ * a migration. UPDATE and a direct DELETE are blocked by the trigger of migration
+ * 0004; only the `ON DELETE CASCADE` of the ticket itself may remove the trail.
+ */
+export const ticketEvents = pgTable(
+  'ticket_events',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    actorKind: text('actor_kind').notNull(),
+    /** NULL for the `public` and `system` actors. */
+    actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
+    payload: jsonb('payload').notNull().default({}),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('ticket_events_ticket_id_idx').on(table.ticketId),
+    check(
+      'ticket_events_actor_kind_check',
+      sql`${table.actorKind} IN (${checkList(TICKET_EVENT_ACTOR_KINDS)})`,
+    ),
+  ],
+)
+
+/**
+ * Photo metadata of a report (`specs/02-data-model.md` §4.10). The bytes live on
+ * the uploads volume below `UPLOAD_DIR`; the directory is never served directly
+ * (`PLAN.md` §15), so the path is stored relative to it.
+ */
+export const ticketPhotos = pgTable(
+  'ticket_photos',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    filePath: text('file_path').notNull(),
+    /** Verified by magic bytes in WP-M2-04c, never by the client claim. */
+    mimeType: text('mime_type').notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    widthPx: integer('width_px'),
+    heightPx: integer('height_px'),
+    /** NULL for an anonymous reporter. */
+    uploaderUserId: uuid('uploader_user_id').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('ticket_photos_file_path_key').on(table.filePath),
+    index('ticket_photos_ticket_id_idx').on(table.ticketId),
+    check(
+      'ticket_photos_mime_type_check',
+      sql`${table.mimeType} IN (${checkList(PHOTO_MIME_TYPES)})`,
+    ),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -309,3 +462,14 @@ export type NewSystem = typeof systems.$inferInsert
 export type SystemType = (typeof SYSTEM_TYPES)[number]
 export type TextTemplate = typeof textTemplates.$inferSelect
 export type TextTemplateTranslation = typeof textTemplateTranslations.$inferSelect
+export type Ticket = typeof tickets.$inferSelect
+export type NewTicket = typeof tickets.$inferInsert
+export type TicketEvent = typeof ticketEvents.$inferSelect
+export type NewTicketEvent = typeof ticketEvents.$inferInsert
+export type TicketPhoto = typeof ticketPhotos.$inferSelect
+export type NewTicketPhoto = typeof ticketPhotos.$inferInsert
+export type TicketNoCounter = typeof ticketNoCounters.$inferSelect
+export type TicketStatus = (typeof TICKET_STATUSES)[number]
+export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
+export type TicketSource = (typeof TICKET_SOURCES)[number]
+export type TicketEventActorKind = (typeof TICKET_EVENT_ACTOR_KINDS)[number]

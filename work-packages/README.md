@@ -151,7 +151,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-02b | QR demo tokens and daily pg-boss cleanup                | done                    | yes     |
 | WP-M2-03  | printable QR sticker sheets (A6/A4 web print)           | done                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
-| WP-M2-04  | ticket tables, events, photos and the counter           | in progress             | yes     |
+| WP-M2-04  | ticket tables, events, photos and the counter           | done                    | yes     |
 | WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | planned                 | yes     |
 | WP-M2-04c | report photo upload to the uploads volume               | planned                 | yes     |
 
@@ -225,7 +225,11 @@ and stopped by an `onClose` hook.
 mixed schema, service, route, rate limit and tests in one package (`PLAN.md` §17: max.
 3–4 source files): **WP-M2-04** adds the four ticket tables behind migration
 `0004_ticket_tables`, the `next_ticket_no()` counter (`ST-<year>-<counter>`) and the
-append-only trigger of `ticket_events`; **WP-M2-04b** (`04b-public-report-api.md`) adds
+append-only trigger of `ticket_events` — **implemented**, and its trigger learned one
+exception from the integration test: a `BEFORE DELETE` trigger also fires for the
+`ON DELETE CASCADE` of the ticket, so only a direct `DELETE` raises
+`ticket_event_append_only` (`specs/02-data-model.md` §4.9);
+**WP-M2-04b** (`04b-public-report-api.md`) adds
 the public `POST /api/v1/public/tickets` with the `client_uuid` idempotency; **WP-M2-04c**
 (`04c-report-photo-upload.md`) adds the photo files and the `ticket_photos` rows. The
 rate limit per IP and per QR token of the legacy plan moves to the **existing WP-M2-07**
