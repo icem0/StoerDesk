@@ -576,6 +576,7 @@ next phase starts).
 | WP-M2-03  | printable QR sticker sheets (web print)      | done   |
 | WP-M2-04  | ticket tables, events, photos, counter       | done   |
 | WP-M2-04b | public report endpoint with idempotency      | done   |
+| WP-M2-04c | report photo upload (magic bytes, volume)    | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -635,7 +636,13 @@ column default (`ST-<year>-NNNN`). Its split child **WP-M2-04b** is implemented:
 enforces the text/contact/system rules with the codes `report_text_required`,
 `contact_required` and `system_not_found`, applies the ±10 minute clock rule and the
 72 h deadline, and answers an idempotent `client_uuid` repeat with `200` and the
-existing ticket. **WP-M2-04c** (photo upload) follows.
+existing ticket. Its split child **WP-M2-04c** is implemented too: the report body
+carries up to six base64 photo data URLs (`photoDataUrlSchema`), each decoded photo is
+capped at `UPLOAD_MAX_BYTES` and verified by magic bytes before anything is written, and
+the files live at `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` with the relative
+path, MIME type and byte count in `ticket_photos` —
+`422 photo_limit_exceeded`/`photo_too_large`/`photo_type_unsupported`. Reading a photo is
+phase 10 (the volume is never served), the per-IP and per-token rate limit is WP-M2-07.
 
 ## 17. Work package rules for small models
 

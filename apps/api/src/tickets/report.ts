@@ -11,6 +11,7 @@ import {
 import type { Database } from '../db/client'
 import { objects, systems, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { generateQrToken } from '../objects/qr'
+import { MAX_REPORT_PHOTOS, saveReportPhotos } from './photos'
 
 /**
  * Public report endpoint (`specs/06-report-form.md` §7.3/§7.5, WP-M2-04b).
@@ -19,6 +20,8 @@ import { generateQrToken } from '../objects/qr'
  * `created` event in one transaction. `client_uuid` is the idempotency key of the
  * offline outbox replay (§7.3.3), the QR token travels in the body, and the rate
  * limit per IP and per token stays with the spam package WP-M2-07 (§7.6).
+ * WP-M2-04c adds the photo data URLs of §7.4: they are verified by magic bytes and
+ * written to the uploads volume after the ticket transaction.
  */
 
 type Db = Database['database']
@@ -101,11 +104,13 @@ async function reportOf(database: Db, row: typeof tickets.$inferSelect): Promise
 
 /**
  * Writes one report (§7.5). `replayed` is service-internal and decides `200`
- * versus `201`; it never reaches the response body.
+ * versus `201`; it never reaches the response body. Photos are stored only for a
+ * new ticket: the idempotent repeat ignores its photo array (§7.4).
  */
 export async function createPublicReport(
   database: Db,
   input: PublicReportRequest,
+  storage: { uploadDir: string; maxPhotoBytes: number },
 ): Promise<{ report: PublicReport; replayed: boolean }> {
   const [object] = await database
     .select()
@@ -208,26 +213,43 @@ export async function createPublicReport(
     return { report: await reportOf(database, existing), replayed: true }
   }
 
+  // §7.4: photos belong to the new ticket only; a repeat keeps the gallery it has.
+  if (input.photos.length > 0) {
+    await saveReportPhotos({ database, ...storage }, created.id, input.photos)
+  }
+
   return { report: await reportOf(database, created), replayed: false }
 }
 
 export type PublicReportRouteOptions = {
   database: Db
+  uploadDir: string
+  maxPhotoBytes: number
 }
 
 export const publicReportRoutes = fp<PublicReportRouteOptions>(
-  async (app, { database }) => {
-    app.post('/api/v1/public/tickets', async (request, reply) => {
-      const parsed = publicReportRequestSchema.safeParse(request.body)
+  async (app, { database, uploadDir, maxPhotoBytes }) => {
+    // §7.4: six photos of `UPLOAD_MAX_BYTES` plus base64 headroom in one JSON body.
+    const photoBodyLimit = Math.ceil(MAX_REPORT_PHOTOS * maxPhotoBytes * 1.4)
 
-      if (!parsed.success) {
-        return reply.code(400).send(invalidRequest(fieldPaths(parsed.error)))
-      }
+    app.post(
+      '/api/v1/public/tickets',
+      { bodyLimit: photoBodyLimit },
+      async (request, reply) => {
+        const parsed = publicReportRequestSchema.safeParse(request.body)
 
-      const { report, replayed } = await createPublicReport(database, parsed.data)
+        if (!parsed.success) {
+          return reply.code(400).send(invalidRequest(fieldPaths(parsed.error)))
+        }
 
-      return reply.code(replayed ? 200 : 201).send(report)
-    })
+        const { report, replayed } = await createPublicReport(database, parsed.data, {
+          uploadDir,
+          maxPhotoBytes,
+        })
+
+        return reply.code(replayed ? 200 : 201).send(report)
+      },
+    )
   },
   { name: 'public-report-routes' },
 )

@@ -1,7 +1,7 @@
 # WP-M2-04c: Report photo upload
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-04b
 phase: 2
 context-budget: 20k tokens
@@ -91,8 +91,29 @@ temporary directory (`UPLOAD_DIR` pointed at `os.tmpdir()`), never into `/data`.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/tickets/photos.ts` (new), `apps/api/src/tickets/report.ts`,
+  `packages/shared/src/schemas/ticket.ts`, `apps/api/src/index.ts`, plus the bookkeeping
+  (`CHANGELOG.md`, `AGENTS.md`, `PLAN.md` §16, `specs/02-data-model.md` §4.10,
+  `docs/REPO-MAP.md`, `work-packages/README.md`) and the fixture file
+  `apps/api/src/tickets/__tests__/report.integration.spec.ts`
+- Interfaces added: `saveReportPhotos(options, ticketId, photos)`,
+  `detectImageType(buffer)`, `MAX_REPORT_PHOTOS`, `PhotoUploadOptions`, `StoredPhoto`;
+  `photoDataUrlSchema` and `photos: z.array(photoDataUrlSchema).max(12).default([])` in
+  `publicReportRequestSchema`; `PublicReportRouteOptions` is
+  `{ database, uploadDir, maxPhotoBytes }` and `createPublicReport` takes the storage
+  options as a third argument; the route `bodyLimit` is `6 × UPLOAD_MAX_BYTES × 1.4`;
+  new codes `422 photo_limit_exceeded`, `422 photo_too_large`, `422 photo_type_unsupported`
+- Spec clarification in the same commit: `specs/02-data-model.md` §4.10 now spells the path
+  as `tickets/<ticket_id>/<file_uuid>.<ext>` — the file name is the UUID v4 of the upload
+  (the file is written before its row exists, the row keeps the `gen_uuid_v7()` default)
+- Verified: `npm run check` green on 2026-10-31 — 30 test files, 181 tests, i18n and
+  `wp:check` ok; `report.integration.spec.ts` runs 12 tests against a throwaway database
+  with `UPLOAD_DIR` in `os.tmpdir()` and `UPLOAD_MAX_BYTES=2048`: a real 1×1 PNG and a real
+  JPEG arrive as data URLs, the files match the fixtures byte for byte and the rows carry
+  the relative path, the detected MIME type and the decoded byte count; JPEG bytes claimed
+  as PNG answer `422 photo_type_unsupported` and store nothing (also not the valid first
+  photo), a seventh photo answers `422 photo_limit_exceeded`, an oversized photo
+  `422 photo_too_large`, two malformed data URLs answer `400`, and the repeat of a
+  `client_uuid` keeps one row and one file; the e2e smoke test passes as well
 - Follow-up WP: none — photo **access** is phase 10 and is not announced here
 - Open question: none

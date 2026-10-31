@@ -341,6 +341,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`actor_kind = 'public'`, payload with locale, source, template keys and text length)
   is written in the same transaction. No photo field (WP-M2-04c) and no per-IP or
   per-token rate limit (WP-M2-07).
+- WP-M2-04c: report photo upload — `apps/api/src/tickets/photos.ts` plus the
+  `photoDataUrlSchema` and the `photos` array of `publicReportRequestSchema` in
+  `packages/shared/src/schemas/ticket.ts`. `POST /api/v1/public/tickets` accepts up to
+  **six** base64 data URLs (`data:image/jpeg;base64,…`) in the same JSON body; every photo
+  is decoded, capped against `UPLOAD_MAX_BYTES` (default 10 MB) by its **decoded** size and
+  verified by magic bytes — `FF D8 FF` for `image/jpeg`,
+  `89 50 4E 47 0D 0A 1A 0A` for `image/png` — so the client claim never decides.
+  `422 photo_limit_exceeded` for a seventh photo, `422 photo_too_large` for an oversized
+  one, `422 photo_type_unsupported` when claim and bytes disagree; a rejected photo
+  aborts the request before a single byte is written, so no half-filled gallery survives.
+  Files land at `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` (UUID v4 name, never an
+  object number) and `ticket_photos` stores the path **relative** to `UPLOAD_DIR`, the
+  detected MIME type and the decoded byte count; the route raises its `bodyLimit` to
+  `6 × UPLOAD_MAX_BYTES × 1.4` and the response carries the real `photoCount`. The photo
+  array of an idempotent repeat is ignored (§7.4). Reading a photo stays phase 10 — the
+  uploads volume is never served.
 
 
 ### Changed

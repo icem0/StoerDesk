@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { basename, join } from 'node:path'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -16,9 +19,31 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped report integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, oldQrTokens, systems, ticketEvents, tickets } = schema
+const { objects, oldQrTokens, systems, ticketEvents, ticketPhotos, tickets } = schema
 
 const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/
+const PHOTO_FILE_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|jpg)$/
+
+// Small enough to build an oversized photo in the test, large enough for the fixtures.
+const TEST_MAX_PHOTO_BYTES = 2048
+
+// Real 1×1 fixtures: the magic bytes are what the server verifies (§7.4).
+const PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+)
+const JPEG_1X1 = Buffer.from(
+  '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a' +
+    'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAA' +
+    'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==',
+  'base64',
+)
+
+const dataUrl = (mime: string, bytes: Buffer) => `data:${mime};base64,${bytes.toString('base64')}`
+
+/** The uploads volume of this test run — never `/data`, only the temp directory. */
+const uploadDir = await mkdtemp(join(tmpdir(), 'stoerdesk-upload-test-'))
 
 type ReportBody = {
   ticketId?: string
@@ -79,6 +104,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return onlyRow(await db.select().from(tickets).where(eq(tickets.clientUuid, clientUuid)), 'ticket')
     }
 
+    function photoRowsOf(ticketId: string) {
+      return db.select().from(ticketPhotos).where(eq(ticketPhotos.ticketId, ticketId))
+    }
+
+    function uploadedFilesOf(ticketId: string): Promise<string[]> {
+      return readdir(join(uploadDir, 'tickets', ticketId)).catch(() => [])
+    }
+
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
 
@@ -86,6 +119,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.NODE_ENV = 'test'
       process.env.API_LOG_LEVEL = 'silent'
       process.env.RATE_LIMIT_MAX = '10000'
+      process.env.UPLOAD_DIR = uploadDir
+      process.env.UPLOAD_MAX_BYTES = String(TEST_MAX_PHOTO_BYTES)
 
       app = await buildServer()
     })
@@ -93,6 +128,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     afterAll(async () => {
       await app.close()
       await client.end({ timeout: 2 })
+      await rm(uploadDir, { recursive: true, force: true })
 
       if (testDatabase.status === 'available') {
         await testDatabase.close()
@@ -286,6 +322,20 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           text: 'x',
           contact: { email: 'not-an-mail' },
         },
+        {
+          qrToken: object.qrToken,
+          clientUuid: crypto.randomUUID(),
+          text: 'x',
+          contact: { phone: '1' },
+          photos: ['http://example.org/foto.jpg'],
+        },
+        {
+          qrToken: object.qrToken,
+          clientUuid: crypto.randomUUID(),
+          text: 'x',
+          contact: { phone: '1' },
+          photos: ['data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='],
+        },
       ]
 
       for (const payload of cases) {
@@ -318,6 +368,136 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(stored.clockSkewed).toBe(true)
       expect(stored.receivedAt.getTime()).toBe(stored.reportedAt.getTime())
       expect(stored.deadlineAt.getTime() - stored.receivedAt.getTime()).toBe(72 * 60 * 60 * 1000)
+    })
+
+    it('stores the photos of a report on the uploads volume', async () => {
+      const object = await createObject('7110_01')
+      const clientUuid = crypto.randomUUID()
+
+      const response = await submit({
+        qrToken: object.qrToken,
+        clientUuid,
+        text: 'BMA-Melder verschmutzt',
+        contact: { phone: '+49 170 0000000' },
+        photos: [dataUrl('image/png', PNG_1X1), dataUrl('image/jpeg', JPEG_1X1)],
+      })
+      const body = response.json<ReportBody>()
+      const ticket = await ticketOfClient(clientUuid)
+      const rows = await photoRowsOf(ticket.id)
+      const mimeTypes = new Map(rows.map((row) => [row.mimeType, row]))
+      const png = mimeTypes.get('image/png')
+      const jpeg = mimeTypes.get('image/jpeg')
+
+      expect(response.statusCode).toBe(201)
+      expect(body.photoCount).toBe(2)
+      expect(rows).toHaveLength(2)
+
+      // §4.10: the stored path is relative to UPLOAD_DIR and the name is a UUID.
+      expect(png?.filePath).toMatch(new RegExp(`^tickets/${ticket.id}/[0-9a-f-]+\\.png$`))
+      expect(png?.sizeBytes).toBe(PNG_1X1.byteLength)
+      expect(jpeg?.filePath).toMatch(new RegExp(`^tickets/${ticket.id}/[0-9a-f-]+\\.jpg$`))
+      expect(jpeg?.sizeBytes).toBe(JPEG_1X1.byteLength)
+
+      if (!png || !jpeg) {
+        throw new Error('expected one PNG and one JPEG row')
+      }
+
+      const expected = [basename(png.filePath), basename(jpeg.filePath)].sort()
+
+      expect(await uploadedFilesOf(ticket.id)).toEqual(expected)
+
+      const written = await readFile(join(uploadDir, png.filePath))
+
+      expect([...written]).toEqual([...PNG_1X1])
+      expect(written.byteLength).toBe(png.sizeBytes)
+    })
+
+    it('rejects a photo whose bytes disagree with the claim and stores nothing', async () => {
+      const object = await createObject('7111_01')
+      const clientUuid = crypto.randomUUID()
+
+      const response = await submit({
+        qrToken: object.qrToken,
+        clientUuid,
+        text: 'Lichtruf-Ausfall',
+        contact: { phone: '+49 170 0000000' },
+        // The first pair is valid, so it may not survive the broken second one.
+        photos: [dataUrl('image/jpeg', JPEG_1X1), dataUrl('image/png', JPEG_1X1)],
+      })
+      const ticket = await ticketOfClient(clientUuid)
+
+      expect(response.statusCode).toBe(422)
+      expect(response.json<ErrorBody>().code).toBe('photo_type_unsupported')
+      expect(await photoRowsOf(ticket.id)).toHaveLength(0)
+      expect(await uploadedFilesOf(ticket.id)).toEqual([])
+    })
+
+    it('answers 422 photo_limit_exceeded for a seventh photo', async () => {
+      const object = await createObject('7112_01')
+      const clientUuid = crypto.randomUUID()
+      const photos = Array.from({ length: 7 }, () => dataUrl('image/jpeg', JPEG_1X1))
+
+      const response = await submit({
+        qrToken: object.qrToken,
+        clientUuid,
+        text: 'Sprachalarm sendet nicht',
+        contact: { phone: '+49 170 0000000' },
+        photos,
+      })
+      const ticket = await ticketOfClient(clientUuid)
+
+      expect(response.statusCode).toBe(422)
+      expect(response.json<ErrorBody>().code).toBe('photo_limit_exceeded')
+      expect(await photoRowsOf(ticket.id)).toHaveLength(0)
+      expect(await uploadedFilesOf(ticket.id)).toEqual([])
+    })
+
+    it('answers 422 photo_too_large for a photo above UPLOAD_MAX_BYTES', async () => {
+      const object = await createObject('7113_01')
+      const clientUuid = crypto.randomUUID()
+      const oversized = Buffer.concat([PNG_1X1, Buffer.alloc(TEST_MAX_PHOTO_BYTES)])
+
+      const response = await submit({
+        qrToken: object.qrToken,
+        clientUuid,
+        text: 'RWA Ausfall',
+        contact: { phone: '+49 170 0000000' },
+        photos: [dataUrl('image/png', oversized)],
+      })
+      const ticket = await ticketOfClient(clientUuid)
+
+      expect(response.statusCode).toBe(422)
+      expect(response.json<ErrorBody>().code).toBe('photo_too_large')
+      expect(await photoRowsOf(ticket.id)).toHaveLength(0)
+      expect(await uploadedFilesOf(ticket.id)).toEqual([])
+    })
+
+    it('ignores the photos of an idempotent repeat', async () => {
+      const object = await createObject('7114_01')
+      const clientUuid = crypto.randomUUID()
+      const payload = {
+        qrToken: object.qrToken,
+        clientUuid,
+        text: 'EMA Störung',
+        contact: { phone: '+49 170 0000000' },
+        photos: [dataUrl('image/jpeg', JPEG_1X1)],
+      }
+
+      const first = await submit(payload)
+      const second = await submit({
+        ...payload,
+        photos: [dataUrl('image/png', PNG_1X1), dataUrl('image/png', PNG_1X1)],
+      })
+      const ticket = await ticketOfClient(clientUuid)
+      const files = await uploadedFilesOf(ticket.id)
+
+      expect(first.statusCode).toBe(201)
+      expect(first.json<ReportBody>().photoCount).toBe(1)
+      expect(second.statusCode).toBe(200)
+      expect(second.json<ReportBody>().photoCount).toBe(1)
+      expect(await photoRowsOf(ticket.id)).toHaveLength(1)
+      expect(files).toHaveLength(1)
+      expect(files[0]).toMatch(PHOTO_FILE_PATTERN)
     })
   },
 )

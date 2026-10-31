@@ -87,7 +87,11 @@ export async function buildServer() {
   await app.register(adminUsersRoutes, { database })
   await app.register(adminRolesRoutes, { database })
   await app.register(objectRoutes, { database })
-  await app.register(publicReportRoutes, { database })
+  await app.register(publicReportRoutes, {
+    database,
+    uploadDir: env.UPLOAD_DIR,
+    maxPhotoBytes: env.UPLOAD_MAX_BYTES,
+  })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
   // or production (`specs/01-rbac.md` §3.7).

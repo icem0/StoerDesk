@@ -214,7 +214,7 @@ path that removes single events.
 | --- | --- | --- |
 | `id` | UUID v7 | primary key |
 | `ticket_id` | UUID, not null | foreign key to `tickets`, `ON DELETE CASCADE` |
-| `file_path` | text, not null, **unique** | path **relative to `UPLOAD_DIR`**: `tickets/<ticket_id>/<id>.<ext>`; the volume is never served directly **(plan, §15)** |
+| `file_path` | text, not null, **unique** | path **relative to `UPLOAD_DIR`**: `tickets/<ticket_id>/<file_uuid>.<ext>` — the file name is the UUID v4 generated at upload time, not the row id (the row keeps the `gen_uuid_v7()` default, §4.2, and is inserted after the file exists); the volume is never served directly **(plan, §15)** |
 | `mime_type` | text, not null | check over `image/jpeg`, `image/png` — verified by magic bytes, never by the client claim |
 | `size_bytes` | integer, not null | decoded size, capped by `UPLOAD_MAX_BYTES` (default 10 MB) |
 | `width_px`, `height_px` | integer, nullable | read from the file when a decoder is available; no storage rule depends on it |

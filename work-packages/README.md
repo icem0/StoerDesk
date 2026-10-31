@@ -153,7 +153,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 | WP-M2-04  | ticket tables, events, photos and the counter           | done                    | yes     |
 | WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | done                    | yes     |
-| WP-M2-04c | report photo upload to the uploads volume               | planned                 | yes     |
+| WP-M2-04c | report photo upload to the uploads volume               | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -230,8 +230,12 @@ exception from the integration test: a `BEFORE DELETE` trigger also fires for th
 `ON DELETE CASCADE` of the ticket, so only a direct `DELETE` raises
 `ticket_event_append_only` (`specs/02-data-model.md` §4.9);
 **WP-M2-04b** (`04b-public-report-api.md`) adds
-the public `POST /api/v1/public/tickets` with the `client_uuid` idempotency; **WP-M2-04c**
-(`04c-report-photo-upload.md`) adds the photo files and the `ticket_photos` rows. The
+the public `POST /api/v1/public/tickets` with the `client_uuid` idempotency —
+**implemented** — and **WP-M2-04c** (`04c-report-photo-upload.md`) adds the photo files
+and the `ticket_photos` rows — **implemented** as the magic-byte check, the
+`UPLOAD_MAX_BYTES` cap over the decoded size and the codes
+`photo_limit_exceeded`/`photo_too_large`/`photo_type_unsupported`; the spec rule of §4.10
+was clarified in the same commit: the file name is the UUID v4 of the upload, not the row id. The
 rate limit per IP and per QR token of the legacy plan moves to the **existing WP-M2-07**
 (spam protection), which also defines "suspicious" and writes `suspected_spam`
 (`specs/06-report-form.md` §7.6). The spec slices it needed were placeholders and are
