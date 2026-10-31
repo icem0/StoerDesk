@@ -578,6 +578,7 @@ next phase starts).
 | WP-M2-04b | public report endpoint with idempotency      | done   |
 | WP-M2-04c | report photo upload (magic bytes, volume)    | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
+| WP-M1-16  | current git version in the deployment env    | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -600,6 +601,9 @@ WP-M1-15 repairs a regression of WP-M1-13: the shell rewrite dropped the version
 commit 3e1c0f8. The sticky header now renders `AppVersion` outside the signed-in branch,
 so the build version is visible on the login screen and on every guarded page; local
 builds fall back to the nearest git tag, images use the `VITE_APP_VERSION` build argument.
+WP-M1-16 closes the gap for local Docker Compose: because an image build has no git
+metadata, `env:create` now stores the current tag in `.env`, and `env:version` refreshes
+that value after a pull without touching the generated secrets.
 Phase 2 has started: `specs/02-data-model.md` was filled from §6 and reviewed, and it
 settles the `object_no` question of WP-M2-00 (§4.3.1 — user input, required, unique over
 `lower(object_no)`, `_` allowed, e.g. `12345_01`; no pool table, the object list is the

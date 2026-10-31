@@ -7,6 +7,7 @@
 // The compose file never has to be edited afterwards: every value the stack
 // needs is read from `.env`.
 
+import { execFileSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -23,6 +24,15 @@ const generatedSecrets = {
   POSTGRES_PASSWORD: () => randomBytes(18).toString('base64url'),
   SESSION_SECRET: () => randomBytes(48).toString('base64url'),
   SEED_ADMIN_PASSWORD: () => randomBytes(12).toString('base64url'),
+}
+
+/** The web shell shows this build version; the local checkout knows it through git. */
+function currentVersion() {
+  try {
+    return execFileSync('git', ['describe', '--tags', '--abbrev=0'], { encoding: 'utf8' }).trim()
+  } catch {
+    return 'dev'
+  }
 }
 
 /** Values that are derived from other values. */
@@ -66,6 +76,7 @@ function main() {
   }
 
   Object.assign(secrets, derivedValues(secrets))
+  secrets.VITE_APP_VERSION = currentVersion()
 
   const output = template
     .split('\n')

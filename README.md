@@ -45,7 +45,7 @@ every value is read from `.env`, the compose file is never edited.
 ```bash
 git clone https://github.com/icem0/StoerDesk.git
 cd StoerDesk
-npm run env:create                # writes .env with generated secrets
+npm run env:create                # writes .env with generated secrets and the current version
 docker compose up -d --build
 ```
 
@@ -60,6 +60,12 @@ stack refuses to start without them:
   echo "SEED_ADMIN_PASSWORD=$(openssl rand -hex 12)"
 } > .env
 docker compose up -d
+```
+
+After a pull, refresh the version in the existing `.env` without touching its secrets:
+
+```bash
+npm run env:version
 ```
 
 The images are built from the local checkout by default
@@ -186,7 +192,8 @@ npm run dev
 | `npm run test` / `test:run` | Vitest in all workspaces                                         |
 | `npm run i18n:check`        | de/en key parity and referenced keys                             |
 | `npm run format`            | Prettier                                                         |
-| `npm run env:create`        | creates `.env` from `.env.example` with generated secrets        |
+| `npm run env:create`        | creates `.env` from `.env.example` with generated secrets and the current version |
+| `npm run env:version`       | refreshes `VITE_APP_VERSION` in `.env` from the current git tag  |
 | `npm run db:migrate`        | apply migrations (`-w @stoerdesk/api`)                           |
 | `npm run db:generate`       | create a new Drizzle migration                                   |
 | `npm run spec:split`        | mirrors originals in `docs/material/` into `specs/`              |

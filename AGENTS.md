@@ -26,7 +26,8 @@ phase 1 closing package **WP-M1-12** (Playwright smoke test "login as admin work
 the UI package **WP-M1-13** (layout shell with header and navigation), the
 seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched) and the
 version-display regression fix **WP-M1-15** (the shell header shows the build version on
-the login screen and on every guarded page).
+the login screen and on every guarded page) and the deployment-version follow-up
+**WP-M1-16** (`env:create` and `env:version` carry the current git tag in `.env`).
 **Phase 1 is closed** — the `Open follow-ups` table of `work-packages/README.md` and
 `PLAN.md` §16 hold no open phase 1 item anymore. **Phase 2 has started**:
 `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed (the `object_no`

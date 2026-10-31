@@ -8,7 +8,7 @@ StörDesk runs as a single Docker Compose stack. Every value is read from
 ```bash
 git clone https://github.com/icem0/StoerDesk.git
 cd StoerDesk
-npm run env:create          # writes .env with generated secrets
+npm run env:create          # writes .env with generated secrets and the current version
 docker compose up -d --build
 ```
 
@@ -21,6 +21,15 @@ docker compose ps           # status of all services
 docker compose logs -f api  # API log
 docker compose down         # stops the stack, keeps the volumes
 docker compose down -v      # stops the stack and DELETES all data
+```
+
+After a `git pull`, refresh the version shown in the web shell without touching the
+secrets in `.env`, then rebuild the `web` image:
+
+```bash
+npm run env:version
+docker compose build web
+docker compose up -d web
 ```
 
 ## Services
@@ -42,7 +51,8 @@ still returns 200.
 `.env.example` documents every variable with its purpose and default.
 `npm run env:create` copies the template to `.env` and replaces the secrets
 (`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`) with random values. The generated
-password is URL-safe, so it can be used inside a connection URL.
+password is URL-safe, so it can be used inside a connection URL. It also writes the
+current git tag into `VITE_APP_VERSION`, the version the web shell shows.
 
 The file is read by:
 

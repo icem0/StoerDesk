@@ -53,9 +53,11 @@ async function signIn(page: Page, language: 'de' | 'en'): Promise<void> {
 
   await expect(page.getByRole('heading', { level: 2, name: texts.loginTitle })).toBeVisible()
 
-  // WP-M1-15: the build version is part of the global shell, so it is already visible
-  // before the login — not only after it.
-  await expect(page.getByTestId('app-version')).toBeVisible()
+  // WP-M1-15/WP-M1-16: the build version is part of the global shell, so it is already
+  // visible before the login — and it must be a real version, never the `dev` fallback.
+  const versionBadge = page.getByTestId('app-version')
+  await expect(versionBadge).toBeVisible()
+  await expect(versionBadge).toContainText(/^Version v\d+\.\d+\.\d+$/)
 
   await page.locator('input[name="email"]').fill(adminEmail)
   await page.locator('input[name="password"]').fill(adminPassword)
