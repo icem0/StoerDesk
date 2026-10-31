@@ -29,7 +29,8 @@ seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched).
 `PLAN.md` §16 hold no open phase 1 item anymore. **Phase 2 has started**:
 `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed (the `object_no`
 decision is §4.3.1: user input, required, unique case-insensitively, `_` allowed, e.g.
-`12345_01`), and **WP-M2-00** is implemented.
+`12345_01`), **WP-M2-00** is implemented, and **WP-M2-01** provides the object
+list CRUD API (`/api/v1/objects`, soft delete, search/filter and system sync).
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -53,6 +54,12 @@ The repository contains:
   `apps/api/src/db/seed-demo.ts` seeds three example objects with one `BMA` each
   and the nine localized `STANDARD_TEXTS` from `packages/shared/src/seed/`,
   idempotent over natural keys and never overwriting edits),
+- the object list API of WP-M2-01 (`apps/api/src/objects/service.ts` plus the shared
+  schemas in `packages/shared/src/schemas/object.ts`): `GET`, `GET /:objectNo`,
+  `POST`, `PATCH /:objectNo` and `DELETE /:objectNo` under `/api/v1/objects`, guarded
+  by `object.read`/`object.write`/`object.delete`; search over number, name, street,
+  city and external id, filters `active`/`city`/`systemType`, systems synced by id,
+  soft delete sets `active=false`, duplicate numbers answer `422 object_no_taken`),
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
   `GET /api/v1/me`; sessions as random tokens with a SHA-256 hash in `sessions`),

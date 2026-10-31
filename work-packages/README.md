@@ -19,7 +19,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
-`WP-M1-10i`, `WP-M1-11` and `WP-M2-00`. The
+`WP-M1-10i`, `WP-M1-11`, `WP-M2-00` and `WP-M2-01`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -103,7 +103,9 @@ implementation.
 > `STANDARD_TEXTS` in `packages/shared/src/seed/` and the idempotent `seed-demo.ts`;
 > `specs/02-data-model.md` was filled from `PLAN.md` §6 and reviewed (`object_no` is user
 > input, unique over `lower(object_no)`, `_` allowed — `specs/02-data-model.md` §4.3.1).
-> The remaining WPs are working plans and are implemented
+> **WP-M2-01** adds the object list CRUD API (`/api/v1/objects` with search/filter,
+> system sync and soft delete); `specs/08-objects-api.md` §9.1 was filled and reviewed
+> for it. The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
 
@@ -129,6 +131,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-13  | UI layout shell with header and navigation              | done                    | yes     |
 | WP-M1-14  | base seed keeps an existing administrator untouched     | done                    | yes     |
 | WP-M2-00  | core object tables and demo seed                        | done                    | yes     |
+| WP-M2-01  | object list CRUD API                                    | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -177,8 +180,13 @@ The phase 1 backlog is closed: every item in the table is `done`.
 decision is §4.3.1: user input, unique over `lower(object_no)`, `_` allowed) it added the
 four core object tables, migration `0002_core_object_tables`, the localized
 `STANDARD_TEXTS` in `packages/shared/src/seed/` and the idempotent `seed-demo.ts`.
-WP-M2-01 (object CRUD API) is the next phase 2 package and is rewritten into the
-small-model format before its implementation.
+`WP-M2-01` is done — the object list CRUD API in `apps/api/src/objects/service.ts`
+answers `GET`, `GET /:objectNo`, `POST`, `PATCH /:objectNo` and `DELETE /:objectNo` under
+`/api/v1/objects`, guarded by `object.read`/`object.write`/`object.delete`; the list
+supports search and the `active`/`city`/`systemType` filters, PATCH syncs systems by id,
+and DELETE is a soft delete (`active = false`). WP-M2-02 (QR generation and regeneration)
+is the next phase 2 package and is rewritten into the small-model format before its
+implementation.
 
 ## Validation
 

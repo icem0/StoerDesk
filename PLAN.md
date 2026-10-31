@@ -570,6 +570,7 @@ next phase starts).
 | WP-M1-13  | UI layout shell with header and navigation   | done   |
 | WP-M1-14  | base seed keeps an existing admin untouched  | done   |
 | WP-M2-00  | core object tables and demo seed             | done   |
+| WP-M2-01  | object list CRUD API                         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -594,7 +595,9 @@ settles the `object_no` question of WP-M2-00 (§4.3.1 — user input, required, 
 maintained table, tickets link by UUID foreign key). WP-M2-00 put the four core object
 tables behind migration `0002_core_object_tables`, added the localized `STANDARD_TEXTS` in
 `packages/shared/src/seed/` and the idempotent `seed-demo.ts` (three example objects with
-one `BMA` each, nine templates in `de` and `en`, a second run is a no-op).
+one `BMA` each, nine templates in `de` and `en`, a second run is a no-op). WP-M2-01 added
+the object list CRUD API (`/api/v1/objects` with search/filter, system sync and soft
+delete) on top of those tables; `specs/08-objects-api.md` §9.1 now carries that contract.
 
 ## 17. Work package rules for small models
 

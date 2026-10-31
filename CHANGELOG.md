@@ -258,6 +258,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   maintained table, `object_no` is user input, unique case-insensitively, format
   `^[A-Z0-9][A-Z0-9_-]{0,31}$` (e.g. `12345_01`), tickets link by UUID foreign key, and
   external referencing (CSV, object API, stickers) uses `object_no`.
+- WP-M2-01: object list CRUD API — `apps/api/src/objects/service.ts` serves
+  `GET /api/v1/objects` (search plus the `active`/`city`/`systemType` filters),
+  `GET /api/v1/objects/:objectNo`, `POST`, `PATCH /:objectNo` and `DELETE /:objectNo`
+  (soft delete, `active = false`). Guards are `object.read`, `object.write` and
+  `object.delete`; systems are synced by id; duplicate object numbers answer
+  `422 object_no_taken`. The shared Zod schemas live in
+  `packages/shared/src/schemas/object.ts`, and `specs/08-objects-api.md` §9.1 is filled
+  from `PLAN.md` §11.
 
 ### Changed
 

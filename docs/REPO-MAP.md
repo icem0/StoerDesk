@@ -30,7 +30,8 @@ apps/
 │   │   ├── db/                  schema, client, migrate, seeds, migrations/, __tests__/
 │   │   ├── notifications/       channels/{index,signal,matrix} (ntfy, SMTP, Telegram,
 │   │   │                        Web Push adapters planned)
-│   │   └── tickets|objects|oncall|stats|jobs/   planned, empty until their WP
+│   │   ├── objects/             service.ts — object list CRUD API (WP-M2-01)
+│   │   └── tickets|oncall|stats|jobs/   planned, empty until their WP
 │   ├── scripts/                 copy-migrations.mjs (ships .sql into dist)
 │   └── drizzle.config.ts        drizzle-kit: schema, out src/db/migrations
 └── ...
@@ -39,7 +40,7 @@ packages/
 └── shared/                      source package, no build step
     ├── src/
     │   ├── permissions.ts       permission catalog + DEFAULT_ROLES (single source)
-    │   ├── schemas/             auth.ts, user.ts, role.ts (Zod, shared by api + web)
+    │   ├── schemas/             auth.ts, user.ts, role.ts, object.ts (shared by api + web)
     │   ├── seed/                standard-texts.ts — localized BMA texts (WP-M2-00)
     │   ├── i18n/                t.ts + server.{de,en}.json, seed.{de,en}.json
     │   └── index.ts             barrel export
@@ -68,7 +69,7 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 | Module                                                        | Purpose                                                                                                                                                                                                                             | Public API                                                                                                                                                    |
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `apps/api/src/index.ts`                                       | Fastify bootstrap: helmet, CORS with `corsOrigins`, cookie, rate limit with the `rate_limited` envelope, session/auth/admin routes, probe route only in `NODE_ENV=test`, `/api/v1/health`                                           | `buildServer()`                                                                                                                                               |
-| `apps/api/src/db/schema.ts`                                   | Drizzle schema: base tables + RBAC tables, UUID v7 default (WP-M1-03, WP-M1-05)                                                                                                                                                     | `users`, `sessions`, `groups`, `userGroups`, `settings`, `roles`, `permissions`, `rolePermissions`, `userRoles`, `userPermissions`, `uuidDefault`             |
+| `apps/api/src/db/schema.ts`                                   | Drizzle schema: base tables, RBAC tables and the core object tables, UUID v7 default (WP-M1-03, WP-M1-05, WP-M2-00)                                                                                                                  | `users`, `sessions`, `groups`, `userGroups`, `settings`, `roles`, `permissions`, `rolePermissions`, `userRoles`, `userPermissions`, `objects`, `systems`, `textTemplates`, `textTemplateTranslations`, `SYSTEM_TYPES`, `uuidDefault` |
 | `apps/api/src/db/client.ts`                                   | postgres-js pool plus Drizzle instance                                                                                                                                                                                              | `createDatabase(url?): { client, database }`, `Database`                                                                                                      |
 | `apps/api/src/db/migrate.ts`                                  | applies the migrations in `src/db/migrations`                                                                                                                                                                                       | `runMigrations(): Promise<void>`                                                                                                                              |
 | `apps/api/src/db/seed-rbac.ts`                                | idempotent seed of the permission catalog, the five system roles and their grants (WP-M1-05)                                                                                                                                        | `seedRbac(database): Promise<{ roles, permissions, rolePermissions }>`                                                                                        |
@@ -86,6 +87,7 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 | `apps/api/src/auth/requirePermission.ts`                      | effective permissions (role union plus allows, minus every denial) cached per request, OR-linked guard, probe route only in `NODE_ENV=test` (WP-M1-08)                                                                              | `loadEffectivePermissions`, `effectivePermissions`, `requirePermission(database, ...keys)`, `permissionProbeRoutes`                                           |
 | `apps/api/src/admin/users.ts`                                 | admin users API: list users with role keys, create with Argon2id hash and role links, update mutable fields; guards for duplicate e-mail, unknown role keys, last active admin (WP-M1-09)                                           | `adminUsersRoutes` — `GET /api/v1/users`, `POST /api/v1/users`, `PATCH /api/v1/users/:id`                                                                     |
 | `apps/api/src/admin/roles.ts`                                 | admin roles API: roles with permission keys and user counts, create a custom role, replace its grant set, delete an unused role; seeded system roles are guarded (WP-M1-09b)                                                        | `adminRolesRoutes` — `GET /api/v1/roles`, `POST /api/v1/roles`, `PATCH /api/v1/roles/:key`, `DELETE /api/v1/roles/:key`                                       |
+| `apps/api/src/objects/service.ts`                             | object list service and routes: search plus `active`/`city`/`systemType` filters, create/update with system sync, soft delete; `object.read`/`object.write`/`object.delete` guards (WP-M2-01)                                        | `objectRoutes` — `GET`, `GET /:objectNo`, `POST`, `PATCH /:objectNo`, `DELETE /:objectNo` under `/api/v1/objects`; `listObjects`, `getObject`, `createObject`, `updateObject`, `softDeleteObject` |
 | `apps/api/src/config/env.ts`                                  | Zod schema of the whole environment including the notification channels (WP-M1-02)                                                                                                                                                  | `loadEnv(source?)`, `loadDotEnvFile()`, `corsOrigins(env)`, `signalRecipients(env)`                                                                           |
 | `apps/api/src/config/env-file.ts`                             | finds the `.env` of the repository root                                                                                                                                                                                             | `findEnvFile(): string \| undefined`                                                                                                                          |
 | `apps/api/src/notifications/channels/index.ts`                | resolves the channels whose environment variables are all set — currently Signal and Matrix, an unset address disables a channel instead of failing at startup                                                                      | `configuredChannels(env): NotificationChannel[]`, `NotificationChannel`, `NotificationMessage`                                                                |
@@ -97,6 +99,7 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 | `packages/shared/src/schemas/auth.ts`                         | Zod schemas for the login payload and the `/me` answer (WP-M1-07)                                                                                                                                                                   | `loginRequestSchema`, `meResponseSchema`, `LoginRequest`, `MeResponse`, `AuthUser`                                                                            |
 | `packages/shared/src/schemas/user.ts`                         | Zod schemas of the admin users API: summary, list, create, update (WP-M1-09)                                                                                                                                                        | `userSummarySchema`, `userListResponseSchema`, `createUserRequestSchema`, `updateUserRequestSchema`, `userLocaleSchema`                                       |
 | `packages/shared/src/schemas/role.ts`                         | Zod schemas of the admin roles API: key slug, permission keys, summary, list (WP-M1-09b)                                                                                                                                            | `roleKeySchema`, `roleSummarySchema`, `roleListResponseSchema`, `createRoleRequestSchema`, `updateRoleRequestSchema`                                          |
+| `packages/shared/src/schemas/object.ts`                       | Zod schemas of the object list API: object number, system types/inputs, summary, list query/response, create/update (WP-M2-01)                                                                                                       | `objectNoSchema`, `objectSystemTypeSchema`, `objectSummarySchema`, `objectListQuerySchema`, `objectListResponseSchema`, `createObjectRequestSchema`, `updateObjectRequestSchema` |
 | `packages/shared/src/i18n/t.ts`                               | server-side `t()` over `server.{de,en}.json` and `seed.{de,en}.json`, `{ param }` interpolation (WP-M1-04)                                                                                                                          | `t(locale, key, params?): string`, `ServerLocale`, `TranslationParams`                                                                                        |
 | `apps/web/src/i18n/index.ts`                                  | i18next setup: 8 namespaces, `de` default, bundled locales (WP-M1-04)                                                                                                                                                               | `i18n`, `namespaces`, `Namespace`                                                                                                                             |
 | `scripts/i18n-check.ts`                                       | de/en key parity plus every `t()` key used in `apps/web/src` must exist (WP-M1-04)                                                                                                                                                  | via `npm run i18n:check`                                                                                                                                      |
@@ -165,16 +168,18 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 > **Phase 2 started**: `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed
 > (the `object_no` decision §4.3.1: user input, unique case-insensitively, `_` allowed), and
 > **WP-M2-00** put the four core object tables behind migration `0002_core_object_tables`,
-> with the demo seed `seed-demo.ts` and the shared `STANDARD_TEXTS`.
+> with the demo seed `seed-demo.ts` and the shared `STANDARD_TEXTS`. **WP-M2-01** adds the
+> object list CRUD API with search/filter, system sync and soft delete;
+> `specs/08-objects-api.md` §9.1 carries the contract.
 >
 > What the running system already does: the Compose stack serves db, api and web from one
 > `.env` (`npm run env:create` generates it), the API answers `/api/v1/health`, the auth
-> routes, the admin users routes and the admin roles routes, and holds the schema, the
-> seeds, the session core and the notification channel adapters. The web app has the shell,
-> the login form and both admin pages at `/admin/users` and `/admin/roles`. The `common` and
-> `settings` namespaces carry real keys, the rest are intentionally empty. `tickets/`,
-> `objects/`, `oncall/`, `stats/` and `jobs/` are empty on purpose until their work package
-> exists.
+> routes, the admin users routes, the admin roles routes and the object list routes, and
+> holds the schema, the seeds, the session core and the notification channel adapters. The
+> web app has the shell, the login form and both admin pages at `/admin/users` and
+> `/admin/roles`. The `common` and `settings` namespaces carry real keys, the rest are
+> intentionally empty. `tickets/`, `oncall/`, `stats/` and `jobs/` are empty on purpose until
+> their work package exists.
 >
 > API integration tests need a real Postgres 16 (`TEST_DATABASE_URL`); CI provides it as a
 > service, without a reachable local database they skip and `npm run check` stays green.
