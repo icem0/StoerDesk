@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 
 import { LoginForm, LogoutButton } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
+import { AppVersion } from './app-version'
 
 const navItems = [
   { key: 'users', path: '/admin/users' },
@@ -22,6 +23,7 @@ export function Shell() {
             <span className="font-semibold tracking-tight">{t('app.title')}</span>
           </div>
           <div className="flex items-center gap-3">
+            <AppVersion className="text-xs text-slate-500" />
             {me.data ? (
               <>
                 <span className="text-sm text-slate-400 hidden sm:block">

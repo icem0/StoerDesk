@@ -571,6 +571,7 @@ next phase starts).
 | WP-M1-14  | base seed keeps an existing admin untouched  | done   |
 | WP-M2-00  | core object tables and demo seed             | done   |
 | WP-M2-01  | object list CRUD API                         | done   |
+| WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -589,6 +590,10 @@ centred main area; it reuses the existing `common` i18n keys. WP-M1-14 repaired 
 seed, which commit 82a9fc7 had broken: the insert uses `onConflictDoNothing` again and the
 status is decided before the insert, so an existing administrator keeps its `password_hash`,
 `locale` and `active` — that fix turned the red `check` runs v0.0.58 … v0.0.61 green.
+WP-M1-15 repairs a regression of WP-M1-13: the shell rewrite dropped the version line of
+commit 3e1c0f8. The sticky header now renders `AppVersion` outside the signed-in branch,
+so the build version is visible on the login screen and on every guarded page; local
+builds fall back to the nearest git tag, images use the `VITE_APP_VERSION` build argument.
 Phase 2 has started: `specs/02-data-model.md` was filled from §6 and reviewed, and it
 settles the `object_no` question of WP-M2-00 (§4.3.1 — user input, required, unique over
 `lower(object_no)`, `_` allowed, e.g. `12345_01`; no pool table, the object list is the

@@ -23,8 +23,10 @@ CI follow-up **WP-M1-10i** (publish run title carries one line of "what is new")
 documentation follow-up **WP-M1-10d** (English ADRs and decision index), the
 documentation follow-up **WP-M1-11** (English, current repository map), the
 phase 1 closing package **WP-M1-12** (Playwright smoke test "login as admin works"),
-the UI package **WP-M1-13** (layout shell with header and navigation) and the
-seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched).
+the UI package **WP-M1-13** (layout shell with header and navigation), the
+seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched) and the
+version-display regression fix **WP-M1-15** (the shell header shows the build version on
+the login screen and on every guarded page).
 **Phase 1 is closed** — the `Open follow-ups` table of `work-packages/README.md` and
 `PLAN.md` §16 hold no open phase 1 item anymore. **Phase 2 has started**:
 `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed (the `object_no`

@@ -53,6 +53,10 @@ async function signIn(page: Page, language: 'de' | 'en'): Promise<void> {
 
   await expect(page.getByRole('heading', { level: 2, name: texts.loginTitle })).toBeVisible()
 
+  // WP-M1-15: the build version is part of the global shell, so it is already visible
+  // before the login — not only after it.
+  await expect(page.getByTestId('app-version')).toBeVisible()
+
   await page.locator('input[name="email"]').fill(adminEmail)
   await page.locator('input[name="password"]').fill(adminPassword)
   await page.getByRole('button', { name: texts.submit }).click()

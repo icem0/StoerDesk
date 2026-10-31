@@ -12,14 +12,14 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 25  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 26  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
-`WP-M1-10i`, `WP-M1-11`, `WP-M2-00` and `WP-M2-01`. The
+`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M2-00` and `WP-M2-01`. The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -132,6 +132,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-14  | base seed keeps an existing administrator untouched     | done                    | yes     |
 | WP-M2-00  | core object tables and demo seed                        | done                    | yes     |
 | WP-M2-01  | object list CRUD API                                    | done                    | yes     |
+| WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -176,6 +177,10 @@ up before the insert, so an existing administrator keeps its `password_hash`, `l
 and `active` and the second run reports `existing`. The red `check` runs
 v0.0.58 … v0.0.61 were caused by that commit; v0.0.62 is green.
 The phase 1 backlog is closed: every item in the table is `done`.
+`WP-M1-15` is done — it repairs a regression of `WP-M1-13`: the layout-shell rewrite had
+dropped the version line that commit 3e1c0f8 added. The shell header now renders
+`AppVersion` on the login screen and on every guarded page; the value comes from the
+existing `VITE_APP_VERSION` build argument, or from the nearest git tag in local builds.
 `WP-M2-00` is done — on top of the reviewed `specs/02-data-model.md` (the `object_no`
 decision is §4.3.1: user input, unique over `lower(object_no)`, `_` allowed) it added the
 four core object tables, migration `0002_core_object_tables`, the localized
