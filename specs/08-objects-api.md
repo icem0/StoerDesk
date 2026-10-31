@@ -4,7 +4,9 @@
 **Scope:** ~180 lines across phases; filled for the object list API
 **Status:** §9.1 is taken from `PLAN.md` §11 and
 [`specs/02-data-model.md`](02-data-model.md) §4.3–§4.4 and was reviewed for
-WP-M2-01. §9.2–§9.5 stay owned by `PLAN.md` §11 until their own work package.
+WP-M2-01. §9.2 (QR tokens) is filled from `PLAN.md` §11 and
+`specs/02-data-model.md` §4.3/§4.7 and was reviewed for WP-M2-02. §9.3–§9.5 stay
+owned by `PLAN.md` §11 until their own work package.
 
 > The source of this slice is `PLAN.md` §11 (objects, QR, stickers, CSV, REST
 > API). The data contract of the object list comes from
@@ -33,10 +35,11 @@ normalised to upper case before validation and storage.
 
 **Object summary.** `id`, `objectNo`, `name`, `street`, `houseNumber`,
 `postalCode`, `city`, `contactName`, `contactPhone`, `contactEmail`,
-`externalId`, `active`, `notes` and `systems`. Address and contact fields are
-nullable. `systems` is an array of `{ id, type, label }`; `type` is one of
-`BMA`, `LICHTRUF`, `RWA`, `EMA`, `SPRACHALARM`, `SONSTIGE`. The optional QR
-tokens and the timestamps stay internal until WP-M2-02/03 need them.
+`externalId`, `active`, `notes`, `qrToken` and `systems`. Address and contact
+fields are nullable. `systems` is an array of `{ id, type, label }`; `type` is
+one of `BMA`, `LICHTRUF`, `RWA`, `EMA`, `SPRACHALARM`, `SONSTIGE`. `qrToken` is
+the object's current QR token and is nullable only for rows created before
+WP-M2-02. Timestamps stay internal.
 
 **List query.**
 
@@ -76,10 +79,43 @@ Soft delete sets `active = false` and keeps the row and its systems for
 history **(plan)**. It is idempotent: deleting an already inactive object still
 answers `204`.
 
-### 9.2 QR codes (planned)
+### 9.2 QR tokens (WP-M2-02)
 
-QR generation, token regeneration and the 30-day redirects are implemented by
-WP-M2-02; the rules stay in `PLAN.md` §11 until that slice is filled.
+Every object carries one `qr_token`: exactly 22 URL-safe characters from 128
+random bits (`base64url`, `crypto.randomBytes(16)`), unique across the object
+list and the retired tokens. The API generates it on create; the client never
+supplies or changes it through the object write API. The QR content is only the
+public URL with the token, never the `object_no` **(plan, §11)**.
+
+**Regeneration.** `POST /api/v1/objects/:objectNo/regenerate-qr` requires
+`object.regenerate_qr` and answers `200 { qrToken }` with the new token. The
+body is optional: `{ blockOldToken?: boolean }` (default `false`). Unless the
+token is blocked, the previous token is copied to `old_qr_tokens` with
+`expires_at = now() + 30 days`; with `blockOldToken: true` it expires
+immediately. A second regeneration keeps every earlier retired token pointing at
+the same object until its own expiry. An object that has no token yet (a row
+created before this package) gets one without a retired entry. Unknown
+`objectNo` answers `404 object_not_found`.
+
+**Resolution.** `GET /api/v1/public/qr/:token` is public (no session) and
+resolves in this order:
+
+1. `objects.qr_token` matches — `200 { token, redirected: false, object }`;
+2. `old_qr_tokens.token` matches and `expires_at > now()` —
+   `200 { token, redirected: true, object }`, where `token` is the object's
+   current token;
+3. otherwise `404 qr_token_not_found`.
+
+Only active objects resolve; a soft-deleted object answers `404` even when its
+token still exists. A malformed token answers `400 invalid_request`. `object` is
+the public subset `{ objectNo, name, street, houseNumber, postalCode, city,
+systems }`; contact data, `externalId`, `notes`, `qrToken` and timestamps stay
+internal. The web route `/m/:token` uses the answer to redirect to the current
+token or to render the report form (WP-M2-05).
+
+**Cleanup.** Expired `old_qr_tokens` rows are deleted by a daily pg-boss job;
+the job and its schedule are part of WP-M2-02b. Until then the resolution query
+already ignores expired rows.
 
 ### 9.3 Printable stickers (planned)
 

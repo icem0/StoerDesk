@@ -4,7 +4,9 @@
 **Scope:** ~250 lines across phases; filled for the phase 2 tables
 **Status:** taken from `PLAN.md` §6 (core tables and indexes), §3 (localized seed
 data), §10 (report form) and §11 (objects, QR, CSV) and reviewed for WP-M2-00.
-The `object_no` rule of §4.3.1 was decided with the product owner on 2026-10-30.
+§4.7 (`old_qr_tokens`) is filled from `PLAN.md` §6/§11 and reviewed for
+WP-M2-02. The `object_no` rule of §4.3.1 was decided with the product owner on
+2026-10-30.
 
 > The source of this slice is `PLAN.md` §6. Details that `PLAN.md` settled are
 > marked **(plan)**. Tables of later phases are named here but detailed in the
@@ -113,14 +115,34 @@ that shows up in the `object_no` format of the list row it maintains (e.g.
 - unique `objects.qr_token`, unique `systems.qr_token` **(plan, §6)**
 - `objects_name_idx`, `objects_active_idx`
 - `systems_object_id_idx`, `systems_type_idx` **(plan, §6)**
+- unique `old_qr_tokens.token`, `old_qr_tokens_object_id_idx`,
+  `old_qr_tokens_expires_at_idx` (§4.7, WP-M2-02)
 
-### 4.7 Tables of later phases (named only)
+### 4.7 `old_qr_tokens` — retired QR tokens (WP-M2-02)
+
+A regeneration never breaks a printed sticker immediately: the previous token
+keeps working as a redirect until it expires.
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| `id` | UUID v7 | primary key |
+| `object_id` | UUID | foreign key to `objects`, `ON DELETE CASCADE` |
+| `token` | text, not null | the retired 22-character token, **unique** over all retired and current tokens |
+| `expires_at` | timestamptz, not null | `now() + 30 days` by default; `now()` when the admin blocks the old token immediately |
+| `created_at` | timestamptz | as §4.2 |
+
+Rows are looked up by exact token and must be `expires_at > now()` to redirect.
+Several retired tokens may point at the same object; resolution always uses the
+object's current `objects.qr_token`. Expired rows are deleted by the daily
+pg-boss cleanup job (WP-M2-02b). The table has no `updated_at`: a retired token
+is never edited.
+
+### 4.8 Tables of later phases (named only)
 
 `contracts_refs`, `tickets` (with `object_id`/`system_id` UUID foreign keys,
 `ticket_no`, `client_uuid`, `status_token`), `ticket_events`, `ticket_photos`,
-`ticket_pauses`, `old_qr_tokens` (WP-M2-02), `api_keys`,
-`notification_channels`, `push_subscriptions`, `outbox`, `settings`,
-`oncall_pools`, `oncall_shifts`, `oncall_swap_requests`, `oncall_events` —
-each is detailed in the spec slice of its own phase before its first WP. The
-`tickets` link to objects and systems is a UUID foreign key into the tables
-above; the object is chosen from the object list.
+`ticket_pauses`, `api_keys`, `notification_channels`, `push_subscriptions`,
+`outbox`, `settings`, `oncall_pools`, `oncall_shifts`, `oncall_swap_requests`,
+`oncall_events` — each is detailed in the spec slice of its own phase before
+its first WP. The `tickets` link to objects and systems is a UUID foreign key
+into the tables above; the object is chosen from the object list.
