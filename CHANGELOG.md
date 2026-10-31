@@ -272,9 +272,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `POST /api/v1/objects/:objectNo/regenerate-qr` rotates it and retires the old
   token for 30 days (`blockOldToken: true` blocks it immediately), and the public
   `GET /api/v1/public/qr/:token` resolves current and retired active tokens for
-  the web route `/m/:token`. `apps/api/src/objects/qr.ts` owns the routes and
+  the web route `/m/:token`.   `apps/api/src/objects/qr.ts` owns the routes and
   `generateQrToken()`; the object summary carries `qrToken`. The daily pg-boss
   cleanup and the demo-seed token backfill are WP-M2-02b.
+- WP-M2-02b: QR token lifecycle — `apps/api/src/jobs/qr-cleanup.ts` adds
+  `deleteExpiredQrTokens(database, now?)` (deletes `old_qr_tokens` rows with
+  `expires_at <= now` and returns the count) and `startQrTokenCleanup(connectionString)`,
+  which starts pg-boss, creates the queue `qr-token-cleanup`, registers the worker
+  (one short-lived pool per job) and schedules it daily at `0 3 * * *`. The job is
+  started only from the direct API start and stopped by an `onClose` hook, so
+  `buildServer` and the test suite never create the pg-boss schema. The demo seed now
+  generates a `qr_token` for every object it inserts and backfills an existing demo
+  object whose token is `NULL`; a non-null token is never overwritten.
+
 
 ### Changed
 

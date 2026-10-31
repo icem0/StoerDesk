@@ -1,7 +1,7 @@
 # WP-M2-02b: QR demo tokens and scheduled cleanup
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-02
 phase: 2
 context-budget: 18k tokens
@@ -91,5 +91,8 @@ past rows disappear and future rows stay; `seedDemo` fills only NULL tokens.
   bookkeeping (`CHANGELOG.md`, `AGENTS.md`, `PLAN.md` §16, `docs/REPO-MAP.md`,
   `work-packages/README.md`)
 - Interfaces added: `deleteExpiredQrTokens`, `startQrTokenCleanup`, queue name
-- Verified: `npm run check` green, cleanup and seed specs pass on PostgreSQL 16
+- Verified: `npm run check` green, cleanup and seed specs pass on PostgreSQL 16; a
+  throwaway probe started `startQrTokenCleanup`, sent one job through pg-boss and saw
+  `deleted: 1` (only the expired row), and the direct API start serves
+  `/api/v1/health` with no job error
 - Follow-up WP: WP-M2-03 (printable QR stickers) depends on WP-M2-02

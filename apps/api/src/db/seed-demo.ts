@@ -3,6 +3,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { STANDARD_TEXT_KEYS, STANDARD_TEXTS } from '@stoerdesk/shared'
 
 import { loadDotEnvFile } from '../config/env'
+import { generateQrToken } from '../objects/qr'
 import { createDatabase, type Database } from './client'
 import * as schema from './schema'
 
@@ -55,8 +56,10 @@ const DEMO_SYSTEM_LABEL = 'BMA'
 /**
  * Idempotent demo seed of the object list and the standard text templates
  * (`work-packages/m2/00-core-tables-seed.md` §4/§5, `specs/02-data-model.md`
- * §4.3–§4.5). It never fills `qr_token` (WP-M2-02) and never touches existing
- * rows, so an administrator's edits survive every run.
+ * §4.3–§4.5). Every demo object it inserts carries a generated `qr_token`, an
+ * existing demo object with a `NULL` token is backfilled (WP-M2-02b) and an
+ * existing token is never touched, so an administrator's edits survive every
+ * run.
  */
 export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> {
   return database.transaction(async (tx) => {
@@ -65,7 +68,7 @@ export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> 
 
     for (const demo of DEMO_OBJECTS) {
       const [existing] = await tx
-        .select({ id: schema.objects.id })
+        .select({ id: schema.objects.id, qrToken: schema.objects.qrToken })
         .from(schema.objects)
         .where(sql`lower(${schema.objects.objectNo}) = lower(${demo.objectNo})`)
         .limit(1)
@@ -75,7 +78,7 @@ export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> 
         (
           await tx
             .insert(schema.objects)
-            .values(demo)
+            .values({ ...demo, qrToken: generateQrToken() })
             .onConflictDoNothing()
             .returning({ id: schema.objects.id })
         )[0]?.id
@@ -86,6 +89,13 @@ export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> 
 
       if (existing === undefined) {
         objects += 1
+      } else if (existing.qrToken === null) {
+        // Backfill of WP-M2-02b: a demo object that still has no token gets one.
+        // A non-null token is a decision (generated or edited) and stays as it is.
+        await tx
+          .update(schema.objects)
+          .set({ qrToken: generateQrToken() })
+          .where(eq(schema.objects.id, existing.id))
       }
 
       const [existingSystem] = await tx

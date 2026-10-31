@@ -18,6 +18,8 @@ if (testDatabase.status === 'unavailable') {
 
 const { objects, systems, textTemplates, textTemplateTranslations } = schema
 
+const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/
+
 type Db = PostgresJsDatabase<typeof schema>
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -81,9 +83,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(demoSystems.every((row) => row.type === 'BMA')).toBe(true)
 
-      const tokens = await db.select({ qrToken: objects.qrToken }).from(objects)
+      const tokens = await db
+        .select({ objectNo: objects.objectNo, qrToken: objects.qrToken })
+        .from(objects)
 
-      expect(tokens.every((row) => row.qrToken === null)).toBe(true)
+      // WP-M2-02b: the demo seed no longer leaves `qr_token` NULL.
+      expect(tokens).toHaveLength(3)
+      expect(tokens.every((row) => QR_TOKEN_PATTERN.test(row.qrToken ?? ''))).toBe(true)
+      expect(new Set(tokens.map((row) => row.qrToken)).size).toBe(3)
     })
 
     it('is a no-op on the second run', async () => {
@@ -136,17 +143,53 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(onlyRow(after, 'translation').text).toBe('edited by the administrator')
     })
 
+    it('backfills a missing demo token and keeps an edited one', async () => {
+      const demoRows = await db
+        .select({ id: objects.id, qrToken: objects.qrToken })
+        .from(objects)
+        .orderBy(objects.objectNo)
+
+      const edited = onlyRow(demoRows, 'demo object')
+      const backfilled = onlyRow(demoRows.slice(1), 'second demo object')
+
+      await db
+        .update(objects)
+        .set({ qrToken: 'edited_by_the_admin_x1' })
+        .where(eq(objects.id, edited.id))
+      await db.update(objects).set({ qrToken: null }).where(eq(objects.id, backfilled.id))
+
+      const third = await seedDemo(db)
+
+      expect(third).toEqual({ objects: 0, systems: 0, templates: 0, translations: 0 })
+
+      const keptToken = await db
+        .select({ qrToken: objects.qrToken })
+        .from(objects)
+        .where(eq(objects.id, edited.id))
+
+      expect(onlyRow(keptToken, 'edited object').qrToken).toBe('edited_by_the_admin_x1')
+
+      const newToken = await db
+        .select({ qrToken: objects.qrToken })
+        .from(objects)
+        .where(eq(objects.id, backfilled.id))
+
+      expect(QR_TOKEN_PATTERN.test(onlyRow(newToken, 'backfilled object').qrToken ?? '')).toBe(true)
+
+      const tokens = await db.select({ qrToken: objects.qrToken }).from(objects)
+
+      expect(new Set(tokens.map((row) => row.qrToken)).size).toBe(3)
+    })
+
     it('rejects an unknown system type and an unsupported locale', async () => {
       const objectRows = await db.select({ id: objects.id }).from(objects).limit(1)
 
       await expect(
-        db
-          .insert(systems)
-          .values({
-            objectId: onlyRow(objectRows, 'object').id,
-            type: 'ELEVATOR',
-            label: 'nope',
-          }),
+        db.insert(systems).values({
+          objectId: onlyRow(objectRows, 'object').id,
+          type: 'ELEVATOR',
+          label: 'nope',
+        }),
       ).rejects.toThrow()
 
       const templateRows = await db.select({ id: textTemplates.id }).from(textTemplates).limit(1)

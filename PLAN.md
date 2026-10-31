@@ -609,9 +609,12 @@ WP-M2-02 filled §9.2 and §4.7 for QR tokens and implemented the QR layer: crea
 generates a 22-character `base64url` token, migration `0003_old_qr_tokens` stores retired
 tokens, `POST /api/v1/objects/:objectNo/regenerate-qr` rotates and retires them (30 days,
 or immediately with `blockOldToken`), and public `GET /api/v1/public/qr/:token` resolves
-current/retired active tokens for `/m/:token`. The daily pg-boss cleanup and the
-demo-seed token backfill are the open follow-up **WP-M2-02b**; it is created before this
-commit and must run before the next phase item.
+current/retired active tokens for `/m/:token`. Its split child **WP-M2-02b** is done too:
+`seed-demo.ts` generates a token for every inserted demo object and backfills a `NULL`
+token (an existing token is never touched), and `apps/api/src/jobs/qr-cleanup.ts` adds
+`deleteExpiredQrTokens` plus the pg-boss queue `qr-token-cleanup` on the cron `0 3 * * *`
+with one short-lived pool per job — started only from the direct API start and stopped by
+an `onClose` hook, so `buildServer` and the test suite never create the pg-boss schema.
 
 ## 17. Work package rules for small models
 

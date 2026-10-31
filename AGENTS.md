@@ -34,8 +34,8 @@ decision is §4.3.1: user input, required, unique case-insensitively, `_` allowe
 `12345_01`), **WP-M2-00** is implemented, **WP-M2-01** provides the object
 list CRUD API (`/api/v1/objects`, soft delete, search/filter and system sync) and
 **WP-M2-02** adds QR generation, regeneration with retired tokens and public token
-resolution; the daily pg-boss cleanup and demo-seed token backfill are the open
-follow-up **WP-M2-02b**.
+resolution, and its follow-up **WP-M2-02b** adds the demo-seed token backfill plus the
+daily pg-boss cleanup of expired retired tokens.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -56,9 +56,12 @@ The repository contains:
   `qr_token`, `systems` with the `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/
   `SONSTIGE` type check and an object FK `ON DELETE CASCADE`, `text_templates`
   plus `text_template_translations` with composite key and `de`/`en` check;
-  `apps/api/src/db/seed-demo.ts` seeds three example objects with one `BMA` each
-  and the nine localized `STANDARD_TEXTS` from `packages/shared/src/seed/`,
-  idempotent over natural keys and never overwriting edits),
+   `apps/api/src/db/seed-demo.ts` seeds three example objects with one `BMA` each
+   and the nine localized `STANDARD_TEXTS` from `packages/shared/src/seed/`,
+   idempotent over natural keys and never overwriting edits; every demo object it
+   inserts carries a generated `qr_token` and a `NULL` token is backfilled
+   (WP-M2-02b),
+
 - the object list API of WP-M2-01 (`apps/api/src/objects/service.ts` plus the shared
   schemas in `packages/shared/src/schemas/object.ts`): `GET`, `GET /:objectNo`,
   `POST`, `PATCH /:objectNo` and `DELETE /:objectNo` under `/api/v1/objects`, guarded
@@ -70,7 +73,14 @@ The repository contains:
   `POST /:objectNo/regenerate-qr` (guarded by `object.regenerate_qr`) moves the old token
   to `old_qr_tokens` with `expires_at = now + 30 days` (`blockOldToken` blocks it now),
   and the public `GET /api/v1/public/qr/:token` resolves current/retired active tokens;
-  object summaries carry `qrToken`,
+   object summaries carry `qrToken`,
+- the scheduled cleanup of WP-M2-02b (`apps/api/src/jobs/qr-cleanup.ts`):
+  `deleteExpiredQrTokens(database, now?)` deletes `old_qr_tokens` rows with
+  `expires_at <= now`, and `startQrTokenCleanup(connectionString)` runs it through the
+  pg-boss queue `qr-token-cleanup` on the cron `0 3 * * *` with one short-lived pool per
+  job — started only in the direct-start block of `apps/api/src/index.ts` (never in
+  `buildServer`) and stopped by an `onClose` hook,
+
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
   `GET /api/v1/me`; sessions as random tokens with a SHA-256 hash in `sessions`),

@@ -110,8 +110,10 @@ implementation.
 > generates the 22-character token on create, `POST /:objectNo/regenerate-qr` retires the
 > old token in `old_qr_tokens` (migration `0003_old_qr_tokens`) for 30 days or immediately,
 > and public `GET /api/v1/public/qr/:token` resolves current and retired active tokens;
-> `specs/08-objects-api.md` §9.2 and `specs/02-data-model.md` §4.7 carry the contract.
-> The daily pg-boss cleanup and demo-seed token backfill are split into **WP-M2-02b**.
+> `specs/08-objects-api.md` §9.2 and `specs/02-data-model.md` §4.7 carry the contract, and
+> its split child **WP-M2-02b** is implemented as well: the demo seed generates and
+> backfills `qr_token`, and `deleteExpiredQrTokens` runs daily through the pg-boss queue
+> `qr-token-cleanup`.
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
@@ -140,7 +142,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-00  | core object tables and demo seed                        | done                    | yes     |
 | WP-M2-01  | object list CRUD API                                    | done                    | yes     |
 | WP-M2-02  | QR generation, regeneration, public resolution          | done                    | yes     |
-| WP-M2-02b | QR demo tokens and daily pg-boss cleanup                | open                    | yes     |
+| WP-M2-02b | QR demo tokens and daily pg-boss cleanup                | done                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
@@ -203,9 +205,12 @@ and DELETE is a soft delete (`active = false`). `WP-M2-02` is done — `qr.ts` g
 `object.regenerate_qr`) moves the old token to `old_qr_tokens` with `expires_at = now +
 30 days` (`blockOldToken: true` blocks it now), and public `GET /api/v1/public/qr/:token`
 resolves current and retired active tokens for the web route `/m/:token`. The split child
-`WP-M2-02b` is open because the parent must stay inside the four-source-file budget: it
-adds the demo-seed token backfill, `deleteExpiredQrTokens` and the daily pg-boss cleanup
-started only from the direct API start.
+`WP-M2-02b` is done too — it was split off because the parent had to stay inside the
+four-source-file budget: `seed-demo.ts` now generates a `qr_token` for every inserted demo
+object and backfills a `NULL` token without ever touching an existing one, and
+`apps/api/src/jobs/qr-cleanup.ts` deletes expired `old_qr_tokens` rows through the pg-boss
+queue `qr-token-cleanup` on the cron `0 3 * * *`, started only from the direct API start
+and stopped by an `onClose` hook.
 
 ## Validation
 

@@ -113,9 +113,13 @@ systems }`; contact data, `externalId`, `notes`, `qrToken` and timestamps stay
 internal. The web route `/m/:token` uses the answer to redirect to the current
 token or to render the report form (WP-M2-05).
 
-**Cleanup.** Expired `old_qr_tokens` rows are deleted by a daily pg-boss job;
-the job and its schedule are part of WP-M2-02b. Until then the resolution query
-already ignores expired rows.
+**Cleanup.** Expired `old_qr_tokens` rows (`expires_at <= now()`) are deleted by the daily
+pg-boss job of WP-M2-02b: `deleteExpiredQrTokens(database, now?)` runs in the queue
+`qr-token-cleanup`, scheduled with the cron `0 3 * * *`, one short-lived pool per job, and
+started only by the direct API start. Until a job has run the resolution query already
+ignores expired rows. The demo seed of WP-M2-02b gives every demo object it inserts a
+generated token and backfills a `NULL` token, so a demo installation is scannable without
+a manual regeneration.
 
 ### 9.3 Printable stickers (planned)
 

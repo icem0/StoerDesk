@@ -9,11 +9,12 @@ import { adminUsersRoutes } from './admin/users'
 import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
-import { corsOrigins, loadDotEnvFile, loadEnv } from './config/env'
+import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
 import { objectRoutes } from './objects/service'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
+import { startQrTokenCleanup } from './jobs/qr-cleanup'
 
 loadDotEnvFile()
 
@@ -114,5 +115,15 @@ if (invokedDirectly) {
   await client.end({ timeout: 5 })
 
   const app = await buildServer()
+
+  // Scheduled jobs belong to the process that serves requests, not to the
+  // server object: `buildServer` stays job-free, so integration tests never
+  // create the pg-boss schema (WP-M2-02b).
+  const cleanup = await startQrTokenCleanup(databaseConnectionUrl(env), app.log)
+
+  app.addHook('onClose', async () => {
+    await cleanup.stop({ timeout: 5000 })
+  })
+
   await app.listen({ host: env.API_HOST, port: env.API_PORT })
 }
