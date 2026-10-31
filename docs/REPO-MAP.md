@@ -28,11 +28,10 @@ apps/
 │   │   ├── auth/                password, session, sessionPlugin, routes, guard
 │   │   ├── config/              env schema (Zod), .env lookup
 │   │   ├── db/                  schema, client, migrate, seeds, migrations/, __tests__/
-│   │   ├── notifications/       channels/{index,signal,matrix} (ntfy, SMTP, Telegram,
-│   │   │                        Web Push adapters planned)
-│   │   ├── objects/             service.ts CRUD + qr.ts token/regenerate/resolve (WP-M2-01/02)
-│   │   ├── jobs/              qr-cleanup.ts — daily retired-token job via pg-boss
-│   │   └── tickets|oncall|stats/   planned, empty until their WP
+ │   │   ├── notifications/       channels/{index,signal,matrix}; ntfy, SMTP, Telegram, Web Push planned
+ │   │   ├── objects/             service.ts CRUD + qr.ts token/regenerate/resolve (WP-M2-01/02)
+ │   │   ├── jobs/              qr-cleanup.ts — daily retired-token job via pg-boss
+ │   │   └── tickets/            report.ts — public report endpoint (WP-M2-04b); oncall, stats planned
 │   ├── scripts/                 copy-migrations.mjs (ships .sql into dist)
 │   └── drizzle.config.ts        drizzle-kit: schema, out src/db/migrations
 └── ...
@@ -41,7 +40,7 @@ packages/
 └── shared/                      source package, no build step
     ├── src/
     │   ├── permissions.ts       permission catalog + DEFAULT_ROLES (single source)
-    │   ├── schemas/             auth.ts, user.ts, role.ts, object.ts (shared by api + web)
+    │   ├── schemas/             auth.ts, user.ts, role.ts, object.ts, ticket.ts (api + web)
     │   ├── seed/                standard-texts.ts — localized BMA texts (WP-M2-00)
     │   ├── i18n/                t.ts + server.{de,en}.json, seed.{de,en}.json
     │   └── index.ts             barrel export
@@ -90,6 +89,7 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 | `apps/api/src/admin/roles.ts`                                 | admin roles API: roles with permission keys and user counts, create a custom role, replace its grant set, delete an unused role; seeded system roles are guarded (WP-M1-09b)                                                        | `adminRolesRoutes` — `GET /api/v1/roles`, `POST /api/v1/roles`, `PATCH /api/v1/roles/:key`, `DELETE /api/v1/roles/:key`                                       |
 | `apps/api/src/objects/service.ts`                             | object list service and routes: search plus `active`/`city`/`systemType` filters, create/update with system sync, soft delete; create generates `qr_token`; `object.read`/`object.write`/`object.delete` guards (WP-M2-01)                                        | `objectRoutes` — `GET`, `GET /:objectNo`, `POST`, `PATCH /:objectNo`, `DELETE /:objectNo` under `/api/v1/objects`; `listObjects`, `getObject`, `createObject`, `updateObject`, `softDeleteObject` |
 | `apps/api/src/objects/qr.ts`                                  | QR token generation, regeneration and public resolution: `generateQrToken()` (22 `base64url` chars), token rotation with retired rows in `old_qr_tokens` (30 days or immediate block), resolve current/retired active tokens (WP-M2-02)                         | `qrRoutes` — `POST /api/v1/objects/:objectNo/regenerate-qr`, public `GET /api/v1/public/qr/:token`; `generateQrToken()` |
+| `apps/api/src/tickets/report.ts`                              | public report endpoint: QR token to active object, the `422` form rules, the ±10 minute clock rule, the 72 h deadline, `client_uuid` idempotency, one ticket plus one `created` event per transaction (WP-M2-04b) | `publicReportRoutes` — public `POST /api/v1/public/tickets`; `createPublicReport(database, input)`, `reportTimes(input, receivedAt?)`, `PublicReportRouteOptions` |
 | `apps/api/src/config/env.ts`                                  | Zod schema of the whole environment including the notification channels (WP-M1-02)                                                                                                                                                  | `loadEnv(source?)`, `loadDotEnvFile()`, `corsOrigins(env)`, `signalRecipients(env)`                                                                           |
 | `apps/api/src/jobs/qr-cleanup.ts`                             | retired-token cleanup: `deleteExpiredQrTokens` removes `old_qr_tokens` rows with `expires_at <= now`, `startQrTokenCleanup` runs it through a pg-boss queue with a daily `0 3 * * *` schedule and a short-lived pool per job (WP-M2-02b) | `deleteExpiredQrTokens(database, now?): Promise<number>`, `startQrTokenCleanup(connectionString, log?): Promise<PgBoss>`, `QR_TOKEN_CLEANUP_QUEUE`, `QR_TOKEN_CLEANUP_CRON`, `QrCleanupLogger` |
 | `apps/api/src/config/env-file.ts`                             | finds the `.env` of the repository root                                                                                                                                                                                             | `findEnvFile(): string \| undefined`                                                                                                                          |
@@ -181,17 +181,17 @@ AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELO
 > `qr_token`, and `deleteExpiredQrTokens` plus the daily pg-boss schedule `0 3 * * *` delete
 > expired retired tokens — started only from the direct API start, never from `buildServer`.
 > **WP-M2-03** adds printable QR sticker sheets: `StickerPage` at `/objects/stickers` prints A6/A4 cards through the browser (`qrcode.react`, mm rules in `apps/web/src/styles.css`, the 112 notice on every card), and `specs/08-objects-api.md` §9.3 carries that contract.
-> **WP-M2-04** adds the ticket schema of migration `0004_ticket_tables`: `tickets` (object FK `ON DELETE RESTRICT`, unique `ticket_no`/`client_uuid`/`status_token`, status/priority/source checks), the append-only `ticket_events` trail (direct `UPDATE`/`DELETE` raise `ticket_event_append_only`, the ticket's own cascade passes), `ticket_photos` metadata and `ticket_no_counters` behind the `next_ticket_no()` column default — no route yet, that is WP-M2-04b/04c.
+> **WP-M2-04** adds the ticket schema of migration `0004_ticket_tables`: `tickets` (object FK `ON DELETE RESTRICT`, unique `ticket_no`/`client_uuid`/`status_token`, status/priority/source checks), the append-only `ticket_events` trail (direct `UPDATE`/`DELETE` raise `ticket_event_append_only`, the ticket's own cascade passes), `ticket_photos` metadata and `ticket_no_counters` behind the `next_ticket_no()` column default. **WP-M2-04b** adds the public report endpoint `POST /api/v1/public/tickets` (`apps/api/src/tickets/report.ts`, shared schemas in `packages/shared/src/schemas/ticket.ts`): token to active object, `422 report_text_required`/`contact_required`/`system_not_found`, the ±10 minute clock rule, the 72 h deadline and the `client_uuid` idempotency (`200` on a repeat); photos are WP-M2-04c.
 >
 > What the running system already does: the Compose stack serves db, api and web from one
 > `.env` (`npm run env:create` generates it), the API answers `/api/v1/health`, the auth
-> routes, the admin users routes, the admin roles routes, the object list routes and the
-> QR resolve/regenerate routes, and
+> routes, the admin users routes, the admin roles routes, the object list routes, the
+> QR resolve/regenerate routes and the public report route, and
 > holds the schema, the seeds, the session core and the notification channel adapters. The
-> web app has the shell, the login form and both admin pages at `/admin/users` and
-> `/admin/roles` and the printable sticker sheet at `/objects/stickers`. The `common` and `settings` namespaces carry real keys, the rest are
-> intentionally empty. `tickets/`, `oncall/` and `stats/` are empty on purpose until their
-> work package exists; `jobs/` holds the first scheduled job (WP-M2-02b).
+> web app has the shell, the login form, both admin pages at `/admin/users` and `/admin/roles` and the printable sticker sheet at `/objects/stickers`. The `common` and `settings` namespaces carry real keys, the rest are
+> intentionally empty. The API `tickets/` module carries the public report endpoint
+> (WP-M2-04b); web ticket UI, `oncall/` and `stats/` stay empty until their WP; `jobs/`
+> holds the daily retired-token job (WP-M2-02b).
 >
 > API integration tests need a real Postgres 16 (`TEST_DATABASE_URL`); CI provides it as a
 > service, without a reachable local database they skip and `npm run check` stays green.

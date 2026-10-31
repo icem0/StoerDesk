@@ -575,6 +575,7 @@ next phase starts).
 | WP-M2-02b | QR demo tokens and scheduled cleanup         | done   |
 | WP-M2-03  | printable QR sticker sheets (web print)      | done   |
 | WP-M2-04  | ticket tables, events, photos, counter       | done   |
+| WP-M2-04b | public report endpoint with idempotency      | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -628,8 +629,13 @@ QR of `<origin>/m/<token>`, the object name, the object number, the report call 
 status/priority/source checks of §7/§13, `reported_at`/`received_at`/`deadline_at`,
 `clock_skewed`, `suspected_spam`, `parent_ticket_id`), the append-only `ticket_events`
 trail, the `ticket_photos` metadata and `ticket_no_counters` behind the `next_ticket_no()`
-column default (`ST-<year>-NNNN`). Its split children **WP-M2-04b** (public report
-endpoint, `specs/06-report-form.md` §7) and **WP-M2-04c** (photo upload) are next.
+column default (`ST-<year>-NNNN`). Its split child **WP-M2-04b** is implemented:
+`POST /api/v1/public/tickets` (`apps/api/src/tickets/report.ts` plus the schemas in
+`packages/shared/src/schemas/ticket.ts`) resolves the QR token to an **active** object,
+enforces the text/contact/system rules with the codes `report_text_required`,
+`contact_required` and `system_not_found`, applies the ±10 minute clock rule and the
+72 h deadline, and answers an idempotent `client_uuid` repeat with `200` and the
+existing ticket. **WP-M2-04c** (photo upload) follows.
 
 ## 17. Work package rules for small models
 

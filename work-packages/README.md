@@ -152,7 +152,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-03  | printable QR sticker sheets (A6/A4 web print)           | done                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 | WP-M2-04  | ticket tables, events, photos and the counter           | done                    | yes     |
-| WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | planned                 | yes     |
+| WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | done                    | yes     |
 | WP-M2-04c | report photo upload to the uploads volume               | planned                 | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run

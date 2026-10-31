@@ -1,7 +1,7 @@
 # WP-M2-04b: Public report endpoint
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-04
 phase: 2
 context-budget: 22k tokens
@@ -101,8 +101,18 @@ error **codes**, never text.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `packages/shared/src/schemas/ticket.ts` (new),
+  `packages/shared/src/schemas/index.ts`, `apps/api/src/tickets/report.ts` (new),
+  `apps/api/src/index.ts`, plus the bookkeeping (`CHANGELOG.md`, `AGENTS.md`,
+  `PLAN.md` §16, `docs/REPO-MAP.md`, `work-packages/README.md`)
+- Interfaces added: public `POST /api/v1/public/tickets`, `publicReportRequestSchema`,
+  `publicReportContactSchema`, `publicReportResponseSchema`, `faultTemplateKeySchema`,
+  `createPublicReport(database, input)`, `reportTimes(input, receivedAt?)`,
+  `publicReportRoutes`, `PublicReportRouteOptions`
+- Verified: `npm run check` green on 2026-10-31 — 30 test files, 176 tests, e2e passed;
+  the new `report.integration.spec.ts` runs 7 tests against a throwaway database (happy
+  path with one `created` event and the 72 h deadline, idempotent repeat `200` with the
+  same `ticketNo` and one event, `404` for unknown/inactive/retired tokens, the three
+  `422` rules, `400` for five malformed bodies, skewed device clock rule)
 - Follow-up WP: `04c-report-photo-upload.md` (exists)
 - Open question: none

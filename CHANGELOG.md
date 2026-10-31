@@ -322,6 +322,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   proves the counter under five concurrent inserts, the unique `client_uuid`, the checks,
   the append-only rule, the `RESTRICT`/`SET NULL` behaviour and the cascade. No route,
   no service and no shared schema yet — that is WP-M2-04b and WP-M2-04c.
+- WP-M2-04b: public report endpoint — `POST /api/v1/public/tickets` (no authentication)
+  in `apps/api/src/tickets/report.ts` with the request/response schemas
+  `publicReportRequestSchema`, `publicReportContactSchema`,
+  `publicReportResponseSchema` and `faultTemplateKeySchema` in
+  `packages/shared/src/schemas/ticket.ts`. The QR token travels in the body and must
+  resolve to an **active** object — an unknown, inactive or retired token answers
+  `404 qr_token_not_found`. `201` for a new report, `200` with the existing ticket for a
+  repeat of the same `client_uuid` (`ON CONFLICT DO NOTHING` over the unique index, so an
+  offline outbox replay never creates a second ticket). `422 report_text_required`
+  without text and template keys, `422 contact_required` without phone and e-mail,
+  `422 system_not_found` for a system of another object, `400 invalid_request` with
+  `params.fields` outside the schema. `reported_at` is the device time unless it deviates
+  from server time by more than ten minutes — then `reported_at = received_at` and
+  `clock_skewed = true` — and `deadline_at` is that base plus 72 h. `status_token` is
+  generated with the ticket by the existing `generateQrToken()`, `ticket_no` comes from
+  the `next_ticket_no()` column default, and one append-only `created` event
+  (`actor_kind = 'public'`, payload with locale, source, template keys and text length)
+  is written in the same transaction. No photo field (WP-M2-04c) and no per-IP or
+  per-token rate limit (WP-M2-07).
 
 
 ### Changed

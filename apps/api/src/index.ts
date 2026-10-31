@@ -15,6 +15,7 @@ import { objectRoutes } from './objects/service'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
+import { publicReportRoutes } from './tickets/report'
 
 loadDotEnvFile()
 
@@ -86,6 +87,7 @@ export async function buildServer() {
   await app.register(adminUsersRoutes, { database })
   await app.register(adminRolesRoutes, { database })
   await app.register(objectRoutes, { database })
+  await app.register(publicReportRoutes, { database })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
   // or production (`specs/01-rbac.md` §3.7).

@@ -41,8 +41,9 @@ every card) — rewritten from the legacy PDF plan, because `PLAN.md` §4/§11 m
 browser print path the primary one and a PDF download optional. **WP-M2-04** adds the
 ticket schema behind migration `0004_ticket_tables` (`tickets` with the `next_ticket_no()`
 default, the append-only `ticket_events`, `ticket_photos` and `ticket_no_counters`) —
-rewritten from the legacy report-form plan and split, so **WP-M2-04b** (public report
-endpoint) and **WP-M2-04c** (photo upload) follow.
+rewritten from the legacy report-form plan and split, so its child **WP-M2-04b** adds the
+public report endpoint `POST /api/v1/public/tickets` (idempotency over `client_uuid`, the
+`422` form rules, the ±10 minute clock rule) and **WP-M2-04c** (photo upload) follows.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -106,9 +107,21 @@ The repository contains:
    self FK; `ticket_events` is append-only through the trigger
    `ticket_events_is_append_only` (a direct `UPDATE`/`DELETE` raises
    `ticket_event_append_only`, the ticket's own cascade passes on
-   `pg_trigger_depth() > 1`); `ticket_photos` stores the metadata of the upload volume
+   `pg_trigger_depth() > 1`);    `ticket_photos` stores the metadata of the upload volume
    with a `image/jpeg`/`image/png` check — no route and no shared schema yet
    (WP-M2-04b/WP-M2-04c),
+
+- the public report endpoint of WP-M2-04b (`apps/api/src/tickets/report.ts` plus the
+   schemas in `packages/shared/src/schemas/ticket.ts`): `POST /api/v1/public/tickets`
+   without auth answers `201` for a new report and `200` for a repeat of the same
+   `client_uuid` (unique index, `ON CONFLICT DO NOTHING`), `404 qr_token_not_found` for
+   an unknown, inactive or retired token, and `422` with `report_text_required`,
+   `contact_required` or `system_not_found`; `reported_at` is the device time unless it
+   deviates by more than ten minutes (`clock_skewed`), `deadline_at` is that base plus
+   72 h, `status_token` is generated with the ticket through `generateQrToken()`, and one
+   append-only `created` event (actor kind `public`, payload with locale, source,
+   template keys and text length) is written in the same transaction — no photo field
+   (WP-M2-04c) and no per-IP/per-token rate limit (WP-M2-07),
 
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
