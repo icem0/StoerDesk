@@ -1,7 +1,7 @@
 # WP-M2-05: Public report form at /m/:token
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-04b
 phase: 2
 context-budget: 28k tokens
@@ -96,7 +96,8 @@ Expected: all green; the new web test fails before the page exists and passes af
   (`CHANGELOG.md`, `AGENTS.md`, `PLAN.md` §16, `docs/REPO-MAP.md`, `work-packages/README.md`)
   and the fixture `apps/web/src/features/tickets/__tests__/report-form-page.test.tsx`
 - Interfaces added: `ReportFormPage`, `usePublicQr(token)`, the `ticket:report.*` keys
-- Verified: see the commit handoff below the implementation
+- Verified: `npm run test:run` (187 passed), `npm run typecheck --workspaces --if-present`,
+  `npm run lint`, `npm run i18n:check` (130 de/en keys) and `npm run wp:check` are green
 - Follow-up WP: `05b-report-photo-upload-ui.md` and `05c-report-form-e2e.md` (created in
   the same commit as this rewrite)
 - Open question: none

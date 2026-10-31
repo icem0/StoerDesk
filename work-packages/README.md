@@ -157,7 +157,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-04  | ticket tables, events, photos and the counter           | done                    | yes     |
 | WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | done                    | yes     |
 | WP-M2-04c | report photo upload to the uploads volume               | done                    | yes     |
-| WP-M2-05  | public report form UI at `/m/:token` (web)              | open                    | yes     |
+| WP-M2-05  | public report form UI at `/m/:token` (web)              | done                    | yes     |
 | WP-M2-05b | photo upload with client canvas compression             | open                    | yes     |
 | WP-M2-05c | report form smoke E2E in de and en                      | open                    | yes     |
 
@@ -253,7 +253,8 @@ filled and reviewed first: `specs/06-report-form.md` (chapter 7) and
 `WP-M2-05` is rewritten into the small-model format and split as well: the legacy plan put
 the route, six components, the client compression, the confirmation page and two Playwright
 tests into one package, which is far over the four-source-file and 300-line limits.
-**WP-M2-05** (`05-report-form-ui.md`) is the public form itself — `ReportFormPage` at the
+**WP-M2-05** (`05-report-form-ui.md`) is implemented as the public form itself —
+`ReportFormPage` at the
 unguarded route `/m/:token` with the prefilled object header, the system select, the fault
 chips over `STANDARD_TEXT_KEYS`, the free text, the contact fields, the 112 notice and the
 confirmation with the ticket number and the `/s/<statusToken>` link. Its child

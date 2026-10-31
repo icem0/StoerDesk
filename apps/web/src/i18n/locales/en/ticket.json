@@ -1,1 +1,52 @@
-{}
+{
+  "report": {
+    "title": "Report a malfunction",
+    "loading": "Loading the object …",
+    "object": {
+      "system": "Affected system",
+      "systemNone": "no selection",
+      "noSystems": "This object has no system on record."
+    },
+    "faults": {
+      "label": "Type of fault",
+      "hint": "Multiple selections allowed — in addition to or instead of the description."
+    },
+    "text": {
+      "label": "What can be seen?",
+      "counter": "{{used}} of {{max}} characters"
+    },
+    "contact": {
+      "hint": "Phone or e-mail is required — without a contact the fault cannot be reported back.",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "E-mail",
+      "privacy": "These details are only used for questions about this report and are deleted once the retention period ends."
+    },
+    "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call.",
+    "submit": "Report malfunction",
+    "submitting": "Sending the report …",
+    "validation": {
+      "faultOrText": "Please select a fault type or describe the fault.",
+      "contactRequired": "Please provide a phone number or an e-mail address.",
+      "email": "That e-mail address is not valid."
+    },
+    "errors": {
+      "qrTokenInvalid": "This QR code is invalid. Please scan the sticker of the object.",
+      "qr_token_not_found": "This QR code does not belong to an active object. Please scan again or name the object number in the report book.",
+      "report_text_required": "Please select a fault type or describe the fault.",
+      "contact_required": "Please provide a phone number or an e-mail address.",
+      "system_not_found": "The selected system does not belong to this object.",
+      "invalid_request": "The report could not be read. Please try again.",
+      "rate_limited": "Too many reports in a short time. Please try again in one minute.",
+      "unknown": "The report could not be sent right now. Please try again later."
+    },
+    "done": {
+      "title": "Report received",
+      "lead": "The report is in the report book and is handled by the responsible company.",
+      "ticketNo": "Reference number: {{ticketNo}}",
+      "deadline": "Feedback by: {{deadline}}",
+      "clockSkewed": "The device clock deviates from the server clock — the report time was aligned to the server clock.",
+      "statusLink": "View the status of this report"
+    }
+  }
+}

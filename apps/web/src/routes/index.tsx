@@ -5,6 +5,7 @@ import { RolesPage } from '../admin/roles-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { StickerPage } from '../features/objects/sticker-page'
+import { ReportFormPage } from '../features/tickets/report-form-page'
 
 export const router = createBrowserRouter([
   {
@@ -36,5 +37,11 @@ export const router = createBrowserRouter([
         ),
       },
     ],
+  },
+  // A QR reporter has no session: `/m/:token` is deliberately outside the `App` shell, so
+  // it never renders the login form of `Shell` (WP-M2-05, specs/06-report-form.md §7.2).
+  {
+    path: '/m/:token',
+    element: <ReportFormPage />,
   },
 ])

@@ -46,7 +46,10 @@ rewritten from the legacy report-form plan and split, so its child **WP-M2-04b**
 public report endpoint `POST /api/v1/public/tickets` (idempotency over `client_uuid`, the
 `422` form rules, the ±10 minute clock rule) and **WP-M2-04c** (photo upload: magic-byte
 check, `UPLOAD_MAX_BYTES` cap, `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` plus the
-`ticket_photos` rows) is implemented as well.
+`ticket_photos` rows) is implemented as well. **WP-M2-05** adds the public report form UI
+(`apps/web/src/features/tickets/report-form-page.tsx` at `/m/:token` — QR resolve, fault
+chips, contact fields, idempotent `clientUuid`, 112 notice and confirmation; photo upload is
+WP-M2-05b).
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -67,11 +70,11 @@ The repository contains:
   `qr_token`, `systems` with the `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/
   `SONSTIGE` type check and an object FK `ON DELETE CASCADE`, `text_templates`
   plus `text_template_translations` with composite key and `de`/`en` check;
-   `apps/api/src/db/seed-demo.ts` seeds three example objects with one `BMA` each
-   and the nine localized `STANDARD_TEXTS` from `packages/shared/src/seed/`,
-   idempotent over natural keys and never overwriting edits; every demo object it
-   inserts carries a generated `qr_token` and a `NULL` token is backfilled
-   (WP-M2-02b),
+  `apps/api/src/db/seed-demo.ts` seeds three example objects with one `BMA` each
+  and the nine localized `STANDARD_TEXTS` from `packages/shared/src/seed/`,
+  idempotent over natural keys and never overwriting edits; every demo object it
+  inserts carries a generated `qr_token` and a `NULL` token is backfilled
+  (WP-M2-02b),
 
 - the object list API of WP-M2-01 (`apps/api/src/objects/service.ts` plus the shared
   schemas in `packages/shared/src/schemas/object.ts`): `GET`, `GET /:objectNo`,
@@ -84,12 +87,12 @@ The repository contains:
   `POST /:objectNo/regenerate-qr` (guarded by `object.regenerate_qr`) moves the old token
   to `old_qr_tokens` with `expires_at = now + 30 days` (`blockOldToken` blocks it now),
   and the public `GET /api/v1/public/qr/:token` resolves current/retired active tokens;
-   object summaries carry `qrToken`,
+  object summaries carry `qrToken`,
 - the scheduled cleanup of WP-M2-02b (`apps/api/src/jobs/qr-cleanup.ts`):
   `deleteExpiredQrTokens(database, now?)` deletes `old_qr_tokens` rows with
   `expires_at <= now`, and `startQrTokenCleanup(connectionString)` runs it through the
   pg-boss queue `qr-token-cleanup` on the cron `0 3 * * *` with one short-lived pool per
-   job — started only in the direct-start block of `apps/api/src/index.ts` (never in
+  job — started only in the direct-start block of `apps/api/src/index.ts` (never in
   `buildServer`) and stopped by an `onClose` hook,
 
 - the printable QR stickers of WP-M2-03 (`apps/web/src/features/objects/sticker-page.tsx`):
@@ -100,44 +103,44 @@ The repository contains:
   report call and the 112 notice (`object:sticker.emergencyNotice`), and a `NULL` token
   prints `object:sticker.noToken` instead of a QR; the mm geometry is in
   `apps/web/src/styles.css`, the selected format writes one `@page` rule and header, nav,
-   toolbar and checklist are `print:hidden` — no API route, no PDF endpoint,
+  toolbar and checklist are `print:hidden` — no API route, no PDF endpoint,
 
 - the ticket schema of WP-M2-04 (migration `0004_ticket_tables`): `tickets` with
-   `ticket_no` default `next_ticket_no()` (`ST-<year>-NNNN` over the per-year row in
-   `ticket_no_counters`), object FK `ON DELETE RESTRICT`, system FK `ON DELETE SET NULL`,
-   checks over `NEW`…`CANCELLED` / `low`…`critical` / `QR`/`INTERNAL`/`API`, unique
-   `ticket_no`, `client_uuid` (idempotency) and `status_token`, plus the `parent_ticket_id`
-   self FK; `ticket_events` is append-only through the trigger
-   `ticket_events_is_append_only` (a direct `UPDATE`/`DELETE` raises
-   `ticket_event_append_only`, the ticket's own cascade passes on
-    `pg_trigger_depth() > 1`);    `ticket_photos` stores the metadata of the upload volume
-    with a `image/jpeg`/`image/png` check — the route and the shared schema arrived with
-    WP-M2-04b and WP-M2-04c,
+  `ticket_no` default `next_ticket_no()` (`ST-<year>-NNNN` over the per-year row in
+  `ticket_no_counters`), object FK `ON DELETE RESTRICT`, system FK `ON DELETE SET NULL`,
+  checks over `NEW`…`CANCELLED` / `low`…`critical` / `QR`/`INTERNAL`/`API`, unique
+  `ticket_no`, `client_uuid` (idempotency) and `status_token`, plus the `parent_ticket_id`
+  self FK; `ticket_events` is append-only through the trigger
+  `ticket_events_is_append_only` (a direct `UPDATE`/`DELETE` raises
+  `ticket_event_append_only`, the ticket's own cascade passes on
+  `pg_trigger_depth() > 1`); `ticket_photos` stores the metadata of the upload volume
+  with a `image/jpeg`/`image/png` check — the route and the shared schema arrived with
+  WP-M2-04b and WP-M2-04c,
 
 - the public report endpoint of WP-M2-04b (`apps/api/src/tickets/report.ts` plus the
-   schemas in `packages/shared/src/schemas/ticket.ts`): `POST /api/v1/public/tickets`
-   without auth answers `201` for a new report and `200` for a repeat of the same
-   `client_uuid` (unique index, `ON CONFLICT DO NOTHING`), `404 qr_token_not_found` for
-   an unknown, inactive or retired token, and `422` with `report_text_required`,
-   `contact_required` or `system_not_found`; `reported_at` is the device time unless it
-   deviates by more than ten minutes (`clock_skewed`), `deadline_at` is that base plus
-   72 h, `status_token` is generated with the ticket through `generateQrToken()`, and one
-    append-only `created` event (actor kind `public`, payload with locale, source,
-    template keys and text length) is written in the same transaction — no photo field
-    (that is WP-M2-04c) and no per-IP/per-token rate limit (WP-M2-07),
+  schemas in `packages/shared/src/schemas/ticket.ts`): `POST /api/v1/public/tickets`
+  without auth answers `201` for a new report and `200` for a repeat of the same
+  `client_uuid` (unique index, `ON CONFLICT DO NOTHING`), `404 qr_token_not_found` for
+  an unknown, inactive or retired token, and `422` with `report_text_required`,
+  `contact_required` or `system_not_found`; `reported_at` is the device time unless it
+  deviates by more than ten minutes (`clock_skewed`), `deadline_at` is that base plus
+  72 h, `status_token` is generated with the ticket through `generateQrToken()`, and one
+  append-only `created` event (actor kind `public`, payload with locale, source,
+  template keys and text length) is written in the same transaction — no photo field
+  (that is WP-M2-04c) and no per-IP/per-token rate limit (WP-M2-07),
 
 - the photo upload of WP-M2-04c (`apps/api/src/tickets/photos.ts` plus
-   `photoDataUrlSchema` and the `photos` array in `packages/shared/src/schemas/ticket.ts`):
-   `POST /api/v1/public/tickets` accepts up to six base64 data URLs of the same JSON body,
-   the route raises its `bodyLimit` to `6 × UPLOAD_MAX_BYTES × 1.4`, every photo is decoded,
-   capped by its **decoded** size and verified by magic bytes (`FF D8 FF`,
-   `89 50 4E 47 0D 0A 1A 0A`) — the client claim never decides — and a rejected photo
-   answers `422 photo_limit_exceeded`, `photo_too_large` or `photo_type_unsupported` before
-   a single byte is written; accepted photos go to
-   `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` (UUID v4 name) with the path relative
-   to `UPLOAD_DIR`, the detected MIME type and the byte count in `ticket_photos`, the
-   response carries the real `photoCount` and an idempotent repeat ignores its photo array;
-   there is **no** read endpoint (phase 10) and no `width_px`/`height_px` decoding,
+  `photoDataUrlSchema` and the `photos` array in `packages/shared/src/schemas/ticket.ts`):
+  `POST /api/v1/public/tickets` accepts up to six base64 data URLs of the same JSON body,
+  the route raises its `bodyLimit` to `6 × UPLOAD_MAX_BYTES × 1.4`, every photo is decoded,
+  capped by its **decoded** size and verified by magic bytes (`FF D8 FF`,
+  `89 50 4E 47 0D 0A 1A 0A`) — the client claim never decides — and a rejected photo
+  answers `422 photo_limit_exceeded`, `photo_too_large` or `photo_type_unsupported` before
+  a single byte is written; accepted photos go to
+  `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` (UUID v4 name) with the path relative
+  to `UPLOAD_DIR`, the detected MIME type and the byte count in `ticket_photos`, the
+  response carries the real `photoCount` and an idempotent repeat ignores its photo array;
+  there is **no** read endpoint (phase 10) and no `width_px`/`height_px` decoding,
 
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,

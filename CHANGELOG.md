@@ -247,7 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - WP-M2-00: core object tables — migration `0002_core_object_tables` adds `objects`
   (user-input `object_no`, unique over `lower(object_no)`, address, contact, nullable
   `qr_token`, `external_id`, `active`, `notes`), `systems` (object FK with `ON DELETE
-  CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`, own
+CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`, own
   optional `qr_token`), `text_templates` and `text_template_translations` (composite key,
   `de`/`en` check) with the indexes of `specs/02-data-model.md` §4.6.
 - WP-M2-00: demo seed `apps/api/src/db/seed-demo.ts` (`npx tsx src/db/seed-demo.ts`) —
@@ -272,7 +272,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `POST /api/v1/objects/:objectNo/regenerate-qr` rotates it and retires the old
   token for 30 days (`blockOldToken: true` blocks it immediately), and the public
   `GET /api/v1/public/qr/:token` resolves current and retired active tokens for
-  the web route `/m/:token`.   `apps/api/src/objects/qr.ts` owns the routes and
+  the web route `/m/:token`. `apps/api/src/objects/qr.ts` owns the routes and
   `generateQrToken()`; the object summary carries `qrToken`. The daily pg-boss
   cleanup and the demo-seed token backfill are WP-M2-02b.
 - WP-M2-02b: QR token lifecycle — `apps/api/src/jobs/qr-cleanup.ts` adds
@@ -292,9 +292,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `<origin>/m/<qr_token>` (`qrcode.react`, SVG), the object name, the object number, the
   report call and the 112 notice of `PLAN.md` §2; an object with a `NULL` token prints
   without a QR. `apps/web/src/styles.css` carries the mm print geometry, the chosen
-   format writes one `@page` rule, and header, nav, toolbar and checklist are
-   `print:hidden`. No API route and no PDF endpoint were added — the browser print path is
-   the primary path of `PLAN.md` §4/§11.
+  format writes one `@page` rule, and header, nav, toolbar and checklist are
+  `print:hidden`. No API route and no PDF endpoint were added — the browser print path is
+  the primary path of `PLAN.md` §4/§11.
 - WP-M2-04 (spec preparation): `specs/06-report-form.md` chapter 7 and
   `specs/02-data-model.md` §4.8–§4.11 are filled from `PLAN.md` §6/§10 and reviewed —
   the report endpoint contract, the ticket tables, the `ST-<year>-NNNN` counter and the
@@ -357,7 +357,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `6 × UPLOAD_MAX_BYTES × 1.4` and the response carries the real `photoCount`. The photo
   array of an idempotent repeat is ignored (§7.4). Reading a photo stays phase 10 — the
   uploads volume is never served.
-
+- WP-M2-05: public report form UI — `apps/web/src/features/tickets/report-form-page.tsx`
+  adds `ReportFormPage` at the unguarded top-level route `/m/:token`, outside the
+  `Shell`/`RequireSession` tree. The page validates the token with `qrTokenSchema`,
+  resolves current/retired active QR tokens through `GET /v1/public/qr/:token`, renders the
+  prefilled object header, system select when the object has systems, localized fault chips
+  from `STANDARD_TEXT_KEYS`/`STANDARD_TEXTS`, free text, contact fields, the 112 notice above
+  the submit button and a confirmation with `ticketNo`, `deadlineAt`, `clockSkewed` and the
+  `/s/<statusToken>` link. Submit posts `POST /v1/public/tickets` with one `clientUuid` per
+  opened form, the current token (not a scanned retired token), selected catalog keys,
+  locale and empty `photos` for now; client-side rules mirror the API `422`s before the
+  round trip and known error codes map to `ticket:report.errors.*`.
 
 ### Changed
 
@@ -528,7 +538,7 @@ images` runs of finished pull request runs are gone, and the check↔publish lin
   Alpine (musl) development container, so the two tests ran locally against the
   distribution browser — `E2E_CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e`
   printed `2 passed` after `prepared throwaway database …` and `dropped throwaway
-  database …`. Without that variable the runner prints its skip notice and `npm run check`
+database …`. Without that variable the runner prints its skip notice and `npm run check`
   stays green, which is why the CI job installs the browser and reports the real run.
 - WP-M1-12: the legacy WP document `work-packages/m1/12-smoke-e2e.md` was rewritten into
   the small-model format, and its four-line task list gained the ten-line stored-language

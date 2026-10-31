@@ -1,1 +1,52 @@
-{}
+{
+  "report": {
+    "title": "Störung melden",
+    "loading": "Objekt wird geladen …",
+    "object": {
+      "system": "Betroffene Anlage",
+      "systemNone": "keine Auswahl",
+      "noSystems": "An diesem Objekt ist keine Anlage hinterlegt."
+    },
+    "faults": {
+      "label": "Art der Störung",
+      "hint": "Mehrere auswählbar — zusätzlich oder alternativ zur Beschreibung."
+    },
+    "text": {
+      "label": "Was ist zu sehen?",
+      "counter": "{{used}} von {{max}} Zeichen"
+    },
+    "contact": {
+      "hint": "Telefon oder E-Mail ist erforderlich — ohne Kontakt kann die Störung nicht zurückgemeldet werden.",
+      "name": "Name",
+      "phone": "Telefon",
+      "email": "E-Mail",
+      "privacy": "Diese Angaben dienen nur der Rückfrage zu dieser Meldung und werden nach Ablauf der Aufbewahrungsfrist gelöscht."
+    },
+    "emergencyNotice": "Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.",
+    "submit": "Störung melden",
+    "submitting": "Meldung wird gesendet …",
+    "validation": {
+      "faultOrText": "Bitte eine Störungsart auswählen oder die Störung beschreiben.",
+      "contactRequired": "Bitte eine Telefonnummer oder eine E-Mail-Adresse angeben.",
+      "email": "Die E-Mail-Adresse ist nicht gültig."
+    },
+    "errors": {
+      "qrTokenInvalid": "Dieser QR-Code ist ungültig. Bitte den Aufkleber des Objekts scannen.",
+      "qr_token_not_found": "Dieser QR-Code gehört zu keinem aktiven Objekt. Bitte erneut scannen oder die Objektnummer dem Meldebuch nennen.",
+      "report_text_required": "Bitte eine Störungsart auswählen oder die Störung beschreiben.",
+      "contact_required": "Bitte eine Telefonnummer oder eine E-Mail-Adresse angeben.",
+      "system_not_found": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
+      "invalid_request": "Die Meldung konnte nicht gelesen werden. Bitte erneut versuchen.",
+      "rate_limited": "Zu viele Meldungen in kurzer Zeit. Bitte in einer Minute erneut versuchen.",
+      "unknown": "Die Meldung konnte gerade nicht gesendet werden. Bitte später erneut versuchen."
+    },
+    "done": {
+      "title": "Meldung eingegangen",
+      "lead": "Die Meldung liegt im Meldebuch und wird von der zuständigen Firma bearbeitet.",
+      "ticketNo": "Vorgangsnummer: {{ticketNo}}",
+      "deadline": "Rückmeldung bis: {{deadline}}",
+      "clockSkewed": "Die Uhr des Geräts weicht von der Serveruhr ab — die Meldezeit wurde an der Serveruhr ausgerichtet.",
+      "statusLink": "Status dieser Meldung ansehen"
+    }
+  }
+}
