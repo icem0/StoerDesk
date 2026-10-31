@@ -17,7 +17,8 @@
     },
     "links": {
       "users": "Benutzerverwaltung",
-      "roles": "Rollenverwaltung"
+      "roles": "Rollenverwaltung",
+      "stickers": "QR-Aufkleber"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",

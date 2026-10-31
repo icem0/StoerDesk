@@ -1,7 +1,7 @@
 # WP-M2-03: Printable QR sticker sheets
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-01, WP-M2-02, WP-M2-02b
 phase: 2
 context-budget: 22k tokens
@@ -66,10 +66,12 @@ this package implements the print view and no PDF endpoint.
    selected format.
 4. `apps/web/src/styles.css`: the sticker classes with millimetre sizes for screen and
    print, black on white, `break-inside: avoid` for cards, white `body` background in
-   `@media print`.
+   `@media print`, and an A6 card one millimetre shorter than the page box so the
+   rounding of a `148 mm` card cannot add an empty page.
 5. `apps/web/src/routes/index.tsx`: register `/objects/stickers` as a guarded child;
-   `apps/web/src/components/Shell.tsx`: add the nav entry and mark header, nav and the
-   main padding `print:hidden`/`print:p-0` so only the sheet reaches the paper.
+   `apps/web/src/components/Shell.tsx`: add the nav entry and mark header, nav, the
+   heading, the toolbar and the checklist `print:hidden` (plus `print:p-0`,
+   `print:max-w-none`, `print:overflow-visible`), so only the sheet reaches the paper.
 6. Test (fixture, excluded from the file budget):
    `apps/web/src/features/objects/__tests__/sticker-page.test.tsx` — stubs
    `/v1/objects`, asserts the object number and name are on the sheet, the German 112
@@ -85,7 +87,6 @@ this package implements the print view and no PDF endpoint.
 - No copies-per-object control and no sheet preview pagination.
 
 ## Acceptance
-
 ```bash
 npm run typecheck --workspaces --if-present
 npm run lint
@@ -105,7 +106,14 @@ per page and an A6 sheet with one card per page, and every card carries the 112 
   test and the bookkeeping (`CHANGELOG.md`, `AGENTS.md`, `PLAN.md` §16,
   `docs/REPO-MAP.md`, `work-packages/README.md`)
 - Interfaces added: `StickerPage`, `StickerCard`, the sticker print classes, one nav entry
-- Verified:
+- Verified: `npm run check` green (typecheck, lint, web and API tests, i18n, wp-check,
+  Playwright smoke on a throwaway database with `E2E_CHROMIUM_PATH`); the new spec covers
+  the card list, the QR/no-token split, search plus deselect and the `@page` rule; a
+  throwaway Playwright probe (not committed) signed in, created five objects and printed:
+  header, nav, toolbar and checklist compute to `display: none`, every card is 105 × 148 mm
+  with a 55 mm QR and the 112 notice inside the card, the A4 sheet produced two pages of
+  210 × 297 mm (four cards on the first), the A6 sheet exactly one 105 × 148 mm page per
+  object
 - Follow-up WP: none — a real PDF download stays optional per `PLAN.md` §4/§11 and only
   gets its own WP when a deployment asks for it, so nothing is announced here
 - Open question: none

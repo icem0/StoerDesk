@@ -1,1 +1,18 @@
-{}
+{
+  "sticker": {
+    "title": "Print QR stickers",
+    "hint": "Deselect objects, pick the sheet format and print. Every sticker carries the QR code, the object name, the object number and the 112 notice.",
+    "search": "Search",
+    "format": "Format",
+    "formatA6": "A6 (one sticker per page)",
+    "formatA4": "A4 (four stickers per page)",
+    "print": "Print stickers",
+    "loading": "Loading objects …",
+    "loadError": "The object list could not be loaded.",
+    "selectedCount": "{{selected}} of {{total}} objects selected",
+    "empty": "No object selected — nothing will be printed.",
+    "noToken": "no QR token set",
+    "reportCall": "Report a malfunction: scan the QR code",
+    "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call."
+  }
+}

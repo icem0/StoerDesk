@@ -113,7 +113,11 @@ implementation.
 > `specs/08-objects-api.md` §9.2 and `specs/02-data-model.md` §4.7 carry the contract, and
 > its split child **WP-M2-02b** is implemented as well: the demo seed generates and
 > backfills `qr_token`, and `deleteExpiredQrTokens` runs daily through the pg-boss queue
-> `qr-token-cleanup`.
+> `qr-token-cleanup`. **WP-M2-03** is implemented as the printable QR sticker sheets of the
+> web app: `StickerPage` at `/objects/stickers` prints A6 or A4 sheets through
+> `window.print()` — QR of `<origin>/m/<token>`, object name, object number, report call
+> and the 112 notice on every card — and `specs/08-objects-api.md` §9.3 was filled and
+> reviewed for it.
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
@@ -143,6 +147,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-01  | object list CRUD API                                    | done                    | yes     |
 | WP-M2-02  | QR generation, regeneration, public resolution          | done                    | yes     |
 | WP-M2-02b | QR demo tokens and daily pg-boss cleanup                | done                    | yes     |
+| WP-M2-03  | printable QR sticker sheets (A6/A4 web print)           | done                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run

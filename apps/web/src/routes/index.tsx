@@ -4,6 +4,7 @@ import { App } from '../App'
 import { RolesPage } from '../admin/roles-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
+import { StickerPage } from '../features/objects/sticker-page'
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/objects/stickers',
+        element: (
+          <RequireSession>
+            <StickerPage />
           </RequireSession>
         ),
       },

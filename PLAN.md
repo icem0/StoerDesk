@@ -573,6 +573,7 @@ next phase starts).
 | WP-M2-01  | object list CRUD API                         | done   |
 | WP-M2-02  | QR generation, regeneration, resolution      | done   |
 | WP-M2-02b | QR demo tokens and scheduled cleanup         | done   |
+| WP-M2-03  | printable QR sticker sheets (web print)      | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -615,6 +616,12 @@ token (an existing token is never touched), and `apps/api/src/jobs/qr-cleanup.ts
 `deleteExpiredQrTokens` plus the pg-boss queue `qr-token-cleanup` on the cron `0 3 * * *`
 with one short-lived pool per job — started only from the direct API start and stopped by
 an `onClose` hook, so `buildServer` and the test suite never create the pg-boss schema.
+**WP-M2-03** replaces the legacy PDF plan with the print path of §4/§11: `StickerPage`
+under the guarded route `/objects/stickers` shows the active objects as a checklist and
+prints A6 or A4 sheets through `window.print()` — every card carries the `qrcode.react`
+QR of `<origin>/m/<token>`, the object name, the object number, the report call and the
+112 notice — and the selected format writes the matching `@page` rule in
+`apps/web/src/styles.css`; `specs/08-objects-api.md` §9.3 carries that contract.
 
 ## 17. Work package rules for small models
 

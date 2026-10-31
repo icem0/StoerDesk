@@ -1,1 +1,18 @@
-{}
+{
+  "sticker": {
+    "title": "QR-Aufkleber drucken",
+    "hint": "Objekte abwählen, Format wählen und drucken. Jeder Aufkleber trägt den QR-Code, den Objektnamen, die Objektnummer und den 112-Hinweis.",
+    "search": "Suchen",
+    "format": "Format",
+    "formatA6": "A6 (ein Aufkleber pro Seite)",
+    "formatA4": "A4 (vier Aufkleber pro Seite)",
+    "print": "Aufkleber drucken",
+    "loading": "Objekte werden geladen …",
+    "loadError": "Die Objektliste konnte nicht geladen werden.",
+    "selectedCount": "{{selected}} von {{total}} Objekten ausgewählt",
+    "empty": "Kein Objekt ausgewählt — es wird nichts gedruckt.",
+    "noToken": "kein QR-Token gesetzt",
+    "reportCall": "Störung melden: QR-Code scannen",
+    "emergencyNotice": "Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf."
+  }
+}

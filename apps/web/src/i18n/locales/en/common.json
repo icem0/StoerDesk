@@ -17,7 +17,8 @@
     },
     "links": {
       "users": "User administration",
-      "roles": "Role administration"
+      "roles": "Role administration",
+      "stickers": "QR stickers"
     },
     "errors": {
       "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",

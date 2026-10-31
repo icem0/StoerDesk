@@ -284,6 +284,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `buildServer` and the test suite never create the pg-boss schema. The demo seed now
   generates a `qr_token` for every object it inserts and backfills an existing demo
   object whose token is `NULL`; a non-null token is never overwritten.
+- WP-M2-03: printable QR stickers — `apps/web/src/features/objects/sticker-page.tsx`
+  adds `StickerPage` at the guarded route `/objects/stickers`: the active objects of
+  `GET /api/v1/objects?active=true` as a checklist (all selected by default, client-side
+  search over number, name and city), an A6/A4 sheet format select and a print button
+  (`window.print()`). Every card is an A6 sheet card (105 × 148 mm) with the QR of
+  `<origin>/m/<qr_token>` (`qrcode.react`, SVG), the object name, the object number, the
+  report call and the 112 notice of `PLAN.md` §2; an object with a `NULL` token prints
+  without a QR. `apps/web/src/styles.css` carries the mm print geometry, the chosen
+  format writes one `@page` rule, and header, nav, toolbar and checklist are
+  `print:hidden`. No API route and no PDF endpoint were added — the browser print path is
+  the primary path of `PLAN.md` §4/§11.
 
 
 ### Changed

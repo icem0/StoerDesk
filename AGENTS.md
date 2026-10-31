@@ -35,7 +35,10 @@ decision is §4.3.1: user input, required, unique case-insensitively, `_` allowe
 list CRUD API (`/api/v1/objects`, soft delete, search/filter and system sync) and
 **WP-M2-02** adds QR generation, regeneration with retired tokens and public token
 resolution, and its follow-up **WP-M2-02b** adds the demo-seed token backfill plus the
-daily pg-boss cleanup of expired retired tokens.
+daily pg-boss cleanup of expired retired tokens. **WP-M2-03** adds the printable QR
+sticker sheets of the web app (`/objects/stickers`, A6/A4 print view, the 112 notice on
+every card) — rewritten from the legacy PDF plan, because `PLAN.md` §4/§11 make the
+browser print path the primary one and a PDF download optional.
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -78,8 +81,18 @@ The repository contains:
   `deleteExpiredQrTokens(database, now?)` deletes `old_qr_tokens` rows with
   `expires_at <= now`, and `startQrTokenCleanup(connectionString)` runs it through the
   pg-boss queue `qr-token-cleanup` on the cron `0 3 * * *` with one short-lived pool per
-  job — started only in the direct-start block of `apps/api/src/index.ts` (never in
+   job — started only in the direct-start block of `apps/api/src/index.ts` (never in
   `buildServer`) and stopped by an `onClose` hook,
+
+- the printable QR stickers of WP-M2-03 (`apps/web/src/features/objects/sticker-page.tsx`):
+  `StickerPage` at the guarded route `/objects/stickers` lists the active objects as a
+  checklist (all selected, client-side search over number/name/city), switches between the
+  A6 and the A4 sheet and prints through `window.print()`; every `StickerCard` carries the
+  `qrcode.react` QR of `<origin>/m/<qr_token>`, the object name, the object number, the
+  report call and the 112 notice (`object:sticker.emergencyNotice`), and a `NULL` token
+  prints `object:sticker.noToken` instead of a QR; the mm geometry is in
+  `apps/web/src/styles.css`, the selected format writes one `@page` rule and header, nav,
+  toolbar and checklist are `print:hidden` — no API route, no PDF endpoint,
 
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,

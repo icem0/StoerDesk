@@ -14,3 +14,91 @@ body {
   min-height: 100dvh;
   background-color: #020617;
 }
+
+/*
+ * Printable QR sticker sheets (WP-M2-03, specs/08-objects-api.md §9.3): A6 cards of
+ * 105 × 148 mm, one per A6 page or four per A4 page. The sheet format writes its own
+ * `@page` rule from the component, so the grid stays gapless and the dashed border is
+ * the cut line.
+ */
+.sticker-sheet {
+  display: grid;
+  gap: 0;
+  justify-content: center;
+}
+
+.sticker-sheet--a6 {
+  grid-template-columns: 105mm;
+}
+
+.sticker-sheet--a4 {
+  grid-template-columns: repeat(2, 105mm);
+}
+
+.sticker-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3mm;
+  width: 105mm;
+  height: 148mm;
+  padding: 6mm;
+  border: 0.3mm dashed #94a3b8;
+  background-color: #ffffff;
+  color: #020617;
+  font-size: 4.5mm;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.sticker-card__qr {
+  width: 55mm;
+  height: 55mm;
+}
+
+.sticker-card__name {
+  font-size: 6mm;
+  font-weight: 600;
+}
+
+.sticker-card__object-no {
+  font-size: 4mm;
+  letter-spacing: 0.08em;
+}
+
+.sticker-card__call {
+  font-size: 5mm;
+  font-weight: 600;
+}
+
+.sticker-card__notice {
+  font-size: 3.4mm;
+  font-weight: 600;
+}
+
+.sticker-card__no-token {
+  font-size: 3.5mm;
+  font-style: italic;
+}
+
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+
+  .sticker-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /*
+   * One A6 card per A6 page: a card of exactly 148 mm can overflow the page box by a
+   * fraction of a pixel and add an empty page, so the printed card stays one millimetre
+   * shorter than the page.
+   */
+  .sticker-sheet--a6 .sticker-card {
+    height: 147mm;
+  }
+}
