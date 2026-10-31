@@ -18,7 +18,7 @@ directly from a placeholder slice.
 | [03-ticket-workflow.md](03-ticket-workflow.md) | Ch. 5 + 5.x additions | ~200 lines |
 | [04-oncall.md](04-oncall.md)                   | Ch. 5a                | ~280 lines |
 | [05-timeline.md](05-timeline.md)               | Ch. 6                 | ~80 lines  |
-| [06-report-form.md](06-report-form.md)         | Ch. 7                 | ~100 lines |
+| [06-report-form.md](06-report-form.md)         | Ch. 7                 | ~155 lines |
 | [07-escalation.md](07-escalation.md)           | Ch. 8                 | ~80 lines  |
 | [08-objects-api.md](08-objects-api.md)         | Ch. 9                 | ~180 lines |
 | [09-offline.md](09-offline.md)                 | Ch. 10                | ~180 lines |
