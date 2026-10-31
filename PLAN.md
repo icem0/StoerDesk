@@ -579,6 +579,9 @@ next phase starts).
 | WP-M2-04c | report photo upload (magic bytes, volume)    | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 | WP-M1-16  | current git version in the deployment env    | done   |
+| WP-M2-05  | public report form at `/m/:token` (web)      | open   |
+| WP-M2-05b | photo upload with client compression         | open   |
+| WP-M2-05c | report form smoke E2E in de and en           | open   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -647,6 +650,15 @@ the files live at `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` with the r
 path, MIME type and byte count in `ticket_photos` —
 `422 photo_limit_exceeded`/`photo_too_large`/`photo_type_unsupported`. Reading a photo is
 phase 10 (the volume is never served), the per-IP and per-token rate limit is WP-M2-07.
+**WP-M2-05** is rewritten into the small-model format and split before implementation: the
+legacy plan mixed the route, six components, the canvas compression, the confirmation page
+and two Playwright tests into one package. **WP-M2-05** (`05-report-form-ui.md`) is the
+public form at the unguarded route `/m/:token` (object header, system select, fault chips
+over `STANDARD_TEXT_KEYS`, free text, contact fields, 112 notice, confirmation with the
+ticket number and the `/s/<statusToken>` link), **WP-M2-05b**
+(`05b-report-photo-upload-ui.md`) adds the client compression to 1600 px/JPEG 0.8 and the
+six-photo uploader, and **WP-M2-05c** (`05c-report-form-e2e.md`) proves the flow in a real
+browser in `de` and `en`. The status page itself stays WP-M2-06.
 
 ## 17. Work package rules for small models
 

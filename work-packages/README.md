@@ -13,16 +13,18 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 27  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 14  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 16  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
 `WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M1-16`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02`,
-`WP-M2-02b`, `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`) and
+`WP-M2-02b`, `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`),
 `WP-M2-04` (rewritten from the legacy `04-report-form-api.md` and split into
-**WP-M2-04b** and **WP-M2-04c**). The
+**WP-M2-04b** and **WP-M2-04c**) and
+`WP-M2-05` (rewritten from the legacy `05-report-form-ui.md` and split into
+**WP-M2-05b** and **WP-M2-05c**). The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -155,6 +157,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-04  | ticket tables, events, photos and the counter           | done                    | yes     |
 | WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | done                    | yes     |
 | WP-M2-04c | report photo upload to the uploads volume               | done                    | yes     |
+| WP-M2-05  | public report form UI at `/m/:token` (web)              | open                    | yes     |
+| WP-M2-05b | photo upload with client canvas compression             | open                    | yes     |
+| WP-M2-05c | report form smoke E2E in de and en                      | open                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -245,6 +250,18 @@ rate limit per IP and per QR token of the legacy plan moves to the **existing WP
 (`specs/06-report-form.md` §7.6). The spec slices it needed were placeholders and are
 filled and reviewed first: `specs/06-report-form.md` (chapter 7) and
 `specs/02-data-model.md` §4.8–§4.11.
+`WP-M2-05` is rewritten into the small-model format and split as well: the legacy plan put
+the route, six components, the client compression, the confirmation page and two Playwright
+tests into one package, which is far over the four-source-file and 300-line limits.
+**WP-M2-05** (`05-report-form-ui.md`) is the public form itself — `ReportFormPage` at the
+unguarded route `/m/:token` with the prefilled object header, the system select, the fault
+chips over `STANDARD_TEXT_KEYS`, the free text, the contact fields, the 112 notice and the
+confirmation with the ticket number and the `/s/<statusToken>` link. Its child
+**WP-M2-05b** (`05b-report-photo-upload-ui.md`) adds the canvas compression to
+1600 px/JPEG 0.8 and the six-photo uploader of §7.4, and **WP-M2-05c**
+(`05c-report-form-e2e.md`) proves the whole path in a real browser in `de` and `en` — the
+photo upload needs a real canvas, which jsdom does not have. The status page `/s/:token`
+stays with WP-M2-06, the duplicate hint with WP-M2-08, the offline outbox with WP-M2-09.
 
 ## Validation
 
