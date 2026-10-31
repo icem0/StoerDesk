@@ -572,7 +572,7 @@ next phase starts).
 | WP-M2-00  | core object tables and demo seed             | done   |
 | WP-M2-01  | object list CRUD API                         | done   |
 | WP-M2-02  | QR generation, regeneration, resolution      | done   |
-| WP-M2-02b | QR demo tokens and scheduled cleanup          | open   |
+| WP-M2-02b | QR demo tokens and scheduled cleanup         | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`

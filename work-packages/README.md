@@ -19,8 +19,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
-`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02` and
-`WP-M2-02b`. The
+`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02`,
+`WP-M2-02b` and `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`). The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.

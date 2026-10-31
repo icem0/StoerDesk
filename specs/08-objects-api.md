@@ -5,8 +5,10 @@
 **Status:** §9.1 is taken from `PLAN.md` §11 and
 [`specs/02-data-model.md`](02-data-model.md) §4.3–§4.4 and was reviewed for
 WP-M2-01. §9.2 (QR tokens) is filled from `PLAN.md` §11 and
-`specs/02-data-model.md` §4.3/§4.7 and was reviewed for WP-M2-02. §9.3–§9.5 stay
-owned by `PLAN.md` §11 until their own work package.
+`specs/02-data-model.md` §4.3/§4.7 and was reviewed for WP-M2-02. §9.3 (printable QR
+stickers) is filled from `PLAN.md` §4/§11 and `PLAN.md` §2 (the 112 notice) and was
+reviewed for WP-M2-03. §9.4–§9.5 stay owned by `PLAN.md` §11 until their own work
+package.
 
 > The source of this slice is `PLAN.md` §11 (objects, QR, stickers, CSV, REST
 > API). The data contract of the object list comes from
@@ -121,10 +123,40 @@ ignores expired rows. The demo seed of WP-M2-02b gives every demo object it inse
 generated token and backfills a `NULL` token, so a demo installation is scannable without
 a manual regeneration.
 
-### 9.3 Printable stickers (planned)
+### 9.3 Printable QR stickers (WP-M2-03)
 
-A6/A4 print views and the 112 notice are implemented by WP-M2-03; the rules stay
-in `PLAN.md` §11 until that slice is filled.
+Stickers are printed from the browser: the web app renders an HTML print view with
+`@media print` and mm page sizes **(plan, §4, §11)**. A real PDF download stays
+optional and only gets its own work package if a deployment needs one — this package
+adds **no API route**; the view reads the object list API of §9.1.
+
+**Route and data.** `/objects/stickers` is a child of the guarded route
+(`RequireSession`, cosmetic next to the server guard). It lists
+`GET /api/v1/objects?active=true` as a checklist, every object selected by default,
+and filters the checklist by a client-side `search` over object number, name and city.
+Inactive (soft-deleted) objects are not printable — their token only serves the
+30-day redirect of §9.2.
+
+**Sticker content**, in this order:
+
+1. the QR code,
+2. the object name,
+3. the object number,
+4. the report call `object:sticker.reportCall` — German reference
+   „Störung melden: QR-Code scannen" **(plan, §11)**,
+5. the 112 notice `object:sticker.emergencyNotice` from `PLAN.md` §2 — multilingual,
+   never hard-coded, and it must stay visible on every printed sticker.
+
+The QR encodes only the public URL `<origin>/m/<qr_token>`, never the object number
+(§9.2). An object whose `qr_token` is still `NULL` prints without a QR and shows
+`object:sticker.noToken` instead of a broken code.
+
+**Formats.** A6 (105 × 148 mm) — one sticker per page; A4 (210 × 297 mm) — four A6
+stickers per page in a 2 × 2 grid. The selected format writes one `@page` rule
+(`size` and `margin`); the sheet grid sizes the cards, every card is
+`break-inside: avoid`, and screen preview and print use the same millimetre sizes.
+The app chrome (header, navigation, toolbar) is `print:hidden`; print colours are
+black on white. No print-dialog automation and no PDF endpoint.
 
 ### 9.4 CSV import (planned)
 
