@@ -13,14 +13,16 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 26  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 11  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 14  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
 `WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02`,
-`WP-M2-02b` and `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`). The
+`WP-M2-02b`, `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`) and
+`WP-M2-04` (rewritten from the legacy `04-report-form-api.md` and split into
+**WP-M2-04b** and **WP-M2-04c**). The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -149,6 +151,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-02b | QR demo tokens and daily pg-boss cleanup                | done                    | yes     |
 | WP-M2-03  | printable QR sticker sheets (A6/A4 web print)           | done                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
+| WP-M2-04  | ticket tables, events, photos and the counter           | in progress             | yes     |
+| WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | planned                 | yes     |
+| WP-M2-04c | report photo upload to the uploads volume               | planned                 | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -216,6 +221,18 @@ object and backfills a `NULL` token without ever touching an existing one, and
 `apps/api/src/jobs/qr-cleanup.ts` deletes expired `old_qr_tokens` rows through the pg-boss
 queue `qr-token-cleanup` on the cron `0 3 * * *`, started only from the direct API start
 and stopped by an `onClose` hook.
+`WP-M2-04` is rewritten into the small-model format and split, because the legacy plan
+mixed schema, service, route, rate limit and tests in one package (`PLAN.md` §17: max.
+3–4 source files): **WP-M2-04** adds the four ticket tables behind migration
+`0004_ticket_tables`, the `next_ticket_no()` counter (`ST-<year>-<counter>`) and the
+append-only trigger of `ticket_events`; **WP-M2-04b** (`04b-public-report-api.md`) adds
+the public `POST /api/v1/public/tickets` with the `client_uuid` idempotency; **WP-M2-04c**
+(`04c-report-photo-upload.md`) adds the photo files and the `ticket_photos` rows. The
+rate limit per IP and per QR token of the legacy plan moves to the **existing WP-M2-07**
+(spam protection), which also defines "suspicious" and writes `suspected_spam`
+(`specs/06-report-form.md` §7.6). The spec slices it needed were placeholders and are
+filled and reviewed first: `specs/06-report-form.md` (chapter 7) and
+`specs/02-data-model.md` §4.8–§4.11.
 
 ## Validation
 
