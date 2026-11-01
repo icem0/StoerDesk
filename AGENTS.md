@@ -285,7 +285,8 @@ and IDE support.
   `notes`, `source_run` and `mode=check`, because a `workflow_dispatch` payload is the only
   one that carries free text. `build.yml` titles itself `publish <version> · <notes>`, i.e.
   `publish v0.0.NN · <commit subject>`; a manual run leaves `notes` empty and titles itself
-  `publish <version> · manual · <ref>`. `latest` moves only for `mode=check`. Publish job
+  `publish <version> · manual · <ref>`. Every publish run moves `latest`; `mode` only
+  records who authorised the run. Publish job
   names (`Publish <service> image <version>`) and their job summaries (what is new, publisher,
   image names, tags, version, source SHA, source run URL) are the second carrier. All
   publish runs share one serialising concurrency group (`publish-queue`), so a slower

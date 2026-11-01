@@ -15,7 +15,7 @@ run-name: ${{ github.event.inputs.notes != '' && format('publish {0} · {1}', gi
 on:
   # Reached from two directions: the `check` run of a version tag push dispatches with
   # `mode=check` and the version of that tag, a person dispatches with `mode=manual`.
-  # Only a `check` run may move `latest`, so an ad hoc republish never rewrites it.
+  # Every publish run moves `latest`; `mode` only records who authorised the run.
   workflow_dispatch:
     inputs:
       version:
@@ -126,7 +126,6 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           TAG: ${{ needs.version.outputs.tag }}
           SHA: ${{ needs.version.outputs.sha }}
-          MODE: ${{ github.event.inputs.mode }}
         run: |
           set -euo pipefail
           image="${REGISTRY}/${IMAGE_OWNER}/stoerdesk-${SERVICE}"
@@ -135,9 +134,7 @@ jobs:
             echo "${image}:${VERSION}"
             echo "${image}:${TAG}"
             echo "${image}:sha-${SHA}"
-            if [ "$MODE" = "check" ]; then
-              echo "${image}:latest"
-            fi
+            echo "${image}:latest"
             echo "TAGS"
           } >> "$GITHUB_OUTPUT"
 

@@ -172,8 +172,9 @@ saw the tag either, because `git push --follow-tags` pushes tag and commit in on
 `WP-M1-10i` adds the second half of that label: a `workflow_run` payload can only carry the
 title of the calling run, so the green `check` run now ends with `Dispatch publish run`, which
 starts `build.yml` through the `workflow_dispatch` REST endpoint with the version and the
-commit subject as inputs — the publish run is titled `publish v0.0.NN · <commit subject>`, and
-only a dispatch with `mode=check` moves `latest`.
+commit subject as inputs — the publish run is titled `publish v0.0.NN · <commit subject>`.
+Every publish run moves `latest`, whether it was dispatched by a green `check` run or
+started manually.
 `WP-M1-09c` is implemented — `useMe`/`usePermission` in `apps/web/src/auth`,
 `UsersPage` at `/admin/users` and the `settings` namespace fixtures.
 `WP-M1-09d` is implemented — `RolesPage` at `/admin/roles` on top of the role API, the
