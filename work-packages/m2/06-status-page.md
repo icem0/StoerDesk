@@ -1,7 +1,7 @@
 # WP-M2-06: Public ticket status API
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-04b
 phase: 2
 context-budget: 20k tokens
@@ -87,6 +87,9 @@ database (skipped without one, like the existing report tests).
   `apps/api/src/tickets/__tests__/status.integration.spec.ts` and the bookkeeping
 - Interfaces added: the public status endpoint, `PublicTicketStatus`,
   `PUBLIC_TICKET_EVENT_TYPES` and `TICKET_STATUS_VALUES`
-- Verified: see the handoff of the implementation commit
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npx vitest run src/tickets/__tests__/status.integration.spec.ts` (3 tests against the
+  real database: no payload/actor leakage, whitelist, `404 status_token_not_found` for a
+  malformed and an unknown token) and `npm run wp:check`
 - Follow-up WP: `06b-status-page-ui.md` (created in the same commit as this rewrite)
 - Open question: none

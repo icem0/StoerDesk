@@ -377,6 +377,15 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   `POST /v1/public/tickets` body and maps `photo_limit_exceeded`, `photo_too_large` and
   `photo_type_unsupported` to `ticket:report.errors.*`; the confirmation shows
   `report.done.photoCount`. The real canvas path is proven by WP-M2-05c.
+- WP-M2-06: public ticket status API — `apps/api/src/tickets/status.ts` adds
+  `GET /api/v1/public/tickets/:token/status`, guarded by nothing but the unguessable
+  `status_token`: an unknown or malformed token is `404 status_token_not_found`, a known one
+  answers `200` with `ticketNo`, the current `status`, `reportedAt`, `deadlineAt` and the
+  timeline. `packages/shared/src/schemas/ticket.ts` carries
+  `PUBLIC_TICKET_EVENT_TYPES`, `publicTicketEventSchema` and
+  `publicTicketStatusResponseSchema`, so only `created`, `work_order_set`, `accepted`,
+  `acknowledged` and `closed` are read and the response never carries an event `payload`, an
+  actor, contact data, the description or an internal comment. The page itself is WP-M2-06b.
 
 ### Changed
 

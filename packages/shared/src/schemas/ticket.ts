@@ -76,3 +76,50 @@ export const publicReportResponseSchema = z.object({
 export type PublicReportContact = z.infer<typeof publicReportContactSchema>
 export type PublicReportRequest = z.infer<typeof publicReportRequestSchema>
 export type PublicReport = z.infer<typeof publicReportResponseSchema>
+
+/**
+ * Public status page (`specs/06-report-form.md` §7.3.4/§7.7, WP-M2-06).
+ *
+ * The status token is the only key of the page. The answer carries the ticket
+ * number, the current status and the **public** part of the timeline — never
+ * event payloads, actors, contact data or internal comments. The status values
+ * mirror the database check of `specs/02-data-model.md` §4.8 and PLAN §7.
+ */
+export const TICKET_STATUS_VALUES = [
+  'NEW',
+  'IN_REVIEW',
+  'WORK_ORDER_CREATED',
+  'OFFERED',
+  'ASSIGNED',
+  'ACCEPTED',
+  'ACKNOWLEDGED',
+  'CLOSED',
+  'CANCELLED',
+] as const
+
+export const ticketStatusSchema = z.enum(TICKET_STATUS_VALUES)
+
+/** Only these event types are visible to the reporter; everything else stays internal. */
+export const PUBLIC_TICKET_EVENT_TYPES = [
+  'created',
+  'work_order_set',
+  'accepted',
+  'acknowledged',
+  'closed',
+] as const
+
+export const publicTicketEventSchema = z.object({
+  type: z.enum(PUBLIC_TICKET_EVENT_TYPES),
+  at: z.iso.datetime(),
+})
+
+export const publicTicketStatusResponseSchema = z.object({
+  ticketNo: z.string(),
+  status: ticketStatusSchema,
+  reportedAt: z.iso.datetime(),
+  deadlineAt: z.iso.datetime(),
+  events: z.array(publicTicketEventSchema),
+})
+
+export type PublicTicketEvent = z.infer<typeof publicTicketEventSchema>
+export type PublicTicketStatus = z.infer<typeof publicTicketStatusResponseSchema>

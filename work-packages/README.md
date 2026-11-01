@@ -163,7 +163,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-05  | public report form UI at `/m/:token` (web)              | done                    | yes     |
 | WP-M2-05b | photo upload with client canvas compression             | done                    | yes     |
 | WP-M2-05c | report form smoke E2E in de and en                      | done                    | yes     |
-| WP-M2-06  | public ticket status API by `status_token`              | open                    | yes     |
+| WP-M2-06  | public ticket status API by `status_token`              | done                    | yes     |
 | WP-M2-06b | public status page at `/s/:token` (web)                 | open                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
@@ -277,8 +277,9 @@ as the report form smoke E2E: it signs in as the administrator, creates the obje
 a real JPEG in one run (canvas compression and server magic-byte check) and asserts the
 ticket number, the `/s/<status_token>` link and the photo count. **WP-M2-06** is rewritten
 into the small-model format and split as well: the legacy plan mixed the public status API,
-the page and its tests into one package. **WP-M2-06** (`06-status-page.md`) is the status
-API — `GET /api/v1/public/tickets/:token/status` answering the ticket number, the current
+the page and its tests into one package. **WP-M2-06** (`06-status-page.md`) is implemented as
+the status API — `GET /api/v1/public/tickets/:token/status` answering the ticket number, the
+current
 status, the deadline and only the whitelisted event types (`created`, `work_order_set`,
 `accepted`, `acknowledged`, `closed`) as `{ type, at }`, never an event payload, an actor or
 an internal comment. Its child **WP-M2-06b** (`06b-status-page-ui.md`) is the public page at

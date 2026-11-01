@@ -16,6 +16,7 @@ import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicReportRoutes } from './tickets/report'
+import { publicStatusRoutes } from './tickets/status'
 
 loadDotEnvFile()
 
@@ -92,6 +93,7 @@ export async function buildServer() {
     uploadDir: env.UPLOAD_DIR,
     maxPhotoBytes: env.UPLOAD_MAX_BYTES,
   })
+  await app.register(publicStatusRoutes, { database })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
   // or production (`specs/01-rbac.md` §3.7).

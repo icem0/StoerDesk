@@ -53,7 +53,10 @@ check, `UPLOAD_MAX_BYTES` cap, `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext
 chips, contact fields, idempotent `clientUuid`, 112 notice and confirmation) and its child
 **WP-M2-05b** adds the photo upload (`image-compress.ts` canvas compression to 1600 px/JPEG
 0.8, `photo-upload.tsx` with six previews and remove buttons, data URLs in the same submit
-body, the photo error codes and `photoCount` on the confirmation).
+body, the photo error codes and `photoCount` on the confirmation), **WP-M2-05c** proves that
+flow in a real browser (Playwright at `/m/<token>` in `de` and `en` with a real JPEG upload)
+and **WP-M2-06** adds the public status API by `status_token`
+(`GET /api/v1/public/tickets/:token/status`, whitelisted public event types only).
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -145,6 +148,14 @@ The repository contains:
   to `UPLOAD_DIR`, the detected MIME type and the byte count in `ticket_photos`, the
   response carries the real `photoCount` and an idempotent repeat ignores its photo array;
   there is **no** read endpoint (phase 10) and no `width_px`/`height_px` decoding,
+
+- the public status API of WP-M2-06 (`apps/api/src/tickets/status.ts` plus the schemas in
+  `packages/shared/src/schemas/ticket.ts`): `GET /api/v1/public/tickets/:token/status`
+  without auth answers `200` with the ticket number, the current status, `reportedAt`,
+  `deadlineAt` and the timeline as `{ type, at }[]`; only `created`, `work_order_set`,
+  `accepted`, `acknowledged` and `closed` are read and no payload, actor, contact data,
+  description or internal comment is ever part of the answer; an unknown or malformed token
+  answers `404 status_token_not_found`,
 
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
