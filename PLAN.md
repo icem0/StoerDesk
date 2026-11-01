@@ -76,6 +76,18 @@ of the product text.
 - Seed data and standard text templates are localized resources, not German
   string literals in code.
 
+### 3.1 i18n mechanics
+
+- Web namespaces: `common`, `errors`, `validation`, `ticket`, `object`, `oncall`,
+  `stats`, `settings`.
+- `de` is the default and the reference locale, `en` must be complete.
+- No literal strings in JSX: the ESLint rule `i18next/no-literal-string` is active.
+- A new namespace file must be registered in `apps/web/src/i18n/index.ts`,
+  otherwise `npm run i18n:check` fails. That check also verifies de/en key parity
+  and that every key referenced in `apps/web/src` exists.
+- Server text goes through the shared `t()` of `packages/shared/src/i18n/t.ts`
+  (`server.{de,en}.json`, `seed.{de,en}.json`); API errors and logs stay English.
+
 ## 4. Architecture and stack
 
 | Area            | Decision                                                                                                  |
@@ -108,6 +120,27 @@ Binding technical choices for decisions that were still open:
   `fastify-type-provider-zod`.
 - **Messengers:** integrations only. StörDesk never ships Matrix, Signal, ntfy,
   SMTP or Telegram containers.
+
+### 4.1 Coding conventions
+
+These are the project conventions a work package has to follow; the agent workflow
+around them is in `AGENTS.md`.
+
+- TypeScript strict, no `any` (ESLint warning), no untyped code. Web and API keep
+  their own `tsconfig.json` because they need different `lib` sets.
+- Code, identifiers, comments, JSDoc, test names, error and log messages, commit
+  messages and developer documentation are English (§3); the repository
+  documentation (README, `AGENTS.md`, `docs/`) is English too.
+- Errors are `{ code, params }` — never translated text in a log or an API payload.
+- Logging is Pino, structured, never PII in plain text.
+- Money amounts: none. StörDesk tracks no amounts, no stock and no time
+  (§1) — do not copy amount or stock patterns from other projects.
+- IDs are UUIDs with UUID v7 as the database default, never sequential numbers
+  (§6, ADR-0002).
+- Timestamps are `timestamptz` in UTC; the server clock is authoritative (§15).
+- User-facing web text only through i18n keys (§3.1).
+- Tests: Vitest (one project per workspace) for unit/integration, Playwright for
+  E2E.
 
 ## 5. Roles and permissions
 
@@ -181,6 +214,17 @@ Indexes at minimum:
 - `tickets(client_uuid)` unique
 - `objects(object_no)` unique, `objects(qr_token)` unique
 - `oncall_shifts(pool_id, start_at, end_at)`
+
+### 6.1 Data model lessons
+
+- **No stock logic.** StörDesk manages no stock and no amounts (§1); an import or
+  sync never changes a stock-like quantity.
+- **Changes stay traceable.** Event tables are append-only: a correction is a new
+  event, never an edit of an old one, and a database trigger blocks `UPDATE` and
+  `DELETE` on `ticket_events` and `oncall_events` (§15 Audit).
+- **Quarantine.** Import or sync errors that cannot be resolved automatically are
+  isolated as quarantine rows and never block the processing of the remaining rows
+  (§11 CSV import, §10 spam and duplicate handling).
 
 ## 7. Ticket workflow
 
@@ -560,6 +604,11 @@ backlog of record (mirrored and kept current in
 (mandatory closure)_ — open items of a phase are finished in numeric order before the
 next phase starts).
 
+This section is the status history of the project. The inventory of what the
+repository actually contains — every module, its purpose and its public API — lives
+in `docs/REPO-MAP.md` and is the only place that is kept current after every work
+package; do not duplicate it here or in `AGENTS.md`.
+
 | WP        | Content                                      | Status |
 | --------- | -------------------------------------------- | ------ |
 | WP-M1-09e | login form, logout and route guard (web)     | done   |
@@ -584,7 +633,7 @@ next phase starts).
 | WP-M2-05b | photo upload with client compression         | done   |
 | WP-M2-05c | report form smoke E2E in de and en           | done   |
 | WP-M2-06  | public status API by `status_token`          | done   |
-| WP-M2-06b | public status page at `/s/:token` (web)      | open   |
+| WP-M2-06b | public status page at `/s/:token` (web)      | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -671,8 +720,8 @@ legacy plan mixed the public status API, the page and its tests into one package
 **WP-M2-06** (`06-status-page.md`) is implemented as the status API —
 `GET /api/v1/public/tickets/:token/status` with the ticket number, the current status, the
 deadline and only the whitelisted event types as `{ type, at }` — and its child
-**WP-M2-06b** (`06b-status-page-ui.md`) adds the public page at `/s/:token` with the status
-badge and the timeline in `de` and `en`.
+**WP-M2-06b** (`06b-status-page-ui.md`) is implemented as the public page at `/s/:token` with
+the status badge and the timeline in `de` and `en`.
 
 ## 17. Work package rules for small models
 
@@ -727,6 +776,28 @@ After every WP:
 npm run check
 npm run build
 ```
+
+### 18.1 The `check` gate
+
+`npm run check` runs these gates in order:
+
+1. `npm run typecheck --workspaces --if-present` — TypeScript per workspace.
+   **Deviation from WP-M1-01:** the root script uses the per-workspace typechecks
+   instead of one `tsc --noEmit` across all packages, because the API (Node) and
+   the web (DOM) need different `lib` sets; the root `tsconfig.json` remains for
+   editor and IDE support.
+2. `eslint .` — flat config `eslint.config.js`, including
+   `i18next/no-literal-string`.
+3. `vitest run` — one Vitest project per workspace.
+4. `npm run i18n:check` — de/en key parity and referenced keys (§3.1).
+5. `npm run wp:check` — work-package size, context budget and required fields.
+6. `npm run test:e2e` — Playwright smoke test on a throwaway database
+   (`WP-M1-12`); without a reachable database or a startable browser it prints one
+   notice and stays green locally, but in CI (`CI=true`) a missing prerequisite is
+   an error.
+
+A failed gate is read, fixed and committed again — a work package never ends with a
+red gate.
 
 Phase 0 and every Docker-related WP additionally:
 

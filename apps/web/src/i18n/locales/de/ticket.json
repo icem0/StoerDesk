@@ -61,5 +61,35 @@
       "photoCount": "Fotos: {{count}}",
       "statusLink": "Status dieser Meldung ansehen"
     }
+  },
+  "status": {
+    "title": "Status der Meldung",
+    "loading": "Status wird geladen …",
+    "ticketNo": "Vorgangsnummer {{ticketNo}}",
+    "reportedAtLabel": "Gemeldet am:",
+    "deadlineLabel": "Rückmeldung bis:",
+    "timeline": "Verlauf",
+    "values": {
+      "NEW": "Neu",
+      "IN_REVIEW": "In Prüfung",
+      "WORK_ORDER_CREATED": "Auftrag angelegt",
+      "OFFERED": "Angeboten",
+      "ASSIGNED": "Zugewiesen",
+      "ACCEPTED": "Angenommen",
+      "ACKNOWLEDGED": "Rückmeldung erfolgt",
+      "CLOSED": "Abgeschlossen",
+      "CANCELLED": "Storniert"
+    },
+    "events": {
+      "created": "Meldung eingegangen",
+      "work_order_set": "Auftrag angelegt",
+      "accepted": "Auftrag angenommen",
+      "acknowledged": "Störung bearbeitet",
+      "closed": "Vorgang abgeschlossen"
+    },
+    "errors": {
+      "invalidToken": "Dieser Statuslink ist ungültig. Bitte den Link aus der Bestätigung erneut öffnen.",
+      "not_found": "Zu diesem Statuslink gibt es keine Meldung. Bitte den Link aus der Bestätigung erneut öffnen."
+    }
   }
 }

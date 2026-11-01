@@ -6,6 +6,7 @@ import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { StickerPage } from '../features/objects/sticker-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
+import { StatusPage } from '../features/tickets/status-page'
 
 export const router = createBrowserRouter([
   {
@@ -43,5 +44,11 @@ export const router = createBrowserRouter([
   {
     path: '/m/:token',
     element: <ReportFormPage />,
+  },
+  // The status link of the confirmation page is public as well: a reporter has no
+  // session, so `/s/:token` stays outside the `Shell` (WP-M2-06b, PLAN §10).
+  {
+    path: '/s/:token',
+    element: <StatusPage />,
   },
 ])

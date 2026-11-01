@@ -386,6 +386,15 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   `publicTicketStatusResponseSchema`, so only `created`, `work_order_set`, `accepted`,
   `acknowledged` and `closed` are read and the response never carries an event `payload`, an
   actor, contact data, the description or an internal comment. The page itself is WP-M2-06b.
+- WP-M2-06b: public status page — `apps/web/src/features/tickets/status-page.tsx` adds
+  `StatusPage` at the top-level route `/s/:token`, outside the `Shell`/`RequireSession` tree.
+  The token is validated with `qrTokenSchema` before the request, `usePublicStatus(token)`
+  reads `GET /v1/public/tickets/:token/status`, and the page shows the ticket number, the
+  status as a badge whose colour is paired with the localized text label of
+  `ticket:status.values.*` (never colour alone), the deadline and the timeline with the
+  localized labels `ticket:status.events.*` plus the localized timestamps — in `de` and `en`.
+  A malformed token renders `ticket:status.errors.invalidToken` without a request, an unknown
+  one renders `ticket:status.errors.not_found`.
 
 ### Changed
 

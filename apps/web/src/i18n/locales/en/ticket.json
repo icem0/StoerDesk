@@ -61,5 +61,35 @@
       "photoCount": "Photos: {{count}}",
       "statusLink": "View the status of this report"
     }
+  },
+  "status": {
+    "title": "Report status",
+    "loading": "Loading the status …",
+    "ticketNo": "Reference number {{ticketNo}}",
+    "reportedAtLabel": "Reported on:",
+    "deadlineLabel": "Feedback by:",
+    "timeline": "History",
+    "values": {
+      "NEW": "New",
+      "IN_REVIEW": "In review",
+      "WORK_ORDER_CREATED": "Work order created",
+      "OFFERED": "Offered",
+      "ASSIGNED": "Assigned",
+      "ACCEPTED": "Accepted",
+      "ACKNOWLEDGED": "Acknowledged",
+      "CLOSED": "Closed",
+      "CANCELLED": "Cancelled"
+    },
+    "events": {
+      "created": "Report received",
+      "work_order_set": "Work order created",
+      "accepted": "Work order accepted",
+      "acknowledged": "Malfunction handled",
+      "closed": "Ticket closed"
+    },
+    "errors": {
+      "invalidToken": "This status link is invalid. Please open the link from the confirmation again.",
+      "not_found": "There is no report for this status link. Please open the link from the confirmation again."
+    }
   }
 }

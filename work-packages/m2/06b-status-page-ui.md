@@ -1,7 +1,7 @@
 # WP-M2-06b: Public status page at /s/:token
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-06
 phase: 2
 context-budget: 24k tokens
@@ -86,6 +86,9 @@ it; `i18n:check` reports the new `ticket:status.*` keys in both locales.
   `apps/web/src/routes/index.tsx`, the `ticket` locale files (de/en), the fixture
   `apps/web/src/features/tickets/__tests__/status-page.test.tsx` and the bookkeeping
 - Interfaces added: `StatusPage`, `usePublicStatus(token)`, `ticket:status.*`
-- Verified: see the handoff of the implementation commit
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run test:run`, `npm run i18n:check` (164 de/164 en keys, all referenced keys exist)
+  and `npm run wp:check`; the page tests cover the badge label, the timeline with
+  `created`/`acknowledged` and the `not_found` notice
 - Follow-up WP: none — the phase 2 exit-criterion E2E is the existing WP-M2-10
 - Open question: none

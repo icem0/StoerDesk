@@ -164,7 +164,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-05b | photo upload with client canvas compression             | done                    | yes     |
 | WP-M2-05c | report form smoke E2E in de and en                      | done                    | yes     |
 | WP-M2-06  | public ticket status API by `status_token`              | done                    | yes     |
-| WP-M2-06b | public status page at `/s/:token` (web)                 | open                    | yes     |
+| WP-M2-06b | public status page at `/s/:token` (web)                 | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -282,8 +282,8 @@ the status API — `GET /api/v1/public/tickets/:token/status` answering the tick
 current
 status, the deadline and only the whitelisted event types (`created`, `work_order_set`,
 `accepted`, `acknowledged`, `closed`) as `{ type, at }`, never an event payload, an actor or
-an internal comment. Its child **WP-M2-06b** (`06b-status-page-ui.md`) is the public page at
-`/s/:token` — ticket number, status badge with a text label, deadline and the timeline in
+an internal comment. Its child **WP-M2-06b** (`06b-status-page-ui.md`) is implemented as the public `StatusPage`
+at `/s/:token` — ticket number, status badge with a text label, deadline and the timeline in
 `de` and `en`. The duplicate hint stays with WP-M2-08, the offline outbox with WP-M2-09.
 
 ## Validation

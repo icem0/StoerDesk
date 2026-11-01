@@ -56,7 +56,9 @@ chips, contact fields, idempotent `clientUuid`, 112 notice and confirmation) and
 body, the photo error codes and `photoCount` on the confirmation), **WP-M2-05c** proves that
 flow in a real browser (Playwright at `/m/<token>` in `de` and `en` with a real JPEG upload)
 and **WP-M2-06** adds the public status API by `status_token`
-(`GET /api/v1/public/tickets/:token/status`, whitelisted public event types only).
+(`GET /api/v1/public/tickets/:token/status`, whitelisted public event types only) and its
+child **WP-M2-06b** the public status page at `/s/:token` (status badge with a text label,
+deadline and the filtered timeline in `de` and `en`).
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`
@@ -156,6 +158,14 @@ The repository contains:
   `accepted`, `acknowledged` and `closed` are read and no payload, actor, contact data,
   description or internal comment is ever part of the answer; an unknown or malformed token
   answers `404 status_token_not_found`,
+
+- the public status page of WP-M2-06b (`apps/web/src/features/tickets/status-page.tsx`):
+  `StatusPage` at the top-level route `/s/:token`, outside the `Shell` and `RequireSession`
+  tree, validating the token with `qrTokenSchema` and reading
+  `GET /v1/public/tickets/:token/status` through `usePublicStatus`; it shows the ticket
+  number, a status badge that carries the localized text label (never colour alone), the
+  deadline and the timeline with the localized event labels of `ticket:status.*` in `de`
+  and `en`,
 
 - the auth HTTP layer (`apps/api/src/auth/session.ts`, `sessionPlugin.ts`,
   `routes.ts`: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
