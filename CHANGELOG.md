@@ -368,6 +368,15 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   opened form, the current token (not a scanned retired token), selected catalog keys,
   locale and empty `photos` for now; client-side rules mirror the API `422`s before the
   round trip and known error codes map to `ticket:report.errors.*`.
+- WP-M2-05b: report photo upload UI — `apps/web/src/features/tickets/image-compress.ts`
+  adds `compressImage` (shortest edge capped at `MAX_PHOTO_DIMENSION = 1600`, JPEG
+  `PHOTO_JPEG_QUALITY = 0.8`, `scaledSize` math and `photo_type_unsupported` for an
+  undecodable or 0 px bitmap) and `photo-upload.tsx` adds `PhotoUpload` with previews,
+  byte sizes, remove buttons and the client limit `MAX_REPORT_PHOTOS = 6`. The report form
+  now holds `photos: string[]` in state, sends the data URLs in the same
+  `POST /v1/public/tickets` body and maps `photo_limit_exceeded`, `photo_too_large` and
+  `photo_type_unsupported` to `ticket:report.errors.*`; the confirmation shows
+  `report.done.photoCount`. The real canvas path is proven by WP-M2-05c.
 
 ### Changed
 

@@ -1,7 +1,7 @@
 # WP-M2-05b: Report photo upload in the web form
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-05
 phase: 2
 context-budget: 24k tokens
@@ -90,7 +90,10 @@ them. The real browser compression is proven by **WP-M2-05c**, because jsdom has
   `scaledSize`, `PhotoUpload`, `MAX_REPORT_PHOTOS`, `MAX_PHOTO_DIMENSION`,
   `PHOTO_JPEG_QUALITY`, `ticket:report.validation.photoLimit`, the three
   `ticket:report.errors.photo_*` keys
-- Verified: see the handoff of the implementation commit
+- Verified: `npm run test:run -w @stoerdesk/web` (40 passed, the new component and scaling
+  tests included), `npm run typecheck -w @stoerdesk/web`, `npm run i18n:check` (141 de/en
+  keys) and `npm run wp:check` are green; `npm run lint` reports only the pre-existing
+  react-refresh warning for the constant next to the component
 - Follow-up WP: `05c-report-form-e2e.md` (photo path in a real browser, created with this
   document)
 - Open question: none

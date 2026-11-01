@@ -158,7 +158,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | done                    | yes     |
 | WP-M2-04c | report photo upload to the uploads volume               | done                    | yes     |
 | WP-M2-05  | public report form UI at `/m/:token` (web)              | done                    | yes     |
-| WP-M2-05b | photo upload with client canvas compression             | open                    | yes     |
+| WP-M2-05b | photo upload with client canvas compression             | done                    | yes     |
 | WP-M2-05c | report form smoke E2E in de and en                      | open                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
@@ -258,10 +258,12 @@ tests into one package, which is far over the four-source-file and 300-line limi
 unguarded route `/m/:token` with the prefilled object header, the system select, the fault
 chips over `STANDARD_TEXT_KEYS`, the free text, the contact fields, the 112 notice and the
 confirmation with the ticket number and the `/s/<statusToken>` link. Its child
-**WP-M2-05b** (`05b-report-photo-upload-ui.md`) adds the canvas compression to
-1600 px/JPEG 0.8 and the six-photo uploader of §7.4, and **WP-M2-05c**
-(`05c-report-form-e2e.md`) proves the whole path in a real browser in `de` and `en` — the
-photo upload needs a real canvas, which jsdom does not have. The status page `/s/:token`
+**WP-M2-05b** (`05b-report-photo-upload-ui.md`) is implemented as the canvas compression to
+1600 px/JPEG 0.8 (`image-compress.ts`) and the six-photo uploader of §7.4
+(`photo-upload.tsx`, data URLs in the submit body, the three photo error codes and the
+`photoCount` on the confirmation). **WP-M2-05c** (`05c-report-form-e2e.md`) proves the
+whole path in a real browser in `de` and `en` — the photo upload needs a real canvas,
+which jsdom does not have. The status page `/s/:token`
 stays with WP-M2-06, the duplicate hint with WP-M2-08, the offline outbox with WP-M2-09.
 
 ## Validation

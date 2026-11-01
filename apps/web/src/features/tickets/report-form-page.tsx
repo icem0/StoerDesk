@@ -18,6 +18,7 @@ import type {
 } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
+import { PhotoUpload } from './photo-upload'
 
 /**
  * Public report form at `/m/:token` (`specs/06-report-form.md` §7.1–§7.3, WP-M2-05).
@@ -26,7 +27,8 @@ import { ApiError, apiFetch } from '../../lib/api'
  * the `Shell` — it must never show the login form. The token is resolved through
  * `GET /api/v1/public/qr/:token` first, so the submit body always carries the current
  * token of a retired one (§7.3), and one `client_uuid` per opened form makes a retry
- * idempotent (§7.3.3). Photos are WP-M2-05b, the status page `/s/:token` is WP-M2-06.
+ * idempotent (§7.3.3). Photos are compressed client-side by WP-M2-05b, the status page
+ * `/s/:token` is WP-M2-06.
  */
 
 const TEXT_MAX_LENGTH = 4000
@@ -40,6 +42,9 @@ const handledErrorCodes = [
   'system_not_found',
   'invalid_request',
   'rate_limited',
+  'photo_limit_exceeded',
+  'photo_too_large',
+  'photo_type_unsupported',
 ] as const
 
 function usePublicQr(token: string) {
@@ -265,6 +270,11 @@ function Confirmation({ report, locale }: { report: PublicReport; locale: Standa
         {t('report.done.ticketNo', { ticketNo: report.ticketNo })}
       </p>
       <p className="text-sm text-slate-400">{t('report.done.deadline', { deadline })}</p>
+      {report.photoCount > 0 ? (
+        <p className="text-sm text-slate-400">
+          {t('report.done.photoCount', { count: report.photoCount })}
+        </p>
+      ) : null}
       {report.clockSkewed ? (
         <p className="text-sm text-amber-300">{t('report.done.clockSkewed')}</p>
       ) : null}
@@ -290,6 +300,7 @@ export function ReportFormPage() {
   const [systemChoice, setSystemChoice] = useState<string | undefined>(undefined)
   const [faultKeys, setFaultKeys] = useState<string[]>([])
   const [text, setText] = useState('')
+  const [photos, setPhotos] = useState<string[]>([])
   const [contact, setContact] = useState<PublicReportContact>({ name: '', phone: '', email: '' })
   /** One idempotency key per opened form (§7.3.3): a retry never doubles the ticket. */
   const [clientUuid] = useState(() => globalThis.crypto.randomUUID())
@@ -344,7 +355,7 @@ export function ReportFormPage() {
       contact,
       reportedAt: new Date().toISOString(),
       locale,
-      photos: [],
+      photos,
     }
 
     setProblems([])
@@ -407,6 +418,13 @@ export function ReportFormPage() {
               <SystemSelect object={object} onChange={setSystemChoice} value={selectedSystemId} />
               <FaultChips labels={labels} onToggle={toggleFault} selected={faultKeys} />
               <FreeText onChange={setText} value={text} />
+              <PhotoUpload
+                photos={photos}
+                onAdd={(photo) => setPhotos((current) => [...current, photo])}
+                onRemove={(index) =>
+                  setPhotos((current) => current.filter((_, position) => position !== index))
+                }
+              />
               <ContactFields contact={contact} onChange={setContact} />
 
               {problems.length > 0 ? (

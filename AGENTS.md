@@ -48,8 +48,10 @@ public report endpoint `POST /api/v1/public/tickets` (idempotency over `client_u
 check, `UPLOAD_MAX_BYTES` cap, `<UPLOAD_DIR>/tickets/<ticketId>/<file_uuid>.<ext>` plus the
 `ticket_photos` rows) is implemented as well. **WP-M2-05** adds the public report form UI
 (`apps/web/src/features/tickets/report-form-page.tsx` at `/m/:token` — QR resolve, fault
-chips, contact fields, idempotent `clientUuid`, 112 notice and confirmation; photo upload is
-WP-M2-05b).
+chips, contact fields, idempotent `clientUuid`, 112 notice and confirmation) and its child
+**WP-M2-05b** adds the photo upload (`image-compress.ts` canvas compression to 1600 px/JPEG
+0.8, `photo-upload.tsx` with six previews and remove buttons, data URLs in the same submit
+body, the photo error codes and `photoCount` on the confirmation).
 The repository contains:
 
 - the binding build plan in `PLAN.md` and the expanded slices in `specs/`

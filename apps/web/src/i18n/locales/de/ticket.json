@@ -15,6 +15,14 @@
       "label": "Was ist zu sehen?",
       "counter": "{{used}} von {{max}} Zeichen"
     },
+    "photos": {
+      "label": "Fotos",
+      "hint": "Bis zu {{max}} Fotos — sie werden auf dem Gerät verkleinert, bevor sie gesendet werden.",
+      "add": "Foto hinzufügen",
+      "remove": "Foto entfernen",
+      "previewAlt": "Vorschau von Foto {{index}}",
+      "size": "{{bytes}} Bytes"
+    },
     "contact": {
       "hint": "Telefon oder E-Mail ist erforderlich — ohne Kontakt kann die Störung nicht zurückgemeldet werden.",
       "name": "Name",
@@ -28,7 +36,8 @@
     "validation": {
       "faultOrText": "Bitte eine Störungsart auswählen oder die Störung beschreiben.",
       "contactRequired": "Bitte eine Telefonnummer oder eine E-Mail-Adresse angeben.",
-      "email": "Die E-Mail-Adresse ist nicht gültig."
+      "email": "Die E-Mail-Adresse ist nicht gültig.",
+      "photoLimit": "Es sind höchstens sechs Fotos möglich."
     },
     "errors": {
       "qrTokenInvalid": "Dieser QR-Code ist ungültig. Bitte den Aufkleber des Objekts scannen.",
@@ -38,6 +47,9 @@
       "system_not_found": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
       "invalid_request": "Die Meldung konnte nicht gelesen werden. Bitte erneut versuchen.",
       "rate_limited": "Zu viele Meldungen in kurzer Zeit. Bitte in einer Minute erneut versuchen.",
+      "photo_limit_exceeded": "Es sind höchstens sechs Fotos möglich.",
+      "photo_too_large": "Ein Foto ist zu groß. Bitte ein kleineres Foto auswählen.",
+      "photo_type_unsupported": "Dieses Fotoformat wird nicht unterstützt. Bitte ein JPEG- oder PNG-Foto auswählen.",
       "unknown": "Die Meldung konnte gerade nicht gesendet werden. Bitte später erneut versuchen."
     },
     "done": {
@@ -46,6 +58,7 @@
       "ticketNo": "Vorgangsnummer: {{ticketNo}}",
       "deadline": "Rückmeldung bis: {{deadline}}",
       "clockSkewed": "Die Uhr des Geräts weicht von der Serveruhr ab — die Meldezeit wurde an der Serveruhr ausgerichtet.",
+      "photoCount": "Fotos: {{count}}",
       "statusLink": "Status dieser Meldung ansehen"
     }
   }

@@ -15,6 +15,14 @@
       "label": "What can be seen?",
       "counter": "{{used}} of {{max}} characters"
     },
+    "photos": {
+      "label": "Photos",
+      "hint": "Up to {{max}} photos — they are scaled down on the device before they are sent.",
+      "add": "Add photo",
+      "remove": "Remove photo",
+      "previewAlt": "Preview of photo {{index}}",
+      "size": "{{bytes}} bytes"
+    },
     "contact": {
       "hint": "Phone or e-mail is required — without a contact the fault cannot be reported back.",
       "name": "Name",
@@ -28,7 +36,8 @@
     "validation": {
       "faultOrText": "Please select a fault type or describe the fault.",
       "contactRequired": "Please provide a phone number or an e-mail address.",
-      "email": "That e-mail address is not valid."
+      "email": "That e-mail address is not valid.",
+      "photoLimit": "At most six photos are possible."
     },
     "errors": {
       "qrTokenInvalid": "This QR code is invalid. Please scan the sticker of the object.",
@@ -38,6 +47,9 @@
       "system_not_found": "The selected system does not belong to this object.",
       "invalid_request": "The report could not be read. Please try again.",
       "rate_limited": "Too many reports in a short time. Please try again in one minute.",
+      "photo_limit_exceeded": "At most six photos are possible.",
+      "photo_too_large": "One photo is too large. Please choose a smaller photo.",
+      "photo_type_unsupported": "This photo format is not supported. Please choose a JPEG or PNG photo.",
       "unknown": "The report could not be sent right now. Please try again later."
     },
     "done": {
@@ -46,6 +58,7 @@
       "ticketNo": "Reference number: {{ticketNo}}",
       "deadline": "Feedback by: {{deadline}}",
       "clockSkewed": "The device clock deviates from the server clock — the report time was aligned to the server clock.",
+      "photoCount": "Photos: {{count}}",
       "statusLink": "View the status of this report"
     }
   }
