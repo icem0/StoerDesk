@@ -1,7 +1,7 @@
 # WP-M2-05c: Report form smoke E2E in de and en
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-05b
 phase: 2
 context-budget: 22k tokens
@@ -20,6 +20,10 @@ files-read:
 files-write:
 
 - apps/web/e2e/report-form.spec.ts
+- apps/web/playwright.config.ts (only a throwaway `UPLOAD_DIR`, so the photo bytes are
+  written on a runner without a writable `/data/uploads`)
+- apps/web/e2e/auth.spec.ts (WP-M1-17 moved the account and the links into the settings
+  menu; the smoke test opens it again)
 
 interfaces:
 
@@ -57,7 +61,8 @@ interfaces:
 - No offline replay through the Dexie outbox (WP-M2-09), no spam/honeypot assertions
   (WP-M2-07), no status page assertions (WP-M2-06) — the link is only asserted to exist.
 - No new Playwright project or device descriptor: the viewport is set inside the spec, so
-  `playwright.config.ts` and `scripts/e2e-check.mjs` stay untouched.
+  `scripts/e2e-check.mjs` stays untouched; `playwright.config.ts` only gains the throwaway
+  `UPLOAD_DIR` that the photo run needs on a runner without a writable `/data/uploads`.
 
 ## Acceptance
 
@@ -72,9 +77,12 @@ notice, in CI both are required).
 
 ## Handoff
 
-- Files changed: `apps/web/e2e/report-form.spec.ts` (new) plus the module row and status
-  lines in `docs/REPO-MAP.md` and `work-packages/README.md`
+- Files changed: `apps/web/e2e/report-form.spec.ts` (new), `apps/web/playwright.config.ts`
+  (throwaway `UPLOAD_DIR`), `apps/web/e2e/auth.spec.ts` (settings menu of WP-M1-17), plus
+  the module row and status lines in `docs/REPO-MAP.md` and `work-packages/README.md`
 - Interfaces added: 2 Playwright tests, no runtime API
-- Verified: see the handoff of the implementation commit
+- Verified: `npm run test:e2e` green (4 tests: the 2 auth smoke tests and the 2 new report
+  form tests), `npm run typecheck -w @stoerdesk/web`, `npx eslint` on the touched files and
+  `npm run wp:check` are green; the full `npm run check` result is in the commit handoff
 - Follow-up WP: none — the phase 2 exit-criterion E2E is the existing WP-M2-10
 - Open question: none

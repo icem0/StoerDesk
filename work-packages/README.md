@@ -160,7 +160,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-04c | report photo upload to the uploads volume               | done                    | yes     |
 | WP-M2-05  | public report form UI at `/m/:token` (web)              | done                    | yes     |
 | WP-M2-05b | photo upload with client canvas compression             | done                    | yes     |
-| WP-M2-05c | report form smoke E2E in de and en                      | open                    | yes     |
+| WP-M2-05c | report form smoke E2E in de and en                      | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -266,9 +266,11 @@ confirmation with the ticket number and the `/s/<statusToken>` link. Its child
 **WP-M2-05b** (`05b-report-photo-upload-ui.md`) is implemented as the canvas compression to
 1600 px/JPEG 0.8 (`image-compress.ts`) and the six-photo uploader of §7.4
 (`photo-upload.tsx`, data URLs in the submit body, the three photo error codes and the
-`photoCount` on the confirmation). **WP-M2-05c** (`05c-report-form-e2e.md`) proves the
-whole path in a real browser in `de` and `en` — the photo upload needs a real canvas,
-which jsdom does not have. The status page `/s/:token`
+`photoCount` on the confirmation). **WP-M2-05c** (`05c-report-form-e2e.md`) is implemented
+as the report form smoke E2E: it signs in as the administrator, creates the object through
+`POST /api/v1/objects`, drives `/m/<token>` on a 375×667 viewport in `de` and `en`, attaches
+a real JPEG in one run (canvas compression and server magic-byte check) and asserts the
+ticket number, the `/s/<status_token>` link and the photo count. The status page `/s/:token`
 stays with WP-M2-06, the duplicate hint with WP-M2-08, the offline outbox with WP-M2-09.
 
 ## Validation

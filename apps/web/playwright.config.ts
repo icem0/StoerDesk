@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { defineConfig, devices } from '@playwright/test'
@@ -21,6 +24,10 @@ const baseURL = `http://127.0.0.1:${webPort}`
 /** Empty means "the API resolves its own default", exactly like `npm run dev`. */
 const databaseUrl = process.env.E2E_DATABASE_URL ?? process.env.DATABASE_URL ?? ''
 
+// WP-M2-05c uploads real photo bytes. A throwaway directory keeps the run independent of
+// a writable `/data/uploads` (the production default) on a developer machine or CI runner.
+const uploadDir = mkdtempSync(join(tmpdir(), 'stoerdesk-e2e-uploads-'))
+
 const apiEnv: Record<string, string> = {
   NODE_ENV: 'test',
   API_HOST: '127.0.0.1',
@@ -32,6 +39,7 @@ const apiEnv: Record<string, string> = {
   // E2E-only value so a developer `.env` never changes the run; the schema asks for 32+.
   SESSION_SECRET: 'e2e-only-session-secret-0123456789abcdef-never-a-real-secret',
   SESSION_TTL_HOURS: '1',
+  UPLOAD_DIR: uploadDir,
 }
 
 if (databaseUrl !== '') {
