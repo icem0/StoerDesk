@@ -16,6 +16,42 @@ body {
 }
 
 /*
+ * The admin pages still render their own <main> with page padding and a page
+ * background (WP-M1-09c/09d). The shell already provides that frame, so inside
+ * the shell only the content remains (WP-M1-17).
+ */
+.shell-main > main {
+  min-height: 0;
+  padding: 0;
+  background-color: transparent;
+}
+
+/*
+ * On phones the admin tables scroll horizontally with momentum instead of
+ * clipping their right columns (WP-M1-17, PLAN.md §14 mobile-first).
+ */
+@media (max-width: 640px) {
+  .shell-main table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  .shell-main table th,
+  .shell-main table td {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .shell-main table th:first-child,
+  .shell-main table td:first-child {
+    padding-left: 0;
+  }
+}
+
+/*
  * Printable QR sticker sheets (WP-M2-03, specs/08-objects-api.md §9.3): A6 cards of
  * 105 × 148 mm, one per A6 page or four per A4 page. The sheet format writes its own
  * `@page` rule from the component, so the grid stays gapless and the dashed border is

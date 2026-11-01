@@ -27,7 +27,9 @@ the UI package **WP-M1-13** (layout shell with header and navigation), the
 seed fix **WP-M1-14** (the base seed keeps an existing administrator untouched) and the
 version-display regression fix **WP-M1-15** (the shell header shows the build version on
 the login screen and on every guarded page) and the deployment-version follow-up
-**WP-M1-16** (`env:create` and `env:version` carry the current git tag in `.env`).
+**WP-M1-16** (`env:create` and `env:version` carry the current git tag in `.env`) and the
+phone-first shell **WP-M1-17** (a settings gear next to the version opens the existing
+admin pages and logout; no permanent sidebar, horizontal table scroll on phones).
 **Phase 1 is closed** — the `Open follow-ups` table of `work-packages/README.md` and
 `PLAN.md` §16 hold no open phase 1 item anymore. **Phase 2 has started**:
 `specs/02-data-model.md` is filled from `PLAN.md` §6 and reviewed (the `object_no`

@@ -579,6 +579,7 @@ next phase starts).
 | WP-M2-04c | report photo upload (magic bytes, volume)    | done   |
 | WP-M1-15  | app version visible in the web shell         | done   |
 | WP-M1-16  | current git version in the deployment env    | done   |
+| WP-M1-17  | responsive shell with a settings gear        | done   |
 | WP-M2-05  | public report form at `/m/:token` (web)      | done   |
 | WP-M2-05b | photo upload with client compression         | done   |
 | WP-M2-05c | report form smoke E2E in de and en           | open   |
@@ -607,6 +608,9 @@ builds fall back to the nearest git tag, images use the `VITE_APP_VERSION` build
 WP-M1-16 closes the gap for local Docker Compose: because an image build has no git
 metadata, `env:create` now stores the current tag in `.env`, and `env:version` refreshes
 that value after a pull without touching the generated secrets.
+WP-M1-17 makes the shell phone-first: the permanent sidebar is gone, a 44 × 44 px gear next
+to the version opens the account, the user/role/sticker pages and logout in a dropdown, and
+the admin tables scroll horizontally on narrow screens.
 Phase 2 has started: `specs/02-data-model.md` was filled from §6 and reviewed, and it
 settles the `object_no` question of WP-M2-00 (§4.3.1 — user input, required, unique over
 `lower(object_no)`, `_` allowed, e.g. `12345_01`; no pool table, the object list is the

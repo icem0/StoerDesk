@@ -2,7 +2,8 @@
   "app": {
     "title": "StörDesk",
     "setupNotice": "Environment is set up. Implementation follows after specification approval.",
-    "version": "Version"
+    "version": "Version",
+    "settings": "Settings"
   },
   "auth": {
     "title": "Sign in",

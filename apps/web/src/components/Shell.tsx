@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
@@ -11,71 +12,154 @@ const navItems = [
   { key: 'stickers', path: '/objects/stickers' },
 ] as const
 
+function SettingsIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+/**
+ * Settings access of the shell (WP-M1-17): the gear sits next to the version, so the
+ * navigation needs no permanent sidebar and the content keeps the full phone width.
+ * Every label reuses an existing `common` key except `app.settings`.
+ */
+function SettingsMenu({ email }: { email: string }) {
+  const { t } = useTranslation('common')
+  const location = useLocation()
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuId = useId()
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        buttonRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div ref={containerRef} className="relative shrink-0">
+      <button
+        ref={buttonRef}
+        aria-controls={open ? menuId : undefined}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={t('app.settings')}
+        className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-700/80 text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        onClick={() => setOpen((current) => !current)}
+        title={t('app.settings')}
+        type="button"
+      >
+        <SettingsIcon />
+      </button>
+
+      {open ? (
+        <div
+          aria-label={t('app.settings')}
+          className="absolute right-0 top-full z-40 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl"
+          id={menuId}
+          role="dialog"
+        >
+          <div className="border-b border-slate-800 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {t('app.settings')}
+            </p>
+            <p className="mt-1 truncate text-sm text-slate-300">
+              {t('auth.signedInAs', { email })}
+            </p>
+          </div>
+
+          <ul className="p-2">
+            {navItems.map((item) => {
+              const active = location.pathname === item.path
+              const itemLabel =
+                item.key === 'users'
+                  ? t('auth.links.users')
+                  : item.key === 'roles'
+                    ? t('auth.links.roles')
+                    : t('auth.links.stickers')
+
+              return (
+                <li key={item.key}>
+                  <Link
+                    className={`flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors ${
+                      active
+                        ? 'bg-sky-600/10 text-sky-300'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                    }`}
+                    onClick={() => setOpen(false)}
+                    to={item.path}
+                  >
+                    {itemLabel}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="border-t border-slate-800 p-2 [&>button]:min-h-11 [&>button]:w-full">
+            <LogoutButton />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function Shell() {
   const { t } = useTranslation('common')
   const me = useMe()
-  const location = useLocation()
 
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-100 flex flex-col print:bg-white">
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-20 print:hidden">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold tracking-tight">{t('app.title')}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <AppVersion className="text-xs text-slate-500" />
-            {me.data ? (
-              <>
-                <span className="text-sm text-slate-400 hidden sm:block">
-                  {t('auth.signedInAs', { email: me.data.user.email })}
-                </span>
-                <LogoutButton />
-              </>
-            ) : null}
+    <div className="flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm print:hidden">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3">
+          <span className="min-w-0 truncate font-semibold tracking-tight">{t('app.title')}</span>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
+            {me.data ? <SettingsMenu email={me.data.user.email} /> : null}
           </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
-        {me.data ? (
-          <nav className="w-64 border-r border-slate-800 bg-slate-900/50 flex-shrink-0 print:hidden">
-            <ul className="p-3 space-y-1">
-              {navItems.map((item) => {
-                const active = location.pathname === item.path
-                const itemLabel =
-                  item.key === 'users'
-                    ? t('auth.links.users')
-                    : item.key === 'roles'
-                      ? t('auth.links.roles')
-                      : t('auth.links.stickers')
-                return (
-                  <li key={item.key}>
-                    <Link
-                      to={item.path}
-                      className={`flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors ${
-                        active
-                          ? 'bg-sky-600/10 text-sky-300 border border-sky-500/30'
-                          : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                      }`}
-                    >
-                      {itemLabel}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </nav>
-        ) : null}
-
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 print:overflow-visible print:p-0">
-          <div className="max-w-3xl mx-auto print:max-w-none print:mx-0">
-            {me.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
-            {me.isError ? <LoginForm /> : null}
-            {me.data ? <Outlet /> : null}
-          </div>
-        </main>
-      </div>
+      <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">
+        {me.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
+        {me.isError ? <LoginForm /> : null}
+        {me.data ? <Outlet /> : null}
+      </main>
     </div>
   )
 }

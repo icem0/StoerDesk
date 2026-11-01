@@ -1,0 +1,100 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { I18nextProvider } from 'react-i18next'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { i18n } from '../../i18n'
+import { Shell } from '../Shell'
+
+const marker = 'guarded-area'
+
+function stubMe(response: unknown) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes('/v1/me')) {
+        return response instanceof Response ? response : Response.json(response)
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    }),
+  )
+}
+
+function renderShell() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+  return render(
+    <QueryClientProvider client={client}>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter initialEntries={['/admin/users']}>
+          <Routes>
+            <Route element={<Shell />}>
+              <Route path="/admin/users" element={<p>{marker}</p>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </I18nextProvider>
+    </QueryClientProvider>,
+  )
+}
+
+function signedInMe() {
+  return {
+    user: {
+      id: '11111111-1111-4111-8111-111111111111',
+      email: 'admin@example.com',
+      locale: 'de',
+      roles: ['admin'],
+      permissions: ['user.read', 'role.read', 'object.read'],
+    },
+  }
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('Shell settings menu', () => {
+  it('opens the existing pages from the gear next to the version', async () => {
+    stubMe(signedInMe())
+    renderShell()
+
+    expect(await screen.findByText(marker)).toBeTruthy()
+    expect(screen.getByTestId('app-version')).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).toBeNull()
+
+    const gear = screen.getByRole('button', { name: 'Einstellungen' })
+    fireEvent.click(gear)
+
+    expect(gear.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('link', { name: 'Benutzerverwaltung' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Rollenverwaltung' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'QR-Aufkleber' })).toBeTruthy()
+    expect(screen.getByText('Angemeldet als admin@example.com')).toBeTruthy()
+
+    fireEvent.click(gear)
+    expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).toBeNull()
+  })
+
+  it('closes the menu on Escape', async () => {
+    stubMe(signedInMe())
+    renderShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
+    expect(screen.getByRole('link', { name: 'Rollenverwaltung' })).toBeTruthy()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('link', { name: 'Rollenverwaltung' })).toBeNull()
+  })
+
+  it('shows no gear while the session is anonymous', async () => {
+    stubMe(Response.json({ code: 'session_invalid', params: {} }, { status: 401 }))
+    renderShell()
+
+    expect(await screen.findByText('Anmeldung')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Einstellungen' })).toBeNull()
+    expect(screen.getByTestId('app-version')).toBeTruthy()
+  })
+})

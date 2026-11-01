@@ -19,7 +19,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
 `WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
 `WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
-`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M1-16`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02`,
+`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M1-16`, `WP-M1-17`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02`,
 `WP-M2-02b`, `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`),
 `WP-M2-04` (rewritten from the legacy `04-report-form-api.md` and split into
 **WP-M2-04b** and **WP-M2-04c**) and
@@ -154,6 +154,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-03  | printable QR sticker sheets (A6/A4 web print)           | done                    | yes     |
 | WP-M1-15  | app version visible in the web shell                    | done                    | yes     |
 | WP-M1-16  | current git version in the deployment environment       | done                    | yes     |
+| WP-M1-17  | responsive shell with a settings gear next to version   | done                    | yes     |
 | WP-M2-04  | ticket tables, events, photos and the counter           | done                    | yes     |
 | WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency   | done                    | yes     |
 | WP-M2-04c | report photo upload to the uploads volume               | done                    | yes     |
@@ -211,6 +212,10 @@ existing `VITE_APP_VERSION` build argument, or from the nearest git tag in local
 `WP-M1-16` is done — Docker builds have no git metadata, so `npm run env:create` now writes
 the current tag into `.env`, and the new `npm run env:version` refreshes that single value
 in an existing `.env` after a pull without touching its secrets.
+`WP-M1-17` is done — the shell drops the permanent sidebar for a full-width, phone-first
+layout: a 44 × 44 px gear next to the version opens a dropdown with the signed-in account,
+the user, role and sticker pages, and logout; the menu closes on route change, Escape and a
+click outside, and the admin tables scroll horizontally on phone widths.
 `WP-M2-00` is done — on top of the reviewed `specs/02-data-model.md` (the `object_no`
 decision is §4.3.1: user input, unique over `lower(object_no)`, `_` allowed) it added the
 four core object tables, migration `0002_core_object_tables`, the localized

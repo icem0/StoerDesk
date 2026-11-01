@@ -21,6 +21,7 @@ const ui = {
   de: {
     loginTitle: 'Anmeldung',
     submit: 'Anmelden',
+    settings: 'Einstellungen',
     signedInAs: `Angemeldet als ${adminEmail}`,
     usersLink: 'Benutzerverwaltung',
     usersTitle: 'Benutzerverwaltung',
@@ -29,6 +30,7 @@ const ui = {
   en: {
     loginTitle: 'Sign in',
     submit: 'Sign in',
+    settings: 'Settings',
     signedInAs: `Signed in as ${adminEmail}`,
     usersLink: 'User administration',
     usersTitle: 'User management',
@@ -63,6 +65,9 @@ async function signIn(page: Page, language: 'de' | 'en'): Promise<void> {
   await page.locator('input[name="password"]').fill(adminPassword)
   await page.getByRole('button', { name: texts.submit }).click()
 
+  // WP-M1-17 moved the signed-in account and the navigation into the settings menu next
+  // to the version badge; open it so the account and the links are reachable.
+  await page.getByRole('button', { name: texts.settings }).click()
   await expect(page.getByText(texts.signedInAs)).toBeVisible()
 }
 
