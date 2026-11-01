@@ -582,7 +582,9 @@ next phase starts).
 | WP-M1-17  | responsive shell with a settings gear        | done   |
 | WP-M2-05  | public report form at `/m/:token` (web)      | done   |
 | WP-M2-05b | photo upload with client compression         | done   |
-| WP-M2-05c | report form smoke E2E in de and en           | open   |
+| WP-M2-05c | report form smoke E2E in de and en           | done   |
+| WP-M2-06  | public status API by `status_token`          | open   |
+| WP-M2-06b | public status page at `/s/:token` (web)      | open   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -663,8 +665,13 @@ ticket number and the `/s/<statusToken>` link); **WP-M2-05b**
 (`05b-report-photo-upload-ui.md`) adds the client compression to 1600 px/JPEG 0.8 and the
 six-photo uploader (`image-compress.ts`, `photo-upload.tsx`, data URLs in the JSON body,
 the photo error codes and `photoCount` on the confirmation), and **WP-M2-05c**
-(`05c-report-form-e2e.md`) proves the flow in a real browser in `de` and `en`. The status
-page itself stays WP-M2-06.
+(`05c-report-form-e2e.md`) proves the flow in a real browser in `de` and `en`.
+**WP-M2-06** is rewritten into the small-model format and split before implementation: the
+legacy plan mixed the public status API, the page and its tests into one package.
+**WP-M2-06** (`06-status-page.md`) is the status API — `GET /api/v1/public/tickets/:token/status`
+with the ticket number, the current status, the deadline and only the whitelisted event
+types as `{ type, at }` — and its child **WP-M2-06b** (`06b-status-page-ui.md`) is the public
+page at `/s/:token` with the status badge and the timeline in `de` and `en`.
 
 ## 17. Work package rules for small models
 

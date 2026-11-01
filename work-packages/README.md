@@ -13,7 +13,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 27  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 16  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 17  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
@@ -24,7 +24,9 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 `WP-M2-04` (rewritten from the legacy `04-report-form-api.md` and split into
 **WP-M2-04b** and **WP-M2-04c**) and
 `WP-M2-05` (rewritten from the legacy `05-report-form-ui.md` and split into
-**WP-M2-05b** and **WP-M2-05c**). The
+**WP-M2-05b** and **WP-M2-05c**) and
+`WP-M2-06` (rewritten from the legacy `06-status-page.md` and split into
+**WP-M2-06b**). The
 remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
 descriptions, but each one is rewritten into the small-model format before
 implementation.
@@ -161,6 +163,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-05  | public report form UI at `/m/:token` (web)              | done                    | yes     |
 | WP-M2-05b | photo upload with client canvas compression             | done                    | yes     |
 | WP-M2-05c | report form smoke E2E in de and en                      | done                    | yes     |
+| WP-M2-06  | public ticket status API by `status_token`              | open                    | yes     |
+| WP-M2-06b | public status page at `/s/:token` (web)                 | open                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -271,8 +275,15 @@ confirmation with the ticket number and the `/s/<statusToken>` link. Its child
 as the report form smoke E2E: it signs in as the administrator, creates the object through
 `POST /api/v1/objects`, drives `/m/<token>` on a 375×667 viewport in `de` and `en`, attaches
 a real JPEG in one run (canvas compression and server magic-byte check) and asserts the
-ticket number, the `/s/<status_token>` link and the photo count. The status page `/s/:token`
-stays with WP-M2-06, the duplicate hint with WP-M2-08, the offline outbox with WP-M2-09.
+ticket number, the `/s/<status_token>` link and the photo count. **WP-M2-06** is rewritten
+into the small-model format and split as well: the legacy plan mixed the public status API,
+the page and its tests into one package. **WP-M2-06** (`06-status-page.md`) is the status
+API — `GET /api/v1/public/tickets/:token/status` answering the ticket number, the current
+status, the deadline and only the whitelisted event types (`created`, `work_order_set`,
+`accepted`, `acknowledged`, `closed`) as `{ type, at }`, never an event payload, an actor or
+an internal comment. Its child **WP-M2-06b** (`06b-status-page-ui.md`) is the public page at
+`/s/:token` — ticket number, status badge with a text label, deadline and the timeline in
+`de` and `en`. The duplicate hint stays with WP-M2-08, the offline outbox with WP-M2-09.
 
 ## Validation
 
