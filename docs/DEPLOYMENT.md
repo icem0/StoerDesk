@@ -24,7 +24,10 @@ docker compose down -v      # stops the stack and DELETES all data
 ```
 
 After a `git pull`, refresh the version shown in the web shell without touching the
-secrets in `.env`, then rebuild the `web` image:
+secrets in `.env`, then rebuild the `web` image; commits made in this repository update
+that `.env` line automatically through the post-commit hook. A `web` image build with a
+`VITE_APP_VERSION` that is not a `vMAJOR.MINOR.PATCH` version fails instead of shipping
+the `dev` placeholder:
 
 ```bash
 npm run env:version

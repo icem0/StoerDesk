@@ -37,7 +37,15 @@ CMD ["sh", "-c", "node apps/api/dist/db/migrate.js && exec node apps/api/dist/in
 
 # ---------- Web ----------
 FROM base AS web-build
-ARG VITE_APP_VERSION=dev
+# The web shell must never display a placeholder: every image build passes a real
+# `vMAJOR.MINOR.PATCH` version — CI passes the tag, Compose reads it from `.env`
+# (`npm run env:create`, refreshed by the commit hook and `npm run env:version`).
+# Anything else stops the image build instead of shipping `dev`.
+ARG VITE_APP_VERSION
+RUN if ! printf '%s' "$VITE_APP_VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then \
+      echo "build arg VITE_APP_VERSION='$VITE_APP_VERSION' is not a vMAJOR.MINOR.PATCH version - run 'npm run env:version' so Compose can read it from .env" >&2; \
+      exit 1; \
+    fi
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
 COPY tsconfig.base.json ./
 COPY packages/shared packages/shared

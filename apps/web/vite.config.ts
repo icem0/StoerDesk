@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process'
 import { fileURLToPath, URL } from 'node:url'
 
 import tailwindcss from '@tailwindcss/vite'
@@ -6,32 +5,14 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-/** Nearest annotated version tag, absent in a Docker build without a `.git` directory. */
-function gitVersion(): string | null {
-  try {
-    return execFileSync('git', ['describe', '--tags', '--abbrev=0'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim()
-  } catch {
-    return null
-  }
-}
-
-/** Explicit image version wins; `dev` means "not configured" and falls back to git. */
-function resolveAppVersion(configured: string | undefined): string {
-  const explicit = configured?.trim()
-
-  if (explicit !== undefined && explicit !== '' && explicit !== 'dev') {
-    return explicit
-  }
-
-  return gitVersion() ?? explicit ?? 'dev'
-}
+import { resolveVersion } from './version-resolve.mjs'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const appVersion = resolveAppVersion(env.VITE_APP_VERSION)
+  // A real version always wins (WP-M1-15/16): explicit build argument, else the
+  // nearest git tag, else the root `.env`. Only a checkout without all of them
+  // (e.g. a tarball dev server) falls back to `dev`.
+  const appVersion = resolveVersion(env.VITE_APP_VERSION) ?? 'dev'
 
   return {
     define: {

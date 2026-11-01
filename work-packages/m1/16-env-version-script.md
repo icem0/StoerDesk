@@ -69,3 +69,6 @@ Expected: all green; the E2E fails if the resolved version is `dev`.
 - Follow-up WP: none.
 - Open question: none — a deployment panel that supplies its own `.env` must set
   `VITE_APP_VERSION` too, while GHCR images receive the tag from `build.yml`.
+- Repair (follow-up commit, same WP): `.husky/post-commit` now runs `env:version` after every
+  tagged commit, so the Compose build arg can never stay stale, and the `web` image
+  build fails when `VITE_APP_VERSION` is not a `vMAJOR.MINOR.PATCH` version.

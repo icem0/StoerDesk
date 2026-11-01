@@ -72,3 +72,9 @@ Expected: all green; the new test fails before the component exists and passes a
 - Follow-up WP: none.
 - Open question: none — local development shows the nearest git tag, a Docker/CI
   build shows the `VITE_APP_VERSION` build argument.
+- Repair (follow-up commit, same WP): the badge showed `dev` again in a Compose deploy — the
+  `.env` line went stale and the Dockerfile default baked `dev` into the image. Now the
+  post-commit hook refreshes `VITE_APP_VERSION` in `.env` after every tagged commit, the
+  web image build aborts on a non-version build arg, and the resolution order
+  (build arg → git tag → root `.env`) lives in `apps/web/version-resolve.mjs` with unit
+  tests; the dist/preview build carries the current tag.

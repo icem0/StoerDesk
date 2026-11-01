@@ -9,8 +9,10 @@ if [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; then
   exit 0
 fi
 
-# HEAD already tagged - do not double-tag the same commit.
+# HEAD already tagged - do not double-tag the same commit, but still align `.env`
+# with that tag below, so Compose image builds never bake a stale or `dev` version.
 if [ -n "$(git tag --points-at HEAD)" ]; then
+  npm run --silent env:version >/dev/null 2>&1 || true
   exit 0
 fi
 
