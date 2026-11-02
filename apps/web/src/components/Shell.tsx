@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
 import { LoginForm, LogoutButton } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
@@ -29,6 +29,16 @@ const navGroups = [
       { key: 'roles', path: '/admin/roles' },
     ],
   },
+] as const
+
+/**
+ * Top-level entries of the header nav (WP-M2-28): the two pages the internal user
+ * needs without opening the settings menu. `/` is matched exactly, `/tickets` by
+ * prefix, so a ticket detail keeps the `tickets` entry active.
+ */
+const headerLinks = [
+  { key: 'dashboard', path: '/' },
+  { key: 'tickets', path: '/tickets' },
 ] as const
 
 function SettingsIcon() {
@@ -171,12 +181,45 @@ export function Shell() {
     <div className="flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white">
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm print:hidden">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3">
-          <span className="min-w-0 truncate font-semibold tracking-tight">{t('app.title')}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <img
+              alt={t('app.logoAlt')}
+              className="h-8 w-auto shrink-0 rounded-lg sm:h-9"
+              decoding="async"
+              height="120"
+              src="/logo.png"
+              width="128"
+            />
+            <span className="min-w-0 truncate font-semibold tracking-tight">{t('app.title')}</span>
+          </span>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
             {me.data ? <SettingsMenu email={me.data.user.email} /> : null}
           </div>
         </div>
+
+        <nav
+          aria-label={t('app.navigation')}
+          className="mx-auto flex w-full max-w-5xl gap-1 overflow-x-auto px-2 pb-1 sm:px-5"
+        >
+          {headerLinks.map((link) => (
+            <NavLink
+              end={link.path === '/'}
+              className={({ isActive: routerActive }) => {
+                const active = routerActive
+
+                return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${active
+                  ? 'bg-sky-600/10 text-sky-300'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                }`
+              }}
+              key={link.key}
+              to={link.path}
+            >
+              {t(`app.nav.${link.key}`)}
+            </NavLink>
+          ))}
+        </nav>
       </header>
 
       <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">

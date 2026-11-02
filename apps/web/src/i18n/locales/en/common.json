@@ -4,6 +4,12 @@
   "setupNotice": "Environment is set up. Implementation follows after specification approval.",
   "version": "Version",
   "settings": "Settings",
+  "logoAlt": "StörDesk logo",
+  "navigation": "Main navigation",
+  "nav": {
+   "dashboard": "Dashboard",
+   "tickets": "Tickets"
+  },
   "settingsGroups": {
    "operations": "Operations",
    "objects": "Objects",

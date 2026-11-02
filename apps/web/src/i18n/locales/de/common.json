@@ -4,6 +4,12 @@
   "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
   "version": "Version",
   "settings": "Einstellungen",
+  "logoAlt": "Logo von StörDesk",
+  "navigation": "Hauptnavigation",
+  "nav": {
+   "dashboard": "Dashboard",
+   "tickets": "Tickets"
+  },
   "settingsGroups": {
    "operations": "Meldungen",
    "objects": "Objekte",

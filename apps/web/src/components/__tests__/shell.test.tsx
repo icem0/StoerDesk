@@ -22,16 +22,16 @@ function stubMe(response: unknown) {
   )
 }
 
-function renderShell() {
+function renderShell(path = '/admin/users') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
-        <MemoryRouter initialEntries={['/admin/users']}>
+        <MemoryRouter initialEntries={[path]}>
           <Routes>
             <Route element={<Shell />}>
-              <Route path="/admin/users" element={<p>{marker}</p>} />
+              <Route path={path} element={<p>{marker}</p>} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -85,9 +85,30 @@ describe('Shell settings menu', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
     expect(screen.getByRole('link', { name: 'Rollenverwaltung' })).toBeTruthy()
 
-    fireEvent.keyDown(document, { key: 'Escape' })
-    expect(screen.queryByRole('link', { name: 'Rollenverwaltung' })).toBeNull()
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(screen.queryByRole('link', { name: 'Rollenverwaltung' })).toBeNull()
   })
+
+  it('shows the top-level header links without opening the menu', async () => {
+    stubMe(signedInMe())
+    renderShell()
+
+    const dashboard = screen.getByRole('link', { name: 'Dashboard' })
+    const tickets = screen.getByRole('link', { name: 'Tickets' })
+    expect(dashboard.getAttribute('href')).toBe('/')
+    expect(tickets.getAttribute('href')).toBe('/tickets')
+    expect(dashboard.getAttribute('aria-current')).toBeNull()
+    expect(tickets.getAttribute('aria-current')).toBeNull()
+  })
+
+  it('marks the ticket link as active on /tickets', async () => {
+    stubMe(signedInMe())
+    renderShell('/tickets')
+
+    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Tickets' }).getAttribute('aria-current')).toBe('page')
+  })
+
 
   it('shows no gear while the session is anonymous', async () => {
     stubMe(Response.json({ code: 'session_invalid', params: {} }, { status: 401 }))
