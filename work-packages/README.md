@@ -174,6 +174,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-09a | service worker and offline sync                        | done                    | yes     |
 | WP-M2-09b | offline E2E test                                       | done                    | yes     |
 | WP-M2-10  | phase 2 exit-criterion E2E (report → status page)      | done                    | yes     |
+| WP-M2-11  | object list UI (read): searchable, filterable table   | done                    | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
