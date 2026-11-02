@@ -1,6 +1,7 @@
 # WP-M1-08: Effective permissions and the requirePermission guard
 
 format: small-model
+status: done
 depends-on: WP-M1-07b
 phase: 1
 context-budget: 26k tokens

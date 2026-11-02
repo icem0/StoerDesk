@@ -1,5 +1,7 @@
 # WP-M1-02: Docker Compose
 
+status: done
+
 depends-on: WP-M1-01
 milestone: m1
 

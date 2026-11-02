@@ -1,5 +1,7 @@
 # WP-M1-03: Drizzle-Schema Grundtabellen
 
+status: done
+
 depends-on: WP-M1-01
 milestone: m1
 

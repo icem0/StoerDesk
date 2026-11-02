@@ -1,6 +1,7 @@
 # WP-M1-09: Admin users API (list, create, update)
 
 format: small-model
+status: done
 depends-on: WP-M1-08
 phase: 1
 context-budget: 28k tokens

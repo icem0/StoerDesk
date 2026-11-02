@@ -1,7 +1,7 @@
 # WP-M1-09b: Role API (role CRUD and permission assignment)
 
 format: small-model
-status: implemented
+status: done
 depends-on: WP-M1-05, WP-M1-08, WP-M1-09
 phase: 1
 context-budget: 26k tokens

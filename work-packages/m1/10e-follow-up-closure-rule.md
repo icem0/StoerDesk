@@ -1,7 +1,7 @@
 # WP-M1-10e: Follow-up closure rule and open backlog
 
 format: small-model
-status: implemented
+status: done
 depends-on: WP-M1-10c
 phase: 1
 context-budget: 16k tokens

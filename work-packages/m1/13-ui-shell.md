@@ -1,6 +1,7 @@
 # WP-M1-13: UI-Layout-Shell mit Header und Navigation
 
 format: small-model
+status: done
 depends-on: WP-M1-12
 phase: 1
 context-budget: 20k tokens

@@ -1,6 +1,7 @@
 # WP-M1-05: RBAC tables and system role seed
 
 format: small-model
+status: done
 depends-on: WP-M1-03
 phase: 1
 context-budget: 22k tokens

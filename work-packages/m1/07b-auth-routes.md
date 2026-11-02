@@ -1,6 +1,7 @@
 # WP-M1-07b: Auth — login, logout and me routes
 
 format: small-model
+status: done
 depends-on: WP-M1-07
 phase: 1
 context-budget: 24k tokens

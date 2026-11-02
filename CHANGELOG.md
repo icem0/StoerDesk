@@ -31,6 +31,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   metadata or an `.env` entry; the misleading `VITE_APP_VERSION` name and the manual
   `env:version` refresh are gone.
 
+### Changed
+
+- The phase 1 record is complete. Seven phase 1 commits had landed without a work
+  package — `3e1c0f8` (centred login card and version display), `71fd066` (RBAC and
+  administrator bootstrap on API start), `f0e0fcc`, `1d56aad` and `d994911` (PostgreSQL
+  service in the `check` job, the dead Playwright job, the publish queue),
+  `4da1c7b`/`ad0b45b` (configurable login rate limit) and `7e64dd1` (the end-of-session
+  commit rule). `WP-M1-23` … `WP-M1-27` are the retroactive work-package documents for
+  them, and every `m1` work-package document now carries a `status:` line.
+- `.env.example` documents `LOGIN_RATE_LIMIT_MAX` and `LOGIN_RATE_LIMIT_WINDOW`; the API
+  environment has had both since `ad0b45b`, but the template of `PLAN.md` §15 was missing
+  them.
+
 ### Added
 
 - The duplicate hint of the public report form. The form asks the API for the open

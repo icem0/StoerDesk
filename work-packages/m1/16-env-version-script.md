@@ -78,3 +78,12 @@ Expected: all green; the E2E fails if the resolved version is `dev`.
   and image builds read `VERSION` because they have no `.git`. No `.env` entry is needed,
   the image build no longer rejects a value, and the smoke E2E asserts only that the
   badge shows a non-empty value.
+- Deviation (`AGENTS.md`, _one work package = one commit_): this package spans three
+  commits — `d680b4d` (current version in the deployment env), `f88cc73` (post-commit
+  writes the tag into `.env`) and `655efe7` (the `VERSION` file replaced `.env`
+  entirely). Two further version-file commits carry no WP id: `c51f060` picks the next
+  version in `.husky/post-commit` by version sort over `v*.*.*` tags instead of the most
+  recently created tag — creation order let a re-created or back-dated tag win and
+  non-version tags count as versions — and `0ca83e4` cut the `v0.1.0` release line
+  through `scripts/version-file.mjs`. Both are recorded here because they touch the same
+  version mechanism.

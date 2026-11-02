@@ -1,6 +1,7 @@
 # WP-M1-10b: Working GitHub issue forms
 
 format: small-model
+status: done
 depends-on: WP-M1-10, WP-M0-05
 phase: 1
 context-budget: 14k tokens

@@ -1,6 +1,7 @@
 # WP-M1-10: English CI and governance files
 
 format: small-model
+status: done
 depends-on: WP-M1-01, WP-M0-05
 phase: 1
 context-budget: 18k tokens
@@ -101,9 +102,7 @@ npx prettier --check .github CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md
 git grep -nI -i -E '\b(und|der|die|mit|nicht|bitte|siehe|für|bei)\b' -- CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md .github/workflows
 ```
 
-Expected: lint, i18n and wp:check green, Prettier reports no reformat, the last
-command finds nothing, and the GitHub Actions `check` run of the pushed commit is
-green — a local `npm run check` alone is not enough.
+Expected: lint, i18n and wp:check green, Prettier reports no reformat, the last command finds nothing, and the GitHub Actions `check` run of the pushed commit is green — a local `npm run check` alone is not enough.
 
 ## Handoff
 

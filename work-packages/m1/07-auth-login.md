@@ -1,6 +1,7 @@
 # WP-M1-07: Auth — session core (token, sessions table)
 
 format: small-model
+status: done
 depends-on: WP-M1-06
 phase: 1
 context-budget: 20k tokens

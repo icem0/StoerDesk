@@ -610,7 +610,13 @@ when its exit criteria and its acceptance tests pass.
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 **WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,
 **WP-M1-09d**, **WP-M1-09e**, **WP-M1-10f**, **WP-M1-10h**, **WP-M1-10i**, **WP-M1-10d**
-and **WP-M1-11** (WP-M1-10g was superseded by WP-M1-10h); the table below is the
+and **WP-M1-11** (WP-M1-10g was superseded by WP-M1-10h); the phase 1 **record** is closed
+as well: **WP-M1-23** … **WP-M1-27** are retroactive work-package documents for the seven
+phase 1 commits that landed without one (`3e1c0f8`, `71fd066`, `f0e0fcc`, `1d56aad`,
+`d994911`, `4da1c7b`/`ad0b45b` and `7e64dd1`), every `m1` work-package document now
+carries a `status:` line, and `.env.example` gained the `LOGIN_RATE_LIMIT_MAX` /
+`LOGIN_RATE_LIMIT_WINDOW` pair that `ad0b45b` had left out (§15: complete `.env.example`);
+the table below is the
 backlog of record (mirrored and kept current in
 `work-packages/README.md`, enforced by the `AGENTS.md` rule _Open follow-ups
 (mandatory closure)_ — open items of a phase are finished in numeric order before the
@@ -656,6 +662,11 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M1-20  | the push command in the governance documents | done   |
 | WP-M1-21  | serialised promotion of `latest`             | done   |
 | WP-M1-22  | the app version reads version tags only      | done   |
+| WP-M1-23  | record: login card and version display       | done   |
+| WP-M1-24  | record: RBAC/admin bootstrap on API start    | done   |
+| WP-M1-25  | record: CI database tests, publish queue     | done   |
+| WP-M1-26  | record: configurable login rate limit        | done   |
+| WP-M1-27  | record: the end-of-session commit rule       | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

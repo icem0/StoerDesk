@@ -1,6 +1,7 @@
 # WP-M1-14: Base seed keeps an existing administrator untouched
 
 format: small-model
+status: done
 depends-on: WP-M1-13
 phase: 1
 context-budget: 15k tokens
@@ -76,4 +77,7 @@ restored.
 - The red `check` runs v0.0.58 … v0.0.61 are fixed by this package — the cause
   was commit 82a9fc7, which changed the insert to `onConflictDoUpdate` without
   the status detection and the test.
+- Deviation: the defect commit `82a9fc7` was made outside any work package and mixed
+  two concerns (the seed upsert and a web build argument); it names no WP and has no WP
+  file of its own, so it is recorded here as the cause of this package.
 - Open question: none

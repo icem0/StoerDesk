@@ -1,5 +1,7 @@
 # WP-M1-01: Monorepo-Grundgerüst
 
+status: done
+
 depends-on: —
 milestone: m1
 

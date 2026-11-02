@@ -1,6 +1,7 @@
 # WP-M1-06: Base seed — bootstrap administrator
 
 format: small-model
+status: done
 depends-on: WP-M1-05
 phase: 1
 context-budget: 20k tokens

@@ -1,6 +1,7 @@
 # WP-M1-10c: English documentation placeholders
 
 format: small-model
+status: done
 depends-on: WP-M1-10, WP-M1-10b
 phase: 1
 context-budget: 16k tokens

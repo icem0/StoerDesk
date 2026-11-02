@@ -12,24 +12,20 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 35  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 20  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 48  |
+| [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
-`m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
-`WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
-`WP-M1-09d`, `WP-M1-09e`, `WP-M1-10`,
-`WP-M1-10b`, `WP-M1-10c`, `WP-M1-10d`, `WP-M1-10e`, `WP-M1-10f`, `WP-M1-10g`, `WP-M1-10h`,
-`WP-M1-10i`, `WP-M1-11`, `WP-M1-15`, `WP-M1-16`, `WP-M1-17`, `WP-M2-00`, `WP-M2-01`, `WP-M2-02`,
-`WP-M2-02b`, `WP-M2-03` (rewritten from the legacy `03-qr-pdf.md`),
-`WP-M2-04` (rewritten from the legacy `04-report-form-api.md` and split into
-**WP-M2-04b** and **WP-M2-04c**) and
-`WP-M2-05` (rewritten from the legacy `05-report-form-ui.md` and split into
-**WP-M2-05b** and **WP-M2-05c**) and
-`WP-M2-06` (rewritten from the legacy `06-status-page.md` and split into
-**WP-M2-06b**). The
-remaining `m1` and `m2` documents are legacy plans: they stay valid as scope
-descriptions, but each one is rewritten into the small-model format before
-implementation.
+Every `m0`, `m1` and `m2` document carries `format: small-model` except the four first
+foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
+as legacy and skips them. A package that was rewritten from a legacy plan and split is
+recognisable by its children: `WP-M1-07` → `WP-M1-07b`, `WP-M1-09` → `WP-M1-09b` …
+`WP-M1-09e`, `WP-M1-10` → `WP-M1-10b` … `WP-M1-10e`, `WP-M2-02` → `WP-M2-02b`,
+`WP-M2-04` → `WP-M2-04b`/`WP-M2-04c`, `WP-M2-05` → `WP-M2-05b`/`WP-M2-05c`, `WP-M2-06` →
+`WP-M2-06b`, `WP-M2-07` → `WP-M2-07b` … `WP-M2-07d`, `WP-M2-19` → `WP-M2-19a` …
+`WP-M2-19d`. `WP-M1-23` … `WP-M1-27` are **retroactive records**: they do not announce
+work, they document phase 1 commits that landed without a work package, so that the
+record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 
 ## Status
 
@@ -124,6 +120,9 @@ implementation.
 > `window.print()` — QR of `<origin>/m/<token>`, object name, object number, report call
 > and the 112 notice on every card — and `specs/08-objects-api.md` §9.3 was filled and
 > reviewed for it.
+> The phase 1 record is closed: every `m1` document now carries a `status:` line, and
+> **WP-M1-23** … **WP-M1-27** are retroactive records for the seven phase 1 commits that
+> landed without a work package.
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
@@ -137,6 +136,19 @@ running phase are implemented in numeric order before the next phase starts.
 
 | WP        | Content                                                 | Status                  | WP file |
 | --------- | ------------------------------------------------------- | ----------------------- | ------- |
+| WP-M1-01  | monorepo workspaces, strict TS, ESLint/Prettier/Vitest   | done                    | yes     |
+| WP-M1-02  | Compose stack, `Dockerfile`, complete `.env.example`      | done                    | yes     |
+| WP-M1-03  | Drizzle base schema, `0000_base_tables`, UUID v7          | done                    | yes     |
+| WP-M1-04  | i18n skeleton, server `t()`, `i18n:check`, lint rule      | done                    | yes     |
+| WP-M1-05  | RBAC tables, `0001_rbac_tables`, system role seed         | done                    | yes     |
+| WP-M1-06  | Argon2id hash and the bootstrap administrator seed        | done                    | yes     |
+| WP-M1-07  | session core and the shared auth schemas                 | done                    | yes     |
+| WP-M1-07b | `sessionPlugin`, `requireUser`, login/logout/me, limit    | done                    | yes     |
+| WP-M1-08  | effective permissions and `requirePermission`             | done                    | yes     |
+| WP-M1-09  | admin users API (list, create, update)                    | done                    | yes     |
+| WP-M1-10  | English CI step names and governance files                | done                    | yes     |
+| WP-M1-10b | valid GitHub issue forms with the 112-only notice         | done                    | yes     |
+| WP-M1-10c | English `docs/` placeholders                              | done                    | yes     |
 | WP-M1-10f | traceable CI run, job and step names                    | done                    | yes     |
 | WP-M1-10g | versioned run names for the publish chain               | superseded by WP-M1-10h | yes     |
 | WP-M1-10h | CI on the version tag, version carried by the run name  | done                    | yes     |
@@ -193,13 +205,36 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
 | WP-M1-21  | serialised promotion of `latest`                        | done                    | yes     |
 | WP-M1-22  | the app version reads version tags only                   | done                    | yes     |
+| WP-M1-23  | record of the login card and version display (3e1c0f8)    | done                    | yes     |
+| WP-M1-24  | record of the RBAC/admin bootstrap on API start (71fd066) | done                    | yes     |
+| WP-M1-25  | record of the CI db tests and publish queue (3 commits)   | done                    | yes     |
+| WP-M1-26  | record of the configurable login rate limit (2 commits)   | done                    | yes     |
+| WP-M1-27  | record of the end-of-session commit rule (7e64dd1)        | done                    | yes     |
 | WP-M2-25  | grouped settings menu in the shell                       | done                    | yes     |
 | WP-M2-26  | back links in the admin pages                            | open                    | yes     |
 | WP-M2-27  | show a hint when internal ticket creation fails          | done                    | yes     |
 | WP-M2-28  | logo and top-level buttons in the shell header           | done                    | yes     |
+| WP-M2-29  | branding settings API (company name)                     | done                    | yes     |
 | WP-M2-30  | branding input field in the administration               | done                    | yes     |
 | WP-M2-31  | company name in the shell header                         | done                    | yes     |
 
+`WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
+phase 1 without a work package and without a WP id in the commit subject —
+`3e1c0f8` (centred login card, version display), `71fd066` (RBAC and administrator
+bootstrap on API start), `f0e0fcc`, `1d56aad` and `d994911` (Postgres service in the
+`check` job, the dead Playwright job, the publish queue), `4da1c7b`/`ad0b45b`
+(configurable login rate limit) and `7e64dd1` (the end-of-session commit rule). The five
+records say what each commit did and what of it is no longer true — the global
+`publish-queue` and "every run moves `latest`" of `d994911` were repaired by WP-M1-18 and
+WP-M1-21, and the `VITE_APP_VERSION` build argument of `3e1c0f8` was replaced by the
+tracked `VERSION` file of WP-M1-16. `WP-M1-26` additionally closes the gap those commits
+left: `LOGIN_RATE_LIMIT_MAX` and `LOGIN_RATE_LIMIT_WINDOW` were missing from
+`.env.example` (`PLAN.md` §15 requires it to be complete). `82a9fc7` (the seed defect
+WP-M1-14 repaired) and the version-file commits `c51f060` and `0ca83e4` carry no WP of
+their own and are recorded in the handoff of WP-M1-14 and WP-M1-16. The commits before
+the work-package rule existed (`fe417df`, `22a8bf6`, `0179bf8`, `3b1872a`, `42d4d35`,
+`80124d8` and the deployment fixes of 2026-10-28/29) stay unrecorded history: their scope
+is `WP-M1-01`, `WP-M1-02` and `WP-M0-01`/`WP-M0-02`.
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
 `WP-M1-10g` is superseded: it assumed a run can rename itself through the REST API. It

@@ -1,5 +1,7 @@
 # WP-M1-04: i18n-Grundgerüst
 
+status: done
+
 depends-on: WP-M1-01
 milestone: m1
 
