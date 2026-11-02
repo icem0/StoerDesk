@@ -1,17 +1,19 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { ObjectListResponse, ObjectSummary } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
 /**
- * Object list page (`specs/08-objects-api.md` §9.1, WP-M2-11).
+ * Object list page (`specs/08-objects-api.md` §9.1, WP-M2-11 … WP-M2-14).
  *
- * Read-only view of the object list: search over object number, name and city,
-   server-side filters for `active`, `city` and `systemType`, one row per object
-   with its systems and an active/inactive badge. Create / update / delete live in
-   WP-M2-12 … WP-M2-14.
+ * View of the object list: search over object number, name and city, server-side
+ * filters for `active`, `city` and `systemType`, one row per object with its
+ * systems and an active/inactive badge. Each row links to the edit page
+   (WP-M2-13) and has a delete button (WP-M2-14). Create lives on `/objects/create`
+   (WP-M2-12).
  */
 
 function useObjects(query: { search?: string; active?: string; city?: string; systemType?: string }) {
@@ -39,6 +41,25 @@ function systemChips(systems: ObjectSummary['systems']) {
 
 function ObjectRow({ object }: { object: ObjectSummary }) {
   const { t } = useTranslation('object')
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  async function handleDelete() {
+    if (!window.confirm(t('delete.confirm', { objectNo: object.objectNo }))) {
+      return
+    }
+
+    try {
+      await apiFetch<never>(`/v1/objects/${object.objectNo}`, { method: 'DELETE' })
+      queryClient.invalidateQueries({ queryKey: ['objects', 'list'] })
+    } catch (known) {
+      if (known instanceof Error && (known as { status?: number; code?: string }).status === 404) {
+        alert(t('delete.errors.objectNotFound'))
+        return
+      }
+      alert(t('delete.errors.unknown'))
+    }
+  }
 
   return (
     <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
@@ -62,10 +83,18 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
         </span>
       </td>
       <td className="p-3 text-sm text-right text-slate-500">
-        <button className="opacity-50 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+        <button
+          className="rounded bg-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-500"
+          type="button"
+          onClick={() => navigate(`/objects/${object.objectNo}/edit`)}
+        >
           {t('list.actions.edit')}
         </button>{' '}
-        <button className="opacity-50 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+        <button
+          className="rounded bg-rose-600 px-2 py-1 text-xs text-white hover:bg-rose-500"
+          type="button"
+          onClick={handleDelete}
+        >
           {t('list.actions.delete')}
         </button>
       </td>
@@ -75,6 +104,7 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
 
 export function ObjectListPage() {
   const { t } = useTranslation('object')
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [active, setActive] = useState<'true' | 'false' | 'all'>('true')
   const [city, setCity] = useState('')
@@ -103,8 +133,8 @@ export function ObjectListPage() {
         </div>
         <button
           className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          disabled
           type="button"
+          onClick={() => navigate('/objects/create')}
         >
           {t('list.actions.create')}
         </button>

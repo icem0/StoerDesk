@@ -115,5 +115,12 @@
       "objectNotFound": "Object not found.",
       "unknown": "The object could not be saved."
     }
+  },
+  "delete": {
+    "confirm": "Delete object „{{objectNo}}“? This cannot be undone.",
+    "errors": {
+      "objectNotFound": "Object not found.",
+      "unknown": "The object could not be deleted."
+    }
   }
 }

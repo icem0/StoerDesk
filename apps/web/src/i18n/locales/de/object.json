@@ -115,5 +115,12 @@
       "objectNotFound": "Objekt nicht gefunden.",
       "unknown": "Das Objekt konnte nicht gespeichert werden."
     }
+  },
+  "delete": {
+    "confirm": "Objekt „{{objectNo}}“ wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+    "errors": {
+      "objectNotFound": "Objekt nicht gefunden.",
+      "unknown": "Das Objekt konnte nicht gelöscht werden."
+    }
   }
 }
