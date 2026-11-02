@@ -40,10 +40,10 @@ interfaces:
    `PUT /v1/settings/branding`; the form prefills from the response, disables the
    save button while the mutation runs and while the user lacks `settings.write`,
    and shows the localized notice after a successful save.
-2. Error mapping follows `users-page.tsx`: `ApiError.code` of
+2. `routes/index.tsx`: route `/admin/branding` wrapped in `RequireSession`.
+3. Error mapping follows `users-page.tsx`: `ApiError.code` of
    `session_invalid`, `forbidden`, `invalid_request` maps to `branding.errors.<code>`,
    anything else to `branding.errors.unknown`.
-3. Route `/admin/branding` wrapped in `RequireSession` in `routes/index.tsx`.
 4. Add the `branding` keys to `common.json` in `de` and `en`; the `de` field label is
    "Firmenname", the hint explains that an empty value shows only "StörDesk".
 5. Test `apps/web/src/settings/__tests__/branding-page.test.tsx`: the input is

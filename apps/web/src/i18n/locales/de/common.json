@@ -16,6 +16,22 @@
    "administration": "Verwaltung"
   }
  },
+ "branding": {
+  "title": "GUI anpassen",
+  "hint": "Firmenname, der neben dem Logo im Header angezeigt wird. Leer zeigt nur „StörDesk“.",
+  "back": "Zurück zur Verwaltung",
+  "field": {
+   "companyName": "Firmenname"
+  },
+  "save": "Speichern",
+  "saved": "Gespeichert.",
+  "errors": {
+   "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+   "forbidden": "Sie sind nicht autorisiert, die Beschriftung zu ändern.",
+   "invalid_request": "Der Firmenname ist ungültig.",
+   "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+  }
+ },
  "auth": {
   "title": "Anmeldung",
   "loading": "Lädt …",
@@ -34,7 +50,8 @@
    "users": "Benutzerverwaltung",
    "roles": "Rollenverwaltung",
    "stickers": "QR-Aufkleber",
-   "admin": "Verwaltung öffnen"
+   "admin": "Verwaltung öffnen",
+   "branding": "Darstellung"
   },
   "errors": {
    "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",

@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 
 import { App } from '../App'
 import { AdminHomePage } from '../admin/admin-home-page'
+import { BrandingPage } from '../settings/branding-page'
 import { RolesPage } from '../admin/roles-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
@@ -50,6 +51,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/branding',
+        element: (
+          <RequireSession>
+            <BrandingPage />
           </RequireSession>
         ),
       },

@@ -16,6 +16,22 @@
    "administration": "Administration"
   }
  },
+ "branding": {
+  "title": "Customize the GUI",
+  "hint": "Company name shown next to the logo in the header. Leave empty to show only “StörDesk”.",
+  "back": "Back to administration",
+  "field": {
+   "companyName": "Company name"
+  },
+  "save": "Save",
+  "saved": "Saved.",
+  "errors": {
+   "session_invalid": "Your session has expired. Please sign in again.",
+   "forbidden": "You are not authorized to change the branding.",
+   "invalid_request": "The company name is invalid.",
+   "unknown": "An unexpected error occurred."
+  }
+ },
  "auth": {
   "title": "Sign in",
   "loading": "Loading …",
@@ -34,7 +50,8 @@
    "users": "User administration",
    "roles": "Role administration",
    "stickers": "QR stickers",
-   "admin": "Open administration"
+   "admin": "Open administration",
+   "branding": "Appearance"
   },
   "errors": {
    "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",

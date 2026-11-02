@@ -27,6 +27,9 @@ interfaces:
   `['branding']` query key and renders `common:app.titleWithCompany`
   ("{{company}} @ {{product}}") when `companyName` is not empty, otherwise
   `common:app.title` alone
+- the settings menu's `administration` group gains the link `/admin/branding`
+  with the label `auth.links.branding`, so the branding page of WP-M2-30 is
+  reachable from the header
 - the query is read-only and never blocks the header: while it is pending or has
   failed, the plain product name is shown
 
@@ -34,10 +37,12 @@ interfaces:
 
 1. `Shell.tsx`: add a `useQuery` on `['branding']` (same key as `BrandingPage`, so
    TanStack Query shares the answer) and derive the header text.
-2. `common.json` de/en: `app.titleWithCompany` with the interpolations `company` and
+2. `Shell.tsx`: add `{ key: 'branding', path: '/admin/branding' }` to the
+   `administration` group of the settings menu.
+3. `common.json` de/en: `app.titleWithCompany` with the interpolations `company` and
    `product`; `de` is "{{company}} @ {{product}}", `en` identical. `app.title` stays
    the fallback.
-3. Extend the existing shell test fixture: with a stubbed branding answer the header
+4. Extend the existing shell test fixture: with a stubbed branding answer the header
    shows "Beispiel @ StörDesk", with an empty `companyName` it shows "StörDesk".
 
 ## Non-goals
