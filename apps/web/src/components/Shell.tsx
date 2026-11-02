@@ -1,10 +1,14 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
 import { LoginForm, LogoutButton } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
+import { apiFetch } from '../lib/api'
 import { AppVersion } from './app-version'
+
+import type { BrandingResponse } from '@stoerdesk/shared'
 
 const navGroups = [
   {
@@ -27,6 +31,7 @@ const navGroups = [
       { key: 'admin', path: '/admin' },
       { key: 'users', path: '/admin/users' },
       { key: 'roles', path: '/admin/roles' },
+      { key: 'branding', path: '/admin/branding' },
     ],
   },
 ] as const
@@ -177,6 +182,17 @@ export function Shell() {
   const { t } = useTranslation('common')
   const me = useMe()
 
+  const { data: branding } = useQuery({
+    queryKey: ['branding'],
+    queryFn: () => apiFetch<BrandingResponse>('/v1/settings/branding'),
+    retry: false,
+  })
+
+  const companyName = branding?.companyName ?? ''
+  const title = companyName
+    ? t('app.titleWithCompany', { company: companyName, product: t('app.title') })
+    : t('app.title')
+
   return (
     <div className="flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white">
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm print:hidden">
@@ -190,7 +206,7 @@ export function Shell() {
               src="/logo.png"
               width="128"
             />
-            <span className="min-w-0 truncate font-semibold tracking-tight">{t('app.title')}</span>
+            <span className="min-w-0 truncate font-semibold tracking-tight">{title}</span>
           </span>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />

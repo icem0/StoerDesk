@@ -85,9 +85,60 @@ describe('Shell settings menu', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
     expect(screen.getByRole('link', { name: 'Rollenverwaltung' })).toBeTruthy()
 
-  fireEvent.keyDown(document, { key: 'Escape' })
-  expect(screen.queryByRole('link', { name: 'Rollenverwaltung' })).toBeNull()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('link', { name: 'Rollenverwaltung' })).toBeNull()
   })
+
+  function stubSessionAndBranding(permissions: string[], branding: { companyName: string }) {
+    return vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/me')) {
+        return Response.json({
+          user: { email: 'admin@example.com', roles: ['admin'], permissions },
+        })
+      }
+
+      if (url.endsWith('/settings/branding')) {
+        return Response.json(branding)
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+  }
+
+  it('shows the configured company name next to the product name', async () => {
+    const fetchMock = stubSessionAndBranding(['user.read'], { companyName: 'Beispiel GmbH' })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderShell()
+
+    expect(
+      await screen.findByText((content) => content.includes('Beispiel GmbH')),
+    ).toBeTruthy()
+  })
+
+  it('shows only the product name without a company name', async () => {
+    const fetchMock = stubSessionAndBranding(['user.read'], { companyName: '' })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderShell()
+
+    expect(await screen.findByText('StörDesk')).toBeTruthy()
+  })
+
+  it('links the branding page from the settings menu', async () => {
+    const fetchMock = stubSessionAndBranding(['settings.read'], { companyName: 'Beispiel GmbH' })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderShell()
+
+    await fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
+
+    const branding = screen.getByRole('link', { name: 'Darstellung' })
+    expect(branding.getAttribute('href')).toBe('/admin/branding')
+  })
+
 
   it('shows the top-level header links without opening the menu', async () => {
     stubMe(signedInMe())

@@ -198,6 +198,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-27  | show a hint when internal ticket creation fails          | done                    | yes     |
 | WP-M2-28  | logo and top-level buttons in the shell header           | done                    | yes     |
 | WP-M2-30  | branding input field in the administration               | done                    | yes     |
+| WP-M2-31  | company name in the shell header                         | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.

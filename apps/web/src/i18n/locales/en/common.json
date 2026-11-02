@@ -10,6 +10,7 @@
    "dashboard": "Dashboard",
    "tickets": "Tickets"
   },
+  "titleWithCompany": "{{company}} @ {{product}}",
   "settingsGroups": {
    "operations": "Operations",
    "objects": "Objects",
