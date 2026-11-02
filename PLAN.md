@@ -634,6 +634,10 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-05c | report form smoke E2E in de and en           | done   |
 | WP-M2-06  | public status API by `status_token`          | done   |
 | WP-M2-06b | public status page at `/s/:token` (web)      | done   |
+| WP-M2-07  | report throttle table and suspicion          | planned |
+| WP-M2-07b | Altcha captcha API primitives                | planned |
+| WP-M2-07c | spam decision on the report create path      | planned |
+| WP-M2-07d | honeypot field and Altcha widget (web)       | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -722,6 +726,18 @@ legacy plan mixed the public status API, the page and its tests into one package
 deadline and only the whitelisted event types as `{ type, at }` — and its child
 **WP-M2-06b** (`06b-status-page-ui.md`) is implemented as the public page at `/s/:token` with
 the status badge and the timeline in `de` and `en`.
+**WP-M2-07** is rewritten into the small-model format and split before implementation: the
+legacy package bundled the throttle, the honeypot, the Altcha server, the create-path
+decision and the form into one run. **WP-M2-07** (`07-spam-protection.md`) is the report
+throttle — a `report_throttle` table plus `recordReportAttempt` / `isReportSuspicious`
+(> 3 reports per 10 minutes per IP **or** QR token); **WP-M2-07b**
+(`07b-altcha-captcha-api.md`) adds the `altcha-lib` primitives
+(`POST /api/v1/public/altcha/challenge`, `verifyAltchaPayload`, `altchaVerificationSchema`);
+**WP-M2-07c** (`07c-spam-decision-report-path.md`) puts the honeypot, the throttle and Altcha
+on the create path so a suspicious or honeypot report is stored with
+`tickets.suspected_spam` while a suspicious report without a valid proof of work answers
+`400 captcha_required`; and **WP-M2-07d** (`07d-spam-form-ui.md`) is the web form's hidden
+`website` honeypot and the Altcha widget that appears only after a `400 captcha_required`.
 
 ## 17. Work package rules for small models
 
