@@ -25,6 +25,12 @@ import type {
 import type {} from 'altcha/types/react'
 
 import { ApiError, apiFetch } from '../../lib/api'
+import {
+  enqueueReport,
+  outboxAvailable,
+  queuedReports,
+  replayOutbox,
+} from '../../lib/outbox'
 import { PhotoUpload } from './photo-upload'
 
 /**
@@ -589,6 +595,29 @@ export function ReportFormPage() {
   /** The answer of the "add to existing" path (§7.8.2) — no new ticket. */
   const [comment, setComment] = useState<PublicTicketComment | null>(null)
   const [pending, setPending] = useState(false)
+  /** A report was stored in the outbox while the device was offline. */
+  const [offlineSaved, setOfflineSaved] = useState(false)
+  /** How many reports wait in the outbox. */
+  const [queuedCount, setQueuedCount] = useState(0)
+
+  const refreshQueued = useCallback(async () => {
+    if (!outboxAvailable()) {
+      setQueuedCount(0)
+      return
+    }
+
+    const count = (await queuedReports()).length
+    setQueuedCount(count)
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void refreshQueued()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [refreshQueued])
+
   const { challenge, request: requestChallenge } = useAltchaChallenge()
 
   const object = qr.data?.object
@@ -660,6 +689,16 @@ export function ReportFormPage() {
       setPending(true)
 
       try {
+        if (!navigator.onLine) {
+          // Offline: persist the report in the outbox and deliver it once the
+          // connection returns (WP-M2-09). The `client_uuid` makes a retry
+          // idempotent on the server.
+          await enqueueReport(body)
+          await refreshQueued()
+          setOfflineSaved(true)
+          return
+        }
+
         setReport(
           await apiFetch<PublicReport>('/v1/public/tickets', {
             method: 'POST',
@@ -668,9 +707,19 @@ export function ReportFormPage() {
           }),
         )
       } catch (error) {
+        // A network failure (not an `ApiError`) means the report could not
+        // reach the server — persist it and retry later.
+        if (!(error instanceof ApiError)) {
+          await enqueueReport(body)
+          await refreshQueued()
+          setOfflineSaved(true)
+          setPending(false)
+          return
+        }
+
         setServerNotice(errorMessage(error))
 
-        if (error instanceof ApiError && error.code === 'captcha_required') {
+        if (error.code === 'captcha_required') {
           // §7.6: only a suspicious report gets a captcha — the challenge is fetched
           // here and never before.
           try {
@@ -692,6 +741,7 @@ export function ReportFormPage() {
       pathTokenValue,
       photos,
       qr.data?.token,
+      refreshQueued,
       requestChallenge,
       selectedSystemId,
       text,
@@ -895,10 +945,24 @@ export function ReportFormPage() {
                 <AltchaCaptcha challenge={challenge} onVerified={handleVerified} />
               ) : null}
 
+              {/* Offline: the report was persisted and waits for delivery. */}
+              {offlineSaved ? (
+                <p className="text-sm text-sky-300" role="status">
+                  {t('report.offline.saved')}
+                </p>
+              ) : null}
+
               {/* §7.1 and PLAN §2: the notice sits directly above the send button. */}
               <p className="rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">
                 {t('report.emergencyNotice')}
               </p>
+
+              {/* How many reports wait in the outbox (offline path of WP-M2-09). */}
+              {queuedCount > 0 ? (
+                <p className="text-xs text-sky-300">
+                  {t('report.offline.badge', { count: queuedCount })}
+                </p>
+              ) : null}
 
               <button
                 className="min-h-12 rounded-lg bg-sky-700 px-4 py-3 text-base font-semibold text-white disabled:opacity-50"
@@ -907,6 +971,24 @@ export function ReportFormPage() {
               >
                 {pending ? t('report.submitting') : t('report.submit')}
               </button>
+
+              {/* Send everything that is waiting in the outbox right now. */}
+              {queuedCount > 0 && navigator.onLine && !pending ? (
+                <button
+                  className="min-h-12 rounded-lg border border-sky-500 px-4 py-3 text-base font-semibold text-sky-300 disabled:opacity-50"
+                  disabled={pending}
+                  type="button"
+                  onClick={async () => {
+                    setPending(true)
+                    await replayOutbox()
+                    await refreshQueued()
+                    setOfflineSaved(false)
+                    setPending(false)
+                  }}
+                >
+                  {t('report.offline.sendNow')}
+                </button>
+              ) : null}
             </form>
           </>
         ) : null}

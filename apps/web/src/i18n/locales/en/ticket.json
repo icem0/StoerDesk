@@ -45,6 +45,11 @@
       "addedAt": "Saved at {{at}}."
     },
     "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call.",
+    "offline": {
+      "saved": "Saved. The report is sent as soon as you are back online.",
+      "badge": "{{count}} waiting",
+      "sendNow": "Send now"
+    },
     "submit": "Report malfunction",
     "submitting": "Sending the report …",
     "validation": {

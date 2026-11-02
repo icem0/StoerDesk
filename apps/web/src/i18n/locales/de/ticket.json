@@ -45,6 +45,11 @@
       "addedAt": "Gespeichert am {{at}}."
     },
     "emergencyNotice": "Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.",
+    "offline": {
+      "saved": "Gespeichert. Die Meldung wird gesendet, sobald Sie wieder online sind.",
+      "badge": "{{count}} wartet",
+      "sendNow": "Jetzt senden"
+    },
     "submit": "Störung melden",
     "submitting": "Meldung wird gesendet …",
     "validation": {

@@ -170,6 +170,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-07c | spam decision on the report create path                 | done                    | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | done                    | yes     |
 | WP-M2-08  | duplicate hint: open tickets and public comment        | done                    | yes     |
+| WP-M2-09  | offline report — Dexie outbox and send flow            | planned                 | yes     |
+| WP-M2-09a | service worker and offline sync                        | planned                 | yes     |
+| WP-M2-09b | offline E2E test                                       | planned                 | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
