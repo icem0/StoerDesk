@@ -1,7 +1,7 @@
 # WP-M2-10: Phase-2 exit-criterion E2E (report → status page)
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-09
 phase: 2
 milestone: m2
