@@ -197,6 +197,8 @@
     "priorityNormal": "Normal",
     "priorityHigh": "Hoch",
     "priorityCritical": "Kritisch",
+    "filterOpen": "nur offene",
+    "filterOverdue": "nur überfällige",
     "noTickets": "Keine Meldungen gefunden.",
     "loading": "Meldungen werden geladen …",
     "loadError": "Die Meldungsliste konnte nicht geladen werden.",

@@ -197,6 +197,8 @@
     "priorityNormal": "Normal",
     "priorityHigh": "High",
     "priorityCritical": "Critical",
+    "filterOpen": "open only",
+    "filterOverdue": "overdue only",
     "noTickets": "No tickets found.",
     "loading": "Loading tickets …",
     "loadError": "The ticket list could not be loaded.",

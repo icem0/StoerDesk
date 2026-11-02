@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import type { TicketListResponse, TicketListItem } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
@@ -53,11 +53,21 @@ const PRIORITY_COLORS: Record<string, string> = {
   critical: 'bg-rose-900/30 text-rose-300',
 }
 
-function useTickets(query: { search?: string; status?: string; priority?: string; limit?: number; offset?: number }) {
+function useTickets(query: {
+  search?: string
+  status?: string
+  priority?: string
+  open?: string
+  overdue?: string
+  limit?: number
+  offset?: number
+}) {
   const params = new URLSearchParams()
   if (query.search) params.set('search', query.search)
   if (query.status) params.set('status', query.status)
   if (query.priority) params.set('priority', query.priority)
+  if (query.open) params.set('open', query.open)
+  if (query.overdue) params.set('overdue', query.overdue)
   if (query.limit !== undefined) params.set('limit', String(query.limit))
   if (query.offset !== undefined) params.set('offset', String(query.offset))
 
@@ -73,7 +83,11 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
 
   return (
     <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
-      <td className="p-3 text-sm font-mono text-slate-300">{ticket.ticketNo}</td>
+      <td className="p-3 text-sm font-mono">
+        <Link className="text-sky-300 hover:text-sky-200 hover:underline" to={`/tickets/${ticket.ticketNo}`}>
+          {ticket.ticketNo}
+        </Link>
+      </td>
       <td className="p-3 text-sm text-slate-200">{ticket.objectName}</td>
       <td className="p-3 text-sm font-mono text-slate-400">{ticket.objectNo}</td>
       <td className="p-3 text-sm">
@@ -96,12 +110,10 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
       <td className="p-3 text-sm text-slate-400">
         {new Date(ticket.deadlineAt).toLocaleString('de-DE')}
       </td>
-      <td className="p-3 text-sm text-right text-slate-500">
-        <button
-          className="opacity-50 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed" disabled
-        >
+      <td className="p-3 text-sm text-right">
+        <Link className="text-sky-300 hover:text-sky-200 hover:underline" to={`/tickets/${ticket.ticketNo}`}>
           {t('list.actions.view')}
-        </button>
+        </Link>
       </td>
     </tr>
   )
@@ -110,12 +122,39 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
 export function TicketListPage() {
   const { t } = useTranslation('ticket')
   const navigate = useNavigate()
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
-  const [priority, setPriority] = useState('')
-  const [offset, setOffset] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const tickets = useTickets({ search, status, priority, limit: 25, offset })
+  // The URL is the single source of truth, so the dashboard tiles open the list
+  // with the matching filter (WP-M2-22, WP-M2-23).
+  const search = searchParams.get('search') ?? ''
+  const status = searchParams.get('status') ?? ''
+  const priority = searchParams.get('priority') ?? ''
+  const open = searchParams.get('open') === 'true'
+  const overdue = searchParams.get('overdue') === 'true'
+  const offset = Number(searchParams.get('offset') ?? '0')
+
+  function updateFilter(key: string, value: string, active: boolean) {
+    const next = new URLSearchParams(searchParams)
+
+    if (value === '' || !active) {
+      next.delete(key)
+    } else {
+      next.set(key, value)
+    }
+
+    next.delete('offset')
+    setSearchParams(next)
+  }
+
+  const tickets = useTickets({
+    search,
+    status,
+    priority,
+    open: open ? 'true' : undefined,
+    overdue: overdue ? 'true' : undefined,
+    limit: 25,
+    offset,
+  })
   const rows = tickets.data?.tickets ?? []
 
   const filtered = useMemo(() => {
@@ -152,7 +191,7 @@ export function TicketListPage() {
             className="rounded bg-slate-900 p-2 text-slate-100"
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => updateFilter('search', event.target.value, true)}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -160,7 +199,7 @@ export function TicketListPage() {
           <select
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            onChange={(event) => updateFilter('status', event.target.value, true)}
           >
             <option value="">{t('list.statusAll')}</option>
             <option value="NEW">{t('list.statusNew')}</option>
@@ -179,7 +218,7 @@ export function TicketListPage() {
           <select
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
-            onChange={(event) => setPriority(event.target.value)}
+            onChange={(event) => updateFilter('priority', event.target.value, true)}
           >
             <option value="">{t('list.priorityAll')}</option>
             <option value="low">{t('list.priorityLow')}</option>
@@ -187,6 +226,22 @@ export function TicketListPage() {
             <option value="high">{t('list.priorityHigh')}</option>
             <option value="critical">{t('list.priorityCritical')}</option>
           </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            checked={open}
+            onChange={(event) => updateFilter('open', 'true', event.target.checked)}
+            type="checkbox"
+          />
+          {t('list.filterOpen')}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            checked={overdue}
+            onChange={(event) => updateFilter('overdue', 'true', event.target.checked)}
+            type="checkbox"
+          />
+          {t('list.filterOverdue')}
         </label>
       </div>
 
@@ -226,7 +281,7 @@ export function TicketListPage() {
           {offset > 0 && (
             <button
               className="rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"
-              onClick={() => setOffset(Math.max(0, offset - 25))}
+              onClick={() => updateFilter('offset', String(Math.max(0, offset - 25)), true)}
             >
               {t('list.prev')}
             </button>
@@ -234,7 +289,7 @@ export function TicketListPage() {
           {offset + filtered.length < tickets.data.total && (
             <button
               className="rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"
-              onClick={() => setOffset(offset + 25)}
+              onClick={() => updateFilter('offset', String(offset + 25), true)}
             >
               {t('list.next')}
             </button>
