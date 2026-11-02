@@ -6,13 +6,29 @@ import { LoginForm, LogoutButton } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
 import { AppVersion } from './app-version'
 
-const navItems = [
-  { key: 'tickets', path: '/tickets' },
-  { key: 'ticketCreate', path: '/tickets/create' },
-  { key: 'objects', path: '/objects' },
-  { key: 'stickers', path: '/objects/stickers' },
-  { key: 'users', path: '/admin/users' },
-  { key: 'roles', path: '/admin/roles' },
+const navGroups = [
+  {
+    key: 'operations',
+    items: [
+      { key: 'tickets', path: '/tickets' },
+      { key: 'ticketCreate', path: '/tickets/create' },
+    ],
+  },
+  {
+    key: 'objects',
+    items: [
+      { key: 'objects', path: '/objects' },
+      { key: 'stickers', path: '/objects/stickers' },
+    ],
+  },
+  {
+    key: 'administration',
+    items: [
+      { key: 'admin', path: '/admin' },
+      { key: 'users', path: '/admin/users' },
+      { key: 'roles', path: '/admin/roles' },
+    ],
+  },
 ] as const
 
 function SettingsIcon() {
@@ -105,27 +121,38 @@ function SettingsMenu({ email }: { email: string }) {
             </p>
           </div>
 
-          <ul className="p-2">
-            {navItems.map((item) => {
-              const active = location.pathname === item.path
+          {navGroups.map((group) => (
+            <div
+              className="border-b border-slate-800 p-2 last:border-b-0"
+              key={group.key}
+              role="group"
+            >
+              <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                {t(`app.settingsGroups.${group.key}`)}
+              </p>
+              <ul>
+                {group.items.map((item) => {
+                  const active = location.pathname === item.path
 
-              return (
-                <li key={item.key}>
-                  <Link
-                    className={`flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors ${
-                      active
-                        ? 'bg-sky-600/10 text-sky-300'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
-                    }`}
-                    onClick={() => setOpen(false)}
-                    to={item.path}
-                  >
-                    {t(`auth.links.${item.key}`)}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+                  return (
+                    <li key={item.key}>
+                      <Link
+                        className={`flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors ${
+                          active
+                            ? 'bg-sky-600/10 text-sky-300'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                        }`}
+                        onClick={() => setOpen(false)}
+                        to={item.path}
+                      >
+                        {t(`auth.links.${item.key}`)}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
 
           <div className="border-t border-slate-800 p-2 [&>button]:min-h-11 [&>button]:w-full">
             <LogoutButton />

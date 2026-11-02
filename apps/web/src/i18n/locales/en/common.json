@@ -1,35 +1,41 @@
 {
-  "app": {
-    "title": "StörDesk",
-    "setupNotice": "Environment is set up. Implementation follows after specification approval.",
-    "version": "Version",
-    "settings": "Settings"
-  },
-  "auth": {
-    "title": "Sign in",
-    "loading": "Loading …",
-    "submit": "Sign in",
-    "logout": "Sign out",
-    "invalidHint": "Enter a valid e-mail and password.",
-    "signedInAs": "Signed in as {{email}}",
-    "fields": {
-      "email": "E-mail",
-      "password": "Password"
-    },
-    "links": {
-      "tickets": "Tickets",
-      "ticketCreate": "Report a malfunction",
-      "objects": "Objects",
-      "users": "User administration",
-      "roles": "Role administration",
-      "stickers": "QR stickers"
-    },
-    "errors": {
-      "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
-      "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
-      "invalid_request": "The sign-in data is incomplete or malformed.",
-      "session_invalid": "The session has expired. Please sign in again.",
-      "unknown": "Sign-in is not possible right now. Please try again later."
-    }
+ "app": {
+  "title": "StörDesk",
+  "setupNotice": "Environment is set up. Implementation follows after specification approval.",
+  "version": "Version",
+  "settings": "Settings",
+  "settingsGroups": {
+   "operations": "Operations",
+   "objects": "Objects",
+   "administration": "Administration"
   }
+ },
+ "auth": {
+  "title": "Sign in",
+  "loading": "Loading …",
+  "submit": "Sign in",
+  "logout": "Sign out",
+  "invalidHint": "Enter a valid e-mail and password.",
+  "signedInAs": "Signed in as {{email}}",
+  "fields": {
+   "email": "E-mail",
+   "password": "Password"
+  },
+  "links": {
+   "tickets": "Tickets",
+   "ticketCreate": "Report a malfunction",
+   "objects": "Objects",
+   "users": "User administration",
+   "roles": "Role administration",
+   "stickers": "QR stickers",
+   "admin": "Open administration"
+  },
+  "errors": {
+   "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
+   "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
+   "invalid_request": "The sign-in data is incomplete or malformed.",
+   "session_invalid": "The session has expired. Please sign in again.",
+   "unknown": "Sign-in is not possible right now. Please try again later."
+  }
+ }
 }

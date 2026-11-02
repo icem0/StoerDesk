@@ -1,7 +1,7 @@
 # WP-M2-25: grouped settings menu
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-24
 phase: 2
 context-budget: 14k tokens
@@ -68,5 +68,5 @@ menu labels it asserts (`auth.links.*`) are unchanged.
 - Interfaces added: grouped `navGroups` in `SettingsMenu`, `app.settingsGroups.*`
   and `auth.links.admin` keys
 - Verified: `npm run check` green
-- Follow-up WP: WP-M2-26 (back links in the admin pages, `26-admin-back-links.md`)
+- Follow-up WP: WP-M2-26 (created with this commit) (back links in the admin pages, `26-admin-back-links.md`)
 - Open question: none

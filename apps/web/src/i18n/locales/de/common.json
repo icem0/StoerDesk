@@ -1,35 +1,41 @@
 {
-  "app": {
-    "title": "StörDesk",
-    "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
-    "version": "Version",
-    "settings": "Einstellungen"
-  },
-  "auth": {
-    "title": "Anmeldung",
-    "loading": "Lädt …",
-    "submit": "Anmelden",
-    "logout": "Abmelden",
-    "invalidHint": "Bitte eine gültige E-Mail und ein Passwort eingeben.",
-    "signedInAs": "Angemeldet als {{email}}",
-    "fields": {
-      "email": "E-Mail",
-      "password": "Passwort"
-    },
-    "links": {
-      "tickets": "Meldungen",
-      "ticketCreate": "Neue Störung melden",
-      "objects": "Objekte",
-      "users": "Benutzerverwaltung",
-      "roles": "Rollenverwaltung",
-      "stickers": "QR-Aufkleber"
-    },
-    "errors": {
-      "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
-      "rate_limited": "Zu viele Anmeldeversuche. Bitte in einer Minute erneut versuchen.",
-      "invalid_request": "Die Anmeldedaten sind unvollständig oder fehlerhaft.",
-      "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
-      "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
-    }
+ "app": {
+  "title": "StörDesk",
+  "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
+  "version": "Version",
+  "settings": "Einstellungen",
+  "settingsGroups": {
+   "operations": "Meldungen",
+   "objects": "Objekte",
+   "administration": "Verwaltung"
   }
+ },
+ "auth": {
+  "title": "Anmeldung",
+  "loading": "Lädt …",
+  "submit": "Anmelden",
+  "logout": "Abmelden",
+  "invalidHint": "Bitte eine gültige E-Mail und ein Passwort eingeben.",
+  "signedInAs": "Angemeldet als {{email}}",
+  "fields": {
+   "email": "E-Mail",
+   "password": "Passwort"
+  },
+  "links": {
+   "tickets": "Meldungen",
+   "ticketCreate": "Neue Störung melden",
+   "objects": "Objekte",
+   "users": "Benutzerverwaltung",
+   "roles": "Rollenverwaltung",
+   "stickers": "QR-Aufkleber",
+   "admin": "Verwaltung öffnen"
+  },
+  "errors": {
+   "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
+   "rate_limited": "Zu viele Anmeldeversuche. Bitte in einer Minute erneut versuchen.",
+   "invalid_request": "Die Anmeldedaten sind unvollständig oder fehlerhaft.",
+   "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+   "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
+  }
+ }
 }
