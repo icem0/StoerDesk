@@ -78,5 +78,42 @@
       "invalidRequest": "Bitte prüfen Sie die Eingaben.",
       "unknown": "Das Objekt konnte nicht angelegt werden."
     }
+  },
+  "edit": {
+    "title": "Objekt {{objectNo}} bearbeiten",
+    "hint": "Ändern Sie die Felder und speichern. Die Objektnummer kann nicht mehr geändert werden.",
+    "loading": "Objekt wird geladen …",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "submitting": "Wird gespeichert …",
+    "fields": {
+      "objectNo": "Objektnummer",
+      "name": "Name",
+      "street": "Straße",
+      "houseNumber": "Hausnummer",
+      "postalCode": "PLZ",
+      "city": "Stadt",
+      "contactName": "Ansprechpartner",
+      "contactPhone": "Telefon",
+      "contactEmail": "E-Mail",
+      "externalId": "Externe ID",
+      "notes": "Notizen"
+    },
+    "hints": {
+      "objectNo": "Die Objektnummer ist nach der Erstellung fest."
+    },
+    "systems": {
+      "title": "Anlagen",
+      "type": "Anlagentyp",
+      "label": "Bezeichnung",
+      "placeholder": "z. B. Brandmeldezentrale",
+      "add": "Anlage hinzufügen"
+    },
+    "errors": {
+      "objectNoTaken": "Diese Objektnummer ist bereits vergeben.",
+      "invalidRequest": "Bitte prüfen Sie die Eingaben.",
+      "objectNotFound": "Objekt nicht gefunden.",
+      "unknown": "Das Objekt konnte nicht gespeichert werden."
+    }
   }
 }

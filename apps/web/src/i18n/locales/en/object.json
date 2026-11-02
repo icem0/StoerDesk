@@ -78,5 +78,42 @@
       "invalidRequest": "Please check your inputs.",
       "unknown": "The object could not be created."
     }
+  },
+  "edit": {
+    "title": "Edit object {{objectNo}}",
+    "hint": "Change the fields and save. The object number cannot be changed after creation.",
+    "loading": "Loading object …",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submitting": "Saving …",
+    "fields": {
+      "objectNo": "Object number",
+      "name": "Name",
+      "street": "Street",
+      "houseNumber": "House number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "contactName": "Contact person",
+      "contactPhone": "Phone",
+      "contactEmail": "E-mail",
+      "externalId": "External ID",
+      "notes": "Notes"
+    },
+    "hints": {
+      "objectNo": "The object number is fixed after creation."
+    },
+    "systems": {
+      "title": "Systems",
+      "type": "System type",
+      "label": "Label",
+      "placeholder": "e. g. fire alarm control panel",
+      "add": "Add system"
+    },
+    "errors": {
+      "objectNoTaken": "This object number is already taken.",
+      "invalidRequest": "Please check your inputs.",
+      "objectNotFound": "Object not found.",
+      "unknown": "The object could not be saved."
+    }
   }
 }
