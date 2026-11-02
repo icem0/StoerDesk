@@ -43,5 +43,40 @@
       "edit": "Bearbeiten",
       "delete": "Löschen"
     }
+  },
+  "create": {
+    "title": "Objekt anlegen",
+    "hint": "Objektnummer und Name sind Pflichtfelder. Anlagen sind optional und können später ergänzt werden.",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "submitting": "Wird gespeichert …",
+    "fields": {
+      "objectNo": "Objektnummer",
+      "name": "Name",
+      "street": "Straße",
+      "houseNumber": "Hausnummer",
+      "postalCode": "PLZ",
+      "city": "Stadt",
+      "contactName": "Ansprechpartner",
+      "contactPhone": "Telefon",
+      "contactEmail": "E-Mail",
+      "externalId": "Externe ID",
+      "notes": "Notizen"
+    },
+    "hints": {
+      "objectNo": "Ziffern, Buchstaben, _ und -, max. 32 Zeichen (z. B. 12345_01)"
+    },
+    "systems": {
+      "title": "Anlagen",
+      "type": "Anlagentyp",
+      "label": "Bezeichnung",
+      "placeholder": "z. B. Brandmeldezentrale",
+      "add": "Anlage hinzufügen"
+    },
+    "errors": {
+      "objectNoTaken": "Diese Objektnummer ist bereits vergeben.",
+      "invalidRequest": "Bitte prüfen Sie die Eingaben.",
+      "unknown": "Das Objekt konnte nicht angelegt werden."
+    }
   }
 }

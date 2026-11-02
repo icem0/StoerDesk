@@ -43,5 +43,40 @@
       "edit": "Edit",
       "delete": "Delete"
     }
+  },
+  "create": {
+    "title": "Create object",
+    "hint": "Object number and name are required. Systems are optional and can be added later.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submitting": "Saving …",
+    "fields": {
+      "objectNo": "Object number",
+      "name": "Name",
+      "street": "Street",
+      "houseNumber": "House number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "contactName": "Contact person",
+      "contactPhone": "Phone",
+      "contactEmail": "E-mail",
+      "externalId": "External ID",
+      "notes": "Notes"
+    },
+    "hints": {
+      "objectNo": "Digits, letters, _ and -, max. 32 characters (e. g. 12345_01)"
+    },
+    "systems": {
+      "title": "Systems",
+      "type": "System type",
+      "label": "Label",
+      "placeholder": "e. g. fire alarm control panel",
+      "add": "Add system"
+    },
+    "errors": {
+      "objectNoTaken": "This object number is already taken.",
+      "invalidRequest": "Please check your inputs.",
+      "unknown": "The object could not be created."
+    }
   }
 }
