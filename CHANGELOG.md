@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The administration pages `/admin/users` and `/admin/roles` carry a quiet back link to the
+  administration home `/admin` (WP-M2-26), labelled `settings:admin.back` in `de` and `en`.
 - The duplicate hint of the public report form. The form asks the API for the open
   tickets of the object and offers the two answers of the plan: "Ergänzen" appends the
   text of the reporter to the open ticket as a public comment event, "Trotzdem neu

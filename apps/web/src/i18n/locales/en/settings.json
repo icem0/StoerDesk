@@ -1,5 +1,6 @@
 {
   "admin": {
+    "back": "Back to administration",
     "home": {
       "title": "Administration",
       "hint": "The administration modules. Modules that are not available yet are marked with their phase.",

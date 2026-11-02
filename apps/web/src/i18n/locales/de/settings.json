@@ -1,5 +1,6 @@
 {
   "admin": {
+    "back": "Zurück zur Verwaltung",
     "home": {
       "title": "Verwaltung",
       "hint": "Die Module der Verwaltung. Noch nicht verfügbare Module sind mit ihrer Phase gekennzeichnet.",

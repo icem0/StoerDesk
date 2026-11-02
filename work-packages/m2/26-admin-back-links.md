@@ -1,7 +1,7 @@
 # WP-M2-26: back links in the admin pages
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-25
 phase: 2
 context-budget: 14k tokens

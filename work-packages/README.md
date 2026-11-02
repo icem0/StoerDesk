@@ -211,7 +211,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-26  | record of the configurable login rate limit (2 commits)   | done                    | yes     |
 | WP-M1-27  | record of the end-of-session commit rule (7e64dd1)        | done                    | yes     |
 | WP-M2-25  | grouped settings menu in the shell                       | done                    | yes     |
-| WP-M2-26  | back links in the admin pages                            | open                    | yes     |
+| WP-M2-26  | back links in the admin pages                            | done                    | yes     |
 | WP-M2-27  | show a hint when internal ticket creation fails          | done                    | yes     |
 | WP-M2-28  | logo and top-level buttons in the shell header           | done                    | yes     |
 | WP-M2-29  | branding settings API (company name)                     | done                    | yes     |

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import type {
   CreateUserRequest,
@@ -316,7 +317,13 @@ export function UsersPage() {
 
   return (
     <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
-      <h1 className="text-2xl font-semibold">{t('admin.users.title')}</h1>
+      <Link
+        className="text-sm text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        to="/admin"
+      >
+        {t('admin.back')}
+      </Link>
+      <h1 className="mt-2 text-2xl font-semibold">{t('admin.users.title')}</h1>
       {users.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, users.error)}

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
+import { MemoryRouter } from 'react-router-dom'
 
 import { i18n } from '../../i18n'
 import { RolesPage } from '../roles-page'
@@ -67,7 +68,9 @@ function renderPage() {
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
-        <RolesPage />
+        <MemoryRouter initialEntries={['/admin/roles']}>
+          <RolesPage />
+        </MemoryRouter>
       </I18nextProvider>
     </QueryClientProvider>,
   )
@@ -84,6 +87,7 @@ describe('RolesPage', () => {
 
     expect(await screen.findByText('dispatcher')).toBeTruthy()
     expect(screen.getByText('Rollenverwaltung')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Zurück zur Verwaltung' })).toBeTruthy()
     expect(screen.getByText('office')).toBeTruthy()
     expect(screen.queryByText('Rolle anlegen')).toBeNull()
   })
