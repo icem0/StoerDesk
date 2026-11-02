@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { TicketDetailResponse } from '@stoerdesk/shared'
+import { STANDARD_TEXTS, type StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
@@ -61,12 +62,17 @@ function formatTime(iso: string): string {
 }
 
 export function TicketDetailPage() {
-  const { t } = useTranslation('ticket')
+  const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
   const { ticketNo } = useParams()
   const [showActions, setShowActions] = useState(false)
 
   const ticketQuery = useTicket(ticketNo)
+
+  const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
+  const labels = Object.fromEntries(
+    STANDARD_TEXTS[locale].map((entry) => [entry.key, entry.text]),
+  )
 
   async function handleAction(event: string, body?: Record<string, unknown>) {
     if (ticketNo === undefined) return
@@ -219,7 +225,7 @@ export function TicketDetailPage() {
             <div className="flex flex-wrap gap-2">
               {ticket.faultTemplateKeys.map((key) => (
                 <span key={key} className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-200">
-                  {key}
+                  {labels[key] ?? key}
                 </span>
               ))}
             </div>

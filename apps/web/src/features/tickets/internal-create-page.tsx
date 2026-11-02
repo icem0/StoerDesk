@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   STANDARD_TEXT_KEYS,
+  STANDARD_TEXTS,
   type InternalCreateTicketRequest,
+  type StandardTextLocale,
 } from '@stoerdesk/shared'
 
-import { apiFetch } from '../../lib/api'
+import { ApiError, apiFetch } from '../../lib/api'
 
 /**
  * Internal ticket creation page (`PLAN.md` §7 rule 1, WP-M2-16).
@@ -44,7 +46,7 @@ function useObjects(search: string) {
 }
 
 export function InternalCreatePage() {
-  const { t } = useTranslation('ticket')
+  const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
@@ -73,6 +75,10 @@ export function InternalCreatePage() {
 
   const objects = objectsQuery.data?.objects ?? []
   const systems = pickedObject?.systems ?? []
+  const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
+  const labels = Object.fromEntries(
+    STANDARD_TEXTS[locale].map((entry) => [entry.key, entry.text]),
+  )
 
   function toggleFaultKey(key: string) {
     setFaultKeys((current) =>
@@ -116,19 +122,31 @@ export function InternalCreatePage() {
     } catch (known) {
       setSubmitting(false)
 
-      if (known instanceof Error && (known as { status?: number; code?: string }).status === 422) {
-        const code = (known as { code?: string }).code
-        setError(
-          code === 'system_not_found'
-            ? t('internal.create.errors.systemNotFound')
-            : t('internal.create.errors.invalidRequest'),
-        )
+      if (known instanceof ApiError && known.code !== undefined) {
+        setError(errorNotice(known.code))
         return
       }
 
       setError(t('internal.create.errors.unknown'))
     } finally {
       if (!error) setSubmitting(false)
+    }
+  }
+
+  function errorNotice(code: string): string {
+    switch (code) {
+      case 'system_not_found':
+        return t('internal.create.errors.systemNotFound')
+      case 'object_not_found':
+        return t('internal.create.errors.objectNotFound')
+      case 'session_invalid':
+        return t('internal.create.errors.sessionInvalid')
+      case 'ticket_create_failed':
+        return t('internal.create.errors.ticketCreateFailed')
+      case 'invalid_request':
+        return t('internal.create.errors.invalidRequest')
+      default:
+        return t('internal.create.errors.unknown')
     }
   }
 
@@ -258,7 +276,7 @@ export function InternalCreatePage() {
                   checked={faultKeys.includes(key)}
                   onChange={() => toggleFaultKey(key)}
                 />
-                <span className="text-sm text-slate-200">{key}</span>
+                <span className="text-sm text-slate-200">{labels[key] ?? key}</span>
               </label>
             ))}
           </div>
