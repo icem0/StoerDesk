@@ -193,6 +193,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
 | WP-M1-21  | serialised promotion of `latest`                        | done                    | yes     |
 | WP-M1-22  | the app version reads version tags only                   | done                    | yes     |
+| WP-M2-25  | grouped settings menu in the shell                       | open                    | yes     |
+| WP-M2-26  | back links in the admin pages                            | open                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
