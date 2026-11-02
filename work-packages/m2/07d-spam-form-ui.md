@@ -1,7 +1,7 @@
 # WP-M2-07d: Honeypot field and Altcha widget in the report form
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-07c
 phase: 2
 context-budget: 22k tokens
@@ -14,13 +14,14 @@ files-read:
 - apps/web/src/features/tickets/photo-upload.tsx (controlled child-component pattern)
 - apps/web/src/lib/api.ts (`apiFetch`, `ApiError.code`)
 - apps/web/src/i18n/locales/de/ticket.json and en/ticket.json (`report.*` keys)
+- node_modules/altcha/dist/types (the web component, its `verified` event and the base64 payload)
 
 files-write:
 
 - apps/web/src/features/tickets/report-form-page.tsx
-- apps/web/src/i18n/locales/de/ticket.json
-- apps/web/src/i18n/locales/en/ticket.json
+- apps/web/src/i18n/locales/{de,en}/ticket.json
 - apps/web/package.json (dependency `altcha` web component)
+- apps/web/src/features/tickets/**tests**/report-form-page.test.tsx (fixture, excluded)
 
 interfaces:
 
@@ -28,12 +29,13 @@ interfaces:
   that is visually hidden, `autoComplete="off"`, `tabIndex={-1}`, `aria-hidden` and
   has **no** visible label (so no translated string and no tab stop)
 - `AltchaCaptcha({ challenge, onVerified })` — a component **inside**
-  `report-form-page.tsx` that renders the `altcha` custom element with the challenge
-  from WP-M2-07b; `onVerified(payload)` hands the solved `verification` back
-- `useAltchaChallenge()` — `GET /v1/public/altcha/challenge` through `apiFetch`,
-  called **only** after a `400 captcha_required`
+  `report-form-page.tsx` that renders the `altcha-widget` custom element with the
+  challenge from WP-M2-07b; `onVerified(verification)` hands the solved proof of work
+  back
+- `useAltchaChallenge()` — `POST /v1/public/altcha/challenge` through `apiFetch`
+  (the route of WP-M2-07b is a `POST`), called **only** after a `400 captcha_required`
 - `handledErrorCodes` gains `captcha_required`; the submit flow: submit →
-  on `captcha_required` fetch a challenge, show the widget above the send button,
+  on `captcha_required` fetch a challenge, show the widget above the 112 notice,
   re-submit once with `verification` set → confirmation as before
 - i18n keys `report.spam.captcha` and `report.errors.captcha_required` in `de` and `en`
 
@@ -50,13 +52,16 @@ payload — the reporter never sees a captcha for a normal report.
 2. Add `captcha_required` to `handledErrorCodes`; on that error set `captchaNeeded`
    and fetch a challenge via `useAltchaChallenge()` (only then, §7.6 "only when
    suspicious").
-3. Inside `report-form-page.tsx`: an `AltchaCaptcha` component that wraps the `altcha`
-   custom element, feeds it the challenge and emits `onVerified(payload)`;
-   `apps/web/package.json`: add `altcha` and register the element once (module side
-   effect in the page file).
+3. Inside `report-form-page.tsx`: an `AltchaCaptcha` component that wraps the
+   `altcha-widget` custom element, feeds it the challenge and emits
+   `onVerified(verification)`; `apps/web/package.json`: add `altcha` — the element is
+   registered by the package and loaded **on demand** (dynamic import), so a reporter
+   of a normal report never downloads the widget. The dependency stays on its v3 major,
+   which answers the v1 challenge format of `altcha-lib`.
 4. On the next submit send the solved `verification`; a `201`/`200` shows the
-   existing confirmation unchanged. The widget sits above the send button, 44 px
-   tall, with the translated `report.spam.captcha` label.
+   existing confirmation unchanged. The widget sits **above the 112 notice** (44 px
+   tall, with the translated `report.spam.captcha` label), so the notice stays
+   directly above the send button (§7.1, `PLAN.md` §2).
 5. `de`/`en` `ticket.json`: `report.spam.captcha` and `report.errors.captcha_required`.
 
 ## Non-goals
@@ -83,12 +88,18 @@ two new keys in both locales and referenced in the code.
 
 - Files changed: `apps/web/src/features/tickets/report-form-page.tsx` (honeypot field
   and the in-file `AltchaCaptcha`),
-  `apps/web/src/i18n/locales/de/ticket.json`,
-  `apps/web/src/i18n/locales/en/ticket.json`, `apps/web/package.json` and the
+  `apps/web/src/i18n/locales/{de,en}/ticket.json`, `apps/web/package.json` (plus
+  `package-lock.json`), the fixture
+  `apps/web/src/features/tickets/__tests__/report-form-page.test.tsx` and the
   bookkeeping
 - Interfaces added: honeypot `website` field, `AltchaCaptcha`, `useAltchaChallenge`,
   i18n `report.spam.captcha` / `report.errors.captcha_required`
-- Verified: (to be filled by the implementation run)
+- Verified: `npm run check` green — typecheck (3 workspaces), `eslint .` (0 errors,
+  the one pre-existing `photo-upload.tsx` fast-refresh warning), `vitest run` 39 files /
+  224 tests against the reachable PostgreSQL of `TEST_DATABASE_URL` (not skipped),
+  `i18n:check`, `wp:check` and `npm run test:e2e` green with
+  `E2E_CHROMIUM_PATH=/usr/bin/chromium` (4 Playwright tests); `npm run build` green
+  (the widget is its own chunk: `altcha` 116 kB / 36 kB gzip, loaded on demand)
 - Follow-up WP: none — the captcha path is exercised by the existing **WP-M2-10**
   (phase 2 exit criterion)
 - Open question: none

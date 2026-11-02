@@ -8,6 +8,12 @@ import { i18n } from '../../../i18n'
 import { ReportFormPage } from '../report-form-page'
 import type { PublicReport, QrResolveResponse } from '@stoerdesk/shared'
 
+// The Altcha widget is a web component of a third-party package — the unit test
+// drives its `verified` event instead of solving a proof of work in jsdom.
+vi.mock('altcha', () => ({}))
+vi.mock('altcha/i18n/de', () => ({}))
+vi.mock('altcha/i18n/en', () => ({}))
+
 /**
  * Fixtures of the public report path (`specs/06-report-form.md` §7.2/§7.3): the QR resolve
  * answer of WP-M2-02 and the create answer of WP-M2-04b. The scanned token is a **retired**
@@ -17,6 +23,25 @@ const SCANNED_TOKEN = 'Zx8Q_-3vLm2pQ7tYw4KdBe'
 const CURRENT_TOKEN = 'Ab3dEf6gHij2pQr7tYw4Kd'
 const SYSTEM_ID = '22222222-2222-4222-8222-222222222222'
 const NOTICE = 'Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.'
+
+/** The challenge of the API (WP-M2-07b) in the `altcha-lib` v1 format. */
+const CHALLENGE = {
+  algorithm: 'SHA-256',
+  challenge: 'a1b2c3d4e5f6',
+  salt: 'salt123?expires=1800000000&',
+  signature: 'signature456',
+  maxnumber: 10000,
+}
+
+/** The solved proof of work of the widget: base64 of the flat v1 payload. */
+const SOLVED = {
+  algorithm: 'SHA-256',
+  challenge: 'a1b2c3d4e5f6',
+  salt: 'salt123?expires=1800000000&',
+  signature: 'signature456',
+  number: 42,
+  took: 12,
+}
 
 const RESOLVE: QrResolveResponse = {
   token: CURRENT_TOKEN,
@@ -270,5 +295,88 @@ describe('ReportFormPage', () => {
       ),
     ).toBeTruthy()
     expect(fetchStub).not.toHaveBeenCalled()
+  })
+
+  it('sends the hidden honeypot of §7.6 with every report', async () => {
+    const bodies = stubPublicApi()
+    await openForm()
+
+    const honeypot = document.querySelector('input[name="website"]')
+
+    expect(honeypot).toBeTruthy()
+    // The honeypot is invisible for a human: no label, no tab stop.
+    expect(honeypot?.getAttribute('aria-hidden')).toBe('true')
+    expect(honeypot?.getAttribute('tabindex')).toBe('-1')
+    expect(screen.queryByRole('textbox', { name: 'website' })).toBeNull()
+
+    fillReport('Leitungsstörung / Linie gestört', 'Leitung im Keller gestört.', '030 123456')
+    fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
+
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]?.website).toBe('')
+    expect(bodies[0]?.verification).toBeUndefined()
+  })
+
+  it('solves the captcha only when the server asks for it and resends the proof', async () => {
+    const bodies: Record<string, unknown>[] = []
+    let attempts = 0
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input)
+
+        if (path.includes('/public/qr/')) {
+          return Response.json(RESOLVE)
+        }
+
+        if (path.includes('/public/altcha/challenge')) {
+          return Response.json(CHALLENGE)
+        }
+
+        if (path.includes('/public/tickets')) {
+          bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+          attempts += 1
+
+          // The first attempt looks like spam (§7.6), the second one carries the proof.
+          return attempts === 1
+            ? Response.json({ code: 'captcha_required', params: {} }, { status: 400 })
+            : Response.json(REPORT, { status: 201 })
+        }
+
+        throw new Error(`unexpected request ${path}`)
+      }),
+    )
+
+    await openForm()
+    fillReport('Leitungsstörung / Linie gestört', 'Leitung im Keller gestört.', '030 123456')
+    fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
+
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]?.verification).toBeUndefined()
+
+    // Only now the widget appears — a normal report never sees a captcha.
+    expect(
+      await screen.findByText('Spam-Schutz: Bitte bestätigen, dass Sie kein Roboter sind.'),
+    ).toBeTruthy()
+
+    const widget = document.querySelector('altcha-widget')
+
+    expect(widget).toBeTruthy()
+    expect(widget?.getAttribute('challenge')).toBe(JSON.stringify(CHALLENGE))
+
+    widget?.dispatchEvent(
+      new CustomEvent('verified', { detail: { payload: btoa(JSON.stringify(SOLVED)) } }),
+    )
+
+    await waitFor(() => expect(bodies).toHaveLength(2))
+    expect(bodies[1]?.verification).toEqual({
+      algorithm: 'SHA-256',
+      challenge: CHALLENGE.challenge,
+      salt: CHALLENGE.salt,
+      signature: CHALLENGE.signature,
+      number: SOLVED.number,
+    })
+    expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
   })
 })

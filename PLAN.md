@@ -609,35 +609,35 @@ repository actually contains — every module, its purpose and its public API �
 in `docs/REPO-MAP.md` and is the only place that is kept current after every work
 package; do not duplicate it here or in `AGENTS.md`.
 
-| WP        | Content                                      | Status  |
-| --------- | -------------------------------------------- | ------- |
-| WP-M1-09e | login form, logout and route guard (web)     | done    |
-| WP-M1-10i | publish run label carries the commit subject | done    |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | done    |
-| WP-M1-11  | `docs/REPO-MAP.md` English and current       | done    |
-| WP-M1-12  | Playwright smoke test "login as admin works" | done    |
-| WP-M1-13  | UI layout shell with header and navigation   | done    |
-| WP-M1-14  | base seed keeps an existing admin untouched  | done    |
-| WP-M2-00  | core object tables and demo seed             | done    |
-| WP-M2-01  | object list CRUD API                         | done    |
-| WP-M2-02  | QR generation, regeneration, resolution      | done    |
-| WP-M2-02b | QR demo tokens and scheduled cleanup         | done    |
-| WP-M2-03  | printable QR sticker sheets (web print)      | done    |
-| WP-M2-04  | ticket tables, events, photos, counter       | done    |
-| WP-M2-04b | public report endpoint with idempotency      | done    |
-| WP-M2-04c | report photo upload (magic bytes, volume)    | done    |
-| WP-M1-15  | app version visible in the web shell         | done    |
-| WP-M1-16  | current git version in the deployment env    | done    |
-| WP-M1-17  | responsive shell with a settings gear        | done    |
-| WP-M2-05  | public report form at `/m/:token` (web)      | done    |
-| WP-M2-05b | photo upload with client compression         | done    |
-| WP-M2-05c | report form smoke E2E in de and en           | done    |
-| WP-M2-06  | public status API by `status_token`          | done    |
-| WP-M2-06b | public status page at `/s/:token` (web)      | done    |
-| WP-M2-07  | report throttle table and suspicion          | done    |
-| WP-M2-07b | Altcha captcha API primitives                | done    |
-| WP-M2-07c | spam decision on the report create path      | done    |
-| WP-M2-07d | honeypot field and Altcha widget (web)       | planned |
+| WP        | Content                                      | Status |
+| --------- | -------------------------------------------- | ------ |
+| WP-M1-09e | login form, logout and route guard (web)     | done   |
+| WP-M1-10i | publish run label carries the commit subject | done   |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | done   |
+| WP-M1-11  | `docs/REPO-MAP.md` English and current       | done   |
+| WP-M1-12  | Playwright smoke test "login as admin works" | done   |
+| WP-M1-13  | UI layout shell with header and navigation   | done   |
+| WP-M1-14  | base seed keeps an existing admin untouched  | done   |
+| WP-M2-00  | core object tables and demo seed             | done   |
+| WP-M2-01  | object list CRUD API                         | done   |
+| WP-M2-02  | QR generation, regeneration, resolution      | done   |
+| WP-M2-02b | QR demo tokens and scheduled cleanup         | done   |
+| WP-M2-03  | printable QR sticker sheets (web print)      | done   |
+| WP-M2-04  | ticket tables, events, photos, counter       | done   |
+| WP-M2-04b | public report endpoint with idempotency      | done   |
+| WP-M2-04c | report photo upload (magic bytes, volume)    | done   |
+| WP-M1-15  | app version visible in the web shell         | done   |
+| WP-M1-16  | current git version in the deployment env    | done   |
+| WP-M1-17  | responsive shell with a settings gear        | done   |
+| WP-M2-05  | public report form at `/m/:token` (web)      | done   |
+| WP-M2-05b | photo upload with client compression         | done   |
+| WP-M2-05c | report form smoke E2E in de and en           | done   |
+| WP-M2-06  | public status API by `status_token`          | done   |
+| WP-M2-06b | public status page at `/s/:token` (web)      | done   |
+| WP-M2-07  | report throttle table and suspicion          | done   |
+| WP-M2-07b | Altcha captcha API primitives                | done   |
+| WP-M2-07c | spam decision on the report create path      | done   |
+| WP-M2-07d | honeypot field and Altcha widget (web)       | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -739,8 +739,11 @@ report throttle — migration `0005_report_throttle` plus `recordReportAttempt`,
 decision: it puts the honeypot, the throttle and Altcha on the report endpoint, stores a
 suspicious or honeypot report with `tickets.suspected_spam` and answers
 `400 captcha_required` for a suspicious report without a valid proof of work; **WP-M2-07d**
-(`07d-spam-form-ui.md`) is the web form's hidden `website` honeypot and the Altcha widget
-that appears only after a `400 captcha_required`.
+(`07d-spam-form-ui.md`) is implemented as the web form's hidden `website` honeypot and the
+Altcha widget that appears only after a `400 captcha_required` — the challenge is fetched
+from `POST /api/v1/public/altcha/challenge`, the solved proof of work travels back in the
+`verification` field of the next attempt, and the widget is loaded on demand, so a reporter
+of a normal report never sees a captcha.
 
 ## 17. Work package rules for small models
 

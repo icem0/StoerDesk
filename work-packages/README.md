@@ -168,7 +168,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-07  | report throttle table and suspicion detection           | done                    | yes     |
 | WP-M2-07b | Altcha captcha API primitives                           | done                    | yes     |
 | WP-M2-07c | spam decision on the report create path                 | done                    | yes     |
-| WP-M2-07d | honeypot field and Altcha widget in the form (web)      | planned                 | yes     |
+| WP-M2-07d | honeypot field and Altcha widget in the form (web)      | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -304,8 +304,11 @@ the `altchaVerificationSchema` — **WP-M2-07c** (`07c-spam-decision-report-path
 implemented as the honeypot, throttle and Altcha decision on the create path, storing a
 suspicious or honeypot report with `tickets.suspected_spam` and answering
 `400 captcha_required` for a suspicious report without a valid proof of work — and
-**WP-M2-07d** (`07d-spam-form-ui.md`) — the planned hidden `website` honeypot and the Altcha
-widget that appears only after a `400 captcha_required`.
+**WP-M2-07d** (`07d-spam-form-ui.md`) — implemented as the hidden `website` honeypot of the
+public form and the Altcha widget that appears only after a `400 captcha_required`: the
+challenge is fetched from `POST /api/v1/public/altcha/challenge`, the solved proof of work
+travels back in the `verification` field of the next attempt, and the widget itself is loaded
+on demand — a reporter of a normal report never sees a captcha.
 
 ## Validation
 

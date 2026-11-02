@@ -1,14 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import {
+  altchaVerificationSchema,
   publicReportContactSchema,
   qrTokenSchema,
   STANDARD_TEXTS,
   STANDARD_TEXT_KEYS,
 } from '@stoerdesk/shared'
 import type {
+  AltchaVerification,
   PublicQrObject,
   PublicReport,
   PublicReportContact,
@@ -16,6 +18,8 @@ import type {
   QrResolveResponse,
   StandardTextLocale,
 } from '@stoerdesk/shared'
+// The JSX types of the Altcha web component (`<altcha-widget>`).
+import type {} from 'altcha/types/react'
 
 import { ApiError, apiFetch } from '../../lib/api'
 import { PhotoUpload } from './photo-upload'
@@ -29,6 +33,10 @@ import { PhotoUpload } from './photo-upload'
  * token of a retired one (§7.3), and one `client_uuid` per opened form makes a retry
  * idempotent (§7.3.3). Photos are compressed client-side by WP-M2-05b, the status page
  * `/s/:token` is WP-M2-06.
+ *
+ * The spam protection of §7.6 is WP-M2-07d: the body always carries the hidden
+ * honeypot `website`, and the Altcha widget only appears after the server answered
+ * `400 captcha_required` — a normal report never sees a captcha.
  */
 
 const TEXT_MAX_LENGTH = 4000
@@ -45,7 +53,72 @@ const handledErrorCodes = [
   'photo_limit_exceeded',
   'photo_too_large',
   'photo_type_unsupported',
+  'captcha_required',
 ] as const
+
+/**
+ * The challenge of the API (`apps/api/src/tickets/altcha.ts`, WP-M2-07b) in the
+ * `altcha-lib` v1 format: the widget of the form solves it and answers with the
+ * solved payload.
+ */
+type AltchaChallenge = {
+  algorithm: string
+  challenge: string
+  salt: string
+  signature: string
+  maxnumber?: number
+}
+
+/**
+ * Decodes the solved proof of work of the widget into the flat payload of
+ * `altchaVerificationSchema` (§7.6). The widget answers base64; only the fields the
+ * server recomputes are sent — the `took` of the widget is a fraction and would not
+ * pass the schema.
+ */
+function verificationOf(payload: string): AltchaVerification | undefined {
+  let decoded: unknown
+
+  try {
+    decoded = JSON.parse(atob(payload))
+  } catch {
+    return undefined
+  }
+
+  if (typeof decoded !== 'object' || decoded === null) {
+    return undefined
+  }
+
+  const candidate = decoded as Record<string, unknown>
+  const parsed = altchaVerificationSchema.safeParse({
+    algorithm: candidate.algorithm,
+    challenge: candidate.challenge,
+    salt: candidate.salt,
+    signature: candidate.signature,
+    number: candidate.number,
+  })
+
+  return parsed.success ? parsed.data : undefined
+}
+
+/**
+ * Fetches a proof-of-work challenge — **only** after the server answered
+ * `400 captcha_required` (§7.6). A normal report never loads the widget.
+ */
+function useAltchaChallenge() {
+  const [challenge, setChallenge] = useState<AltchaChallenge | null>(null)
+
+  const request = useCallback(async () => {
+    const answer = await apiFetch<AltchaChallenge>('/v1/public/altcha/challenge', {
+      method: 'POST',
+    })
+
+    setChallenge(answer)
+
+    return answer
+  }, [])
+
+  return { challenge, request }
+}
 
 function usePublicQr(token: string) {
   return useQuery({
@@ -254,6 +327,73 @@ function ContactFields({
   )
 }
 
+/**
+ * The Altcha widget of the public form (`specs/06-report-form.md` §7.6, WP-M2-07d).
+ *
+ * The widget is a third-party web component: the `altcha` package registers
+ * `<altcha-widget>` and it is loaded **only** when the server asked for a captcha.
+ * The challenge of the API is handed over as its `challenge` attribute, and the
+ * solved proof of work arrives as the `verified` event with a base64 payload.
+ */
+function AltchaCaptcha({
+  challenge,
+  onVerified,
+}: {
+  challenge: AltchaChallenge
+  onVerified: (verification: AltchaVerification) => void
+}) {
+  const { t, i18n } = useTranslation('ticket')
+  const widgetRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const widget = widgetRef.current
+
+    if (widget === null) {
+      return undefined
+    }
+
+    // The widget and its translations are loaded on demand: a reporter of a normal
+    // report never downloads them.
+    const language = i18n.language === 'en' ? 'en' : 'de'
+
+    void import('altcha').catch(() => undefined)
+
+    if (language === 'en') {
+      void import('altcha/i18n/en').catch(() => undefined)
+    } else {
+      void import('altcha/i18n/de').catch(() => undefined)
+    }
+
+    widget.setAttribute('challenge', JSON.stringify(challenge))
+    widget.setAttribute('language', language)
+
+    const handleVerified = (event: Event) => {
+      const detail = (event as CustomEvent<{ payload?: string }>).detail
+      const verification =
+        typeof detail?.payload === 'string' ? verificationOf(detail.payload) : undefined
+
+      if (verification !== undefined) {
+        onVerified(verification)
+      }
+    }
+
+    widget.addEventListener('verified', handleVerified)
+
+    return () => {
+      widget.removeEventListener('verified', handleVerified)
+    }
+  }, [challenge, i18n.language, onVerified])
+
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="text-sm">{t('report.spam.captcha')}</p>
+      <div className="min-h-11">
+        <altcha-widget ref={widgetRef} />
+      </div>
+    </div>
+  )
+}
+
 function Confirmation({ report, locale }: { report: PublicReport; locale: StandardTextLocale }) {
   const { t } = useTranslation('ticket')
   const deadline = new Intl.DateTimeFormat(locale, {
@@ -302,12 +442,17 @@ export function ReportFormPage() {
   const [text, setText] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [contact, setContact] = useState<PublicReportContact>({ name: '', phone: '', email: '' })
+  /** The honeypot of §7.6: it stays empty for a human, a filled one flags the report. */
+  const [website, setWebsite] = useState('')
+  /** The solved proof of work — it is only asked for a suspicious report (§7.6). */
+  const [verification, setVerification] = useState<AltchaVerification | undefined>(undefined)
   /** One idempotency key per opened form (§7.3.3): a retry never doubles the ticket. */
   const [clientUuid] = useState(() => globalThis.crypto.randomUUID())
   const [problems, setProblems] = useState<string[]>([])
   const [serverNotice, setServerNotice] = useState<string | undefined>(undefined)
   const [report, setReport] = useState<PublicReport | null>(null)
   const [pending, setPending] = useState(false)
+  const { challenge, request: requestChallenge } = useAltchaChallenge()
 
   const object = qr.data?.object
   const systems = object?.systems ?? []
@@ -319,6 +464,81 @@ export function ReportFormPage() {
       current.includes(key) ? current.filter((entry) => entry !== key) : [...current, key],
     )
   }
+
+  /**
+   * Sends the report. `proof` carries the solved captcha of §7.6 — it is only set
+   * after the server asked for one, so a normal report never solves a puzzle.
+   */
+  const sendReport = useCallback(
+    async (proof?: AltchaVerification) => {
+      const trimmedText = text.trim()
+      const body: PublicReportRequest = {
+        // The resolved current token, never the scanned one of a retired sticker (§7.3).
+        qrToken: qr.data?.token ?? pathTokenValue,
+        clientUuid,
+        text: trimmedText === '' ? undefined : trimmedText,
+        faultTemplateKeys: faultKeys,
+        systemId: selectedSystemId === '' ? undefined : selectedSystemId,
+        contact,
+        reportedAt: new Date().toISOString(),
+        locale,
+        photos,
+        // §7.6: the honeypot travels with every report, empty for a human.
+        website,
+        verification: proof,
+      }
+
+      setProblems([])
+      setServerNotice(undefined)
+      setPending(true)
+
+      try {
+        setReport(
+          await apiFetch<PublicReport>('/v1/public/tickets', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(body),
+          }),
+        )
+      } catch (error) {
+        setServerNotice(errorMessage(error))
+
+        if (error instanceof ApiError && error.code === 'captcha_required') {
+          // §7.6: only a suspicious report gets a captcha — the challenge is fetched
+          // here and never before.
+          try {
+            await requestChallenge()
+          } catch {
+            setServerNotice('report.errors.unknown')
+          }
+        }
+      } finally {
+        setPending(false)
+      }
+    },
+    [
+      clientUuid,
+      contact,
+      faultKeys,
+      locale,
+      pathTokenValue,
+      photos,
+      qr.data?.token,
+      requestChallenge,
+      selectedSystemId,
+      text,
+      website,
+    ],
+  )
+
+  /** The solved captcha is sent right away — the reporter does not press twice. */
+  const handleVerified = useCallback(
+    (proof: AltchaVerification) => {
+      setVerification(proof)
+      void sendReport(proof)
+    },
+    [sendReport],
+  )
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -345,36 +565,7 @@ export function ReportFormPage() {
       return
     }
 
-    const body: PublicReportRequest = {
-      // The resolved current token, never the scanned one of a retired sticker (§7.3).
-      qrToken: qr.data?.token ?? pathTokenValue,
-      clientUuid,
-      text: trimmedText === '' ? undefined : trimmedText,
-      faultTemplateKeys: faultKeys,
-      systemId: selectedSystemId === '' ? undefined : selectedSystemId,
-      contact,
-      reportedAt: new Date().toISOString(),
-      locale,
-      photos,
-    }
-
-    setProblems([])
-    setServerNotice(undefined)
-    setPending(true)
-
-    try {
-      setReport(
-        await apiFetch<PublicReport>('/v1/public/tickets', {
-          method: 'POST',
-          headers: jsonHeaders,
-          body: JSON.stringify(body),
-        }),
-      )
-    } catch (error) {
-      setServerNotice(errorMessage(error))
-    } finally {
-      setPending(false)
-    }
+    await sendReport(verification)
   }
 
   if (report !== null) {
@@ -427,6 +618,17 @@ export function ReportFormPage() {
               />
               <ContactFields contact={contact} onChange={setContact} />
 
+              {/* §7.6: the honeypot is invisible for a human — no label, no tab stop. */}
+              <input
+                aria-hidden="true"
+                autoComplete="off"
+                className="sr-only"
+                name="website"
+                tabIndex={-1}
+                value={website}
+                onChange={(event) => setWebsite(event.target.value)}
+              />
+
               {problems.length > 0 ? (
                 <ul className="flex flex-col gap-1 text-sm text-amber-300" role="alert">
                   {problems.map((problem) => (
@@ -439,6 +641,11 @@ export function ReportFormPage() {
                 <p className="text-sm text-rose-400" role="alert">
                   {t(serverNotice)}
                 </p>
+              ) : null}
+
+              {/* §7.6: the captcha appears only when the server asked for one. */}
+              {challenge !== null ? (
+                <AltchaCaptcha challenge={challenge} onVerified={handleVerified} />
               ) : null}
 
               {/* §7.1 and PLAN §2: the notice sits directly above the send button. */}

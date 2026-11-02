@@ -30,6 +30,9 @@
       "email": "E-mail",
       "privacy": "These details are only used for questions about this report and are deleted once the retention period ends."
     },
+    "spam": {
+      "captcha": "Spam protection: please confirm that you are not a robot."
+    },
     "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call.",
     "submit": "Report malfunction",
     "submitting": "Sending the report …",
@@ -50,6 +53,7 @@
       "photo_limit_exceeded": "At most six photos are possible.",
       "photo_too_large": "One photo is too large. Please choose a smaller photo.",
       "photo_type_unsupported": "This photo format is not supported. Please choose a JPEG or PNG photo.",
+      "captcha_required": "This report looked like spam. Please confirm the spam protection and send the report again.",
       "unknown": "The report could not be sent right now. Please try again later."
     },
     "done": {

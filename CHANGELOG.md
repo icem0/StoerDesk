@@ -431,6 +431,14 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   stores it as suspected spam when no captcha is configured and otherwise accepts only a
   verified `altcha-lib` payload. An idempotent repeat returns the existing ticket before
   the spam decision, so replay does not create or flag a second ticket.
+- WP-M2-07d: honeypot and Altcha widget in the public report form — the form at `/m/:token`
+  now sends the hidden `website` honeypot with every report (invisible for a human: no
+  label, no tab stop), and only a `400 captcha_required` makes the Altcha widget appear:
+  the challenge is fetched from `POST /api/v1/public/altcha/challenge`, the solved proof
+  of work travels back in the `verification` field of the next attempt, and the widget
+  itself is loaded on demand — a reporter of a normal report never sees a captcha.
+  The `altcha` web component is held on its v3 major, which answers the v1 challenge
+  format of `altcha-lib`.
 
 ### Changed
 
