@@ -7,9 +7,12 @@ import { useMe } from '../auth/usePermission'
 import { AppVersion } from './app-version'
 
 const navItems = [
+  { key: 'tickets', path: '/tickets' },
+  { key: 'ticketCreate', path: '/tickets/create' },
+  { key: 'objects', path: '/objects' },
+  { key: 'stickers', path: '/objects/stickers' },
   { key: 'users', path: '/admin/users' },
   { key: 'roles', path: '/admin/roles' },
-  { key: 'stickers', path: '/objects/stickers' },
 ] as const
 
 function SettingsIcon() {
@@ -105,12 +108,6 @@ function SettingsMenu({ email }: { email: string }) {
           <ul className="p-2">
             {navItems.map((item) => {
               const active = location.pathname === item.path
-              const itemLabel =
-                item.key === 'users'
-                  ? t('auth.links.users')
-                  : item.key === 'roles'
-                    ? t('auth.links.roles')
-                    : t('auth.links.stickers')
 
               return (
                 <li key={item.key}>
@@ -123,7 +120,7 @@ function SettingsMenu({ email }: { email: string }) {
                     onClick={() => setOpen(false)}
                     to={item.path}
                   >
-                    {itemLabel}
+                    {t(`auth.links.${item.key}`)}
                   </Link>
                 </li>
               )

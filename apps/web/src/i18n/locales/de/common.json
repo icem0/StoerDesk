@@ -17,6 +17,9 @@
       "password": "Passwort"
     },
     "links": {
+      "tickets": "Meldungen",
+      "ticketCreate": "Neue Störung melden",
+      "objects": "Objekte",
       "users": "Benutzerverwaltung",
       "roles": "Rollenverwaltung",
       "stickers": "QR-Aufkleber"

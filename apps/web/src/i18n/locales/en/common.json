@@ -17,6 +17,9 @@
       "password": "Password"
     },
     "links": {
+      "tickets": "Tickets",
+      "ticketCreate": "Report a malfunction",
+      "objects": "Objects",
       "users": "User administration",
       "roles": "Role administration",
       "stickers": "QR stickers"
