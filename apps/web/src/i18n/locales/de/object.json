@@ -14,5 +14,34 @@
     "noToken": "kein QR-Token gesetzt",
     "reportCall": "Störung melden: QR-Code scannen",
     "emergencyNotice": "Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf."
+  },
+  "list": {
+    "title": "Objekte",
+    "hint": "Alle Objekte mit Such- und Filtermöglichkeit. Bearbeiten und Löschen folgen in einem der nächsten Pakete.",
+    "search": "Suchen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "activeTrue": "nur aktiv",
+    "activeFalse": "nur inaktiv",
+    "activeAll": "alle",
+    "city": "Stadt",
+    "systemType": "Anlagentyp",
+    "systemTypeAll": "alle Typen",
+    "noObjects": "Keine Objekte gefunden.",
+    "loading": "Objekte werden geladen …",
+    "loadError": "Die Objektliste konnte nicht geladen werden.",
+    "columns": {
+      "objectNo": "Objektnummer",
+      "name": "Name",
+      "city": "Ort",
+      "systems": "Anlagen",
+      "active": "Aktiv",
+      "actions": "Aktionen"
+    },
+    "actions": {
+      "create": "Objekt anlegen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    }
   }
 }

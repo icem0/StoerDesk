@@ -5,6 +5,7 @@ import { RolesPage } from '../admin/roles-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { StickerPage } from '../features/objects/sticker-page'
+import { ObjectListPage } from '../features/objects/object-list-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
 
@@ -34,6 +35,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <StickerPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/objects',
+        element: (
+          <RequireSession>
+            <ObjectListPage />
           </RequireSession>
         ),
       },

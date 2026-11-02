@@ -14,5 +14,34 @@
     "noToken": "no QR token set",
     "reportCall": "Report a malfunction: scan the QR code",
     "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call."
+  },
+  "list": {
+    "title": "Objects",
+    "hint": "All objects with search and filters. Edit and delete follow in upcoming packages.",
+    "search": "Search",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activeTrue": "active only",
+    "activeFalse": "inactive only",
+    "activeAll": "all",
+    "city": "City",
+    "systemType": "System type",
+    "systemTypeAll": "all types",
+    "noObjects": "No objects found.",
+    "loading": "Loading objects …",
+    "loadError": "The object list could not be loaded.",
+    "columns": {
+      "objectNo": "Object no.",
+      "name": "Name",
+      "city": "City",
+      "systems": "Systems",
+      "active": "Active",
+      "actions": "Actions"
+    },
+    "actions": {
+      "create": "Create object",
+      "edit": "Edit",
+      "delete": "Delete"
+    }
   }
 }
