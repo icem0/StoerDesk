@@ -40,12 +40,12 @@ on-call shift and recorded in a traceable audit trail. Emergency service dispatc
 
 Docker Compose is the supported way to run StörDesk — Docker is the only
 prerequisite. Database, migrations, API and web frontend come up as one stack;
-every value is read from `.env`, the compose file is never edited.
+runtime configuration is read from `.env`, the compose file is never edited.
 
 ```bash
 git clone https://github.com/icem0/StoerDesk.git
 cd StoerDesk
-npm run env:create                # writes .env with generated secrets and the current version
+npm run env:create                # writes .env with generated secrets
 docker compose up -d --build
 ```
 
@@ -62,11 +62,10 @@ stack refuses to start without them:
 docker compose up -d
 ```
 
-After a pull, refresh the version in the existing `.env` without touching its secrets:
-
-```bash
-npm run env:version
-```
+The version shown in the web shell comes from the repository itself: the commit
+hooks write the next version into [`VERSION`](VERSION) and tag exactly that value,
+so every commit and every image carries the version produced by the development
+workflow. It is not a frontend or framework version and must not be set in `.env`.
 
 The images are built from the local checkout by default
 (`IMAGE_BUILD_CONTEXT=.`, see [`.env.example`](.env.example)). A deployment panel
@@ -192,8 +191,7 @@ npm run dev
 | `npm run test` / `test:run` | Vitest in all workspaces                                         |
 | `npm run i18n:check`        | de/en key parity and referenced keys                             |
 | `npm run format`            | Prettier                                                         |
-| `npm run env:create`        | creates `.env` from `.env.example` with generated secrets and the current version |
-| `npm run env:version`       | refreshes `VITE_APP_VERSION` in `.env` from the current git tag  |
+| `npm run env:create`        | creates `.env` from `.env.example` with generated secrets        |
 | `npm run db:migrate`        | apply migrations (`-w @stoerdesk/api`)                           |
 | `npm run db:generate`       | create a new Drizzle migration                                   |
 | `npm run spec:split`        | mirrors originals in `docs/material/` into `specs/`              |

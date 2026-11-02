@@ -37,17 +37,14 @@ CMD ["sh", "-c", "node apps/api/dist/db/migrate.js && exec node apps/api/dist/in
 
 # ---------- Web ----------
 FROM base AS web-build
-# The web shell must never display a placeholder: every image build passes a real
-# `vMAJOR.MINOR.PATCH` version — CI passes the tag, Compose reads it from `.env`
-# (`npm run env:create`, refreshed by the commit hook and `npm run env:version`).
-# Anything else stops the image build instead of shipping `dev`.
-ARG VITE_APP_VERSION
-RUN if ! printf '%s' "$VITE_APP_VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then \
-      echo "build arg VITE_APP_VERSION='$VITE_APP_VERSION' is not a vMAJOR.MINOR.PATCH version - run 'npm run env:version' so Compose can read it from .env" >&2; \
-      exit 1; \
-    fi
-ENV VITE_APP_VERSION=$VITE_APP_VERSION
+# The version shown in the web shell comes from the development workflow: the
+# tracked `VERSION` file (written by pre-commit, tagged by post-commit) is part
+# of the build context, so no git metadata is needed. CI may pass the release tag
+# explicitly; any non-empty value is accepted, including pre-releases.
+ARG APP_VERSION
+ENV APP_VERSION=$APP_VERSION
 COPY tsconfig.base.json ./
+COPY VERSION ./VERSION
 COPY packages/shared packages/shared
 COPY apps/web apps/web
 RUN npm run build --workspace @stoerdesk/web

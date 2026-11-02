@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The version in the web shell is the application version produced by the development
+  workflow. The pre-commit hook writes the next version into the tracked `VERSION` file,
+  the post-commit hook tags exactly that value, and image builds read it without git
+  metadata or an `.env` entry; the misleading `VITE_APP_VERSION` name and the manual
+  `env:version` refresh are gone.
+
 ### Added
 
 - Monorepo skeleton with npm workspaces (`apps/web`, `apps/api`, `packages/shared`).
@@ -398,6 +406,19 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
 
 ### Changed
 
+- Governance split: `AGENTS.md` now regulates only the agent behaviour and the
+  workflow — plan anchor, before-you-start checklist, work-package discipline, the
+  follow-up closure rule, the quality-gate and CI-after-push behaviour, commits,
+  version tags, the mandatory todo list, structure discipline and the security rules.
+  Every project-specific fact moved into `PLAN.md`: the i18n mechanics (§3.1), the
+  coding conventions beyond the stack table (§4.1), the data model lessons (§6.1), the
+  six `check` gates with the WP-M1-01 deviation (§18.1), the development commands for
+  database, migrations, seeds and E2E (§18.2) and the CI run-name, publish-dispatch,
+  version-tag and credential-store mechanics (§18.3); `PLAN.md` §16 names
+  `docs/REPO-MAP.md` as the only inventory of the code. The section references of the
+  removed `AGENTS.md` chapters were repointed to `PLAN.md` in
+  `specs/02-data-model.md`, ADR-0002, `docs/REPO-MAP.md`, `apps/web/src/lib/api.ts`,
+  `.github/workflows/check.yml` and `scripts/e2e-check.mjs`.
 - WP-M1-12: `apps/web/src/i18n/index.ts` reads the stored language preference
   (`i18nextLng`, only `de`/`en`) as the initial language, with `de` still the default and
   the reference locale and a broken storage never breaking init. Without it the `en` bundle

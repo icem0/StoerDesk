@@ -1,14 +1,15 @@
 # Deployment
 
-StörDesk runs as a single Docker Compose stack. Every value is read from
-`.env`; the compose file itself is never edited for a deployment.
+StörDesk runs as a single Docker Compose stack. Runtime configuration is read from
+`.env`; the compose file itself is never edited for a deployment. The application
+version comes from the tracked `VERSION` file, not from `.env`.
 
 ## Quickstart (production stack)
 
 ```bash
 git clone https://github.com/icem0/StoerDesk.git
 cd StoerDesk
-npm run env:create          # writes .env with generated secrets and the current version
+npm run env:create          # writes .env with generated secrets
 docker compose up -d --build
 ```
 
@@ -23,14 +24,13 @@ docker compose down         # stops the stack, keeps the volumes
 docker compose down -v      # stops the stack and DELETES all data
 ```
 
-After a `git pull`, refresh the version shown in the web shell without touching the
-secrets in `.env`, then rebuild the `web` image; commits made in this repository update
-that `.env` line automatically through the post-commit hook. A `web` image build with a
-`VITE_APP_VERSION` that is not a `vMAJOR.MINOR.PATCH` version fails instead of shipping
-the `dev` placeholder:
+The version shown in the web shell is produced by the development workflow: the
+pre-commit hook writes the next version into the tracked `VERSION` file, and the
+post-commit hook tags exactly that value. Because `VERSION` is part of the commit,
+an image build from a Git URL needs no `.env` entry and no git metadata. Rebuild
+the `web` image after a pull to show the new version:
 
 ```bash
-npm run env:version
 docker compose build web
 docker compose up -d web
 ```
@@ -54,8 +54,8 @@ still returns 200.
 `.env.example` documents every variable with its purpose and default.
 `npm run env:create` copies the template to `.env` and replaces the secrets
 (`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`) with random values. The generated
-password is URL-safe, so it can be used inside a connection URL. It also writes the
-current git tag into `VITE_APP_VERSION`, the version the web shell shows.
+password is URL-safe, so it can be used inside a connection URL. The application version is
+not configured here: it comes from the tracked `VERSION` file.
 
 The file is read by:
 
@@ -303,7 +303,8 @@ docker exec arcane ls -la /app/data/projects/stoerdesk   # Dockerfile must exist
 
 The project `.env` needs at least `POSTGRES_PASSWORD` and `SESSION_SECRET`
 (values from `npm run env:create`); the compose file refuses to start without
-them.
+them. The application version needs no entry: the `web` build reads the tracked
+`VERSION` file from the build context.
 
 ## Troubleshooting
 

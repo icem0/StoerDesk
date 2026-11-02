@@ -1,4 +1,25 @@
 #!/usr/bin/env sh
-# A merge commit is created by git merge, not by git commit, so post-commit does
-# not run for it. Reuse the same versioning logic.
-sh "$(dirname "$0")/post-commit"
+# A merge commit is created by git merge, not by git commit, so pre-commit does
+# not run for it. Fast-forward pulls already carry a tagged commit; only a newly
+# created merge commit needs the next version written into VERSION. Amend it
+# before it is pushed (post-merge runs right after the merge), then let the
+# post-commit hook create the tag.
+
+GIT_DIR=$(git rev-parse --git-dir)
+
+if [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; then
+  exit 0
+fi
+
+if [ -n "$(git tag --points-at HEAD)" ]; then
+  exit 0
+fi
+
+parents=$(git rev-list --parents -n 1 HEAD | wc -w)
+if [ "$parents" -gt 2 ]; then
+  node scripts/version-file.mjs || exit 1
+  git add VERSION
+  git commit --amend --no-edit --no-verify >/dev/null || exit 1
+else
+  sh "$(dirname "$0")/post-commit"
+fi

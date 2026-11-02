@@ -212,11 +212,12 @@ v0.0.58 … v0.0.61 were caused by that commit; v0.0.62 is green.
 The phase 1 backlog is closed: every item in the table is `done`.
 `WP-M1-15` is done — it repairs a regression of `WP-M1-13`: the layout-shell rewrite had
 dropped the version line that commit 3e1c0f8 added. The shell header now renders
-`AppVersion` on the login screen and on every guarded page; the value comes from the
-existing `VITE_APP_VERSION` build argument, or from the nearest git tag in local builds.
-`WP-M1-16` is done — Docker builds have no git metadata, so `npm run env:create` now writes
-the current tag into `.env`, and the new `npm run env:version` refreshes that single value
-in an existing `.env` after a pull without touching its secrets.
+`AppVersion` on the login screen and on every guarded page. The value is the application
+version produced by the development workflow, not a frontend version.
+`WP-M1-16` is done — the pre-commit hook writes the next version into the tracked
+`VERSION` file and the post-commit hook tags exactly that value. Image builds read
+`VERSION`, so deployment panels need no `.env` entry; the former `env:version` script and
+the git-tag refresh are gone.
 `WP-M1-17` is done — the shell drops the permanent sidebar for a full-width, phone-first
 layout: a 44 × 44 px gear next to the version opens a dropdown with the signed-in account,
 the user, role and sticker pages, and logout; the menu closes on route change, Escape and a

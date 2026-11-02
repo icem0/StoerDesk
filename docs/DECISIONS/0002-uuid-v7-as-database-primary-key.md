@@ -6,7 +6,7 @@
 
 ## Context
 
-StörDesk uses UUIDs as primary keys (AGENTS.md, conventions). Sequential numbers are
+StörDesk uses UUIDs as primary keys (PLAN.md §4.1 and §6). Sequential numbers are
 excluded. The database is Postgres 16, and Postgres 16 provides no built-in `uuidv7()`
 function (that arrives only with Postgres 18). The convention asks for "UUID v7 as the
 default in the DB", i.e. server-side default generation instead of app-side IDs.

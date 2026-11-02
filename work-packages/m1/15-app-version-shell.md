@@ -78,3 +78,8 @@ Expected: all green; the new test fails before the component exists and passes a
   web image build aborts on a non-version build arg, and the resolution order
   (build arg → git tag → root `.env`) lives in `apps/web/version-resolve.mjs` with unit
   tests; the dist/preview build carries the current tag.
+- Repair (second follow-up commit, same WP): the visible value must be the application
+  version produced by the development workflow, not a frontend version. The variable is
+  now `APP_VERSION` (no Vite prefix); `apps/web/app-version.mjs` resolves it from the
+  build argument, the tracked `VERSION` file or the nearest git tag. The badge shows any
+  non-empty value including pre-releases and `latest`.

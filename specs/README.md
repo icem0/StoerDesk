@@ -45,6 +45,6 @@ directly from a placeholder slice.
 
 - `specs/` = **what** is built (domain logic, data model, requirements).
 - `PLAN.md` = binding scope, stack, phases, work-package limits, open decisions.
-- `AGENTS.md` = **how** work happens in the repository (conventions, quality,
-  workflow).
+- `AGENTS.md` = **how** work happens in the repository (workflow, discipline,
+  quality and CI behaviour). It holds no project facts — those are in `PLAN.md`.
 - `docs/` = supplied material and supporting documentation.

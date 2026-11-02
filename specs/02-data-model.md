@@ -200,8 +200,7 @@ from the timestamp the server actually trusts.
 | `payload` | jsonb, not null, default `{}` | event data (decline reason, acknowledge result, submission details) |
 | `created_at` | timestamptz, not null, default `now()` | event time; **no `updated_at`** |
 
-Corrections are new events, never edits (`AGENTS.md`, _Changes stay
-traceable_). The trigger `ticket_events_append_only` blocks `UPDATE` and
+Corrections are new events, never edits (`PLAN.md` §6, _Data model lessons_). The trigger `ticket_events_append_only` blocks `UPDATE` and
 `DELETE` and raises `ticket_event_append_only` — the same mechanism as
 `protect_system_roles` in migration 0001 **(plan, §15 Audit)**. The one allowed
 `DELETE` is the `ON DELETE CASCADE` of the ticket itself, recognised through

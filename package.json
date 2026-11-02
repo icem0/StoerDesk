@@ -25,7 +25,7 @@
     "i18n:check": "tsx scripts/i18n-check.ts",
     "wp:check": "node scripts/wp-check.mjs",
     "env:create": "node scripts/create-env.mjs",
-    "env:version": "node scripts/env-version.mjs",
+    "version:file": "node scripts/version-file.mjs",
     "spec:split": "node scripts/split-spec.mjs",
     "orchestrate": "node scripts/orchestrate.mjs",
     "prepare": "husky"

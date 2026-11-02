@@ -72,3 +72,9 @@ Expected: all green; the E2E fails if the resolved version is `dev`.
 - Repair (follow-up commit, same WP): `.husky/post-commit` now runs `env:version` after every
   tagged commit, so the Compose build arg can never stay stale, and the `web` image
   build fails when `VITE_APP_VERSION` is not a `vMAJOR.MINOR.PATCH` version.
+- Repair (second follow-up commit, same WP): supersedes `env:version` and the git-tag
+  refresh entirely. The version belongs to the development workflow: pre-commit writes
+  the next value into the tracked `VERSION` file, post-commit tags exactly that value,
+  and image builds read `VERSION` because they have no `.git`. No `.env` entry is needed,
+  the image build no longer rejects a value, and the smoke E2E asserts only that the
+  badge shows a non-empty value.

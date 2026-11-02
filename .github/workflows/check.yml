@@ -67,7 +67,7 @@ jobs:
         run: npm run check
         env:
           # The database integration tests need a reachable PostgreSQL 16; the
-          # account may create its own throwaway databases (see AGENTS.md).
+          # account may create its own throwaway databases (see PLAN.md §18.2).
           TEST_DATABASE_URL: postgres://stoerdesk:ci-stoerdesk@localhost:5432/stoerdesk
 
       - name: Build web and API artifacts (no publish)

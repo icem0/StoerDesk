@@ -35,7 +35,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   if (!response.ok) {
-    // The API always answers errors as `{ code, params }` (AGENTS.md); a body that
+    // The API always answers errors as `{ code, params }` (PLAN.md §3); a body that
     // is not JSON degrades to a status-only ApiError instead of throwing again.
     let code: string | undefined
     let params: Record<string, string | number> | undefined

@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 # One version tag per commit: v0.0.1, v0.0.2, ... (patch bump).
+# The pre-commit hook wrote that version into the tracked `VERSION` file, so the
+# tag and the version baked into image builds are always the same.
 # Prints the commit feedback line after every successful commit.
 
 GIT_DIR=$(git rev-parse --git-dir)
@@ -9,31 +11,27 @@ if [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; then
   exit 0
 fi
 
-# HEAD already tagged - do not double-tag the same commit, but still align `.env`
-# with that tag below, so Compose image builds never bake a stale or `dev` version.
+# HEAD already tagged - do not double-tag the same commit.
 if [ -n "$(git tag --points-at HEAD)" ]; then
-  npm run --silent env:version >/dev/null 2>&1 || true
   exit 0
 fi
 
-latest=$(git tag --list 'v*.*.*' | sort -V | tail -n 1)
-if [ -z "$latest" ]; then
-  next="v0.0.1"
-else
-  base=${latest#v}
-  major=${base%%.*}
-  rest=${base#*.}
-  minor=${rest%%.*}
-  patch=${rest##*.}
-  next="v$major.$minor.$((patch + 1))"
+version=$(tr -d '[:space:]' < VERSION 2>/dev/null || true)
+
+if [ -z "$version" ]; then
+  echo "post-commit: VERSION is missing or empty - run 'npm run version:file' and amend" >&2
+  exit 1
 fi
 
-if git tag -a "$next" -m "$next" >/dev/null 2>&1; then
+if ! printf '%s' "$version" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+  echo "post-commit: VERSION='$version' is not a vMAJOR.MINOR.PATCH version" >&2
+  exit 1
+fi
+
+if git tag -a "$version" -m "$version" >/dev/null 2>&1; then
   short=$(git rev-parse --short HEAD)
-  echo "commit $short successful - version $next (run 'git push --follow-tags' to share it)"
-  # Align `.env` with the tag that was just created, so the next Compose build of
-  # the `web` image bakes this commit's version and never a stale one.
-  npm run --silent env:version >/dev/null 2>&1 || true
+  echo "commit $short successful - version $version (run 'git push --follow-tags' to share it)"
+else
+  echo "post-commit: tag $version already exists - run 'npm run version:file' and amend" >&2
+  exit 1
 fi
-
-exit 0

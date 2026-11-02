@@ -24,14 +24,6 @@ base_url="http://127.0.0.1:${web_port}"
 work_dir=$(mktemp -d "${TMPDIR:-/tmp}/stoerdesk-smoke.XXXXXX")
 cp "$repo_root/.env.example" "$work_dir/.env"
 
-# The web image build refuses a `VITE_APP_VERSION` that is not a real version
-# (WP-M1-15), so the smoke stack bakes the current tag like a real deployment.
-smoke_version=$(git -C "$repo_root" describe --tags --abbrev=0 2>/dev/null || true)
-if [ -n "$smoke_version" ]; then
-  sed -i.bak "s/^VITE_APP_VERSION=.*/VITE_APP_VERSION=$smoke_version/" "$work_dir/.env"
-  rm -f "$work_dir/.env.bak"
-fi
-
 cat >>"$work_dir/.env" <<EOF
 
 # --- smoke overrides (WP-M0-04) ---

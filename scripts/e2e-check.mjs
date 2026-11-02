@@ -8,8 +8,8 @@
 // Prerequisites are the same as for the API integration tests: a reachable PostgreSQL
 // (`TEST_DATABASE_URL`, fallback `DATABASE_URL`) and a Chromium that really starts. Without
 // one of them the runner prints a single notice and exits 0, so `npm run check` never turns
-// red because a developer machine has no database or no browser (AGENTS.md
-// _Database and tests_). The same rule as `scripts/docker-smoke.sh`, which needs Docker.
+// red because a developer machine has no database or no browser (PLAN.md §18.2).
+// The same rule as `scripts/docker-smoke.sh`, which needs Docker.
 // In CI (`CI=true`) both prerequisites are installed by the `check` job, so a missing one
 // is an error there and never a green skip. `E2E_CHROMIUM_PATH` selects a distribution
 // browser for containers that cannot run the bundled build.

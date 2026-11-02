@@ -5,14 +5,15 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-import { resolveVersion } from './version-resolve.mjs'
+import { resolveAppVersion } from './app-version.mjs'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  // A real version always wins (WP-M1-15/16): explicit build argument, else the
-  // nearest git tag, else the root `.env`. Only a checkout without all of them
-  // (e.g. a tarball dev server) falls back to `dev`.
-  const appVersion = resolveVersion(env.VITE_APP_VERSION) ?? 'dev'
+  // The application version comes from the development workflow: the tracked
+  // `VERSION` file (present in every commit and image build), a CI override or
+  // the nearest git tag. It is never the frontend stack version; only a checkout
+  // without any of those falls back to `dev`.
+  const appVersion = resolveAppVersion(env.APP_VERSION) ?? 'dev'
 
   return {
     define: {

@@ -654,11 +654,11 @@ status is decided before the insert, so an existing administrator keeps its `pas
 `locale` and `active` — that fix turned the red `check` runs v0.0.58 … v0.0.61 green.
 WP-M1-15 repairs a regression of WP-M1-13: the shell rewrite dropped the version line of
 commit 3e1c0f8. The sticky header now renders `AppVersion` outside the signed-in branch,
-so the build version is visible on the login screen and on every guarded page; local
-builds fall back to the nearest git tag, images use the `VITE_APP_VERSION` build argument.
-WP-M1-16 closes the gap for local Docker Compose: because an image build has no git
-metadata, `env:create` now stores the current tag in `.env`, and `env:version` refreshes
-that value after a pull without touching the generated secrets.
+so the version is visible on the login screen and on every guarded page. The value is
+the version of this application, produced by the development workflow: the pre-commit
+hook writes the next version into the tracked `VERSION` file, the post-commit hook tags
+exactly that value, and image builds read the file because they have no git metadata.
+It is never the frontend stack and never a manually maintained `.env` value.
 WP-M1-17 makes the shell phone-first: the permanent sidebar is gone, a 44 × 44 px gear next
 to the version opens the account, the user/role/sticker pages and logout in a dropdown, and
 the admin tables scroll horizontally on narrow screens.
@@ -796,9 +796,6 @@ npm run build
    notice and stays green locally, but in CI (`CI=true`) a missing prerequisite is
    an error.
 
-A failed gate is read, fixed and committed again — a work package never ends with a
-red gate.
-
 Phase 0 and every Docker-related WP additionally:
 
 ```bash
@@ -814,8 +811,72 @@ The stack publishes only the web port (`WEB_PORT`). A work package must not
 publish an API or database host port; direct API access for curl or monitoring
 goes through the optional override `docker-compose.debug.yml`.
 
-Database integration tests use `TEST_DATABASE_URL`; CI provides PostgreSQL 16.
-A WP is not done when tests are skipped because no database is available.
+### 18.2 Database, migrations and seeds in development
+
+- Local PostgreSQL 16: `docker compose -f docker-compose.dev.yml up -d db`
+  (credentials as in `.env.example`).
+- Migrations: `npm run db:migrate -w @stoerdesk/api`; change the schema with
+  `npm run db:generate -w @stoerdesk/api` (drizzle-kit, output folder
+  `apps/api/src/db/migrations`).
+- Seeds are idempotent and ordered: `npx tsx src/db/seed-rbac.ts`, then
+  `src/db/seed-base.ts` (bootstrap administrator from `SEED_ADMIN_EMAIL` /
+  `SEED_ADMIN_PASSWORD`), then `src/db/seed-demo.ts`. Seed output never contains an
+  e-mail or a password.
+- API integration tests run against a real database through `TEST_DATABASE_URL`
+  (fallback `DATABASE_URL`); CI provides PostgreSQL 16. Without a reachable
+  database they are skipped and `npm run check` stays green — the skip verifies
+  nothing, it is reported as unverified.
+- The E2E (`npm run test:e2e`, `scripts/e2e-check.mjs`) uses the same connection to
+  create its own throwaway database `stoerdesk_e2e_<run>`, migrates and seeds it,
+  runs Playwright and drops it again — it never writes into a shared database, and
+  it skips when the account may not `CREATE DATABASE`. The bundled Playwright
+  Chromium is a glibc build: in a musl (Alpine) container point
+  `E2E_CHROMIUM_PATH` at a distribution browser, e.g.
+  `E2E_CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e`.
+- `scripts/docker-smoke.sh` (CI job `docker-smoke`) is the only Docker-level test;
+  it runs in CI, never in an environment without a Docker daemon.
+
+### 18.3 CI pipeline, run names and version tags
+
+- The quality gates hang on the **version tag**: `check.yml` triggers on
+  `push: tags: ['v[0-9]*']` plus `pull_request` and sets
+  `run-name: ${{ github.ref_name }}`, so the run title is `v0.0.NN`. A commit
+  pushed **without** its tag starts no quality-gate run and publishes nothing.
+- **A run label cannot be renamed afterwards.** GitHub offers no endpoint for it, so
+  the text must be in the event payload when the run starts. A tag-push payload
+  carries the version but no usable single line (`head_commit.message` is the whole
+  multiline message, and Actions expressions have no `substring()`). Therefore the
+  publish run is **dispatched**: the `Dispatch publish run` job of a green tag
+  `check` run calls
+  `POST /repos/<repo>/actions/workflows/build.yml/dispatches` with the inputs
+  `version`, `notes` (the commit subject), `source_run` and `mode=check`, because a
+  `workflow_dispatch` payload is the only one that carries free text. `build.yml`
+  titles itself `publish v0.0.NN · <commit subject>`; a manual run titles itself
+  `publish <version> · manual · <ref>`. The publish job names
+  (`Publish <service> image <version>`) and their job summaries (what is new,
+  publisher, image names, tags, version, source SHA, source run URL) are the second
+  carrier of that information.
+- Every publish run moves `latest`; all publish runs share the serialising
+  concurrency group `publish-queue`, so a slower build of an older commit can never
+  overwrite `latest`.
+- **One annotated tag per commit** (`v0.0.1`, `v0.0.2`, …). `.husky/post-commit`
+  reads the highest existing version tag, bumps the patch number and creates the
+  annotated tag on the new commit; `.husky/post-merge` does the same for merge
+  commits; rebases and already-tagged HEADs are skipped, no double tags. The hook
+  prints `commit <short-hash> successful - version v0.0.N` and the hint to run
+  `git push --follow-tags`. The tag is the version of record; the `version`
+  fields in the `package.json` files stay on the current release line. Annotated
+  tags are required so `git push --follow-tags` publishes them; tags are never
+  pushed automatically.
+- The version in the web shell is the application version produced by the
+  development workflow. `.husky/pre-commit` writes the next version into the
+  tracked `VERSION` file and stages it; `.husky/post-commit` tags exactly that
+  value. Docker builds read `VERSION` from the context, so no git metadata and no
+  `.env` entry is required (WP-M1-16).
+- **GitHub push credentials:** the fine-grained PAT lives in the git credential
+  store — file `~/.git-credentials` (helper `store`, host `github.com`, user
+  `icem0`), set up once per environment. The token itself never appears in the
+  repository, docs, logs or commits.
 
 Definition of done:
 
