@@ -8,6 +8,7 @@ import { StickerPage } from '../features/objects/sticker-page'
 import { ObjectListPage } from '../features/objects/object-list-page'
 import { ObjectCreatePage } from '../features/objects/object-create-page'
 import { ObjectEditPage } from '../features/objects/object-edit-page'
+import { InternalCreatePage } from '../features/tickets/internal-create-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
 
@@ -61,6 +62,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <ObjectEditPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/tickets/create',
+        element: (
+          <RequireSession>
+            <InternalCreatePage />
           </RequireSession>
         ),
       },

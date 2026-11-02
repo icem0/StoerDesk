@@ -87,6 +87,46 @@
       "statusLink": "Status dieser Meldung ansehen"
     }
   },
+  "internal": {
+    "loading": "Objekte werden geladen …",
+    "errors": {
+      "noObjects": "Keine Objekte verfügbar. Legen Sie zuerst ein Objekt an."
+    },
+    "create": {
+      "title": "Neue Störung melden",
+      "hint": "Objekt und Anlage wählen, Störung beschreiben und absenden. Die Vorgangsnummer wird automatisch vergeben.",
+      "cancel": "Abbrechen",
+      "submit": "Meldung erstellen",
+      "submitting": "Wird erstellt …",
+      "fields": {
+        "object": "Objekt",
+        "objectPlaceholder": "Objekt auswählen",
+        "system": "Anlage",
+        "systemPlaceholder": "keine Auswahl",
+        "title": "Titel",
+        "description": "Beschreibung",
+        "faults": "Störungsarten",
+        "priority": "Priorität",
+        "contact": "Kontakt",
+        "contactHint": "Telefon oder E-Mail für Rückfragen",
+        "contactName": "Name",
+        "contactPhone": "Telefon",
+        "contactEmail": "E-Mail"
+      },
+      "priority": {
+        "low": "Niedrig",
+        "normal": "Normal",
+        "high": "Hoch",
+        "critical": "Kritisch"
+      },
+      "errors": {
+        "systemNotFound": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
+        "invalidRequest": "Bitte prüfen Sie die Eingaben.",
+        "noObjects": "Keine Objekte verfügbar. Legen Sie zuerst ein Objekt an.",
+        "unknown": "Die Meldung konnte nicht erstellt werden."
+      }
+    }
+  },
   "status": {
     "title": "Status der Meldung",
     "loading": "Status wird geladen …",

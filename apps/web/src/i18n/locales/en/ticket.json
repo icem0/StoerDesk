@@ -77,14 +77,54 @@
       "duplicate_parent_invalid": "The open report could not be assigned. Please try again.",
       "unknown": "The report could not be sent right now. Please try again later."
     },
-    "done": {
+  "done": {
       "title": "Report received",
-      "lead": "The report is in the report book and is handled by the responsible company.",
+      "lead": "The report is in the malfunction log and will be processed by the responsible company.",
       "ticketNo": "Reference number: {{ticketNo}}",
-      "deadline": "Feedback by: {{deadline}}",
-      "clockSkewed": "The device clock deviates from the server clock — the report time was aligned to the server clock.",
+      "deadline": "Response by: {{deadline}}",
+      "clockSkewed": "The device clock differs from the server clock — the report time was aligned to the server clock.",
       "photoCount": "Photos: {{count}}",
       "statusLink": "View the status of this report"
+    }
+  },
+  "internal": {
+    "loading": "Loading objects …",
+    "errors": {
+      "noObjects": "No objects available. Create an object first."
+    },
+    "create": {
+      "title": "Report a malfunction",
+      "hint": "Choose object and system, describe the fault and submit. The reference number is generated automatically.",
+      "cancel": "Cancel",
+      "submit": "Create report",
+      "submitting": "Creating …",
+      "fields": {
+        "object": "Object",
+        "objectPlaceholder": "Select an object",
+        "system": "System",
+        "systemPlaceholder": "none",
+        "title": "Title",
+        "description": "Description",
+        "faults": "Fault types",
+        "priority": "Priority",
+        "contact": "Contact",
+        "contactHint": "Phone or e‑mail for follow‑up questions",
+        "contactName": "Name",
+        "contactPhone": "Phone",
+        "contactEmail": "E‑mail"
+      },
+      "priority": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "errors": {
+        "systemNotFound": "The chosen system does not belong to this object.",
+        "invalidRequest": "Please check your inputs.",
+        "noObjects": "No objects available. Create an object first.",
+        "unknown": "The report could not be created."
+      }
     }
   },
   "status": {
