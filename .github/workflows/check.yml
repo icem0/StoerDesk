@@ -54,6 +54,18 @@ jobs:
           node-version: '22'
           cache: npm
 
+      # The run title of a tag push is the bare version (`v0.0.NN`), because the push
+      # payload carries no usable one-line commit subject. The summary resolves the
+      # run to its commit and its work package.
+      - name: Record the release context in the run summary
+        run: |
+          {
+            echo "## ${GITHUB_REF_NAME}"
+            echo ""
+            echo "- commit: \`$(git rev-parse HEAD)\`"
+            echo "- subject: $(git log -1 --pretty=%s)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Install
         run: npm ci
 

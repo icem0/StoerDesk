@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The publish chain of the GitHub Actions no longer loses a version and no longer
+  leaves `latest` behind. A queued publish run was cancelled when a newer publish run
+  was queued (the versions `v0.0.87` and `v0.0.97` never reached the registry),
+  because all publish runs shared one concurrency group; every version now has its
+  own group. `latest` was written by every build, so the version that happened to
+  finish last won and `latest` pointed to `v0.0.98` while `v0.0.99` was already
+  published; the build writes only the version tags now and a promotion step points
+  `latest` at the newest version that exists in the registry.
 - The version in the web shell is the application version produced by the development
   workflow. The pre-commit hook writes the next version into the tracked `VERSION` file,
   the post-commit hook tags exactly that value, and image builds read it without git

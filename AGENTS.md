@@ -133,6 +133,9 @@ Docker checks a Docker-related WP adds and which development commands exist is
 - Do not finish a work package with an unpushed commit.
 - After the push wait for the `check` run titled `v0.0.NN` and for its follow-up
   publish run; how both are triggered and titled is `PLAN.md` §18.3.
+- The publish run writes the version tags of its commit and promotes `latest` to the
+  newest version that exists in the registry. `latest` never depends on which build
+  finished last.
 - A WP is complete only when those runs are green (or a job is skipped by design).
   If a job fails, read the failing log, fix it in a new commit and push again.
 - Report to the user: the run titles, the version tag, the commit hash, the run URL

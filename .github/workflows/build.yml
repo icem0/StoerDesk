@@ -10,12 +10,16 @@ name: publish images
 # `publish <version> · manual · <ref>` (WP-M1-10i).
 # One line on purpose: a folded scalar would keep the newlines of deeper-indented
 # continuation lines and put them into the label.
+# The image tags of a run are the version tags of that commit. `latest` is not one of
+# them: a separate promotion step points it at the newest version that exists in the
+# registry, so `latest` never depends on which build finished last.
 run-name: ${{ github.event.inputs.notes != '' && format('publish {0} · {1}', github.event.inputs.version, github.event.inputs.notes) || format('publish {0} · {1} · {2}', github.event.inputs.version, github.event.inputs.mode, github.ref_name) }}
 
 on:
   # Reached from two directions: the `check` run of a version tag push dispatches with
   # `mode=check` and the version of that tag, a person dispatches with `mode=manual`.
-  # Every publish run moves `latest`; `mode` only records who authorised the run.
+  # `mode` only records who authorised the run; every publish run publishes its own
+  # version tags and promotes `latest` to the newest published version.
   workflow_dispatch:
     inputs:
       version:
@@ -46,11 +50,15 @@ permissions:
   contents: read
   packages: write
 
-# One global publish queue: consecutive pushes would otherwise build images in
-# parallel and a slower run of an older commit could overwrite `latest`
-# afterwards. Runs queue behind each other (max two waiting), never cancel.
+# One group per version. A shared group was wrong: GitHub keeps only one pending
+# run per group and cancels the previous pending one when a new run is queued, so
+# a batch of dispatches lost the runs in between (`publish v0.0.87` and
+# `publish v0.0.97` were cancelled and their images were never built). With one
+# group per version no run can cancel another, and `latest` is no longer written
+# by the build but promoted afterwards (see the promotion step in the publish
+# job), so the order of the runs does not matter.
 concurrency:
-  group: publish-queue
+  group: publish-${{ inputs.version }}
   cancel-in-progress: false
 
 env:
@@ -134,7 +142,6 @@ jobs:
             echo "${image}:${VERSION}"
             echo "${image}:${TAG}"
             echo "${image}:sha-${SHA}"
-            echo "${image}:latest"
             echo "TAGS"
           } >> "$GITHUB_OUTPUT"
 
@@ -156,6 +163,34 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
+      # `latest` must name the newest published version, not the version whose build
+      # happened to finish last. The promotion reads the registry, takes the highest
+      # version tag that really exists there and points `latest` at that manifest, so
+      # an older build can never move `latest` backwards and a failed build leaves
+      # `latest` on the newest version that was published.
+      - name: Promote latest to the newest published version
+        id: promote
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          set -euo pipefail
+          image="${REGISTRY}/${IMAGE_OWNER}/stoerdesk-${SERVICE}"
+          newest=""
+          for tag in $(git tag --list --sort=-v:refname 'v[0-9]*'); do
+            if docker buildx imagetools inspect "${image}:${tag}" >/dev/null 2>&1; then
+              newest="$tag"
+              break
+            fi
+          done
+          if [ -z "$newest" ]; then
+            echo "No published version of ${image} found in the registry." >&2
+            exit 1
+          fi
+          docker buildx imagetools create --tag "${image}:latest" "${image}:${newest}"
+          echo "newest=${newest}" >> "$GITHUB_OUTPUT"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "Promoted ${image}:latest to ${newest}."
+
       # Every publish run states in its job summary which images exist now and which line
       # of "what is new" its label carries, so the run list plus the summary answers
       # "which version produced which image".
@@ -165,6 +200,8 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           SHA: ${{ needs.version.outputs.sha }}
           TAGS: ${{ steps.tags.outputs.tags }}
+          NEWEST: ${{ steps.promote.outputs.newest }}
+          IMAGE: ${{ steps.promote.outputs.image }}
           MODE: ${{ github.event.inputs.mode }}
           NOTES: ${{ github.event.inputs.notes }}
           SOURCE_RUN: ${{ github.event.inputs.source_run }}
@@ -184,4 +221,5 @@ jobs:
             while IFS= read -r line; do
               echo "  - \`${line}\`"
             done <<< "$TAGS"
+            echo "- \`latest\`: \`${IMAGE}:latest\` -> \`${NEWEST}\`"
           } >> "$GITHUB_STEP_SUMMARY"

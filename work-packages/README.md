@@ -169,6 +169,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-07b | Altcha captcha API primitives                           | done                    | yes     |
 | WP-M2-07c | spam decision on the report create path                 | done                    | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | done                    | yes     |
+| WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -309,6 +310,16 @@ public form and the Altcha widget that appears only after a `400 captcha_require
 challenge is fetched from `POST /api/v1/public/altcha/challenge`, the solved proof of work
 travels back in the `verification` field of the next attempt, and the widget itself is loaded
 on demand — a reporter of a normal report never sees a captcha.
+`WP-M1-18` is done — it repairs the publish chain of the GitHub Actions. All publish runs
+shared the concurrency group `publish-queue`; GitHub keeps only one pending run per group and
+cancels the previous pending one, so a queued publish run disappeared without publishing its
+version (`v0.0.87` and `v0.0.97` have no images in GHCR). Every version now has its own
+group `publish-<version>`. The build writes only the version tags of its commit; a new
+promotion step reads the registry, takes the highest version tag that exists there and points
+`latest` at it with `docker buildx imagetools create`, so `latest` no longer depends on which
+build finished last — it pointed to `v0.0.98` while `v0.0.99` was already published. The
+check run writes version, commit and subject into its job summary, because the title of a tag
+push is the bare version.
 
 ## Validation
 

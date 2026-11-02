@@ -878,9 +878,17 @@ goes through the optional override `docker-compose.debug.yml`.
   (`Publish <service> image <version>`) and their job summaries (what is new,
   publisher, image names, tags, version, source SHA, source run URL) are the second
   carrier of that information.
-- Every publish run moves `latest`; all publish runs share the serialising
-  concurrency group `publish-queue`, so a slower build of an older commit can never
-  overwrite `latest`.
+- A publish run writes the version tags of its commit (`v0.0.NN`, `0.0.NN`,
+  `sha-<sha>`) and then **promotes `latest`** to the newest version that exists in
+  the registry: the promotion reads the tags, takes the highest one and points
+  `latest` at that manifest (`docker buildx imagetools create`). `latest` therefore
+  never depends on which build finished last, and a failed build leaves it on the
+  newest version that was really published.
+- Publish runs do **not** share one concurrency group. GitHub keeps only one
+  pending run per group and cancels the previous pending one when a new run is
+  queued, so a shared group made a queued publish run disappear without publishing
+  its version. Each run gets the group `publish-<version>`, so no run can cancel
+  another.
 - **One annotated tag per commit** (`v0.0.1`, `v0.0.2`, …). `.husky/post-commit`
   reads the highest existing version tag, bumps the patch number and creates the
   annotated tag on the new commit; `.husky/post-merge` does the same for merge
