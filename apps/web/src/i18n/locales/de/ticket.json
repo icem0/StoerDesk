@@ -156,5 +156,47 @@
       "invalidToken": "Dieser Statuslink ist ungültig. Bitte den Link aus der Bestätigung erneut öffnen.",
       "not_found": "Zu diesem Statuslink gibt es keine Meldung. Bitte den Link aus der Bestätigung erneut öffnen."
     }
+  },
+  "list": {
+    "title": "Meldungen",
+    "hint": "Alle Vorgänge mit Suche und Filter. Detailansicht folgt in einem der nächsten Pakete.",
+    "search": "Suchen",
+    "status": "Status",
+    "statusAll": "alle Status",
+    "statusNew": "Neu",
+    "statusInReview": "In Prüfung",
+    "statusWorkOrder": "Auftrag angelegt",
+    "statusOffered": "Angeboten",
+    "statusAssigned": "Zugewiesen",
+    "statusAccepted": "Angenommen",
+    "statusAcknowledged": "Rückmeldung erfolgt",
+    "statusClosed": "Abgeschlossen",
+    "statusCancelled": "Storniert",
+    "priority": "Priorität",
+    "priorityAll": "alle Prioritäten",
+    "priorityLow": "Niedrig",
+    "priorityNormal": "Normal",
+    "priorityHigh": "Hoch",
+    "priorityCritical": "Kritisch",
+    "noTickets": "Keine Meldungen gefunden.",
+    "loading": "Meldungen werden geladen …",
+    "loadError": "Die Meldungsliste konnte nicht geladen werden.",
+    "range": "{{from}}–{{to}} von {{total}}",
+    "prev": "Vorherige",
+    "next": "Nächste",
+    "columns": {
+      "ticketNo": "Vorgangsnummer",
+      "object": "Objekt",
+      "objectNo": "Objektnummer",
+      "status": "Status",
+      "priority": "Priorität",
+      "reportedAt": "Gemeldet",
+      "deadlineAt": "Frist",
+      "actions": "Aktionen"
+    },
+    "actions": {
+      "view": "Anzeigen",
+      "create": "Neue Meldung"
+    }
   }
 }

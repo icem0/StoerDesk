@@ -156,5 +156,47 @@
       "invalidToken": "This status link is invalid. Please open the link from the confirmation again.",
       "not_found": "There is no report for this status link. Please open the link from the confirmation again."
     }
+  },
+  "list": {
+    "title": "Tickets",
+    "hint": "All reports with search and filters. Detail view follows in upcoming packages.",
+    "search": "Search",
+    "status": "Status",
+    "statusAll": "all statuses",
+    "statusNew": "New",
+    "statusInReview": "In review",
+    "statusWorkOrder": "Work order created",
+    "statusOffered": "Offered",
+    "statusAssigned": "Assigned",
+    "statusAccepted": "Accepted",
+    "statusAcknowledged": "Acknowledged",
+    "statusClosed": "Closed",
+    "statusCancelled": "Cancelled",
+    "priority": "Priority",
+    "priorityAll": "all priorities",
+    "priorityLow": "Low",
+    "priorityNormal": "Normal",
+    "priorityHigh": "High",
+    "priorityCritical": "Critical",
+    "noTickets": "No tickets found.",
+    "loading": "Loading tickets …",
+    "loadError": "The ticket list could not be loaded.",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "prev": "Previous",
+    "next": "Next",
+    "columns": {
+      "ticketNo": "Reference no.",
+      "object": "Object",
+      "objectNo": "Object no.",
+      "status": "Status",
+      "priority": "Priority",
+      "reportedAt": "Reported",
+      "deadlineAt": "Deadline",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "create": "New report"
+    }
   }
 }
