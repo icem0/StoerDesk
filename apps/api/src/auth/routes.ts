@@ -3,6 +3,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { loginRequestSchema, meResponseSchema } from '@stoerdesk/shared'
 
 import { users } from '../db/schema'
+import type { Env } from '../config/env'
 import { verifyPassword } from './password'
 import { effectivePermissions, loadEffectivePermissions } from './requirePermission'
 import {
@@ -15,8 +16,18 @@ import {
 import type { AuthPluginOptions } from './sessionPlugin'
 import { requireUser } from './sessionPlugin'
 
-/** Login attempts per minute and IP (`PLAN.md` §15, `specs/01-rbac.md` §3.6). */
-const LOGIN_RATE_LIMIT = { max: 5, timeWindow: '1 minute' } as const
+/**
+ * Login attempts per minute and IP (`PLAN.md` §15, `specs/01-rbac.md` §3.6).
+ * Configurable via `LOGIN_RATE_LIMIT_MAX` / `LOGIN_RATE_LIMIT_WINDOW`; the
+ * production default is 5/min. The throwaway E2E API raises it so the
+ * sequential sign-ins of the E2E suite never trip `rate_limited`.
+ */
+function loginRateLimit(env: Env) {
+  return {
+    max: env.LOGIN_RATE_LIMIT_MAX,
+    timeWindow: env.LOGIN_RATE_LIMIT_WINDOW,
+  } as const
+}
 
 /**
  * Real Argon2id hash of a throw-away value. A login for an unknown e-mail verifies
@@ -34,7 +45,7 @@ const DECOY_HASH =
 export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { database, env }) => {
   app.post(
     '/api/v1/auth/login',
-    { config: { rateLimit: LOGIN_RATE_LIMIT } },
+    { config: { rateLimit: loginRateLimit(env) } },
     async (request, reply) => {
       const parsed = loginRequestSchema.safeParse(request.body)
 

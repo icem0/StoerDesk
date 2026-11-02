@@ -40,10 +40,11 @@ const apiEnv: Record<string, string> = {
   SESSION_SECRET: 'e2e-only-session-secret-0123456789abcdef-never-a-real-secret',
   SESSION_TTL_HOURS: '1',
   // The E2E suite signs in once per test (auth + report-form + report-flow = 6
-  // logins within a minute on the same IP). The production login rate limit is
+  // logins within a minute on the same CI IP). The production login rate limit is
   // 5/min (apps/api/src/auth/routes.ts); raise it for the throwaway E2E API so
-  // the sequential logins never trip `rate_limited`. E2E only — never production.
-  RATE_LIMIT_MAX: '60',
+  // the sequential sign-ins never trip `rate_limited`. E2E only — never production.
+  RATE_LIMIT_MAX: '999999',
+  LOGIN_RATE_LIMIT_MAX: '999999',
   UPLOAD_DIR: uploadDir,
 }
 

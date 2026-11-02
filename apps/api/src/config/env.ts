@@ -35,6 +35,9 @@ const envSchema = z
     COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
     RATE_LIMIT_WINDOW: z.string().default('1 minute'),
+    /** Login attempts per minute and IP (`specs/01-rbac.md` §3.6). */
+    LOGIN_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
+    LOGIN_RATE_LIMIT_WINDOW: z.string().default('1 minute'),
     /** Altcha HMAC key (WP-M2-07b). Empty means "no captcha configured". */
     ALTCHA_SECRET: z.string().default(''),
     /** Proof-of-work difficulty: the client searches a counter below this number. */
