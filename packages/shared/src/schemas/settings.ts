@@ -16,3 +16,6 @@ export const brandingResponseSchema = z.object({
 export const updateBrandingRequestSchema = z.object({
   companyName: z.string().trim().max(80),
 })
+
+export type BrandingResponse = z.infer<typeof brandingResponseSchema>
+export type UpdateBrandingRequest = z.infer<typeof updateBrandingRequestSchema>

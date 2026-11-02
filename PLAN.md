@@ -414,6 +414,18 @@ CSV import:
 - upload, column mapping and preview (new/changed/unchanged),
 - upsert by `object_no`.
 
+BMAcloud object sync:
+
+- Daily read-only pull of the BMAcloud Anlagen (`GET /anlagen`) into the object
+  table; one Anlage becomes exactly one object, `object_no = nr` (dots allowed).
+- BMAcloud wins for name and address on objects it owns (`external_id` set);
+  locally maintained objects are never overwritten, disappeared Anlagen are
+  soft-deactivated.
+- Configurable cron (`BMA_SYNC_CRON`, default `15 3 * * *`) plus a manual
+  "Jetzt abgleichen" trigger; run history in `bma_sync_runs`.
+- Secrets `BMA_API_BASE_URL` / `BMA_API_KEY` in `.env` only; the client allows
+  `GET` only. Contract in `specs/17-bmacloud-sync.md`, decision ADR-0003.
+
 REST API `/api/v1`:
 
 - Bearer API key with scopes `objects:read`, `objects:write`, `tickets:read`,
@@ -948,7 +960,6 @@ These decisions need an ADR or explicit approval before the related WP starts:
 - hosting model (homelab behind Cloudflare vs. external server),
 - multi-tenancy (default: no),
 - default deadlines per priority and contract type,
-- source and format of object data for sync (CSV, ERP, work-order system),
 - whether shift swaps require admin approval by default (default: yes),
 - name and logo (working title: StörDesk).
 
