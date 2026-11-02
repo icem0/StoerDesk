@@ -1,4 +1,17 @@
-import { and, count, eq, ilike, or } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lt,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -22,6 +35,9 @@ import { objects, tickets } from '../db/schema'
  */
 
 type Db = Database['database']
+
+/** A ticket is open while it is neither closed nor cancelled (`specs/06-report-form.md` §7.8). */
+const CLOSED_STATUSES: string[] = ['CLOSED', 'CANCELLED']
 
 function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
@@ -47,6 +63,22 @@ export async function listTickets(
     conditions.push(eq(tickets.status, query.status))
   }
 
+  if (query.open !== undefined) {
+    conditions.push(
+      query.open ? notInArray(tickets.status, CLOSED_STATUSES) : inArray(tickets.status, CLOSED_STATUSES),
+    )
+  }
+
+  if (query.overdue !== undefined) {
+    const pastDeadline = lt(tickets.deadlineAt, new Date())
+
+    conditions.push(
+      query.overdue
+        ? and(pastDeadline, notInArray(tickets.status, CLOSED_STATUSES))
+        : or(gte(tickets.deadlineAt, new Date()), inArray(tickets.status, CLOSED_STATUSES)),
+    )
+  }
+
   if (query.objectId !== undefined) {
     conditions.push(eq(tickets.objectId, query.objectId))
   }
@@ -65,6 +97,20 @@ export async function listTickets(
 
   const total = Number(totalResult?.count ?? 0)
 
+  const orderColumn =
+    query.order === 'deadlineAt'
+      ? tickets.deadlineAt
+      : query.order === 'priority'
+        ? sql`CASE ${tickets.priority}
+            WHEN 'critical' THEN 1
+            WHEN 'high' THEN 2
+            WHEN 'normal' THEN 3
+            ELSE 4
+          END`
+        : tickets.reportedAt
+
+  const orderDirection = query.direction === 'asc' ? asc : desc
+
   const rows = await database
     .select({
       id: tickets.id,
@@ -79,7 +125,7 @@ export async function listTickets(
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
     .where(where)
-    .orderBy(tickets.reportedAt)
+    .orderBy(orderDirection(orderColumn))
     .limit(query.limit)
     .offset(query.offset)
 

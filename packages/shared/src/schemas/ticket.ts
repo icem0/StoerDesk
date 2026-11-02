@@ -276,6 +276,18 @@ export const ticketListQuerySchema = z.object({
   status: z.enum(['NEW', 'IN_REVIEW', 'WORK_ORDER_CREATED', 'OFFERED', 'ASSIGNED', 'ACCEPTED', 'ACKNOWLEDGED', 'CLOSED', 'CANCELLED']).optional(),
   objectId: z.uuid().optional(),
   priority: z.enum(['low', 'normal', 'high', 'critical']).optional(),
+  /** Open means: the status is neither CLOSED nor CANCELLED (`specs/06-report-form.md` §7.8). */
+  open: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === 'true')),
+  /** Overdue means: the deadline is in the past and the ticket is still open. */
+  overdue: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === 'true')),
+  order: z.enum(['reportedAt', 'deadlineAt', 'priority']).default('reportedAt'),
+  direction: z.enum(['asc', 'desc']).default('desc'),
   limit: z.coerce.number().min(1).max(100).default(25),
   offset: z.coerce.number().min(0).default(0),
 })
