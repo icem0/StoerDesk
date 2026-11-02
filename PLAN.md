@@ -641,6 +641,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M1-18  | publish chain without cancelled runs         | done   |
 | WP-M1-19  | one tag per push for every commit            | done   |
 | WP-M1-20  | the push command in the governance documents | done   |
+| WP-M1-21  | serialised promotion of `latest`             | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -886,7 +887,9 @@ goes through the optional override `docker-compose.debug.yml`.
   the registry: the promotion reads the tags, takes the highest one and points
   `latest` at that manifest (`docker buildx imagetools create`). `latest` therefore
   never depends on which build finished last, and a failed build leaves it on the
-  newest version that was really published.
+  newest version that was really published. The promotions of one image are serialised
+  (concurrency group `latest-<image>`), so the read of the registry and the write of
+  `latest` never interleave with another promotion and `latest` can only move forward.
 - Publish runs do **not** share one concurrency group. GitHub keeps only one
   pending run per group and cancels the previous pending one when a new run is
   queued, so a shared group made a queued publish run disappear without publishing

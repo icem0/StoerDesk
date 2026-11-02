@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The promotion of the `latest` image tag runs in a job of its own and the promotions of
+  one image are serialised (concurrency group `latest-<image>`). Without that, two
+  parallel publish runs could write `latest` in the wrong order and move it back to an
+  older version.
 - The publish chain of the GitHub Actions no longer loses a version and no longer
   leaves `latest` behind. A queued publish run was cancelled when a newer publish run
   was queued (the versions `v0.0.87` and `v0.0.97` never reached the registry),
@@ -25,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The duplicate hint of the public report form. The form asks the API for the open
+  tickets of the object and offers the two answers of the plan: "Ergänzen" appends the
+  text of the reporter to the open ticket as a public comment event, "Trotzdem neu
+  melden" creates a new ticket that points at the open one (`tickets.parent_ticket_id`).
+  The QR token of the object is the capability of the public comment, so the status
+  token of a foreign ticket is never handed out.
 - `npm run release:push` pushes the current branch and every version tag the remote does
   not have yet, one tag per push. GitHub creates no tag push event when more than three
   tags are pushed at once, so a batch push of several tags left the older commits without
