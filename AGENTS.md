@@ -101,6 +101,23 @@ Docker checks a Docker-related WP adds and which development commands exist is
 - `commitlint` enforces the format and the sign-off (Husky hook `commit-msg`).
 - Never commit secrets, tokens or PII.
 
+### Session end (hard rule)
+
+- **Every session ends with a commit.** Before the final answer, stage and commit
+  every change made in the session with a Conventional Commit and the DCO sign-off.
+  An agent that stops with session changes uncommitted has not finished the task.
+- This end-of-session commit is the default in this repository and overrides the
+  general "only commit when explicitly asked" default. Only an explicit instruction
+  from the user to leave changes uncommitted waives it.
+- Run `git status --short` before the final answer. If unrelated changes remain,
+  do not silently mix them into the session commit: ask whether to include them or
+  commit them separately with their own message. An explicit "commit everything"
+  includes them.
+- If the commit is blocked (failed hook, conflict, missing identity), fix it or
+  report the blocker and the exact remaining files; never end silently.
+- Report the commit hash and the version tag printed by the hook. Pushing remains a
+  separate, explicit action (`git push --follow-tags`).
+
 ## Versioning (one tag per commit)
 
 - Every commit gets the next patch version as an annotated git tag; the hook
