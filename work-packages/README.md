@@ -167,7 +167,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-06b | public status page at `/s/:token` (web)                 | done                    | yes     |
 | WP-M2-07  | report throttle table and suspicion detection           | done                    | yes     |
 | WP-M2-07b | Altcha captcha API primitives                           | done                    | yes     |
-| WP-M2-07c | spam decision on the report create path                 | planned                 | yes     |
+| WP-M2-07c | spam decision on the report create path                 | done                    | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | planned                 | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
@@ -299,12 +299,13 @@ decision and the form into one run, far over the source-file and line limits. **
 of the per-IP and the per-token count inside the window) and `isReportSuspicious` (> 3 reports
 per 10 minutes per IP **or** QR token) — detection only, no route reads it yet. Its children,
 all created in this same rewrite commit, are **WP-M2-07b**
-(`07b-altcha-captcha-api.md`) — the `altcha-lib` challenge/verify primitives and the
-`altchaVerificationSchema` — **WP-M2-07c** (`07c-spam-decision-report-path.md`) — the
-honeypot, the throttle and Altcha on the create path, storing a suspicious or honeypot report
-with `tickets.suspected_spam` and answering `400 captcha_required` for a suspicious report
-without a valid proof of work — and **WP-M2-07d** (`07d-spam-form-ui.md`) — the hidden
-`website` honeypot and the Altcha widget that appears only after a `400 captcha_required`.
+(`07b-altcha-captcha-api.md`) — implemented as the `altcha-lib` challenge/verify primitives and
+the `altchaVerificationSchema` — **WP-M2-07c** (`07c-spam-decision-report-path.md`) —
+implemented as the honeypot, throttle and Altcha decision on the create path, storing a
+suspicious or honeypot report with `tickets.suspected_spam` and answering
+`400 captcha_required` for a suspicious report without a valid proof of work — and
+**WP-M2-07d** (`07d-spam-form-ui.md`) — the planned hidden `website` honeypot and the Altcha
+widget that appears only after a `400 captcha_required`.
 
 ## Validation
 

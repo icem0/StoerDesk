@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
+import { solveChallenge } from 'altcha-lib'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -12,6 +13,7 @@ import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/t
 import * as schema from '../../db/schema'
 import { buildServer } from '../../index'
 import { generateQrToken } from '../../objects/qr'
+import type { AltchaChallenge } from '../altcha'
 
 const testDatabase = await openTestDatabase()
 
@@ -41,6 +43,43 @@ const JPEG_1X1 = Buffer.from(
 )
 
 const dataUrl = (mime: string, bytes: Buffer) => `data:${mime};base64,${bytes.toString('base64')}`
+
+async function solveAltcha(body: unknown): Promise<Record<string, unknown>> {
+  const challenge = body as AltchaChallenge
+  const { promise } = solveChallenge(
+    challenge.challenge,
+    challenge.salt,
+    challenge.algorithm,
+    challenge.maxnumber,
+  )
+  const solution = await promise
+
+  if (solution === null) {
+    throw new Error('the integration proof of work was not solved')
+  }
+
+  return {
+    algorithm: challenge.algorithm,
+    challenge: challenge.challenge,
+    salt: challenge.salt,
+    signature: challenge.signature,
+    maxnumber: challenge.maxnumber,
+    number: solution.number,
+    took: solution.took,
+  }
+}
+
+/**
+ * The spam counter counts per IP inside a 10-minute window. Default test traffic
+ * uses one fresh IP per submit so unrelated cases cannot tip the suspicion rule;
+ * spam tests explicitly pass the same `remoteAddress`.
+ */
+let nextTestIpIndex = 0
+const nextTestIp = () => {
+  nextTestIpIndex += 1
+
+  return `10.99.${Math.floor(nextTestIpIndex / 256) % 256}.${nextTestIpIndex % 256}`
+}
 
 /** The uploads volume of this test run — never `/data`, only the temp directory. */
 const uploadDir = await mkdtemp(join(tmpdir(), 'stoerdesk-upload-test-'))
@@ -77,8 +116,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     let app: FastifyInstance
 
-    const submit = (payload: Record<string, unknown>) =>
-      app.inject({ method: 'POST', url: '/api/v1/public/tickets', payload })
+    const submit = (payload: Record<string, unknown>, remoteAddress = nextTestIp()) =>
+      app.inject({ method: 'POST', url: '/api/v1/public/tickets', payload, remoteAddress })
 
     async function createObject(objectNo: string, active = true) {
       const inserted = await db
@@ -121,6 +160,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.RATE_LIMIT_MAX = '10000'
       process.env.UPLOAD_DIR = uploadDir
       process.env.UPLOAD_MAX_BYTES = String(TEST_MAX_PHOTO_BYTES)
+      process.env.ALTCHA_SECRET = 'integration-altcha-secret-never-a-real-one'
+      process.env.ALTCHA_MAX_NUMBER = '1000'
 
       app = await buildServer()
     })
@@ -470,6 +511,85 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<ErrorBody>().code).toBe('photo_too_large')
       expect(await photoRowsOf(ticket.id)).toHaveLength(0)
       expect(await uploadedFilesOf(ticket.id)).toEqual([])
+    })
+
+    it('stores a honeypot report as suspected spam without asking for a captcha', async () => {
+      const object = await createObject('7115_01')
+      const clientUuid = crypto.randomUUID()
+
+      const response = await submit(
+        {
+          qrToken: object.qrToken,
+          clientUuid,
+          text: 'Automated submission',
+          contact: { phone: '+49 170 0000000' },
+          website: 'http://spam.example/',
+        },
+        '10.20.70.115',
+      )
+
+      expect(response.statusCode).toBe(201)
+
+      const stored = await ticketOfClient(clientUuid)
+
+      expect(stored.suspectedSpam).toBe(true)
+    })
+
+    it('requires the captcha for the fourth report and accepts the solved payload', async () => {
+      const object = await createObject('7116_01')
+      const remoteAddress = '10.20.70.116'
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        const normal = await submit(
+          {
+            qrToken: object.qrToken,
+            clientUuid: crypto.randomUUID(),
+            text: `Normal report ${attempt}`,
+            contact: { phone: '+49 170 0000000' },
+          },
+          remoteAddress,
+        )
+
+        expect(normal.statusCode).toBe(201)
+      }
+
+      const withoutVerification = await submit(
+        {
+          qrToken: object.qrToken,
+          clientUuid: crypto.randomUUID(),
+          text: 'Fourth report without proof of work',
+          contact: { phone: '+49 170 0000000' },
+        },
+        remoteAddress,
+      )
+
+      expect(withoutVerification.statusCode).toBe(400)
+      expect(withoutVerification.json<ErrorBody>().code).toBe('captcha_required')
+      expect(withoutVerification.json<ErrorBody>().params?.fields).toEqual(['verification'])
+
+      const challengeResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/public/altcha/challenge',
+      })
+      const verification = await solveAltcha(challengeResponse.json())
+
+      const solvedClientUuid = crypto.randomUUID()
+      const withVerification = await submit(
+        {
+          qrToken: object.qrToken,
+          clientUuid: solvedClientUuid,
+          text: 'Fourth report with proof of work',
+          contact: { phone: '+49 170 0000000' },
+          verification,
+        },
+        remoteAddress,
+      )
+
+      expect(withVerification.statusCode).toBe(201)
+
+      const stored = await ticketOfClient(solvedClientUuid)
+
+      expect(stored.suspectedSpam).toBe(false)
     })
 
     it('ignores the photos of an idempotent repeat', async () => {

@@ -422,6 +422,15 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   `404 altcha_not_configured`. `altcha-lib` is held on its v1 major: its challenge format
   `{ algorithm, challenge, salt, signature, maxnumber }` is the one the `altcha` web
   component answers with. Nothing on the create path reads it yet — that is WP-M2-07c.
+- WP-M2-07c: spam decision on the report create path — the public report request accepts
+  the optional honeypot field `website` and an optional Altcha `verification` payload, and
+  `apps/api/src/tickets/report.ts` records every new public report attempt in the
+  `report_throttle` table before writing the ticket. A filled honeypot is stored with
+  `tickets.suspected_spam = true`; a suspicious report (more than three attempts per IP
+  or QR token inside 10 minutes) asks for the proof of work with `400 captcha_required`,
+  stores it as suspected spam when no captcha is configured and otherwise accepts only a
+  verified `altcha-lib` payload. An idempotent repeat returns the existing ticket before
+  the spam decision, so replay does not create or flag a second ticket.
 
 ### Changed
 

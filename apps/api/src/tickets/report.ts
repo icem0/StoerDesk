@@ -8,10 +8,13 @@ import {
   type PublicReportRequest,
 } from '@stoerdesk/shared'
 
+import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, systems, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { generateQrToken } from '../objects/qr'
+import { verifyAltchaPayload, type AltchaPayload } from './altcha'
 import { MAX_REPORT_PHOTOS, saveReportPhotos } from './photos'
+import { isReportSuspicious, recordReportAttempt } from './spam'
 
 /**
  * Public report endpoint (`specs/06-report-form.md` §7.3/§7.5, WP-M2-04b).
@@ -111,6 +114,7 @@ export async function createPublicReport(
   database: Db,
   input: PublicReportRequest,
   storage: { uploadDir: string; maxPhotoBytes: number },
+  context: { ip: string; altchaSecret: string },
 ): Promise<{ report: PublicReport; replayed: boolean }> {
   const [object] = await database
     .select()
@@ -148,6 +152,40 @@ export async function createPublicReport(
     })
   }
 
+  const [existing] = await database
+    .select()
+    .from(tickets)
+    .where(eq(tickets.clientUuid, input.clientUuid))
+    .limit(1)
+
+  if (existing !== undefined) {
+    return { report: await reportOf(database, existing), replayed: true }
+  }
+
+  await recordReportAttempt(database, { ip: context.ip, qrToken: input.qrToken })
+
+  const suspicious = await isReportSuspicious(database, {
+    ip: context.ip,
+    qrToken: input.qrToken,
+  })
+
+  let suspectedSpam = input.website !== undefined && input.website !== ''
+
+  if (!suspectedSpam && suspicious) {
+    const verified =
+      input.verification !== undefined &&
+      (await verifyAltchaPayload(input.verification as AltchaPayload, context.altchaSecret))
+
+    if (!verified) {
+      if (context.altchaSecret === '') {
+        // Without a configured captcha a suspicious report must still survive (§7.6).
+        suspectedSpam = true
+      } else {
+        throw new ReportRouteError(400, 'captcha_required', { fields: ['verification'] })
+      }
+    }
+  }
+
   const times = reportTimes(input)
 
   const insertValues = {
@@ -163,6 +201,7 @@ export async function createPublicReport(
     reporterEmail: input.contact.email ?? null,
     clientUuid: input.clientUuid,
     statusToken: generateQrToken(),
+    suspectedSpam,
     ...times,
   }
 
@@ -231,6 +270,7 @@ export const publicReportRoutes = fp<PublicReportRouteOptions>(
   async (app, { database, uploadDir, maxPhotoBytes }) => {
     // §7.4: six photos of `UPLOAD_MAX_BYTES` plus base64 headroom in one JSON body.
     const photoBodyLimit = Math.ceil(MAX_REPORT_PHOTOS * maxPhotoBytes * 1.4)
+    const { ALTCHA_SECRET } = loadEnv()
 
     app.post(
       '/api/v1/public/tickets',
@@ -242,10 +282,12 @@ export const publicReportRoutes = fp<PublicReportRouteOptions>(
           return reply.code(400).send(invalidRequest(fieldPaths(parsed.error)))
         }
 
-        const { report, replayed } = await createPublicReport(database, parsed.data, {
-          uploadDir,
-          maxPhotoBytes,
-        })
+        const { report, replayed } = await createPublicReport(
+          database,
+          parsed.data,
+          { uploadDir, maxPhotoBytes },
+          { ip: request.ip, altchaSecret: ALTCHA_SECRET },
+        )
 
         return reply.code(replayed ? 200 : 201).send(report)
       },

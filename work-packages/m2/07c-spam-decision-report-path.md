@@ -1,7 +1,7 @@
 # WP-M2-07c: Spam decision on the report create path
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-07b
 phase: 2
 context-budget: 22k tokens
@@ -13,9 +13,9 @@ files-read:
 - apps/api/src/tickets/spam.ts (WP-M2-07: `isReportSuspicious`, `recordReportAttempt`)
 - apps/api/src/tickets/altcha.ts (WP-M2-07b: `verifyAltchaPayload`)
 - apps/api/src/tickets/report.ts (the create path this package gates)
+- apps/api/src/config/env.ts (empty `ALTCHA_SECRET` means "no captcha configured")
 - apps/api/src/db/schema.ts (`tickets.suspectedSpam`)
 - packages/shared/src/schemas/ticket.ts (`publicReportRequestSchema`, `altchaVerificationSchema`)
-- apps/api/src/tickets/**tests**/report.integration.spec.ts (test DB + request shape)
 
 files-write:
 
@@ -25,12 +25,14 @@ files-write:
 
 interfaces:
 
-- request `publicReportRequestSchema` gains `website` (honeypot, `string`,
-  default `''`) and `verification` (optional, validated by a new shared
+- request `publicReportRequestSchema` gains `website` (honeypot, optional `string`;
+  absent or empty means human) and `verification` (optional, validated by a new shared
   `altchaVerificationSchema` — `{ algorithm: 'SHA-256', challenge, salt, signature,
-  maxnumber: int, key?: string }` — added in `packages/shared/src/schemas/ticket.ts`)
+  number: int, maxnumber?: int, took?: int, key?: string }` — added in
+  `packages/shared/src/schemas/ticket.ts`)
 - `createPublicReport(database, input, storage, context)` — new 4th arg
-  `context: { ip: string }`; route passes `request.ip`
+  `context: { ip: string; altchaSecret: string }`; route passes `request.ip` and
+  `ALTCHA_SECRET`
 - new error `400 captcha_required` (`params.fields = ['verification']`) for a
   suspicious report without a valid proof of work
 - the stored `tickets.suspected_spam` reflects the decision below; `PublicReport`
@@ -61,11 +63,12 @@ valid proof of work is rejected without losing the earlier attempts.
 1. `packages/shared/src/schemas/ticket.ts`: export `altchaVerificationSchema` (and its
    type) plus add `website` (honeypot, default `''`) and optional `verification`
    (reuses `altchaVerificationSchema`) to `publicReportRequestSchema`.
-2. `apps/api/src/tickets/report.ts`: thread `context.ip` into `createPublicReport`;
-   after validation call `recordReportAttempt` + `isReportSuspicious`; apply the
-   decision above; set `suspectedSpam` in `insertValues`; add the
-   `400 captcha_required` error.
-3. Route handler: pass `{ ip: request.ip }` (honours `TRUST_PROXY`).
+2. `apps/api/src/tickets/report.ts`: thread `context.ip` and `context.altchaSecret`
+   into `createPublicReport`; after validation call `recordReportAttempt` +
+   `isReportSuspicious`; apply the decision above; set `suspectedSpam` in
+   `insertValues`; add the `400 captcha_required` error.
+3. Route handler: pass `{ ip: request.ip, altchaSecret: ALTCHA_SECRET }` (honours
+   `TRUST_PROXY`).
 4. Extend the fixture: honeypot filled → `201` with `suspected_spam = true`; a 4th
    report from one IP/token inside 10 min without `verification` → `400
    captcha_required`; the same with a valid proof of work → `201`,
@@ -98,7 +101,11 @@ Expected: all green; the four new integration assertions pass against
   `apps/api/src/tickets/__tests__/report.integration.spec.ts` and the bookkeeping
 - Interfaces added: honeypot `website` + optional `verification` on the request,
   `400 captcha_required`, the `suspected_spam` decision on the create path
-- Verified: (to be filled by the implementation run)
+- Verified: `npm run check` green — typecheck (3 workspaces), `eslint .` (0 errors,
+  the one pre-existing `photo-upload.tsx` fast-refresh warning), `vitest run` 39 files /
+  222 tests against the reachable PostgreSQL of `TEST_DATABASE_URL` (not skipped),
+  `i18n:check`, `wp:check` and `npm run test:e2e` green with
+  `E2E_CHROMIUM_PATH=/usr/bin/chromium` (4 Playwright tests); `npm run build` green
 - Follow-up WP: consumed by `07d-spam-form-ui.md` (created with the WP-M2-07
   rewrite); no new follow-up announced here
 - Open question: none (inherits the `report_throttle.ip` retention question from

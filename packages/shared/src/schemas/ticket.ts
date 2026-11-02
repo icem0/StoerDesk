@@ -39,6 +39,23 @@ export const photoDataUrlSchema = z
   .string()
   .regex(/^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/)
 
+/**
+ * Altcha proof-of-work payload sent back after a `400 captcha_required`
+ * (`specs/06-report-form.md` §7.6, WP-M2-07c). The server verifies the challenge
+ * hash and signature again; `maxnumber` and `took` are diagnostic fields of the
+ * widget and are not needed to recompute the proof.
+ */
+export const altchaVerificationSchema = z.object({
+  algorithm: z.literal('SHA-256'),
+  challenge: z.string().min(1),
+  salt: z.string().min(1),
+  signature: z.string().min(1),
+  number: z.number().int().min(0),
+  maxnumber: z.number().int().positive().optional(),
+  took: z.number().int().nonnegative().optional(),
+  key: z.string().optional(),
+})
+
 export const publicReportRequestSchema = z.object({
   qrToken: qrTokenSchema,
   clientUuid: z.uuid(),
@@ -59,6 +76,10 @@ export const publicReportRequestSchema = z.object({
   locale: z.enum(['de', 'en']).default('de'),
   /** Structural bound of 12; the semantic limit of 6 lives in the service (§7.4). */
   photos: z.array(photoDataUrlSchema).max(12).default([]),
+  /** Hidden honeypot field (§7.6): absent/empty is human, filled flags spam. */
+  website: z.string().optional(),
+  /** Proof of work only asked for a suspicious report (§7.6, WP-M2-07c). */
+  verification: altchaVerificationSchema.optional(),
 })
 
 export const publicReportResponseSchema = z.object({
@@ -76,6 +97,7 @@ export const publicReportResponseSchema = z.object({
 export type PublicReportContact = z.infer<typeof publicReportContactSchema>
 export type PublicReportRequest = z.infer<typeof publicReportRequestSchema>
 export type PublicReport = z.infer<typeof publicReportResponseSchema>
+export type AltchaVerification = z.infer<typeof altchaVerificationSchema>
 
 /**
  * Public status page (`specs/06-report-form.md` §7.3.4/§7.7, WP-M2-06).

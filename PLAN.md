@@ -636,7 +636,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-06b | public status page at `/s/:token` (web)      | done    |
 | WP-M2-07  | report throttle table and suspicion          | done    |
 | WP-M2-07b | Altcha captcha API primitives                | done    |
-| WP-M2-07c | spam decision on the report create path      | planned |
+| WP-M2-07c | spam decision on the report create path      | done    |
 | WP-M2-07d | honeypot field and Altcha widget (web)       | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -733,13 +733,14 @@ decision and the form into one run. **WP-M2-07** (`07-spam-protection.md`) is im
 report throttle — migration `0005_report_throttle` plus `recordReportAttempt`,
 `recentReportCount` and `isReportSuspicious` in `apps/api/src/tickets/spam.ts` (> 3 reports per
 10 minutes per IP **or** QR token), detection only, no route reads it yet; **WP-M2-07b**
-(`07b-altcha-captcha-api.md`) adds the `altcha-lib` primitives
+(`07b-altcha-captcha-api.md`) is implemented as the `altcha-lib` primitives
 (`POST /api/v1/public/altcha/challenge`, `verifyAltchaPayload`, `altchaVerificationSchema`);
-**WP-M2-07c** (`07c-spam-decision-report-path.md`) puts the honeypot, the throttle and Altcha
-on the create path so a suspicious or honeypot report is stored with
-`tickets.suspected_spam` while a suspicious report without a valid proof of work answers
-`400 captcha_required`; and **WP-M2-07d** (`07d-spam-form-ui.md`) is the web form's hidden
-`website` honeypot and the Altcha widget that appears only after a `400 captcha_required`.
+**WP-M2-07c** (`07c-spam-decision-report-path.md`) is implemented as the create-path spam
+decision: it puts the honeypot, the throttle and Altcha on the report endpoint, stores a
+suspicious or honeypot report with `tickets.suspected_spam` and answers
+`400 captcha_required` for a suspicious report without a valid proof of work; **WP-M2-07d**
+(`07d-spam-form-ui.md`) is the web form's hidden `website` honeypot and the Altcha widget
+that appears only after a `400 captcha_required`.
 
 ## 17. Work package rules for small models
 
