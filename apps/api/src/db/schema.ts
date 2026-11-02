@@ -4,6 +4,7 @@ import {
   boolean,
   check,
   index,
+  inet,
   integer,
   jsonb,
   pgTable,
@@ -339,7 +340,9 @@ export const tickets = pgTable(
   'tickets',
   {
     id: uuid('id').primaryKey().default(uuidDefault),
-    ticketNo: text('ticket_no').notNull().default(sql`next_ticket_no()`),
+    ticketNo: text('ticket_no')
+      .notNull()
+      .default(sql`next_ticket_no()`),
     /** Objects are only soft-deleted, so a report never loses its object. */
     objectId: uuid('object_id')
       .notNull()
@@ -351,7 +354,10 @@ export const tickets = pgTable(
     title: text('title'),
     description: text('description'),
     /** `text_templates.key` values — machine keys, never translated text. */
-    faultTemplateKeys: text('fault_template_keys').array().notNull().default(sql`'{}'::text[]`),
+    faultTemplateKeys: text('fault_template_keys')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     source: text('source').notNull().default('QR'),
     reportedAt: timestamp('reported_at', timestampOptions).notNull(),
     receivedAt: timestamp('received_at', timestampOptions).notNull().defaultNow(),
@@ -444,6 +450,30 @@ export const ticketPhotos = pgTable(
   ],
 )
 
+/**
+ * Attempt log of the public report endpoint (`specs/06-report-form.md` §7.6,
+ * WP-M2-07). One row per report attempt; the 10-minute suspicion window is a
+ * `count(*)` over these rows, because the stack has no cache or Redis
+ * (`PLAN.md` §4) and PostgreSQL is the only shared store. The application only
+ * ever inserts here — no update, no delete (see `PLAN.md` §15 for the retention
+ * question of the stored IP).
+ */
+export const reportThrottle = pgTable(
+  'report_throttle',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    /** Request IP as Fastify sees it, honouring `TRUST_PROXY`. */
+    ip: inet('ip').notNull(),
+    /** The QR token the attempt arrived with — object tokens and system tokens. */
+    qrToken: text('qr_token').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('report_throttle_ip_created_at_idx').on(table.ip, table.createdAt),
+    index('report_throttle_qr_token_created_at_idx').on(table.qrToken, table.createdAt),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -468,6 +498,8 @@ export type TicketEvent = typeof ticketEvents.$inferSelect
 export type NewTicketEvent = typeof ticketEvents.$inferInsert
 export type TicketPhoto = typeof ticketPhotos.$inferSelect
 export type NewTicketPhoto = typeof ticketPhotos.$inferInsert
+export type ReportThrottle = typeof reportThrottle.$inferSelect
+export type NewReportThrottle = typeof reportThrottle.$inferInsert
 export type TicketNoCounter = typeof ticketNoCounters.$inferSelect
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number]

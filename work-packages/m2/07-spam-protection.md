@@ -1,7 +1,7 @@
 # WP-M2-07: Report throttle and suspicion detection
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-04
 phase: 2
 context-budget: 20k tokens
@@ -85,10 +85,18 @@ are skipped without a reachable database, exactly like the report integration te
 - Files changed: `apps/api/src/db/schema.ts`, new migration
   `0005_report_throttle.sql` + meta, `apps/api/src/tickets/spam.ts` (new), the
   fixture `apps/api/src/tickets/__tests__/spam.integration.spec.ts`, plus
-  `docs/REPO-MAP.md` and `work-packages/README.md`
+  `docs/REPO-MAP.md`, `work-packages/README.md`, `PLAN.md` §16 and `CHANGELOG.md`
 - Interfaces added: table `report_throttle`, `recordReportAttempt`,
   `recentReportCount`, `isReportSuspicious`, `SUSPICION_MAX`, `SUSPICION_WINDOW_MS`
-- Verified: (to be filled by the implementation run)
+- Verified: `npm run check` green — typecheck (3 workspaces), `eslint .` (0 errors,
+  the one pre-existing `photo-upload.tsx` fast-refresh warning), `vitest run` 38 files /
+  215 tests including the 4 new throttle tests against a throwaway PostgreSQL 16
+  database from `TEST_DATABASE_URL` (not skipped), `i18n:check`, `wp:check`;
+  `npm run test:e2e` green with `E2E_CHROMIUM_PATH=/usr/bin/chromium` (4 Playwright
+  tests, its throwaway database migrated through `0005_report_throttle`);
+  `npm run build -w @stoerdesk/api` copies the new migration into `dist/db/migrations`.
+  The CI `check`/publish runs of this tag stay to be read after the push (`AGENTS.md`
+  _CI after push_); the Docker smoke test does not run here (no Docker daemon).
 - Follow-up WP: `07b-altcha-captcha-api.md`, `07c-spam-decision-report-path.md`
   and `07d-spam-form-ui.md` — all created in the same commit as this rewrite
 - Open question: `report_throttle.ip` stores the reporter's IP — `PLAN.md` §16 data

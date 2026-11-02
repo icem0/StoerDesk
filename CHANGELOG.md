@@ -403,6 +403,15 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   localized labels `ticket:status.events.*` plus the localized timestamps — in `de` and `en`.
   A malformed token renders `ticket:status.errors.invalidToken` without a request, an unknown
   one renders `ticket:status.errors.not_found`.
+- WP-M2-07: report throttle — migration `0005_report_throttle` adds the append-only
+  `report_throttle` table (one row per public report attempt: `ip` as `inet`, `qr_token`,
+  `created_at`, indexed by `(ip, created_at)` and `(qr_token, created_at)`) and
+  `apps/api/src/tickets/spam.ts` adds `recordReportAttempt`, `recentReportCount` (the higher of
+  the per-IP and the per-token count inside the window) and `isReportSuspicious` (more than
+  `SUSPICION_MAX` = 3 attempts inside `SUSPICION_WINDOW_MS` = 10 minutes) — the window is a
+  `count(*)` in PostgreSQL because the stack has no cache and no Redis. No route consults it
+  yet: the honeypot, the Altcha proof of work and the `tickets.suspected_spam` write are
+  WP-M2-07b/07c/07d. The retention of the stored IP stays an open decision.
 
 ### Changed
 

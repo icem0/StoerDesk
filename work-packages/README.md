@@ -165,7 +165,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-05c | report form smoke E2E in de and en                      | done                    | yes     |
 | WP-M2-06  | public ticket status API by `status_token`              | done                    | yes     |
 | WP-M2-06b | public status page at `/s/:token` (web)                 | done                    | yes     |
-| WP-M2-07  | report throttle table and suspicion detection           | planned                 | yes     |
+| WP-M2-07  | report throttle table and suspicion detection           | done                    | yes     |
 | WP-M2-07b | Altcha captcha API primitives                           | planned                 | yes     |
 | WP-M2-07c | spam decision on the report create path                 | planned                 | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | planned                 | yes     |
@@ -293,9 +293,12 @@ at `/s/:token` — ticket number, status badge with a text label, deadline and t
 **WP-M2-07** is rewritten into the small-model format and split before implementation: the
 legacy package bundled the throttle, the honeypot, the Altcha verification, the create-path
 decision and the form into one run, far over the source-file and line limits. **WP-M2-07**
-(`07-spam-protection.md`) is planned as the report throttle — a `report_throttle` table with
-`recordReportAttempt` and `isReportSuspicious` (> 3 reports per 10 minutes per IP **or** QR
-token). Its children, all created in this same rewrite commit, are **WP-M2-07b**
+(`07-spam-protection.md`) is implemented as the report throttle: migration
+`0005_report_throttle` adds the append-only `report_throttle` table and
+`apps/api/src/tickets/spam.ts` provides `recordReportAttempt`, `recentReportCount` (the higher
+of the per-IP and the per-token count inside the window) and `isReportSuspicious` (> 3 reports
+per 10 minutes per IP **or** QR token) — detection only, no route reads it yet. Its children,
+all created in this same rewrite commit, are **WP-M2-07b**
 (`07b-altcha-captcha-api.md`) — the `altcha-lib` challenge/verify primitives and the
 `altchaVerificationSchema` — **WP-M2-07c** (`07c-spam-decision-report-path.md`) — the
 honeypot, the throttle and Altcha on the create path, storing a suspicious or honeypot report
