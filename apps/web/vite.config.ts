@@ -25,6 +25,15 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg'],
+        srcDir: 'src',
+        filename: 'sw.ts',
+        strategies: 'injectManifest',
+        injectRegister: false,
+        injectManifest: {
+          globPatterns: [
+            '**/*.{js,css,html,ico,svg,woff,woff2,ttf,json}',
+          ],
+        },
         manifest: {
           name: 'StörDesk',
           short_name: 'StörDesk',
