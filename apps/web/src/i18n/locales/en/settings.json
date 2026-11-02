@@ -1,5 +1,53 @@
 {
   "admin": {
+    "home": {
+      "title": "Administration",
+      "hint": "The administration modules. Modules that are not available yet are marked with their phase.",
+      "available": "available",
+      "planned": "planned · {{phase}}",
+      "phases": {
+        "phase1": "Phase 1",
+        "phase2": "Phase 2",
+        "phase6": "Phase 6",
+        "phase7": "Phase 7",
+        "phase8": "Phase 8",
+        "phase10": "Phase 10"
+      },
+      "modules": {
+        "users": {
+          "title": "User administration",
+          "hint": "Create users, edit them and assign roles."
+        },
+        "roles": {
+          "title": "Role administration",
+          "hint": "Manage roles and their permissions."
+        },
+        "groups": {
+          "title": "Groups",
+          "hint": "User groups for the ticket assignment."
+        },
+        "standardTexts": {
+          "title": "Standard texts",
+          "hint": "Maintain the fault texts of the report form."
+        },
+        "deadlines": {
+          "title": "Deadlines",
+          "hint": "Response deadlines per priority and contract."
+        },
+        "oncall": {
+          "title": "On-call plan",
+          "hint": "Shifts, confirmations and shift swaps."
+        },
+        "channels": {
+          "title": "Channels",
+          "hint": "Notification channels like ntfy, e-mail and Web Push."
+        },
+        "apiKeys": {
+          "title": "API keys",
+          "hint": "Keys for the external interface."
+        }
+      }
+    },
     "users": {
       "title": "User management",
       "loading": "Loading …",

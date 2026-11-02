@@ -1,5 +1,53 @@
 {
   "admin": {
+    "home": {
+      "title": "Verwaltung",
+      "hint": "Die Module der Verwaltung. Noch nicht verfügbare Module sind mit ihrer Phase gekennzeichnet.",
+      "available": "verfügbar",
+      "planned": "geplant · {{phase}}",
+      "phases": {
+        "phase1": "Phase 1",
+        "phase2": "Phase 2",
+        "phase6": "Phase 6",
+        "phase7": "Phase 7",
+        "phase8": "Phase 8",
+        "phase10": "Phase 10"
+      },
+      "modules": {
+        "users": {
+          "title": "Benutzerverwaltung",
+          "hint": "Benutzer anlegen, bearbeiten und Rollen zuweisen."
+        },
+        "roles": {
+          "title": "Rollenverwaltung",
+          "hint": "Rollen und ihre Berechtigungen verwalten."
+        },
+        "groups": {
+          "title": "Gruppen",
+          "hint": "Benutzergruppen für die Zuweisung von Tickets."
+        },
+        "standardTexts": {
+          "title": "Standardtexte",
+          "hint": "Die Störungstexte des Meldeformulars pflegen."
+        },
+        "deadlines": {
+          "title": "Fristen",
+          "hint": "Reaktionsfristen je Priorität und Objektart."
+        },
+        "oncall": {
+          "title": "Bereitschaftsplan",
+          "hint": "Schichten, Bestätigungen und Schichttausch."
+        },
+        "channels": {
+          "title": "Kanäle",
+          "hint": "Benachrichtigungskanäle wie ntfy, E-Mail und Web Push."
+        },
+        "apiKeys": {
+          "title": "API-Schlüssel",
+          "hint": "Schlüssel für die Schnittstelle nach außen."
+        }
+      }
+    },
     "users": {
       "title": "Benutzerverwaltung",
       "loading": "Lädt …",

@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 
 import { App } from '../App'
+import { AdminHomePage } from '../admin/admin-home-page'
 import { RolesPage } from '../admin/roles-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
@@ -25,6 +26,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <StartPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin',
+        element: (
+          <RequireSession>
+            <AdminHomePage />
           </RequireSession>
         ),
       },
