@@ -107,7 +107,7 @@ describe('BrandingPage', () => {
       }),
     )
 
-    renderPage(vi.fn())
+    renderPage()
 
     expect(await screen.findByText(/Die Sitzung ist abgelaufen|Your session has expired/i)).toBeTruthy()
   })
