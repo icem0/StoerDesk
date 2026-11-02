@@ -638,6 +638,8 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-07b | Altcha captcha API primitives                | done   |
 | WP-M2-07c | spam decision on the report create path      | done   |
 | WP-M2-07d | honeypot field and Altcha widget (web)       | done   |
+| WP-M1-18  | publish chain without cancelled runs         | done   |
+| WP-M1-19  | one tag per push for every commit            | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

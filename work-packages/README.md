@@ -170,6 +170,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-07c | spam decision on the report create path                 | done                    | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | done                    | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
+| WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -320,6 +321,11 @@ promotion step reads the registry, takes the highest version tag that exists the
 build finished last — it pointed to `v0.0.98` while `v0.0.99` was already published. The
 check run writes version, commit and subject into its job summary, because the title of a tag
 push is the bare version.
+`WP-M1-19` is done — GitHub creates no tag push event when more than three tags are pushed
+at once, so the session of 2026-11-02 pushed seven tags in one `git push --follow-tags` and
+the versions `v0.0.93`, `v0.0.94` and `v0.0.95` never got a check run at all. The new
+`npm run release:push` pushes the branch and every missing tag one tag per push, so every
+commit gets its own run; the hint of the post-commit hook points to it.
 
 ## Validation
 

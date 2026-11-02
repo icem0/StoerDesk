@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `npm run release:push` pushes the current branch and every version tag the remote does
+  not have yet, one tag per push. GitHub creates no tag push event when more than three
+  tags are pushed at once, so a batch push of several tags left the older commits without
+  a check run and without published images (`v0.0.93`, `v0.0.94`, `v0.0.95`).
 - Monorepo skeleton with npm workspaces (`apps/web`, `apps/api`, `packages/shared`).
 - Configuration: TypeScript strict, ESLint (flat config, i18next rule), Prettier,
   Vitest (root and per workspace), Husky, commitlint.

@@ -26,6 +26,7 @@
     "wp:check": "node scripts/wp-check.mjs",
     "env:create": "node scripts/create-env.mjs",
     "version:file": "node scripts/version-file.mjs",
+    "release:push": "node scripts/push-release.mjs",
     "spec:split": "node scripts/split-spec.mjs",
     "orchestrate": "node scripts/orchestrate.mjs",
     "prepare": "husky"

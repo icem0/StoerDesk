@@ -30,7 +30,7 @@ fi
 
 if git tag -a "$version" -m "$version" >/dev/null 2>&1; then
   short=$(git rev-parse --short HEAD)
-  echo "commit $short successful - version $version (run 'git push --follow-tags' to share it)"
+  echo "commit $short successful - version $version (run 'npm run release:push' to share it)"
 else
   echo "post-commit: tag $version already exists - run 'npm run version:file' and amend" >&2
   exit 1
