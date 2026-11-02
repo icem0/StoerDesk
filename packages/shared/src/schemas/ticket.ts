@@ -303,3 +303,55 @@ export type TicketListQuery = z.infer<typeof ticketListQuerySchema>
 export type TicketListResponse = z.infer<typeof ticketListResponseSchema>
 export type TicketListItem = z.infer<typeof ticketListItemSchema>
 
+/**
+ * Ticket detail API (`PLAN.md` §6/§7, WP-M2-18a).
+ *
+ * Authenticated `GET /api/v1/tickets/:ticketNo` for staff. Returns the ticket
+ * with object info, the append-only event history and photo metadata.
+ */
+
+export const ticketDetailResponseSchema = z.object({
+  ticket: z.object({
+    id: z.uuid(),
+    ticketNo: z.string(),
+    objectNo: z.string(),
+    objectName: z.string(),
+    systemType: z.string().nullable(),
+    systemLabel: z.string().nullable(),
+    status: z.string(),
+    priority: z.string(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+    faultTemplateKeys: z.array(z.string()),
+    source: z.string(),
+    reportedAt: z.iso.datetime(),
+    receivedAt: z.iso.datetime(),
+    deadlineAt: z.iso.datetime(),
+    reporterName: z.string().nullable(),
+    reporterPhone: z.string().nullable(),
+    reporterEmail: z.string().nullable(),
+    statusToken: z.string().nullable(),
+  }),
+  events: z.array(
+    z.object({
+      id: z.uuid(),
+      type: z.string(),
+      actorKind: z.string(),
+      actorName: z.string().nullable(),
+      payload: z.record(z.string(), z.unknown()).default({}),
+      createdAt: z.iso.datetime(),
+    }),
+  ),
+  photos: z.array(
+    z.object({
+      id: z.uuid(),
+      filePath: z.string(),
+      mimeType: z.string(),
+      sizeBytes: z.number(),
+      createdAt: z.iso.datetime(),
+    }),
+  ),
+})
+
+export type TicketDetailResponse = z.infer<typeof ticketDetailResponseSchema>
+

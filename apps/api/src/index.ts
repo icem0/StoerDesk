@@ -19,6 +19,7 @@ import { publicAltchaRoutes } from './tickets/altcha'
 import { publicDuplicateRoutes } from './tickets/duplicates'
 import { internalTicketRoutes } from './tickets/internal'
 import { ticketListRoutes } from './tickets/list'
+import { ticketDetailRoutes } from './tickets/detail'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
 
@@ -105,6 +106,7 @@ export async function buildServer() {
   await app.register(publicDuplicateRoutes, { database })
   await app.register(internalTicketRoutes, { database })
   await app.register(ticketListRoutes, { database })
+  await app.register(ticketDetailRoutes, { database })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
   // or production (`specs/01-rbac.md` §3.7).
