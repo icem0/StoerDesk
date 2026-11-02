@@ -62,7 +62,7 @@ describe('BrandingPage', () => {
 
     renderPage()
 
-    const input = await screen.findByLabelText(/Firmenname|Company name/i)
+    const input = (await screen.findByLabelText(/Firmenname|Company name/i)) as HTMLInputElement
     expect(input.value).toBe('Beispiel GmbH')
 
     fireEvent.change(input, { target: { value: 'Neue GmbH' } })
@@ -89,7 +89,7 @@ describe('BrandingPage', () => {
 
     renderPage()
 
-    const button = await screen.findByRole('button', { name: /Speichern|Save/i })
+    const button = (await screen.findByRole('button', { name: /Speichern|Save/i })) as HTMLButtonElement
     expect(button.disabled).toBe(true)
   })
 

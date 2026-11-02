@@ -114,7 +114,7 @@ describe('Shell settings menu', () => {
     renderShell()
 
     expect(
-      await screen.findByText((content) => content.includes('Beispiel GmbH')),
+      await screen.findByText(/Beispiel GmbH/),
     ).toBeTruthy()
   })
 
