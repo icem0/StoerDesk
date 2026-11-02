@@ -635,7 +635,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-06  | public status API by `status_token`          | done    |
 | WP-M2-06b | public status page at `/s/:token` (web)      | done    |
 | WP-M2-07  | report throttle table and suspicion          | done    |
-| WP-M2-07b | Altcha captcha API primitives                | planned |
+| WP-M2-07b | Altcha captcha API primitives                | done    |
 | WP-M2-07c | spam decision on the report create path      | planned |
 | WP-M2-07d | honeypot field and Altcha widget (web)       | planned |
 

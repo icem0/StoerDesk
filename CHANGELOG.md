@@ -412,6 +412,16 @@ CASCADE`, type check over `BMA`/`LICHTRUF`/`RWA`/`EMA`/`SPRACHALARM`/`SONSTIGE`,
   `count(*)` in PostgreSQL because the stack has no cache and no Redis. No route consults it
   yet: the honeypot, the Altcha proof of work and the `tickets.suspected_spam` write are
   WP-M2-07b/07c/07d. The retention of the stored IP stays an open decision.
+- WP-M2-07b: Altcha captcha primitives — `apps/api/src/tickets/altcha.ts` adds
+  `createAltchaChallenge` (SHA-256 proof of work, difficulty `ALTCHA_MAX_NUMBER`, the
+  expiry carried inside the `salt` so one solved payload cannot be replayed forever),
+  `verifyAltchaPayload` (recomputes `hash(salt + number)`, the HMAC signature over that
+  hash and the expiry) and the unauthenticated
+  `POST /api/v1/public/altcha/challenge`; `apps/api/src/index.ts` registers it next to the
+  other public routes. `ALTCHA_SECRET` empty means "no captcha configured" and answers
+  `404 altcha_not_configured`. `altcha-lib` is held on its v1 major: its challenge format
+  `{ algorithm, challenge, salt, signature, maxnumber }` is the one the `altcha` web
+  component answers with. Nothing on the create path reads it yet — that is WP-M2-07c.
 
 ### Changed
 

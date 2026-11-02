@@ -15,6 +15,7 @@ import { objectRoutes } from './objects/service'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
+import { publicAltchaRoutes } from './tickets/altcha'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
 
@@ -92,6 +93,10 @@ export async function buildServer() {
     database,
     uploadDir: env.UPLOAD_DIR,
     maxPhotoBytes: env.UPLOAD_MAX_BYTES,
+  })
+  await app.register(publicAltchaRoutes, {
+    secret: env.ALTCHA_SECRET,
+    maxNumber: env.ALTCHA_MAX_NUMBER,
   })
   await app.register(publicStatusRoutes, { database })
 

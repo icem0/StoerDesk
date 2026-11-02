@@ -166,7 +166,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-06  | public ticket status API by `status_token`              | done                    | yes     |
 | WP-M2-06b | public status page at `/s/:token` (web)                 | done                    | yes     |
 | WP-M2-07  | report throttle table and suspicion detection           | done                    | yes     |
-| WP-M2-07b | Altcha captcha API primitives                           | planned                 | yes     |
+| WP-M2-07b | Altcha captcha API primitives                           | done                    | yes     |
 | WP-M2-07c | spam decision on the report create path                 | planned                 | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | planned                 | yes     |
 

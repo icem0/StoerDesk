@@ -35,6 +35,10 @@ const envSchema = z
     COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
     RATE_LIMIT_WINDOW: z.string().default('1 minute'),
+    /** Altcha HMAC key (WP-M2-07b). Empty means "no captcha configured". */
+    ALTCHA_SECRET: z.string().default(''),
+    /** Proof-of-work difficulty: the client searches a counter below this number. */
+    ALTCHA_MAX_NUMBER: z.coerce.number().int().positive().default(10000),
     API_LOG_LEVEL: z.string().default('info'),
     UPLOAD_DIR: z.string().default('/data/uploads'),
     UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(10485760),
