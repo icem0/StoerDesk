@@ -1,4 +1,23 @@
 {
+  "dashboard": {
+    "greeting": "StörDesk",
+    "hint": "Report new faults here and keep an eye on the open tickets.",
+    "primaryAction": "Report a malfunction",
+    "tiles": {
+      "total": "tickets total",
+      "open": "open",
+      "overdue": "overdue",
+      "unreviewed": "not reviewed"
+    },
+    "burningTitle": "Burning now",
+    "loading": "Loading tickets …",
+    "loadError": "The tickets could not be loaded.",
+    "noOpenTickets": "No open tickets.",
+    "remaining": {
+      "hours": "{{hours}} h left",
+      "overdue": "overdue for {{hours}} h"
+    }
+  },
   "report": {
     "title": "Report a malfunction",
     "loading": "Loading the object …",

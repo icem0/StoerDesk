@@ -1,4 +1,23 @@
 {
+  "dashboard": {
+    "greeting": "StörDesk",
+    "hint": "Hier erfassen Sie neue Störungen und behalten die offenen Vorgänge im Blick.",
+    "primaryAction": "Neue Störung melden",
+    "tiles": {
+      "total": "Meldungen gesamt",
+      "open": "offen",
+      "overdue": "überfällig",
+      "unreviewed": "ohne Prüfung"
+    },
+    "burningTitle": "Brennt jetzt",
+    "loading": "Meldungen werden geladen …",
+    "loadError": "Die Meldungen konnten nicht geladen werden.",
+    "noOpenTickets": "Keine offenen Meldungen.",
+    "remaining": {
+      "hours": "noch {{hours}} Std",
+      "overdue": "seit {{hours}} Std überfällig"
+    }
+  },
   "report": {
     "title": "Störung melden",
     "loading": "Objekt wird geladen …",

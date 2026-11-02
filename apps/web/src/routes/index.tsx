@@ -4,6 +4,7 @@ import { App } from '../App'
 import { RolesPage } from '../admin/roles-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
+import { StartPage } from '../features/dashboard/start-page'
 import { StickerPage } from '../features/objects/sticker-page'
 import { ObjectListPage } from '../features/objects/object-list-page'
 import { ObjectCreatePage } from '../features/objects/object-create-page'
@@ -19,6 +20,14 @@ export const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
+      {
+        path: '/',
+        element: (
+          <RequireSession>
+            <StartPage />
+          </RequireSession>
+        ),
+      },
       {
         path: '/admin/users',
         element: (
