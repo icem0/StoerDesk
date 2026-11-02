@@ -643,6 +643,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M1-19  | one tag per push for every commit            | done   |
 | WP-M1-20  | the push command in the governance documents | done   |
 | WP-M1-21  | serialised promotion of `latest`             | done   |
+| WP-M1-22  | the app version reads version tags only      | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

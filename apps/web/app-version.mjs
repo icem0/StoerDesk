@@ -37,11 +37,18 @@ export function versionFileAppVersion(...searchDirs) {
   return null
 }
 
-/** Nearest annotated version tag; absent in an image build without `.git`. */
-export function gitVersion() {
+/**
+ * Nearest annotated **version** tag; absent in an image build without `.git`.
+ *
+ * Only version tags count (`--match 'v[0-9]*'`): a moving pointer tag such as
+ * `latest` is not a version and must neither become the version of the shell
+ * nor break the test that reads it.
+ */
+export function gitVersion(cwd = process.cwd()) {
   try {
     return normalizeAppVersion(
-      execFileSync('git', ['describe', '--tags', '--abbrev=0'], {
+      execFileSync('git', ['describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*'], {
+        cwd,
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],
       }),

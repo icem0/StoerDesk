@@ -7,8 +7,8 @@
 // `.husky/pre-commit` runs this after lint. The post-commit hook tags exactly this
 // value, so the version is part of the commit and survives an image build without
 // `.git` (Docker, deployment panels). Do not edit `VERSION` by hand.
-// Ohne `STOERDESK_VERSION` wird der nächste Patch-Release von der höchsten
-// `vMAJOR.MINOR.PATCH`-Tag abgeleitet.
+// Without `STOERDESK_VERSION` the next patch release is derived from the highest
+// `vMAJOR.MINOR.PATCH` tag.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, writeFileSync } from 'node:fs'

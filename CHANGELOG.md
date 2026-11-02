@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The version of the web shell reads the nearest **version** tag only. A moving pointer
+  tag such as `latest` is not a version and must neither become the version in the
+  header nor break the quality gate: the check run of the release `v0.1.0` failed
+  because `git describe` answered `latest` instead of the version tag.
 - The promotion of the `latest` image tag runs in a job of its own and the promotions of
   one image are serialised (concurrency group `latest-<image>`). Without that, two
   parallel publish runs could write `latest` in the wrong order and move it back to an

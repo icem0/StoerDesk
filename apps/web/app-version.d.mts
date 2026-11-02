@@ -2,7 +2,7 @@ export declare function normalizeAppVersion(value: unknown): string | null
 
 export declare function versionFileAppVersion(...searchDirs: string[]): string | null
 
-export declare function gitVersion(): string | null
+export declare function gitVersion(cwd?: string): string | null
 
 export declare function resolveAppVersion(
   configured: string | undefined,

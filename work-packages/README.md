@@ -174,6 +174,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
 | WP-M1-21  | serialised promotion of `latest`                        | done                    | yes     |
+| WP-M1-22  | the app version reads version tags only                   | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -342,6 +343,7 @@ commit gets its own run; the hint of the post-commit hook points to it.
 `WP-M1-20` is done — `AGENTS.md`, `PLAN.md` §18.3 and `CONTRIBUTING.md` name
 `npm run release:push` instead of `git push --follow-tags` and carry the rule "one tag per
 push" with the GitHub limitation behind it.
+`WP-M1-22` is done — the check run of the release `v0.1.0` was red: the fallback of the app version read the nearest tag with `git describe --tags --abbrev=0`, and the moving pointer tag `latest` won over the version tag. The fallback now describes the version tags only (`--match 'v[0-9]*'`), so a pointer tag can neither become the version in the shell nor break the gate.
 `WP-M1-21` is done — the promotion of `latest` moves into a job of its own, and the
 promotions of one image are serialised by the concurrency group `latest-<image>`. Two
 promotions of the same image therefore never interleave: without the group the older run

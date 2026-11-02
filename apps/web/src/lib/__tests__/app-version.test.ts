@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,6 +11,23 @@ import {
   resolveAppVersion,
   versionFileAppVersion,
 } from '../../../app-version.mjs'
+
+/** A throwaway repository with a version tag and a moving pointer tag. */
+function repositoryWithPointerTag(): string {
+  const dir = mkdtempSync(join(tmpdir(), 'stoerdesk-app-version-git-'))
+  const git = (args: string[]) => execFileSync('git', args, { cwd: dir })
+
+  git(['init', '--quiet'])
+  git(['config', 'user.email', 'test@example.org'])
+  git(['config', 'user.name', 'Test'])
+  writeFileSync(join(dir, 'file.txt'), 'content\n')
+  git(['add', '.'])
+  git(['commit', '--quiet', '-m', 'init'])
+  git(['tag', '-a', 'v1.2.3', '-m', 'v1.2.3'])
+  git(['tag', '-a', 'latest', '-m', 'latest'])
+
+  return dir
+}
 
 describe('app-version', () => {
   it('accepts the development version as-is', () => {
@@ -51,6 +69,12 @@ describe('app-version', () => {
         versionFileDirs: [mkdtempSync(join(tmpdir(), 'stoerdesk-app-version-empty-'))],
       }),
     ).toBe('v0.0.93')
+  })
+
+  it('ignores a moving pointer tag and answers the nearest version tag', () => {
+    // A release pointer such as `latest` is not a version: it must never become
+    // the version of the shell.
+    expect(gitVersion(repositoryWithPointerTag())).toBe('v1.2.3')
   })
 
   it('returns null when no source carries a version', () => {
