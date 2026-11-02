@@ -198,5 +198,44 @@
       "view": "Anzeigen",
       "create": "Neue Meldung"
     }
+  },
+  "detail": {
+    "title": "Meldung {{ticketNo}}",
+    "subtitle": "Objekt {{object}}",
+    "loading": "Meldung wird geladen …",
+    "back": "Zurück zur Liste",
+    "actions": "Aktionen",
+    "errors": {
+      "notFound": "Meldung nicht gefunden."
+    },
+    "header": "Vorgang",
+    "field": {
+      "object": "Objekt",
+      "objectNo": "Objektnummer",
+      "status": "Status",
+      "priority": "Priorität",
+      "source": "Quelle",
+      "reportedAt": "Gemeldet am",
+      "deadlineAt": "Frist bis",
+      "reporterName": "Melder Name",
+      "reporterPhone": "Telefon",
+      "reporterEmail": "E-Mail",
+      "title": "Titel",
+      "description": "Beschreibung",
+      "faults": "Störungsarten"
+    },
+    "history": "Verlauf",
+    "historyEmpty": "Keine Ereignisse.",
+    "photos": {
+      "title": "Fotos",
+      "sizeKB": "{{size}} kB"
+    },
+    "action": {
+      "review": "In Prüfung setzen",
+      "assign": "Zuweisen",
+      "accept": "Annehmen",
+      "acknowledge": "Quittieren",
+      "close": "Schließen"
+    }
   }
 }

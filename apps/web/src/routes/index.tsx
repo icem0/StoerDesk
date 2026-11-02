@@ -10,6 +10,7 @@ import { ObjectCreatePage } from '../features/objects/object-create-page'
 import { ObjectEditPage } from '../features/objects/object-edit-page'
 import { InternalCreatePage } from '../features/tickets/internal-create-page'
 import { TicketListPage } from '../features/tickets/ticket-list-page'
+import { TicketDetailPage } from '../features/tickets/ticket-detail-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
 
@@ -79,6 +80,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <TicketListPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/tickets/:ticketNo',
+        element: (
+          <RequireSession>
+            <TicketDetailPage />
           </RequireSession>
         ),
       },

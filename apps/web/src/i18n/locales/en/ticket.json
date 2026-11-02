@@ -198,5 +198,44 @@
       "view": "View",
       "create": "New report"
     }
+  },
+  "detail": {
+    "title": "Ticket {{ticketNo}}",
+    "subtitle": "Object {{object}}",
+    "loading": "Loading ticket …",
+    "back": "Back to list",
+    "actions": "Actions",
+    "errors": {
+      "notFound": "Ticket not found."
+    },
+    "header": "Ticket",
+    "field": {
+      "object": "Object",
+      "objectNo": "Object no.",
+      "status": "Status",
+      "priority": "Priority",
+      "source": "Source",
+      "reportedAt": "Reported at",
+      "deadlineAt": "Deadline",
+      "reporterName": "Reporter name",
+      "reporterPhone": "Phone",
+      "reporterEmail": "E‑mail",
+      "title": "Title",
+      "description": "Description",
+      "faults": "Fault types"
+    },
+    "history": "History",
+    "historyEmpty": "No events.",
+    "photos": {
+      "title": "Photos",
+      "sizeKB": "{{size}} kB"
+    },
+    "action": {
+      "review": "Set in review",
+      "assign": "Assign",
+      "accept": "Accept",
+      "acknowledge": "Acknowledge",
+      "close": "Close"
+    }
   }
 }
