@@ -2,10 +2,13 @@
 // Writes the next development version into the tracked `VERSION` file and stages it.
 //
 //   node scripts/version-file.mjs
+//   STOERDESK_VERSION=v1.2.3 node scripts/version-file.mjs   // explicit release version
 //
 // `.husky/pre-commit` runs this after lint. The post-commit hook tags exactly this
 // value, so the version is part of the commit and survives an image build without
 // `.git` (Docker, deployment panels). Do not edit `VERSION` by hand.
+// Ohne `STOERDESK_VERSION` wird der nächste Patch-Release von der höchsten
+// `vMAJOR.MINOR.PATCH`-Tag abgeleitet.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, writeFileSync } from 'node:fs'
@@ -54,7 +57,17 @@ function main() {
     return
   }
 
-  const version = nextVersion(latestVersion())
+  const explicit = process.env.STOERDESK_VERSION
+  let version
+
+  if (explicit !== undefined) {
+    if (!/^v\d+\.\d+\.\d+$/.test(explicit)) {
+      throw new Error(`STOERDESK_VERSION='${explicit}' is not a vMAJOR.MINOR.PATCH version`)
+    }
+    version = explicit
+  } else {
+    version = nextVersion(latestVersion())
+  }
 
   writeFileSync(versionPath, `${version}\n`)
   git(['add', 'VERSION'])
