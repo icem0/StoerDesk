@@ -232,10 +232,22 @@
     },
     "action": {
       "review": "In Prüfung setzen",
+      "workOrder": "Auftrag anlegen",
       "assign": "Zuweisen",
+      "offer": "Anbieten",
       "accept": "Annehmen",
+      "decline": "Ablehnen",
       "acknowledge": "Quittieren",
-      "close": "Schließen"
+      "close": "Schließen",
+      "reopen": "Wieder eröffnen",
+      "cancel": "Stornieren"
+    },
+    "prompt": {
+      "workOrderType": "Auftragsart (z. B. AA):",
+      "workOrderNumber": "Auftragsnummer:",
+      "declineReason": "Ablehnungsgrund (mind. 5 Zeichen):",
+      "reopenReason": "Wiedereröffnungsgrund (mind. 5 Zeichen):",
+      "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):"
     }
   }
 }

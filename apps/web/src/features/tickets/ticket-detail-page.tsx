@@ -7,13 +7,13 @@ import type { TicketDetailResponse } from '@stoerdesk/shared'
 import { apiFetch } from '../../lib/api'
 
 /**
- * Ticket detail page (`PLAN.md` §14, WP-M2-18b).
+ * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d).
  *
  * Loads `GET /api/v1/tickets/:ticketNo` and renders the ticket header (number,
  * object, status badge, priority badge, times), the append-only event history as a
  * timeline, and the photo list. Action buttons (review, assign, accept,
- * acknowledge, close) are disabled placeholders until phase 4 (transitionTicket,
- * WP-M2-19).
+ * acknowledge, close) call the matching POST endpoint of WP-M2-19c and refetch
+ * the ticket on success.
  */
 
 const STATUS_LABELS: Record<string, string> = {
@@ -67,6 +67,23 @@ export function TicketDetailPage() {
   const [showActions, setShowActions] = useState(false)
 
   const ticketQuery = useTicket(ticketNo)
+
+  async function handleAction(event: string, body?: Record<string, unknown>) {
+    if (ticketNo === undefined) return
+
+    try {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}/${event}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined,
+      })
+      void ticketQuery.refetch()
+      setShowActions(false)
+    } catch (error) {
+      const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
+      alert(err.code ?? 'Action failed')
+    }
+  }
 
   if (ticketQuery.isPending) {
     return <p className="text-slate-400">{t('detail.loading')}</p>
@@ -138,9 +155,7 @@ export function TicketDetailPage() {
             <div className="col-span-full">
               <dt className="text-xs text-slate-500">{t('detail.field.priority')}</dt>
               <dd className="text-sm">
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${'bg-slate-900/30 text-slate-300'}`}
-                >
+                <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
                   {PRIORITY_LABELS[ticket.priority] ?? ticket.priority}
                 </span>
               </dd>
@@ -228,12 +243,10 @@ export function TicketDetailPage() {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-slate-200">
-                    {event.type}
-                  </div>
+                  <div className="text-sm font-medium text-slate-200">{event.type}</div>
                   <div className="text-xs text-slate-400">
-                    {event.actorKind}{' '}
-                    {event.actorName !== null ? `(${event.actorName})` : ''}
+                    {event.actorKind}
+                    {event.actorName !== null ? ` (${event.actorName})` : ''}
                   </div>
                 </div>
               </div>
@@ -261,42 +274,102 @@ export function TicketDetailPage() {
       )}
 
       {showActions && (
-        <div className="col-span-full flex gap-2">
-          <button
-            className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-400 disabled:opacity-30"
-            disabled
-            type="button"
-          >
-            {t('detail.action.review')}
-          </button>
-          <button
-            className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-400 disabled:opacity-30"
-            disabled
-            type="button"
-          >
-            {t('detail.action.assign')}
-          </button>
-          <button
-            className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-400 disabled:opacity-30"
-            disabled
-            type="button"
-          >
-            {t('detail.action.accept')}
-          </button>
-          <button
-            className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-400 disabled:opacity-30"
-            disabled
-            type="button"
-          >
-            {t('detail.action.acknowledge')}
-          </button>
-          <button
-            className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-400 disabled:opacity-30"
-            disabled
-            type="button"
-          >
-            {t('detail.action.close')}
-          </button>
+        <div className="col-span-full flex flex-wrap gap-2">
+          {(() => {
+            const status = ticket.status
+
+            const actionBtn = (labelKey: string, event: string, color = 'slate-700') => (
+              <button
+                key={event}
+                className={`rounded bg-${color} px-4 py-2 text-sm text-slate-200 hover:bg-${color === 'slate-700' ? 'slate-600' : color === 'sky-600' ? 'sky-500' : 'rose-600'}`}
+                type="button"
+                onClick={() => void handleAction(event)}
+              >
+                {t(`detail.action.${labelKey}`)}
+              </button>
+            )
+
+            const buttons = []
+
+            if (status === 'NEW') {
+              buttons.push(actionBtn('review', 'review_started'))
+            } else if (status === 'IN_REVIEW') {
+              buttons.push(
+                <button
+                  key="work_order"
+                  className="rounded bg-sky-600 px-4 py-2 text-sm text-slate-200 hover:bg-sky-500"
+                  type="button"
+                  onClick={() => {
+                    const type = window.prompt(t('detail.prompt.workOrderType'))
+                    const number = window.prompt(t('detail.prompt.workOrderNumber'))
+                    if (type !== null && number !== null) {
+                      void handleAction('work_order_set', { type: type.trim(), number: number.trim() })
+                    }
+                  }}
+                >
+                  {t('detail.action.workOrder')}
+                </button>
+              )
+            } else if (status === 'WORK_ORDER_CREATED') {
+              buttons.push(actionBtn('assign', 'assigned'))
+              buttons.push(actionBtn('offer', 'offered', 'purple-600'))
+            } else if (status === 'OFFERED' || status === 'ASSIGNED') {
+              buttons.push(actionBtn('accept', 'accepted', 'emerald-600'))
+              buttons.push(
+                <button
+                  key="decline"
+                  className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
+                  type="button"
+                  onClick={() => {
+                    const reason = window.prompt(t('detail.prompt.declineReason'))
+                    if (reason !== null && reason.trim() !== '') {
+                      void handleAction('declined', { reason: reason.trim() })
+                    }
+                  }}
+                >
+                  {t('detail.action.decline')}
+                </button>
+              )
+            } else if (status === 'ACCEPTED') {
+              buttons.push(actionBtn('acknowledge', 'acknowledged', 'emerald-600'))
+            } else if (status === 'ACKNOWLEDGED') {
+              buttons.push(actionBtn('close', 'closed'))
+            } else if (status === 'CLOSED') {
+              buttons.push(
+                <button
+                  key="reopen"
+                  className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
+                  type="button"
+                  onClick={() => {
+                    const reason = window.prompt(t('detail.prompt.reopenReason'))
+                    if (reason !== null && reason.trim() !== '') {
+                      void handleAction('reopened', { reason: reason.trim() })
+                    }
+                  }}
+                >
+                  {t('detail.action.reopen')}
+                </button>
+              )
+            }
+
+            buttons.push(
+              <button
+                key="cancel"
+                className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
+                type="button"
+                onClick={() => {
+                  const reason = window.prompt(t('detail.prompt.cancelReason'))
+                  if (reason !== null && reason.trim() !== '') {
+                    void handleAction('cancelled', { reason: reason.trim() })
+                  }
+                }}
+              >
+                {t('detail.action.cancel')}
+              </button>
+            )
+
+            return buttons
+          })()}
         </div>
       )}
     </section>
