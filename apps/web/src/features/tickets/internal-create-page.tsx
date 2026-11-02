@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -12,21 +12,33 @@ import { apiFetch } from '../../lib/api'
 /**
  * Internal ticket creation page (`PLAN.md` §7 rule 1, WP-M2-16).
  *
- * Staff form: choose an object (and optional system), enter title / description,
- * pick fault template keys and priority, add contact fields, then POST to
- * `/api/v1/tickets`. The server enforces `ticket.create` permission.
+ * Staff form: choose an object (full-text search over object number, name and
+ * address, debounced against `GET /v1/objects?search=`), pick an optional system,
+ * enter title / description, pick fault template keys and priority, add contact
+ * fields, then POST to `/api/v1/tickets`. The server enforces `ticket.create`.
+ * The object is identified by its UUID `id`, not by `objectNo`, so the server
+ * lookup in `createInternalTicket` resolves.
  */
 
 type ObjectOption = {
+  id: string
   objectNo: string
   name: string
   systems: { id: string; type: string; label: string }[]
 }
 
-function useObjects() {
+function useObjects(search: string) {
   return useQuery<{ objects: ObjectOption[] }>({
-    queryKey: ['objects', 'internal-picker'],
-    queryFn: () => apiFetch<{ objects: ObjectOption[] }>('/v1/objects?active=true'),
+    queryKey: ['objects', 'internal-picker', search],
+    queryFn: () => {
+      const params = new URLSearchParams({ active: 'true' })
+
+      if (search.trim() !== '') {
+        params.set('search', search.trim())
+      }
+
+      return apiFetch<{ objects: ObjectOption[] }>(`/v1/objects?${params.toString()}`)
+    },
     retry: false,
   })
 }
@@ -35,8 +47,10 @@ export function InternalCreatePage() {
   const { t } = useTranslation('ticket')
   const navigate = useNavigate()
 
-  const objectsQuery = useObjects()
-  const [objectId, setObjectId] = useState('')
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [selectedObjectId, setSelectedObjectId] = useState('')
+  const [pickedObject, setPickedObject] = useState<ObjectOption | undefined>(undefined)
   const [systemId, setSystemId] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -48,14 +62,28 @@ export function InternalCreatePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Debounce the search so the object list API is not hit on every keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 150)
+
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const objectsQuery = useObjects(debouncedSearch)
+
   const objects = objectsQuery.data?.objects ?? []
-  const selectedObject = objects.find((o) => o.objectNo === objectId)
-  const systems = selectedObject?.systems ?? []
+  const systems = pickedObject?.systems ?? []
 
   function toggleFaultKey(key: string) {
     setFaultKeys((current) =>
       current.includes(key) ? current.filter((k) => k !== key) : [...current, key],
     )
+  }
+
+  function pickObject(object: ObjectOption) {
+    setPickedObject(object)
+    setSelectedObjectId(object.id)
+    setSystemId('')
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -65,7 +93,7 @@ export function InternalCreatePage() {
 
     try {
       const payload: InternalCreateTicketRequest = {
-        objectId,
+        objectId: selectedObjectId,
         systemId: systemId || undefined,
         title: title || undefined,
         description: description || undefined,
@@ -108,7 +136,7 @@ export function InternalCreatePage() {
     return <p className="text-slate-400">{t('internal.loading')}</p>
   }
 
-  if (objectsQuery.isError || objects.length === 0) {
+  if (objectsQuery.isError) {
     return <p className="text-rose-400 text-sm" role="alert">{t('internal.errors.noObjects')}</p>
   }
 
@@ -137,22 +165,43 @@ export function InternalCreatePage() {
           <label className="text-sm font-medium text-slate-200">
             {t('internal.create.fields.object')}
           </label>
-          <select
+          <input
             className="rounded bg-slate-900 p-2 text-slate-100"
-            value={objectId}
-            onChange={(event) => setObjectId(event.target.value)}
-            required
-          >
-            <option value="">{t('internal.create.fields.objectPlaceholder')}</option>
-            {objects.map((o) => (
-              <option key={o.objectNo} value={o.objectNo}>
-                {o.objectNo} — {o.name}
-              </option>
-            ))}
-          </select>
+            type="search"
+            placeholder={t('internal.create.fields.objectSearchPlaceholder')}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          {search.trim() !== '' ? (
+            <div className="flex flex-col gap-1 border border-slate-700 rounded bg-slate-900/80">
+              {objects.length === 0 ? (
+                <div className="p-2 text-xs text-slate-400">
+                  {t('internal.create.errors.noMatch')}
+                </div>
+              ) : (
+                objects.map((object) => (
+                  <button
+                    key={object.id}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                    type="button"
+                    onClick={() => pickObject(object)}
+                  >
+                    <span className="font-mono text-slate-400">{object.objectNo}</span>
+                    <span>{object.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : null}
+          {pickedObject !== undefined ? (
+            <p className="text-xs text-slate-400">
+              <span className="font-mono">{pickedObject.objectNo}</span>{' — '}
+              {pickedObject.name}
+            </p>
+          ) : null}
         </div>
 
-        {selectedObject !== undefined && (
+        {pickedObject !== undefined && (
           <div className="flex flex-col gap-2 col-span-full">
             <label className="text-sm font-medium text-slate-200">
               {t('internal.create.fields.system')}
@@ -273,7 +322,7 @@ export function InternalCreatePage() {
           <button
             className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             type="submit"
-            disabled={submitting || objectId === ''}
+            disabled={submitting || selectedObjectId === ''}
           >
             {submitting ? t('internal.create.submitting') : t('internal.create.submit')}
           </button>

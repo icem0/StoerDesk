@@ -119,6 +119,7 @@
       "submitting": "Wird erstellt …",
       "fields": {
         "object": "Objekt",
+        "objectSearchPlaceholder": "Objekt suchen (Nummer, Name, Adresse)",
         "objectPlaceholder": "Objekt auswählen",
         "system": "Anlage",
         "systemPlaceholder": "keine Auswahl",
@@ -141,6 +142,7 @@
       "errors": {
         "systemNotFound": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
         "invalidRequest": "Bitte prüfen Sie die Eingaben.",
+        "noMatch": "Kein passendes Objekt gefunden.",
         "noObjects": "Keine Objekte verfügbar. Legen Sie zuerst ein Objekt an.",
         "unknown": "Die Meldung konnte nicht erstellt werden."
       }
