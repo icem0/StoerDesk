@@ -142,6 +142,9 @@
       "errors": {
         "systemNotFound": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
         "invalidRequest": "Bitte prüfen Sie die Eingaben.",
+        "objectNotFound": "Dieses Objekt existiert nicht mehr. Bitte wählen Sie ein anderes Objekt.",
+        "sessionInvalid": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+        "ticketCreateFailed": "Die Meldung konnte technisch nicht angelegt werden. Bitte versuchen Sie es später erneut.",
         "noMatch": "Kein passendes Objekt gefunden.",
         "noObjects": "Keine Objekte verfügbar. Legen Sie zuerst ein Objekt an.",
         "unknown": "Die Meldung konnte nicht erstellt werden."
