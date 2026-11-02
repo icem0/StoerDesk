@@ -16,6 +16,7 @@ import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
+import { publicDuplicateRoutes } from './tickets/duplicates'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
 
@@ -99,6 +100,7 @@ export async function buildServer() {
     maxNumber: env.ALTCHA_MAX_NUMBER,
   })
   await app.register(publicStatusRoutes, { database })
+  await app.register(publicDuplicateRoutes, { database })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
   // or production (`specs/01-rbac.md` §3.7).

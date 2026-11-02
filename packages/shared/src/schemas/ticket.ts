@@ -80,6 +80,12 @@ export const publicReportRequestSchema = z.object({
   website: z.string().optional(),
   /** Proof of work only asked for a suspicious report (§7.6, WP-M2-07c). */
   verification: altchaVerificationSchema.optional(),
+  /**
+   * The open ticket this report duplicates (`specs/06-report-form.md` §7.8.3,
+   * WP-M2-08): the server accepts it only for a ticket of the same object and
+   * stores it in `tickets.parent_ticket_id`.
+   */
+  parentTicketId: z.uuid().optional(),
 })
 
 export const publicReportResponseSchema = z.object({
@@ -145,3 +151,80 @@ export const publicTicketStatusResponseSchema = z.object({
 
 export type PublicTicketEvent = z.infer<typeof publicTicketEventSchema>
 export type PublicTicketStatus = z.infer<typeof publicTicketStatusResponseSchema>
+
+/**
+ * Open tickets of an object (`specs/06-report-form.md` §7.8.1, WP-M2-08).
+ *
+ * "Open" is every status of the workflow of `PLAN.md` §7 except `CLOSED` and
+ * `CANCELLED`: a ticket stays open from the report until the office closes it.
+ */
+export const OPEN_TICKET_STATUSES = [
+  'NEW',
+  'IN_REVIEW',
+  'WORK_ORDER_CREATED',
+  'OFFERED',
+  'ASSIGNED',
+  'ACCEPTED',
+  'ACKNOWLEDGED',
+] as const
+
+export type OpenTicketStatus = (typeof OPEN_TICKET_STATUSES)[number]
+
+export function isOpenTicketStatus(status: string): status is OpenTicketStatus {
+  return (OPEN_TICKET_STATUSES as readonly string[]).includes(status)
+}
+
+/**
+ * The duplicate hint (`specs/06-report-form.md` §7.8.1): the current QR token of
+ * an active object resolves the object, `systemId` narrows the answer to one
+ * system. The answer carries no description, no contact data and no
+ * `status_token` — the hint shows number, status and time.
+ */
+export const publicOpenTicketsQuerySchema = z.object({
+  qrToken: qrTokenSchema,
+  systemId: z.uuid().optional(),
+})
+
+export const publicOpenTicketSchema = z.object({
+  ticketId: z.uuid(),
+  ticketNo: z.string(),
+  status: ticketStatusSchema,
+  reportedAt: z.iso.datetime(),
+})
+
+export const publicOpenTicketsResponseSchema = z.object({
+  tickets: z.array(publicOpenTicketSchema),
+})
+
+/**
+ * The public comment of the duplicate hint (`specs/06-report-form.md` §7.8.2):
+ * the **QR token of the object** is the capability, so the server can check that
+ * the ticket belongs to the object of the token. At least one of `text` and
+ * `faultTemplateKeys` is required, exactly as in the report of §7.3.
+ */
+export const publicTicketCommentRequestSchema = z.object({
+  qrToken: qrTokenSchema,
+  text: trimmedText(2000),
+  faultTemplateKeys: z
+    .array(faultTemplateKeySchema)
+    .max(9)
+    .default([])
+    .refine((keys) => new Set(keys).size === keys.length),
+  contact: publicReportContactSchema.default({
+    name: undefined,
+    phone: undefined,
+    email: undefined,
+  }),
+  locale: z.enum(['de', 'en']).default('de'),
+})
+
+export const publicTicketCommentResponseSchema = z.object({
+  ticketNo: z.string(),
+  at: z.iso.datetime(),
+})
+
+export type PublicOpenTicket = z.infer<typeof publicOpenTicketSchema>
+export type PublicOpenTickets = z.infer<typeof publicOpenTicketsResponseSchema>
+export type PublicTicketCommentRequest = z.infer<typeof publicTicketCommentRequestSchema>
+export type PublicTicketComment = z.infer<typeof publicTicketCommentResponseSchema>
+

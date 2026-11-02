@@ -6,7 +6,7 @@ import { I18nextProvider } from 'react-i18next'
 
 import { i18n } from '../../../i18n'
 import { ReportFormPage } from '../report-form-page'
-import type { PublicReport, QrResolveResponse } from '@stoerdesk/shared'
+import type { PublicOpenTicket, PublicReport, QrResolveResponse } from '@stoerdesk/shared'
 
 // The Altcha widget is a web component of a third-party package — the unit test
 // drives its `verified` event instead of solving a proof of work in jsdom.
@@ -69,7 +69,19 @@ const REPORT: PublicReport = {
   photoCount: 0,
 }
 
-function stubPublicApi(createStatus = 201, createBody: unknown = REPORT) {
+/** An open ticket of the object — the duplicate hint of §7.8 shows it. */
+const OPEN_TICKET: PublicOpenTicket = {
+  ticketId: '44444444-4444-4444-8444-444444444444',
+  ticketNo: 'ST-2026-0041',
+  status: 'ASSIGNED',
+  reportedAt: '2026-10-30T07:30:00.000Z',
+}
+
+function stubPublicApi(
+  createStatus = 201,
+  createBody: unknown = REPORT,
+  openTickets: PublicOpenTicket[] = [],
+) {
   const bodies: Record<string, unknown>[] = []
 
   vi.stubGlobal(
@@ -79,6 +91,11 @@ function stubPublicApi(createStatus = 201, createBody: unknown = REPORT) {
 
       if (path.includes('/public/qr/')) {
         return Response.json(RESOLVE)
+      }
+
+      // The duplicate hint of §7.8.1 — the open tickets of the object.
+      if (path.includes('/public/tickets/open')) {
+        return Response.json({ tickets: openTickets })
       }
 
       if (path.includes('/public/tickets')) {
@@ -377,6 +394,90 @@ describe('ReportFormPage', () => {
       signature: CHALLENGE.signature,
       number: SOLVED.number,
     })
+    expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
+  })
+
+  it('shows no duplicate hint when the object has no open ticket', async () => {
+    stubPublicApi()
+    await openForm()
+
+    await waitFor(() =>
+      expect(
+        vi
+          .mocked(globalThis.fetch)
+          .mock.calls.some((call) => String(call[0]).includes('/public/tickets/open')),
+      ).toBe(true),
+    )
+    expect(screen.queryByTestId('duplicate-hint')).toBeNull()
+  })
+
+  it('shows the duplicate hint and adds the text to the open ticket', async () => {
+    const comments: Record<string, unknown>[] = []
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input)
+
+        if (path.includes('/public/qr/')) {
+          return Response.json(RESOLVE)
+        }
+
+        if (path.includes('/public/tickets/open')) {
+          return Response.json({ tickets: [OPEN_TICKET] })
+        }
+
+        if (path.includes('/comments')) {
+          comments.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+
+          return Response.json(
+            { ticketNo: OPEN_TICKET.ticketNo, at: '2026-11-02T09:00:00.000Z' },
+            { status: 201 },
+          )
+        }
+
+        throw new Error(`unexpected request ${path}`)
+      }),
+    )
+
+    await openForm()
+
+    expect(await screen.findByTestId('duplicate-hint')).toBeTruthy()
+    expect(screen.getByText(/ST-2026-0041/)).toBeTruthy()
+    // The hint is a notice — the send button of the form stays the way to report.
+    expect(screen.getByRole('button', { name: 'Störung melden' })).toBeTruthy()
+
+    fillReport(
+      'Rauchmelder defekt oder verschmutzt',
+      'Die Störung besteht weiterhin.',
+      '030 123456',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Ergänzen' }))
+
+    await waitFor(() => expect(comments).toHaveLength(1))
+    expect(comments[0]?.qrToken).toBe(CURRENT_TOKEN)
+    expect(comments[0]?.text).toBe('Die Störung besteht weiterhin.')
+    expect(comments[0]?.faultTemplateKeys).toEqual(['bma.smoke_detector_fault'])
+    expect(comments[0]?.locale).toBe('de')
+
+    expect(await screen.findByTestId('duplicate-comment-done')).toBeTruthy()
+    expect(
+      screen.getByText('Ihre Ergänzung wurde der Meldung ST-2026-0041 hinzugefügt.'),
+    ).toBeTruthy()
+  })
+
+  it('reports anyway and links the open ticket as the parent', async () => {
+    const bodies = stubPublicApi(201, REPORT, [OPEN_TICKET])
+
+    await openForm()
+    expect(await screen.findByTestId('duplicate-hint')).toBeTruthy()
+
+    fillReport('Rauchmelder defekt oder verschmutzt', 'Zweite Meldung.', '030 123456')
+    fireEvent.click(screen.getByRole('button', { name: 'Trotzdem neu melden' }))
+
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    // §7.8.3: the new report points at the open ticket of the object.
+    expect(bodies[0]?.parentTicketId).toBe(OPEN_TICKET.ticketId)
     expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
   })
 })

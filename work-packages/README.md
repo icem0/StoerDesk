@@ -12,8 +12,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | Directory | Content                                                                       | WPs |
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 27  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 17  |
+| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 35  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 20  |
 
 `m0` uses the small-model format (`format: small-model`), and so do `WP-M1-05`,
 `WP-M1-06`, `WP-M1-07`, `WP-M1-07b`, `WP-M1-08`, `WP-M1-09`, `WP-M1-09b`, `WP-M1-09c`,
@@ -169,6 +169,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-07b | Altcha captcha API primitives                           | done                    | yes     |
 | WP-M2-07c | spam decision on the report create path                 | done                    | yes     |
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | done                    | yes     |
+| WP-M2-08  | duplicate hint: open tickets and public comment        | done                    | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
@@ -313,6 +314,16 @@ public form and the Altcha widget that appears only after a `400 captcha_require
 challenge is fetched from `POST /api/v1/public/altcha/challenge`, the solved proof of work
 travels back in the `verification` field of the next attempt, and the widget itself is loaded
 on demand — a reporter of a normal report never sees a captcha.
+`WP-M2-08` is done — it is the duplicate hint of `specs/06-report-form.md` §7.8 and it
+was implemented in **one** package, without a split into `08a`/`08b`: the open tickets of
+the object come from `GET /api/v1/public/tickets/open` (the current QR token of an active
+object, closed, cancelled and suspected spam tickets stay hidden), and
+`POST /api/v1/public/tickets/:ticketNo/comments` appends the text of the reporter to an
+open ticket of that object as one append-only `comment` event — the QR token of the object
+is the capability, so the `status_token` of a foreign ticket is never handed out. The
+public form shows the hint with one "Ergänzen" button per open ticket and one "Trotzdem
+neu melden" button, and every new report of an object with an open ticket carries the
+`parentTicketId` of the oldest open ticket in `tickets.parent_ticket_id`.
 `WP-M1-18` is done — it repairs the publish chain of the GitHub Actions. All publish runs
 shared the concurrency group `publish-queue`; GitHub keeps only one pending run per group and
 cancels the previous pending one, so a queued publish run disappeared without publishing its

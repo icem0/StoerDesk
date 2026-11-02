@@ -2,6 +2,7 @@ import { and, count, eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
+  isOpenTicketStatus,
   publicReportRequestSchema,
   publicReportResponseSchema,
   type PublicReport,
@@ -146,6 +147,27 @@ export async function createPublicReport(
     })
   }
 
+  // §7.8.3: the duplicate hint of WP-M2-08. An unknown or foreign parent is a
+  // client error; a parent of the same object that was closed in the meantime is
+  // ignored — the report is still created, a race is not the reporter's fault.
+  let parentTicketId: string | null = null
+
+  if (input.parentTicketId !== undefined) {
+    const [parent] = await database
+      .select({ id: tickets.id, objectId: tickets.objectId, status: tickets.status })
+      .from(tickets)
+      .where(eq(tickets.id, input.parentTicketId))
+      .limit(1)
+
+    if (parent === undefined || parent.objectId !== object.id) {
+      throw new ReportRouteError(422, 'duplicate_parent_invalid', {
+        fields: ['parentTicketId'],
+      })
+    }
+
+    parentTicketId = isOpenTicketStatus(parent.status) ? parent.id : null
+  }
+
   if (input.contact.phone === undefined && input.contact.email === undefined) {
     throw new ReportRouteError(422, 'contact_required', {
       fields: ['contact.phone', 'contact.email'],
@@ -202,6 +224,7 @@ export async function createPublicReport(
     clientUuid: input.clientUuid,
     statusToken: generateQrToken(),
     suspectedSpam,
+    parentTicketId,
     ...times,
   }
 

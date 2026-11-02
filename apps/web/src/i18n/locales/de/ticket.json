@@ -33,6 +33,17 @@
     "spam": {
       "captcha": "Spam-Schutz: Bitte bestätigen, dass Sie kein Roboter sind."
     },
+    "duplicate": {
+      "title": "Zu diesem Objekt ist bereits eine Meldung offen.",
+      "hint": "Bitte ergänzen Sie die offene Meldung oder melden Sie die Störung trotzdem als neue Meldung.",
+      "ticket": "{{ticketNo}} · gemeldet am {{reportedAt}}",
+      "add": "Ergänzen",
+      "createAnyway": "Trotzdem neu melden",
+      "addedTitle": "Ergänzung gespeichert",
+      "addedLead": "Die offene Meldung wurde ergänzt — es wurde kein neuer Vorgang angelegt.",
+      "added": "Ihre Ergänzung wurde der Meldung {{ticketNo}} hinzugefügt.",
+      "addedAt": "Gespeichert am {{at}}."
+    },
     "emergencyNotice": "Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.",
     "submit": "Störung melden",
     "submitting": "Meldung wird gesendet …",
@@ -54,6 +65,11 @@
       "photo_too_large": "Ein Foto ist zu groß. Bitte ein kleineres Foto auswählen.",
       "photo_type_unsupported": "Dieses Fotoformat wird nicht unterstützt. Bitte ein JPEG- oder PNG-Foto auswählen.",
       "captcha_required": "Diese Meldung wurde als Spam-Verdacht erkannt. Bitte bestätigen Sie den Spam-Schutz und senden Sie die Meldung erneut.",
+      "ticket_not_found": "Diese Meldung existiert nicht (mehr).",
+      "ticket_closed": "Diese Meldung wurde inzwischen geschlossen. Bitte melden Sie die Störung als neue Meldung.",
+      "ticket_object_mismatch": "Diese Meldung gehört zu einem anderen Objekt.",
+      "comment_text_required": "Bitte beschreiben Sie die Störung oder wählen Sie eine Störungsart aus.",
+      "duplicate_parent_invalid": "Die offene Meldung konnte nicht zugeordnet werden. Bitte versuchen Sie es erneut.",
       "unknown": "Die Meldung konnte gerade nicht gesendet werden. Bitte später erneut versuchen."
     },
     "done": {

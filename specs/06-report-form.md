@@ -1,14 +1,16 @@
 # 07 — Report form
 
 **Chapter:** 7
-**Scope:** ~150 lines; filled for WP-M2-04, WP-M2-04b and WP-M2-04c
+**Scope:** ~230 lines; filled for WP-M2-04, WP-M2-04b, WP-M2-04c and WP-M2-08
 **Status:** taken from `PLAN.md` §2 (112 notice), §10 (report form and offline),
 §6 (ticket fields) and §15 (NFR: magic bytes, token entropy, rate limits) and
 reviewed with the product owner on 2026-10-31. Three points were **decided then**,
 because `PLAN.md` left them open: the `ticket_no` format is
 `ST-<year>-<counter>` (§7.3.1), the photos of a report travel as base64 data URLs
 in the JSON body (§7.4), and `status_token` is generated **when the ticket is
-created**, not in WP-M2-06 (§7.3.4).
+created**, not in WP-M2-06 (§7.3.4). §7.8 (the duplicate hint of WP-M2-08) was
+added on 2026-11-02: the **QR token of the object** is the capability of the
+public comment, not the `status_token` of a foreign ticket.
 
 > Tables and columns of this chapter are specified in
 > [`02-data-model.md`](02-data-model.md) §4.8–§4.11; this slice specifies the
@@ -151,6 +153,68 @@ compatible.
 
 ## 7.7 Later packages of this chapter
 
-The duplicate hint (`GET /api/v1/public/tickets/open?…`, `parent_ticket_id`) is
-WP-M2-08, the form itself WP-M2-05, the status page WP-M2-06, the offline outbox
-WP-M2-09.
+The offline outbox is WP-M2-09, the phase 2 exit-criterion E2E is WP-M2-10.
+
+## 7.8 Duplicate hint (WP-M2-08)
+
+Before the report is sent, the form asks whether the object already has an open
+ticket and offers the two answers of `PLAN.md` §10: **"report anyway"** and
+**"add to existing"**.
+
+"Open" is every ticket whose status is neither `CLOSED` nor `CANCELLED` — the
+workflow of `PLAN.md` §7 keeps a ticket open from the report until the office
+closes it.
+
+### 7.8.1 Open tickets of an object
+
+`GET /api/v1/public/tickets/open?qrToken=<token>&systemId=<uuid>` — **no
+authentication**. The **current** QR token of an **active** object resolves the
+object, exactly as in the create path of §7.3; a retired or unknown token
+answers `404 qr_token_not_found`, a `systemId` that does not belong to the
+object answers `422 system_not_found`.
+
+`200` — `{ tickets: [{ ticketId, ticketNo, status, reportedAt }] }`, oldest
+first. The answer never carries a description, a contact, a photo or a
+`status_token`: the hint shows the number, the status and the time.
+
+The filter: without `systemId` every open ticket of the object; with it every
+open ticket **of that system** plus every open ticket of the object **without**
+a system, because a fault of the whole object concerns every system. A ticket
+with `suspected_spam = true` never appears (§7.6).
+
+### 7.8.2 Add to the existing ticket
+
+`POST /api/v1/public/tickets/:ticketNo/comments` — **no authentication**. The
+**capability is the QR token of the object**: the body carries `qrToken`, and
+the server checks that the ticket belongs to the object of that token. The QR
+code is printed on the object, so its holder is the reporter at the object; the
+`status_token` of a foreign ticket is never handed out.
+
+The body: `qrToken` (required), `text` (trimmed, max. 2000, optional),
+`faultTemplateKeys` (array of `text_templates.key`, max. 9, optional),
+`contact` (`name`, `phone`, `email` — all optional), `locale` (`de` | `en`,
+default `de`). At least one of `text` and `faultTemplateKeys` is required.
+
+`201` — `{ ticketNo, at }`. The server writes **one** append-only
+`ticket_events` row: `type = 'comment'`, `actor_kind = 'public'`,
+`actor_user_id = NULL`, `payload = { source: 'duplicate_hint', locale, text,
+faultTemplateKeys, contact }`. An event is never edited (`PLAN.md` §6).
+
+Errors: `400 invalid_request`, `404 qr_token_not_found`, `404 ticket_not_found`
+(unknown number), `422 ticket_closed` (the ticket was closed or cancelled in
+the meantime), `422 ticket_object_mismatch` (the ticket belongs to another
+object), `422 comment_text_required` (neither text nor a fault key).
+
+### 7.8.3 Report anyway
+
+The create endpoint of §7.3 gains the optional field `parentTicketId` (UUID).
+The server accepts it only when it points to a ticket of the **same object**;
+an unknown or foreign ticket answers `422 duplicate_parent_invalid`. A parent
+that belongs to the object but is no longer open is **ignored** — the report is
+still created, because a ticket closed between the hint and the submit is not
+the reporter's fault. The accepted value is stored in `tickets.parent_ticket_id`
+(§4.8), so the office sees that the new ticket duplicates an open one.
+
+The form sends the field for every new report of an object with an open ticket
+and uses the **oldest** open ticket, because that is the report that carries
+the ongoing fault.

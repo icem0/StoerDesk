@@ -638,6 +638,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-07b | Altcha captcha API primitives                | done   |
 | WP-M2-07c | spam decision on the report create path      | done   |
 | WP-M2-07d | honeypot field and Altcha widget (web)       | done   |
+| WP-M2-08  | duplicate hint: open tickets and public comment | done   |
 | WP-M1-18  | publish chain without cancelled runs         | done   |
 | WP-M1-19  | one tag per push for every commit            | done   |
 | WP-M1-20  | the push command in the governance documents | done   |
@@ -747,7 +748,16 @@ suspicious or honeypot report with `tickets.suspected_spam` and answers
 Altcha widget that appears only after a `400 captcha_required` — the challenge is fetched
 from `POST /api/v1/public/altcha/challenge`, the solved proof of work travels back in the
 `verification` field of the next attempt, and the widget is loaded on demand, so a reporter
-of a normal report never sees a captcha.
+of a normal report never sees a captcha. **WP-M2-08** (`08-duplicate-hint.md`) is
+implemented as the duplicate hint of `specs/06-report-form.md` §7.8 in **one** package
+without a split: `GET /api/v1/public/tickets/open` lists the open tickets of the object
+of the current QR token (closed, cancelled and suspected spam tickets stay hidden), and
+`POST /api/v1/public/tickets/:ticketNo/comments` appends the text of the reporter to an
+open ticket of that object as one append-only `comment` event — the **QR token of the
+object is the capability**, so no `status_token` of a foreign ticket is handed out. The
+public form shows the hint with one "Ergänzen" button per open ticket and one "Trotzdem
+neu melden" button, and every new report of an object with an open ticket carries the
+`parentTicketId` of the oldest open ticket in `tickets.parent_ticket_id` (§6).
 
 ## 17. Work package rules for small models
 

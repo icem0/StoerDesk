@@ -33,6 +33,17 @@
     "spam": {
       "captcha": "Spam protection: please confirm that you are not a robot."
     },
+    "duplicate": {
+      "title": "There is already an open report for this object.",
+      "hint": "Please add to the open report or report the malfunction as a new report.",
+      "ticket": "{{ticketNo}} · reported on {{reportedAt}}",
+      "add": "Add to report",
+      "createAnyway": "Report anyway",
+      "addedTitle": "Addition saved",
+      "addedLead": "The open report was extended — no new ticket was created.",
+      "added": "Your addition was added to report {{ticketNo}}.",
+      "addedAt": "Saved at {{at}}."
+    },
     "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call.",
     "submit": "Report malfunction",
     "submitting": "Sending the report …",
@@ -54,6 +65,11 @@
       "photo_too_large": "One photo is too large. Please choose a smaller photo.",
       "photo_type_unsupported": "This photo format is not supported. Please choose a JPEG or PNG photo.",
       "captcha_required": "This report looked like spam. Please confirm the spam protection and send the report again.",
+      "ticket_not_found": "This report does not exist (anymore).",
+      "ticket_closed": "This report has been closed in the meantime. Please report the malfunction as a new report.",
+      "ticket_object_mismatch": "This report belongs to another object.",
+      "comment_text_required": "Please describe the malfunction or choose a fault type.",
+      "duplicate_parent_invalid": "The open report could not be assigned. Please try again.",
       "unknown": "The report could not be sent right now. Please try again later."
     },
     "done": {

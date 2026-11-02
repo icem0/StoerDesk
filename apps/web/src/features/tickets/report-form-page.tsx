@@ -11,10 +11,13 @@ import {
 } from '@stoerdesk/shared'
 import type {
   AltchaVerification,
+  PublicOpenTicket,
+  PublicOpenTickets,
   PublicQrObject,
   PublicReport,
   PublicReportContact,
   PublicReportRequest,
+  PublicTicketComment,
   QrResolveResponse,
   StandardTextLocale,
 } from '@stoerdesk/shared'
@@ -54,6 +57,12 @@ const handledErrorCodes = [
   'photo_too_large',
   'photo_type_unsupported',
   'captcha_required',
+  // The duplicate hint of §7.8 — the open tickets and the comment on them.
+  'ticket_not_found',
+  'ticket_closed',
+  'ticket_object_mismatch',
+  'comment_text_required',
+  'duplicate_parent_invalid',
 ] as const
 
 /**
@@ -125,6 +134,30 @@ function usePublicQr(token: string) {
     queryKey: ['public-qr', token],
     queryFn: () => apiFetch<QrResolveResponse>(`/v1/public/qr/${token}`),
     enabled: qrTokenSchema.safeParse(token).success,
+    retry: false,
+  })
+}
+
+/**
+ * The open tickets of the object (`specs/06-report-form.md` §7.8.1, WP-M2-08).
+ *
+ * The query key carries the chosen system, so the hint follows the selection of
+ * the reporter. The answer of the API never carries a description, a contact
+ * or a `status_token` — only the number, the status and the time.
+ */
+function useOpenTickets(qrToken: string | undefined, systemId: string) {
+  return useQuery({
+    queryKey: ['public-open-tickets', qrToken, systemId],
+    queryFn: () => {
+      const params = new URLSearchParams({ qrToken: qrToken ?? '' })
+
+      if (systemId !== '') {
+        params.set('systemId', systemId)
+      }
+
+      return apiFetch<PublicOpenTickets>(`/v1/public/tickets/open?${params.toString()}`)
+    },
+    enabled: qrToken !== undefined,
     retry: false,
   })
 }
@@ -429,6 +462,108 @@ function Confirmation({ report, locale }: { report: PublicReport; locale: Standa
   )
 }
 
+/**
+ * The duplicate hint of the public form (`specs/06-report-form.md` §7.8, WP-M2-08).
+ *
+ * The plan asks for the two answers of §10: "report anyway" creates a new
+ * ticket, "add to existing" appends the text of the reporter to the open ticket
+ * as a comment event. The hint is a notice, not a blocker: the send button of
+ * the form stays the way to report a malfunction.
+ */
+function DuplicateHint({
+  tickets,
+  locale,
+  onAdd,
+  onCreateAnyway,
+  pending,
+}: {
+  tickets: PublicOpenTicket[]
+  locale: StandardTextLocale
+  onAdd: (ticket: PublicOpenTicket) => void
+  onCreateAnyway: () => void
+  pending: boolean
+}) {
+  const { t } = useTranslation('ticket')
+  const format = (value: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
+      new Date(value),
+    )
+
+  return (
+    <section
+      className="flex flex-col gap-3 rounded-lg border border-amber-700 bg-amber-950/30 p-4"
+      data-testid="duplicate-hint"
+    >
+      <p className="text-sm font-semibold text-amber-200">{t('report.duplicate.title')}</p>
+      <p className="text-sm text-amber-100/80">{t('report.duplicate.hint')}</p>
+
+      <ul className="flex flex-col gap-2">
+        {tickets.map((ticket) => (
+          <li
+            className="flex flex-wrap items-center justify-between gap-2 text-sm"
+            key={ticket.ticketId}
+          >
+            <span className="flex flex-col">
+              <span>
+                {t('report.duplicate.ticket', {
+                  ticketNo: ticket.ticketNo,
+                  reportedAt: format(ticket.reportedAt),
+                })}
+              </span>
+              <span className="text-xs text-amber-100/70">
+                {t(`status.values.${ticket.status}`)}
+              </span>
+            </span>
+            <button
+              className="min-h-11 rounded border border-amber-500 px-3 text-amber-100 disabled:opacity-50"
+              disabled={pending}
+              type="button"
+              onClick={() => onAdd(ticket)}
+            >
+              {t('report.duplicate.add')}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        className="min-h-11 rounded bg-slate-700 px-3 text-slate-100 disabled:opacity-50"
+        disabled={pending}
+        type="button"
+        onClick={onCreateAnyway}
+      >
+        {t('report.duplicate.createAnyway')}
+      </button>
+    </section>
+  )
+}
+
+/** The confirmation of the "add to existing" path — no new ticket was created. */
+function CommentConfirmation({
+  comment,
+  locale,
+}: {
+  comment: PublicTicketComment
+  locale: StandardTextLocale
+}) {
+  const { t } = useTranslation('ticket')
+  const at = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
+    new Date(comment.at),
+  )
+
+  return (
+    <section
+      className="flex flex-col gap-3 rounded-lg border border-emerald-800 bg-emerald-950/40 p-4"
+      data-testid="duplicate-comment-done"
+    >
+      <h1 className="text-xl font-semibold">{t('report.duplicate.addedTitle')}</h1>
+      <p className="text-sm text-slate-300">{t('report.duplicate.addedLead')}</p>
+      <p className="text-lg font-medium">{t('report.duplicate.added', { ticketNo: comment.ticketNo })}</p>
+      <p className="text-sm text-slate-400">{t('report.duplicate.addedAt', { at })}</p>
+    </section>
+  )
+}
+
 export function ReportFormPage() {
   const { t, i18n } = useTranslation('ticket')
   const { token: pathToken } = useParams<{ token: string }>()
@@ -451,6 +586,8 @@ export function ReportFormPage() {
   const [problems, setProblems] = useState<string[]>([])
   const [serverNotice, setServerNotice] = useState<string | undefined>(undefined)
   const [report, setReport] = useState<PublicReport | null>(null)
+  /** The answer of the "add to existing" path (§7.8.2) — no new ticket. */
+  const [comment, setComment] = useState<PublicTicketComment | null>(null)
   const [pending, setPending] = useState(false)
   const { challenge, request: requestChallenge } = useAltchaChallenge()
 
@@ -458,11 +595,39 @@ export function ReportFormPage() {
   const systems = object?.systems ?? []
   const defaultSystemId = systems.length === 1 ? (systems[0]?.id ?? '') : ''
   const selectedSystemId = systemChoice ?? defaultSystemId
+  const openTickets = useOpenTickets(qr.data?.token, selectedSystemId)
+  const openTicketList = openTickets.data?.tickets ?? []
+  /** The oldest open ticket carries the running fault, so it is the parent (§7.8.3). */
+  const duplicateParentId = openTicketList[0]?.ticketId
 
   function toggleFault(key: string) {
     setFaultKeys((current) =>
       current.includes(key) ? current.filter((entry) => entry !== key) : [...current, key],
     )
+  }
+
+  /**
+   * The client mirror of the server rules of §7.3.2 and §7.8.2. The contact is
+   * mandatory for a report and optional for a comment — the office can ask the
+   * reporter of the open ticket instead.
+   */
+  function validate(contactRequired: boolean): string[] {
+    const found: string[] = []
+
+    if (text.trim() === '' && faultKeys.length === 0) {
+      found.push('report.validation.faultOrText')
+    }
+
+    const hasContact =
+      (contact.phone ?? '').trim() !== '' || (contact.email ?? '').trim() !== ''
+
+    if (contactRequired && !hasContact) {
+      found.push('report.validation.contactRequired')
+    } else if (hasContact && !publicReportContactSchema.safeParse(contact).success) {
+      found.push('report.validation.email')
+    }
+
+    return found
   }
 
   /**
@@ -486,6 +651,8 @@ export function ReportFormPage() {
         // §7.6: the honeypot travels with every report, empty for a human.
         website,
         verification: proof,
+        // §7.8.3: a new report of an object with an open ticket points at it.
+        parentTicketId: duplicateParentId,
       }
 
       setProblems([])
@@ -519,6 +686,7 @@ export function ReportFormPage() {
     [
       clientUuid,
       contact,
+      duplicateParentId,
       faultKeys,
       locale,
       pathTokenValue,
@@ -543,20 +711,9 @@ export function ReportFormPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const trimmedText = text.trim()
-    const found: string[] = []
-
     // Client mirror of the server `422`s of §7.3.2, so the reporter sees the rule before
     // the round trip; the server still decides over the same schema.
-    if (trimmedText === '' && faultKeys.length === 0) {
-      found.push('report.validation.faultOrText')
-    }
-
-    if ((contact.phone ?? '').trim() === '' && (contact.email ?? '').trim() === '') {
-      found.push('report.validation.contactRequired')
-    } else if (!publicReportContactSchema.safeParse(contact).success) {
-      found.push('report.validation.email')
-    }
+    const found = validate(true)
 
     if (found.length > 0) {
       setProblems(found)
@@ -568,11 +725,89 @@ export function ReportFormPage() {
     await sendReport(verification)
   }
 
+  /**
+   * "Trotzdem neu" (§7.8.3): the report is created anyway and points at the open
+   * ticket of the object, so the office sees that it is a duplicate.
+   */
+  async function createAnyway() {
+    const found = validate(true)
+
+    if (found.length > 0) {
+      setProblems(found)
+      setServerNotice(undefined)
+
+      return
+    }
+
+    await sendReport(verification)
+  }
+
+  /**
+   * "Ergänzen" (§7.8.2): the text of the reporter is appended to the open ticket
+   * as a comment event — no new ticket is created. The contact is optional here;
+   * the office can ask the reporter of the open ticket instead.
+   */
+  async function addToExisting(ticket: PublicOpenTicket) {
+    const qrToken = qr.data?.token
+
+    if (qrToken === undefined) {
+      return
+    }
+
+    const found = validate(false)
+
+    if (found.length > 0) {
+      setProblems(found)
+      setServerNotice(undefined)
+
+      return
+    }
+
+    const trimmedText = text.trim()
+
+    setProblems([])
+    setServerNotice(undefined)
+    setPending(true)
+
+    try {
+      const answer = await apiFetch<PublicTicketComment>(
+        `/v1/public/tickets/${encodeURIComponent(ticket.ticketNo)}/comments`,
+        {
+          method: 'POST',
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            qrToken,
+            text: trimmedText === '' ? undefined : trimmedText,
+            faultTemplateKeys: faultKeys,
+            contact,
+            locale,
+          }),
+        },
+      )
+
+      setComment(answer)
+    } catch (error) {
+      setServerNotice(errorMessage(error))
+    } finally {
+      setPending(false)
+    }
+  }
+
   if (report !== null) {
     return (
       <main className="min-h-dvh bg-slate-950 p-4 text-slate-100">
         <div className="mx-auto flex max-w-xl flex-col gap-4">
           <Confirmation locale={locale} report={report} />
+        </div>
+      </main>
+    )
+  }
+
+  if (comment !== null) {
+    return (
+      <main className="min-h-dvh bg-slate-950 p-4 text-slate-100">
+        <div className="mx-auto flex max-w-xl flex-col gap-4">
+          <CommentConfirmation comment={comment} locale={locale} />
         </div>
       </main>
     )
@@ -605,6 +840,18 @@ export function ReportFormPage() {
         {object ? (
           <>
             <ObjectHeader object={object} />
+
+            {/* §7.8: the duplicate hint — a notice with the two answers of the plan. */}
+            {openTicketList.length > 0 ? (
+              <DuplicateHint
+                locale={locale}
+                onAdd={(ticket) => void addToExisting(ticket)}
+                onCreateAnyway={() => void createAnyway()}
+                pending={pending}
+                tickets={openTicketList}
+              />
+            ) : null}
+
             <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)}>
               <SystemSelect object={object} onChange={setSystemChoice} value={selectedSystemId} />
               <FaultChips labels={labels} onToggle={toggleFault} selected={faultKeys} />
