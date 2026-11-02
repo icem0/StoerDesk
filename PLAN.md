@@ -640,6 +640,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-07d | honeypot field and Altcha widget (web)       | done   |
 | WP-M1-18  | publish chain without cancelled runs         | done   |
 | WP-M1-19  | one tag per push for every commit            | done   |
+| WP-M1-20  | the push command in the governance documents | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -896,10 +897,16 @@ goes through the optional override `docker-compose.debug.yml`.
   annotated tag on the new commit; `.husky/post-merge` does the same for merge
   commits; rebases and already-tagged HEADs are skipped, no double tags. The hook
   prints `commit <short-hash> successful - version v0.0.N` and the hint to run
-  `git push --follow-tags`. The tag is the version of record; the `version`
+  `npm run release:push`. The tag is the version of record; the `version`
   fields in the `package.json` files stay on the current release line. Annotated
-  tags are required so `git push --follow-tags` publishes them; tags are never
+  tags are required so the push publishes them; tags are never
   pushed automatically.
+- **One tag per push.** GitHub creates no tag push event when more than three tags
+  are pushed at once ("Events will not be created for tags when more than three tags
+  are pushed at once"), and the quality gates hang on that event: a batch push would
+  leave the older commits without a check run and without published images.
+  `npm run release:push` therefore pushes the branch first and every missing version
+  tag in its own push, so every commit gets its own run.
 - The version in the web shell is the application version produced by the
   development workflow. `.husky/pre-commit` writes the next version into the
   tracked `VERSION` file and stages it; `.husky/post-commit` tags exactly that

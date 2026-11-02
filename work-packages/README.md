@@ -171,6 +171,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-07d | honeypot field and Altcha widget in the form (web)      | done                    | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
+| WP-M1-20  | the push command in the governance documents            | done                    | yes     |
 
 `WP-M1-10f` is implemented — the `run-name` labels, the `Resolve version tag` run
 rename and the named jobs, steps and image summaries of both workflows are in place.
@@ -326,6 +327,9 @@ at once, so the session of 2026-11-02 pushed seven tags in one `git push --follo
 the versions `v0.0.93`, `v0.0.94` and `v0.0.95` never got a check run at all. The new
 `npm run release:push` pushes the branch and every missing tag one tag per push, so every
 commit gets its own run; the hint of the post-commit hook points to it.
+`WP-M1-20` is done — `AGENTS.md`, `PLAN.md` §18.3 and `CONTRIBUTING.md` name
+`npm run release:push` instead of `git push --follow-tags` and carry the rule "one tag per
+push" with the GitHub limitation behind it.
 
 ## Validation
 

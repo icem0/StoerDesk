@@ -29,7 +29,7 @@ docker compose -f docker-compose.dev.yml up -d db
 - **DCO**: sign every commit with `git commit -s`. The `commit-msg` hook
   (commitlint) checks the Conventional Commit format and the sign-off.
 - **Version tags**: the `post-commit` hook creates the next annotated patch tag
-  (`v0.0.N`) on the new commit; tags are published with `git push --follow-tags`.
+  (`v0.0.N`) on the new commit; tags are published with `npm run release:push`.
 
 ## Before pushing
 
@@ -39,10 +39,11 @@ npm run check
 
 Typecheck, lint, tests, `i18n:check` and `wp:check` must be green. Run
 `npm run build` as well when build artefacts are affected. Push with
-`git push --follow-tags`: the quality gates are triggered by the **tag** of the commit, so
-a commit without its tag starts no CI. After the push, wait for the `check` run titled
-`v0.0.NN` — the `publish images` run `publish v0.0.NN` publishes the versioned images only
-after that run succeeded.
+`npm run release:push`: the quality gates are triggered by the **tag** of the commit, so
+a commit without its tag starts no CI. The script pushes every missing tag on its own,
+because GitHub creates no tag push event when more than three tags are pushed at once.
+After the push, wait for the `check` run titled `v0.0.NN` — the `publish images` run
+`publish v0.0.NN` publishes the versioned images only after that run succeeded.
 
 ## Pull requests
 

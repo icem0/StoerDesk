@@ -116,7 +116,7 @@ Docker checks a Docker-related WP adds and which development commands exist is
 - If the commit is blocked (failed hook, conflict, missing identity), fix it or
   report the blocker and the exact remaining files; never end silently.
 - Report the commit hash and the version tag printed by the hook. Pushing remains a
-  separate, explicit action (`git push --follow-tags`).
+  separate, explicit action (`npm run release:push`).
 
 ## Versioning (one tag per commit)
 
@@ -126,7 +126,11 @@ Docker checks a Docker-related WP adds and which development commands exist is
 - After each commit read the line the hook prints
   (`commit <short-hash> successful - version v0.0.N …`) and report it, with the
   version, to the user. Never push a commit that did not print it.
-- Push with `git push --follow-tags`; tags are never pushed automatically.
+- Push with `npm run release:push`; tags are never pushed automatically. The script
+  pushes the branch and every missing version tag **one tag per push**: GitHub
+  creates no tag push event when more than three tags are pushed at once, and the
+  quality gates hang on that event, so a batch push would leave commits without a
+  check run and without published images.
 
 ## CI after push
 
