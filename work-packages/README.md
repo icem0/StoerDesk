@@ -175,6 +175,19 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-09b | offline E2E test                                       | done                    | yes     |
 | WP-M2-10  | phase 2 exit-criterion E2E (report → status page)      | done                    | yes     |
 | WP-M2-11  | object list UI (read): searchable, filterable table   | done                    | yes     |
+| WP-M2-12  | object create UI                                       | done                    | yes     |
+| WP-M2-13  | object edit UI                                         | done                    | yes     |
+| WP-M2-14  | object delete UI (soft delete)                         | done                    | yes     |
+| WP-M2-15  | internal ticket creation API (server)                  | done                    | yes     |
+| WP-M2-16  | internal ticket creation UI (web)                      | done                    | yes     |
+| WP-M2-17  | ticket list API (server)                               | done                    | yes     |
+| WP-M2-17b | ticket list UI (web)                                   | done                    | yes     |
+| WP-M2-18a | ticket detail API (server)                             | done                    | yes     |
+| WP-M2-18b | ticket detail UI (web)                                 | done                    | yes     |
+| WP-M2-19a | DB migration for ticket workflow columns               | done                    | yes     |
+| WP-M2-19b | transitionTicket() state machine                       | done                    | yes     |
+| WP-M2-19c | workflow API routes                                    | done                    | yes     |
+| WP-M2-19d | workflow UI actions                                    | done                    | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
