@@ -223,6 +223,41 @@ export const publicTicketCommentResponseSchema = z.object({
   at: z.iso.datetime(),
 })
 
+/**
+ * Internal ticket creation API (`PLAN.md` §7 rule 1, WP-M2-15).
+ *
+ * Authenticated endpoint for staff (`reporter_internal`, `office`, …). The
+ * database generates `ticket_no` (§4.11) and `status_token` (§7.3.4); the
+ * server sets `source = 'INTERNAL'` and `status = 'NEW'`.
+ */
+
+export const internalCreateTicketRequestSchema = z.object({
+  objectId: z.uuid(),
+  systemId: z.uuid().optional(),
+  title: trimmedText(200),
+  description: trimmedText(4000),
+  faultTemplateKeys: z
+    .array(faultTemplateKeySchema)
+    .max(9)
+    .default([])
+    .refine((keys) => new Set(keys).size === keys.length),
+  priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
+  contact: publicReportContactSchema.optional(),
+})
+
+export const internalCreateTicketResponseSchema = z.object({
+  ticketId: z.uuid(),
+  ticketNo: z.string(),
+  status: z.string(),
+  statusToken: z.string(),
+  reportedAt: z.iso.datetime(),
+  receivedAt: z.iso.datetime(),
+  deadlineAt: z.iso.datetime(),
+})
+
+export type InternalCreateTicketRequest = z.infer<typeof internalCreateTicketRequestSchema>
+export type InternalCreateTicketResponse = z.infer<typeof internalCreateTicketResponseSchema>
+
 export type PublicOpenTicket = z.infer<typeof publicOpenTicketSchema>
 export type PublicOpenTickets = z.infer<typeof publicOpenTicketsResponseSchema>
 export type PublicTicketCommentRequest = z.infer<typeof publicTicketCommentRequestSchema>
