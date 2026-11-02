@@ -263,3 +263,43 @@ export type PublicOpenTickets = z.infer<typeof publicOpenTicketsResponseSchema>
 export type PublicTicketCommentRequest = z.infer<typeof publicTicketCommentRequestSchema>
 export type PublicTicketComment = z.infer<typeof publicTicketCommentResponseSchema>
 
+/**
+ * Ticket list API (`PLAN.md` §6, WP-M2-17).
+ *
+ * Authenticated `GET /api/v1/tickets` for staff. Paginated list with object
+ * number/name, status, priority, reportedAt and deadlineAt. Filters: search
+ * (object number / name), status, objectId, priority.
+ */
+
+export const ticketListQuerySchema = z.object({
+  search: z.string().trim().max(200).optional(),
+  status: z.enum(['NEW', 'IN_REVIEW', 'WORK_ORDER_CREATED', 'OFFERED', 'ASSIGNED', 'ACCEPTED', 'ACKNOWLEDGED', 'CLOSED', 'CANCELLED']).optional(),
+  objectId: z.uuid().optional(),
+  priority: z.enum(['low', 'normal', 'high', 'critical']).optional(),
+  limit: z.coerce.number().min(1).max(100).default(25),
+  offset: z.coerce.number().min(0).default(0),
+})
+
+export const ticketListItemSchema = z.object({
+  id: z.uuid(),
+  ticketNo: z.string(),
+  objectNo: z.string(),
+  objectName: z.string(),
+  systemType: z.string().nullable(),
+  status: z.string(),
+  priority: z.string(),
+  reportedAt: z.iso.datetime(),
+  deadlineAt: z.iso.datetime(),
+})
+
+export const ticketListResponseSchema = z.object({
+  tickets: z.array(ticketListItemSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+})
+
+export type TicketListQuery = z.infer<typeof ticketListQuerySchema>
+export type TicketListResponse = z.infer<typeof ticketListResponseSchema>
+export type TicketListItem = z.infer<typeof ticketListItemSchema>
+
