@@ -28,7 +28,10 @@ function onlyRow<T>(rows: T[], what: string): T {
   return row
 }
 
-async function countRows(database: ReturnType<typeof drizzle>, table: typeof textTemplates) {
+async function countRows(
+  database: ReturnType<typeof drizzle>,
+  table: typeof textTemplates | typeof textTemplateTranslations,
+) {
   const rows = await database.select().from(table)
 
   return rows.length
@@ -73,13 +76,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('does not resurrect a deleted standard type', async () => {
-      const [template] = await db
-        .select({ id: textTemplates.id })
-        .from(textTemplates)
-        .where(eq(textTemplates.key, 'bma.false_alarm'))
-        .limit(1)
+      const template = onlyRow(
+        await db
+          .select({ id: textTemplates.id })
+          .from(textTemplates)
+          .where(eq(textTemplates.key, 'bma.false_alarm'))
+          .limit(1),
+        'template',
+      )
 
-      await db.delete(textTemplates).where(eq(textTemplates.id, onlyRow([template], 'template').id))
+      await db.delete(textTemplates).where(eq(textTemplates.id, template.id))
 
       await seedStandardTexts(db)
 
