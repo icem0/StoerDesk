@@ -10,6 +10,7 @@ import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
 import { settingsBrandingRoutes } from './settings/branding'
+import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
 import { objectRoutes } from './objects/service'
@@ -95,6 +96,7 @@ export async function buildServer() {
   await app.register(adminUsersRoutes, { database })
   await app.register(adminRolesRoutes, { database })
   await app.register(settingsBrandingRoutes, { database })
+  await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(publicReportRoutes, {
     database,

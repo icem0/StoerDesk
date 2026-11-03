@@ -677,7 +677,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-38  | sync card on the administration home         | planned |
 | WP-M2-39  | external badge in the object list            | planned |
 | WP-M2-40  | fault template archive schema and contracts  | done    |
-| WP-M2-40b | fault template admin and public catalog API  | planned |
+| WP-M2-40b | fault template admin and public catalog API  | done    |
 | WP-M2-40c | fault template administration UI             | planned |
 | WP-M2-40d | fault template entry on the admin home       | planned |
 | WP-M2-40e | report form uses the live fault catalog      | planned |

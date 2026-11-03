@@ -241,7 +241,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-38  | BMAcloud sync card on the administration home            | planned                 | yes     |
 | WP-M2-39  | external-maintained badge in the object list             | planned                 | yes     |
 | WP-M2-40  | fault template archive schema and shared contracts       | done                    | yes     |
-| WP-M2-40b | fault template admin and public catalog API              | planned                 | yes     |
+| WP-M2-40b | fault template admin and public catalog API              | done                    | yes     |
 | WP-M2-40c | fault template administration UI                         | planned                 | yes     |
 | WP-M2-40d | fault template entry on the administration home          | planned                 | yes     |
 | WP-M2-40e | public report form uses the live fault catalog           | planned                 | yes     |

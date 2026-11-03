@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { qrTokenSchema } from './object.js'
+import { textTemplateKeySchema } from './text-template.js'
 
 /**
  * Public report form API schemas (`specs/06-report-form.md` §7.3, WP-M2-04b).
@@ -20,7 +21,7 @@ const trimmedText = (max: number) =>
     .transform((value) => (value === '' ? undefined : value))
 
 /** `text_templates.key` values — machine keys, never translated text (plan §3). */
-export const faultTemplateKeySchema = z.string().regex(/^[a-z0-9_.]{1,64}$/)
+export const faultTemplateKeySchema = textTemplateKeySchema
 
 export const publicReportContactSchema = z.object({
   name: trimmedText(120),
