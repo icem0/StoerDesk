@@ -45,16 +45,28 @@ describe('update schemas', () => {
 
   it('answers the status of the admin routes', () => {
     const status = updateStatusResponseSchema.parse({
-      agent: { reachable: false, state: null },
+      agent: { reachable: false, state: null, error: 'update_agent_not_configured' },
       running: false,
       currentVersion: null,
       lastRun: null,
     })
 
     expect(status.agent.reachable).toBe(false)
+    expect(status.agent.error).toBe('update_agent_not_configured')
 
     const runs = updateRunsResponseSchema.parse({ runs: [] })
 
     expect(runs.runs).toEqual([])
+  })
+
+  it('rejects an unknown agent error', () => {
+    expect(() =>
+      updateStatusResponseSchema.parse({
+        agent: { reachable: false, state: null, error: 'update_broken' },
+        running: false,
+        currentVersion: null,
+        lastRun: null,
+      }),
+    ).toThrow()
   })
 })

@@ -8,6 +8,7 @@ import {
   updateRunsResponseSchema,
   updateStatusResponseSchema,
   type AgentRun,
+  type UpdateAgentErrorReason,
   type UpdateRun as UpdateRunAnswer,
 } from '@stoerdesk/shared'
 
@@ -15,7 +16,7 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { updateRuns, type UpdateRun as UpdateRunRow } from '../db/schema'
-import { createUpdateAgentClient, UpdateAgentError } from './client'
+import { createUpdateAgentClient, UpdateAgentError, type UpdateAgentErrorCode } from './client'
 
 /**
  * Admin API of the host update (`specs/18-self-update.md` §18.4–§18.6,
@@ -47,6 +48,21 @@ export const UPDATE_RUN_COOLDOWN_MS = 60_000
 
 /** How many runs the history answers. */
 const RUN_HISTORY_LIMIT = 20
+
+/**
+ * The reason why the agent is not reachable. `update_already_running` cannot
+ * happen while reading the status, so it becomes `update_agent_unreachable`.
+ */
+function agentErrorOf(code: UpdateAgentErrorCode): UpdateAgentErrorReason {
+  switch (code) {
+    case 'update_agent_not_configured':
+      return 'update_agent_not_configured'
+    case 'update_agent_bad_response':
+      return 'update_agent_bad_response'
+    default:
+      return 'update_agent_unreachable'
+  }
+}
 
 function toRunAnswer(row: UpdateRunRow): UpdateRunAnswer {
   return {
@@ -118,9 +134,14 @@ export const updateRoutes = fp<UpdateRouteOptions>(
       '/api/v1/admin/update/status',
       { preHandler: requirePermission(database, PERMISSIONS.system.update) },
       async () => {
-        let agent: { reachable: boolean; state: 'idle' | 'running' | 'failed' | null } = {
+        let agent: {
+          reachable: boolean
+          state: 'idle' | 'running' | 'failed' | null
+          error: UpdateAgentErrorReason | null
+        } = {
           reachable: false,
           state: null,
+          error: null,
         }
         let currentVersion: string | null = null
         let agentRun: AgentRun | null = null
@@ -128,13 +149,16 @@ export const updateRoutes = fp<UpdateRouteOptions>(
         try {
           const status = await client.status()
 
-          agent = { reachable: true, state: status.state }
+          agent = { reachable: true, state: status.state, error: null }
           currentVersion = status.checkout.version
           agentRun = status.lastRun
         } catch (error) {
           if (!(error instanceof UpdateAgentError)) {
             throw error
           }
+
+          // The operator has to fix the cause, so the answer names it.
+          agent = { reachable: false, state: null, error: agentErrorOf(error.code) }
         }
 
         const lastRun = await reconcile(await newestRun(), agentRun)

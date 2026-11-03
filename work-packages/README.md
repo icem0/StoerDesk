@@ -265,6 +265,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-54  | the admin update API                                    | done                    | yes     |
 | WP-M2-55  | the host update section in the admin update page         | done                    | yes     |
 | WP-M2-56  | documentation of the host update                         | done                    | yes     |
+| WP-M2-57  | the status route names the reason of an unreachable agent   | done                    | yes     |
+| WP-M2-58  | the page shows why the agent is not reachable             | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

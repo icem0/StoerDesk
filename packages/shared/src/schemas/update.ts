@@ -42,6 +42,20 @@ export const updateAgentStateSchema = z.enum(UPDATE_AGENT_STATES)
 
 export type UpdateAgentState = z.infer<typeof updateAgentStateSchema>
 
+/**
+ * Why the agent cannot be reached. The operator has to fix the cause, so the
+ * answer of the status route names it instead of a plain "not reachable".
+ */
+export const UPDATE_AGENT_ERROR_CODES = [
+  'update_agent_not_configured',
+  'update_agent_unreachable',
+  'update_agent_bad_response',
+] as const
+
+export const updateAgentErrorSchema = z.enum(UPDATE_AGENT_ERROR_CODES)
+
+export type UpdateAgentErrorReason = z.infer<typeof updateAgentErrorSchema>
+
 /** One step of a run with its result. */
 export const updateStepResultSchema = z.object({
   step: updateStepSchema,
@@ -95,6 +109,8 @@ export const updateStatusResponseSchema = z.object({
   agent: z.object({
     reachable: z.boolean(),
     state: updateAgentStateSchema.nullable(),
+    /** Why the agent is not reachable; `null` when it answers. */
+    error: updateAgentErrorSchema.nullable(),
   }),
   running: z.boolean(),
   currentVersion: z.string().nullable(),
