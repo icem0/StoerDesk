@@ -508,6 +508,34 @@ export const bmaSyncRuns = pgTable(
   ],
 )
 
+/** Run status of a host update (`specs/18-self-update.md` §18.4). */
+export const UPDATE_RUN_STATUSES = ['RUNNING', 'SUCCESS', 'PARTIAL', 'FAILED'] as const
+
+/**
+ * One run of the host update: `git pull` → `docker compose up -d --build` →
+ * image prune (`specs/18-self-update.md` §18.4, ADR-0006). The row is the
+ * history the administration shows; the update agent reports the result, the
+ * API stores it. `agentRunId` is the id of the agent run, so a `RUNNING` row
+ * can be reconciled after the restart of the API.
+ */
+export const updateRuns = pgTable(
+  'update_runs',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    startedAt: timestamp('started_at', timestampOptions).notNull().defaultNow(),
+    finishedAt: timestamp('finished_at', timestampOptions),
+    status: text('status').notNull().default('RUNNING'),
+    beforeVersion: text('before_version'),
+    afterVersion: text('after_version'),
+    errorCode: text('error_code'),
+    agentRunId: text('agent_run_id'),
+  },
+  (table) => [
+    check('update_runs_status_check', sql`${table.status} IN (${checkList(UPDATE_RUN_STATUSES)})`),
+    index('update_runs_started_at_idx').on(table.startedAt),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -537,6 +565,9 @@ export type NewReportThrottle = typeof reportThrottle.$inferInsert
 export type BmaSyncRun = typeof bmaSyncRuns.$inferSelect
 export type NewBmaSyncRun = typeof bmaSyncRuns.$inferInsert
 export type BmaSyncRunStatus = (typeof BMA_SYNC_RUN_STATUSES)[number]
+export type UpdateRun = typeof updateRuns.$inferSelect
+export type NewUpdateRun = typeof updateRuns.$inferInsert
+export type UpdateRunStatus = (typeof UPDATE_RUN_STATUSES)[number]
 export type TicketNoCounter = typeof ticketNoCounters.$inferSelect
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number]

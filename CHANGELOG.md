@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The `update_runs` table (WP-M2-50): one row per host update — status, the
+  versions before and after the pull, the error code and the id of the agent run,
+  so a run stays visible in the administration after the restart of the API.
+  Migration `0009_update_runs`.
 - Permission `system.update` and the update schemas (WP-M2-49): the new key belongs
   to the role `admin` only — a host update is a deployment decision. `@stoerdesk/shared`
   exports the schemas of the update contract (the run row, the agent status, the answers

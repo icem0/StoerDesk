@@ -257,7 +257,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-47  | API-key field on the BMAcloud sync page                  | done                    | yes     |
 | WP-M2-48  | host update agent decision (ADR-0006) and work plan      | done                    | yes     |
 | WP-M2-49  | shared contracts: `system.update` and the update schemas | done                    | yes     |
-| WP-M2-50  | the `update_runs` table and migration `0009`             | planned                 | yes     |
+| WP-M2-50  | the `update_runs` table and migration `0009`             | done                    | yes     |
 | WP-M2-51  | the update agent service core (`apps/agent`)             | planned                 | yes     |
 | WP-M2-52  | the update agent HTTP server                             | planned                 | yes     |
 | WP-M2-53  | the agent image, compose service and env wiring          | planned                 | yes     |

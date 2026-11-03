@@ -1,7 +1,7 @@
 # WP-M2-50: the `update_runs` table
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-49
 phase: 2
 context-budget: 14k tokens
@@ -58,8 +58,11 @@ applies cleanly on an empty database and a second run is a no-op.
 
 ## Handoff
 
-- Files changed: the four files of `files-write`.
+- Files changed: the four files of `files-write` plus the integration test
+  (`apps/api/src/db/__tests__/updateRuns.integration.spec.ts`).
 - Interfaces added: the table `update_runs` and its types.
-- Verified: `npm run check`.
+- Verified: `npm run check` green; the migration and the snapshot were written
+  by `drizzle-kit generate --name update_runs`, the journal lists the tag
+  `0009_update_runs`.
 - Follow-up WP: WP-M2-51 (the agent service core).
 - Open question: none.
