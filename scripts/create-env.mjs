@@ -23,6 +23,7 @@ const generatedSecrets = {
   POSTGRES_PASSWORD: () => randomBytes(18).toString('base64url'),
   SESSION_SECRET: () => randomBytes(48).toString('base64url'),
   SEED_ADMIN_PASSWORD: () => randomBytes(12).toString('base64url'),
+  UPDATE_AGENT_TOKEN: () => randomBytes(32).toString('base64url'),
 }
 
 /** Values that are derived from other values. */

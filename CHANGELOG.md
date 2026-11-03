@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The image, the compose service and the environment of the update agent
+  (WP-M2-53): the image `stoerdesk-agent` is `node:22-alpine` with `git`,
+  `docker-cli` and `docker-cli-compose`; the service `update-agent` lives
+  behind the compose profile `update`, so the normal `docker compose up -d
+  --build` never touches it and the agent survives the redeploy it triggers. It
+  is mounted with the checkout, the Docker socket and a state volume, listens
+  only on the internal network and publishes no host port. `npm run env:create`
+  generates the bearer `UPDATE_AGENT_TOKEN`.
 - The update agent HTTP server (WP-M2-52): the agent speaks three paths —
   `GET /status`, `POST /run` and `GET /runs` — on the internal network only,
   behind the bearer `UPDATE_AGENT_TOKEN`, which is compared in constant time

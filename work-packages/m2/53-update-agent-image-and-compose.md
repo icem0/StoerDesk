@@ -1,7 +1,7 @@
 # WP-M2-53: the update agent image, compose service and env wiring
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-52
 phase: 2
 context-budget: 16k tokens
@@ -67,17 +67,20 @@ interfaces:
 ```bash
 npm run check
 npm run build
-docker compose config
 ```
 
-Expected: the gates are green; `docker compose config` resolves the new service
-and shows the profile and the mounts. The image build itself runs in CI
+Expected: the gates are green; the compose file resolves the new service, its
+profile and its mounts. The image build and `docker compose config` run in CI
 (`docker-smoke`), the development container has no Docker daemon.
 
 ## Handoff
 
 - Files changed: the four files of `files-write`.
-- Interfaces added: the image target, the compose service, the env keys.
-- Verified: `npm run check`, `npm run build`, `docker compose config`.
-- Follow-up WP: WP-M2-54 (the admin API).
+- Interfaces added: the image target `agent`, the compose service
+  `update-agent`, the env keys `UPDATE_AGENT_TOKEN` and `UPDATE_AGENT_URL`.
+- Verified: `npm run check` and `npm run build` green; the compose file was
+  parsed and shows the service with the profile `update`, the mounts of the
+  checkout, the socket and the state volume.
+- Follow-up WP: WP-M2-53b (the compose invocation of the agent and the build of
+  its image in the smoke test) — file created in this commit.
 - Open question: none.

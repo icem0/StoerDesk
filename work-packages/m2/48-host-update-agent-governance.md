@@ -49,6 +49,7 @@ interfaces:
    - 51 agent service core (new workspace `apps/agent`, the run logic, tests)
    - 52 agent HTTP server (`GET /status`, `POST /run`, `GET /runs`)
    - 53 agent image, compose service and env wiring
+   - 53b the compose invocation of the agent and its image in the smoke test
    - 54 admin API (`/api/v1/admin/update/*`, agent client, reconciliation)
    - 55 admin UI (host update section on `/admin/update`, i18n)
    - 56 documentation (deployment, repository map, changelog, plan backlog)
