@@ -32,7 +32,7 @@ part of the product text. **(plan, §2)**
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | object        | prefilled from the QR token, searchable in the internal form; a QR report always reports on exactly one object                           | plan §10   |
 | system        | optional, prefilled when the QR belongs to a `systems` row; must belong to that object                                                   | plan §10   |
-| fault type    | multi-select of the localized standard templates (`text_templates.key`, §4.5) **and/or** free text — at least one of the two is required | plan §10   |
+| fault type    | multi-select of the **active** localized standard templates (`text_templates.key`, §4.5) **and/or** free text — at least one of the two is required | plan §10   |
 | free text     | `description`, max. 4000 characters                                                                                                      | this slice |
 | photos        | up to 6, compressed client-side to max. 1600 px and JPEG quality 0.8                                                                     | plan §10   |
 | contact       | name optional, **phone or e-mail required** (at least one)                                                                               | plan §10   |
@@ -218,3 +218,25 @@ the reporter's fault. The accepted value is stored in `tickets.parent_ticket_id`
 The form sends the field for every new report of an object with an open ticket
 and uses the **oldest** open ticket, because that is the report that carries
 the ongoing fault.
+
+## 7.9 Fault catalog (WP-M2-40)
+
+The fault chips of the public form and the internal create form are the **active**
+`text_templates` rows (`archived_at IS NULL`), not a compile-time constant. The
+administration maintains them (create, edit, archive, delete; §4.5):
+
+- `GET /api/v1/public/text-templates?locale=de|en` — no authentication, active
+  templates only, `{ templates: [{ key, text }] }`, ordered by `key`.
+- `GET /api/v1/text-templates` — `settings.read`, every template including
+  archived ones, with both translations and `usageCount` (number of tickets that
+  carry the key).
+- `POST /api/v1/text-templates` and `PATCH /api/v1/text-templates/:id` —
+  `settings.write`; the body carries the complete `de`/`en` pair, PATCH also
+  `archived`. The key is generated on create and never changes.
+- `DELETE /api/v1/text-templates/:id` — `settings.write`, `409
+  text_template_in_use` while a ticket carries the key.
+
+The create path keeps accepting a stale key: an offline report queued before an
+archive must still land. Archived and unknown keys never appear in the catalog,
+and the ticket detail resolves them from the administration list so historical
+tickets keep their label. An unknown key falls back to the raw key.

@@ -88,7 +88,7 @@ that shows up in the `object_no` format of the list row it maintains (e.g.
 ### 4.5 `text_templates` and `text_template_translations`
 
 - `text_templates`: `id` UUID v7, `key` text not null **unique** (stable
-  machine key), timestamps.
+  machine key), `archived_at` timestamptz nullable, timestamps.
 - `text_template_translations`: composite primary key (`template_id`, `locale`),
   `template_id` foreign key `ON DELETE CASCADE`, `locale` with check
   `IN ('de','en')`, `text` text not null.
@@ -96,9 +96,16 @@ that shows up in the `object_no` format of the list row it maintains (e.g.
   `de` **and** an `en` row from
   `STANDARD_TEXTS: Record<Locale, StandardText[]>` in `packages/shared` — seed
   data is a localized resource, never a German literal in API code. **(plan, §3)**
+- Lifecycle (WP-M2-40): an administrator creates a template with a generated
+  machine key (`custom.<uuid>`) and a complete `de`/`en` translation pair. An
+  **archived** template (`archived_at` set) stays in the database and keeps
+  labelling existing tickets, but the report form no longer offers it. A
+  template may be deleted only while **no ticket** carries its key in
+  `tickets.fault_template_keys`; the API answers `409 text_template_in_use`
+  otherwise. `updated_at` changes on every edit and archive transition.
 - The raw specification did not carry the text list, so the nine texts are
-  drafted here (proposed, refinable via the admin template editor; the demo
-  seed never overwrites edits):
+  drafted here (proposed, editable in the administration; the demo seed never
+  overwrites edits):
 
 | `key` | `de` | `en` |
 | --- | --- | --- |
