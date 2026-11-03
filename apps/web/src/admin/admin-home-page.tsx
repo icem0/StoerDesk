@@ -20,7 +20,7 @@ const MODULES: Module[] = [
   { key: 'users', to: '/admin/users' },
   { key: 'roles', to: '/admin/roles' },
   { key: 'groups', phase: 'phase1' },
-  { key: 'standardTexts', phase: 'phase2' },
+  { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', phase: 'phase6' },
   { key: 'oncall', phase: 'phase8' },
   { key: 'channels', phase: 'phase7' },
