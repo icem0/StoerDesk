@@ -92,7 +92,7 @@ that shows up in the `object_no` format of the list row it maintains (e.g.
 - `text_template_translations`: composite primary key (`template_id`, `locale`),
   `template_id` foreign key `ON DELETE CASCADE`, `locale` with check
   `IN ('de','en')`, `text` text not null.
-- The nine BMA standard texts of the report form are seeded as templates with a
+- The eight standard fault types of the report form are seeded as templates with a
   `de` **and** an `en` row from
   `STANDARD_TEXTS: Record<Locale, StandardText[]>` in `packages/shared` — seed
   data is a localized resource, never a German literal in API code. **(plan, §3)**
@@ -103,21 +103,20 @@ that shows up in the `object_no` format of the list row it maintains (e.g.
   template may be deleted only while **no ticket** carries its key in
   `tickets.fault_template_keys`; the API answers `409 text_template_in_use`
   otherwise. `updated_at` changes on every edit and archive transition.
-- The raw specification did not carry the text list, so the nine texts are
-  drafted here (proposed, editable in the administration; the demo seed never
+- The raw specification did not carry the text list, so the bootstrap list is
+  fixed here (editable in the administration; the demo seed never
   overwrites edits):
 
 | `key` | `de` | `en` |
 | --- | --- | --- |
-| `bma.total_outage` | Brandmeldeanlage fällt komplett aus | Fire alarm system completely out of service |
-| `bma.malfunction_display` | Störungsmeldung an der Brandmelderzentrale | Fault indication on the alarm control panel |
-| `bma.false_alarm` | Falschalarm ohne erkennbaren Grund | False alarm without identifiable cause |
-| `bma.smoke_detector_fault` | Rauchmelder defekt oder verschmutzt | Smoke detector defective or soiled |
-| `bma.manual_callpoint_fault` | Handdruckmelder defekt | Manual call point defective |
-| `bma.power_supply_fault` | Störung der Stromversorgung / Batterie | Power supply or battery fault |
-| `bma.line_fault` | Leitungsstörung / Linie gestört | Line/circuit fault |
-| `bma.transmission_fault` | Störung der Alarmübertragung | Transmission to the emergency services fails |
-| `bma.ups_time_overdue` | Aufschaltzeit überschritten | Delay before alarm transmission exceeded |
+| `bma.line_interruption` | Leitungsunterbrechung | Line interruption |
+| `bma.fault_unknown` | Störung (Unbekannt) | Fault (unknown) |
+| `bma.signal_device_fault` | Störung Signalgeber | Signal device fault |
+| `bma.detector_fault` | Störung Melder | Detector fault |
+| `bma.false_alarm` | Täuschungsalarm | False alarm |
+| `bma.power_supply_fault` | Störung Energieversorgung | Power supply fault |
+| `bma.input_fault` | Störung Eingang | Input fault |
+| `bma.battery_fault` | Störung Akku | Battery fault |
 
 ### 4.6 Indexes and constraints for the phase 2 tables
 
