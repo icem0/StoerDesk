@@ -59,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The BMAcloud sync card on the administration home (WP-M2-38): `MODULES` gains
+  `bmaSync` → `/admin/bma-sync` directly after the roles card, labelled
+  "BMAcloud-Abgleich" / "BMAcloud sync" and saying that the object list is pulled
+  read-only. The admin home had no page test before, so the WP adds one covering the
+  new card and the planned badge.
 - The BMAcloud sync page in the administration (WP-M2-37): `/admin/bma-sync` lists the run
   history with the localized status label (never colour alone) and the five counters, shows
   the conflicts of the newest run, triggers a manual pull with "Jetzt abgleichen" and carries

@@ -1,7 +1,7 @@
 # WP-M2-38: BMAcloud sync card on the administration home
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-37
 phase: 2
 context-budget: 12k tokens
@@ -51,12 +51,20 @@ npm run i18n:check
 npm run wp:check
 ```
 
-Expected: all green; the existing `admin-home` test still passes and de/en stay parallel.
+Expected: all green; de/en stay parallel. The admin home had **no** page test before this
+WP, so the WP adds `apps/web/src/admin/__tests__/admin-home-page.test.tsx` (excluded from the
+file limit) and asserts both branches: the linked `bmaSync` card directly after the roles
+card, and a module without `to` still rendering the planned badge.
 
 ## Handoff
 
-- Files changed: the three files above, `docs/REPO-MAP.md`, `work-packages/README.md`
-- Interfaces added: the `bmaSync` module card
-- Verified: —
+- Files changed: the three files above plus the new page test, `docs/REPO-MAP.md` (the
+  missing `admin-home-page.tsx` and `branding-page.tsx` rows, the two object form rows merged
+  into one so the map stays inside its 200-line limit), `work-packages/README.md`,
+  `PLAN.md` §16, `CHANGELOG.md`
+- Interfaces added: the `bmaSync` module card and the `settings:admin.home.modules.bmaSync.*`
+  keys
+- Verified: `npm run check` locally (typecheck, lint with no new warning, 296 tests, 509 de
+  and 509 en keys, wp:check; the E2E gate skipped: no usable Chromium)
 - Follow-up WP: none — WP-M2-39 is announced by WP-M2-37
 - Open question: none

@@ -23,6 +23,10 @@
           "title": "Role administration",
           "hint": "Manage roles and their permissions."
         },
+        "bmaSync": {
+          "title": "BMAcloud sync",
+          "hint": "The object list is pulled read-only from BMAcloud and can be triggered manually here."
+        },
         "groups": {
           "title": "Groups",
           "hint": "User groups for the ticket assignment."

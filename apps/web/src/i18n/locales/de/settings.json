@@ -23,6 +23,10 @@
           "title": "Rollenverwaltung",
           "hint": "Rollen und ihre Berechtigungen verwalten."
         },
+        "bmaSync": {
+          "title": "BMAcloud-Abgleich",
+          "hint": "Die Objektliste wird read-only aus der BMAcloud geholt und lässt sich dort manuell anstoßen."
+        },
         "groups": {
           "title": "Gruppen",
           "hint": "Benutzergruppen für die Zuweisung von Tickets."
