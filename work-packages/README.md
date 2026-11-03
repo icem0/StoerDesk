@@ -13,7 +13,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 56  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 66  |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1` and `m2` document carries `format: small-model` except the four first
@@ -237,6 +237,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-34  | the `bma_sync_runs` table (migration `0007`)             | done                    | yes     |
 | WP-M2-35  | the BMAcloud sync service (mapping, conflicts)           | done                    | yes     |
 | WP-M2-36  | BMAcloud admin API and the scheduled sync job            | done                    | yes     |
+| WP-M2-36b | `GET /admin/bma-sync/schedule` for the page prefill      | done                    | yes     |
 | WP-M2-37  | BMAcloud sync page in the administration                 | planned                 | yes     |
 | WP-M2-38  | BMAcloud sync card on the administration home            | planned                 | yes     |
 | WP-M2-39  | external-maintained badge in the object list             | planned                 | yes     |

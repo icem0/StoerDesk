@@ -91,5 +91,7 @@ otherwise report it as unverified). No test starts pg-boss.
   E2E gate skipped: no usable Chromium); the reachable-DB integration spec runs 20 tests
   in the BMAcloud folder.
 - Follow-up WP: WP-M2-37 (admin page), WP-M2-38 (its card on the administration home)
-- Open question: WP-M2-37 needs the current schedule for its form prefill, but §17.5 and
-  this WP define no `GET /api/v1/admin/bma-sync/schedule`.
+- Open question: closed by **WP-M2-36b** (`36b-bma-sync-schedule-get.md`) — the admin page of
+  WP-M2-37 prefills its schedule form from the new
+  `GET /api/v1/admin/bma-sync/schedule`, which answers the effective pair of
+  `readBmaSyncSchedule`.

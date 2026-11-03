@@ -89,6 +89,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return app.inject({ method: 'POST', url: '/api/v1/admin/bma-sync/run', headers: { cookie } })
     }
 
+    function getSchedule(cookie: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/bma-sync/schedule',
+        headers: { cookie },
+      })
+    }
+
     function patchSchedule(cookie: string, payload: Record<string, unknown>) {
       return app.inject({
         method: 'PATCH',
@@ -134,6 +142,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.RATE_LIMIT_MAX = '10000'
       // The manual trigger must refuse before any request and any run row.
       process.env.BMA_API_KEY = ''
+      // Deterministic environment half of the schedule fallback (WP-M2-36b).
+      process.env.BMA_SYNC_ENABLED = 'false'
+      process.env.BMA_SYNC_CRON = '0 5 * * 2'
 
       app = await buildServer()
     })
@@ -150,23 +161,27 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('answers 401 for every route before the permission check', async () => {
       const list = await getRuns('')
       const run = await postRun('')
+      const readSchedule = await getSchedule('')
       const schedule = await patchSchedule('', { enabled: true, cron: '15 3 * * *' })
 
       expect(list.statusCode).toBe(401)
       expect(list.json<ErrorResponseBody>().code).toBe('session_invalid')
       expect(run.statusCode).toBe(401)
+      expect(readSchedule.statusCode).toBe(401)
       expect(schedule.statusCode).toBe(401)
     })
 
-    it('reads runs with object.read but refuses the trigger and the schedule', async () => {
+    it('reads runs and the schedule with object.read but refuses the trigger and the schedule write', async () => {
       const list = await getRuns(reporterCookie)
       const run = await postRun(reporterCookie)
+      const readSchedule = await getSchedule(reporterCookie)
       const schedule = await patchSchedule(reporterCookie, { enabled: true, cron: '15 3 * * *' })
 
       expect(list.statusCode).toBe(200)
       expect(list.json<RunsResponseBody>().runs).toEqual([])
       expect(run.statusCode).toBe(403)
       expect(run.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
+      expect(readSchedule.statusCode).toBe(200)
       expect(schedule.statusCode).toBe(403)
     })
 
@@ -177,6 +192,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<ErrorResponseBody>()).toEqual({ code: 'bma_not_configured', params: {} })
 
       expect(await db.select({ id: bmaSyncRuns.id }).from(bmaSyncRuns)).toHaveLength(0)
+    })
+
+    it('answers the effective schedule pair before anything was stored', async () => {
+      const response = await getSchedule(adminCookie)
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<ScheduleResponseBody>()).toEqual({
+        enabled: false,
+        cron: '0 5 * * 2',
+      })
     })
 
     it('stores the schedule pair and answers the effective pair again', async () => {
@@ -201,6 +226,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
 
       expect(again.json<ScheduleResponseBody>()).toEqual({ enabled: true, cron: '15 3 * * *' })
+
+      const readBack = await getSchedule(adminCookie)
+
+      expect(readBack.json<ScheduleResponseBody>()).toEqual({ enabled: true, cron: '15 3 * * *' })
     })
 
     it('rejects an invalid cron and an invalid limit with field paths only', async () => {

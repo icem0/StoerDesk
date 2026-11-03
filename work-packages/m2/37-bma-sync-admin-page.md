@@ -28,6 +28,7 @@ interfaces:
 - `BmaSyncPage` at the guarded route `/admin/bma-sync` inside `RequireSession`
 - `useBmaSyncRuns()` → `GET /v1/admin/bma-sync/runs`, `useRunBmaSync()` →
   `POST /v1/admin/bma-sync/run`, `useBmaSyncSchedule()` →
+  `GET /v1/admin/bma-sync/schedule` (prefill, exists since WP-M2-36b) and
   `PATCH /v1/admin/bma-sync/schedule`
 - i18n keys `settings:admin.bma.*` — title, hint, back link label reuse of
   `settings:admin.back`, table headers, `runNow`, `running`, `enabled`, `cron`, `save`,

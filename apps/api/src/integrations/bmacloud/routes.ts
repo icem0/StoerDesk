@@ -190,6 +190,12 @@ export const bmaSyncRoutes = fp<BmaSyncRouteOptions>(
       },
     )
 
+    app.get(
+      '/api/v1/admin/bma-sync/schedule',
+      { preHandler: requirePermission(database, PERMISSIONS.object.read) },
+      async () => bmaSyncScheduleResponseSchema.parse(await readBmaSyncSchedule(database, env)),
+    )
+
     app.patch(
       '/api/v1/admin/bma-sync/schedule',
       { preHandler: requirePermission(database, PERMISSIONS.object.write) },

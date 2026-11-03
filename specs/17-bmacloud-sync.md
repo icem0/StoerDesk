@@ -67,6 +67,8 @@ Admin API (`object.read` / `object.write` / `object.import`):
 
 - `GET /api/v1/admin/bma-sync/runs` — run history with counters and conflicts.
 - `POST /api/v1/admin/bma-sync/run` — manual pull ("Jetzt abgleichen").
+- `GET /api/v1/admin/bma-sync/schedule` — the effective schedule pair, i.e. the stored
+  `settings` rows with the `BMA_SYNC_*` environment as fallback.
 - `PATCH /api/v1/admin/bma-sync/schedule` — cron and enabled flag.
 
 Admin UI page `/admin/bma-sync`: run table, conflict table, trigger button,

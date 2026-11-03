@@ -59,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `GET /api/v1/admin/bma-sync/schedule` (WP-M2-36b): the admin page of WP-M2-37 prefills
+  its schedule form, and the effective pair — the stored `bma.sync.enabled` /
+  `bma.sync.cron` settings with the `BMA_SYNC_*` environment as fallback — was not
+  readable anywhere. The route is guarded by `object.read` and answers the existing
+  `bmaSyncScheduleResponseSchema`; it closes the open question of WP-M2-36.
 - The standard fault types are bootstrapped into `text_templates` when the API
   starts (WP-M2-42): the eight texts with their `de`/`en` row, marked as done in
   `settings`, so a deleted type stays deleted and an edited translation is kept.

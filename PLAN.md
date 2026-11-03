@@ -673,6 +673,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-34  | `bma_sync_runs` table (migration `0007`)     | done    |
 | WP-M2-35  | BMAcloud sync service                        | done    |
 | WP-M2-36  | BMAcloud admin API and pg-boss job           | done    |
+| WP-M2-36b | `GET` of the BMAcloud schedule pair          | done    |
 | WP-M2-37  | BMAcloud sync page (web)                     | planned |
 | WP-M2-38  | sync card on the administration home         | planned |
 | WP-M2-39  | external badge in the object list            | planned |
