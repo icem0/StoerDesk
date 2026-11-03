@@ -56,6 +56,27 @@ export const updateAgentErrorSchema = z.enum(UPDATE_AGENT_ERROR_CODES)
 
 export type UpdateAgentErrorReason = z.infer<typeof updateAgentErrorSchema>
 
+/**
+ * How much output tail a run carries (§18.5). The detail is a bounded tail of
+ * the failing command, never a log: it is stored in a row and shown in the
+ * administration of a single-tenant host.
+ */
+export const UPDATE_ERROR_DETAIL_MAX_CHARS = 2000
+
+/**
+ * The sanitized output tail of the failing step. The agent redacts every
+ * credential before it stores the text (§18.5); the API never invents one.
+ * `default(null)` keeps the state file of an agent written before WP-M2-68
+ * readable.
+ */
+export const updateErrorDetailSchema = z
+  .string()
+  .max(UPDATE_ERROR_DETAIL_MAX_CHARS)
+  .nullable()
+  .default(null)
+
+export type UpdateErrorDetail = z.infer<typeof updateErrorDetailSchema>
+
 /** One step of a run with its result. */
 export const updateStepResultSchema = z.object({
   step: updateStepSchema,
@@ -74,6 +95,7 @@ export const agentRunSchema = z.object({
   beforeVersion: z.string().nullable(),
   afterVersion: z.string().nullable(),
   errorCode: z.string().nullable(),
+  errorDetail: updateErrorDetailSchema,
   steps: z.array(updateStepResultSchema),
 })
 

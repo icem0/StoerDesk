@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import {
   type AgentRun,
+  UPDATE_ERROR_DETAIL_MAX_CHARS,
   type UpdateAgentState,
   type UpdateErrorCode,
   type UpdateStep,
@@ -19,7 +20,7 @@ import {
  * shell and without a Docker daemon.
  */
 
-/** The result of one command. The output is never stored in a run. */
+/** The output of one command. A failed step contributes its tail to the run. */
 export interface CommandResult {
   code: number
   stdout: string
@@ -56,6 +57,83 @@ const STEP_ERROR_CODES: Record<UpdateStep, UpdateErrorCode> = {
   git: 'update_git_failed',
   compose: 'update_compose_failed',
   prune: 'update_prune_failed',
+}
+
+const REDACTED = '***'
+
+/**
+ * The credential shapes a command output must never carry out of the agent
+ * (§18.5): the userinfo of a remote URL, a known token format, an
+ * `Authorization` value and a secret assignment.
+ */
+const CREDENTIAL_RULES: readonly { pattern: RegExp; replacement: string }[] = [
+  { pattern: /(\b[a-z][a-z0-9+.-]*:\/\/)[^\s/@]+:[^\s@/]+(?=@)/gi, replacement: `$1${REDACTED}` },
+  {
+    pattern:
+      /\b(?:gh[pousr]_[A-Za-z0-9]{6,}|github_pat_[A-Za-z0-9_]{6,}|xox[baprs]-[A-Za-z0-9-]{6,})\b/g,
+    replacement: REDACTED,
+  },
+  { pattern: /(\bauthorization\s*[:=]\s*)(?:basic|bearer)?\s*\S+/gi, replacement: `$1${REDACTED}` },
+  {
+    pattern:
+      /(\b(?:token|password|passwd|pwd|secret|api[_-]?key|access[_-]?key|private[_-]?key)\b\s*[:=]\s*)\S+/gi,
+    replacement: `$1${REDACTED}`,
+  },
+]
+
+/** Removes every credential that a command could have echoed (§18.5). */
+export function redactCredentials(text: string): string {
+  let redacted = text
+
+  for (const rule of CREDENTIAL_RULES) {
+    redacted = redacted.replace(rule.pattern, rule.replacement)
+  }
+
+  return redacted
+}
+
+/** Drops the control characters of a terminal output; keeps `\n` and `\t`. */
+function keepPrintable(text: string): string {
+  let kept = ''
+
+  for (const char of text) {
+    const code = char.charCodeAt(0)
+
+    if ((code >= 0x20 && code !== 0x7f) || char === '\n' || char === '\t') {
+      kept += char
+    }
+  }
+
+  return kept
+}
+
+/**
+ * The output tail of a failed command: stderr first, stdout when stderr is
+ * empty, without control characters, redacted and never longer than
+ * `UPDATE_ERROR_DETAIL_MAX_CHARS`. `null` when the command said nothing — the
+ * error code of the step still names what failed.
+ */
+export function failureDetail(result: CommandResult): string | null {
+  const raw = result.stderr.trim() === '' ? result.stdout : result.stderr
+  const text = keepPrintable(raw.replace(/\r\n?/g, '\n')).trim()
+
+  if (text === '') {
+    return null
+  }
+
+  // Redacted first, then cut: a tail that starts inside a credential would cut
+  // the pattern apart and let the rest of the secret through.
+  const redacted = redactCredentials(text)
+
+  return redacted.length > UPDATE_ERROR_DETAIL_MAX_CHARS
+    ? redacted.slice(-UPDATE_ERROR_DETAIL_MAX_CHARS)
+    : redacted
+}
+
+/** The outcome of one step of a run. */
+interface StepOutcome {
+  ok: boolean
+  detail: string | null
 }
 
 /**
@@ -132,6 +210,7 @@ export class UpdateRunner {
       beforeVersion: await this.readVersion(),
       afterVersion: null,
       errorCode: null,
+      errorDetail: null,
       steps: [],
     }
 
@@ -164,10 +243,10 @@ export class UpdateRunner {
         await this.restoreOwner(owner)
       }
 
-      if (!pulled) {
+      if (!pulled.ok) {
         this.skip(run, 'compose')
         this.skip(run, 'prune')
-        await this.finish(run, 'FAILED', 'update_git_failed')
+        await this.finish(run, 'FAILED', 'update_git_failed', pulled.detail)
       } else {
         step = 'compose'
 
@@ -190,9 +269,9 @@ export class UpdateRunner {
           { cwd: this.projectDirectory },
         )
 
-        if (!composed) {
+        if (!composed.ok) {
           this.skip(run, 'prune')
-          await this.finish(run, 'PARTIAL', 'update_compose_failed')
+          await this.finish(run, 'PARTIAL', 'update_compose_failed', composed.detail)
         } else {
           step = 'prune'
 
@@ -200,13 +279,14 @@ export class UpdateRunner {
 
           await this.finish(
             run,
-            pruned ? 'SUCCESS' : 'PARTIAL',
-            pruned ? null : 'update_prune_failed',
+            pruned.ok ? 'SUCCESS' : 'PARTIAL',
+            pruned.ok ? null : 'update_prune_failed',
+            pruned.detail,
           )
         }
       }
     } catch {
-      await this.finish(run, 'FAILED', STEP_ERROR_CODES[step])
+      await this.finish(run, 'FAILED', STEP_ERROR_CODES[step], null)
     }
 
     await this.onRunFinished?.(run)
@@ -218,7 +298,7 @@ export class UpdateRunner {
     command: string,
     args: readonly string[],
     options?: { cwd?: string; env?: Record<string, string> },
-  ): Promise<boolean> {
+  ): Promise<StepOutcome> {
     const result = await this.runCommand(command, args, options)
     const ok = result.code === 0
 
@@ -228,7 +308,7 @@ export class UpdateRunner {
       errorCode: ok ? null : STEP_ERROR_CODES[step],
     })
 
-    return ok
+    return { ok, detail: ok ? null : failureDetail(result) }
   }
 
   private skip(run: AgentRun, step: UpdateStep): void {
@@ -239,9 +319,11 @@ export class UpdateRunner {
     run: AgentRun,
     status: AgentRun['status'],
     errorCode: UpdateErrorCode | null,
+    errorDetail: string | null,
   ): Promise<void> {
     run.status = status
     run.errorCode = errorCode
+    run.errorDetail = status === 'SUCCESS' ? null : errorDetail
     run.afterVersion = await this.readVersion()
     run.finishedAt = this.now().toISOString()
     this.activeRun = null

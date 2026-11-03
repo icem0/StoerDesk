@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AgentRun } from '@stoerdesk/shared'
+import { type AgentRun, UPDATE_ERROR_DETAIL_MAX_CHARS } from '@stoerdesk/shared'
 
 import { type CommandResult, type CommandRunner, UpdateRunner } from '../update-runner.js'
 
@@ -111,6 +111,75 @@ describe('update runner', () => {
     expect(run.errorCode).toBe('update_git_failed')
     expect(run.steps.map((step) => step.status)).toEqual(['failed', 'skipped', 'skipped'])
     expect(calls.filter((call) => call.command === 'docker')).toHaveLength(0)
+  })
+
+  it('carries the output of the failing pull as the error detail', async () => {
+    const { runner } = recorder({
+      'git -c': {
+        code: 1,
+        stdout: 'Already up to date.',
+        stderr:
+          'hint: Updates were rejected because it was not possible to fast-forward.\nfatal: Not possible to fast-forward, aborting.\n',
+      },
+    })
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.errorDetail).toContain('not possible to fast-forward')
+    expect(run.errorDetail).not.toContain('Already up to date.')
+  })
+
+  it('falls back to the standard output when the failing step is silent', async () => {
+    const { runner } = recorder({
+      'docker image': { code: 1, stdout: 'a image is in use by container', stderr: '   \n' },
+    })
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.errorCode).toBe('update_prune_failed')
+    expect(run.errorDetail).toBe('a image is in use by container')
+  })
+
+  it('keeps a credential out of the error detail', async () => {
+    const { runner } = recorder({
+      'git -c': {
+        code: 128,
+        stdout: '',
+        stderr:
+          'fatal: Authentication failed for ' +
+          "'https://ghp_Sup3rSecretTokenValue@github.com/icem0/StoerDesk/'\n",
+      },
+    })
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.errorDetail).toContain('Authentication failed')
+    expect(run.errorDetail).not.toContain('Sup3rSecretTokenValue')
+    expect(run.errorDetail).toContain('https://***@github.com')
+  })
+
+  it('never carries more than the bounded tail of a failing build', async () => {
+    const noise = 'ERROR: build step failed\n'.repeat(500)
+    const { runner } = recorder({
+      'docker compose': { code: 1, stdout: '', stderr: noise },
+    })
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect((run.errorDetail ?? '').length).toBeLessThanOrEqual(UPDATE_ERROR_DETAIL_MAX_CHARS)
+    expect(run.errorDetail?.endsWith('build step failed')).toBe(true)
   })
 
   it('reports a partial run when the rebuild fails', async () => {

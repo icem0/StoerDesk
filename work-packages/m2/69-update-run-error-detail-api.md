@@ -1,0 +1,69 @@
+# WP-M2-69: the run row stores and answers the failure detail
+
+format: small-model
+status: planned
+depends-on: WP-M2-68
+phase: 2
+context-budget: 14k tokens
+spec: specs/18-self-update.md §18.4–§18.6
+spec-lines: 130
+
+files-read:
+
+- apps/api/src/db/schema.ts — the `update_runs` table of WP-M2-50
+- apps/api/src/update/routes.ts — `toRunAnswer()` and `reconcile()`
+- packages/shared/src/schemas/update.ts — `updateErrorDetailSchema` of WP-M2-68
+- apps/agent/src/update-runner.ts — where the detail is produced
+- apps/api/src/update/**tests**/routes.integration.spec.ts — the fake agent
+
+files-write:
+
+- apps/api/src/db/schema.ts
+- apps/api/src/db/migrations/0011_update_runs_error_detail.sql
+- packages/shared/src/schemas/update.ts
+- apps/api/src/update/routes.ts
+
+interfaces:
+
+- `update_runs` gains the nullable column `error_detail`
+- `updateRunSchema` and with it the answers of `GET …/update/status` and
+  `GET …/update/runs` carry `errorDetail: string | null`
+
+## Task
+
+1. Layer 1: add `errorDetail: text('error_detail')` to `updateRuns` and generate
+   the migration `0011_update_runs_error_detail.sql` with its snapshot.
+2. Layer 2/3: reuse `updateErrorDetailSchema` of WP-M2-68 in `updateRunSchema`;
+   `toRunAnswer()` maps the column; `reconcile()` copies `errorDetail` of the
+   agent run into the row together with the status.
+3. The API never invents a detail: a row without an agent answer keeps `null`,
+   and a successful run keeps `null`. No secret is stored (§18.5) — the agent
+   already redacted the text.
+
+## Non-goals
+
+- No UI change — the page shows the detail in WP-M2-70.
+- No log table, no full command output, no per-step detail.
+- No change of the agent and of its protocol.
+
+## Acceptance
+
+```bash
+npm run check
+```
+
+Expected: typecheck, lint, tests, i18n and wp:check green; the integration test
+proves that a failed agent run lands in `update_runs.error_detail` and in the
+status answer (integration tests need `TEST_DATABASE_URL`, otherwise they skip
+and are reported as unverified).
+
+## Handoff
+
+- Files changed: the four files of `files-write`, the migration snapshot and
+  the tests.
+- Interfaces added: `update_runs.error_detail`, `errorDetail` on
+  `updateRunSchema`.
+- Verified: `npm run check`.
+- Follow-up WP: WP-M2-70 (`70-update-run-error-detail-ui.md`, created with this
+  commit).
+- Open question: none.

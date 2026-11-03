@@ -98,6 +98,7 @@ function startFakeAgent(): {
         beforeVersion: 'v0.1.98',
         afterVersion: null,
         errorCode: null,
+        errorDetail: null,
         steps: [],
       }
 
@@ -141,7 +142,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     }
 
     async function roleIdFor(key: string): Promise<string> {
-      return onlyRow(await db.select({ id: roles.id }).from(roles).where(eq(roles.key, key)), key).id
+      return onlyRow(await db.select({ id: roles.id }).from(roles).where(eq(roles.key, key)), key)
+        .id
     }
 
     async function sessionCookieFor(userId: string): Promise<string> {
