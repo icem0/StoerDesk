@@ -684,6 +684,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-40f | internal create and detail live catalog      | done    |
 | WP-M2-41  | bootstrap standard fault types               | done    |
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list  | done    |
+| WP-M2-42  | bootstrap of the standard fault types      | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

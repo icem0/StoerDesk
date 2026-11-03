@@ -248,6 +248,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-40f | internal create and detail use the live fault catalog    | done                    | yes     |
 | WP-M2-41  | bootstrap standard fault types                           | done                    | yes     |
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list              | done                    | yes     |
+| WP-M2-42  | bootstrap the standard fault types on the API start      | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

@@ -16,6 +16,7 @@ import { createDatabase } from './db/client'
 import { objectRoutes } from './objects/service'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
+import { seedStandardTexts } from './db/seed-standard-texts'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { publicDuplicateRoutes } from './tickets/duplicates'
@@ -139,6 +140,7 @@ if (invokedDirectly) {
     email: env.SEED_ADMIN_EMAIL,
     password: env.SEED_ADMIN_PASSWORD,
   })
+  await seedStandardTexts(database)
   await client.end({ timeout: 5 })
 
   const app = await buildServer()
