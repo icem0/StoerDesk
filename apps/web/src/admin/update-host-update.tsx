@@ -232,6 +232,15 @@ export function UpdateHostUpdate() {
             )}${errorCodeText(t, lastRun.errorCode) ? ` — ${errorCodeText(t, lastRun.errorCode)}` : ''}`}
       </p>
 
+      {lastRun?.errorDetail ? (
+        <div className="mt-2 text-sm">
+          <p className="text-slate-400">{t('admin.update.host.errorDetailLabel')}</p>
+          <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded border border-slate-700 bg-slate-950/60 p-2 font-mono text-xs text-slate-200">
+            {lastRun.errorDetail}
+          </pre>
+        </div>
+      ) : null}
+
       {status.isError ? (
         <p role="alert" className="mt-3 text-sm text-amber-300">
           {t('admin.update.host.apiUnreachable')}

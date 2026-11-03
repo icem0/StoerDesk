@@ -1,7 +1,7 @@
 # WP-M2-70: the page shows why the update failed
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-69
 phase: 2
 context-budget: 12k tokens
@@ -19,6 +19,7 @@ files-read:
 files-write:
 
 - apps/web/src/admin/update-host-update.tsx
+- apps/web/src/admin/__tests__/update-host-update.test.tsx
 - apps/web/src/i18n/locales/de/settings.json
 - apps/web/src/i18n/locales/en/settings.json
 
@@ -56,8 +57,10 @@ wp:check green.
 
 ## Handoff
 
-- Files changed: the three files of `files-write` plus the test.
+- Files changed: the four files of `files-write`.
 - Interfaces added: the i18n key `admin.update.host.errorDetailLabel`.
-- Verified: `npm run check`.
+- Verified: `npm run check` green (389 tests, `i18n:check` 596 keys in de and en);
+  the e2e job skipped — no usable Chromium in this container — and the Docker smoke
+  test needs CI.
 - Follow-up WP: none.
 - Open question: none.

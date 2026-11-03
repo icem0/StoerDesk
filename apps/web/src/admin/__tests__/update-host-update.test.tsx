@@ -255,6 +255,55 @@ describe('UpdateHostUpdate', () => {
     ).toBeNull()
   })
 
+  it('shows the failure detail of a failed run below the translated error code', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({
+        lastRun: {
+          id: '22222222-2222-4222-8222-222222222222',
+          status: 'FAILED',
+          startedAt: '2026-01-01T00:00:00.000Z',
+          finishedAt: '2026-01-01T00:01:00.000Z',
+          beforeVersion: 'v0.1.99',
+          afterVersion: null,
+          errorCode: 'update_git_failed',
+          errorDetail: 'fatal: Not possible to fast-forward, aborting.\npull fehlgeschlagen',
+        },
+      }),
+    })
+
+    renderSection()
+
+    expect(await screen.findByText(/Git-Pull fehlgeschlagen/)).toBeTruthy()
+    expect(screen.getByText(/Fehlerdetail|Error detail/i)).toBeTruthy()
+    expect(
+      screen.getByText('fatal: Not possible to fast-forward, aborting. pull fehlgeschlagen'),
+    ).toBeTruthy()
+  })
+
+  it('shows no failure detail block when the last run has none', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({
+        lastRun: {
+          id: '33333333-3333-4333-8333-333333333333',
+          status: 'SUCCESS',
+          startedAt: '2026-01-01T00:00:00.000Z',
+          finishedAt: '2026-01-01T00:01:00.000Z',
+          beforeVersion: 'v0.1.99',
+          afterVersion: 'v0.1.104',
+          errorCode: null,
+          errorDetail: null,
+        },
+      }),
+    })
+
+    renderSection()
+
+    expect(await screen.findByText(/Letzter Lauf|Last run/i)).toBeTruthy()
+    expect(screen.queryByText(/Fehlerdetail|Error detail/i)).toBeNull()
+  })
+
   it('shows check failed when github is unreachable', async () => {
     vi.stubGlobal(
       'fetch',

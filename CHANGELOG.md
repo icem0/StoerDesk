@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update page shows the raw failure detail (WP-M2-70): below the
+  translated error code of the last run, a scrollable monospace block renders the
+  sanitized output tail stored by the agent; no block appears when the run has
+  no detail.
 - A host update names why it failed (WP-M2-68, WP-M2-69): the update agent keeps
   the output tail of the failing step — stderr first, control characters dropped,
   every credential redacted and cut to `UPDATE_ERROR_DETAIL_MAX_CHARS` — and the

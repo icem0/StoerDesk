@@ -143,7 +143,8 @@
           "update_already_running": "An update is already running",
           "update_rate_limited": "Too many attempts, please wait",
           "unknown": "Unknown error"
-        }
+        },
+        "errorDetailLabel": "Error detail"
       }
     },
     "users": {
