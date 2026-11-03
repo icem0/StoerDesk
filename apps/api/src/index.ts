@@ -28,6 +28,7 @@ import { ticketDetailRoutes } from './tickets/detail'
 import { workflowRoutes } from './tickets/workflow-routes'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
+import { updateRoutes } from './update/routes'
 
 loadDotEnvFile()
 
@@ -102,6 +103,7 @@ export async function buildServer() {
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(bmaSyncRoutes, { database, env })
+  await app.register(updateRoutes, { database, env })
   await app.register(publicReportRoutes, {
     database,
     uploadDir: env.UPLOAD_DIR,

@@ -700,7 +700,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-52  | the update agent HTTP server | done    |
 | WP-M2-53  | the agent image, compose service and env wiring | done    |
 | WP-M2-53b | the compose invocation of the agent and its image in the smoke test | done    |
-| WP-M2-54  | the admin update API | planned |
+| WP-M2-54  | the admin update API | done    |
 | WP-M2-55  | the host update section in the admin update page | planned |
 | WP-M2-56  | documentation of the host update | planned |
 

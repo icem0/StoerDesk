@@ -90,6 +90,12 @@ const envSchema = z
     MATRIX_HOMESERVER: z.string().default(''),
     MATRIX_ROOM_ID: z.string().default(''),
     MATRIX_ACCESS_TOKEN: z.string().default(''),
+
+    // --- Host update agent (ADR-0006, specs/18-self-update.md) ---
+    /** The address of the agent inside the compose network. */
+    UPDATE_AGENT_URL: z.string().default('http://update-agent:8080'),
+    /** Bearer of the agent; empty means that no agent is configured. */
+    UPDATE_AGENT_TOKEN: z.string().default(''),
   })
   .superRefine((value, context) => {
     const email = value.SEED_ADMIN_EMAIL.trim()

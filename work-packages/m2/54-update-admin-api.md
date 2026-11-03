@@ -1,7 +1,7 @@
 # WP-M2-54: the admin update API
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-53
 phase: 2
 context-budget: 18k tokens
@@ -73,8 +73,11 @@ proves the guard, the `409`, the `429`, the `202` and the reconciliation of a
 
 ## Handoff
 
-- Files changed: the four files of `files-write` plus the test.
+- Files changed: the four files of `files-write` plus the integration test
+  (`apps/api/src/update/__tests__/routes.integration.spec.ts`).
 - Interfaces added: the three admin routes and the agent client.
-- Verified: `npm run check`.
+- Verified: `npm run check` green (342 tests); the integration test proves the
+  guard (`401`, `403`), the `202`, the `409` while a run is active, the `429`
+  inside the cooldown, the reconciliation of a `RUNNING` row and the history.
 - Follow-up WP: WP-M2-55 (the admin UI).
 - Open question: none.

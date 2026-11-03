@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The admin update API (WP-M2-54): `GET /api/v1/admin/update/status`,
+  `POST /api/v1/admin/update/run` and `GET /api/v1/admin/update/runs`, guarded
+  with the new permission `system.update`. The API stays a client: it calls the
+  agent over the internal network with the bearer `UPDATE_AGENT_TOKEN` and
+  validates every answer, so a malformed answer becomes an error and never a
+  crash. A run is written before the agent starts — the rebuild replaces the
+  API container — and a `RUNNING` row is reconciled with the state of the agent
+  after the restart. A second run is refused with `409`, a run inside the
+  cooldown with `429`.
 - The compose invocation of the agent and its image in the smoke test
   (WP-M2-53b): the compose client of the agent runs in the project directory,
   so it reads the `.env` of the checkout and therefore the project name of the
