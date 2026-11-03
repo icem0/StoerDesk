@@ -71,8 +71,10 @@ docker compose --profile update up -d update-agent
   the compose client of the agent reads the build context from it, so the
   rebuilt images contain the new code.
 - **It publishes no host port.** The agent answers only on the internal
-  `backend` network, and only with the bearer `UPDATE_AGENT_TOKEN` from
-  `.env` (`npm run env:create` generates it). The API calls the agent with it.
+  `backend` network, and only with its bearer. The agent creates that bearer
+  itself and writes it into the state volume; the API reads it from there, so
+  **no secret has to be configured** — `UPDATE_AGENT_TOKEN` in `.env` is
+  optional and only pins a fixed bearer.
 - **A run restarts the API.** The rebuild replaces the API container, so the
   request that triggered the run dies with it. The agent keeps the truth about
   the run, and the API reconciles the run row after its restart. The
@@ -81,16 +83,19 @@ docker compose --profile update up -d update-agent
   `docker image prune -a` is not used: it would delete the images of other
   projects on a shared host.
 
-Without the agent the administration reports that the agent is not reachable;
-the client-side update of the PWA keeps working.
+Without the agent the administration reports that the agent is not reachable
+and shows the command that starts it; the client-side update of the PWA keeps
+working.
 
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.
 `npm run env:create` copies the template to `.env` and replaces the secrets
-(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`, `UPDATE_AGENT_TOKEN`) with random values. The generated
-password is URL-safe, so it can be used inside a connection URL. The application version is
-not configured here: it comes from the tracked `VERSION` file.
+(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`, `UPDATE_AGENT_TOKEN`) with random values. The token
+of the update agent is optional: the agent creates its own bearer when the value is
+empty. The generated password is URL-safe, so it can be used inside a connection
+URL. The application version is not configured here: it comes from the tracked
+`VERSION` file.
 
 The file is read by:
 

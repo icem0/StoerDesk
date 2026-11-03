@@ -270,7 +270,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-59  | the agent generates its own token (state volume)          | done                    | yes     |
 | WP-M2-60  | the API reads the token from the state volume              | done                    | yes     |
 | WP-M2-61  | the admin page carries the guide for the host update       | done                    | yes     |
-| WP-M2-62  | documentation of the token without the environment          | planned                 | yes     |
+| WP-M2-62  | documentation of the token without the environment          | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

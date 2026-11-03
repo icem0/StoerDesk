@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update works without a configured secret (WP-M2-59, WP-M2-60): the
+  agent creates its own bearer and writes it into the state volume, the API
+  mounts that volume read-only and reads the value there. `UPDATE_AGENT_TOKEN`
+  in the `.env` is optional and only pins a fixed bearer — the operator has to
+  configure nothing.
+- The administration carries the guide for the host update (WP-M2-61): while the
+  agent does not answer, the section shows the two steps and the command that
+  starts it on the host, with a button that copies it to the clipboard.
+
 - The host update page names why the agent is not reachable (WP-M2-57,
   WP-M2-58): the status of the API carries the cause — the token
   `UPDATE_AGENT_TOKEN` is missing in the `.env` of the host, the agent answered

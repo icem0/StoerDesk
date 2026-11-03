@@ -91,8 +91,11 @@ in the `api` image. The topology is fixed by ADR-0006:
     `update_runs` row (modelled on `bma_sync_runs`): started, finished, status
     (`RUNNING`/`SUCCESS`/`PARTIAL`/`FAILED`), before/after version, error code.
   - `GET  /api/v1/admin/update/runs` — run history.
-- `UPDATE_AGENT_TOKEN` lives in `.env` only; never logged, never in a payload or
-  the run row, never committed. `.env.example` ships an empty value.
+- The bearer of the agent is a random shared secret. The agent creates it itself
+  and writes it into the state volume; the API reads it from there, so no
+  secret has to be configured. `UPDATE_AGENT_TOKEN` in `.env` is optional and
+  only pins a fixed bearer. The value is never logged, never in a payload or
+  the run row, never committed.
 - A run may restart the stack; the API must stay honest about its own
   interruption and the UI re-checks health after the run.
 

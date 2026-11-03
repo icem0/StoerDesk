@@ -44,10 +44,12 @@ Facts that shape the design:
    `/var/run/docker.sock` read-write, and a small named volume for the agent's
    last-run state. No published port: the agent is reachable only on the
    internal `backend` network as `http://update-agent:8080`.
-4. **Agent API.** Minimal and bearer-protected with `UPDATE_AGENT_TOKEN`
-   (timing-safe comparison): `GET /status`, `POST /run`, `GET /runs`. No shell,
-   no arbitrary command, no path from the request — the agent decides what a
-   run is.
+4. **Agent API.** Minimal and bearer-protected (timing-safe
+   comparison): `GET /status`, `POST /run`, `GET /runs`. No shell, no arbitrary
+   command, no path from the request — the agent decides what a run is. The
+   bearer is created by the agent itself and written into the state volume,
+   which the API mounts read-only; `UPDATE_AGENT_TOKEN` in `.env` is optional
+   and only pins a fixed bearer. The operator configures no secret.
 5. **Run steps.** `git -c safe.directory=/repo pull --ff-only` →
    `docker compose --project-directory /repo -f /repo/docker-compose.yml up -d
    --build` → `docker image prune -f`. The prune removes the dangling images of
