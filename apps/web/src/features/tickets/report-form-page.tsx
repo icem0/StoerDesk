@@ -6,8 +6,6 @@ import {
   altchaVerificationSchema,
   publicReportContactSchema,
   qrTokenSchema,
-  STANDARD_TEXTS,
-  STANDARD_TEXT_KEYS,
 } from '@stoerdesk/shared'
 import type {
   AltchaVerification,
@@ -32,6 +30,7 @@ import {
   replayOutbox,
 } from '../../lib/outbox'
 import { PhotoUpload } from './photo-upload'
+import { usePublicFaultCatalog, type FaultCatalogEntry } from './use-fault-catalog'
 
 /**
  * Public report form at `/m/:token` (`specs/06-report-form.md` §7.1–§7.3, WP-M2-05).
@@ -172,15 +171,6 @@ function localeOf(language: string): StandardTextLocale {
   return language === 'en' ? 'en' : 'de'
 }
 
-/**
- * The fault chips are the localized standard templates of §7.2 — the same catalog the
- * demo seed writes into `text_templates` (`specs/02-data-model.md` §4.5), not literals of
- * this component. A public text-template endpoint is phase 10.
- */
-function faultCatalog(locale: StandardTextLocale): Record<string, string> {
-  return Object.fromEntries(STANDARD_TEXTS[locale].map((entry) => [entry.key, entry.text]))
-}
-
 function addressLine(object: PublicQrObject): string {
   const street = [object.street ?? '', object.houseNumber ?? ''].join(' ').trim()
   const place = [object.postalCode ?? '', object.city ?? ''].join(' ').trim()
@@ -255,11 +245,11 @@ function SystemSelect({
 }
 
 function FaultChips({
-  labels,
+  entries,
   selected,
   onToggle,
 }: {
-  labels: Record<string, string>
+  entries: FaultCatalogEntry[]
   selected: string[]
   onToggle: (key: string) => void
 }) {
@@ -270,9 +260,8 @@ function FaultChips({
       <legend className="text-sm font-medium">{t('report.faults.label')}</legend>
       <p className="text-sm text-slate-400">{t('report.faults.hint')}</p>
       <div className="flex flex-wrap gap-2">
-        {STANDARD_TEXT_KEYS.map((key) => {
-          const active = selected.includes(key)
-          const label = labels[key] ?? key
+        {entries.map((entry) => {
+          const active = selected.includes(entry.key)
 
           return (
             <button
@@ -282,11 +271,11 @@ function FaultChips({
                   ? 'border-sky-400 bg-sky-600/20 text-sky-100'
                   : 'border-slate-700 bg-slate-900 text-slate-300'
               }`}
-              key={key}
+              key={entry.key}
               type="button"
-              onClick={() => onToggle(key)}
+              onClick={() => onToggle(entry.key)}
             >
-              {label}
+              {entry.text}
             </button>
           )
         })}
@@ -577,7 +566,7 @@ export function ReportFormPage() {
   const tokenIsValid = qrTokenSchema.safeParse(pathTokenValue).success
   const qr = usePublicQr(pathTokenValue)
   const locale = localeOf(i18n.language)
-  const labels = faultCatalog(locale)
+  const catalog = usePublicFaultCatalog(locale)
   const [systemChoice, setSystemChoice] = useState<string | undefined>(undefined)
   const [faultKeys, setFaultKeys] = useState<string[]>([])
   const [text, setText] = useState('')
@@ -904,7 +893,7 @@ export function ReportFormPage() {
 
             <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)}>
               <SystemSelect object={object} onChange={setSystemChoice} value={selectedSystemId} />
-              <FaultChips labels={labels} onToggle={toggleFault} selected={faultKeys} />
+              <FaultChips entries={catalog} onToggle={toggleFault} selected={faultKeys} />
               <FreeText onChange={setText} value={text} />
               <PhotoUpload
                 photos={photos}

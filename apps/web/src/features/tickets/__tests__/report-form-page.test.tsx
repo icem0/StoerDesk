@@ -6,6 +6,7 @@ import { I18nextProvider } from 'react-i18next'
 
 import { i18n } from '../../../i18n'
 import { ReportFormPage } from '../report-form-page'
+import { STANDARD_TEXTS } from '@stoerdesk/shared'
 import type { PublicOpenTicket, PublicReport, QrResolveResponse } from '@stoerdesk/shared'
 
 // The Altcha widget is a web component of a third-party package — the unit test
@@ -91,6 +92,19 @@ function stubPublicApi(
 
       if (path.includes('/public/qr/')) {
         return Response.json(RESOLVE)
+      }
+
+      // The live fault catalog of §7.9 — the form asks the server for the
+      // active templates of the current locale.
+      if (path.includes('/public/text-templates')) {
+        const locale = path.includes('locale=en') ? 'en' : 'de'
+
+        return Response.json({
+          templates: STANDARD_TEXTS[locale].map((entry) => ({
+            key: entry.key,
+            text: entry.text,
+          })),
+        })
       }
 
       // The duplicate hint of §7.8.1 — the open tickets of the object.
@@ -311,7 +325,10 @@ describe('ReportFormPage', () => {
         'Dieser QR-Code ist ungültig. Bitte den Aufkleber des Objekts scannen.',
       ),
     ).toBeTruthy()
-    expect(fetchStub).not.toHaveBeenCalled()
+    // Only the catalog of §7.9 may be read; no report is sent for an invalid token.
+    expect(
+      fetchStub.mock.calls.filter((call) => String(call[0]).includes('/public/tickets')),
+    ).toHaveLength(0)
   })
 
   it('sends the hidden honeypot of §7.6 with every report', async () => {
