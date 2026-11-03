@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The BMAcloud contract knows the system type (WP-M2-65): `bmaAnlageSchema` reads
+  the `typ` id, `GET /anlagentypen` resolves it to a name and
+  `externalTypeCategory()` classifies the German type keywords into `BMA`, `LICHTRUF`,
+  `RWA`, `EMA` and `SPRACHALARM` — an unknown name stays `null`, no `SONSTIGE` guess.
+
 - The host update section checks for a newer version (WP-M2-63): „Update prüfen“
   reads the newest StörDesk release from GitHub, offers „Jetzt updaten“ when that
   version is newer than the running one and reports „Sie nutzen die neueste

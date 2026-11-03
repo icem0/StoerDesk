@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { bmaAnlageSchema } from '../schemas/bmacloud.js'
+import {
+  bmaAnlageSchema,
+  bmaAnlagentypSchema,
+  externalTypeCategory,
+} from '../schemas/bmacloud.js'
 
 const anlage = {
   aid: 1,
@@ -33,7 +37,7 @@ describe('bmaAnlageSchema', () => {
     expect(bmaAnlageSchema.safeParse({ ...anlage, aid: 1.5 }).success).toBe(false)
   })
 
-  it('keeps the unmapped wire fields out of the parsed payload', () => {
+  it('keeps the typ id of the wire payload and drops the other unmapped fields', () => {
     const parsed = bmaAnlageSchema.parse({
       ...anlage,
       gid: 0,
@@ -43,8 +47,65 @@ describe('bmaAnlageSchema', () => {
       notizen: 'Testnotiz',
     })
 
+    expect(parsed.typ).toBe(4)
     expect(Object.keys(parsed).sort()).toEqual(
-      ['aid', 'anlagenort', 'firma', 'nr', 'ort', 'plz', 'status', 'str'].sort(),
+      ['aid', 'anlagenort', 'firma', 'nr', 'ort', 'plz', 'status', 'str', 'typ'].sort(),
     )
+  })
+
+  it('accepts a missing or null typ as no type', () => {
+    expect(bmaAnlageSchema.parse(anlage).typ).toBeUndefined()
+    expect(bmaAnlageSchema.parse({ ...anlage, typ: null }).typ).toBeNull()
+    expect(bmaAnlageSchema.safeParse({ ...anlage, typ: 'four' }).success).toBe(false)
+  })
+})
+
+describe('bmaAnlagentypSchema', () => {
+  it('parses one reference row of GET /anlagentypen', () => {
+    const parsed = bmaAnlagentypSchema.parse({
+      typid: 4,
+      descr: 'Brandmeldeanlage',
+      herstellername: 'Honeywell',
+    })
+
+    expect(parsed).toEqual({ typid: 4, descr: 'Brandmeldeanlage', herstellername: 'Honeywell' })
+  })
+
+  it('accepts a row without a manufacturer and rejects an id or description gap', () => {
+    expect(bmaAnlagentypSchema.parse({ typid: 7, descr: 'RWA' }).herstellername).toBeUndefined()
+    expect(bmaAnlagentypSchema.safeParse({ typid: 7, descr: '' }).success).toBe(false)
+    expect(bmaAnlagentypSchema.safeParse({ descr: 'RWA' }).success).toBe(false)
+  })
+})
+
+describe('externalTypeCategory', () => {
+  it('classifies the German keywords case-insensitively', () => {
+    expect(externalTypeCategory('Brandmeldeanlage')).toBe('BMA')
+    expect(externalTypeCategory('BMA 2000')).toBe('BMA')
+    expect(externalTypeCategory('Lichtrufsystem')).toBe('LICHTRUF')
+    expect(externalTypeCategory('Sprachalarmierungsanlage')).toBe('SPRACHALARM')
+    expect(externalTypeCategory('Sprechanlage EG')).toBe('SPRACHALARM')
+    expect(externalTypeCategory('RWA')).toBe('RWA')
+    expect(externalTypeCategory('rauchabzug')).toBe('RWA')
+    expect(externalTypeCategory('Wärmeabzug')).toBe('RWA')
+    expect(externalTypeCategory('Druckbelüftung Treppenhaus')).toBe('RWA')
+    expect(externalTypeCategory('Einbruchmeldeanlage')).toBe('EMA')
+    expect(externalTypeCategory('Überfallmeldeanlage')).toBe('EMA')
+  })
+
+  it('reads the manufacturer name as a second source', () => {
+    expect(externalTypeCategory('Zentrale', 'BMA GmbH')).toBe('BMA')
+    expect(externalTypeCategory(null, 'Honeywell')).toBeNull()
+  })
+
+  it('keeps BMA before the generic RWA keywords', () => {
+    expect(externalTypeCategory('Brandmeldeanlage mit Rauchmeldern')).toBe('BMA')
+  })
+
+  it('answers null instead of guessing SONSTIGE', () => {
+    expect(externalTypeCategory('Aufzugsanlage')).toBeNull()
+    expect(externalTypeCategory(null)).toBeNull()
+    expect(externalTypeCategory('   ')).toBeNull()
+    expect(externalTypeCategory(undefined, null)).toBeNull()
   })
 })

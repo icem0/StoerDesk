@@ -1,7 +1,7 @@
 # WP-M2-65: the BMAcloud contract knows the Anlagentyp
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-64
 phase: 2
 context-budget: 16k tokens
@@ -20,7 +20,8 @@ files-write:
 - packages/shared/src/schemas/bmacloud.ts — `typ` in `bmaAnlageSchema`,
   `bmaAnlagentypSchema`, `externalTypeCategory()`
 - apps/api/src/integrations/bmacloud/client.ts — `anlagentypen()`
-- apps/api/src/integrations/bmacloud/__tests__/client.spec.ts — the new endpoint
+- apps/{api/src/integrations/bmacloud/__tests__/client.spec.ts,
+  shared/src/__tests__/bmacloud.test.ts} — the new endpoint and the keyword table
 
 interfaces:
 
@@ -43,7 +44,9 @@ interfaces:
    `wärmeabzug`/`druckbelüftung` → `RWA`; `einbruch`/`überfall` → `EMA`; `brandmelde` and
    `bma` (also via `herstellername`) → `BMA`; unknown → `null`.
 4. Test the endpoint with the fake `fetch` of `client.spec.ts` (array, non-array answer,
-   `bma_not_configured`) and `externalTypeCategory` with the keyword table plus unknown.
+   failing status) and `externalTypeCategory` with the keyword table, the manufacturer
+   name, the `BMA`-before-`RWA` order and the unknown names.
+5. Keep the shared schema test honest: the parsed payload now carries `typ` as well.
 
 ## Non-goals
 
@@ -65,7 +68,10 @@ Expected: all green; the client spec stays offline (fake `fetch` only).
   and `docs/REPO-MAP.md`.
 - Interfaces added: `anlagentypen()`, `bmaAnlageSchema.typ`, `bmaAnlagentypSchema`,
   `externalTypeCategory()`.
-- Verified: —
+- Verified: `npm run check` green — typecheck, lint, 62 Vitest files, i18n:check,
+  wp:check; the client spec runs on a fake `fetch` only, no network.
+- Note: the keyword table checks `BMA` before `RWA`, so "Brandmeldeanlage mit
+  Rauchmeldern" classifies as `BMA`; both umlaut spellings (`ue`/`ü`) are listed.
 - Follow-up WP: WP-M2-65b (`65b-bma-sync-external-type-write.md`, created with this
   rewrite) writes the column, then WP-M2-66 (the list column).
 - Open question: none

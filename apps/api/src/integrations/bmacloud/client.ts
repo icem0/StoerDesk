@@ -8,6 +8,16 @@
  * appears in an error message, an error param or a log line.
  */
 
+/**
+ * One row of `GET /anlagentypen` — the reference list that turns anlage `typ` into a
+ * human-readable type name (§17.2); the shared `bmaAnlagentypSchema` validates it.
+ */
+export interface BmaAnlagentyp {
+  typid: number
+  descr: string
+  herstellername?: string | null
+}
+
 export interface BmaCloudConfig {
   /** Base URL of the API, e.g. https://bmacloud.de/api/v2/ */
   baseUrl: string
@@ -28,6 +38,8 @@ export interface BmaAnlage {
   plz?: string | null
   ort?: string | null
   status?: string | null
+  /** `Anlage-Typ` id; resolved through `anlagentypen()` (WP-M2-65). */
+  typ?: number | null
 }
 
 export type BmaCloudErrorCode = 'bma_not_configured' | 'bma_request_failed' | 'bma_bad_response'
@@ -47,6 +59,8 @@ export interface BmaCloudClient {
   listAnlagen(): Promise<BmaAnlage[]>
   /** A single Anlage, or `null` for an unknown `aid`. */
   anlage(aid: string): Promise<BmaAnlage | null>
+  /** Reference list of the Anlage types of the tenant — one `GET /anlagentypen` call. */
+  anlagentypen(): Promise<BmaAnlagentyp[]>
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -122,6 +136,22 @@ export function createBmaCloudClient(
       }
 
       return body as unknown as BmaAnlage
+    },
+
+    async anlagentypen(): Promise<BmaAnlagentyp[]> {
+      const response = await get('/anlagentypen')
+
+      if (!response.ok) {
+        throw new BmaCloudError('bma_request_failed', `BMAcloud answered ${response.status}`)
+      }
+
+      const body = await json(response)
+
+      if (!Array.isArray(body)) {
+        throw new BmaCloudError('bma_bad_response', 'BMAcloud /anlagentypen is not an array')
+      }
+
+      return body as BmaAnlagentyp[]
     },
   }
 }

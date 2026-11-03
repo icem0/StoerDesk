@@ -88,6 +88,34 @@ describe('createBmaCloudClient', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('reads the anlagentypen reference list with one GET', async () => {
+    const types = [
+      { typid: 4, descr: 'Brandmeldeanlage', herstellername: 'Honeywell' },
+      { typid: 7, descr: 'RWA' },
+    ]
+    const fetchMock = vi.fn(async () => Response.json(types))
+
+    const result = await client(fetchMock as unknown as typeof fetch).anlagentypen()
+
+    expect(result).toEqual(types)
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://bmacloud.example/api/v2/anlagentypen')
+    expect(init.method).toBe('GET')
+    expect((init.headers as Record<string, string>).authorization).toBe('Bearer secret-key')
+  })
+
+  it('reports a non-array anlagentypen body and a failed call with its code', async () => {
+    const bad = client((async () => Response.json({ typen: [] })) as unknown as typeof fetch)
+
+    await expect(bad.anlagentypen()).rejects.toMatchObject({ code: 'bma_bad_response' })
+
+    const failed = client(
+      (async () => new Response('', { status: 503 })) as unknown as typeof fetch,
+    )
+
+    await expect(failed.anlagentypen()).rejects.toMatchObject({ code: 'bma_request_failed' })
+  })
+
   it('never puts the key into an error message', async () => {
     const bma = client((async () => new Response('', { status: 502 })) as unknown as typeof fetch)
 

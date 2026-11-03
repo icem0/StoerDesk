@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import type { ObjectSystemType } from './object.js'
+
 /**
  * Schemas of the BMAcloud object sync (`specs/17-bmacloud-sync.md` §17.3–§17.4,
  * ADR-0003). The API validates every Anlage of a pull with `bmaAnlageSchema`
@@ -27,9 +29,56 @@ export const bmaAnlageSchema = z.object({
   plz: z.string().nullish(),
   ort: z.string().nullish(),
   status: z.string().nullish(),
+  /** `Anlage-Typ` id of the wire format; resolved through `/anlagentypen` (§17.2). */
+  typ: z.number().int().nullish(),
 })
 
 export type BmaAnlagePayload = z.infer<typeof bmaAnlageSchema>
+
+/** One row of `GET /anlagentypen` — the reference list of the Anlage types (§17.2). */
+export const bmaAnlagentypSchema = z.object({
+  typid: z.number().int(),
+  descr: z.string().min(1),
+  herstellername: z.string().nullish(),
+})
+
+export type BmaAnlagentyp = z.infer<typeof bmaAnlagentypSchema>
+
+/**
+ * Keyword table of the external type name (§17.3, WP-M2-65). German terms,
+ * case-insensitive; both umlaut spellings (`ue` and `ü`) are listed. The `BMA` keywords are checked before the
+ * generic `RWA` ones, so "Brandmeldeanlage mit Rauchmeldern" stays `BMA`. An
+ * unknown name answers `null` — StörDesk never guesses `SONSTIGE`.
+ */
+const EXTERNAL_TYPE_KEYWORDS: ReadonlyArray<readonly [ObjectSystemType, readonly string[]]> = [
+  ['LICHTRUF', ['lichtruf']],
+  ['SPRACHALARM', ['sprachalarm', 'sprechanlage']],
+  ['EMA', ['einbruch', 'ueberfall', 'überfall']],
+  ['BMA', ['brandmelde', 'bma']],
+  ['RWA', ['rwa', 'rauch', 'waermeabzug', 'wärmeabzug', 'druckbelueftung', 'druckbelüftung']],
+]
+
+export function externalTypeCategory(
+  name: string | null | undefined,
+  herstellername?: string | null,
+): ObjectSystemType | null {
+  const haystack = [name, herstellername]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .toLowerCase()
+
+  if (haystack.trim() === '') {
+    return null
+  }
+
+  for (const [type, keywords] of EXTERNAL_TYPE_KEYWORDS) {
+    if (keywords.some((keyword) => haystack.includes(keyword))) {
+      return type
+    }
+  }
+
+  return null
+}
 
 /** Why the sync could not apply one Anlage; never a translated text (§3). */
 export const BMA_SYNC_CONFLICT_CODES = ['invalid_object_no', 'object_no_taken'] as const
