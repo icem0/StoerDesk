@@ -67,7 +67,7 @@ const ui = {
     signedInAs: `Signed in as ${adminEmail}`,
     reportTitle: 'Report a malfunction',
     system: 'Affected system',
-    faultChip: 'Fire alarm system completely out of service',
+    faultChip: 'Line interruption',
     textLabel: 'What can be seen?',
     photoLabel: 'Photos',
     phoneLabel: 'Phone',

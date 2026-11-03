@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The public report E2E smoke tests use the live fault catalog label `Line interruption`
+  in English. The old expectation still waited for `Fire alarm system completely out of
+  service`, which the bootstrapped standard fault types no longer offer.
 - The version of the web shell reads the nearest **version** tag only. A moving pointer
   tag such as `latest` is not a version and must neither become the version in the
   header nor break the quality gate: the check run of the release `v0.1.0` failed

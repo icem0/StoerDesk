@@ -51,7 +51,7 @@ const ui = {
     settings: 'Settings',
     signedInAs: `Signed in as ${adminEmail}`,
     reportTitle: 'Report a malfunction',
-    faultChip: 'Fire alarm system completely out of service',
+    faultChip: 'Line interruption',
     textLabel: 'What can be seen?',
     phoneLabel: 'Phone',
     emergencyNotice: 'For fire or danger: emergency call 112. This form is never an emergency call.',
