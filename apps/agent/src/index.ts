@@ -6,6 +6,7 @@ import { agentRunSchema, type AgentRun } from '@stoerdesk/shared'
 
 import { loadAgentConfig } from './config.js'
 import { createAgentServer } from './server.js'
+import { resolveAgentToken } from './token.js'
 import { type CommandRunner, UpdateRunner } from './update-runner.js'
 
 /**
@@ -61,6 +62,7 @@ export async function writeState(stateDir: string, run: AgentRun): Promise<void>
 
 async function main(): Promise<void> {
   const config = loadAgentConfig()
+  const token = await resolveAgentToken(config)
   let lastRun = await readState(config.stateDir)
 
   const runner = new UpdateRunner({
@@ -77,7 +79,7 @@ async function main(): Promise<void> {
 
   const server = createAgentServer({
     runner,
-    token: config.token,
+    token,
     getLastRun: () => lastRun,
   })
 

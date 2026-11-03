@@ -7,7 +7,14 @@ import { z } from 'zod'
  */
 
 export const agentConfigSchema = z.object({
-  token: z.string().min(32, 'UPDATE_AGENT_TOKEN needs at least 32 characters'),
+  /**
+   * The bearer of the agent. Empty means that the agent generates its own
+   * token and writes it into the state volume, so the API can read the same
+   * value there — the operator configures nothing.
+   */
+  token: z.string().default(''),
+  /** The file of the token inside the state volume. */
+  tokenFile: z.string().min(1).default('/state/agent-token'),
   port: z.coerce.number().int().min(1).max(65535).default(8080),
   checkoutPath: z.string().min(1).default('/repo'),
   projectDirectory: z.string().min(1).default('/repo'),
@@ -21,6 +28,7 @@ export type AgentConfig = z.infer<typeof agentConfigSchema>
 export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
   return agentConfigSchema.parse({
     token: env.UPDATE_AGENT_TOKEN,
+    tokenFile: env.UPDATE_AGENT_TOKEN_FILE,
     port: env.UPDATE_AGENT_PORT,
     checkoutPath: env.UPDATE_AGENT_CHECKOUT,
     projectDirectory: env.UPDATE_AGENT_PROJECT_DIR,
