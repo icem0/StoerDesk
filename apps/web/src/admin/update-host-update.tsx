@@ -36,6 +36,9 @@ const handledErrorCodes = [
   'update_agent_bad_response',
   'update_already_running',
   'update_rate_limited',
+  'update_git_failed',
+  'update_compose_failed',
+  'update_prune_failed',
 ] as const
 
 function errorMessage(t: TFunction<'settings'>, error: unknown): string {
@@ -47,6 +50,15 @@ function errorMessage(t: TFunction<'settings'>, error: unknown): string {
       : 'unknown'
 
   return t(`admin.update.host.errors.${code}`)
+}
+
+/** Lesbare Beschreibung eines Fehlercodes. */
+function errorCodeText(t: TFunction<'settings'>, code: string | null): string {
+  if (code === null || code === '') {
+    return ''
+  }
+
+  return t(`admin.update.host.errorCodes.${code}` as `admin.update.host.errorCodes.${string}`)
 }
 
 export function UpdateHostUpdate() {
@@ -120,7 +132,9 @@ export function UpdateHostUpdate() {
       <p className="mt-3 text-sm text-slate-400">
         {lastRun === null
           ? t('admin.update.host.noRun')
-          : `${t('admin.update.host.lastRun')}: ${t(`admin.update.host.status.${lastRun.status}`)}`}
+          : `${t('admin.update.host.lastRun')}: ${t(
+              `admin.update.host.status.${lastRun.status}`,
+            )}${errorCodeText(t, lastRun.errorCode) ? ` — ${errorCodeText(t, lastRun.errorCode)}` : ''}`}
       </p>
 
       {status.isError ? (

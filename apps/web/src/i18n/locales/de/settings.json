@@ -112,6 +112,27 @@
           "update_already_running": "Es läuft bereits ein Host-Update.",
           "update_rate_limited": "Es wurde vor Kurzem ein Host-Update gestartet.",
           "unknown": "Das Host-Update konnte nicht gestartet werden."
+        },
+        "steps": {
+          "git": "Repository aktualisieren",
+          "compose": "Stack neu aufbauen",
+          "prune": "Alte Images löschen"
+        },
+        "step": {
+          "ok": "erledigt",
+          "failed": "fehlgeschlagen",
+          "skipped": "übersprungen"
+        },
+        "errorCodes": {
+          "update_git_failed": "Git-Pull fehlgeschlagen",
+          "update_compose_failed": "Neubuild des Stacks fehlgeschlagen",
+          "update_prune_failed": "Alte Images konnten nicht gelöscht werden",
+          "update_agent_unreachable": "Agent nicht erreichbar",
+          "update_agent_not_configured": "Agent nicht konfiguriert",
+          "update_agent_bad_response": "Ungültige Antwort vom Agenten",
+          "update_already_running": "Ein Update läuft bereits",
+          "update_rate_limited": "Zu viele Versuche, bitte warten",
+          "unknown": "Unbekannter Fehler"
         }
       }
     },

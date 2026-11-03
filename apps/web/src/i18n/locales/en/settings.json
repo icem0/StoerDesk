@@ -112,6 +112,27 @@
           "update_already_running": "A host update is already running.",
           "update_rate_limited": "A host update was started recently.",
           "unknown": "The host update could not be started."
+        },
+        "steps": {
+          "git": "Update repository",
+          "compose": "Rebuild stack",
+          "prune": "Delete old images"
+        },
+        "step": {
+          "ok": "done",
+          "failed": "failed",
+          "skipped": "skipped"
+        },
+        "errorCodes": {
+          "update_git_failed": "Git pull failed",
+          "update_compose_failed": "Stack rebuild failed",
+          "update_prune_failed": "Old images could not be deleted",
+          "update_agent_unreachable": "Agent not reachable",
+          "update_agent_not_configured": "Agent not configured",
+          "update_agent_bad_response": "Invalid answer from agent",
+          "update_already_running": "An update is already running",
+          "update_rate_limited": "Too many attempts, please wait",
+          "unknown": "Unknown error"
         }
       }
     },
