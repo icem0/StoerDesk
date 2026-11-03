@@ -50,6 +50,13 @@
       "when": 1793604098789,
       "tag": "0006_ticket_workflow_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793687928546,
+      "tag": "0007_bma_sync_runs",
+      "breakpoints": true
     }
   ]
 }

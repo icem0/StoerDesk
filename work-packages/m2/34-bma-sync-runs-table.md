@@ -1,7 +1,7 @@
 # WP-M2-34: the `bma_sync_runs` table
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-32
 phase: 2
 context-budget: 14k tokens
@@ -68,6 +68,6 @@ required, otherwise report it as unverified, never as green.
 - Files changed: the three entries above plus the integration spec, `docs/REPO-MAP.md`,
   `work-packages/README.md`
 - Interfaces added: `bmaSyncRuns`, `BMA_SYNC_RUN_STATUSES`, migration `0007`
-- Verified: —
+- Verified: `npm run check` green; 4 integration tests run against a throwaway database
 - Follow-up WP: WP-M2-35 (the sync service)
-- Open question: none
+- Open question: the repository has no `meta/0006_snapshot.json` (migration 0006 was hand-written); `db:generate` still reports "no schema changes", so the gap is harmless today, but a future schema change should regenerate the snapshot chain

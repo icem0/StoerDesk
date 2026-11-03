@@ -234,7 +234,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-31  | company name in the shell header                         | done                    | yes     |
 | WP-M2-32  | record of the BMAcloud decision commit `a6804ed`         | done                    | yes     |
 | WP-M2-33  | BMAcloud read-only client and its environment            | done                    | yes     |
-| WP-M2-34  | the `bma_sync_runs` table (migration `0007`)             | planned                 | yes     |
+| WP-M2-34  | the `bma_sync_runs` table (migration `0007`)             | done                    | yes     |
 | WP-M2-35  | the BMAcloud sync service (mapping, conflicts)           | planned                 | yes     |
 | WP-M2-36  | BMAcloud admin API and the scheduled sync job            | planned                 | yes     |
 | WP-M2-37  | BMAcloud sync page in the administration                 | planned                 | yes     |

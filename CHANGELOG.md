@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The `bma_sync_runs` table behind migration `0007_bma_sync_runs` (WP-M2-34): one row per
+  BMAcloud pull with the status check `RUNNING`/`SUCCESS`/`PARTIAL`/`FAILED`, the five
+  counters, the conflicts as jsonb and an index on `started_at` for the run history.
 - The read-only BMAcloud client of the object sync (WP-M2-33): `GET /anlagen` and
   `GET /anlagen/{aid}`, a hard-coded `GET` in the private request helper (the write
   endpoints stay unreachable), `BMA_API_BASE_URL` / `BMA_API_KEY` / `BMA_SYNC_ENABLED` /

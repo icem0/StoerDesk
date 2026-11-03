@@ -474,6 +474,36 @@ export const reportThrottle = pgTable(
   ],
 )
 
+/** Run status of the BMAcloud object sync (`specs/17-bmacloud-sync.md` §17.4). */
+export const BMA_SYNC_RUN_STATUSES = ['RUNNING', 'SUCCESS', 'PARTIAL', 'FAILED'] as const
+
+/**
+ * One run of the BMAcloud Anlagen pull (`specs/17-bmacloud-sync.md` §17.4,
+ * ADR-0003, WP-M2-34). A row is written once at the start and finished once;
+ * unlike the event tables it is not append-only. `conflicts` keeps what the run
+ * could not apply (`{ code, objectNo, aid, detail }`) and never a contact field.
+ */
+export const bmaSyncRuns = pgTable(
+  'bma_sync_runs',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    startedAt: timestamp('started_at', timestampOptions).notNull().defaultNow(),
+    finishedAt: timestamp('finished_at', timestampOptions),
+    status: text('status').notNull().default('RUNNING'),
+    total: integer('total').notNull().default(0),
+    created: integer('created').notNull().default(0),
+    updated: integer('updated').notNull().default(0),
+    unchanged: integer('unchanged').notNull().default(0),
+    deactivated: integer('deactivated').notNull().default(0),
+    conflicts: jsonb('conflicts').notNull().default([]),
+    errorCode: text('error_code'),
+  },
+  (table) => [
+    check('bma_sync_runs_status_check', sql`${table.status} IN (${checkList(BMA_SYNC_RUN_STATUSES)})`),
+    index('bma_sync_runs_started_at_idx').on(table.startedAt),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -500,6 +530,9 @@ export type TicketPhoto = typeof ticketPhotos.$inferSelect
 export type NewTicketPhoto = typeof ticketPhotos.$inferInsert
 export type ReportThrottle = typeof reportThrottle.$inferSelect
 export type NewReportThrottle = typeof reportThrottle.$inferInsert
+export type BmaSyncRun = typeof bmaSyncRuns.$inferSelect
+export type NewBmaSyncRun = typeof bmaSyncRuns.$inferInsert
+export type BmaSyncRunStatus = (typeof BMA_SYNC_RUN_STATUSES)[number]
 export type TicketNoCounter = typeof ticketNoCounters.$inferSelect
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
