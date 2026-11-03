@@ -693,6 +693,15 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-45  | BMAcloud bearer key in `settings` + admin routes (ADR-0005) | done    |
 | WP-M2-46  | the scheduled pull reads the effective bearer key | done    |
 | WP-M2-47  | API-key field on the BMAcloud sync page | done    |
+| WP-M2-48  | host update agent decision (ADR-0006) and work plan | done    |
+| WP-M2-49  | shared contracts: `system.update` and the update schemas | planned |
+| WP-M2-50  | the `update_runs` table and migration `0009` | planned |
+| WP-M2-51  | the update agent service core (`apps/agent`) | planned |
+| WP-M2-52  | the update agent HTTP server | planned |
+| WP-M2-53  | the agent image, compose service and env wiring | planned |
+| WP-M2-54  | the admin update API | planned |
+| WP-M2-55  | the host update section in the admin update page | planned |
+| WP-M2-56  | documentation of the host update | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -836,6 +845,16 @@ and the three credential routes and **WP-M2-46** the effective key of the schedu
 startup read decides whether the queue is scheduled at all and every run resolves the key
 again, so a stored or deleted key needs no API restart. **WP-M2-47** added the write-only
 key field on `/admin/bma-sync`.
+
+Stage 2 of the self-update (the real host update: `git pull` → `docker compose up -d --build`
+→ `docker image prune -f`) is planned as the chain **WP-M2-48 … WP-M2-56**. **WP-M2-48** fixes
+the topology with **ADR-0006**: the update agent is a service of the **same** compose project
+behind the profile `update` — a plain `docker compose up -d --build` skips it, so the agent
+survives the redeploy it triggers — mounted with the checkout and the Docker socket and
+reachable only on the internal network with the bearer `UPDATE_AGENT_TOKEN`. The chain then
+implements the shared contracts (`system.update`), the `update_runs` table, the agent service,
+its image and compose wiring, the admin API, the page section and the documentation — in that
+order, one commit per work package.
 
 ## 17. Work package rules for small models
 

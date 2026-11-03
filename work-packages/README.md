@@ -255,6 +255,15 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-45  | BMAcloud bearer key in `settings` and its admin routes   | done                    | yes     |
 | WP-M2-46  | the scheduled pull reads the effective bearer key        | done                    | yes     |
 | WP-M2-47  | API-key field on the BMAcloud sync page                  | done                    | yes     |
+| WP-M2-48  | host update agent decision (ADR-0006) and work plan      | done                    | yes     |
+| WP-M2-49  | shared contracts: `system.update` and the update schemas | planned                 | yes     |
+| WP-M2-50  | the `update_runs` table and migration `0009`             | planned                 | yes     |
+| WP-M2-51  | the update agent service core (`apps/agent`)             | planned                 | yes     |
+| WP-M2-52  | the update agent HTTP server                             | planned                 | yes     |
+| WP-M2-53  | the agent image, compose service and env wiring          | planned                 | yes     |
+| WP-M2-54  | the admin update API                                    | planned                 | yes     |
+| WP-M2-55  | the host update section in the admin update page         | planned                 | yes     |
+| WP-M2-56  | documentation of the host update                         | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

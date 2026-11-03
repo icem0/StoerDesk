@@ -55,16 +55,37 @@ build-time web value (`__APP_VERSION__`); the API runtime does not read `VERSION
 A failing upstream call answers `{ code }` and never leaks a token. Not required
 for stage 1.
 
-## §18.4 Stage 2 — host update agent (planned, needs its own WP)
+## §18.4 Stage 2 — host update agent (ADR-0006)
 
 The privileged part lives in a **separate, trusted container** on the host, never
-in the `api` image.
+in the `api` image. The topology is fixed by ADR-0006:
 
-- Agent: a small container mounted with the Docker socket, the repository
-  checkout and its git credentials. It performs `git pull` →
-  `docker compose up -d --build` → `docker image prune`. It listens only on the
-  internal network and requires the bearer `UPDATE_AGENT_TOKEN`.
-- API contract (guarded, new permission e.g. `system.update`):
+- Agent: a service `update-agent` of the **same compose project**, behind the
+  compose profile `update`. A plain `docker compose up -d --build` skips a
+  service whose profile is not enabled, so the agent is never recreated by the
+  redeploy it triggers. It is started explicitly: `docker compose --profile
+  update up -d update-agent`.
+- Image: `node:22-alpine` plus `git`, `docker-cli` and `docker-cli-compose`
+  (Alpine `main` / `community`); the agent code is bundled, no runtime npm
+  dependencies.
+- Mounts: the checkout read-write (relative `.`, so client and daemon share the
+  absolute path), `/var/run/docker.sock` read-write, a small named volume for
+  the agent's last-run state. **No published port** — the agent listens only on
+  the internal `backend` network at `http://update-agent:8080`.
+- Run steps, in this order:
+  1. `git -c safe.directory=/repo pull --ff-only` — the repository is public, so
+     no credential is needed; `GIT_TERMINAL_PROMPT=0` keeps it from blocking on
+     a prompt. The owner of the checkout is recorded before and restored after
+     the pull.
+  2. `docker compose --project-directory /repo -f /repo/docker-compose.yml up
+     -d --build` — the rebuild of `api` and `web`; the `api` container is
+     recreated, so the request that triggered the run dies with it.
+  3. `docker image prune -f` — the dangling images of the previous local build.
+     `docker image prune -a` is not used: it would delete the images of other
+     projects on a shared host.
+- The agent decides what a run is. It accepts no path, no command and no
+  arguments from a request.
+- API contract (guarded, new permission `system.update`):
   - `GET  /api/v1/admin/update/status` — agent reachable, current/known version.
   - `POST /api/v1/admin/update/run` — trigger one update; writes an
     `update_runs` row (modelled on `bma_sync_runs`): started, finished, status
@@ -81,3 +102,26 @@ in the `api` image.
 - Update triggers are rate limited and require an explicit confirmation in the UI
   (a confirm step, not a password).
 - The agent token is a random shared secret, rotated like any other `.env` value.
+- The agent rejects a request without the bearer token with `401` and compares
+  the token in constant time. It binds to the internal network only and answers
+  no port on the host.
+
+## §18.6 Agent contract
+
+The agent speaks a small, fixed protocol on `http://update-agent:8080`:
+
+- `GET /status` — `{ state, checkout: { version, commit? }, lastRun? }` where
+  `state` is `idle`, `running` or `failed`.
+- `POST /run` — starts one run; answers `202` with the run, `409` while a run is
+  active.
+- `GET /runs` — the runs the agent knows.
+
+Every agent answer is validated by the API with the shared Zod schemas
+(`packages/shared/src/schemas/update.ts`); a malformed answer is an error of the
+API, never a crash.
+
+Run state: the agent writes its last run to `/state/last-run.json` (the named
+volume) and reloads it on start, so a restarted agent can still tell what
+happened in the last run. The `update_runs` row of the API is the history the
+UI shows; the API reconciles a `RUNNING` row with the agent's state after its
+own restart and never invents a result the agent did not report.

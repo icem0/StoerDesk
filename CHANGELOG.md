@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Host update agent — decision and work plan (WP-M2-48, ADR-0006): stage 2 of the
+  self-update runs the real host update (`git pull` → `docker compose up -d --build` →
+  `docker image prune -f`) without giving the `api` container any host access. The agent is a
+  service of the **same** compose project behind the profile `update`, so the normal
+  `docker compose up -d --build` never touches it and it survives the redeploy it triggers; it
+  is mounted with the checkout and the Docker socket, listens only on the internal network
+  behind the bearer `UPDATE_AGENT_TOKEN` and decides itself what a run is. The chain
+  WP-M2-49 … WP-M2-56 implements the contracts (`system.update`), the `update_runs` table, the
+  agent, its image and compose wiring, the admin API, the page section and the documentation.
+  `specs/18-self-update.md` §18.4–§18.6 now describe the topology and the agent protocol.
 - API-key field on the BMAcloud sync page (WP-M2-47): `/admin/bma-sync` shows the effective
   source (`db`, `env` or `none`), a write-only key field, `Schlüssel speichern` / `Save key`
   and — only for a stored key — `Gespeicherten Schlüssel löschen` / `Delete stored key`. The
