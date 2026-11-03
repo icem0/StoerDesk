@@ -13,7 +13,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 66  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1` and `m2` document carries `format: small-model` except the four first
@@ -252,6 +252,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-42  | bootstrap the standard fault types on the API start      | done                    | yes     |
 | WP-M2-43  | self-update decision (ADR-0004), spec 18 and WP plan     | done                    | yes     |
 | WP-M2-44  | admin update page — clean PWA update (stage 1)           | done                    | yes     |
+| WP-M2-45  | BMAcloud bearer key in `settings` and its admin routes   | done                    | yes     |
+| WP-M2-46  | the scheduled pull reads the effective bearer key        | planned                 | yes     |
+| WP-M2-47  | API-key field on the BMAcloud sync page                  | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -446,6 +449,18 @@ newer run had already written it.
 `WP-M1-20` is done — `AGENTS.md`, `PLAN.md` §18.3 and `CONTRIBUTING.md` name
 `npm run release:push` instead of `git push --follow-tags` and carry the rule "one tag per
 push" with the GitHub limitation behind it.
+
+**ADR-0005** and **WP-M2-45** close the credential gap of the BMAcloud sync: the page at
+`/admin/bma-sync` administered the schedule and the trigger but the bearer key could only come
+from `BMA_API_KEY`, so a deployment that cannot edit `.env` saw `bma_not_configured` with no
+way out. ADR-0003 stays in force for the read-only client and the permission guards; only its
+credential rule is superseded. The key may now live in the `settings` row `bma.api.key` and
+wins over the environment; `GET /admin/bma-sync/credentials` answers `{ configured, source }`
+with `source` in `db`/`env`/`none`, `PUT` stores a trimmed 1–512 character key and `DELETE`
+removes the row — the stored value is never answered, never logged and never written into a run
+row. `readBmaApiKey(database, env)` is the single resolution point of the manual trigger and,
+from **WP-M2-46**, of the pg-boss worker; **WP-M2-47** adds the field on the page. Both child
+WP files were created in the same commit as this parent.
 
 ## Validation
 

@@ -84,6 +84,31 @@ export const bmaSyncCronSchema = z
   .max(BMA_SYNC_CRON_MAX_LENGTH)
   .regex(/^\S+(\s+\S+){4}$/, 'cron must have five fields')
 
+/**
+ * Length cap of the bearer key. The live tenant key is a hex string, so 512 is a
+ * generous ceiling that still keeps a stray paste out of the `settings` row
+ * (ADR-0005).
+ */
+export const BMA_API_KEY_MAX_LENGTH = 512
+
+/** Body of the credential write — the key travels one way only (ADR-0005). */
+export const bmaApiKeyRequestSchema = z.object({
+  apiKey: z.string().trim().min(1).max(BMA_API_KEY_MAX_LENGTH),
+})
+
+export type BmaApiKeyRequest = z.infer<typeof bmaApiKeyRequestSchema>
+
+/** Where the effective key comes from: stored row, environment or nowhere. */
+export const BMA_API_KEY_SOURCES = ['db', 'env', 'none'] as const
+
+/** Answer of the credential routes: never the key itself (ADR-0005). */
+export const bmaCredentialsResponseSchema = z.object({
+  configured: z.boolean(),
+  source: z.enum(BMA_API_KEY_SOURCES),
+})
+
+export type BmaCredentialsResponse = z.infer<typeof bmaCredentialsResponseSchema>
+
 /** The schedule pair of the sync (§17.5, ADR-0003). */
 export const bmaSyncScheduleRequestSchema = z.object({
   enabled: z.boolean(),

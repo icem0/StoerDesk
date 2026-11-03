@@ -34,5 +34,6 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | ------------------------------------------------------------- | ----------------------------------- | -------- |
 | [ADR-0001](DECISIONS/0001-monorepo-with-npm-workspaces.md)    | Monorepo with npm workspaces        | accepted |
 | [ADR-0002](DECISIONS/0002-uuid-v7-as-database-primary-key.md) | UUID v7 as the database primary key | accepted |
-| [ADR-0003](DECISIONS/0003-bmacloud-object-sync.md)            | BMAcloud pull sync of objects (Anlagen)                          | accepted |
+| [ADR-0003](DECISIONS/0003-bmacloud-object-sync.md)            | BMAcloud pull sync of objects (Anlagen)                          | accepted — credential rule superseded by ADR-0005 |
 | [ADR-0004](DECISIONS/0004-self-update-model.md)              | Self-update model (admin update control)        | accepted |
+| [ADR-0005](DECISIONS/0005-bmacloud-api-key-in-settings.md)   | BMAcloud bearer key configurable in the administration          | accepted |

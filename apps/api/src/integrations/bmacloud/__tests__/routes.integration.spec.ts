@@ -34,6 +34,7 @@ type RunRow = {
 
 type RunsResponseBody = { runs?: RunRow[] }
 type ScheduleResponseBody = { enabled?: boolean; cron?: string }
+type CredentialsResponseBody = { configured?: boolean; source?: string }
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -106,6 +107,31 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function getCredentials(cookie: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/bma-sync/credentials',
+        headers: { cookie },
+      })
+    }
+
+    function putCredentials(cookie: string, payload: Record<string, unknown>) {
+      return app.inject({
+        method: 'PUT',
+        url: '/api/v1/admin/bma-sync/credentials',
+        headers: { cookie },
+        payload,
+      })
+    }
+
+    function deleteCredentials(cookie: string) {
+      return app.inject({
+        method: 'DELETE',
+        url: '/api/v1/admin/bma-sync/credentials',
+        headers: { cookie },
+      })
+    }
+
     async function insertRun(startedAt: Date, overrides: Record<string, unknown> = {}) {
       await db.insert(bmaSyncRuns).values({
         startedAt,
@@ -142,6 +168,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.RATE_LIMIT_MAX = '10000'
       // The manual trigger must refuse before any request and any run row.
       process.env.BMA_API_KEY = ''
+      // Unreachable on purpose: a stored key may reach the client but never the network.
+      process.env.BMA_API_BASE_URL = 'http://127.0.0.1:1/'
       // Deterministic environment half of the schedule fallback (WP-M2-36b).
       process.env.BMA_SYNC_ENABLED = 'false'
       process.env.BMA_SYNC_CRON = '0 5 * * 2'
@@ -192,6 +220,89 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<ErrorResponseBody>()).toEqual({ code: 'bma_not_configured', params: {} })
 
       expect(await db.select({ id: bmaSyncRuns.id }).from(bmaSyncRuns)).toHaveLength(0)
+    })
+
+    it('answers 401 on the credential routes before the permission check', async () => {
+      const read = await getCredentials('')
+      const write = await putCredentials('', { apiKey: 'deadbeef' })
+      const remove = await deleteCredentials('')
+
+      expect(read.statusCode).toBe(401)
+      expect(read.json<ErrorResponseBody>().code).toBe('session_invalid')
+      expect(write.statusCode).toBe(401)
+      expect(remove.statusCode).toBe(401)
+    })
+
+    it('reads the credential status with object.read but refuses the write and delete', async () => {
+      const read = await getCredentials(reporterCookie)
+      const write = await putCredentials(reporterCookie, { apiKey: 'deadbeef' })
+      const remove = await deleteCredentials(reporterCookie)
+
+      expect(read.statusCode).toBe(200)
+      expect(read.json<CredentialsResponseBody>()).toEqual({ configured: false, source: 'none' })
+      expect(write.statusCode).toBe(403)
+      expect(write.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
+      expect(remove.statusCode).toBe(403)
+    })
+
+    it('refuses an empty and an oversized key with the field path only', async () => {
+      const empty = await putCredentials(adminCookie, { apiKey: '   ' })
+      const long = await putCredentials(adminCookie, { apiKey: 'a'.repeat(513) })
+
+      expect(empty.statusCode).toBe(400)
+      expect(empty.json<ErrorResponseBody>()).toEqual({
+        code: 'invalid_request',
+        params: { fields: ['apiKey'] },
+      })
+      expect(long.statusCode).toBe(400)
+      expect(long.json<ErrorResponseBody>()).toEqual({
+        code: 'invalid_request',
+        params: { fields: ['apiKey'] },
+      })
+    })
+
+    it('stores the key without echoing it and lets the trigger reach the client', async () => {
+      const write = await putCredentials(adminCookie, { apiKey: '  deadbeef  ' })
+
+      expect(write.statusCode).toBe(200)
+      expect(write.json<CredentialsResponseBody>()).toEqual({ configured: true, source: 'db' })
+      expect(JSON.stringify(write.json())).not.toContain('deadbeef')
+
+      const stored = await db
+        .select({ key: settings.key, value: settings.value })
+        .from(settings)
+        .where(eq(settings.key, 'bma.api.key'))
+
+      expect(onlyRow(stored, 'bma.api.key').value).toBe('deadbeef')
+
+      const read = await getCredentials(adminCookie)
+
+      expect(read.json<CredentialsResponseBody>()).toEqual({ configured: true, source: 'db' })
+
+      // The stored key is effective without a restart: the trigger reaches the
+      // unreachable base URL instead of answering 409, and still writes no run row.
+      const run = await postRun(adminCookie)
+
+      expect(run.statusCode).toBe(502)
+      expect(run.json<ErrorResponseBody>()).toEqual({ code: 'bma_request_failed', params: {} })
+      expect(await db.select({ id: bmaSyncRuns.id }).from(bmaSyncRuns)).toHaveLength(0)
+    })
+
+    it('deletes the stored key so the empty environment leaves the state unconfigured', async () => {
+      const removed = await deleteCredentials(adminCookie)
+
+      expect(removed.statusCode).toBe(200)
+      expect(removed.json<CredentialsResponseBody>()).toEqual({
+        configured: false,
+        source: 'none',
+      })
+
+      const stored = await db
+        .select({ key: settings.key })
+        .from(settings)
+        .where(eq(settings.key, 'bma.api.key'))
+
+      expect(stored).toHaveLength(0)
     })
 
     it('answers the effective schedule pair before anything was stored', async () => {

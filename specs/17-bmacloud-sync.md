@@ -59,20 +59,33 @@ by the sync.
   total/created/updated/unchanged/deactivated counts, conflicts (jsonb), error
   code.
 
-## 17.5 Schedule and trigger
+## 17.5 Schedule, credentials and trigger
 
 pg-boss queue `bma-anlage-sync`, cron `BMA_SYNC_CRON` (default `15 3 * * *`),
 toggle `BMA_SYNC_ENABLED` / DB setting `bma.sync.enabled` / `bma.sync.cron`.
-Admin API (`object.read` / `object.write` / `object.import`):
+The bearer key is resolved per run: the `settings` row `bma.api.key` first, the
+`BMA_API_KEY` environment as fallback, no key = unconfigured (ADR-0005). Admin
+API (`object.read` / `object.write` / `object.import`):
 
 - `GET /api/v1/admin/bma-sync/runs` — run history with counters and conflicts.
 - `POST /api/v1/admin/bma-sync/run` — manual pull ("Jetzt abgleichen").
 - `GET /api/v1/admin/bma-sync/schedule` — the effective schedule pair, i.e. the stored
   `settings` rows with the `BMA_SYNC_*` environment as fallback.
 - `PATCH /api/v1/admin/bma-sync/schedule` — cron and enabled flag.
+- `GET /api/v1/admin/bma-sync/credentials` — `{ configured, source }` with
+  `source` = `db` | `env` | `none`; the stored key is never answered.
+- `PUT /api/v1/admin/bma-sync/credentials` — stores the trimmed key
+  (1–512 characters) in `bma.api.key`; the answer is `{ configured: true, source: 'db' }`.
+- `DELETE /api/v1/admin/bma-sync/credentials` — deletes the row, so the
+  environment fallback applies again.
+
+The key is write-only: it never appears in an answer, a log line, a run row or an
+error payload; every `settings` read stays key-scoped, so no listing exposes it.
+A stored key needs no API restart — the trigger and the pg-boss job read it per run.
 
 Admin UI page `/admin/bma-sync`: run table, conflict table, trigger button,
-cron setting. Object list shows a badge for externally maintained objects.
+cron setting, API-key field with its source and a delete action. Object list shows
+a badge for externally maintained objects.
 
 ## 17.6 Rate limit
 

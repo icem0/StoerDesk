@@ -1,8 +1,10 @@
-import { desc, inArray } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 
 import {
+  bmaApiKeyRequestSchema,
+  bmaCredentialsResponseSchema,
   bmaSyncCronSchema,
   bmaSyncRunsQuerySchema,
   bmaSyncRunsResponseSchema,
@@ -10,6 +12,7 @@ import {
   bmaSyncScheduleRequestSchema,
   bmaSyncScheduleResponseSchema,
   PERMISSIONS,
+  type BmaCredentialsResponse,
   type BmaSyncRunRow,
   type BmaSyncSchedule,
 } from '@stoerdesk/shared'
@@ -32,6 +35,12 @@ import { syncBmaAnlagen } from './sync'
  * `bma.sync.cron`); when a row is absent the environment pair
  * (`BMA_SYNC_ENABLED` / `BMA_SYNC_CRON`) is the fallback, which is also what the
  * pg-boss job of `jobs/bma-sync.ts` schedules on.
+ *
+ * The bearer key lives in the `settings` row `bma.api.key` when the admin set it
+ * on the sync page and in `BMA_API_KEY` otherwise (ADR-0005). `readBmaApiKey`
+ * resolves that order for the manual trigger and the scheduled job; no route of
+ * this module ever answers the stored value — the credential routes report
+ * `{ configured, source }` only.
  */
 
 type Db = Database['database']
@@ -40,8 +49,14 @@ type Db = Database['database']
 export const BMA_SYNC_ENABLED_SETTING = 'bma.sync.enabled'
 export const BMA_SYNC_CRON_SETTING = 'bma.sync.cron'
 
+/** Setting key of the bearer key stored by the admin (ADR-0005). */
+export const BMA_API_KEY_SETTING = 'bma.api.key'
+
 /** The environment half of the schedule fallback. */
 export type BmaSyncScheduleEnv = Pick<Env, 'BMA_SYNC_ENABLED' | 'BMA_SYNC_CRON'>
+
+/** The environment half of the bearer key fallback (ADR-0005). */
+export type BmaCredentialEnv = Pick<Env, 'BMA_API_KEY'>
 
 export type BmaSyncRouteOptions = {
   database: Db
@@ -104,6 +119,42 @@ async function storeSetting(database: Db, key: string, value: unknown): Promise<
     .onConflictDoUpdate({ target: settings.key, set: { value, updatedAt: new Date() } })
 }
 
+/** The stored key, or `undefined` when no usable row exists. */
+async function storedApiKey(database: Db): Promise<string | undefined> {
+  const value = (await storedValues(database, [BMA_API_KEY_SETTING])).get(BMA_API_KEY_SETTING)
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    return undefined
+  }
+
+  return value.trim()
+}
+
+/**
+ * The effective bearer key (ADR-0005): the stored `bma.api.key` row first, the
+ * `BMA_API_KEY` environment as fallback, `''` when neither is set. Both the
+ * manual trigger and the pg-boss job of `jobs/bma-sync.ts` run on this function,
+ * so a key set on the admin page needs no restart.
+ */
+export async function readBmaApiKey(database: Db, env: BmaCredentialEnv): Promise<string> {
+  return (await storedApiKey(database)) ?? env.BMA_API_KEY.trim()
+}
+
+/** What the credential routes answer: where the effective key comes from. */
+export async function readBmaCredentials(
+  database: Db,
+  env: BmaCredentialEnv,
+): Promise<BmaCredentialsResponse> {
+  const source =
+    (await storedApiKey(database)) !== undefined
+      ? 'db'
+      : env.BMA_API_KEY.trim() !== ''
+        ? 'env'
+        : 'none'
+
+  return bmaCredentialsResponseSchema.parse({ configured: source !== 'none', source })
+}
+
 function toRunRow(row: {
   id: string
   startedAt: Date
@@ -164,14 +215,16 @@ export const bmaSyncRoutes = fp<BmaSyncRouteOptions>(
       '/api/v1/admin/bma-sync/run',
       { preHandler: requirePermission(database, PERMISSIONS.object.import) },
       async (_request, reply) => {
-        if (env.BMA_API_KEY.trim() === '') {
+        const apiKey = await readBmaApiKey(database, env)
+
+        if (apiKey === '') {
           // No key, no request, no run row (§17.5).
           return reply.code(409).send({ code: 'bma_not_configured', params: {} })
         }
 
         const client = createBmaCloudClient({
           baseUrl: env.BMA_API_BASE_URL,
-          apiKey: env.BMA_API_KEY,
+          apiKey,
         })
 
         let anlagen: unknown[]
@@ -212,6 +265,41 @@ export const bmaSyncRoutes = fp<BmaSyncRouteOptions>(
         await storeSetting(database, BMA_SYNC_CRON_SETTING, parsed.data.cron)
 
         return bmaSyncScheduleResponseSchema.parse(await readBmaSyncSchedule(database, env))
+      },
+    )
+
+    app.get(
+      '/api/v1/admin/bma-sync/credentials',
+      { preHandler: requirePermission(database, PERMISSIONS.object.read) },
+      async () => readBmaCredentials(database, env),
+    )
+
+    app.put(
+      '/api/v1/admin/bma-sync/credentials',
+      { preHandler: requirePermission(database, PERMISSIONS.object.import) },
+      async (request, reply) => {
+        const parsed = bmaApiKeyRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        await storeSetting(database, BMA_API_KEY_SETTING, parsed.data.apiKey)
+
+        // The stored value is never echoed back (ADR-0005).
+        return bmaCredentialsResponseSchema.parse({ configured: true, source: 'db' })
+      },
+    )
+
+    app.delete(
+      '/api/v1/admin/bma-sync/credentials',
+      { preHandler: requirePermission(database, PERMISSIONS.object.import) },
+      async () => {
+        await database.delete(settings).where(eq(settings.key, BMA_API_KEY_SETTING))
+
+        return readBmaCredentials(database, env)
       },
     )
   },

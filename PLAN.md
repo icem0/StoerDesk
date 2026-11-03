@@ -423,8 +423,10 @@ BMAcloud object sync:
   soft-deactivated.
 - Configurable cron (`BMA_SYNC_CRON`, default `15 3 * * *`) plus a manual
   "Jetzt abgleichen" trigger; run history in `bma_sync_runs`.
-- Secrets `BMA_API_BASE_URL` / `BMA_API_KEY` in `.env` only; the client allows
-  `GET` only. Contract in `specs/17-bmacloud-sync.md`, decision ADR-0003.
+- Bearer key resolvable per run: the `settings` row `bma.api.key` (set on the admin
+  page) first, `BMA_API_BASE_URL` / `BMA_API_KEY` in `.env` as fallback; the key is
+  write-only — never answered, never logged (ADR-0005). The client allows `GET`
+  only. Contract in `specs/17-bmacloud-sync.md`, decisions ADR-0003 and ADR-0005.
 
 REST API `/api/v1`:
 
@@ -688,6 +690,9 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-42  | bootstrap of the standard fault types      | done    |
 | WP-M2-43  | self-update decision (ADR-0004) and spec 18 | done    |
 | WP-M2-44  | admin update page: clean PWA update (stage 1) | done    |
+| WP-M2-45  | BMAcloud bearer key in `settings` + admin routes (ADR-0005) | done    |
+| WP-M2-46  | the scheduled pull reads the effective bearer key | planned |
+| WP-M2-47  | API-key field on the BMAcloud sync page | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -821,6 +826,14 @@ not features: the retention of `report_throttle.ip` (WP-M2-07, WP-M2-07c), the r
 `bma_sync_runs.conflicts` (WP-M2-32) and the missing `meta/0006_snapshot.json` of the
 hand-written migration 0006 (WP-M2-34). The phase 2 `status:` lines of `09` … `31` match the
 shipped code.
+
+After the phase 2 close a usage gap of the BMAcloud sync surfaced in the field: the sync page
+offers everything but the credential, so an image-based deployment could only answer
+`bma_not_configured`. **ADR-0005** supersedes the credential rule of ADR-0003 — the key may
+live in the `settings` row `bma.api.key`, which wins over `BMA_API_KEY` and is write-only
+(never answered, never logged). **WP-M2-45** implements the shared contract, `readBmaApiKey`
+and the three credential routes, **WP-M2-46** the effective key in the scheduled job and
+**WP-M2-47** the key field on `/admin/bma-sync`.
 
 ## 17. Work package rules for small models
 

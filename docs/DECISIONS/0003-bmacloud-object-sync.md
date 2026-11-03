@@ -1,6 +1,6 @@
 # ADR-0003: BMAcloud pull sync of maintenance objects (Anlagen)
 
-- Status: accepted
+- Status: accepted — the credential rule below is superseded by ADR-0005
 - Date: 2026-11-02
 - Stakeholders: product owner, maintenance office
 
@@ -35,7 +35,8 @@ the name, `str`/`plz`/`ort` the address, `status` active|sleep.
 - **Credentials.** `BMA_API_BASE_URL` (default `https://bmacloud.de/api/v2/`)
   and `BMA_API_KEY` (bearer, hex). Key lives only in `.env`/runtime env; never
   logged, never in health answers, never committed (`.env.example` has empty
-  values).
+  values). _Superseded by ADR-0005: the key may also live in the `settings` row
+  `bma.api.key` set from the admin page, which wins over the environment._
 - **Mapping (1 Anlage = 1 Objekt).** `object_no = nr` verbatim (dots allowed;
   the one value with whitespace is a conflict, not an object), `name = firma`
   plus ` – anlagenort` when that differs and is non-empty, `street = str`

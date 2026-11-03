@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- BMAcloud bearer key configurable in the administration (WP-M2-45, ADR-0005): the key
+  may now live in the `settings` row `bma.api.key` and wins over the `BMA_API_KEY`
+  environment, so an image-based deployment that cannot edit `.env` is no longer stuck
+  on `bma_not_configured`. New admin routes `GET`/`PUT`/`DELETE
+  /api/v1/admin/bma-sync/credentials` — the status answers `{ configured, source }`
+  (`db` / `env` / `none`) only, the stored key is never echoed, never logged and never
+  written into a run row. ADR-0005 supersedes only the credential rule of ADR-0003; the
+  read-only client and the `object.read` / `object.import` guards stay. The scheduled
+  pull (WP-M2-46) and the key field on the sync page (WP-M2-47) follow.
 - Self-update decision and spec (WP-M2-43, ADR-0004): the admin update control is
   an out-of-band host update agent, never shell execution in the `api` container
   and never an OS/Linux password. Stage 1 is implemented as a client-only clean PWA
