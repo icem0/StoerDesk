@@ -702,7 +702,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-53b | the compose invocation of the agent and its image in the smoke test | done    |
 | WP-M2-54  | the admin update API | done    |
 | WP-M2-55  | the host update section in the admin update page | done    |
-| WP-M2-56  | documentation of the host update | planned |
+| WP-M2-56  | documentation of the host update | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -848,14 +848,16 @@ again, so a stored or deleted key needs no API restart. **WP-M2-47** added the w
 key field on `/admin/bma-sync`.
 
 Stage 2 of the self-update (the real host update: `git pull` → `docker compose up -d --build`
-→ `docker image prune -f`) is planned as the chain **WP-M2-48 … WP-M2-56**. **WP-M2-48** fixes
+→ `docker image prune -f`) is implemented as the chain **WP-M2-48 … WP-M2-56**. **WP-M2-48** fixes
 the topology with **ADR-0006**: the update agent is a service of the **same** compose project
 behind the profile `update` — a plain `docker compose up -d --build` skips it, so the agent
 survives the redeploy it triggers — mounted with the checkout and the Docker socket and
 reachable only on the internal network with the bearer `UPDATE_AGENT_TOKEN`. The chain then
-implements the shared contracts (`system.update`), the `update_runs` table, the agent service,
-its image and compose wiring, the admin API, the page section and the documentation — in that
-order, one commit per work package.
+implements the shared contracts (`system.update`, **WP-M2-49**), the `update_runs` table
+(**WP-M2-50**), the agent service with its three steps (**WP-M2-51**), the agent protocol
+(**WP-M2-52**), the image and the compose wiring (**WP-M2-53**, **WP-M2-53b**), the admin API
+(**WP-M2-54**), the page section (**WP-M2-55**) and the documentation (**WP-M2-56**) — one
+commit per work package. The API stays a client: it never runs `git`, `docker` or a shell.
 
 ## 17. Work package rules for small models
 

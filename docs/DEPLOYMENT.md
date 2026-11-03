@@ -37,23 +37,58 @@ docker compose up -d web
 
 ## Services
 
-| Service  | Profile  | Host port  | Purpose                                            |
-| -------- | -------- | ---------- | -------------------------------------------------- |
-| `db`     | —        | none       | PostgreSQL 16, source of truth                     |
-| `api`    | —        | none       | Fastify API on port 3000; runs migrations on start |
-| `web`    | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
-| `backup` | `backup` | none       | periodic `pg_dump` into the backup volume          |
+| Service       | Profile  | Host port  | Purpose                                            |
+| ------------- | -------- | ---------- | -------------------------------------------------- |
+| `db`          | —        | none       | PostgreSQL 16, source of truth                     |
+| `api`         | —        | none       | Fastify API on port 3000; runs migrations on start |
+| `web`         | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
+| `backup`      | `backup` | none       | periodic `pg_dump` into the backup volume          |
+| `update-agent`| `update` | none       | host update: pull, rebuild, prune the old images   |
 
 The `web` container starts independently of the API: nginx resolves the API
 host per request, so the UI is reachable while the API is starting or
 temporarily down. Until the API answers, `/api/` returns 502 while `/healthz`
 still returns 200.
 
+## Host update (update agent)
+
+The administration can update the deployment itself: `git pull` of the whole
+repository, `docker compose up -d --build` and a purge of the old images
+(ADR-0006, `specs/18-self-update.md` §18.4). The privileged part lives in the
+separate `update-agent` container, never in the API image.
+
+```bash
+docker compose --profile update up -d update-agent
+```
+
+- **Opt-in.** The agent belongs to the profile `update`, so a normal
+  `docker compose up -d --build` neither starts nor stops nor recreates it.
+  That is what lets the agent survive the redeploy it triggers itself.
+- **The Docker socket is its only host privilege.** The agent is mounted with
+  `/var/run/docker.sock` and therefore as privileged as the host. Start it
+  deliberately; the normal deployment does not need it.
+- **The checkout is mounted read-write** at `/repo`. The agent pulls it and
+  the compose client of the agent reads the build context from it, so the
+  rebuilt images contain the new code.
+- **It publishes no host port.** The agent answers only on the internal
+  `backend` network, and only with the bearer `UPDATE_AGENT_TOKEN` from
+  `.env` (`npm run env:create` generates it). The API calls the agent with it.
+- **A run restarts the API.** The rebuild replaces the API container, so the
+  request that triggered the run dies with it. The agent keeps the truth about
+  the run, and the API reconciles the run row after its restart. The
+  administration shows the result on `/admin/update`.
+- **The prune removes the dangling images** of the previous local build.
+  `docker image prune -a` is not used: it would delete the images of other
+  projects on a shared host.
+
+Without the agent the administration reports that the agent is not reachable;
+the client-side update of the PWA keeps working.
+
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.
 `npm run env:create` copies the template to `.env` and replaces the secrets
-(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`) with random values. The generated
+(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`, `UPDATE_AGENT_TOKEN`) with random values. The generated
 password is URL-safe, so it can be used inside a connection URL. The application version is
 not configured here: it comes from the tracked `VERSION` file.
 

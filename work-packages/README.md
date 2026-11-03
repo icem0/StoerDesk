@@ -264,7 +264,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-53b | the compose invocation of the agent and its image in the smoke test | done             | yes     |
 | WP-M2-54  | the admin update API                                    | done                    | yes     |
 | WP-M2-55  | the host update section in the admin update page         | done                    | yes     |
-| WP-M2-56  | documentation of the host update                         | planned                 | yes     |
+| WP-M2-56  | documentation of the host update                         | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

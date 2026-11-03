@@ -1,7 +1,7 @@
 # WP-M2-56: documentation of the host update
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-55
 phase: 2
 context-budget: 14k tokens
@@ -61,6 +61,9 @@ backlog of record lists every WP of the chain with its status.
 
 - Files changed: the files of `files-write`.
 - Interfaces added: none — documentation only.
-- Verified: `npm run check`.
+- Verified: `npm run check` green; `docs/REPO-MAP.md` has exactly 200 lines with
+  the new modules (the agent workspace, the admin API, the `update_runs` table
+  and the shared schemas); the backlog of record lists every WP of the chain
+  with its status.
 - Follow-up WP: none — the stage-2 chain is closed.
 - Open question: none.
