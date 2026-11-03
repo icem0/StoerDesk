@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { UpdateRunResponse, UpdateStatusResponse } from '@stoerdesk/shared'
 
-import { appVersion } from '../lib/version'
 import { usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 
@@ -33,7 +32,8 @@ function parseVersion(v: string): [number, number, number] {
   const m = v.match(/^v?(\d+)\.(\d+)\.(\d+)/)
 
   if (!m) {
-    return [0, 0, 0]
+    // 'dev' or any unparseable version is treated as highest possible
+    return [999, 999, 999]
   }
 
   return [Number(m[1]), Number(m[2]), Number(m[3])]
@@ -155,7 +155,8 @@ export function UpdateHostUpdate() {
   const lastRun = data?.lastRun ?? null
   const running = data?.running === true
   const agentError = data?.agent.error ?? null
-  const updateAvailable = latestVersion !== null && isNewerVersion(latestVersion, appVersion)
+  const updateAvailable =
+    latestVersion !== null && data?.currentVersion && isNewerVersion(latestVersion, data.currentVersion)
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
