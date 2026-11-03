@@ -268,10 +268,14 @@ export const textTemplates = pgTable(
   {
     id: uuid('id').primaryKey().default(uuidDefault),
     key: text('key').notNull(),
+    archivedAt: timestamp('archived_at', timestampOptions),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('text_templates_key_key').on(table.key)],
+  (table) => [
+    uniqueIndex('text_templates_key_key').on(table.key),
+    index('text_templates_archived_at_idx').on(table.archivedAt),
+  ],
 )
 
 export const textTemplateTranslations = pgTable(

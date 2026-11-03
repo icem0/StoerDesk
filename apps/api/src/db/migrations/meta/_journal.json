@@ -57,6 +57,13 @@
       "when": 1793687928546,
       "tag": "0007_bma_sync_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793688152167,
+      "tag": "0008_text_template_archive",
+      "breakpoints": true
     }
   ]
 }

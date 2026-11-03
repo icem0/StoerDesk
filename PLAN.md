@@ -676,6 +676,14 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-37  | BMAcloud sync page (web)                     | planned |
 | WP-M2-38  | sync card on the administration home         | planned |
 | WP-M2-39  | external badge in the object list            | planned |
+| WP-M2-40  | fault template archive schema and contracts  | done    |
+| WP-M2-40b | fault template admin and public catalog API  | planned |
+| WP-M2-40c | fault template administration UI             | planned |
+| WP-M2-40d | fault template entry on the admin home       | planned |
+| WP-M2-40e | report form uses the live fault catalog      | planned |
+| WP-M2-40f | internal create and detail live catalog      | planned |
+| WP-M2-41  | bootstrap standard fault types               | done    |
+| WP-M2-41b | E2E fault-chip labels of the bootstrap list  | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -801,7 +809,7 @@ migration is `0006_ticket_workflow_columns`), no `BMA_API_BASE_URL` / `BMA_API_K
 `BMA_SYNC_CRON` environment key and no admin route or page. The §11 text above is therefore
 documentation, and the implementation starts with **WP-M2-33** (the read-only client and its
 environment, done), continues with **WP-M2-34** (the `bma_sync_runs` run log, done) and with
-**WP-M2-35** … **WP-M2-39**; the phase 2
+**WP-M2-35** (mapping and sync service, done) … **WP-M2-39**; the phase 2
 `status:` lines of `09` … `31` now match the shipped code.
 
 ## 17. Work package rules for small models

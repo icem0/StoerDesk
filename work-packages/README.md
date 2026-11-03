@@ -235,11 +235,19 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-32  | record of the BMAcloud decision commit `a6804ed`         | done                    | yes     |
 | WP-M2-33  | BMAcloud read-only client and its environment            | done                    | yes     |
 | WP-M2-34  | the `bma_sync_runs` table (migration `0007`)             | done                    | yes     |
-| WP-M2-35  | the BMAcloud sync service (mapping, conflicts)           | planned                 | yes     |
+| WP-M2-35  | the BMAcloud sync service (mapping, conflicts)           | done                    | yes     |
 | WP-M2-36  | BMAcloud admin API and the scheduled sync job            | planned                 | yes     |
 | WP-M2-37  | BMAcloud sync page in the administration                 | planned                 | yes     |
 | WP-M2-38  | BMAcloud sync card on the administration home            | planned                 | yes     |
 | WP-M2-39  | external-maintained badge in the object list             | planned                 | yes     |
+| WP-M2-40  | fault template archive schema and shared contracts       | done                    | yes     |
+| WP-M2-40b | fault template admin and public catalog API              | planned                 | yes     |
+| WP-M2-40c | fault template administration UI                         | planned                 | yes     |
+| WP-M2-40d | fault template entry on the administration home          | planned                 | yes     |
+| WP-M2-40e | public report form uses the live fault catalog           | planned                 | yes     |
+| WP-M2-40f | internal create and detail use the live fault catalog    | planned                 | yes     |
+| WP-M2-41  | bootstrap standard fault types                           | done                    | yes     |
+| WP-M2-41b | E2E fault-chip labels of the bootstrap list              | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
