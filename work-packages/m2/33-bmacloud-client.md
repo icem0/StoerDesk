@@ -1,7 +1,7 @@
 # WP-M2-33: BMAcloud read-only client and its environment
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-32
 phase: 2
 context-budget: 16k tokens
@@ -75,6 +75,6 @@ Expected: all green; the new spec runs without a database. No network call in an
 - Files changed: the three files above plus the new spec, `docs/REPO-MAP.md`,
   `work-packages/README.md`
 - Interfaces added: `createBmaCloudClient`, `BmaCloudClient`, the four `BMA_*` env keys
-- Verified: —
+- Verified: `npm run check` green; 7 client tests pass without a network call
 - Follow-up WP: WP-M2-34 (the `bma_sync_runs` table), WP-M2-35 (the sync service)
 - Open question: none

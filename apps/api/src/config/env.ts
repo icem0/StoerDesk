@@ -77,6 +77,15 @@ const envSchema = z
     SIGNAL_SOURCE_NUMBER: z.string().default(''),
     SIGNAL_RECIPIENTS: z.string().default(''),
 
+    // --- BMAcloud object sync (ADR-0003, specs/17-bmacloud-sync.md) ---
+    /** Base URL of the BMAcloud API v2. Empty key disables the sync. */
+    BMA_API_BASE_URL: z.string().default('https://bmacloud.de/api/v2/'),
+    /** Bearer key of the tenant; never logged, never in an error param. */
+    BMA_API_KEY: z.string().default(''),
+    BMA_SYNC_ENABLED: booleanValue(true),
+    /** Cron of the daily pull; the `bma.sync.cron` setting can override it. */
+    BMA_SYNC_CRON: z.string().default('15 3 * * *'),
+
     // --- Push channel Matrix ---
     MATRIX_HOMESERVER: z.string().default(''),
     MATRIX_ROOM_ID: z.string().default(''),

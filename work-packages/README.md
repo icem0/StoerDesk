@@ -129,7 +129,8 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > `apps/web/apps/web/src/__tests__/diag.test.tsx` that commit committed outside the source
 > tree. `a6804ed` wrote **no implementation** — no client, no `bma_sync_runs` table, no
 > `BMA_*` environment key, no route, no page — so the plan text of §11 is documentation
-> until **WP-M2-33** … **WP-M2-39** (created with the record) are implemented. The stale
+> until **WP-M2-33** … **WP-M2-39** (created with the record) are implemented; **WP-M2-33**
+> (the read-only client and its `BMA_*` environment) is done. The stale
 > `status:` lines of `09` … `31` now say what the code already does, and the stale
 > `Follow-up WP:` line of `26` is corrected: it named a file that never existed.
 > The remaining WPs are working plans and are implemented
@@ -232,7 +233,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-30  | branding input field in the administration               | done                    | yes     |
 | WP-M2-31  | company name in the shell header                         | done                    | yes     |
 | WP-M2-32  | record of the BMAcloud decision commit `a6804ed`         | done                    | yes     |
-| WP-M2-33  | BMAcloud read-only client and its environment            | planned                 | yes     |
+| WP-M2-33  | BMAcloud read-only client and its environment            | done                    | yes     |
 | WP-M2-34  | the `bma_sync_runs` table (migration `0007`)             | planned                 | yes     |
 | WP-M2-35  | the BMAcloud sync service (mapping, conflicts)           | planned                 | yes     |
 | WP-M2-36  | BMAcloud admin API and the scheduled sync job            | planned                 | yes     |

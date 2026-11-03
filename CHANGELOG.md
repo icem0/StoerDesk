@@ -56,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The read-only BMAcloud client of the object sync (WP-M2-33): `GET /anlagen` and
+  `GET /anlagen/{aid}`, a hard-coded `GET` in the private request helper (the write
+  endpoints stay unreachable), `BMA_API_BASE_URL` / `BMA_API_KEY` / `BMA_SYNC_ENABLED` /
+  `BMA_SYNC_CRON` in the environment schema and `.env.example`, and `bma_not_configured`
+  before any request when the key is empty. The key never reaches an error message or a log.
 - The administration pages `/admin/users` and `/admin/roles` carry a quiet back link to the
   administration home `/admin` (WP-M2-26), labelled `settings:admin.back` in `de` and `en`.
 - The duplicate hint of the public report form. The form asks the API for the open

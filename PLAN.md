@@ -669,7 +669,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M1-27  | record: the end-of-session commit rule       | done    |
 | WP-M2-26  | back links in the admin pages                | done    |
 | WP-M2-32  | record: the BMAcloud contract commit         | done    |
-| WP-M2-33  | BMAcloud read-only client and env            | planned |
+| WP-M2-33  | BMAcloud read-only client and env            | done    |
 | WP-M2-34  | `bma_sync_runs` table (migration `0007`)     | planned |
 | WP-M2-35  | BMAcloud sync service                        | planned |
 | WP-M2-36  | BMAcloud admin API and pg-boss job           | planned |
@@ -799,7 +799,8 @@ block above) without a work package and without a WP id in its subject, and it w
 **no implementation** — there is no BMAcloud client, no `bma_sync_runs` table (the last
 migration is `0006_ticket_workflow_columns`), no `BMA_API_BASE_URL` / `BMA_API_KEY` /
 `BMA_SYNC_CRON` environment key and no admin route or page. The §11 text above is therefore
-documentation, and the implementation is planned as **WP-M2-33** … **WP-M2-39**; the phase 2
+documentation, and the implementation starts with **WP-M2-33** (the read-only client and its
+environment, done) and continues with **WP-M2-34** … **WP-M2-39**; the phase 2
 `status:` lines of `09` … `31` now match the shipped code.
 
 ## 17. Work package rules for small models
