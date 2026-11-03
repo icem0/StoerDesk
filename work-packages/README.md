@@ -245,7 +245,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-40c | fault template administration UI                         | done                    | yes     |
 | WP-M2-40d | fault template entry on the administration home          | done                    | yes     |
 | WP-M2-40e | public report form uses the live fault catalog           | done                    | yes     |
-| WP-M2-40f | internal create and detail use the live fault catalog    | planned                 | yes     |
+| WP-M2-40f | internal create and detail use the live fault catalog    | done                    | yes     |
 | WP-M2-41  | bootstrap standard fault types                           | done                    | yes     |
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list              | done                    | yes     |
 

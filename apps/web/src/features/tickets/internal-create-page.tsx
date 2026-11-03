@@ -3,13 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  STANDARD_TEXT_KEYS,
-  STANDARD_TEXTS,
   type InternalCreateTicketRequest,
   type StandardTextLocale,
 } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
+import { useFaultCatalog } from './use-fault-catalog'
 
 /**
  * Internal ticket creation page (`PLAN.md` §7 rule 1, WP-M2-16).
@@ -76,9 +75,8 @@ export function InternalCreatePage() {
   const objects = objectsQuery.data?.objects ?? []
   const systems = pickedObject?.systems ?? []
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
-  const labels = Object.fromEntries(
-    STANDARD_TEXTS[locale].map((entry) => [entry.key, entry.text]),
-  )
+  const catalog = useFaultCatalog(locale)
+  const activeCatalog = catalog.filter((entry) => entry.archived === false)
 
   function toggleFaultKey(key: string) {
     setFaultKeys((current) =>
@@ -269,14 +267,14 @@ export function InternalCreatePage() {
             {t('internal.create.fields.faults')}
           </label>
           <div className="grid gap-2 sm:grid-cols-3">
-            {STANDARD_TEXT_KEYS.map((key) => (
-              <label key={key} className="flex items-center gap-2 p-2 rounded bg-slate-800">
+            {activeCatalog.map((entry) => (
+              <label key={entry.key} className="flex items-center gap-2 p-2 rounded bg-slate-800">
                 <input
                   type="checkbox"
-                  checked={faultKeys.includes(key)}
-                  onChange={() => toggleFaultKey(key)}
+                  checked={faultKeys.includes(entry.key)}
+                  onChange={() => toggleFaultKey(entry.key)}
                 />
-                <span className="text-sm text-slate-200">{labels[key] ?? key}</span>
+                <span className="text-sm text-slate-200">{entry.text}</span>
               </label>
             ))}
           </div>

@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { TicketDetailResponse } from '@stoerdesk/shared'
-import { STANDARD_TEXTS, type StandardTextLocale } from '@stoerdesk/shared'
+import { type StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
+import { useFaultCatalog } from './use-fault-catalog'
 
 /**
  * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d).
@@ -70,9 +71,8 @@ export function TicketDetailPage() {
   const ticketQuery = useTicket(ticketNo)
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
-  const labels = Object.fromEntries(
-    STANDARD_TEXTS[locale].map((entry) => [entry.key, entry.text]),
-  )
+  const catalog = useFaultCatalog(locale)
+  const labels = Object.fromEntries(catalog.map((entry) => [entry.key, entry.text]))
 
   async function handleAction(event: string, body?: Record<string, unknown>) {
     if (ticketNo === undefined) return

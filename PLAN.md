@@ -681,7 +681,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-40c | fault template administration UI             | done    |
 | WP-M2-40d | fault template entry on the admin home       | done    |
 | WP-M2-40e | report form uses the live fault catalog      | done    |
-| WP-M2-40f | internal create and detail live catalog      | planned |
+| WP-M2-40f | internal create and detail live catalog      | done    |
 | WP-M2-41  | bootstrap standard fault types               | done    |
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list  | done    |
 
