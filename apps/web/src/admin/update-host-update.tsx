@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -17,9 +17,16 @@ import { ApiError, apiFetch } from '../lib/api'
  * so the API is briefly unreachable during a run; the section says that instead
  * of failing and recovers when the API answers again.
  *
+ * As long as the agent does not run, the section carries the guide how to
+ * start it: the agent is opt-in, because it holds the Docker socket of the
+ * host. The guide names the command and can copy it to the clipboard.
+ *
  * The section is hidden without the permission `system.update`. The guard of the
  * server stays the only enforcement point.
  */
+
+/** The command that starts the agent on the host. */
+const AGENT_START_COMMAND = 'docker compose --profile update up -d update-agent'
 
 const handledErrorCodes = [
   'session_invalid',
@@ -47,6 +54,16 @@ export function UpdateHostUpdate() {
   const mayUpdate = usePermission('system.update')
   const queryClient = useQueryClient()
   const [confirming, setConfirming] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const copyCommand = useCallback(async () => {
+    try {
+      await navigator.clipboard?.writeText(AGENT_START_COMMAND)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }, [])
 
   const status = useQuery({
     queryKey: ['admin', 'update', 'status'],
@@ -116,6 +133,29 @@ export function UpdateHostUpdate() {
         <p role="alert" className="mt-3 text-sm text-rose-300">
           {errorMessage(t, run.error)}
         </p>
+      ) : null}
+
+      {data?.agent.reachable !== true ? (
+        <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 p-3 text-sm">
+          <p className="font-medium">{t('admin.update.host.guide.title')}</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>{t('admin.update.host.guide.step1')}</li>
+            <li>{t('admin.update.host.guide.step2')}</li>
+          </ol>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <code className="rounded bg-slate-900 px-2 py-1 font-mono text-xs">
+              {AGENT_START_COMMAND}
+            </code>
+            <button
+              className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
+              type="button"
+              onClick={() => void copyCommand()}
+            >
+              {copied ? t('admin.update.host.guide.copied') : t('admin.update.host.guide.copy')}
+            </button>
+          </div>
+          <p className="mt-3 text-slate-400">{t('admin.update.host.guide.hint')}</p>
+        </div>
       ) : null}
 
       {confirming ? (

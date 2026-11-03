@@ -707,7 +707,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-58  | the page shows why the agent is not reachable | done    |
 | WP-M2-59  | the agent generates its own token (state volume) | done    |
 | WP-M2-60  | the API reads the token from the state volume | done    |
-| WP-M2-61  | the admin page carries the guide for the host update | planned |
+| WP-M2-61  | the admin page carries the guide for the host update | done    |
 | WP-M2-62  | documentation of the token without the environment | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`

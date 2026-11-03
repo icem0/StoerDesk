@@ -154,7 +154,41 @@ describe('UpdateHostUpdate', () => {
     expect(screen.getByText(/der Agent läuft nicht|agent does not run/i)).toBeTruthy()
   })
 
-  it('names the missing token of the environment', async () => {
+  it('carries the guide that starts the agent', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({
+        agent: { reachable: false, state: null, error: 'update_agent_unreachable' },
+        currentVersion: null,
+      }),
+    })
+
+    renderSection()
+
+    expect(
+      await screen.findByText(/Host-Update aktivieren|Enable the host update/i),
+    ).toBeTruthy()
+    expect(
+      screen.getByText('docker compose --profile update up -d update-agent'),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /Befehl kopieren|Copy command/i }),
+    ).toBeTruthy()
+  })
+
+  it('hides the guide when the agent answers', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload(),
+    })
+
+    renderSection()
+
+    expect(await screen.findByText('v0.1.99')).toBeTruthy()
+    expect(screen.queryByText(/Host-Update aktivieren|Enable the host update/i)).toBeNull()
+  })
+
+  it('names the missing token of the agent', async () => {
     stubRoutes({
       ...meRoutes(['system.update']),
       '/v1/admin/update/status': statusPayload({
@@ -165,6 +199,8 @@ describe('UpdateHostUpdate', () => {
 
     renderSection()
 
-    expect(await screen.findByText(/UPDATE_AGENT_TOKEN/)).toBeTruthy()
+    expect(
+      await screen.findByText(/Agent läuft noch nicht|agent does not run yet/i),
+    ).toBeTruthy()
   })
 })
