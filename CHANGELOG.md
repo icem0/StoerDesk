@@ -65,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   type keeps labelling existing tickets but leaves the form, and a type that a ticket
   carries cannot be deleted (`409 text_template_in_use`). The forms read the catalog
   from the API instead of a compile-time list.
+- The BMAcloud mapping and sync service (WP-M2-35): `mapAnlage` per §17.3, and
+  `syncBmaAnlagen` that matches objects by `external_id` then `object_no`,
+  reports `object_no_taken` instead of overwriting a local object, soft-deactivates
+  objects that disappeared from the pull and records every run with its counters.
 - The `bma_sync_runs` table behind migration `0007_bma_sync_runs` (WP-M2-34): one row per
   BMAcloud pull with the status check `RUNNING`/`SUCCESS`/`PARTIAL`/`FAILED`, the five
   counters, the conflicts as jsonb and an index on `started_at` for the run history.

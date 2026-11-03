@@ -1,7 +1,7 @@
 # WP-M2-35: the BMAcloud sync service
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-33, WP-M2-34
 phase: 2
 context-budget: 20k tokens
@@ -81,6 +81,7 @@ otherwise report it as unverified).
 - Files changed: the three files above plus the integration spec, `docs/REPO-MAP.md`,
   `work-packages/README.md`
 - Interfaces added: `bmaAnlageSchema`, `mapAnlage`, `syncBmaAnlagen`, `BmaSyncRunResult`
-- Verified: —
+- Verified: `npm run check` green; 7 integration tests run against a throwaway database
+  (create, unchanged, update, both conflicts, deactivation, tickets kept)
 - Follow-up WP: WP-M2-36 (admin API and the pg-boss job)
 - Open question: none
