@@ -28,8 +28,8 @@
           "hint": "User groups for the ticket assignment."
         },
         "standardTexts": {
-          "title": "Standard texts",
-          "hint": "Maintain the fault texts of the report form."
+          "title": "Fault types",
+          "hint": "Maintain, archive and delete the fault types of the report form."
         },
         "deadlines": {
           "title": "Deadlines",
@@ -125,6 +125,45 @@
         "system_role_protected": "System roles are protected – the seed rewrites their grants.",
         "role_in_use": "Users still hold this role.",
         "unknown_permission_key": "Unknown permission in the selection.",
+        "unknown": "Saving failed."
+      }
+    },
+    "textTemplates": {
+      "title": "Fault types",
+      "hint": "The fault types offered by the report form. Archived types still label existing tickets but are no longer offered. Deleting is only possible while no ticket uses the type.",
+      "loading": "Loading …",
+      "sessionNotice": "Fault type administration requires a valid sign-in.",
+      "forbiddenNotice": "No permission for fault type administration.",
+      "active": "active",
+      "archived": "archived",
+      "createTitle": "Create fault type",
+      "editTitle": "Edit fault type {{key}}",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "archive": "Archive",
+      "unarchive": "Reactivate",
+      "delete": "Delete",
+      "deleteBlocked": "Used by tickets",
+      "fields": {
+        "de": "German text",
+        "en": "English text"
+      },
+      "table": {
+        "key": "Key",
+        "de": "German",
+        "en": "English",
+        "status": "Status",
+        "usage": "Tickets",
+        "actions": "Actions"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please fill in both texts.",
+        "text_template_not_found": "Fault type not found.",
+        "text_template_in_use": "Tickets still use this fault type, so it cannot be deleted.",
         "unknown": "Saving failed."
       }
     }

@@ -28,8 +28,8 @@
           "hint": "Benutzergruppen für die Zuweisung von Tickets."
         },
         "standardTexts": {
-          "title": "Standardtexte",
-          "hint": "Die Störungstexte des Meldeformulars pflegen."
+          "title": "Störungsarten",
+          "hint": "Die Störungsarten des Meldeformulars pflegen, archivieren und löschen."
         },
         "deadlines": {
           "title": "Fristen",
@@ -125,6 +125,45 @@
         "system_role_protected": "Systemrollen sind geschützt – ihre Rechte setzt der Seed.",
         "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
         "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
+        "unknown": "Speichern fehlgeschlagen."
+      }
+    },
+    "textTemplates": {
+      "title": "Störungsarten",
+      "hint": "Die Auswahl der Störungsarten im Meldeformular. Archivierte Arten bleiben an bestehenden Vorgängen sichtbar, werden aber nicht mehr angeboten. Löschen ist nur möglich, solange kein Vorgang die Art verwendet.",
+      "loading": "Lädt …",
+      "sessionNotice": "Die Störungsarten-Verwaltung benötigt eine gültige Anmeldung.",
+      "forbiddenNotice": "Keine Berechtigung für die Störungsarten-Verwaltung.",
+      "active": "aktiv",
+      "archived": "archiviert",
+      "createTitle": "Störungsart anlegen",
+      "editTitle": "Störungsart {{key}} bearbeiten",
+      "create": "Anlegen",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "archive": "Archivieren",
+      "unarchive": "Reaktivieren",
+      "delete": "Löschen",
+      "deleteBlocked": "Wird von Vorgängen verwendet",
+      "fields": {
+        "de": "Deutscher Text",
+        "en": "Englischer Text"
+      },
+      "table": {
+        "key": "Schlüssel",
+        "de": "Deutsch",
+        "en": "Englisch",
+        "status": "Status",
+        "usage": "Vorgänge",
+        "actions": "Aktionen"
+      },
+      "errors": {
+        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+        "invalid_request": "Eingabe ungültig – bitte beide Texte ausfüllen.",
+        "text_template_not_found": "Störungsart nicht gefunden.",
+        "text_template_in_use": "Die Störungsart wird noch von Vorgängen verwendet und kann nicht gelöscht werden.",
         "unknown": "Speichern fehlgeschlagen."
       }
     }

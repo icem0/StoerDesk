@@ -4,6 +4,7 @@ import { App } from '../App'
 import { AdminHomePage } from '../admin/admin-home-page'
 import { BrandingPage } from '../settings/branding-page'
 import { RolesPage } from '../admin/roles-page'
+import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { StartPage } from '../features/dashboard/start-page'
@@ -51,6 +52,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/text-templates',
+        element: (
+          <RequireSession>
+            <TextTemplatesPage />
           </RequireSession>
         ),
       },
