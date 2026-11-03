@@ -49,7 +49,7 @@ const ui = {
     signedInAs: `Angemeldet als ${adminEmail}`,
     reportTitle: 'Störung melden',
     system: 'Betroffene Anlage',
-    faultChip: 'Brandmeldeanlage fällt komplett aus',
+    faultChip: 'Leitungsunterbrechung',
     textLabel: 'Was ist zu sehen?',
     photoLabel: 'Fotos',
     phoneLabel: 'Telefon',

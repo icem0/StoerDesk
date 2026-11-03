@@ -30,7 +30,7 @@ const ui = {
     settings: 'Einstellungen',
     signedInAs: `Angemeldet als ${adminEmail}`,
     reportTitle: 'Störung melden',
-    faultChip: 'Brandmeldeanlage fällt komplett aus',
+    faultChip: 'Leitungsunterbrechung',
     textLabel: 'Was ist zu sehen?',
     phoneLabel: 'Telefon',
     emergencyNotice: 'Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.',

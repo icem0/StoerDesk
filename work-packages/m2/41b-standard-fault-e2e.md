@@ -1,7 +1,7 @@
 # WP-M2-41b: E2E fault-chip labels of the bootstrap list
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M2-41
 phase: 2
 context-budget: 6k tokens
@@ -52,6 +52,6 @@ Expected: green, or an explicit skip notice when no database/browser is availabl
 
 - Files changed: the three report E2E specs
 - Interfaces added: none
-- Verified: —
+- Verified: `npm run test:e2e` skipped — no usable Chromium in this environment; unverified.
 - Follow-up WP: WP-M2-40b (catalog API)
 - Open question: none
