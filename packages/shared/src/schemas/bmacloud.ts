@@ -7,9 +7,19 @@ import { z } from 'zod'
  * instead of a broken object.
  */
 
+/**
+ * `aid` is an integer in the live BMAcloud payload (`Anlagen-ID` in the OpenAPI
+ * spec, e.g. `1`) and a string in fixtures and single-object calls; both are
+ * accepted and normalised to the trimmed string stored in `external_id`.
+ */
+const bmaAidSchema = z
+  .union([z.string(), z.number().int()])
+  .transform((aid) => String(aid).trim())
+  .refine((aid) => aid !== '', 'aid must not be empty')
+
 /** One Anlage as far as StörDesk reads it (§17.3). */
 export const bmaAnlageSchema = z.object({
-  aid: z.string().trim().min(1),
+  aid: bmaAidSchema,
   nr: z.string().min(1),
   firma: z.string().default(''),
   anlagenort: z.string().nullish(),

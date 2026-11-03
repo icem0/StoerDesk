@@ -213,4 +213,43 @@ describe.skipIf(testDatabase.status === 'unavailable')('syncBmaAnlagen (integrat
 
     expect(after?.active).toBe(false)
   })
+
+  it('accepts the live wire format with an integer aid and reference fields', async () => {
+    const run = await syncBmaAnlagen(database, [
+      {
+        aid: 12345,
+        nr: '10372_07',
+        gid: 0,
+        firma: 'Drahtlos-Firma',
+        anlagenort: '',
+        str: '',
+        plz: '',
+        ort: '',
+        typ: 4,
+        sst: 44,
+        bemerkung: 'irrelevant',
+        status: 'sleep',
+        ppmail: 'name@kundendomain.de',
+        notizen: 'Testnotiz',
+      },
+      { aid: 'aid-8', nr: '10372 08', typ: 4 },
+    ])
+
+    expect(run.status).toBe('PARTIAL')
+    expect(run.created).toBe(1)
+    expect(run.conflicts).toEqual([
+      { code: 'invalid_object_no', objectNo: '10372 08', aid: 'aid-8', detail: 'whitespace' },
+    ])
+
+    const [row] = await database.select().from(objects).where(eq(objects.objectNo, '10372_07'))
+
+    expect(row).toMatchObject({
+      name: 'Drahtlos-Firma',
+      street: null,
+      postalCode: null,
+      city: null,
+      active: false,
+      externalId: '12345',
+    })
+  })
 })

@@ -15,9 +15,12 @@ export interface BmaCloudConfig {
   apiKey: string
 }
 
-/** One Anlage as far as StörDesk reads it (§17.3). */
+/**
+ * One Anlage as far as StörDesk reads it (§17.3). The wire format of `aid` is an
+ * integer (`Anlagen-ID` in the OpenAPI spec); `bmaAnlageSchema` normalises it.
+ */
 export interface BmaAnlage {
-  aid: string
+  aid: string | number
   nr: string
   firma: string
   anlagenort?: string | null

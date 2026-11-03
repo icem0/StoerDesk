@@ -80,6 +80,11 @@ function sameField(left: string | null, right: string | null): boolean {
   return (left ?? '') === (right ?? '')
 }
 
+/** Ids of a rejected raw row: the live payload carries `aid` as an integer. */
+function rawId(value: unknown): string {
+  return typeof value === 'string' ? value : typeof value === 'number' ? String(value) : ''
+}
+
 /**
  * Applies one pull and writes its run row. All object writes are one
  * transaction; a failure rolls them back and records a `FAILED` run with a fixed
@@ -100,8 +105,8 @@ export async function syncBmaAnlagen(
       const record = (anlage ?? {}) as Record<string, unknown>
       conflicts.push({
         code: 'invalid_object_no',
-        objectNo: typeof record.nr === 'string' ? record.nr : '',
-        aid: typeof record.aid === 'string' ? record.aid : '',
+        objectNo: rawId(record.nr),
+        aid: rawId(record.aid),
         detail: 'invalid_payload',
       })
       continue
