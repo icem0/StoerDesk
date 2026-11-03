@@ -10,18 +10,14 @@ import { Link } from 'react-router-dom'
  * are visible instead of silently missing.
  */
 
-type Module = {
-  key: string
-  to?: string
-  phase?: string
-}
+type Module = { key: string; to: string } | { key: string; to?: undefined; phase: string }
 
 const MODULES: Module[] = [
   { key: 'users', to: '/admin/users' },
   { key: 'roles', to: '/admin/roles' },
   { key: 'bmaSync', to: '/admin/bma-sync' },
   { key: 'update', to: '/admin/update' },
-  { key: 'groups', phase: 'phase1' },
+  { key: 'groups', phase: 'phase4' },
   { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', phase: 'phase6' },
   { key: 'oncall', phase: 'phase8' },
@@ -67,7 +63,7 @@ export function AdminHomePage() {
                 </span>
                 <span className="mt-2 inline-flex rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-400">
                   {t('admin.home.planned', {
-                    phase: t(`admin.home.phases.${module.phase ?? 'phase1'}`),
+                    phase: t(`admin.home.phases.${module.phase}`),
                   })}
                 </span>
               </div>
