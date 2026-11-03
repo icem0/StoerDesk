@@ -23,11 +23,19 @@ const runRow = {
   errorCode: null,
 }
 
+const fetchCalls: { url: string; method: string; body?: unknown }[] = []
+
 function stubRoutes(routes: Record<string, unknown>) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (input: RequestInfo | URL) => {
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
+
+      fetchCalls.push({
+        url,
+        method: init?.method ?? 'GET',
+        body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+      })
 
       for (const [path, payload] of Object.entries(routes)) {
         if (url.includes(path)) {
@@ -57,6 +65,7 @@ function baseRoutes(permissions: string[], extra: Record<string, unknown> = {}) 
     },
     '/v1/admin/bma-sync/runs': { runs: [runRow] },
     '/v1/admin/bma-sync/schedule': { enabled: true, cron: '15 3 * * *' },
+    '/v1/admin/bma-sync/credentials': { configured: false, source: 'none' },
     ...extra,
   }
 }
@@ -81,6 +90,7 @@ const adminPermissions = ['object.read', 'object.write', 'object.import']
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  fetchCalls.length = 0
 })
 
 describe('BmaSyncPage', () => {
@@ -137,6 +147,73 @@ describe('BmaSyncPage', () => {
     })) as HTMLButtonElement
 
     expect(button.disabled).toBe(true)
+  })
+
+  it('shows where the effective api key comes from', async () => {
+    stubRoutes(
+      baseRoutes(adminPermissions, {
+        '/v1/admin/bma-sync/credentials': { configured: true, source: 'env' },
+      }),
+    )
+    renderPage()
+
+    expect(
+      await screen.findByText(
+        /API-Schlüssel kommt aus der Umgebung|API key comes from the environment/i,
+      ),
+    ).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: /Gespeicherten Schlüssel löschen|Delete stored key/i }),
+    ).toBeNull()
+  })
+
+  it('stores a typed api key, clears the field and reports the source as stored', async () => {
+    stubRoutes(baseRoutes(adminPermissions))
+    renderPage()
+
+    const input = (await screen.findByLabelText(
+      /API-Schlüssel der BMAcloud|BMAcloud API key/i,
+    )) as HTMLInputElement
+
+    fireEvent.change(input, { target: { value: 'secret-key' } })
+    fireEvent.click(screen.getByRole('button', { name: /Schlüssel speichern|Save key/i }))
+
+    expect(await screen.findByText(/API-Schlüssel gespeichert|API key saved/i)).toBeTruthy()
+    expect(
+      fetchCalls.some((call) => {
+        const body = (call.body ?? {}) as Record<string, unknown>
+
+        return (
+          call.method === 'PUT' &&
+          call.url.includes('/v1/admin/bma-sync/credentials') &&
+          body.apiKey === 'secret-key'
+        )
+      }),
+    ).toBe(true)
+    expect(input.value).toBe('')
+  })
+
+  it('offers deletion for a stored key and disables writes without object.import', async () => {
+    stubRoutes(
+      baseRoutes(['object.read'], {
+        '/v1/admin/bma-sync/credentials': { configured: true, source: 'db' },
+      }),
+    )
+    renderPage()
+
+    const removeButton = (await screen.findByRole('button', {
+      name: /Gespeicherten Schlüssel löschen|Delete stored key/i,
+    })) as HTMLButtonElement
+    const saveButton = screen.getByRole('button', {
+      name: /Schlüssel speichern|Save key/i,
+    }) as HTMLButtonElement
+    const input = (await screen.findByLabelText(
+      /API-Schlüssel der BMAcloud|BMAcloud API key/i,
+    )) as HTMLInputElement
+
+    expect(removeButton.disabled).toBe(true)
+    expect(saveButton.disabled).toBe(true)
+    expect(input.disabled).toBe(true)
   })
 
   it('shows the session notice when /me answers 401', async () => {

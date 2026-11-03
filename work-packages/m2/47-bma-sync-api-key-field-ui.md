@@ -1,7 +1,7 @@
 # WP-M2-47: API-key field on the BMAcloud sync page
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-45, WP-M2-46, ADR-0005
 phase: 2
 context-budget: 16k tokens
@@ -72,8 +72,16 @@ Expected: all green; the page test runs in jsdom and asserts the two mutations.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/bma-sync-page.tsx`,
+  `apps/web/src/admin/__tests__/bma-sync-page.test.tsx`,
+  `apps/web/src/i18n/locales/de/settings.json`,
+  `apps/web/src/i18n/locales/en/settings.json`, `work-packages/m2/47-bma-sync-api-key-field-ui.md`,
+  `work-packages/README.md`, `PLAN.md`, `CHANGELOG.md`, `docs/REPO-MAP.md`
+- Interfaces added: `useBmaCredentials`, `CredentialsCard`, CREDENTIAL_SOURCE_KEYS;
+  `admin.bma.credentialsTitle`, `credentialsHint`, `credentialsSourceDb`, `credentialsSourceEnv`,
+  `credentialsSourceNone`, `credentialsLabel`, `credentialsSave`, `credentialsRemove`,
+  `credentialsSaved`, `credentialsRemoved`
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run test:run`, `npm run i18n:check`, `npm run wp:check`
 - Follow-up WP: none
 - Open question: none

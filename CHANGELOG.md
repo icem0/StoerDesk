@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- API-key field on the BMAcloud sync page (WP-M2-47): `/admin/bma-sync` shows the effective
+  source (`db`, `env` or `none`), a write-only key field, `Schlüssel speichern` / `Save key`
+  and — only for a stored key — `Gespeicherten Schlüssel löschen` / `Delete stored key`. The
+  field is gated on `object.import`, never prefilled and never echoed back; after save the
+  credentials query refreshes to the stored source.
 - The scheduled BMAcloud pull resolves the same key as the manual trigger (WP-M2-46): one
   startup read of the `bma.api.key` row with `BMA_API_KEY` as fallback decides whether the
   `bma-anlage-sync` queue is scheduled at all, and every run reads the key again — a key
@@ -21,8 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   /api/v1/admin/bma-sync/credentials` — the status answers `{ configured, source }`
   (`db` / `env` / `none`) only, the stored key is never echoed, never logged and never
   written into a run row. ADR-0005 supersedes only the credential rule of ADR-0003; the
-  read-only client and the `object.read` / `object.import` guards stay. The key field on
-  the sync page follows in WP-M2-47.
+read-only client and the `object.read` / `object.import` guards stay. The key field on
+the sync page followed in WP-M2-47.
 - Self-update decision and spec (WP-M2-43, ADR-0004): the admin update control is
   an out-of-band host update agent, never shell execution in the `api` container
   and never an OS/Linux password. Stage 1 is implemented as a client-only clean PWA

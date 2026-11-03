@@ -3,26 +3,31 @@ import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import type {
-  BmaSyncRunRow,
-  BmaSyncRunSummary,
-  BmaSyncRunsResponse,
-  BmaSyncSchedule,
+import {
+  BMA_API_KEY_MAX_LENGTH,
+  type BmaCredentialsResponse,
+  type BmaSyncRunRow,
+  type BmaSyncRunSummary,
+  type BmaSyncRunsResponse,
+  type BmaSyncSchedule,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 
 /**
- * BMAcloud sync page (`specs/17-bmacloud-sync.md` §17.5, WP-M2-37).
+ * BMAcloud sync page (`specs/17-bmacloud-sync.md` §17.5, WP-M2-37, WP-M2-47).
  *
  * The office sees the run history of the read-only object pull, the conflicts of the
  * newest run and triggers a manual pull with "Jetzt abgleichen". The schedule pair is
  * read from `GET /api/v1/admin/bma-sync/schedule` (WP-M2-36b), so the form prefills
  * what the pg-boss job of WP-M2-36 really schedules — the stored `settings` rows with
- * the `BMA_SYNC_*` environment as fallback. The server guards (`object.read`,
- * `object.import`, `object.write`) are the only enforcement point; the UI only hides
- * what the role may not do.
+ * the `BMA_SYNC_*` environment as fallback. The bearer key is write-only (ADR-0005):
+ * the credentials card shows only `{ configured, source }` from
+ * `GET /api/v1/admin/bma-sync/credentials`, stores a typed key with `PUT` and removes
+ * the stored row with `DELETE`; nothing ever refills the field, because the API never
+ * answers the key. The server guards (`object.read`, `object.import`, `object.write`)
+ * are the only enforcement point; the UI only hides what the role may not do.
  */
 
 const handledErrorCodes = [
@@ -68,6 +73,125 @@ function useBmaSyncSchedule() {
     queryFn: () => apiFetch<BmaSyncSchedule>('/v1/admin/bma-sync/schedule'),
     retry: false,
   })
+}
+
+function useBmaCredentials() {
+  return useQuery({
+    queryKey: ['bma-sync', 'credentials'],
+    queryFn: () => apiFetch<BmaCredentialsResponse>('/v1/admin/bma-sync/credentials'),
+    retry: false,
+  })
+}
+
+/** Source line of the credentials card — the key itself is never fetched (ADR-0005). */
+const CREDENTIAL_SOURCE_KEYS = {
+  db: 'admin.bma.credentialsSourceDb',
+  env: 'admin.bma.credentialsSourceEnv',
+  none: 'admin.bma.credentialsSourceNone',
+} as const
+
+function CredentialsCard({
+  credentials,
+  canWrite,
+}: {
+  credentials: BmaCredentialsResponse
+  canWrite: boolean
+}) {
+  const { t } = useTranslation('settings')
+  const queryClient = useQueryClient()
+  const [apiKey, setApiKey] = useState('')
+  const [feedback, setFeedback] = useState<'saved' | 'removed' | null>(null)
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['bma-sync', 'credentials'] })
+    void queryClient.invalidateQueries({ queryKey: ['bma-sync'] })
+  }
+
+  const store = useMutation({
+    mutationFn: () =>
+      apiFetch<BmaCredentialsResponse>('/v1/admin/bma-sync/credentials', {
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify({ apiKey }),
+      }),
+    onSuccess: () => {
+      setApiKey('')
+      setFeedback('saved')
+      invalidate()
+    },
+  })
+
+  const remove = useMutation({
+    mutationFn: () =>
+      apiFetch<BmaCredentialsResponse>('/v1/admin/bma-sync/credentials', { method: 'DELETE' }),
+    onSuccess: () => {
+      setFeedback('removed')
+      invalidate()
+    },
+  })
+
+  const mutationError = store.error ?? remove.error
+
+  return (
+    <form
+      className="mt-6 flex flex-col gap-3 rounded border border-slate-700 bg-slate-900 p-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        setFeedback(null)
+        store.mutate()
+      }}
+    >
+      <h2 className="text-lg font-semibold">{t('admin.bma.credentialsTitle')}</h2>
+      <p className="text-sm text-slate-400">{t(CREDENTIAL_SOURCE_KEYS[credentials.source])}</p>
+      <p className="text-sm text-slate-400">{t('admin.bma.credentialsHint')}</p>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.bma.credentialsLabel')}
+        <input
+          type="password"
+          autoComplete="off"
+          className="rounded bg-slate-950 p-2 text-slate-100"
+          maxLength={BMA_API_KEY_MAX_LENGTH}
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          disabled={!canWrite}
+        />
+      </label>
+      {mutationError ? (
+        <p role="alert" className="text-sm text-red-400">
+          {errorMessage(t, mutationError)}
+        </p>
+      ) : null}
+      {feedback ? (
+        <p className="text-sm text-emerald-400">
+          {feedback === 'saved'
+            ? t('admin.bma.credentialsSaved')
+            : t('admin.bma.credentialsRemoved')}
+        </p>
+      ) : null}
+      <div className="flex flex-wrap gap-3">
+        <button
+          className="rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+          type="submit"
+          disabled={!canWrite || store.isPending || apiKey.trim() === ''}
+        >
+          {t('admin.bma.credentialsSave')}
+        </button>
+        {credentials.source === 'db' ? (
+          <button
+            className="rounded border border-slate-600 px-4 py-2 font-medium text-slate-200 disabled:opacity-50"
+            type="button"
+            disabled={!canWrite || remove.isPending}
+            onClick={() => {
+              setFeedback(null)
+              remove.mutate()
+            }}
+          >
+            {t('admin.bma.credentialsRemove')}
+          </button>
+        ) : null}
+      </div>
+    </form>
+  )
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -246,6 +370,7 @@ export function BmaSyncPage() {
   const [saved, setSaved] = useState(false)
   const runs = useBmaSyncRuns()
   const schedule = useBmaSyncSchedule()
+  const credentials = useBmaCredentials()
 
   const trigger = useMutation({
     mutationFn: () => apiFetch<BmaSyncRunSummary>('/v1/admin/bma-sync/run', { method: 'POST' }),
@@ -303,13 +428,17 @@ export function BmaSyncPage() {
         ) : null}
       </div>
 
+      {credentials.data ? (
+        <CredentialsCard credentials={credentials.data} canWrite={mayImport} />
+      ) : null}
+
       {schedule.data ? (
         <ScheduleForm schedule={schedule.data} canWrite={mayWrite} onSaved={() => setSaved(true)} />
       ) : null}
 
-      {schedule.isError || runs.isError ? (
+      {schedule.isError || runs.isError || credentials.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
-          {errorMessage(t, schedule.error ?? runs.error)}
+          {errorMessage(t, schedule.error ?? runs.error ?? credentials.error)}
         </p>
       ) : null}
 

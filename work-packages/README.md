@@ -254,7 +254,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-44  | admin update page — clean PWA update (stage 1)           | done                    | yes     |
 | WP-M2-45  | BMAcloud bearer key in `settings` and its admin routes   | done                    | yes     |
 | WP-M2-46  | the scheduled pull reads the effective bearer key        | done                    | yes     |
-| WP-M2-47  | API-key field on the BMAcloud sync page                  | planned                 | yes     |
+| WP-M2-47  | API-key field on the BMAcloud sync page                  | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -461,7 +461,7 @@ removes the row — the stored value is never answered, never logged and never w
 row. `readBmaApiKey(database, env)` is the single resolution point — of the manual trigger
 (WP-M2-45) and, since **WP-M2-46**, of the pg-boss worker as well: one startup read decides
 whether the queue is scheduled at all, and every run resolves the key again, so storing or
-deleting it on the admin page needs no API restart. **WP-M2-47** adds the field on the page.
+deleting it on the admin page needs no API restart. **WP-M2-47** added the write-only field on the page.
 Both child WP files were created in the same commit as this parent.
 
 ## Validation
