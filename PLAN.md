@@ -802,18 +802,22 @@ public form shows the hint with one "Ergänzen" button per open ticket and one "
 neu melden" button, and every new report of an object with an open ticket carries the
 `parentTicketId` of the oldest open ticket in `tickets.parent_ticket_id` (§6).
 
-Phase 2 is implemented through **WP-M2-31**; **WP-M2-26** (back links in the admin pages)
-closed the last open phase 2 backlog item. Its record gap is closed by **WP-M2-32**: commit
-`a6804ed` landed the BMAcloud contract (`specs/17-bmacloud-sync.md`, ADR-0003 and the §11
-block above) without a work package and without a WP id in its subject, and it wrote
-**no implementation** — there is no BMAcloud client, no `bma_sync_runs` table (the last
-migration is `0006_ticket_workflow_columns`), no `BMA_API_BASE_URL` / `BMA_API_KEY` /
-`BMA_SYNC_CRON` environment key and no admin route or page. The §11 text above is therefore
-documentation, and the implementation starts with **WP-M2-33** (the read-only client and its
-environment, done), continues with **WP-M2-34** (the `bma_sync_runs` run log, done) and with
-**WP-M2-35** (mapping and sync service, done) and **WP-M2-36** (admin API and pg-boss job,
-done) … **WP-M2-39**; the phase 2
-`status:` lines of `09` … `31` now match the shipped code.
+Phase 2 is **complete**. **WP-M2-00 … WP-M2-31** are implemented, **WP-M2-26** closed the last
+backlog item of that run and **WP-M2-32** closed its record gap: commit `a6804ed` had landed
+the BMAcloud contract (`specs/17-bmacloud-sync.md`, ADR-0003 and the §11 block above) without
+a work package, without a WP id in its subject and with **no implementation** — no client, no
+`bma_sync_runs` table, no `BMA_*` environment key, no admin route and no page. That gap is
+worked off: **WP-M2-33** (read-only client and environment), **WP-M2-34** (the
+`bma_sync_runs` run log), **WP-M2-35** (mapping and sync service), **WP-M2-36** (admin API and
+pg-boss job), **WP-M2-36b** (the `GET` of the effective schedule pair, which closed the open
+question of WP-M2-36), **WP-M2-37** (the admin page at `/admin/bma-sync`), **WP-M2-38** (its
+card on the administration home) and **WP-M2-39** (the "extern gepflegt" badge in the object
+list) are implemented, and so are the fault-template packages **WP-M2-40 … WP-M2-42**. No
+phase 2 work package is open; what phase 2 leaves behind are three documented **questions**,
+not features: the retention of `report_throttle.ip` (WP-M2-07, WP-M2-07c), the retention of
+`bma_sync_runs.conflicts` (WP-M2-32) and the missing `meta/0006_snapshot.json` of the
+hand-written migration 0006 (WP-M2-34). The phase 2 `status:` lines of `09` … `31` match the
+shipped code.
 
 ## 17. Work package rules for small models
 
