@@ -69,6 +69,8 @@ export const objectSummarySchema = z.object({
   contactPhone: z.string().nullable(),
   contactEmail: z.string().nullable(),
   externalId: z.string().nullable(),
+  /** The human-readable system type of an externally maintained object (WP-M2-64/65). */
+  externalType: z.string().nullable(),
   active: z.boolean(),
   notes: z.string().nullable(),
   qrToken: qrTokenSchema.nullable(),

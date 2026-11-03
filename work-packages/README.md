@@ -271,6 +271,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-60  | the API reads the token from the state volume              | done                    | yes     |
 | WP-M2-61  | the admin page carries the guide for the host update       | done                    | yes     |
 | WP-M2-62  | documentation of the token without the environment          | done                    | yes     |
+| WP-M2-63  | the update availability check of the admin page             | done                    | yes     |
+| WP-M2-64  | objects.external_type behind migration 0010                 | done                    | yes     |
+| WP-M2-65  | the BMAcloud contract knows the Anlagentyp                  | planned                 | yes     |
+| WP-M2-65b | the sync writes the external system type                    | planned                 | yes     |
+| WP-M2-66  | the object list shows the system type                       | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

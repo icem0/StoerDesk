@@ -71,6 +71,13 @@
       "when": 1793706773741,
       "tag": "0009_update_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793716155867,
+      "tag": "0010_object_external_type",
+      "breakpoints": true
     }
   ]
 }

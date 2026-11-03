@@ -196,6 +196,7 @@ export const objects = pgTable(
     contactEmail: text('contact_email'),
     qrToken: text('qr_token'),
     externalId: text('external_id'),
+    externalType: text('external_type'),
     active: boolean('active').notNull().default(true),
     notes: text('notes'),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update section checks for a newer version (WP-M2-63): „Update prüfen“
+  reads the newest StörDesk release from GitHub, offers „Jetzt updaten“ when that
+  version is newer than the running one and reports „Sie nutzen die neueste
+  Version“ otherwise; a failed lookup never blocks the manual update.
+- Every object answer of the API carries the read-only `externalType` (WP-M2-64):
+  `objects` gains the nullable `external_type` behind migration
+  `0010_object_external_type` — the human-readable system type name of an externally
+  maintained object; locally created objects keep it `null` and the create/update
+  inputs never accept it.
 - The host update works without a configured secret (WP-M2-59, WP-M2-60): the
   agent creates its own bearer and writes it into the state volume, the API
   mounts that volume read-only and reads the value there. `UPDATE_AGENT_TOKEN`

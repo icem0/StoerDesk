@@ -25,6 +25,7 @@ type ObjectBody = {
   objectNo: string
   name: string
   city: string | null
+  externalType: string | null
   active: boolean
   systems: SystemBody[]
 }
@@ -214,6 +215,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         name: 'Werk Nord',
         city: 'Musterstadt',
         active: true,
+        externalType: null,
       })
       expect(created.systems).toHaveLength(2)
 
@@ -249,6 +251,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(noop.statusCode).toBe(200)
       expect(noop.json<ObjectBody>().name).toBe('Werk Nord 2')
+
+      const foreign = await patchObject(cookies['admin'], '5001_01', {
+        notes: 'Der Typ gehört der Synchronisation.',
+        externalType: 'Brandmeldeanlage Notifier',
+      })
+
+      expect(foreign.statusCode).toBe(200)
+      expect(foreign.json<ObjectBody>().externalType).toBeNull()
     })
 
     it('rejects a duplicate object number case-insensitively', async () => {

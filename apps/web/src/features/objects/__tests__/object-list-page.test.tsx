@@ -28,6 +28,7 @@ function objectSummary(objectNo: string, externalId: string | null) {
     contactPhone: null,
     contactEmail: null,
     externalId,
+    externalType: null,
     active: true,
     notes: null,
     qrToken: null,

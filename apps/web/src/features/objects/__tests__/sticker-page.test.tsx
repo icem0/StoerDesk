@@ -22,6 +22,7 @@ function object(objectNo: string, name: string, qrToken: string | null): ObjectS
     contactPhone: null,
     contactEmail: null,
     externalId: null,
+    externalType: null,
     active: true,
     notes: null,
     qrToken,
