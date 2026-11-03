@@ -166,6 +166,58 @@
         "text_template_in_use": "Tickets still use this fault type, so it cannot be deleted.",
         "unknown": "Saving failed."
       }
+    },
+    "bma": {
+      "title": "BMAcloud sync",
+      "hint": "The object list is pulled read-only from BMAcloud. A sync overwrites name and address of externally maintained objects; notes, contact data and QR codes stay local. Objects missing from the pull are deactivated, never deleted.",
+      "loading": "Loading …",
+      "sessionNotice": "The BMAcloud sync needs a valid sign-in.",
+      "forbiddenNotice": "No permission for the BMAcloud sync.",
+      "runNow": "Sync now",
+      "running": "Sync running …",
+      "save": "Save",
+      "saved": "Schedule saved.",
+      "noRuns": "No sync has run yet.",
+      "noConflicts": "The last sync had no conflicts.",
+      "noDetail": "–",
+      "notFinished": "still running",
+      "enabled": "Automatic sync enabled",
+      "cron": "Cron expression",
+      "scheduleTitle": "Schedule",
+      "scheduleHint": "Five fields: minute hour day month weekday. Without a stored value the environment BMA_SYNC_ENABLED / BMA_SYNC_CRON applies.",
+      "runsTitle": "Recent sync runs",
+      "conflictsTitle": "Conflicts of the newest run",
+      "status": {
+        "RUNNING": "running",
+        "SUCCESS": "successful",
+        "PARTIAL": "partial",
+        "FAILED": "failed"
+      },
+      "table": {
+        "started": "Started",
+        "finished": "Finished",
+        "status": "Status",
+        "total": "Total",
+        "created": "Created",
+        "updated": "Updated",
+        "unchanged": "Unchanged",
+        "deactivated": "Deactivated"
+      },
+      "conflicts": {
+        "code": "Conflict",
+        "objectNo": "Object number",
+        "aid": "System id",
+        "detail": "Detail"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the cron expression.",
+        "bma_not_configured": "BMAcloud is not configured – no API key is set.",
+        "bma_request_failed": "The request to BMAcloud failed.",
+        "bma_bad_response": "BMAcloud answered in an unexpected way.",
+        "unknown": "Sync failed."
+      }
     }
   }
 }

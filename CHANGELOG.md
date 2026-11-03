@@ -59,6 +59,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The BMAcloud sync page in the administration (WP-M2-37): `/admin/bma-sync` lists the run
+  history with the localized status label (never colour alone) and the five counters, shows
+  the conflicts of the newest run, triggers a manual pull with "Jetzt abgleichen" and carries
+  the schedule form, prefilled from the stored or effective pair. The trigger needs
+  `object.import`, the schedule needs `object.write`, and `bma_not_configured`,
+  `bma_request_failed`, `bma_bad_response` and `invalid_request` answer localized hints.
 - `GET /api/v1/admin/bma-sync/schedule` (WP-M2-36b): the admin page of WP-M2-37 prefills
   its schedule form, and the effective pair — the stored `bma.sync.enabled` /
   `bma.sync.cron` settings with the `BMA_SYNC_*` environment as fallback — was not

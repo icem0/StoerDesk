@@ -1,8 +1,8 @@
 # WP-M2-37: BMAcloud sync page in the administration
 
 format: small-model
-status: planned
-depends-on: WP-M2-36
+status: implemented
+depends-on: WP-M2-36, WP-M2-36b
 phase: 2
 context-budget: 18k tokens
 spec: specs/17-bmacloud-sync.md §17.5 (admin UI page), PLAN.md §14 (settings)
@@ -37,8 +37,9 @@ interfaces:
 ## Task
 
 1. `bma-sync-page.tsx`: the back link to `/admin`, the heading, the schedule form
-   (enabled checkbox plus cron text input) and the "Jetzt abgleichen" button; the button is
-   disabled while the request runs and shows `admin.bma.running`.
+   (enabled checkbox plus cron text input, prefilled from the `GET` of WP-M2-36b) and the
+   "Jetzt abgleichen" button; the button is disabled while the request runs and shows
+   `admin.bma.running`.
 2. The run table lists the newest runs: started, finished, status badge carrying the
    localized label (never colour alone) and the five counters.
 3. Below it the conflicts of the newest run as a table
@@ -70,10 +71,19 @@ Expected: all green; de and en carry the same key set (`i18n:check` parity).
 
 ## Handoff
 
-- Files changed: the four files above plus the page test, `docs/REPO-MAP.md`,
-  `work-packages/README.md`
-- Interfaces added: `BmaSyncPage`, the `settings:admin.bma.*` keys
-- Verified: —
+- Files changed: the four files above plus the page test
+  `apps/web/src/admin/__tests__/bma-sync-page.test.tsx`, `docs/REPO-MAP.md`,
+  `work-packages/README.md`, `PLAN.md` §16, `CHANGELOG.md`
+- Interfaces added: `BmaSyncPage` and its components `ScheduleForm`, `RunTable`,
+  `ConflictTable`, `StatusBadge`, the route `/admin/bma-sync`, the `settings:admin.bma.*`
+  keys (title, hint, loading, notices, runNow, running, save, saved, scheduleTitle,
+  scheduleHint, enabled, cron, runsTitle, conflictsTitle, noRuns, noConflicts, noDetail,
+  notFinished, `table.*`, `conflicts.*`, the four `status.*` labels and `errors.*`)
+- Verified: `npm run check` locally (typecheck, lint with no new warning, 294 tests, 507 de
+  and 507 en keys, wp:check; the E2E gate skipped: no usable Chromium); the page test adds
+  five tests covering the prefill, the status label and conflicts, the empty conflict table,
+  the `bma_not_configured` hint of the trigger, the disabled trigger without `object.import`
+  and the session notice.
 - Follow-up WP: WP-M2-38 (card on the administration home) and WP-M2-39 (external badge in
   the object list) — both files exist since the WP-M2-32 record commit
-- Open question: none
+- Open question: none — the schedule prefill is answered by WP-M2-36b

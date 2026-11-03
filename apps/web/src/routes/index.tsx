@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 
 import { App } from '../App'
 import { AdminHomePage } from '../admin/admin-home-page'
+import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { RolesPage } from '../admin/roles-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/bma-sync',
+        element: (
+          <RequireSession>
+            <BmaSyncPage />
           </RequireSession>
         ),
       },
