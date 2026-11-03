@@ -29,6 +29,8 @@ directly from a placeholder slice.
 | [14-nfr.md](14-nfr.md)                         | Ch. 15                | ~120 lines |
 | [15-work-packages.md](15-work-packages.md)     | Ch. 17 + 17a          | ~200 lines |
 | [16-acceptance.md](16-acceptance.md)           | Ch. 18 + 19           | ~180 lines |
+| [17-bmacloud-sync.md](17-bmacloud-sync.md)     | Ch. 11 sync addendum  | ~120 lines |
+| [18-self-update.md](18-self-update.md)         | Self-update (ADR-0004)| ~110 lines |
 
 ## Rules
 

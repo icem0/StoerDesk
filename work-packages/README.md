@@ -250,6 +250,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-41  | bootstrap standard fault types                           | done                    | yes     |
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list              | done                    | yes     |
 | WP-M2-42  | bootstrap the standard fault types on the API start      | done                    | yes     |
+| WP-M2-43  | self-update decision (ADR-0004), spec 18 and WP plan     | done                    | yes     |
+| WP-M2-44  | admin update page — clean PWA update (stage 1)           | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

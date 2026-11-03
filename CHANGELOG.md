@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Self-update decision and spec (WP-M2-43, ADR-0004): the admin update control is
+  an out-of-band host update agent, never shell execution in the `api` container
+  and never an OS/Linux password. Stage 1 is a client-only clean PWA update on a
+  guarded `/admin/update` page (WP-M2-44, planned); stage 2 (agent container on the
+  Docker socket, `UPDATE_AGENT_TOKEN`, an `update_runs` table and a `system.update`
+  permission) stays planned. New `specs/18-self-update.md`.
+
 ### Fixed
 
 - The public report E2E smoke tests use the live fault catalog label `Line interruption`

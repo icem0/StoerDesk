@@ -686,6 +686,8 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-41  | bootstrap standard fault types               | done    |
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list  | done    |
 | WP-M2-42  | bootstrap of the standard fault types      | done    |
+| WP-M2-43  | self-update decision (ADR-0004) and spec 18 | done    |
+| WP-M2-44  | admin update page: clean PWA update (stage 1) | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1004,7 +1006,11 @@ These decisions need an ADR or explicit approval before the related WP starts:
 
 - mandatory messenger set for production (default: ntfy, Matrix, Signal, Web
   Push, SMTP, Telegram available; admin decides which are mandatory),
-- hosting model (homelab behind Cloudflare vs. external server),
+- hosting model (homelab behind Cloudflare vs. external server) — **resolved for
+  the running instance**: a host checkout deployed with `docker compose up -d
+  --build` (ADR-0004, `docs/DEPLOYMENT.md`). The admin self-update is an
+  out-of-band host update agent, never shell execution in the `api` container and
+  never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
 - default deadlines per priority and contract type,
 - whether shift swaps require admin approval by default (default: yes),
