@@ -704,7 +704,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-55  | the host update section in the admin update page | done    |
 | WP-M2-56  | documentation of the host update | done    |
 | WP-M2-57  | the status route names the reason of an unreachable agent | done    |
-| WP-M2-58  | the page shows why the agent is not reachable | planned |
+| WP-M2-58  | the page shows why the agent is not reachable | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

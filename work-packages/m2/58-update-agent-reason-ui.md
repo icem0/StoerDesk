@@ -1,7 +1,7 @@
 # WP-M2-58: the page shows why the agent is not reachable
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-57
 phase: 2
 context-budget: 12k tokens
@@ -59,7 +59,10 @@ wp:check green.
 ## Handoff
 
 - Files changed: the three files of `files-write` plus the test.
-- Interfaces added: the i18n keys of the reason.
-- Verified: `npm run check`.
+- Interfaces added: the i18n keys `admin.update.host.agentNotConfigured` and
+  `admin.update.host.agentBadResponse`; the text of the missing agent names
+  the command that starts it.
+- Verified: `npm run check` green (353 tests, `i18n:check` 565 keys in de
+  and en).
 - Follow-up WP: none.
 - Open question: none.

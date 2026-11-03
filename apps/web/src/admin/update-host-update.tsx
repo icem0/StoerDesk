@@ -72,6 +72,7 @@ export function UpdateHostUpdate() {
   const data = status.data
   const lastRun = data?.lastRun ?? null
   const running = data?.running === true
+  const agentError = data?.agent.error ?? null
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -84,7 +85,11 @@ export function UpdateHostUpdate() {
           <dd className="mt-1">
             {data?.agent.reachable === true
               ? t('admin.update.host.agentReady')
-              : t('admin.update.host.agentMissing')}
+              : agentError === 'update_agent_not_configured'
+                ? t('admin.update.host.agentNotConfigured')
+                : agentError === 'update_agent_bad_response'
+                  ? t('admin.update.host.agentBadResponse')
+                  : t('admin.update.host.agentMissing')}
           </dd>
         </div>
         <div>

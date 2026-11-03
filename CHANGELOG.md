@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update page names why the agent is not reachable (WP-M2-57,
+  WP-M2-58): the status of the API carries the cause — the token
+  `UPDATE_AGENT_TOKEN` is missing in the `.env` of the host, the agent answered
+  something invalid, or the agent does not run. The page shows the matching
+  text; the last one names the command that starts the agent.
 - The host update section in the admin update page (WP-M2-55): `/admin/update` shows
   the state of the update agent, the version on the server and the last run, and starts
   a host update with an explicit confirmation — a confirm step, never a password. The

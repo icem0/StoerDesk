@@ -44,7 +44,7 @@ function meRoutes(permissions: string[]) {
 
 function statusPayload(overrides: Record<string, unknown> = {}) {
   return {
-    agent: { reachable: true, state: 'idle' },
+    agent: { reachable: true, state: 'idle', error: null },
     running: false,
     currentVersion: 'v0.1.99',
     lastRun: null,
@@ -136,7 +136,7 @@ describe('UpdateHostUpdate', () => {
     stubRoutes({
       ...meRoutes(['system.update']),
       '/v1/admin/update/status': statusPayload({
-        agent: { reachable: false, state: null },
+        agent: { reachable: false, state: null, error: 'update_agent_unreachable' },
         currentVersion: null,
       }),
     })
@@ -152,5 +152,19 @@ describe('UpdateHostUpdate', () => {
     })
 
     expect(screen.getByText(/der Agent läuft nicht|agent does not run/i)).toBeTruthy()
+  })
+
+  it('names the missing token of the environment', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({
+        agent: { reachable: false, state: null, error: 'update_agent_not_configured' },
+        currentVersion: null,
+      }),
+    })
+
+    renderSection()
+
+    expect(await screen.findByText(/UPDATE_AGENT_TOKEN/)).toBeTruthy()
   })
 })
