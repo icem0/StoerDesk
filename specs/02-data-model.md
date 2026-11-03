@@ -96,6 +96,10 @@ that shows up in the `object_no` format of the list row it maintains (e.g.
   `de` **and** an `en` row from
   `STANDARD_TEXTS: Record<Locale, StandardText[]>` in `packages/shared` — seed
   data is a localized resource, never a German literal in API code. **(plan, §3)**
+- **Bootstrap (WP-M2-42):** the API start inserts the eight types once and marks
+  the run in `settings` under the key `standard_texts_bootstrap`. A later start
+  inserts nothing, so a standard type that an administrator deleted stays
+  deleted and an edited translation is never overwritten.
 - Lifecycle (WP-M2-40): an administrator creates a template with a generated
   machine key (`custom.<uuid>`) and a complete `de`/`en` translation pair. An
   **archived** template (`archived_at` set) stays in the database and keeps
