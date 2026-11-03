@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update section in the admin update page (WP-M2-55): `/admin/update` shows
+  the state of the update agent, the version on the server and the last run, and starts
+  a host update with an explicit confirmation — a confirm step, never a password. The
+  section is hidden without the permission `system.update`; the guard of the server
+  stays the only enforcement point. During the rebuild the API is briefly unreachable,
+  and the page says that instead of failing.
 - The admin update API (WP-M2-54): `GET /api/v1/admin/update/status`,
   `POST /api/v1/admin/update/run` and `GET /api/v1/admin/update/runs`, guarded
   with the new permission `system.update`. The API stays a client: it calls the

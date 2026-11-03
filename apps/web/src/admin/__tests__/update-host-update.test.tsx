@@ -1,0 +1,156 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { I18nextProvider } from 'react-i18next'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { i18n } from '../../i18n'
+import { UpdateHostUpdate } from '../update-host-update'
+
+const fetchCalls: { url: string; method: string }[] = []
+
+function stubRoutes(routes: Record<string, unknown>) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      fetchCalls.push({ url, method: init?.method ?? 'GET' })
+
+      for (const [path, payload] of Object.entries(routes)) {
+        if (url.includes(path)) {
+          return Response.json(payload)
+        }
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    }),
+  )
+}
+
+function meRoutes(permissions: string[]) {
+  return {
+    '/v1/me': {
+      user: {
+        id: '22222222-2222-4222-8222-222222222222',
+        email: 'admin@example.com',
+        locale: 'de',
+        roles: ['admin'],
+        permissions,
+      },
+    },
+  }
+}
+
+function statusPayload(overrides: Record<string, unknown> = {}) {
+  return {
+    agent: { reachable: true, state: 'idle' },
+    running: false,
+    currentVersion: 'v0.1.99',
+    lastRun: null,
+    ...overrides,
+  }
+}
+
+function renderSection() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+  return render(
+    <QueryClientProvider client={client}>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter initialEntries={['/admin/update']}>
+          <Routes>
+            <Route path="/admin/update" element={<UpdateHostUpdate />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nextProvider>
+    </QueryClientProvider>,
+  )
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  fetchCalls.length = 0
+})
+
+describe('UpdateHostUpdate', () => {
+  it('stays hidden without the permission system.update', async () => {
+    stubRoutes({ ...meRoutes(['settings.read']), '/v1/admin/update/status': statusPayload() })
+
+    renderSection()
+
+    await waitFor(() => {
+      expect(fetchCalls.some((call) => call.url.includes('/v1/me'))).toBe(true)
+    })
+
+    expect(screen.queryByText(/Host-Update|Host update/i)).toBeNull()
+  })
+
+  it('shows the state of the agent and the version of the server', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload(),
+    })
+
+    renderSection()
+
+    expect(await screen.findByText('v0.1.99')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Host-Update starten|Start host update/i })).toBeTruthy()
+  })
+
+  it('asks for a confirmation before the run starts', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload(),
+      '/v1/admin/update/run': { run: { id: 'run-1', status: 'RUNNING' } },
+    })
+
+    renderSection()
+
+    // The button is only enabled when the state of the agent is known.
+    expect(await screen.findByText('v0.1.99')).toBeTruthy()
+
+    const button = screen.getByRole('button', {
+      name: /Host-Update starten|Start host update/i,
+    })
+
+    fireEvent.click(button)
+
+    expect(
+      await screen.findByText(/Der Stack wird neu gebaut|stack is rebuilt/i),
+    ).toBeTruthy()
+    expect(fetchCalls.some((call) => call.url.includes('/v1/admin/update/run'))).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: /Ja, Host-Update starten|Yes, start/i }))
+
+    await waitFor(() => {
+      expect(
+        fetchCalls.some(
+          (call) => call.url.includes('/v1/admin/update/run') && call.method === 'POST',
+        ),
+      ).toBe(true)
+    })
+  })
+
+  it('shows a missing agent and blocks the run', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({
+        agent: { reachable: false, state: null },
+        currentVersion: null,
+      }),
+    })
+
+    renderSection()
+
+    const button = (await screen.findByRole('button', {
+      name: /Host-Update starten|Start host update/i,
+    })) as HTMLButtonElement
+
+    await waitFor(() => {
+      expect(button.disabled).toBe(true)
+    })
+
+    expect(screen.getByText(/der Agent läuft nicht|agent does not run/i)).toBeTruthy()
+  })
+})

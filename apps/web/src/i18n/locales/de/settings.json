@@ -70,7 +70,40 @@
       "reload": "Jetzt neu laden",
       "clearCache": "Cache leeren & neu laden",
       "clearing": "Cache wird geleert …",
-      "outboxBlocked": "Es sind noch Offline-Meldungen offen. Update-Aktionen sind gesperrt, bis der Outbox-Status gesendet ist."
+      "outboxBlocked": "Es sind noch Offline-Meldungen offen. Update-Aktionen sind gesperrt, bis der Outbox-Status gesendet ist.",
+      "host": {
+        "title": "Host-Update",
+        "hint": "Zieht das Repository, baut den Stack neu und entfernt die alten Images. Dafür muss der Update-Agent laufen; der Stack ist dabei kurz nicht erreichbar.",
+        "agent": "Update-Agent",
+        "agentReady": " erreichbar",
+        "agentMissing": "nicht erreichbar — der Agent läuft nicht",
+        "version": "Version auf dem Server",
+        "unknownVersion": "unbekannt",
+        "noRun": "Noch kein Host-Update gelaufen.",
+        "lastRun": "Letzter Lauf",
+        "running": "Das Host-Update läuft.",
+        "run": "Host-Update starten",
+        "confirm": "Das Host-Update jetzt starten? Der Stack wird neu gebaut, die API ist dabei kurz nicht erreichbar und die alten Images werden entfernt.",
+        "confirmYes": "Ja, Host-Update starten",
+        "confirmNo": "Abbrechen",
+        "apiUnreachable": "Die API ist gerade nicht erreichbar — der Stack wird neu gebaut.",
+        "status": {
+          "RUNNING": "läuft",
+          "SUCCESS": "erfolgreich",
+          "PARTIAL": "teilweise erfolgreich",
+          "FAILED": "fehlgeschlagen"
+        },
+        "errors": {
+          "session_invalid": "Die Sitzung ist abgelaufen.",
+          "forbidden": "Für den Host-Update fehlt die Berechtigung system.update.",
+          "update_agent_unreachable": "Der Update-Agent ist nicht erreichbar.",
+          "update_agent_not_configured": "Es ist kein Update-Agent konfiguriert.",
+          "update_agent_bad_response": "Der Update-Agent hat eine ungültige Antwort geliefert.",
+          "update_already_running": "Es läuft bereits ein Host-Update.",
+          "update_rate_limited": "Es wurde vor Kurzem ein Host-Update gestartet.",
+          "unknown": "Das Host-Update konnte nicht gestartet werden."
+        }
+      }
     },
     "users": {
       "title": "Benutzerverwaltung",

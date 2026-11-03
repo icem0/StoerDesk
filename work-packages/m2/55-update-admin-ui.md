@@ -1,7 +1,7 @@
 # WP-M2-55: the host update section in the admin update page
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-54
 phase: 2
 context-budget: 18k tokens
@@ -66,8 +66,13 @@ wp:check green.
 
 ## Handoff
 
-- Files changed: the four files of `files-write` plus the test.
-- Interfaces added: the host update section and the i18n keys.
-- Verified: `npm run check`.
+- Files changed: the four files of `files-write` plus the test
+  (`apps/web/src/admin/__tests__/update-host-update.test.tsx`).
+- Interfaces added: the host update section and the i18n keys
+  `settings:admin.update.host.*` (de and en).
+- Verified: `npm run check` green (346 tests, `i18n:check` 563 keys in de and
+  en); the test proves that the section stays hidden without the permission,
+  that the confirmation is required before the run and that a missing agent
+  blocks the run.
 - Follow-up WP: WP-M2-56 (documentation).
 - Open question: none.

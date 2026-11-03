@@ -70,7 +70,40 @@
       "reload": "Reload now",
       "clearCache": "Clear cache & reload",
       "clearing": "Clearing cache …",
-      "outboxBlocked": "Offline reports are still open. Update actions are blocked until the outbox has been sent."
+      "outboxBlocked": "Offline reports are still open. Update actions are blocked until the outbox has been sent.",
+      "host": {
+        "title": "Host update",
+        "hint": "Pulls the repository, rebuilds the stack and removes the old images. The update agent has to run for it; the stack is briefly unavailable while it works.",
+        "agent": "Update agent",
+        "agentReady": "reachable",
+        "agentMissing": "not reachable — the agent does not run",
+        "version": "Version on the server",
+        "unknownVersion": "unknown",
+        "noRun": "No host update has run yet.",
+        "lastRun": "Last run",
+        "running": "The host update is running.",
+        "run": "Start host update",
+        "confirm": "Start the host update now? The stack is rebuilt, the API is briefly unavailable and the old images are removed.",
+        "confirmYes": "Yes, start the host update",
+        "confirmNo": "Cancel",
+        "apiUnreachable": "The API is not reachable right now — the stack is being rebuilt.",
+        "status": {
+          "RUNNING": "running",
+          "SUCCESS": "succeeded",
+          "PARTIAL": "partly succeeded",
+          "FAILED": "failed"
+        },
+        "errors": {
+          "session_invalid": "The session has expired.",
+          "forbidden": "The host update needs the permission system.update.",
+          "update_agent_unreachable": "The update agent is not reachable.",
+          "update_agent_not_configured": "No update agent is configured.",
+          "update_agent_bad_response": "The update agent answered something invalid.",
+          "update_already_running": "A host update is already running.",
+          "update_rate_limited": "A host update was started recently.",
+          "unknown": "The host update could not be started."
+        }
+      }
     },
     "users": {
       "title": "User management",

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 
 import { outboxAvailable, queuedReports } from '../lib/outbox'
 import { appVersion } from '../lib/version'
+import { UpdateHostUpdate } from './update-host-update'
 
 /**
  * Clean PWA update control (`specs/18-self-update.md` §18.2, WP-M2-44).
@@ -13,6 +14,10 @@ import { appVersion } from '../lib/version'
  * worker exists, activates it through `SKIP_WAITING` and can clear the PWA
  * caches. No host command, no update token and no forced reload while the Dexie
  * outbox still carries a queued or sending report.
+ *
+ * The host update of stage 2 lives in its own section
+ * (`update-host-update.tsx`): it is a server action of the administration and
+ * needs the permission `system.update`.
  */
 
 type UpdateState = 'idle' | 'checking' | 'available' | 'current' | 'unavailable'
@@ -252,6 +257,8 @@ export function UpdatePage() {
           {t('admin.update.unavailable')}
         </p>
       ) : null}
+
+      <UpdateHostUpdate />
     </section>
   )
 }
