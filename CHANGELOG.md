@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The standard fault types are bootstrapped into `text_templates` when the API
+  starts (WP-M2-42): the eight texts with their `de`/`en` row, marked as done in
+  `settings`, so a deleted type stays deleted and an edited translation is kept.
 - The fault type administration (WP-M2-40 … WP-M2-40f): the eight standard fault
   types of the report form are bootstrapped in `text_templates`, an administrator
   creates, edits, archives and deletes them at `/admin/text-templates`, an archived
