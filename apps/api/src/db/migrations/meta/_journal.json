@@ -78,6 +78,13 @@
       "when": 1793716155867,
       "tag": "0010_object_external_type",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793716155868,
+      "tag": "0011_update_runs_error_detail",
+      "breakpoints": true
     }
   ]
 }

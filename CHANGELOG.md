@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A host update names why it failed (WP-M2-68, WP-M2-69): the update agent keeps
+  the output tail of the failing step — stderr first, control characters dropped,
+  every credential redacted and cut to `UPDATE_ERROR_DETAIL_MAX_CHARS` — and the
+  API stores it in `update_runs.error_detail` (migration
+  `0011_update_runs_error_detail`) and answers it with the last run.
+
 - The object list shows the system type (WP-M2-66): a new `Typ` column renders the
   category derived from `external_type` as a quiet badge whose title carries the stored
   BMAcloud name; a locally maintained object shows a dash instead.

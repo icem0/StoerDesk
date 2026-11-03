@@ -184,7 +184,7 @@ describe('migration 0004 ticket tables', () => {
   it('protects ticket_events with an append-only trigger', () => {
     expect(sql).toContain('CREATE OR REPLACE FUNCTION ticket_events_append_only()')
     expect(sql).toContain("RAISE EXCEPTION 'ticket_event_append_only: %', OLD.type")
-    expect(sql).toContain('IF TG_OP = \'DELETE\' AND pg_trigger_depth() > 1 THEN')
+    expect(sql).toContain("IF TG_OP = 'DELETE' AND pg_trigger_depth() > 1 THEN")
     expect(sql).toContain('CREATE TRIGGER ticket_events_is_append_only')
     expect(sql).toContain('BEFORE UPDATE OR DELETE ON "ticket_events"')
   })
@@ -202,5 +202,21 @@ describe('migration 0004 ticket tables', () => {
     expect(sql).toContain('CREATE UNIQUE INDEX "tickets_client_uuid_key"')
     expect(sql).toContain(`CHECK ("tickets"."source" IN ('QR', 'INTERNAL', 'API'))`)
     expect(sql).toContain(`CHECK ("ticket_photos"."mime_type" IN ('image/jpeg', 'image/png'))`)
+  })
+})
+
+describe('migration 0011 update run error detail', () => {
+  const sql = readMigration('0011_update_runs_error_detail')
+
+  it('adds only the nullable detail column to update_runs', () => {
+    expect(sql).toContain('ALTER TABLE "update_runs" ADD COLUMN "error_detail" text;')
+    expect(sql.match(/ALTER TABLE/g)).toHaveLength(1)
+  })
+
+  it('is the last entry of the journal', () => {
+    const entries = readJournal().entries
+
+    expect(entries.at(-1)?.tag).toBe('0011_update_runs_error_detail')
+    expect(entries.at(-1)?.idx).toBe(entries.length - 1)
   })
 })

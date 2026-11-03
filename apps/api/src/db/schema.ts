@@ -517,7 +517,9 @@ export const UPDATE_RUN_STATUSES = ['RUNNING', 'SUCCESS', 'PARTIAL', 'FAILED'] a
  * image prune (`specs/18-self-update.md` §18.4, ADR-0006). The row is the
  * history the administration shows; the update agent reports the result, the
  * API stores it. `agentRunId` is the id of the agent run, so a `RUNNING` row
- * can be reconciled after the restart of the API.
+ * can be reconciled after the restart of the API. `errorDetail` is the bounded,
+ * already redacted output tail of the failing step (WP-M2-69) — never a secret,
+ * never a full log.
  */
 export const updateRuns = pgTable(
   'update_runs',
@@ -529,6 +531,7 @@ export const updateRuns = pgTable(
     beforeVersion: text('before_version'),
     afterVersion: text('after_version'),
     errorCode: text('error_code'),
+    errorDetail: text('error_detail'),
     agentRunId: text('agent_run_id'),
   },
   (table) => [

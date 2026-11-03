@@ -62,7 +62,26 @@ describe.skipIf(testDatabase.status === 'unavailable')('update_runs (integration
     expect(run.beforeVersion).toBeNull()
     expect(run.afterVersion).toBeNull()
     expect(run.errorCode).toBeNull()
+    expect(run.errorDetail).toBeNull()
     expect(run.agentRunId).toBeNull()
+  })
+
+  it('keeps the failure detail of a failed run (migration 0011)', async () => {
+    const stored = onlyRow(
+      await db
+        .insert(updateRuns)
+        .values({
+          status: 'FAILED',
+          finishedAt: new Date(),
+          errorCode: 'update_git_failed',
+          errorDetail: "hint: Use 'git pull --rebase'.\nfatal: Not possible to fast-forward.",
+        })
+        .returning(),
+      'run',
+    )
+
+    expect(stored.errorCode).toBe('update_git_failed')
+    expect(stored.errorDetail).toContain('Not possible to fast-forward')
   })
 
   it('finishes a run and keeps the versions and the agent run', async () => {

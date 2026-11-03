@@ -715,7 +715,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-65b  | the sync writes `external_type`                      | done     |
 | WP-M2-66   | the system type column of the object list            | done     |
 | WP-M2-68   | the run carries the failure output of the agent      | done     |
-| WP-M2-69   | `update_runs.error_detail` and the API answer        | planned  |
+| WP-M2-69   | `update_runs.error_detail` and the API answer        | done     |
 | WP-M2-70   | the page shows the failure output                    | planned  |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`

@@ -77,6 +77,7 @@ function toRunAnswer(row: UpdateRunRow): UpdateRunAnswer {
     beforeVersion: row.beforeVersion,
     afterVersion: row.afterVersion,
     errorCode: row.errorCode,
+    errorDetail: row.errorDetail,
   }
 }
 
@@ -113,7 +114,9 @@ export const updateRoutes = fp<UpdateRouteOptions>(
       const startedAt = Date.parse(agentRun.startedAt)
       const belongs =
         row.agentRunId === agentRun.id ||
-        (row.agentRunId === null && Number.isFinite(startedAt) && startedAt >= row.startedAt.getTime())
+        (row.agentRunId === null &&
+          Number.isFinite(startedAt) &&
+          startedAt >= row.startedAt.getTime())
 
       if (!belongs || agentRun.status === 'RUNNING') {
         return row
@@ -126,6 +129,7 @@ export const updateRoutes = fp<UpdateRouteOptions>(
           finishedAt: agentRun.finishedAt === null ? null : new Date(agentRun.finishedAt),
           afterVersion: agentRun.afterVersion,
           errorCode: agentRun.errorCode,
+          errorDetail: agentRun.errorDetail,
           agentRunId: agentRun.id,
         })
         .where(eq(updateRuns.id, row.id))

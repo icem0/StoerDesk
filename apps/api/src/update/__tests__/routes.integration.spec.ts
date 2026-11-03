@@ -29,11 +29,18 @@ type StatusResponseBody = {
   agent?: { reachable?: boolean; state?: string | null }
   running?: boolean
   currentVersion?: string | null
-  lastRun?: { id: string; status: string; errorCode: string | null } | null
+  lastRun?: {
+    id: string
+    status: string
+    errorCode: string | null
+    errorDetail?: string | null
+  } | null
 }
 
 type RunResponseBody = { run?: { id: string; status: string } }
-type RunsResponseBody = { runs?: { id: string; status: string }[] }
+type RunsResponseBody = {
+  runs?: { id: string; status: string; errorDetail?: string | null }[]
+}
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -321,6 +328,50 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(last?.status).toBe('SUCCESS')
       expect(last?.afterVersion).toBe('v0.1.99')
+    })
+
+    it('stores the failure detail of the agent run in the row and the answer', async () => {
+      const agentRun = agent.state.lastRun
+
+      if (agentRun === null) {
+        throw new Error('expected an agent run of the previous test')
+      }
+
+      const row = onlyRow(await db.insert(updateRuns).values({}).returning(), 'run')
+
+      agent.state.lastRun = {
+        ...agentRun,
+        id: 'agent-run-failed',
+        status: 'FAILED',
+        startedAt: row.startedAt.toISOString(),
+        finishedAt: new Date().toISOString(),
+        afterVersion: 'v0.1.98',
+        errorCode: 'update_git_failed',
+        errorDetail: 'fatal: Not possible to fast-forward, aborting.',
+      }
+
+      const response = await getStatus(adminCookie)
+
+      expect(response.statusCode).toBe(200)
+
+      const body = response.json<StatusResponseBody>()
+
+      expect(body.lastRun?.errorCode).toBe('update_git_failed')
+      expect(body.lastRun?.errorDetail).toContain('Not possible to fast-forward')
+
+      const stored = onlyRow(
+        await db.select().from(updateRuns).where(eq(updateRuns.id, row.id)),
+        'run',
+      )
+
+      expect(stored.status).toBe('FAILED')
+      expect(stored.errorDetail).toBe('fatal: Not possible to fast-forward, aborting.')
+
+      const history = await getRuns(adminCookie)
+
+      expect(history.json<RunsResponseBody>().runs?.[0]?.errorDetail).toContain(
+        'Not possible to fast-forward',
+      )
     })
 
     it('answers the history of the runs', async () => {

@@ -122,6 +122,7 @@ export const updateRunSchema = z.object({
   beforeVersion: z.string().nullable(),
   afterVersion: z.string().nullable(),
   errorCode: z.string().nullable(),
+  errorDetail: updateErrorDetailSchema,
 })
 
 export type UpdateRun = z.infer<typeof updateRunSchema>
