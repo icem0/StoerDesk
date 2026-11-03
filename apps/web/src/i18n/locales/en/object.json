@@ -35,6 +35,7 @@
     "columns": {
       "objectNo": "Object no.",
       "name": "Name",
+      "type": "Type",
       "city": "City",
       "systems": "Systems",
       "active": "Active",

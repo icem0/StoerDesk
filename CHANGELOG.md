@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The object list shows the system type (WP-M2-66): a new `Typ` column renders the
+  category derived from `external_type` as a quiet badge whose title carries the stored
+  BMAcloud name; a locally maintained object shows a dash instead.
+
 - The BMAcloud sync writes the system type (WP-M2-65b): every run fetches the
   `GET /anlagentypen` reference list best-effort and stores the resolved type name in
   `objects.external_type`; an unknown `typ` stays `null` and a failed reference call leaves

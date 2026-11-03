@@ -1,7 +1,7 @@
 # WP-M2-66: the object list shows the system type
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-64, WP-M2-65
 phase: 2
 context-budget: 12k tokens
@@ -55,8 +55,14 @@ Expected: all green; i18n:check reports equal de/en keys including `list.columns
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: the list page, the `list.columns.type` key in `de`/`en` object.json, the list
+  test plus `CHANGELOG.md`, `work-packages/README.md` and `docs/REPO-MAP.md`.
+- Interfaces added: the `Typ` column of the object list table; no new shared export
+  is used beyond `externalTypeCategory()` (WP-M2-65).
+- Verified: `npm run check` green with `E2E_CHROMIUM_PATH=/usr/bin/chromium` — typecheck, lint,
+  62 Vitest files, i18n:check (595 keys in de and en), wp:check and the Playwright
+  e2e suite.
+- Note: an `externalType` the keyword table does not classify renders its stored name as
+  the badge text instead of an empty badge; the local object shows the em dash.
 - Follow-up WP: none.
 - Open question: none.

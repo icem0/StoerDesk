@@ -35,6 +35,7 @@
     "columns": {
       "objectNo": "Objektnummer",
       "name": "Name",
+      "type": "Typ",
       "city": "Ort",
       "systems": "Anlagen",
       "active": "Aktiv",

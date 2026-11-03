@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import type { ObjectListResponse, ObjectSummary } from '@stoerdesk/shared'
+import {
+  externalTypeCategory,
+  type ObjectListResponse,
+  type ObjectSummary,
+} from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
@@ -13,7 +17,8 @@ import { apiFetch } from '../../lib/api'
  * filters for `active`, `city` and `systemType`, one row per object with its
  * systems and an active/inactive badge. An object that BMAcloud owns (`external_id`
  * set, `specs/17-bmacloud-sync.md` §17.4) carries a second, independent badge next to
- * its number (WP-M2-39). Each row links to the edit page
+ * its number (WP-M2-39) and shows the system type the sync stored in
+ * `external_type` (§17.3, WP-M2-66). Each row links to the edit page
    (WP-M2-13) and has a delete button (WP-M2-14). Create lives on `/objects/create`
    (WP-M2-12).
  */
@@ -85,6 +90,18 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
         ) : null}
       </td>
       <td className="p-3 text-sm text-slate-200">{object.name}</td>
+      <td className="p-3 text-sm">
+        {object.externalType === null ? (
+          <span className="text-slate-500">—</span>
+        ) : (
+          <span
+            className="inline-flex items-center rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200"
+            title={object.externalType}
+          >
+            {externalTypeCategory(object.externalType) ?? object.externalType}
+          </span>
+        )}
+      </td>
       <td className="p-3 text-sm text-slate-400">
         {[object.street, object.houseNumber, object.postalCode, object.city]
           .filter(Boolean)
@@ -225,6 +242,9 @@ export function ObjectListPage() {
                 </th>
                 <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {t('list.columns.name')}
+                </th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t('list.columns.type')}
                 </th>
                 <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {t('list.columns.city')}
