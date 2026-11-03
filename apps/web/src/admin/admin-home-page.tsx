@@ -20,6 +20,7 @@ const MODULES: Module[] = [
   { key: 'users', to: '/admin/users' },
   { key: 'roles', to: '/admin/roles' },
   { key: 'bmaSync', to: '/admin/bma-sync' },
+  { key: 'update', to: '/admin/update' },
   { key: 'groups', phase: 'phase1' },
   { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', phase: 'phase6' },

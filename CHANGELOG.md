@@ -11,8 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Self-update decision and spec (WP-M2-43, ADR-0004): the admin update control is
   an out-of-band host update agent, never shell execution in the `api` container
-  and never an OS/Linux password. Stage 1 is a client-only clean PWA update on a
-  guarded `/admin/update` page (WP-M2-44, planned); stage 2 (agent container on the
+  and never an OS/Linux password. Stage 1 is implemented as a client-only clean PWA
+  update on the guarded `/admin/update` page (WP-M2-44): it shows the app and
+  service-worker versions, checks for a waiting worker, activates it with
+  `SKIP_WAITING`, can clear PWA caches and blocks reload/cache-clear while the
+  offline outbox still has queued or sending reports. Stage 2 (agent container on the
   Docker socket, `UPDATE_AGENT_TOKEN`, an `update_runs` table and a `system.update`
   permission) stays planned. New `specs/18-self-update.md`.
 

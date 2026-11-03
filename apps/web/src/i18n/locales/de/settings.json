@@ -27,6 +27,10 @@
           "title": "BMAcloud-Abgleich",
           "hint": "Die Objektliste wird read-only aus der BMAcloud geholt und lässt sich dort manuell anstoßen."
         },
+        "update": {
+          "title": "Aktualisierung",
+          "hint": "Client-Update der PWA prüfen: neue Version aktivieren oder Cache sauber leeren. Host-Updates sind hier noch nicht enthalten."
+        },
         "groups": {
           "title": "Gruppen",
           "hint": "Benutzergruppen für die Zuweisung von Tickets."
@@ -52,6 +56,22 @@
           "hint": "Schlüssel für die Schnittstelle nach außen."
         }
       }
+    },
+    "update": {
+      "title": "Aktualisierung",
+      "hint": "Diese Seite aktualisiert nur den Browser-Client der PWA. Sie prüft die Service-Worker-Version, aktiviert eine wartende Version und kann den PWA-Cache sauber leeren — ohne Host-Zugriff und ohne offene Offline-Meldungen zu verlieren.",
+      "currentVersion": "App-Version",
+      "swVersion": "Service-Worker-Version",
+      "noServiceWorker": "kein Service Worker aktiv",
+      "checkUpdate": "Update prüfen",
+      "checking": "Prüfung läuft …",
+      "updateAvailable": "Eine neue Version ist bereit.",
+      "noUpdate": "Es ist keine neue Version verfügbar.",
+      "unavailable": "Ein Service-Worker-Update ist in diesem Browser gerade nicht verfügbar.",
+      "reload": "Jetzt neu laden",
+      "clearCache": "Cache leeren & neu laden",
+      "clearing": "Cache wird geleert …",
+      "outboxBlocked": "Es sind noch Offline-Meldungen offen. Update-Aktionen sind gesperrt, bis der Outbox-Status gesendet ist."
     },
     "users": {
       "title": "Benutzerverwaltung",

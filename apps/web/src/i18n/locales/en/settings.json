@@ -27,6 +27,10 @@
           "title": "BMAcloud sync",
           "hint": "The object list is pulled read-only from BMAcloud and can be triggered manually here."
         },
+        "update": {
+          "title": "Update",
+          "hint": "Check the PWA client update: activate a new version or clear the cache cleanly. Host updates are not part of this page yet."
+        },
         "groups": {
           "title": "Groups",
           "hint": "User groups for the ticket assignment."
@@ -52,6 +56,22 @@
           "hint": "Keys for the external interface."
         }
       }
+    },
+    "update": {
+      "title": "Update",
+      "hint": "This page updates only the browser client of the PWA. It checks the service worker version, activates a waiting version and can clear the PWA cache cleanly — without host access and without losing an offline report.",
+      "currentVersion": "App version",
+      "swVersion": "Service worker version",
+      "noServiceWorker": "no service worker active",
+      "checkUpdate": "Check update",
+      "checking": "Checking …",
+      "updateAvailable": "A new version is ready.",
+      "noUpdate": "No new version is available.",
+      "unavailable": "A service worker update is not available in this browser right now.",
+      "reload": "Reload now",
+      "clearCache": "Clear cache & reload",
+      "clearing": "Clearing cache …",
+      "outboxBlocked": "Offline reports are still open. Update actions are blocked until the outbox has been sent."
     },
     "users": {
       "title": "User management",

@@ -1,7 +1,7 @@
 # WP-M2-44: clean PWA update page in the administration (stage 1)
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-43
 phase: 2
 context-budget: 20k tokens
@@ -29,10 +29,13 @@ files-write:
 interfaces:
 
 - `UpdatePage` at the guarded route `/admin/update` inside `RequireSession`
-- SW message contract: a `SKIP_WAITING` message → `self.skipWaiting()`; a
-  `CLEAR_CACHES` message → delete every `caches` key
-- `useCleanUpdate()` in the page: registration `update()` → skipWaiting →
-  reload; a clear-caches action; both disabled while the outbox is pending
+- SW message contract: `SKIP_WAITING` → `self.skipWaiting()`, `GET_VERSION` →
+  reply `appVersion`, `CLEAR_CACHES` → delete every `caches` key and answer on
+  the optional `MessagePort`
+- clean-update handlers inside the page: registration `update()` → waiting worker
+  → `SKIP_WAITING` → reload on `controllerchange`; a clear-caches action posts
+  `CLEAR_CACHES`, unregisters and reloads; actions are disabled while the outbox
+  is pending
 - i18n keys `settings:admin.update.*` (title, hint, currentVersion, checkUpdate,
   updateAvailable, reload, clearCache, outboxBlocked, errors) and the module card
   keys `settings:admin.home.modules.update.{title,hint}` — de and en complete
@@ -78,7 +81,8 @@ Expected: all green; de and en carry the same new key set.
   two locale fixtures, plus `apps/web/src/admin/__tests__/update-page.test.tsx`.
 - Interfaces added: `UpdatePage`, the `SKIP_WAITING`/`CLEAR_CACHES` SW messages and
   the `settings:admin.update.*` keys.
-- Verified: —
+- Verified: `typecheck`, `lint`, `test:run`, `i18n:check`, `wp:check` green —
+  299 unit/integration tests, 527 de/en keys, 112 small-model WPs, 0 failures.
 - Follow-up WP: none. Stage 2 (host agent, `update_runs`, `system.update`) is
   planned in `specs/18-self-update.md` §18.4 and gets its own WP when opened.
 - Open question: none

@@ -687,7 +687,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-41b | E2E fault-chip labels of the bootstrap list  | done    |
 | WP-M2-42  | bootstrap of the standard fault types      | done    |
 | WP-M2-43  | self-update decision (ADR-0004) and spec 18 | done    |
-| WP-M2-44  | admin update page: clean PWA update (stage 1) | planned |
+| WP-M2-44  | admin update page: clean PWA update (stage 1) | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -814,7 +814,8 @@ worked off: **WP-M2-33** (read-only client and environment), **WP-M2-34** (the
 pg-boss job), **WP-M2-36b** (the `GET` of the effective schedule pair, which closed the open
 question of WP-M2-36), **WP-M2-37** (the admin page at `/admin/bma-sync`), **WP-M2-38** (its
 card on the administration home) and **WP-M2-39** (the "extern gepflegt" badge in the object
-list) are implemented, and so are the fault-template packages **WP-M2-40 … WP-M2-42**. No
+list) are implemented, and so are the fault-template packages **WP-M2-40 … WP-M2-42** plus
+the self-update governance **WP-M2-43** and its stage-1 client update page **WP-M2-44**. No
 phase 2 work package is open; what phase 2 leaves behind are three documented **questions**,
 not features: the retention of `report_throttle.ip` (WP-M2-07, WP-M2-07c), the retention of
 `bma_sync_runs.conflicts` (WP-M2-32) and the missing `meta/0006_snapshot.json` of the
