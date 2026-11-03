@@ -1,7 +1,7 @@
 # WP-M2-52: the update agent HTTP server
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-51
 phase: 2
 context-budget: 16k tokens
@@ -18,10 +18,10 @@ files-read:
 
 files-write:
 
+- apps/agent/src/config.ts
 - apps/agent/src/server.ts
 - apps/agent/src/index.ts
-- apps/agent/src/config.ts
-- apps/agent/vitest.config.ts
+- apps/agent/package.json
 
 interfaces:
 
@@ -40,7 +40,8 @@ interfaces:
 2. Write `apps/agent/src/server.ts` with `node:http` — no web framework, so the
    agent image stays free of runtime dependencies:
    - every request without `Authorization: Bearer <token>` answers `401`; the
-     token is compared with `crypto.timingSafeEqual`.
+     token is compared with `crypto.timingSafeEqual` over the digests, so the
+     comparison leaks neither the token nor its length.
    - `GET /status` answers `{ state, checkout: { version, commit? }, lastRun? }`.
    - `POST /run` starts one run and answers `202` with the run; a run that is
      already active answers `409`.
@@ -49,9 +50,8 @@ interfaces:
 3. Write `apps/agent/src/index.ts`: read the configuration, create the runner
    and the server, listen on the configured port, load the last run from
    `<state dir>/last-run.json` and write it after every run.
-4. Write `apps/agent/vitest.config.ts` like the one of `apps/api` and add the
-   test of the server: `401` without a token, `202` for a run, `409` for a
-   second run.
+4. Add the build script to `apps/agent/package.json` (esbuild bundles the agent
+   with its dependencies, so the image needs no `node_modules`).
 
 ## Non-goals
 
@@ -63,15 +63,19 @@ interfaces:
 
 ```bash
 npm run check
+npm run build
 ```
 
 Expected: typecheck, lint, tests, i18n and wp:check green; the server test
-proves the token guard, the status answer and the run conflict.
+proves the token guard, the status answer and the run conflict; the bundle
+answers `401` without a token and `200` with one.
 
 ## Handoff
 
 - Files changed: the four files of `files-write` plus the test.
-- Interfaces added: `createAgentServer`, the agent endpoints.
-- Verified: `npm run check`.
+- Interfaces added: `createAgentServer`, the agent endpoints, `loadAgentConfig`.
+- Verified: `npm run check` green (335 tests), `npm run build` green; the
+  bundle of `apps/agent/dist/index.js` was started and answered `401` without a
+  token and the status with one.
 - Follow-up WP: WP-M2-53 (image, compose service, env wiring).
 - Open question: none.

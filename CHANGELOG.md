@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The update agent HTTP server (WP-M2-52): the agent speaks three paths —
+  `GET /status`, `POST /run` and `GET /runs` — on the internal network only,
+  behind the bearer `UPDATE_AGENT_TOKEN`, which is compared in constant time
+  over the digests. Without a web framework, so the agent image stays free of
+  runtime dependencies; a request carries no command, no path and no argument.
+  The last run is written to the state file of the agent, so a restart of the
+  agent does not lose it.
 - The update agent service core (WP-M2-51): the new workspace `apps/agent` holds the
   logic of a host update — `git pull` → `docker compose up -d --build` → `docker image
   prune -f` — with the command runner injected, so the whole logic is tested without a
