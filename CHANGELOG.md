@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The update agent service core (WP-M2-51): the new workspace `apps/agent` holds the
+  logic of a host update — `git pull` → `docker compose up -d --build` → `docker image
+  prune -f` — with the command runner injected, so the whole logic is tested without a
+  shell and without a Docker daemon. A run knows three steps and three error codes, never
+  the output of a command, and the owner of the checkout is restored after the pull.
 - The `update_runs` table (WP-M2-50): one row per host update — status, the
   versions before and after the pull, the error code and the id of the agent run,
   so a run stays visible in the administration after the restart of the API.

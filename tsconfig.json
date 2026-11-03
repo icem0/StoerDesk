@@ -8,6 +8,7 @@
     "apps/web/src/**/*.ts",
     "apps/web/src/**/*.tsx",
     "apps/api/src/**/*.ts",
+    "apps/agent/src/**/*.ts",
     "packages/shared/src/**/*.ts",
     "scripts/**/*.ts",
     "vite.config.ts",
