@@ -1,7 +1,7 @@
 # WP-M2-29: branding settings API
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-28
 phase: 2
 context-budget: 16k tokens

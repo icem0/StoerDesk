@@ -1,7 +1,7 @@
 # WP-M2-22: start page with ticket capture as primary action
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-21, WP-M2-20
 phase: 2
 context-budget: 24k tokens

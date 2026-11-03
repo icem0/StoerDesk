@@ -1,7 +1,7 @@
 # WP-M2-19d: Workflow UI actions (web)
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-19c, WP-M2-18b
 phase: 4
 context-budget: 25k tokens

@@ -1,7 +1,7 @@
 # WP-M2-09b: Offline E2E test
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-09a
 phase: 2
 milestone: m2

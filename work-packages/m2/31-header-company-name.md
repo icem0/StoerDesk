@@ -1,7 +1,7 @@
 # WP-M2-31: company name in the shell header
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-30
 phase: 2
 context-budget: 12k tokens

@@ -1,7 +1,7 @@
 # WP-M2-20: navigation for tickets and objects
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-16, WP-M2-17b
 phase: 2
 context-budget: 18k tokens

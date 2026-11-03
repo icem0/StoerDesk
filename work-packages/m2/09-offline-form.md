@@ -1,7 +1,7 @@
 # WP-M2-09: Offline report — Dexie outbox and send flow
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-05
 phase: 2
 milestone: m2

@@ -665,8 +665,17 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M1-23  | record: login card and version display       | done   |
 | WP-M1-24  | record: RBAC/admin bootstrap on API start    | done   |
 | WP-M1-25  | record: CI database tests, publish queue     | done   |
-| WP-M1-26  | record: configurable login rate limit        | done   |
-| WP-M1-27  | record: the end-of-session commit rule       | done   |
+| WP-M1-26  | record: configurable login rate limit        | done    |
+| WP-M1-27  | record: the end-of-session commit rule       | done    |
+| WP-M2-26  | back links in the admin pages                | done    |
+| WP-M2-32  | record: the BMAcloud contract commit         | done    |
+| WP-M2-33  | BMAcloud read-only client and env            | planned |
+| WP-M2-34  | `bma_sync_runs` table (migration `0007`)     | planned |
+| WP-M2-35  | BMAcloud sync service                        | planned |
+| WP-M2-36  | BMAcloud admin API and pg-boss job           | planned |
+| WP-M2-37  | BMAcloud sync page (web)                     | planned |
+| WP-M2-38  | sync card on the administration home         | planned |
+| WP-M2-39  | external badge in the object list            | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -782,6 +791,16 @@ object is the capability**, so no `status_token` of a foreign ticket is handed o
 public form shows the hint with one "Ergänzen" button per open ticket and one "Trotzdem
 neu melden" button, and every new report of an object with an open ticket carries the
 `parentTicketId` of the oldest open ticket in `tickets.parent_ticket_id` (§6).
+
+Phase 2 is implemented through **WP-M2-31**; **WP-M2-26** (back links in the admin pages)
+closed the last open phase 2 backlog item. Its record gap is closed by **WP-M2-32**: commit
+`a6804ed` landed the BMAcloud contract (`specs/17-bmacloud-sync.md`, ADR-0003 and the §11
+block above) without a work package and without a WP id in its subject, and it wrote
+**no implementation** — there is no BMAcloud client, no `bma_sync_runs` table (the last
+migration is `0006_ticket_workflow_columns`), no `BMA_API_BASE_URL` / `BMA_API_KEY` /
+`BMA_SYNC_CRON` environment key and no admin route or page. The §11 text above is therefore
+documentation, and the implementation is planned as **WP-M2-33** … **WP-M2-39**; the phase 2
+`status:` lines of `09` … `31` now match the shipped code.
 
 ## 17. Work package rules for small models
 

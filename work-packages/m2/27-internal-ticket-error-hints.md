@@ -1,7 +1,7 @@
 # WP-M2-27: Show a hint when internal ticket creation fails
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-16
 phase: 2
 context-budget: 18k tokens

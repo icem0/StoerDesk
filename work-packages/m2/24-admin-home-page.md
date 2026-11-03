@@ -1,7 +1,7 @@
 # WP-M2-24: administration home page
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-20
 phase: 2
 context-budget: 22k tokens

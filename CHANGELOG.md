@@ -33,6 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The phase 2 record is closed. Commit `a6804ed` landed the BMAcloud contract
+  (`specs/17-bmacloud-sync.md`, ADR-0003, the `PLAN.md` §11 block) without a work package
+  and without a WP id in its subject, and it committed a stray test file at
+  `apps/web/apps/web/src/__tests__/diag.test.tsx`, outside the source tree. `WP-M2-32`
+  records that commit, deletes the stray file and announces the implementation as
+  `WP-M2-33` … `WP-M2-39` — the commit wrote no client, no `bma_sync_runs` table, no
+  `BMA_*` environment key, no route and no page, so `PLAN.md` §11 is documentation until
+  that chain runs. The stale `status:` lines of the `m2` documents `09` … `31` now say what
+  the code already does, and the stale `Follow-up WP:` line of `WP-M2-26` is corrected: it
+  named a work-package file that never existed.
 - The phase 1 record is complete. Seven phase 1 commits had landed without a work
   package — `3e1c0f8` (centred login card and version display), `71fd066` (RBAC and
   administrator bootstrap on API start), `f0e0fcc`, `1d56aad` and `d994911` (PostgreSQL

@@ -1,6 +1,7 @@
 # WP-M2-00: Core object tables and demo seed
 
 format: small-model
+status: implemented
 depends-on: WP-M1-12
 phase: 2
 context-budget: 25k tokens

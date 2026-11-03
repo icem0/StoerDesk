@@ -1,7 +1,7 @@
 # WP-M2-17: Ticket list API (server)
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-15
 phase: 2
 context-budget: 22k tokens

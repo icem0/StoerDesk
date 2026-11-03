@@ -1,7 +1,7 @@
 # WP-M2-21: ticket list filters (open, overdue) and ordering
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-17
 phase: 2
 context-budget: 20k tokens

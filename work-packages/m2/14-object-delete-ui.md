@@ -1,7 +1,7 @@
 # WP-M2-14: Object delete UI (soft delete)
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-11
 phase: 2
 context-budget: 20k tokens

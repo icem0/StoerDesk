@@ -1,7 +1,7 @@
 # WP-M2-12: Object create UI (create)
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-11
 phase: 2
 context-budget: 22k tokens

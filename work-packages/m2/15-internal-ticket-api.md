@@ -1,7 +1,7 @@
 # WP-M2-15: Internal ticket creation API (server)
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-14, WP-M1-08
 phase: 2
 context-budget: 22k tokens

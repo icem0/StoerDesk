@@ -1,7 +1,7 @@
 # WP-M2-11: Object list UI (read)
 
 format: small-model
-status: done
+status: implemented
 depends-on: WP-M2-01
 phase: 2
 context-budget: 20k tokens

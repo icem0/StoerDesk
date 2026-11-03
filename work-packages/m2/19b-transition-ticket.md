@@ -1,7 +1,7 @@
 # WP-M2-19b: transitionTicket() state machine function
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-19a, WP-M2-15
 phase: 4
 context-budget: 25k tokens

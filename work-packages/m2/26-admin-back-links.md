@@ -61,6 +61,9 @@ Expected: all green; the Playwright auth spec still finds the users table.
 - Interfaces added: back link on `/admin/users` and `/admin/roles`,
   `settings:admin.back` key
 - Verified: `npm run check` green
-- Follow-up WP: WP-M2-27 (BMAcloud object sync — decision and spec,
-  `27-bmacloud-sync-decision.md`); the sync chain 27 … 31 follows in the same phase
+- Follow-up WP: WP-M2-27 (`27-internal-ticket-error-hints.md`) — the earlier line of this
+  handoff named `27-bmacloud-sync-decision.md`, a file that was never created; the BMAcloud
+  decision had already landed in commit `a6804ed` and is recorded by **WP-M2-32**, whose
+  chain WP-M2-33 … WP-M2-39 carries the implementation (`AGENTS.md`: a `Follow-up WP:` line
+  without a WP file is a defect)
 - Open question: none

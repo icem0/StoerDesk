@@ -1,7 +1,7 @@
 # WP-M2-19c: Workflow API routes (server)
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-19b, WP-M1-08
 phase: 4
 context-budget: 25k tokens

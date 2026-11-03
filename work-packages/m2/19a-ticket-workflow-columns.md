@@ -1,7 +1,7 @@
 # WP-M2-19a: DB migration for ticket workflow columns
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-04
 phase: 4
 context-budget: 12k tokens

@@ -1,7 +1,7 @@
 # WP-M2-30: branding input field in the administration
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-29
 phase: 2
 context-budget: 16k tokens

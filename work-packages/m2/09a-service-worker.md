@@ -1,7 +1,7 @@
 # WP-M2-09a: Service Worker and offline sync
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-09
 phase: 2
 milestone: m2

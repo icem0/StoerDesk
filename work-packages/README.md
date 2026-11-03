@@ -13,7 +13,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | --------- | ----------------------------------------------------------------------------- | --- |
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 48  |
+| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 56  |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1` and `m2` document carries `format: small-model` except the four first
@@ -123,6 +123,15 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > The phase 1 record is closed: every `m1` document now carries a `status:` line, and
 > **WP-M1-23** … **WP-M1-27** are retroactive records for the seven phase 1 commits that
 > landed without a work package.
+> The phase 2 record is closed the same way: **WP-M2-32** records commit `a6804ed`, which
+> landed the BMAcloud contract (`specs/17-bmacloud-sync.md`, ADR-0003, the `PLAN.md` §11
+> block) with neither a work package nor a WP id in its subject, and it deletes the stray
+> `apps/web/apps/web/src/__tests__/diag.test.tsx` that commit committed outside the source
+> tree. `a6804ed` wrote **no implementation** — no client, no `bma_sync_runs` table, no
+> `BMA_*` environment key, no route, no page — so the plan text of §11 is documentation
+> until **WP-M2-33** … **WP-M2-39** (created with the record) are implemented. The stale
+> `status:` lines of `09` … `31` now say what the code already does, and the stale
+> `Follow-up WP:` line of `26` is corrected: it named a file that never existed.
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
@@ -200,6 +209,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-19b | transitionTicket() state machine                       | done                    | yes     |
 | WP-M2-19c | workflow API routes                                    | done                    | yes     |
 | WP-M2-19d | workflow UI actions                                    | done                    | yes     |
+| WP-M2-20  | navigation for tickets and objects                      | done                    | yes     |
+| WP-M2-21  | ticket list filters (open, overdue) and ordering        | done                    | yes     |
+| WP-M2-22  | start page with ticket capture as primary action        | done                    | yes     |
+| WP-M2-23  | ticket list links and query parameters                  | done                    | yes     |
+| WP-M2-24  | administration home page                                | done                    | yes     |
 | WP-M1-18  | publish chain: no cancelled run, correct `latest`       | done                    | yes     |
 | WP-M1-19  | one tag per push for every commit                       | done                    | yes     |
 | WP-M1-20  | the push command in the governance documents            | done                    | yes     |
@@ -217,6 +231,14 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-29  | branding settings API (company name)                     | done                    | yes     |
 | WP-M2-30  | branding input field in the administration               | done                    | yes     |
 | WP-M2-31  | company name in the shell header                         | done                    | yes     |
+| WP-M2-32  | record of the BMAcloud decision commit `a6804ed`         | done                    | yes     |
+| WP-M2-33  | BMAcloud read-only client and its environment            | planned                 | yes     |
+| WP-M2-34  | the `bma_sync_runs` table (migration `0007`)             | planned                 | yes     |
+| WP-M2-35  | the BMAcloud sync service (mapping, conflicts)           | planned                 | yes     |
+| WP-M2-36  | BMAcloud admin API and the scheduled sync job            | planned                 | yes     |
+| WP-M2-37  | BMAcloud sync page in the administration                 | planned                 | yes     |
+| WP-M2-38  | BMAcloud sync card on the administration home            | planned                 | yes     |
+| WP-M2-39  | external-maintained badge in the object list             | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

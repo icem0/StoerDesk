@@ -1,7 +1,7 @@
 # WP-M2-23: ticket list links to the detail and reads the query parameters
 
 format: small-model
-status: in_progress
+status: implemented
 depends-on: WP-M2-17b, WP-M2-22
 phase: 2
 context-budget: 20k tokens
