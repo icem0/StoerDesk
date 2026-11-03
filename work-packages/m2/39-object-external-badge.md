@@ -1,7 +1,7 @@
 # WP-M2-39: external-maintained badge in the object list
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-35
 phase: 2
 context-budget: 12k tokens
@@ -55,12 +55,18 @@ npm run i18n:check
 npm run wp:check
 ```
 
-Expected: all green; the object-list test still passes and de/en stay parallel.
+Expected: all green; de/en stay parallel. The object list had **no** page test before this
+WP, so the WP adds `apps/web/src/features/objects/__tests__/object-list-page.test.tsx`
+(excluded from the file limit) and asserts the badge pair.
 
 ## Handoff
 
-- Files changed: the three files above, `docs/REPO-MAP.md`, `work-packages/README.md`
+- Files changed: the three files above plus the new page test, `docs/REPO-MAP.md`,
+  `work-packages/README.md`, `PLAN.md` §16, `CHANGELOG.md`
 - Interfaces added: `object:list.externalBadge`, `object:list.externalHint`
-- Verified: —
+- Verified: `npm run check` locally (typecheck, lint with no new warning, 297 tests, 511 de
+  and 511 en keys, wp:check; the E2E gate skipped: no usable Chromium); the new page test
+  asserts the badge on the object with `externalId`, its absence on the local object, the
+  `title` naming BMAcloud and that the active badge of both rows is untouched.
 - Follow-up WP: none — the BMAcloud chain 32 … 39 is complete
 - Open question: none

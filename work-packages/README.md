@@ -240,7 +240,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-36b | `GET /admin/bma-sync/schedule` for the page prefill      | done                    | yes     |
 | WP-M2-37  | BMAcloud sync page in the administration                 | done                    | yes     |
 | WP-M2-38  | BMAcloud sync card on the administration home            | done                    | yes     |
-| WP-M2-39  | external-maintained badge in the object list             | planned                 | yes     |
+| WP-M2-39  | external-maintained badge in the object list             | done                    | yes     |
 | WP-M2-40  | fault template archive schema and shared contracts       | done                    | yes     |
 | WP-M2-40b | fault template admin and public catalog API              | done                    | yes     |
 | WP-M2-40c | fault template administration UI                         | done                    | yes     |

@@ -11,12 +11,19 @@ import { apiFetch } from '../../lib/api'
  *
  * View of the object list: search over object number, name and city, server-side
  * filters for `active`, `city` and `systemType`, one row per object with its
- * systems and an active/inactive badge. Each row links to the edit page
+ * systems and an active/inactive badge. An object that BMAcloud owns (`external_id`
+ * set, `specs/17-bmacloud-sync.md` §17.4) carries a second, independent badge next to
+ * its number (WP-M2-39). Each row links to the edit page
    (WP-M2-13) and has a delete button (WP-M2-14). Create lives on `/objects/create`
    (WP-M2-12).
  */
 
-function useObjects(query: { search?: string; active?: string; city?: string; systemType?: string }) {
+function useObjects(query: {
+  search?: string
+  active?: string
+  city?: string
+  systemType?: string
+}) {
   const params = new URLSearchParams()
   if (query.search) params.set('search', query.search)
   if (query.active !== undefined && query.active !== 'all') params.set('active', query.active)
@@ -32,7 +39,10 @@ function useObjects(query: { search?: string; active?: string; city?: string; sy
 
 function systemChips(systems: ObjectSummary['systems']) {
   return systems.map((system) => (
-    <span key={system.id} className="inline-flex items-center gap-1 rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200">
+    <span
+      key={system.id}
+      className="inline-flex items-center gap-1 rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200"
+    >
       {system.type}
       <span className="text-slate-400">{` · ${system.label}`}</span>
     </span>
@@ -63,7 +73,17 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
 
   return (
     <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
-      <td className="p-3 text-sm font-mono text-slate-300">{object.objectNo}</td>
+      <td className="p-3 text-sm font-mono text-slate-300">
+        {object.objectNo}
+        {object.externalId !== null ? (
+          <span
+            className="ml-2 inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-300"
+            title={t('list.externalHint')}
+          >
+            {t('list.externalBadge')}
+          </span>
+        ) : null}
+      </td>
       <td className="p-3 text-sm text-slate-200">{object.name}</td>
       <td className="p-3 text-sm text-slate-400">
         {[object.street, object.houseNumber, object.postalCode, object.city]
@@ -74,9 +94,7 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
       <td className="p-3 text-sm">
         <span
           className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-            object.active
-              ? 'bg-emerald-900/30 text-emerald-300'
-              : 'bg-rose-900/30 text-rose-300'
+            object.active ? 'bg-emerald-900/30 text-emerald-300' : 'bg-rose-900/30 text-rose-300'
           }`}
         >
           {object.active ? t('list.active') : t('list.inactive')}
@@ -192,7 +210,9 @@ export function ObjectListPage() {
       {objects.isPending ? (
         <p className="text-slate-400">{t('list.loading')}</p>
       ) : objects.isError ? (
-        <p className="text-rose-400" role="alert">{t('list.loadError')}</p>
+        <p className="text-rose-400" role="alert">
+          {t('list.loadError')}
+        </p>
       ) : filtered.length === 0 ? (
         <p className="text-slate-400">{t('list.noObjects')}</p>
       ) : (
@@ -200,12 +220,24 @@ export function ObjectListPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-700">
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.objectNo')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.name')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.city')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.systems')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.active')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">{t('list.columns.actions')}</th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t('list.columns.objectNo')}
+                </th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t('list.columns.name')}
+                </th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t('list.columns.city')}
+                </th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t('list.columns.systems')}
+                </th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t('list.columns.active')}
+                </th>
+                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">
+                  {t('list.columns.actions')}
+                </th>
               </tr>
             </thead>
             <tbody>

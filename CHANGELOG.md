@@ -59,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The external-maintained badge in the object list (WP-M2-39): a row whose `external_id` is
+  set carries a quiet "extern gepflegt" / "externally maintained" badge next to the object
+  number, with a `title` naming BMAcloud and the overwrite rule. The badge is independent of
+  the active badge and neither is colour-only. The object list had no page test before, so
+  the WP adds one. With this the BMAcloud chain WP-M2-32 … WP-M2-39 is complete.
 - The BMAcloud sync card on the administration home (WP-M2-38): `MODULES` gains
   `bmaSync` → `/admin/bma-sync` directly after the roles card, labelled
   "BMAcloud-Abgleich" / "BMAcloud sync" and saying that the object list is pulled
