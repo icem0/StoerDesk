@@ -162,8 +162,8 @@ describe('ReportFormPage', () => {
     // The object has exactly one system, so it is prefilled (§7.2).
     expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe(SYSTEM_ID)
     expect(screen.getByRole('option', { name: 'BMA Mitte (BMA)' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Rauchmelder defekt oder verschmutzt' })).toBeTruthy()
-    expect(screen.getAllByRole('button')).toHaveLength(10)
+    expect(screen.getByRole('button', { name: 'Störung Melder' })).toBeTruthy()
+    expect(screen.getAllByRole('button')).toHaveLength(9)
     expect(screen.getByText(NOTICE)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Störung melden' })).toBeTruthy()
   })
@@ -174,7 +174,7 @@ describe('ReportFormPage', () => {
     await openForm()
 
     expect(screen.getByRole('heading', { level: 2, name: 'Report a malfunction' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Smoke detector defective or soiled' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Detector fault' })).toBeTruthy()
     expect(
       screen.getByText(
         'For fire or danger: emergency call 112. This form is never an emergency call.',
@@ -219,7 +219,7 @@ describe('ReportFormPage', () => {
     await openForm()
 
     fillReport(
-      'Rauchmelder defekt oder verschmutzt',
+      'Störung Melder',
       'Rauchmelder im 2. Obergeschoss blinkt.',
       '030 123456',
     )
@@ -235,7 +235,7 @@ describe('ReportFormPage', () => {
     expect(body.qrToken).toBe(CURRENT_TOKEN)
     expect(body.clientUuid).toMatch(/^[0-9a-f-]{36}$/)
     expect(body.text).toBe('Rauchmelder im 2. Obergeschoss blinkt.')
-    expect(body.faultTemplateKeys).toEqual(['bma.smoke_detector_fault'])
+    expect(body.faultTemplateKeys).toEqual(['bma.detector_fault'])
     expect(body.systemId).toBe(SYSTEM_ID)
     expect(body.contact).toEqual({ name: '', phone: '030 123456', email: '' })
     expect(body.locale).toBe('de')
@@ -271,7 +271,7 @@ describe('ReportFormPage', () => {
     )
 
     await openForm()
-    fillReport('Leitungsstörung / Linie gestört', 'Leitung im Keller gestört.', '030 123456')
+    fillReport('Leitungsunterbrechung', 'Leitung im Keller gestört.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
     expect(
@@ -284,7 +284,7 @@ describe('ReportFormPage', () => {
 
     await waitFor(() => expect(bodies).toHaveLength(2))
     expect(bodies[0]?.clientUuid).toBe(bodies[1]?.clientUuid)
-    expect(bodies[1]?.faultTemplateKeys).toEqual(['bma.line_fault'])
+    expect(bodies[1]?.faultTemplateKeys).toEqual(['bma.line_interruption'])
     expect(bodies[1]?.systemId).toBeUndefined()
     expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
   })
@@ -326,7 +326,7 @@ describe('ReportFormPage', () => {
     expect(honeypot?.getAttribute('tabindex')).toBe('-1')
     expect(screen.queryByRole('textbox', { name: 'website' })).toBeNull()
 
-    fillReport('Leitungsstörung / Linie gestört', 'Leitung im Keller gestört.', '030 123456')
+    fillReport('Leitungsunterbrechung', 'Leitung im Keller gestört.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
     await waitFor(() => expect(bodies).toHaveLength(1))
@@ -366,7 +366,7 @@ describe('ReportFormPage', () => {
     )
 
     await openForm()
-    fillReport('Leitungsstörung / Linie gestört', 'Leitung im Keller gestört.', '030 123456')
+    fillReport('Leitungsunterbrechung', 'Leitung im Keller gestört.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
     await waitFor(() => expect(bodies).toHaveLength(1))
@@ -448,7 +448,7 @@ describe('ReportFormPage', () => {
     expect(screen.getByRole('button', { name: 'Störung melden' })).toBeTruthy()
 
     fillReport(
-      'Rauchmelder defekt oder verschmutzt',
+      'Störung Melder',
       'Die Störung besteht weiterhin.',
       '030 123456',
     )
@@ -457,7 +457,7 @@ describe('ReportFormPage', () => {
     await waitFor(() => expect(comments).toHaveLength(1))
     expect(comments[0]?.qrToken).toBe(CURRENT_TOKEN)
     expect(comments[0]?.text).toBe('Die Störung besteht weiterhin.')
-    expect(comments[0]?.faultTemplateKeys).toEqual(['bma.smoke_detector_fault'])
+    expect(comments[0]?.faultTemplateKeys).toEqual(['bma.detector_fault'])
     expect(comments[0]?.locale).toBe('de')
 
     expect(await screen.findByTestId('duplicate-comment-done')).toBeTruthy()
@@ -472,7 +472,7 @@ describe('ReportFormPage', () => {
     await openForm()
     expect(await screen.findByTestId('duplicate-hint')).toBeTruthy()
 
-    fillReport('Rauchmelder defekt oder verschmutzt', 'Zweite Meldung.', '030 123456')
+    fillReport('Störung Melder', 'Zweite Meldung.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Trotzdem neu melden' }))
 
     await waitFor(() => expect(bodies).toHaveLength(1))

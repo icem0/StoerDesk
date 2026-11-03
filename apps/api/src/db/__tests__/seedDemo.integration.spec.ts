@@ -58,14 +58,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
     })
 
-    it('creates three objects with one BMA system each and nine localized templates', async () => {
+    it('creates three objects with one BMA system each and eight localized templates', async () => {
       const first = await seedDemo(db)
 
-      expect(first).toEqual({ objects: 3, systems: 3, templates: 9, translations: 18 })
+      expect(first).toEqual({ objects: 3, systems: 3, templates: 8, translations: 16 })
       expect(await countRows(db, objects)).toBe(3)
       expect(await countRows(db, systems)).toBe(3)
-      expect(await countRows(db, textTemplates)).toBe(9)
-      expect(await countRows(db, textTemplateTranslations)).toBe(18)
+      expect(await countRows(db, textTemplates)).toBe(8)
+      expect(await countRows(db, textTemplateTranslations)).toBe(16)
 
       const localized = await db
         .select({ key: textTemplates.key })
@@ -77,7 +77,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .groupBy(textTemplates.key)
         .having(sql`count(*) = 2`)
 
-      expect(localized).toHaveLength(9)
+      expect(localized).toHaveLength(8)
 
       const demoSystems = await db.select({ type: systems.type }).from(systems)
 
@@ -99,8 +99,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(second).toEqual({ objects: 0, systems: 0, templates: 0, translations: 0 })
       expect(await countRows(db, objects)).toBe(3)
       expect(await countRows(db, systems)).toBe(3)
-      expect(await countRows(db, textTemplates)).toBe(9)
-      expect(await countRows(db, textTemplateTranslations)).toBe(18)
+      expect(await countRows(db, textTemplates)).toBe(8)
+      expect(await countRows(db, textTemplateTranslations)).toBe(16)
     })
 
     it('keeps an edited translation on every later run', async () => {

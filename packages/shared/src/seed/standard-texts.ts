@@ -1,23 +1,22 @@
 import type { ServerLocale } from '../i18n/t.js'
 
 /**
- * Localized BMA standard texts of the report form
+ * Bootstrap fault types of the report form
  * (`specs/02-data-model.md` §4.5, `PLAN.md` §3). Seed data and standard texts
  * are localized resources — never German literals in API code.
  *
- * The nine texts were drafted in the reviewed data model slice; the demo seed
- * inserts them once and never overwrites edits made in the admin UI.
+ * The eight texts are the standard fault types requested for the bootstrap; the
+ * demo seed inserts them once and never overwrites edits made in the admin UI.
  */
 export const STANDARD_TEXT_KEYS = [
-  'bma.total_outage',
-  'bma.malfunction_display',
+  'bma.line_interruption',
+  'bma.fault_unknown',
+  'bma.signal_device_fault',
+  'bma.detector_fault',
   'bma.false_alarm',
-  'bma.smoke_detector_fault',
-  'bma.manual_callpoint_fault',
   'bma.power_supply_fault',
-  'bma.line_fault',
-  'bma.transmission_fault',
-  'bma.ups_time_overdue',
+  'bma.input_fault',
+  'bma.battery_fault',
 ] as const
 
 export type StandardTextKey = (typeof STANDARD_TEXT_KEYS)[number]
@@ -31,25 +30,23 @@ export type StandardTextLocale = ServerLocale
 
 export const STANDARD_TEXTS: Record<StandardTextLocale, StandardText[]> = {
   de: [
-    { key: 'bma.total_outage', text: 'Brandmeldeanlage fällt komplett aus' },
-    { key: 'bma.malfunction_display', text: 'Störungsmeldung an der Brandmelderzentrale' },
-    { key: 'bma.false_alarm', text: 'Falschalarm ohne erkennbaren Grund' },
-    { key: 'bma.smoke_detector_fault', text: 'Rauchmelder defekt oder verschmutzt' },
-    { key: 'bma.manual_callpoint_fault', text: 'Handdruckmelder defekt' },
-    { key: 'bma.power_supply_fault', text: 'Störung der Stromversorgung / Batterie' },
-    { key: 'bma.line_fault', text: 'Leitungsstörung / Linie gestört' },
-    { key: 'bma.transmission_fault', text: 'Störung der Alarmübertragung' },
-    { key: 'bma.ups_time_overdue', text: 'Aufschaltzeit überschritten' },
+    { key: 'bma.line_interruption', text: 'Leitungsunterbrechung' },
+    { key: 'bma.fault_unknown', text: 'Störung (Unbekannt)' },
+    { key: 'bma.signal_device_fault', text: 'Störung Signalgeber' },
+    { key: 'bma.detector_fault', text: 'Störung Melder' },
+    { key: 'bma.false_alarm', text: 'Täuschungsalarm' },
+    { key: 'bma.power_supply_fault', text: 'Störung Energieversorgung' },
+    { key: 'bma.input_fault', text: 'Störung Eingang' },
+    { key: 'bma.battery_fault', text: 'Störung Akku' },
   ],
   en: [
-    { key: 'bma.total_outage', text: 'Fire alarm system completely out of service' },
-    { key: 'bma.malfunction_display', text: 'Fault indication on the alarm control panel' },
-    { key: 'bma.false_alarm', text: 'False alarm without identifiable cause' },
-    { key: 'bma.smoke_detector_fault', text: 'Smoke detector defective or soiled' },
-    { key: 'bma.manual_callpoint_fault', text: 'Manual call point defective' },
-    { key: 'bma.power_supply_fault', text: 'Power supply or battery fault' },
-    { key: 'bma.line_fault', text: 'Line/circuit fault' },
-    { key: 'bma.transmission_fault', text: 'Transmission to the emergency services fails' },
-    { key: 'bma.ups_time_overdue', text: 'Delay before alarm transmission exceeded' },
+    { key: 'bma.line_interruption', text: 'Line interruption' },
+    { key: 'bma.fault_unknown', text: 'Fault (unknown)' },
+    { key: 'bma.signal_device_fault', text: 'Signal device fault' },
+    { key: 'bma.detector_fault', text: 'Detector fault' },
+    { key: 'bma.false_alarm', text: 'False alarm' },
+    { key: 'bma.power_supply_fault', text: 'Power supply fault' },
+    { key: 'bma.input_fault', text: 'Input fault' },
+    { key: 'bma.battery_fault', text: 'Battery fault' },
   ],
 }
