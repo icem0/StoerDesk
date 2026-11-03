@@ -94,8 +94,10 @@ const envSchema = z
     // --- Host update agent (ADR-0006, specs/18-self-update.md) ---
     /** The address of the agent inside the compose network. */
     UPDATE_AGENT_URL: z.string().default('http://update-agent:8080'),
-    /** Bearer of the agent; empty means that no agent is configured. */
+    /** Bearer of the agent; empty means that the token file is read. */
     UPDATE_AGENT_TOKEN: z.string().default(''),
+    /** The token file of the shared state volume of the agent. */
+    UPDATE_AGENT_TOKEN_FILE: z.string().default('/agent-state/agent-token'),
   })
   .superRefine((value, context) => {
     const email = value.SEED_ADMIN_EMAIL.trim()

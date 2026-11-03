@@ -1,3 +1,7 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { describe, expect, it, vi } from 'vitest'
 
 import { createUpdateAgentClient, UpdateAgentError } from '../client.js'
@@ -20,6 +24,35 @@ describe('update agent client', () => {
     await expect(client.status()).rejects.toMatchObject({
       code: 'update_agent_not_configured',
     })
+  })
+
+  it('reads the token of the agent from the state volume', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'stoerdesk-api-'))
+    const tokenFile = join(directory, 'agent-token')
+
+    await writeFile(tokenFile, 'from-the-volume\n', 'utf8')
+
+    const calls: { authorization: string | null }[] = []
+    const client = createUpdateAgentClient(
+      { baseUrl: 'http://update-agent:8080', token: '', tokenFile },
+      vi.fn(async (_input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+        calls.push({
+          authorization: (init?.headers as Record<string, string> | undefined)?.authorization ?? null,
+        })
+
+        return Response.json({
+          state: 'idle',
+          checkout: { version: 'v0.1.99', commit: null },
+          lastRun: null,
+        })
+      }) as unknown as typeof fetch,
+    )
+
+    await client.status()
+
+    expect(calls[0]?.authorization).toBe('Bearer from-the-volume')
+
+    await rm(directory, { recursive: true, force: true })
   })
 
   it('reports an unreachable agent', async () => {

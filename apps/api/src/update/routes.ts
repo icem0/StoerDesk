@@ -36,7 +36,10 @@ import { createUpdateAgentClient, UpdateAgentError, type UpdateAgentErrorCode } 
 
 type Db = Database['database']
 
-export type UpdateRouteEnv = Pick<Env, 'UPDATE_AGENT_URL' | 'UPDATE_AGENT_TOKEN'>
+export type UpdateRouteEnv = Pick<
+  Env,
+  'UPDATE_AGENT_URL' | 'UPDATE_AGENT_TOKEN' | 'UPDATE_AGENT_TOKEN_FILE'
+>
 
 export type UpdateRouteOptions = {
   database: Db
@@ -82,6 +85,7 @@ export const updateRoutes = fp<UpdateRouteOptions>(
     const client = createUpdateAgentClient({
       baseUrl: env.UPDATE_AGENT_URL,
       token: env.UPDATE_AGENT_TOKEN,
+      tokenFile: env.UPDATE_AGENT_TOKEN_FILE,
     })
 
     /** The newest run row of the history. */

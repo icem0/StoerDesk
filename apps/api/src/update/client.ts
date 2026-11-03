@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+
 import { z } from 'zod'
 
 import { agentRunSchema, agentStatusSchema, type AgentRun, type AgentStatus } from '@stoerdesk/shared'
@@ -11,13 +13,19 @@ import { agentRunSchema, agentStatusSchema, type AgentRun, type AgentStatus } fr
  * validates every answer with the shared schemas, so a malformed answer becomes
  * an error of the API and never a crash. The token never appears in an error,
  * an answer or a log line.
+ *
+ * The bearer comes from the environment or from the state volume of the agent:
+ * the agent writes its token there, so the operator configures nothing. The
+ * volume is mounted read-only, the API never writes it.
  */
 
 export interface UpdateAgentConfig {
   /** The address of the agent inside the compose network. */
   baseUrl: string
-  /** The bearer of the agent; an empty value disables the client. */
+  /** The bearer of the agent; an empty value falls back to the token file. */
   token: string
+  /** The token file of the shared state volume. */
+  tokenFile?: string
   /** The timeout of one call in milliseconds. */
   timeoutMs?: number
 }
@@ -51,15 +59,41 @@ const DEFAULT_TIMEOUT_MS = 5000
 
 const agentRunsSchema = z.object({ runs: z.array(agentRunSchema) })
 
+/**
+ * The bearer of the agent: the environment wins, otherwise the token file of
+ * the shared state volume. An empty value means that no agent is configured —
+ * the agent has not written its token yet.
+ */
+export async function resolveAgentToken(config: UpdateAgentConfig): Promise<string> {
+  const fromEnv = config.token.trim()
+
+  if (fromEnv !== '') {
+    return fromEnv
+  }
+
+  if (config.tokenFile === undefined || config.tokenFile === '') {
+    return ''
+  }
+
+  try {
+    const content = await readFile(config.tokenFile, 'utf8')
+
+    return content.trim()
+  } catch {
+    return ''
+  }
+}
+
 export function createUpdateAgentClient(
   config: UpdateAgentConfig,
   fetchImpl: typeof fetch = fetch,
 ): UpdateAgentClient {
   const baseUrl = config.baseUrl.replace(/\/+$/, '')
-  const token = config.token.trim()
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS
 
   async function call(path: string, init: RequestInit = {}): Promise<unknown> {
+    const token = await resolveAgentToken(config)
+
     if (token === '') {
       throw new UpdateAgentError('update_agent_not_configured', 'the update agent has no token')
     }

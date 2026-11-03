@@ -80,6 +80,9 @@ services:
       - '${API_PORT:-3000}'
     volumes:
       - uploads:/data/uploads
+      # The state volume of the update agent, read-only: the API reads the
+      # token of the agent there, so the operator configures no secret.
+      - update-state:/agent-state:ro
     healthcheck:
       test:
         - CMD
