@@ -56,6 +56,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The fault type administration (WP-M2-40 … WP-M2-40f): the eight standard fault
+  types of the report form are bootstrapped in `text_templates`, an administrator
+  creates, edits, archives and deletes them at `/admin/text-templates`, an archived
+  type keeps labelling existing tickets but leaves the form, and a type that a ticket
+  carries cannot be deleted (`409 text_template_in_use`). The forms read the catalog
+  from the API instead of a compile-time list.
 - The `bma_sync_runs` table behind migration `0007_bma_sync_runs` (WP-M2-34): one row per
   BMAcloud pull with the status check `RUNNING`/`SUCCESS`/`PARTIAL`/`FAILED`, the five
   counters, the conflicts as jsonb and an index on `started_at` for the run history.
