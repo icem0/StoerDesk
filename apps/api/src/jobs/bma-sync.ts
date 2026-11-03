@@ -115,7 +115,20 @@ export async function startBmaAnlageSync(
         apiKey,
       })
       const anlagen = await bmaCloud.listAnlagen()
-      const run = await syncBmaAnlagen(database, anlagen)
+
+      // Best-effort reference list (WP-M2-65b): a failed call only omits the list.
+      let anlagentypen: unknown[] | undefined
+
+      try {
+        anlagentypen = await bmaCloud.anlagentypen()
+      } catch (error) {
+        log?.warn(
+          { code: error instanceof BmaCloudError ? error.code : 'bma_reference_failed' },
+          'BMAcloud anlagentypen reference call failed',
+        )
+      }
+
+      const run = await syncBmaAnlagen(database, anlagen, new Date(), anlagentypen)
 
       log?.info(
         {

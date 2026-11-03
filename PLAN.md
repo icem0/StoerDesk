@@ -712,7 +712,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-63   | the update availability check                        | done     |
 | WP-M2-64   | `objects.external_type` (migration `0010`)           | done     |
 | WP-M2-65   | BMAcloud contract for the Anlagentyp                 | done     |
-| WP-M2-65b  | the sync writes `external_type`                      | planned  |
+| WP-M2-65b  | the sync writes `external_type`                      | done     |
 | WP-M2-66   | the system type column of the object list            | planned  |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`

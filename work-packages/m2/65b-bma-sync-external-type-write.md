@@ -1,7 +1,7 @@
 # WP-M2-65b: the sync writes the external system type
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-64, WP-M2-65
 phase: 2
 context-budget: 20k tokens
@@ -21,8 +21,9 @@ files-write:
 - apps/api/src/integrations/bmacloud/sync.ts — `MappedAnlage.externalType`, the type-name
   map, the diff and the update of the column
 - apps/api/src/integrations/bmacloud/routes.ts — best-effort reference fetch per run
-- apps/api/src/integrations/bmacloud/__tests__/sync.integration.spec.ts — the wire `typ`
-  lands as the `descr` name, a failed reference fetch keeps the previous value
+- apps/{api/src/integrations/bmacloud/__tests__/sync.integration.spec.ts,
+  api/src/jobs/bma-sync.ts} — the live wire type lands as the reference name and both
+  pull sites (manual route and pg-boss job) fetch the reference list best-effort
 
 interfaces:
 
@@ -39,8 +40,9 @@ interfaces:
 2. Insert writes the resolved name (or `null`); the owned-object diff adds
    `externalType` so a changed name counts as `updated`, an equal one stays `unchanged`;
    without a reference list the column is neither read into the diff nor written.
-3. `routes.ts` fetches `anlagentypen()` best-effort before each pull: a failing reference
-   call does not fail the run, it only omits the list (logged by its error code, no key).
+3. Both pull sites fetch `anlagentypen()` best-effort before the pull — `routes.ts` (the
+   manual trigger) and `jobs/bma-sync.ts` (the scheduled pull): a failing reference call
+   never fails the run, it only omits the list, and only the fixed code is logged.
 4. Extend `sync.integration.spec.ts`: a wire fixture with `typ` lands the `descr` name in
    `objects.external_type`; a second identical run reports `unchanged`; a run without the
    reference list leaves the stored value untouched.
@@ -65,6 +67,7 @@ required, otherwise report it as unverified).
 - Files changed: the three files above plus `CHANGELOG.md`, `work-packages/README.md`
   and `docs/REPO-MAP.md`.
 - Interfaces added: the optional `anlagentypen` argument of `syncBmaAnlagen`.
-- Verified: —
+- Verified: `npm run check` green — typecheck, lint, 62 Vitest files, i18n:check and
+  wp:check; the sync integration spec really ran against Postgres 16.
 - Follow-up WP: WP-M2-66 (the object list column) — its document exists since WP-M2-64.
 - Open question: none

@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -251,5 +251,53 @@ describe.skipIf(testDatabase.status === 'unavailable')('syncBmaAnlagen (integrat
       active: false,
       externalId: '12345',
     })
+  })
+
+  it('writes the anlagentyp name of the reference list into external_type', async () => {
+    const types = [
+      { typid: 4, descr: 'Brandmeldeanlage', herstellername: 'Honeywell' },
+      { typid: 7, descr: 'RWA' },
+    ]
+    const pull = (typ9: number) => [
+      anlage({ aid: 'aid-9', nr: '10372_09', firma: 'Typ Firma', typ: typ9 }),
+      anlage({ aid: 'aid-10', nr: '10372_10', firma: 'Fremder Typ', typ: 99 }),
+    ]
+
+    const first = await syncBmaAnlagen(database, pull(4), new Date(), types)
+
+    expect(first).toMatchObject({ status: 'SUCCESS', created: 2, updated: 0 })
+
+    const named = await database
+      .select()
+      .from(objects)
+      .where(inArray(objects.objectNo, ['10372_09', '10372_10']))
+
+    expect(named.find((row) => row.objectNo === '10372_09')?.externalType).toBe(
+      'Brandmeldeanlage',
+    )
+    // a typ the reference list does not know stays null instead of a SONSTIGE guess
+    expect(named.find((row) => row.objectNo === '10372_10')?.externalType).toBeNull()
+
+    const repeated = await syncBmaAnlagen(database, pull(4), new Date(), types)
+
+    expect(repeated).toMatchObject({ created: 0, updated: 0, unchanged: 2 })
+
+    const renamed = await syncBmaAnlagen(database, pull(7), new Date(), types)
+
+    expect(renamed).toMatchObject({ created: 0, updated: 1, unchanged: 1 })
+
+    const stored = await database.select().from(objects).where(eq(objects.objectNo, '10372_09'))
+
+    expect(stored[0]?.externalType).toBe('RWA')
+
+    // Without the reference list the column is neither compared nor written, so a
+    // failed anlagentypen call keeps the stored name.
+    const blind = await syncBmaAnlagen(database, pull(4))
+
+    expect(blind).toMatchObject({ created: 0, updated: 0, unchanged: 2 })
+
+    const kept = await database.select().from(objects).where(eq(objects.objectNo, '10372_09'))
+
+    expect(kept[0]?.externalType).toBe('RWA')
   })
 })

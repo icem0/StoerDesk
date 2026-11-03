@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The BMAcloud sync writes the system type (WP-M2-65b): every run fetches the
+  `GET /anlagentypen` reference list best-effort and stores the resolved type name in
+  `objects.external_type`; an unknown `typ` stays `null` and a failed reference call leaves
+  the stored name untouched instead of clearing it.
+
 - The BMAcloud contract knows the system type (WP-M2-65): `bmaAnlageSchema` reads
   the `typ` id, `GET /anlagentypen` resolves it to a name and
   `externalTypeCategory()` classifies the German type keywords into `BMA`, `LICHTRUF`,

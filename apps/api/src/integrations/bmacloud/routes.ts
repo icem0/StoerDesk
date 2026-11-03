@@ -239,7 +239,20 @@ export const bmaSyncRoutes = fp<BmaSyncRouteOptions>(
           throw error
         }
 
-        return syncBmaAnlagen(database, anlagen)
+        // Best-effort reference list (WP-M2-65b): a failed call only omits the list,
+        // it never fails the run, and only the fixed code is logged — never the key.
+        let anlagentypen: unknown[] | undefined
+
+        try {
+          anlagentypen = await client.anlagentypen()
+        } catch (error) {
+          app.log.warn(
+            { code: error instanceof BmaCloudError ? error.code : 'bma_reference_failed' },
+            'BMAcloud anlagentypen reference call failed',
+          )
+        }
+
+        return syncBmaAnlagen(database, anlagen, undefined, anlagentypen)
       },
     )
 

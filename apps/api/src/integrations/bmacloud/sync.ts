@@ -1,6 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
 import {
+  bmaAnlagentypSchema,
   bmaSyncRunSummarySchema,
   type BmaSyncConflict,
   type BmaSyncRunSummary,
@@ -35,6 +36,11 @@ export interface MappedAnlage {
   city: string | null
   active: boolean
   externalId: string
+  /**
+   * Human-readable type name resolved from `typ` (WP-M2-65b); `null` without a
+   * reference list or for a `typ` the reference list does not know.
+   */
+  externalType: string | null
 }
 
 export type MapResult =
@@ -68,6 +74,7 @@ export function mapAnlage(anlage: BmaAnlagePayload): MapResult {
       city: (anlage.ort ?? '').trim() || null,
       active: anlage.status === 'active',
       externalId: aid,
+      externalType: null,
     },
   }
 }
@@ -89,12 +96,28 @@ function rawId(value: unknown): string {
  * Applies one pull and writes its run row. All object writes are one
  * transaction; a failure rolls them back and records a `FAILED` run with a fixed
  * error code (never the raw message, which could carry tenant data).
+ *
+ * The optional `anlagentypen` reference list (WP-M2-65b) resolves the `typ` id of
+ * every Anlage to the human-readable `external_type`. Without it the column is
+ * neither compared nor written, so a failed reference call keeps what is stored.
  */
 export async function syncBmaAnlagen(
   database: Db,
   anlagen: readonly unknown[],
   now: Date = new Date(),
+  anlagentypen?: readonly unknown[],
 ): Promise<BmaSyncRunResult> {
+  const hasTypeList = anlagentypen !== undefined
+  const typeNames = new Map<number, string>()
+
+  for (const row of anlagentypen ?? []) {
+    const parsed = bmaAnlagentypSchema.safeParse(row)
+
+    if (parsed.success) {
+      typeNames.set(parsed.data.typid, parsed.data.descr)
+    }
+  }
+
   const conflicts: BmaSyncConflict[] = []
   const mapped: MappedAnlage[] = []
 
@@ -115,6 +138,12 @@ export async function syncBmaAnlagen(
     const result = mapAnlage(parsed.data)
 
     if (result.ok) {
+      const typ = parsed.data.typ
+
+      if (typ !== null && typ !== undefined) {
+        result.value.externalType = typeNames.get(typ) ?? null
+      }
+
       mapped.push(result.value)
     } else {
       conflicts.push(result.conflict)
@@ -133,6 +162,7 @@ export async function syncBmaAnlagen(
           city: objects.city,
           active: objects.active,
           externalId: objects.externalId,
+          externalType: objects.externalType,
         })
         .from(objects)
 
@@ -157,7 +187,8 @@ export async function syncBmaAnlagen(
             !sameField(owned.street, anlage.street) ||
             !sameField(owned.postalCode, anlage.postalCode) ||
             !sameField(owned.city, anlage.city) ||
-            owned.active !== anlage.active
+            owned.active !== anlage.active ||
+            (hasTypeList && (owned.externalType ?? null) !== anlage.externalType)
 
           if (!differs) {
             unchanged += 1
@@ -172,6 +203,7 @@ export async function syncBmaAnlagen(
               postalCode: anlage.postalCode,
               city: anlage.city,
               active: anlage.active,
+              ...(hasTypeList ? { externalType: anlage.externalType } : {}),
               updatedAt: now,
             })
             .where(eq(objects.id, owned.id))
@@ -200,6 +232,7 @@ export async function syncBmaAnlagen(
           city: anlage.city,
           active: anlage.active,
           externalId: anlage.externalId,
+          externalType: anlage.externalType,
           qrToken: generateQrToken(),
         })
 
