@@ -691,7 +691,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-43  | self-update decision (ADR-0004) and spec 18 | done    |
 | WP-M2-44  | admin update page: clean PWA update (stage 1) | done    |
 | WP-M2-45  | BMAcloud bearer key in `settings` + admin routes (ADR-0005) | done    |
-| WP-M2-46  | the scheduled pull reads the effective bearer key | planned |
+| WP-M2-46  | the scheduled pull reads the effective bearer key | done    |
 | WP-M2-47  | API-key field on the BMAcloud sync page | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -832,8 +832,10 @@ offers everything but the credential, so an image-based deployment could only an
 `bma_not_configured`. **ADR-0005** supersedes the credential rule of ADR-0003 — the key may
 live in the `settings` row `bma.api.key`, which wins over `BMA_API_KEY` and is write-only
 (never answered, never logged). **WP-M2-45** implements the shared contract, `readBmaApiKey`
-and the three credential routes, **WP-M2-46** the effective key in the scheduled job and
-**WP-M2-47** the key field on `/admin/bma-sync`.
+and the three credential routes and **WP-M2-46** the effective key of the scheduled job — the
+startup read decides whether the queue is scheduled at all and every run resolves the key
+again, so a stored or deleted key needs no API restart. **WP-M2-47** adds the key field on
+`/admin/bma-sync`.
 
 ## 17. Work package rules for small models
 

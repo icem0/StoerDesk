@@ -3,21 +3,27 @@ import { PgBoss } from 'pg-boss'
 import type { Env } from '../config/env'
 import { createDatabase } from '../db/client'
 import { BmaCloudError, createBmaCloudClient } from '../integrations/bmacloud/client'
-import { readBmaSyncSchedule, type BmaSyncScheduleEnv } from '../integrations/bmacloud/routes'
+import {
+  readBmaApiKey,
+  readBmaSyncSchedule,
+  type BmaSyncScheduleEnv,
+} from '../integrations/bmacloud/routes'
 import { syncBmaAnlagen } from '../integrations/bmacloud/sync'
 
 /**
  * Scheduled BMAcloud pull (`specs/17-bmacloud-sync.md` §17.5, ADR-0003,
- * WP-M2-36). The shape follows `jobs/qr-cleanup.ts`: pg-boss owns the cron,
- * every job opens its own short-lived pool and the scheduler is started only
- * from the direct API start — `buildServer()` and the test suite never create
- * the pg-boss schema.
+ * WP-M2-36, WP-M2-46). The shape follows `jobs/qr-cleanup.ts`: pg-boss owns the
+ * cron, every job opens its own short-lived pool and the scheduler is started
+ * only from the direct API start — `buildServer()` and the test suite never
+ * create the pg-boss schema.
  *
  * The cron and the enabled flag are read once at start from the `settings` rows
  * `bma.sync.cron` / `bma.sync.enabled`, with `BMA_SYNC_CRON` /
- * `BMA_SYNC_ENABLED` as the fallback. An empty `BMA_API_KEY` disables the job
- * completely, so a deployment without BMAcloud credentials never schedules a
- * pull that could only fail.
+ * `BMA_SYNC_ENABLED` as the fallback. The bearer key is resolved by
+ * `readBmaApiKey` — the `settings` row `bma.api.key` first, `BMA_API_KEY` as the
+ * fallback (ADR-0005) — once at start, which decides whether the job is scheduled
+ * at all, and again per run, so a key stored or removed on the admin page takes
+ * effect without an API restart.
  */
 
 /** pg-boss queue name of the daily Anlagen pull. */
@@ -33,8 +39,12 @@ export type BmaSyncLogger = {
 
 export type BmaSyncJobEnv = BmaSyncScheduleEnv & Pick<Env, 'BMA_API_BASE_URL' | 'BMA_API_KEY'>
 
-/** The stored schedule pair, or `undefined` when the job must not run at all. */
-async function storedSchedule(
+/**
+ * The one startup read: the effective schedule pair and the effective bearer key
+ * through a single short-lived pool. `undefined` means the job must not be
+ * scheduled at all — a disabled schedule or no key in either source.
+ */
+async function startupState(
   connectionString: string,
   env: BmaSyncJobEnv,
   log?: BmaSyncLogger,
@@ -46,6 +56,15 @@ async function storedSchedule(
 
     if (!schedule.enabled) {
       log?.info({ queue: BMA_ANLAGE_SYNC_QUEUE }, 'BMA sync schedule disabled')
+
+      return undefined
+    }
+
+    if ((await readBmaApiKey(database, env)) === '') {
+      log?.info(
+        { queue: BMA_ANLAGE_SYNC_QUEUE },
+        'BMA sync job disabled: neither bma.api.key nor BMA_API_KEY is set',
+      )
 
       return undefined
     }
@@ -66,13 +85,7 @@ export async function startBmaAnlageSync(
   env: BmaSyncJobEnv,
   log?: BmaSyncLogger,
 ): Promise<PgBoss | undefined> {
-  if (env.BMA_API_KEY.trim() === '') {
-    log?.info({ queue: BMA_ANLAGE_SYNC_QUEUE }, 'BMA sync job disabled: BMA_API_KEY is not set')
-
-    return undefined
-  }
-
-  const schedule = await storedSchedule(connectionString, env, log)
+  const schedule = await startupState(connectionString, env, log)
 
   if (schedule === undefined) {
     return undefined
@@ -95,9 +108,11 @@ export async function startBmaAnlageSync(
     const { client: pool, database } = createDatabase(connectionString)
 
     try {
+      // Resolved per run, so a key stored or deleted on the admin page needs no restart.
+      const apiKey = await readBmaApiKey(database, env)
       const bmaCloud = createBmaCloudClient({
         baseUrl: env.BMA_API_BASE_URL,
-        apiKey: env.BMA_API_KEY,
+        apiKey,
       })
       const anlagen = await bmaCloud.listAnlagen()
       const run = await syncBmaAnlagen(database, anlagen)

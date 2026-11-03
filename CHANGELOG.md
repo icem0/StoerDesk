@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The scheduled BMAcloud pull resolves the same key as the manual trigger (WP-M2-46): one
+  startup read of the `bma.api.key` row with `BMA_API_KEY` as fallback decides whether the
+  `bma-anlage-sync` queue is scheduled at all, and every run reads the key again — a key
+  stored or removed on the admin page takes effect without an API restart. Without a key in
+  either source the job still refuses to start and logs only the fixed reason.
 - BMAcloud bearer key configurable in the administration (WP-M2-45, ADR-0005): the key
   may now live in the `settings` row `bma.api.key` and wins over the `BMA_API_KEY`
   environment, so an image-based deployment that cannot edit `.env` is no longer stuck
@@ -16,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   /api/v1/admin/bma-sync/credentials` — the status answers `{ configured, source }`
   (`db` / `env` / `none`) only, the stored key is never echoed, never logged and never
   written into a run row. ADR-0005 supersedes only the credential rule of ADR-0003; the
-  read-only client and the `object.read` / `object.import` guards stay. The scheduled
-  pull (WP-M2-46) and the key field on the sync page (WP-M2-47) follow.
+  read-only client and the `object.read` / `object.import` guards stay. The key field on
+  the sync page follows in WP-M2-47.
 - Self-update decision and spec (WP-M2-43, ADR-0004): the admin update control is
   an out-of-band host update agent, never shell execution in the `api` container
   and never an OS/Linux password. Stage 1 is implemented as a client-only clean PWA

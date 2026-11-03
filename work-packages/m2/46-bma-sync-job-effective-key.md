@@ -1,7 +1,7 @@
 # WP-M2-46: the scheduled BMAcloud pull reads the effective bearer key
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-45, ADR-0005
 phase: 2
 context-budget: 14k tokens
@@ -70,8 +70,18 @@ reported as unverified, never as green).
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: WP-M2-47 (`47-bma-sync-api-key-field-ui.md`)
+- Files changed: `apps/api/src/jobs/bma-sync.ts`, the new
+  `apps/api/src/jobs/__tests__/bma-sync-job.integration.spec.ts`, `docs/REPO-MAP.md`,
+  `PLAN.md` §16, `work-packages/README.md`, this document, `CHANGELOG.md`
+- Interfaces added: none — `startBmaAnlageSync` keeps its signature, the new `startupState`
+  is private and reuses `readBmaApiKey` of WP-M2-45
+- Verified: `npm run check` locally (typecheck, lint 0 errors, 310 tests in 53 files, i18n
+  parity 526 keys de/en, wp:check 115 small-model WP); the E2E gate **skipped** — no usable
+  Chromium in this container, so it stays unverified, not green. The new job spec runs 5 tests
+  against a reachable throwaway database (8 in the `jobs/` folder): no key in either source →
+  no schedule, an empty settings row → no schedule, the stored row alone → schedules, the
+  `BMA_API_KEY` fallback → schedules, `bma.sync.enabled = false` → no schedule; the captured
+  log lines carry the queue, the cron and the fixed reason but never the key.
+- Follow-up WP: WP-M2-47 (`47-bma-sync-api-key-field-ui.md`) — its file exists since the
+  WP-M2-45 commit
 - Open question: none
