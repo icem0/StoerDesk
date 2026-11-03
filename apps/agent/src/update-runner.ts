@@ -171,16 +171,24 @@ export class UpdateRunner {
       } else {
         step = 'compose'
 
-        const composed = await this.step(run, step, 'docker', [
-          'compose',
-          '--project-directory',
-          this.projectDirectory,
-          '-f',
-          this.composeFile,
-          'up',
-          '-d',
-          '--build',
-        ])
+        const composed = await this.step(
+          run,
+          step,
+          'docker',
+          [
+            'compose',
+            '--project-directory',
+            this.projectDirectory,
+            '-f',
+            this.composeFile,
+            'up',
+            '-d',
+            '--build',
+          ],
+          // The compose client reads the `.env` of the project from its working
+          // directory — the checkout of the host.
+          { cwd: this.projectDirectory },
+        )
 
         if (!composed) {
           this.skip(run, 'prune')

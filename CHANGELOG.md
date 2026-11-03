@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The compose invocation of the agent and its image in the smoke test
+  (WP-M2-53b): the compose client of the agent runs in the project directory,
+  so it reads the `.env` of the checkout and therefore the project name of the
+  host — without it the agent would deploy a second stack next to the running
+  one. The smoke test builds the image of the agent, so CI proves that the
+  Alpine packages for `git` and the Docker CLI exist.
 - The image, the compose service and the environment of the update agent
   (WP-M2-53): the image `stoerdesk-agent` is `node:22-alpine` with `git`,
   `docker-cli` and `docker-cli-compose`; the service `update-agent` lives

@@ -81,6 +81,7 @@ describe('update runner', () => {
         '-d',
         '--build',
       ],
+      cwd: '/repo',
     })
     expect(calls[2]).toMatchObject({ command: 'docker', args: ['image', 'prune', '-f'] })
   })

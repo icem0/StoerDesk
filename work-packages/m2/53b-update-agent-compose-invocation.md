@@ -1,7 +1,7 @@
 # WP-M2-53b: the compose invocation of the agent and its image in the smoke test
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-53
 phase: 2
 context-budget: 12k tokens
@@ -59,8 +59,10 @@ does not have).
 
 ## Handoff
 
-- Files changed: the two files of `files-write`.
+- Files changed: the two files of `files-write` plus the test.
 - Interfaces added: none — the compose invocation and the coverage.
-- Verified: `npm run check`, `npm run build`.
+- Verified: `npm run check` green (335 tests); the smoke test builds the image
+  of the agent in CI — the image build itself needs a Docker daemon, which the
+  development container does not have.
 - Follow-up WP: WP-M2-54 (the admin API).
 - Open question: none.
