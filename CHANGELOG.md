@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   type keeps labelling existing tickets but leaves the form, and a type that a ticket
   carries cannot be deleted (`409 text_template_in_use`). The forms read the catalog
   from the API instead of a compile-time list.
+- The BMAcloud admin API and scheduled sync job (WP-M2-36): the guarded admin routes
+  `GET /api/v1/admin/bma-sync/runs`, `POST /api/v1/admin/bma-sync/run` and
+  `PATCH /api/v1/admin/bma-sync/schedule`, the effective schedule from the
+  `bma.sync.enabled` and `bma.sync.cron` settings with `BMA_SYNC_*` fallback, and a
+  pg-boss job that starts only when `BMA_API_KEY` is present.
 - The BMAcloud mapping and sync service (WP-M2-35): `mapAnlage` per §17.3, and
   `syncBmaAnlagen` that matches objects by `external_id` then `object_no`,
   reports `object_no_taken` instead of overwriting a local object, soft-deactivates

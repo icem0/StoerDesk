@@ -1,7 +1,7 @@
 # WP-M2-36: BMAcloud admin API and the scheduled sync job
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-35
 phase: 2
 context-budget: 20k tokens
@@ -34,7 +34,9 @@ interfaces:
 - `PATCH /api/v1/admin/bma-sync/schedule` — guarded by `object.write`, body
   `{ enabled: boolean, cron: string }`, stored as the `settings` rows `bma.sync.enabled`
   and `bma.sync.cron` (key/value table, `PLAN.md` §6), answers the stored pair
-- `bmaSyncRunsResponseSchema`, `bmaSyncScheduleRequestSchema` in the shared package
+- `bmaSyncRunsQuerySchema`, `bmaSyncRunsResponseSchema`, `bmaSyncScheduleRequestSchema`,
+  `bmaSyncScheduleResponseSchema` in the shared package
+- `readBmaSyncSchedule(database, env)` — effective settings/env schedule pair
 - `startBmaAnlageSync(connectionString, env, log?)` — pg-boss queue `bma-anlage-sync`,
   cron from the `bma.sync.cron` setting with `BMA_SYNC_CRON` as fallback; never started
   when `BMA_API_KEY` is empty; each job opens its own short-lived pool
@@ -80,10 +82,14 @@ otherwise report it as unverified). No test starts pg-boss.
 
 ## Handoff
 
-- Files changed: the four files above plus the integration spec, `docs/REPO-MAP.md`,
-  `work-packages/README.md`
-- Interfaces added: `bmaSyncRoutes`, `startBmaAnlageSync`, `BMA_ANLAGE_SYNC_QUEUE`,
-  the three `/api/v1/admin/bma-sync/*` routes
-- Verified: —
+- Files changed: the four source files above, the integration spec, `docs/REPO-MAP.md`,
+  `work-packages/README.md`, `PLAN.md` and `CHANGELOG.md`
+- Interfaces added: `bmaSyncRoutes`, `readBmaSyncSchedule`, `startBmaAnlageSync`,
+  `BMA_ANLAGE_SYNC_QUEUE`, the three `/api/v1/admin/bma-sync/*` routes and the
+  run-history/schedule shared schemas
+- Verified: `npm run check` locally (typecheck, lint, 288 tests, i18n, wp:check; the
+  E2E gate skipped: no usable Chromium); the reachable-DB integration spec runs 20 tests
+  in the BMAcloud folder.
 - Follow-up WP: WP-M2-37 (admin page), WP-M2-38 (its card on the administration home)
-- Open question: none
+- Open question: WP-M2-37 needs the current schedule for its form prefill, but §17.5 and
+  this WP define no `GET /api/v1/admin/bma-sync/schedule`.

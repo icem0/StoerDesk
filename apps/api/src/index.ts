@@ -9,6 +9,7 @@ import { adminUsersRoutes } from './admin/users'
 import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
+import { bmaSyncRoutes } from './integrations/bmacloud/routes'
 import { settingsBrandingRoutes } from './settings/branding'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
@@ -17,6 +18,7 @@ import { objectRoutes } from './objects/service'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { seedStandardTexts } from './db/seed-standard-texts'
+import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { publicDuplicateRoutes } from './tickets/duplicates'
@@ -99,6 +101,7 @@ export async function buildServer() {
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
+  await app.register(bmaSyncRoutes, { database, env })
   await app.register(publicReportRoutes, {
     database,
     uploadDir: env.UPLOAD_DIR,
@@ -150,8 +153,16 @@ if (invokedDirectly) {
   // create the pg-boss schema (WP-M2-02b).
   const cleanup = await startQrTokenCleanup(databaseConnectionUrl(env), app.log)
 
+  // The BMAcloud pull is scheduled only when the tenant credentials exist
+  // (WP-M2-36); the manual trigger of the admin API needs no scheduler.
+  const bmaSync = await startBmaAnlageSync(databaseConnectionUrl(env), env, app.log)
+
   app.addHook('onClose', async () => {
     await cleanup.stop({ timeout: 5000 })
+
+    if (bmaSync !== undefined) {
+      await bmaSync.stop({ timeout: 5000 })
+    }
   })
 
   await app.listen({ host: env.API_HOST, port: env.API_PORT })
