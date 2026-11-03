@@ -203,4 +203,100 @@ describe('UpdateHostUpdate', () => {
       await screen.findByText(/Agent läuft noch nicht|agent does not run yet/i),
     ).toBeTruthy()
   })
+
+  it('checks for a newer version on GitHub and shows the update button', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload(),
+      'api.github.com/repos/icem0/StoerDesk/tags': [{ name: 'v0.2.0' }],
+    })
+
+    renderSection()
+
+    await screen.findByText('v0.1.99')
+
+    const checkButton = screen.getByRole('button', {
+      name: /Update prüfen|Check for update/i,
+    })
+    fireEvent.click(checkButton)
+
+    expect(await screen.findByText(/v0.2.0/)).toBeTruthy()
+    expect(
+      await screen.findByText(/Update verfügbar!|Update available!/i),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /Jetzt updaten|Update now/i }),
+    ).toBeTruthy()
+  })
+
+  it('shows up to date when versions match', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload(),
+      'api.github.com/repos/icem0/StoerDesk/tags': [{ name: 'v0.1.91' }],
+    })
+
+    renderSection()
+
+    await screen.findByText('v0.1.99')
+
+    const checkButton = screen.getByRole('button', {
+      name: /Update prüfen|Check for update/i,
+    })
+    fireEvent.click(checkButton)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Sie nutzen die neueste Version|You are using the latest version/i),
+      ).toBeTruthy()
+    })
+    expect(
+      screen.queryByRole('button', { name: /Jetzt updaten|Update now/i }),
+    ).toBeNull()
+  })
+
+  it('shows check failed when github is unreachable', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        fetchCalls.push({ url, method: 'GET' })
+
+        if (url.includes('api.github.com')) {
+          throw new Error('network error')
+        }
+
+        for (const [path, payload] of Object.entries({
+          '/v1/me': {
+            user: {
+              id: '22222222-2222-4222-8222-222222222222',
+              email: 'admin@example.com',
+              locale: 'de',
+              roles: ['admin'],
+              permissions: ['system.update'],
+            },
+          },
+          '/v1/admin/update/status': statusPayload(),
+        })) {
+          if (url.includes(path)) {
+            return Response.json(payload)
+          }
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderSection()
+
+    await screen.findByText('v0.1.99')
+
+    const checkButton = screen.getByRole('button', {
+      name: /Update prüfen|Check for update/i,
+    })
+    fireEvent.click(checkButton)
+
+    expect(await screen.findByText(/Prüfung fehlgeschlagen|Check failed/i)).toBeTruthy()
+  })
 })

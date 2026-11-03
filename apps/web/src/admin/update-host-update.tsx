@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { UpdateRunResponse, UpdateStatusResponse } from '@stoerdesk/shared'
 
+import { appVersion } from '../lib/version'
 import { usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 
@@ -25,8 +26,33 @@ import { ApiError, apiFetch } from '../lib/api'
  * server stays the only enforcement point.
  */
 
-/** The command that starts the agent on the host. */
 const AGENT_START_COMMAND = 'docker compose --profile update up -d update-agent'
+const GITHUB_TAGS_URL = 'https://api.github.com/repos/icem0/StoerDesk/tags?per_page=1'
+
+function parseVersion(v: string): [number, number, number] {
+  const m = v.match(/^v?(\d+)\.(\d+)\.(\d+)/)
+
+  if (!m) {
+    return [0, 0, 0]
+  }
+
+  return [Number(m[1]), Number(m[2]), Number(m[3])]
+}
+
+function isNewerVersion(latest: string, current: string): boolean {
+  const [a1, a2, a3] = parseVersion(latest)
+  const [b1, b2, b3] = parseVersion(current)
+
+  if (a1 !== b1) {
+    return a1 > b1
+  }
+
+  if (a2 !== b2) {
+    return a2 > b2
+  }
+
+  return a3 > b3
+}
 
 const handledErrorCodes = [
   'session_invalid',
@@ -67,6 +93,8 @@ export function UpdateHostUpdate() {
   const queryClient = useQueryClient()
   const [confirming, setConfirming] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [checkState, setCheckState] = useState<'idle' | 'checking' | 'done' | 'failed'>('idle')
+  const [latestVersion, setLatestVersion] = useState<string | null>(null)
 
   const copyCommand = useCallback(async () => {
     try {
@@ -74,6 +102,31 @@ export function UpdateHostUpdate() {
       setCopied(true)
     } catch {
       setCopied(false)
+    }
+  }, [])
+
+  const checkUpdate = useCallback(async () => {
+    setCheckState('checking')
+    setLatestVersion(null)
+
+    try {
+      const response = await fetch(GITHUB_TAGS_URL)
+
+      if (!response.ok) {
+        throw new Error('check failed')
+      }
+
+      const tags = await response.json()
+      const latest = tags[0]?.name
+
+      if (!latest) {
+        throw new Error('no tags')
+      }
+
+      setLatestVersion(latest)
+      setCheckState('done')
+    } catch {
+      setCheckState('failed')
     }
   }, [])
 
@@ -102,6 +155,7 @@ export function UpdateHostUpdate() {
   const lastRun = data?.lastRun ?? null
   const running = data?.running === true
   const agentError = data?.agent.error ?? null
+  const updateAvailable = latestVersion !== null && isNewerVersion(latestVersion, appVersion)
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -128,6 +182,46 @@ export function UpdateHostUpdate() {
           </dd>
         </div>
       </dl>
+
+      <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 p-3 text-sm">
+        <p className="font-medium">{t('admin.update.host.check.title')}</p>
+
+        {checkState === 'idle' ? (
+          <button
+            className="mt-2 rounded bg-slate-700 px-3 py-1 text-xs text-white hover:bg-slate-600"
+            type="button"
+            onClick={() => void checkUpdate()}
+          >
+            {t('admin.update.host.checkUpdate')}
+          </button>
+        ) : checkState === 'checking' ? (
+          <p className="mt-2 text-sm text-slate-400">{t('admin.update.host.checking')}</p>
+        ) : checkState === 'failed' ? (
+          <p className="mt-2 text-sm text-rose-300">{t('admin.update.host.checkFailed')}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-sm">
+              {t('admin.update.host.latestVersion')}: {latestVersion}
+            </p>
+
+            {updateAvailable ? (
+              <>
+                <p className="mt-1 text-sm text-emerald-300">{t('admin.update.host.updateAvailable')}</p>
+                <button
+                  className="mt-1 rounded bg-sky-700 px-3 py-1 text-xs text-white hover:bg-slate-600 disabled:opacity-50"
+                  type="button"
+                  disabled={running || data?.agent.reachable !== true}
+                  onClick={() => setConfirming(true)}
+                >
+                  {t('admin.update.host.startUpdate')}
+                </button>
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-emerald-300">{t('admin.update.host.upToDate')}</p>
+            )}
+          </>
+        )}
+      </div>
 
       <p className="mt-3 text-sm text-slate-400">
         {lastRun === null

@@ -77,6 +77,16 @@
         "agent": "Update agent",
         "agentReady": "reachable",
         "agentMissing": "not reachable — the agent does not run",
+        "check": {
+          "title": "Check for update"
+        },
+        "checkUpdate": "Check for update",
+        "checking": "Checking…",
+        "latestVersion": "Latest version",
+        "updateAvailable": "Update available!",
+        "upToDate": "You are using the latest version.",
+        "startUpdate": "Update now",
+        "checkFailed": "Check failed.",
         "agentNotConfigured": "not reachable — the agent does not run yet (it writes its token at the start)",
         "agentBadResponse": "not reachable — the agent answers something invalid",
         "guide": {

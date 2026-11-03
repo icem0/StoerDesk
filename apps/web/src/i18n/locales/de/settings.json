@@ -77,6 +77,16 @@
         "agent": "Update-Agent",
         "agentReady": " erreichbar",
         "agentMissing": "nicht erreichbar — der Agent läuft nicht",
+        "check": {
+          "title": "Update prüfen"
+        },
+        "checkUpdate": "Update prüfen",
+        "checking": "Prüfung läuft…",
+        "latestVersion": "Neueste Version",
+        "updateAvailable": "Update verfügbar!",
+        "upToDate": "Sie nutzen die neueste Version.",
+        "startUpdate": "Jetzt updaten",
+        "checkFailed": "Prüfung fehlgeschlagen.",
         "agentNotConfigured": "nicht erreichbar — der Agent läuft noch nicht (er schreibt sein Token erst beim Start)",
         "agentBadResponse": "nicht erreichbar — der Agent antwortet ungültig",
         "guide": {
