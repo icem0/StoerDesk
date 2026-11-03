@@ -88,8 +88,9 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `stats.export`         |     |     |     | x   | x   |
 | `notification.read`    | x   | x   | x   | x   | x   |
 | `notification.write`   | x   | x   | x   | x   | x   |
+| `system.update`        |     |     |     |     | x   |
 
-Totals: 37 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 37.
+Totals: 38 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 38.
 
 Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)**:
 
@@ -122,6 +123,7 @@ settings.read, settings.write
 apikey.read, apikey.write
 stats.read, stats.export
 notification.read, notification.write
+system.update
 ```
 
 This catalog is the only place where keys are added. `DEFAULT_ROLES` in the same

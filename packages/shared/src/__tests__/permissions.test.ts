@@ -72,4 +72,16 @@ describe('default roles', () => {
       }
     }
   })
+
+  it('grants the host update to the admin only', () => {
+    expect(DEFAULT_ROLES.admin).toContain(PERMISSIONS.system.update)
+
+    for (const roleKey of SYSTEM_ROLE_KEYS) {
+      if (roleKey === 'admin') {
+        continue
+      }
+
+      expect(DEFAULT_ROLES[roleKey]).not.toContain(PERMISSIONS.system.update)
+    }
+  })
 })

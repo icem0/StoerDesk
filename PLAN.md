@@ -694,7 +694,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-46  | the scheduled pull reads the effective bearer key | done    |
 | WP-M2-47  | API-key field on the BMAcloud sync page | done    |
 | WP-M2-48  | host update agent decision (ADR-0006) and work plan | done    |
-| WP-M2-49  | shared contracts: `system.update` and the update schemas | planned |
+| WP-M2-49  | shared contracts: `system.update` and the update schemas | done    |
 | WP-M2-50  | the `update_runs` table and migration `0009` | planned |
 | WP-M2-51  | the update agent service core (`apps/agent`) | planned |
 | WP-M2-52  | the update agent HTTP server | planned |

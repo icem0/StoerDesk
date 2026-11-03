@@ -1,7 +1,7 @@
 # WP-M2-49: shared contracts for the host update
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-48
 phase: 2
 context-budget: 14k tokens
@@ -34,8 +34,9 @@ interfaces:
 ## Task
 
 1. Add the permission key `system.update` to `PERMISSIONS` (new group
-   `system`), append it to `PERMISSION_KEYS` and give it to the role `admin` in
-   `DEFAULT_ROLES`. No other role gets it.
+   `system`), append it to `PERMISSION_KEYS` and give it to the role `admin`:
+   the role `admin` holds every key through `[...PERMISSION_KEYS]`, no other
+   role gets the new key.
 2. Create `packages/shared/src/schemas/update.ts` with the Zod schemas of the
    update contract:
    - `updateRunSchema`: `{ id, status: 'RUNNING'|'SUCCESS'|'PARTIAL'|'FAILED',
@@ -67,8 +68,12 @@ the new key; the seed inserts it on the next API start (the seed upserts
 
 ## Handoff
 
-- Files changed: the four files of `files-write`.
+- Files changed: the four files of `files-write` plus the tests
+  (`packages/shared/src/__tests__/update.test.ts`, the permission test and the
+  grant count of the role API test).
 - Interfaces added: `system.update`, the update schemas.
-- Verified: `npm run check`.
+- Verified: `npm run check` green (typecheck, eslint, 318 tests, i18n, wp:check);
+  the seed upserts `PERMISSION_KEYS`, so the new key exists after the next API
+  start — no migration needed.
 - Follow-up WP: WP-M2-50 (the `update_runs` table).
 - Open question: none.

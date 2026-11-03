@@ -59,6 +59,9 @@ export const PERMISSIONS = {
     read: 'notification.read',
     write: 'notification.write',
   },
+  system: {
+    update: 'system.update',
+  },
 } as const
 
 type PermissionGroups = typeof PERMISSIONS
@@ -106,6 +109,7 @@ export const PERMISSION_KEYS: PermissionKey[] = [
   PERMISSIONS.stats.export,
   PERMISSIONS.notification.read,
   PERMISSIONS.notification.write,
+  PERMISSIONS.system.update,
 ]
 
 export const SYSTEM_ROLE_KEYS = [

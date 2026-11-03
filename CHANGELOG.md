@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Permission `system.update` and the update schemas (WP-M2-49): the new key belongs
+  to the role `admin` only — a host update is a deployment decision. `@stoerdesk/shared`
+  exports the schemas of the update contract (the run row, the agent status, the answers
+  of the admin routes), so the API and the update agent speak one protocol.
 - Host update agent — decision and work plan (WP-M2-48, ADR-0006): stage 2 of the
   self-update runs the real host update (`git pull` → `docker compose up -d --build` →
   `docker image prune -f`) without giving the `api` container any host access. The agent is a
