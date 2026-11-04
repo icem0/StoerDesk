@@ -378,6 +378,25 @@ export const tickets = pgTable(
     parentTicketId: uuid('parent_ticket_id').references((): AnyPgColumn => tickets.id, {
       onDelete: 'set null',
     }),
+    /**
+     * Workflow columns of `PLAN.md` §7 — added by the hand-written migration 0006
+     * (WP-M2-19a) and declared here so the snapshot chain describes the real database.
+     */
+    assignedUserId: uuid('assigned_user_id').references(() => users.id, { onDelete: 'set null' }),
+    reviewedByUserId: uuid('reviewed_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    reviewStartedAt: timestamp('review_started_at', timestampOptions),
+    offeredToUserId: uuid('offered_to_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    offerEscalatedAt: timestamp('offer_escalated_at', timestampOptions),
+    workOrderType: text('work_order_type'),
+    workOrderNumber: text('work_order_number'),
+    acceptedAt: timestamp('accepted_at', timestampOptions),
+    firstResponseAt: timestamp('first_response_at', timestampOptions),
+    acknowledgedAt: timestamp('acknowledged_at', timestampOptions),
+    closedAt: timestamp('closed_at', timestampOptions),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
@@ -388,6 +407,7 @@ export const tickets = pgTable(
     index('tickets_object_id_reported_at_idx').on(table.objectId, table.reportedAt),
     index('tickets_status_idx').on(table.status),
     index('tickets_parent_ticket_id_idx').on(table.parentTicketId),
+    index('tickets_assigned_user_id_status_idx').on(table.assignedUserId, table.status),
     check('tickets_status_check', sql`${table.status} IN (${checkList(TICKET_STATUSES)})`),
     check('tickets_priority_check', sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`),
     check('tickets_source_check', sql`${table.source} IN (${checkList(TICKET_SOURCES)})`),
