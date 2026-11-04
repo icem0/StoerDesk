@@ -502,6 +502,37 @@ export const ticketPurges = pgTable(
 )
 
 /**
+ * Server-side receipts for replayed internal actions (`PLAN.md` §10,
+ * WP-M5-01/WP-M5-02). The `client_uuid` unique key mirrors the client
+ * outbox and makes a replayed acknowledge/comment/decline idempotent:
+ * a second insert with the same `client_uuid` is rejected.
+ */
+export const internalActionReceipts = pgTable(
+  'internal_action_receipts',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    /** Idempotency key of the offline outbox — unique over all receipts. */
+    clientUuid: text('client_uuid').notNull().unique(),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    actorUserId: uuid('actor_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    action: text('action').notNull(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => ticketEvents.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('internal_action_receipts_client_uuid_key').on(table.clientUuid),
+    index('internal_action_receipts_ticket_id_idx').on(table.ticketId),
+    index('internal_action_receipts_created_at_idx').on(table.createdAt),
+  ]
+)
+
+/**
  * Attempt log of the public report endpoint (`specs/06-report-form.md` §7.6,
  * WP-M2-07). One row per report attempt; the 10-minute suspicion window is a
  * `count(*)` over these rows, because the stack has no cache or Redis
@@ -612,6 +643,8 @@ export type TicketPhoto = typeof ticketPhotos.$inferSelect
 export type NewTicketPhoto = typeof ticketPhotos.$inferInsert
 export type TicketPurge = typeof ticketPurges.$inferSelect
 export type NewTicketPurge = typeof ticketPurges.$inferInsert
+export type InternalActionReceipt = typeof internalActionReceipts.$inferSelect
+export type NewInternalActionReceipt = typeof internalActionReceipts.$inferInsert
 export type ReportThrottle = typeof reportThrottle.$inferSelect
 export type NewReportThrottle = typeof reportThrottle.$inferInsert
 export type BmaSyncRun = typeof bmaSyncRuns.$inferSelect

@@ -1,7 +1,7 @@
 # WP-M5-02: the `internal_action_receipts` table (db)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M2-04, WP-M2-67
 phase: 5
 milestone: m5
@@ -69,8 +69,8 @@ database and skips locally without PostgreSQL (reported as unverified locally).
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/db/schema.ts`, `apps/api/src/db/migrations/0013_internal_action_receipts.sql`, `apps/api/src/db/migrations/meta/_journal.json`, `apps/api/src/db/migrations/meta/0013_snapshot.json`, `apps/api/src/db/__tests__/internalActionReceipts.integration.spec.ts`, `apps/api/src/db/__tests__/migrations.spec.ts`
+- Interfaces added: `internalActionReceipts` table (`id`, `client_uuid` unique, `ticket_id` → tickets cascade, `actor_user_id` → users set null, `action`, `event_id` → ticket_events cascade, `created_at`), types `InternalActionReceipt` / `NewInternalActionReceipt`
+- Verified: `npm run typecheck -w @stoerdesk/api`, `npm run lint`, `npm run test:run` (integration spec skips without PostgreSQL), `npm run wp:check`
 - Follow-up WP: WP-M5-03 (`m5/03-idempotent-transition-helper.md`)
 - Open question: none
