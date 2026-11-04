@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
+import { hostname as osHostname } from 'node:os'
 import { join } from 'node:path'
 
 import {
@@ -314,7 +315,7 @@ export class UpdateRunner {
       return this.composeProject
     }
 
-    const hostname = process.env.HOSTNAME ?? ''
+    const hostname = process.env.HOSTNAME ?? osHostname()
 
     if (hostname === '') {
       return null
