@@ -236,6 +236,7 @@
       "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
       "deleteFailed": "Die Meldung konnte nicht gelöscht werden."
     },
+    "offlineQueued": "Nicht versendet – wird automatisch nachgesendet ({{count}} ausstehend).",
     "header": "Vorgang",
     "field": {
       "object": "Objekt",
@@ -269,6 +270,7 @@
       "close": "Schließen",
       "reopen": "Wieder eröffnen",
       "cancel": "Stornieren",
+      "comment": "Kommentar hinzufügen",
       "delete": "Endgültig löschen"
     },
     "prompt": {
@@ -277,7 +279,10 @@
       "declineReason": "Ablehnungsgrund (mind. 5 Zeichen):",
       "reopenReason": "Wiedereröffnungsgrund (mind. 5 Zeichen):",
       "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):",
-      "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt."
+      "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt.",
+      "acknowledgeResult": "Ergebnis (fixed, partially_fixed, follow_up_required, no_fault_found):",
+      "acknowledgeNote": "Notiz (optional):",
+      "commentText": "Kommentartext:"
     }
   }
 }

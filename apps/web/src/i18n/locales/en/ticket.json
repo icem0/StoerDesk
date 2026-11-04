@@ -236,6 +236,7 @@
       "actionFailed": "The action could not be performed.",
       "deleteFailed": "The ticket could not be deleted."
     },
+    "offlineQueued": "Not sent – will be sent automatically when you are back online ({{count}} pending).",
     "header": "Ticket",
     "field": {
       "object": "Object",
@@ -269,6 +270,7 @@
       "close": "Close",
       "reopen": "Reopen",
       "cancel": "Cancel",
+      "comment": "Add comment",
       "delete": "Delete permanently"
     },
     "prompt": {
@@ -277,7 +279,10 @@
       "declineReason": "Decline reason (min. 5 chars):",
       "reopenReason": "Reopen reason (min. 5 chars):",
       "cancelReason": "Cancel reason (min. 5 chars):",
-      "deleteConfirm": "Permanently delete this ticket? All photos and the history are removed irrevocably."
+      "deleteConfirm": "Permanently delete this ticket? All photos and the history are removed irrevocably.",
+      "acknowledgeResult": "Result (fixed, partially_fixed, follow_up_required, no_fault_found):",
+      "acknowledgeNote": "Note (optional):",
+      "commentText": "Comment text:"
     }
   }
 }

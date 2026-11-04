@@ -5,9 +5,10 @@ import { useQuery } from '@tanstack/react-query'
 import type { TicketDetailResponse } from '@stoerdesk/shared'
 import { type StandardTextLocale } from '@stoerdesk/shared'
 
-import { apiFetch } from '../../lib/api'
+import { apiFetch, ApiError } from '../../lib/api'
 import { usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
+import { useInternalActions } from './use-internal-actions'
 
 /**
  * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d).
@@ -76,6 +77,7 @@ const ACTION_SEGMENTS: Record<string, string> = {
   accepted: 'accept',
   declined: 'decline',
   acknowledged: 'acknowledge',
+  commented: 'comments',
   closed: 'close',
   reopened: 'reopen',
   cancelled: 'cancel',
@@ -89,6 +91,7 @@ export function TicketDetailPage() {
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
+  const { queueAction, pendingCount } = useInternalActions(ticketNo ?? '')
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
@@ -114,8 +117,17 @@ export function TicketDetailPage() {
       void ticketQuery.refetch()
       setShowActions(false)
     } catch (error) {
-      const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
-      alert(err.code ?? t('detail.errors.actionFailed'))
+      if (error instanceof ApiError) {
+        alert(error.code ?? t('detail.errors.actionFailed'))
+        return
+      }
+      // Network error (no ApiError): queue the write offline and show the
+      // queued notice instead of an error (WP-M5-05).
+      const actionKind = (segment === 'comments'
+        ? 'comment'
+        : segment) as 'acknowledge' | 'comment' | 'decline'
+      await queueAction(actionKind, body ?? {})
+      setShowActions(false)
     }
   }
 
@@ -177,6 +189,12 @@ export function TicketDetailPage() {
           </button>
         </div>
       </div>
+
+      {pendingCount > 0 && (
+        <div className="col-span-full rounded bg-amber-900/20 border border-amber-500/30 p-3 text-sm">
+          {t('detail.offlineQueued', { count: pendingCount })}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="col-span-full">
@@ -381,7 +399,24 @@ export function TicketDetailPage() {
                 </button>
               )
             } else if (status === 'ACCEPTED') {
-              buttons.push(actionBtn('acknowledge', 'acknowledged', 'emerald-600'))
+              buttons.push(
+                <button
+                  key="acknowledge"
+                  className="rounded bg-emerald-600 px-4 py-2 text-sm text-slate-200 hover:bg-emerald-500"
+                  type="button"
+                  onClick={() => {
+                    const result = window.prompt(t('detail.prompt.acknowledgeResult'))
+                    if (result === null) return
+                    const note = window.prompt(t('detail.prompt.acknowledgeNote')) ?? ''
+                    void handleAction('acknowledged', {
+                      result: result.trim(),
+                      note: note.trim(),
+                    })
+                  }}
+                >
+                  {t('detail.action.acknowledge')}
+                </button>
+              )
             } else if (status === 'ACKNOWLEDGED') {
               buttons.push(actionBtn('close', 'closed'))
             } else if (status === 'CLOSED') {
@@ -398,6 +433,24 @@ export function TicketDetailPage() {
                   }}
                 >
                   {t('detail.action.reopen')}
+                </button>
+              )
+            }
+
+            if (status !== 'CLOSED' && status !== 'CANCELLED') {
+              buttons.push(
+                <button
+                  key="comment"
+                  className="rounded bg-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-slate-500"
+                  type="button"
+                  onClick={() => {
+                    const text = window.prompt(t('detail.prompt.commentText'))
+                    if (text !== null && text.trim() !== '') {
+                      void handleAction('commented', { text: text.trim() })
+                    }
+                  }}
+                >
+                  {t('detail.action.comment')}
                 </button>
               )
             }

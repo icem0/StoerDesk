@@ -98,17 +98,16 @@ check) are enforced by the API exactly as in the online path.
   update page blocks cache clearing while queued or sending rows exist
   (`specs/18-self-update.md` §18.2).
 
-## §9.6 Not part of phase 3
+## §9.6 Internal writes (shipped with phase 5)
 
-- Stale-while-revalidate caches for object and text-template API responses.
-- Offline reading of assigned tickets, the pool, object data and the on-call
-  calendar.
-- Offline internal writes (acknowledge, comment, decline, confirm/decline a
-  shift) and the conflict UI.
-- Claiming from the pool and accepting a swap (online only).
-
-These belong to the offline internal actions of the later phases and need their
-own work packages.
+- Offline internal writes (acknowledge, comment, decline) are shipped: the client
+  outbox queues them (`WP-M5-01`) and the server replays them idempotently through
+  `applyInternalAction` with an `internal_action_receipts` receipt per
+  `client_uuid` (`WP-M5-03`, `WP-M5-04`). The three routes answer `200`/`201` on
+  first delivery and `200` with `{ replayed: true }` on a repeat, so a replayed
+  outbox row never creates a second event.
+- Confirming or declining an on-call shift stays out of scope (phase 8).
+- Claiming from the pool and accepting a swap remain online only.
 
 ## §9.7 Acceptance references
 

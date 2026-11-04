@@ -1,7 +1,7 @@
 # WP-M5-05: the detail page queues acknowledge, comment and decline offline (web)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M5-01, WP-M5-04
 phase: 5
 milestone: m5
@@ -71,8 +71,8 @@ Expected: all green; i18n parity de/en for the new keys.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/features/tickets/use-internal-actions.ts` (new hook), `apps/web/src/features/tickets/ticket-detail-page.tsx` (queue on network failure, offline notice, comment button, acknowledge with result+note), `apps/web/src/lib/__tests__/use-internal-actions.test.ts` (new, 6 tests), `apps/web/src/i18n/locales/de/ticket.json` and `en/ticket.json` (queue texts)
+- Interfaces added: `useInternalActions(ticketNo)` → `{ queueAction(kind, payload), deliverNow(row), pendingCount, isDelivering }`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `eslint`, `vitest run` (6/6 new tests pass), `npm run i18n:check` (589/584 → 589/589 keys de/en), `npm run wp:check` (179/0)
 - Follow-up WP: WP-M5-06 (`m5/06-conflict-ui-offline-writes.md`)
 - Open question: none
