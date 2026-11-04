@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A host deploy hook for the update menu (WP-M3-15): `npm run deploy:hook`
+  listens for the webhook of the administration, checks the token and starts
+  `scripts/update.sh --yes` in the background. Setup in `docs/DEPLOYMENT.md`.
+
 - The update menu of the administration (WP-M3-10): the version badge of the
   shell header is a button for a user with `system.update` and opens a panel
   with the installed version, the installed commit, the newest upstream commit,

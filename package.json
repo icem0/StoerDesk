@@ -30,7 +30,8 @@
     "update:host": "sh scripts/update.sh",
     "spec:split": "node scripts/split-spec.mjs",
     "orchestrate": "node scripts/orchestrate.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "deploy:hook": "node scripts/deploy-hook.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

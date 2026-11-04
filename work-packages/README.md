@@ -307,6 +307,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-12  | the documentation of the new update control                        | done                    | yes     |
 | WP-M3-13  | the not found page and the error boundary of the router            | done                    | yes     |
 | WP-M3-14  | the update menu tells a lost connection from a refused webhook     | done                    | yes     |
+| WP-M3-15  | host deploy hook for the update menu (`npm run deploy:hook`)         | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |

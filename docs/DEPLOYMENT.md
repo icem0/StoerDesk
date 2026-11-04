@@ -137,6 +137,47 @@ A second start inside five minutes is refused (`429 update_rate_limited`); the
 window lives in the memory of the API process, and the deployment restarts the
 API anyway.
 
+### Deploy hook on the host
+
+The update menu needs a deploy hook that performs the update. The repository
+ships one: `scripts/deploy-hook.mjs`, started on the host (npm only, no
+dependencies). It listens for `POST /hooks/deploy`, checks the header
+`X-Deploy-Token` and starts `sh scripts/update.sh --yes` in the background,
+logging to `deploy-hook.log`.
+
+1. Create the token and put it into `.env` as `UPDATE_WEBHOOK_TOKEN`:
+
+   ```bash
+   openssl rand -hex 32
+   ```
+
+2. Set the webhook address in `.env`. The `api` container reaches the host
+   under `host.docker.internal`:
+
+   ```env
+   UPDATE_WEBHOOK_URL=http://host.docker.internal:9000/hooks/deploy
+   ```
+
+3. Start the hook on the host, in the repository folder, with the same token:
+
+   ```bash
+   DEPLOY_HOOK_TOKEN=<the token> npm run deploy:hook
+   ```
+
+   Run it as a service (systemd, or the process manager of your host) so it
+   survives a reboot. The user needs the right to run `docker`.
+
+- **The port reaches the host only from the Docker network.** Bind the hook to
+  the address of the Docker bridge (`DEPLOY_HOOK_HOST`, usually the address of
+  `docker0`, e.g. `172.17.0.1`) and not to all interfaces, and keep port 9000
+  closed to the outside. The token is the second barrier, not the first.
+- **The hook answers at once.** A request while a deployment runs is answered
+  with `409`. A deployment replaces the `api` container, so the connection of
+  the start request may end before the answer arrives (see the menu text
+  "Verbindung unterbrochen").
+- **Without a hook** leave `UPDATE_WEBHOOK_URL` empty: the check still works and
+  the start button says that no deploy webhook is configured.
+
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.
