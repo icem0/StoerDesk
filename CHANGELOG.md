@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update page shows the comparison of the built-in version and the
+  newest GitHub tag (WP-M2-74). If the agent knows no checkout version, the
+  version of the web app is used; an unparseable version is named instead of
+  claiming the latest version. The run button only appears when the agent is
+  reachable; otherwise the page carries a one-time command that discovers the
+  compose project and its directory from the running web container.
 - A panel deployment without git metadata now builds the current sources
   (WP-M2-73): the agent and `scripts/update.sh` set `IMAGE_BUILD_CONTEXT` to the
   repository URL when `.env` has no Git build context, so a synced project

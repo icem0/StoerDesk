@@ -283,6 +283,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-71  | the host update works in panel (Arcane) deployments         | done                    | yes     |
 | WP-M2-72  | the host update runs as a shell script without the agent    | done                    | yes     |
 | WP-M2-73  | the panel build fetches the current sources                 | done                    | yes     |
+| WP-M2-74  | the host update shows the version and starts with a button  | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
