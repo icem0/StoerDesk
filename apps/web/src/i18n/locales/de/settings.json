@@ -1,265 +1,269 @@
 {
-  "admin": {
-    "back": "Zurück zur Verwaltung",
-    "home": {
-      "title": "Verwaltung",
-      "hint": "Die Module der Verwaltung. Noch nicht verfügbare Module sind mit ihrer Phase gekennzeichnet.",
-      "available": "verfügbar",
-      "planned": "geplant · {{phase}}",
-      "phases": {
-        "phase6": "Phase 6",
-        "phase7": "Phase 7",
-        "phase8": "Phase 8",
-        "phase10": "Phase 10"
-      },
-      "modules": {
-        "users": {
-          "title": "Benutzerverwaltung",
-          "hint": "Benutzer anlegen, bearbeiten und Rollen zuweisen."
-        },
-        "roles": {
-          "title": "Rollenverwaltung",
-          "hint": "Rollen und ihre Berechtigungen verwalten."
-        },
-        "bmaSync": {
-          "title": "BMAcloud-Abgleich",
-          "hint": "Die Objektliste wird read-only aus der BMAcloud geholt und lässt sich dort manuell anstoßen."
-        },
-        "groups": {
-          "title": "Gruppen",
-          "hint": "Benutzergruppen für die Zuweisung von Tickets."
-        },
-        "standardTexts": {
-          "title": "Störungsarten",
-          "hint": "Die Störungsarten des Meldeformulars pflegen, archivieren und löschen."
-        },
-        "deadlines": {
-          "title": "Fristen",
-          "hint": "Reaktionsfristen je Priorität und Objektart."
-        },
-        "oncall": {
-          "title": "Bereitschaftsplan",
-          "hint": "Schichten, Bestätigungen und Schichttausch."
-        },
-        "channels": {
-          "title": "Kanäle",
-          "hint": "Benachrichtigungskanäle wie ntfy, E-Mail und Web Push."
-        },
-        "apiKeys": {
-          "title": "API-Schlüssel",
-          "hint": "Schlüssel für die Schnittstelle nach außen."
-        }
-      }
-    },
-    "update": {
-      "title": "Update",
-      "hint": "Prüft GitHub auf einen neueren Commit und startet die Bereitstellung des Stacks.",
-      "installedVersion": "Installierte Version",
-      "installedCommit": "Installierter Commit",
-      "latestCommit": "Neuester Commit",
-      "unknown": "unbekannt",
-      "checking": "Prüfung läuft …",
-      "upToDate": "Die installierte Version ist aktuell.",
-      "notComparable": "Die Versionen lassen sich nicht vergleichen.",
-      "available": "{{count}} Commits seit der installierten Version.",
-      "startUpdate": "Update starten",
-      "confirm": "Das Update jetzt starten? Der Stack wird neu gebaut und ist dabei kurz nicht erreichbar.",
-      "confirmYes": "Ja, Update starten",
-      "confirmNo": "Abbrechen",
-      "started": "Das Update wurde gestartet. Der Stack startet neu — die Seite ist gleich kurz nicht erreichbar.",
-      "close": "Schließen",
-      "errors": {
-        "session_invalid": "Die Sitzung ist abgelaufen.",
-        "forbidden": "Für das Update fehlt die Berechtigung system.update.",
-        "update_not_configured": "Es ist kein Repository konfiguriert.",
-        "update_check_failed": "GitHub ist nicht erreichbar.",
-        "update_github_rate_limited": "GitHub hat die Anfrage gedrosselt.",
-        "update_no_update_available": "Es ist kein Update verfügbar.",
-        "update_webhook_not_configured": "Es ist kein Deploy-Webhook konfiguriert.",
-        "update_webhook_failed": "Der Deploy-Webhook hat die Anfrage abgelehnt.",
-        "update_rate_limited": "Es wurde vor Kurzem ein Update gestartet.",
-        "unknown": "Das Update konnte nicht gestartet werden."
-      }
-    },
+ "admin": {
+  "back": "Zurück zur Verwaltung",
+  "home": {
+   "title": "Verwaltung",
+   "hint": "Die Module der Verwaltung. Noch nicht verfügbare Module sind mit ihrer Phase gekennzeichnet.",
+   "available": "verfügbar",
+   "planned": "geplant · {{phase}}",
+   "phases": {
+    "phase6": "Phase 6",
+    "phase7": "Phase 7",
+    "phase8": "Phase 8",
+    "phase10": "Phase 10"
+   },
+   "modules": {
     "users": {
-      "title": "Benutzerverwaltung",
-      "loading": "Lädt …",
-      "sessionNotice": "Die Benutzerverwaltung benötigt eine gültige Anmeldung.",
-      "forbiddenNotice": "Keine Berechtigung für die Benutzerverwaltung.",
-      "table": {
-        "email": "E-Mail",
-        "locale": "Sprache",
-        "active": "Aktiv",
-        "roles": "Rollen",
-        "actions": "Aktionen"
-      },
-      "active": "aktiv",
-      "inactive": "inaktiv",
-      "createTitle": "Benutzer anlegen",
-      "editTitle": "Benutzer bearbeiten",
-      "create": "Anlegen",
-      "edit": "Bearbeiten",
-      "save": "Speichern",
-      "fields": {
-        "email": "E-Mail",
-        "password": "Passwort",
-        "passwordNew": "Neues Passwort (optional)",
-        "locale": "Sprache",
-        "activeLabel": "Aktiv",
-        "rolesLabel": "Rollen"
-      },
-      "locales": {
-        "de": "Deutsch",
-        "en": "English"
-      },
-      "errors": {
-        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
-        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
-        "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
-        "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
-        "last_admin": "Der letzte aktive Administrator darf nicht deaktiviert oder ohne Rolle gespeichert werden.",
-        "unknown_role_key": "Unbekannte Rolle in der Auswahl.",
-        "unknown": "Speichern fehlgeschlagen."
-      }
+     "title": "Benutzerverwaltung",
+     "hint": "Benutzer anlegen, bearbeiten und Rollen zuweisen."
     },
     "roles": {
-      "title": "Rollenverwaltung",
-      "loading": "Lädt …",
-      "sessionNotice": "Die Rollenverwaltung benötigt eine gültige Anmeldung.",
-      "forbiddenNotice": "Keine Berechtigung für die Rollenverwaltung.",
-      "systemHint": "Systemrollen stammen aus dem Seed und sind schreibgeschützt.",
-      "table": {
-        "key": "Schlüssel",
-        "kind": "Art",
-        "permissions": "Berechtigungen",
-        "users": "Benutzer",
-        "actions": "Aktionen"
-      },
-      "system": "System",
-      "custom": "benutzerdefiniert",
-      "readOnly": "schreibgeschützt",
-      "createTitle": "Rolle anlegen",
-      "editTitle": "Rolle {{key}} bearbeiten",
-      "create": "Anlegen",
-      "edit": "Bearbeiten",
-      "save": "Speichern",
-      "delete": "Löschen",
-      "fields": {
-        "key": "Schlüssel",
-        "permissionsLabel": "Berechtigungen"
-      },
-      "errors": {
-        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
-        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
-        "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
-        "role_not_found": "Rolle nicht gefunden.",
-        "role_key_taken": "Dieser Rollenschlüssel ist bereits vergeben.",
-        "system_role_protected": "Systemrollen sind geschützt – ihre Rechte setzt der Seed.",
-        "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
-        "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
-        "unknown": "Speichern fehlgeschlagen."
-      }
+     "title": "Rollenverwaltung",
+     "hint": "Rollen und ihre Berechtigungen verwalten."
     },
-    "textTemplates": {
-      "title": "Störungsarten",
-      "hint": "Die Auswahl der Störungsarten im Meldeformular. Archivierte Arten bleiben an bestehenden Vorgängen sichtbar, werden aber nicht mehr angeboten. Löschen ist nur möglich, solange kein Vorgang die Art verwendet.",
-      "loading": "Lädt …",
-      "sessionNotice": "Die Störungsarten-Verwaltung benötigt eine gültige Anmeldung.",
-      "forbiddenNotice": "Keine Berechtigung für die Störungsarten-Verwaltung.",
-      "active": "aktiv",
-      "archived": "archiviert",
-      "createTitle": "Störungsart anlegen",
-      "editTitle": "Störungsart {{key}} bearbeiten",
-      "create": "Anlegen",
-      "edit": "Bearbeiten",
-      "save": "Speichern",
-      "cancel": "Abbrechen",
-      "archive": "Archivieren",
-      "unarchive": "Reaktivieren",
-      "delete": "Löschen",
-      "deleteBlocked": "Wird von Vorgängen verwendet",
-      "fields": {
-        "de": "Deutscher Text",
-        "en": "Englischer Text"
-      },
-      "table": {
-        "key": "Schlüssel",
-        "de": "Deutsch",
-        "en": "Englisch",
-        "status": "Status",
-        "usage": "Vorgänge",
-        "actions": "Aktionen"
-      },
-      "errors": {
-        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
-        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
-        "invalid_request": "Eingabe ungültig – bitte beide Texte ausfüllen.",
-        "text_template_not_found": "Störungsart nicht gefunden.",
-        "text_template_in_use": "Die Störungsart wird noch von Vorgängen verwendet und kann nicht gelöscht werden.",
-        "unknown": "Speichern fehlgeschlagen."
-      }
+    "bmaSync": {
+     "title": "BMAcloud-Abgleich",
+     "hint": "Die Objektliste wird read-only aus der BMAcloud geholt und lässt sich dort manuell anstoßen."
     },
-    "bma": {
-      "title": "BMAcloud-Abgleich",
-      "hint": "Die Objektliste wird read-only aus der BMAcloud geholt. Ein Abgleich überschreibt Name und Anschrift extern gepflegter Objekte; Notizen, Kontaktdaten und QR-Codes bleiben lokal. Objekte, die in der BMAcloud fehlen, werden deaktiviert, nie gelöscht.",
-      "loading": "Lädt …",
-      "sessionNotice": "Der BMAcloud-Abgleich benötigt eine gültige Anmeldung.",
-      "forbiddenNotice": "Keine Berechtigung für den BMAcloud-Abgleich.",
-      "runNow": "Jetzt abgleichen",
-      "running": "Abgleich läuft …",
-      "save": "Speichern",
-      "saved": "Zeitplan gespeichert.",
-      "noRuns": "Noch kein Abgleich durchgeführt.",
-      "noConflicts": "Der letzte Abgleich hatte keine Konflikte.",
-      "noDetail": "–",
-      "notFinished": "läuft noch",
-      "enabled": "Automatischer Abgleich aktiv",
-      "cron": "Cron-Ausdruck",
-      "scheduleTitle": "Zeitplan",
-      "scheduleHint": "Fünf Felder: Minute Stunde Tag Monat Wochentag. Ohne gespeicherten Wert gilt BMA_SYNC_ENABLED / BMA_SYNC_CRON aus der Umgebung.",
-      "credentialsTitle": "API-Schlüssel",
-      "credentialsHint": "Der Schlüssel wird nur gesetzt und niemals zurückgegeben. Ohne gespeicherten Wert gilt BMA_API_KEY aus der Umgebung.",
-      "credentialsSourceDb": "Der API-Schlüssel ist in dieser Installation gespeichert.",
-      "credentialsSourceEnv": "Der API-Schlüssel kommt aus der Umgebung (BMA_API_KEY).",
-      "credentialsSourceNone": "Es ist kein API-Schlüssel gesetzt – der Abgleich ist nicht möglich.",
-      "credentialsLabel": "API-Schlüssel der BMAcloud",
-      "credentialsSave": "Schlüssel speichern",
-      "credentialsRemove": "Gespeicherten Schlüssel löschen",
-      "credentialsSaved": "API-Schlüssel gespeichert.",
-      "credentialsRemoved": "Gespeicherter API-Schlüssel gelöscht.",
-      "runsTitle": "Letzte Abgleiche",
-      "conflictsTitle": "Konflikte des letzten Abgleichs",
-      "status": {
-        "RUNNING": "läuft",
-        "SUCCESS": "erfolgreich",
-        "PARTIAL": "teilweise",
-        "FAILED": "fehlgeschlagen"
-      },
-      "table": {
-        "started": "Gestartet",
-        "finished": "Beendet",
-        "status": "Status",
-        "total": "Gesamt",
-        "created": "Angelegt",
-        "updated": "Aktualisiert",
-        "unchanged": "Unverändert",
-        "deactivated": "Deaktiviert"
-      },
-      "conflicts": {
-        "code": "Konflikt",
-        "objectNo": "Objektnummer",
-        "aid": "Anlagen-ID",
-        "detail": "Detail"
-      },
-      "errors": {
-        "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
-        "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
-        "invalid_request": "Eingabe ungültig – bitte den Cron-Ausdruck prüfen.",
-        "bma_not_configured": "BMAcloud ist nicht konfiguriert – es ist kein API-Schlüssel gesetzt. Bitte in das Feld „API-Schlüssel der BMAcloud“ tragen.",
-        "bma_request_failed": "Die Anfrage an BMAcloud ist fehlgeschlagen.",
-        "bma_bad_response": "BMAcloud hat eine unerwartete Antwort gesendet.",
-        "unknown": "Abgleich fehlgeschlagen."
-      }
+    "groups": {
+     "title": "Gruppen",
+     "hint": "Benutzergruppen für die Zuweisung von Tickets."
+    },
+    "standardTexts": {
+     "title": "Störungsarten",
+     "hint": "Die Störungsarten des Meldeformulars pflegen, archivieren und löschen."
+    },
+    "deadlines": {
+     "title": "Fristen",
+     "hint": "Reaktionsfristen je Priorität und Objektart."
+    },
+    "oncall": {
+     "title": "Bereitschaftsplan",
+     "hint": "Schichten, Bestätigungen und Schichttausch."
+    },
+    "channels": {
+     "title": "Kanäle",
+     "hint": "Benachrichtigungskanäle wie ntfy, E-Mail und Web Push."
+    },
+    "apiKeys": {
+     "title": "API-Schlüssel",
+     "hint": "Schlüssel für die Schnittstelle nach außen."
     }
+   }
+  },
+  "update": {
+   "title": "Update",
+   "hint": "Prüft GitHub auf einen neueren Commit und startet die Bereitstellung des Stacks.",
+   "installedVersion": "Installierte Version",
+   "installedCommit": "Installierter Commit",
+   "latestCommit": "Neuester Commit",
+   "unknown": "unbekannt",
+   "checking": "Prüfung läuft …",
+   "upToDate": "Die installierte Version ist aktuell.",
+   "notComparable": "Die Versionen lassen sich nicht vergleichen.",
+   "available": "{{count}} Commits seit der installierten Version.",
+   "startUpdate": "Update starten",
+   "confirm": "Das Update jetzt starten? Der Stack wird neu gebaut und ist dabei kurz nicht erreichbar.",
+   "confirmYes": "Ja, Update starten",
+   "confirmNo": "Abbrechen",
+   "started": "Das Update wurde gestartet. Der Stack startet neu — die Seite ist gleich kurz nicht erreichbar.",
+   "close": "Schließen",
+   "errors": {
+    "session_invalid": "Die Sitzung ist abgelaufen.",
+    "forbidden": "Für das Update fehlt die Berechtigung system.update.",
+    "update_not_configured": "Es ist kein Repository konfiguriert.",
+    "update_check_failed": "GitHub ist nicht erreichbar.",
+    "update_github_rate_limited": "GitHub hat die Anfrage gedrosselt.",
+    "update_no_update_available": "Es ist kein Update verfügbar.",
+    "update_webhook_not_configured": "Es ist kein Deploy-Webhook konfiguriert.",
+    "update_webhook_failed": "Der Deploy-Webhook hat die Anfrage abgelehnt.",
+    "update_rate_limited": "Es wurde vor Kurzem ein Update gestartet.",
+    "unknown": "Das Update konnte nicht gestartet werden.",
+    "connection": "Die Verbindung wurde unterbrochen — der Stack startet vermutlich neu. Lade die Seite nach ein paar Sekunden neu.",
+    "http": "Das Update konnte nicht gestartet werden (HTTP {{status}}).",
+    "checkFailed": "Die Update-Prüfung ist fehlgeschlagen."
+   },
+   "reload": "Seite neu laden"
+  },
+  "users": {
+   "title": "Benutzerverwaltung",
+   "loading": "Lädt …",
+   "sessionNotice": "Die Benutzerverwaltung benötigt eine gültige Anmeldung.",
+   "forbiddenNotice": "Keine Berechtigung für die Benutzerverwaltung.",
+   "table": {
+    "email": "E-Mail",
+    "locale": "Sprache",
+    "active": "Aktiv",
+    "roles": "Rollen",
+    "actions": "Aktionen"
+   },
+   "active": "aktiv",
+   "inactive": "inaktiv",
+   "createTitle": "Benutzer anlegen",
+   "editTitle": "Benutzer bearbeiten",
+   "create": "Anlegen",
+   "edit": "Bearbeiten",
+   "save": "Speichern",
+   "fields": {
+    "email": "E-Mail",
+    "password": "Passwort",
+    "passwordNew": "Neues Passwort (optional)",
+    "locale": "Sprache",
+    "activeLabel": "Aktiv",
+    "rolesLabel": "Rollen"
+   },
+   "locales": {
+    "de": "Deutsch",
+    "en": "English"
+   },
+   "errors": {
+    "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+    "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+    "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+    "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
+    "last_admin": "Der letzte aktive Administrator darf nicht deaktiviert oder ohne Rolle gespeichert werden.",
+    "unknown_role_key": "Unbekannte Rolle in der Auswahl.",
+    "unknown": "Speichern fehlgeschlagen."
+   }
+  },
+  "roles": {
+   "title": "Rollenverwaltung",
+   "loading": "Lädt …",
+   "sessionNotice": "Die Rollenverwaltung benötigt eine gültige Anmeldung.",
+   "forbiddenNotice": "Keine Berechtigung für die Rollenverwaltung.",
+   "systemHint": "Systemrollen stammen aus dem Seed und sind schreibgeschützt.",
+   "table": {
+    "key": "Schlüssel",
+    "kind": "Art",
+    "permissions": "Berechtigungen",
+    "users": "Benutzer",
+    "actions": "Aktionen"
+   },
+   "system": "System",
+   "custom": "benutzerdefiniert",
+   "readOnly": "schreibgeschützt",
+   "createTitle": "Rolle anlegen",
+   "editTitle": "Rolle {{key}} bearbeiten",
+   "create": "Anlegen",
+   "edit": "Bearbeiten",
+   "save": "Speichern",
+   "delete": "Löschen",
+   "fields": {
+    "key": "Schlüssel",
+    "permissionsLabel": "Berechtigungen"
+   },
+   "errors": {
+    "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+    "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+    "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+    "role_not_found": "Rolle nicht gefunden.",
+    "role_key_taken": "Dieser Rollenschlüssel ist bereits vergeben.",
+    "system_role_protected": "Systemrollen sind geschützt – ihre Rechte setzt der Seed.",
+    "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
+    "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
+    "unknown": "Speichern fehlgeschlagen."
+   }
+  },
+  "textTemplates": {
+   "title": "Störungsarten",
+   "hint": "Die Auswahl der Störungsarten im Meldeformular. Archivierte Arten bleiben an bestehenden Vorgängen sichtbar, werden aber nicht mehr angeboten. Löschen ist nur möglich, solange kein Vorgang die Art verwendet.",
+   "loading": "Lädt …",
+   "sessionNotice": "Die Störungsarten-Verwaltung benötigt eine gültige Anmeldung.",
+   "forbiddenNotice": "Keine Berechtigung für die Störungsarten-Verwaltung.",
+   "active": "aktiv",
+   "archived": "archiviert",
+   "createTitle": "Störungsart anlegen",
+   "editTitle": "Störungsart {{key}} bearbeiten",
+   "create": "Anlegen",
+   "edit": "Bearbeiten",
+   "save": "Speichern",
+   "cancel": "Abbrechen",
+   "archive": "Archivieren",
+   "unarchive": "Reaktivieren",
+   "delete": "Löschen",
+   "deleteBlocked": "Wird von Vorgängen verwendet",
+   "fields": {
+    "de": "Deutscher Text",
+    "en": "Englischer Text"
+   },
+   "table": {
+    "key": "Schlüssel",
+    "de": "Deutsch",
+    "en": "Englisch",
+    "status": "Status",
+    "usage": "Vorgänge",
+    "actions": "Aktionen"
+   },
+   "errors": {
+    "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+    "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+    "invalid_request": "Eingabe ungültig – bitte beide Texte ausfüllen.",
+    "text_template_not_found": "Störungsart nicht gefunden.",
+    "text_template_in_use": "Die Störungsart wird noch von Vorgängen verwendet und kann nicht gelöscht werden.",
+    "unknown": "Speichern fehlgeschlagen."
+   }
+  },
+  "bma": {
+   "title": "BMAcloud-Abgleich",
+   "hint": "Die Objektliste wird read-only aus der BMAcloud geholt. Ein Abgleich überschreibt Name und Anschrift extern gepflegter Objekte; Notizen, Kontaktdaten und QR-Codes bleiben lokal. Objekte, die in der BMAcloud fehlen, werden deaktiviert, nie gelöscht.",
+   "loading": "Lädt …",
+   "sessionNotice": "Der BMAcloud-Abgleich benötigt eine gültige Anmeldung.",
+   "forbiddenNotice": "Keine Berechtigung für den BMAcloud-Abgleich.",
+   "runNow": "Jetzt abgleichen",
+   "running": "Abgleich läuft …",
+   "save": "Speichern",
+   "saved": "Zeitplan gespeichert.",
+   "noRuns": "Noch kein Abgleich durchgeführt.",
+   "noConflicts": "Der letzte Abgleich hatte keine Konflikte.",
+   "noDetail": "–",
+   "notFinished": "läuft noch",
+   "enabled": "Automatischer Abgleich aktiv",
+   "cron": "Cron-Ausdruck",
+   "scheduleTitle": "Zeitplan",
+   "scheduleHint": "Fünf Felder: Minute Stunde Tag Monat Wochentag. Ohne gespeicherten Wert gilt BMA_SYNC_ENABLED / BMA_SYNC_CRON aus der Umgebung.",
+   "credentialsTitle": "API-Schlüssel",
+   "credentialsHint": "Der Schlüssel wird nur gesetzt und niemals zurückgegeben. Ohne gespeicherten Wert gilt BMA_API_KEY aus der Umgebung.",
+   "credentialsSourceDb": "Der API-Schlüssel ist in dieser Installation gespeichert.",
+   "credentialsSourceEnv": "Der API-Schlüssel kommt aus der Umgebung (BMA_API_KEY).",
+   "credentialsSourceNone": "Es ist kein API-Schlüssel gesetzt – der Abgleich ist nicht möglich.",
+   "credentialsLabel": "API-Schlüssel der BMAcloud",
+   "credentialsSave": "Schlüssel speichern",
+   "credentialsRemove": "Gespeicherten Schlüssel löschen",
+   "credentialsSaved": "API-Schlüssel gespeichert.",
+   "credentialsRemoved": "Gespeicherter API-Schlüssel gelöscht.",
+   "runsTitle": "Letzte Abgleiche",
+   "conflictsTitle": "Konflikte des letzten Abgleichs",
+   "status": {
+    "RUNNING": "läuft",
+    "SUCCESS": "erfolgreich",
+    "PARTIAL": "teilweise",
+    "FAILED": "fehlgeschlagen"
+   },
+   "table": {
+    "started": "Gestartet",
+    "finished": "Beendet",
+    "status": "Status",
+    "total": "Gesamt",
+    "created": "Angelegt",
+    "updated": "Aktualisiert",
+    "unchanged": "Unverändert",
+    "deactivated": "Deaktiviert"
+   },
+   "conflicts": {
+    "code": "Konflikt",
+    "objectNo": "Objektnummer",
+    "aid": "Anlagen-ID",
+    "detail": "Detail"
+   },
+   "errors": {
+    "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+    "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+    "invalid_request": "Eingabe ungültig – bitte den Cron-Ausdruck prüfen.",
+    "bma_not_configured": "BMAcloud ist nicht konfiguriert – es ist kein API-Schlüssel gesetzt. Bitte in das Feld „API-Schlüssel der BMAcloud“ tragen.",
+    "bma_request_failed": "Die Anfrage an BMAcloud ist fehlgeschlagen.",
+    "bma_bad_response": "BMAcloud hat eine unerwartete Antwort gesendet.",
+    "unknown": "Abgleich fehlgeschlagen."
+   }
   }
+ }
 }

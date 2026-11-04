@@ -94,6 +94,14 @@ itself is never part of the application.
 - The route answers `202 { "started": true }` immediately. It never waits for
   the end of the deployment: the target rebuilds the stack, so the API is gone
   while the deployment runs.
+- **The webhook target answers immediately** and starts the deployment in the
+  background. The API waits at most ten seconds for the answer; a target that
+  deploys synchronously is answered with `502 update_webhook_failed`.
+- **The answer can be lost.** The deployment replaces the API container, so the
+  connection of the request may die before the `202` reaches the browser. The
+  menu tells that case from a refused webhook: a lost connection means that
+  the deployment has probably started, a refused webhook is an error of the
+  configuration.
 - A second start within five minutes is refused with `429 update_rate_limited`.
   The cooldown lives in the memory of the API process; the deployment restarts
   the API anyway, so a new window starts with it.

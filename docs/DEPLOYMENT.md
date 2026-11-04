@@ -112,6 +112,13 @@ immediately, because the deployment replaces the API container. The hook runs
 the deployment — for example the deploy hook of a panel, or a small script on
 the host that calls `scripts/update.sh`.
 
+**The hook must answer immediately** and start the deployment in the background.
+The API waits at most ten seconds for the answer; a hook that deploys
+synchronously is reported as a refused webhook. The deployment replaces the
+API container, so the connection of the request can die before the answer
+arrives — the menu then says that the connection was interrupted and that the
+stack is probably restarting. That is the normal case of a fast deployment.
+
 | Variable               | Meaning                                                           |
 | ---------------------- | ----------------------------------------------------------------- |
 | `GITHUB_REPO`          | `owner/repo` of the upstream repository; empty disables the check |

@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The update menu tells the failures of a start apart (WP-M3-14): a refused
+  webhook, an unknown answer of the API (with its HTTP status) and a **lost
+  connection** — the last one is the normal case of a deployment that replaces
+  the API container, so the panel says that the stack is probably restarting
+  and offers a reload of the page.
 - The router shows a page of the application instead of the developer page of
   React Router (WP-M3-13): an unknown address gets a "not found" page with a
   link to the dashboard, an unexpected error gets an error page, and the

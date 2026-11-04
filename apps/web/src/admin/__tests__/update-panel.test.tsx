@@ -173,4 +173,59 @@ describe('UpdatePanel', () => {
 
     expect(await screen.findByText('Es wurde vor Kurzem ein Update gestartet.')).toBeTruthy()
   })
+
+  it('names the status of an unknown answer of the API', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        fetchCalls.push({ url, method: 'GET' })
+
+        if (url.includes('/v1/admin/update/start')) {
+          return Response.json({ statusCode: 500, error: 'Internal Server Error' }, { status: 500 })
+        }
+
+        return Response.json(checkPayload())
+      }),
+    )
+
+    renderPanel()
+
+    const button = await screen.findByRole('button', { name: /Update starten/ })
+
+    fireEvent.click(button)
+    fireEvent.click(await screen.findByRole('button', { name: /Ja, Update starten/ }))
+
+    expect(
+      await screen.findByText('Das Update konnte nicht gestartet werden (HTTP 500).'),
+    ).toBeTruthy()
+  })
+
+  it('treats a lost connection as a restarting stack', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        fetchCalls.push({ url, method: 'GET' })
+
+        if (url.includes('/v1/admin/update/start')) {
+          throw new TypeError('Failed to fetch')
+        }
+
+        return Response.json(checkPayload())
+      }),
+    )
+
+    renderPanel()
+
+    const button = await screen.findByRole('button', { name: /Update starten/ })
+
+    fireEvent.click(button)
+    fireEvent.click(await screen.findByRole('button', { name: /Ja, Update starten/ }))
+
+    expect(await screen.findByText(/Die Verbindung wurde unterbrochen/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Seite neu laden/ })).toBeTruthy()
+  })
 })

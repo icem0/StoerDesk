@@ -32,21 +32,39 @@ const HANDLED_ERROR_CODES = [
   'update_rate_limited',
 ] as const
 
-/** The code of an error of the API; `unknown` for anything unexpected. */
-function errorCode(error: unknown): string {
+/**
+ * The text of a failed start.
+ *
+ * Three cases are told apart: the API answered with a known code, the API
+ * answered with something unknown (its status is named, so a failure of the
+ * API stays visible), and **no answer arrived at all**. The last case is the
+ * normal one of a deployment that replaces the API container: the webhook
+ * starts the rebuild and the connection dies with the old container — the
+ * update has probably started.
+ */
+function errorMessage(t: TFunction<'settings'>, error: unknown): string {
+  if (!(error instanceof ApiError)) {
+    return t('admin.update.errors.connection')
+  }
+
+  if (error.code !== undefined && (HANDLED_ERROR_CODES as readonly string[]).includes(error.code)) {
+    return t(`admin.update.errors.${error.code}`)
+  }
+
+  return t('admin.update.errors.http', { status: error.status })
+}
+
+/** The text of a failed check: the API or GitHub did not answer. */
+function checkErrorMessage(t: TFunction<'settings'>, error: unknown): string {
   if (
     error instanceof ApiError &&
     error.code !== undefined &&
     (HANDLED_ERROR_CODES as readonly string[]).includes(error.code)
   ) {
-    return error.code
+    return t(`admin.update.errors.${error.code}`)
   }
 
-  return 'unknown'
-}
-
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
-  return t(`admin.update.errors.${errorCode(error)}`)
+  return t('admin.update.errors.checkFailed')
 }
 
 function CloseIcon() {
@@ -126,7 +144,7 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
 
         {check.isError ? (
           <p role="alert" className="mt-3 text-amber-300">
-            {errorMessage(t, check.error)}
+            {checkErrorMessage(t, check.error)}
           </p>
         ) : null}
 
@@ -162,6 +180,18 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
           <p role="alert" className="mt-3 text-rose-300">
             {errorMessage(t, start.error)}
           </p>
+        ) : null}
+
+        {/* The stack replaces the API container: after a start the page is
+            reloaded by hand, the new version is then visible. */}
+        {started || start.isError ? (
+          <button
+            className="mt-3 w-full rounded border border-slate-600 px-4 py-2 font-medium text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            onClick={() => window.location.reload()}
+            type="button"
+          >
+            {t('admin.update.reload')}
+          </button>
         ) : null}
 
         {data?.updateAvailable === true && !started ? (

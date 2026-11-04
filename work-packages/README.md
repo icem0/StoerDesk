@@ -306,6 +306,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-11  | the removal of the update agent                                   | done                    | yes     |
 | WP-M3-12  | the documentation of the new update control                        | done                    | yes     |
 | WP-M3-13  | the not found page and the error boundary of the router            | done                    | yes     |
+| WP-M3-14  | the update menu tells a lost connection from a refused webhook     | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |
@@ -614,6 +615,11 @@ the shell header the entry point of the update menu (the page `/admin/update` is
 `update-agent`, the `agent` target of the `Dockerfile`, the keys `UPDATE_AGENT_*` and the
 volume `update-state` are gone; `scripts/update.sh` stays the manual path of the
 operator. **WP-M3-12** documents the new control.
+
+**The update menu tells the failures apart (WP-M3-14).** The deployment replaces the API container, so
+the connection of the start request can die before the answer arrives — that is the normal case of a
+fast deployment. The menu names that case separately from a refused webhook and offers a reload of
+the page; a webhook target must answer immediately and deploy in the background.
 
 **The router shows a page of the application (WP-M3-13).** The retired page `/admin/update` is
 a dead address, and every other unknown address ended in the developer page of React Router
