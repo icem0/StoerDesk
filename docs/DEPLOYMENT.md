@@ -43,7 +43,7 @@ docker compose up -d web
 | `api`          | —        | none       | Fastify API on port 3000; runs migrations on start |
 | `web`          | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
 | `backup`       | `backup` | none       | periodic `pg_dump` into the backup volume          |
-| `update-agent` | `update` | none       | host update: pull, rebuild, prune the old images   |
+| `update-agent` | `update` | none       | host update: pull, rebuild, remove old images      |
 
 The `web` container starts independently of the API: nginx resolves the API
 host per request, so the UI is reachable while the API is starting or
@@ -56,16 +56,39 @@ The default host update is a shell script on the server — no agent and no API
 access needed:
 
 ```bash
-sh scripts/update.sh          # check GitHub, pull/build, prune
+sh scripts/update.sh          # check GitHub, pull/build, clean up the images
 sh scripts/update.sh --check  # only compare the local and remote version
 sh scripts/update.sh --yes    # update without the confirmation
+sh scripts/update.sh --cleanup # only clean up images: no pull, no rebuild
+sh scripts/update.sh --gc     # additionally drop tagless images and build cache
+                              # older than STOERDESK_GC_UNTIL hours (168)
 ```
 
 The script compares the tracked `VERSION` with the newest GitHub tag, pulls a
-git checkout (`--ff-only --autostash`), runs `docker compose up -d --build` for
-the running stack and prunes the old images of the project. Running optional
-profiles such as `backup` stay enabled; the `update` profile is never touched.
-The stack is briefly unreachable during the rebuild.
+git checkout (`--ff-only --autostash`), runs
+`docker compose up -d --build --remove-orphans` for the running stack and removes
+the images this stack replaced. Running optional profiles such as `backup` stay
+enabled; the `update` profile is never touched. The stack is briefly unreachable
+during the rebuild.
+
+**Why the clean-up works from image ids.** The rebuild moves the fixed
+`:latest` tags of the built services to the new images, so the previous image of
+every service loses its name. `docker image prune` with the project label only
+finds such an image when the build wrote that label into it — it does not for a
+build from a remote build context (`IMAGE_BUILD_CONTEXT`), not for the
+`docker-compose` v1 fallback and not for an aborted build. Every update left one
+tagless `<none>` image per service on the host. The script therefore snapshots
+the image ids of its own image names (`STOERDESK_OWN_IMAGES`, by default
+`stoerdesk-api`, `stoerdesk-web`, `stoerdesk-agent`) and of the Compose default
+names of the project **before** the rebuild, and afterwards deletes by id
+whatever is neither the current image of one of those names nor the image of a
+container of this project — `docker rmi` without `-f`, so an image a container
+still holds stays. A tagged or tagless image of another project is never touched;
+`docker image prune -a` and an unscoped `docker image prune -f` are not used.
+The backlog an older version left behind goes away with `--gc`, which also prunes
+tagless images and build cache older than `STOERDESK_GC_UNTIL` hours — on a
+shared host that window includes tagless images of other projects, so it stays an
+explicit choice.
 
 In a panel deployment such as Arcane the project folder is usually no git
 checkout. The script then skips the pull and the compose build fetches the
@@ -103,7 +126,11 @@ docker compose --profile update up -d update-agent
   administration shows the result on `/admin/update`.
 - **The prune removes the dangling images** of the previous build of this
   project. `docker image prune -a` is not used: it would delete the images of
-  other projects on a shared host.
+  other projects on a shared host. That label filter alone does not see the
+  images of a build without the project label (remote build context,
+  `docker-compose` v1, aborted build); the agent follows the id-based clean-up of
+  the script in WP-M3-02b, which is why the shell script is the cleaner path
+  until then.
 - **Panels and non-git checkouts work.** When `/repo` is no git work tree (for
   example an Arcane project folder), the pull step is skipped and the compose
   build performs the update. The agent reads the compose project from its own
@@ -406,3 +433,21 @@ deployment is still running:
 docker ps --filter publish=3000      # who holds the port
 docker compose down                  # removes the old stack's containers
 ```
+
+### Disk full of `<none>` images
+
+Every rebuild leaves the previous image of `api`, `web` and `update-agent`
+without a tag on the host; an update that was interrupted does it twice. The
+clean-up of `scripts/update.sh` removes them by image id (see
+[Host update](#host-update)). For the backlog an older version left behind:
+
+```bash
+docker images -f dangling=true        # the tagless backlog
+sh scripts/update.sh --cleanup --gc   # plus tagless images and build cache
+                                      # older than STOERDESK_GC_UNTIL hours
+```
+
+Without `--gc` the script removes nothing it does not own. With `--gc` it also
+prunes the tagless images of other projects inside that window, so on a shared
+host pick the window deliberately: `STOERDESK_GC_UNTIL=720 sh scripts/update.sh
+--cleanup --gc`.

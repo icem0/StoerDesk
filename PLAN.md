@@ -725,6 +725,8 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-76   | `ticket_purges` append-only log of hard-deleted tickets | planned  |
 | WP-M2-77   | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets | planned  |
 | WP-M2-78   | "Endgültig löschen" button on the ticket detail page     | planned  |
+| WP-M3-02   | the update script removes the images it replaces          | done     |
+| WP-M3-02b  | the update agent removes the images it replaces           | planned  |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -893,6 +895,19 @@ implements the shared contracts (`system.update`, **WP-M2-49**), the `update_run
 (**WP-M2-52**), the image and the compose wiring (**WP-M2-53**, **WP-M2-53b**), the admin API
 (**WP-M2-54**), the page section (**WP-M2-55**) and the documentation (**WP-M2-56**) — one
 commit per work package. The API stays a client: it never runs `git`, `docker` or a shell.
+
+The host update in the field showed what the rebuild leaves behind, and **WP-M3-02**
+fixes it: `docker compose up -d --build` moves the fixed `:latest` tags of
+`docker-compose.yml` to the new images, so every update turned the previous image of
+`api`, `web` and `update-agent` into a tagless one, while the only cleaner was
+`docker image prune -f` with the `com.docker.compose.project` **image** label — a label
+a build from a remote build context, the `docker-compose` v1 fallback and an aborted
+build never write. `scripts/update.sh` now snapshots the image ids it owns before the
+rebuild and removes by id whatever no container of the project and no current tag needs,
+keeps the labelled prune as best effort, rebuilds with `--remove-orphans`, never prunes
+unscoped and clears an existing backlog with `--cleanup` and `--gc`
+(`STOERDESK_GC_UNTIL`). The agent still has the label-only prune; **WP-M3-02b** ports the
+id-based clean-up into it.
 
 ## 17. Work package rules for small models
 

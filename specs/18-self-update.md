@@ -92,7 +92,10 @@ update up -d update-agent`.
   3. `docker image prune -f --filter
 label=com.docker.compose.project=<project>` — the dangling images of the
      previous build of this project. `docker image prune -a` is not used: it
-     would delete the images of other projects on a shared host.
+     would delete the images of other projects on a shared host. This label
+     filter alone misses the images of a build that never carried the label
+     (remote build context, `docker-compose` v1, aborted build); the agent
+     adopts the id-based clean-up of §18.7 in WP-M3-02b.
 - The agent decides what a run is. It accepts no path, no command and no
   arguments from a request.
 - A panel deployment builds from the Git URL (`IMAGE_BUILD_CONTEXT`,
@@ -154,12 +157,33 @@ and without the agent:
 - Without `--check` it asks once (skipped with `--yes`), pulls a git work tree
   with `--ff-only --autostash`, otherwise sets the Git build context when
   `.env` has none and leaves the sources to the compose build, then runs
-  `docker compose up -d --build` for the running project.
+  `docker compose up -d --build --remove-orphans` for the running project.
 - The compose project is read from `COMPOSE_PROJECT_NAME` or the running
   containers; running optional profiles such as `backup` stay enabled and the
   `update` profile is never touched.
-- Finally it prunes the dangling images with the project label filter (plain
-  `docker image prune -f` when the project is unknown). `docker image prune -a`
-  is never used.
+- **The image clean-up (WP-M3-02).** The rebuild moves the fixed `:latest` tags
+  of `docker-compose.yml` to the new images, so the previous image of every
+  built service turns tagless. A prune that only trusts the
+  `com.docker.compose.project` **image** label misses them: that label is absent
+  for a build from a remote build context (`IMAGE_BUILD_CONTEXT`), for the
+  `docker-compose` v1 fallback and for an aborted build — and every one of those
+  updates left a `<none>` image on the host. The script therefore snapshots the
+  image ids it owns **before** the rebuild — the three `image:` names of
+  `docker-compose.yml` (overridable with `STOERDESK_OWN_IMAGES`) plus the Compose
+  default name patterns `<project>-*` and `<project>_*` — and afterwards removes
+  by id every snapshotted image that is neither the current image of one of those
+  names nor the image of a container of this compose project. `docker rmi`
+  without `-f`: an image a container still holds stays. The project-labelled
+  `docker image prune -f` stays as an additional best-effort step. The clean-up
+  runs after a failed rebuild too, because that attempt already moved the tags.
+- `docker image prune -a` and an unscoped `docker image prune -f` are never used:
+  without a known project the name-based clean-up is the whole clean-up, so the
+  images of other projects on a shared host stay untouched.
+- `--cleanup` runs only the clean-up (no version check, no pull, no rebuild).
+  `--gc` additionally prunes tagless images and the build cache older than
+  `STOERDESK_GC_UNTIL` hours (default 168): `docker image prune -f` and
+  `docker builder prune -f`, each with `--filter until=<n>h`. That is the opt-in
+  way to clear the backlog an older version left behind, and on a shared host it
+  also removes tagless images of other projects inside that window.
 - The script needs `docker` and `sh`; `git`, `curl`/`wget` or `node` are used
   when present. It never writes a credential and never edits `.env`.

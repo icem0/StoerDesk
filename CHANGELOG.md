@@ -176,6 +176,25 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The host update script no longer leaves an untagged image behind on every
+  update (WP-M3-02). `docker compose up -d --build` moves the fixed
+  `stoerdesk-{api,web,agent}:latest` tags to the new images, so the previous
+  image of each service turns tagless; the only cleaner was `docker image prune
+  -f --filter label=com.docker.compose.project=<project>`, and that filter finds
+  a tagless image only when the build wrote the label into it. Builds from a
+  remote build context (`IMAGE_BUILD_CONTEXT`, the Arcane path), the
+  `docker-compose` v1 fallback the script accepts and every aborted build carry
+  no such label, so each of them left a `<none>` image on the host.
+  `scripts/update.sh` now snapshots the image ids it owns before the rebuild —
+  `STOERDESK_OWN_IMAGES` plus the Compose default names of the project — and
+  afterwards removes by id whatever is neither the current image of one of its
+  names nor the image of a container of this project (`docker rmi` without `-f`,
+  so an image still held by a container stays), also after a failed rebuild. It
+  adds `--remove-orphans`, never runs an unscoped `docker image prune -f`, and
+  gains `--cleanup` (no pull, no rebuild) plus `--gc` (`STOERDESK_GC_UNTIL`,
+  default 168 h) for the backlog of tagless images and build cache an older
+  version left behind. The update agent keeps its label-only prune until
+  WP-M3-02b ports this to it.
 - The background-sync queue of the service worker matches the public report path
   through its API base (WP-M3-01): the route compared the bare `/v1/public/tickets`
   while the app requests `/api/v1/public/tickets`, so the queue never matched. The

@@ -14,7 +14,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline report and sync closure (background-sync path)               | 1   |
+| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 3   |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
@@ -290,6 +290,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-77  | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets  | planned                 | yes     |
 | WP-M2-78  | "Endgültig löschen" button on the ticket detail page      | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                | done                    | yes     |
+| WP-M3-02  | the update script removes the images it replaces            | done                    | yes     |
+| WP-M3-02b | the update agent removes the images it replaces             | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -508,6 +510,17 @@ ticket after reconnect". It found one defect: the Workbox background-sync route 
 matched. **WP-M3-01** fixes the predicate (`apps/web/src/lib/sw-routes.ts`), covers it with
 a unit test and keeps the outbox, the online path and the API unchanged. The offline E2E
 passes against a real throwaway database and a real Chromium.
+
+**The host update in the field (WP-M3-02).** Every rebuild moves the fixed `:latest` tags
+of `docker-compose.yml` to the new images, so the previous image of each built service
+turns tagless. `scripts/update.sh` removed them only through `docker image prune -f` with
+the `com.docker.compose.project` **image** label — a label a build from a remote build
+context, the `docker-compose` v1 fallback and an aborted build never write, so every such
+update left a `<none>` image on the host. The script now snapshots the image ids it owns
+before the rebuild and removes by id whatever no container of the project and no current
+tag needs, never prunes unscoped, rebuilds with `--remove-orphans` and clears an existing
+backlog with `--cleanup` and `--gc`. The update agent still prunes by label alone;
+**WP-M3-02b** ports the id-based clean-up into it.
 
 ## Validation
 
