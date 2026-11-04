@@ -1,7 +1,7 @@
 # WP-M3-09: the deployment configuration of the update control
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-08
 phase: 3
 milestone: m3
@@ -63,8 +63,13 @@ environment and the extra host; the quality gates stay green.
 
 ## Handoff
 
-- Files changed: `Dockerfile`, `docker-compose.yml`, `.env.example`
-- Interfaces added: the build argument, the environment keys, the extra host
-- Verified: pending
+- Files changed: `Dockerfile`, `docker-compose.yml`, `.env.example`,
+  `docs/REPO-MAP.md`, `CHANGELOG.md`
+- Interfaces added: the build argument `GIT_COMMIT`, the environment keys of
+  §18.5, `extra_hosts: host.docker.internal:host-gateway`
+- Verified: `npm run check` green; the compose file parses and carries the
+  build argument, the environment and the extra host — `docker compose config`
+  itself is unverified, because this development container has no Docker
+  daemon
 - Follow-up WP: WP-M3-11 (the removal of the agent)
 - Open question: none

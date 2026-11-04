@@ -41,6 +41,10 @@ services:
     build:
       context: ${IMAGE_BUILD_CONTEXT:-.}
       target: api
+      args:
+        # The commit the image is built from; the API compares it with the
+        # newest commit of the branch (specs/18-self-update.md §18.3).
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     image: stoerdesk-api:latest
     restart: unless-stopped
     env_file:
@@ -65,10 +69,14 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3080}
       UPLOAD_DIR: /data/uploads
       UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
-      # The host update agent (profile "update"). Without a token the API
-      # answers that the agent is not configured; the token is never logged.
-      UPDATE_AGENT_URL: ${UPDATE_AGENT_URL:-http://update-agent:8080}
-      UPDATE_AGENT_TOKEN: ${UPDATE_AGENT_TOKEN:-}
+      # The update control (ADR-0007): the API checks GitHub for a newer commit
+      # and starts the deployment through the webhook. The tokens stay in this
+      # container; they are never sent to the browser and never logged.
+      GITHUB_REPO: ${GITHUB_REPO:-}
+      GITHUB_BRANCH: ${GITHUB_BRANCH:-main}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      UPDATE_WEBHOOK_URL: ${UPDATE_WEBHOOK_URL:-}
+      UPDATE_WEBHOOK_TOKEN: ${UPDATE_WEBHOOK_TOKEN:-}
       TZ: ${TZ:-Europe/Berlin}
     depends_on:
       db:
@@ -78,6 +86,10 @@ services:
     # docker-compose.debug.yml.
     expose:
       - '${API_PORT:-3000}'
+    # A deploy hook that runs on the host of the stack is reachable under this
+    # name (specs/18-self-update.md §18.5).
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - uploads:/data/uploads
       # The state volume of the update agent, read-only: the API reads the

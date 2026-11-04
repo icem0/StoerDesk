@@ -21,6 +21,11 @@ RUN npm run build --workspace @stoerdesk/api
 FROM node:22-alpine AS api
 WORKDIR /app
 ENV NODE_ENV=production
+# The installed commit of the image. The compose file passes it as a build
+# argument; without it the API reads the version of the tracked `VERSION` file
+# that the image carries (specs/18-self-update.md §18.3).
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=$GIT_COMMIT
 COPY package.json package-lock.json* ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared/package.json packages/shared/package.json
@@ -28,6 +33,8 @@ COPY packages/shared/package.json packages/shared/package.json
 # repository — neither exists in the runtime image.
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=api-build /app/apps/api/dist apps/api/dist
+# The version of record of this commit; the fallback of the installed version.
+COPY VERSION ./VERSION
 # Uploads are written by the unprivileged `node` user.
 RUN mkdir -p /data/uploads && chown -R node:node /data
 USER node

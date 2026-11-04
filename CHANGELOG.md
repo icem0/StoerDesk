@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The stack carries the configuration of the update control (WP-M3-09): the
+  `api` image takes the build argument `GIT_COMMIT` and the tracked `VERSION`
+  file, the compose file passes the keys `GITHUB_REPO`, `GITHUB_BRANCH`,
+  `GITHUB_TOKEN`, `UPDATE_WEBHOOK_URL` and `UPDATE_WEBHOOK_TOKEN` to the API
+  and gives it `host.docker.internal:host-gateway`, so a deploy hook on the
+  host is reachable. `.env.example` documents the keys.
+
 - The update control of the administration is replaced by a GitHub check and a
   deploy webhook (ADR-0007, WP-M3-07 … WP-M3-08): `GET /api/v1/admin/update/check`
   answers the installed version, the newest commit of the branch and the
