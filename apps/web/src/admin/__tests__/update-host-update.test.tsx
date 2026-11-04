@@ -149,7 +149,7 @@ describe('UpdateHostUpdate', () => {
     ).toBeNull()
   })
 
-  it('carries the agent start guide with a discovered project path', async () => {
+  it('carries the agent start guide with the project directory pinned to the folder', async () => {
     stubRoutes({
       ...meRoutes(['system.update']),
       '/v1/admin/update/status': statusPayload({
@@ -163,10 +163,12 @@ describe('UpdateHostUpdate', () => {
     expect(
       await screen.findByText(/Update-Knopf aktivieren|Enable the update button/i),
     ).toBeTruthy()
-    expect(screen.getByText(/com\.docker\.compose\.project\.working_dir/)).toBeTruthy()
-    expect(screen.getByText(/range \.Mounts/)).toBeTruthy()
-    expect(screen.getByText(/cd into the project folder of the running stack/)).toBeTruthy()
+    expect(screen.getByText(/--project-directory "\$PWD"/)).toBeTruthy()
+    expect(screen.getByText(/printenv/)).toBeTruthy()
     expect(screen.getByText(/--profile update up -d --build update-agent/)).toBeTruthy()
+    // The working_dir label names a path inside the container of a panel, so the
+    // guide must not use it any more.
+    expect(screen.queryByText(/working_dir/)).toBeNull()
     expect(
       screen.getByRole('button', { name: /Befehl kopieren|Copy command/i }),
     ).toBeTruthy()

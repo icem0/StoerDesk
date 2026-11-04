@@ -14,7 +14,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 4   |
+| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 5   |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow        | 1   |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
@@ -294,6 +294,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-02  | the update script removes the images it replaces            | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces             | planned                 | yes     |
 | WP-M3-03  | the agent start command finds the project dir on the host   | done                    | yes     |
+| WP-M3-04  | the start command pins `--project-directory` and fills `.env` | done                  | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
@@ -525,18 +526,20 @@ tag needs, never prunes unscoped, rebuilds with `--remove-orphans` and clears an
 backlog with `--cleanup` and `--gc`. The update agent still prunes by label alone;
 **WP-M3-02b** ports the id-based clean-up into it.
 
-**The start command under Arcane (WP-M3-03).** The same field report stopped at the first
-line of the guide on `/admin/update`: the command `cd`ed into the
-`com.docker.compose.project.working_dir` label of the running web container, and that
+**The start command under Arcane (WP-M3-03, corrected by WP-M3-04).** The same field
+report stopped at the first line of the guide on `/admin/update`: the command `cd`ed into
+the `com.docker.compose.project.working_dir` label of the running web container, and that
 label holds the path **inside** the container that ran compose — under Arcane
-`/app/data/projects/stoerdesk`, which the host does not know. The command now accepts the
-label path only where a `docker-compose.yml` really exists on the host, otherwise maps it
-through the bind mounts of the running containers (`/app/data` → the data volume of the
-panel) and stops with a clear message instead of starting a second stack next to the
-running one. `docs/DEPLOYMENT.md` names the Arcane host path, the mapping rule and the
-`--env-file` fallback for a panel that keeps its variables in its own store;
-`scripts/update.sh` still requires a real checkout, and the self-cloning agent stays a
-separate decision.
+`/app/data/projects/stoerdesk`, which the host does not know. **WP-M3-03** mapped the label
+through the bind mounts of the running containers; **WP-M3-04** replaced that discovery with
+the contract the field actually uses: the operator runs the copied command in the project
+folder, the command pins it with `--project-directory "$PWD"`, keeps the project name from
+the `com.docker.compose.project` label and appends only the missing `POSTGRES_PASSWORD` /
+`SESSION_SECRET` to the project `.env`, read from the running `api` container with
+`docker exec … printenv` under `umask 077` — the compose file needs that file, because `api`
+declares `env_file: .env`. `docs/DEPLOYMENT.md` names the Arcane host path and the rule that
+the label path is container-internal; `scripts/update.sh` still requires a real checkout,
+and the self-cloning agent stays a separate decision.
 
 ## Validation
 

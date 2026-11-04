@@ -106,53 +106,38 @@ script and can stay stopped.
 docker compose --profile update up -d update-agent
 ```
 
-That command runs in the project folder of the running stack — the folder that
-holds `docker-compose.yml` and `.env`. The start command the administration
-copies from `/admin/update` discovers that folder on the host itself:
+Run it in the **project folder of the running stack** — the folder that holds
+`docker-compose.yml`. The start command the administration copies from
+`/admin/update` pins that folder and fills only the missing `.env` keys from the
+running stack:
 
 ```bash
 PROJECT=$(docker ps --filter label=com.docker.compose.service=web --format '{{.Label "com.docker.compose.project"}}' | head -n1)
-WEB=$(docker ps -q --filter label=com.docker.compose.service=web | head -n1)
-DIR=$(docker inspect -f '{{ index .Config.Labels "com.docker.compose.project.working_dir" }}' "$WEB")
-if [ ! -f "$DIR/docker-compose.yml" ]; then
-  DIR=$(for c in $(docker ps -q); do
-    docker inspect -f '{{range .Mounts}}{{.Destination}} {{.Source}}{{println}}{{end}}' "$c"
-  done | while read -r d s; do
-    case "$DIR" in "$d"*) [ -f "$s${DIR#"$d"}/docker-compose.yml" ] &&
-      echo "$s${DIR#"$d"}" ;; esac
-  done | head -n1)
-fi
-[ -f "$DIR/docker-compose.yml" ] || { echo "cd into the project folder of the running stack first" >&2; exit 1; }
-cd "$DIR" && IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \
-  docker compose -p "$PROJECT" --profile update up -d --build update-agent
-```
-
-**The label path is not a host path.** `com.docker.compose.project.working_dir`
-names the folder as the compose client that started the stack saw it. A panel
-that runs compose inside its own container writes the path **inside that
-container**: Arcane answers `/app/data/projects/<project>`, which the host does
-not know — the same folder lives in the data volume of the panel, e.g.
-`/var/lib/docker/volumes/arcane_arcane-data/_data/projects/<project>`. The loop
-maps the label path through the bind mount that serves it (`/app/data` → that
-volume) and only then changes into it. On a plain host the label path exists
-already and no mapping happens; when no candidate holds a `docker-compose.yml`
-the command stops instead of running compose in the wrong folder.
-
-Compose still interpolates the `.env` of that folder, and `POSTGRES_PASSWORD`
-plus `SESSION_SECRET` are required by the file itself. A panel that keeps its
-variables in its own store has none there; write them into a root-only file from
-the running API and hand that to compose:
-
-```bash
+API=$(docker ps -q --filter label=com.docker.compose.service=api | head -n1)
 umask 077
-docker exec "$(docker ps -q --filter label=com.docker.compose.service=api | head -n1)" \
-  sh -c 'printf "POSTGRES_PASSWORD=%s\nSESSION_SECRET=%s\n" "$POSTGRES_PASSWORD" "$SESSION_SECRET"' \
-  >/tmp/stoerdesk.env
+for k in POSTGRES_PASSWORD SESSION_SECRET; do
+  grep -q "^$k=" .env 2>/dev/null ||
+    printf '%s=%s\n' "$k" "$(docker exec "$API" printenv "$k")" >> .env
+done
 IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \
-  docker compose -p "$PROJECT" --env-file /tmp/stoerdesk.env \
-    --profile update up -d --build update-agent
-rm -f /tmp/stoerdesk.env
+  docker compose -p "$PROJECT" --project-directory "$PWD" --profile update up -d --build update-agent
 ```
+
+- **`-p` plus `--project-directory "$PWD"` are deliberate.** `-p` takes the name
+  of the running stack from its label, so no second stack appears next to the
+  stack a panel started; `--project-directory` pins the build contexts, the
+  relative paths and the `.env` of the current folder. The
+  `com.docker.compose.project.working_dir` label is **not** used — it names the
+  folder as the container that ran compose saw it, and a panel such as Arcane
+  reports a path the host does not know: `/app/data/projects/<project>` instead
+  of `/var/lib/docker/volumes/arcane_arcane-data/_data/projects/<project>`.
+- **`.env` appears when the panel keeps its variables in its own store.** The
+  compose file requires `POSTGRES_PASSWORD` and `SESSION_SECRET` (the `:?`
+  defaults at the top of `docker-compose.yml`) and the `api` service loads
+  `.env`. The loop appends only the keys that are missing, reads every value
+  **inside** the running `api` container with `printenv` — never on the host
+  command line — and creates the file with `umask 077`. An existing value is
+  never rewritten, so a changed secret needs the file edited or removed by hand.
 
 - **Opt-in.** The agent belongs to the profile `update`, so a normal
   `docker compose up -d --build` neither starts nor stops nor recreates it.
@@ -452,10 +437,12 @@ through the data volume of Arcane:
 ls -la /var/lib/docker/volumes/arcane_arcane-data/_data/projects/stoerdesk
 ```
 
-That host path is what a `cd` needs — the path `/app/data/projects/stoerdesk`
-only exists inside the Arcane container, and the Compose labels of the running
-stack carry exactly that container-internal path. The start command of
-[Host update](#host-update) maps it, so it works from a shell on the host.
+That host path is what a shell on the host addresses — the path
+`/app/data/projects/stoerdesk` exists only inside the Arcane container, and the
+`working_dir` label of the running stack carries exactly that container-internal
+path. The start command of [Host update](#host-update) therefore never follows
+that label: change into the host path above and it pins the folder with
+`--project-directory "$PWD"`.
 
 ### Environment
 
@@ -496,12 +483,14 @@ docker compose down                  # removes the old stack's containers
 
 ### `cd: /app/data/projects/<project>: No such file or directory`
 
-The start command of the administration took the compose `working_dir` label of
-the running stack. That label names the project folder **inside the container
-that ran compose** — under a panel such as Arcane it is not a path of the host,
-and no amount of root rights changes that. Use the host path of the panel volume
-([Arcane](#arcane)) or the mapping of the start command
-([Host update](#host-update)).
+An older revision of the start guide changed into the
+`com.docker.compose.project.working_dir` label of the running stack. That label
+names the project folder **inside the container that ran compose** — under a
+panel such as Arcane it is no path of the host, and no amount of root rights
+changes that. Change into the host path of the panel volume
+([Arcane](#arcane)) and start the agent with
+`--project-directory "$PWD"` from there; the guide on `/admin/update` already
+works that way.
 
 ### Disk full of `<none>` images
 

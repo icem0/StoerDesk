@@ -84,4 +84,7 @@ run is operator work.
 - Verified: `npm run check` (e2e skipped: no usable Chromium in this container)
 - Follow-up WP: WP-M3-02b (`m3/02b-update-agent-image-hygiene.md`) — the agent
   still prunes by label only
+- Corrected by: WP-M3-04 (`m3/04-agent-start-command-pins-project-dir.md`) — the
+  label and the bind-mount mapping of this package were replaced by
+  `--project-directory "$PWD"` plus the `.env` fill from the running `api`
 - Open question: none

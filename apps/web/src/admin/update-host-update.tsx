@@ -19,12 +19,16 @@ import { appVersion } from '../lib/version'
  * of failing and recovers when the API answers again.
  *
  * The button needs the update agent; without it the section shows the one-time
- * start command and can copy it to the clipboard. The command discovers the
- * compose project from the running web container and its **host** directory:
- * the `working_dir` label holds the path of the machine that ran compose, which
- * is a path inside the container of a panel such as Arcane. The command
- * therefore maps that path through the bind mounts of the running containers
- * before it changes into it — no hard-coded path, no panel-specific knowledge.
+ * start command and can copy it to the clipboard. The command runs **in the
+ * project folder of the running stack** and pins that folder with
+ * `--project-directory "$PWD"` together with the project name read from the
+ * `com.docker.compose.project` label — the `working_dir` label is deliberately
+ * unused, because it holds the path inside the container that ran compose and
+ * is therefore not a path of the host under a panel such as Arcane. The compose
+ * file needs `POSTGRES_PASSWORD` and `SESSION_SECRET` and loads `.env` of the
+ * project, so the command first fills only the missing keys of that file from
+ * the environment of the running `api` container: an existing value is never
+ * rewritten and no secret ever appears on the host command line.
  *
  * The section is hidden without the permission `system.update`. The guard of the
  * server stays the only enforcement point.
@@ -32,19 +36,14 @@ import { appVersion } from '../lib/version'
 
 const AGENT_START_COMMAND = [
   'PROJECT=$(docker ps --filter label=com.docker.compose.service=web --format \'{{.Label "com.docker.compose.project"}}\' | head -n1)',
-  'WEB=$(docker ps -q --filter label=com.docker.compose.service=web | head -n1)',
-  'DIR=$(docker inspect -f \'{{ index .Config.Labels "com.docker.compose.project.working_dir" }}\' "$WEB")',
-  'if [ ! -f "$DIR/docker-compose.yml" ]; then',
-  '  DIR=$(for c in $(docker ps -q); do',
-  '    docker inspect -f \'{{range .Mounts}}{{.Destination}} {{.Source}}{{println}}{{end}}\' "$c"',
-  '  done | while read -r d s; do',
-  '    case "$DIR" in "$d"*) [ -f "$s${DIR#"$d"}/docker-compose.yml" ] &&',
-  '      echo "$s${DIR#"$d"}" ;; esac',
-  '  done | head -n1)',
-  'fi',
-  '[ -f "$DIR/docker-compose.yml" ] || { echo "cd into the project folder of the running stack first" >&2; exit 1; }',
-  'cd "$DIR" && IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \\',
-  '  docker compose -p "$PROJECT" --profile update up -d --build update-agent',
+  'API=$(docker ps -q --filter label=com.docker.compose.service=api | head -n1)',
+  'umask 077',
+  'for k in POSTGRES_PASSWORD SESSION_SECRET; do',
+  '  grep -q "^$k=" .env 2>/dev/null ||',
+  '    printf \'%s=%s\\n\' "$k" "$(docker exec "$API" printenv "$k")" >> .env',
+  'done',
+  'IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \\',
+  '  docker compose -p "$PROJECT" --project-directory "$PWD" --profile update up -d --build update-agent',
 ].join('\n')
 const GITHUB_TAGS_URL = 'https://api.github.com/repos/icem0/StoerDesk/tags?per_page=1'
 

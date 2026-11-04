@@ -176,19 +176,23 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
-- The start command of the update button finds the project folder **on the host**
-  (WP-M3-03). It used the `com.docker.compose.project.working_dir` label of the
-  running web container as a host path, but that label names the folder as the
-  machine that ran compose saw it: a panel such as Arcane runs compose inside its
-  own container, so the label says `/app/data/projects/<project>`, the host does
-  not know that path and the copied command failed with
-  `cd: …: No such file or directory`. The command accepts the label path only
-  where a `docker-compose.yml` really exists on the host, maps it otherwise
-  through the bind mounts of the running containers (`/app/data` → the data
-  volume of the panel) and stops with a clear message instead of running compose
-  in the wrong folder. `docs/DEPLOYMENT.md` names the host path of an Arcane
-  project, the mapping rule and the `--env-file` fallback for a panel that keeps
-  the project variables in its own store.
+- The start command of the update button runs in the project folder and no longer
+  follows a container-internal path (WP-M3-03, WP-M3-04). It used the
+  `com.docker.compose.project.working_dir` label of the running web container as
+  a host path, but that label names the folder as the machine that ran compose
+  saw it: a panel such as Arcane runs compose inside its own container, so the
+  label says `/app/data/projects/<project>`, the host does not know that path and
+  the copied command failed with `cd: …: No such file or directory`. The command
+  now keeps only the project name from the `com.docker.compose.project` label,
+  pins the folder it is copied into with `--project-directory "$PWD"` and stops
+  guessing directories.
+- A panel deployment without a project `.env` can start the update agent
+  (WP-M3-04): the compose file requires `POSTGRES_PASSWORD` and `SESSION_SECRET`
+  and the `api` service declares `env_file: .env`, so compose failed before the
+  agent started. The start command now appends only the missing keys to `.env`,
+  reading every value inside the running `api` container with `printenv` (never
+  on the host command line), creates the file under `umask 077` and never
+  rewrites an existing secret.
 - The permanent ticket deletion typechecks again (WP-M2-77): `tickets` has no
   `object_no` column, only the `object_id` foreign key, and the deletion used
   `sql` without importing it. The object number that `ticket_purges` requires is

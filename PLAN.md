@@ -728,6 +728,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M3-02   | the update script removes the images it replaces          | done     |
 | WP-M3-02b  | the update agent removes the images it replaces           | planned  |
 | WP-M3-03   | the agent start command finds the project dir on the host | done     |
+| WP-M3-04   | the start command pins `--project-directory` and fills `.env` | done     |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -913,11 +914,15 @@ id-based clean-up into it.
 The same field report showed a second trap: the start command of the update button
 changed into `com.docker.compose.project.working_dir`, and under Arcane that label holds
 the path **inside the panel container** (`/app/data/projects/stoerdesk`) while the folder
-sits on the host in the data volume of the panel. **WP-M3-03** keeps the label as the
-first choice but accepts it only where the `docker-compose.yml` exists on the host, maps
-it otherwise through the bind mounts of the running containers and stops with a clear
-message instead of starting a second stack. `scripts/update.sh` keeps requiring a real
-checkout: the panel path is the agent path.
+sits on the host in the data volume of the panel. **WP-M3-03** first mapped that label
+through the bind mounts of the running containers; **WP-M3-04** replaced the whole
+discovery, because the operator already stands in the project folder: the command keeps the
+project name from the `com.docker.compose.project` label, pins the folder with
+`--project-directory "$PWD"` and fills only the missing `POSTGRES_PASSWORD` /
+`SESSION_SECRET` of the project `.env` from the running `api` container
+(`docker exec … printenv`, `umask 077`) — the compose file needs that file, because `api`
+declares `env_file: .env`. `scripts/update.sh` keeps requiring a real checkout: the panel
+path is the agent path.
 
 ## 17. Work package rules for small models
 
