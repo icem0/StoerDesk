@@ -313,7 +313,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                     | done                    | yes     |
 | WP-M5-03  | `applyInternalAction`: replay-safe acknowledge/comment/decline      | done                    | yes     |
-| WP-M5-04  | `clientUuid` on the action routes + internal comment route          | planned                 | yes     |
+| WP-M5-04  | `clientUuid` on the action routes + internal comment route          | done                    | yes     |
 | WP-M5-05  | the detail page queues actions offline and replays them             | planned                 | yes     |
 | WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible     | planned                 | yes     |
 | WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | planned                 | yes     |

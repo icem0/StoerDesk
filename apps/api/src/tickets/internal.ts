@@ -12,6 +12,7 @@ import {
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects, systems, ticketEvents, tickets } from '../db/schema'
+import { applyInternalAction } from './internal-actions'
 
 /**
  * Internal ticket creation (`PLAN.md` §7 rule 1, WP-M2-15).
@@ -157,6 +158,50 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
         } catch (error) {
           if (error instanceof InternalTicketRouteError) {
             return reply.code(error.statusCode).send({ code: error.code, params: error.params })
+          }
+          throw error
+        }
+      },
+    )
+
+    const COMMENT_BODY = z.object({
+      clientUuid: z.string().uuid(),
+      text: z.string().trim().min(1).max(2000),
+    })
+
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/comments',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.comment) },
+      async (request, reply) => {
+        const parsed = COMMENT_BODY.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        const user = request.user
+
+        if (user === undefined) {
+          return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        try {
+          const applied = await applyInternalAction({
+            database,
+            ticketNo: request.params.ticketNo,
+            clientUuid: parsed.data.clientUuid,
+            action: 'comment',
+            actorUserId: user.id,
+            payload: { text: parsed.data.text },
+          })
+
+          const body = { ticketNo: applied.ticket.ticketNo, at: applied.event.createdAt.toISOString(), replayed: applied.replayed }
+
+          return reply.code(applied.replayed ? 200 : 201).send(body)
+        } catch (error) {
+          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
           }
           throw error
         }

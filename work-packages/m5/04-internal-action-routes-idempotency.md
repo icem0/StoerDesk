@@ -1,7 +1,7 @@
 # WP-M5-04: idempotency on the action routes and the internal comment route (api)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M5-03
 phase: 5
 milestone: m5
@@ -71,8 +71,8 @@ skips locally without PostgreSQL (reported as unverified locally).
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/tickets/workflow-routes.ts` (acknowledge/decline bodies gain optional `clientUuid`; both routes delegate to `applyInternalAction` when present, otherwise keep the direct `transitionTicket` call), `apps/api/src/tickets/internal.ts` (new `POST /api/v1/tickets/:ticketNo/comments` guarded by `ticket.comment`, body `{ clientUuid: uuid, text: string (1…2000) }`, answers `201` on first delivery, `200` with `{ replayed: true }` on replay), `apps/api/src/tickets/__tests__/internalActions.routes.integration.spec.ts` (new), `docs/REPO-MAP.md` (internal.ts + workflow-routes.ts rows), `work-packages/README.md` (WP-M5-04 status → done), `specs/09-offline.md` (§9.6: acknowledge/comment/decline shipped via phase 5, confirm/decline shift stays phase 8)
+- Interfaces added: acknowledge/decline bodies accept optional `clientUuid: z.string().uuid()`; `POST /api/v1/tickets/:ticketNo/comments` with `{ clientUuid, text }` → `201` / replay `200` with `{ replayed: true }`; conflicts keep `409 invalid_transition` with `{ ticketNo, from, event }` in `params`
+- Verified: `npm run typecheck --workspaces`, `eslint` on the changed files (0 errors), `vitest run` on both new specs (5 + 5 tests pass against real Postgres 16), `npm run wp:check` (179 checked, 0 failed), `npm run i18n:check` (584/584 keys). The three pre-existing failures of `internalActionReceipts.integration.spec.ts` (fake `objectId` FK) fail identically without this change.
 - Follow-up WP: WP-M5-05 (`m5/05-offline-action-queue-ui.md`)
 - Open question: none

@@ -9,6 +9,7 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { tickets } from '../db/schema'
 import { transitionTicket } from './workflow'
+import { applyInternalAction } from './internal-actions'
 
 /**
  * Workflow API routes (`PLAN.md` §7, WP-M2-19c).
@@ -33,9 +34,11 @@ type RouteDef = {
   event: string
   permission: PermissionKey
   body?: z.ZodTypeAny
+  /** When set, the route accepts an optional `clientUuid` and replays through `applyInternalAction`. */
+  action?: 'acknowledge' | 'decline' | 'comment'
 }
 
-function makeHandler(event: string, bodySchema?: z.ZodTypeAny) {
+function makeHandler(event: string, bodySchema?: z.ZodTypeAny, action?: RouteDef['action']) {
   return async (request: any, reply: any) => {
     const { ticketNo } = request.params
     const actor = request.user
@@ -61,7 +64,33 @@ function makeHandler(event: string, bodySchema?: z.ZodTypeAny) {
       return reply.code(400).send({ code: 'invalid_request', params: {} })
     }
 
-    const payload: Record<string, unknown> = Object.assign({}, result?.data ?? {}) as Record<string, unknown>
+    const body = result?.data ?? {}
+    const clientUuid = (body as { clientUuid?: string }).clientUuid
+
+    // With a clientUuid the action is idempotent: replay short-circuits through
+    // `applyInternalAction`, which shares the receipt with the client outbox.
+    if (action !== undefined && clientUuid !== undefined) {
+      try {
+        const applied = await applyInternalAction({
+          database,
+          ticketNo,
+          clientUuid,
+          action,
+          actorUserId: actor.id,
+          payload: body as Record<string, unknown>,
+        })
+
+        return reply.code(applied.replayed ? 200 : 200).send({ ...applied.ticket, replayed: applied.replayed })
+      } catch (error) {
+        const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+        if (err.statusCode !== undefined) {
+          return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+        }
+        throw error
+      }
+    }
+
+    const payload: Record<string, unknown> = Object.assign({}, body) as Record<string, unknown>
 
     try {
       const { ticket: updated } = await transitionTicket({
@@ -100,8 +129,8 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       { path: '/api/v1/tickets/:ticketNo/offer', event: 'offered', permission: PERM(PERMISSIONS.ticket.offer) },
       { path: '/api/v1/tickets/:ticketNo/claim', event: 'claimed', permission: PERM(PERMISSIONS.ticket.claim) },
       { path: '/api/v1/tickets/:ticketNo/accept', event: 'accepted', permission: PERM(PERMISSIONS.ticket.accept) },
-      { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.accept), body: z.object({ reason: DECLINE_REASON }) },
-      { path: '/api/v1/tickets/:ticketNo/acknowledge', event: 'acknowledged', permission: PERM(PERMISSIONS.ticket.acknowledge), body: z.object({ result: ACK_RESULT, note: z.string().trim().max(2000).optional() }) },
+      { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.accept), body: z.object({ reason: DECLINE_REASON, clientUuid: z.string().uuid().optional() }), action: 'decline' },
+      { path: '/api/v1/tickets/:ticketNo/acknowledge', event: 'acknowledged', permission: PERM(PERMISSIONS.ticket.acknowledge), body: z.object({ result: ACK_RESULT, note: z.string().trim().max(2000).optional(), clientUuid: z.string().uuid().optional() }), action: 'acknowledge' },
       { path: '/api/v1/tickets/:ticketNo/close', event: 'closed', permission: PERM(PERMISSIONS.ticket.close) },
       { path: '/api/v1/tickets/:ticketNo/reopen', event: 'reopened', permission: PERM(PERMISSIONS.ticket.reopen), body: z.object({ reason: DECLINE_REASON }) },
       { path: '/api/v1/tickets/:ticketNo/cancel', event: 'cancelled', permission: PERM(PERMISSIONS.ticket.cancel), body: z.object({ reason: DECLINE_REASON }) },
@@ -111,7 +140,7 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       app.post<{ Params: { ticketNo: string } }>(
         route.path,
         { preHandler: requirePermission(database, route.permission) },
-        makeHandler(route.event, route.body),
+        makeHandler(route.event, route.body, route.action),
       )
     }
   },
