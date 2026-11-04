@@ -1,9 +1,9 @@
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
-import { ticketEvents, ticketPhotos, ticketPurges, tickets } from '../db/schema'
+import { objects, ticketEvents, ticketPhotos, ticketPurges, tickets } from '../db/schema'
 
 /**
  * Permanent ticket deletion (`PLAN.md` §7 rule 10, WP-M2-77).
@@ -63,10 +63,13 @@ export async function deleteTicket(input: DeleteTicketInput): Promise<DeleteTick
     .select({
       id: tickets.id,
       ticketNo: tickets.ticketNo,
-      objectNo: tickets.objectNo,
+      objectNo: objects.objectNo,
       status: tickets.status,
     })
     .from(tickets)
+    // Objects are only soft-deleted (`onDelete: 'restrict'`), so the object of a
+    // report always exists and carries the number written to `ticket_purges`.
+    .innerJoin(objects, eq(objects.id, tickets.objectId))
     .where(eq(tickets.ticketNo, ticketNo))
     .limit(1)
 
