@@ -14,9 +14,10 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
+| [m3](m3/) | Phase 3: offline report and sync closure (background-sync path)               | 1   |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
-Every `m0`, `m1` and `m2` document carries `format: small-model` except the four first
+Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
 as legacy and skips them. A package that was rewritten from a legacy plan and split is
 recognisable by its children: `WP-M1-07` → `WP-M1-07b`, `WP-M1-09` → `WP-M1-09b` …
@@ -284,6 +285,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-72  | the host update runs as a shell script without the agent    | done                    | yes     |
 | WP-M2-73  | the panel build fetches the current sources                 | done                    | yes     |
 | WP-M2-74  | the host update shows the version and starts with a button  | done                    | yes     |
+| WP-M3-01  | offline background sync matches the API path                | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -492,6 +494,16 @@ row. `readBmaApiKey(database, env)` is the single resolution point — of the ma
 whether the queue is scheduled at all, and every run resolves the key again, so storing or
 deleting it on the admin page needs no API restart. **WP-M2-47** added the write-only field on the page.
 Both child WP files were created in the same commit as this parent.
+
+**Phase 3 is complete.** Its work was implemented early under phase 2 — **WP-M2-09**
+(Dexie outbox), **WP-M2-09a** (service worker and replay) and **WP-M2-09b** (offline E2E in
+`de` and `en`). The closure filled `specs/09-offline.md`, which had been a placeholder, and
+checked the shipped code against the exit criterion "offline report creates exactly one
+ticket after reconnect". It found one defect: the Workbox background-sync route compared
+`/v1/public/tickets` while the app requests `/api/v1/public/tickets`, so the queue never
+matched. **WP-M3-01** fixes the predicate (`apps/web/src/lib/sw-routes.ts`), covers it with
+a unit test and keeps the outbox, the online path and the API unchanged. The offline E2E
+passes against a real throwaway database and a real Chromium.
 
 ## Validation
 

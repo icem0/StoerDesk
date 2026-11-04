@@ -171,6 +171,12 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The background-sync queue of the service worker matches the public report path
+  through its API base (WP-M3-01): the route compared the bare `/v1/public/tickets`
+  while the app requests `/api/v1/public/tickets`, so the queue never matched. The
+  predicate now lives in `apps/web/src/lib/sw-routes.ts` and is unit-tested; the Dexie
+  outbox, the online path and the API are unchanged. The phase 3 closure also filled
+  the previously placeholder `specs/09-offline.md`.
 - The public report E2E smoke tests use the live fault catalog label `Line interruption`
   in English. The old expectation still waited for `Fire alarm system completely out of
 service`, which the bootstrapped standard fault types no longer offer.

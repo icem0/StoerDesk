@@ -855,6 +855,19 @@ not features: the retention of `report_throttle.ip` (WP-M2-07, WP-M2-07c), the r
 hand-written migration 0006 (WP-M2-34). The phase 2 `status:` lines of `09` … `31` match the
 shipped code.
 
+Phase 3 is **complete**. Its features were implemented early under phase 2 — the PWA shell
+and outbox (**WP-M2-09**), the service worker and automatic replay (**WP-M2-09a**) and the
+offline E2E "flight mode, send, online, exactly one ticket" in `de` and `en`
+(**WP-M2-09b**) — so the phase 3 entry in the roadmap above is backed by shipped code.
+The closure filled the previously placeholder `specs/09-offline.md` with the shipped
+contract (outbox, `client_uuid` idempotency, replay triggers, PWA shell, failure behaviour
+and the explicit boundary to the offline internal actions of the later phases) and found
+one defect: the Workbox background-sync route compared the bare `/v1/public/tickets` while
+the app requests `/api/v1/public/tickets`, so the queue never matched. **WP-M3-01** moves
+the predicate into `apps/web/src/lib/sw-routes.ts`, matches the API base and covers it with
+a unit test. The offline E2E of WP-M2-09b passes against a real throwaway database and a
+real Chromium; `npm run check` and `npm run build` are green.
+
 After the phase 2 close a usage gap of the BMAcloud sync surfaced in the field: the sync page
 offers everything but the credential, so an image-based deployment could only answer
 `bma_not_configured`. **ADR-0005** supersedes the credential rule of ADR-0003 — the key may

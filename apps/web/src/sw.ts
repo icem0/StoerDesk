@@ -3,6 +3,7 @@ import { BackgroundSyncPlugin } from 'workbox-background-sync'
 import { NetworkOnly } from 'workbox-strategies'
 import { registerRoute } from 'workbox-routing'
 
+import { isPublicReportPath } from './lib/sw-routes'
 import { appVersion } from './lib/version'
 
 declare global {
@@ -27,7 +28,7 @@ const reportQueue = new BackgroundSyncPlugin('sync-report', {
 })
 
 registerRoute(
-  ({ url }) => url.pathname === '/v1/public/tickets',
+  ({ url }) => isPublicReportPath(url.pathname),
   new NetworkOnly({ plugins: [reportQueue] }),
   'POST',
 )
