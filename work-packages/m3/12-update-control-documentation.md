@@ -1,7 +1,7 @@
 # WP-M3-12: the documentation of the new update control
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-11
 phase: 3
 milestone: m3
@@ -62,9 +62,12 @@ Expected: all green; every module of the repository is listed exactly once in
 
 ## Handoff
 
-- Files changed: the deployment guide, the repository map, the plan, the
-  backlog of record, the changelog
+- Files changed: `docs/DEPLOYMENT.md` (the section about the agent becomes the
+  description of the update menu and of the deploy webhook),
+  `docs/REPO-MAP.md`, `PLAN.md` §16, `work-packages/README.md`,
+  `scripts/update.sh` (no agent image any more), `CHANGELOG.md`
 - Interfaces added: none
-- Verified: pending
+- Verified: `npm run check` green (61 files, 383 tests, i18n and wp-check);
+  `sh -n scripts/update.sh` and `sh -n scripts/docker-smoke.sh` are green
 - Follow-up WP: none
 - Open question: none

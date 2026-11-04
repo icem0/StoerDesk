@@ -18,7 +18,7 @@ puts a second, privileged surface next to the application:
 
 - the agent image needs `git`, `docker-cli` and `docker-cli-compose`, and the
   socket of the host — as privileged as the host itself;
-- the agent belongs to a profile, so it is started explicitly and is *not* part
+- the agent belongs to a profile, so it is started explicitly and is _not_ part
   of a normal `docker compose up -d --build`;
 - the path of the checkout has to be discovered on the host, which differs per
   deployment panel (WP-M3-03, WP-M3-04);
@@ -31,7 +31,7 @@ puts a second, privileged surface next to the application:
 The operator of this instance already runs a deployment tool on the host (a
 panel with a deploy hook, or a small script behind an HTTP endpoint). The
 application does not have to know how a deployment is performed — it only has to
-know *that* a newer version exists and *that* the operator wants it.
+know _that_ a newer version exists and _that_ the operator wants it.
 
 Facts that shape the design:
 
@@ -58,8 +58,8 @@ Facts that shape the design:
    GitHub compare endpoint, so the installed version is always comparable.
 3. **The trigger is a webhook, not a command.** `POST /api/v1/admin/update/start`
    sends `POST $UPDATE_WEBHOOK_URL` with the header `X-Deploy-Token:
-   $UPDATE_WEBHOOK_TOKEN` and a body the API builds itself, and answers `202
-   { "started": true }` immediately. The deployment target does the work; the
+$UPDATE_WEBHOOK_TOKEN` and a body the API builds itself, and answers `202
+{ "started": true }` immediately. The deployment target does the work; the
    API waits for nothing, because the deployment replaces the API container.
 4. **The client sends no parameters.** The route ignores the request body, so
    no value of the browser can reach the webhook.
@@ -84,7 +84,7 @@ Facts that shape the design:
 - **The API runs `git pull` and `docker compose` itself:** rejected — ADR-0004
   and §18.1; the `api` image would need the Docker socket and a shell.
 - **The browser calls the GitHub API directly (as the old page did):**
-  rejected — the browser cannot name the installed version of the *server*, the
+  rejected — the browser cannot name the installed version of the _server_, the
   rate limit of an anonymous request belongs to the user, and the check would
   keep working when the API is down.
 - **The check compares version tags instead of commits:** rejected — the tags

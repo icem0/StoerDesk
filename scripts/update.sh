@@ -11,7 +11,7 @@
 # Works with a git checkout (pull) and with panel deployments such as Arcane
 # (no checkout: the compose build fetches the sources through
 # IMAGE_BUILD_CONTEXT). Only the running stack is rebuilt; the optional
-# update-agent profile is never touched.
+# backup profile stays enabled.
 #
 # Why the clean-up works from image ids and not only from labels: the rebuild
 # moves the fixed `:latest` tags of this stack to the new images, so every
@@ -28,7 +28,7 @@ set -eu
 REPO_SLUG="${STOERDESK_REPO_SLUG:-icem0/StoerDesk}"
 # The image names docker-compose.yml gives the built services. Pulled images such
 # as postgres are deliberately not part of the clean-up.
-OWN_IMAGES="${STOERDESK_OWN_IMAGES:-stoerdesk-api:latest stoerdesk-web:latest stoerdesk-agent:latest}"
+OWN_IMAGES="${STOERDESK_OWN_IMAGES:-stoerdesk-api:latest stoerdesk-web:latest}"
 # The `--gc` window in hours for the backlog an older version left behind.
 GC_UNTIL="${STOERDESK_GC_UNTIL:-168}"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

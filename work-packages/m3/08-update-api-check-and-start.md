@@ -15,7 +15,7 @@ files-read:
 - apps/api/src/update/github.ts — the client of WP-M3-07
 - apps/api/src/config/env.ts — the environment schema
 - apps/api/src/auth/requirePermission.ts — the guard of an admin write
-- apps/api/src/update/__tests__/routes.integration.spec.ts — the old route test
+- apps/api/src/update/**tests**/routes.integration.spec.ts — the old route test
 - specs/18-self-update.md (§18.3–§18.5)
 
 files-write:
@@ -23,7 +23,7 @@ files-write:
 - apps/api/src/update/routes.ts
 - apps/api/src/update/installed-version.ts
 - apps/api/src/config/env.ts
-- apps/api/src/update/__tests__/routes.integration.spec.ts
+- apps/api/src/update/**tests**/routes.integration.spec.ts
 
 interfaces:
 

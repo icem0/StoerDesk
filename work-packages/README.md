@@ -304,7 +304,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-09  | the deployment configuration of the update control                  | done                    | yes     |
 | WP-M3-10  | the update menu in the shell header                                | done                    | yes     |
 | WP-M3-11  | the removal of the update agent                                   | done                    | yes     |
-| WP-M3-12  | the documentation of the new update control                        | planned                 | yes     |
+| WP-M3-12  | the documentation of the new update control                        | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |
@@ -593,6 +593,26 @@ Fastify answers with 400. The repair maps every event to its segment, sends the 
 with a body, opens the panel per step in the test and drops the two `waitForResponse` calls
 that waited for a browser request the API-driven steps never make. The E2E now runs against
 a real throwaway database and Chromium — locally 10/10 and in the CI check run.
+
+**The update control is replaced (WP-M3-07 … WP-M3-12, ADR-0007).** The host update agent
+of ADR-0006 needed a second, privileged container next to the application — the Docker
+socket of the host, `git` and the Docker CLI in the image, a state volume and a start
+command whose path differs per deployment panel. The operator already runs a deployment
+tool, so the application only has to know *that* a newer commit exists and *that* the
+operator wants it. **WP-M3-07** writes the contract (`specs/18-self-update.md` §18.1–§18.7)
+and the decision (ADR-0007; ADR-0006 is superseded) and adds the read-only client of the
+GitHub API. **WP-M3-08** adds `GET /api/v1/admin/update/check` and
+`POST /api/v1/admin/update/start` — the check answers the installed version, the newest
+commit of the branch and the commits behind it (cached for a minute), the start checks
+again on the server, calls the deploy webhook with the header `X-Deploy-Token` and
+answers `202 { started: true }` immediately. **WP-M3-09** gives the image the build
+argument `GIT_COMMIT` and the tracked `VERSION` file and the compose file the keys of
+§18.5 plus `host.docker.internal:host-gateway`. **WP-M3-10** makes the version badge of
+the shell header the entry point of the update menu (the page `/admin/update` is gone).
+**WP-M3-11** retires the agent: the workspace `apps/agent`, the compose service
+`update-agent`, the `agent` target of the `Dockerfile`, the keys `UPDATE_AGENT_*` and the
+volume `update-state` are gone; `scripts/update.sh` stays the manual path of the
+operator. **WP-M3-12** documents the new control.
 
 **Phase 5 is split and started (the `m5` packages).** Phase 4 closed with WP-M4-01 and left
 no open follow-up, so the next roadmap step is phase 5 (offline internal actions). It had nowork packages — `specs/09-offline.md` §9.6 only named the topic — so the split required by

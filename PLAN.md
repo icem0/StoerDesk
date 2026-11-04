@@ -732,6 +732,12 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done   |
 | WP-M3-05  | shared error code `update_step_timeout` for self-update           | done   |
 | WP-M3-06  | the update agent run can never hang forever                       | done   |
+| WP-M3-07  | the update contract (spec §18, ADR-0007) and the GitHub client     | done   |
+| WP-M3-08  | the update API: `check` and `start` with the environment keys      | done   |
+| WP-M3-09  | the deployment configuration of the update control                  | done   |
+| WP-M3-10  | the update menu in the shell header                                | done   |
+| WP-M3-11  | the removal of the update agent                                   | done   |
+| WP-M3-12  | the documentation of the new update control                        | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -937,6 +943,30 @@ and the image clean-up each run against `UPDATE_STEP_TIMEOUT_MS` (default ten mi
 A step that passes its deadline fails with `update_step_timeout`, the run reaches
 `finishedAt` and the agent state leaves `running` — `lastRun` no longer shows `Läuft`
 for a build that never comes back.
+
+**The update control is replaced (WP-M3-07 … WP-M3-12, ADR-0007).** The host update
+agent needed a second, privileged container next to the application: the Docker socket of
+the host, `git` and the Docker CLI in the image, a state volume and a start command
+whose path differs per deployment panel. The operator of this instance already runs a
+deployment tool, so the application only has to know *that* a newer commit exists and
+*that* the operator wants it. **WP-M3-07** writes the contract (`specs/18-self-update.md`
+§18.1–§18.7) and the decision (ADR-0007, ADR-0006 is superseded) and adds the read-only
+client of the GitHub API. **WP-M3-08** adds `GET /api/v1/admin/update/check` (the
+installed version, the newest commit of the branch, the commits behind it, the answer
+cached for a minute) and `POST /api/v1/admin/update/start` (the check runs again on the
+server, the deploy webhook is called with the header `X-Deploy-Token` and a body the
+server builds itself, `202 { started: true }` immediately, a second start inside five
+minutes refused). **WP-M3-09** gives the image the build argument `GIT_COMMIT` and the
+tracked `VERSION` file, the compose file the keys `GITHUB_REPO`, `GITHUB_BRANCH`,
+`GITHUB_TOKEN`, `UPDATE_WEBHOOK_URL` and `UPDATE_WEBHOOK_TOKEN` plus
+`host.docker.internal:host-gateway`. **WP-M3-10** makes the version badge of the shell
+header the entry point: for a user with `system.update` it is a button that opens the
+update panel, the page `/admin/update` is gone. **WP-M3-11** retires the agent — the
+workspace `apps/agent`, the compose service `update-agent`, the `agent` target of the
+`Dockerfile`, the keys `UPDATE_AGENT_*` and the volume `update-state` are gone;
+`scripts/update.sh` stays the manual path of the operator. **WP-M3-12** documents the
+new control in `docs/DEPLOYMENT.md`, `docs/REPO-MAP.md` and this section. The tokens
+belong to the API: they never reach the browser, a log line or the repository.
 
 Phase 4 is **complete** with a single package: **WP-M4-01** drives the whole workflow
 (review → work order → assign → accept → acknowledge → close) as one Playwright test in

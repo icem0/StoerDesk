@@ -37,13 +37,12 @@ docker compose up -d web
 
 ## Services
 
-| Service        | Profile  | Host port  | Purpose                                            |
-| -------------- | -------- | ---------- | -------------------------------------------------- |
-| `db`           | —        | none       | PostgreSQL 16, source of truth                     |
-| `api`          | —        | none       | Fastify API on port 3000; runs migrations on start |
-| `web`          | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
-| `backup`       | `backup` | none       | periodic `pg_dump` into the backup volume          |
-| `update-agent` | `update` | none       | host update: pull, rebuild, remove old images      |
+| Service  | Profile  | Host port  | Purpose                                            |
+| -------- | -------- | ---------- | -------------------------------------------------- |
+| `db`     | —        | none       | PostgreSQL 16, source of truth                     |
+| `api`    | —        | none       | Fastify API on port 3000; runs migrations on start |
+| `web`    | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
+| `backup` | `backup` | none       | periodic `pg_dump` into the backup volume          |
 
 The `web` container starts independently of the API: nginx resolves the API
 host per request, so the UI is reachable while the API is starting or
@@ -52,8 +51,7 @@ still returns 200.
 
 ## Host update
 
-The default host update is a shell script on the server — no agent and no API
-access needed:
+The default host update is a shell script on the server — no API access needed:
 
 ```bash
 sh scripts/update.sh          # check GitHub, pull/build, clean up the images
@@ -79,7 +77,7 @@ build from a remote build context (`IMAGE_BUILD_CONTEXT`), not for the
 `docker-compose` v1 fallback and not for an aborted build. Every update left one
 tagless `<none>` image per service on the host. The script therefore snapshots
 the image ids of its own image names (`STOERDESK_OWN_IMAGES`, by default
-`stoerdesk-api`, `stoerdesk-web`, `stoerdesk-agent`) and of the Compose default
+`stoerdesk-api`, `stoerdesk-web`) and of the Compose default
 names of the project **before** the rebuild, and afterwards deletes by id
 whatever is neither the current image of one of those names nor the image of a
 container of this project — `docker rmi` without `-f`, so an image a container
@@ -96,108 +94,48 @@ sources itself; set `IMAGE_BUILD_CONTEXT` to the Git URL
 (`https://github.com/icem0/StoerDesk.git#main`) as described
 [below](#arcane), otherwise the build reuses the files of the project folder.
 
-### Optional update agent (in-UI button)
+### Update menu (in the administration)
 
-The administration can also start a host update with a button. That path needs
-the separate `update-agent` container; it is **not required** for the shell
-script and can stay stopped.
+The administration can also start an update from the browser: the version badge
+of the header is a button for a user with the permission `system.update` and
+opens a panel that checks GitHub and starts the deployment
+(`specs/18-self-update.md` §18.2, ADR-0007).
 
-```bash
-docker compose --profile update up -d update-agent
-```
+The check asks the GitHub API for the newest commit of `GITHUB_BRANCH` and
+compares it with the installed version — the commit of the build (`GIT_COMMIT`)
+or the version of the tracked `VERSION` file of the image. The panel shows the
+installed version, the newest commit and the commits behind it.
 
-Run it in the **project folder of the running stack** — the folder that holds
-`docker-compose.yml`. The start command the administration copies from
-`/admin/update` pins that folder and fills only the missing `.env` keys from the
-running stack:
+The start does **not** deploy anything itself: the API calls the deploy hook
+configured in `UPDATE_WEBHOOK_URL` with the header `X-Deploy-Token` and answers
+immediately, because the deployment replaces the API container. The hook runs
+the deployment — for example the deploy hook of a panel, or a small script on
+the host that calls `scripts/update.sh`.
 
-```bash
-PROJECT=$(docker ps --filter label=com.docker.compose.service=web --format '{{.Label "com.docker.compose.project"}}' | head -n1)
-API=$(docker ps -q --filter label=com.docker.compose.service=api | head -n1)
-umask 077
-[ -f docker-compose.yml ] || { echo "nicht im Projektordner des Stacks (docker-compose.yml fehlt)" >&2; exit 1; }
-for k in POSTGRES_PASSWORD SESSION_SECRET; do
-  grep -q "^$k=" .env 2>/dev/null || {
-    value=$(docker exec "$API" printenv "$k" 2>/dev/null) || {
-      echo "konnte $k nicht aus dem laufenden api-Container lesen" >&2
-      exit 1
-    }
-    printf '%s=%s\n' "$k" "$value" >> .env
-  }
-  done
-IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \
-  docker compose -p "$PROJECT" --project-directory "$PWD" --profile update up -d --build update-agent
-```
+| Variable               | Meaning                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| `GITHUB_REPO`          | `owner/repo` of the upstream repository; empty disables the check |
+| `GITHUB_BRANCH`        | the branch with the newest sources; default `main`                |
+| `GITHUB_TOKEN`         | optional token of the GitHub API; it raises the rate limit        |
+| `UPDATE_WEBHOOK_URL`   | the deploy hook the start calls; empty disables the start         |
+| `UPDATE_WEBHOOK_TOKEN` | the value of the `X-Deploy-Token` header                          |
 
-- **`-p` plus `--project-directory "$PWD"` are deliberate.** `-p` takes the name
-  of the running stack from its label, so no second stack appears next to the
-  stack a panel started; `--project-directory` pins the build contexts, the
-  relative paths and the `.env` of the current folder. The
-  `com.docker.compose.project.working_dir` label is **not** used — it names the
-  folder as the container that ran compose saw it, and a panel such as Arcane
-  reports a path the host does not know: `/app/data/projects/<project>` instead
-  of `/var/lib/docker/volumes/arcane_arcane-data/_data/projects/<project>`.
-- **`.env` appears when the panel keeps its variables in its own store.** The
-  compose file requires `POSTGRES_PASSWORD` and `SESSION_SECRET` (the `:?`
-  defaults at the top of `docker-compose.yml`) and the `api` service loads
-  `.env`. The loop appends only the keys that are missing, reads every value
-  **inside** the running `api` container with `printenv` — never on the host
-  command line — and creates the file with `umask 077`. An existing value is
-  never rewritten, so a changed secret needs the file edited or removed by hand.
+The tokens stay in the `api` container: they are never sent to the browser,
+never logged and never committed. The `api` service has
+`host.docker.internal:host-gateway` in its `extra_hosts`, so a hook on the host
+is reachable under that name — for example
+`http://host.docker.internal:9000/hooks/deploy`.
 
-- **Opt-in.** The agent belongs to the profile `update`, so a normal
-  `docker compose up -d --build` neither starts nor stops nor recreates it.
-  That is what lets the agent survive the redeploy it triggers itself.
-- **The Docker socket is its only host privilege.** The agent is mounted with
-  `/var/run/docker.sock` and therefore as privileged as the host. Start it
-  deliberately; the normal deployment does not need it.
-- **The checkout is mounted read-write** at `/repo`. The agent pulls it and
-  the compose client of the agent reads the build context from it, so the
-  rebuilt images contain the new code.
-- **It publishes no host port.** The agent answers only on the internal
-  `backend` network, and only with its bearer. The agent creates that bearer
-  itself and writes it into the state volume; the API reads it from there, so
-  **no secret has to be configured** — `UPDATE_AGENT_TOKEN` in `.env` is
-  optional and only pins a fixed bearer.
-- **A run restarts the API.** The rebuild replaces the API container, so the
-  request that triggered the run dies with it. The agent keeps the truth about
-  the run, and the API reconciles the run row after its restart. The
-  administration shows the result on `/admin/update`.
-- **The clean-up removes the images this update replaced.** The rebuild moves
-  the fixed `:latest` tags to the new images, so the previous image of every
-  built service turns tagless. The agent snapshots the image ids of its own image
-  names (`stoerdesk-api:latest`, `stoerdesk-web:latest`,
-  `stoerdesk-agent:latest`) **before** the rebuild and removes by id afterwards
-  whatever is neither the current image of one of those names nor the image of a
-  container of this project — `docker rmi` without `-f`, so an image a container
-  still holds stays and the run stays `SUCCESS`. The project-labelled
-  `docker image prune -f` stays as the last, best-effort command: it also sweeps
-  the project-prefixed default names of an older layout. `docker image prune -a`
-  and an unscoped `docker image prune -f` are never used — they would touch the
-  images of other projects on a shared host. What the agent never does is prune a
-  time window: the backlog an older version left behind still goes away with
-  `scripts/update.sh --gc` (WP-M3-02, WP-M3-02b).
-- **Panels and non-git checkouts work.** When `/repo` is no git work tree (for
-  example an Arcane project folder), the pull step is skipped and the compose
-  build performs the update. The agent reads the compose project from its own
-  container label, so it redeploys the stack Arcane started instead of creating
-  a second one. Running optional profiles (`backup`) are kept; the `update`
-  profile is never touched, so the agent survives its own redeploy.
-  When `.env` has no Git URL, the agent and `scripts/update.sh` set
-  `IMAGE_BUILD_CONTEXT` to the repository URL for the build, so a synced project
-  folder does not rebuild the old files.
-
-Without the agent the administration reports that the agent is not reachable
-and shows the command that starts it; the client-side update of the PWA keeps
-working.
+A second start inside five minutes is refused (`429 update_rate_limited`); the
+window lives in the memory of the API process, and the deployment restarts the
+API anyway.
 
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.
 `npm run env:create` copies the template to `.env` and replaces the secrets
-(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`, `UPDATE_AGENT_TOKEN`) with random values. The token
-of the update agent is optional: the agent creates its own bearer when the value is
-empty. The generated password is URL-safe, so it can be used inside a connection
+(`POSTGRES_PASSWORD`, `SESSION_SECRET`, `SEED_ADMIN_PASSWORD`) with random values.
+The generated password is URL-safe, so it can be used inside a connection
 URL. The application version is not configured here: it comes from the tracked
 `VERSION` file.
 
@@ -453,8 +391,8 @@ ls -la /var/lib/docker/volumes/arcane_arcane-data/_data/projects/stoerdesk
 That host path is what a shell on the host addresses — the path
 `/app/data/projects/stoerdesk` exists only inside the Arcane container, and the
 `working_dir` label of the running stack carries exactly that container-internal
-path. The start command of [Host update](#host-update) therefore never follows
-that label: change into the host path above and it pins the folder with
+path. The host update of [Host update](#host-update) therefore never follows
+that label: change into the host path above and pin the folder with
 `--project-directory "$PWD"`.
 
 ### Environment
@@ -501,16 +439,15 @@ An older revision of the start guide changed into the
 names the project folder **inside the container that ran compose** — under a
 panel such as Arcane it is no path of the host, and no amount of root rights
 changes that. Change into the host path of the panel volume
-([Arcane](#arcane)) and start the agent with
-`--project-directory "$PWD"` from there; the guide on `/admin/update` already
-works that way.
+([Arcane](#arcane)) and run the host update from there with
+`--project-directory "$PWD"`.
 
 ### Disk full of `<none>` images
 
-Every rebuild leaves the previous image of `api`, `web` and `update-agent`
-without a tag on the host; an update that was interrupted does it twice. Both
-update paths remove them by image id — `scripts/update.sh` and the update agent
-(see [Host update](#host-update)). For the backlog an older version left behind:
+Every rebuild leaves the previous image of `api` and `web` without a tag on the
+host; an update that was interrupted does it twice. The host update removes
+them by image id — `scripts/update.sh` (see
+[Host update](#host-update)). For the backlog an older version left behind:
 
 ```bash
 docker images -f dangling=true        # the tagless backlog
