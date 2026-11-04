@@ -6,7 +6,6 @@ import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { RolesPage } from '../admin/roles-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
-import { UpdatePage } from '../admin/update-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { StartPage } from '../features/dashboard/start-page'
@@ -70,14 +69,6 @@ export const router = createBrowserRouter([
         element: (
           <RequireSession>
             <TextTemplatesPage />
-          </RequireSession>
-        ),
-      },
-      {
-        path: '/admin/update',
-        element: (
-          <RequireSession>
-            <UpdatePage />
           </RequireSession>
         ),
       },

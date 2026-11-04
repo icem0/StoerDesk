@@ -35,7 +35,9 @@ describe('github client', () => {
           headers: (init?.headers as Record<string, string>) ?? {},
         })
 
-        return Response.json(commitPayload('abc1234def', 'fix(api): answer\n\nbody', '2026-11-04T10:00:00Z'))
+        return Response.json(
+          commitPayload('abc1234def', 'fix(api): answer\n\nbody', '2026-11-04T10:00:00Z'),
+        )
       }) as unknown as typeof fetch,
     )
 
@@ -96,7 +98,9 @@ describe('github client', () => {
   it('answers no comparison when GitHub cannot compare the refs', async () => {
     const client = createGitHubClient(
       { repo: 'icem0/StoerDesk', branch: 'main', token: '' },
-      vi.fn(async () => Response.json({ message: 'Not Found' }, { status: 404 })) as unknown as typeof fetch,
+      vi.fn(async () =>
+        Response.json({ message: 'Not Found' }, { status: 404 }),
+      ) as unknown as typeof fetch,
     )
 
     await expect(client.compare('local-only', 'abc1234')).resolves.toBeNull()

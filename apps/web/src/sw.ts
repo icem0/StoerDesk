@@ -4,7 +4,6 @@ import { NetworkOnly } from 'workbox-strategies'
 import { registerRoute } from 'workbox-routing'
 
 import { isPublicReportPath } from './lib/sw-routes'
-import { appVersion } from './lib/version'
 
 declare global {
   interface Window {
@@ -32,50 +31,3 @@ registerRoute(
   new NetworkOnly({ plugins: [reportQueue] }),
   'POST',
 )
-
-/**
- * Clean-update control (specs/18-self-update.md §18.2, WP-M2-44). The admin
- * update page posts `SKIP_WAITING`, `GET_VERSION` or `CLEAR_CACHES`. The narrow
- * scope type is needed because this project typechecks the web workspace with
- * the DOM lib and not with the Web Worker lib.
- */
-type UpdateMessageEvent = {
-  data: unknown
-  ports: MessagePort[]
-  waitUntil: (promise: Promise<void>) => void
-}
-
-type UpdateWorkerScope = {
-  addEventListener: (type: 'message', listener: (event: UpdateMessageEvent) => void) => void
-  skipWaiting: () => Promise<ServiceWorkerRegistration>
-}
-
-const scope = self as unknown as UpdateWorkerScope
-
-scope.addEventListener('message', (event) => {
-  const port = event.ports[0]
-
-  if (event.data === 'SKIP_WAITING') {
-    void scope.skipWaiting()
-    port?.postMessage('SKIP_WAITING_DONE')
-
-    return
-  }
-
-  if (event.data === 'GET_VERSION') {
-    port?.postMessage(appVersion)
-
-    return
-  }
-
-  if (event.data === 'CLEAR_CACHES') {
-    event.waitUntil(
-      caches
-        .keys()
-        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-        .then(() => {
-          port?.postMessage('CLEAR_CACHES_DONE')
-        }),
-    )
-  }
-})

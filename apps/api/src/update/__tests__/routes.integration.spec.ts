@@ -86,7 +86,9 @@ function stubFetch() {
           })
         }
 
-        return Response.json(commitPayload('abc1234def5678', 'fix(api): newest', '2026-11-04T10:00:00Z'))
+        return Response.json(
+          commitPayload('abc1234def5678', 'fix(api): newest', '2026-11-04T10:00:00Z'),
+        )
       }
 
       if (url.startsWith(WEBHOOK_URL)) {

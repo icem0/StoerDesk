@@ -26,10 +26,6 @@
           "title": "BMAcloud-Abgleich",
           "hint": "Die Objektliste wird read-only aus der BMAcloud geholt und lässt sich dort manuell anstoßen."
         },
-        "update": {
-          "title": "Aktualisierung",
-          "hint": "Client-Update der PWA prüfen: neue Version aktivieren oder Cache sauber leeren. Host-Updates sind hier noch nicht enthalten."
-        },
         "groups": {
           "title": "Gruppen",
           "hint": "Benutzergruppen für die Zuweisung von Tickets."
@@ -57,98 +53,33 @@
       }
     },
     "update": {
-      "title": "Aktualisierung",
-      "hint": "Diese Seite aktualisiert nur den Browser-Client der PWA. Sie prüft die Service-Worker-Version, aktiviert eine wartende Version und kann den PWA-Cache sauber leeren — ohne Host-Zugriff und ohne offene Offline-Meldungen zu verlieren.",
-      "currentVersion": "App-Version",
-      "swVersion": "Service-Worker-Version",
-      "noServiceWorker": "kein Service Worker aktiv",
-      "checkUpdate": "Update prüfen",
+      "title": "Update",
+      "hint": "Prüft GitHub auf einen neueren Commit und startet die Bereitstellung des Stacks.",
+      "installedVersion": "Installierte Version",
+      "installedCommit": "Installierter Commit",
+      "latestCommit": "Neuester Commit",
+      "unknown": "unbekannt",
       "checking": "Prüfung läuft …",
-      "updateAvailable": "Eine neue Version ist bereit.",
-      "noUpdate": "Es ist keine neue Version verfügbar.",
-      "unavailable": "Ein Service-Worker-Update ist in diesem Browser gerade nicht verfügbar.",
-      "reload": "Jetzt neu laden",
-      "clearCache": "Cache leeren & neu laden",
-      "clearing": "Cache wird geleert …",
-      "outboxBlocked": "Es sind noch Offline-Meldungen offen. Update-Aktionen sind gesperrt, bis der Outbox-Status gesendet ist.",
-      "host": {
-        "title": "Host-Update",
-        "hint": "Vergleicht die laufende Version mit GitHub und startet per Knopf das Host-Update. Der Stack ist dabei kurz nicht erreichbar.",
-        "agent": "In-UI-Update (Agent)",
-        "agentReady": " erreichbar",
-        "agentMissing": "nicht aktiv — der Knopf braucht den Agenten",
-        "check": {
-          "title": "Update prüfen"
-        },
-        "checkUpdate": "Update prüfen",
-        "checking": "Prüfung läuft…",
-        "latestVersion": "Neueste Version",
-        "updateAvailable": "Update verfügbar!",
-        "upToDate": "Sie nutzen die neueste Version.",
-        "startUpdate": "Jetzt updaten",
-        "checkFailed": "Prüfung fehlgeschlagen.",
-        "agentNotConfigured": "nicht erreichbar — der Agent läuft noch nicht (er schreibt sein Token erst beim Start)",
-        "agentBadResponse": "nicht erreichbar — der Agent antwortet ungültig",
-        "guide": {
-          "title": "Update-Knopf aktivieren (einmalig)",
-          "step1": "Im Projektverzeichnis auf dem Host ausführen — der Befehl findet Projekt und Pfad selbst:",
-          "step2": "Danach ist der Knopf dauerhaft aktiv; der Agent startet mit dem Server neu.",
-          "copy": "Befehl kopieren",
-          "copied": "Kopiert",
-          "hint": "Kein Token, keine .env-Änderung. Fehlt im Projektordner ein Git-Checkout, baut der Agent die Quellen aus GitHub."
-        },
-        "currentVersion": "Aktuelle Version",
-        "clientVersion": "aus dieser Web-App",
-        "versionUnknown": "Die Versionen lassen sich nicht vergleichen. Bitte den Agenten starten oder den neuesten Stand manuell einspielen.",
-        "version": "Version auf dem Server",
-        "unknownVersion": "unbekannt",
-        "noRun": "Noch kein Host-Update gelaufen.",
-        "lastRun": "Letzter Lauf",
-        "running": "Das Host-Update läuft.",
-        "run": "Host-Update starten",
-        "confirm": "Das Host-Update jetzt starten? Der Stack wird neu gebaut, die API ist dabei kurz nicht erreichbar und die alten Images werden entfernt.",
-        "confirmYes": "Ja, Host-Update starten",
-        "confirmNo": "Abbrechen",
-        "apiUnreachable": "Die API ist gerade nicht erreichbar — der Stack wird neu gebaut.",
-        "status": {
-          "RUNNING": "läuft",
-          "SUCCESS": "erfolgreich",
-          "PARTIAL": "teilweise erfolgreich",
-          "FAILED": "fehlgeschlagen"
-        },
-        "errors": {
-          "session_invalid": "Die Sitzung ist abgelaufen.",
-          "forbidden": "Für den Host-Update fehlt die Berechtigung system.update.",
-          "update_agent_unreachable": "Der Update-Agent ist nicht erreichbar.",
-          "update_agent_not_configured": "Es ist kein Update-Agent konfiguriert.",
-          "update_agent_bad_response": "Der Update-Agent hat eine ungültige Antwort geliefert.",
-          "update_already_running": "Es läuft bereits ein Host-Update.",
-          "update_rate_limited": "Es wurde vor Kurzem ein Host-Update gestartet.",
-          "unknown": "Das Host-Update konnte nicht gestartet werden."
-        },
-        "steps": {
-          "git": "Repository aktualisieren",
-          "compose": "Stack neu aufbauen",
-          "prune": "Alte Images löschen"
-        },
-        "step": {
-          "ok": "erledigt",
-          "failed": "fehlgeschlagen",
-          "skipped": "übersprungen"
-        },
-        "errorCodes": {
-          "update_git_failed": "Git-Pull fehlgeschlagen",
-          "update_compose_failed": "Neubuild des Stacks fehlgeschlagen",
-          "update_prune_failed": "Alte Images konnten nicht gelöscht werden",
-          "update_step_timeout": "Der Update-Schritt hat sein Zeitlimit überschritten",
-          "update_agent_unreachable": "Agent nicht erreichbar",
-          "update_agent_not_configured": "Agent nicht konfiguriert",
-          "update_agent_bad_response": "Ungültige Antwort vom Agenten",
-          "update_already_running": "Ein Update läuft bereits",
-          "update_rate_limited": "Zu viele Versuche, bitte warten",
-          "unknown": "Unbekannter Fehler"
-        },
-        "errorDetailLabel": "Fehlerdetail"
+      "upToDate": "Die installierte Version ist aktuell.",
+      "notComparable": "Die Versionen lassen sich nicht vergleichen.",
+      "available": "{{count}} Commits seit der installierten Version.",
+      "startUpdate": "Update starten",
+      "confirm": "Das Update jetzt starten? Der Stack wird neu gebaut und ist dabei kurz nicht erreichbar.",
+      "confirmYes": "Ja, Update starten",
+      "confirmNo": "Abbrechen",
+      "started": "Das Update wurde gestartet. Der Stack startet neu — die Seite ist gleich kurz nicht erreichbar.",
+      "close": "Schließen",
+      "errors": {
+        "session_invalid": "Die Sitzung ist abgelaufen.",
+        "forbidden": "Für das Update fehlt die Berechtigung system.update.",
+        "update_not_configured": "Es ist kein Repository konfiguriert.",
+        "update_check_failed": "GitHub ist nicht erreichbar.",
+        "update_github_rate_limited": "GitHub hat die Anfrage gedrosselt.",
+        "update_no_update_available": "Es ist kein Update verfügbar.",
+        "update_webhook_not_configured": "Es ist kein Deploy-Webhook konfiguriert.",
+        "update_webhook_failed": "Der Deploy-Webhook hat die Anfrage abgelehnt.",
+        "update_rate_limited": "Es wurde vor Kurzem ein Update gestartet.",
+        "unknown": "Das Update konnte nicht gestartet werden."
       }
     },
     "users": {

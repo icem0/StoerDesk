@@ -7,7 +7,9 @@ import { Link } from 'react-router-dom'
  * The entry point of the administration area. It lists the administration
  * modules: the available ones link to their page, the ones whose phase has not
  * arrived yet are marked as planned with the phase they belong to, so the gaps
- * are visible instead of silently missing.
+ * are visible instead of silently missing. The update is no module of this
+ * list: it lives in the version badge of the header (`specs/18-self-update.md`
+ * §18.2).
  */
 
 type Module = { key: string; to: string } | { key: string; to?: undefined; phase: string }
@@ -16,7 +18,6 @@ const MODULES: Module[] = [
   { key: 'users', to: '/admin/users' },
   { key: 'roles', to: '/admin/roles' },
   { key: 'bmaSync', to: '/admin/bma-sync' },
-  { key: 'update', to: '/admin/update' },
   { key: 'groups', phase: 'phase4' },
   { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', phase: 'phase6' },

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The update menu of the administration (WP-M3-10): the version badge of the
+  shell header is a button for a user with `system.update` and opens a panel
+  with the installed version, the installed commit, the newest upstream commit,
+  the commits behind it and a button that starts the deployment after an
+  explicit confirmation. Every other user keeps the plain version text.
+
+### Changed
+
+- The page `/admin/update` and its host update section are gone (WP-M3-10); the
+  update lives in the version badge of the header now. The PWA updates itself
+  (`registerType: autoUpdate`), so the manual cache control of the old page is
+  not needed any more.
+
 - The stack carries the configuration of the update control (WP-M3-09): the
   `api` image takes the build argument `GIT_COMMIT` and the tracked `VERSION`
   file, the compose file passes the keys `GITHUB_REPO`, `GITHUB_BRANCH`,

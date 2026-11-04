@@ -1,7 +1,7 @@
 # WP-M3-10: the update menu in the shell header
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-08
 phase: 3
 milestone: m3
@@ -72,8 +72,20 @@ answer of the start.
 
 ## Handoff
 
-- Files changed: the panel, the badge, the route table, the texts, the tests
-- Interfaces added: `UpdatePanel`
-- Verified: pending
+- Files changed: `apps/web/src/admin/update-panel.tsx` (new),
+  `apps/web/src/admin/__tests__/update-panel.test.tsx` (new),
+  `apps/web/src/components/app-version.tsx`,
+  `apps/web/src/components/__tests__/app-version.test.tsx`,
+  `apps/web/src/routes/index.tsx`, `apps/web/src/admin/admin-home-page.tsx`,
+  `apps/web/src/i18n/locales/de/settings.json`,
+  `apps/web/src/i18n/locales/en/settings.json`, `apps/web/src/sw.ts`,
+  `docs/REPO-MAP.md`, `CHANGELOG.md`; the old page
+  `apps/web/src/admin/update-page.tsx`, the host update section
+  `apps/web/src/admin/update-host-update.tsx` and their tests are deleted
+- Interfaces added: `UpdatePanel`; the badge `AppVersion` becomes a button for
+  a user with `system.update`
+- Verified: `npm run check` (64 files, 410 tests, i18n and wp-check green); the
+  panel test proves the answer, the confirmation, the start and the error codes,
+  the badge test proves the hidden state without the permission
 - Follow-up WP: WP-M3-12 (the documentation)
 - Open question: none

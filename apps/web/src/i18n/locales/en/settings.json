@@ -26,10 +26,6 @@
           "title": "BMAcloud sync",
           "hint": "The object list is pulled read-only from BMAcloud and can be triggered manually here."
         },
-        "update": {
-          "title": "Update",
-          "hint": "Check the PWA client update: activate a new version or clear the cache cleanly. Host updates are not part of this page yet."
-        },
         "groups": {
           "title": "Groups",
           "hint": "User groups for the ticket assignment."
@@ -58,97 +54,32 @@
     },
     "update": {
       "title": "Update",
-      "hint": "This page updates only the browser client of the PWA. It checks the service worker version, activates a waiting version and can clear the PWA cache cleanly — without host access and without losing an offline report.",
-      "currentVersion": "App version",
-      "swVersion": "Service worker version",
-      "noServiceWorker": "no service worker active",
-      "checkUpdate": "Check update",
+      "hint": "Checks GitHub for a newer commit and starts the deployment of the stack.",
+      "installedVersion": "Installed version",
+      "installedCommit": "Installed commit",
+      "latestCommit": "Newest commit",
+      "unknown": "unknown",
       "checking": "Checking …",
-      "updateAvailable": "A new version is ready.",
-      "noUpdate": "No new version is available.",
-      "unavailable": "A service worker update is not available in this browser right now.",
-      "reload": "Reload now",
-      "clearCache": "Clear cache & reload",
-      "clearing": "Clearing cache …",
-      "outboxBlocked": "Offline reports are still open. Update actions are blocked until the outbox has been sent.",
-      "host": {
-        "title": "Host update",
-        "hint": "Compares the running version with GitHub and starts the host update with a button. The stack is briefly unavailable while it works.",
-        "agent": "In-UI update (agent)",
-        "agentReady": "reachable",
-        "agentMissing": "not active — the button needs the agent",
-        "check": {
-          "title": "Check for update"
-        },
-        "checkUpdate": "Check for update",
-        "checking": "Checking…",
-        "latestVersion": "Latest version",
-        "updateAvailable": "Update available!",
-        "upToDate": "You are using the latest version.",
-        "startUpdate": "Update now",
-        "checkFailed": "Check failed.",
-        "agentNotConfigured": "not reachable — the agent does not run yet (it writes its token at the start)",
-        "agentBadResponse": "not reachable — the agent answers something invalid",
-        "guide": {
-          "title": "Enable the update button (one-time)",
-          "step1": "Run this in the project directory on the host — the command finds the project and its path itself:",
-          "step2": "The button stays active afterwards; the agent restarts with the server.",
-          "copy": "Copy command",
-          "copied": "Copied",
-          "hint": "No token, no .env change. If the project directory has no git checkout, the agent builds the sources from GitHub."
-        },
-        "currentVersion": "Current version",
-        "clientVersion": "from this web app",
-        "versionUnknown": "The versions cannot be compared. Start the agent or apply the latest version manually.",
-        "version": "Version on the server",
-        "unknownVersion": "unknown",
-        "noRun": "No host update has run yet.",
-        "lastRun": "Last run",
-        "running": "The host update is running.",
-        "run": "Start host update",
-        "confirm": "Start the host update now? The stack is rebuilt, the API is briefly unavailable and the old images are removed.",
-        "confirmYes": "Yes, start the host update",
-        "confirmNo": "Cancel",
-        "apiUnreachable": "The API is not reachable right now — the stack is being rebuilt.",
-        "status": {
-          "RUNNING": "running",
-          "SUCCESS": "succeeded",
-          "PARTIAL": "partly succeeded",
-          "FAILED": "failed"
-        },
-        "errors": {
-          "session_invalid": "The session has expired.",
-          "forbidden": "The host update needs the permission system.update.",
-          "update_agent_unreachable": "The update agent is not reachable.",
-          "update_agent_not_configured": "No update agent is configured.",
-          "update_agent_bad_response": "The update agent answered something invalid.",
-          "update_already_running": "A host update is already running.",
-          "update_rate_limited": "A host update was started recently.",
-          "unknown": "The host update could not be started."
-        },
-        "steps": {
-          "git": "Update repository",
-          "compose": "Rebuild stack",
-          "prune": "Delete old images"
-        },
-        "step": {
-          "ok": "done",
-          "failed": "failed",
-          "skipped": "skipped"
-        },
-        "errorCodes": {
-          "update_git_failed": "Git pull failed",
-          "update_compose_failed": "Stack rebuild failed",
-          "update_prune_failed": "Old images could not be deleted",
-          "update_step_timeout": "The update step passed its deadline",
-          "update_agent_unreachable": "Agent not reachable",
-          "update_agent_not_configured": "Agent not configured",
-          "update_agent_bad_response": "Invalid answer from agent",
-          "update_already_running": "An update is already running",
-          "update_rate_limited": "Too many attempts, please wait",
-          "unknown": "Unknown error"
-        },
-        "errorDetailLabel": "Error detail"
+      "upToDate": "The installed version is up to date.",
+      "notComparable": "The versions cannot be compared.",
+      "available": "{{count}} commits since the installed version.",
+      "startUpdate": "Start update",
+      "confirm": "Start the update now? The stack is rebuilt and briefly unreachable while it works.",
+      "confirmYes": "Yes, start the update",
+      "confirmNo": "Cancel",
+      "started": "The update was started. The stack restarts — the page is briefly unreachable.",
+      "close": "Close",
+      "errors": {
+        "session_invalid": "The session has expired.",
+        "forbidden": "The update needs the permission system.update.",
+        "update_not_configured": "No repository is configured.",
+        "update_check_failed": "GitHub is not reachable.",
+        "update_github_rate_limited": "GitHub throttled the request.",
+        "update_no_update_available": "No update is available.",
+        "update_webhook_not_configured": "No deploy webhook is configured.",
+        "update_webhook_failed": "The deploy webhook refused the request.",
+        "update_rate_limited": "An update was started recently.",
+        "unknown": "The update could not be started."
       }
     },
     "users": {

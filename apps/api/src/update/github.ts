@@ -19,9 +19,7 @@ export interface GitHubConfig {
 }
 
 export type GitHubErrorCode =
-  | 'update_not_configured'
-  | 'update_check_failed'
-  | 'update_github_rate_limited'
+  'update_not_configured' | 'update_check_failed' | 'update_github_rate_limited'
 
 export class GitHubError extends Error {
   readonly code: GitHubErrorCode

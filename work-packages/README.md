@@ -302,7 +302,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-07  | the update contract (spec §18, ADR-0007) and the GitHub client     | done                    | yes     |
 | WP-M3-08  | the update API: `check` and `start` with the environment keys      | done                    | yes     |
 | WP-M3-09  | the deployment configuration of the update control                  | done                    | yes     |
-| WP-M3-10  | the update menu in the shell header                                | planned                 | yes     |
+| WP-M3-10  | the update menu in the shell header                                | done                    | yes     |
 | WP-M3-11  | the removal of the update agent                                   | planned                 | yes     |
 | WP-M3-12  | the documentation of the new update control                        | planned                 | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
