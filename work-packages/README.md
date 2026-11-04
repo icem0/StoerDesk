@@ -298,7 +298,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done                    | yes     |
 | WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done                    | yes     |
 | WP-M3-05  | shared error code `update_step_timeout` for self-update           | done                    | yes     |
-| WP-M3-06  | the update agent run can never hang forever                       | planned                 | yes     |
+| WP-M3-06  | the update agent run can never hang forever                       | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |

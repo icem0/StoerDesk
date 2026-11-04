@@ -731,7 +731,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done   |
 | WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done   |
 | WP-M3-05  | shared error code `update_step_timeout` for self-update           | done   |
-| WP-M3-06  | the update agent run can never hang forever                       | planned |
+| WP-M3-06  | the update agent run can never hang forever                       | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

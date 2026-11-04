@@ -1,7 +1,7 @@
 # WP-M3-06: the update agent run can never hang forever
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-05
 phase: 3
 milestone: m3
@@ -77,4 +77,11 @@ never answers and proves the run leaves `running` with
 
 ## Handoff
 
-- pending
+- Files changed: `apps/agent/src/update-runner.ts`, `apps/agent/src/config.ts`,
+  `apps/agent/src/index.ts`, the runner test, changelog and backlog tables
+- Interfaces added: `UPDATE_STEP_TIMEOUT_MS`, `CommandResult.timedOut`,
+  `StepOutcome.errorCode`
+- Verified: `npm run check` (64 files, 410 tests, i18n and wp-check green) plus
+  the new timeout unit test
+- Follow-up WP: none
+- Open question: none
