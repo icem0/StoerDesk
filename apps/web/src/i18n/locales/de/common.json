@@ -15,6 +15,22 @@
    "operations": "Meldungen",
    "objects": "Objekte",
    "administration": "Verwaltung"
+  },
+  "notFound": {
+   "title": "Seite nicht gefunden",
+   "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt.",
+   "back": "Zur Startseite"
+  },
+  "error": {
+   "notFound": {
+    "title": "Seite nicht gefunden",
+    "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt."
+   },
+   "failed": {
+    "title": "Unerwarteter Fehler",
+    "hint": "Die Seite konnte nicht geladen werden. Bitte lade sie neu oder gehe zur Startseite."
+   },
+   "back": "Zur Startseite"
   }
  },
  "branding": {

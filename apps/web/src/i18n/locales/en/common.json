@@ -15,6 +15,22 @@
    "operations": "Operations",
    "objects": "Objects",
    "administration": "Administration"
+  },
+  "notFound": {
+   "title": "Page not found",
+   "hint": "This address does not exist (any more). Maybe the page was renamed or removed.",
+   "back": "Back to the dashboard"
+  },
+  "error": {
+   "notFound": {
+    "title": "Page not found",
+    "hint": "This address does not exist (any more). Maybe the page was renamed or removed."
+   },
+   "failed": {
+    "title": "Unexpected error",
+    "hint": "The page could not be loaded. Please reload it or go back to the dashboard."
+   },
+   "back": "Back to the dashboard"
   }
  },
  "branding": {

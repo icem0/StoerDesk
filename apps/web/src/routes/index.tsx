@@ -1,10 +1,12 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 
 import { App } from '../App'
 import { AdminHomePage } from '../admin/admin-home-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
+import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
+import { RouteErrorPage } from '../components/route-error-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
@@ -19,10 +21,24 @@ import { TicketDetailPage } from '../features/tickets/ticket-detail-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
 
-export const router = createBrowserRouter([
+/**
+ * The route table of the application (`apps/web/src/routes/index.tsx`).
+ *
+ * The table is exported next to the router, so a test can build a memory
+ * router from the same routes (WP-M3-13).
+ *
+ * Two rules keep a wrong address out of the developer page of React Router:
+ * the root route carries an `errorElement` (`RouteErrorPage`) and the last
+ * child is the catch-all route of the not found page (`NotFoundPage`). The
+ * public routes `/m/:token` and `/s/:token` stay outside the shell and are
+ * more specific than the catch-all, so a reporter never sees the not found
+ * page of the internal app.
+ */
+export const routes: RouteObject[] = [
   {
     path: '/',
     element: <App />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         path: '/',
@@ -136,6 +152,23 @@ export const router = createBrowserRouter([
           </RequireSession>
         ),
       },
+      {
+        // The update page of the retired host update (WP-M2-44) is gone: the
+        // update menu lives in the version badge of the header (WP-M3-10). An
+        // old bookmark lands on the administration home instead of a 404.
+        path: '/admin/update',
+        element: <Navigate replace to="/admin" />,
+      },
+      {
+        // Every address that does not exist shows the not found page of the
+        // application instead of the developer page of React Router.
+        path: '*',
+        element: (
+          <RequireSession>
+            <NotFoundPage />
+          </RequireSession>
+        ),
+      },
     ],
   },
   // A QR reporter has no session: `/m/:token` is deliberately outside the `App` shell, so
@@ -150,4 +183,6 @@ export const router = createBrowserRouter([
     path: '/s/:token',
     element: <StatusPage />,
   },
-])
+]
+
+export const router = createBrowserRouter(routes)

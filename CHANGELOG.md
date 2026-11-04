@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The router shows a page of the application instead of the developer page of
+  React Router (WP-M3-13): an unknown address gets a "not found" page with a
+  link to the dashboard, an unexpected error gets an error page, and the
+  retired address `/admin/update` leads to the administration home — the update
+  menu lives in the version badge of the header.
 - The page `/admin/update` and its host update section are gone (WP-M3-10); the
   update lives in the version badge of the header now. The PWA updates itself
   (`registerType: autoUpdate`), so the manual cache control of the old page is

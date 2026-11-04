@@ -305,6 +305,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-10  | the update menu in the shell header                                | done                    | yes     |
 | WP-M3-11  | the removal of the update agent                                   | done                    | yes     |
 | WP-M3-12  | the documentation of the new update control                        | done                    | yes     |
+| WP-M3-13  | the not found page and the error boundary of the router            | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |
@@ -613,6 +614,12 @@ the shell header the entry point of the update menu (the page `/admin/update` is
 `update-agent`, the `agent` target of the `Dockerfile`, the keys `UPDATE_AGENT_*` and the
 volume `update-state` are gone; `scripts/update.sh` stays the manual path of the
 operator. **WP-M3-12** documents the new control.
+
+**The router shows a page of the application (WP-M3-13).** The retired page `/admin/update` is
+a dead address, and every other unknown address ended in the developer page of React Router
+("Unexpected Application Error! 404 Not Found"). **WP-M3-13** adds a not found page, an error
+element for the router and a catch-all route; the retired address leads to the administration
+home, so an old bookmark lands somewhere useful.
 
 **Phase 5 is split and started (the `m5` packages).** Phase 4 closed with WP-M4-01 and left
 no open follow-up, so the next roadmap step is phase 5 (offline internal actions). It had nowork packages — `specs/09-offline.md` §9.6 only named the topic — so the split required by
