@@ -729,6 +729,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M3-02b | the update agent removes the images it replaces                     | done   |
 | WP-M3-03  | the agent start command finds the project dir on the host           | done   |
 | WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done   |
+| WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -925,7 +926,9 @@ project name from the `com.docker.compose.project` label, pins the folder with
 `SESSION_SECRET` of the project `.env` from the running `api` container
 (`docker exec … printenv`, `umask 077`) — the compose file needs that file, because `api`
 declares `env_file: .env`. `scripts/update.sh` keeps requiring a real checkout: the panel
-path is the agent path.
+path is the agent path. **WP-M3-04b** finally guards the start command: if the current
+directory has no `docker-compose.yml`, it exits with `exit 1` and a clear message before
+`docker compose` or the `.env` are touched.
 
 Phase 4 is **complete** with a single package: **WP-M4-01** drives the whole workflow
 (review → work order → assign → accept → acknowledge → close) as one Playwright test in

@@ -218,6 +218,10 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
   reading every value inside the running `api` container with `printenv` (never
   on the host command line), creates the file under `umask 077` and never
   rewrites an existing secret.
+- Der Startbefehl bricht ab, wenn er nicht im Projektordner liegt (WP-M3-04b):
+  fehlt die `docker-compose.yml` im aktuellen Verzeichnis, endet der Befehl mit
+  `exit 1` und einer klaren Meldung, bevor Compose oder die `.env` angerührt
+  werden.
 - The permanent ticket deletion typechecks again (WP-M2-77): `tickets` has no
   `object_no` column, only the `object_id` foreign key, and the deletion used
   `sql` without importing it. The object number that `ticket_purges` requires is
