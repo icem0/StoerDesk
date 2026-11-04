@@ -1,19 +1,14 @@
-import { createServer, type Server } from 'node:http'
-import type { AddressInfo } from 'node:net'
-
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-
-import type { AgentRun } from '@stoerdesk/shared'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createSession } from '../../auth/session'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
-import { roles, updateRuns, userRoles, users } from '../../db/schema'
+import { roles, userRoles, users } from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { buildServer } from '../../index'
 
@@ -23,112 +18,96 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped update routes integration: ${testDatabase.reason}\n`)
 }
 
-const AGENT_TOKEN = 'a'.repeat(32)
+const WEBHOOK_URL = 'http://127.0.0.1:9/hooks/deploy'
+const WEBHOOK_TOKEN = 'deploy-token-value'
+const INSTALLED_COMMIT = 'abc1234def5678'
 
-type StatusResponseBody = {
-  agent?: { reachable?: boolean; state?: string | null }
-  running?: boolean
-  currentVersion?: string | null
-  lastRun?: {
-    id: string
-    status: string
-    errorCode: string | null
-    errorDetail?: string | null
-  } | null
-}
-
-type RunResponseBody = { run?: { id: string; status: string } }
-type RunsResponseBody = {
-  runs?: { id: string; status: string; errorDetail?: string | null }[]
-}
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
-function onlyRow<T>(rows: T[], what: string): T {
-  const [row] = rows
-
-  if (!row) {
-    throw new Error(`expected one ${what}`)
-  }
-
-  return row
+type CheckResponseBody = {
+  current?: string | null
+  latest?: string | null
+  updateAvailable?: boolean
+  commitsBehind?: number | null
+  commits?: { sha: string; message: string; date: string }[]
+  checkedAt?: string
 }
 
-/** A stand-in for the update agent: it speaks the protocol of §18.6. */
-function startFakeAgent(): {
+type FetchCall = {
   url: string
-  server: Server
-  state: { lastRun: AgentRun | null; refuseRun: boolean }
-} {
-  const state: { lastRun: AgentRun | null; refuseRun: boolean } = {
-    lastRun: null,
-    refuseRun: false,
-  }
+  method: string
+  headers: Record<string, string>
+  body: string | null
+}
 
-  const server = createServer((request, response) => {
-    const answer = (status: number, body: unknown) => {
-      const payload = JSON.stringify(body)
+const calls: FetchCall[] = []
 
-      response.writeHead(status, { 'content-type': 'application/json' })
-      response.end(payload)
-    }
+/** The state of the fake GitHub and of the fake webhook. */
+const upstream = {
+  aheadBy: 2,
+  compareStatus: 200,
+  webhookStatus: 200,
+  githubFails: false,
+}
 
-    if (request.headers.authorization !== `Bearer ${AGENT_TOKEN}`) {
-      answer(401, { code: 'unauthorized' })
+function commitPayload(sha: string, message: string, date: string) {
+  return { sha, commit: { message, committer: { date }, author: { date } } }
+}
 
-      return
-    }
+function stubFetch() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+      const url = String(input)
 
-    const path = new URL(request.url ?? '/', 'http://agent').pathname
-
-    if (path === '/status') {
-      answer(200, {
-        state: state.lastRun?.status === 'RUNNING' ? 'running' : 'idle',
-        checkout: { version: 'v0.1.99', commit: 'abc1234' },
-        lastRun: state.lastRun,
+      calls.push({
+        url,
+        method: init?.method ?? 'GET',
+        headers: (init?.headers as Record<string, string>) ?? {},
+        body: typeof init?.body === 'string' ? init.body : null,
       })
 
-      return
-    }
+      if (url.includes('api.github.com')) {
+        if (upstream.githubFails) {
+          throw new Error('network down')
+        }
 
-    if (path === '/run') {
-      if (state.refuseRun) {
-        answer(409, { code: 'update_already_running' })
+        if (url.includes('/compare/')) {
+          if (upstream.compareStatus !== 200) {
+            return Response.json({ message: 'Not Found' }, { status: upstream.compareStatus })
+          }
 
-        return
+          return Response.json({
+            ahead_by: upstream.aheadBy,
+            commits: [
+              commitPayload('aaa1111', 'feat(web): one', '2026-11-04T09:00:00Z'),
+              commitPayload('bbb2222', 'fix(api): two', '2026-11-04T08:00:00Z'),
+            ],
+          })
+        }
+
+        return Response.json(commitPayload('abc1234def5678', 'fix(api): newest', '2026-11-04T10:00:00Z'))
       }
 
-      const run: AgentRun = {
-        id: `agent-run-${Date.now()}`,
-        status: 'RUNNING',
-        startedAt: new Date().toISOString(),
-        finishedAt: null,
-        beforeVersion: 'v0.1.98',
-        afterVersion: null,
-        errorCode: null,
-        errorDetail: null,
-        steps: [],
+      if (url.startsWith(WEBHOOK_URL)) {
+        return Response.json({ ok: true }, { status: upstream.webhookStatus })
       }
 
-      state.lastRun = run
-      answer(202, { run })
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    }),
+  )
+}
 
-      return
-    }
+function githubCalls(): FetchCall[] {
+  return calls.filter((call) => call.url.includes('api.github.com'))
+}
 
-    if (path === '/runs') {
-      answer(200, { runs: state.lastRun === null ? [] : [state.lastRun] })
-
-      return
-    }
-
-    answer(404, { code: 'not_found' })
-  })
-
-  return { url: '', server, state }
+function webhookCalls(): FetchCall[] {
+  return calls.filter((call) => call.url.startsWith(WEBHOOK_URL))
 }
 
 describe.skipIf(testDatabase.status === 'unavailable')(
-  'update admin API — status, run and history (integration)',
+  'update admin API — check and start (integration)',
   () => {
     const url = testDatabase.status === 'available' ? testDatabase.url : ''
     const client = postgres(url, { max: 2 })
@@ -137,7 +116,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let app: FastifyInstance
     let adminCookie = ''
     let reporterCookie = ''
-    const agent = startFakeAgent()
 
     async function userIdFor(email: string): Promise<string> {
       const inserted = await db
@@ -145,12 +123,24 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .values({ email, passwordHash: 'no-login-for-this-update-test' })
         .returning({ id: users.id })
 
-      return onlyRow(inserted, `user ${email}`).id
+      const [row] = inserted
+
+      if (row === undefined) {
+        throw new Error(`expected the user ${email}`)
+      }
+
+      return row.id
     }
 
     async function roleIdFor(key: string): Promise<string> {
-      return onlyRow(await db.select({ id: roles.id }).from(roles).where(eq(roles.key, key)), key)
-        .id
+      const rows = await db.select({ id: roles.id }).from(roles).where(eq(roles.key, key))
+      const [row] = rows
+
+      if (row === undefined) {
+        throw new Error(`expected the role ${key}`)
+      }
+
+      return row.id
     }
 
     async function sessionCookieFor(userId: string): Promise<string> {
@@ -159,26 +149,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return `session=${session.token}`
     }
 
-    function getStatus(cookie: string) {
+    function getCheck(cookie: string) {
       return app.inject({
         method: 'GET',
-        url: '/api/v1/admin/update/status',
+        url: '/api/v1/admin/update/check',
         headers: { cookie },
       })
     }
 
-    function postRun(cookie: string) {
+    function postStart(cookie: string) {
       return app.inject({
         method: 'POST',
-        url: '/api/v1/admin/update/run',
-        headers: { cookie },
-      })
-    }
-
-    function getRuns(cookie: string) {
-      return app.inject({
-        method: 'GET',
-        url: '/api/v1/admin/update/runs',
+        url: '/api/v1/admin/update/start',
         headers: { cookie },
       })
     }
@@ -197,28 +179,38 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       adminCookie = await sessionCookieFor(adminId)
       reporterCookie = await sessionCookieFor(reporterId)
+    })
 
-      await new Promise<void>((resolve) => {
-        agent.server.listen(0, resolve)
-      })
+    beforeEach(async () => {
+      calls.length = 0
+      upstream.aheadBy = 2
+      upstream.compareStatus = 200
+      upstream.webhookStatus = 200
+      upstream.githubFails = false
 
-      const address = agent.server.address() as AddressInfo
+      stubFetch()
 
       process.env.DATABASE_URL = url
       process.env.NODE_ENV = 'test'
       process.env.API_LOG_LEVEL = 'silent'
       process.env.RATE_LIMIT_MAX = '10000'
-      process.env.UPDATE_AGENT_URL = `http://127.0.0.1:${address.port}`
-      process.env.UPDATE_AGENT_TOKEN = AGENT_TOKEN
+      process.env.GITHUB_REPO = 'icem0/StoerDesk'
+      process.env.GITHUB_BRANCH = 'main'
+      process.env.GITHUB_TOKEN = ''
+      process.env.GIT_COMMIT = INSTALLED_COMMIT
+      process.env.VERSION_FILE = '/nonexistent/VERSION'
+      process.env.UPDATE_WEBHOOK_URL = WEBHOOK_URL
+      process.env.UPDATE_WEBHOOK_TOKEN = WEBHOOK_TOKEN
 
       app = await buildServer()
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
       await app.close()
-      await new Promise<void>((resolve) => {
-        agent.server.close(() => resolve())
-      })
+      vi.unstubAllGlobals()
+    })
+
+    afterAll(async () => {
       await client.end({ timeout: 2 })
 
       if (testDatabase.status === 'available') {
@@ -227,161 +219,135 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('answers 401 for every route before the permission check', async () => {
-      expect((await getStatus('')).statusCode).toBe(401)
-      expect((await postRun('')).statusCode).toBe(401)
-      expect((await getRuns('')).statusCode).toBe(401)
+      expect((await getCheck('')).statusCode).toBe(401)
+      expect((await postStart('')).statusCode).toBe(401)
     })
 
     it('refuses every route without the permission system.update', async () => {
-      expect((await getStatus(reporterCookie)).statusCode).toBe(403)
-      expect((await postRun(reporterCookie)).statusCode).toBe(403)
-      expect((await getRuns(reporterCookie)).statusCode).toBe(403)
+      expect((await getCheck(reporterCookie)).statusCode).toBe(403)
+      expect((await postStart(reporterCookie)).statusCode).toBe(403)
     })
 
-    it('answers the state of the agent', async () => {
-      const response = await getStatus(adminCookie)
+    it('answers the installed version, the newest commit and the commits behind', async () => {
+      const response = await getCheck(adminCookie)
 
       expect(response.statusCode).toBe(200)
 
-      const body = response.json<StatusResponseBody>()
+      const body = response.json<CheckResponseBody>()
 
-      expect(body.agent?.reachable).toBe(true)
-      expect(body.currentVersion).toBe('v0.1.99')
-      expect(body.running).toBe(false)
+      expect(body.current).toBe(INSTALLED_COMMIT)
+      expect(body.latest).toBe('abc1234')
+      expect(body.updateAvailable).toBe(true)
+      expect(body.commitsBehind).toBe(2)
+      expect(body.commits).toHaveLength(2)
+      expect(body.commits?.[0]?.message).toBe('feat(web): one')
+      expect(body.checkedAt).toBeTruthy()
     })
 
-    it('starts a run, writes the row and refuses a second run', async () => {
-      const response = await postRun(adminCookie)
+    it('caches the answer for a minute', async () => {
+      expect((await getCheck(adminCookie)).statusCode).toBe(200)
+      expect((await getCheck(adminCookie)).statusCode).toBe(200)
 
-      expect(response.statusCode).toBe(202)
+      // The second request is answered from the cache: the newest commit and
+      // the comparison are asked only once.
+      expect(githubCalls()).toHaveLength(2)
+    })
 
-      const body = response.json<RunResponseBody>()
+    it('answers that the versions cannot be compared when GitHub refuses it', async () => {
+      upstream.compareStatus = 404
 
-      expect(body.run?.status).toBe('RUNNING')
+      const response = await getCheck(adminCookie)
 
-      const rows = await db.select().from(updateRuns)
+      expect(response.statusCode).toBe(200)
 
-      expect(rows).toHaveLength(1)
-      expect(rows[0]?.agentRunId).toBe(agent.state.lastRun?.id)
-      expect(body.run?.id).toBe(rows[0]?.id)
+      const body = response.json<CheckResponseBody>()
 
-      const second = await postRun(adminCookie)
+      expect(body.commitsBehind).toBeNull()
+      expect(body.updateAvailable).toBe(false)
+      expect(body.commits).toEqual([])
+    })
 
-      expect(second.statusCode).toBe(409)
-      expect(second.json<ErrorResponseBody>()).toEqual({
-        code: 'update_already_running',
+    it('reports a failing GitHub call', async () => {
+      upstream.githubFails = true
+
+      const response = await getCheck(adminCookie)
+
+      expect(response.statusCode).toBe(503)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'update_check_failed',
         params: {},
       })
     })
 
-    it('refuses a new run inside the cooldown', async () => {
-      const [row] = await db.select().from(updateRuns).orderBy(updateRuns.startedAt)
+    it('starts the update and calls the webhook', async () => {
+      const response = await postStart(adminCookie)
 
-      await db
-        .update(updateRuns)
-        .set({ status: 'SUCCESS', finishedAt: new Date() })
-        .where(eq(updateRuns.id, row?.id ?? ''))
+      expect(response.statusCode).toBe(202)
+      expect(response.json()).toEqual({ started: true })
 
-      const response = await postRun(adminCookie)
+      const [webhook] = webhookCalls()
 
-      expect(response.statusCode).toBe(429)
-      expect(response.json<ErrorResponseBody>()).toEqual({
+      expect(webhook?.method).toBe('POST')
+      expect(webhook?.headers['x-deploy-token']).toBe(WEBHOOK_TOKEN)
+
+      const body = JSON.parse(webhook?.body ?? '{}') as Record<string, unknown>
+
+      expect(body.version).toBe('abc1234')
+      expect(body.current).toBe(INSTALLED_COMMIT)
+      expect(Object.keys(body).sort()).toEqual(['current', 'requestedAt', 'version'])
+    })
+
+    it('refuses a second start inside the cooldown', async () => {
+      expect((await postStart(adminCookie)).statusCode).toBe(202)
+
+      const second = await postStart(adminCookie)
+
+      expect(second.statusCode).toBe(429)
+      expect(second.json<ErrorResponseBody>()).toEqual({
         code: 'update_rate_limited',
         params: {},
       })
+      expect(webhookCalls()).toHaveLength(1)
     })
 
-    it('reconciles a running row with the state of the agent', async () => {
-      const agentRun = agent.state.lastRun
+    it('refuses the start without an available update', async () => {
+      upstream.aheadBy = 0
 
-      agent.state.lastRun =
-        agentRun === null
-          ? null
-          : {
-              ...agentRun,
-              status: 'SUCCESS',
-              finishedAt: new Date().toISOString(),
-              afterVersion: 'v0.1.99',
-            }
+      const response = await postStart(adminCookie)
 
-      // The row of the run is still RUNNING: the API was replaced by the
-      // rebuild of the stack before it could store the result.
-      const rows = await db.select().from(updateRuns).orderBy(updateRuns.startedAt)
-      const row = rows[rows.length - 1]
-
-      await db
-        .update(updateRuns)
-        .set({ status: 'RUNNING', finishedAt: null, afterVersion: null })
-        .where(eq(updateRuns.id, row?.id ?? ''))
-
-      const response = await getStatus(adminCookie)
-
-      expect(response.statusCode).toBe(200)
-
-      const body = response.json<StatusResponseBody>()
-
-      expect(body.running).toBe(false)
-      expect(body.lastRun?.status).toBe('SUCCESS')
-
-      const reconciled = await db.select().from(updateRuns).orderBy(updateRuns.startedAt)
-      const last = reconciled[reconciled.length - 1]
-
-      expect(last?.status).toBe('SUCCESS')
-      expect(last?.afterVersion).toBe('v0.1.99')
+      expect(response.statusCode).toBe(409)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'update_no_update_available',
+        params: {},
+      })
+      expect(webhookCalls()).toHaveLength(0)
     })
 
-    it('stores the failure detail of the agent run in the row and the answer', async () => {
-      const agentRun = agent.state.lastRun
+    it('refuses the start without a configured webhook', async () => {
+      process.env.UPDATE_WEBHOOK_URL = ''
 
-      if (agentRun === null) {
-        throw new Error('expected an agent run of the previous test')
-      }
+      await app.close()
+      app = await buildServer()
 
-      const row = onlyRow(await db.insert(updateRuns).values({}).returning(), 'run')
+      const response = await postStart(adminCookie)
 
-      agent.state.lastRun = {
-        ...agentRun,
-        id: 'agent-run-failed',
-        status: 'FAILED',
-        startedAt: row.startedAt.toISOString(),
-        finishedAt: new Date().toISOString(),
-        afterVersion: 'v0.1.98',
-        errorCode: 'update_git_failed',
-        errorDetail: 'fatal: Not possible to fast-forward, aborting.',
-      }
-
-      const response = await getStatus(adminCookie)
-
-      expect(response.statusCode).toBe(200)
-
-      const body = response.json<StatusResponseBody>()
-
-      expect(body.lastRun?.errorCode).toBe('update_git_failed')
-      expect(body.lastRun?.errorDetail).toContain('Not possible to fast-forward')
-
-      const stored = onlyRow(
-        await db.select().from(updateRuns).where(eq(updateRuns.id, row.id)),
-        'run',
-      )
-
-      expect(stored.status).toBe('FAILED')
-      expect(stored.errorDetail).toBe('fatal: Not possible to fast-forward, aborting.')
-
-      const history = await getRuns(adminCookie)
-
-      expect(history.json<RunsResponseBody>().runs?.[0]?.errorDetail).toContain(
-        'Not possible to fast-forward',
-      )
+      expect(response.statusCode).toBe(503)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'update_webhook_not_configured',
+        params: {},
+      })
     })
 
-    it('answers the history of the runs', async () => {
-      const response = await getRuns(adminCookie)
+    it('reports a refused webhook', async () => {
+      upstream.webhookStatus = 500
 
-      expect(response.statusCode).toBe(200)
+      const response = await postStart(adminCookie)
 
-      const body = response.json<RunsResponseBody>()
-
-      expect(body.runs?.length).toBeGreaterThan(0)
+      expect(response.statusCode).toBe(502)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'update_webhook_failed',
+        params: {},
+      })
     })
   },
 )

@@ -91,13 +91,21 @@ const envSchema = z
     MATRIX_ROOM_ID: z.string().default(''),
     MATRIX_ACCESS_TOKEN: z.string().default(''),
 
-    // --- Host update agent (ADR-0006, specs/18-self-update.md) ---
-    /** The address of the agent inside the compose network. */
-    UPDATE_AGENT_URL: z.string().default('http://update-agent:8080'),
-    /** Bearer of the agent; empty means that the token file is read. */
-    UPDATE_AGENT_TOKEN: z.string().default(''),
-    /** The token file of the shared state volume of the agent. */
-    UPDATE_AGENT_TOKEN_FILE: z.string().default('/agent-state/agent-token'),
+    // --- Update control (ADR-0007, specs/18-self-update.md §18.5) ---
+    /** The commit the `api` image was built from; `unknown` when unknown. */
+    GIT_COMMIT: z.string().default(''),
+    /** The version file of the image; the fallback of the installed version. */
+    VERSION_FILE: z.string().default('/app/VERSION'),
+    /** `owner/repo` of the upstream repository; empty disables the check. */
+    GITHUB_REPO: z.string().default(''),
+    /** The branch with the newest sources. */
+    GITHUB_BRANCH: z.string().default('main'),
+    /** Optional token of the GitHub API; it never leaves the API. */
+    GITHUB_TOKEN: z.string().default(''),
+    /** The deploy hook the start triggers; empty disables the start. */
+    UPDATE_WEBHOOK_URL: z.string().default(''),
+    /** The value of the `X-Deploy-Token` header of the webhook. */
+    UPDATE_WEBHOOK_TOKEN: z.string().default(''),
   })
   .superRefine((value, context) => {
     const email = value.SEED_ADMIN_EMAIL.trim()

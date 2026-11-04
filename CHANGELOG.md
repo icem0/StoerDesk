@@ -10,12 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - The update control of the administration is replaced by a GitHub check and a
-  deploy webhook (ADR-0007, WP-M3-07): the API reads the newest commit of the
-  configured branch and compares it with the installed version, the start
-  hands the deployment to a webhook target of the operator. The contract lives
-  in `specs/18-self-update.md` §18.3–§18.5, the shared schemas in
-  `packages/shared/src/schemas/update-menu.ts` and the read-only client of the
-  GitHub API in `apps/api/src/update/github.ts`.
+  deploy webhook (ADR-0007, WP-M3-07 … WP-M3-08): `GET /api/v1/admin/update/check`
+  answers the installed version, the newest commit of the branch and the
+  commits behind it (cached for a minute), `POST /api/v1/admin/update/start`
+  checks again on the server, calls the deploy webhook with the header
+  `X-Deploy-Token` and answers immediately — the deployment replaces the API
+  container. A second start inside five minutes is refused. The tokens belong
+  to the API and never reach the browser.
 
 - The Dexie outbox learns the offline internal writes (WP-M5-01): a v2 table
   `internal_actions` queues acknowledge, comment and decline with their own

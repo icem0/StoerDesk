@@ -1,7 +1,7 @@
 # WP-M3-08: the update API — check and start
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-07
 phase: 3
 milestone: m3
@@ -79,9 +79,21 @@ cooldown and the error codes.
 
 ## Handoff
 
-- Files changed: the routes, the installed version, the environment, the route
-  test
-- Interfaces added: the two routes, `resolveInstalledVersion`
-- Verified: pending
+- Files changed: `apps/api/src/update/routes.ts`,
+  `apps/api/src/update/installed-version.ts`,
+  `apps/api/src/update/__tests__/routes.integration.spec.ts`,
+  `apps/api/src/update/__tests__/installed-version.spec.ts`,
+  `apps/api/src/config/env.ts`, `docs/REPO-MAP.md`, `CHANGELOG.md`; the client
+  of the retired agent (`apps/api/src/update/client.ts`) and its test are
+  deleted
+- Interfaces added: `GET /api/v1/admin/update/check`,
+  `POST /api/v1/admin/update/start`, `resolveInstalledVersion`,
+  `UPDATE_CHECK_CACHE_MS`, `UPDATE_START_COOLDOWN_MS`; the environment keys
+  `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_TOKEN`, `UPDATE_WEBHOOK_URL`,
+  `UPDATE_WEBHOOK_TOKEN`, `GIT_COMMIT`, `VERSION_FILE`
+- Verified: `npm run check` (65 files, 418 tests, i18n and wp-check green); the
+  integration test proves the guard, the answer, the cache, the compare that
+  cannot be answered, the webhook call with its header, the cooldown and the
+  error codes
 - Follow-up WP: WP-M3-09 (the deployment configuration), WP-M3-10 (the menu)
 - Open question: none

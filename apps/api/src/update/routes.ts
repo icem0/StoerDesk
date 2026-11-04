@@ -1,44 +1,46 @@
-import { desc, eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 
 import {
   PERMISSIONS,
-  updateRunResponseSchema,
-  updateRunStatusSchema,
-  updateRunsResponseSchema,
-  updateStatusResponseSchema,
-  type AgentRun,
-  type UpdateAgentErrorReason,
-  type UpdateRun as UpdateRunAnswer,
+  updateCheckResponseSchema,
+  updateStartResponseSchema,
+  type UpdateCheckResponse,
+  type UpdateCommit,
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
-import { updateRuns, type UpdateRun as UpdateRunRow } from '../db/schema'
-import { createUpdateAgentClient, UpdateAgentError, type UpdateAgentErrorCode } from './client'
+import { createGitHubClient, GitHubError } from './github'
+import { resolveInstalledVersion } from './installed-version'
 
 /**
- * Admin API of the host update (`specs/18-self-update.md` §18.4–§18.6,
- * ADR-0006).
+ * The admin API of the update control (`specs/18-self-update.md` §18.3–§18.4,
+ * ADR-0007).
  *
- * `GET /api/v1/admin/update/status` — the state of the agent, the known
- * version and the last run; it reconciles a `RUNNING` row with the state of
- * the agent, because the rebuild of the stack replaces the API container while
- * the agent keeps running.
- * `POST /api/v1/admin/update/run` — starts one run; `409` while a run is
- * active, `429` inside the cooldown.
- * `GET /api/v1/admin/update/runs` — the history of the run rows.
+ * `GET /api/v1/admin/update/check` — the installed version, the newest commit
+ * of the branch and the commits behind it. The answer is cached for a minute,
+ * so the menu does not spam the GitHub API.
+ * `POST /api/v1/admin/update/start` — the check runs again on the server, the
+ * deploy webhook is called and the route answers immediately: the deployment
+ * replaces this container, so waiting for its end would kill the request.
  *
- * Every route is guarded with `system.update` and answers `{ code, params }` on
- * an error — never translated text and never a secret.
+ * Both routes are guarded with `system.update` and answer `{ code, params }` on
+ * an error — never translated text and never a secret. The GitHub token and
+ * the deploy token never leave the API.
  */
 
 type Db = Database['database']
 
 export type UpdateRouteEnv = Pick<
   Env,
-  'UPDATE_AGENT_URL' | 'UPDATE_AGENT_TOKEN' | 'UPDATE_AGENT_TOKEN_FILE'
+  | 'GITHUB_REPO'
+  | 'GITHUB_BRANCH'
+  | 'GITHUB_TOKEN'
+  | 'UPDATE_WEBHOOK_URL'
+  | 'UPDATE_WEBHOOK_TOKEN'
+  | 'GIT_COMMIT'
+  | 'VERSION_FILE'
 >
 
 export type UpdateRouteOptions = {
@@ -46,209 +48,159 @@ export type UpdateRouteOptions = {
   env: UpdateRouteEnv
 }
 
-/** The cooldown between two runs: a host update is not a repeated action. */
-export const UPDATE_RUN_COOLDOWN_MS = 60_000
+/** How long the answer of the check is reused, in milliseconds. */
+export const UPDATE_CHECK_CACHE_MS = 60_000
 
-/** How many runs the history answers. */
-const RUN_HISTORY_LIMIT = 20
+/** How long a started update blocks a second start, in milliseconds. */
+export const UPDATE_START_COOLDOWN_MS = 5 * 60_000
 
-/**
- * The reason why the agent is not reachable. `update_already_running` cannot
- * happen while reading the status, so it becomes `update_agent_unreachable`.
- */
-function agentErrorOf(code: UpdateAgentErrorCode): UpdateAgentErrorReason {
-  switch (code) {
-    case 'update_agent_not_configured':
-      return 'update_agent_not_configured'
-    case 'update_agent_bad_response':
-      return 'update_agent_bad_response'
-    default:
-      return 'update_agent_unreachable'
-  }
-}
-
-function toRunAnswer(row: UpdateRunRow): UpdateRunAnswer {
-  return {
-    id: row.id,
-    // The column has a check constraint, so the value is always a known status.
-    status: updateRunStatusSchema.parse(row.status),
-    startedAt: row.startedAt.toISOString(),
-    finishedAt: row.finishedAt === null ? null : row.finishedAt.toISOString(),
-    beforeVersion: row.beforeVersion,
-    afterVersion: row.afterVersion,
-    errorCode: row.errorCode,
-    errorDetail: row.errorDetail,
-  }
-}
+/** The timeout of the webhook call in milliseconds. */
+const WEBHOOK_TIMEOUT_MS = 10_000
 
 export const updateRoutes = fp<UpdateRouteOptions>(
   async (app, { database, env }) => {
-    const client = createUpdateAgentClient({
-      baseUrl: env.UPDATE_AGENT_URL,
-      token: env.UPDATE_AGENT_TOKEN,
-      tokenFile: env.UPDATE_AGENT_TOKEN_FILE,
+    const client = createGitHubClient({
+      repo: env.GITHUB_REPO,
+      branch: env.GITHUB_BRANCH,
+      token: env.GITHUB_TOKEN,
     })
 
-    /** The newest run row of the history. */
-    async function newestRun(): Promise<UpdateRunRow | undefined> {
-      const rows = await database
-        .select()
-        .from(updateRuns)
-        .orderBy(desc(updateRuns.startedAt))
-        .limit(1)
+    const installedVersion = resolveInstalledVersion(env)
 
-      return rows[0]
-    }
+    let cached: { answer: UpdateCheckResponse; at: number } | null = null
+    let lastStart: number | null = null
 
     /**
-     * Reconciles a `RUNNING` row with the last run of the agent: the redeploy
-     * of the stack replaces the API container, so the row can outlive the
-     * request that wrote it. The API never invents a result the agent did not
-     * report.
+     * The newest upstream commit and the commits between the installed version
+     * and it. A failed call is not cached, so the next request tries again.
      */
-    async function reconcile(row: UpdateRunRow | undefined, agentRun: AgentRun | null) {
-      if (row === undefined || row.status !== 'RUNNING' || agentRun === null) {
-        return row
+    async function check(): Promise<UpdateCheckResponse> {
+      const now = Date.now()
+
+      if (cached !== null && now - cached.at < UPDATE_CHECK_CACHE_MS) {
+        return cached.answer
       }
 
-      const startedAt = Date.parse(agentRun.startedAt)
-      const belongs =
-        row.agentRunId === agentRun.id ||
-        (row.agentRunId === null &&
-          Number.isFinite(startedAt) &&
-          startedAt >= row.startedAt.getTime())
+      const latest = await client.latestCommit()
+      const current = installedVersion
 
-      if (!belongs || agentRun.status === 'RUNNING') {
-        return row
+      let commitsBehind: number | null = null
+      let commits: UpdateCommit[] = []
+
+      if (current !== null) {
+        const comparison = await client.compare(current, latest.sha)
+
+        if (comparison !== null) {
+          commitsBehind = comparison.aheadBy
+          commits = comparison.commits
+        }
       }
 
-      const [updated] = await database
-        .update(updateRuns)
-        .set({
-          status: agentRun.status,
-          finishedAt: agentRun.finishedAt === null ? null : new Date(agentRun.finishedAt),
-          afterVersion: agentRun.afterVersion,
-          errorCode: agentRun.errorCode,
-          errorDetail: agentRun.errorDetail,
-          agentRunId: agentRun.id,
-        })
-        .where(eq(updateRuns.id, row.id))
-        .returning()
+      const answer = updateCheckResponseSchema.parse({
+        current,
+        latest: latest.sha.slice(0, 7),
+        updateAvailable: commitsBehind !== null && commitsBehind > 0,
+        commitsBehind,
+        commits,
+        checkedAt: new Date(now).toISOString(),
+      })
 
-      return updated ?? row
+      cached = { answer, at: now }
+
+      return answer
+    }
+
+    /** The GitHub error of a failed check as the answer of the route. */
+    function githubError(error: unknown): { code: string; params: Record<string, never> } | null {
+      if (!(error instanceof GitHubError)) {
+        return null
+      }
+
+      return { code: error.code, params: {} }
     }
 
     app.get(
-      '/api/v1/admin/update/status',
+      '/api/v1/admin/update/check',
       { preHandler: requirePermission(database, PERMISSIONS.system.update) },
-      async () => {
-        let agent: {
-          reachable: boolean
-          state: 'idle' | 'running' | 'failed' | null
-          error: UpdateAgentErrorReason | null
-        } = {
-          reachable: false,
-          state: null,
-          error: null,
-        }
-        let currentVersion: string | null = null
-        let agentRun: AgentRun | null = null
-
+      async (_request, reply) => {
         try {
-          const status = await client.status()
-
-          agent = { reachable: true, state: status.state, error: null }
-          currentVersion = status.checkout.version
-          agentRun = status.lastRun
+          return await check()
         } catch (error) {
-          if (!(error instanceof UpdateAgentError)) {
+          const envelope = githubError(error)
+
+          if (envelope === null) {
             throw error
           }
 
-          // The operator has to fix the cause, so the answer names it.
-          agent = { reachable: false, state: null, error: agentErrorOf(error.code) }
+          return reply.code(503).send(envelope)
         }
-
-        const lastRun = await reconcile(await newestRun(), agentRun)
-
-        return updateStatusResponseSchema.parse({
-          agent,
-          running: lastRun !== undefined && lastRun.status === 'RUNNING',
-          currentVersion,
-          lastRun: lastRun === undefined ? null : toRunAnswer(lastRun),
-        })
       },
     )
 
     app.post(
-      '/api/v1/admin/update/run',
+      '/api/v1/admin/update/start',
       { preHandler: requirePermission(database, PERMISSIONS.system.update) },
       async (_request, reply) => {
-        const previous = await newestRun()
+        const now = Date.now()
 
-        if (previous !== undefined && previous.status === 'RUNNING') {
-          return reply.code(409).send({ code: 'update_already_running', params: {} })
-        }
-
-        if (
-          previous !== undefined &&
-          Date.now() - previous.startedAt.getTime() < UPDATE_RUN_COOLDOWN_MS
-        ) {
+        // A double click must not start two deployments.
+        if (lastStart !== null && now - lastStart < UPDATE_START_COOLDOWN_MS) {
           return reply.code(429).send({ code: 'update_rate_limited', params: {} })
         }
 
-        // The row is written before the agent starts: the rebuild replaces this
-        // container, so a run that is only written afterwards could be lost.
-        const [started] = await database.insert(updateRuns).values({}).returning()
+        const webhookUrl = env.UPDATE_WEBHOOK_URL.trim()
 
-        if (started === undefined) {
-          return reply.code(500).send({ code: 'update_run_failed', params: {} })
+        if (webhookUrl === '') {
+          return reply.code(503).send({ code: 'update_webhook_not_configured', params: {} })
         }
 
+        let answer: UpdateCheckResponse
+
         try {
-          const run = await client.run()
-
-          const [updated] = await database
-            .update(updateRuns)
-            .set({ agentRunId: run.id, beforeVersion: run.beforeVersion })
-            .where(eq(updateRuns.id, started.id))
-            .returning()
-
-          return reply
-            .code(202)
-            .send(updateRunResponseSchema.parse({ run: toRunAnswer(updated ?? started) }))
+          answer = await check()
         } catch (error) {
-          if (!(error instanceof UpdateAgentError)) {
+          const envelope = githubError(error)
+
+          if (envelope === null) {
             throw error
           }
 
-          await database
-            .update(updateRuns)
-            .set({
-              status: 'FAILED',
-              finishedAt: new Date(),
-              errorCode: error.code,
-            })
-            .where(eq(updateRuns.id, started.id))
-
-          const statusCode = error.code === 'update_already_running' ? 409 : 503
-
-          return reply.code(statusCode).send({ code: error.code, params: {} })
+          return reply.code(503).send(envelope)
         }
-      },
-    )
 
-    app.get(
-      '/api/v1/admin/update/runs',
-      { preHandler: requirePermission(database, PERMISSIONS.system.update) },
-      async () => {
-        const rows = await database
-          .select()
-          .from(updateRuns)
-          .orderBy(desc(updateRuns.startedAt))
-          .limit(RUN_HISTORY_LIMIT)
+        if (!answer.updateAvailable) {
+          return reply.code(409).send({ code: 'update_no_update_available', params: {} })
+        }
 
-        return updateRunsResponseSchema.parse({ runs: rows.map(toRunAnswer) })
+        // The body is built by the server: no value of the request reaches the
+        // webhook.
+        const body = JSON.stringify({
+          version: answer.latest,
+          current: answer.current,
+          requestedAt: new Date(now).toISOString(),
+        })
+
+        try {
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-deploy-token': env.UPDATE_WEBHOOK_TOKEN,
+            },
+            body,
+            signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+          })
+
+          if (!response.ok) {
+            return reply.code(502).send({ code: 'update_webhook_failed', params: {} })
+          }
+        } catch {
+          return reply.code(502).send({ code: 'update_webhook_failed', params: {} })
+        }
+
+        lastStart = Date.now()
+
+        return reply.code(202).send(updateStartResponseSchema.parse({ started: true }))
       },
     )
   },
