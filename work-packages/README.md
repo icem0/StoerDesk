@@ -15,6 +15,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
 | [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 4   |
+| [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow        | 1   |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
@@ -293,6 +294,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-02  | the update script removes the images it replaces            | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces             | planned                 | yes     |
 | WP-M3-03  | the agent start command finds the project dir on the host   | done                    | yes     |
+| WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

@@ -19,7 +19,7 @@ apps/
 │   │   ├── routes/              react-router route table
 │   │   ├── App.tsx, main.tsx    shell and React root
 │   │   └── styles.css           Tailwind entry
-│   ├── e2e/                     auth.spec.ts (WP-M1-12), report-form.spec.ts (WP-M2-05c) — Playwright smoke tests
+│   ├── e2e/                     auth.spec.ts (WP-M1-12), report-form.spec.ts (WP-M2-05c), workflow.spec.ts (WP-M4-01) — Playwright smoke tests
 │   └── nginx-pwa.conf.template  PWA nginx config, /api/ proxy to ${API_UPSTREAM}
 ├── api/                         Fastify + Drizzle + postgres-js + pg-boss
 │   ├── src/
