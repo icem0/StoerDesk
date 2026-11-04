@@ -63,6 +63,7 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `ticket.close`         |     | x   |     |     | x   |
 | `ticket.reopen`        |     | x   |     | x   | x   |
 | `ticket.cancel`        |     | x   |     |     | x   |
+| `ticket.delete`        |     |     |     |     | x   |
 | `ticket.comment`       | x   | x   | x   | x   | x   |
 | `ticket.photo.read`    | x   | x   | x   | x   | x   |
 | `ticket.photo.write`   | x   | x   | x   |     | x   |
@@ -113,7 +114,7 @@ the key (multi-word keys use `snake_case`, for example `object.regenerate_qr`):
 ```
 ticket.read, ticket.create, ticket.review, ticket.assign, ticket.offer,
 ticket.claim, ticket.accept, ticket.decline, ticket.acknowledge, ticket.close,
-ticket.reopen, ticket.cancel, ticket.comment, ticket.photo.read,
+ticket.reopen, ticket.cancel, ticket.delete, ticket.comment, ticket.photo.read,
 ticket.photo.write
 object.read, object.write, object.delete, object.regenerate_qr, object.import
 oncall.read, oncall.plan, oncall.confirm, oncall.swap, oncall.admin

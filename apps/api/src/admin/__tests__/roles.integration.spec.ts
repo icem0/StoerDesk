@@ -178,7 +178,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         office: 19,
         oncall: 15,
         manager: 12,
-        admin: 38,
+        admin: 39,
       }
 
       for (const [key, grants] of Object.entries(expected)) {
