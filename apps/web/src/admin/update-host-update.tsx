@@ -6,6 +6,7 @@ import type { UpdateRunResponse, UpdateStatusResponse } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
+import { appVersion } from '../lib/version'
 
 /**
  * The host update of the administration (`specs/18-self-update.md` §18.4–§18.5,
@@ -17,43 +18,50 @@ import { ApiError, apiFetch } from '../lib/api'
  * so the API is briefly unreachable during a run; the section says that instead
  * of failing and recovers when the API answers again.
  *
- * The default update runs as a host shell script (`scripts/update.sh`): it
- * checks GitHub, pulls (or lets the compose build fetch the sources), rebuilds
- * the stack and prunes the old images. The agent is only needed for the button
- * in this page; without it the section carries the script command and can copy
- * it to the clipboard.
+ * The button needs the update agent; without it the section shows the one-time
+ * start command and can copy it to the clipboard. The command discovers the
+ * compose project and its directory from the running web container, so it works
+ * in a panel such as Arcane without a hard-coded path.
  *
  * The section is hidden without the permission `system.update`. The guard of the
  * server stays the only enforcement point.
  */
 
-const UPDATE_COMMAND = 'sh scripts/update.sh'
+const AGENT_START_COMMAND = [
+  'PROJECT=$(docker ps --filter label=com.docker.compose.service=web --format \'{{.Label "com.docker.compose.project"}}\' | head -n1)',
+  'DIR=$(docker inspect -f \'{{ index .Config.Labels "com.docker.compose.project.working_dir" }}\' "$(docker ps -q --filter label=com.docker.compose.service=web | head -n1)")',
+  'cd "$DIR" && IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \\',
+  '  docker compose -p "$PROJECT" --profile update up -d --build update-agent',
+].join('\n')
 const GITHUB_TAGS_URL = 'https://api.github.com/repos/icem0/StoerDesk/tags?per_page=1'
 
-function parseVersion(v: string): [number, number, number] {
+/** `null` for a version that cannot be compared, e.g. `dev`. */
+function parseVersion(v: string): [number, number, number] | null {
   const m = v.match(/^v?(\d+)\.(\d+)\.(\d+)/)
 
   if (!m) {
-    // 'dev' or any unparseable version is treated as highest possible
-    return [999, 999, 999]
+    return null
   }
 
   return [Number(m[1]), Number(m[2]), Number(m[3])]
 }
 
-function isNewerVersion(latest: string, current: string): boolean {
-  const [a1, a2, a3] = parseVersion(latest)
-  const [b1, b2, b3] = parseVersion(current)
+/** `true`/`false` for comparable versions, `null` when one is unknown. */
+function isNewerVersion(latest: string, current: string): boolean | null {
+  const a = parseVersion(latest)
+  const b = parseVersion(current)
 
-  if (a1 !== b1) {
-    return a1 > b1
+  if (a === null || b === null) {
+    return null
   }
 
-  if (a2 !== b2) {
-    return a2 > b2
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] !== b[index]) {
+      return (a[index] ?? 0) > (b[index] ?? 0)
+    }
   }
 
-  return a3 > b3
+  return false
 }
 
 const handledErrorCodes = [
@@ -89,7 +97,11 @@ function errorCodeText(t: TFunction<'settings'>, code: string | null): string {
   return t(`admin.update.host.errorCodes.${code}` as `admin.update.host.errorCodes.${string}`)
 }
 
-export function UpdateHostUpdate() {
+export function UpdateHostUpdate({
+  clientVersion = appVersion,
+}: {
+  clientVersion?: string
+} = {}) {
   const { t } = useTranslation('settings')
   const mayUpdate = usePermission('system.update')
   const queryClient = useQueryClient()
@@ -100,7 +112,7 @@ export function UpdateHostUpdate() {
 
   const copyCommand = useCallback(async () => {
     try {
-      await navigator.clipboard?.writeText(UPDATE_COMMAND)
+      await navigator.clipboard?.writeText(AGENT_START_COMMAND)
       setCopied(true)
     } catch {
       setCopied(false)
@@ -157,8 +169,13 @@ export function UpdateHostUpdate() {
   const lastRun = data?.lastRun ?? null
   const running = data?.running === true
   const agentError = data?.agent.error ?? null
-  const updateAvailable =
-    latestVersion !== null && data?.currentVersion && isNewerVersion(latestVersion, data.currentVersion)
+  const agentReachable = data?.agent.reachable === true
+  // The agent knows the version of the checkout; a panel without git metadata
+  // reports none, so fall back to the version this UI was built with.
+  const currentVersion = data?.currentVersion ?? clientVersion
+  const comparison =
+    latestVersion === null ? null : isNewerVersion(latestVersion, currentVersion)
+  const updateAvailable = comparison === true
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -179,9 +196,13 @@ export function UpdateHostUpdate() {
           </dd>
         </div>
         <div>
-          <dt className="text-slate-400">{t('admin.update.host.version')}</dt>
+          <dt className="text-slate-400">{t('admin.update.host.currentVersion')}</dt>
           <dd className="mt-1 font-mono">
-            {data?.currentVersion ?? t('admin.update.host.unknownVersion')}
+            {data?.currentVersion ?? (
+              <span>
+                {clientVersion} <span className="text-slate-500">({t('admin.update.host.clientVersion')})</span>
+              </span>
+            )}
           </dd>
         </div>
       </dl>
@@ -204,23 +225,32 @@ export function UpdateHostUpdate() {
         ) : (
           <>
             <p className="mt-2 text-sm">
-              {t('admin.update.host.latestVersion')}: {latestVersion}
+              {t('admin.update.host.currentVersion')}:{' '}
+              <span className="font-mono">{currentVersion}</span>
+            </p>
+            <p className="mt-1 text-sm">
+              {t('admin.update.host.latestVersion')}:{' '}
+              <span className="font-mono">{latestVersion}</span>
             </p>
 
             {updateAvailable ? (
               <>
                 <p className="mt-1 text-sm text-emerald-300">{t('admin.update.host.updateAvailable')}</p>
-                <button
-                  className="mt-1 rounded bg-sky-700 px-3 py-1 text-xs text-white hover:bg-slate-600 disabled:opacity-50"
-                  type="button"
-                  disabled={running || data?.agent.reachable !== true}
-                  onClick={() => setConfirming(true)}
-                >
-                  {t('admin.update.host.startUpdate')}
-                </button>
+                {agentReachable ? (
+                  <button
+                    className="mt-1 rounded bg-sky-700 px-3 py-1 text-xs text-white hover:bg-slate-600 disabled:opacity-50"
+                    type="button"
+                    disabled={running}
+                    onClick={() => setConfirming(true)}
+                  >
+                    {t('admin.update.host.startUpdate')}
+                  </button>
+                ) : null}
               </>
-            ) : (
+            ) : comparison === false ? (
               <p className="mt-1 text-sm text-emerald-300">{t('admin.update.host.upToDate')}</p>
+            ) : (
+              <p className="mt-1 text-sm text-amber-300">{t('admin.update.host.versionUnknown')}</p>
             )}
           </>
         )}
@@ -255,25 +285,23 @@ export function UpdateHostUpdate() {
         </p>
       ) : null}
 
-      {data?.agent.reachable !== true ? (
+      {!agentReachable ? (
         <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 p-3 text-sm">
           <p className="font-medium">{t('admin.update.host.guide.title')}</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>{t('admin.update.host.guide.step1')}</li>
             <li>{t('admin.update.host.guide.step2')}</li>
           </ol>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <code className="rounded bg-slate-900 px-2 py-1 font-mono text-xs">
-              {UPDATE_COMMAND}
-            </code>
-            <button
-              className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
-              type="button"
-              onClick={() => void copyCommand()}
-            >
-              {copied ? t('admin.update.host.guide.copied') : t('admin.update.host.guide.copy')}
-            </button>
-          </div>
+          <pre className="mt-3 max-w-full overflow-auto whitespace-pre-wrap break-words rounded bg-slate-900 px-2 py-1 font-mono text-xs">
+            {AGENT_START_COMMAND}
+          </pre>
+          <button
+            className="mt-2 rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
+            type="button"
+            onClick={() => void copyCommand()}
+          >
+            {copied ? t('admin.update.host.guide.copied') : t('admin.update.host.guide.copy')}
+          </button>
           <p className="mt-3 text-slate-400">{t('admin.update.host.guide.hint')}</p>
         </div>
       ) : null}
@@ -299,16 +327,16 @@ export function UpdateHostUpdate() {
             </button>
           </div>
         </div>
-      ) : (
+      ) : agentReachable ? (
         <button
           className="mt-4 rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
           type="button"
-          disabled={running || data?.agent.reachable !== true}
+          disabled={running}
           onClick={() => setConfirming(true)}
         >
           {running ? t('admin.update.host.running') : t('admin.update.host.run')}
         </button>
-      )}
+      ) : null}
     </section>
   )
 }

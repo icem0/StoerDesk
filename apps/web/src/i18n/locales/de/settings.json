@@ -73,10 +73,10 @@
       "outboxBlocked": "Es sind noch Offline-Meldungen offen. Update-Aktionen sind gesperrt, bis der Outbox-Status gesendet ist.",
       "host": {
         "title": "Host-Update",
-        "hint": "Prüft GitHub, zieht die neue Version, baut den Stack neu und entfernt die alten Images. Der Standardweg ist das Shell-Skript auf dem Host; der Stack ist dabei kurz nicht erreichbar.",
-        "agent": "In-UI-Update (Agent, optional)",
+        "hint": "Vergleicht die laufende Version mit GitHub und startet per Knopf das Host-Update. Der Stack ist dabei kurz nicht erreichbar.",
+        "agent": "In-UI-Update (Agent)",
         "agentReady": " erreichbar",
-        "agentMissing": "nicht aktiv — Updates laufen über das Shell-Skript",
+        "agentMissing": "nicht aktiv — der Knopf braucht den Agenten",
         "check": {
           "title": "Update prüfen"
         },
@@ -90,13 +90,16 @@
         "agentNotConfigured": "nicht erreichbar — der Agent läuft noch nicht (er schreibt sein Token erst beim Start)",
         "agentBadResponse": "nicht erreichbar — der Agent antwortet ungültig",
         "guide": {
-          "title": "Update per Shell-Skript",
-          "step1": "Im Projektverzeichnis auf dem Host ausführen:",
-          "step2": "Das Skript prüft GitHub, zieht die neue Version, baut den Stack neu und räumt alte Images auf. Danach diese Seite neu laden.",
+          "title": "Update-Knopf aktivieren (einmalig)",
+          "step1": "Im Projektverzeichnis auf dem Host ausführen — der Befehl findet Projekt und Pfad selbst:",
+          "step2": "Danach ist der Knopf dauerhaft aktiv; der Agent startet mit dem Server neu.",
           "copy": "Befehl kopieren",
           "copied": "Kopiert",
-          "hint": "Das Skript braucht nur Docker und optional git. Der Agent ist nur für den Knopf auf dieser Seite nötig, nicht für das Update selbst."
+          "hint": "Kein Token, keine .env-Änderung. Fehlt im Projektordner ein Git-Checkout, baut der Agent die Quellen aus GitHub."
         },
+        "currentVersion": "Aktuelle Version",
+        "clientVersion": "aus dieser Web-App",
+        "versionUnknown": "Die Versionen lassen sich nicht vergleichen. Bitte den Agenten starten oder den neuesten Stand manuell einspielen.",
         "version": "Version auf dem Server",
         "unknownVersion": "unbekannt",
         "noRun": "Noch kein Host-Update gelaufen.",

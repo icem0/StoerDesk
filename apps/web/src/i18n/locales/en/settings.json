@@ -73,10 +73,10 @@
       "outboxBlocked": "Offline reports are still open. Update actions are blocked until the outbox has been sent.",
       "host": {
         "title": "Host update",
-        "hint": "Checks GitHub, pulls the new version, rebuilds the stack and removes the old images. The default path is the shell script on the host; the stack is briefly unavailable while it works.",
-        "agent": "In-UI update (agent, optional)",
+        "hint": "Compares the running version with GitHub and starts the host update with a button. The stack is briefly unavailable while it works.",
+        "agent": "In-UI update (agent)",
         "agentReady": "reachable",
-        "agentMissing": "not active — updates run through the shell script",
+        "agentMissing": "not active — the button needs the agent",
         "check": {
           "title": "Check for update"
         },
@@ -90,13 +90,16 @@
         "agentNotConfigured": "not reachable — the agent does not run yet (it writes its token at the start)",
         "agentBadResponse": "not reachable — the agent answers something invalid",
         "guide": {
-          "title": "Update through the shell script",
-          "step1": "Run this in the project directory on the host:",
-          "step2": "The script checks GitHub, pulls the new version, rebuilds the stack and removes old images. Reload this page afterwards.",
+          "title": "Enable the update button (one-time)",
+          "step1": "Run this in the project directory on the host — the command finds the project and its path itself:",
+          "step2": "The button stays active afterwards; the agent restarts with the server.",
           "copy": "Copy command",
           "copied": "Copied",
-          "hint": "The script only needs Docker and optionally git. The agent is only needed for the button on this page, not for the update itself."
+          "hint": "No token, no .env change. If the project directory has no git checkout, the agent builds the sources from GitHub."
         },
+        "currentVersion": "Current version",
+        "clientVersion": "from this web app",
+        "versionUnknown": "The versions cannot be compared. Start the agent or apply the latest version manually.",
         "version": "Version on the server",
         "unknownVersion": "unknown",
         "noRun": "No host update has run yet.",

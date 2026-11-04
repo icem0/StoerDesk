@@ -52,7 +52,7 @@ function statusPayload(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function renderSection() {
+function renderSection(clientVersion?: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   return render(
@@ -60,7 +60,7 @@ function renderSection() {
       <I18nextProvider i18n={i18n}>
         <MemoryRouter initialEntries={['/admin/update']}>
           <Routes>
-            <Route path="/admin/update" element={<UpdateHostUpdate />} />
+            <Route path="/admin/update" element={<UpdateHostUpdate clientVersion={clientVersion} />} />
           </Routes>
         </MemoryRouter>
       </I18nextProvider>
@@ -132,7 +132,7 @@ describe('UpdateHostUpdate', () => {
     })
   })
 
-  it('shows a missing agent and blocks the run', async () => {
+  it('shows a missing agent and does not render a dead button', async () => {
     stubRoutes({
       ...meRoutes(['system.update']),
       '/v1/admin/update/status': statusPayload({
@@ -143,18 +143,13 @@ describe('UpdateHostUpdate', () => {
 
     renderSection()
 
-    const button = (await screen.findByRole('button', {
-      name: /Host-Update starten|Start host update/i,
-    })) as HTMLButtonElement
-
-    await waitFor(() => {
-      expect(button.disabled).toBe(true)
-    })
-
-    expect(screen.getByText(/nicht aktiv|not active/i)).toBeTruthy()
+    expect(await screen.findByText(/nicht aktiv|not active/i)).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: /Host-Update starten|Start host update/i }),
+    ).toBeNull()
   })
 
-  it('carries the shell update guide', async () => {
+  it('carries the agent start guide with a discovered project path', async () => {
     stubRoutes({
       ...meRoutes(['system.update']),
       '/v1/admin/update/status': statusPayload({
@@ -166,11 +161,10 @@ describe('UpdateHostUpdate', () => {
     renderSection()
 
     expect(
-      await screen.findByText(/Update per Shell-Skript|Update through the shell script/i),
+      await screen.findByText(/Update-Knopf aktivieren|Enable the update button/i),
     ).toBeTruthy()
-    expect(
-      screen.getByText('sh scripts/update.sh'),
-    ).toBeTruthy()
+    expect(screen.getByText(/com\.docker\.compose\.project\.working_dir/)).toBeTruthy()
+    expect(screen.getByText(/--profile update up -d --build update-agent/)).toBeTruthy()
     expect(
       screen.getByRole('button', { name: /Befehl kopieren|Copy command/i }),
     ).toBeTruthy()
@@ -253,6 +247,41 @@ describe('UpdateHostUpdate', () => {
     expect(
       screen.queryByRole('button', { name: /Jetzt updaten|Update now/i }),
     ).toBeNull()
+  })
+
+  it('does not claim up to date when the version is unknown', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({ currentVersion: null }),
+      'api.github.com/repos/icem0/StoerDesk/tags': [{ name: 'v0.2.0' }],
+    })
+
+    renderSection('dev')
+
+    await screen.findByText(/dev/)
+    fireEvent.click(screen.getByRole('button', { name: /Update prüfen|Check for update/i }))
+
+    expect(
+      await screen.findByText(/lassen sich nicht vergleichen|cannot be compared/i),
+    ).toBeTruthy()
+    expect(
+      screen.queryByText(/Sie nutzen die neueste Version|You are using the latest version/i),
+    ).toBeNull()
+  })
+
+  it('falls back to the version this web app was built with', async () => {
+    stubRoutes({
+      ...meRoutes(['system.update']),
+      '/v1/admin/update/status': statusPayload({ currentVersion: null }),
+      'api.github.com/repos/icem0/StoerDesk/tags': [{ name: 'v0.1.109' }],
+    })
+
+    renderSection('v0.1.108')
+
+    await screen.findByText('v0.1.108')
+    fireEvent.click(screen.getByRole('button', { name: /Update prüfen|Check for update/i }))
+
+    expect(await screen.findByText(/Update verfügbar!|Update available!/i)).toBeTruthy()
   })
 
   it('shows the failure detail of a failed run below the translated error code', async () => {
