@@ -153,6 +153,20 @@ detect_project() {
   fi
 }
 
+# The version the stack really runs: the `/app/VERSION` of the api container of
+# this project. The folder may be newer than the containers (a synced panel folder),
+# so the folder never decides alone. Empty when nothing runs or the image is older
+# than the version file: the caller then rebuilds.
+running_version() {
+  [ -n "$project" ] || return 1
+  container=$(docker ps \
+    --filter 'label=com.docker.compose.service=api' \
+    --filter "label=com.docker.compose.project=$project" \
+    --format '{{.Names}}' 2>/dev/null | head -n 1)
+  [ -n "$container" ] || return 1
+  docker exec "$container" cat /app/VERSION 2>/dev/null | tr -d '[:space:]'
+}
+
 # The image name patterns this deployment owns: its own repositories and the
 # Compose default names of the project (older layouts, retired service names).
 own_patterns() {
@@ -230,11 +244,12 @@ clean_images() {
 }
 
 if [ "$MODE" != cleanup ]; then
-  local_version=$(tr -d '[:space:]' <VERSION 2>/dev/null || true)
+  detect_project
+  local_version=$(running_version || true)
   latest=$(remote_version)
 
-  say "Lokal:  ${local_version:-unbekannt}"
-  say "GitHub: $latest"
+  say "Laufend: ${local_version:-unbekannt}"
+  say "GitHub:  $latest"
 
   if [ "$MODE" = check ]; then
     if [ -n "$local_version" ] && [ "$local_version" = "$latest" ]; then

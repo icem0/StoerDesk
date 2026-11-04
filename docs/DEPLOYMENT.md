@@ -62,7 +62,7 @@ sh scripts/update.sh --gc     # additionally drop tagless images and build cache
                               # older than STOERDESK_GC_UNTIL hours (168)
 ```
 
-The script compares the tracked `VERSION` with the newest GitHub tag, pulls a
+The script compares the version of the running `api` container (its image carries `/app/VERSION`) with the newest GitHub tag — not the folder, which may be newer than the containers. It then pulls a
 git checkout (`--ff-only --autostash`), runs
 `docker compose up -d --build --remove-orphans` for the running stack and removes
 the images this stack replaced. Running optional profiles such as `backup` stay

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `scripts/update.sh` compares the version of the running `api` container with
+  GitHub instead of the folder `VERSION` (WP-M3-16); a folder that is already
+  newer than the containers no longer blocks the rebuild.
+
 - A host deploy hook for the update menu (WP-M3-15): `npm run deploy:hook`
   listens for the webhook of the administration, checks the token and starts
   `scripts/update.sh --yes` in the background. Setup in `docs/DEPLOYMENT.md`.

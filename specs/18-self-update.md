@@ -19,8 +19,8 @@ itself is never part of the application.
   receives, stores or forwards an OS/Linux/sudo password. The whole feature is
   built on that rule.
 - Update triggers are authenticated like every other admin write: session cookie
-  + CSRF + the permission guard `system.update`; errors are `{ code, params }`,
-  never translated text and never a secret.
+  - CSRF + the permission guard `system.update`; errors are `{ code, params }`,
+    never translated text and never a secret.
 - The GitHub token and the deploy token belong to the API. They never reach the
   browser, a payload, a log line, a run row or the repository.
 - The client of the PWA updates itself (`registerType: autoUpdate`); the update
@@ -110,14 +110,14 @@ itself is never part of the application.
 
 ## §18.5 Configuration
 
-| Variable         | Meaning                                                                          |
-| ---------------- | -------------------------------------------------------------------------------- |
-| `GITHUB_REPO`    | `owner/repo` of the upstream repository; empty disables the check.               |
-| `GITHUB_BRANCH`  | the branch with the newest sources; default `main`.                              |
-| `GITHUB_TOKEN`   | optional personal access token; it raises the rate limit, it never leaves the API. |
-| `UPDATE_WEBHOOK_URL` | the deploy hook the start triggers; empty disables the start.                |
-| `UPDATE_WEBHOOK_TOKEN` | the value of the `X-Deploy-Token` header of the webhook.                  |
-| `GIT_COMMIT`     | build argument of the `api` image: the installed commit; `unknown` when the build does not know it. |
+| Variable               | Meaning                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `GITHUB_REPO`          | `owner/repo` of the upstream repository; empty disables the check.                                  |
+| `GITHUB_BRANCH`        | the branch with the newest sources; default `main`.                                                 |
+| `GITHUB_TOKEN`         | optional personal access token; it raises the rate limit, it never leaves the API.                  |
+| `UPDATE_WEBHOOK_URL`   | the deploy hook the start triggers; empty disables the start.                                       |
+| `UPDATE_WEBHOOK_TOKEN` | the value of the `X-Deploy-Token` header of the webhook.                                            |
+| `GIT_COMMIT`           | build argument of the `api` image: the installed commit; `unknown` when the build does not know it. |
 
 The compose file passes `GIT_COMMIT` as a build argument of the `api` service and
 the variables above as its environment. `extra_hosts:
@@ -141,7 +141,7 @@ runs on the host of the stack.
 `scripts/update.sh` (also `npm run update:host`) updates a host without the API
 and without a webhook target:
 
-- `--check` compares the tracked `VERSION` with the newest GitHub tag
+- `--check` compares the version of the running `api` container (`/app/VERSION` of its image) with the newest GitHub tag; without a running stack the answer is unknown and the update is built
   (`git ls-remote`, or the GitHub API when there is no checkout) and exits.
 - Without `--check` it asks once (skipped with `--yes`), pulls a git work tree
   with `--ff-only --autostash`, otherwise sets the Git build context when
