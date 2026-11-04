@@ -1,6 +1,6 @@
 # ADR-0006: Host update agent topology
 
-- Status: accepted
+- Status: superseded by ADR-0007
 - Date: 2026-11-03
 - Stakeholders: product owner, operator, admin
 
@@ -80,6 +80,11 @@ Facts that shape the design:
 - **Collecting the host password in the UI:** rejected — ADR-0004, §18.1.
 
 ## Consequences
+
+> **Superseded by ADR-0007 (2026-11-04):** the agent is retired. The update
+> control is a GitHub check in the API plus a deploy webhook
+> (`specs/18-self-update.md` §18.3–§18.5). The decision below is kept as the
+> record of the topology that was replaced.
 
 - New service `update-agent`, new workspace `apps/agent`, new env keys
   `UPDATE_AGENT_URL` and `UPDATE_AGENT_TOKEN`, new permission `system.update`,

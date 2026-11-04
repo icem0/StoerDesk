@@ -1,13 +1,17 @@
-# 18 — Self-update (admin update control)
+# 18 — Update control (the update menu of the administration)
 
-This slice expands the self-update decision (ADR-0004). It is authoritative for
+This slice expands the update decision of ADR-0004 and replaces the host update
+agent of ADR-0006 with the deploy webhook of ADR-0007. It is authoritative for
 the update control because it carries real content. `PLAN.md` §4/§15 (no host
-access from `api`/`db`, secrets) and §10 (PWA update strategy, never force a
-reload during input) still win where they are stricter.
+access from `api`/`db`, secrets) and §10 (PWA update strategy) still win where
+they are stricter.
 
 Deployment assumption for this instance: **host checkout + `docker compose up -d
---build`** (`docs/DEPLOYMENT.md` Quickstart). "Update" therefore means
-`git pull` → rebuild → image prune on the host — never inside the `api` image.
+--build`** (`docs/DEPLOYMENT.md`). "Update" therefore means: the administration
+sees that a newer commit exists upstream and hands the deployment to an external
+tool — a deploy hook of a panel, a webhook of a container or a small script on
+the host. The API never runs `git`, `docker` or a shell, and the deployment
+itself is never part of the application.
 
 ## §18.1 Hard rules
 
@@ -15,157 +19,119 @@ Deployment assumption for this instance: **host checkout + `docker compose up -d
   receives, stores or forwards an OS/Linux/sudo password. The whole feature is
   built on that rule.
 - Update triggers are authenticated like every other admin write: session cookie
-  - CSRF + a permission guard; errors are `{ code, params }`, never translated
-    text and never a secret.
-- The PWA clean update must not destroy unsent offline reports. While the Dexie
-  outbox (`apps/web/src/lib/outbox.ts`) holds a row with status `queued` or
-  `sending`, a forced cache clear / reload is blocked (§10).
+  + CSRF + the permission guard `system.update`; errors are `{ code, params }`,
+  never translated text and never a secret.
+- The GitHub token and the deploy token belong to the API. They never reach the
+  browser, a payload, a log line, a run row or the repository.
+- The client of the PWA updates itself (`registerType: autoUpdate`); the update
+  control of this slice is about the **stack**, not about the browser cache.
 
-## §18.2 Stage 1 — safe status + clean PWA update (WP-M2-44)
+## §18.2 The update menu (web)
 
-Client-only. No API call, no host access, no new permission key, no new table.
-
-- Guarded page `/admin/update` (inside `RequireSession`), reachable from the
-  administration home as the module `update`.
-- Shows the current application version from `appVersion` (`lib/version.ts`) and
-  the version string of the active service worker when available.
-- **Update check + reload:** asks the registration for the active/updated
-  service worker, and when an update is waiting calls `skipWaiting` and reloads.
-  When `registerType: autoUpdate` already replaced the worker, the page still
-  offers a manual reload.
-- **Clean update / clear cache:** sends the service worker a message to unregister
-  itself and delete every `caches` entry, then reloads the page.
-- **Outbox guard:** the reload/clear controls are disabled and explained while a
-  report is queued or sending. Re-enabling is automatic when the outbox drains.
+- The version badge of the shell header is the entry point: for a user with the
+  permission `system.update` it is a **button** that opens a panel, for every
+  other user it stays a plain text. The badge is visible on the login screen
+  and on every guarded page (WP-M1-15, WP-M1-17).
+- The panel shows: the installed version, the installed commit, the newest
+  upstream commit, whether an update is available, the number of commits behind
+  and the commits themselves (sha, message, date) — plus the button that starts
+  the update.
+- The panel reads `GET /api/v1/admin/update/check` and starts the update with
+  `POST /api/v1/admin/update/start`. The button is disabled while the request
+  runs and the panel states that the stack restarts itself and is briefly
+  unreachable.
+- A start is confirmed explicitly — a confirm step, never a password.
+- The panel is hidden without the permission `system.update`; the guard of the
+  server stays the only enforcement point (§3.2).
 - All text through the `settings` namespace, keys `settings:admin.update.*`, de
   and en complete (`i18n:check`).
 
-Out of scope for stage 1: any host command, any "run the update" button, the
-agent, `UPDATE_AGENT_TOKEN`, the `update_runs` table and a new permission.
+## §18.3 The check endpoint
 
-## §18.3 Update availability (optional, planned)
+`GET /api/v1/admin/update/check` (guard `system.update`) answers:
 
-A read-only "is a newer version upstream?" signal may be added later as its own
-WP: `GET /api/v1/admin/update/status` returning
-`{ currentVersion?, latestVersion?, updateAvailable, checkedAt }` from a
-read-only GitHub tag/commit call (pattern of `apps/api/src/integrations/
-bmacloud/client.ts`), guarded by `settings.read`. The current version is a
-build-time web value (`__APP_VERSION__`); the API runtime does not read `VERSION`
-(WP-M1-16), so the client sends its version or the comparison runs client-side.
-A failing upstream call answers `{ code }` and never leaks a token. Not required
-for stage 1.
+```json
+{
+  "current": "v0.0.42",
+  "latest": "1a2b3c4",
+  "updateAvailable": true,
+  "commitsBehind": 3,
+  "commits": [{ "sha": "1a2b3c4", "message": "fix(api): …", "date": "2026-11-04T10:00:00.000Z" }],
+  "checkedAt": "2026-11-04T10:05:00.000Z"
+}
+```
 
-## §18.4 Stage 2 — host update agent (ADR-0006, optional for the in-UI button)
+- `current` is the installed version: the commit of the build (`GIT_COMMIT`) if
+  the build carries one, otherwise the version of the tracked `VERSION` file of
+  the image, `null` when neither is known.
+- `latest` is the **short sha** of the newest commit of the branch.
+  `commitsBehind` is the number of commits between the installed version and
+  it, `null` when the two cannot be compared.
+- `commits` lists the commits behind, newest first; `message` is the subject
+  (the first line of the commit message), `date` the commit date in UTC.
+- The API calls `https://api.github.com/repos/$GITHUB_REPO/commits/$GITHUB_BRANCH`
+  and, when the installed version is known, additionally
+  `https://api.github.com/repos/$GITHUB_REPO/compare/$current...$latest`.
+- The answer is cached for 60 seconds, so the menu does not spam the GitHub
+  API. A failed call is not cached.
+- A failing call answers an error code — `update_not_configured`,
+  `update_github_rate_limited`, `update_check_failed` — and never leaks a
+  token. A compare that GitHub refuses (the installed version is not part of
+  the upstream history) is not an error: the answer carries
+  `commitsBehind: null`, so the menu says that the versions cannot be compared.
 
-The default host update is the shell script of §18.7. The agent described here is
-only needed when an administrator wants to start the update from the admin page.
-The privileged part lives in a **separate, trusted container** on the host, never
-in the `api` image. The topology is fixed by ADR-0006:
+## §18.4 The start endpoint
 
-- Agent: a service `update-agent` of the **same compose project**, behind the
-  compose profile `update`. A plain `docker compose up -d --build` skips a
-  service whose profile is not enabled, so the agent is never recreated by the
-  redeploy it triggers. It is started explicitly: `docker compose --profile
-update up -d update-agent`.
-- The start command the administration offers (WP-M3-03, corrected by WP-M3-04)
-  runs **in the project folder of the stack** and pins that folder instead of
-  discovering it: `-p <project>` from the `com.docker.compose.project` label of
-  the running web container plus `--project-directory "$PWD"`. The
-  `working_dir` label is not used — a panel runs compose inside its own
-  container, so that label names a path inside the panel and changing into it
-  fails on the host. The command also fills the two `.env` keys the compose file
-  requires (`POSTGRES_PASSWORD`, `SESSION_SECRET`) from the environment of the
-  running `api` container: only missing keys are appended, the file is created
-  with `umask 077`, and no secret is ever carried over the host command line.
-- Image: `node:22-alpine` plus `git`, `docker-cli` and `docker-cli-compose`
-  (Alpine `main` / `community`); the agent code is bundled, no runtime npm
-  dependencies.
-- Mounts: the checkout read-write (relative `.`, so client and daemon share the
-  absolute path), `/var/run/docker.sock` read-write, a small named volume for
-  the agent's last-run state. **No published port** — the agent listens only on
-  the internal `backend` network at `http://update-agent:8080`.
-- Run steps, in this order:
-  1. `git -c safe.directory=/repo pull --ff-only --autostash` — the repository
-     is public, so no credential is needed; `GIT_TERMINAL_PROMPT=0` keeps it
-     from blocking on a prompt. The owner of the checkout is recorded before
-     and restored after the pull. When `/repo` is no git work tree (a panel
-     such as Arcane syncs or builds the sources itself), the step is skipped
-     instead of failing the run.
-  2. `docker compose -p <project> --project-directory /repo -f
-     /repo/docker-compose.yml up -d --build` — the rebuild of the whole running
-     stack; the `api` container is recreated, so the request
-     that triggered the run dies with it. The project is read from the agent's
-     own `com.docker.compose.project` label, so a panel-specific project name
-     is updated instead of a second stack being created. Profiles that are
-     running now (e.g. `backup`) stay enabled; the `update` profile never is,
-     because it contains the agent itself.
-   3. `docker image prune -f --filter
-label=com.docker.compose.project=<project>` — the dangling images of the
-     previous build of this project. `docker image prune -a` is not used: it
-     would delete the images of other projects on a shared host. This label
-     filter alone misses the images of a build that never carried the label
-     (remote build context, `docker-compose` v1, aborted build); the agent
-     adopts the id-based clean-up of §18.7 in WP-M3-02b.
-   4. Every step runs against `UPDATE_STEP_TIMEOUT_MS` (default ten minutes).
-      A step that passes its deadline fails the run with `update_step_timeout`
-      instead of blocking forever: the run reaches `finishedAt` and `lastRun`
-      leaves `running`, so the administration no longer shows `Läuft` for a
-      build that never comes back.
-- The agent decides what a run is. It accepts no path, no command and no
-  arguments from a request.
-- A panel deployment builds from the Git URL (`IMAGE_BUILD_CONTEXT`,
-  `docs/DEPLOYMENT.md`), because without a checkout there is nothing to pull;
-  the compose build then fetches the new sources itself. The agent sets the Git
-  URL when `.env` has none, so a synced project folder cannot rebuild the old
-  files.
-- API contract (guarded, new permission `system.update`):
-  - `GET  /api/v1/admin/update/status` — agent reachable, current/known version.
-  - `POST /api/v1/admin/update/run` — trigger one update; writes an
-    `update_runs` row (modelled on `bma_sync_runs`): started, finished, status
-    (`RUNNING`/`SUCCESS`/`PARTIAL`/`FAILED`), before/after version, error code.
-  - `GET  /api/v1/admin/update/runs` — run history.
-- The bearer of the agent is a random shared secret. The agent creates it itself
-  and writes it into the state volume; the API reads it from there, so no
-  secret has to be configured. `UPDATE_AGENT_TOKEN` in `.env` is optional and
-  only pins a fixed bearer. The value is never logged, never in a payload or
-  the run row, never committed.
-- A run may restart the stack; the API must stay honest about its own
-  interruption and the UI re-checks health after the run.
+`POST /api/v1/admin/update/start` (guard `system.update`):
 
-## §18.5 Security
+- The server checks again whether an update is available (the cached answer is
+  reused while it is younger than 60 seconds). Without an available update the
+  route answers `409 update_no_update_available`.
+- The server sends `POST $UPDATE_WEBHOOK_URL` with the header
+  `X-Deploy-Token: $UPDATE_WEBHOOK_TOKEN` and a body it builds itself
+  (`{ "version": …, "current": …, "requestedAt": … }`). **No value of the
+  request reaches the webhook** — the client sends no parameters at all.
+- The route answers `202 { "started": true }` immediately. It never waits for
+  the end of the deployment: the target rebuilds the stack, so the API is gone
+  while the deployment runs.
+- A second start within five minutes is refused with `429 update_rate_limited`.
+  The cooldown lives in the memory of the API process; the deployment restarts
+  the API anyway, so a new window starts with it.
+- A missing webhook answers `503 update_webhook_not_configured`, a refused
+  webhook `502 update_webhook_failed`.
 
-- No OS credential anywhere in UI, API, logs, run rows or commits (§18.1).
-- Update triggers are rate limited and require an explicit confirmation in the UI
-  (a confirm step, not a password).
-- The agent token is a random shared secret, rotated like any other `.env` value.
-- The agent rejects a request without the bearer token with `401` and compares
-  the token in constant time. It binds to the internal network only and answers
-  no port on the host.
+## §18.5 Configuration
 
-## §18.6 Agent contract
+| Variable         | Meaning                                                                          |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `GITHUB_REPO`    | `owner/repo` of the upstream repository; empty disables the check.               |
+| `GITHUB_BRANCH`  | the branch with the newest sources; default `main`.                              |
+| `GITHUB_TOKEN`   | optional personal access token; it raises the rate limit, it never leaves the API. |
+| `UPDATE_WEBHOOK_URL` | the deploy hook the start triggers; empty disables the start.                |
+| `UPDATE_WEBHOOK_TOKEN` | the value of the `X-Deploy-Token` header of the webhook.                  |
+| `GIT_COMMIT`     | build argument of the `api` image: the installed commit; `unknown` when the build does not know it. |
 
-The agent speaks a small, fixed protocol on `http://update-agent:8080`:
+The compose file passes `GIT_COMMIT` as a build argument of the `api` service and
+the variables above as its environment. `extra_hosts:
+"host.docker.internal:host-gateway"` lets the webhook reach a deploy hook that
+runs on the host of the stack.
 
-- `GET /status` — `{ state, checkout: { version, commit? }, lastRun? }` where
-  `state` is `idle`, `running` or `failed`.
-- `POST /run` — starts one run; answers `202` with the run, `409` while a run is
-  active.
-- `GET /runs` — the runs the agent knows.
+## §18.6 Security
 
-Every agent answer is validated by the API with the shared Zod schemas
-(`packages/shared/src/schemas/update.ts`); a malformed answer is an error of the
-API, never a crash.
+- No OS credential anywhere in UI, API, logs or commits (§18.1).
+- The start is rate limited (five minutes) and requires an explicit confirmation
+  in the UI (a confirm step, not a password).
+- The GitHub token is sent as `Authorization: Bearer …` to `api.github.com` and
+  nowhere else; the deploy token is sent as `X-Deploy-Token` to the configured
+  webhook and nowhere else. Both are never logged, never answered and never
+  committed.
+- The webhook URL and the tokens are configuration of the operator; the menu
+  never shows them.
 
-Run state: the agent writes its last run to `/state/last-run.json` (the named
-volume) and reloads it on start, so a restarted agent can still tell what
-happened in the last run. The `update_runs` row of the API is the history the
-UI shows; the API reconciles a `RUNNING` row with the agent's state after its
-own restart and never invents a result the agent did not report.
-
-## §18.7 Host update shell script (default, no agent)
+## §18.7 The host update shell script (unchanged)
 
 `scripts/update.sh` (also `npm run update:host`) updates a host without the API
-and without the agent:
+and without a webhook target:
 
 - `--check` compares the tracked `VERSION` with the newest GitHub tag
   (`git ls-remote`, or the GitHub API when there is no checkout) and exits.
@@ -174,31 +140,19 @@ and without the agent:
   `.env` has none and leaves the sources to the compose build, then runs
   `docker compose up -d --build --remove-orphans` for the running project.
 - The compose project is read from `COMPOSE_PROJECT_NAME` or the running
-  containers; running optional profiles such as `backup` stay enabled and the
-  `update` profile is never touched.
+  containers; running optional profiles such as `backup` stay enabled.
 - **The image clean-up (WP-M3-02).** The rebuild moves the fixed `:latest` tags
   of `docker-compose.yml` to the new images, so the previous image of every
-  built service turns tagless. A prune that only trusts the
-  `com.docker.compose.project` **image** label misses them: that label is absent
-  for a build from a remote build context (`IMAGE_BUILD_CONTEXT`), for the
-  `docker-compose` v1 fallback and for an aborted build — and every one of those
-  updates left a `<none>` image on the host. The script therefore snapshots the
-  image ids it owns **before** the rebuild — the three `image:` names of
-  `docker-compose.yml` (overridable with `STOERDESK_OWN_IMAGES`) plus the Compose
-  default name patterns `<project>-*` and `<project>_*` — and afterwards removes
-  by id every snapshotted image that is neither the current image of one of those
-  names nor the image of a container of this compose project. `docker rmi`
-  without `-f`: an image a container still holds stays. The project-labelled
-  `docker image prune -f` stays as an additional best-effort step. The clean-up
-  runs after a failed rebuild too, because that attempt already moved the tags.
+  built service turns tagless. The script snapshots the image ids it owns
+  **before** the rebuild and afterwards removes by id every snapshotted image
+  that is neither the current image of one of those names nor the image of a
+  container of this compose project. `docker rmi` without `-f`: an image a
+  container still holds stays.
 - `docker image prune -a` and an unscoped `docker image prune -f` are never used:
   without a known project the name-based clean-up is the whole clean-up, so the
   images of other projects on a shared host stay untouched.
 - `--cleanup` runs only the clean-up (no version check, no pull, no rebuild).
   `--gc` additionally prunes tagless images and the build cache older than
-  `STOERDESK_GC_UNTIL` hours (default 168): `docker image prune -f` and
-  `docker builder prune -f`, each with `--filter until=<n>h`. That is the opt-in
-  way to clear the backlog an older version left behind, and on a shared host it
-  also removes tagless images of other projects inside that window.
+  `STOERDESK_GC_UNTIL` hours (default 168).
 - The script needs `docker` and `sh`; `git`, `curl`/`wget` or `node` are used
   when present. It never writes a credential and never edits `.env`.

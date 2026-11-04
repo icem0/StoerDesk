@@ -14,7 +14,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 8   |
+| [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 14  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
@@ -299,6 +299,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done                    | yes     |
 | WP-M3-05  | shared error code `update_step_timeout` for self-update           | done                    | yes     |
 | WP-M3-06  | the update agent run can never hang forever                       | done                    | yes     |
+| WP-M3-07  | the update contract (spec §18, ADR-0007) and the GitHub client     | done                    | yes     |
+| WP-M3-08  | the update API: `check` and `start` with the environment keys      | planned                 | yes     |
+| WP-M3-09  | the deployment configuration of the update control                  | planned                 | yes     |
+| WP-M3-10  | the update menu in the shell header                                | planned                 | yes     |
+| WP-M3-11  | the removal of the update agent                                   | planned                 | yes     |
+| WP-M3-12  | the documentation of the new update control                        | planned                 | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |
