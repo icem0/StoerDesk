@@ -288,6 +288,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-75  | `ticket.delete` permission key (admin only)               | planned                 | yes     |
 | WP-M2-76  | `ticket_purges` append-only log of hard-deleted tickets   | planned                 | yes     |
 | WP-M2-77  | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets  | planned                 | yes     |
+| WP-M2-78  | "Endgültig löschen" button on the ticket detail page      | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

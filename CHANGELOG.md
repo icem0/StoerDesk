@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Admins can permanently delete cancelled tickets (`ticket.delete`,
+  `DELETE /api/v1/tickets/:ticketNo`): the deletion is recorded in the
+  append-only `ticket_purges` log and the ticket's photos are removed from the
+  uploads volume; the ticket detail page shows an "Endgültig löschen" button
+  once a ticket has been storniert (WP-M2-75 … WP-M2-78).
 - The host update page shows the comparison of the built-in version and the
   newest GitHub tag (WP-M2-74). If the agent knows no checkout version, the
   version of the web app is used; an unparseable version is named instead of

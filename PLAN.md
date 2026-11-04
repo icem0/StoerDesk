@@ -724,6 +724,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-75   | `ticket.delete` permission key (admin only)          | planned  |
 | WP-M2-76   | `ticket_purges` append-only log of hard-deleted tickets | planned  |
 | WP-M2-77   | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets | planned  |
+| WP-M2-78   | "Endgültig löschen" button on the ticket detail page     | planned  |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

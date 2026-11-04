@@ -6,6 +6,7 @@ import type { TicketDetailResponse } from '@stoerdesk/shared'
 import { type StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
+import { usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
 
 /**
@@ -69,6 +70,7 @@ export function TicketDetailPage() {
   const [showActions, setShowActions] = useState(false)
 
   const ticketQuery = useTicket(ticketNo)
+  const mayDelete = usePermission('ticket.delete')
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
@@ -87,7 +89,23 @@ export function TicketDetailPage() {
       setShowActions(false)
     } catch (error) {
       const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
-      alert(err.code ?? 'Action failed')
+      alert(err.code ?? t('detail.errors.actionFailed'))
+    }
+  }
+
+  async function handleDelete() {
+    if (ticketNo === undefined) return
+
+    if (!window.confirm(t('detail.prompt.deleteConfirm'))) {
+      return
+    }
+
+    try {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}`, { method: 'DELETE' })
+      navigate('/tickets')
+    } catch (error) {
+      const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
+      alert(err.code ?? t('detail.errors.deleteFailed'))
     }
   }
 
@@ -369,10 +387,23 @@ export function TicketDetailPage() {
                     void handleAction('cancelled', { reason: reason.trim() })
                   }
                 }}
-              >
-                {t('detail.action.cancel')}
-              </button>
+                >
+                  {t('detail.action.cancel')}
+                </button>
             )
+
+            if (status === 'CANCELLED' && mayDelete) {
+              buttons.push(
+                <button
+                  key="delete"
+                  className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
+                  type="button"
+                  onClick={handleDelete}
+                >
+                  {t('detail.action.delete')}
+                </button>
+              )
+            }
 
             return buttons
           })()}

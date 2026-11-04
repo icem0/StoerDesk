@@ -232,7 +232,9 @@
     "back": "Zurück zur Liste",
     "actions": "Aktionen",
     "errors": {
-      "notFound": "Meldung nicht gefunden."
+      "notFound": "Meldung nicht gefunden.",
+      "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
+      "deleteFailed": "Die Meldung konnte nicht gelöscht werden."
     },
     "header": "Vorgang",
     "field": {
@@ -266,14 +268,16 @@
       "acknowledge": "Quittieren",
       "close": "Schließen",
       "reopen": "Wieder eröffnen",
-      "cancel": "Stornieren"
+      "cancel": "Stornieren",
+      "delete": "Endgültig löschen"
     },
     "prompt": {
       "workOrderType": "Auftragsart (z. B. AA):",
       "workOrderNumber": "Auftragsnummer:",
       "declineReason": "Ablehnungsgrund (mind. 5 Zeichen):",
       "reopenReason": "Wiedereröffnungsgrund (mind. 5 Zeichen):",
-      "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):"
+      "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):",
+      "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt."
     }
   }
 }
