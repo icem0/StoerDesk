@@ -936,7 +936,9 @@ before any code: **WP-M5-01 … WP-M5-09** in `work-packages/m5/` cover the Dexi
 action queue, the `internal_action_receipts` table, the replay-safe `applyInternalAction`
 helper, the `clientUuid` idempotency on the acknowledge/decline routes plus the internal
 comment route, the offline queue and conflict UI, the stale-while-revalidate ticket reads,
-the E2E of the exit criterion and the cache clear on sign-out. Claiming from the pool and
+the E2E of the exit criterion and the cache clear on sign-out. **WP-M5-01 is implemented**
+(the Dexie v2 `internal_actions` queue with its replay triggers and `pendingWrites`).
+Claiming from the pool and
 shift confirm/decline stay out of phase 5 (online-only rule of §9.6; on-call is phase 8).
 
 ## 17. Work package rules for small models

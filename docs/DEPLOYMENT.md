@@ -115,10 +115,13 @@ running stack:
 PROJECT=$(docker ps --filter label=com.docker.compose.service=web --format '{{.Label "com.docker.compose.project"}}' | head -n1)
 API=$(docker ps -q --filter label=com.docker.compose.service=api | head -n1)
 umask 077
+[ -f docker-compose.yml ] || { echo "nicht im Projektordner des Stacks (docker-compose.yml fehlt)" >&2; exit 1; }
 for k in POSTGRES_PASSWORD SESSION_SECRET; do
-  grep -q "^$k=" .env 2>/dev/null ||
-    printf '%s=%s\n' "$k" "$(docker exec "$API" printenv "$k")" >> .env
-done
+  grep -q "^$k=" .env 2>/dev/null || {
+    value=$(docker exec "$API" printenv "$k" 2>/dev/null) ||
+      echo "konnte $k nicht aus dem laufenden api-Container lesen" >&2; exit 1; }
+    printf '%s=%s\n' "$k" "$value" >> .env
+  done
 IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \
   docker compose -p "$PROJECT" --project-directory "$PWD" --profile update up -d --build update-agent
 ```

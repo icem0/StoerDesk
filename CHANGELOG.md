@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The Dexie outbox learns the offline internal writes (WP-M5-01): a v2 table
+  `internal_actions` queues acknowledge, comment and decline with their own
+  `client_uuid` idempotency key, replays oldest-first on app start and the
+  `online` event and reports both queues through `pendingWrites()`. The rows
+  wait for their endpoints (WP-M5-02 … WP-M5-04); nothing sends yet beyond the
+  delivery skeleton.
 - Phase 5 (offline internal actions) is planned in nine work packages  (WP-M5-01 … WP-M5-09 in `work-packages/m5/`): the Dexie v2 internal action
   queue, the `internal_action_receipts` table with its replay-safe helper, the
   `clientUuid` idempotency on the acknowledge/decline routes plus an internal

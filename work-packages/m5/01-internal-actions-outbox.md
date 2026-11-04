@@ -1,7 +1,7 @@
 # WP-M5-01: the outbox stores queued internal actions (web)
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-09, WP-M2-19b
 phase: 5
 milestone: m5
@@ -79,8 +79,15 @@ Expected: all green; the new outbox tests fail before the change and pass after.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/lib/outbox.ts` (Dexie v2, queue API),
+  `apps/web/src/main.tsx` (replay triggers), new
+  `apps/web/src/lib/__tests__/outbox-actions.test.ts` (9 tests, `fake-indexeddb`
+  as new web devDependency)
+- Interfaces added: `InternalActionKind`, `QueuedAction`,
+  `enqueueInternalAction`, `queuedActions`, `updateAction`, `removeAction`,
+  `deliverAction`, `replayInternalActions`, `pendingWrites`
+- Verified: `npm run check` green including the real E2E suite 10/10
+  (local PostgreSQL + system Chromium via `E2E_CHROMIUM_PATH`); the 9 new unit
+  tests fail before the change and pass after
 - Follow-up WP: WP-M5-02 (`m5/02-internal-action-receipts-table.md`)
 - Open question: none

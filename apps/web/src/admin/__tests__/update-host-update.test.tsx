@@ -166,6 +166,7 @@ describe('UpdateHostUpdate', () => {
     expect(screen.getByText(/--project-directory "\$PWD"/)).toBeTruthy()
     expect(screen.getByText(/printenv/)).toBeTruthy()
     expect(screen.getByText(/--profile update up -d --build update-agent/)).toBeTruthy()
+    expect(screen.getByText(/docker-compose\.yml fehlt/)).toBeTruthy()
     // The working_dir label names a path inside the container of a panel, so the
     // guide must not use it any more.
     expect(screen.queryByText(/working_dir/)).toBeNull()
