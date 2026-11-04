@@ -68,5 +68,12 @@ without a reachable PostgreSQL and Chromium (developer machine), runs in CI.
 - Files changed: `apps/web/e2e/workflow.spec.ts` (new)
 - Interfaces added: E2E test `workflow.spec.ts`
 - Verified: `npm run wp:check` green; E2E skips locally without database/browser
+- Corrected by: the WP-M4-01 repair commit — the test never reached the workflow
+  buttons: they hide behind the "Actions" toggle (WP-M2-19d), and
+  `handleAction` posted the **event names** (`/review_started`, `/accepted`)
+  instead of the route segments of WP-M2-19c (`/review`, `/accept`) with a
+  `content-type: application/json` header but no body (Fastify 400). The CI
+  check runs of v0.1.123 … v0.1.125 were red because of this; the repair makes
+  the E2E pass against a real database and Chromium.
 - Follow-up WP: none announced
 - Open question: none

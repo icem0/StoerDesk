@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Phase 5 (offline internal actions) is planned in nine work packages
-  (WP-M5-01 … WP-M5-09 in `work-packages/m5/`): the Dexie v2 internal action
+- Phase 5 (offline internal actions) is planned in nine work packages  (WP-M5-01 … WP-M5-09 in `work-packages/m5/`): the Dexie v2 internal action
   queue, the `internal_action_receipts` table with its replay-safe helper, the
   `clientUuid` idempotency on the acknowledge/decline routes plus an internal
   comment route, the offline queue and conflict UI, stale-while-revalidate
@@ -189,6 +188,13 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The ticket detail page reaches the workflow routes: every action event is
+  mapped to its API route segment (`/review`, `/work-order`, `/assign`, …)
+  instead of posting the internal event name, and the JSON content type is only
+  sent together with a body (Fastify rejects an empty JSON body with 400). The
+  WP-M4-01 workflow E2E, whose CI check runs v0.1.123 … v0.1.125 were red, now
+  drives every transition through the "Actions" panel and passes 10/10 against
+  a real database and Chromium.
 - The start command of the update button runs in the project folder and no longer
   follows a container-internal path (WP-M3-03, WP-M3-04). It used the
   `com.docker.compose.project.working_dir` label of the running web container as

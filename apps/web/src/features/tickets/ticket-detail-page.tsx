@@ -63,6 +63,24 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleString('de-DE')
 }
 
+/**
+ * Workflow events are not URL segments (`WP-M2-19c`): the detail page maps each
+ * event to the route path of `apps/api/src/tickets/workflow-routes.ts`.
+ */
+const ACTION_SEGMENTS: Record<string, string> = {
+  review_started: 'review',
+  work_order_set: 'work-order',
+  assigned: 'assign',
+  offered: 'offer',
+  claimed: 'claim',
+  accepted: 'accept',
+  declined: 'decline',
+  acknowledged: 'acknowledge',
+  closed: 'close',
+  reopened: 'reopen',
+  cancelled: 'cancel',
+}
+
 export function TicketDetailPage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
@@ -79,11 +97,19 @@ export function TicketDetailPage() {
   async function handleAction(event: string, body?: Record<string, unknown>) {
     if (ticketNo === undefined) return
 
+    const segment = ACTION_SEGMENTS[event]
+
+    if (segment === undefined) return
+
     try {
-      await apiFetch<never>(`/v1/tickets/${ticketNo}/${event}`, {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}/${segment}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body === undefined
+          ? {}
+          : {
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(body),
+            }),
       })
       void ticketQuery.refetch()
       setShowActions(false)

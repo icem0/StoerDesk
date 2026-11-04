@@ -170,6 +170,20 @@ function statusText(language: 'de' | 'en', status: string): string {
   return ui[language].status[status as keyof (typeof ui)['de']['status']] ?? status
 }
 
+/**
+ * The workflow buttons live behind the "Actions" toggle of the detail page
+ * (`WP-M2-19d`); after a successful action the panel closes again, so every
+ * step opens it first.
+ */
+async function performAction(
+  page: Page,
+  texts: Pick<(typeof ui)['de'], 'actions'> | Pick<(typeof ui)['en'], 'actions'>,
+  buttonName: string,
+): Promise<void> {
+  await page.getByRole('button', { name: texts.actions }).click()
+  await page.getByRole('button', { name: buttonName }).click()
+}
+
 for (const language of ['de', 'en'] as const) {
   test(`full ticket workflow with audit trail (${language.toUpperCase()})`, async ({
     page,
@@ -199,13 +213,12 @@ for (const language of ['de', 'en'] as const) {
     await expect(page.getByText(texts.event.created)).toBeVisible()
 
     // 1. Review: NEW → IN_REVIEW (UI button, no body).
-    await page.getByRole('button', { name: texts.action.review }).click()
+    await performAction(page, texts, texts.action.review)
     await expect(page.getByText(statusText(language, 'IN_REVIEW'))).toBeVisible()
     await expect(page.getByText(texts.event.review_started)).toBeVisible()
 
     // 2. Work order: IN_REVIEW → WORK_ORDER_CREATED (API, needs { type, number }).
     await setWorkOrder(page, ticketNo)
-    await page.waitForResponse(`/api/v1/tickets/${ticketNo}`)
     await page.reload()
     await expect(
       page.getByText(statusText(language, 'WORK_ORDER_CREATED')),
@@ -213,18 +226,17 @@ for (const language of ['de', 'en'] as const) {
     await expect(page.getByText(texts.event.work_order_set)).toBeVisible()
 
     // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (UI button, no body).
-    await page.getByRole('button', { name: texts.action.assign }).click()
+    await performAction(page, texts, texts.action.assign)
     await expect(page.getByText(statusText(language, 'ASSIGNED'))).toBeVisible()
     await expect(page.getByText(texts.event.assigned)).toBeVisible()
 
     // 4. Accept: ASSIGNED → ACCEPTED (UI button, no body).
-    await page.getByRole('button', { name: texts.action.accept }).click()
+    await performAction(page, texts, texts.action.accept)
     await expect(page.getByText(statusText(language, 'ACCEPTED'))).toBeVisible()
     await expect(page.getByText(texts.event.accepted)).toBeVisible()
 
     // 5. Acknowledge: ACCEPTED → ACKNOWLEDGED (API, needs { result }).
     await acknowledgeTicket(page, ticketNo)
-    await page.waitForResponse(`/api/v1/tickets/${ticketNo}`)
     await page.reload()
     await expect(
       page.getByText(statusText(language, 'ACKNOWLEDGED')),
@@ -232,7 +244,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(page.getByText(texts.event.acknowledged)).toBeVisible()
 
     // 6. Close: ACKNOWLEDGED → CLOSED (UI button, no body).
-    await page.getByRole('button', { name: texts.action.close }).click()
+    await performAction(page, texts, texts.action.close)
     await expect(page.getByText(statusText(language, 'CLOSED'))).toBeVisible()
     await expect(page.getByText(texts.event.closed)).toBeVisible()
 

@@ -561,9 +561,19 @@ declares `env_file: .env`. `docs/DEPLOYMENT.md` names the Arcane host path and t
 the label path is container-internal; `scripts/update.sh` still requires a real checkout,
 and the self-cloning agent stays a separate decision.
 
+**Record correction (WP-M4-01 E2E repair).** The WP-M4-01 test never ran a green CI check
+run: its CI jobs v0.1.123 … v0.1.125 failed at the first UI step. Two defects: the test
+clicked the workflow buttons without opening the "Actions" toggle that WP-M2-19d put in
+front of them, and the detail page posted the internal **event names**
+(`/review_started`, `/accepted`, …) instead of the route segments defined by WP-M2-19c
+(`/review`, `/accept`, …) — sending `content-type: application/json` without a body, which
+Fastify answers with 400. The repair maps every event to its segment, sends the header only
+with a body, opens the panel per step in the test and drops the two `waitForResponse` calls
+that waited for a browser request the API-driven steps never make. The E2E now runs against
+a real throwaway database and Chromium — locally 10/10 and in the CI check run.
+
 **Phase 5 is split, not started (the `m5` packages).** Phase 4 closed with WP-M4-01 and left
-no open follow-up, so the next roadmap step is phase 5 (offline internal actions). It had no
-work packages — `specs/09-offline.md` §9.6 only named the topic — so the split required by
+no open follow-up, so the next roadmap step is phase 5 (offline internal actions). It had nowork packages — `specs/09-offline.md` §9.6 only named the topic — so the split required by
 `PLAN.md` §16 happened first: **WP-M5-01 … WP-M5-09** in `work-packages/m5/`, implemented in
 numeric order (01 outbox table → 02 receipts table → 03 idempotent helper → 04 routes →
 05 queue UI → 06 conflict UI → 07 offline reads → 08 E2E exit criterion → 09 cache clear on
