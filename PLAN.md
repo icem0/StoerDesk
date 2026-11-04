@@ -927,6 +927,18 @@ project name from the `com.docker.compose.project` label, pins the folder with
 declares `env_file: .env`. `scripts/update.sh` keeps requiring a real checkout: the panel
 path is the agent path.
 
+Phase 4 is **complete** with a single package: **WP-M4-01** drives the whole workflow
+(review → work order → assign → accept → acknowledge → close) as one Playwright test in
+`de` and `en` and asserts the `ticket_events` chain after every transition; it announced no
+follow-up. Phase 5 (offline internal actions) then had no work packages at all —
+`specs/09-offline.md` §9.6 only named the topic — so the split required by §16 happened
+before any code: **WP-M5-01 … WP-M5-09** in `work-packages/m5/` cover the Dexie v2 internal
+action queue, the `internal_action_receipts` table, the replay-safe `applyInternalAction`
+helper, the `clientUuid` idempotency on the acknowledge/decline routes plus the internal
+comment route, the offline queue and conflict UI, the stale-while-revalidate ticket reads,
+the E2E of the exit criterion and the cache clear on sign-out. Claiming from the pool and
+shift confirm/decline stay out of phase 5 (online-only rule of §9.6; on-call is phase 8).
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

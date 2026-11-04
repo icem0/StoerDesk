@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Phase 5 (offline internal actions) is planned in nine work packages
+  (WP-M5-01 … WP-M5-09 in `work-packages/m5/`): the Dexie v2 internal action
+  queue, the `internal_action_receipts` table with its replay-safe helper, the
+  `clientUuid` idempotency on the acknowledge/decline routes plus an internal
+  comment route, the offline queue and conflict UI, stale-while-revalidate
+  ticket reads, the E2E exit-criterion test and the cache clear on sign-out.
+  No product code yet — this is the split required by `PLAN.md` §16/§17.
 - The update agent removes the images it replaces (WP-M3-02b): it snapshots the
   image ids of the three owned image names before the compose rebuild, removes by
   id whatever neither a current tag nor a container of the compose project needs

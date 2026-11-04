@@ -16,6 +16,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
 | [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up              | 5   |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
+| [m5](m5/) | Phase 5 (planned): offline internal actions — queue, receipts, replay, conflicts | 9 |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
@@ -296,6 +297,15 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-03  | the agent start command finds the project dir on the host           | done                    | yes     |
 | WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
+| WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | planned                 | yes     |
+| WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |
+| WP-M5-03  | `applyInternalAction`: replay-safe acknowledge/comment/decline      | planned                 | yes     |
+| WP-M5-04  | `clientUuid` on the action routes + internal comment route          | planned                 | yes     |
+| WP-M5-05  | the detail page queues actions offline and replays them             | planned                 | yes     |
+| WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible     | planned                 | yes     |
+| WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | planned                 | yes     |
+| WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | planned                 | yes     |
+| WP-M5-09  | sign-out clears the `internal-tickets` cache                        | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -550,6 +560,16 @@ the `com.docker.compose.project` label and appends only the missing `POSTGRES_PA
 declares `env_file: .env`. `docs/DEPLOYMENT.md` names the Arcane host path and the rule that
 the label path is container-internal; `scripts/update.sh` still requires a real checkout,
 and the self-cloning agent stays a separate decision.
+
+**Phase 5 is split, not started (the `m5` packages).** Phase 4 closed with WP-M4-01 and left
+no open follow-up, so the next roadmap step is phase 5 (offline internal actions). It had no
+work packages — `specs/09-offline.md` §9.6 only named the topic — so the split required by
+`PLAN.md` §16 happened first: **WP-M5-01 … WP-M5-09** in `work-packages/m5/`, implemented in
+numeric order (01 outbox table → 02 receipts table → 03 idempotent helper → 04 routes →
+05 queue UI → 06 conflict UI → 07 offline reads → 08 E2E exit criterion → 09 cache clear on
+sign-out). The exit criterion "offline acknowledge syncs and conflicts are shown" is proven
+by WP-M5-08. Claiming from the pool and confirm/decline of shifts stay out of phase 5
+(online-only rule of §9.6, on-call is phase 8).
 
 ## Validation
 
