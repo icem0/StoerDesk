@@ -66,6 +66,9 @@ const STEP_ERROR_CODES: Record<UpdateStep, UpdateErrorCode> = {
   prune: 'update_prune_failed',
 }
 
+/** The source a panel build fetches when the project has no git checkout. */
+export const DEFAULT_BUILD_CONTEXT = 'https://github.com/icem0/StoerDesk.git#main'
+
 const REDACTED = '***'
 
 /**
@@ -236,8 +239,9 @@ export class UpdateRunner {
 
     try {
       const project = await this.resolveComposeProject()
+      const gitCheckout = await this.isGitCheckout()
 
-      if (!(await this.isGitCheckout())) {
+      if (!gitCheckout) {
         // A panel such as Arcane syncs or builds the sources itself and leaves
         // no git checkout behind. There is nothing to pull; the compose build
         // is the update. Skipping beats failing the whole run.
@@ -279,7 +283,7 @@ export class UpdateRunner {
         await this.composeArgs(project),
         // The compose client reads the `.env` of the project from its working
         // directory — the checkout of the host.
-        { cwd: this.projectDirectory },
+        { cwd: this.projectDirectory, env: await this.buildEnv(gitCheckout) },
       )
 
       if (!composed.ok) {
@@ -348,6 +352,42 @@ export class UpdateRunner {
     )
 
     return result.code === 0 && result.stdout.trim() === 'true'
+  }
+
+  /**
+   * The build context of a checkout without git metadata. A panel may keep only
+   * a synced copy of the files; building that copy would redeploy the old
+   * sources. The Git URL makes the compose build fetch the current sources,
+   * unless the operator configured another Git URL in the `.env`.
+   */
+  private async buildEnv(gitCheckout: boolean): Promise<Record<string, string> | undefined> {
+    if (gitCheckout) {
+      return undefined
+    }
+
+    const configured = await this.dotEnvValue('IMAGE_BUILD_CONTEXT')
+
+    if (configured !== null && /^(?:https?|git|ssh):\/\//i.test(configured)) {
+      return undefined
+    }
+
+    return { IMAGE_BUILD_CONTEXT: DEFAULT_BUILD_CONTEXT }
+  }
+
+  /** One value of the project `.env`, without quotes; `null` when absent. */
+  private async dotEnvValue(name: string): Promise<string | null> {
+    try {
+      const content = await readFile(join(this.projectDirectory, '.env'), 'utf8')
+      const match = new RegExp(`^${name}=(.*)$`, 'm').exec(content)
+
+      if (match === null) {
+        return null
+      }
+
+      return match[1]?.trim().replace(/^(['"])(.*)\1$/, '$2') ?? ''
+    } catch {
+      return null
+    }
   }
 
   /**

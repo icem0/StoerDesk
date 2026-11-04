@@ -95,9 +95,11 @@ label=com.docker.compose.project=<project>` — the dangling images of the
      would delete the images of other projects on a shared host.
 - The agent decides what a run is. It accepts no path, no command and no
   arguments from a request.
-- A panel deployment must build from the Git URL (`IMAGE_BUILD_CONTEXT`,
+- A panel deployment builds from the Git URL (`IMAGE_BUILD_CONTEXT`,
   `docs/DEPLOYMENT.md`), because without a checkout there is nothing to pull;
-  the compose build then fetches the new sources itself.
+  the compose build then fetches the new sources itself. The agent sets the Git
+  URL when `.env` has none, so a synced project folder cannot rebuild the old
+  files.
 - API contract (guarded, new permission `system.update`):
   - `GET  /api/v1/admin/update/status` — agent reachable, current/known version.
   - `POST /api/v1/admin/update/run` — trigger one update; writes an
@@ -150,9 +152,9 @@ and without the agent:
 - `--check` compares the tracked `VERSION` with the newest GitHub tag
   (`git ls-remote`, or the GitHub API when there is no checkout) and exits.
 - Without `--check` it asks once (skipped with `--yes`), pulls a git work tree
-  with `--ff-only --autostash`, otherwise leaves the sources to the compose
-  build (`IMAGE_BUILD_CONTEXT` must point to the Git URL in a panel
-  deployment), then runs `docker compose up -d --build` for the running project.
+  with `--ff-only --autostash`, otherwise sets the Git build context when
+  `.env` has none and leaves the sources to the compose build, then runs
+  `docker compose up -d --build` for the running project.
 - The compose project is read from `COMPOSE_PROJECT_NAME` or the running
   containers; running optional profiles such as `backup` stay enabled and the
   `update` profile is never touched.

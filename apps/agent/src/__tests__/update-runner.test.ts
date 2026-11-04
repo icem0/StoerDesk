@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { type AgentRun, UPDATE_ERROR_DETAIL_MAX_CHARS } from '@stoerdesk/shared'
 
-import { type CommandResult, type CommandRunner, UpdateRunner } from '../update-runner.js'
+import {
+  type CommandResult,
+  type CommandRunner,
+  DEFAULT_BUILD_CONTEXT,
+  UpdateRunner,
+} from '../update-runner.js'
 
 interface RecordedCommand {
   command: string
@@ -95,6 +100,7 @@ describe('update runner', () => {
       ],
       cwd: '/repo',
     })
+    expect(compose?.env).toBeUndefined()
     expect(
       calls.find((call) => call.command === 'docker' && call.args[0] === 'image'),
     ).toMatchObject({ command: 'docker', args: ['image', 'prune', '-f'] })
@@ -262,7 +268,12 @@ describe('update runner', () => {
     expect(run.status).toBe('SUCCESS')
     expect(run.steps.map((step) => step.status)).toEqual(['skipped', 'ok', 'ok'])
     expect(calls.some((call) => call.command === 'git' && call.args.includes('pull'))).toBe(false)
-    expect(calls.some((call) => call.command === 'docker' && call.args[0] === 'compose')).toBe(true)
+
+    const compose = calls.find((call) => call.command === 'docker' && call.args[0] === 'compose')
+
+    // A synced panel copy has no git checkout: the build must fetch the
+    // current sources from the repository instead of rebuilding the copy.
+    expect(compose?.env).toEqual({ IMAGE_BUILD_CONTEXT: DEFAULT_BUILD_CONTEXT })
   })
 
   it('redeploys the panel project and keeps its running profiles', async () => {

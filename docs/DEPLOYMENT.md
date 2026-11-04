@@ -110,8 +110,9 @@ docker compose --profile update up -d update-agent
   container label, so it redeploys the stack Arcane started instead of creating
   a second one. Running optional profiles (`backup`) are kept; the `update`
   profile is never touched, so the agent survives its own redeploy.
-  Prerequisite: `IMAGE_BUILD_CONTEXT` must point to the Git URL, otherwise the
-  build reuses the files of the project folder.
+  When `.env` has no Git URL, the agent and `scripts/update.sh` set
+  `IMAGE_BUILD_CONTEXT` to the repository URL for the build, so a synced project
+  folder does not rebuild the old files.
 
 Without the agent the administration reports that the agent is not reachable
 and shows the command that starts it; the client-side update of the PWA keeps

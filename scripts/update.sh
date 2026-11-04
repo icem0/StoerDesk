@@ -136,9 +136,9 @@ else
   say 'Kein Git-Checkout (z. B. Arcane): der Compose-Build holt die Quellen selbst.'
 
   if ! grep -q '^IMAGE_BUILD_CONTEXT=\(https\?\|git\|ssh\)' .env 2>/dev/null; then
-    say 'WARNUNG: IMAGE_BUILD_CONTEXT zeigt nicht auf eine Git-URL.'
-    say "         Setze IMAGE_BUILD_CONTEXT=https://github.com/$REPO_SLUG.git#main"
-    say '         oder synchronisiere die Dateien vorher (Arcane Sync).'
+    IMAGE_BUILD_CONTEXT="${STOERDESK_BUILD_CONTEXT:-https://github.com/$REPO_SLUG.git#main}"
+    export IMAGE_BUILD_CONTEXT
+    say "IMAGE_BUILD_CONTEXT zeigt auf keine Git-URL — baue aus $IMAGE_BUILD_CONTEXT."
   fi
 fi
 

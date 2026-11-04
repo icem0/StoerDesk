@@ -719,6 +719,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-70   | the page shows the failure output                    | done     |
 | WP-M2-71   | the host update works in panel (Arcane) deployments  | done     |
 | WP-M2-72   | the host update runs as a shell script without the agent | done |
+| WP-M2-73   | the panel build fetches the current sources          | done     |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

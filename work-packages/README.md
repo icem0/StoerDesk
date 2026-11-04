@@ -276,12 +276,13 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-65  | the BMAcloud contract knows the Anlagentyp                  | done                 | yes     |
 | WP-M2-65b | the sync writes the external system type                    | done                    | yes     |
 | WP-M2-66  | the object list shows the system type                       | done                    | yes     |
-| WP-M2-67  | the migration snapshot chain is complete again              | planned                 | yes     |
+| WP-M2-67  | the migration snapshot chain is complete again              | done                 | yes     |
 | WP-M2-68  | the update run carries the failure output of the agent      | done                    | yes     |
 | WP-M2-69  | `update_runs.error_detail` and the API answer               | done                    | yes     |
 | WP-M2-70  | the host update page shows the failure output               | done                    | yes     |
 | WP-M2-71  | the host update works in panel (Arcane) deployments         | done                    | yes     |
 | WP-M2-72  | the host update runs as a shell script without the agent    | done                    | yes     |
+| WP-M2-73  | the panel build fetches the current sources                 | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

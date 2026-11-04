@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A panel deployment without git metadata now builds the current sources
+  (WP-M2-73): the agent and `scripts/update.sh` set `IMAGE_BUILD_CONTEXT` to the
+  repository URL when `.env` has no Git build context, so a synced project
+  folder cannot rebuild the old files and report success.
+
 - The host update runs as a shell script without the agent (WP-M2-72):
   `sh scripts/update.sh` compares `VERSION` with the newest GitHub tag, pulls a
   git checkout or lets the compose build fetch the sources in a panel
