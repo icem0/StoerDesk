@@ -99,13 +99,18 @@ update up -d update-agent`.
      is updated instead of a second stack being created. Profiles that are
      running now (e.g. `backup`) stay enabled; the `update` profile never is,
      because it contains the agent itself.
-  3. `docker image prune -f --filter
+   3. `docker image prune -f --filter
 label=com.docker.compose.project=<project>` — the dangling images of the
      previous build of this project. `docker image prune -a` is not used: it
      would delete the images of other projects on a shared host. This label
      filter alone misses the images of a build that never carried the label
      (remote build context, `docker-compose` v1, aborted build); the agent
      adopts the id-based clean-up of §18.7 in WP-M3-02b.
+   4. Every step runs against `UPDATE_STEP_TIMEOUT_MS` (default ten minutes).
+      A step that passes its deadline fails the run with `update_step_timeout`
+      instead of blocking forever: the run reaches `finishedAt` and `lastRun`
+      leaves `running`, so the administration no longer shows `Läuft` for a
+      build that never comes back.
 - The agent decides what a run is. It accepts no path, no command and no
   arguments from a request.
 - A panel deployment builds from the Git URL (`IMAGE_BUILD_CONTEXT`,

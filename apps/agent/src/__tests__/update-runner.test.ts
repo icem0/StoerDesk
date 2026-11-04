@@ -129,6 +129,7 @@ function createRunner(
   onRunFinished: (run: AgentRun) => void,
   restoreOwnership = false,
   composeProject?: string,
+  stepTimeoutMs?: number,
 ): UpdateRunner {
   return new UpdateRunner({
     checkoutPath: '/repo',
@@ -137,6 +138,7 @@ function createRunner(
     composeProject,
     runCommand,
     restoreOwnership,
+    stepTimeoutMs,
     onRunFinished,
   })
 }
@@ -474,5 +476,35 @@ describe('update runner', () => {
     const checkout = await updates.checkout()
 
     expect(checkout.commit).toBe('abc1234')
+  })
+
+  it('aborts a step that passes its deadline with update_step_timeout', async () => {
+    const hang = deferred<CommandResult>()
+    const runner: CommandRunner = async (command, args) => {
+      if (command === 'docker' && args[0] === 'compose') {
+        return hang.promise
+      }
+      if (command === 'git' && args.includes('--is-inside-work-tree')) {
+        return { code: 0, stdout: 'true\n', stderr: '' }
+      }
+      return { code: 0, stdout: '', stderr: '' }
+    }
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run), false, 'stoerdesk', 50)
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.status).toBe('PARTIAL')
+    expect(run.errorCode).toBe('update_step_timeout')
+    expect(run.errorDetail).toContain('timed out')
+    expect(run.steps.map((step) => step.step)).toEqual(['git', 'compose', 'prune'])
+    expect(run.steps[0]).toMatchObject({ step: 'git', status: 'ok' })
+    expect(run.steps[1]).toMatchObject({
+      step: 'compose',
+      status: 'failed',
+      errorCode: 'update_step_timeout',
+    })
+    expect(run.steps[2]).toMatchObject({ step: 'prune', status: 'skipped' })
   })
 })

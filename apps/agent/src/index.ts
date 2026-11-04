@@ -70,6 +70,7 @@ async function main(): Promise<void> {
     projectDirectory: config.projectDirectory,
     composeFile: config.composeFile,
     composeProject: config.composeProject,
+    stepTimeoutMs: config.stepTimeoutMs,
     runCommand: createCommandRunner(),
     onRunFinished: (run) => {
       lastRun = run

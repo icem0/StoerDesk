@@ -194,6 +194,11 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The update agent no longer stays `running` forever (WP-M3-05): every run
+  step (`git pull`, `docker compose up -d --build`, the image clean-up) runs
+  against `UPDATE_STEP_TIMEOUT_MS` (default ten minutes). When a step passes
+  its deadline, the run fails with `update_step_timeout`, reaches
+  `finishedAt` and shows the error instead of staying `Läuft` endlessly.
 - The ticket detail page reaches the workflow routes: every action event is
   mapped to its API route segment (`/review`, `/work-order`, `/assign`, …)
   instead of posting the internal event name, and the JSON content type is only

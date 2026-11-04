@@ -26,6 +26,8 @@ export interface CommandResult {
   code: number
   stdout: string
   stderr: string
+  /** The command passed its step deadline and was abandoned. */
+  timedOut?: boolean
 }
 
 /** Runs one command and answers its exit code and its output. */
@@ -63,6 +65,13 @@ export interface UpdateRunnerOptions {
   ownImages?: readonly string[]
   /** Restores the owner of the checkout after the pull (ADR-0006). */
   restoreOwnership?: boolean
+  /**
+   * The deadline of one update step in milliseconds. A step that runs longer
+   * fails the run with `update_step_timeout` instead of blocking forever.
+   * Defaults to `600000` (ten minutes); overridable with
+   * `UPDATE_STEP_TIMEOUT_MS`.
+   */
+  stepTimeoutMs?: number
   /** Called when a run has finished — the agent writes its state file. */
   onRunFinished?: (run: AgentRun) => void | Promise<void>
   /** The clock of the runs. */
@@ -165,6 +174,7 @@ export function failureDetail(result: CommandResult): string | null {
 /** The outcome of one step of a run. */
 interface StepOutcome {
   ok: boolean
+  errorCode: UpdateErrorCode | null
   detail: string | null
 }
 
@@ -181,6 +191,7 @@ export class UpdateRunner {
   private readonly runCommand: CommandRunner
   private readonly ownImages: readonly string[]
   private readonly restoreOwnership: boolean
+  private readonly stepTimeoutMs: number
   private readonly onRunFinished: ((run: AgentRun) => void | Promise<void>) | undefined
   private readonly now: () => Date
   private readonly createRunId: () => string
@@ -195,6 +206,7 @@ export class UpdateRunner {
     this.runCommand = options.runCommand
     this.ownImages = options.ownImages ?? OWN_IMAGES
     this.restoreOwnership = options.restoreOwnership ?? true
+    this.stepTimeoutMs = options.stepTimeoutMs ?? 600_000
     this.onRunFinished = options.onRunFinished
     this.now = options.now ?? (() => new Date())
     this.createRunId = options.createRunId ?? (() => randomUUID())
@@ -291,7 +303,7 @@ export class UpdateRunner {
         if (!pulled.ok) {
           this.skip(run, 'compose')
           this.skip(run, 'prune')
-          await this.finish(run, 'FAILED', 'update_git_failed', pulled.detail)
+          await this.finish(run, 'FAILED', pulled.errorCode ?? STEP_ERROR_CODES.git, pulled.detail)
           await this.onRunFinished?.(run)
 
           return
@@ -317,7 +329,7 @@ export class UpdateRunner {
 
       if (!composed.ok) {
         this.skip(run, 'prune')
-        await this.finish(run, 'PARTIAL', 'update_compose_failed', composed.detail)
+        await this.finish(run, 'PARTIAL', composed.errorCode ?? STEP_ERROR_CODES.compose, composed.detail)
       } else {
         step = 'prune'
 
@@ -326,7 +338,7 @@ export class UpdateRunner {
         await this.finish(
           run,
           pruned.ok ? 'SUCCESS' : 'PARTIAL',
-          pruned.ok ? null : 'update_prune_failed',
+          pruned.ok ? null : pruned.errorCode ?? STEP_ERROR_CODES.prune,
           pruned.detail,
         )
       }
@@ -590,29 +602,57 @@ export class UpdateRunner {
     if (commands.length === 0) {
       run.steps.push({ step: 'prune', status: 'ok', errorCode: null })
 
-      return { ok: true, detail: null }
+      return { ok: true, errorCode: null, detail: null }
     }
 
     let succeeded = false
     let failure: string | null = null
+    let errorCode: UpdateErrorCode | null = null
 
     for (const command of commands) {
-      const result = await this.runCommand(command.command, command.args)
+      const result = await this.runCommandWithTimeout(command.command, command.args)
 
       if (result.code === 0) {
         succeeded = true
       } else {
         failure = failureDetail(result) ?? failure
+        errorCode = result.timedOut ? 'update_step_timeout' : STEP_ERROR_CODES.prune
       }
     }
 
     run.steps.push({
       step: 'prune',
       status: succeeded ? 'ok' : 'failed',
-      errorCode: succeeded ? null : STEP_ERROR_CODES.prune,
+      errorCode,
     })
 
-    return { ok: succeeded, detail: succeeded ? null : failure }
+    return { ok: succeeded, errorCode, detail: succeeded ? null : failure }
+  }
+
+  /**
+   * Runs one command against the step deadline. When the command passes the
+   * deadline it is abandoned: the returned result carries `timedOut` and the
+   * step fails with `update_step_timeout` instead of blocking the run forever.
+   */
+  private async runCommandWithTimeout(
+    command: string,
+    args: readonly string[],
+    options?: { cwd?: string; env?: Record<string, string> },
+  ): Promise<CommandResult> {
+    const timeout = new Promise<CommandResult>((resolve) => {
+      setTimeout(
+        () =>
+          resolve({
+            code: 124,
+            stdout: '',
+            stderr: 'update step timed out',
+            timedOut: true,
+          }),
+        this.stepTimeoutMs,
+      )
+    })
+
+    return Promise.race([this.runCommand(command, args, options), timeout])
   }
 
   private async step(
@@ -622,16 +662,21 @@ export class UpdateRunner {
     args: readonly string[],
     options?: { cwd?: string; env?: Record<string, string> },
   ): Promise<StepOutcome> {
-    const result = await this.runCommand(command, args, options)
-    const ok = result.code === 0
+    const result = await this.runCommandWithTimeout(command, args, options)
+    const ok = result.code === 0 && !result.timedOut
+    const errorCode = result.timedOut
+      ? 'update_step_timeout'
+      : ok
+        ? null
+        : STEP_ERROR_CODES[step]
 
     run.steps.push({
       step,
       status: ok ? 'ok' : 'failed',
-      errorCode: ok ? null : STEP_ERROR_CODES[step],
+      errorCode,
     })
 
-    return { ok, detail: ok ? null : failureDetail(result) }
+    return { ok, errorCode, detail: ok ? null : failureDetail(result) }
   }
 
   private skip(run: AgentRun, step: UpdateStep): void {

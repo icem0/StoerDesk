@@ -19,6 +19,7 @@ export const UPDATE_ERROR_CODES = [
   'update_git_failed',
   'update_compose_failed',
   'update_prune_failed',
+  'update_step_timeout',
   'update_agent_unreachable',
   'update_agent_not_configured',
   'update_rate_limited',

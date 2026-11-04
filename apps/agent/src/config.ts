@@ -24,6 +24,11 @@ export const agentConfigSchema = z.object({
    * it from its own container label, so a panel-specific project name works.
    */
   composeProject: z.string().default(''),
+  /**
+   * The deadline of one update step in milliseconds. A step that runs longer
+   * fails the run with `update_step_timeout` instead of blocking forever.
+   */
+  stepTimeoutMs: z.coerce.number().int().min(1).default(600_000),
   stateDir: z.string().min(1).default('/state'),
 })
 
@@ -39,6 +44,7 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     projectDirectory: env.UPDATE_AGENT_PROJECT_DIR,
     composeFile: env.UPDATE_AGENT_COMPOSE_FILE,
     composeProject: env.UPDATE_AGENT_COMPOSE_PROJECT,
+    stepTimeoutMs: env.UPDATE_STEP_TIMEOUT_MS,
     stateDir: env.UPDATE_AGENT_STATE_DIR,
   })
 }
