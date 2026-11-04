@@ -67,6 +67,14 @@ in the `api` image. The topology is fixed by ADR-0006:
   service whose profile is not enabled, so the agent is never recreated by the
   redeploy it triggers. It is started explicitly: `docker compose --profile
 update up -d update-agent`.
+- The start command the administration offers (WP-M3-03) finds the project
+  folder on the **host**: the compose `working_dir` label of the running stack
+  is accepted only where a `docker-compose.yml` really exists there, otherwise
+  it is mapped through the bind mounts of the running containers before the
+  `cd`. A panel runs compose inside its own container, so that label holds a
+  path inside the panel and not a path of the host; a hard-coded or blindly
+  trusted label path would break the start under Arcane. Without a compose file
+  in any candidate the command stops instead of starting a second stack.
 - Image: `node:22-alpine` plus `git`, `docker-cli` and `docker-cli-compose`
   (Alpine `main` / `community`); the agent code is bundled, no runtime npm
   dependencies.

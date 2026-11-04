@@ -176,6 +176,24 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The start command of the update button finds the project folder **on the host**
+  (WP-M3-03). It used the `com.docker.compose.project.working_dir` label of the
+  running web container as a host path, but that label names the folder as the
+  machine that ran compose saw it: a panel such as Arcane runs compose inside its
+  own container, so the label says `/app/data/projects/<project>`, the host does
+  not know that path and the copied command failed with
+  `cd: …: No such file or directory`. The command accepts the label path only
+  where a `docker-compose.yml` really exists on the host, maps it otherwise
+  through the bind mounts of the running containers (`/app/data` → the data
+  volume of the panel) and stops with a clear message instead of running compose
+  in the wrong folder. `docs/DEPLOYMENT.md` names the host path of an Arcane
+  project, the mapping rule and the `--env-file` fallback for a panel that keeps
+  the project variables in its own store.
+- The permanent ticket deletion typechecks again (WP-M2-77): `tickets` has no
+  `object_no` column, only the `object_id` foreign key, and the deletion used
+  `sql` without importing it. The object number that `ticket_purges` requires is
+  now selected through the object of the ticket — objects are only soft-deleted,
+  so that join always finds the row.
 - The host update script no longer leaves an untagged image behind on every
   update (WP-M3-02). `docker compose up -d --build` moves the fixed
   `stoerdesk-{api,web,agent}:latest` tags to the new images, so the previous

@@ -164,6 +164,8 @@ describe('UpdateHostUpdate', () => {
       await screen.findByText(/Update-Knopf aktivieren|Enable the update button/i),
     ).toBeTruthy()
     expect(screen.getByText(/com\.docker\.compose\.project\.working_dir/)).toBeTruthy()
+    expect(screen.getByText(/range \.Mounts/)).toBeTruthy()
+    expect(screen.getByText(/cd into the project folder of the running stack/)).toBeTruthy()
     expect(screen.getByText(/--profile update up -d --build update-agent/)).toBeTruthy()
     expect(
       screen.getByRole('button', { name: /Befehl kopieren|Copy command/i }),

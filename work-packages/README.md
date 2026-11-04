@@ -14,7 +14,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 3   |
+| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 4   |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
@@ -292,6 +292,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-01  | offline background sync matches the API path                | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces            | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces             | planned                 | yes     |
+| WP-M3-03  | the agent start command finds the project dir on the host   | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -521,6 +522,19 @@ before the rebuild and removes by id whatever no container of the project and no
 tag needs, never prunes unscoped, rebuilds with `--remove-orphans` and clears an existing
 backlog with `--cleanup` and `--gc`. The update agent still prunes by label alone;
 **WP-M3-02b** ports the id-based clean-up into it.
+
+**The start command under Arcane (WP-M3-03).** The same field report stopped at the first
+line of the guide on `/admin/update`: the command `cd`ed into the
+`com.docker.compose.project.working_dir` label of the running web container, and that
+label holds the path **inside** the container that ran compose — under Arcane
+`/app/data/projects/stoerdesk`, which the host does not know. The command now accepts the
+label path only where a `docker-compose.yml` really exists on the host, otherwise maps it
+through the bind mounts of the running containers (`/app/data` → the data volume of the
+panel) and stops with a clear message instead of starting a second stack next to the
+running one. `docs/DEPLOYMENT.md` names the Arcane host path, the mapping rule and the
+`--env-file` fallback for a panel that keeps its variables in its own store;
+`scripts/update.sh` still requires a real checkout, and the self-cloning agent stays a
+separate decision.
 
 ## Validation
 

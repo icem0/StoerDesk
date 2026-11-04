@@ -727,6 +727,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-78   | "Endgültig löschen" button on the ticket detail page     | planned  |
 | WP-M3-02   | the update script removes the images it replaces          | done     |
 | WP-M3-02b  | the update agent removes the images it replaces           | planned  |
+| WP-M3-03   | the agent start command finds the project dir on the host | done     |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -908,6 +909,15 @@ keeps the labelled prune as best effort, rebuilds with `--remove-orphans`, never
 unscoped and clears an existing backlog with `--cleanup` and `--gc`
 (`STOERDESK_GC_UNTIL`). The agent still has the label-only prune; **WP-M3-02b** ports the
 id-based clean-up into it.
+
+The same field report showed a second trap: the start command of the update button
+changed into `com.docker.compose.project.working_dir`, and under Arcane that label holds
+the path **inside the panel container** (`/app/data/projects/stoerdesk`) while the folder
+sits on the host in the data volume of the panel. **WP-M3-03** keeps the label as the
+first choice but accepts it only where the `docker-compose.yml` exists on the host, maps
+it otherwise through the bind mounts of the running containers and stops with a clear
+message instead of starting a second stack. `scripts/update.sh` keeps requiring a real
+checkout: the panel path is the agent path.
 
 ## 17. Work package rules for small models
 
