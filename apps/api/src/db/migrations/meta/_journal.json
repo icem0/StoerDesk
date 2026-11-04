@@ -81,9 +81,16 @@
     },
     {
       "idx": 11,
-      "version": "7",
+      "version": 7,
       "when": 1793716155868,
       "tag": "0011_update_runs_error_detail",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": 7,
+      "when": 1793791026,
+      "tag": "0012_ticket_purges",
       "breakpoints": true
     }
   ]

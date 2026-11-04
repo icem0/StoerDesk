@@ -722,6 +722,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M2-73   | the panel build fetches the current sources          | done     |
 | WP-M2-74   | the page shows the version and starts with a button  | done     |
 | WP-M2-75   | `ticket.delete` permission key (admin only)          | planned  |
+| WP-M2-76   | `ticket_purges` append-only log of hard-deleted tickets | planned  |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

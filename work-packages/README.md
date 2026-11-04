@@ -286,6 +286,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-73  | the panel build fetches the current sources                 | done                    | yes     |
 | WP-M2-74  | the host update shows the version and starts with a button  | done                    | yes     |
 | WP-M2-75  | `ticket.delete` permission key (admin only)               | planned                 | yes     |
+| WP-M2-76  | `ticket_purges` append-only log of hard-deleted tickets   | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -476,6 +476,32 @@ export const ticketPhotos = pgTable(
 )
 
 /**
+ * Append-only log of permanently deleted tickets (`PLAN.md` §7 rule 10,
+ * WP-M2-76). A hard-deleted ticket takes its events and photo rows with it;
+ * this table keeps the accountability record without any reporter contact
+ * data or ticket content.
+ */
+export const ticketPurges = pgTable(
+  'ticket_purges',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketNo: text('ticket_no').notNull(),
+    objectNo: text('object_no').notNull(),
+    /** NULL if the deleting admin was removed afterwards. */
+    actorUserId: uuid('actor_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    reason: text('reason'),
+    deletedEventsCount: integer('deleted_events_count').notNull(),
+    deletedPhotosCount: integer('deleted_photos_count').notNull(),
+    createdAt: timestamp('created_at', timestampOptions)
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index('ticket_purges_created_at_idx').on(table.createdAt)]
+)
+
+/**
  * Attempt log of the public report endpoint (`specs/06-report-form.md` §7.6,
  * WP-M2-07). One row per report attempt; the 10-minute suspicion window is a
  * `count(*)` over these rows, because the stack has no cache or Redis
@@ -584,6 +610,8 @@ export type TicketEvent = typeof ticketEvents.$inferSelect
 export type NewTicketEvent = typeof ticketEvents.$inferInsert
 export type TicketPhoto = typeof ticketPhotos.$inferSelect
 export type NewTicketPhoto = typeof ticketPhotos.$inferInsert
+export type TicketPurge = typeof ticketPurges.$inferSelect
+export type NewTicketPurge = typeof ticketPurges.$inferInsert
 export type ReportThrottle = typeof reportThrottle.$inferSelect
 export type NewReportThrottle = typeof reportThrottle.$inferInsert
 export type BmaSyncRun = typeof bmaSyncRuns.$inferSelect
