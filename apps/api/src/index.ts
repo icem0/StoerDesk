@@ -21,6 +21,7 @@ import { seedStandardTexts } from './db/seed-standard-texts'
 import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
+import { deleteRoutes } from './tickets/delete-routes'
 import { publicDuplicateRoutes } from './tickets/duplicates'
 import { internalTicketRoutes } from './tickets/internal'
 import { ticketListRoutes } from './tickets/list'
@@ -118,6 +119,7 @@ export async function buildServer() {
   await app.register(internalTicketRoutes, { database })
   await app.register(ticketListRoutes, { database })
   await app.register(ticketDetailRoutes, { database })
+  await app.register(deleteRoutes, { database, uploadDir: env.UPLOAD_DIR })
   await app.register(workflowRoutes, { database })
 
   // Guard probe of WP-M1-08: only in the test environment, never in development
