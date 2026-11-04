@@ -12,10 +12,10 @@ import {
 } from '@stoerdesk/shared'
 
 /**
- * The host update of the update agent (`specs/18-self-update.md` §18.4,
+ * The host update of the update agent (`specs/18-self-update.md` §18.4, §18.7,
  * ADR-0006). The runner knows the three steps of a run — `git pull` →
- * `docker compose up -d --build` → `docker image prune -f` — and nothing else:
- * a request never carries a command, a path or an argument.
+ * `docker compose up -d --build` → the project-scoped image clean-up — and
+ * nothing else: a request never carries a command, a path or an argument.
  *
  * The command runner is injected, so the whole logic is testable without a
  * shell and without a Docker daemon.
@@ -35,6 +35,12 @@ export type CommandRunner = (
   options?: { cwd?: string; env?: Record<string, string> },
 ) => Promise<CommandResult>
 
+/** One command of a step: the program and its fixed argument list. */
+export interface Command {
+  command: string
+  args: readonly string[]
+}
+
 export interface UpdateRunnerOptions {
   /** The checkout of the repository, inside the agent `/repo`. */
   checkoutPath: string
@@ -50,6 +56,11 @@ export interface UpdateRunnerOptions {
   composeProject?: string
   /** Runs a command. */
   runCommand: CommandRunner
+  /**
+   * The image names this deployment owns. Defaults to `OWN_IMAGES` — the
+   * `image:` names of `docker-compose.yml`.
+   */
+  ownImages?: readonly string[]
   /** Restores the owner of the checkout after the pull (ADR-0006). */
   restoreOwnership?: boolean
   /** Called when a run has finished — the agent writes its state file. */
@@ -68,6 +79,17 @@ const STEP_ERROR_CODES: Record<UpdateStep, UpdateErrorCode> = {
 
 /** The source a panel build fetches when the project has no git checkout. */
 export const DEFAULT_BUILD_CONTEXT = 'https://github.com/icem0/StoerDesk.git#main'
+
+/**
+ * The images this deployment owns — the three `image:` names of
+ * `docker-compose.yml`, the same list `scripts/update.sh` cleans by
+ * (WP-M3-02b).
+ */
+export const OWN_IMAGES: readonly string[] = [
+  'stoerdesk-api:latest',
+  'stoerdesk-web:latest',
+  'stoerdesk-agent:latest',
+]
 
 const REDACTED = '***'
 
@@ -157,6 +179,7 @@ export class UpdateRunner {
   private readonly composeFile: string
   private readonly composeProject: string
   private readonly runCommand: CommandRunner
+  private readonly ownImages: readonly string[]
   private readonly restoreOwnership: boolean
   private readonly onRunFinished: ((run: AgentRun) => void | Promise<void>) | undefined
   private readonly now: () => Date
@@ -170,6 +193,7 @@ export class UpdateRunner {
     this.composeFile = options.composeFile
     this.composeProject = options.composeProject ?? ''
     this.runCommand = options.runCommand
+    this.ownImages = options.ownImages ?? OWN_IMAGES
     this.restoreOwnership = options.restoreOwnership ?? true
     this.onRunFinished = options.onRunFinished
     this.now = options.now ?? (() => new Date())
@@ -274,6 +298,11 @@ export class UpdateRunner {
         }
       }
 
+      // The image ids the owned names carry **before** the rebuild: the rebuild
+      // moves the fixed `:latest` tags to the new images, and the image it
+      // replaces is tagless afterwards, so no name filter finds it any more.
+      const ownedBefore = await this.imageIds(this.ownImages.map((name) => `reference=${name}`))
+
       step = 'compose'
 
       const composed = await this.step(
@@ -292,7 +321,7 @@ export class UpdateRunner {
       } else {
         step = 'prune'
 
-        const pruned = await this.step(run, step, 'docker', this.pruneArgs(project))
+        const pruned = await this.pruneStep(run, project, ownedBefore)
 
         await this.finish(
           run,
@@ -445,18 +474,145 @@ export class UpdateRunner {
   }
 
   /**
-   * The prune of the old images. With a known project the filter keeps the
-   * images of other projects on a shared host untouched; without one it falls
-   * back to the plain prune of dangling images.
+   * The clean-up of the images this update replaced (WP-M3-02b, the agent path
+   * of §18.7 — the same rule `scripts/update.sh` applies).
+   *
+   * `docker compose up -d --build` moves the fixed `:latest` tags of the stack
+   * to the new images, so the previous image of every built service turns
+   * tagless. A project-labelled `docker image prune -f` only finds such an image
+   * when the **build** wrote the project label into it — never for a build from
+   * a remote context, a `docker-compose` v1 fallback or an aborted build. So the
+   * images are cleaned by **id**: the ids every owned name had before the
+   * rebuild, minus the current image of each owned name and the images of the
+   * running containers of this project.
+   *
+   * The labelled prune stays as the last, best-effort command: it also sweeps
+   * the project-prefixed default names of an older layout, which carry the image
+   * label. An unscoped prune is never run, so the images of other projects stay
+   * untouched. The owned names of `docker-compose.yml` carry no project prefix —
+   * the same simplification `scripts/update.sh` documents: a shared host must
+   * not run two StörDesk projects with these image names.
    */
-  private pruneArgs(project: string | null): string[] {
-    const args = ['image', 'prune', '-f']
+  private async pruneCommands(
+    project: string | null,
+    ownedBefore: readonly string[],
+  ): Promise<Command[]> {
+    const owned = [...this.ownImages]
+    const keep = new Set(await this.keptImageIds(project, owned))
+    const stale = [...new Set(ownedBefore)].filter((id) => id !== '' && !keep.has(id))
 
-    if (project !== null) {
-      args.push('--filter', `label=com.docker.compose.project=${project}`)
+    const commands: Command[] = []
+
+    for (const id of stale) {
+      commands.push({ command: 'docker', args: ['rmi', id] })
     }
 
-    return args
+    if (project !== null) {
+      commands.push({
+        command: 'docker',
+        args: ['image', 'prune', '-f', '--filter', `label=com.docker.compose.project=${project}`],
+      })
+    }
+
+    return commands
+  }
+
+  /** The images the clean-up must keep. */
+  private async keptImageIds(project: string | null, owned: string[]): Promise<string[]> {
+    const current = await this.imageIds(owned.map((name) => `reference=${name}`))
+
+    if (project === null) {
+      return current
+    }
+
+    return [...current, ...(await this.runningImageIds(project))]
+  }
+
+  /** The image ids of the images matching every `--filter` term. */
+  private async imageIds(filters: string[]): Promise<string[]> {
+    if (filters.length === 0) {
+      return []
+    }
+
+    const args = ['image', 'ls', '--no-trunc', '-q']
+
+    for (const filter of filters) {
+      args.push('--filter', filter)
+    }
+
+    const result = await this.runCommand('docker', args)
+
+    if (result.code !== 0) {
+      return []
+    }
+
+    return result.stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '')
+  }
+
+  /** The image ids the running containers of the project hold. */
+  private async runningImageIds(project: string): Promise<string[]> {
+    const result = await this.runCommand('docker', [
+      'ps',
+      '--all',
+      '--no-trunc',
+      '--filter',
+      `label=com.docker.compose.project=${project}`,
+      '--format',
+      '{{.Image}}',
+    ])
+
+    if (result.code !== 0) {
+      return []
+    }
+
+    return result.stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '')
+  }
+
+  /**
+   * The `prune` step: every command of the clean-up runs one after the other.
+   * The step is `ok` when at least one command succeeded or there was nothing to
+   * remove — a `docker rmi` of an image a container still holds fails and is a
+   * kept image, not a failed update (§18.7).
+   */
+  private async pruneStep(
+    run: AgentRun,
+    project: string | null,
+    ownedBefore: readonly string[],
+  ): Promise<StepOutcome> {
+    const commands = await this.pruneCommands(project, ownedBefore)
+
+    if (commands.length === 0) {
+      run.steps.push({ step: 'prune', status: 'ok', errorCode: null })
+
+      return { ok: true, detail: null }
+    }
+
+    let succeeded = false
+    let failure: string | null = null
+
+    for (const command of commands) {
+      const result = await this.runCommand(command.command, command.args)
+
+      if (result.code === 0) {
+        succeeded = true
+      } else {
+        failure = failureDetail(result) ?? failure
+      }
+    }
+
+    run.steps.push({
+      step: 'prune',
+      status: succeeded ? 'ok' : 'failed',
+      errorCode: succeeded ? null : STEP_ERROR_CODES.prune,
+    })
+
+    return { ok: succeeded, detail: succeeded ? null : failure }
   }
 
   private async step(

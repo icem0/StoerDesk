@@ -629,106 +629,106 @@ repository actually contains — every module, its purpose and its public API �
 in `docs/REPO-MAP.md` and is the only place that is kept current after every work
 package; do not duplicate it here or in `AGENTS.md`.
 
-| WP        | Content                                      | Status |
-| --------- | -------------------------------------------- | ------ |
-| WP-M1-09e | login form, logout and route guard (web)     | done   |
-| WP-M1-10i | publish run label carries the commit subject | done   |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`         | done   |
-| WP-M1-11  | `docs/REPO-MAP.md` English and current       | done   |
-| WP-M1-12  | Playwright smoke test "login as admin works" | done   |
-| WP-M1-13  | UI layout shell with header and navigation   | done   |
-| WP-M1-14  | base seed keeps an existing admin untouched  | done   |
-| WP-M2-00  | core object tables and demo seed             | done   |
-| WP-M2-01  | object list CRUD API                         | done   |
-| WP-M2-02  | QR generation, regeneration, resolution      | done   |
-| WP-M2-02b | QR demo tokens and scheduled cleanup         | done   |
-| WP-M2-03  | printable QR sticker sheets (web print)      | done   |
-| WP-M2-04  | ticket tables, events, photos, counter       | done   |
-| WP-M2-04b | public report endpoint with idempotency      | done   |
-| WP-M2-04c | report photo upload (magic bytes, volume)    | done   |
-| WP-M1-15  | app version visible in the web shell         | done   |
-| WP-M1-16  | current git version in the deployment env    | done   |
-| WP-M1-17  | responsive shell with a settings gear        | done   |
-| WP-M2-05  | public report form at `/m/:token` (web)      | done   |
-| WP-M2-05b | photo upload with client compression         | done   |
-| WP-M2-05c | report form smoke E2E in de and en           | done   |
-| WP-M2-06  | public status API by `status_token`          | done   |
-| WP-M2-06b | public status page at `/s/:token` (web)      | done   |
-| WP-M2-07  | report throttle table and suspicion          | done   |
-| WP-M2-07b | Altcha captcha API primitives                | done   |
-| WP-M2-07c | spam decision on the report create path      | done   |
-| WP-M2-07d | honeypot field and Altcha widget (web)       | done   |
-| WP-M2-08  | duplicate hint: open tickets and public comment | done   |
-| WP-M1-18  | publish chain without cancelled runs         | done   |
-| WP-M1-19  | one tag per push for every commit            | done   |
-| WP-M1-20  | the push command in the governance documents | done   |
-| WP-M1-21  | serialised promotion of `latest`             | done   |
-| WP-M1-22  | the app version reads version tags only      | done   |
-| WP-M1-23  | record: login card and version display       | done   |
-| WP-M1-24  | record: RBAC/admin bootstrap on API start    | done   |
-| WP-M1-25  | record: CI database tests, publish queue     | done   |
-| WP-M1-26  | record: configurable login rate limit        | done    |
-| WP-M1-27  | record: the end-of-session commit rule       | done    |
-| WP-M2-26  | back links in the admin pages                | done    |
-| WP-M2-32  | record: the BMAcloud contract commit         | done    |
-| WP-M2-33  | BMAcloud read-only client and env            | done    |
-| WP-M2-34  | `bma_sync_runs` table (migration `0007`)     | done    |
-| WP-M2-35  | BMAcloud sync service                        | done    |
-| WP-M2-36  | BMAcloud admin API and pg-boss job           | done    |
-| WP-M2-36b | `GET` of the BMAcloud schedule pair          | done    |
-| WP-M2-37  | BMAcloud sync page (web)                     | done    |
-| WP-M2-38  | sync card on the administration home         | done    |
-| WP-M2-39  | external badge in the object list            | done    |
-| WP-M2-40  | fault template archive schema and contracts  | done    |
-| WP-M2-40b | fault template admin and public catalog API  | done    |
-| WP-M2-40c | fault template administration UI             | done    |
-| WP-M2-40d | fault template entry on the admin home       | done    |
-| WP-M2-40e | report form uses the live fault catalog      | done    |
-| WP-M2-40f | internal create and detail live catalog      | done    |
-| WP-M2-41  | bootstrap standard fault types               | done    |
-| WP-M2-41b | E2E fault-chip labels of the bootstrap list  | done    |
-| WP-M2-42  | bootstrap of the standard fault types      | done    |
-| WP-M2-43  | self-update decision (ADR-0004) and spec 18 | done    |
-| WP-M2-44  | admin update page: clean PWA update (stage 1) | done    |
-| WP-M2-45  | BMAcloud bearer key in `settings` + admin routes (ADR-0005) | done    |
-| WP-M2-46  | the scheduled pull reads the effective bearer key | done    |
-| WP-M2-47  | API-key field on the BMAcloud sync page | done    |
-| WP-M2-48  | host update agent decision (ADR-0006) and work plan | done    |
-| WP-M2-49  | shared contracts: `system.update` and the update schemas | done    |
-| WP-M2-50  | the `update_runs` table and migration `0009` | done    |
-| WP-M2-51  | the update agent service core (`apps/agent`) | done    |
-| WP-M2-52  | the update agent HTTP server | done    |
-| WP-M2-53  | the agent image, compose service and env wiring | done    |
-| WP-M2-53b | the compose invocation of the agent and its image in the smoke test | done    |
-| WP-M2-54  | the admin update API | done    |
-| WP-M2-55  | the host update section in the admin update page | done    |
-| WP-M2-56  | documentation of the host update | done    |
-| WP-M2-57  | the status route names the reason of an unreachable agent | done    |
-| WP-M2-58  | the page shows why the agent is not reachable | done    |
-| WP-M2-59  | the agent generates its own token (state volume) | done    |
-| WP-M2-60  | the API reads the token from the state volume | done    |
-| WP-M2-61  | the admin page carries the guide for the host update | done    |
-| WP-M2-62  | documentation of the token without the environment | done    |
-| WP-M2-63   | the update availability check                        | done     |
-| WP-M2-64   | `objects.external_type` (migration `0010`)           | done     |
-| WP-M2-65   | BMAcloud contract for the Anlagentyp                 | done     |
-| WP-M2-65b  | the sync writes `external_type`                      | done     |
-| WP-M2-66   | the system type column of the object list            | done     |
-| WP-M2-68   | the run carries the failure output of the agent      | done     |
-| WP-M2-69   | `update_runs.error_detail` and the API answer        | done     |
-| WP-M2-70   | the page shows the failure output                    | done     |
-| WP-M2-71   | the host update works in panel (Arcane) deployments  | done     |
-| WP-M2-72   | the host update runs as a shell script without the agent | done |
-| WP-M2-73   | the panel build fetches the current sources          | done     |
-| WP-M2-74   | the page shows the version and starts with a button  | done     |
-| WP-M2-75   | `ticket.delete` permission key (admin only)          | planned  |
-| WP-M2-76   | `ticket_purges` append-only log of hard-deleted tickets | planned  |
-| WP-M2-77   | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets | planned  |
-| WP-M2-78   | "Endgültig löschen" button on the ticket detail page     | planned  |
-| WP-M3-02   | the update script removes the images it replaces          | done     |
-| WP-M3-02b  | the update agent removes the images it replaces           | planned  |
-| WP-M3-03   | the agent start command finds the project dir on the host | done     |
-| WP-M3-04   | the start command pins `--project-directory` and fills `.env` | done     |
+| WP        | Content                                                             | Status |
+| --------- | ------------------------------------------------------------------- | ------ |
+| WP-M1-09e | login form, logout and route guard (web)                            | done   |
+| WP-M1-10i | publish run label carries the commit subject                        | done   |
+| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                                | done   |
+| WP-M1-11  | `docs/REPO-MAP.md` English and current                              | done   |
+| WP-M1-12  | Playwright smoke test "login as admin works"                        | done   |
+| WP-M1-13  | UI layout shell with header and navigation                          | done   |
+| WP-M1-14  | base seed keeps an existing admin untouched                         | done   |
+| WP-M2-00  | core object tables and demo seed                                    | done   |
+| WP-M2-01  | object list CRUD API                                                | done   |
+| WP-M2-02  | QR generation, regeneration, resolution                             | done   |
+| WP-M2-02b | QR demo tokens and scheduled cleanup                                | done   |
+| WP-M2-03  | printable QR sticker sheets (web print)                             | done   |
+| WP-M2-04  | ticket tables, events, photos, counter                              | done   |
+| WP-M2-04b | public report endpoint with idempotency                             | done   |
+| WP-M2-04c | report photo upload (magic bytes, volume)                           | done   |
+| WP-M1-15  | app version visible in the web shell                                | done   |
+| WP-M1-16  | current git version in the deployment env                           | done   |
+| WP-M1-17  | responsive shell with a settings gear                               | done   |
+| WP-M2-05  | public report form at `/m/:token` (web)                             | done   |
+| WP-M2-05b | photo upload with client compression                                | done   |
+| WP-M2-05c | report form smoke E2E in de and en                                  | done   |
+| WP-M2-06  | public status API by `status_token`                                 | done   |
+| WP-M2-06b | public status page at `/s/:token` (web)                             | done   |
+| WP-M2-07  | report throttle table and suspicion                                 | done   |
+| WP-M2-07b | Altcha captcha API primitives                                       | done   |
+| WP-M2-07c | spam decision on the report create path                             | done   |
+| WP-M2-07d | honeypot field and Altcha widget (web)                              | done   |
+| WP-M2-08  | duplicate hint: open tickets and public comment                     | done   |
+| WP-M1-18  | publish chain without cancelled runs                                | done   |
+| WP-M1-19  | one tag per push for every commit                                   | done   |
+| WP-M1-20  | the push command in the governance documents                        | done   |
+| WP-M1-21  | serialised promotion of `latest`                                    | done   |
+| WP-M1-22  | the app version reads version tags only                             | done   |
+| WP-M1-23  | record: login card and version display                              | done   |
+| WP-M1-24  | record: RBAC/admin bootstrap on API start                           | done   |
+| WP-M1-25  | record: CI database tests, publish queue                            | done   |
+| WP-M1-26  | record: configurable login rate limit                               | done   |
+| WP-M1-27  | record: the end-of-session commit rule                              | done   |
+| WP-M2-26  | back links in the admin pages                                       | done   |
+| WP-M2-32  | record: the BMAcloud contract commit                                | done   |
+| WP-M2-33  | BMAcloud read-only client and env                                   | done   |
+| WP-M2-34  | `bma_sync_runs` table (migration `0007`)                            | done   |
+| WP-M2-35  | BMAcloud sync service                                               | done   |
+| WP-M2-36  | BMAcloud admin API and pg-boss job                                  | done   |
+| WP-M2-36b | `GET` of the BMAcloud schedule pair                                 | done   |
+| WP-M2-37  | BMAcloud sync page (web)                                            | done   |
+| WP-M2-38  | sync card on the administration home                                | done   |
+| WP-M2-39  | external badge in the object list                                   | done   |
+| WP-M2-40  | fault template archive schema and contracts                         | done   |
+| WP-M2-40b | fault template admin and public catalog API                         | done   |
+| WP-M2-40c | fault template administration UI                                    | done   |
+| WP-M2-40d | fault template entry on the admin home                              | done   |
+| WP-M2-40e | report form uses the live fault catalog                             | done   |
+| WP-M2-40f | internal create and detail live catalog                             | done   |
+| WP-M2-41  | bootstrap standard fault types                                      | done   |
+| WP-M2-41b | E2E fault-chip labels of the bootstrap list                         | done   |
+| WP-M2-42  | bootstrap of the standard fault types                               | done   |
+| WP-M2-43  | self-update decision (ADR-0004) and spec 18                         | done   |
+| WP-M2-44  | admin update page: clean PWA update (stage 1)                       | done   |
+| WP-M2-45  | BMAcloud bearer key in `settings` + admin routes (ADR-0005)         | done   |
+| WP-M2-46  | the scheduled pull reads the effective bearer key                   | done   |
+| WP-M2-47  | API-key field on the BMAcloud sync page                             | done   |
+| WP-M2-48  | host update agent decision (ADR-0006) and work plan                 | done   |
+| WP-M2-49  | shared contracts: `system.update` and the update schemas            | done   |
+| WP-M2-50  | the `update_runs` table and migration `0009`                        | done   |
+| WP-M2-51  | the update agent service core (`apps/agent`)                        | done   |
+| WP-M2-52  | the update agent HTTP server                                        | done   |
+| WP-M2-53  | the agent image, compose service and env wiring                     | done   |
+| WP-M2-53b | the compose invocation of the agent and its image in the smoke test | done   |
+| WP-M2-54  | the admin update API                                                | done   |
+| WP-M2-55  | the host update section in the admin update page                    | done   |
+| WP-M2-56  | documentation of the host update                                    | done   |
+| WP-M2-57  | the status route names the reason of an unreachable agent           | done   |
+| WP-M2-58  | the page shows why the agent is not reachable                       | done   |
+| WP-M2-59  | the agent generates its own token (state volume)                    | done   |
+| WP-M2-60  | the API reads the token from the state volume                       | done   |
+| WP-M2-61  | the admin page carries the guide for the host update                | done   |
+| WP-M2-62  | documentation of the token without the environment                  | done   |
+| WP-M2-63  | the update availability check                                       | done   |
+| WP-M2-64  | `objects.external_type` (migration `0010`)                          | done   |
+| WP-M2-65  | BMAcloud contract for the Anlagentyp                                | done   |
+| WP-M2-65b | the sync writes `external_type`                                     | done   |
+| WP-M2-66  | the system type column of the object list                           | done   |
+| WP-M2-68  | the run carries the failure output of the agent                     | done   |
+| WP-M2-69  | `update_runs.error_detail` and the API answer                       | done   |
+| WP-M2-70  | the page shows the failure output                                   | done   |
+| WP-M2-71  | the host update works in panel (Arcane) deployments                 | done   |
+| WP-M2-72  | the host update runs as a shell script without the agent            | done   |
+| WP-M2-73  | the panel build fetches the current sources                         | done   |
+| WP-M2-74  | the page shows the version and starts with a button                 | done   |
+| WP-M2-75  | `ticket.delete` permission key (admin only)                         | done   |
+| WP-M2-76  | `ticket_purges` append-only log of hard-deleted tickets             | done   |
+| WP-M2-77  | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets            | done   |
+| WP-M2-78  | "Endgültig löschen" button on the ticket detail page                | done   |
+| WP-M3-02  | the update script removes the images it replaces                    | done   |
+| WP-M3-02b | the update agent removes the images it replaces                     | done   |
+| WP-M3-03  | the agent start command finds the project dir on the host           | done   |
+| WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -908,8 +908,11 @@ build never write. `scripts/update.sh` now snapshots the image ids it owns befor
 rebuild and removes by id whatever no container of the project and no current tag needs,
 keeps the labelled prune as best effort, rebuilds with `--remove-orphans`, never prunes
 unscoped and clears an existing backlog with `--cleanup` and `--gc`
-(`STOERDESK_GC_UNTIL`). The agent still has the label-only prune; **WP-M3-02b** ports the
-id-based clean-up into it.
+(`STOERDESK_GC_UNTIL`). **WP-M3-02b** ports that clean-up into the agent: it
+snapshots the image ids of the three owned names before the rebuild, removes by
+id whatever neither a current tag nor a container of the project needs, keeps the
+labelled prune as its last best-effort command and never prunes a time window —
+`--gc` stays a property of the script.
 
 The same field report showed a second trap: the start command of the update button
 changed into `com.docker.compose.project.working_dir`, and under Arcane that label holds
@@ -1111,7 +1114,7 @@ These decisions need an ADR or explicit approval before the related WP starts:
   Push, SMTP, Telegram available; admin decides which are mandatory),
 - hosting model (homelab behind Cloudflare vs. external server) — **resolved for
   the running instance**: a host checkout deployed with `docker compose up -d
-  --build` (ADR-0004, `docs/DEPLOYMENT.md`). The admin self-update is an
+--build` (ADR-0004, `docs/DEPLOYMENT.md`). The admin self-update is an
   out-of-band host update agent, never shell execution in the `api` container and
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),

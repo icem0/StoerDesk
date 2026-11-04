@@ -157,13 +157,20 @@ IMAGE_BUILD_CONTEXT=https://github.com/icem0/StoerDesk.git#main \
   request that triggered the run dies with it. The agent keeps the truth about
   the run, and the API reconciles the run row after its restart. The
   administration shows the result on `/admin/update`.
-- **The prune removes the dangling images** of the previous build of this
-  project. `docker image prune -a` is not used: it would delete the images of
-  other projects on a shared host. That label filter alone does not see the
-  images of a build without the project label (remote build context,
-  `docker-compose` v1, aborted build); the agent follows the id-based clean-up of
-  the script in WP-M3-02b, which is why the shell script is the cleaner path
-  until then.
+- **The clean-up removes the images this update replaced.** The rebuild moves
+  the fixed `:latest` tags to the new images, so the previous image of every
+  built service turns tagless. The agent snapshots the image ids of its own image
+  names (`stoerdesk-api:latest`, `stoerdesk-web:latest`,
+  `stoerdesk-agent:latest`) **before** the rebuild and removes by id afterwards
+  whatever is neither the current image of one of those names nor the image of a
+  container of this project — `docker rmi` without `-f`, so an image a container
+  still holds stays and the run stays `SUCCESS`. The project-labelled
+  `docker image prune -f` stays as the last, best-effort command: it also sweeps
+  the project-prefixed default names of an older layout. `docker image prune -a`
+  and an unscoped `docker image prune -f` are never used — they would touch the
+  images of other projects on a shared host. What the agent never does is prune a
+  time window: the backlog an older version left behind still goes away with
+  `scripts/update.sh --gc` (WP-M3-02, WP-M3-02b).
 - **Panels and non-git checkouts work.** When `/repo` is no git work tree (for
   example an Arcane project folder), the pull step is skipped and the compose
   build performs the update. The agent reads the compose project from its own
@@ -495,9 +502,9 @@ works that way.
 ### Disk full of `<none>` images
 
 Every rebuild leaves the previous image of `api`, `web` and `update-agent`
-without a tag on the host; an update that was interrupted does it twice. The
-clean-up of `scripts/update.sh` removes them by image id (see
-[Host update](#host-update)). For the backlog an older version left behind:
+without a tag on the host; an update that was interrupted does it twice. Both
+update paths remove them by image id — `scripts/update.sh` and the update agent
+(see [Host update](#host-update)). For the backlog an older version left behind:
 
 ```bash
 docker images -f dangling=true        # the tagless backlog

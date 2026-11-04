@@ -1,5 +1,5 @@
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M1-08
 phase: 4
 context-budget: 12k tokens

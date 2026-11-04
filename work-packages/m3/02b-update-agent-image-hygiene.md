@@ -1,7 +1,7 @@
 # WP-M3-02b: the update agent removes the images it replaces
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-02
 phase: 3
 milestone: m3
@@ -71,8 +71,25 @@ prune and pass after the change.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/agent/src/update-runner.ts`,
+  `apps/agent/src/__tests__/update-runner.test.ts`, `docs/DEPLOYMENT.md`, plus
+  the bookkeeping (`docs/REPO-MAP.md`, `work-packages/README.md`, `PLAN.md` §16,
+  `CHANGELOG.md`)
+- Interfaces added: `Command` (exported), `OWN_IMAGES`,
+  `UpdateRunnerOptions.ownImages`; private `pruneCommands(project, ownedBefore)`,
+  `pruneStep(run, project, ownedBefore)`, `keptImageIds`, `imageIds`,
+  `runningImageIds`. `pruneArgs` is gone.
+- Two deviations from the task sketch, both deliberate: the kept ids are read
+  with `docker image ls --filter reference=<name>` (the current image of each
+  owned name) and `docker ps --all --filter label=com.docker.compose.project=…`
+  (the images of the containers of the project) instead of `docker image`
+  `inspect` — same kept set, no id list on a command line; and the owned ids are
+  snapshotted **before** the compose step and passed in, because a replaced image
+  is tagless afterwards and no name filter finds it — the same order
+  `scripts/update.sh` uses.
+- Verified: `npx tsc --noEmit -p apps/agent/tsconfig.json`, `npx eslint`
+  `apps/agent`, `npx vitest run apps/agent` (27 tests, the new assertions fail
+  against the old single-command prune), `npm run check`. The Docker rebuild and
+  the smoke gate stay unverified here (no Docker daemon, `PLAN.md` §18).
 - Follow-up WP: none
 - Open question: none

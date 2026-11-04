@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The update agent removes the images it replaces (WP-M3-02b): it snapshots the
+  image ids of the three owned image names before the compose rebuild, removes by
+  id whatever neither a current tag nor a container of the compose project needs
+  and keeps the project-labelled `docker image prune -f` as the last best-effort
+  command. It never runs an unscoped prune; `--gc` remains a property of
+  `scripts/update.sh`.
 - Admins can permanently delete cancelled tickets (`ticket.delete`,
   `DELETE /api/v1/tickets/:ticketNo`): the deletion is recorded in the
   append-only `ticket_purges` log and the ticket's photos are removed from the
@@ -202,7 +208,7 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
   update (WP-M3-02). `docker compose up -d --build` moves the fixed
   `stoerdesk-{api,web,agent}:latest` tags to the new images, so the previous
   image of each service turns tagless; the only cleaner was `docker image prune
-  -f --filter label=com.docker.compose.project=<project>`, and that filter finds
+-f --filter label=com.docker.compose.project=<project>`, and that filter finds
   a tagless image only when the build wrote the label into it. Builds from a
   remote build context (`IMAGE_BUILD_CONTEXT`, the Arcane path), the
   `docker-compose` v1 fallback the script accepts and every aborted build carry

@@ -16,25 +16,103 @@ interface RecordedCommand {
   env?: Record<string, string>
 }
 
-function recorder(answers: Record<string, CommandResult> = {}): {
-  calls: RecordedCommand[]
-  runner: CommandRunner
-} {
+/**
+ * The answers are keyed by command plus the first two arguments, so
+ * `docker image ls` and `docker image prune` can answer differently.
+ * `images` is the image registry the fake Docker CLI reads for a
+ * `docker image ls --filter reference=<name>`, `onCommand` lets a test change it
+ * while the fake rebuild of the stack runs.
+ */
+function recorder(
+  answers: Record<string, CommandResult> = {},
+  options: {
+    images?: Record<string, readonly string[]>
+    onCommand?: (call: RecordedCommand) => void
+  } = {},
+): { calls: RecordedCommand[]; runner: CommandRunner } {
   const calls: RecordedCommand[] = []
 
-  const runner: CommandRunner = async (command, args, options) => {
-    calls.push({ command, args: [...args], cwd: options?.cwd, env: options?.env })
+  const runner: CommandRunner = async (command, args, cmdOptions) => {
+    const call: RecordedCommand = {
+      command,
+      args: [...args],
+      cwd: cmdOptions?.cwd,
+      env: cmdOptions?.env,
+    }
+
+    calls.push(call)
+    options.onCommand?.(call)
 
     if (command === 'git' && args.includes('--is-inside-work-tree')) {
       return answers['git is-inside'] ?? { code: 0, stdout: 'true\n', stderr: '' }
     }
 
-    const key = `${command} ${args[0] ?? ''}`
+    const key = `${command} ${args[0] ?? ''} ${args[1] ?? ''}`
+    const answer = answers[key] ?? answers[`${command} ${args[0] ?? ''}`]
 
-    return answers[key] ?? { code: 0, stdout: '', stderr: '' }
+    if (answer !== undefined) {
+      return answer
+    }
+
+    if (command === 'docker' && args[0] === 'image' && args[1] === 'ls') {
+      const ids = referencedNames(args).flatMap((name) => options.images?.[name] ?? [])
+
+      return { code: 0, stdout: ids.length === 0 ? '' : `${ids.join('\n')}\n`, stderr: '' }
+    }
+
+    return { code: 0, stdout: '', stderr: '' }
   }
 
   return { calls, runner }
+}
+
+/** The image names a `docker image ls` asks for. */
+function referencedNames(args: readonly string[]): string[] {
+  return args
+    .filter((arg) => arg.startsWith('reference='))
+    .map((arg) => arg.slice('reference='.length))
+}
+
+/** Every `docker image prune` the run answered with, without its `docker` prefix. */
+function pruneCalls(calls: readonly RecordedCommand[]): readonly string[][] {
+  return calls
+    .filter(
+      (call) => call.command === 'docker' && call.args[0] === 'image' && call.args[1] === 'prune',
+    )
+    .map((call) => [...call.args])
+}
+
+/** Every `docker rmi` of the run. */
+function rmiCalls(calls: readonly RecordedCommand[]): readonly string[][] {
+  return calls
+    .filter((call) => call.command === 'docker' && call.args[0] === 'rmi')
+    .map((call) => [...call.args])
+}
+
+/**
+ * The stack of a real update: three owned images, and the rebuild of the stack
+ * replaces the image behind `stoerdesk-api:latest`. The image it replaces is
+ * tagless and — as in a build from a remote context or an aborted build — carries
+ * no project label, so no prune filter finds it.
+ */
+function rebuiltStack(): {
+  images: Record<string, readonly string[]>
+  onCommand: (call: RecordedCommand) => void
+} {
+  const images: Record<string, readonly string[]> = {
+    'stoerdesk-api:latest': ['sha256:old-api'],
+    'stoerdesk-web:latest': ['sha256:old-web'],
+    'stoerdesk-agent:latest': ['sha256:old-agent'],
+  }
+
+  return {
+    images,
+    onCommand: (call) => {
+      if (call.args[0] === 'compose') {
+        images['stoerdesk-api:latest'] = ['sha256:new-api']
+      }
+    },
+  }
 }
 
 function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
@@ -101,9 +179,11 @@ describe('update runner', () => {
       cwd: '/repo',
     })
     expect(compose?.env).toBeUndefined()
-    expect(
-      calls.find((call) => call.command === 'docker' && call.args[0] === 'image'),
-    ).toMatchObject({ command: 'docker', args: ['image', 'prune', '-f'] })
+
+    // Nothing was rebuilt, so nothing was replaced: the clean-up runs no prune.
+    expect(pruneCalls(calls)).toEqual([])
+    expect(rmiCalls(calls)).toEqual([])
+    expect(run.steps.at(-1)?.status).toBe('ok')
   })
 
   it('refuses a second run while a run is active', async () => {
@@ -159,10 +239,10 @@ describe('update runner', () => {
 
   it('falls back to the standard output when the failing step is silent', async () => {
     const { runner } = recorder({
-      'docker image': { code: 1, stdout: 'a image is in use by container', stderr: '   \n' },
+      'docker image prune': { code: 1, stdout: 'a image is in use by container', stderr: '   \n' },
     })
     const done = deferred<AgentRun>()
-    const updates = createRunner(runner, (run) => done.resolve(run))
+    const updates = createRunner(runner, (run) => done.resolve(run), false, 'stoerdesk')
 
     await updates.start()
     const run = await done.promise
@@ -224,10 +304,10 @@ describe('update runner', () => {
 
   it('reports a partial run when the prune fails', async () => {
     const { runner } = recorder({
-      'docker image': { code: 1, stdout: '', stderr: 'busy' },
+      'docker image prune': { code: 1, stdout: '', stderr: 'busy' },
     })
     const done = deferred<AgentRun>()
-    const updates = createRunner(runner, (run) => done.resolve(run))
+    const updates = createRunner(runner, (run) => done.resolve(run), false, 'stoerdesk')
 
     await updates.start()
     const run = await done.promise
@@ -301,14 +381,8 @@ describe('update runner', () => {
     expect(compose?.args).toContain('backup')
     expect(compose?.args).not.toContain('update')
 
-    const prune = calls.find((call) => call.command === 'docker' && call.args[0] === 'image')
-
-    expect(prune?.args).toEqual([
-      'image',
-      'prune',
-      '-f',
-      '--filter',
-      'label=com.docker.compose.project=arcane-stoerdesk',
+    expect(pruneCalls(calls)).toEqual([
+      ['image', 'prune', '-f', '--filter', 'label=com.docker.compose.project=arcane-stoerdesk'],
     ])
   })
 
@@ -327,6 +401,68 @@ describe('update runner', () => {
     const compose = calls.find((call) => call.command === 'docker' && call.args[0] === 'compose')
 
     expect(compose?.args.slice(0, 3)).toEqual(['compose', '-p', 'stoerdesk'])
+  })
+
+  it('removes the image the rebuild replaced by id and keeps the current tag', async () => {
+    const stack = rebuiltStack()
+    const { calls, runner } = recorder(
+      { 'docker ps': { code: 0, stdout: 'sha256:running-api\n', stderr: '' } },
+      stack,
+    )
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run), false, 'stoerdesk')
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.status).toBe('SUCCESS')
+    // The replaced image is gone by id — never a tagged image of the stack,
+    // never the image a running container of the project holds.
+    expect(rmiCalls(calls)).toEqual([['rmi', 'sha256:old-api']])
+
+    const rmiIndex = calls.findIndex((call) => call.args[0] === 'rmi')
+
+    expect(pruneCalls(calls)).toEqual([
+      ['image', 'prune', '-f', '--filter', 'label=com.docker.compose.project=stoerdesk'],
+    ])
+    expect(
+      calls.findIndex((call) => call.args[0] === 'image' && call.args[1] === 'prune'),
+    ).toBeGreaterThan(rmiIndex)
+  })
+
+  it('never forces an image away and stays ok when it is still in use', async () => {
+    const stack = rebuiltStack()
+    const { calls, runner } = recorder(
+      {
+        'docker rmi': { code: 1, stdout: 'image is in use by container 42ff', stderr: '' },
+      },
+      stack,
+    )
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run), false, 'stoerdesk')
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.status).toBe('SUCCESS')
+    expect(run.steps.at(-1)).toMatchObject({ step: 'prune', status: 'ok' })
+    expect(rmiCalls(calls).every((args) => !args.includes('-f'))).toBe(true)
+  })
+
+  it('prunes nothing outside its own project when the project is unknown', async () => {
+    const stack = rebuiltStack()
+    const { calls, runner } = recorder({}, stack)
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.status).toBe('SUCCESS')
+    expect(rmiCalls(calls)).toEqual([['rmi', 'sha256:old-api']])
+    // An unscoped `docker image prune -f` would sweep the images of every other
+    // project on a shared host — the agent never runs one.
+    expect(pruneCalls(calls)).toEqual([])
   })
 
   it('reads the commit of the checkout', async () => {
