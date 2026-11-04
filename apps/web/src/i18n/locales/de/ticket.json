@@ -237,6 +237,23 @@
       "deleteFailed": "Die Meldung konnte nicht gelöscht werden."
     },
     "offlineQueued": "Nicht versendet – wird automatisch nachgesendet ({{count}} ausstehend).",
+    "offlineTitle": "Nicht versendete Aktionen",
+    "offlineAction": {
+      "acknowledge": "Quittieren",
+      "comment": "Kommentar",
+      "decline": "Ablehnen",
+      "retry": "Wiederholen",
+      "discard": "Verwerfen"
+    },
+    "offlineStatus": {
+      "queued": "wartend",
+      "failed": "fehlgeschlagen",
+      "conflict": "Konflikt",
+      "sending": "wird gesendet",
+      "sent": "gesendet"
+    },
+    "offlineConflict": "Konflikt: {{code}} – aktueller Status {{status}}",
+    "offlineAge": "vor {{minutes}} Min.",
     "header": "Vorgang",
     "field": {
       "object": "Objekt",

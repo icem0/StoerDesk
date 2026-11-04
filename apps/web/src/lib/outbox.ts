@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 
-import { apiFetch } from './api'
+import { apiFetch, ApiError } from './api'
 import type { PublicReport, PublicReportRequest } from '@stoerdesk/shared'
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -156,13 +156,19 @@ export async function pendingWrites(): Promise<{ reports: number; actions: numbe
     outboxDb.internal_actions
       .filter(
         (row) =>
-          row.status === 'queued' || row.status === 'sending' || row.status === 'failed',
+          row.status === 'queued' ||
+          row.status === 'sending' ||
+          row.status === 'failed' ||
+          row.status === 'conflict',
       )
       .count(),
   ])
 
   return { reports, actions }
 }
+
+/** Server error codes that make an outbox row a conflict: never auto-retried. */
+const CONFLICT_CODES = new Set(['invalid_transition', 'ticket_not_found', 'action_actor_mismatch'])
 
 /** Route segment of every internal action kind (`WP-M2-19c`). */
 const ACTION_SEGMENTS: Record<InternalActionKind, string> = {
@@ -189,7 +195,20 @@ export async function deliverAction(row: QueuedAction): Promise<boolean> {
     }
 
     return true
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError && CONFLICT_CODES.has(error.code ?? '')) {
+      if (row.id !== undefined) {
+        await updateAction(row.id, {
+          status: 'conflict',
+          error_code: error.code,
+          ticket_status:
+            typeof error.params?.from === 'string' ? error.params.from : undefined,
+          retries: row.retries,
+        })
+      }
+      return false
+    }
+
     if (row.id !== undefined) {
       await updateAction(row.id, { status: 'failed', retries: row.retries + 1 })
     }

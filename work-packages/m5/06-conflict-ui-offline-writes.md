@@ -1,7 +1,7 @@
 # WP-M5-06: failed and conflicting offline writes stay visible (web)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M5-05
 phase: 5
 milestone: m5
@@ -69,8 +69,8 @@ Expected: all green; the banner test fails before the change and passes after.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/lib/outbox.ts` (conflict status in `deliverAction`, `conflict` counted in `pendingWrites`), `apps/web/src/features/tickets/use-internal-actions.ts` (expose `rows` with `ageMinutes`, `discard`), `apps/web/src/features/tickets/offline-action-banner.tsx` (new banner component), `apps/web/src/features/tickets/ticket-detail-page.tsx` (render banner above workflow buttons), `apps/web/src/i18n/locales/de/ticket.json` and `en/ticket.json` (conflict texts), `apps/web/src/features/tickets/__tests__/offline-action-banner.test.tsx` (new component test)
+- Interfaces added: `OfflineActionBanner({ rows, onRetry, onDiscard })`, `useInternalActions` now returns `discard` and `rows`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `eslint`, `vitest run` (new banner test 4/4, hook test 6/6), `npm run i18n:check` (602/602 keys de/en), `npm run wp:check` (179/0), `npm run build`
 - Follow-up WP: WP-M5-07 (`m5/07-offline-ticket-reads-sw.md`)
 - Open question: none

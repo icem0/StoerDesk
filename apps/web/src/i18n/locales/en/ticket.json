@@ -237,6 +237,23 @@
       "deleteFailed": "The ticket could not be deleted."
     },
     "offlineQueued": "Not sent – will be sent automatically when you are back online ({{count}} pending).",
+    "offlineTitle": "Unsent actions",
+    "offlineAction": {
+      "acknowledge": "Acknowledge",
+      "comment": "Comment",
+      "decline": "Decline",
+      "retry": "Retry",
+      "discard": "Discard"
+    },
+    "offlineStatus": {
+      "queued": "waiting",
+      "failed": "failed",
+      "conflict": "conflict",
+      "sending": "sending",
+      "sent": "sent"
+    },
+    "offlineConflict": "Conflict: {{code}} – current status {{status}}",
+    "offlineAge": "{{minutes}} min ago",
     "header": "Ticket",
     "field": {
       "object": "Object",

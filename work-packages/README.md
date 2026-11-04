@@ -315,7 +315,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-03  | `applyInternalAction`: replay-safe acknowledge/comment/decline      | done                    | yes     |
 | WP-M5-04  | `clientUuid` on the action routes + internal comment route          | done                    | yes     |
 | WP-M5-05  | the detail page queues actions offline and replays them             | done                    | yes     |
-| WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible     | planned                 | yes     |
+| WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible     | done                    | yes     |
 | WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | planned                 | yes     |
 | WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | planned                 | yes     |
 | WP-M5-09  | sign-out clears the `internal-tickets` cache                        | planned                 | yes     |

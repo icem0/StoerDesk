@@ -4,6 +4,7 @@ import {
   deliverAction,
   enqueueInternalAction,
   queuedActions,
+  removeAction,
   type QueuedAction,
 } from '../../lib/outbox'
 
@@ -14,24 +15,49 @@ import {
  * `queueAction` persists a write to IndexedDB and bumps the pending count.
  * `deliverNow(row)` replays one row through `deliverAction` (which removes it
  * on success and marks network failures `failed` with `retries + 1`).
- * `pendingCount` counts queued/failed rows of this ticket, refreshed on mount
- * so the notice survives a reload.
+ * `pendingCount` counts queued/failed/conflict rows of this ticket, refreshed on
+ * mount so the notice survives a reload. `rows` exposes every row of this ticket
+ * (with a pre-computed `ageMinutes`) so the conflict banner can render them
+ * (`WP-M5-06`).
  */
+type ActionRow = QueuedAction & { ageMinutes: number }
+
 export function useInternalActions(ticketNo: string) {
   const [pendingCount, setPendingCount] = useState(0)
   const [isDelivering, setIsDelivering] = useState(false)
+  const [rows, setRows] = useState<ActionRow[]>([])
+
+  const ageMinutes = (createdAt: number) =>
+    Math.max(0, Math.round((Date.now() - createdAt) / 60000))
+
+  const refresh = useCallback(async () => {
+    const fetched = await queuedActions()
+    const ticketRows = fetched
+      .filter((row) => row.ticket_no === ticketNo)
+      .map((row) => ({ ...row, ageMinutes: ageMinutes(row.created_at) }))
+    setRows(ticketRows)
+    setPendingCount(
+      ticketRows.filter(
+        (row) =>
+          row.status === 'queued' || row.status === 'failed' || row.status === 'conflict',
+      ).length,
+    )
+  }, [ticketNo])
 
   useEffect(() => {
     let mounted = true
 
-    queuedActions().then((rows) => {
+    queuedActions().then((fetched) => {
       if (!mounted) return
 
+      const ticketRows = fetched
+        .filter((row) => row.ticket_no === ticketNo)
+        .map((row) => ({ ...row, ageMinutes: ageMinutes(row.created_at) }))
+      setRows(ticketRows)
       setPendingCount(
-        rows.filter(
+        ticketRows.filter(
           (row) =>
-            row.ticket_no === ticketNo &&
-            (row.status === 'queued' || row.status === 'failed'),
+            row.status === 'queued' || row.status === 'failed' || row.status === 'conflict',
         ).length,
       )
     })
@@ -55,14 +81,22 @@ export function useInternalActions(ticketNo: string) {
       try {
         const ok = await deliverAction(row)
         if (ok) {
-          setPendingCount((c) => Math.max(0, c - 1))
+          await refresh()
         }
       } finally {
         setIsDelivering(false)
       }
     },
-    [],
+    [refresh],
   )
 
-  return { queueAction, deliverNow, pendingCount, isDelivering }
+  const discard = useCallback(
+    async (id: number) => {
+      await removeAction(id)
+      await refresh()
+    },
+    [refresh],
+  )
+
+  return { queueAction, deliverNow, discard, pendingCount, isDelivering, rows }
 }

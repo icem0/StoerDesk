@@ -9,6 +9,7 @@ import { apiFetch, ApiError } from '../../lib/api'
 import { usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
 import { useInternalActions } from './use-internal-actions'
+import { OfflineActionBanner } from './offline-action-banner'
 
 /**
  * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d).
@@ -91,7 +92,7 @@ export function TicketDetailPage() {
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
-  const { queueAction, pendingCount } = useInternalActions(ticketNo ?? '')
+  const { queueAction, deliverNow, discard, pendingCount, rows } = useInternalActions(ticketNo ?? '')
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
@@ -340,6 +341,8 @@ export function TicketDetailPage() {
           </div>
         </div>
       )}
+
+      <OfflineActionBanner rows={rows} onRetry={deliverNow} onDiscard={discard} />
 
       {showActions && (
         <div className="col-span-full flex flex-wrap gap-2">
