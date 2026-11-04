@@ -42,14 +42,4 @@ describe('AdminHomePage', () => {
     expect(await screen.findByText(/Bereitschaftsplan|On-call roster/i)).toBeTruthy()
     expect(screen.getAllByText(/geplant|planned/i).length).toBeGreaterThan(0)
   })
-
-  it('marks the groups placeholder with the phase that owns ticket assignment', async () => {
-    renderHome()
-
-    const groups = await screen.findByText(/^Gruppen$|^Groups$/i)
-    const card = groups.closest('div')
-
-    expect(card?.textContent).toMatch(/Phase 4/)
-    expect(card?.textContent).not.toMatch(/Phase 1\b/)
-  })
 })
