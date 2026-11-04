@@ -151,10 +151,10 @@ describe('UpdateHostUpdate', () => {
       expect(button.disabled).toBe(true)
     })
 
-    expect(screen.getByText(/der Agent läuft nicht|agent does not run/i)).toBeTruthy()
+    expect(screen.getByText(/nicht aktiv|not active/i)).toBeTruthy()
   })
 
-  it('carries the guide that starts the agent', async () => {
+  it('carries the shell update guide', async () => {
     stubRoutes({
       ...meRoutes(['system.update']),
       '/v1/admin/update/status': statusPayload({
@@ -166,10 +166,10 @@ describe('UpdateHostUpdate', () => {
     renderSection()
 
     expect(
-      await screen.findByText(/Host-Update aktivieren|Enable the host update/i),
+      await screen.findByText(/Update per Shell-Skript|Update through the shell script/i),
     ).toBeTruthy()
     expect(
-      screen.getByText('docker compose --profile update up -d update-agent'),
+      screen.getByText('sh scripts/update.sh'),
     ).toBeTruthy()
     expect(
       screen.getByRole('button', { name: /Befehl kopieren|Copy command/i }),

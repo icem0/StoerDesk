@@ -73,10 +73,10 @@
       "outboxBlocked": "Es sind noch Offline-Meldungen offen. Update-Aktionen sind gesperrt, bis der Outbox-Status gesendet ist.",
       "host": {
         "title": "Host-Update",
-        "hint": "Zieht das Repository, baut den Stack neu und entfernt die alten Images. Dafür muss der Update-Agent laufen; der Stack ist dabei kurz nicht erreichbar.",
-        "agent": "Update-Agent",
+        "hint": "Prüft GitHub, zieht die neue Version, baut den Stack neu und entfernt die alten Images. Der Standardweg ist das Shell-Skript auf dem Host; der Stack ist dabei kurz nicht erreichbar.",
+        "agent": "In-UI-Update (Agent, optional)",
         "agentReady": " erreichbar",
-        "agentMissing": "nicht erreichbar — der Agent läuft nicht",
+        "agentMissing": "nicht aktiv — Updates laufen über das Shell-Skript",
         "check": {
           "title": "Update prüfen"
         },
@@ -90,12 +90,12 @@
         "agentNotConfigured": "nicht erreichbar — der Agent läuft noch nicht (er schreibt sein Token erst beim Start)",
         "agentBadResponse": "nicht erreichbar — der Agent antwortet ungültig",
         "guide": {
-          "title": "Host-Update aktivieren",
-          "step1": "Im Verzeichnis des Checkouts auf dem Host den Update-Agent starten:",
-          "step2": "Diese Seite neu laden. Sobald der Agent erreichbar ist, wird der Knopf aktiv.",
+          "title": "Update per Shell-Skript",
+          "step1": "Im Projektverzeichnis auf dem Host ausführen:",
+          "step2": "Das Skript prüft GitHub, zieht die neue Version, baut den Stack neu und räumt alte Images auf. Danach diese Seite neu laden.",
           "copy": "Befehl kopieren",
           "copied": "Kopiert",
-          "hint": "Der Agent braucht den Docker-Socket des Hosts und läuft deshalb bewusst nicht mit dem übrigen Stack. Er bleibt aktiv, bis der Host neu gestartet wird."
+          "hint": "Das Skript braucht nur Docker und optional git. Der Agent ist nur für den Knopf auf dieser Seite nötig, nicht für das Update selbst."
         },
         "version": "Version auf dem Server",
         "unknownVersion": "unbekannt",

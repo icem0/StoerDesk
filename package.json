@@ -27,6 +27,7 @@
     "env:create": "node scripts/create-env.mjs",
     "version:file": "node scripts/version-file.mjs",
     "release:push": "node scripts/push-release.mjs",
+    "update:host": "sh scripts/update.sh",
     "spec:split": "node scripts/split-spec.mjs",
     "orchestrate": "node scripts/orchestrate.mjs",
     "prepare": "husky"

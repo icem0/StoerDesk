@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update runs as a shell script without the agent (WP-M2-72):
+  `sh scripts/update.sh` compares `VERSION` with the newest GitHub tag, pulls a
+  git checkout or lets the compose build fetch the sources in a panel
+  deployment, rebuilds the running stack and prunes the old images. The admin
+  page now points to that command; the update agent remains optional for the
+  in-UI button.
+
 - The host update works in panel deployments (WP-M2-71): without a git work
   tree the pull step is skipped instead of failing the run, so an Arcane project
   folder updates through the compose build. The agent reads the compose project

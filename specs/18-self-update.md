@@ -55,8 +55,10 @@ build-time web value (`__APP_VERSION__`); the API runtime does not read `VERSION
 A failing upstream call answers `{ code }` and never leaks a token. Not required
 for stage 1.
 
-## §18.4 Stage 2 — host update agent (ADR-0006)
+## §18.4 Stage 2 — host update agent (ADR-0006, optional for the in-UI button)
 
+The default host update is the shell script of §18.7. The agent described here is
+only needed when an administrator wants to start the update from the admin page.
 The privileged part lives in a **separate, trusted container** on the host, never
 in the `api` image. The topology is fixed by ADR-0006:
 
@@ -139,3 +141,23 @@ volume) and reloads it on start, so a restarted agent can still tell what
 happened in the last run. The `update_runs` row of the API is the history the
 UI shows; the API reconciles a `RUNNING` row with the agent's state after its
 own restart and never invents a result the agent did not report.
+
+## §18.7 Host update shell script (default, no agent)
+
+`scripts/update.sh` (also `npm run update:host`) updates a host without the API
+and without the agent:
+
+- `--check` compares the tracked `VERSION` with the newest GitHub tag
+  (`git ls-remote`, or the GitHub API when there is no checkout) and exits.
+- Without `--check` it asks once (skipped with `--yes`), pulls a git work tree
+  with `--ff-only --autostash`, otherwise leaves the sources to the compose
+  build (`IMAGE_BUILD_CONTEXT` must point to the Git URL in a panel
+  deployment), then runs `docker compose up -d --build` for the running project.
+- The compose project is read from `COMPOSE_PROJECT_NAME` or the running
+  containers; running optional profiles such as `backup` stay enabled and the
+  `update` profile is never touched.
+- Finally it prunes the dangling images with the project label filter (plain
+  `docker image prune -f` when the project is unknown). `docker image prune -a`
+  is never used.
+- The script needs `docker` and `sh`; `git`, `curl`/`wget` or `node` are used
+  when present. It never writes a credential and never edits `.env`.

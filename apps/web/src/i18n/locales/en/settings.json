@@ -73,10 +73,10 @@
       "outboxBlocked": "Offline reports are still open. Update actions are blocked until the outbox has been sent.",
       "host": {
         "title": "Host update",
-        "hint": "Pulls the repository, rebuilds the stack and removes the old images. The update agent has to run for it; the stack is briefly unavailable while it works.",
-        "agent": "Update agent",
+        "hint": "Checks GitHub, pulls the new version, rebuilds the stack and removes the old images. The default path is the shell script on the host; the stack is briefly unavailable while it works.",
+        "agent": "In-UI update (agent, optional)",
         "agentReady": "reachable",
-        "agentMissing": "not reachable — the agent does not run",
+        "agentMissing": "not active — updates run through the shell script",
         "check": {
           "title": "Check for update"
         },
@@ -90,12 +90,12 @@
         "agentNotConfigured": "not reachable — the agent does not run yet (it writes its token at the start)",
         "agentBadResponse": "not reachable — the agent answers something invalid",
         "guide": {
-          "title": "Enable the host update",
-          "step1": "Start the update agent in the checkout directory on the host:",
-          "step2": "Reload this page. As soon as the agent is reachable, the button becomes active.",
+          "title": "Update through the shell script",
+          "step1": "Run this in the project directory on the host:",
+          "step2": "The script checks GitHub, pulls the new version, rebuilds the stack and removes old images. Reload this page afterwards.",
           "copy": "Copy command",
           "copied": "Copied",
-          "hint": "The agent needs the Docker socket of the host, so it deliberately does not run with the rest of the stack. It stays active until the host is restarted."
+          "hint": "The script only needs Docker and optionally git. The agent is only needed for the button on this page, not for the update itself."
         },
         "version": "Version on the server",
         "unknownVersion": "unknown",

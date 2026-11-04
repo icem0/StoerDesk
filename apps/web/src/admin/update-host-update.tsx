@@ -17,15 +17,17 @@ import { ApiError, apiFetch } from '../lib/api'
  * so the API is briefly unreachable during a run; the section says that instead
  * of failing and recovers when the API answers again.
  *
- * As long as the agent does not run, the section carries the guide how to
- * start it: the agent is opt-in, because it holds the Docker socket of the
- * host. The guide names the command and can copy it to the clipboard.
+ * The default update runs as a host shell script (`scripts/update.sh`): it
+ * checks GitHub, pulls (or lets the compose build fetch the sources), rebuilds
+ * the stack and prunes the old images. The agent is only needed for the button
+ * in this page; without it the section carries the script command and can copy
+ * it to the clipboard.
  *
  * The section is hidden without the permission `system.update`. The guard of the
  * server stays the only enforcement point.
  */
 
-const AGENT_START_COMMAND = 'docker compose --profile update up -d update-agent'
+const UPDATE_COMMAND = 'sh scripts/update.sh'
 const GITHUB_TAGS_URL = 'https://api.github.com/repos/icem0/StoerDesk/tags?per_page=1'
 
 function parseVersion(v: string): [number, number, number] {
@@ -98,7 +100,7 @@ export function UpdateHostUpdate() {
 
   const copyCommand = useCallback(async () => {
     try {
-      await navigator.clipboard?.writeText(AGENT_START_COMMAND)
+      await navigator.clipboard?.writeText(UPDATE_COMMAND)
       setCopied(true)
     } catch {
       setCopied(false)
@@ -262,7 +264,7 @@ export function UpdateHostUpdate() {
           </ol>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <code className="rounded bg-slate-900 px-2 py-1 font-mono text-xs">
-              {AGENT_START_COMMAND}
+              {UPDATE_COMMAND}
             </code>
             <button
               className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"

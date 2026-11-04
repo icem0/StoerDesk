@@ -50,12 +50,34 @@ host per request, so the UI is reachable while the API is starting or
 temporarily down. Until the API answers, `/api/` returns 502 while `/healthz`
 still returns 200.
 
-## Host update (update agent)
+## Host update
 
-The administration can update the deployment itself: `git pull` of the whole
-repository, `docker compose up -d --build` and a purge of the old images
-(ADR-0006, `specs/18-self-update.md` §18.4). The privileged part lives in the
-separate `update-agent` container, never in the API image.
+The default host update is a shell script on the server — no agent and no API
+access needed:
+
+```bash
+sh scripts/update.sh          # check GitHub, pull/build, prune
+sh scripts/update.sh --check  # only compare the local and remote version
+sh scripts/update.sh --yes    # update without the confirmation
+```
+
+The script compares the tracked `VERSION` with the newest GitHub tag, pulls a
+git checkout (`--ff-only --autostash`), runs `docker compose up -d --build` for
+the running stack and prunes the old images of the project. Running optional
+profiles such as `backup` stay enabled; the `update` profile is never touched.
+The stack is briefly unreachable during the rebuild.
+
+In a panel deployment such as Arcane the project folder is usually no git
+checkout. The script then skips the pull and the compose build fetches the
+sources itself; set `IMAGE_BUILD_CONTEXT` to the Git URL
+(`https://github.com/icem0/StoerDesk.git#main`) as described
+[below](#arcane), otherwise the build reuses the files of the project folder.
+
+### Optional update agent (in-UI button)
+
+The administration can also start a host update with a button. That path needs
+the separate `update-agent` container; it is **not required** for the shell
+script and can stay stopped.
 
 ```bash
 docker compose --profile update up -d update-agent
