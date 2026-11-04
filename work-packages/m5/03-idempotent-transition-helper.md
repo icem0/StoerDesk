@@ -1,7 +1,7 @@
 # WP-M5-03: the idempotent internal action helper (api)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M5-02, WP-M2-19b
 phase: 5
 milestone: m5
@@ -74,8 +74,8 @@ Expected: all green; the new spec fails before the change and passes after.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/tickets/internal-actions.ts` (new), `apps/api/src/tickets/workflow.ts` (`transitionTicket()` returns `{ ticket, event }`), `apps/api/src/tickets/workflow-routes.ts` (destructure `ticket`), `apps/api/src/tickets/__tests__/internal-actions.spec.ts` (new), `docs/REPO-MAP.md` (workflow.ts row + internal-actions.ts row), `work-packages/README.md` (WP-M5-03 status → done)
+- Interfaces added: `applyInternalAction(ctx) → { replayed, ticket, event }`, `ApplyInternalActionResult`, `applyInternalAction` short-circuits a replayed `client_uuid` (`replayed: true`), rejects a foreign actor with `403 action_actor_mismatch`, rejects an invalid transition with `409 invalid_transition` (`from` in `params`) and writes no receipt; the receipt is written only when the action executed.
+- Verified: `npm run typecheck -w @stoerdesk/api`, `eslint` on the four changed files (no errors), `vitest run apps/api/src/tickets/__tests__/internal-actions.spec.ts` (5 tests pass against a real Postgres 16), `npm run wp:check` (179 checked, 0 failed). The three pre-existing failures of `internalActionReceipts.integration.spec.ts` (FK on a fake `objectId`) fail identically without this change and are unrelated.
 - Follow-up WP: WP-M5-04 (`m5/04-internal-action-routes-idempotency.md`)
 - Open question: none

@@ -15,6 +15,9 @@ import { ticketEvents, tickets } from '../db/schema'
  * The workflow columns (`assigned_user_id`, `reviewed_by_user_id`, `accepted_at`,
  * `acknowledged_at`, `closed_at`, …) are added by migration 0006 and will be
  * written here once WP-M2-19c wires them into the route payloads.
+ *
+ * Returns the updated ticket together with the appended event row so callers
+ * (e. g. `applyInternalAction` of WP-M5-03) can reference the event id.
  */
 
 type Db = Database['database']
@@ -117,15 +120,22 @@ export async function transitionTicket(ctx: TransitionContext) {
       throw TICKET_NOT_FOUND(ticketId)
     }
 
-    await tx.insert(ticketEvents).values({
-      ticketId: updated.id,
-      type: event,
-      actorKind: 'user',
-      actorUserId,
-      payload,
-    })
+    const [insertedEvent] = await tx
+      .insert(ticketEvents)
+      .values({
+        ticketId: updated.id,
+        type: event,
+        actorKind: 'user',
+        actorUserId,
+        payload,
+      })
+      .returning()
 
-    return updated
+    if (insertedEvent === undefined) {
+      throw TICKET_NOT_FOUND(ticketId)
+    }
+
+    return { ticket: updated, event: insertedEvent }
   })
 }
 

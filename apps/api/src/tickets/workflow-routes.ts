@@ -64,7 +64,7 @@ function makeHandler(event: string, bodySchema?: z.ZodTypeAny) {
     const payload: Record<string, unknown> = Object.assign({}, result?.data ?? {}) as Record<string, unknown>
 
     try {
-      const updated = await transitionTicket({
+      const { ticket: updated } = await transitionTicket({
         database,
         ticketId: row.id,
         event,
