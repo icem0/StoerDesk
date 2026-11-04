@@ -17,8 +17,8 @@ type Module = { key: string; to: string } | { key: string; to?: undefined; phase
 const MODULES: Module[] = [
   { key: 'users', to: '/admin/users' },
   { key: 'roles', to: '/admin/roles' },
+  { key: 'groups', to: '/admin/groups' },
   { key: 'bmaSync', to: '/admin/bma-sync' },
-  { key: 'groups', phase: 'phase4' },
   { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', phase: 'phase6' },
   { key: 'oncall', phase: 'phase8' },
