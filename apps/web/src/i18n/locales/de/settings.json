@@ -140,6 +140,7 @@
           "update_git_failed": "Git-Pull fehlgeschlagen",
           "update_compose_failed": "Neubuild des Stacks fehlgeschlagen",
           "update_prune_failed": "Alte Images konnten nicht gelöscht werden",
+          "update_step_timeout": "Der Update-Schritt hat sein Zeitlimit überschritten",
           "update_agent_unreachable": "Agent nicht erreichbar",
           "update_agent_not_configured": "Agent nicht konfiguriert",
           "update_agent_bad_response": "Ungültige Antwort vom Agenten",

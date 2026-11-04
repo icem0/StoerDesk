@@ -14,7 +14,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 7   |
+| [m3](m3/) | Phase 3: offline sync closure and the host update image clean-up            | 8   |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
 | [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
@@ -297,7 +297,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-03  | the agent start command finds the project dir on the host           | done                    | yes     |
 | WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done                    | yes     |
 | WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done                    | yes     |
-| WP-M3-05  | the update agent run can never hang forever                       | done                    | yes     |
+| WP-M3-05  | shared error code `update_step_timeout` for self-update           | done                    | yes     |
+| WP-M3-06  | the update agent run can never hang forever                       | planned                 | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                 | planned                 | yes     |
@@ -564,7 +565,9 @@ the label path is container-internal; `scripts/update.sh` still requires a real 
 and the self-cloning agent stays a separate decision. **WP-M3-04b** adds the guard: the
 command exits with `exit 1` and a clear message if the current directory has no
 `docker-compose.yml`, before Compose or the `.env` are touched. **WP-M3-05**
-finally gives every step of the run a deadline (`UPDATE_STEP_TIMEOUT_MS`,
+lays the ground for the step deadline: the shared update schema and the
+administration labels know the fixed error code `update_step_timeout`.
+**WP-M3-06** gives every step of the run a deadline (`UPDATE_STEP_TIMEOUT_MS`,
 default ten minutes): `git pull`, the compose rebuild and the image clean-up.
 A step that passes its deadline fails with `update_step_timeout`, the run
 reaches `finishedAt` and `lastRun` leaves `running` — `Läuft` no longer sticks

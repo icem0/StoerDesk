@@ -730,7 +730,8 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M3-03  | the agent start command finds the project dir on the host           | done   |
 | WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done   |
 | WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done   |
-| WP-M3-05  | the update agent run can never hang forever                       | done   |
+| WP-M3-05  | shared error code `update_step_timeout` for self-update           | done   |
+| WP-M3-06  | the update agent run can never hang forever                       | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -929,11 +930,13 @@ project name from the `com.docker.compose.project` label, pins the folder with
 declares `env_file: .env`. `scripts/update.sh` keeps requiring a real checkout: the panel
 path is the agent path. **WP-M3-04b** finally guards the start command: if the current
 directory has no `docker-compose.yml`, it exits with `exit 1` and a clear message before
-`docker compose` or the `.env` are touched. **WP-M3-05** adds a deadline to every step of
-the run: `git pull`, the compose rebuild and the image clean-up each run against
-`UPDATE_STEP_TIMEOUT_MS` (default ten minutes). A step that passes its deadline fails
-with `update_step_timeout`, the run reaches `finishedAt` and the agent state leaves
-`running` — `lastRun` no longer shows `Läuft` for a build that never comes back.
+`docker compose` or the `.env` are touched. **WP-M3-05** puts the fixed error code
+`update_step_timeout` into the shared update schema and the administration labels.
+**WP-M3-06** adds a deadline to every step of the run: `git pull`, the compose rebuild
+and the image clean-up each run against `UPDATE_STEP_TIMEOUT_MS` (default ten minutes).
+A step that passes its deadline fails with `update_step_timeout`, the run reaches
+`finishedAt` and the agent state leaves `running` — `lastRun` no longer shows `Läuft`
+for a build that never comes back.
 
 Phase 4 is **complete** with a single package: **WP-M4-01** drives the whole workflow
 (review → work order → assign → accept → acknowledge → close) as one Playwright test in

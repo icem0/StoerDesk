@@ -140,6 +140,7 @@
           "update_git_failed": "Git pull failed",
           "update_compose_failed": "Stack rebuild failed",
           "update_prune_failed": "Old images could not be deleted",
+          "update_step_timeout": "The update step passed its deadline",
           "update_agent_unreachable": "Agent not reachable",
           "update_agent_not_configured": "Agent not configured",
           "update_agent_bad_response": "Invalid answer from agent",
