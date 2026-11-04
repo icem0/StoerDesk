@@ -571,10 +571,11 @@ administration labels know the fixed error code `update_step_timeout`.
 default ten minutes): `git pull`, the compose rebuild and the image clean-up.
 A step that passes its deadline fails with `update_step_timeout`, the run
 reaches `finishedAt` and `lastRun` leaves `running` — `Läuft` no longer sticks
-for a build that never comes back. **Record.** WP-M3-05 was first committed unsplit
-(b551259): its document carried 6 `files-write` entries over the §17 limit, so the
-check runs v0.1.130 … v0.1.132 were red at `wp-check`. The split into WP-M3-05 and
-WP-M3-06 replaced the document; its removal turns `wp-check` green again.
+for a build that never comes back. **Record.** WP-M3-05 was first committed as one
+package (b551259, check v0.1.130 green). During implementation it exceeded the four
+`files-write` entries of §17, so it was split into **WP-M3-05** (shared error code,
+spec and labels) and **WP-M3-06** (the deadline in the agent); the superseded single
+document was removed (fb0197d). All check runs v0.1.130 … v0.1.134 are green.
 
 **Record correction (WP-M4-01 E2E repair).** The WP-M4-01 test never ran a green CI check
 run: its CI jobs v0.1.123 … v0.1.125 failed at the first UI step. Two defects: the test
