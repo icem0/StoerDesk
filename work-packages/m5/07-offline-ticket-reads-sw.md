@@ -1,7 +1,7 @@
 # WP-M5-07: assigned tickets stay readable offline (pwa)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M2-09a, WP-M2-18b
 phase: 5
 milestone: m5

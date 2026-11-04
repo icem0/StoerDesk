@@ -1,9 +1,10 @@
 import { precacheAndRoute } from 'workbox-precaching'
 import { BackgroundSyncPlugin } from 'workbox-background-sync'
-import { NetworkOnly } from 'workbox-strategies'
+import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
+import { ExpirationPlugin } from 'workbox-expiration'
 import { registerRoute } from 'workbox-routing'
 
-import { isPublicReportPath } from './lib/sw-routes'
+import { isInternalTicketRead, isPublicReportPath } from './lib/sw-routes'
 
 declare global {
   interface Window {
@@ -30,4 +31,18 @@ registerRoute(
   ({ url }) => isPublicReportPath(url.pathname),
   new NetworkOnly({ plugins: [reportQueue] }),
   'POST',
+)
+
+/**
+ * Assigned tickets stay readable offline: list and detail are served from the
+ * `internal-tickets` cache while the network revalidates in the background
+ * (WP-M5-07). Action paths (accept, claim, comments) stay network-only.
+ */
+registerRoute(
+  ({ url }) => isInternalTicketRead(url.pathname),
+  new StaleWhileRevalidate({
+    cacheName: 'internal-tickets',
+    plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 12 * 3600 })],
+  }),
+  'GET',
 )

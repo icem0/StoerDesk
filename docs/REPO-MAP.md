@@ -13,7 +13,7 @@ apps/
 │   │   ├── components/          Shell, AppVersion, NotFoundPage, RouteErrorPage — layout shell, version badge, not found page
 │   │   ├── features/            objects/sticker-page.tsx (WP-M2-03); tickets/report-form-page.tsx, image-compress.ts, photo-upload.tsx (WP-M2-05/05b), status-page.tsx (WP-M2-06b), offline-action-banner.tsx, use-internal-actions.ts (WP-M5-05/06); oncall, stats, settings (planned)
 │   │   ├── i18n/                i18next setup + locales/{de,en}/<ns>.json
-│   │   ├── lib/                 apiFetch client (credentials, ApiError), build version
+│   │   ├── lib/                 apiFetch client (credentials, ApiError), build version, service-worker route predicates (sw-routes.ts) and the precache/background-sync/stale-while-revalidate routes (sw.ts)
 │   │   ├── routes/              react-router route table
 │   │   ├── App.tsx, main.tsx    shell and React root
 │   │   └── styles.css           Tailwind entry
