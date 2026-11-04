@@ -1,7 +1,7 @@
 # WP-M2-67: the migration snapshot chain is complete again
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-19a, WP-M2-34
 phase: 2
 context-budget: 14k tokens
