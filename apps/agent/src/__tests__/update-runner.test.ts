@@ -20,6 +20,10 @@ function recorder(answers: Record<string, CommandResult> = {}): {
   const runner: CommandRunner = async (command, args, options) => {
     calls.push({ command, args: [...args], cwd: options?.cwd, env: options?.env })
 
+    if (command === 'git' && args.includes('--is-inside-work-tree')) {
+      return answers['git is-inside'] ?? { code: 0, stdout: 'true\n', stderr: '' }
+    }
+
     const key = `${command} ${args[0] ?? ''}`
 
     return answers[key] ?? { code: 0, stdout: '', stderr: '' }
@@ -41,11 +45,13 @@ function createRunner(
   runCommand: CommandRunner,
   onRunFinished: (run: AgentRun) => void,
   restoreOwnership = false,
+  composeProject?: string,
 ): UpdateRunner {
   return new UpdateRunner({
     checkoutPath: '/repo',
     projectDirectory: '/repo',
     composeFile: '/repo/docker-compose.yml',
+    composeProject,
     runCommand,
     restoreOwnership,
     onRunFinished,
@@ -63,13 +69,19 @@ describe('update runner', () => {
 
     expect(run.status).toBe('SUCCESS')
     expect(run.steps.map((step) => step.step)).toEqual(['git', 'compose', 'prune'])
-    expect(calls[0]).toMatchObject({
+
+    const pull = calls.find((call) => call.command === 'git' && call.args.includes('pull'))
+
+    expect(pull).toMatchObject({
       command: 'git',
-      args: ['-c', 'safe.directory=/repo', 'pull', '--ff-only'],
+      args: ['-c', 'safe.directory=/repo', 'pull', '--ff-only', '--autostash'],
       cwd: '/repo',
     })
-    expect(calls[0]?.env).toEqual({ GIT_TERMINAL_PROMPT: '0' })
-    expect(calls[1]).toMatchObject({
+    expect(pull?.env).toEqual({ GIT_TERMINAL_PROMPT: '0' })
+
+    const compose = calls.find((call) => call.command === 'docker' && call.args[0] === 'compose')
+
+    expect(compose).toMatchObject({
       command: 'docker',
       args: [
         'compose',
@@ -83,7 +95,9 @@ describe('update runner', () => {
       ],
       cwd: '/repo',
     })
-    expect(calls[2]).toMatchObject({ command: 'docker', args: ['image', 'prune', '-f'] })
+    expect(
+      calls.find((call) => call.command === 'docker' && call.args[0] === 'image'),
+    ).toMatchObject({ command: 'docker', args: ['image', 'prune', '-f'] })
   })
 
   it('refuses a second run while a run is active', async () => {
@@ -110,7 +124,12 @@ describe('update runner', () => {
     expect(run.status).toBe('FAILED')
     expect(run.errorCode).toBe('update_git_failed')
     expect(run.steps.map((step) => step.status)).toEqual(['failed', 'skipped', 'skipped'])
-    expect(calls.filter((call) => call.command === 'docker')).toHaveLength(0)
+    expect(
+      calls.filter((call) => call.command === 'docker' && call.args[0] === 'compose'),
+    ).toHaveLength(0)
+    expect(
+      calls.filter((call) => call.command === 'docker' && call.args[0] === 'image'),
+    ).toHaveLength(0)
   })
 
   it('carries the output of the failing pull as the error detail', async () => {
@@ -228,6 +247,75 @@ describe('update runner', () => {
     expect(calls.findIndex((call) => call.command === 'git')).toBeLessThan(
       calls.findIndex((call) => call.command === 'chown'),
     )
+  })
+
+  it('skips the pull when the checkout is no git work tree and still rebuilds', async () => {
+    const { calls, runner } = recorder({
+      'git is-inside': { code: 128, stdout: '', stderr: 'fatal: not a git repository' },
+    })
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.status).toBe('SUCCESS')
+    expect(run.steps.map((step) => step.status)).toEqual(['skipped', 'ok', 'ok'])
+    expect(calls.some((call) => call.command === 'git' && call.args.includes('pull'))).toBe(false)
+    expect(calls.some((call) => call.command === 'docker' && call.args[0] === 'compose')).toBe(true)
+  })
+
+  it('redeploys the panel project and keeps its running profiles', async () => {
+    const { calls, runner } = recorder({
+      'docker inspect': { code: 0, stdout: 'arcane-stoerdesk\n', stderr: '' },
+      'docker ps': {
+        code: 0,
+        stdout: 'db\napi\nweb\nbackup\nupdate-agent\n',
+        stderr: '',
+      },
+    })
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run))
+
+    await updates.start()
+    const run = await done.promise
+
+    expect(run.status).toBe('SUCCESS')
+
+    const compose = calls.find((call) => call.command === 'docker' && call.args[0] === 'compose')
+
+    expect(compose?.args).toContain('-p')
+    expect(compose?.args).toContain('arcane-stoerdesk')
+    expect(compose?.args).toContain('--profile')
+    expect(compose?.args).toContain('backup')
+    expect(compose?.args).not.toContain('update')
+
+    const prune = calls.find((call) => call.command === 'docker' && call.args[0] === 'image')
+
+    expect(prune?.args).toEqual([
+      'image',
+      'prune',
+      '-f',
+      '--filter',
+      'label=com.docker.compose.project=arcane-stoerdesk',
+    ])
+  })
+
+  it('uses a pinned compose project without inspecting its own container', async () => {
+    const { calls, runner } = recorder()
+    const done = deferred<AgentRun>()
+    const updates = createRunner(runner, (run) => done.resolve(run), false, 'stoerdesk')
+
+    await updates.start()
+    await done.promise
+
+    expect(calls.some((call) => call.command === 'docker' && call.args[0] === 'inspect')).toBe(
+      false,
+    )
+
+    const compose = calls.find((call) => call.command === 'docker' && call.args[0] === 'compose')
+
+    expect(compose?.args.slice(0, 3)).toEqual(['compose', '-p', 'stoerdesk'])
   })
 
   it('reads the commit of the checkout', async () => {

@@ -19,6 +19,11 @@ export const agentConfigSchema = z.object({
   checkoutPath: z.string().min(1).default('/repo'),
   projectDirectory: z.string().min(1).default('/repo'),
   composeFile: z.string().min(1).default('/repo/docker-compose.yml'),
+  /**
+   * The compose project of the running stack. Empty means that the agent reads
+   * it from its own container label, so a panel-specific project name works.
+   */
+  composeProject: z.string().default(''),
   stateDir: z.string().min(1).default('/state'),
 })
 
@@ -33,6 +38,7 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     checkoutPath: env.UPDATE_AGENT_CHECKOUT,
     projectDirectory: env.UPDATE_AGENT_PROJECT_DIR,
     composeFile: env.UPDATE_AGENT_COMPOSE_FILE,
+    composeProject: env.UPDATE_AGENT_COMPOSE_PROJECT,
     stateDir: env.UPDATE_AGENT_STATE_DIR,
   })
 }

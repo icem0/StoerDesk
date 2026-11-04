@@ -69,6 +69,7 @@ async function main(): Promise<void> {
     checkoutPath: config.checkoutPath,
     projectDirectory: config.projectDirectory,
     composeFile: config.composeFile,
+    composeProject: config.composeProject,
     runCommand: createCommandRunner(),
     onRunFinished: (run) => {
       lastRun = run

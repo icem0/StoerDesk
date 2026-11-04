@@ -37,13 +37,13 @@ docker compose up -d web
 
 ## Services
 
-| Service       | Profile  | Host port  | Purpose                                            |
-| ------------- | -------- | ---------- | -------------------------------------------------- |
-| `db`          | —        | none       | PostgreSQL 16, source of truth                     |
-| `api`         | —        | none       | Fastify API on port 3000; runs migrations on start |
-| `web`         | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
-| `backup`      | `backup` | none       | periodic `pg_dump` into the backup volume          |
-| `update-agent`| `update` | none       | host update: pull, rebuild, prune the old images   |
+| Service        | Profile  | Host port  | Purpose                                            |
+| -------------- | -------- | ---------- | -------------------------------------------------- |
+| `db`           | —        | none       | PostgreSQL 16, source of truth                     |
+| `api`          | —        | none       | Fastify API on port 3000; runs migrations on start |
+| `web`          | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
+| `backup`       | `backup` | none       | periodic `pg_dump` into the backup volume          |
+| `update-agent` | `update` | none       | host update: pull, rebuild, prune the old images   |
 
 The `web` container starts independently of the API: nginx resolves the API
 host per request, so the UI is reachable while the API is starting or
@@ -79,9 +79,17 @@ docker compose --profile update up -d update-agent
   request that triggered the run dies with it. The agent keeps the truth about
   the run, and the API reconciles the run row after its restart. The
   administration shows the result on `/admin/update`.
-- **The prune removes the dangling images** of the previous local build.
-  `docker image prune -a` is not used: it would delete the images of other
-  projects on a shared host.
+- **The prune removes the dangling images** of the previous build of this
+  project. `docker image prune -a` is not used: it would delete the images of
+  other projects on a shared host.
+- **Panels and non-git checkouts work.** When `/repo` is no git work tree (for
+  example an Arcane project folder), the pull step is skipped and the compose
+  build performs the update. The agent reads the compose project from its own
+  container label, so it redeploys the stack Arcane started instead of creating
+  a second one. Running optional profiles (`backup`) are kept; the `update`
+  profile is never touched, so the agent survives its own redeploy.
+  Prerequisite: `IMAGE_BUILD_CONTEXT` must point to the Git URL, otherwise the
+  build reuses the files of the project folder.
 
 Without the agent the administration reports that the agent is not reachable
 and shows the command that starts it; the client-side update of the PWA keeps

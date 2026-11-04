@@ -201,6 +201,10 @@ services:
       UPDATE_AGENT_CHECKOUT: /repo
       UPDATE_AGENT_PROJECT_DIR: /repo
       UPDATE_AGENT_COMPOSE_FILE: /repo/docker-compose.yml
+      # Empty: the agent reads the compose project from its own container
+      # label, so a panel-specific project name is redeployed instead of a
+      # second stack. Set it only to pin a project explicitly.
+      UPDATE_AGENT_COMPOSE_PROJECT: ${UPDATE_AGENT_COMPOSE_PROJECT:-}
       UPDATE_AGENT_STATE_DIR: /state
     volumes:
       - .:/repo

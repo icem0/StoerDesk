@@ -15,8 +15,8 @@ Deployment assumption for this instance: **host checkout + `docker compose up -d
   receives, stores or forwards an OS/Linux/sudo password. The whole feature is
   built on that rule.
 - Update triggers are authenticated like every other admin write: session cookie
-  + CSRF + a permission guard; errors are `{ code, params }`, never translated
-  text and never a secret.
+  - CSRF + a permission guard; errors are `{ code, params }`, never translated
+    text and never a secret.
 - The PWA clean update must not destroy unsent offline reports. While the Dexie
   outbox (`apps/web/src/lib/outbox.ts`) holds a row with status `queued` or
   `sending`, a forced cache clear / reload is blocked (§10).
@@ -64,7 +64,7 @@ in the `api` image. The topology is fixed by ADR-0006:
   compose profile `update`. A plain `docker compose up -d --build` skips a
   service whose profile is not enabled, so the agent is never recreated by the
   redeploy it triggers. It is started explicitly: `docker compose --profile
-  update up -d update-agent`.
+update up -d update-agent`.
 - Image: `node:22-alpine` plus `git`, `docker-cli` and `docker-cli-compose`
   (Alpine `main` / `community`); the agent code is bundled, no runtime npm
   dependencies.
@@ -73,18 +73,29 @@ in the `api` image. The topology is fixed by ADR-0006:
   the agent's last-run state. **No published port** — the agent listens only on
   the internal `backend` network at `http://update-agent:8080`.
 - Run steps, in this order:
-  1. `git -c safe.directory=/repo pull --ff-only` — the repository is public, so
-     no credential is needed; `GIT_TERMINAL_PROMPT=0` keeps it from blocking on
-     a prompt. The owner of the checkout is recorded before and restored after
-     the pull.
-  2. `docker compose --project-directory /repo -f /repo/docker-compose.yml up
-     -d --build` — the rebuild of `api` and `web`; the `api` container is
-     recreated, so the request that triggered the run dies with it.
-  3. `docker image prune -f` — the dangling images of the previous local build.
-     `docker image prune -a` is not used: it would delete the images of other
-     projects on a shared host.
+  1. `git -c safe.directory=/repo pull --ff-only --autostash` — the repository
+     is public, so no credential is needed; `GIT_TERMINAL_PROMPT=0` keeps it
+     from blocking on a prompt. The owner of the checkout is recorded before
+     and restored after the pull. When `/repo` is no git work tree (a panel
+     such as Arcane syncs or builds the sources itself), the step is skipped
+     instead of failing the run.
+  2. `docker compose -p <project> --project-directory /repo -f
+     /repo/docker-compose.yml up -d --build` — the rebuild of the whole running
+     stack; the `api` container is recreated, so the request
+     that triggered the run dies with it. The project is read from the agent's
+     own `com.docker.compose.project` label, so a panel-specific project name
+     is updated instead of a second stack being created. Profiles that are
+     running now (e.g. `backup`) stay enabled; the `update` profile never is,
+     because it contains the agent itself.
+  3. `docker image prune -f --filter
+label=com.docker.compose.project=<project>` — the dangling images of the
+     previous build of this project. `docker image prune -a` is not used: it
+     would delete the images of other projects on a shared host.
 - The agent decides what a run is. It accepts no path, no command and no
   arguments from a request.
+- A panel deployment must build from the Git URL (`IMAGE_BUILD_CONTEXT`,
+  `docs/DEPLOYMENT.md`), because without a checkout there is nothing to pull;
+  the compose build then fetches the new sources itself.
 - API contract (guarded, new permission `system.update`):
   - `GET  /api/v1/admin/update/status` — agent reachable, current/known version.
   - `POST /api/v1/admin/update/run` — trigger one update; writes an

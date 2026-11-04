@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The host update works in panel deployments (WP-M2-71): without a git work
+  tree the pull step is skipped instead of failing the run, so an Arcane project
+  folder updates through the compose build. The agent reads the compose project
+  from its own container label (no second stack), keeps running optional
+  profiles such as `backup`, never recreates itself through the `update`
+  profile, and prunes only the dangling images of its own project.
+
 - The host update page shows the raw failure detail (WP-M2-70): below the
   translated error code of the last run, a scrollable monospace block renders the
   sanitized output tail stored by the agent; no block appears when the run has
@@ -81,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (WP-M2-53): the image `stoerdesk-agent` is `node:22-alpine` with `git`,
   `docker-cli` and `docker-cli-compose`; the service `update-agent` lives
   behind the compose profile `update`, so the normal `docker compose up -d
-  --build` never touches it and the agent survives the redeploy it triggers. It
+--build` never touches it and the agent survives the redeploy it triggers. It
   is mounted with the checkout, the Docker socket and a state volume, listens
   only on the internal network and publishes no host port. `npm run env:create`
   generates the bearer `UPDATE_AGENT_TOKEN`.
@@ -94,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   agent does not lose it.
 - The update agent service core (WP-M2-51): the new workspace `apps/agent` holds the
   logic of a host update — `git pull` → `docker compose up -d --build` → `docker image
-  prune -f` — with the command runner injected, so the whole logic is tested without a
+prune -f` — with the command runner injected, so the whole logic is tested without a
   shell and without a Docker daemon. A run knows three steps and three error codes, never
   the output of a command, and the owner of the checkout is restored after the pull.
 - The `update_runs` table (WP-M2-50): one row per host update — status, the
@@ -129,11 +136,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   may now live in the `settings` row `bma.api.key` and wins over the `BMA_API_KEY`
   environment, so an image-based deployment that cannot edit `.env` is no longer stuck
   on `bma_not_configured`. New admin routes `GET`/`PUT`/`DELETE
-  /api/v1/admin/bma-sync/credentials` — the status answers `{ configured, source }`
+/api/v1/admin/bma-sync/credentials` — the status answers `{ configured, source }`
   (`db` / `env` / `none`) only, the stored key is never echoed, never logged and never
   written into a run row. ADR-0005 supersedes only the credential rule of ADR-0003; the
-read-only client and the `object.read` / `object.import` guards stay. The key field on
-the sync page followed in WP-M2-47.
+  read-only client and the `object.read` / `object.import` guards stay. The key field on
+  the sync page followed in WP-M2-47.
 - Self-update decision and spec (WP-M2-43, ADR-0004): the admin update control is
   an out-of-band host update agent, never shell execution in the `api` container
   and never an OS/Linux password. Stage 1 is implemented as a client-only clean PWA
@@ -148,7 +155,7 @@ the sync page followed in WP-M2-47.
 
 - The public report E2E smoke tests use the live fault catalog label `Line interruption`
   in English. The old expectation still waited for `Fire alarm system completely out of
-  service`, which the bootstrapped standard fault types no longer offer.
+service`, which the bootstrapped standard fault types no longer offer.
 - The version of the web shell reads the nearest **version** tag only. A moving pointer
   tag such as `latest` is not a version and must neither become the version in the
   header nor break the quality gate: the check run of the release `v0.1.0` failed

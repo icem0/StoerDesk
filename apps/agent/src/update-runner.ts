@@ -41,6 +41,12 @@ export interface UpdateRunnerOptions {
   projectDirectory: string
   /** The compose file of the project. */
   composeFile: string
+  /**
+   * The compose project the agent belongs to. Empty or absent means that the
+   * agent reads the project from its own container label, so it redeploys the
+   * stack it runs in — also when a panel started it with another project name.
+   */
+  composeProject?: string
   /** Runs a command. */
   runCommand: CommandRunner
   /** Restores the owner of the checkout after the pull (ADR-0006). */
@@ -145,6 +151,7 @@ export class UpdateRunner {
   private readonly checkoutPath: string
   private readonly projectDirectory: string
   private readonly composeFile: string
+  private readonly composeProject: string
   private readonly runCommand: CommandRunner
   private readonly restoreOwnership: boolean
   private readonly onRunFinished: ((run: AgentRun) => void | Promise<void>) | undefined
@@ -157,6 +164,7 @@ export class UpdateRunner {
     this.checkoutPath = options.checkoutPath
     this.projectDirectory = options.projectDirectory
     this.composeFile = options.composeFile
+    this.composeProject = options.composeProject ?? ''
     this.runCommand = options.runCommand
     this.restoreOwnership = options.restoreOwnership ?? true
     this.onRunFinished = options.onRunFinished
@@ -226,70 +234,188 @@ export class UpdateRunner {
     let step: UpdateStep = 'git'
 
     try {
-      const owner = this.restoreOwnership ? await this.readOwner() : null
+      const project = await this.resolveComposeProject()
 
-      const pulled = await this.step(
-        run,
-        step,
-        'git',
-        ['-c', `safe.directory=${this.checkoutPath}`, 'pull', '--ff-only'],
-        {
-          cwd: this.checkoutPath,
-          env: { GIT_TERMINAL_PROMPT: '0' },
-        },
-      )
-
-      if (owner !== null) {
-        await this.restoreOwner(owner)
-      }
-
-      if (!pulled.ok) {
-        this.skip(run, 'compose')
-        this.skip(run, 'prune')
-        await this.finish(run, 'FAILED', 'update_git_failed', pulled.detail)
+      if (!(await this.isGitCheckout())) {
+        // A panel such as Arcane syncs or builds the sources itself and leaves
+        // no git checkout behind. There is nothing to pull; the compose build
+        // is the update. Skipping beats failing the whole run.
+        this.skip(run, 'git')
       } else {
-        step = 'compose'
+        const owner = this.restoreOwnership ? await this.readOwner() : null
 
-        const composed = await this.step(
+        const pulled = await this.step(
           run,
           step,
-          'docker',
-          [
-            'compose',
-            '--project-directory',
-            this.projectDirectory,
-            '-f',
-            this.composeFile,
-            'up',
-            '-d',
-            '--build',
-          ],
-          // The compose client reads the `.env` of the project from its working
-          // directory — the checkout of the host.
-          { cwd: this.projectDirectory },
+          'git',
+          ['-c', `safe.directory=${this.checkoutPath}`, 'pull', '--ff-only', '--autostash'],
+          {
+            cwd: this.checkoutPath,
+            env: { GIT_TERMINAL_PROMPT: '0' },
+          },
         )
 
-        if (!composed.ok) {
-          this.skip(run, 'prune')
-          await this.finish(run, 'PARTIAL', 'update_compose_failed', composed.detail)
-        } else {
-          step = 'prune'
-
-          const pruned = await this.step(run, step, 'docker', ['image', 'prune', '-f'])
-
-          await this.finish(
-            run,
-            pruned.ok ? 'SUCCESS' : 'PARTIAL',
-            pruned.ok ? null : 'update_prune_failed',
-            pruned.detail,
-          )
+        if (owner !== null) {
+          await this.restoreOwner(owner)
         }
+
+        if (!pulled.ok) {
+          this.skip(run, 'compose')
+          this.skip(run, 'prune')
+          await this.finish(run, 'FAILED', 'update_git_failed', pulled.detail)
+          await this.onRunFinished?.(run)
+
+          return
+        }
+      }
+
+      step = 'compose'
+
+      const composed = await this.step(
+        run,
+        step,
+        'docker',
+        await this.composeArgs(project),
+        // The compose client reads the `.env` of the project from its working
+        // directory — the checkout of the host.
+        { cwd: this.projectDirectory },
+      )
+
+      if (!composed.ok) {
+        this.skip(run, 'prune')
+        await this.finish(run, 'PARTIAL', 'update_compose_failed', composed.detail)
+      } else {
+        step = 'prune'
+
+        const pruned = await this.step(run, step, 'docker', this.pruneArgs(project))
+
+        await this.finish(
+          run,
+          pruned.ok ? 'SUCCESS' : 'PARTIAL',
+          pruned.ok ? null : 'update_prune_failed',
+          pruned.detail,
+        )
       }
     } catch {
       await this.finish(run, 'FAILED', STEP_ERROR_CODES[step], null)
     }
 
     await this.onRunFinished?.(run)
+  }
+
+  /**
+   * The compose project of the running stack. A deployment panel may start the
+   * stack under its own project name; redeploying with the file name instead
+   * would create a second stack next to the running one. The label of the own
+   * container is the reliable source.
+   */
+  private async resolveComposeProject(): Promise<string | null> {
+    if (this.composeProject !== '') {
+      return this.composeProject
+    }
+
+    const hostname = process.env.HOSTNAME ?? ''
+
+    if (hostname === '') {
+      return null
+    }
+
+    const result = await this.runCommand('docker', [
+      'inspect',
+      '--type',
+      'container',
+      '--format',
+      '{{ index .Config.Labels "com.docker.compose.project" }}',
+      hostname,
+    ])
+
+    if (result.code !== 0) {
+      return null
+    }
+
+    const project = result.stdout.trim()
+
+    return project === '' || project === '<no value>' ? null : project
+  }
+
+  /** Whether the checkout is a git work tree (a panel sync may leave none). */
+  private async isGitCheckout(): Promise<boolean> {
+    const result = await this.runCommand(
+      'git',
+      ['-c', `safe.directory=${this.checkoutPath}`, 'rev-parse', '--is-inside-work-tree'],
+      { cwd: this.checkoutPath, env: { GIT_TERMINAL_PROMPT: '0' } },
+    )
+
+    return result.code === 0 && result.stdout.trim() === 'true'
+  }
+
+  /**
+   * The compose command of the redeploy. Optional profiles that are running
+   * now (e.g. `backup`) are kept, so the update covers every running container
+   * of the stack. The profile `update` is never enabled: it contains the agent
+   * itself, which must survive the redeploy it triggers.
+   */
+  private async composeArgs(project: string | null): Promise<string[]> {
+    const args = ['compose']
+
+    if (project !== null) {
+      args.push('-p', project)
+    }
+
+    if (project !== null) {
+      const services = await this.runningServices(project)
+
+      if (services.includes('backup')) {
+        args.push('--profile', 'backup')
+      }
+    }
+
+    args.push(
+      '--project-directory',
+      this.projectDirectory,
+      '-f',
+      this.composeFile,
+      'up',
+      '-d',
+      '--build',
+    )
+
+    return args
+  }
+
+  /** The services of the project that currently run on the host. */
+  private async runningServices(project: string): Promise<string[]> {
+    const result = await this.runCommand('docker', [
+      'ps',
+      '--filter',
+      `label=com.docker.compose.project=${project}`,
+      '--format',
+      '{{.Label "com.docker.compose.service"}}',
+    ])
+
+    if (result.code !== 0) {
+      return []
+    }
+
+    return result.stdout
+      .split('\n')
+      .map((service) => service.trim())
+      .filter((service) => service !== '')
+  }
+
+  /**
+   * The prune of the old images. With a known project the filter keeps the
+   * images of other projects on a shared host untouched; without one it falls
+   * back to the plain prune of dangling images.
+   */
+  private pruneArgs(project: string | null): string[] {
+    const args = ['image', 'prune', '-f']
+
+    if (project !== null) {
+      args.push('--filter', `label=com.docker.compose.project=${project}`)
+    }
+
+    return args
   }
 
   private async step(
