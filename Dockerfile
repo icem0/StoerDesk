@@ -7,7 +7,6 @@ ENV CI=true
 COPY package.json package-lock.json* ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
-COPY apps/agent/package.json apps/agent/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN npm ci
 
@@ -69,24 +68,3 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 COPY apps/web/nginx-pwa.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=web-build /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 80
-
-# ---------- Update agent ----------
-# The host update agent (ADR-0006): it pulls the repository, rebuilds the stack
-# and prunes the old images. It is the only image with `git` and the Docker CLI.
-FROM base AS agent-build
-COPY tsconfig.base.json ./
-COPY packages/shared packages/shared
-COPY apps/agent apps/agent
-RUN npm run build --workspace @stoerdesk/agent
-
-FROM node:22-alpine AS agent
-WORKDIR /app
-ENV NODE_ENV=production
-# `git` pulls the checkout, `docker-cli` and `docker-cli-compose` rebuild and
-# prune the stack. Both docker packages live in the Alpine community repository.
-RUN apk add --no-cache git docker-cli docker-cli-compose
-COPY --from=agent-build /app/apps/agent/dist apps/agent/dist
-# The agent needs the Docker socket, which is owned by root: it runs as root and
-# restores the owner of the checkout after the pull.
-EXPOSE 8080
-CMD ["node", "apps/agent/dist/index.js"]

@@ -15,20 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the commits behind it and a button that starts the deployment after an
   explicit confirmation. Every other user keeps the plain version text.
 
-### Changed
-
-- The page `/admin/update` and its host update section are gone (WP-M3-10); the
-  update lives in the version badge of the header now. The PWA updates itself
-  (`registerType: autoUpdate`), so the manual cache control of the old page is
-  not needed any more.
-
-- The stack carries the configuration of the update control (WP-M3-09): the
-  `api` image takes the build argument `GIT_COMMIT` and the tracked `VERSION`
-  file, the compose file passes the keys `GITHUB_REPO`, `GITHUB_BRANCH`,
-  `GITHUB_TOKEN`, `UPDATE_WEBHOOK_URL` and `UPDATE_WEBHOOK_TOKEN` to the API
-  and gives it `host.docker.internal:host-gateway`, so a deploy hook on the
-  host is reachable. `.env.example` documents the keys.
-
 - The update control of the administration is replaced by a GitHub check and a
   deploy webhook (ADR-0007, WP-M3-07 … WP-M3-08): `GET /api/v1/admin/update/check`
   answers the installed version, the newest commit of the branch and the
@@ -37,6 +23,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `X-Deploy-Token` and answers immediately — the deployment replaces the API
   container. A second start inside five minutes is refused. The tokens belong
   to the API and never reach the browser.
+
+- The stack carries the configuration of the update control (WP-M3-09): the
+  `api` image takes the build argument `GIT_COMMIT` and the tracked `VERSION`
+  file, the compose file passes the keys `GITHUB_REPO`, `GITHUB_BRANCH`,
+  `GITHUB_TOKEN`, `UPDATE_WEBHOOK_URL` and `UPDATE_WEBHOOK_TOKEN` to the API
+  and gives it `host.docker.internal:host-gateway`, so a deploy hook on the
+  host is reachable. `.env.example` documents the keys.
+
+### Changed
+
+- The page `/admin/update` and its host update section are gone (WP-M3-10); the
+  update lives in the version badge of the header now. The PWA updates itself
+  (`registerType: autoUpdate`), so the manual cache control of the old page is
+  not needed any more.
+- The update agent is retired (WP-M3-11, ADR-0007): the workspace `apps/agent`,
+  the compose service `update-agent`, the `agent` target of the `Dockerfile`, the
+  environment keys `UPDATE_AGENT_*` and the state volume `update-state` are
+  gone. The deployment of the stack is triggered by the webhook of the operator
+  (or by `scripts/update.sh` on the host), the application needs no privileged
+  container any more. The table `update_runs` stays as the history of the
+  retired runs.
 
 - The Dexie outbox learns the offline internal writes (WP-M5-01): a v2 table
   `internal_actions` queues acknowledge, comment and decline with their own

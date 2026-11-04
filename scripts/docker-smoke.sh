@@ -59,10 +59,6 @@ printf 'compose config ok (project %s, web port %s)\n' "$project" "$web_port"
 
 # --- 2. images ---
 compose build
-# The image of the update agent is not part of the normal stack (profile
-# "update"), but it has to be buildable: CI proves that the Alpine packages for
-# git and the Docker CLI exist and that the bundle of the agent builds.
-compose --profile update build update-agent
 
 # --- 3. start ---
 compose up -d

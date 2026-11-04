@@ -1,72 +1,74 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  agentStatusSchema,
-  updateRunSchema,
-  updateRunsResponseSchema,
-  updateStatusResponseSchema,
+  updateCheckResponseSchema,
+  updateCommitSchema,
+  updateStartResponseSchema,
 } from '../schemas/update.js'
 
 describe('update schemas', () => {
-  it('accepts a complete agent status', () => {
-    const parsed = agentStatusSchema.parse({
-      state: 'idle',
-      checkout: { version: 'v0.1.79', commit: 'abc1234' },
-      lastRun: {
-        id: 'run-1',
-        status: 'SUCCESS',
-        startedAt: '2026-11-03T10:00:00.000Z',
-        finishedAt: '2026-11-03T10:01:00.000Z',
-        beforeVersion: 'v0.1.78',
-        afterVersion: 'v0.1.79',
-        errorCode: null,
-        steps: [{ step: 'git', status: 'ok', errorCode: null }],
-      },
+  it('accepts a commit of the check answer', () => {
+    const parsed = updateCommitSchema.parse({
+      sha: '1a2b3c4d5e6f',
+      message: 'fix(api): answer the check',
+      date: '2026-11-04T10:00:00.000Z',
     })
 
-    expect(parsed.state).toBe('idle')
-    expect(parsed.lastRun?.afterVersion).toBe('v0.1.79')
+    expect(parsed.sha).toBe('1a2b3c4d5e6f')
+    expect(parsed.message).toBe('fix(api): answer the check')
   })
 
-  it('rejects a malformed agent answer', () => {
-    expect(() => agentStatusSchema.parse({ state: 'unknown' })).toThrow()
-    expect(() => agentStatusSchema.parse({ state: 'idle', checkout: {} })).toThrow()
+  it('rejects a commit without a sha', () => {
+    expect(() => updateCommitSchema.parse({ message: 'fix', date: '2026-11-04T10:00:00.000Z' })).toThrow()
   })
 
-  it('rejects a run row without an id or with an unknown status', () => {
-    expect(() => updateRunSchema.parse({ id: 'not-a-uuid', status: 'SUCCESS' })).toThrow()
+  it('answers the check of the admin route', () => {
+    const parsed = updateCheckResponseSchema.parse({
+      current: 'abc1234def5678',
+      latest: '1a2b3c4',
+      updateAvailable: true,
+      commitsBehind: 2,
+      commits: [
+        { sha: '1a2b3c4', message: 'fix(api): one', date: '2026-11-04T10:00:00.000Z' },
+        { sha: '2b3c4d5', message: 'fix(api): two', date: '2026-11-04T09:00:00.000Z' },
+      ],
+      checkedAt: '2026-11-04T10:05:00.000Z',
+    })
+
+    expect(parsed.updateAvailable).toBe(true)
+    expect(parsed.commitsBehind).toBe(2)
+    expect(parsed.commits).toHaveLength(2)
+  })
+
+  it('accepts an unknown installed version and an unknown comparison', () => {
+    const parsed = updateCheckResponseSchema.parse({
+      current: null,
+      latest: null,
+      updateAvailable: false,
+      commitsBehind: null,
+      commits: [],
+      checkedAt: '2026-11-04T10:05:00.000Z',
+    })
+
+    expect(parsed.current).toBeNull()
+    expect(parsed.commitsBehind).toBeNull()
+  })
+
+  it('rejects a negative number of commits', () => {
     expect(() =>
-      updateRunSchema.parse({
-        id: '8f14e45f-ceea-4b1a-9d2c-6f3a5b7c8d90',
-        status: 'DONE',
+      updateCheckResponseSchema.parse({
+        current: 'abc1234',
+        latest: '1a2b3c4',
+        updateAvailable: false,
+        commitsBehind: -1,
+        commits: [],
+        checkedAt: '2026-11-04T10:05:00.000Z',
       }),
     ).toThrow()
   })
 
-  it('answers the status of the admin routes', () => {
-    const status = updateStatusResponseSchema.parse({
-      agent: { reachable: false, state: null, error: 'update_agent_not_configured' },
-      running: false,
-      currentVersion: null,
-      lastRun: null,
-    })
-
-    expect(status.agent.reachable).toBe(false)
-    expect(status.agent.error).toBe('update_agent_not_configured')
-
-    const runs = updateRunsResponseSchema.parse({ runs: [] })
-
-    expect(runs.runs).toEqual([])
-  })
-
-  it('rejects an unknown agent error', () => {
-    expect(() =>
-      updateStatusResponseSchema.parse({
-        agent: { reachable: false, state: null, error: 'update_broken' },
-        running: false,
-        currentVersion: null,
-        lastRun: null,
-      }),
-    ).toThrow()
+  it('answers the start of the admin route', () => {
+    expect(updateStartResponseSchema.parse({ started: true }).started).toBe(true)
+    expect(() => updateStartResponseSchema.parse({ started: 'yes' })).toThrow()
   })
 })

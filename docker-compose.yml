@@ -5,7 +5,6 @@
 #
 #   docker compose up -d --build                 # core stack (db, api, web)
 #   docker compose --profile backup up -d       # + periodic database dumps
-#   docker compose --profile update up -d update-agent  # + host update agent
 #
 # Profiles are independent and can be combined.
 
@@ -92,9 +91,6 @@ services:
       - 'host.docker.internal:host-gateway'
     volumes:
       - uploads:/data/uploads
-      # The state volume of the update agent, read-only: the API reads the
-      # token of the agent there, so the operator configures no secret.
-      - update-state:/agent-state:ro
     healthcheck:
       test:
         - CMD
@@ -184,53 +180,6 @@ services:
     networks:
       - backend
 
-  # Host update agent (profile "update"): pulls the repository, rebuilds the
-  # stack and prunes the old images (ADR-0006).
-  #
-  # The profile keeps the agent out of a plain `docker compose up -d --build`,
-  # so the agent is never recreated by the redeploy it triggers itself. It is
-  # started explicitly:
-  #
-  #   docker compose --profile update up -d update-agent
-  #
-  # The agent listens only on the internal `backend` network and answers only
-  # with the bearer UPDATE_AGENT_TOKEN. It has no published host port.
-  update-agent:
-    build:
-      context: ${IMAGE_BUILD_CONTEXT:-.}
-      target: agent
-    image: stoerdesk-agent:latest
-    profiles:
-      - update
-    restart: unless-stopped
-    environment:
-      # The bearer of the agent. An empty value stops the agent with a clear
-      # message instead of starting it without a secret.
-      UPDATE_AGENT_TOKEN: ${UPDATE_AGENT_TOKEN:-}
-      UPDATE_AGENT_PORT: ${UPDATE_AGENT_PORT:-8080}
-      # The checkout of the host is mounted read-write: the agent pulls it and
-      # the compose client of the agent reads the build context from it.
-      UPDATE_AGENT_CHECKOUT: /repo
-      UPDATE_AGENT_PROJECT_DIR: /repo
-      UPDATE_AGENT_COMPOSE_FILE: /repo/docker-compose.yml
-      # Empty: the agent reads the compose project from its own container
-      # label, so a panel-specific project name is redeployed instead of a
-      # second stack. Set it only to pin a project explicitly.
-      UPDATE_AGENT_COMPOSE_PROJECT: ${UPDATE_AGENT_COMPOSE_PROJECT:-}
-      UPDATE_AGENT_STATE_DIR: /state
-    volumes:
-      - .:/repo
-      # The Docker socket is the only host privilege of the agent.
-      - /var/run/docker.sock:/var/run/docker.sock
-      - update-state:/state
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-    networks:
-      - backend
-
 volumes:
   # Postgres data (survives `docker compose down`).
   pgdata:
@@ -241,9 +190,6 @@ volumes:
   # Compressed database dumps.
   backups:
     name: ${BACKUP_VOLUME:-stoerdesk_backups}
-  # The last run of the update agent.
-  update-state:
-    name: ${UPDATE_STATE_VOLUME:-stoerdesk_update_state}
 
 networks:
   # Database, API and web frontend.

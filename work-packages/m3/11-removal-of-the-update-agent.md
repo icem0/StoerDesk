@@ -1,7 +1,7 @@
 # WP-M3-11: the removal of the update agent
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M3-10
 phase: 3
 milestone: m3
@@ -67,9 +67,19 @@ lock file knows no agent workspace.
 
 ## Handoff
 
-- Files changed: the agent workspace, the `Dockerfile`, the compose file, the
-  environment template, the lock file
-- Interfaces added: none — interfaces are removed
-- Verified: pending
+- Files changed: the workspace `apps/agent` is deleted, `Dockerfile` (no
+  `agent` target), `docker-compose.yml` (no service `update-agent`, no volume
+  `update-state`), `scripts/docker-smoke.sh` (no agent build),
+  `package-lock.json` (no workspace),
+  `packages/shared/src/schemas/update.ts` (the contracts of the agent are
+  replaced by the contracts of the update control),
+  `packages/shared/src/__tests__/update.test.ts`, `docs/REPO-MAP.md`,
+  `CHANGELOG.md`
+- Interfaces added: none — the service `update-agent`, the target `agent`, the
+  keys `UPDATE_AGENT_*` and the volume `update-state` are removed
+- Verified: `npm run check` (61 files, 383 tests, i18n and wp-check green);
+  `sh -n scripts/docker-smoke.sh` and the parse of the compose file are green —
+  `docker compose config` itself is unverified, because this development
+  container has no Docker daemon
 - Follow-up WP: WP-M3-12 (the documentation)
 - Open question: none
