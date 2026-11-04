@@ -163,7 +163,36 @@
     "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
     "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
     "unknown": "Speichern fehlgeschlagen."
-   }
+    }
+  },
+  "groups": {
+    "title": "Gruppenverwaltung",
+    "loading": "Lädt …",
+    "sessionNotice": "Die Gruppenverwaltung benötigt eine gültige Anmeldung.",
+    "forbiddenNotice": "Keine Berechtigung für die Gruppenverwaltung.",
+    "table": {
+      "name": "Name",
+      "users": "Benutzer",
+      "actions": "Aktionen"
+    },
+    "createTitle": "Gruppe anlegen",
+    "editTitle": "Gruppe {{name}} bearbeiten",
+    "create": "Anlegen",
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "fields": {
+      "name": "Name"
+    },
+    "errors": {
+      "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+      "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+      "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+      "group_not_found": "Gruppe nicht gefunden.",
+      "group_name_taken": "Dieser Gruppenname ist bereits vergeben.",
+      "group_in_use": "Die Gruppe wird noch von Benutzern verwendet.",
+      "unknown": "Speichern fehlgeschlagen."
+    }
   },
   "textTemplates": {
    "title": "Störungsarten",

@@ -163,7 +163,36 @@
     "role_in_use": "Users still hold this role.",
     "unknown_permission_key": "Unknown permission in the selection.",
     "unknown": "Saving failed."
-   }
+    }
+  },
+  "groups": {
+    "title": "Group administration",
+    "loading": "Loading …",
+    "sessionNotice": "Group administration requires a valid sign-in.",
+    "forbiddenNotice": "No permission for group administration.",
+    "table": {
+      "name": "Name",
+      "users": "Users",
+      "actions": "Actions"
+    },
+    "createTitle": "Create group",
+    "editTitle": "Edit group {{name}}",
+    "create": "Create",
+    "edit": "Edit",
+    "save": "Save",
+    "delete": "Delete",
+    "fields": {
+      "name": "Name"
+    },
+    "errors": {
+      "session_invalid": "Session expired – please sign in again.",
+      "forbidden": "Access denied – missing permission.",
+      "invalid_request": "Invalid input – please check the fields.",
+      "group_not_found": "Group not found.",
+      "group_name_taken": "This group name is already taken.",
+      "group_in_use": "Users still belong to this group.",
+      "unknown": "Saving failed."
+    }
   },
   "textTemplates": {
    "title": "Fault types",

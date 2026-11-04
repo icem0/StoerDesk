@@ -6,6 +6,7 @@ import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
+import { GroupsPage } from '../admin/groups-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
@@ -69,6 +70,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/groups',
+        element: (
+          <RequireSession>
+            <GroupsPage />
           </RequireSession>
         ),
       },
