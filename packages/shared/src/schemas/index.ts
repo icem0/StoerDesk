@@ -1,5 +1,6 @@
 export * from './auth.js'
 export * from './bmacloud.js'
+export * from './group.js'
 export * from './object.js'
 export * from './role.js'
 export * from './settings.js'
