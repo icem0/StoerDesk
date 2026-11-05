@@ -1,7 +1,7 @@
 # WP-M6-05: pause service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-04
 phase: 6
 milestone: m6
