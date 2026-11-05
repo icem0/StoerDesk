@@ -324,7 +324,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
 | WP-M6-04  | `ticket_pauses` table and migration 0014                            | done                    | yes     |
 | WP-M6-05  | pause service                                                       | done                    | yes     |
-| WP-M6-06  | pause routes and acknowledge auto-close                             | planned                 | yes     |
+| WP-M6-06  | pause routes and acknowledge auto-close                             | done                    | yes     |
 | WP-M6-07  | escalation rule definitions                                         | planned                 | yes     |
 | WP-M6-08  | escalation scan and event writer                                    | planned                 | yes     |
 | WP-M6-09  | pg-boss escalation job                                              | planned                 | yes     |

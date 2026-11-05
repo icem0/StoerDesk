@@ -1,5 +1,10 @@
 import { and, eq, isNull } from 'drizzle-orm'
+import fp from 'fastify-plugin'
+import type { FastifyReply } from 'fastify'
+import { z } from 'zod'
+import { PERMISSIONS } from '@stoerdesk/shared'
 
+import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { ticketEvents, ticketPauses, tickets } from '../db/schema'
 
@@ -170,6 +175,67 @@ export async function endTicketPause(
     return { ticketNo: ticket.ticketNo, pause, eventId: event.id }
   })
 }
+
+const PAUSE_BODY = z.object({ reason: z.string().trim().min(3).max(500) })
+
+function sendPauseError(reply: FastifyReply, error: unknown) {
+  if (error instanceof PauseError) {
+    return reply.code(error.statusCode).send({ code: error.code, params: error.params })
+  }
+
+  throw error
+}
+
+/**
+ * `POST /api/v1/tickets/:ticketNo/pause` and `/resume` (`specs/05-timeline.md`
+ * §5.2/§5.4, WP-M6-06). Pausing is an office action, so both routes use
+ * `ticket.review`; the pause is online-only like the claim of `PLAN.md` §10.
+ */
+export const pauseRoutes = fp<{ database: Db }>(
+  async (app, { database }) => {
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/pause',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.review) },
+      async (request, reply) => {
+        const parsed = PAUSE_BODY.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['reason'] } })
+        }
+
+        try {
+          const result = await startTicketPause(database, {
+            ticketNo: request.params.ticketNo,
+            actorUserId: request.user?.id ?? '',
+            reason: parsed.data.reason,
+          })
+
+          return reply.code(201).send({ ticketNo: result.ticketNo, pause: result.pause })
+        } catch (error) {
+          return sendPauseError(reply, error)
+        }
+      },
+    )
+
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/resume',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.review) },
+      async (request, reply) => {
+        try {
+          const result = await endTicketPause(database, {
+            ticketNo: request.params.ticketNo,
+            actorUserId: request.user?.id ?? '',
+          })
+
+          return reply.code(200).send({ ticketNo: result.ticketNo, pause: result.pause })
+        } catch (error) {
+          return sendPauseError(reply, error)
+        }
+      },
+    )
+  },
+  { name: 'stoerdesk-pause-routes' },
+)
 
 /** Ends the open pause of a ticket inside an existing transaction. */
 export async function closeOpenPause(

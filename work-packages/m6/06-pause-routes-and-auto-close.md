@@ -1,7 +1,7 @@
 # WP-M6-06: pause routes and acknowledge auto-close
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-05
 phase: 6
 milestone: m6

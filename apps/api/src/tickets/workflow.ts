@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
 import { ticketEvents, tickets } from '../db/schema'
+import { closeOpenPause } from './pauses'
 
 /**
  * Ticket state machine (`PLAN.md` §7, WP-M2-19b).
@@ -133,6 +134,16 @@ export async function transitionTicket(ctx: TransitionContext) {
 
     if (insertedEvent === undefined) {
       throw TICKET_NOT_FOUND(ticketId)
+    }
+
+    // The timeline stops at acknowledgement and the ticket leaves the workflow;
+    // an open wait reason must not outlive that step (specs/05-timeline.md §5.2).
+    if (event === 'acknowledged' || event === 'closed' || event === 'cancelled') {
+      await closeOpenPause(tx, {
+        ticketId,
+        actorUserId,
+        at: new Date(),
+      })
     }
 
     return { ticket: updated, event: insertedEvent }

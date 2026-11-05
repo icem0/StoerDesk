@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import * as schema from '../../db/schema'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import { PauseError, endTicketPause, startTicketPause } from '../pauses'
+import { transitionTicket } from '../workflow'
 
 const testDatabase = await openTestDatabase()
 
@@ -110,6 +111,38 @@ describe.skipIf(testDatabase.status === 'unavailable')('pause service (integrati
       .where(eq(ticketPauses.ticketId, started.pause.ticketId))
 
     expect(pauses).toHaveLength(1)
+  })
+
+  it('ends an open pause when the ticket is acknowledged', async () => {
+    const started = await startTicketPause(db, {
+      ticketNo,
+      actorUserId,
+      reason: 'open during acknowledgement',
+    })
+
+    const [ticket] = await db
+      .select({ id: tickets.id })
+      .from(tickets)
+      .where(eq(tickets.ticketNo, ticketNo))
+      .limit(1)
+
+    for (const event of ['work_order_set', 'assigned', 'accepted', 'acknowledged']) {
+      await transitionTicket({
+        database: db,
+        ticketId: ticket?.id ?? '',
+        event,
+        actorUserId,
+        payload: event === 'acknowledged' ? { result: 'fixed' } : {},
+      })
+    }
+
+    const [closed] = await db
+      .select({ endedAt: ticketPauses.endedAt })
+      .from(ticketPauses)
+      .where(eq(ticketPauses.id, started.pause.id))
+      .limit(1)
+
+    expect(closed?.endedAt).not.toBeNull()
   })
 
   it('rejects a pause on an acknowledged ticket', async () => {
