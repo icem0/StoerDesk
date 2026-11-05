@@ -10,6 +10,7 @@ import { usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
 import { useInternalActions } from './use-internal-actions'
 import { OfflineActionBanner } from './offline-action-banner'
+import { TicketTimeline } from './ticket-timeline'
 
 /**
  * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d).
@@ -148,6 +149,34 @@ export function TicketDetailPage() {
     }
   }
 
+  async function handlePause(reason: string) {
+    if (ticketNo === undefined) return
+    try {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}/pause`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      })
+      void ticketQuery.refetch()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        alert(error.code ?? t('detail.errors.actionFailed'))
+      }
+    }
+  }
+
+  async function handleResume() {
+    if (ticketNo === undefined) return
+    try {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}/resume`, { method: 'POST' })
+      void ticketQuery.refetch()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        alert(error.code ?? t('detail.errors.actionFailed'))
+      }
+    }
+  }
+
   if (ticketQuery.isPending) {
     return <p className="text-slate-400">{t('detail.loading')}</p>
   }
@@ -163,6 +192,8 @@ export function TicketDetailPage() {
   if (ticket === undefined) {
     return <p className="text-rose-400 text-sm" role="alert">{t('detail.errors.notFound')}</p>
   }
+
+  const timelineData = ticketQuery.data!.timeline
 
   return (
     <section className="flex flex-col gap-4">
@@ -295,6 +326,17 @@ export function TicketDetailPage() {
           </div>
         )}
       </div>
+
+      <TicketTimeline
+        reportedAt={timelineData.reportedAt}
+        deadlineAt={timelineData.deadlineAt}
+        stoppedAt={timelineData.stoppedAt}
+        pauses={ticketQuery.data!.pauses}
+        markers={timelineData.markers}
+        status={ticket.status}
+        onPause={handlePause}
+        onResume={handleResume}
+      />
 
       <div className="col-span-full">
         <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">

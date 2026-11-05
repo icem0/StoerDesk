@@ -329,7 +329,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-08  | escalation scan and event writer                                    | planned                 | yes     |
 | WP-M6-09  | pg-boss escalation job                                              | planned                 | yes     |
 | WP-M6-10  | timeline and pause data in the ticket API                           | done                    | yes     |
-| WP-M6-11  | web timeline bar and pause controls                                 | planned                 | yes     |
+| WP-M6-11  | web timeline bar and pause controls                                 | done                    | yes     |
 | WP-M6-12  | list mini timeline and remaining time                               | planned                 | yes     |
 | WP-M6-13  | phase-6 exit criterion and record                                   | planned                 | yes     |
 

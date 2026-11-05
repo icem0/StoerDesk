@@ -1,7 +1,7 @@
 # WP-M6-11: web timeline bar and pause controls
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-10
 phase: 6
 milestone: m6

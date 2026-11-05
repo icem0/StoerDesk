@@ -181,6 +181,18 @@
       "not_found": "Zu diesem Statuslink gibt es keine Meldung. Bitte den Link aus der Bestätigung erneut öffnen."
     }
   },
+  "timeline": {
+    "title": "Zeitlinie",
+    "remaining": "Noch {{hours}} Std.",
+    "overdue": "Seit {{hours}} Std. überfällig",
+    "stopped": "Bei Quittierung angehalten",
+    "pause": "Pause starten",
+    "resume": "Pause beenden",
+    "pauseReason": "Offene Pause: {{reason}}",
+    "prompt": {
+      "reason": "Wartegrund (mind. 3 Zeichen):"
+    }
+  },
   "list": {
     "title": "Meldungen",
     "hint": "Alle Vorgänge mit Suche und Filter. Detailansicht folgt in einem der nächsten Pakete.",
