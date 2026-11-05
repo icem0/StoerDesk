@@ -22,7 +22,6 @@ vi.mock('altcha/i18n/en', () => ({}))
  */
 const SCANNED_TOKEN = 'Zx8Q_-3vLm2pQ7tYw4KdBe'
 const CURRENT_TOKEN = 'Ab3dEf6gHij2pQr7tYw4Kd'
-const SYSTEM_ID = '22222222-2222-4222-8222-222222222222'
 const NOTICE = 'Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.'
 
 /** The challenge of the API (WP-M2-07b) in the `altcha-lib` v1 format. */
@@ -54,7 +53,6 @@ const RESOLVE: QrResolveResponse = {
     houseNumber: '12',
     postalCode: '12345',
     city: 'Beispielstadt',
-    systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
   },
 }
 
@@ -173,9 +171,6 @@ describe('ReportFormPage', () => {
 
     expect(screen.getByText('12345_01')).toBeTruthy()
     expect(screen.getByText('Bahnhofstrasse 12, 12345 Beispielstadt')).toBeTruthy()
-    // The object has exactly one system, so it is prefilled (§7.2).
-    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe(SYSTEM_ID)
-    expect(screen.getByRole('option', { name: 'BMA Mitte (BMA)' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Störung Melder' })).toBeTruthy()
     expect(screen.getAllByRole('button')).toHaveLength(9)
     expect(screen.getByText(NOTICE)).toBeTruthy()
@@ -250,7 +245,6 @@ describe('ReportFormPage', () => {
     expect(body.clientUuid).toMatch(/^[0-9a-f-]{36}$/)
     expect(body.text).toBe('Rauchmelder im 2. Obergeschoss blinkt.')
     expect(body.faultTemplateKeys).toEqual(['bma.detector_fault'])
-    expect(body.systemId).toBe(SYSTEM_ID)
     expect(body.contact).toEqual({ name: '', phone: '030 123456', email: '' })
     expect(body.locale).toBe('de')
     expect(body.photos).toEqual([])
@@ -277,9 +271,8 @@ describe('ReportFormPage', () => {
         bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
         attempts += 1
 
-        // The prefilled system is stale in this run: the server answers `422` once (§7.3.2).
         return attempts === 1
-          ? Response.json({ code: 'system_not_found', params: {} }, { status: 422 })
+          ? Response.json({ code: 'rate_limited', params: {} }, { status: 429 })
           : Response.json(REPORT, { status: 201 })
       }),
     )
@@ -288,18 +281,14 @@ describe('ReportFormPage', () => {
     fillReport('Leitungsunterbrechung', 'Leitung im Keller gestört.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
-    expect(
-      await screen.findByText('Die gewählte Anlage gehört nicht zu diesem Objekt.'),
-    ).toBeTruthy()
+    expect(await screen.findByText('Zu viele Meldungen in kurzer Zeit.')).toBeTruthy()
     await waitFor(() => expect(bodies).toHaveLength(1))
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
     await waitFor(() => expect(bodies).toHaveLength(2))
     expect(bodies[0]?.clientUuid).toBe(bodies[1]?.clientUuid)
     expect(bodies[1]?.faultTemplateKeys).toEqual(['bma.line_interruption'])
-    expect(bodies[1]?.systemId).toBeUndefined()
     expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
   })
 

@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 import { STANDARD_TEXT_KEYS, STANDARD_TEXTS } from '@stoerdesk/shared'
 
@@ -10,12 +10,11 @@ import * as schema from './schema'
 /**
  * Counts of rows this seed run really inserted. A second run is a no-op and
  * reports zeros, because the natural keys (`objects.object_no` case
- * insensitively, `systems` per object and type, `text_templates.key`) decide
- * existence. Edits made in the admin UI are never overwritten.
+ * insensitively, `text_templates.key`) decide existence. Edits made in the
+ * admin UI are never overwritten.
  */
 export type DemoSeedResult = {
   objects: number
-  systems: number
   templates: number
   translations: number
 }
@@ -50,9 +49,6 @@ const DEMO_OBJECTS = [
   },
 ] as const
 
-const DEMO_SYSTEM_TYPE = 'BMA'
-const DEMO_SYSTEM_LABEL = 'BMA'
-
 /**
  * Idempotent demo seed of the object list and the standard text templates
  * (`work-packages/m2/00-core-tables-seed.md` §4/§5, `specs/02-data-model.md`
@@ -64,7 +60,6 @@ const DEMO_SYSTEM_LABEL = 'BMA'
 export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> {
   return database.transaction(async (tx) => {
     let objects = 0
-    let systems = 0
 
     for (const demo of DEMO_OBJECTS) {
       const [existing] = await tx
@@ -89,31 +84,13 @@ export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> 
 
       if (existing === undefined) {
         objects += 1
-      } else if (existing.qrToken === null) {
+      } else       if (existing.qrToken === null) {
         // Backfill of WP-M2-02b: a demo object that still has no token gets one.
         // A non-null token is a decision (generated or edited) and stays as it is.
         await tx
           .update(schema.objects)
           .set({ qrToken: generateQrToken() })
           .where(eq(schema.objects.id, existing.id))
-      }
-
-      const [existingSystem] = await tx
-        .select({ id: schema.systems.id })
-        .from(schema.systems)
-        .where(
-          and(eq(schema.systems.objectId, objectId), eq(schema.systems.type, DEMO_SYSTEM_TYPE)),
-        )
-        .limit(1)
-
-      if (existingSystem === undefined) {
-        const inserted = await tx
-          .insert(schema.systems)
-          .values({ objectId, type: DEMO_SYSTEM_TYPE, label: DEMO_SYSTEM_LABEL })
-          .onConflictDoNothing()
-          .returning({ id: schema.systems.id })
-
-        systems += inserted.length
       }
     }
 
@@ -164,7 +141,7 @@ export async function seedDemo(database: DemoDatabase): Promise<DemoSeedResult> 
       }
     }
 
-    return { objects, systems, templates, translations }
+    return { objects, templates, translations }
   })
 }
 
