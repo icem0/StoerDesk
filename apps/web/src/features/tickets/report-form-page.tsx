@@ -150,15 +150,11 @@ function usePublicQr(token: string) {
  * the reporter. The answer of the API never carries a description, a contact
  * or a `status_token` — only the number, the status and the time.
  */
-function useOpenTickets(qrToken: string | undefined, systemId: string) {
+function useOpenTickets(qrToken: string | undefined) {
   return useQuery({
-    queryKey: ['public-open-tickets', qrToken, systemId],
+    queryKey: ['public-open-tickets', qrToken],
     queryFn: () => {
       const params = new URLSearchParams({ qrToken: qrToken ?? '' })
-
-      if (systemId !== '') {
-        params.set('systemId', systemId)
-      }
 
       return apiFetch<PublicOpenTickets>(`/v1/public/tickets/open?${params.toString()}`)
     },
@@ -190,7 +186,6 @@ function errorMessage(error: unknown): string {
 }
 
 function ObjectHeader({ object }: { object: PublicQrObject }) {
-  const { t } = useTranslation('ticket')
   const address = addressLine(object)
 
   return (
@@ -198,49 +193,7 @@ function ObjectHeader({ object }: { object: PublicQrObject }) {
       <p className="text-xs uppercase tracking-wide text-slate-400">{object.objectNo}</p>
       <h1 className="text-xl font-semibold">{object.name}</h1>
       {address !== '' ? <p className="text-sm text-slate-400">{address}</p> : null}
-      {object.systems.length === 0 ? (
-        <p className="text-sm text-slate-400">{t('report.object.noSystems')}</p>
-      ) : null}
     </section>
-  )
-}
-
-function SystemSelect({
-  object,
-  value,
-  onChange,
-}: {
-  object: PublicQrObject
-  value: string
-  onChange: (systemId: string) => void
-}) {
-  const { t } = useTranslation('ticket')
-
-  if (object.systems.length === 0) {
-    return null
-  }
-
-  return (
-    <label className="flex flex-col gap-1 text-sm">
-      {t('report.object.system')}
-      <select
-        className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-        name="system"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">{t('report.object.systemNone')}</option>
-        {object.systems.map((system) => {
-          const optionLabel = `${system.label} (${system.type})`
-
-          return (
-            <option key={system.id} value={system.id}>
-              {optionLabel}
-            </option>
-          )
-        })}
-      </select>
-    </label>
   )
 }
 
@@ -567,8 +520,6 @@ export function ReportFormPage() {
   const qr = usePublicQr(pathTokenValue)
   const locale = localeOf(i18n.language)
   const catalog = usePublicFaultCatalog(locale)
-  const [systemChoice, setSystemChoice] = useState<string | undefined>(undefined)
-  const [faultKeys, setFaultKeys] = useState<string[]>([])
   const [text, setText] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [contact, setContact] = useState<PublicReportContact>({ name: '', phone: '', email: '' })
@@ -609,11 +560,11 @@ export function ReportFormPage() {
 
   const { challenge, request: requestChallenge } = useAltchaChallenge()
 
+  const [faultKeys, setFaultKeys] = useState<string[]>([])
+  const [text, setText] = useState('')
+
   const object = qr.data?.object
-  const systems = object?.systems ?? []
-  const defaultSystemId = systems.length === 1 ? (systems[0]?.id ?? '') : ''
-  const selectedSystemId = systemChoice ?? defaultSystemId
-  const openTickets = useOpenTickets(qr.data?.token, selectedSystemId)
+  const openTickets = useOpenTickets(qr.data?.token)
   const openTicketList = openTickets.data?.tickets ?? []
   /** The oldest open ticket carries the running fault, so it is the parent (§7.8.3). */
   const duplicateParentId = openTicketList[0]?.ticketId
@@ -661,7 +612,6 @@ export function ReportFormPage() {
         clientUuid,
         text: trimmedText === '' ? undefined : trimmedText,
         faultTemplateKeys: faultKeys,
-        systemId: selectedSystemId === '' ? undefined : selectedSystemId,
         contact,
         reportedAt: new Date().toISOString(),
         locale,
@@ -732,7 +682,6 @@ export function ReportFormPage() {
       qr.data?.token,
       refreshQueued,
       requestChallenge,
-      selectedSystemId,
       text,
       website,
     ],
@@ -892,7 +841,6 @@ export function ReportFormPage() {
             ) : null}
 
             <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)}>
-              <SystemSelect object={object} onChange={setSystemChoice} value={selectedSystemId} />
               <FaultChips entries={catalog} onToggle={toggleFault} selected={faultKeys} />
               <FreeText onChange={setText} value={text} />
               <PhotoUpload
