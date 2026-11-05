@@ -82,6 +82,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket deadlines', () =>
       {
         qrToken: 'a'.repeat(22),
         clientUuid: randomUUID(),
+        title: undefined,
         text: 'probe',
         faultTemplateKeys: [],
         contact: { name: undefined, phone: '000' },

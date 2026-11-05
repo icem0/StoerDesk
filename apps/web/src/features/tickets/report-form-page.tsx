@@ -609,6 +609,7 @@ export function ReportFormPage() {
         // The resolved current token, never the scanned one of a retired sticker (§7.3).
         qrToken: qr.data?.token ?? pathTokenValue,
         clientUuid,
+        title: undefined,
         text: trimmedText === '' ? undefined : trimmedText,
         faultTemplateKeys: faultKeys,
         contact,

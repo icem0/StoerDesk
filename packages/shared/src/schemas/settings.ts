@@ -11,10 +11,12 @@ import { z } from 'zod'
 
 export const brandingResponseSchema = z.object({
   companyName: z.string().max(80),
+  titleEnabled: z.boolean(),
 })
 
 export const updateBrandingRequestSchema = z.object({
   companyName: z.string().trim().max(80),
+  titleEnabled: z.boolean().default(false),
 })
 
 export type BrandingResponse = z.infer<typeof brandingResponseSchema>

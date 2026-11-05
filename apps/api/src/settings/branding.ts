@@ -10,10 +10,10 @@ import { settings } from '../db/schema'
  * Public branding settings (`PLAN.md` §14, WP-M2-29).
  *
  * One jsonb row under the key `branding` of the existing `settings` table:
- * `{ companyName }`. No new table, no migration.
+ * `{ companyName, titleEnabled }`. No new table, no migration.
  *
- * `GET /api/v1/settings/branding` — `settings.read`, answers `{ companyName }`
- * (`''` when nothing is configured yet).
+ * `GET /api/v1/settings/branding` — `settings.read`, answers `{ companyName, titleEnabled }`
+ * (`''` and `false` when nothing is configured yet).
  * `PUT /api/v1/settings/branding` — `settings.write`, upserts the row and
  * answers the stored value. A malformed body answers `400 invalid_request`.
  */
@@ -31,6 +31,17 @@ function storedCompanyName(value: unknown): string {
   )
 }
 
+function storedTitleEnabled(value: unknown): boolean {
+  return (
+    value !== null &&
+    value !== undefined &&
+    typeof value === 'object' &&
+    typeof (value as { titleEnabled?: unknown }).titleEnabled === 'boolean'
+      ? (value as { titleEnabled: boolean }).titleEnabled
+      : false
+  )
+}
+
 export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
   async (app, { database }) => {
     app.get(
@@ -43,7 +54,10 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           .where(eq(settings.key, BRANDING_KEY))
           .limit(1)
 
-        return brandingResponseSchema.parse({ companyName: storedCompanyName(rows[0]?.value) })
+        return brandingResponseSchema.parse({
+          companyName: storedCompanyName(rows[0]?.value),
+          titleEnabled: storedTitleEnabled(rows[0]?.value),
+        })
       },
     )
 
@@ -59,13 +73,19 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
 
         await database
           .insert(settings)
-          .values({ key: BRANDING_KEY, value: { companyName: parsed.data.companyName } })
+          .values({ key: BRANDING_KEY, value: { companyName: parsed.data.companyName, titleEnabled: parsed.data.titleEnabled } })
           .onConflictDoUpdate({
             target: settings.key,
-            set: { value: { companyName: parsed.data.companyName }, updatedAt: new Date() },
+            set: {
+              value: { companyName: parsed.data.companyName, titleEnabled: parsed.data.titleEnabled },
+              updatedAt: new Date(),
+            },
           })
 
-        return brandingResponseSchema.parse({ companyName: parsed.data.companyName })
+        return brandingResponseSchema.parse({
+          companyName: parsed.data.companyName,
+          titleEnabled: parsed.data.titleEnabled,
+        })
       },
     )
   },

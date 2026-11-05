@@ -13,7 +13,7 @@ import {
 
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
+import { objects, settings, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { generateQrToken } from '../objects/qr'
 import { readDeadlineHours } from './deadline'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
@@ -210,6 +210,20 @@ export async function createPublicReport(
   const deadlineHours = await readDeadlineHours(database)
   const times = reportTimes(input, new Date(), deadlineHours.normal)
 
+  const [brandingRow] = await database
+    .select({ value: settings.value })
+    .from(settings)
+    .where(eq(settings.key, 'branding'))
+    .limit(1)
+
+  const titleEnabled =
+    brandingRow?.value !== null &&
+    brandingRow?.value !== undefined &&
+    typeof brandingRow?.value === 'object' &&
+    typeof (brandingRow?.value as { titleEnabled?: unknown }).titleEnabled === 'boolean'
+      ? (brandingRow?.value as { titleEnabled: boolean }).titleEnabled
+      : false
+
   const insertValues = {
     objectId: object.id,
     status: 'NEW',
@@ -224,6 +238,7 @@ export async function createPublicReport(
     statusToken: generateQrToken(),
     suspectedSpam,
     parentTicketId,
+    title: titleEnabled ? (input.title ?? null) : null,
     ...times,
   }
 
@@ -251,6 +266,7 @@ export async function createPublicReport(
           source: 'QR',
           faultTemplateKeys: input.faultTemplateKeys,
           textLength: input.text?.length ?? 0,
+          title: input.title ?? null,
         },
       })
 

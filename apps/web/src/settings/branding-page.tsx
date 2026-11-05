@@ -96,7 +96,7 @@ export function BrandingPage() {
         onSubmit={(event) => {
           event.preventDefault()
           const form = new FormData(event.currentTarget)
-          mutation.mutate({ companyName: String(form.get('companyName') ?? '') })
+          mutation.mutate({ companyName: String(form.get('companyName') ?? ''), titleEnabled: false })
         }}
       >
         <label className="flex flex-col gap-1 text-sm">

@@ -228,6 +228,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         source: 'QR',
         faultTemplateKeys: ['akustik', 'strom'],
         textLength: 25,
+        title: null,
       })
     })
 

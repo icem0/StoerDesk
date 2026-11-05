@@ -60,6 +60,7 @@ export const altchaVerificationSchema = z.object({
 export const publicReportRequestSchema = z.object({
   qrToken: qrTokenSchema,
   clientUuid: z.uuid(),
+  title: trimmedText(200),
   text: trimmedText(4000),
   faultTemplateKeys: z
     .array(faultTemplateKeySchema)

@@ -19,7 +19,7 @@ if (testDatabase.status === 'unavailable') {
 
 const { users, roles, userRoles } = schema
 
-type BrandingResponseBody = { companyName?: string }
+type BrandingResponseBody = { companyName?: string; titleEnabled?: boolean }
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -141,19 +141,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false })
     })
 
     it('stores and returns the company name', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false })
     })
 
     it('resets to the empty name', async () => {
@@ -162,7 +162,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false })
     })
 
     it('rejects a too long name with 400 invalid_request', async () => {
@@ -185,6 +185,34 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         code: 'invalid_request',
         params: { fields: ['companyName'] },
       })
+    })
+
+    it('answers titleEnabled false before anything is configured', async () => {
+      const response = await getBranding(cookies['admin'])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false })
+    })
+
+    it('stores and returns titleEnabled true', async () => {
+      const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH', titleEnabled: true })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true })
+
+      const get = await getBranding(cookies['admin'])
+
+      expect(get.statusCode).toBe(200)
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true })
+    })
+
+    it('resets titleEnabled to false', async () => {
+      await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH', titleEnabled: false })
+
+      const response = await getBranding(cookies['admin'])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false })
     })
   },
 )
