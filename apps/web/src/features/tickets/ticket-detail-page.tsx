@@ -6,6 +6,7 @@ import type { TicketDetailResponse } from '@stoerdesk/shared'
 import { type StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiFetch, ApiError } from '../../lib/api'
+import { i18n } from '../../i18n'
 import { usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
 import { useInternalActions } from './use-internal-actions'
@@ -22,18 +23,6 @@ import { TicketTimeline } from './ticket-timeline'
  * the ticket on success.
  */
 
-const STATUS_LABELS: Record<string, string> = {
-  NEW: 'Neu',
-  IN_REVIEW: 'In Prüfung',
-  WORK_ORDER_CREATED: 'Auftrag angelegt',
-  OFFERED: 'Angeboten',
-  ASSIGNED: 'Zugewiesen',
-  ACCEPTED: 'Angenommen',
-  ACKNOWLEDGED: 'Rückmeldung erfolgt',
-  CLOSED: 'Abgeschlossen',
-  CANCELLED: 'Storniert',
-}
-
 const STATUS_COLORS: Record<string, string> = {
   NEW: 'bg-slate-900/30 text-slate-300',
   IN_REVIEW: 'bg-blue-900/30 text-blue-300',
@@ -46,13 +35,6 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-rose-900/30 text-rose-300',
 }
 
-const PRIORITY_LABELS: Record<string, string> = {
-  low: 'Niedrig',
-  normal: 'Normal',
-  high: 'Hoch',
-  critical: 'Kritisch',
-}
-
 function useTicket(ticketNo: string | undefined) {
   return useQuery({
     queryKey: ['tickets', 'detail', ticketNo],
@@ -63,7 +45,8 @@ function useTicket(ticketNo: string | undefined) {
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString('de-DE')
+  const locale = i18n.language === 'en' ? 'en-US' : 'de-DE'
+  return new Date(iso).toLocaleString(locale)
 }
 
 /**
@@ -248,7 +231,7 @@ export function TicketDetailPage() {
                 <span
                   className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
                 >
-                  {STATUS_LABELS[ticket.status] ?? ticket.status}
+                  {t(`status.values.${ticket.status}`) ?? ticket.status}
                 </span>
               </dd>
             </div>
@@ -256,7 +239,7 @@ export function TicketDetailPage() {
               <dt className="text-xs text-slate-500">{t('detail.field.priority')}</dt>
               <dd className="text-sm">
                 <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
-                  {PRIORITY_LABELS[ticket.priority] ?? ticket.priority}
+                  {t(`ticket.priority.${ticket.priority}`) ?? ticket.priority}
                 </span>
               </dd>
             </div>
@@ -327,16 +310,18 @@ export function TicketDetailPage() {
         )}
       </div>
 
-      <TicketTimeline
-        reportedAt={timelineData.reportedAt}
-        deadlineAt={timelineData.deadlineAt}
-        stoppedAt={timelineData.stoppedAt}
-        pauses={ticketQuery.data!.pauses}
-        markers={timelineData.markers}
-        status={ticket.status}
-        onPause={handlePause}
-        onResume={handleResume}
-      />
+        <div className="col-span-full">
+          <TicketTimeline
+            reportedAt={timelineData.reportedAt}
+            deadlineAt={timelineData.deadlineAt}
+            stoppedAt={timelineData.stoppedAt}
+            pauses={ticketQuery.data!.pauses}
+            markers={timelineData.markers}
+            status={ticket.status}
+            onPause={handlePause}
+            onResume={handleResume}
+          />
+        </div>
 
       <div className="col-span-full">
         <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
@@ -354,9 +339,11 @@ export function TicketDetailPage() {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-slate-200">{event.type}</div>
+                  <div className="text-sm font-medium text-slate-200">
+                    {t(`status.events.${event.type}`) ?? event.type}
+                  </div>
                   <div className="text-xs text-slate-400">
-                    {event.actorKind}
+                    {t(`ticket.actorKind.${event.actorKind}`) ?? event.actorKind}
                     {event.actorName !== null ? ` (${event.actorName})` : ''}
                   </div>
                 </div>

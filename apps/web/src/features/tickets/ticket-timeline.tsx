@@ -112,22 +112,30 @@ export function TicketTimeline({
           className={`h-full transition-colors duration-300 ${colour}`}
           style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
         />
-        {reportedMs !== undefined && deadlineMs !== undefined && span > 0 &&
-          markers.map((marker) => {
-            const atMs = parseMs(marker.at)
-            const left =
-              atMs !== undefined
-                ? Math.min(100, Math.max(0, ((atMs - reportedMs) / span) * 100))
-                : 0
-            return (
-              <div
-                key={marker.at}
-                className="absolute -top-1 h-5 w-1 bg-slate-400"
-                style={{ left: `${left}%` }}
-                title={`${marker.type} · ${marker.at}`}
-              />
-            )
-          })}
+        {reportedMs !== undefined && deadlineMs !== undefined && span > 0 && (
+          <>
+            {markers.map((marker) => {
+              const atMs = parseMs(marker.at)
+              const left =
+                atMs !== undefined
+                  ? Math.min(100, Math.max(0, ((atMs - reportedMs) / span) * 100))
+                  : 0
+              return (
+                <div
+                  key={marker.at}
+                  className="absolute -top-1.5 z-10 h-3 w-3 rounded-full bg-slate-300 border border-slate-700 shadow-sm"
+                  style={{ left: `${left}%` }}
+                  title={`${marker.type} · ${marker.at}`}
+                />
+              )
+            })}
+            <div
+              className="absolute -top-1 z-10 h-3 w-[1px] bg-rose-400/70"
+              style={{ left: '100%' }}
+              title={t('timeline.deadline')}
+            />
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">

@@ -172,17 +172,37 @@
     "events": {
       "created": "Report received",
       "work_order_set": "Work order created",
+      "review_started": "Set in review",
+      "assigned": "Assigned",
+      "offered": "Offered",
+      "claimed": "Claimed",
       "accepted": "Work order accepted",
+      "declined": "Declined",
       "acknowledged": "Malfunction handled",
-      "closed": "Ticket closed"
+      "commented": "Commented",
+      "closed": "Ticket closed",
+      "reopened": "Reopened",
+      "cancelled": "Cancelled"
     },
     "errors": {
       "invalidToken": "This status link is invalid. Please open the link from the confirmation again.",
       "not_found": "There is no report for this status link. Please open the link from the confirmation again."
     }
   },
+  "priority": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "actorKind": {
+    "user": "User",
+    "system": "System",
+    "public": "Public"
+  },
   "timeline": {
     "title": "Timeline",
+    "deadline": "Deadline",
     "remaining": "{{hours}} h left",
     "overdue": "Overdue for {{hours}} h",
     "stopped": "Stopped at acknowledgement",

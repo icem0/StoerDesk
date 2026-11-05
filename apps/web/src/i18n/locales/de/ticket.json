@@ -172,17 +172,37 @@
     "events": {
       "created": "Meldung eingegangen",
       "work_order_set": "Auftrag angelegt",
+      "review_started": "In Prüfung gesetzt",
+      "assigned": "Zugewiesen",
+      "offered": "Angeboten",
+      "claimed": "Übernommen",
       "accepted": "Auftrag angenommen",
+      "declined": "Abgelehnt",
       "acknowledged": "Störung bearbeitet",
-      "closed": "Vorgang abgeschlossen"
+      "commented": "Kommentiert",
+      "closed": "Vorgang abgeschlossen",
+      "reopened": "Wieder eröffnet",
+      "cancelled": "Storniert"
     },
     "errors": {
       "invalidToken": "Dieser Statuslink ist ungültig. Bitte den Link aus der Bestätigung erneut öffnen.",
       "not_found": "Zu diesem Statuslink gibt es keine Meldung. Bitte den Link aus der Bestätigung erneut öffnen."
     }
   },
+  "priority": {
+    "low": "Niedrig",
+    "normal": "Normal",
+    "high": "Hoch",
+    "critical": "Kritisch"
+  },
+  "actorKind": {
+    "user": "Nutzer",
+    "system": "System",
+    "public": "Öffentlich"
+  },
   "timeline": {
     "title": "Zeitlinie",
+    "deadline": "Frist",
     "remaining": "Noch {{hours}} Std.",
     "overdue": "Seit {{hours}} Std. überfällig",
     "stopped": "Bei Quittierung angehalten",
