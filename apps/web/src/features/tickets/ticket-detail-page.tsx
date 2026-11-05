@@ -229,6 +229,7 @@ export function TicketDetailPage() {
               <dt className="text-xs text-slate-500">{t('detail.field.status')}</dt>
               <dd className="text-sm">
                 <span
+                  data-testid="ticket-status-badge"
                   className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
                 >
                   {t(`status.values.${ticket.status}`) ?? ticket.status}
@@ -327,7 +328,7 @@ export function TicketDetailPage() {
         <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
           {t('detail.history')}
         </h2>
-        <div className="border border-slate-700 rounded divide-y divide-slate-700">
+        <div data-testid="ticket-history" className="border border-slate-700 rounded divide-y divide-slate-700">
           {events.length === 0 ? (
             <p className="p-3 text-slate-400">{t('detail.historyEmpty')}</p>
           ) : (

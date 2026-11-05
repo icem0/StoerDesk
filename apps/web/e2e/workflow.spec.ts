@@ -56,13 +56,13 @@ const ui = {
       close: 'Schließen',
     },
     event: {
-      created: 'created',
-      review_started: 'review_started',
-      work_order_set: 'work_order_set',
-      assigned: 'assigned',
-      accepted: 'accepted',
-      acknowledged: 'acknowledged',
-      closed: 'closed',
+      created: 'Meldung eingegangen',
+      review_started: 'In Prüfung gesetzt',
+      work_order_set: 'Auftrag angelegt',
+      assigned: 'Zugewiesen',
+      accepted: 'Auftrag angenommen',
+      acknowledged: 'Störung bearbeitet',
+      closed: 'Vorgang abgeschlossen',
     },
   },
   en: {
@@ -79,13 +79,13 @@ const ui = {
     actions: 'Actions',
     history: 'History',
     status: {
-      NEW: 'Neu',
-      IN_REVIEW: 'In Prüfung',
-      WORK_ORDER_CREATED: 'Auftrag angelegt',
-      ASSIGNED: 'Zugewiesen',
-      ACCEPTED: 'Angenommen',
-      ACKNOWLEDGED: 'Rückmeldung erfolgt',
-      CLOSED: 'Abgeschlossen',
+      NEW: 'New',
+      IN_REVIEW: 'In review',
+      WORK_ORDER_CREATED: 'Work order created',
+      ASSIGNED: 'Assigned',
+      ACCEPTED: 'Accepted',
+      ACKNOWLEDGED: 'Acknowledged',
+      CLOSED: 'Closed',
     },
     action: {
       review: 'Set in review',
@@ -94,13 +94,13 @@ const ui = {
       close: 'Close',
     },
     event: {
-      created: 'created',
-      review_started: 'review_started',
-      work_order_set: 'work_order_set',
-      assigned: 'assigned',
-      accepted: 'accepted',
-      acknowledged: 'acknowledged',
-      closed: 'closed',
+      created: 'Report received',
+      review_started: 'Set in review',
+      work_order_set: 'Work order created',
+      assigned: 'Assigned',
+      accepted: 'Work order accepted',
+      acknowledged: 'Malfunction handled',
+      closed: 'Ticket closed',
     },
   },
 } as const
@@ -171,6 +171,19 @@ function statusText(language: 'de' | 'en', status: string): string {
 }
 
 /**
+ * The status badge and the history rows of the internal detail page. Both carry the
+ * same words (`status.values.*` and `status.events.*`), so every expectation is
+ * scoped to its own element instead of searching the whole page.
+ */
+function statusBadge(page: Page) {
+  return page.getByTestId('ticket-status-badge')
+}
+
+function history(page: Page) {
+  return page.getByTestId('ticket-history')
+}
+
+/**
  * The workflow buttons live behind the "Actions" toggle of the detail page
  * (`WP-M2-19d`); after a successful action the panel closes again, so every
  * step opens it first.
@@ -207,50 +220,44 @@ for (const language of ['de', 'en'] as const) {
 
     // Expect NEW status and the created event in the history.
     await expect(page.getByRole('heading', { level: 1 })).toContainText(ticketNo)
-    await expect(
-      page.getByText(statusText(language, 'NEW')),
-    ).toBeVisible()
-    await expect(page.getByText(texts.event.created)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'NEW'))
+    await expect(history(page).getByText(texts.event.created)).toBeVisible()
 
     // 1. Review: NEW → IN_REVIEW (UI button, no body).
     await performAction(page, texts, texts.action.review)
-    await expect(page.getByText(statusText(language, 'IN_REVIEW'))).toBeVisible()
-    await expect(page.getByText(texts.event.review_started)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'IN_REVIEW'))
+    await expect(history(page).getByText(texts.event.review_started)).toBeVisible()
 
     // 2. Work order: IN_REVIEW → WORK_ORDER_CREATED (API, needs { type, number }).
     await setWorkOrder(page, ticketNo)
     await page.reload()
-    await expect(
-      page.getByText(statusText(language, 'WORK_ORDER_CREATED')),
-    ).toBeVisible()
-    await expect(page.getByText(texts.event.work_order_set)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'WORK_ORDER_CREATED'))
+    await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
     // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (UI button, no body).
     await performAction(page, texts, texts.action.assign)
-    await expect(page.getByText(statusText(language, 'ASSIGNED'))).toBeVisible()
-    await expect(page.getByText(texts.event.assigned)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'ASSIGNED'))
+    await expect(history(page).getByText(texts.event.assigned)).toBeVisible()
 
     // 4. Accept: ASSIGNED → ACCEPTED (UI button, no body).
     await performAction(page, texts, texts.action.accept)
-    await expect(page.getByText(statusText(language, 'ACCEPTED'))).toBeVisible()
-    await expect(page.getByText(texts.event.accepted)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'ACCEPTED'))
+    await expect(history(page).getByText(texts.event.accepted)).toBeVisible()
 
     // 5. Acknowledge: ACCEPTED → ACKNOWLEDGED (API, needs { result }).
     await acknowledgeTicket(page, ticketNo)
     await page.reload()
-    await expect(
-      page.getByText(statusText(language, 'ACKNOWLEDGED')),
-    ).toBeVisible()
-    await expect(page.getByText(texts.event.acknowledged)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'ACKNOWLEDGED'))
+    await expect(history(page).getByText(texts.event.acknowledged)).toBeVisible()
 
     // 6. Close: ACKNOWLEDGED → CLOSED (UI button, no body).
     await performAction(page, texts, texts.action.close)
-    await expect(page.getByText(statusText(language, 'CLOSED'))).toBeVisible()
-    await expect(page.getByText(texts.event.closed)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(statusText(language, 'CLOSED'))
+    await expect(history(page).getByText(texts.event.closed)).toBeVisible()
 
     // Full audit trail: all seven events in order.
-    const history = page.locator('.text-sm.font-medium.text-slate-200')
-    await expect(history).toContainText([
+    const rows = history(page).locator('.text-sm.font-medium.text-slate-200')
+    await expect(rows).toContainText([
       texts.event.created,
       texts.event.review_started,
       texts.event.work_order_set,

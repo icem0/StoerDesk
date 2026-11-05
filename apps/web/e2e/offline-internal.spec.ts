@@ -30,9 +30,9 @@ const ui = {
       ACKNOWLEDGED: 'Rückmeldung erfolgt',
       CANCELLED: 'Storniert',
     },
-    // The internal detail page renders the raw event type, not the localized label.
+    // The internal detail page renders the localized event label.
     event: {
-      acknowledged: 'acknowledged',
+      acknowledged: 'Störung bearbeitet',
     },
     offlineQueued: 'Nicht versendet – wird automatisch nachgesendet (1 ausstehend).',
     offlineTitle: 'Nicht versendete Aktionen',
@@ -54,9 +54,9 @@ const ui = {
       ACKNOWLEDGED: 'Acknowledged',
       CANCELLED: 'Cancelled',
     },
-    // The internal detail page renders the raw event type, not the localized label.
+    // The internal detail page renders the localized event label.
     event: {
-      acknowledged: 'acknowledged',
+      acknowledged: 'Malfunction handled',
     },
     offlineQueued: 'Not sent – will be sent automatically when you are back online (1 pending).',
     offlineTitle: 'Unsent actions',
@@ -68,6 +68,19 @@ const ui = {
 } as const
 
 test.use({ viewport: { width: 1280, height: 800 } })
+
+/**
+ * The status badge and the history rows of the internal detail page. Both carry the
+ * same words (`status.values.*` and `status.events.*`), so every expectation is
+ * scoped to its own element instead of searching the whole page.
+ */
+function statusBadge(page: Page) {
+  return page.getByTestId('ticket-status-badge')
+}
+
+function history(page: Page) {
+  return page.getByTestId('ticket-history')
+}
 
 async function openInLanguage(page: Page, language: 'de' | 'en'): Promise<void> {
   await page.addInitScript(
@@ -191,7 +204,7 @@ for (const language of ['de', 'en'] as const) {
 
     // Open the detail once online so the service worker caches it (WP-M5-07).
     await page.goto(`/tickets/${ticketNo}`)
-    await expect(page.getByText(texts.status.ACCEPTED)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
     // Go offline: the acknowledge cannot reach the server and is queued instead.
     await page.context().setOffline(true)
@@ -221,11 +234,11 @@ for (const language of ['de', 'en'] as const) {
     await page.reload()
     await detail
 
-    await expect(page.getByText(texts.status.ACKNOWLEDGED)).toBeVisible()
-    await expect(page.getByText(texts.event.acknowledged)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(texts.status.ACKNOWLEDGED)
+    await expect(history(page).getByText(texts.event.acknowledged)).toBeVisible()
 
     // Idempotency: exactly one acknowledged event even if the replay retried.
-    await expect(page.getByText(texts.event.acknowledged)).toHaveCount(1)
+    await expect(history(page).getByText(texts.event.acknowledged)).toHaveCount(1)
 
     // The queue drained: no unsent-actions notice any more.
     await expect(page.getByText(texts.offlineTitle)).toBeHidden()
@@ -245,7 +258,7 @@ for (const language of ['de', 'en'] as const) {
 
     await driveToAccepted(page, ticketNo)
     await page.goto(`/tickets/${ticketNo}`)
-    await expect(page.getByText(texts.status.ACCEPTED)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
     // Queue an acknowledge while offline.
     await page.context().setOffline(true)
@@ -268,13 +281,13 @@ for (const language of ['de', 'en'] as const) {
 
     // The badge precedes the conflict banner in the DOM, so the first match is
     // the status badge (the banner text itself contains the raw status too).
-    await expect(page.getByText(texts.status.CANCELLED).first()).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(texts.status.CANCELLED)
     await expect(page.getByText(texts.offlineTitle)).toBeVisible()
     await expect(page.getByText(texts.offlineConflict)).toBeVisible()
 
     // Discard removes the conflict row; the ticket stays cancelled.
     await page.getByRole('button', { name: texts.offlineAction.discard }).click()
     await expect(page.getByText(texts.offlineTitle)).toBeHidden()
-    await expect(page.getByText(texts.status.CANCELLED)).toBeVisible()
+    await expect(statusBadge(page)).toHaveText(texts.status.CANCELLED)
   })
 }
