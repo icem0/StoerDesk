@@ -248,6 +248,16 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The ticket workflow and the offline internal E2E expect the labels of the
+  internal detail page again: the status badge and the history rows render
+  `status.values.*` and `status.events.*`, so the six Playwright tests of
+  `workflow.spec.ts` and `offline-internal.spec.ts` that searched for the raw
+  event types — and for the German status labels in the English run — failed.
+  The badge and the history carry a test id now, so every expectation is scoped
+  to its own element, and the English run uses the English labels. The check runs
+  of the versions v0.1.173 … v0.1.195 and v1.0.0 stay red: they predate the
+  repair, and a published tag cannot be changed afterwards. The working build is
+  the version v1.0.1.
 - The self-update groundwork for the step deadline (WP-M3-05): the shared update
   schema now carries the fixed error code `update_step_timeout`, the spec §18.4
   records the deadline rule and `/admin/update` labels the code in de and en.
