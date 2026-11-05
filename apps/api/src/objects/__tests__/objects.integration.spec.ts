@@ -272,7 +272,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
       await createAsAdmin('6002_01', {
         name: 'Beta Halle',
-        city: 'Beispielstadt',
+        city: 'Anderstadt',
       })
       await createAsAdmin('6003_01', {
         name: 'Gamma Werk',
@@ -294,11 +294,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         '6003_01',
       ])
       expect(byCity.json<ListBody>().objects?.map((object) => object.objectNo).sort()).toEqual([
-        '6002_01',
-        '6003_01',
-      ])
-      expect(combined.json<ListBody>().objects?.map((object) => object.objectNo).sort()).toEqual([
-        '6002_01',
         '6003_01',
       ])
       expect(combined.json<ListBody>().objects?.map((object) => object.objectNo)).toEqual([
