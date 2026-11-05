@@ -15,6 +15,7 @@ import {
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
+  computeTicketTimeline,
   PERMISSIONS,
   ticketListQuerySchema,
   ticketListResponseSchema,
@@ -121,6 +122,9 @@ export async function listTickets(
       priority: tickets.priority,
       reportedAt: tickets.reportedAt,
       deadlineAt: tickets.deadlineAt,
+      acknowledgedAt: tickets.acknowledgedAt,
+      closedAt: tickets.closedAt,
+      updatedAt: tickets.updatedAt,
     })
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
@@ -130,17 +134,31 @@ export async function listTickets(
     .offset(query.offset)
 
   return {
-    tickets: rows.map((row) => ({
-      id: row.id,
-      ticketNo: row.ticketNo,
-      objectNo: row.objectNo,
-      objectName: row.objectName,
-      systemType: null,
-      status: row.status,
-      priority: row.priority,
-      reportedAt: row.reportedAt.toISOString(),
-      deadlineAt: row.deadlineAt.toISOString(),
-    })),
+    tickets: rows.map((row) => {
+      const terminal = row.status === 'CLOSED' || row.status === 'CANCELLED'
+      const stoppedAt = row.acknowledgedAt ??
+        (terminal ? (row.closedAt ?? row.updatedAt) : null)
+      const timeline = computeTicketTimeline({
+        reportedAt: row.reportedAt,
+        deadlineAt: row.deadlineAt,
+        stoppedAt,
+      })
+
+      return {
+        id: row.id,
+        ticketNo: row.ticketNo,
+        objectNo: row.objectNo,
+        objectName: row.objectName,
+        systemType: null,
+        status: row.status,
+        priority: row.priority,
+        reportedAt: row.reportedAt.toISOString(),
+        deadlineAt: row.deadlineAt.toISOString(),
+        timelineState: timeline.state,
+        percent: timeline.percent,
+        remainingMs: timeline.remainingMs,
+      }
+    }),
     total,
     limit: query.limit,
     offset: query.offset,

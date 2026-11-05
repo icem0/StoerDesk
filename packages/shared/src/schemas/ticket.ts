@@ -293,6 +293,38 @@ export const ticketListQuerySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 })
 
+export const ticketTimelineStateSchema = z.enum(['green', 'yellow', 'orange', 'red', 'stopped'])
+
+export const ticketPauseSchema = z.object({
+  id: z.uuid(),
+  ticketId: z.uuid(),
+  reason: z.string(),
+  startedAt: z.iso.datetime(),
+  endedAt: z.iso.datetime().nullable(),
+  startedByUserId: z.uuid().nullable(),
+  endedByUserId: z.uuid().nullable(),
+  createdAt: z.iso.datetime(),
+})
+
+export const ticketTimelineMarkerSchema = z.object({
+  type: z.string(),
+  at: z.iso.datetime(),
+})
+
+export const ticketTimelineSchema = z.object({
+  reportedAt: z.iso.datetime(),
+  deadlineAt: z.iso.datetime(),
+  stoppedAt: z.iso.datetime().nullable(),
+  pausedMs: z.number().nonnegative(),
+  totalMs: z.number().nonnegative(),
+  elapsedMs: z.number().nonnegative(),
+  remainingMs: z.number().nonnegative(),
+  percent: z.number().min(0).max(100),
+  state: ticketTimelineStateSchema,
+  pause: ticketPauseSchema.pick({ id: true, reason: true, startedAt: true }).nullable(),
+  markers: z.array(ticketTimelineMarkerSchema),
+})
+
 export const ticketListItemSchema = z.object({
   id: z.uuid(),
   ticketNo: z.string(),
@@ -303,6 +335,9 @@ export const ticketListItemSchema = z.object({
   priority: z.string(),
   reportedAt: z.iso.datetime(),
   deadlineAt: z.iso.datetime(),
+  timelineState: ticketTimelineStateSchema,
+  percent: z.number().min(0).max(100),
+  remainingMs: z.number().nonnegative(),
 })
 
 export const ticketListResponseSchema = z.object({
@@ -364,6 +399,8 @@ export const ticketDetailResponseSchema = z.object({
       createdAt: z.iso.datetime(),
     }),
   ),
+  timeline: ticketTimelineSchema,
+  pauses: z.array(ticketPauseSchema),
 })
 
 export type TicketDetailResponse = z.infer<typeof ticketDetailResponseSchema>

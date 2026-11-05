@@ -1,6 +1,7 @@
 import { asc, eq, inArray } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import {
+  computeTicketTimeline,
   PERMISSIONS,
   ticketDetailResponseSchema,
   type TicketDetailResponse,
@@ -8,7 +9,15 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, systems, ticketEvents, ticketPhotos, tickets, users } from '../db/schema'
+import {
+  objects,
+  systems,
+  ticketEvents,
+  ticketPauses,
+  ticketPhotos,
+  tickets,
+  users,
+} from '../db/schema'
 
 /**
  * Ticket detail (`PLAN.md` §6/§7, WP-M2-18a).
@@ -55,6 +64,9 @@ export async function getTicketDetail(
       reportedAt: tickets.reportedAt,
       receivedAt: tickets.receivedAt,
       deadlineAt: tickets.deadlineAt,
+      acknowledgedAt: tickets.acknowledgedAt,
+      closedAt: tickets.closedAt,
+      updatedAt: tickets.updatedAt,
       reporterName: tickets.reporterName,
       reporterPhone: tickets.reporterPhone,
       reporterEmail: tickets.reporterEmail,
@@ -82,6 +94,12 @@ export async function getTicketDetail(
     .from(ticketEvents)
     .where(eq(ticketEvents.ticketId, ticketRow.id))
     .orderBy(asc(ticketEvents.createdAt))
+
+  const pauses = await database
+    .select()
+    .from(ticketPauses)
+    .where(eq(ticketPauses.ticketId, ticketRow.id))
+    .orderBy(asc(ticketPauses.startedAt))
 
   const photos = await database
     .select({
@@ -114,7 +132,48 @@ export async function getTicketDetail(
     }
   }
 
+  const terminal = ticketRow.status === 'CLOSED' || ticketRow.status === 'CANCELLED'
+  const stoppedAt = ticketRow.acknowledgedAt ??
+    (terminal ? (ticketRow.closedAt ?? ticketRow.updatedAt) : null)
+  const openPause = pauses.find((pause) => pause.endedAt === null) ?? null
+  const markerTypes = new Set([
+    'created',
+    'review_started',
+    'work_order_set',
+    'accepted',
+    'acknowledged',
+  ])
+  const timeline = computeTicketTimeline({
+    reportedAt: ticketRow.reportedAt,
+    deadlineAt: ticketRow.deadlineAt,
+    stoppedAt,
+    pauses,
+  })
+
   return {
+    timeline: {
+      ...timeline,
+      pause: openPause === null
+        ? null
+        : {
+            id: openPause.id,
+            reason: openPause.reason,
+            startedAt: openPause.startedAt.toISOString(),
+          },
+      markers: events
+        .filter((event) => markerTypes.has(event.type))
+        .map((event) => ({ type: event.type, at: event.createdAt.toISOString() })),
+    },
+    pauses: pauses.map((pause) => ({
+      id: pause.id,
+      ticketId: pause.ticketId,
+      reason: pause.reason,
+      startedAt: pause.startedAt.toISOString(),
+      endedAt: pause.endedAt?.toISOString() ?? null,
+      startedByUserId: pause.startedByUserId,
+      endedByUserId: pause.endedByUserId,
+      createdAt: pause.createdAt.toISOString(),
+    })),
     ticket: {
       id: ticketRow.id,
       ticketNo: ticketRow.ticketNo,

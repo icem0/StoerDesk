@@ -1,7 +1,7 @@
 # WP-M6-10: timeline and pause data in the ticket API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-04, WP-M6-06
 phase: 6
 milestone: m6
