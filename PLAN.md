@@ -756,7 +756,9 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M5-09  | sign-out clears the `internal-tickets` cache                       | done   |
 | WP-M7-01  | ntfy channel adapter and its env wiring                            | done   |
 | WP-M7-02  | ntfy channel unit test                                             | done   |
-| WP-M7-03  | ntfy QR code, onboarding and i18n label                            | planned |
+| WP-M7-03  | ntfy QR code, onboarding and i18n label                            | done    |
+| WP-M7-04  | outbox rows in the ticket create transaction                       | planned |
+| WP-M7-04b | the outbox worker, its retries and the localized ntfy label        | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1010,7 +1012,18 @@ exit-criterion integration test "overdue ticket escalates and appears in the his
 real API on a throwaway database. The phase-6 exit criterion — an overdue ticket escalates with
 `rule = deadline_exceeded`, the ticket detail timeline turns `red`, and a second escalation scan
 adds no event — is proven by `apps/api/src/tickets/__tests__/escalation-exit.integration.spec.ts`.
-Phase 7 (notifications) starts with its `m7` packages.
+Phase 7 (notifications) starts with its `m7` packages: **WP-M7-01** and **WP-M7-02**
+are implemented (the ntfy channel adapter, its `configuredChannels` entry and its unit test),
+and **WP-M7-03** is implemented as well — `apps/web/src/features/settings/NtfySubscription.tsx`
+renders the subscription QR of `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}` with the `ntfy://<topic>`
+deep-link switch and the labels `ntfy.subscribe`, `ntfy.qrLabel` and `ntfy.appHint` in the
+`common` namespace (`de` and `en`), props with a `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC`
+build fallback (no API route, non-goal of the WP) and an empty card while the channel is
+unconfigured. Its announced follow-up chain **WP-M7-04** (the `outbox`, `notification_channels`
+and `push_subscriptions` tables plus one `PENDING` row per configured channel inside the create
+transaction) and **WP-M7-04b** (the worker that drains them with three retries and backoff, the
+`notification_sent`/`notification_failed` ticket events and the localized ntfy `view` action label
+through the shared `t()` — closing the hard-coded German `Öffnen` label of WP-M7-01) is planned.
 
 **Out-of-band phase 2 — the klarmname columns (WP-M2-93).** `users.given_name` and
 `users.family_name` are text, `NOT NULL`, default `''`, length ≤ 64, stored trimmed, with

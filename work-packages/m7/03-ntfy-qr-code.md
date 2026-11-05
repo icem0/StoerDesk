@@ -1,7 +1,7 @@
 # WP-M7-03: QR code for ntfy topic subscription (web UI + i18n)
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M7-01
 phase: 7
 context-budget: 20k tokens
@@ -55,8 +55,11 @@ Expected: all green; `npm run i18n:check` confirms de/en key parity for the new 
 
 ## Handoff
 
-- Files changed: component + two locale files (+ i18n index if new namespace)
-- Interfaces added: `NtfySubscription` component, `ntfy.*` i18n keys
-- Deviation: if `common` namespace is used, no new i18n registration is needed
-- Follow-up WP: WP-M7-04 (wire ntfy send into ticket creation / outbox)
-- Open question: whether `NTFY_PUBLIC_URL`/`NTFY_TOPIC` are exposed to the browser via build-time env (`VITE_*`) or passed as component props from a settings page that fetches them from the API
+- Files changed: `apps/web/src/features/settings/NtfySubscription.tsx` (new), `de` and `en` `common.json` (+3 keys), test `apps/web/src/features/settings/__tests__/ntfy-subscription.test.tsx`
+- Interfaces added: `NtfySubscription(options)`, `NtfySubscriptionOptions`, `subscriptionValue(publicUrl, topic, deepLink)`, keys `ntfy.subscribe`, `ntfy.qrLabel`, `ntfy.appHint`
+- Deviation: no new namespace — the keys live in `common`, so `apps/web/src/i18n/index.ts` is untouched; `subscriptionValue` is exported next to the component so a test can pin the QR payload
+- Deviation: the open question below is answered **both ways** — props are the primary input, the build-time `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC` pair is the fallback, so no API route is needed and a settings page can still pass the values
+- Deviation: the card renders nothing while `publicUrl` or `topic` is empty — an unconfigured channel shows no dead QR
+- Still open: the German `Öffnen` action label in `apps/api/src/notifications/channels/ntfy.ts` stays hard-coded; it is server text and belongs to the shared `t()` layer, not to this web WP — WP-M7-04b carries it
+- Follow-up WP: WP-M7-04 (outbox rows in the create transaction) and WP-M7-04b (the outbox worker with its retries and the localized ntfy action label); the settings page that renders this card is a later admin WP
+- Open question: whether `NTFY_PUBLIC_URL`/`NTFY_TOPIC` are exposed to the browser via build-time env (`VITE_*`) or passed as component props from a settings page that fetches them from the API — answered in this WP: props with a `VITE_*` fallback; the remaining question is only **where** the settings page reads them from

@@ -77,7 +77,12 @@
    "rate_limited": "Zu viele Anmeldeversuche. Bitte in einer Minute erneut versuchen.",
    "invalid_request": "Die Anmeldedaten sind unvollständig oder fehlerhaft.",
    "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
-   "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
+    "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
+   }
+  },
+  "ntfy": {
+    "subscribe": "In der ntfy-App abonnieren",
+    "qrLabel": "ntfy-Abo QR-Code",
+    "appHint": "mit dem Handy scannen"
   }
  }
-}

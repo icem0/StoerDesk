@@ -77,7 +77,12 @@
    "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
    "invalid_request": "The sign-in data is incomplete or malformed.",
    "session_invalid": "The session has expired. Please sign in again.",
-   "unknown": "Sign-in is not possible right now. Please try again later."
+    "unknown": "Sign-in is not possible right now. Please try again later."
+   }
+  },
+  "ntfy": {
+    "subscribe": "Subscribe in the ntfy app",
+    "qrLabel": "ntfy subscription QR code",
+    "appHint": "scan it with your phone"
   }
  }
-}

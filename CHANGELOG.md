@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ntfy subscription QR arrives in the web app (WP-M7-03):
+  `apps/web/src/features/settings/NtfySubscription.tsx` renders a `qrcode.react`
+  card whose QR carries the public subscription address
+  `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}` from `docs/DEPLOYMENT.md` — the values are
+  component props with a build-time `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC`
+  fallback, so no API route exposes them; a `deepLink` switch carries the
+  `ntfy://<topic>` payload of the ntfy app instead. The card labels itself with
+  the new `ntfy.subscribe`, `ntfy.qrLabel` and `ntfy.appHint` keys of the
+  `common` namespace (`de` and `en`) and renders nothing while the channel is
+  not configured. The follow-up chain WP-M7-04 (outbox rows in the create
+  transaction) and WP-M7-04b (the outbox worker and the localized ntfy action
+  label) is planned.
+
 - Every user gets a sortable klarmname (WP-M2-93): the `users` table gains
   `given_name` and `family_name` (`NOT NULL`, default `''`, length ≤ 64, stored
   trimmed) behind migration `0018_user_klarmname`, indexed by `users_name_idx` over

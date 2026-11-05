@@ -147,8 +147,17 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > `fetch` posts the JSON payload (title, message and the single `view` action labelled
 > `Öffnen`) to `${NTFY_URL}/${NTFY_TOPIC}` with `content-type: application/json`, the channel
 > still sends when `pwaUrl` is empty, and a non-2xx answer throws `NtfyError` `http_error`.
-> **WP-M7-03** (ntfy QR code + i18n label) is planned; the German `Öffnen` label stays
-> hard-coded there until that package adds the i18n key.
+> **WP-M7-03** (`03-ntfy-qr-code.md`) is implemented: `apps/web/src/features/settings/NtfySubscription.tsx`
+> renders a `qrcode.react` card whose QR carries the subscription address
+> `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}` of `docs/DEPLOYMENT.md` — the values arrive as props or from the
+> build-time `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC` pair, and a `deepLink` switch renders the
+> `ntfy://<topic>` payload of the app instead. The labels `ntfy.subscribe`, `ntfy.qrLabel` and
+> `ntfy.appHint` are added to the `common` namespace in `de` and `en`, and the card renders nothing
+> while the channel is not configured. Its follow-up chain **WP-M7-04** (the outbox tables and one
+> `PENDING` row per configured channel inside the create transaction) and **WP-M7-04b** (the worker
+> that drains them with three retries and backoff, the `notification_sent`/`notification_failed`
+> events and the localized ntfy `view` action label through the shared `t()`) are planned — the
+> German `Öffnen` label of WP-M7-01 stays hard-coded until WP-M7-04b replaces it.
 
 ## Open follow-ups
 
@@ -369,7 +378,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-13 | phase-6 exit criterion and record   | done                    | yes     |
 | WP-M7-01  | ntfy channel adapter and its env wiring                             | done                    | yes     |
 | WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
-| WP-M7-03  | ntfy QR code, onboarding and i18n label                             | planned                 | yes     |
+| WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |
+| WP-M7-04  | outbox rows in the ticket create transaction                        | planned                 | yes     |
+| WP-M7-04b | the outbox worker, its retries and the localized ntfy label         | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
