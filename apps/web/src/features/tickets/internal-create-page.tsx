@@ -25,7 +25,6 @@ type ObjectOption = {
   id: string
   objectNo: string
   name: string
-  systems: { id: string; type: string; label: string }[]
 }
 
 function useObjects(search: string) {
@@ -52,7 +51,6 @@ export function InternalCreatePage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedObjectId, setSelectedObjectId] = useState('')
   const [pickedObject, setPickedObject] = useState<ObjectOption | undefined>(undefined)
-  const [systemId, setSystemId] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [faultKeys, setFaultKeys] = useState<string[]>([])
@@ -73,7 +71,6 @@ export function InternalCreatePage() {
   const objectsQuery = useObjects(debouncedSearch)
 
   const objects = objectsQuery.data?.objects ?? []
-  const systems = pickedObject?.systems ?? []
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
   const activeCatalog = catalog.filter((entry) => entry.archived === false)
@@ -87,7 +84,6 @@ export function InternalCreatePage() {
   function pickObject(object: ObjectOption) {
     setPickedObject(object)
     setSelectedObjectId(object.id)
-    setSystemId('')
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -98,7 +94,6 @@ export function InternalCreatePage() {
     try {
       const payload: InternalCreateTicketRequest = {
         objectId: selectedObjectId,
-        systemId: systemId || undefined,
         title: title || undefined,
         description: description || undefined,
         faultTemplateKeys: faultKeys,
@@ -133,8 +128,6 @@ export function InternalCreatePage() {
 
   function errorNotice(code: string): string {
     switch (code) {
-      case 'system_not_found':
-        return t('internal.create.errors.systemNotFound')
       case 'object_not_found':
         return t('internal.create.errors.objectNotFound')
       case 'session_invalid':
@@ -216,26 +209,6 @@ export function InternalCreatePage() {
             </p>
           ) : null}
         </div>
-
-        {pickedObject !== undefined && (
-          <div className="flex flex-col gap-2 col-span-full">
-            <label className="text-sm font-medium text-slate-200">
-              {t('internal.create.fields.system')}
-            </label>
-            <select
-              className="rounded bg-slate-900 p-2 text-slate-100"
-              value={systemId}
-              onChange={(event) => setSystemId(event.target.value)}
-            >
-              <option value="">{t('internal.create.fields.systemPlaceholder')}</option>
-              {systems.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.type} — {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         <div className="flex flex-col gap-2 col-span-full">
           <label className="text-sm font-medium text-slate-200">
