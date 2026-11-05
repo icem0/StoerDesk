@@ -192,6 +192,8 @@ Core tables:
 - `ticket_pauses` — wait reason, start/end, actor
 - `text_templates` and `text_template_translations` — localized standard texts
 - `users`, `groups`, `user_groups`, `sessions`, `api_keys`
+  - `users.theme` — `auto` (follows `prefers-color-scheme`), `light` or `dark`
+    (WP-M2-92)
 - `notification_channels`, `push_subscriptions`, `outbox`
 - `settings`
 - `oncall_pools`, `oncall_shifts`, `oncall_swap_requests`, `oncall_events`
@@ -529,7 +531,8 @@ Requirements:
 - photo gallery with fullscreen and download,
 - accessibility: AA contrast, touch targets at least 44 px, status not conveyed
   by color alone,
-- dark mode via `prefers-color-scheme`,
+- dark mode via `prefers-color-scheme`, plus a theme per user (`auto`, `light`,
+  `dark`) that the user management sets (WP-M2-92),
 - all text through i18n.
 
 ## 15. Non-functional requirements
