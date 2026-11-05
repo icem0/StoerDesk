@@ -217,13 +217,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         active: true,
         externalType: null,
       })
-      expect(created.systems).toHaveLength(2)
-
-      const bma = created.systems.find((system) => system.type === 'BMA')
-      const rwa = created.systems.find((system) => system.type === 'RWA')
-
-      expect(bma).toBeDefined()
-      expect(rwa).toBeDefined()
+      expect(created.systems).toHaveLength(0)
 
       const detail = await getObject(cookies['reporter'], '5001_01')
 
@@ -233,19 +227,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const updated = await patchObject(cookies['admin'], '5001_01', {
         name: 'Werk Nord 2',
         contactPhone: '0123 456789',
-        systems: [
-          { id: bma?.id, type: 'BMA', label: 'BMA EG neu' },
-          { type: 'EMA', label: 'EMA Lager' },
-        ],
       })
       const body = updated.json<ObjectBody>()
 
       expect(updated.statusCode).toBe(200)
       expect(body.name).toBe('Werk Nord 2')
-      expect(body.systems).toHaveLength(2)
-      expect(body.systems.map((system) => system.type).sort()).toEqual(['BMA', 'EMA'])
-      expect(body.systems.find((system) => system.type === 'BMA')?.id).toBe(bma?.id)
-      expect(body.systems.some((system) => system.id === rwa?.id)).toBe(false)
+      expect(body.systems).toHaveLength(0)
 
       const noop = await patchObject(cookies['admin'], '5001_01', {})
 

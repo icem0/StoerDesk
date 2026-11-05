@@ -172,29 +172,6 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
     expect(kept).toEqual([{ type: 'created' }])
   })
 
-  it('refuses to hard-delete an object with tickets and clears a deleted system', async () => {
-    const objectId = await newObject()
-    const system = onlyRow(
-      await db
-        .insert(systems)
-        .values({ objectId, type: 'BMA', label: 'Brandmeldeanlage' })
-        .returning({ id: systems.id }),
-      'system',
-    )
-    const ticket = await newTicket(objectId, { systemId: system.id })
-
-    await expectPgError('23503', () => db.delete(objects).where(eq(objects.id, objectId)))
-
-    await db.delete(systems).where(eq(systems.id, system.id))
-
-    const afterSystemDelete = await db
-      .select({ systemId: tickets.systemId })
-      .from(tickets)
-      .where(eq(tickets.id, ticket.id))
-
-    expect(afterSystemDelete).toEqual([{ systemId: null }])
-  })
-
   it('cascades events and photos when a ticket is removed', async () => {
     const objectId = await newObject()
     const ticket = await newTicket(objectId)

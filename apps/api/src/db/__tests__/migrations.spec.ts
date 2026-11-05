@@ -194,9 +194,6 @@ describe('migration 0004 ticket tables', () => {
       'FOREIGN KEY ("object_id") REFERENCES "public"."objects"("id") ON DELETE restrict',
     )
     expect(sql).toContain(
-      'FOREIGN KEY ("system_id") REFERENCES "public"."systems"("id") ON DELETE set null',
-    )
-    expect(sql).toContain(
       'FOREIGN KEY ("ticket_id") REFERENCES "public"."tickets"("id") ON DELETE cascade',
     )
     expect(sql).toContain('CREATE UNIQUE INDEX "tickets_client_uuid_key"')

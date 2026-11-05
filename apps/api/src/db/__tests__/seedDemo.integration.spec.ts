@@ -79,10 +79,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(localized).toHaveLength(8)
 
-      const demoSystems = await db.select({ type: systems.type }).from(systems)
-
-      expect(demoSystems.every((row) => row.type === 'BMA')).toBe(true)
-
       const tokens = await db
         .select({ objectNo: objects.objectNo, qrToken: objects.qrToken })
         .from(objects)
@@ -96,9 +92,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('is a no-op on the second run', async () => {
       const second = await seedDemo(db)
 
-      expect(second).toEqual({ objects: 0, systems: 0, templates: 0, translations: 0 })
+      expect(second).toEqual({ objects: 0, templates: 0, translations: 0 })
       expect(await countRows(db, objects)).toBe(3)
-      expect(await countRows(db, systems)).toBe(3)
       expect(await countRows(db, textTemplates)).toBe(8)
       expect(await countRows(db, textTemplateTranslations)).toBe(16)
     })
