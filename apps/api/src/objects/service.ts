@@ -1,4 +1,4 @@
-import { and, eq, exists, ilike, inArray, or, sql } from 'drizzle-orm'
+import { and, eq, exists, ilike, or, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -11,14 +11,13 @@ import {
   updateObjectRequestSchema,
   type CreateObjectRequest,
   type ObjectListQuery,
-  type ObjectSystemInput,
   type ObjectSummary,
   type UpdateObjectRequest,
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, systems } from '../db/schema'
+import { objects } from '../db/schema'
 import { generateQrToken, qrRoutes } from './qr'
 
 /**
@@ -68,13 +67,9 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 type ObjectRow = typeof objects.$inferSelect
-type SystemRow = typeof systems.$inferSelect
 
-function summarize(row: ObjectRow, rows: SystemRow[]): ObjectSummary {
-  return objectSummarySchema.parse({
-    ...row,
-    systems: rows.map(({ id, type, label }) => ({ id, type, label })),
-  })
+function summarize(row: ObjectRow): ObjectSummary {
+  return objectSummarySchema.parse(row)
 }
 
 async function findByObjectNo(database: Executor, objectNo: string): Promise<ObjectRow> {
@@ -89,28 +84,6 @@ async function findByObjectNo(database: Executor, objectNo: string): Promise<Obj
   }
 
   return row
-}
-
-async function loadSystems(database: Executor, objectIds: string[]): Promise<Map<string, SystemRow[]>> {
-  const byObject = new Map<string, SystemRow[]>()
-
-  if (objectIds.length === 0) {
-    return byObject
-  }
-
-  const rows = await database
-    .select()
-    .from(systems)
-    .where(inArray(systems.objectId, objectIds))
-    .orderBy(systems.type, systems.label)
-
-  for (const row of rows) {
-    const existing = byObject.get(row.objectId) ?? []
-    existing.push(row)
-    byObject.set(row.objectId, existing)
-  }
-
-  return byObject
 }
 
 function whereFromQuery(database: Executor, query: ObjectListQuery) {
@@ -159,23 +132,13 @@ export async function listObjects(database: Db, query: ObjectListQuery): Promise
     .where(whereFromQuery(database, query))
     .orderBy(objects.objectNo)
 
-  const systemsByObject = await loadSystems(
-    database,
-    rows.map((row) => row.id),
-  )
-
-  return rows.map((row) => summarize(row, systemsByObject.get(row.id) ?? []))
+  return rows.map((row) => summarize(row))
 }
 
 export async function getObject(database: Db, objectNo: string): Promise<ObjectSummary> {
   const row = await findByObjectNo(database, objectNo)
-  const systemsByObject = await loadSystems(database, [row.id])
 
-  return summarize(row, systemsByObject.get(row.id) ?? [])
-}
-
-function systemValues(objectId: string, entries: ObjectSystemInput[]) {
-  return entries.map((entry) => ({ objectId, type: entry.type, label: entry.label }))
+  return summarize(row)
 }
 
 export async function createObject(
@@ -208,13 +171,7 @@ export async function createObject(
         throw new ObjectRouteError(500, 'object_create_failed', {})
       }
 
-      if (input.systems.length > 0) {
-        await tx.insert(systems).values(systemValues(row.id, input.systems))
-      }
-
-      const systemsByObject = await loadSystems(tx, [row.id])
-
-      return summarize(row, systemsByObject.get(row.id) ?? [])
+      return summarize(row)
     })
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -222,54 +179,6 @@ export async function createObject(
     }
 
     throw error
-  }
-}
-
-async function syncSystems(
-  database: Executor,
-  objectId: string,
-  entries: ObjectSystemInput[],
-): Promise<void> {
-  const existing = await database
-    .select({ id: systems.id })
-    .from(systems)
-    .where(eq(systems.objectId, objectId))
-  const existingIds = new Set(existing.map((row) => row.id))
-  const keptIds: string[] = []
-
-  for (const [index, entry] of entries.entries()) {
-    if (entry.id === undefined) {
-      const inserted = await database
-        .insert(systems)
-        .values({ objectId, type: entry.type, label: entry.label })
-        .returning({ id: systems.id })
-
-      const [row] = inserted
-
-      if (row !== undefined) {
-        keptIds.push(row.id)
-      }
-
-      continue
-    }
-
-    if (!existingIds.has(entry.id)) {
-      throw invalidRequest([`systems.${index}.id`])
-    }
-
-    await database
-      .update(systems)
-      .set({ type: entry.type, label: entry.label, updatedAt: new Date() })
-      .where(eq(systems.id, entry.id))
-    keptIds.push(entry.id)
-  }
-
-  const removedIds = existing
-    .map((row) => row.id)
-    .filter((id) => keptIds.includes(id) === false)
-
-  if (removedIds.length > 0) {
-    await database.delete(systems).where(inArray(systems.id, removedIds))
   }
 }
 
@@ -307,13 +216,7 @@ export async function updateObject(
         throw new ObjectRouteError(500, 'object_update_failed', {})
       }
 
-      if (input.systems !== undefined) {
-        await syncSystems(tx, existing.id, input.systems)
-      }
-
-      const systemsByObject = await loadSystems(tx, [row.id])
-
-      return summarize(row, systemsByObject.get(row.id) ?? [])
+      return summarize(row)
     })
   } catch (error) {
     if (isUniqueViolation(error)) {

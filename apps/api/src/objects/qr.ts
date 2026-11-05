@@ -15,7 +15,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, oldQrTokens, systems } from '../db/schema'
+import { objects, oldQrTokens } from '../db/schema'
 
 /**
  * QR token generation, regeneration and public resolution
@@ -101,12 +101,6 @@ async function rotateQrToken(
 }
 
 async function publicObject(database: Executor, row: ObjectRow): Promise<PublicQrObject> {
-  const rows = await database
-    .select({ id: systems.id, type: systems.type, label: systems.label })
-    .from(systems)
-    .where(eq(systems.objectId, row.id))
-    .orderBy(systems.type, systems.label)
-
   return publicQrObjectSchema.parse({
     objectNo: row.objectNo,
     name: row.name,
@@ -114,7 +108,6 @@ async function publicObject(database: Executor, row: ObjectRow): Promise<PublicQ
     houseNumber: row.houseNumber,
     postalCode: row.postalCode,
     city: row.city,
-    systems: rows,
   })
 }
 
