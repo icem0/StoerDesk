@@ -8,18 +8,6 @@ import { z } from 'zod'
  * digits, upper-case letters, `_` and `-`. Internal links still use the UUID.
  */
 
-export const OBJECT_SYSTEM_TYPES = [
-  'BMA',
-  'LICHTRUF',
-  'RWA',
-  'EMA',
-  'SPRACHALARM',
-  'SONSTIGE',
-] as const
-
-export const objectSystemTypeSchema = z.enum(OBJECT_SYSTEM_TYPES)
-
-/** QR tokens are 22 URL-safe characters from 128 random bits (WP-M2-02). */
 export const qrTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{22}$/)
 
 export const objectNoSchema = z
@@ -45,18 +33,6 @@ const optionalText = (max: number) =>
 
 const optionalEmail = optionalText(320).pipe(z.email().nullable().optional())
 
-export const objectSystemInputSchema = z.object({
-  id: z.uuid().optional(),
-  type: objectSystemTypeSchema,
-  label: z.string().trim().min(1).max(120),
-})
-
-export const objectSystemSummarySchema = z.object({
-  id: z.uuid(),
-  type: objectSystemTypeSchema,
-  label: z.string(),
-})
-
 export const objectSummarySchema = z.object({
   id: z.uuid(),
   objectNo: objectNoSchema,
@@ -74,7 +50,6 @@ export const objectSummarySchema = z.object({
   active: z.boolean(),
   notes: z.string().nullable(),
   qrToken: qrTokenSchema.nullable(),
-  systems: z.array(objectSystemSummarySchema),
 })
 
 export const objectListResponseSchema = z.object({
@@ -85,7 +60,6 @@ export const objectListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
   active: z.enum(['true', 'false', 'all']).default('true'),
   city: z.string().trim().max(120).optional(),
-  systemType: objectSystemTypeSchema.optional(),
 })
 
 export const regenerateQrRequestSchema = z.object({
@@ -104,7 +78,6 @@ export const publicQrObjectSchema = z.object({
   houseNumber: z.string().nullable(),
   postalCode: z.string().nullable(),
   city: z.string().nullable(),
-  systems: z.array(objectSystemSummarySchema),
 })
 
 export const qrResolveResponseSchema = z.object({
@@ -129,7 +102,6 @@ const objectFields = {
 export const createObjectRequestSchema = z.object({
   objectNo: objectNoSchema,
   ...objectFields,
-  systems: z.array(objectSystemInputSchema).max(50).default([]),
 })
 
 export const updateObjectRequestSchema = z.object({
@@ -144,12 +116,8 @@ export const updateObjectRequestSchema = z.object({
   contactEmail: objectFields.contactEmail,
   externalId: objectFields.externalId,
   notes: objectFields.notes,
-  systems: z.array(objectSystemInputSchema).max(50).optional(),
 })
 
-export type ObjectSystemType = z.infer<typeof objectSystemTypeSchema>
-export type ObjectSystemInput = z.infer<typeof objectSystemInputSchema>
-export type ObjectSystemSummary = z.infer<typeof objectSystemSummarySchema>
 export type ObjectSummary = z.infer<typeof objectSummarySchema>
 export type ObjectListResponse = z.infer<typeof objectListResponseSchema>
 export type ObjectListQuery = z.infer<typeof objectListQuerySchema>

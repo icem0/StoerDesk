@@ -66,7 +66,6 @@ export const publicReportRequestSchema = z.object({
     .max(9)
     .default([])
     .refine((keys) => new Set(keys).size === keys.length),
-  systemId: z.uuid().optional(),
   contact: publicReportContactSchema.default({
     name: undefined,
     phone: undefined,
@@ -183,7 +182,6 @@ export function isOpenTicketStatus(status: string): status is OpenTicketStatus {
  */
 export const publicOpenTicketsQuerySchema = z.object({
   qrToken: qrTokenSchema,
-  systemId: z.uuid().optional(),
 })
 
 export const publicOpenTicketSchema = z.object({
@@ -234,7 +232,6 @@ export const publicTicketCommentResponseSchema = z.object({
 
 export const internalCreateTicketRequestSchema = z.object({
   objectId: z.uuid(),
-  systemId: z.uuid().optional(),
   title: trimmedText(200),
   description: trimmedText(4000),
   faultTemplateKeys: z
@@ -330,7 +327,6 @@ export const ticketListItemSchema = z.object({
   ticketNo: z.string(),
   objectNo: z.string(),
   objectName: z.string(),
-  systemType: z.string().nullable(),
   status: z.string(),
   priority: z.string(),
   reportedAt: z.iso.datetime(),
@@ -364,8 +360,6 @@ export const ticketDetailResponseSchema = z.object({
     ticketNo: z.string(),
     objectNo: z.string(),
     objectName: z.string(),
-    systemType: z.string().nullable(),
-    systemLabel: z.string().nullable(),
     status: z.string(),
     priority: z.string(),
     title: z.string().nullable(),
