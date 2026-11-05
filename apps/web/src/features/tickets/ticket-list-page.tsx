@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import type { TicketListResponse, TicketListItem } from '@stoerdesk/shared'
+import type { TicketListItem, TicketListResponse, TimelineState } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
@@ -10,9 +10,11 @@ import { apiFetch } from '../../lib/api'
  * Ticket list page (`PLAN.md` §13, §14, WP-M2-17b).
  *
  * Paginated ticket list with search and filters (status, priority). Each row
- * shows ticket number, object, status badge, priority badge, reported and
- * deadline times. Row click navigates to ticket detail (WP-M2-18, disabled
- * until then).
+ * shows ticket number, object, status badge, priority badge, reported time and
+ * a mini timeline (WP-M6-12): a small bar from `percent` coloured by
+ * `timelineState` with the remaining or overdue time as label and the absolute
+ * deadline as its title. Row click navigates to ticket detail (WP-M2-18,
+ * disabled until then).
  */
 
 const STATUS_LABELS: Record<string, string> = {
@@ -53,6 +55,15 @@ const PRIORITY_COLORS: Record<string, string> = {
   critical: 'bg-rose-900/30 text-rose-300',
 }
 
+/** Mini timeline colours of the list bar (WP-M6-12, `specs/05-timeline.md` §5.3). */
+const STATE_COLOUR: Record<TimelineState, string> = {
+  green: 'bg-green-500',
+  yellow: 'bg-yellow-500',
+  orange: 'bg-orange-500',
+  red: 'bg-rose-500',
+  stopped: 'bg-slate-500',
+}
+
 function useTickets(query: {
   search?: string
   status?: string
@@ -81,6 +92,20 @@ function useTickets(query: {
 function TicketRow({ ticket }: { ticket: TicketListItem }) {
   const { t } = useTranslation('ticket')
 
+  const [fetchedAt] = useState(() => Date.now())
+
+  const deadlineMs = new Date(ticket.deadlineAt).getTime()
+  const hoursLeft = Math.ceil(ticket.remainingMs / 3_600_000)
+  const hoursOver = Number.isFinite(deadlineMs)
+    ? Math.max(0, Math.ceil((fetchedAt - deadlineMs) / 3_600_000))
+    : 0
+  const remainingLabel =
+    ticket.timelineState === 'stopped'
+      ? t('list.remaining.stopped')
+      : ticket.timelineState === 'red'
+        ? t('list.remaining.overdue', { hours: hoursOver })
+        : t('list.remaining.left', { hours: hoursLeft })
+
   return (
     <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
       <td className="p-3 text-sm font-mono">
@@ -108,7 +133,17 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
         {new Date(ticket.reportedAt).toLocaleString('de-DE')}
       </td>
       <td className="p-3 text-sm text-slate-400">
-        {new Date(ticket.deadlineAt).toLocaleString('de-DE')}
+        <div className="flex flex-col gap-1">
+          <div className="relative h-1 w-24 rounded bg-slate-700 overflow-hidden">
+            <div
+              className={`h-full rounded ${STATE_COLOUR[ticket.timelineState]}`}
+              style={{ width: `${Math.min(100, Math.max(0, ticket.percent))}%` }}
+            />
+          </div>
+          <span title={new Date(ticket.deadlineAt).toLocaleString('de-DE')}>
+            {remainingLabel}
+          </span>
+        </div>
       </td>
       <td className="p-3 text-sm text-right">
         <Link className="text-sky-300 hover:text-sky-200 hover:underline" to={`/tickets/${ticket.ticketNo}`}>

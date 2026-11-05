@@ -1,7 +1,7 @@
 # WP-M6-12: list mini timeline and remaining time
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-10
 phase: 6
 milestone: m6

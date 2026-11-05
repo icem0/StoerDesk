@@ -232,6 +232,11 @@
       "deadlineAt": "Deadline",
       "actions": "Actions"
     },
+    "remaining": {
+      "left": "{{hours}} h left",
+      "overdue": "Overdue for {{hours}} h",
+      "stopped": "Stopped at acknowledgement"
+    },
     "actions": {
       "view": "View",
       "create": "New report"

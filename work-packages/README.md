@@ -325,12 +325,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-04  | `ticket_pauses` table and migration 0014                            | done                    | yes     |
 | WP-M6-05  | pause service                                                       | done                    | yes     |
 | WP-M6-06  | pause routes and acknowledge auto-close                             | done                    | yes     |
-| WP-M6-07  | escalation rule definitions                                         | planned                 | yes     |
-| WP-M6-08  | escalation scan and event writer                                    | planned                 | yes     |
-| WP-M6-09  | pg-boss escalation job                                              | planned                 | yes     |
+| WP-M6-07  | escalation rule definitions                                         | done                    | yes     |
+| WP-M6-08  | escalation scan and event writer                                    | done                    | yes     |
+| WP-M6-09  | pg-boss escalation job                                              | done                    | yes     |
 | WP-M6-10  | timeline and pause data in the ticket API                           | done                    | yes     |
 | WP-M6-11  | web timeline bar and pause controls                                 | done                    | yes     |
-| WP-M6-12  | list mini timeline and remaining time                               | planned                 | yes     |
+| WP-M6-12  | list mini timeline and remaining time                               | done                    | yes     |
 | WP-M6-13  | phase-6 exit criterion and record                                   | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

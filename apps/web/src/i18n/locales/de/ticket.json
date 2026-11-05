@@ -232,6 +232,11 @@
       "deadlineAt": "Frist",
       "actions": "Aktionen"
     },
+    "remaining": {
+      "left": "Noch {{hours}} Std.",
+      "overdue": "Seit {{hours}} Std. überfällig",
+      "stopped": "Bei Quittierung angehalten"
+    },
     "actions": {
       "view": "Anzeigen",
       "create": "Neue Meldung"
