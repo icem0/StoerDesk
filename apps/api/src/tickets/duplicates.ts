@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, or } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -14,7 +14,7 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { objects, systems, ticketEvents, tickets } from '../db/schema'
+import { objects, ticketEvents, tickets } from '../db/schema'
 
 /**
  * Duplicate hint of the public report path (`specs/06-report-form.md` §7.8,
@@ -81,34 +81,15 @@ async function resolveObject(database: Db, qrToken: string) {
  */
 export async function findOpenTickets(
   database: Db,
-  input: { qrToken: string; systemId?: string },
+  input: { qrToken: string },
 ): Promise<PublicOpenTickets> {
   const object = await resolveObject(database, input.qrToken)
 
-  if (input.systemId !== undefined) {
-    const [system] = await database
-      .select({ id: systems.id })
-      .from(systems)
-      .where(and(eq(systems.id, input.systemId), eq(systems.objectId, object.id)))
-      .limit(1)
-
-    if (system === undefined) {
-      throw new DuplicateRouteError(422, 'system_not_found', { fields: ['systemId'] })
-    }
-  }
-
-  // A fault of the whole object concerns every system, so the tickets without a
-  // system belong to the answer of a system query as well (§7.8.1).
-  const systemFilter =
-    input.systemId === undefined
-      ? undefined
-      : or(eq(tickets.systemId, input.systemId), isNull(tickets.systemId))
-
+  // All open tickets of the object count — there is no system level any more.
   const filters = [
     eq(tickets.objectId, object.id),
     inArray(tickets.status, [...OPEN_TICKET_STATUSES]),
     eq(tickets.suspectedSpam, false),
-    ...(systemFilter === undefined ? [] : [systemFilter]),
   ]
 
   const rows = await database

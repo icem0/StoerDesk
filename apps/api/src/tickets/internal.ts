@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -11,7 +11,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, systems, ticketEvents, tickets } from '../db/schema'
+import { objects, ticketEvents, tickets } from '../db/schema'
 import { deadlineAtForPriority } from './deadline'
 import { applyInternalAction } from './internal-actions'
 
@@ -59,24 +59,6 @@ export async function createInternalTicket(
     throw new InternalTicketRouteError(404, 'object_not_found', { fields: ['objectId'] })
   }
 
-  // If a system is given, it must belong to this object.
-  if (input.systemId !== undefined) {
-    const [system] = await database
-      .select({ id: systems.id })
-      .from(systems)
-      .where(
-        and(
-          eq(systems.id, input.systemId),
-          eq(systems.objectId, object.id),
-        ),
-      )
-      .limit(1)
-
-    if (system === undefined) {
-      throw new InternalTicketRouteError(422, 'system_not_found', { fields: ['systemId'] })
-    }
-  }
-
   const now = new Date()
   const deadlineAt = await deadlineAtForPriority(database, now, input.priority)
 
@@ -85,7 +67,6 @@ export async function createInternalTicket(
       .insert(tickets)
       .values({
         objectId: object.id,
-        systemId: input.systemId ?? null,
         title: input.title ?? null,
         description: input.description ?? null,
         faultTemplateKeys: input.faultTemplateKeys,

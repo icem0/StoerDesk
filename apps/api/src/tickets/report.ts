@@ -13,7 +13,7 @@ import {
 
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { objects, systems, ticketEvents, ticketPhotos, tickets } from '../db/schema'
+import { objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { generateQrToken } from '../objects/qr'
 import { readDeadlineHours } from './deadline'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
@@ -140,18 +140,6 @@ export async function createPublicReport(
     throw new ReportRouteError(404, 'qr_token_not_found', {})
   }
 
-  if (input.systemId !== undefined) {
-    const [system] = await database
-      .select({ id: systems.id })
-      .from(systems)
-      .where(and(eq(systems.id, input.systemId), eq(systems.objectId, object.id)))
-      .limit(1)
-
-    if (system === undefined) {
-      throw new ReportRouteError(422, 'system_not_found', { fields: ['systemId'] })
-    }
-  }
-
   if (input.text === undefined && input.faultTemplateKeys.length === 0) {
     throw new ReportRouteError(422, 'report_text_required', {
       fields: ['text', 'faultTemplateKeys'],
@@ -224,7 +212,6 @@ export async function createPublicReport(
 
   const insertValues = {
     objectId: object.id,
-    systemId: input.systemId ?? null,
     status: 'NEW',
     priority: 'normal',
     source: 'QR',

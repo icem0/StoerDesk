@@ -11,7 +11,6 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import {
   objects,
-  systems,
   ticketEvents,
   ticketPauses,
   ticketPhotos,
@@ -53,8 +52,6 @@ export async function getTicketDetail(
       ticketNo: tickets.ticketNo,
       objectNo: objects.objectNo,
       objectName: objects.name,
-      systemType: systems.type,
-      systemLabel: systems.label,
       status: tickets.status,
       priority: tickets.priority,
       title: tickets.title,
@@ -74,7 +71,6 @@ export async function getTicketDetail(
     })
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
-    .leftJoin(systems, eq(tickets.systemId, systems.id))
     .where(eq(tickets.ticketNo, ticketNo))
     .limit(1)
 
@@ -179,8 +175,6 @@ export async function getTicketDetail(
       ticketNo: ticketRow.ticketNo,
       objectNo: ticketRow.objectNo,
       objectName: ticketRow.objectName,
-      systemType: ticketRow.systemType,
-      systemLabel: ticketRow.systemLabel,
       status: ticketRow.status,
       priority: ticketRow.priority,
       title: ticketRow.title,
