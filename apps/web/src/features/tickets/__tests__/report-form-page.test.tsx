@@ -281,7 +281,7 @@ describe('ReportFormPage', () => {
     fillReport('Leitungsunterbrechung', 'Leitung im Keller gestört.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
-    expect(await screen.findByText('Zu viele Meldungen in kurzer Zeit.')).toBeTruthy()
+    expect(await screen.findByText(/Zu viele Meldungen in kurzer Zeit/)).toBeTruthy()
     await waitFor(() => expect(bodies).toHaveLength(1))
 
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))

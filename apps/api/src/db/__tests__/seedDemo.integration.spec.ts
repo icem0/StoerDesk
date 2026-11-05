@@ -58,7 +58,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
     })
 
-    it('creates three objects with one BMA system each and eight localized templates', async () => {
+    it('creates three objects with qr tokens and eight localized templates', async () => {
       const first = await seedDemo(db)
 
       expect(first).toEqual({ objects: 3, templates: 8, translations: 16 })

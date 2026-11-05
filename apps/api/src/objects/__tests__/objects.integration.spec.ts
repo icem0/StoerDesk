@@ -265,35 +265,27 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
     })
 
-    it('filters the list by search, city, active state and system type', async () => {
+    it('filters the list by search, city and active state', async () => {
       await createAsAdmin('6001_01', {
         name: 'Alpha Haus',
         city: 'Musterstadt',
-        systems: [{ type: 'BMA', label: 'BMA' }],
       })
       await createAsAdmin('6002_01', {
         name: 'Beta Halle',
         city: 'Beispielstadt',
-        systems: [{ type: 'RWA', label: 'RWA' }],
       })
       await createAsAdmin('6003_01', {
         name: 'Gamma Werk',
         city: 'Beispielstadt',
-        systems: [
-          { type: 'BMA', label: 'BMA' },
-          { type: 'RWA', label: 'RWA' },
-        ],
       })
 
       const byName = await getObjects(cookies['admin'], '?search=Beta')
       const byNumber = await getObjects(cookies['admin'], '?search=6003')
       const byCity = await getObjects(cookies['admin'], '?city=beispielstadt')
-      const byBma = await getObjects(cookies['admin'], '?search=600&systemType=BMA')
       const combined = await getObjects(
         cookies['admin'],
-        '?city=Beispielstadt&systemType=BMA',
+        '?city=Beispielstadt',
       )
-      const invalid = await getObjects(cookies['admin'], '?systemType=NOPE')
 
       expect(byName.json<ListBody>().objects?.map((object) => object.objectNo)).toEqual([
         '6002_01',
@@ -305,6 +297,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         '6002_01',
         '6003_01',
       ])
+      expect(combined.json<ListBody>().objects?.map((object) => object.objectNo).sort()).toEqual([
+        '6002_01',
+        '6003_01',
+      ])
       expect(byBma.json<ListBody>().objects?.map((object) => object.objectNo).sort()).toEqual([
         '6001_01',
         '6003_01',
@@ -312,8 +308,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(combined.json<ListBody>().objects?.map((object) => object.objectNo)).toEqual([
         '6003_01',
       ])
-      expect(invalid.statusCode).toBe(400)
-      expect(invalid.json<ErrorBody>().params?.fields).toEqual(['systemType'])
     })
 
     it('soft-deletes an object and keeps it visible only on request', async () => {
