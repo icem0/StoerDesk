@@ -1,7 +1,7 @@
 # WP-M2-92: `theme` column on the users table
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M1-09 (users), WP-M2-80 (schema change pattern)
 phase: 2
 context-budget: 12k tokens
@@ -55,4 +55,14 @@ a database — reported as unverified when skipped).
 
 ## Handoff
 
-- (filled by the implementing commit)
+- Files changed: `apps/api/src/db/schema.ts`,
+  `apps/api/src/db/migrations/0016_user_theme.sql`,
+  `apps/api/src/db/migrations/meta/_journal.json`,
+  `apps/api/src/db/__tests__/migrations.spec.ts` (test)
+- Interfaces added: `users.theme` (text, not null, default `auto`, check
+  `users_theme_check` with `auto`/`light`/`dark`); migration `0016_user_theme` is the
+  last journal entry
+- Verified: `npm run check` green (DB integration tests skipped locally without
+  PostgreSQL — unverified locally, CI has the service)
+- Follow-up WP: WP-M2-92b (theme in the shared schemas and in the session)
+- Open question: none

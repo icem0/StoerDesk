@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Every user gets a theme setting (WP-M2-92): the `users` table gains a `theme`
+  column (`auto`, `light` or `dark`, default `auto`) with the check constraint
+  `users_theme_check`; migration `0016_user_theme` is part of the journal.
+
 - The ticket detail page (WP-M2-91) shows an always visible action panel below the
   title instead of an "Aktionen" toggle: payload actions carry inline input fields
   (placeholders from the former prompts), missing required values and API failures

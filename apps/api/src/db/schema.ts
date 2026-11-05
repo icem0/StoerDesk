@@ -31,6 +31,7 @@ export const users = pgTable(
     email: text('email').notNull(),
     passwordHash: text('password_hash').notNull(),
     locale: text('locale').notNull().default('de'),
+    theme: text('theme').notNull().default('auto'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
@@ -38,6 +39,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex('users_email_key').on(table.email),
     check('users_locale_check', sql`${table.locale} IN ('de', 'en')`),
+    check('users_theme_check', sql`${table.theme} IN ('auto', 'light', 'dark')`),
   ],
 )
 

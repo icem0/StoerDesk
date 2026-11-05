@@ -95,7 +95,7 @@ describe('base schema', () => {
     )
 
     expect(columnsByTable).toEqual([
-      ['id', 'email', 'passwordHash', 'locale', 'active', 'createdAt', 'updatedAt'],
+      ['id', 'email', 'passwordHash', 'locale', 'theme', 'active', 'createdAt', 'updatedAt'],
       ['id', 'userId', 'tokenHash', 'expiresAt', 'createdAt'],
       ['id', 'name', 'createdAt', 'updatedAt'],
       ['userId', 'groupId', 'createdAt'],
@@ -213,7 +213,23 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0015_remove_systems_level')
+    expect(entries.at(-1)?.tag).toBe('0016_user_theme')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
+  })
+})
+
+describe('migration 0016 user theme', () => {
+  const sql = readMigration('0016_user_theme')
+
+  it('adds the theme column with the auto default and constrains the values', () => {
+    expect(sql).toContain(`ALTER TABLE "users" ADD COLUMN "theme" text DEFAULT 'auto' NOT NULL;`)
+    expect(sql).toContain(
+      `ALTER TABLE "users" ADD CONSTRAINT "users_theme_check" CHECK ("users"."theme" IN ('auto', 'light', 'dark'));`,
+    )
+  })
+
+  it('touches the users table only', () => {
+    expect(sql).not.toContain('tickets')
+    expect(sql).not.toContain('sessions')
   })
 })
