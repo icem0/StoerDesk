@@ -210,32 +210,6 @@ export const objects = pgTable(
   ],
 )
 
-export const SYSTEM_TYPES = ['BMA', 'LICHTRUF', 'RWA', 'EMA', 'SPRACHALARM', 'SONSTIGE'] as const
-
-const systemTypeCheckSql = sql.raw(SYSTEM_TYPES.map((type) => `'${type}'`).join(', '))
-
-/** Maintenance subsystems of an object (`specs/02-data-model.md` §4.4). */
-export const systems = pgTable(
-  'systems',
-  {
-    id: uuid('id').primaryKey().default(uuidDefault),
-    objectId: uuid('object_id')
-      .notNull()
-      .references(() => objects.id, { onDelete: 'cascade' }),
-    type: text('type').notNull(),
-    label: text('label').notNull(),
-    qrToken: text('qr_token'),
-    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex('systems_qr_token_key').on(table.qrToken),
-    index('systems_object_id_idx').on(table.objectId),
-    index('systems_type_idx').on(table.type),
-    check('systems_type_check', sql`${table.type} IN (${systemTypeCheckSql})`),
-  ],
-)
-
 /**
  * Retired QR tokens (`specs/02-data-model.md` §4.7, WP-M2-02). A regenerated
  * object token keeps redirecting through this table until `expires_at`; the
@@ -352,8 +326,6 @@ export const tickets = pgTable(
     objectId: uuid('object_id')
       .notNull()
       .references(() => objects.id, { onDelete: 'restrict' }),
-    /** The object sync of WP-M2-01 deletes system rows; the report keeps the object. */
-    systemId: uuid('system_id').references(() => systems.id, { onDelete: 'set null' }),
     status: text('status').notNull().default('NEW'),
     priority: text('priority').notNull().default('normal'),
     title: text('title'),
@@ -661,9 +633,6 @@ export type UserRole = typeof userRoles.$inferSelect
 export type UserPermission = typeof userPermissions.$inferSelect
 export type MaintenanceObject = typeof objects.$inferSelect
 export type NewMaintenanceObject = typeof objects.$inferInsert
-export type System = typeof systems.$inferSelect
-export type NewSystem = typeof systems.$inferInsert
-export type SystemType = (typeof SYSTEM_TYPES)[number]
 export type TextTemplate = typeof textTemplates.$inferSelect
 export type TextTemplateTranslation = typeof textTemplateTranslations.$inferSelect
 export type Ticket = typeof tickets.$inferSelect
