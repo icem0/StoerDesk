@@ -1,7 +1,7 @@
 # WP-M6-09: pg-boss escalation job
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-08
 phase: 6
 milestone: m6

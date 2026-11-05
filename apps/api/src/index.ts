@@ -20,6 +20,7 @@ import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { seedStandardTexts } from './db/seed-standard-texts'
 import { startBmaAnlageSync } from './jobs/bma-sync'
+import { startTicketEscalation } from './jobs/escalation'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { deleteRoutes } from './tickets/delete-routes'
@@ -160,6 +161,7 @@ if (invokedDirectly) {
   // server object: `buildServer` stays job-free, so integration tests never
   // create the pg-boss schema (WP-M2-02b).
   const cleanup = await startQrTokenCleanup(databaseConnectionUrl(env), app.log)
+  const escalation = await startTicketEscalation(databaseConnectionUrl(env), app.log)
 
   // The BMAcloud pull is scheduled only when the tenant credentials exist
   // (WP-M2-36); the manual trigger of the admin API needs no scheduler.
@@ -167,6 +169,7 @@ if (invokedDirectly) {
 
   app.addHook('onClose', async () => {
     await cleanup.stop({ timeout: 5000 })
+    await escalation.stop({ timeout: 5000 })
 
     if (bmaSync !== undefined) {
       await bmaSync.stop({ timeout: 5000 })
