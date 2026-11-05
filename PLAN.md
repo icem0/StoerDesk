@@ -1040,6 +1040,18 @@ gone. The remaining half is **WP-M7-04c** (`work-packages/m7/04c-outbox-drain-wo
 writes `SENT`/`FAILED`, appends the `notification_sent`/`notification_failed` ticket events
 and is scheduled per minute from the direct API start only.
 
+**Repair — red CI runs of WP-M4-07 / WP-M7-02 / WP-M7-03 / WP-M7-04 / WP-M7-04b
+(v1.0.25 … v1.0.29).** WP-M4-07 moved every workflow action into one dropdown menu but
+never wired body-less actions (review, assign, accept, close) nor "`Zurück zur Liste`",
+so the phase-4 and phase-5 E2E exit criteria were red against a real database and
+Chromium — `npm run check` skips e2e locally without those prerequisites (a skipped
+gate is never presented as green, §18.2), which is why the check looked green before
+push. The repair commit makes the checks green end to end (`npm run check`,
+`npm run build`, E2E 14 passed against a throwaway database): the dropdown performs
+body-less actions on confirmation, navigates back to the ticket list via "`Zurück zur
+Liste`", the confirm inputs are addressable by `name`, and the E2E specs drive the
+dropdown instead of the removed buttons. Phase 7 continues with **WP-M7-04c**.
+
 **Out-of-band phase 2 — the klarmname columns (WP-M2-93).** `users.given_name` and
 `users.family_name` are text, `NOT NULL`, default `''`, length ≤ 64, stored trimmed, with
 `users_name_idx` over `lower(family_name), lower(given_name)` and the helper

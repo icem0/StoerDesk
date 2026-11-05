@@ -65,5 +65,13 @@ Expected: all green. The detail page shows timeline on top, status/priority top 
 - Files changed: `ticket-detail-page.tsx`, `ticket-timeline.tsx`, both `ticket.json` locales
 - Interfaces added: none (UI rework only)
 - Verified: `npm run check` green (typecheck, eslint, vitest 483 tests, i18n:check 635/635 keys, wp:check 220/220)
+- Corrected by: the repair of the red CI runs v1.0.25 … v1.0.29 — WP-M4-07 moved all
+  workflow actions into one dropdown but left body-less actions (review, assign,
+  accept, close) and "Zurück zur Liste" without a working target, so the phase-4 and
+  phase-5 E2E exit criteria were red against a real database and Chromium (e2e skips
+  locally without those and is never a green proof). The dropdown now performs
+  body-less actions on confirmation and navigates back to the list; the E2E specs
+  drive the dropdown instead of the removed buttons, and confirm inputs are
+  addressable via `name` attributes.
 - Follow-up WP: none
 - Open question: none

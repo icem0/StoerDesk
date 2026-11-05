@@ -39,6 +39,7 @@ const ui = {
     offlineAction: {
       discard: 'Verwerfen',
     },
+    confirm: 'Bestätigen',
   },
   en: {
     loginTitle: 'Sign in',
@@ -62,6 +63,7 @@ const ui = {
     offlineAction: {
       discard: 'Discard',
     },
+    confirm: 'Confirm',
   },
 } as const
 
@@ -199,10 +201,15 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // Go offline: the acknowledge cannot reach the server and is queued instead.
+    // Choose the acknowledge entry of the dropdown menu (WP-M4-07), go offline and
+    // confirm it: the acknowledge cannot reach the server and is queued instead.
+    const actions = page.locator('select[name="ticketAction"]')
+    await expect(actions).toContainText(texts.acknowledge)
+
+    await actions.selectOption('acknowledged')
     await page.context().setOffline(true)
     await page.locator('input[name="acknowledgeResult"]').fill('fixed')
-    await page.getByRole('button', { name: texts.acknowledge }).click()
+    await page.getByRole('button', { name: texts.confirm }).click()
 
     // The queued notice proves the write was persisted locally instead of being sent.
     await expect(page.getByText(texts.offlineQueued)).toBeVisible()
@@ -251,10 +258,15 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // Queue an acknowledge while offline.
+    // Queue an acknowledge while offline: choose the dropdown entry first, so the
+    // input fields of its confirmation panel exist, then confirm offline.
+    const actions = page.locator('select[name="ticketAction"]')
+    await expect(actions).toContainText(texts.acknowledge)
+
+    await actions.selectOption('acknowledged')
     await page.context().setOffline(true)
     await page.locator('input[name="acknowledgeResult"]').fill('fixed')
-    await page.getByRole('button', { name: texts.acknowledge }).click()
+    await page.getByRole('button', { name: texts.confirm }).click()
 
     // Cancel through the API while the page is offline: API requests leave the
     // browser context directly, so the cancel reaches the server.

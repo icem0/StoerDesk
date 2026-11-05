@@ -246,12 +246,14 @@ export function TicketDetailPage() {
           <div className="flex flex-wrap gap-2 items-end">
             <input
               className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="workOrderType"
               placeholder={t('detail.prompt.workOrderType')}
               value={fields.workOrderType ?? ''}
               onChange={(event) => setFields({ ...fields, workOrderType: event.target.value })}
             />
             <input
               className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="workOrderNumber"
               placeholder={t('detail.prompt.workOrderNumber')}
               value={fields.workOrderNumber ?? ''}
               onChange={(event) => setFields({ ...fields, workOrderNumber: event.target.value })}
@@ -294,6 +296,7 @@ export function TicketDetailPage() {
           <div className="flex flex-wrap gap-2 items-end">
             <input
               className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="declineReason"
               placeholder={t('detail.prompt.declineReason')}
               value={fields.declineReason ?? ''}
               onChange={(event) => setFields({ ...fields, declineReason: event.target.value })}
@@ -334,12 +337,14 @@ export function TicketDetailPage() {
           <div className="flex flex-wrap gap-2 items-end">
             <input
               className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="acknowledgeResult"
               placeholder={t('detail.prompt.acknowledgeResult')}
               value={fields.acknowledgeResult ?? ''}
               onChange={(event) => setFields({ ...fields, acknowledgeResult: event.target.value })}
             />
             <input
               className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="acknowledgeNote"
               placeholder={t('detail.prompt.acknowledgeNote')}
               value={fields.acknowledgeNote ?? ''}
               onChange={(event) => setFields({ ...fields, acknowledgeNote: event.target.value })}
@@ -383,6 +388,7 @@ export function TicketDetailPage() {
           <div className="flex flex-wrap gap-2 items-end">
             <input
               className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="reopenReason"
               placeholder={t('detail.prompt.reopenReason')}
               value={fields.reopenReason ?? ''}
               onChange={(event) => setFields({ ...fields, reopenReason: event.target.value })}
@@ -423,6 +429,7 @@ export function TicketDetailPage() {
           <div className="flex flex-wrap gap-2 items-end">
             <input
               className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="commentText"
               placeholder={t('detail.prompt.commentText')}
               value={fields.commentText ?? ''}
               onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
@@ -463,6 +470,7 @@ export function TicketDetailPage() {
           <div className="flex flex-wrap gap-2 items-end">
             <input
               className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="cancelReason"
               placeholder={t('detail.prompt.cancelReason')}
               value={fields.cancelReason ?? ''}
               onChange={(event) => setFields({ ...fields, cancelReason: event.target.value })}
@@ -567,12 +575,41 @@ export function TicketDetailPage() {
           </div>
         )
       }
-      case 'list':
-        navigate('/tickets')
-        setSelectedAction(null)
-        return null
-      default:
-        return null
+      default: {
+        const segment = selectedAction === null ? undefined : ACTION_SEGMENTS[selectedAction]
+
+        if (segment === undefined) {
+          return null
+        }
+
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500"
+              type="button"
+              onClick={() => {
+                const action = selectedAction as string
+                setSelectedAction(null)
+                setFields({})
+                void handleAction(action)
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
     }
   }
 
@@ -751,9 +788,19 @@ export function TicketDetailPage() {
           {t('detail.actions')}
         </label>
         <select
+          name="ticketAction"
           value={selectedAction ?? ''}
           onChange={(event) => {
             const value = event.target.value
+
+            if (value === 'list') {
+              setSelectedAction(null)
+              setLastError(null)
+              navigate('/tickets')
+
+              return
+            }
+
             setSelectedAction(value === '' ? null : value)
             setLastError(null)
           }}
@@ -766,7 +813,7 @@ export function TicketDetailPage() {
             </option>
           ))}
         </select>
-        {selectedAction !== null && selectedAction !== 'list' && (
+        {selectedAction !== null && (
           <div className="mt-2">{renderConfirmPanel()}</div>
         )}
       </div>

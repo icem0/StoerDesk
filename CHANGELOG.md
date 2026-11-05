@@ -1148,6 +1148,17 @@ database …`. Without that variable the runner prints its skip notice and `npm 
   read in `apps/web/src/i18n/index.ts`: the acceptance demands an EN test, and the app had
   no path to the `en` bundle.
 
+### Fixed
+
+- The ticket detail dropdown of WP-M4-07 now performs body-less workflow actions
+  (review, assign, accept, close) on confirmation and navigates back to the ticket
+  list via "`Zurück zur Liste`": the redesign left them without any working target,
+  so the phase-4 and phase-5 E2E exit criteria (WP-M4-01, WP-M5-08) were red in CI
+  for runs v1.0.25 … v1.0.29 against a real database and Chromium. The E2E specs
+  now drive the dropdown menu instead of the removed buttons
+  (`select[name="ticketAction"]`, payload inputs addressable via their `name`
+  attributes). `npm run check` is green end to end.
+
 ### Not implemented (by design)
 
 - All domain logic (tickets, objects, on-call, notifications, UI).
