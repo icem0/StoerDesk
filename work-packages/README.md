@@ -311,7 +311,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-92  | `users.theme` column and migration 0016                             | done                    | yes     |
 | WP-M2-92b | theme through the session and the login response                | done                    | yes     |
 | WP-M2-92c | theme in the shared schemas and in the admin user API              | done                    | yes     |
-| WP-M2-92d | theme class in the shell and light palette in styles.css            | planned                 | yes     |
+| WP-M2-92d | theme class in the shell and light palette in styles.css            | done                    | yes     |
 | WP-M2-92e | theme select in the user settings (users page)                      | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
@@ -332,6 +332,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-15  | host deploy hook for the update menu (`npm run deploy:hook`)         | done                    | yes     |
 | WP-M3-16  | update.sh compares the running version, not the folder             | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
+| WP-M4-06  | fix ticket hard-delete blocked by append-only trigger               | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
 | WP-M5-02  | `internal_action_receipts` table and migration 0013                     | done                    | yes     |
 | WP-M5-03  | `applyInternalAction`: replay-safe acknowledge/comment/decline      | done                    | yes     |

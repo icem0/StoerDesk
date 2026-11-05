@@ -84,6 +84,12 @@ export async function deleteTicket(input: DeleteTicketInput): Promise<DeleteTick
   const photoDir = join(uploadDir, 'tickets', ticket.id)
 
   return await database.transaction(async (tx) => {
+    // Allow the ON DELETE CASCADE of ticket_events when the ticket row is
+    // hard-deleted. The append-only trigger of migration 0004 blocks direct
+    // deletes on ticket_events; pg_trigger_depth() does not increment for FK
+    // cascades, so we grant the bypass via a transaction-scoped session variable.
+    await tx.execute(sql`SET LOCAL stoerdesk.allow_ticket_event_delete = 'true'`)
+
     const eventRows = await tx
       .select({ count: sql`count(*)` })
       .from(ticketEvents)

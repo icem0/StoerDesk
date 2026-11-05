@@ -120,6 +120,13 @@
       "when": 1793877422000,
       "tag": "0016_user_theme",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": 7,
+      "when": 1793877423000,
+      "tag": "0017_fix_ticket_event_delete_trigger",
+      "breakpoints": true
     }
   ]
 }

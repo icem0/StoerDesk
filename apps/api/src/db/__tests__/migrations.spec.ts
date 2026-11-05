@@ -213,7 +213,7 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0016_user_theme')
+    expect(entries.at(-1)?.tag).toBe('0017_fix_ticket_event_delete_trigger')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
   })
 })

@@ -88,7 +88,7 @@ export async function buildServer() {
     if (envelope.code === undefined) {
       request.log.error({ err: error }, 'request failed')
 
-      return reply.send(error)
+      return reply.code(500).send({ code: 'internal_error', params: {} })
     }
 
     request.log.warn({ code: envelope.code, statusCode: envelope.statusCode ?? 500 })
