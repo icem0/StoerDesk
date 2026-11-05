@@ -49,6 +49,15 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleString(locale)
 }
 
+function formatEventTime(iso: string): string {
+  const locale = i18n.language === 'en' ? 'en-US' : 'de-DE'
+  return new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(new Date(iso))
+}
+
 /**
  * Workflow events are not URL segments (`WP-M2-19c`): the detail page maps each
  * event to the route path of `apps/api/src/tickets/workflow-routes.ts`.
@@ -240,7 +249,7 @@ export function TicketDetailPage() {
               <dt className="text-xs text-slate-500">{t('detail.field.priority')}</dt>
               <dd className="text-sm">
                 <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
-                  {t(`ticket.priority.${ticket.priority}`) ?? ticket.priority}
+                  {t(`priority.${ticket.priority}`) ?? ticket.priority}
                 </span>
               </dd>
             </div>
@@ -334,9 +343,9 @@ export function TicketDetailPage() {
           ) : (
             events.map((event) => (
               <div key={event.id} className="p-3 flex gap-3">
-                <div className="w-8">
+                <div className="w-24 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-mono text-slate-500">
-                    {formatTime(event.createdAt).substring(11)}
+                    {formatEventTime(event.createdAt)}
                   </span>
                 </div>
                 <div className="flex-1">
@@ -344,7 +353,7 @@ export function TicketDetailPage() {
                     {t(`status.events.${event.type}`) ?? event.type}
                   </div>
                   <div className="text-xs text-slate-400">
-                    {t(`ticket.actorKind.${event.actorKind}`) ?? event.actorKind}
+                    {t(`actorKind.${event.actorKind}`) ?? event.actorKind}
                     {event.actorName !== null ? ` (${event.actorName})` : ''}
                   </div>
                 </div>

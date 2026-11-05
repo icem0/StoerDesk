@@ -64,6 +64,11 @@ const ui = {
       acknowledged: 'Störung bearbeitet',
       closed: 'Vorgang abgeschlossen',
     },
+    actorKind: {
+      user: 'Nutzer',
+      system: 'System',
+      public: 'Öffentlich',
+    },
   },
   en: {
     loginTitle: 'Sign in',
@@ -101,6 +106,11 @@ const ui = {
       accepted: 'Work order accepted',
       acknowledged: 'Malfunction handled',
       closed: 'Ticket closed',
+    },
+    actorKind: {
+      user: 'User',
+      system: 'System',
+      public: 'Public',
     },
   },
 } as const
@@ -266,5 +276,10 @@ for (const language of ['de', 'en'] as const) {
       texts.event.acknowledged,
       texts.event.closed,
     ])
+    // Every internal transition writes its event with actor kind `user`, so the
+    // localized actor label must appear in the history rows instead of the raw key.
+    await expect(history(page).locator('.text-xs.text-slate-400')).toContainText(
+      texts.actorKind.user,
+    )
   })
 }
