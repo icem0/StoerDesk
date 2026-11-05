@@ -1,7 +1,7 @@
 # WP-M6-08: escalation scan and event writer
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-05, WP-M6-07
 phase: 6
 milestone: m6
