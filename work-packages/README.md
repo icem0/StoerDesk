@@ -319,6 +319,19 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | done                    | yes     |
 | WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | done                    | yes     |
 | WP-M5-09  | sign-out clears the `internal-tickets` cache                        | done                    | yes     |
+| WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
+| WP-M6-02  | shared deadline and timeline contracts                              | planned                 | yes     |
+| WP-M6-03  | per-priority deadlines on ticket creation                           | planned                 | yes     |
+| WP-M6-04  | `ticket_pauses` table and migration 0014                            | planned                 | yes     |
+| WP-M6-05  | pause service                                                       | planned                 | yes     |
+| WP-M6-06  | pause routes and acknowledge auto-close                             | planned                 | yes     |
+| WP-M6-07  | escalation rule definitions                                         | planned                 | yes     |
+| WP-M6-08  | escalation scan and event writer                                    | planned                 | yes     |
+| WP-M6-09  | pg-boss escalation job                                              | planned                 | yes     |
+| WP-M6-10  | timeline and pause data in the ticket API                           | planned                 | yes     |
+| WP-M6-11  | web timeline bar and pause controls                                 | planned                 | yes     |
+| WP-M6-12  | list mini timeline and remaining time                               | planned                 | yes     |
+| WP-M6-13  | phase-6 exit criterion and record                                   | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

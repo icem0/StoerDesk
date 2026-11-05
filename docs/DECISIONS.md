@@ -39,3 +39,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0005](DECISIONS/0005-bmacloud-api-key-in-settings.md)   | BMAcloud bearer key configurable in the administration          | accepted |
 | [ADR-0006](DECISIONS/0006-host-update-agent.md)             | Host update agent topology (profile `update`, same project)    | superseded by ADR-0007 |
 | [ADR-0007](DECISIONS/0007-update-check-and-deploy-webhook.md) | Update check in the API and deployment over a deploy webhook | accepted |
+| [ADR-0008](DECISIONS/0008-deadline-and-escalation-defaults.md) | Deadline and escalation defaults per priority | accepted |
