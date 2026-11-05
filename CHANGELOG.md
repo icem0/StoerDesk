@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The web shell knows a light mode (WP-M2-92d): the theme of the user (`auto`,
+  `light` or `dark`) is applied as a class on the shell root, `auto` follows the
+  system preference of the browser. The light palette only remaps the Tailwind
+  color variables, so every page keeps its colors without a new utility class.
+
 - The theme is part of the user contract (WP-M2-92c): `userThemeSchema` knows
   `auto`, `light` and `dark`, the user summary, the create and update requests
   and the `/me` answer carry it. The admin user API reads and stores the theme,

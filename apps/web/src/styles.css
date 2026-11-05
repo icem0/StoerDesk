@@ -16,6 +16,80 @@ body {
 }
 
 /*
+ * Theme of the user (WP-M2-92d, `PLAN.md` §14): the shell root carries
+ * `theme-light` or `theme-dark` — `auto` is resolved to the system preference in
+ * `Shell.tsx`. Tailwind v4 resolves every color utility through `var(--color-*)`,
+ * so the light mode only remaps the variables: the slate scale is inverted (the
+ * page becomes light, the text dark) and the light steps of the accent colors
+ * become dark enough for a light background.
+ */
+.theme-light {
+  color-scheme: light;
+
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #64748b;
+  --color-slate-700: #475569;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  --color-sky-100: #075985;
+  --color-sky-200: #075985;
+  --color-sky-300: #0369a1;
+  --color-sky-400: #0369a1;
+  --color-blue-100: #1e40af;
+  --color-blue-200: #1e40af;
+  --color-blue-300: #1d4ed8;
+  --color-blue-400: #1d4ed8;
+  --color-indigo-100: #3730a3;
+  --color-indigo-200: #3730a3;
+  --color-indigo-300: #4338ca;
+  --color-indigo-400: #4338ca;
+  --color-purple-100: #6b21a8;
+  --color-purple-200: #6b21a8;
+  --color-purple-300: #7e22ce;
+  --color-purple-400: #7e22ce;
+  --color-emerald-100: #065f46;
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #047857;
+  --color-green-100: #166534;
+  --color-green-200: #166534;
+  --color-green-300: #15803d;
+  --color-green-400: #15803d;
+  --color-amber-100: #92400e;
+  --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
+  --color-amber-400: #b45309;
+  --color-yellow-100: #854d0e;
+  --color-yellow-200: #854d0e;
+  --color-yellow-300: #a16207;
+  --color-yellow-400: #a16207;
+  --color-orange-100: #9a3412;
+  --color-orange-200: #9a3412;
+  --color-orange-300: #c2410c;
+  --color-orange-400: #c2410c;
+  --color-rose-100: #9f1239;
+  --color-rose-200: #9f1239;
+  --color-rose-300: #be123c;
+  --color-rose-400: #be123c;
+  --color-red-100: #991b1b;
+  --color-red-200: #991b1b;
+  --color-red-300: #b91c1c;
+  --color-red-400: #b91c1c;
+}
+
+/* The page background of the light mode (the shell fills the viewport itself). */
+body:has(.theme-light) {
+  background-color: #f8fafc;
+}
+
+/*
  * The admin pages still render their own <main> with page padding and a page
  * background (WP-M1-09c/09d). The shell already provides that frame, so inside
  * the shell only the content remains (WP-M1-17).

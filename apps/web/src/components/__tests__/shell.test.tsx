@@ -46,10 +46,23 @@ function signedInMe() {
       id: '11111111-1111-4111-8111-111111111111',
       email: 'admin@example.com',
       locale: 'de',
+      theme: 'auto',
       roles: ['admin'],
       permissions: ['user.read', 'role.read', 'object.read'],
     },
   }
+}
+
+/** jsdom has no `matchMedia` — the shell asks it for the system theme (WP-M2-92d). */
+function stubMatchMedia(prefersLight: boolean): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: prefersLight,
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  }))
 }
 
 afterEach(() => {
@@ -168,5 +181,24 @@ describe('Shell settings menu', () => {
     expect(await screen.findByText('Anmeldung')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Einstellungen' })).toBeNull()
     expect(screen.getByTestId('app-version')).toBeTruthy()
+  })
+
+  it('applies the theme of the signed-in user on the shell root', async () => {
+    stubMe({
+      user: { ...signedInMe().user, theme: 'light' },
+    })
+    renderShell()
+
+    expect(await screen.findByText(marker)).toBeTruthy()
+    expect(document.querySelector('.theme-light')).toBeTruthy()
+  })
+
+  it('resolves the theme auto to the system preference', async () => {
+    stubMatchMedia(true)
+    stubMe(signedInMe())
+    renderShell()
+
+    expect(await screen.findByText(marker)).toBeTruthy()
+    expect(document.querySelector('.theme-light')).toBeTruthy()
   })
 })

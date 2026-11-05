@@ -10,6 +10,35 @@ import { AppVersion } from './app-version'
 
 import type { BrandingResponse } from '@stoerdesk/shared'
 
+/**
+ * System preference of the theme (WP-M2-92d): the setting `auto` follows
+ * `prefers-color-scheme`, also when the preference changes while the app is open.
+ */
+function useSystemTheme(): 'light' | 'dark' {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return 'dark'
+    }
+
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: light)')
+    const listener = (event: MediaQueryListEvent) => setTheme(event.matches ? 'light' : 'dark')
+
+    media.addEventListener('change', listener)
+
+    return () => media.removeEventListener('change', listener)
+  }, [])
+
+  return theme
+}
+
 const navGroups = [
   {
     key: 'operations',
@@ -181,6 +210,7 @@ function SettingsMenu({ email }: { email: string }) {
 export function Shell() {
   const { t } = useTranslation('common')
   const me = useMe()
+  const systemTheme = useSystemTheme()
 
   const { data: branding } = useQuery({
     queryKey: ['branding'],
@@ -193,8 +223,15 @@ export function Shell() {
     ? t('app.titleWithCompany', { company: companyName, product: t('app.title') })
     : t('app.title')
 
+  // The theme of the user (WP-M2-92d): `auto` follows `prefers-color-scheme`, the
+  // palette of the light mode lives in `styles.css` as Tailwind color variables.
+  const theme = me.data?.user.theme ?? 'auto'
+  const effectiveTheme = theme === 'auto' ? systemTheme : theme
+
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white">
+    <div
+      className={`theme-${effectiveTheme} flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white`}
+    >
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm print:hidden">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3">
           <span className="flex min-w-0 items-center gap-2">

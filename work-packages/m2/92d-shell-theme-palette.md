@@ -1,7 +1,7 @@
 # WP-M2-92d: theme class in the shell and the light palette in styles.css
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-92b (`/me` answers `theme`), WP-M1-13/17 (shell)
 phase: 2
 context-budget: 16k tokens
@@ -21,23 +21,25 @@ files-write:
 
 interfaces:
 
-- the shell root class carries `theme-auto` when signed out or the user's theme is
-  `auto`, otherwise `theme-light`/`theme-dark` from `/me`
-- `styles.css` defines the light palette (inverted slate scale, light 300/400 steps of
-  rose/emerald/amber/sky, `color-scheme: light`) once for `.theme-light` and, inside
-  `@media (prefers-color-scheme: light)`, for `.theme-auto`; `body:has(.theme-light)`
-  and the media counterpart for `.theme-auto` get the light page background
+- the shell root class carries `theme-light` or `theme-dark`; the theme `auto` of
+  the user (and the signed-out state) is resolved to the system preference
+  `prefers-color-scheme` in the shell
+- `styles.css` defines the light palette for `.theme-light`: the slate scale is
+  inverted (light page, dark text), the light steps of the accent colors become dark
+  enough for a light background, `color-scheme: light`; `body:has(.theme-light)` gets
+  the light page background
 - public token pages (`/m`, `/s`) are outside the shell and keep the dark palette
 
 ## Task
 
-1. `Shell.tsx`: the shell container class list gains
-   `theme-${me.data?.user.theme ?? 'auto'}` (no user text in the class).
-2. `styles.css`: one custom-property block for the light palette; apply it to
-   `.theme-light` and to `.theme-auto` under a `prefers-color-scheme: light` media
-   query; add the `body:has(...)` background rules.
-3. `Shell.test.tsx`: the `theme-auto` class without `/me` data and `theme-light` with a
-   stubbed `theme: 'light'`.
+1. `Shell.tsx`: `useSystemTheme()` reads `prefers-color-scheme` (and follows a
+   change of the preference); the shell container class list gains
+   `theme-${theme}` with the theme of the user or the system preference.
+2. `styles.css`: the custom-property block `.theme-light` with the inverted slate
+   scale and the dark accent steps; `body:has(.theme-light)` gets the light page
+   background.
+3. `Shell.test.tsx`: the `theme-light` class for a user with `theme: 'light'` and
+   for `auto` with a light system preference.
 
 ## Non-goals
 
@@ -55,4 +57,12 @@ npm run wp:check
 
 ## Handoff
 
-- (filled by the implementing commit)
+- Files changed: `apps/web/src/components/Shell.tsx`, `apps/web/src/styles.css`,
+  `apps/web/src/components/__tests__/shell.test.tsx` (test)
+- Interfaces added: `useSystemTheme()` in the shell, the `theme-light`/`theme-dark`
+  class on the shell root, the light palette as Tailwind color variables in
+  `styles.css` (no utility class changes)
+- Verified: `npm run check` green — the shell tests prove the class for the theme of
+  the user and for `auto` with a light system preference
+- Follow-up WP: WP-M2-92e (theme select in the user settings)
+- Open question: none
