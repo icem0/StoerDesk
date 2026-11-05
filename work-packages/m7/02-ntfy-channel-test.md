@@ -1,7 +1,7 @@
 # WP-M7-02: Unit test for the ntfy channel adapter
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M7-01
 phase: 7
 context-budget: 18k tokens

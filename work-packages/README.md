@@ -17,7 +17,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 14  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7 (planned): ntfy channel adapter, channel test, ntfy onboarding        | 3   |
+| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding                 | 3   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -139,6 +139,16 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > The remaining WPs are working plans and are implemented
 > only after approval — WP by WP, never in bulk. A WP counts as done only when code,
 > tests, lint, typecheck and docs agree and the corresponding commit is pushed.
+>
+> **Phase 7 started** with the `m7` packages: **WP-M7-01** is implemented (the ntfy
+> channel adapter `sendNtfyNotification` in `apps/api/src/notifications/channels/ntfy.ts`,
+> wired into `configuredChannels` and its `.env.example` keys `NTFY_URL`/`NTFY_TOPIC`) and
+> **WP-M7-02** (`02-ntfy-channel-test.md`) is implemented as its vitest suite — mocked
+> `fetch` posts the JSON payload (title, message and the single `view` action labelled
+> `Öffnen`) to `${NTFY_URL}/${NTFY_TOPIC}` with `content-type: application/json`, the channel
+> still sends when `pwaUrl` is empty, and a non-2xx answer throws `NtfyError` `http_error`.
+> **WP-M7-03** (ntfy QR code + i18n label) is planned; the German `Öffnen` label stays
+> hard-coded there until that package adds the i18n key.
 
 ## Open follow-ups
 
@@ -357,6 +367,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-11  | web timeline bar and pause controls                                 | done                    | yes     |
 | WP-M6-12  | list mini timeline and remaining time                               | done                    | yes     |
 | WP-M6-13 | phase-6 exit criterion and record   | done                    | yes     |
+| WP-M7-01  | ntfy channel adapter and its env wiring                             | done                    | yes     |
+| WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
+| WP-M7-03  | ntfy QR code, onboarding and i18n label                             | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

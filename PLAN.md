@@ -754,6 +754,9 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M5-07  | stale-while-revalidate cache for internal ticket reads             | done   |
 | WP-M5-08  | offline internal actions E2E — phase 5 exit criterion              | done   |
 | WP-M5-09  | sign-out clears the `internal-tickets` cache                       | done   |
+| WP-M7-01  | ntfy channel adapter and its env wiring                            | done   |
+| WP-M7-02  | ntfy channel unit test                                             | done   |
+| WP-M7-03  | ntfy QR code, onboarding and i18n label                            | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
