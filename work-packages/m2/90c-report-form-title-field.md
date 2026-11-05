@@ -1,7 +1,7 @@
 # WP-M2-90c: optional title field on the public report form
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-90
 phase: 2
 context-budget: 16k tokens
@@ -62,8 +62,15 @@ Expected: all green.
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
-- Verified: —
+- Files changed: `apps/web/src/features/tickets/report-form-page.tsx`,
+  `apps/web/src/features/tickets/__tests__/report-form-page.test.tsx`,
+  `apps/web/src/i18n/locales/de/ticket.json`, `apps/web/src/i18n/locales/en/ticket.json`
+- Interfaces added: `TitleField` renders only while `qr.data?.titleEnabled === true`
+  between the fault chips and the free text; the submit body (online and offline
+  outbox) carries `title: <trimmed>` only when enabled and non-empty; i18n key
+  `report.titleField.label` in de ("Kurztitok (optional)") and en.
+- Verified: `npm run check` green (e2e skipped locally — no Chromium); the new test
+  proves the title input and body title with `titleEnabled: true`, the existing
+  tests keep `title: undefined` with the false stub.
 - Follow-up WP: none
 - Open question: none

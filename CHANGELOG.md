@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The public report form offers the optional short title (WP-M2-90c): with
+  `titleEnabled` from the QR resolve the form renders a `Kurztitok (optional)`
+  input between the fault chips and the free text, and the submit body (also the
+  offline outbox body) carries the trimmed value; without the switch no title
+  input exists at all. New i18n key `report.titleField.label` in de and en.
+
 - The branding page gains a `titleEnabled` checkbox (WP-M2-90b): it prefills
   from the branding response, is disabled without `settings.write` and the
   `PUT` body carries the switch together with the company name; new i18n keys

@@ -27,6 +27,9 @@
       "label": "Art der Störung",
       "hint": "Mehrere auswählbar — zusätzlich oder alternativ zur Beschreibung."
     },
+    "titleField": {
+      "label": "Kurztitok (optional)"
+    },
     "text": {
       "label": "Was ist zu sehen?",
       "counter": "{{used}} von {{max}} Zeichen"

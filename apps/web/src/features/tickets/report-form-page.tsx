@@ -237,6 +237,25 @@ function FaultChips({
   )
 }
 
+/** Optional short title of the report (WP-M2-90c) — only when `titleEnabled`. */
+function TitleField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { t } = useTranslation('ticket')
+
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      <label htmlFor="report-title">{t('report.titleField.label')}</label>
+      <input
+        className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+        id="report-title"
+        maxLength={200}
+        name="title"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  )
+}
+
 function FreeText({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { t } = useTranslation('ticket')
 
@@ -561,8 +580,12 @@ export function ReportFormPage() {
 
   const [faultKeys, setFaultKeys] = useState<string[]>([])
   const [text, setText] = useState('')
+  /** The optional short title of WP-M2-90c — only rendered when `titleEnabled`. */
+  const [title, setTitle] = useState('')
 
   const object = qr.data?.object
+  /** WP-M2-90/90b: the object decides whether the form offers the title field. */
+  const titleEnabled = qr.data?.titleEnabled === true
   const openTickets = useOpenTickets(qr.data?.token)
   const openTicketList = openTickets.data?.tickets ?? []
   /** The oldest open ticket carries the running fault, so it is the parent (§7.8.3). */
@@ -609,7 +632,8 @@ export function ReportFormPage() {
         // The resolved current token, never the scanned one of a retired sticker (§7.3).
         qrToken: qr.data?.token ?? pathTokenValue,
         clientUuid,
-        title: undefined,
+        // WP-M2-90c: the trimmed title only when the object enables it and it is filled.
+        title: titleEnabled && title.trim() !== '' ? title.trim() : undefined,
         text: trimmedText === '' ? undefined : trimmedText,
         faultTemplateKeys: faultKeys,
         contact,
@@ -680,9 +704,11 @@ export function ReportFormPage() {
       pathTokenValue,
       photos,
       qr.data?.token,
+      qr.data?.titleEnabled,
       refreshQueued,
       requestChallenge,
       text,
+      title,
       website,
     ],
   )
@@ -842,6 +868,7 @@ export function ReportFormPage() {
 
             <form className="flex flex-col gap-5" onSubmit={(event) => void submit(event)}>
               <FaultChips entries={catalog} onToggle={toggleFault} selected={faultKeys} />
+              {titleEnabled ? <TitleField onChange={setTitle} value={title} /> : null}
               <FreeText onChange={setText} value={text} />
               <PhotoUpload
                 photos={photos}

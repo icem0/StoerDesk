@@ -27,6 +27,9 @@
       "label": "Type of fault",
       "hint": "Multiple selections allowed — in addition to or instead of the description."
     },
+    "titleField": {
+      "label": "Short title (optional)"
+    },
     "text": {
       "label": "What can be seen?",
       "counter": "{{used}} of {{max}} characters"

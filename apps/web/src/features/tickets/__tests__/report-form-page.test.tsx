@@ -77,10 +77,14 @@ const OPEN_TICKET: PublicOpenTicket = {
   reportedAt: '2026-10-30T07:30:00.000Z',
 }
 
+/** WP-M2-90c: the same resolve with the title switch on. */
+const RESOLVE_WITH_TITLE: QrResolveResponse = { ...RESOLVE, titleEnabled: true }
+
 function stubPublicApi(
   createStatus = 201,
   createBody: unknown = REPORT,
   openTickets: PublicOpenTicket[] = [],
+  resolve: QrResolveResponse = RESOLVE,
 ) {
   const bodies: Record<string, unknown>[] = []
 
@@ -90,7 +94,7 @@ function stubPublicApi(
       const path = String(input)
 
       if (path.includes('/public/qr/')) {
-        return Response.json(RESOLVE)
+        return Response.json(resolve)
       }
 
       // The live fault catalog of §7.9 — the form asks the server for the
@@ -174,6 +178,8 @@ describe('ReportFormPage', () => {
     expect(screen.getByText('Bahnhofstrasse 12, 12345 Beispielstadt')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Störung Melder' })).toBeTruthy()
     expect(screen.getAllByRole('button')).toHaveLength(9)
+    // The stub resolves with `titleEnabled: false` — no title input at all.
+    expect(screen.queryByRole('textbox', { name: 'Kurztitok (optional)' })).toBeNull()
     expect(screen.getByText(NOTICE)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Störung melden' })).toBeTruthy()
   })
@@ -249,6 +255,7 @@ describe('ReportFormPage', () => {
     expect(body.contact).toEqual({ name: '', phone: '030 123456', email: '' })
     expect(body.locale).toBe('de')
     expect(body.photos).toEqual([])
+    expect(body.title).toBeUndefined()
     expect(new Date(String(body.reportedAt)).getTime()).not.toBeNaN()
 
     expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
@@ -485,6 +492,25 @@ describe('ReportFormPage', () => {
     await waitFor(() => expect(bodies).toHaveLength(1))
     // §7.8.3: the new report points at the open ticket of the object.
     expect(bodies[0]?.parentTicketId).toBe(OPEN_TICKET.ticketId)
+    expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
+  })
+
+  it('offers the optional title field only when the object enables it', async () => {
+    const bodies = stubPublicApi(undefined, undefined, [], RESOLVE_WITH_TITLE)
+
+    await openForm()
+
+    const titleField = screen.getByRole('textbox', { name: 'Kurztitok (optional)' })
+    fireEvent.change(titleField, { target: { value: 'Rauchmelder 2. OG' } })
+    fillReport('Störung Melder', 'Rauchmelder im 2. Obergeschoss blinkt.', '030 123456')
+    fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
+
+    const body = await waitFor(() => {
+      expect(bodies).toHaveLength(1)
+
+      return bodies[0] as Record<string, unknown>
+    })
+    expect(body.title).toBe('Rauchmelder 2. OG')
     expect(await screen.findByText('Vorgangsnummer: ST-2026-0042')).toBeTruthy()
   })
 })
