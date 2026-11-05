@@ -758,7 +758,8 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-02  | ntfy channel unit test                                             | done   |
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                            | done    |
 | WP-M7-04  | outbox rows in the ticket create transaction                       | done   |
-| WP-M7-04b | the outbox worker, its retries and the localized ntfy label        | planned |
+| WP-M7-04b | the localized ntfy action label                                    | done   |
+| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1027,10 +1028,17 @@ exposes `enqueueOutbox(database, ticket, env)` that inserts one `PENDING` row pe
 `configuredChannels(env)` with no HTTP call, and `report.ts` calls it inside the create transaction
 after the ticket and its `created` event — the row carries only the machine-readable message
 parameters `{ ticketNo, priority, objectName }` (no photo, no contact data), so a channel failure can
-never lose the event. Its announced follow-up **WP-M7-04b** (the worker that drains them with three
-retries and backoff, the `notification_sent`/`notification_failed` ticket events and the localized
-ntfy `view` action label through the shared `t()` — closing the hard-coded German `Öffnen` label of
-WP-M7-01) is **planned**.
+never lose the event. Its announced follow-up was split before any code was written
+(`PLAN.md` §17: the worker needs `outbox.ts` next to the direct-start wiring in `index.ts`,
+which exceeds the four-file budget together with the label files): **WP-M7-04b** is
+**implemented** as the localized ntfy `view` action label — `server.{de,en}.json` gained
+`notification.action_label` (`Öffnen` / `Open`) and `NtfyConfig` gained the optional
+`locale` of the shared `ServerLocale`, so the label of a payload is
+`t(locale, 'notification.action_label')` and the hard-coded German literal of WP-M7-01 is
+gone. The remaining half is **WP-M7-04c** (`work-packages/m7/04c-outbox-drain-worker.md`,
+**planned**): the worker that drains the rows oldest first with three retries and backoff,
+writes `SENT`/`FAILED`, appends the `notification_sent`/`notification_failed` ticket events
+and is scheduled per minute from the direct API start only.
 
 **Out-of-band phase 2 — the klarmname columns (WP-M2-93).** `users.given_name` and
 `users.family_name` are text, `NOT NULL`, default `''`, length ≤ 64, stored trimmed, with

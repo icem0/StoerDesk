@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ntfy `view` action label is localized (WP-M7-04b): `server.de.json` and
+  `server.en.json` gained the `notification.action_label` key (`Öffnen` in the German
+  reference locale, `Open` in English) and `NtfyConfig` in
+  `apps/api/src/notifications/channels/ntfy.ts` gained the optional `locale` of the
+  shared `ServerLocale`. The label of a payload is now
+  `t(config.locale ?? 'de', 'notification.action_label')` through the shared server
+  `t()`, so the hard-coded German literal of WP-M7-01 never reaches a payload again
+  (`PLAN.md` §3.1); an unset locale keeps the `de` default and
+  `configuredChannels(env)` stays unchanged, because the environment carries no channel
+  locale yet. The package announced as "the outbox worker and the localized ntfy action
+  label" was split before any code was written (`PLAN.md` §17 file limit): the drain
+  worker, its retries and the `notification_sent`/`notification_failed` events moved to
+  **WP-M7-04c**.
+
 - The notification outbox is written with the ticket (WP-M7-04): the
   `notification_channels`, `push_subscriptions` and `outbox` tables land in
   migration `0019_notification_outbox` (the `state` check `PENDING`/`SENT`/`FAILED`,
@@ -18,8 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and no HTTP call, and `apps/api/src/tickets/report.ts` calls it inside the create transaction
   right after the ticket and its `created` event — the row carries only the machine-readable
   message parameters `{ ticketNo, priority, objectName }` (no photo, no contact data). The
-  channel failure can therefore never lose the event; draining the rows with retries and the
-  localized ntfy action label remains the announced follow-up WP-M7-04b.
+  channel failure can therefore never lose the event; draining the rows with retries
+  remains the announced follow-up WP-M7-04c.
 
   `apps/web/src/features/settings/NtfySubscription.tsx` renders a `qrcode.react`
   card whose QR carries the public subscription address

@@ -2,5 +2,8 @@
   "sample": {
     "greeting": "Server ready",
     "items": "{{count}} items"
+  },
+  "notification": {
+    "action_label": "Open"
   }
 }

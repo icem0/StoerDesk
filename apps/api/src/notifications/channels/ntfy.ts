@@ -1,8 +1,16 @@
+import { t, type ServerLocale } from '@stoerdesk/shared'
+
 export interface NtfyConfig {
   /** Base URL of an existing ntfy server, e.g. https://ntfy.sh */
   url: string
   /** Topic notifications are published to, e.g. stoerdesk */
   topic: string
+  /**
+   * Locale of the `view` action label. `de` is the default and reference locale
+   * (`PLAN.md` §3.1) and an unset locale resolves to it, so a caller that knows
+   * no locale still gets a translated label (WP-M7-04b).
+   */
+  locale?: ServerLocale
 }
 
 export interface NotificationMessage {
@@ -19,6 +27,14 @@ export class NtfyError extends Error {
     this.code = code
   }
 }
+
+/**
+ * The label of the `view` action, resolved through the shared server `t()` over
+ * `server.{de,en}.json` — the German literal of WP-M7-01 never reaches a payload
+ * again (`PLAN.md` §3.1, WP-M7-04b).
+ */
+const actionLabel = (config: NtfyConfig): string =>
+  t(config.locale ?? 'de', 'notification.action_label')
 
 /**
  * Sends a notification to an ntfy topic via HTTP POST.
@@ -39,7 +55,7 @@ export async function sendNtfyNotification(
     body: JSON.stringify({
       title: message.title,
       message: message.body,
-      actions: [{ action: 'view', label: 'Öffnen', uri: pwaUrl }],
+      actions: [{ action: 'view', label: actionLabel(config), uri: pwaUrl }],
     }),
   })
 

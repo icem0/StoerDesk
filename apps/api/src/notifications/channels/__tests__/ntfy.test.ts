@@ -34,6 +34,33 @@ describe('sendNtfyNotification', () => {
     ])
   })
 
+  it('labels the view action in the configured locale (WP-M7-04b)', async () => {
+    const cases: { locale: 'de' | 'en'; label: string }[] = [
+      { locale: 'de', label: 'Öffnen' },
+      { locale: 'en', label: 'Open' },
+    ]
+
+    for (const testCase of cases) {
+      const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
+
+      await sendNtfyNotification(
+        { ...config, locale: testCase.locale },
+        { title: 'New ticket', body: 'Lift 2 is broken' },
+        'https://stoerdesk.local/pwa',
+        fetchMock as unknown as typeof fetch,
+      )
+
+      const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+      const payload = JSON.parse(String(init.body)) as {
+        actions: { action: string; label: string; uri: string }[]
+      }
+
+      expect(payload.actions).toEqual([
+        { action: 'view', label: testCase.label, uri: 'https://stoerdesk.local/pwa' },
+      ])
+    }
+  })
+
   it('still sends when the pwaUrl is empty', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
 

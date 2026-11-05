@@ -17,7 +17,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 14  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding                 | 3   |
+| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox | 6   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -161,10 +161,17 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > one `PENDING` row per channel of `configuredChannels(env)` (never an HTTP call), and `report.ts`
 > calls it inside the create transaction after the ticket and its `created` event so a channel failure
 > can never lose the event; the row carries only the machine-readable message parameters
-> `{ ticketNo, priority, objectName }` (no photo, no contact data). Its follow-up **WP-M7-04b**
-> (the worker that drains them with three retries and backoff, the `notification_sent`/`notification_failed`
-> events and the localized ntfy `view` action label through the shared `t()`) is planned — the
-> German `Öffnen` label of WP-M7-01 stays hard-coded until WP-M7-04b replaces it.
+> `{ ticketNo, priority, objectName }` (no photo, no contact data). Its announced follow-up was
+> split before any code was written (`PLAN.md` §17: the worker needs `outbox.ts` next to the
+> direct-start wiring in `index.ts`, which exceeds the four-file budget together with the label
+> files): **WP-M7-04b** (`04b-outbox-worker-and-label.md`) is implemented as the **localized
+> ntfy `view` action label** — `server.{de,en}.json` gained `notification.action_label`
+> (`Öffnen` / `Open`) and `NtfyConfig` the optional `locale` of the shared `ServerLocale`, so
+> the payload label is `t(locale, 'notification.action_label')` and the hard-coded German
+> literal of WP-M7-01 is gone. **WP-M7-04c** (`04c-outbox-drain-worker.md`) is **planned**:
+> the worker that drains the rows oldest first with three retries and backoff, writes
+> `SENT`/`FAILED`, appends the `notification_sent`/`notification_failed` events and is
+> scheduled per minute from the direct API start only.
 
 ## Open follow-ups
 
@@ -387,7 +394,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |
 | WP-M7-04  | outbox rows in the ticket create transaction                        | done                    | yes     |
-| WP-M7-04b | the outbox worker, its retries and the localized ntfy label         | planned                 | yes     |
+| WP-M7-04b | the localized ntfy action label                                   | done                    | yes     |
+| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
