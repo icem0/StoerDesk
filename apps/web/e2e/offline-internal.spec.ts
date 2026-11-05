@@ -22,7 +22,6 @@ const ui = {
     loginSubmit: 'Anmelden',
     settings: 'Einstellungen',
     signedInAs: `Angemeldet als ${adminEmail}`,
-    actions: 'Aktionen',
     acknowledge: 'Quittieren',
     cancel: 'Stornieren',
     status: {
@@ -46,7 +45,6 @@ const ui = {
     loginSubmit: 'Sign in',
     settings: 'Settings',
     signedInAs: `Signed in as ${adminEmail}`,
-    actions: 'Actions',
     acknowledge: 'Acknowledge',
     cancel: 'Cancel',
     status: {
@@ -172,11 +170,6 @@ function awaitDetail(page: Page, ticketNo: string) {
   )
 }
 
-/** Answer both prompts of the acknowledge dialog: result and optional note. */
-function answerAcknowledgeDialogs(page: Page): void {
-  page.on('dialog', (dialog) => void dialog.accept('fixed'))
-}
-
 async function driveToAccepted(page: Page, ticketNo: string): Promise<void> {
   await transition(page, ticketNo, 'review')
   await setWorkOrder(page, ticketNo)
@@ -208,9 +201,7 @@ for (const language of ['de', 'en'] as const) {
 
     // Go offline: the acknowledge cannot reach the server and is queued instead.
     await page.context().setOffline(true)
-    answerAcknowledgeDialogs(page)
-
-    await page.getByRole('button', { name: texts.actions }).click()
+    await page.locator('input[name="acknowledgeResult"]').fill('fixed')
     await page.getByRole('button', { name: texts.acknowledge }).click()
 
     // The queued notice proves the write was persisted locally instead of being sent.
@@ -262,8 +253,7 @@ for (const language of ['de', 'en'] as const) {
 
     // Queue an acknowledge while offline.
     await page.context().setOffline(true)
-    answerAcknowledgeDialogs(page)
-    await page.getByRole('button', { name: texts.actions }).click()
+    await page.locator('input[name="acknowledgeResult"]').fill('fixed')
     await page.getByRole('button', { name: texts.acknowledge }).click()
 
     // Cancel through the API while the page is offline: API requests leave the

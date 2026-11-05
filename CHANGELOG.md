@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ticket detail page (WP-M2-91) shows an always visible action panel below the
+  title instead of an "Aktionen" toggle: payload actions carry inline input fields
+  (placeholders from the former prompts), missing required values and API failures
+  show as an inline alert line, the hard delete confirms by typing the ticket
+  number — no `window.prompt`/`alert`/`confirm` dialogs any more. New i18n keys
+  `detail.errors.fieldRequired`, `detail.errors.deleteConfirmMismatch` and
+  `detail.prompt.deleteConfirmNumber` in de and en.
+
 - The public report form offers the optional short title (WP-M2-90c): with
   `titleEnabled` from the QR resolve the form renders a `Kurztitok (optional)`
   input between the fault chips and the free text, and the submit body (also the

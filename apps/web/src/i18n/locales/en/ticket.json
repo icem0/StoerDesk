@@ -266,11 +266,13 @@
     "loading": "Loading ticket …",
     "back": "Back to list",
     "actions": "Actions",
-    "errors": {
-      "notFound": "Ticket not found.",
-      "actionFailed": "The action could not be performed.",
-      "deleteFailed": "The ticket could not be deleted."
-    },
+      "errors": {
+        "notFound": "Ticket not found.",
+        "actionFailed": "The action could not be performed.",
+        "deleteFailed": "The ticket could not be deleted.",
+        "fieldRequired": "Please complete the required fields first.",
+        "deleteConfirmMismatch": "To confirm the deletion, type the ticket number again."
+      },
     "offlineQueued": "Not sent – will be sent automatically when you are back online ({{count}} pending).",
     "offlineTitle": "Unsent actions",
     "offlineAction": {
@@ -336,7 +338,8 @@
       "deleteConfirm": "Permanently delete this ticket? All photos and the history are removed irrevocably.",
       "acknowledgeResult": "Result (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Note (optional):",
-      "commentText": "Comment text:"
+        "commentText": "Comment text:",
+        "deleteConfirmNumber": "Ticket number to confirm:"
     }
   }
 }

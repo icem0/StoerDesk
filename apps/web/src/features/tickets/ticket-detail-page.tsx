@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -18,9 +19,9 @@ import { TicketTimeline } from './ticket-timeline'
  *
  * Loads `GET /api/v1/tickets/:ticketNo` and renders the ticket header (number,
  * object, status badge, priority badge, times), the append-only event history as a
- * timeline, and the photo list. Action buttons (review, assign, accept,
- * acknowledge, close) call the matching POST endpoint of WP-M2-19c and refetch
- * the ticket on success.
+ * timeline, and the photo list. The always visible action panel (WP-M2-91) sits below
+ * the title, stays reachable at the bottom on mobile and takes inline input fields for
+ * payload actions; failures show as an inline alert line — no `window` dialogs.
  */
 
 const STATUS_COLORS: Record<string, string> = {
@@ -82,7 +83,8 @@ export function TicketDetailPage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
   const { ticketNo } = useParams()
-  const [showActions, setShowActions] = useState(false)
+  const [fields, setFields] = useState<Record<string, string>>({})
+  const [lastError, setLastError] = useState<string | null>(null)
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
@@ -110,10 +112,11 @@ export function TicketDetailPage() {
             }),
       })
       void ticketQuery.refetch()
-      setShowActions(false)
+      setLastError(null)
+      setFields({})
     } catch (error) {
       if (error instanceof ApiError) {
-        alert(error.code ?? t('detail.errors.actionFailed'))
+        setLastError(error.code ?? t('detail.errors.actionFailed'))
         return
       }
       // Network error (no ApiError): queue the write offline and show the
@@ -122,14 +125,14 @@ export function TicketDetailPage() {
         ? 'comment'
         : segment) as 'acknowledge' | 'comment' | 'decline'
       await queueAction(actionKind, body ?? {})
-      setShowActions(false)
     }
   }
 
-  async function handleDelete() {
+  async function handleDelete(confirmed: string) {
     if (ticketNo === undefined) return
 
-    if (!window.confirm(t('detail.prompt.deleteConfirm'))) {
+    if (confirmed !== ticketNo) {
+      setLastError(t('detail.errors.deleteConfirmMismatch'))
       return
     }
 
@@ -138,7 +141,7 @@ export function TicketDetailPage() {
       navigate('/tickets')
     } catch (error) {
       const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
-      alert(err.code ?? t('detail.errors.deleteFailed'))
+      setLastError(err.code ?? t('detail.errors.deleteFailed'))
     }
   }
 
@@ -153,7 +156,7 @@ export function TicketDetailPage() {
       void ticketQuery.refetch()
     } catch (error) {
       if (error instanceof ApiError) {
-        alert(error.code ?? t('detail.errors.actionFailed'))
+        setLastError(error.code ?? t('detail.errors.actionFailed'))
       }
     }
   }
@@ -165,7 +168,7 @@ export function TicketDetailPage() {
       void ticketQuery.refetch()
     } catch (error) {
       if (error instanceof ApiError) {
-        alert(error.code ?? t('detail.errors.actionFailed'))
+        setLastError(error.code ?? t('detail.errors.actionFailed'))
       }
     }
   }
@@ -198,21 +201,14 @@ export function TicketDetailPage() {
           <p className="text-sm text-slate-400">{t('detail.subtitle', { object: ticket.objectName })}</p>
         </div>
         <div className="flex gap-2">
-          <button
-            className="rounded bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-500"
-            type="button"
-            onClick={() => navigate('/tickets')}
-          >
-            {t('detail.back')}
-          </button>
-          <button
-            className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
-            type="button"
-            onClick={() => setShowActions(!showActions)}
-          >
-            {t('detail.actions')}
-          </button>
-        </div>
+            <button
+              className="rounded bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-500"
+              type="button"
+              onClick={() => navigate('/tickets')}
+            >
+              {t('detail.back')}
+            </button>
+          </div>
       </div>
 
       {pendingCount > 0 && (
@@ -220,6 +216,166 @@ export function TicketDetailPage() {
           {t('detail.offlineQueued', { count: pendingCount })}
         </div>
       )}
+
+      <div
+        data-testid="ticket-actions"
+        className="col-span-full flex flex-col gap-2 sticky bottom-4 z-10 rounded bg-slate-900/95 border border-slate-700 p-3"
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {t('detail.actions')}
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          {(() => {
+            const status = ticket.status
+            const req = (name: string) => (fields[name] ?? '').trim()
+
+            const btn = (labelKey: string, onClick: () => void, color: string, hover: string) => (
+              <button
+                key={labelKey}
+                className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-${color} hover:bg-${hover}`}
+                type="button"
+                onClick={onClick}
+              >
+                {t(`detail.action.${labelKey}`)}
+              </button>
+            )
+
+            const field = (name: string, promptKey: string) => (
+              <input
+                key={name}
+                className="w-full box-border rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 min-h-11"
+                name={name}
+                placeholder={t(promptKey)}
+                type="text"
+                value={fields[name] ?? ''}
+                onChange={(event) => setFields({ ...fields, [name]: event.target.value })}
+              />
+            )
+
+            const actions: ReactNode[] = []
+
+            if (status === 'NEW') {
+              actions.push(btn('review', () => void handleAction('review_started'), 'slate-600', 'slate-500'))
+            } else if (status === 'IN_REVIEW') {
+              actions.push(
+                field('workOrderType', 'detail.prompt.workOrderType'),
+                field('workOrderNumber', 'detail.prompt.workOrderNumber'),
+                btn('workOrder', () => {
+                  const type = req('workOrderType')
+                  const number = req('workOrderNumber')
+                  if (type === '' || number === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  void handleAction('work_order_set', { type, number })
+                }, 'sky-600', 'sky-500'),
+              )
+            } else if (status === 'WORK_ORDER_CREATED') {
+              actions.push(
+                btn('assign', () => void handleAction('assigned'), 'slate-600', 'slate-500'),
+                btn('offer', () => void handleAction('offered'), 'purple-600', 'purple-500'),
+              )
+            } else if (status === 'OFFERED' || status === 'ASSIGNED') {
+              actions.push(
+                btn('accept', () => void handleAction('accepted'), 'emerald-600', 'emerald-500'),
+                btn('decline', () => {
+                  const reason = req('declineReason')
+                  if (reason === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  void handleAction('declined', { reason })
+                }, 'rose-600', 'rose-500'),
+              )
+            } else if (status === 'ACCEPTED') {
+              actions.push(
+                field('acknowledgeResult', 'detail.prompt.acknowledgeResult'),
+                field('acknowledgeNote', 'detail.prompt.acknowledgeNote'),
+                btn('acknowledge', () => {
+                  const result = req('acknowledgeResult')
+                  if (result === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  void handleAction('acknowledged', {
+                    result,
+                    note: req('acknowledgeNote'),
+                  })
+                }, 'emerald-600', 'emerald-500'),
+              )
+            } else if (status === 'ACKNOWLEDGED') {
+              actions.push(btn('close', () => void handleAction('closed'), 'slate-600', 'slate-500'))
+            } else if (status === 'CLOSED') {
+              actions.push(
+                btn('reopen', () => {
+                  const reason = req('reopenReason')
+                  if (reason === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  void handleAction('reopened', { reason })
+                }, 'rose-600', 'rose-500'),
+              )
+            }
+
+            if (status !== 'CLOSED' && status !== 'CANCELLED') {
+              actions.push(
+                field('commentText', 'detail.prompt.commentText'),
+                btn('comment', () => {
+                  const text = req('commentText')
+                  if (text === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  void handleAction('commented', { text })
+                }, 'slate-600', 'slate-500'),
+              )
+            }
+
+            actions.push(
+              field('cancelReason', 'detail.prompt.cancelReason'),
+              btn('cancel', () => {
+                const reason = req('cancelReason')
+                if (reason === '') {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                void handleAction('cancelled', { reason })
+              }, 'rose-600', 'rose-500'),
+            )
+
+            if (status === 'CANCELLED') {
+              actions.push(
+                field('uncancelReason', 'detail.prompt.uncancelReason'),
+                btn('uncancel', () => {
+                  const reason = req('uncancelReason')
+                  if (reason === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  void handleAction('uncancelled', { reason })
+                }, 'rose-600', 'rose-500'),
+              )
+              if (mayDelete) {
+                actions.push(
+                  <span key="delete-warning" className="text-xs text-rose-300">
+                    {t('detail.prompt.deleteConfirm')}
+                  </span>,
+                  field('deleteConfirm', 'detail.prompt.deleteConfirmNumber'),
+                  btn('delete', () => void handleDelete(req('deleteConfirm')), 'rose-600', 'rose-500'),
+                )
+              }
+            }
+
+            return actions
+          })()}
+        </div>
+        {lastError !== null && (
+          <p className="text-rose-400 text-sm" role="alert">
+            {lastError}
+          </p>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="col-span-full">
@@ -383,171 +539,6 @@ export function TicketDetailPage() {
       )}
 
       <OfflineActionBanner rows={rows} onRetry={deliverNow} onDiscard={discard} />
-
-      {showActions && (
-        <div className="col-span-full flex flex-wrap gap-2">
-          {(() => {
-            const status = ticket.status
-
-            const actionBtn = (labelKey: string, event: string, color = 'slate-700') => (
-              <button
-                key={event}
-                className={`rounded bg-${color} px-4 py-2 text-sm text-slate-200 hover:bg-${color === 'slate-700' ? 'slate-600' : color === 'sky-600' ? 'sky-500' : 'rose-600'}`}
-                type="button"
-                onClick={() => void handleAction(event)}
-              >
-                {t(`detail.action.${labelKey}`)}
-              </button>
-            )
-
-            const buttons = []
-
-            if (status === 'NEW') {
-              buttons.push(actionBtn('review', 'review_started'))
-            } else if (status === 'IN_REVIEW') {
-              buttons.push(
-                <button
-                  key="work_order"
-                  className="rounded bg-sky-600 px-4 py-2 text-sm text-slate-200 hover:bg-sky-500"
-                  type="button"
-                  onClick={() => {
-                    const type = window.prompt(t('detail.prompt.workOrderType'))
-                    const number = window.prompt(t('detail.prompt.workOrderNumber'))
-                    if (type !== null && number !== null) {
-                      void handleAction('work_order_set', { type: type.trim(), number: number.trim() })
-                    }
-                  }}
-                >
-                  {t('detail.action.workOrder')}
-                </button>
-              )
-            } else if (status === 'WORK_ORDER_CREATED') {
-              buttons.push(actionBtn('assign', 'assigned'))
-              buttons.push(actionBtn('offer', 'offered', 'purple-600'))
-            } else if (status === 'OFFERED' || status === 'ASSIGNED') {
-              buttons.push(actionBtn('accept', 'accepted', 'emerald-600'))
-              buttons.push(
-                <button
-                  key="decline"
-                  className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
-                  type="button"
-                  onClick={() => {
-                    const reason = window.prompt(t('detail.prompt.declineReason'))
-                    if (reason !== null && reason.trim() !== '') {
-                      void handleAction('declined', { reason: reason.trim() })
-                    }
-                  }}
-                >
-                  {t('detail.action.decline')}
-                </button>
-              )
-            } else if (status === 'ACCEPTED') {
-              buttons.push(
-                <button
-                  key="acknowledge"
-                  className="rounded bg-emerald-600 px-4 py-2 text-sm text-slate-200 hover:bg-emerald-500"
-                  type="button"
-                  onClick={() => {
-                    const result = window.prompt(t('detail.prompt.acknowledgeResult'))
-                    if (result === null) return
-                    const note = window.prompt(t('detail.prompt.acknowledgeNote')) ?? ''
-                    void handleAction('acknowledged', {
-                      result: result.trim(),
-                      note: note.trim(),
-                    })
-                  }}
-                >
-                  {t('detail.action.acknowledge')}
-                </button>
-              )
-            } else if (status === 'ACKNOWLEDGED') {
-              buttons.push(actionBtn('close', 'closed'))
-            } else if (status === 'CLOSED') {
-              buttons.push(
-                <button
-                  key="reopen"
-                  className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
-                  type="button"
-                  onClick={() => {
-                    const reason = window.prompt(t('detail.prompt.reopenReason'))
-                    if (reason !== null && reason.trim() !== '') {
-                      void handleAction('reopened', { reason: reason.trim() })
-                    }
-                  }}
-                >
-                  {t('detail.action.reopen')}
-                </button>
-              )
-            }
-
-            if (status !== 'CLOSED' && status !== 'CANCELLED') {
-              buttons.push(
-                <button
-                  key="comment"
-                  className="rounded bg-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-slate-500"
-                  type="button"
-                  onClick={() => {
-                    const text = window.prompt(t('detail.prompt.commentText'))
-                    if (text !== null && text.trim() !== '') {
-                      void handleAction('commented', { text: text.trim() })
-                    }
-                  }}
-                >
-                  {t('detail.action.comment')}
-                </button>
-              )
-            }
-
-            buttons.push(
-              <button
-                key="cancel"
-                className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
-                type="button"
-                onClick={() => {
-                  const reason = window.prompt(t('detail.prompt.cancelReason'))
-                  if (reason !== null && reason.trim() !== '') {
-                    void handleAction('cancelled', { reason: reason.trim() })
-                  }
-                }}
-                >
-                  {t('detail.action.cancel')}
-                </button>
-            )
-
-            if (status === 'CANCELLED') {
-              buttons.push(
-                <button
-                  key="uncancel"
-                  className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
-                  type="button"
-                  onClick={() => {
-                    const reason = window.prompt(t('detail.prompt.uncancelReason'))
-                    if (reason !== null && reason.trim() !== '') {
-                      void handleAction('uncancelled', { reason: reason.trim() })
-                    }
-                  }}
-                >
-                  {t('detail.action.uncancel')}
-                </button>
-              )
-              if (mayDelete) {
-                buttons.push(
-                  <button
-                    key="delete"
-                    className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
-                    type="button"
-                    onClick={handleDelete}
-                  >
-                    {t('detail.action.delete')}
-                  </button>
-                )
-              }
-            }
-
-            return buttons
-          })()}
-        </div>
-      )}
     </section>
   )
 }

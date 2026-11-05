@@ -266,11 +266,13 @@
     "loading": "Meldung wird geladen …",
     "back": "Zurück zur Liste",
     "actions": "Aktionen",
-    "errors": {
-      "notFound": "Meldung nicht gefunden.",
-      "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
-      "deleteFailed": "Die Meldung konnte nicht gelöscht werden."
-    },
+      "errors": {
+        "notFound": "Meldung nicht gefunden.",
+        "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
+        "deleteFailed": "Die Meldung konnte nicht gelöscht werden.",
+        "fieldRequired": "Please enter the required fields first.",
+        "deleteConfirmMismatch": "To confirm the deletion, re-enter the ticket number."
+      },
     "offlineQueued": "Nicht versendet – wird automatisch nachgesendet ({{count}} ausstehend).",
     "offlineTitle": "Nicht versendete Aktionen",
     "offlineAction": {
@@ -336,7 +338,8 @@
       "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt.",
       "acknowledgeResult": "Ergebnis (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Notiz (optional):",
-      "commentText": "Kommentartext:"
+        "commentText": "Kommentartext:",
+        "deleteConfirmNumber": "Ticketnumber for confirmation:"
     }
   }
 }

@@ -14,18 +14,14 @@ files-read:
 - apps/api/src/tickets/workflow-routes.ts
 - apps/api/src/tickets/delete-routes.ts
 - apps/web/src/features/tickets/ticket-detail-page.tsx
-- apps/web/src/i18n/locales/de/ticket.json
-- apps/web/src/i18n/locales/en/ticket.json
-- PLAN.md §7
+- apps/web/src/i18n/locales/{de,en}/ticket.json
 
 files-write:
 
 - apps/api/src/tickets/workflow.ts — `CANCELLED` → `uncancelled` → `NEW` transition
-- apps/api/src/tickets/workflow-routes.ts — `POST /api/v1/tickets/:ticketNo/uncancel`
-- apps/api/src/tickets/delete-routes.ts — accept missing DELETE body
+- apps/api/src/tickets/workflow-routes.ts and delete-routes.ts — `POST /api/v1/tickets/:ticketNo/uncancel`; accept missing DELETE body
 - apps/web/src/features/tickets/ticket-detail-page.tsx — un-cancel button for CANCELLED tickets
-- apps/web/src/i18n/locales/de/ticket.json — de keys for un-cancel
-- apps/web/src/i18n/locales/en/ticket.json — en keys for un-cancel
+- apps/web/src/i18n/locales/{de,en}/ticket.json — de/en keys for un-cancel
 
 interfaces:
 

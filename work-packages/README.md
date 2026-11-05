@@ -306,6 +306,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-90  | public QR resolve carries `titleEnabled`                            | done                    | yes     |
 | WP-M2-90b | branding page title checkbox                                        | done                    | yes     |
 | WP-M2-90c | report form optional title field                                    | done                    | yes     |
+| WP-M2-91  | always visible ticket detail action panel with inline fields       | done                    | yes     |
+| WP-M2-91b | mobile-first ticket list cards                                      | planned                 | yes     |
+| WP-M2-92  | `users.theme` column and migration 0016                             | planned                 | yes     |
+| WP-M2-92b | theme in shared schemas, PATCH and `/me`                            | planned                 | yes     |
+| WP-M2-92c | theme class in the shell and light palette in styles.css            | planned                 | yes     |
+| WP-M2-92d | theme select in the user settings (users page)                      | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |

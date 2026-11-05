@@ -38,7 +38,6 @@ const ui = {
     titleLabel: 'Titel',
     submit: 'Meldung erstellen',
     back: 'Zurück zur Liste',
-    actions: 'Aktionen',
     history: 'Verlauf',
     status: {
       NEW: 'Neu',
@@ -81,7 +80,6 @@ const ui = {
     titleLabel: 'Title',
     submit: 'Create report',
     back: 'Back to list',
-    actions: 'Actions',
     history: 'History',
     status: {
       NEW: 'New',
@@ -194,16 +192,11 @@ function history(page: Page) {
 }
 
 /**
- * The workflow buttons live behind the "Actions" toggle of the detail page
- * (`WP-M2-19d`); after a successful action the panel closes again, so every
- * step opens it first.
+ * The workflow buttons live in the always visible action panel of the detail page
+ * (`WP-M2-91`): after a successful action the panel re-renders for the new status,
+ * so every step can click the action button directly.
  */
-async function performAction(
-  page: Page,
-  texts: Pick<(typeof ui)['de'], 'actions'> | Pick<(typeof ui)['en'], 'actions'>,
-  buttonName: string,
-): Promise<void> {
-  await page.getByRole('button', { name: texts.actions }).click()
+async function performAction(page: Page, buttonName: string): Promise<void> {
   await page.getByRole('button', { name: buttonName }).click()
 }
 
@@ -234,7 +227,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.created)).toBeVisible()
 
     // 1. Review: NEW → IN_REVIEW (UI button, no body).
-    await performAction(page, texts, texts.action.review)
+    await performAction(page, texts.action.review)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'IN_REVIEW'))
     await expect(history(page).getByText(texts.event.review_started)).toBeVisible()
 
@@ -245,12 +238,12 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
     // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (UI button, no body).
-    await performAction(page, texts, texts.action.assign)
+    await performAction(page, texts.action.assign)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ASSIGNED'))
     await expect(history(page).getByText(texts.event.assigned)).toBeVisible()
 
     // 4. Accept: ASSIGNED → ACCEPTED (UI button, no body).
-    await performAction(page, texts, texts.action.accept)
+    await performAction(page, texts.action.accept)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ACCEPTED'))
     await expect(history(page).getByText(texts.event.accepted)).toBeVisible()
 
@@ -261,7 +254,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.acknowledged)).toBeVisible()
 
     // 6. Close: ACKNOWLEDGED → CLOSED (UI button, no body).
-    await performAction(page, texts, texts.action.close)
+    await performAction(page, texts.action.close)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'CLOSED'))
     await expect(history(page).getByText(texts.event.closed)).toBeVisible()
 
