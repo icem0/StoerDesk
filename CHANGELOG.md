@@ -17,11 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `t(config.locale ?? 'de', 'notification.action_label')` through the shared server
   `t()`, so the hard-coded German literal of WP-M7-01 never reaches a payload again
   (`PLAN.md` §3.1); an unset locale keeps the `de` default and
-  `configuredChannels(env)` stays unchanged, because the environment carries no channel
-  locale yet. The package announced as "the outbox worker and the localized ntfy action
-  label" was split before any code was written (`PLAN.md` §17 file limit): the drain
-  worker, its retries and the `notification_sent`/`notification_failed` events moved to
-  **WP-M7-04c**.
+   `configuredChannels(env)` stays unchanged, because the environment carries no channel
+   locale yet. The package announced as "the outbox worker and the localized ntfy action
+   label" was split before any code was written (`PLAN.md` §17 file limit): the drain
+   worker, its retries and the `notification_sent`/`notification_failed` events moved to
+   **WP-M7-04c**.
+
+- The outbox drain worker (WP-M7-04c): `apps/api/src/notifications/outbox.ts` claims the
+  oldest `PENDING` outbox row atomically (`UPDATE ... WHERE state = 'PENDING'` plus the
+  `(state, created_at)` index of migration 0019), sends through `configuredChannels(env)`,
+  retries up to three attempts with backoff, writes `SENT`/`FAILED` and appends exactly one
+  `notification_sent`/`notification_failed` event (`actorKind: 'system'`, payload
+  `{ channel, ticketNo, attempts }`) to the ticket history per row. Rows whose channel is no
+  longer configured end `FAILED`. `startNotificationOutboxJob` runs the drain on a per-minute
+  pg-boss schedule with one short-lived pool per job, started only from the direct API start
+  next to the other pg-boss jobs; `buildServer()` stays job-free. Covered by a mocked-channel
+  unit spec and a PostgreSQL integration spec asserting claims, states, `attempts`, the
+  ticket's `created` event and the localized ntfy `view` action label of WP-M7-04b in the
+  payload.
 
 - The notification outbox is written with the ticket (WP-M7-04): the
   `notification_channels`, `push_subscriptions` and `outbox` tables land in

@@ -168,10 +168,14 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > ntfy `view` action label** — `server.{de,en}.json` gained `notification.action_label`
 > (`Öffnen` / `Open`) and `NtfyConfig` the optional `locale` of the shared `ServerLocale`, so
 > the payload label is `t(locale, 'notification.action_label')` and the hard-coded German
-> literal of WP-M7-01 is gone. **WP-M7-04c** (`04c-outbox-drain-worker.md`) is **planned**:
-> the worker that drains the rows oldest first with three retries and backoff, writes
-> `SENT`/`FAILED`, appends the `notification_sent`/`notification_failed` events and is
-> scheduled per minute from the direct API start only.
+> literal of WP-M7-01 is gone. **WP-M7-04c** (`04c-outbox-drain-worker.md`) is **implemented**:
+> `apps/api/src/notifications/outbox.ts` claims the oldest `PENDING` row atomically with one
+> `UPDATE ... WHERE state = 'PENDING'` plus the `(state, created_at)` index of migration 0019,
+> sends through `configuredChannels(env)`, retries up to three attempts with backoff, writes
+> `SENT`/`FAILED` plus one `notification_sent`/`notification_failed` event per row, and
+> `startNotificationOutboxJob` follows the `jobs/bma-sync.ts` shape (one short-lived pool per
+> job, `createQueue`/`work`/`schedule` every minute) and is started only from the direct API
+> start next to the other pg-boss jobs.
 
 ## Open follow-ups
 
@@ -395,7 +399,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |
 | WP-M7-04  | outbox rows in the ticket create transaction                        | done                    | yes     |
 | WP-M7-04b | the localized ntfy action label                                   | done                    | yes     |
-| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | planned                 | yes     |
+| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

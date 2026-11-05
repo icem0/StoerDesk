@@ -1,9 +1,15 @@
-import type { Env } from '../config/env'
-import type { Database } from '../db/client'
-import { outbox } from '../db/schema'
-import { configuredChannels } from './channels/index'
+import { PgBoss } from 'pg-boss'
+import { and, eq, sql } from 'drizzle-orm'
 
-type Db = Database['database']
+import type { Env } from '../config/env'
+import { createDatabase, type Database } from '../db/client'
+import { outbox, ticketEvents } from '../db/schema'
+import {
+  configuredChannels,
+  type NotificationChannel,
+  type NotificationMessage,
+} from './channels/index'
+import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 
 /** The insert capability — enough for both the live database and a transaction node. */
 type DbLike = Pick<Db, 'insert'>
@@ -53,13 +59,254 @@ function outboxRows(ticket: OutboxTicket, env: Env): OutboxRow[] {
   }))
 }
 
+type Db = Database['database']
+
+/** pg-boss queue name of the per-minute outbox drain. */
+export const NOTIFICATION_OUTBOX_QUEUE = 'notification-outbox'
+
+/** One drain run per minute. */
+export const NOTIFICATION_OUTBOX_CRON = '* * * * *'
+
+/** A row may be sent at most this many times before it becomes `FAILED`. */
+export const NOTIFICATION_OUTBOX_MAX_ATTEMPTS = 3
+
+/** Base backoff between retry attempts: `base · 2^(attempt - 1)`. */
+export const NOTIFICATION_OUTBOX_RETRY_BACKOFF_MS = 300
+
+/** One claimed outbox row, fresh from the atomic `UPDATE ... RETURNING` claim. */
+export interface ClaimedOutboxRow {
+  id: string
+  ticketId: string
+  channel: string
+  target: Record<string, unknown>
+  attempts: number
+}
+
+/**
+ * Claims exactly one `PENDING` row — the oldest one — atomically: the single
+ * `UPDATE` bumps `attempts` and only matches a row that is still `PENDING`,
+ * so a concurrent drain can never pick the same row twice. Returns `undefined`
+ * when nothing is pending.
+ */
+export async function claimOutboxRow(database: Db): Promise<ClaimedOutboxRow | undefined> {
+  const [row] = await database
+    .update(outbox)
+    .set({
+      attempts: sql`(${outbox.attempts} + 1)`,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(outbox.state, 'PENDING'),
+        sql`(${outbox.id} IN (SELECT id FROM outbox WHERE state = 'PENDING' ORDER BY created_at LIMIT 1))`,
+      ),
+    )
+    .returning({
+      id: outbox.id,
+      ticketId: outbox.ticketId,
+      channel: outbox.channel,
+      target: outbox.target,
+      attempts: outbox.attempts,
+    })
+
+  if (row === undefined) {
+    return undefined
+  }
+
+  return {
+    ...row,
+    target: row.target as Record<string, unknown>,
+  }
+}
+
+/** Aggregate counters of one drain run — never contact data. */
+export interface OutboxDrainResult {
+  sent: number
+  failed: number
+  attempts: number
+}
+
+/**
+ * Builds the channel message from the machine-readable row params — ticket
+ * number, priority, object name — no photo, no contact data, no translated
+ * UI text (`PLAN.md` §12; the `view` action label itself comes from i18n).
+ */
+const messageOf = (target: Record<string, unknown>): NotificationMessage => ({
+  title: String(target.ticketNo ?? ''),
+  body: `${String(target.priority ?? '')} · ${String(target.objectName ?? '')}`,
+})
+
+/**
+ * Marks one row `SENT` or `FAILED` and appends exactly one
+ * `notification_sent`/`notification_failed` event to the ticket history, both
+ * in the same transaction.
+ */
+async function finishRow(
+  database: Db,
+  row: ClaimedOutboxRow,
+  state: 'SENT' | 'FAILED',
+  eventType: 'notification_sent' | 'notification_failed',
+): Promise<void> {
+  await database.transaction(async (tx) => {
+    await tx.update(outbox).set({ state, updatedAt: new Date() }).where(eq(outbox.id, row.id))
+
+    await tx.insert(ticketEvents).values({
+      ticketId: row.ticketId,
+      type: eventType,
+      actorKind: 'system',
+      payload: {
+        channel: row.channel,
+        ticketNo: String(row.target.ticketNo ?? ''),
+        attempts: row.attempts,
+      },
+    })
+  })
+}
+
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+
+/**
+ * Drains the notification outbox oldest first: claims one row at a time,
+ * sends it through the channel named by the row, retries up to
+ * `NOTIFICATION_OUTBOX_MAX_ATTEMPTS` times with backoff and writes `SENT` /
+ * `FAILED` plus the `notification_sent` / `notification_failed` event per row.
+ * A row whose channel name is no longer configured ends `FAILED`.
+ */
+export async function drainOutbox(
+  database: Db,
+  env: Env,
+  log?: QrCleanupLogger,
+): Promise<OutboxDrainResult> {
+  const channelsByName = new Map<string, NotificationChannel>(
+    configuredChannels(env).map((channel) => [channel.name, channel]),
+  )
+  const result: OutboxDrainResult = { sent: 0, failed: 0, attempts: 0 }
+
+  while (true) {
+    const row = await claimOutboxRow(database)
+
+    if (row === undefined) {
+      return result
+    }
+
+    result.attempts += 1
+
+    const channel = channelsByName.get(row.channel)
+    const ticketNo = String(row.target.ticketNo ?? '')
+
+    if (channel === undefined) {
+      await finishRow(database, row, 'FAILED', 'notification_failed')
+
+      log?.warn(
+        {
+          queue: NOTIFICATION_OUTBOX_QUEUE,
+          channel: row.channel,
+          ticketNo,
+          attempts: row.attempts,
+          code: 'channel_unconfigured',
+        },
+        'notification channel not configured',
+      )
+
+      result.failed += 1
+      continue
+    }
+
+    try {
+      await channel.send(messageOf(row.target))
+      await finishRow(database, row, 'SENT', 'notification_sent')
+
+      result.sent += 1
+    } catch (error) {
+      log?.warn(
+        {
+          queue: NOTIFICATION_OUTBOX_QUEUE,
+          channel: row.channel,
+          ticketNo,
+          attempts: row.attempts,
+          code: 'channel_send_failed',
+          err: {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+        },
+        'notification send failed',
+      )
+
+      if (row.attempts >= NOTIFICATION_OUTBOX_MAX_ATTEMPTS) {
+        await finishRow(database, row, 'FAILED', 'notification_failed')
+        result.failed += 1
+      } else {
+        // The row stays `PENDING`; the next loop iteration claims it again.
+        await sleep(NOTIFICATION_OUTBOX_RETRY_BACKOFF_MS * 2 ** (row.attempts - 1))
+      }
+    }
+  }
+}
+
+/**
+ * Starts pg-boss, creates the outbox drain queue, registers the worker and the
+ * per-minute schedule; returns the instance so the caller can `stop()` it.
+ * Each run opens its own short-lived pool, so the worker never shares the
+ * request pool — `buildServer()` stays job-free.
+ */
+export async function startNotificationOutboxJob(
+  connectionString: string,
+  env: Env,
+  log?: QrCleanupLogger,
+): Promise<PgBoss> {
+  const boss = new PgBoss({ connectionString })
+
+  boss.on('error', (error: Error) => {
+    // Message and stack only: pg-boss errors never carry credentials.
+    log?.error(
+      { err: { message: error.message, stack: error.stack }, queue: NOTIFICATION_OUTBOX_QUEUE },
+      'notification outbox job failed',
+    )
+  })
+
+  await boss.start()
+  await boss.createQueue(NOTIFICATION_OUTBOX_QUEUE)
+
+  await boss.work(NOTIFICATION_OUTBOX_QUEUE, async () => {
+    const { client, database } = createDatabase(connectionString)
+
+    try {
+      const { sent, failed, attempts } = await drainOutbox(database, env, log)
+
+      log?.info(
+        { queue: NOTIFICATION_OUTBOX_QUEUE, sent, failed, attempts },
+        'notification outbox drain finished',
+      )
+    } finally {
+      await client.end({ timeout: 5 })
+    }
+  })
+
+  await boss.schedule(NOTIFICATION_OUTBOX_QUEUE, NOTIFICATION_OUTBOX_CRON)
+
+  log?.info(
+    { queue: NOTIFICATION_OUTBOX_QUEUE, cron: NOTIFICATION_OUTBOX_CRON },
+    'notification outbox job scheduled',
+  )
+
+  return boss
+}
+
 /**
  * Writes the notification outbox rows for a freshly created ticket, inside the
  * same transaction the caller is in. It only inserts — there is deliberately no
  * HTTP call, so a channel failure can never lose the ticket event (`PLAN.md` §12).
  * Returns the number of rows written; an unconfigured environment writes none.
  */
-export async function enqueueOutbox(database: DbLike, ticket: OutboxTicket, env: Env): Promise<number> {
+export async function enqueueOutbox(
+  database: DbLike,
+  ticket: OutboxTicket,
+  env: Env,
+): Promise<number> {
   const rows = outboxRows(ticket, env)
 
   if (rows.length === 0) {

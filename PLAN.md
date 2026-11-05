@@ -759,7 +759,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                            | done    |
 | WP-M7-04  | outbox rows in the ticket create transaction                       | done   |
 | WP-M7-04b | the localized ntfy action label                                    | done   |
-| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | planned |
+| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

@@ -1,7 +1,7 @@
 # WP-M7-04c: the outbox drain worker and its pg-boss schedule
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M7-04 (outbox rows in the create transaction), WP-M7-04b (the localized ntfy label)
 phase: 7
 context-budget: 20k tokens
@@ -26,8 +26,8 @@ files-write:
 
 - apps/api/src/notifications/outbox.ts — `drainOutbox`, `startNotificationOutboxJob`
 - apps/api/src/index.ts — start the job from the direct API start only
-- apps/api/src/notifications/__tests__/outbox-worker.unit.spec.ts — mocked channel drain
-- apps/api/src/notifications/__tests__/outbox.integration.spec.ts — claims, states and events on PostgreSQL
+- apps/api/src/notifications/**tests**/outbox-worker.unit.spec.ts — mocked channel drain
+- apps/api/src/notifications/**tests**/outbox.integration.spec.ts — claims, states and events on PostgreSQL
 
 interfaces:
 
@@ -82,8 +82,15 @@ reported as unverified without PostgreSQL — CI has the service.
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
-- Deviation: —
+- Files changed: `apps/api/src/notifications/outbox.ts` (`claimOutboxRow`, `drainOutbox`,
+  `startNotificationOutboxJob`, `OutboxDrainResult`, `NOTIFICATION_OUTBOX_QUEUE`,
+  `NOTIFICATION_OUTBOX_CRON`), `apps/api/src/index.ts` (starts the job from the direct
+  API start and stops it in the existing `onClose` hook), plus the two test specs
+  (excluded from the file limit of §17).
+- Interfaces added: `claimOutboxRow(database)`, `drainOutbox(database, env, log?)`,
+  `OutboxDrainResult`, `startNotificationOutboxJob(connectionString, env, log?)`,
+  `NOTIFICATION_OUTBOX_QUEUE = 'notification-outbox'`,
+  `NOTIFICATION_OUTBOX_CRON = '* * * * *'`, `NOTIFICATION_OUTBOX_MAX_ATTEMPTS = 3`.
+- Deviation: none.
 - Follow-up WP: none
 - Open question: none

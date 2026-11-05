@@ -21,6 +21,7 @@ import { seedRbac } from './db/seed-rbac'
 import { seedStandardTexts } from './db/seed-standard-texts'
 import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startTicketEscalation } from './jobs/escalation'
+import { startNotificationOutboxJob } from './notifications/outbox'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { deleteRoutes } from './tickets/delete-routes'
@@ -166,10 +167,16 @@ if (invokedDirectly) {
   // The BMAcloud pull is scheduled only when the tenant credentials exist
   // (WP-M2-36); the manual trigger of the admin API needs no scheduler.
   const bmaSync = await startBmaAnlageSync(databaseConnectionUrl(env), env, app.log)
+  const notificationOutbox = await startNotificationOutboxJob(
+    databaseConnectionUrl(env),
+    env,
+    app.log,
+  )
 
   app.addHook('onClose', async () => {
     await cleanup.stop({ timeout: 5000 })
     await escalation.stop({ timeout: 5000 })
+    await notificationOutbox.stop({ timeout: 5000 })
 
     if (bmaSync !== undefined) {
       await bmaSync.stop({ timeout: 5000 })
