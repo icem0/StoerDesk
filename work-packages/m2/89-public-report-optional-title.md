@@ -62,5 +62,5 @@ Expected: all green; the new test really runs (a reachable database is required 
 - Files changed: the four source files above plus the extended integration test, `docs/REPO-MAP.md`, `work-packages/README.md`
 - Interfaces added: `titleEnabled` on branding schemas/routes, optional `title` on `publicReportRequestSchema`
 - Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run i18n:check`, `npm run wp:check` all green; 463 tests pass.
-- Follow-up WP: WP-M2-90 (QR resolve `titleEnabled`, report form conditional title field, branding page checkbox)
+- Follow-up WP: WP-M2-90 (QR resolve `titleEnabled`) and WP-M2-90b (report form title field, branding checkbox)
 - Open question: none
