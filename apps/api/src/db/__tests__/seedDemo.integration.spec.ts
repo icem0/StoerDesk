@@ -154,7 +154,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const third = await seedDemo(db)
 
-      expect(third).toEqual({ objects: 0, systems: 0, templates: 0, translations: 0 })
+      expect(third).toEqual({ objects: 0, templates: 0, translations: 0 })
 
       const keptToken = await db
         .select({ qrToken: objects.qrToken })
