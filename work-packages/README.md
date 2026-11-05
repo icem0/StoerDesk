@@ -331,7 +331,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-10  | timeline and pause data in the ticket API                           | done                    | yes     |
 | WP-M6-11  | web timeline bar and pause controls                                 | done                    | yes     |
 | WP-M6-12  | list mini timeline and remaining time                               | done                    | yes     |
-| WP-M6-13  | phase-6 exit criterion and record                                   | planned                 | yes     |
+| WP-M6-13 | phase-6 exit criterion and record   | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

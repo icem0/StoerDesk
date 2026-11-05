@@ -993,6 +993,15 @@ and conflict UI, the offline reads, the E2E and the cache clear), which closes p
 Claiming from the pool and
 shift confirm/decline stay out of phase 5 (online-only rule of §9.6; on-call is phase 8).
 
+**Phase 6 is complete**: **WP-M6-01** … **WP-M6-13** are implemented (timeline contracts, per-priority
+deadlines, `ticket_pauses`, escalation rules and scan, the pg-boss job, the timeline data in the
+ticket API, the web timeline bar, the list mini timeline). **WP-M6-13** closes the phase with the
+exit-criterion integration test "overdue ticket escalates and appears in the history" against the
+real API on a throwaway database. The phase-6 exit criterion — an overdue ticket escalates with
+`rule = deadline_exceeded`, the ticket detail timeline turns `red`, and a second escalation scan
+adds no event — is proven by `apps/api/src/tickets/__tests__/escalation-exit.integration.spec.ts`.
+Phase 7 (notifications) starts with its `m7` packages.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
@@ -1184,7 +1193,7 @@ These decisions need an ADR or explicit approval before the related WP starts:
   out-of-band host update agent, never shell execution in the `api` container and
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
-- default deadlines per priority and contract type,
+- contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03),
 - whether shift swaps require admin approval by default (default: yes),
 - name and logo (working title: StörDesk).
 
