@@ -326,6 +326,14 @@
       "cancel": "Cancel",
       "uncancel": "Uncancel",
       "comment": "Add comment",
+      "delete": "Delete permanently",
+      "choose": "Choose an action…",
+      "confirm": "Confirm",
+      "abort": "Cancel"
+    },
+    "menu": {
+      "cancel": "Cancel",
+      "uncancel": "Revoke cancellation",
       "delete": "Delete permanently"
     },
     "prompt": {

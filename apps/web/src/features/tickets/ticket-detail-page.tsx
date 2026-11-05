@@ -85,6 +85,7 @@ export function TicketDetailPage() {
   const { ticketNo } = useParams()
   const [fields, setFields] = useState<Record<string, string>>({})
   const [lastError, setLastError] = useState<string | null>(null)
+  const [selectedAction, setSelectedAction] = useState<string | null>(null)
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
@@ -332,39 +333,85 @@ export function TicketDetailPage() {
               )
             }
 
-            actions.push(
-              field('cancelReason', 'detail.prompt.cancelReason'),
-              btn('cancel', () => {
-                const reason = req('cancelReason')
-                if (reason === '') {
-                  setLastError(t('detail.errors.fieldRequired'))
-                  return
-                }
-                void handleAction('cancelled', { reason })
-              }, 'rose-600', 'rose-500'),
-            )
+            // One openable menu instead of permanently visible input fields
+            // that block the view. Confirmation fields appear only after a
+            // menu entry is chosen.
+            if (status !== 'CLOSED') {
+              actions.push(
+                <select
+                  key="cancel-menu"
+                  value={selectedAction ?? ''}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setSelectedAction(value === '' ? null : value)
+                    setLastError(null)
+                  }}
+                  className="w-full min-w-[150px] rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+                >
+                  <option value="">{t('detail.action.choose')}</option>
+                  {status !== 'CANCELLED' && (
+                    <option value="cancel">{t('detail.menu.cancel')}</option>
+                  )}
+                  {status === 'CANCELLED' && (
+                    <option value="uncancel">{t('detail.menu.uncancel')}</option>
+                  )}
+                  {status === 'CANCELLED' && mayDelete && (
+                    <option value="delete">{t('detail.menu.delete')}</option>
+                  )}
+                </select>,
+              )
+            }
 
-            if (status === 'CANCELLED') {
+            if (selectedAction === 'cancel') {
+              actions.push(
+                field('cancelReason', 'detail.prompt.cancelReason'),
+                btn('confirm', () => {
+                  const reason = req('cancelReason')
+                  if (reason === '') {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  setSelectedAction(null)
+                  void handleAction('cancelled', { reason })
+                }, 'rose-600', 'rose-500'),
+                btn('abort', () => {
+                  setSelectedAction(null)
+                  setFields({})
+                }, 'slate-600', 'slate-500'),
+              )
+            }
+
+            if (selectedAction === 'uncancel') {
               actions.push(
                 field('uncancelReason', 'detail.prompt.uncancelReason'),
-                btn('uncancel', () => {
+                btn('confirm', () => {
                   const reason = req('uncancelReason')
                   if (reason === '') {
                     setLastError(t('detail.errors.fieldRequired'))
                     return
                   }
+                  setSelectedAction(null)
                   void handleAction('uncancelled', { reason })
                 }, 'rose-600', 'rose-500'),
+                btn('abort', () => {
+                  setSelectedAction(null)
+                  setFields({})
+                }, 'slate-600', 'slate-500'),
               )
-              if (mayDelete) {
-                actions.push(
-                  <span key="delete-warning" className="text-xs text-rose-300">
-                    {t('detail.prompt.deleteConfirm')}
-                  </span>,
-                  field('deleteConfirm', 'detail.prompt.deleteConfirmNumber'),
-                  btn('delete', () => void handleDelete(req('deleteConfirm')), 'rose-600', 'rose-500'),
-                )
-              }
+            }
+
+            if (selectedAction === 'delete') {
+              actions.push(
+                <span key="delete-warning" className="text-xs text-rose-300">
+                  {t('detail.prompt.deleteConfirm')}
+                </span>,
+                field('deleteConfirm', 'detail.prompt.deleteConfirmNumber'),
+                btn('confirm', () => void handleDelete(req('deleteConfirm')), 'rose-600', 'rose-500'),
+                btn('abort', () => {
+                  setSelectedAction(null)
+                  setFields({})
+                }, 'slate-600', 'slate-500'),
+              )
             }
 
             return actions

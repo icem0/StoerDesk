@@ -326,6 +326,14 @@
       "cancel": "Stornieren",
       "uncancel": "Stornierung aufheben",
       "comment": "Kommentar hinzufügen",
+      "delete": "Endgültig löschen",
+      "choose": "Aktion wählen…",
+      "confirm": "Bestätigen",
+      "abort": "Abbrechen"
+    },
+    "menu": {
+      "cancel": "Stornieren",
+      "uncancel": "Stornierung aufheben",
       "delete": "Endgültig löschen"
     },
     "prompt": {
