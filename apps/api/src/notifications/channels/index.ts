@@ -40,6 +40,19 @@ const matrixChannel = async (env: Env, message: NotificationMessage): Promise<vo
   )
 }
 
+const ntfyChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+  const { sendNtfyNotification } = await import('./ntfy.js')
+
+  await sendNtfyNotification(
+    {
+      url: env.NTFY_URL,
+      topic: env.NTFY_TOPIC,
+    },
+    message,
+    env.PWA_URL,
+  )
+}
+
 /**
  * Notification channels that are configured in the environment.
  *
@@ -60,6 +73,13 @@ export function configuredChannels(env: Env): NotificationChannel[] {
     channels.push({
       name: 'matrix',
       send: (message) => matrixChannel(env, message),
+    })
+  }
+
+  if (env.NTFY_URL !== '' && env.NTFY_TOPIC !== '') {
+    channels.push({
+      name: 'ntfy',
+      send: (message) => ntfyChannel(env, message),
     })
   }
 
