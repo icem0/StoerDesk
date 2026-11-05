@@ -291,6 +291,17 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-76  | `ticket_purges` append-only log of hard-deleted tickets             | done                    | yes     |
 | WP-M2-77  | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets            | done                    | yes     |
 | WP-M2-78  | "Endgültig löschen" button on the ticket detail page                | done                    | yes     |
+| WP-M2-80  | remove systems level from DB schema                                 | done                    | yes     |
+| WP-M2-81  | remove systems level from shared schemas                            | done                    | yes     |
+| WP-M2-82  | remove systems level from ticket API                                | done                    | yes     |
+| WP-M2-83  | remove systems level from object API                                | done                    | yes     |
+| WP-M2-84  | remove systems level from report form                               | done                    | yes     |
+| WP-M2-85  | remove systems level from internal create                           | done                    | yes     |
+| WP-M2-86  | remove systems level from object UI                                 | done                    | yes     |
+| WP-M2-87  | remove systems level from i18n                                      | done                    | yes     |
+| WP-M2-88a | remove systems level from API tests part 1                          | done                    | yes     |
+| WP-M2-88b | remove systems level from API tests part 2                          | done                    | yes     |
+| WP-M2-88c | remove systems level from web test and seed                         | done                    | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |
