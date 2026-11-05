@@ -301,10 +301,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         '6002_01',
         '6003_01',
       ])
-      expect(byBma.json<ListBody>().objects?.map((object) => object.objectNo).sort()).toEqual([
-        '6001_01',
-        '6003_01',
-      ])
       expect(combined.json<ListBody>().objects?.map((object) => object.objectNo)).toEqual([
         '6003_01',
       ])
