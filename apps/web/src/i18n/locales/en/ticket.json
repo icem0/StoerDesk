@@ -22,9 +22,6 @@
     "title": "Report a malfunction",
     "loading": "Loading the object …",
     "object": {
-      "system": "Affected system",
-      "systemNone": "no selection",
-      "noSystems": "This object has no system on record."
     },
     "faults": {
       "label": "Type of fault",
@@ -82,7 +79,6 @@
       "qr_token_not_found": "This QR code does not belong to an active object. Please scan again or name the object number in the report book.",
       "report_text_required": "Please select a fault type or describe the fault.",
       "contact_required": "Please provide a phone number or an e-mail address.",
-      "system_not_found": "The selected system does not belong to this object.",
       "invalid_request": "The report could not be read. Please try again.",
       "rate_limited": "Too many reports in a short time. Please try again in one minute.",
       "photo_limit_exceeded": "At most six photos are possible.",
@@ -121,8 +117,6 @@
         "object": "Object",
         "objectSearchPlaceholder": "Search objects (number, name, address)",
         "objectPlaceholder": "Select an object",
-        "system": "System",
-        "systemPlaceholder": "none",
         "title": "Title",
         "description": "Description",
         "faults": "Fault types",

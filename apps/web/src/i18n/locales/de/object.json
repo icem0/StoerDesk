@@ -27,8 +27,6 @@
     "activeFalse": "nur inaktiv",
     "activeAll": "alle",
     "city": "Stadt",
-    "systemType": "Anlagentyp",
-    "systemTypeAll": "alle Typen",
     "noObjects": "Keine Objekte gefunden.",
     "loading": "Objekte werden geladen …",
     "loadError": "Die Objektliste konnte nicht geladen werden.",
@@ -37,7 +35,6 @@
       "name": "Name",
       "type": "Typ",
       "city": "Ort",
-      "systems": "Anlagen",
       "active": "Aktiv",
       "actions": "Aktionen"
     },
@@ -69,13 +66,6 @@
     "hints": {
       "objectNo": "Ziffern, Buchstaben, _ und -, max. 32 Zeichen (z. B. 12345_01)"
     },
-    "systems": {
-      "title": "Anlagen",
-      "type": "Anlagentyp",
-      "label": "Bezeichnung",
-      "placeholder": "z. B. Brandmeldezentrale",
-      "add": "Anlage hinzufügen"
-    },
     "errors": {
       "objectNoTaken": "Diese Objektnummer ist bereits vergeben.",
       "invalidRequest": "Bitte prüfen Sie die Eingaben.",
@@ -104,13 +94,6 @@
     },
     "hints": {
       "objectNo": "Die Objektnummer ist nach der Erstellung fest."
-    },
-    "systems": {
-      "title": "Anlagen",
-      "type": "Anlagentyp",
-      "label": "Bezeichnung",
-      "placeholder": "z. B. Brandmeldezentrale",
-      "add": "Anlage hinzufügen"
     },
     "errors": {
       "objectNoTaken": "Diese Objektnummer ist bereits vergeben.",

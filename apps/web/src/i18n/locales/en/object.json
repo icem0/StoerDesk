@@ -27,8 +27,6 @@
     "activeFalse": "inactive only",
     "activeAll": "all",
     "city": "City",
-    "systemType": "System type",
-    "systemTypeAll": "all types",
     "noObjects": "No objects found.",
     "loading": "Loading objects …",
     "loadError": "The object list could not be loaded.",
@@ -37,7 +35,6 @@
       "name": "Name",
       "type": "Type",
       "city": "City",
-      "systems": "Systems",
       "active": "Active",
       "actions": "Actions"
     },
@@ -69,13 +66,6 @@
     "hints": {
       "objectNo": "Digits, letters, _ and -, max. 32 characters (e. g. 12345_01)"
     },
-    "systems": {
-      "title": "Systems",
-      "type": "System type",
-      "label": "Label",
-      "placeholder": "e. g. fire alarm control panel",
-      "add": "Add system"
-    },
     "errors": {
       "objectNoTaken": "This object number is already taken.",
       "invalidRequest": "Please check your inputs.",
@@ -104,13 +94,6 @@
     },
     "hints": {
       "objectNo": "The object number is fixed after creation."
-    },
-    "systems": {
-      "title": "Systems",
-      "type": "System type",
-      "label": "Label",
-      "placeholder": "e. g. fire alarm control panel",
-      "add": "Add system"
     },
     "errors": {
       "objectNoTaken": "This object number is already taken.",

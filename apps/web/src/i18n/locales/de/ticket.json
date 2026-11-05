@@ -22,9 +22,6 @@
     "title": "Störung melden",
     "loading": "Objekt wird geladen …",
     "object": {
-      "system": "Betroffene Anlage",
-      "systemNone": "keine Auswahl",
-      "noSystems": "An diesem Objekt ist keine Anlage hinterlegt."
     },
     "faults": {
       "label": "Art der Störung",
@@ -82,7 +79,6 @@
       "qr_token_not_found": "Dieser QR-Code gehört zu keinem aktiven Objekt. Bitte erneut scannen oder die Objektnummer dem Meldebuch nennen.",
       "report_text_required": "Bitte eine Störungsart auswählen oder die Störung beschreiben.",
       "contact_required": "Bitte eine Telefonnummer oder eine E-Mail-Adresse angeben.",
-      "system_not_found": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
       "invalid_request": "Die Meldung konnte nicht gelesen werden. Bitte erneut versuchen.",
       "rate_limited": "Zu viele Meldungen in kurzer Zeit. Bitte in einer Minute erneut versuchen.",
       "photo_limit_exceeded": "Es sind höchstens sechs Fotos möglich.",
@@ -121,8 +117,6 @@
         "object": "Objekt",
         "objectSearchPlaceholder": "Objekt suchen (Nummer, Name, Adresse)",
         "objectPlaceholder": "Objekt auswählen",
-        "system": "Anlage",
-        "systemPlaceholder": "keine Auswahl",
         "title": "Titel",
         "description": "Beschreibung",
         "faults": "Störungsarten",
