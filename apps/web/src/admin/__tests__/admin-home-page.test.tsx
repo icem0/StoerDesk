@@ -24,16 +24,20 @@ function renderHome() {
 }
 
 describe('AdminHomePage', () => {
-  it('links the BMAcloud sync card directly after the roles card', async () => {
+  it('links the BMAcloud sync card after the groups card', async () => {
     renderHome()
 
     const roles = await screen.findByRole('link', {
       name: /Rollenverwaltung|Role administration/i,
     })
+    const groupsText = await screen.findByText(/^Gruppen$|^Groups$/i)
+    const groups = groupsText.closest('a')
     const sync = screen.getByRole('link', { name: /BMAcloud/i })
 
+    expect(groups?.getAttribute('href')).toBe('/admin/groups')
     expect(sync.getAttribute('href')).toBe('/admin/bma-sync')
-    expect(roles.closest('li')?.nextElementSibling).toBe(sync.closest('li'))
+    expect(roles.closest('li')?.nextElementSibling).toBe(groups?.closest('li'))
+    expect(groups?.closest('li')?.nextElementSibling).toBe(sync.closest('li'))
   })
 
   it('keeps a module without a route as a planned card', async () => {
@@ -43,13 +47,16 @@ describe('AdminHomePage', () => {
     expect(screen.getAllByText(/geplant|planned/i).length).toBeGreaterThan(0)
   })
 
-  it('marks the groups placeholder with the phase that owns ticket assignment', async () => {
+  it('marks the groups module as available and deadlines as planned phase 6', async () => {
     renderHome()
 
-    const groups = await screen.findByText(/^Gruppen$|^Groups$/i)
-    const card = groups.closest('div')
+    const groupsText = await screen.findByText(/^Gruppen$|^Groups$/i)
+    const groups = groupsText.closest('a')
+    expect(groups?.getAttribute('href')).toBe('/admin/groups')
 
-    expect(card?.textContent).toMatch(/Phase 4/)
+    const deadlines = await screen.findByText(/^Fristen$|^Deadlines$/i)
+    const card = deadlines.closest('li')
+    expect(card?.textContent).toMatch(/Phase 6/)
     expect(card?.textContent).not.toMatch(/Phase 1\b/)
   })
 })

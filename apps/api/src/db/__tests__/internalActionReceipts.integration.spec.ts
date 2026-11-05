@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import {
   internalActionReceipts,
+  objects,
   tickets,
   ticketEvents,
 } from '../schema'
@@ -35,7 +36,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal_action_receipts
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
   const client = postgres(url, { max: 4 })
   const db = drizzle(client, {
-    schema: { internalActionReceipts, tickets, ticketEvents },
+    schema: { internalActionReceipts, objects, tickets, ticketEvents },
   })
 
   beforeAll(async () => {
@@ -60,9 +61,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal_action_receipts
   })
 
   it('inserts one receipt and returns uuid v7 id, client_uuid and timestamps', async () => {
+    const object = onlyRow(
+      await db.insert(objects).values({
+        objectNo: 'OBJ-000',
+        name: 'Test Object',
+      }).returning(),
+      'object',
+    )
     const ticket = onlyRow(
       await db.insert(tickets).values({
-        objectId: '00000000-0000-0000-0000-000000000000',
+        objectId: object.id,
         reportedAt: new Date(),
         deadlineAt: new Date(Date.now() + 86400000),
       }).returning(),
@@ -101,9 +109,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal_action_receipts
   })
 
   it('rejects a second insert with the same client_uuid (unique)', async () => {
+    const object = onlyRow(
+      await db.insert(objects).values({
+        objectNo: 'OBJ-001',
+        name: 'Test Object 1',
+      }).returning(),
+      'object',
+    )
     const ticket = onlyRow(
       await db.insert(tickets).values({
-        objectId: '00000000-0000-0000-0000-000000000001',
+        objectId: object.id,
         reportedAt: new Date(),
         deadlineAt: new Date(Date.now() + 86400000),
       }).returning(),
@@ -150,9 +165,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal_action_receipts
   })
 
   it('cascades delete with the ticket', async () => {
+    const object = onlyRow(
+      await db.insert(objects).values({
+        objectNo: 'OBJ-002',
+        name: 'Test Object 2',
+      }).returning(),
+      'object',
+    )
     const ticket = onlyRow(
       await db.insert(tickets).values({
-        objectId: '00000000-0000-0000-0000-000000000002',
+        objectId: object.id,
         reportedAt: new Date(),
         deadlineAt: new Date(Date.now() + 86400000),
       }).returning(),
