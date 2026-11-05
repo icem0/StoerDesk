@@ -6,6 +6,11 @@ import { registerRoute } from 'workbox-routing'
 
 import { isInternalTicketRead, isPublicReportPath } from './lib/sw-routes'
 
+/**
+ * The cache that holds the offline copies of assigned tickets (WP-M5-07).
+ */
+const CACHE_INTERNAL_TICKETS = 'internal-tickets'
+
 declare global {
   interface Window {
     /** Injected by vite-plugin-pwa at build time (injectManifest strategy). */
@@ -41,8 +46,28 @@ registerRoute(
 registerRoute(
   ({ url }) => isInternalTicketRead(url.pathname),
   new StaleWhileRevalidate({
-    cacheName: 'internal-tickets',
+    cacheName: CACHE_INTERNAL_TICKETS,
     plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 12 * 3600 })],
   }),
   'GET',
 )
+
+/**
+ * Clears only the `internal-tickets` cache on sign-out, so the next online
+ * read re-fetches from the server. The precache and every other cache stay
+ * untouched. Answers `CLEAR_USER_CACHE_DONE` on `port`.
+ */
+export async function clearUserCache(
+  cacheStorage: CacheStorage,
+  port: MessagePort,
+): Promise<void> {
+  await cacheStorage.delete(CACHE_INTERNAL_TICKETS)
+  void port.postMessage({ type: 'CLEAR_USER_CACHE_DONE' })
+}
+
+self.addEventListener('message', (event: MessageEvent) => {
+  const { data, ports } = event
+  if (data?.type === 'CLEAR_USER_CACHE' && ports?.[0]) {
+    void clearUserCache(caches, ports[0]).catch(() => undefined)
+  }
+})

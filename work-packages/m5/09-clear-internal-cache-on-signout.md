@@ -1,7 +1,7 @@
 # WP-M5-09: sign-out clears the internal ticket cache (web)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M5-07
 phase: 5
 milestone: m5
@@ -57,8 +57,8 @@ Expected: all green; the handler test fails before the change and passes after.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/sw.ts` (`clearUserCache` plus the `CLEAR_USER_CACHE` message branch next to the other caches), `apps/web/src/auth/login-form.tsx` (`LogoutButton` posts `CLEAR_USER_CACHE` best-effort before the logout mutation), `apps/web/src/auth/__tests__/login-form.test.tsx` (asserts the post), new `apps/web/src/__tests__/sw.test.ts` (unit tests for `clearUserCache`: only `internal-tickets` is deleted, `CLEAR_USER_CACHE_DONE` answered on the port, precache untouched)
+- Interfaces added: `clearUserCache(cacheStorage, port): Promise<void>`; messages `CLEAR_USER_CACHE` → `CLEAR_USER_CACHE_DONE`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `npm run lint`, `npm run test:run` (the new handler test fails before the change and passes after), `npm run wp:check`
 - Follow-up WP: none
 - Open question: none

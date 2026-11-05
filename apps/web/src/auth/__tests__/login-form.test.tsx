@@ -138,4 +138,34 @@ describe('LoginForm', () => {
     expect(await screen.findByLabelText('E-Mail')).toBeTruthy()
     expect(screen.queryByText(marker)).toBeNull()
   })
+
+  it('posts CLEAR_USER_CACHE to the service worker before logging out', async () => {
+    const postMessage = vi.fn()
+    vi.stubGlobal(
+      'navigator',
+      {
+        serviceWorker: {
+          ready: Promise.resolve({ active: { postMessage } }),
+        },
+      } as unknown as Navigator,
+    )
+    stubRoutes({
+      '/v1/me': [meResponse(), unauthorized()],
+      '/v1/auth/logout': new Response(null, { status: 204 }),
+    })
+    renderWithProviders(
+      <RequireSession>
+        <p>{marker}</p>
+        <LogoutButton />
+      </RequireSession>,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abmelden' }))
+
+    // The service-worker message is posted on a promise microtask.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(postMessage).toHaveBeenCalledWith({ type: 'CLEAR_USER_CACHE' })
+    expect(await screen.findByLabelText('E-Mail')).toBeTruthy()
+  })
 })

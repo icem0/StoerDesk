@@ -153,7 +153,16 @@ export function LogoutButton() {
       className="self-start rounded border border-slate-600 px-3 py-1 text-sm disabled:opacity-50"
       type="button"
       disabled={mutation.isPending}
-      onClick={() => mutation.mutate()}
+      onClick={() => {
+        if (navigator.serviceWorker) {
+          void navigator.serviceWorker.ready
+            .then((registration) =>
+              registration.active?.postMessage({ type: 'CLEAR_USER_CACHE' }),
+            )
+            .catch(() => undefined)
+        }
+        mutation.mutate()
+      }}
     >
       {t('auth.logout')}
     </button>
