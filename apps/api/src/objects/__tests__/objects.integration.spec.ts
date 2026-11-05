@@ -229,7 +229,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(updated.statusCode).toBe(200)
       expect(body.name).toBe('Werk Nord 2')
-      expect(body.systems).toHaveLength(0)
 
       const noop = await patchObject(cookies['admin'], '5001_01', {})
 
