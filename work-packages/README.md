@@ -316,9 +316,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-04  | `clientUuid` on the action routes + internal comment route          | done                    | yes     |
 | WP-M5-05  | the detail page queues actions offline and replays them             | done                    | yes     |
 | WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible     | done                    | yes     |
-| WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | planned                 | yes     |
-| WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | planned                 | yes     |
-| WP-M5-09  | sign-out clears the `internal-tickets` cache                        | planned                 | yes     |
+| WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | done                    | yes     |
+| WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | done                    | yes     |
+| WP-M5-09  | sign-out clears the `internal-tickets` cache                        | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -634,10 +634,11 @@ no open follow-up, so the next roadmap step is phase 5 (offline internal actions
 `PLAN.md` §16 happened first: **WP-M5-01 … WP-M5-09** in `work-packages/m5/`, implemented in
 numeric order (01 outbox table → 02 receipts table → 03 idempotent helper → 04 routes →
 05 queue UI → 06 conflict UI → 07 offline reads → 08 E2E exit criterion → 09 cache clear on
-sign-out). **WP-M5-01 is implemented** (Dexie v2 `internal_actions` queue, replay triggers,
-`pendingWrites`). The exit criterion "offline acknowledge syncs and conflicts are shown" is
-proven by WP-M5-08. Claiming from the pool and confirm/decline of shifts stay out of phase 5
-(online-only rule of §9.6, on-call is phase 8).
+sign-out). **WP-M5-01 … WP-M5-09 are implemented** (Dexie v2 `internal_actions` queue,
+receipts table, idempotent helper, action routes, queue UI, conflict UI, offline reads, the
+E2E exit criterion and the cache clear on sign-out). Phase 5 is closed. Claiming from the
+pool and confirm/decline of shifts stay out of phase 5 (online-only rule of §9.6,
+on-call is phase 8).
 
 ## Validation
 

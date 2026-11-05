@@ -1,7 +1,7 @@
 # WP-M5-08: offline internal actions E2E — the phase 5 exit criterion (web)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M5-05, WP-M5-06, WP-M5-07
 phase: 5
 milestone: m5
@@ -66,8 +66,8 @@ unverified locally, never as green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/e2e/offline-internal.spec.ts` (new — the phase 5 exit criterion in `de` and `en`)
+- Interfaces added: none; the test drives `useInternalActions` / `replayInternalActions` / `clearUserCache` through the UI and the API, no new product surface
+- Verified: `npm run lint` and `npm run wp:check` green locally; `npm run test:e2e` skips without a reachable PostgreSQL and Chromium (this container) and runs in CI — report it as unverified locally, never as green; the two acceptance scenarios are "offline acknowledge replays into exactly one event" and "conflicting offline write stays visible until discarded"
 - Follow-up WP: WP-M5-09 (`m5/09-clear-internal-cache-on-signout.md`)
 - Open question: none

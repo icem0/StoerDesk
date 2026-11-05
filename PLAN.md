@@ -738,6 +738,15 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M3-10  | the update menu in the shell header                                | done   |
 | WP-M3-11  | the removal of the update agent                                   | done   |
 | WP-M3-12  | the documentation of the new update control                        | done   |
+| WP-M5-01  | the outbox stores queued internal actions (Dexie v2)               | done   |
+| WP-M5-02  | `internal_action_receipts` table and migration 0013                | done   |
+| WP-M5-03  | `applyInternalAction`: replay-safe acknowledge/comment/decline     | done   |
+| WP-M5-04  | `clientUuid` on the action routes + internal comment route         | done   |
+| WP-M5-05  | the detail page queues actions offline and replays them            | done   |
+| WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible    | done   |
+| WP-M5-07  | stale-while-revalidate cache for internal ticket reads             | done   |
+| WP-M5-08  | offline internal actions E2E — phase 5 exit criterion              | done   |
+| WP-M5-09  | sign-out clears the `internal-tickets` cache                       | done   |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -977,8 +986,10 @@ before any code: **WP-M5-01 … WP-M5-09** in `work-packages/m5/` cover the Dexi
 action queue, the `internal_action_receipts` table, the replay-safe `applyInternalAction`
 helper, the `clientUuid` idempotency on the acknowledge/decline routes plus the internal
 comment route, the offline queue and conflict UI, the stale-while-revalidate ticket reads,
-the E2E of the exit criterion and the cache clear on sign-out. **WP-M5-01 is implemented**
-(the Dexie v2 `internal_actions` queue with its replay triggers and `pendingWrites`).
+the E2E of the exit criterion and the cache clear on sign-out. **All of WP-M5-01 … WP-M5-09
+are implemented** (the Dexie v2 `internal_actions` queue with its replay triggers and
+`pendingWrites`, the receipts table, the idempotent helper, the action routes, the queue
+and conflict UI, the offline reads, the E2E and the cache clear), which closes phase 5.
 Claiming from the pool and
 shift confirm/decline stay out of phase 5 (online-only rule of §9.6; on-call is phase 8).
 
