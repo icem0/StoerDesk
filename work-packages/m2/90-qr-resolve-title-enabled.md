@@ -64,5 +64,5 @@ Expected: all green.
 - Interfaces added: `titleEnabled` on `qrResolveResponseSchema`, public QR resolve answers the switch
 - Verified: `npm run typecheck`, `npm run lint`, `npm run test:run` (465 tests), `npm run i18n:check`,
   `npm run wp:check` all green.
-- Follow-up WP: WP-M2-90b (report form title field, branding checkbox)
+- Follow-up WP: WP-M2-90b (branding checkbox) and WP-M2-90c (report form title field)
 - Open question: none
