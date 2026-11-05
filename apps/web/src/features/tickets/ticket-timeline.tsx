@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   computeTicketTimeline,
@@ -31,12 +31,28 @@ type TicketTimelineProps = {
   status: string
   onPause?: (reason: string) => Promise<void>
   onResume?: () => Promise<void>
+  /** Deadline length in hours, shown next to the deadline label ("72 Std / 72 h"). */
+  deadlineHours: number
+  /** Suffix appended to scale numbers ("Std" / "h"). */
+  scaleSuffix: string
 }
 
 function parseMs(value: string | null | undefined): number | undefined {
   if (value === null || value === undefined) return undefined
   const ms = Date.parse(value)
   return Number.isFinite(ms) ? ms : undefined
+}
+
+/** Scale tick positions every 6 hours between reportedAt and deadlineAt. */
+function scaleTicks(reportedMs: number, deadlineMs: number): number[] {
+  const ticks: number[] = []
+  const stepMs = 6 * 60 * 60 * 1000
+  let t = reportedMs
+  while (t <= deadlineMs) {
+    ticks.push(t)
+    t += stepMs
+  }
+  return ticks
 }
 
 export function TicketTimeline({
@@ -48,6 +64,8 @@ export function TicketTimeline({
   status,
   onPause,
   onResume,
+  deadlineHours,
+  scaleSuffix,
 }: TicketTimelineProps) {
   const { t } = useTranslation('ticket')
   const [pauseReason, setPauseReason] = useState('')
@@ -78,7 +96,13 @@ export function TicketTimeline({
 
   const reportedMs = parseMs(reportedAt)
   const deadlineMs = parseMs(deadlineAt)
-  const span = reportedMs !== undefined && deadlineMs !== undefined ? deadlineMs - reportedMs : 0
+  const span =
+    reportedMs !== undefined && deadlineMs !== undefined ? deadlineMs - reportedMs : 0
+
+  const ticks = useMemo(
+    () => (reportedMs !== undefined && deadlineMs !== undefined ? scaleTicks(reportedMs, deadlineMs) : []),
+    [reportedMs, deadlineMs],
+  )
 
   const openPause = pauses.find((pause) => pause.endedAt === null)
   const canPause = PAUSABLE_STATUSES.has(status)
@@ -101,13 +125,25 @@ export function TicketTimeline({
     }
   }
 
+  const reportedTime = reportedMs !== undefined ? new Date(reportedMs).toLocaleString() : ''
+  const deadlineTime = deadlineMs !== undefined ? new Date(deadlineMs).toLocaleString() : ''
+
   return (
     <section className="col-span-full rounded bg-slate-900/50 border border-slate-700 p-4">
       <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
         {t('timeline.title')}
       </h2>
 
-      <div className="relative h-3 w-full rounded bg-slate-800/50 overflow-hidden mb-2">
+      <div className="flex items-baseline gap-2 text-xs text-slate-400 mb-1">
+        <span className="font-medium">{t('timeline.reportedAtLabel')}</span>
+        <span>{reportedTime}</span>
+      </div>
+      <div className="flex items-baseline gap-2 text-xs text-slate-400 justify-end mb-2">
+        <span className="font-medium">{t('timeline.deadlineLabel')}</span>
+        <span>{deadlineTime} ({deadlineHours} {scaleSuffix})</span>
+      </div>
+
+      <div className="relative h-3 w-full rounded bg-slate-800/50 overflow-hidden mb-1">
         <div
           className={`h-full transition-colors duration-300 ${colour}`}
           style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
@@ -137,6 +173,27 @@ export function TicketTimeline({
           </>
         )}
       </div>
+
+      {reportedMs !== undefined && deadlineMs !== undefined && span > 0 && (
+        <div className="relative h-4 w-full mb-3">
+          {ticks.map((tickMs, index) => {
+            const left = ((tickMs - reportedMs) / span) * 100
+            const hours = Math.round((tickMs - reportedMs) / 3_600_000)
+            return (
+              <div
+                key={index}
+                className="absolute flex flex-col items-center"
+                style={{ left: `${left}%`, transform: 'translateX(-50%)' }}
+              >
+                <div className="w-[1px] h-2 bg-slate-600" />
+                <span className="text-[10px] text-slate-500 mt-0.5 whitespace-nowrap">
+                  {hours} {scaleSuffix}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
         <span className={`font-medium ${state === 'red' ? 'text-rose-400' : 'text-slate-300'}`}>

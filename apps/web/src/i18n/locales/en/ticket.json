@@ -207,6 +207,9 @@
     "pause": "Start pause",
     "resume": "End pause",
     "pauseReason": "Open pause: {{reason}}",
+    "reportedAtLabel": "Reported on",
+    "deadlineLabel": "Response by",
+    "scaleSuffix": "h",
     "prompt": {
       "reason": "Wait reason (min. 3 chars):"
     }
@@ -298,6 +301,9 @@
       "status": "Status",
       "priority": "Priority",
       "source": "Source",
+      "recordedBy": "Recorded by",
+      "reportedBy": "Reported by",
+      "unknown": "–",
       "reportedAt": "Reported at",
       "deadlineAt": "Deadline",
       "reporterName": "Reporter name",

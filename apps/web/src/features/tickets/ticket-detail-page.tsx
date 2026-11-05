@@ -15,13 +15,17 @@ import { OfflineActionBanner } from './offline-action-banner'
 import { TicketTimeline } from './ticket-timeline'
 
 /**
- * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d).
+ * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d / WP-M4-07).
  *
- * Loads `GET /api/v1/tickets/:ticketNo` and renders the ticket header (number,
- * object, status badge, priority badge, times), the append-only event history as a
- * timeline, and the photo list. The always visible action panel (WP-M2-91) sits below
- * the title, stays reachable at the bottom on mobile and takes inline input fields for
- * payload actions; failures show as an inline alert line — no `window` dialogs.
+ * Layout per user request:
+ * - Header: ticket number + object on the left, status + priority badges on the top right.
+ * - Timeline bar directly under the header: "Gemeldet am" left, "Reaktionszeit bis" right,
+ *   6 h scale markings below the bar, milestone dots on the bar.
+ * - Object row: object name + object number side by side, labels above.
+ * - Three fields side by side: Erfasser, Meldender, Quelle with labels above.
+ * - Description, photos, history follow below.
+ * - All workflow actions live in a single dropdown menu; "Zurück zur Liste" is a menu entry.
+ * - The standalone "Zurück zur Liste" button is removed.
  */
 
 const STATUS_COLORS: Record<string, string> = {
@@ -43,11 +47,6 @@ function useTicket(ticketNo: string | undefined) {
     enabled: ticketNo !== undefined,
     retry: false,
   })
-}
-
-function formatTime(iso: string): string {
-  const locale = i18n.language === 'en' ? 'en-US' : 'de-DE'
-  return new Date(iso).toLocaleString(locale)
 }
 
 function formatEventTime(iso: string): string {
@@ -115,6 +114,7 @@ export function TicketDetailPage() {
       void ticketQuery.refetch()
       setLastError(null)
       setFields({})
+      setSelectedAction(null)
     } catch (error) {
       if (error instanceof ApiError) {
         setLastError(error.code ?? t('detail.errors.actionFailed'))
@@ -192,24 +192,411 @@ export function TicketDetailPage() {
 
   const timelineData = ticketQuery.data!.timeline
 
+  /**
+   * Builds the list of dropdown menu entries for the current status.
+   * Each entry: { value, labelKey, needsConfirm, confirmLabelKey, abortLabelKey, fieldRenderer? }
+   */
+  const status = ticket.status
+  const req = (name: string) => (fields[name] ?? '').trim()
+
+  const menuEntries: { value: string; labelKey: string }[] = []
+
+  if (status === 'NEW') {
+    menuEntries.push({ value: 'review_started', labelKey: 'detail.action.review' })
+  } else if (status === 'IN_REVIEW') {
+    menuEntries.push({ value: 'work_order_set', labelKey: 'detail.action.workOrder' })
+  } else if (status === 'WORK_ORDER_CREATED') {
+    menuEntries.push({ value: 'assigned', labelKey: 'detail.action.assign' })
+    menuEntries.push({ value: 'offered', labelKey: 'detail.action.offer' })
+  } else if (status === 'OFFERED' || status === 'ASSIGNED') {
+    menuEntries.push({ value: 'accepted', labelKey: 'detail.action.accept' })
+    menuEntries.push({ value: 'declined', labelKey: 'detail.action.decline' })
+  } else if (status === 'ACCEPTED') {
+    menuEntries.push({ value: 'acknowledged', labelKey: 'detail.action.acknowledge' })
+  } else if (status === 'ACKNOWLEDGED') {
+    menuEntries.push({ value: 'closed', labelKey: 'detail.action.close' })
+  } else if (status === 'CLOSED') {
+    menuEntries.push({ value: 'reopened', labelKey: 'detail.action.reopen' })
+  }
+
+  if (status !== 'CLOSED' && status !== 'CANCELLED') {
+    menuEntries.push({ value: 'commented', labelKey: 'detail.action.comment' })
+  }
+
+  if (status !== 'CANCELLED') {
+    menuEntries.push({ value: 'cancel', labelKey: 'detail.menu.cancel' })
+  }
+  if (status === 'CANCELLED') {
+    menuEntries.push({ value: 'uncancel', labelKey: 'detail.menu.uncancel' })
+    if (mayDelete) {
+      menuEntries.push({ value: 'delete', labelKey: 'detail.menu.delete' })
+    }
+  }
+
+  // "Zurück zur Liste" replaces the removed standalone button.
+  menuEntries.push({ value: 'list', labelKey: 'detail.back' })
+
+  function renderConfirmPanel(): ReactNode {
+    switch (selectedAction) {
+      case 'work_order_set': {
+        const type = req('workOrderType')
+        const number = req('workOrderNumber')
+        const missing = type === '' || number === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.workOrderType')}
+              value={fields.workOrderType ?? ''}
+              onChange={(event) => setFields({ ...fields, workOrderType: event.target.value })}
+            />
+            <input
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.workOrderNumber')}
+              value={fields.workOrderNumber ?? ''}
+              onChange={(event) => setFields({ ...fields, workOrderNumber: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                void handleAction('work_order_set', {
+                  type: req('workOrderType'),
+                  number: req('workOrderNumber'),
+                })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'declined': {
+        const reason = req('declineReason')
+        const missing = reason === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.declineReason')}
+              value={fields.declineReason ?? ''}
+              onChange={(event) => setFields({ ...fields, declineReason: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setSelectedAction(null)
+                void handleAction('declined', { reason: req('declineReason') })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'acknowledged': {
+        const result = req('acknowledgeResult')
+        const missing = result === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.acknowledgeResult')}
+              value={fields.acknowledgeResult ?? ''}
+              onChange={(event) => setFields({ ...fields, acknowledgeResult: event.target.value })}
+            />
+            <input
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.acknowledgeNote')}
+              value={fields.acknowledgeNote ?? ''}
+              onChange={(event) => setFields({ ...fields, acknowledgeNote: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setSelectedAction(null)
+                void handleAction('acknowledged', {
+                  result: req('acknowledgeResult'),
+                  note: req('acknowledgeNote'),
+                })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'reopened': {
+        const reason = req('reopenReason')
+        const missing = reason === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.reopenReason')}
+              value={fields.reopenReason ?? ''}
+              onChange={(event) => setFields({ ...fields, reopenReason: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setSelectedAction(null)
+                void handleAction('reopened', { reason: req('reopenReason') })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'commented': {
+        const text = req('commentText')
+        const missing = text === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.commentText')}
+              value={fields.commentText ?? ''}
+              onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setSelectedAction(null)
+                void handleAction('commented', { text: req('commentText') })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'cancel': {
+        const reason = req('cancelReason')
+        const missing = reason === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.cancelReason')}
+              value={fields.cancelReason ?? ''}
+              onChange={(event) => setFields({ ...fields, cancelReason: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setSelectedAction(null)
+                void handleAction('cancelled', { reason: req('cancelReason') })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'uncancel': {
+        const reason = req('uncancelReason')
+        const missing = reason === ''
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <input
+              className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.uncancelReason')}
+              value={fields.uncancelReason ?? ''}
+              onChange={(event) => setFields({ ...fields, uncancelReason: event.target.value })}
+            />
+            <button
+              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+              type="button"
+              disabled={missing}
+              onClick={() => {
+                if (missing) {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setSelectedAction(null)
+                void handleAction('uncancelled', { reason: req('uncancelReason') })
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'delete': {
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <span className="text-xs text-rose-300">{t('detail.prompt.deleteConfirm')}</span>
+            <input
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              placeholder={t('detail.prompt.deleteConfirmNumber')}
+              value={fields.deleteConfirm ?? ''}
+              onChange={(event) => setFields({ ...fields, deleteConfirm: event.target.value })}
+            />
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-rose-600 hover:bg-rose-500"
+              type="button"
+              onClick={() => void handleDelete(req('deleteConfirm'))}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'list':
+        navigate('/tickets')
+        setSelectedAction(null)
+        return null
+      default:
+        return null
+    }
+  }
+
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-between sm:justify-between">
+      {/* Header: title left, status + priority right */}
+      <div className="flex flex-col sm:flex-row sm:items-between sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">
             {t('detail.title', { ticketNo: ticket.ticketNo })}
           </h1>
           <p className="text-sm text-slate-400">{t('detail.subtitle', { object: ticket.objectName })}</p>
         </div>
-        <div className="flex gap-2">
-            <button
-              className="rounded bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-500"
-              type="button"
-              onClick={() => navigate('/tickets')}
-            >
-              {t('detail.back')}
-            </button>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <span
+            data-testid="ticket-status-badge"
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
+          >
+            {t(`status.values.${ticket.status}`) ?? ticket.status}
+          </span>
+          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
+            {t(`priority.${ticket.priority}`) ?? ticket.priority}
+          </span>
+        </div>
       </div>
 
       {pendingCount > 0 && (
@@ -218,329 +605,120 @@ export function TicketDetailPage() {
         </div>
       )}
 
-      <div
-        data-testid="ticket-actions"
-        className="col-span-full flex flex-col gap-2 sticky bottom-4 z-10 rounded bg-slate-900/95 border border-slate-700 p-3"
-      >
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          {t('detail.actions')}
-        </h2>
-        <div className="flex flex-wrap items-center gap-2">
-          {(() => {
-            const status = ticket.status
-            const req = (name: string) => (fields[name] ?? '').trim()
+      {/* Timeline on top */}
+      <TicketTimeline
+        reportedAt={timelineData.reportedAt}
+        deadlineAt={timelineData.deadlineAt}
+        stoppedAt={timelineData.stoppedAt}
+        pauses={ticketQuery.data!.pauses}
+        markers={timelineData.markers}
+        status={ticket.status}
+        onPause={handlePause}
+        onResume={handleResume}
+        deadlineHours={Math.max(1, Math.round(timelineData.totalMs / 3_600_000))}
+        scaleSuffix={t('timeline.scaleSuffix')}
+      />
 
-            const btn = (labelKey: string, onClick: () => void, color: string, hover: string) => (
-              <button
-                key={labelKey}
-                className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-${color} hover:bg-${hover}`}
-                type="button"
-                onClick={onClick}
-              >
-                {t(`detail.action.${labelKey}`)}
-              </button>
-            )
-
-            const field = (name: string, promptKey: string) => (
-              <input
-                key={name}
-                className="w-full box-border rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 min-h-11"
-                name={name}
-                placeholder={t(promptKey)}
-                type="text"
-                value={fields[name] ?? ''}
-                onChange={(event) => setFields({ ...fields, [name]: event.target.value })}
-              />
-            )
-
-            const actions: ReactNode[] = []
-
-            if (status === 'NEW') {
-              actions.push(btn('review', () => void handleAction('review_started'), 'slate-600', 'slate-500'))
-            } else if (status === 'IN_REVIEW') {
-              actions.push(
-                field('workOrderType', 'detail.prompt.workOrderType'),
-                field('workOrderNumber', 'detail.prompt.workOrderNumber'),
-                btn('workOrder', () => {
-                  const type = req('workOrderType')
-                  const number = req('workOrderNumber')
-                  if (type === '' || number === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  void handleAction('work_order_set', { type, number })
-                }, 'sky-600', 'sky-500'),
-              )
-            } else if (status === 'WORK_ORDER_CREATED') {
-              actions.push(
-                btn('assign', () => void handleAction('assigned'), 'slate-600', 'slate-500'),
-                btn('offer', () => void handleAction('offered'), 'purple-600', 'purple-500'),
-              )
-            } else if (status === 'OFFERED' || status === 'ASSIGNED') {
-              actions.push(
-                btn('accept', () => void handleAction('accepted'), 'emerald-600', 'emerald-500'),
-                btn('decline', () => {
-                  const reason = req('declineReason')
-                  if (reason === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  void handleAction('declined', { reason })
-                }, 'rose-600', 'rose-500'),
-              )
-            } else if (status === 'ACCEPTED') {
-              actions.push(
-                field('acknowledgeResult', 'detail.prompt.acknowledgeResult'),
-                field('acknowledgeNote', 'detail.prompt.acknowledgeNote'),
-                btn('acknowledge', () => {
-                  const result = req('acknowledgeResult')
-                  if (result === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  void handleAction('acknowledged', {
-                    result,
-                    note: req('acknowledgeNote'),
-                  })
-                }, 'emerald-600', 'emerald-500'),
-              )
-            } else if (status === 'ACKNOWLEDGED') {
-              actions.push(btn('close', () => void handleAction('closed'), 'slate-600', 'slate-500'))
-            } else if (status === 'CLOSED') {
-              actions.push(
-                btn('reopen', () => {
-                  const reason = req('reopenReason')
-                  if (reason === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  void handleAction('reopened', { reason })
-                }, 'rose-600', 'rose-500'),
-              )
-            }
-
-            if (status !== 'CLOSED' && status !== 'CANCELLED') {
-              actions.push(
-                field('commentText', 'detail.prompt.commentText'),
-                btn('comment', () => {
-                  const text = req('commentText')
-                  if (text === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  void handleAction('commented', { text })
-                }, 'slate-600', 'slate-500'),
-              )
-            }
-
-            // One openable menu instead of permanently visible input fields
-            // that block the view. Confirmation fields appear only after a
-            // menu entry is chosen.
-            if (status !== 'CLOSED') {
-              actions.push(
-                <select
-                  key="cancel-menu"
-                  value={selectedAction ?? ''}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setSelectedAction(value === '' ? null : value)
-                    setLastError(null)
-                  }}
-                  className="w-full min-w-[150px] rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
-                >
-                  <option value="">{t('detail.action.choose')}</option>
-                  {status !== 'CANCELLED' && (
-                    <option value="cancel">{t('detail.menu.cancel')}</option>
-                  )}
-                  {status === 'CANCELLED' && (
-                    <option value="uncancel">{t('detail.menu.uncancel')}</option>
-                  )}
-                  {status === 'CANCELLED' && mayDelete && (
-                    <option value="delete">{t('detail.menu.delete')}</option>
-                  )}
-                </select>,
-              )
-            }
-
-            if (selectedAction === 'cancel') {
-              actions.push(
-                field('cancelReason', 'detail.prompt.cancelReason'),
-                btn('confirm', () => {
-                  const reason = req('cancelReason')
-                  if (reason === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  setSelectedAction(null)
-                  void handleAction('cancelled', { reason })
-                }, 'rose-600', 'rose-500'),
-                btn('abort', () => {
-                  setSelectedAction(null)
-                  setFields({})
-                }, 'slate-600', 'slate-500'),
-              )
-            }
-
-            if (selectedAction === 'uncancel') {
-              actions.push(
-                field('uncancelReason', 'detail.prompt.uncancelReason'),
-                btn('confirm', () => {
-                  const reason = req('uncancelReason')
-                  if (reason === '') {
-                    setLastError(t('detail.errors.fieldRequired'))
-                    return
-                  }
-                  setSelectedAction(null)
-                  void handleAction('uncancelled', { reason })
-                }, 'rose-600', 'rose-500'),
-                btn('abort', () => {
-                  setSelectedAction(null)
-                  setFields({})
-                }, 'slate-600', 'slate-500'),
-              )
-            }
-
-            if (selectedAction === 'delete') {
-              actions.push(
-                <span key="delete-warning" className="text-xs text-rose-300">
-                  {t('detail.prompt.deleteConfirm')}
-                </span>,
-                field('deleteConfirm', 'detail.prompt.deleteConfirmNumber'),
-                btn('confirm', () => void handleDelete(req('deleteConfirm')), 'rose-600', 'rose-500'),
-                btn('abort', () => {
-                  setSelectedAction(null)
-                  setFields({})
-                }, 'slate-600', 'slate-500'),
-              )
-            }
-
-            return actions
-          })()}
+      {/* Object: name + number side by side, labels above */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.object')}
+          </label>
+          <span className="text-sm text-slate-200">{ticket.objectName}</span>
         </div>
-        {lastError !== null && (
-          <p className="text-rose-400 text-sm" role="alert">
-            {lastError}
-          </p>
-        )}
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.objectNo')}
+          </label>
+          <span className="text-sm font-mono text-slate-300">{ticket.objectNo}</span>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Three fields side by side: Erfasser, Meldender, Quelle */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="col-span-full">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            {t('detail.header')}
-          </h2>
-          <dl className="grid gap-2 sm:grid-cols-2">
-            <div className="col-span-full">
-              <dt className="text-xs text-slate-500">{t('detail.field.object')}</dt>
-              <dd className="text-sm text-slate-200">{ticket.objectName}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">{t('detail.field.objectNo')}</dt>
-              <dd className="text-sm font-mono text-slate-300">{ticket.objectNo}</dd>
-            </div>
-            <div className="col-span-full">
-              <dt className="text-xs text-slate-500">{t('detail.field.status')}</dt>
-              <dd className="text-sm">
-                <span
-                  data-testid="ticket-status-badge"
-                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
-                >
-                  {t(`status.values.${ticket.status}`) ?? ticket.status}
-                </span>
-              </dd>
-            </div>
-            <div className="col-span-full">
-              <dt className="text-xs text-slate-500">{t('detail.field.priority')}</dt>
-              <dd className="text-sm">
-                <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
-                  {t(`priority.${ticket.priority}`) ?? ticket.priority}
-                </span>
-              </dd>
-            </div>
-            <div className="col-span-full">
-              <dt className="text-xs text-slate-500">{t('detail.field.source')}</dt>
-              <dd className="text-sm text-slate-200">{ticket.source}</dd>
-            </div>
-            <div className="col-span-full">
-              <dt className="text-xs text-slate-500">{t('detail.field.reportedAt')}</dt>
-              <dd className="text-sm text-slate-200">{formatTime(ticket.reportedAt)}</dd>
-            </div>
-            <div className="col-span-full">
-              <dt className="text-xs text-slate-500">{t('detail.field.deadlineAt')}</dt>
-              <dd className="text-sm text-slate-200">{formatTime(ticket.deadlineAt)}</dd>
-            </div>
-            {ticket.reporterName !== null && (
-              <div className="col-span-full">
-                <dt className="text-xs text-slate-500">{t('detail.field.reporterName')}</dt>
-                <dd className="text-sm text-slate-200">{ticket.reporterName}</dd>
-              </div>
-            )}
-            {ticket.reporterPhone !== null && (
-              <div className="col-span-full">
-                <dt className="text-xs text-slate-500">{t('detail.field.reporterPhone')}</dt>
-                <dd className="text-sm text-slate-200">{ticket.reporterPhone}</dd>
-              </div>
-            )}
-            {ticket.reporterEmail !== null && (
-              <div className="col-span-full">
-                <dt className="text-xs text-slate-500">{t('detail.field.reporterEmail')}</dt>
-                <dd className="text-sm text-slate-200">{ticket.reporterEmail}</dd>
-              </div>
-            )}
-          </dl>
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.recordedBy')}
+          </label>
+          <span className="text-sm text-slate-200">{ticket.reporterName ?? t('detail.field.unknown')}</span>
         </div>
-
-        {ticket.title !== null && (
-          <div className="col-span-full">
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              {t('detail.field.title')}
-            </h2>
-            <p className="text-sm text-slate-200 whitespace-pre-wrap">{ticket.title}</p>
-          </div>
-        )}
-
-        {ticket.description !== null && (
-          <div className="col-span-full">
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              {t('detail.field.description')}
-            </h2>
-            <p className="text-sm text-slate-200 whitespace-pre-wrap">{ticket.description}</p>
-          </div>
-        )}
-
-        {ticket.faultTemplateKeys.length > 0 && (
-          <div className="col-span-full">
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              {t('detail.field.faults')}
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {ticket.faultTemplateKeys.map((key) => (
-                <span key={key} className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-200">
-                  {labels[key] ?? key}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.reportedBy')}
+          </label>
+          <span className="text-sm text-slate-200">
+            {ticket.reporterPhone ?? ticket.reporterEmail ?? t('detail.field.unknown')}
+          </span>
+        </div>
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.source')}
+          </label>
+          <span className="text-sm text-slate-200">{ticket.source}</span>
+        </div>
       </div>
 
+      {/* Title */}
+      {ticket.title !== null && (
         <div className="col-span-full">
-          <TicketTimeline
-            reportedAt={timelineData.reportedAt}
-            deadlineAt={timelineData.deadlineAt}
-            stoppedAt={timelineData.stoppedAt}
-            pauses={ticketQuery.data!.pauses}
-            markers={timelineData.markers}
-            status={ticket.status}
-            onPause={handlePause}
-            onResume={handleResume}
-          />
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.title')}
+          </label>
+          <p className="text-sm text-slate-200 whitespace-pre-wrap">{ticket.title}</p>
         </div>
+      )}
 
+      {/* Description */}
+      {ticket.description !== null && (
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.description')}
+          </label>
+          <p className="text-sm text-slate-200 whitespace-pre-wrap">{ticket.description}</p>
+        </div>
+      )}
+
+      {/* Faults */}
+      {ticket.faultTemplateKeys.length > 0 && (
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider">
+            {t('detail.field.faults')}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {ticket.faultTemplateKeys.map((key) => (
+              <span key={key} className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-200">
+                {labels[key] ?? key}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Photos */}
+      {photos.length > 0 && (
+        <div className="col-span-full">
+          <label className="text-xs text-slate-500 uppercase tracking-wider mb-2">
+            {t('detail.photos.title')}
+          </label>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {photos.map((photo) => (
+              <div key={photo.id} className="text-xs text-slate-400">
+                <div className="truncate">{photo.filePath}</div>
+                <div className="text-slate-500">
+                  {photo.mimeType} · {t('detail.photos.sizeKB', { size: (photo.sizeBytes / 1024).toFixed(1) })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* History / Verlauf */}
       <div className="col-span-full">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
+        <label className="text-xs text-slate-500 uppercase tracking-wider mb-2">
           {t('detail.history')}
-        </h2>
+        </label>
         <div data-testid="ticket-history" className="border border-slate-700 rounded divide-y divide-slate-700">
           {events.length === 0 ? (
             <p className="p-3 text-slate-400">{t('detail.historyEmpty')}</p>
@@ -567,22 +745,34 @@ export function TicketDetailPage() {
         </div>
       </div>
 
-      {photos.length > 0 && (
-        <div className="col-span-full">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            {t('detail.photos.title')}
-          </h2>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {photos.map((photo) => (
-              <div key={photo.id} className="text-xs text-slate-400">
-                <div className="truncate">{photo.filePath}</div>
-                <div className="text-slate-500">
-                  {photo.mimeType} · {t('detail.photos.sizeKB', { size: (photo.sizeBytes / 1024).toFixed(1) })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Actions dropdown */}
+      <div className="col-span-full">
+        <label className="text-xs text-slate-500 uppercase tracking-wider mb-2">
+          {t('detail.actions')}
+        </label>
+        <select
+          value={selectedAction ?? ''}
+          onChange={(event) => {
+            const value = event.target.value
+            setSelectedAction(value === '' ? null : value)
+            setLastError(null)
+          }}
+          className="w-full min-w-[200px] rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+        >
+          <option value="">{t('detail.action.choose')}</option>
+          {menuEntries.map((entry) => (
+            <option key={entry.value} value={entry.value}>
+              {t(entry.labelKey)}
+            </option>
+          ))}
+        </select>
+        {selectedAction !== null && selectedAction !== 'list' && (
+          <div className="mt-2">{renderConfirmPanel()}</div>
+        )}
+      </div>
+
+      {lastError !== null && (
+        <p className="text-rose-400 text-sm" role="alert">{lastError}</p>
       )}
 
       <OfflineActionBanner rows={rows} onRetry={deliverNow} onDiscard={discard} />

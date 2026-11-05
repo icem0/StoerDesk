@@ -35,6 +35,8 @@ describe('TicketTimeline', () => {
           markers={[{ type: 'created', at: reportedAt }]}
           status="NEW"
           onPause={onPause}
+          deadlineHours={72}
+          scaleSuffix="Std"
         />
       </I18nextProvider>,
     )
@@ -58,6 +60,8 @@ describe('TicketTimeline', () => {
           pauses={[]}
           markers={[]}
           status="NEW"
+          deadlineHours={72}
+          scaleSuffix="Std"
         />
       </I18nextProvider>,
     )
@@ -76,6 +80,8 @@ describe('TicketTimeline', () => {
           pauses={[]}
           markers={[]}
           status="ACKNOWLEDGED"
+          deadlineHours={72}
+          scaleSuffix="Std"
         />
       </I18nextProvider>,
     )
@@ -99,6 +105,8 @@ describe('TicketTimeline', () => {
           markers={[]}
           status="IN_REVIEW"
           onResume={onResume}
+          deadlineHours={72}
+          scaleSuffix="Std"
         />
       </I18nextProvider>,
     )
@@ -126,6 +134,8 @@ describe('TicketTimeline', () => {
           markers={[]}
           status="IN_REVIEW"
           onPause={onPause}
+          deadlineHours={72}
+          scaleSuffix="Std"
         />
       </I18nextProvider>,
     )

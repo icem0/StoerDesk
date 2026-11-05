@@ -207,6 +207,9 @@
     "pause": "Pause starten",
     "resume": "Pause beenden",
     "pauseReason": "Offene Pause: {{reason}}",
+    "reportedAtLabel": "Gemeldet am",
+    "deadlineLabel": "Reaktionszeit bis",
+    "scaleSuffix": "Std",
     "prompt": {
       "reason": "Wartegrund (mind. 3 Zeichen):"
     }
@@ -298,6 +301,9 @@
       "status": "Status",
       "priority": "Priorität",
       "source": "Quelle",
+      "recordedBy": "Erfasser",
+      "reportedBy": "Meldender",
+      "unknown": "–",
       "reportedAt": "Gemeldet am",
       "deadlineAt": "Frist bis",
       "reporterName": "Melder Name",
