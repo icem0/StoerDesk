@@ -21,7 +21,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped report integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, oldQrTokens, ticketEvents, ticketPhotos, tickets } = schema
+const { objects, oldQrTokens, settings, ticketEvents, ticketPhotos, tickets } = schema
 
 const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/
 const PHOTO_FILE_PATTERN =
@@ -229,6 +229,44 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         faultTemplateKeys: ['akustik', 'strom'],
         textLength: 25,
         title: null,
+      })
+    })
+
+    it('stores the title only while the branding switch is on', async () => {
+      const object = await createObject('7155_01')
+      const clientUuid = crypto.randomUUID()
+
+      await db
+        .insert(settings)
+        .values({ key: 'branding', value: { companyName: 'Switch GmbH', titleEnabled: true } })
+
+      const response = await submit({
+        qrToken: object.qrToken,
+        clientUuid,
+        title: 'Lift stopped between floors',
+        text: 'The lift is stopped.',
+        contact: { name: 'Resident', phone: '+49 170 7654321' },
+        locale: 'de',
+      })
+
+      expect(response.statusCode).toBe(201)
+
+      const stored = await ticketOfClient(clientUuid)
+
+      expect(stored.title).toBe('Lift stopped between floors')
+
+      const [event] = await db
+        .select()
+        .from(ticketEvents)
+        .where(eq(ticketEvents.ticketId, stored.id))
+        .limit(1)
+
+      expect(event?.payload).toEqual({
+        locale: 'de',
+        source: 'QR',
+        faultTemplateKeys: [],
+        textLength: 20,
+        title: 'Lift stopped between floors',
       })
     })
 

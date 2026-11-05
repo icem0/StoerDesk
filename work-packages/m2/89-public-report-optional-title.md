@@ -1,7 +1,7 @@
 # WP-M2-89: public report optional title with settings switch
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-29
 phase: 2
 context-budget: 18k tokens
@@ -61,6 +61,6 @@ Expected: all green; the new test really runs (a reachable database is required 
 
 - Files changed: the four source files above plus the extended integration test, `docs/REPO-MAP.md`, `work-packages/README.md`
 - Interfaces added: `titleEnabled` on branding schemas/routes, optional `title` on `publicReportRequestSchema`
-- Verified: —
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run i18n:check`, `npm run wp:check` all green; 463 tests pass.
 - Follow-up WP: WP-M2-90 (QR resolve `titleEnabled`, report form conditional title field, branding page checkbox)
 - Open question: none

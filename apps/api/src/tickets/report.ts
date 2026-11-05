@@ -266,7 +266,7 @@ export async function createPublicReport(
           source: 'QR',
           faultTemplateKeys: input.faultTemplateKeys,
           textLength: input.text?.length ?? 0,
-          title: input.title ?? null,
+          title: titleEnabled ? (input.title ?? null) : null,
         },
       })
 
