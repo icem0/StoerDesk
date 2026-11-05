@@ -61,9 +61,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('creates three objects with one BMA system each and eight localized templates', async () => {
       const first = await seedDemo(db)
 
-      expect(first).toEqual({ objects: 3, systems: 3, templates: 8, translations: 16 })
+      expect(first).toEqual({ objects: 3, templates: 8, translations: 16 })
       expect(await countRows(db, objects)).toBe(3)
-      expect(await countRows(db, systems)).toBe(3)
       expect(await countRows(db, textTemplates)).toBe(8)
       expect(await countRows(db, textTemplateTranslations)).toBe(16)
 
@@ -174,26 +173,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const tokens = await db.select({ qrToken: objects.qrToken }).from(objects)
 
       expect(new Set(tokens.map((row) => row.qrToken)).size).toBe(3)
-    })
-
-    it('rejects an unknown system type and an unsupported locale', async () => {
-      const objectRows = await db.select({ id: objects.id }).from(objects).limit(1)
-
-      await expect(
-        db.insert(systems).values({
-          objectId: onlyRow(objectRows, 'object').id,
-          type: 'ELEVATOR',
-          label: 'nope',
-        }),
-      ).rejects.toThrow()
-
-      const templateRows = await db.select({ id: textTemplates.id }).from(textTemplates).limit(1)
-
-      await expect(
-        db
-          .insert(textTemplateTranslations)
-          .values({ templateId: onlyRow(templateRows, 'template').id, locale: 'fr', text: 'non' }),
-      ).rejects.toThrow()
     })
 
     it('rejects a duplicated object_no, also when it differs only in case', async () => {

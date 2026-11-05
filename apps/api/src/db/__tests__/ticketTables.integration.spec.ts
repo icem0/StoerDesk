@@ -49,7 +49,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
   const client = postgres(url, { max: 8 })
   const db = drizzle(client, {
-    schema: { objects, systems, tickets, ticketEvents, ticketPhotos },
+    schema: { objects, tickets, ticketEvents, ticketPhotos },
   })
 
   beforeAll(async () => {

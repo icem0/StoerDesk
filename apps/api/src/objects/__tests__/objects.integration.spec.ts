@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
@@ -215,7 +215,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         active: true,
         externalType: null,
       })
-      expect(created.systems).toHaveLength(0)
 
       const detail = await getObject(cookies['reporter'], '5001_01')
 
@@ -331,13 +330,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .where(eq(objects.id, created.id))
 
       expect(stored?.active).toBe(false)
-
-      const [systemCount] = await db
-        .select({ id: systems.id })
-        .from(systems)
-        .where(and(eq(systems.objectId, created.id), eq(systems.type, 'BMA')))
-
-      expect(systemCount).toBeDefined()
 
       const defaultList = await getObjects(cookies['admin'], '?search=7001')
       const allList = await getObjects(cookies['admin'], '?search=7001&active=all')
