@@ -11,6 +11,7 @@ const adminUser = {
   id: '11111111-1111-4111-8111-111111111111',
   email: 'admin@example.com',
   locale: 'de',
+  theme: 'auto',
   active: true,
   roleKeys: ['admin'],
 }
@@ -42,6 +43,7 @@ function meResponse(permissions: string[]) {
       id: adminUser.id,
       email: adminUser.email,
       locale: 'de',
+      theme: 'auto',
       roles: ['admin'],
       permissions,
     },

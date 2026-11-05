@@ -20,6 +20,7 @@ type UserRow = {
   id: string
   email: string
   locale: string
+  theme: string
   active: boolean
 }
 
@@ -103,7 +104,13 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
       { preHandler: requirePermission(database, PERMISSIONS.user.read) },
       async () => {
         const userRows = await database
-          .select({ id: users.id, email: users.email, locale: users.locale, active: users.active })
+          .select({
+            id: users.id,
+            email: users.email,
+            locale: users.locale,
+            theme: users.theme,
+            active: users.active,
+          })
           .from(users)
           .orderBy(users.email)
 
@@ -142,7 +149,7 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
             )
         }
 
-        const { email, password, locale, active, roleKeys } = parsed.data
+        const { email, password, locale, theme, active, roleKeys } = parsed.data
         const duplicate = await database
           .select({ id: users.id })
           .from(users)
@@ -158,11 +165,12 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
           const roleIds = await loadRoleIds(tx, roleKeys)
           const inserted = await tx
             .insert(users)
-            .values({ email, passwordHash, locale, active })
+            .values({ email, passwordHash, locale, theme, active })
             .returning({
               id: users.id,
               email: users.email,
               locale: users.locale,
+              theme: users.theme,
               active: users.active,
             })
 
@@ -218,6 +226,7 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
               id: users.id,
               email: users.email,
               locale: users.locale,
+              theme: users.theme,
               active: users.active,
             })
             .from(users)
@@ -243,11 +252,13 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
           }
 
           const nextLocale = body.locale ?? target.locale
+          const nextTheme = body.theme ?? target.theme
 
           await tx
             .update(users)
             .set({
               locale: nextLocale,
+              theme: nextTheme,
               active: nextActive,
               updatedAt: new Date(),
               ...(passwordHash === undefined ? {} : { passwordHash }),
@@ -270,6 +281,7 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
               id: target.id,
               email: target.email,
               locale: nextLocale,
+              theme: nextTheme,
               active: nextActive,
             },
             nextRoleKeys,

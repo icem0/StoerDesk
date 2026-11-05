@@ -10,6 +10,9 @@ import { z } from 'zod'
 
 export const userLocaleSchema = z.enum(['de', 'en'])
 
+/** Theme of a user: `auto` follows `prefers-color-scheme` (WP-M2-92, `PLAN.md` §14). */
+export const userThemeSchema = z.enum(['auto', 'light', 'dark'])
+
 const roleKeySchema = z.string().trim().min(1).max(64)
 
 const roleKeysSchema = z
@@ -21,6 +24,7 @@ export const userSummarySchema = z.object({
   id: z.uuid(),
   email: z.email(),
   locale: userLocaleSchema,
+  theme: userThemeSchema,
   active: z.boolean(),
   roleKeys: z.array(z.string()),
 })
@@ -33,12 +37,14 @@ export const createUserRequestSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()),
   password: z.string().min(12).max(256),
   locale: userLocaleSchema.default('de'),
+  theme: userThemeSchema.default('auto'),
   active: z.boolean().default(true),
   roleKeys: roleKeysSchema.default([]),
 })
 
 export const updateUserRequestSchema = z.object({
   locale: userLocaleSchema.optional(),
+  theme: userThemeSchema.optional(),
   active: z.boolean().optional(),
   roleKeys: roleKeysSchema.optional(),
   password: z.string().min(12).max(256).optional(),

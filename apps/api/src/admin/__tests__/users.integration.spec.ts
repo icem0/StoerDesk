@@ -23,6 +23,7 @@ type UserSummary = {
   id: string
   email: string
   locale: string
+  theme: string
   active: boolean
   roleKeys: string[]
 }
@@ -182,6 +183,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         id: expect.any(String),
         email: 'newuser@example.org',
         locale: 'de',
+        theme: 'auto',
         active: true,
         roleKeys: ['office', 'oncall'],
       })
@@ -212,6 +214,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         email: 'newuser@example.org',
         active: true,
         roleKeys: ['oncall'],
+      })
+    })
+
+    it('stores the theme of a user', async () => {
+      const response = await patchUser(cookies['admin'], createdId, { theme: 'light' })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<UserResponseBody>()).toMatchObject({ theme: 'light' })
+
+      const listed = await getUsers(cookies['admin'])
+
+      expect(listed.json<UsersResponseBody>()).toMatchObject({
+        users: expect.arrayContaining([expect.objectContaining({ id: createdId, theme: 'light' })]),
       })
     })
 

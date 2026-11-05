@@ -14,11 +14,13 @@ import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 
 type UserLocale = 'de' | 'en'
+type UserTheme = 'auto' | 'light' | 'dark'
 
 interface UserFormValues {
   email: string
   password: string
   locale: UserLocale
+  theme: UserTheme
   active: boolean
   roleKeys: string[]
 }
@@ -93,6 +95,7 @@ function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
     email: '',
     password: '',
     locale: 'de',
+    theme: 'auto',
     active: true,
     roleKeys: [],
   })
@@ -106,7 +109,14 @@ function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] })
-      setValues({ email: '', password: '', locale: 'de', active: true, roleKeys: [] })
+      setValues({
+        email: '',
+        password: '',
+        locale: 'de',
+        theme: 'auto',
+        active: true,
+        roleKeys: [],
+      })
     },
   })
 
@@ -194,6 +204,7 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
     email: user.email,
     password: '',
     locale: user.locale,
+    theme: user.theme,
     active: user.active,
     roleKeys: user.roleKeys,
   })

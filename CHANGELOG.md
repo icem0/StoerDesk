@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The theme is part of the user contract (WP-M2-92c): `userThemeSchema` knows
+  `auto`, `light` and `dark`, the user summary, the create and update requests
+  and the `/me` answer carry it. The admin user API reads and stores the theme,
+  so an admin can set the appearance of every user.
+
 - The theme of a user travels through the session (WP-M2-92b): the session user and
   the login response carry the stored `theme` next to the locale, so the web shell
   can apply the user's own appearance.
