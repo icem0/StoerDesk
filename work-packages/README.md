@@ -312,7 +312,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-92b | theme through the session and the login response                | done                    | yes     |
 | WP-M2-92c | theme in the shared schemas and in the admin user API              | done                    | yes     |
 | WP-M2-92d | theme class in the shell and light palette in styles.css            | done                    | yes     |
-| WP-M2-92e | theme select in the user settings (users page)                      | planned                 | yes     |
+| WP-M2-92e | theme select in the user settings (users page)                      | done                    | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |

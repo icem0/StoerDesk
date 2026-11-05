@@ -161,6 +161,20 @@ function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
           <option value="en">{t('admin.users.locales.en')}</option>
         </select>
       </label>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.users.fields.theme')}
+        <select
+          className="rounded bg-slate-900 p-2 text-slate-100"
+          name="theme"
+          value={values.theme}
+          onChange={(event) =>
+            setValues({ ...values, theme: event.target.value as UserTheme })}
+        >
+          <option value="auto">{t('admin.users.themeValues.auto')}</option>
+          <option value="light">{t('admin.users.themeValues.light')}</option>
+          <option value="dark">{t('admin.users.themeValues.dark')}</option>
+        </select>
+      </label>
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -216,6 +230,7 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
         headers: jsonHeaders,
         body: JSON.stringify({
           locale: values.locale,
+          theme: values.theme,
           active: values.active,
           roleKeys: values.roleKeys,
           ...(values.password === '' ? {} : { password: values.password }),
@@ -254,6 +269,20 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
         >
           <option value="de">{t('admin.users.locales.de')}</option>
           <option value="en">{t('admin.users.locales.en')}</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.users.fields.theme')}
+        <select
+          className="rounded bg-slate-950 p-2 text-slate-100"
+          name="theme"
+          value={values.theme}
+          onChange={(event) =>
+            setValues({ ...values, theme: event.target.value as UserTheme })}
+        >
+          <option value="auto">{t('admin.users.themeValues.auto')}</option>
+          <option value="light">{t('admin.users.themeValues.light')}</option>
+          <option value="dark">{t('admin.users.themeValues.dark')}</option>
         </select>
       </label>
       <label className="flex items-center gap-2 text-sm">

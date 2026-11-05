@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -114,5 +114,48 @@ describe('UsersPage', () => {
     renderPage()
 
     expect(await screen.findByText('Keine Berechtigung für die Benutzerverwaltung.')).toBeTruthy()
+  })
+
+  it('offers the theme of a user in the edit form and sends it with the PATCH', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.includes('/v1/me')) {
+        return Response.json(meResponse(['user.read', 'user.write']))
+      }
+
+      if (url.includes('/v1/users') && init?.method === 'PATCH') {
+        return Response.json({ ...adminUser, theme: 'light' })
+      }
+
+      if (url.includes('/v1/users')) {
+        return Response.json({ users: [adminUser] })
+      }
+
+      if (url.includes('/v1/roles')) {
+        return Response.json({ roles: [] })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+    renderPage()
+
+    fireEvent.click(await screen.findByText('Bearbeiten'))
+
+    const editForm = (await screen.findByText('Benutzer bearbeiten')).closest('form')
+    const select = within(editForm as HTMLElement).getByLabelText('Design') as HTMLSelectElement
+    expect(select.value).toBe('auto')
+
+    fireEvent.change(select, { target: { value: 'light' } })
+    fireEvent.click(screen.getByText('Speichern'))
+
+    await waitFor(() => {
+      const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH')
+
+      expect(patch).toBeTruthy()
+      expect(String(patch?.[1]?.body)).toContain('"theme":"light"')
+    })
   })
 })

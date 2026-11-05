@@ -110,12 +110,18 @@
     "password": "Password",
     "passwordNew": "New password (optional)",
     "locale": "Language",
+    "theme": "Appearance",
     "activeLabel": "Active",
     "rolesLabel": "Roles"
    },
+   "themeValues": {
+     "auto": "Auto (system)",
+     "light": "Light",
+     "dark": "Dark"
+   },
    "locales": {
-    "de": "German",
-    "en": "English"
+     "de": "German",
+     "en": "English"
    },
    "errors": {
     "session_invalid": "Session expired – please sign in again.",

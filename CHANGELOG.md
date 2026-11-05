@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Every user gets a theme in the user management (WP-M2-92e): the create and the
+  edit form of `/admin/users` carry a select for `auto` (the system preference),
+  `light` and `dark`; the value is stored with the user and the shell applies it.
+
 - The web shell knows a light mode (WP-M2-92d): the theme of the user (`auto`,
   `light` or `dark`) is applied as a class on the shell root, `auto` follows the
   system preference of the browser. The light palette only remaps the Tailwind

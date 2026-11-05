@@ -1,7 +1,7 @@
 # WP-M2-92e: theme select in the user settings
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-92c (admin API carries the theme)
 phase: 2
 context-budget: 14k tokens
@@ -22,9 +22,10 @@ files-write:
 
 interfaces:
 
-- `EditUserForm` renders a `select` `name="theme"` initialized from the user summary
-  with the options `auto`/`light`/`dark`, labeled by `admin.users.themeValues.*`
-- the PATCH body carries `theme`
+- `EditUserForm` and `CreateUserForm` render a `select` `name="theme"` initialized
+  from the user summary (the create form with `auto`), with the options
+  `auto`/`light`/`dark`, labeled by `admin.users.themeValues.*`
+- the PATCH body carries `theme`, the POST body of the create form as well
 
 ## Task
 
@@ -52,4 +53,14 @@ npm run wp:check
 
 ## Handoff
 
-- (filled by the implementing commit)
+- Files changed: `apps/web/src/admin/users-page.tsx`,
+  `apps/web/src/i18n/locales/de/settings.json`,
+  `apps/web/src/i18n/locales/en/settings.json`,
+  `apps/web/src/admin/__tests__/users-page.test.tsx` (test)
+- Interfaces added: the theme select in the user management (create and edit form),
+  the PATCH/POST bodies carry the theme; i18n keys `admin.users.fields.theme` and
+  `admin.users.themeValues.{auto,light,dark}` in de and en
+- Verified: `npm run check` green — the test proves the select of the edit form and
+  the theme in the PATCH body
+- Follow-up WP: none
+- Open question: none
