@@ -25,6 +25,7 @@ export type SessionUser = {
   id: string
   email: string
   locale: string
+  theme: string
 }
 
 /** Options for `reply.setCookie` / `reply.clearCookie` of the session cookie. */
@@ -88,6 +89,7 @@ export async function loadSession(
       id: users.id,
       email: users.email,
       locale: users.locale,
+      theme: users.theme,
       active: users.active,
       expiresAt: sessions.expiresAt,
     })
@@ -107,7 +109,7 @@ export async function loadSession(
     return undefined
   }
 
-  return { id: current.id, email: current.email, locale: current.locale }
+  return { id: current.id, email: current.email, locale: current.locale, theme: current.theme }
 }
 
 /** Logout: the row is gone, an unknown token is not an error. */

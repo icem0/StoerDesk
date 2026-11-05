@@ -18,6 +18,7 @@ export type AuthUser = {
   id: string
   email: string
   locale: string
+  theme: string
   roles: string[]
 }
 

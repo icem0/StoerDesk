@@ -63,6 +63,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           id: users.id,
           email: users.email,
           locale: users.locale,
+          theme: users.theme,
           passwordHash: users.passwordHash,
           active: users.active,
         })
@@ -97,6 +98,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
             id: account.id,
             email: account.email,
             locale: account.locale,
+            theme: account.theme,
             roles,
             permissions,
           },

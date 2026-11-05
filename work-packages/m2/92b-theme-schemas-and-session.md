@@ -1,7 +1,7 @@
-# WP-M2-92b: theme in the shared schemas and in the session
+# WP-M2-92b: theme through the session and the login response
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-92 (theme column)
 phase: 2
 context-budget: 14k tokens
@@ -10,41 +10,35 @@ spec-lines: 10
 
 files-read:
 
-- packages/shared/src/schemas/user.ts — `userLocaleSchema`, request schemas (WP-M1-09)
-- packages/shared/src/schemas/auth.ts — `meResponseSchema` (WP-M1-07b)
 - apps/api/src/auth/session.ts — `loadSession` reads the session user
 - apps/api/src/auth/sessionPlugin.ts — `AuthUser` and the session hook
+- apps/api/src/auth/routes.ts — login and `GET /api/v1/me`
+- packages/shared/src/schemas/auth.ts — `meResponseSchema` (WP-M1-07b)
 
 files-write:
 
-- packages/shared/src/schemas/user.ts — `userThemeSchema`, theme in the request schemas
-- packages/shared/src/schemas/auth.ts — `theme` in `meResponseSchema.user`
-- apps/api/src/auth/session.ts — `loadSession` reads the theme column
-- apps/api/src/auth/sessionPlugin.ts — `AuthUser` carries the theme
+- apps/api/src/auth/session.ts — `SessionUser.theme` and the `users.theme` column
+- apps/api/src/auth/sessionPlugin.ts — `AuthUser.theme`
+- apps/api/src/auth/routes.ts — the login response carries the theme
 
 interfaces:
 
-- `userThemeSchema = z.enum(['auto', 'light', 'dark'])`; `createUserRequestSchema.theme`
-  (default `auto`) and `updateUserRequestSchema.theme` (optional)
-- `meResponseSchema.user.theme` — the theme of the signed-in user
-- `AuthUser.theme` — read from the `users` row of the session
+- `SessionUser.theme` and `AuthUser.theme` — the stored theme of the signed-in user
+- the login response (`POST /api/v1/auth/login`) carries the theme next to the locale
+- the response schema still strips the unknown key until WP-M2-92c adds it — the
+  commit stays green
 
 ## Task
 
-1. `user.ts`: `export const userThemeSchema = z.enum(['auto', 'light', 'dark'])` next
-   to `userLocaleSchema`; `theme: userThemeSchema.default('auto')` in
-   `createUserRequestSchema`; `theme: userThemeSchema.optional()` in
-   `updateUserRequestSchema`.
-2. `auth.ts`: `theme: z.enum(['auto', 'light', 'dark'])` in `meResponseSchema.user`.
-3. `session.ts`: `loadSession` selects `users.theme` next to the locale and returns it.
-4. `sessionPlugin.ts`: `AuthUser` gains `theme: string`; the hook spreads it.
-
-The admin API (user list, PATCH) owns the stored value in WP-M2-92c — the schemas
-above only carry it.
+1. `session.ts`: `SessionUser` gains `theme: string`; `loadSession` selects
+   `users.theme` and returns it.
+2. `sessionPlugin.ts`: `AuthUser` gains `theme: string`.
+3. `routes.ts`: the login route selects `users.theme` and answers it in the user
+   object.
 
 ## Non-goals
 
-- No admin route change (WP-M2-92c), no web UI (WP-M2-92d/92e).
+- No schema change (WP-M2-92c), no web UI (WP-M2-92d/92e).
 
 ## Acceptance
 
@@ -57,4 +51,12 @@ npm run wp:check
 
 ## Handoff
 
-- (filled by the implementing commit)
+- Files changed: `apps/api/src/auth/session.ts`, `apps/api/src/auth/sessionPlugin.ts`,
+  `apps/api/src/auth/routes.ts`
+- Interfaces added: `SessionUser.theme`, `AuthUser.theme`; the login response carries
+  the stored theme next to the locale (the response schema strips the key until
+  WP-M2-92c)
+- Verified: `npm run check` green (DB integration tests skipped locally without
+  PostgreSQL — unverified locally, CI has the service)
+- Follow-up WP: WP-M2-92c (theme in the shared schemas and in the admin user API)
+- Open question: none

@@ -103,6 +103,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('session core (integratio
       id: userId,
       email: 'session@example.org',
       locale: 'de',
+      theme: 'auto',
     })
   })
 

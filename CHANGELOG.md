@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The theme of a user travels through the session (WP-M2-92b): the session user and
+  the login response carry the stored `theme` next to the locale, so the web shell
+  can apply the user's own appearance.
+
 - Every user gets a theme setting (WP-M2-92): the `users` table gains a `theme`
   column (`auto`, `light` or `dark`, default `auto`) with the check constraint
   `users_theme_check`; migration `0016_user_theme` is part of the journal.

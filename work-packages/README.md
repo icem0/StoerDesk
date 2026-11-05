@@ -309,7 +309,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-91  | always visible ticket detail action panel with inline fields       | done                    | yes     |
 | WP-M2-91b | mobile-first ticket list cards                                      | done                    | yes     |
 | WP-M2-92  | `users.theme` column and migration 0016                             | done                    | yes     |
-| WP-M2-92b | theme in the shared schemas and in the session                      | planned                 | yes     |
+| WP-M2-92b | theme through the session and the login response                | done                    | yes     |
 | WP-M2-92c | theme in the admin user API                                         | planned                 | yes     |
 | WP-M2-92d | theme class in the shell and light palette in styles.css            | planned                 | yes     |
 | WP-M2-92e | theme select in the user settings (users page)                      | planned                 | yes     |
