@@ -444,6 +444,37 @@ export const ticketEvents = pgTable(
 )
 
 /**
+ * Wait reasons of the timeline (`PLAN.md` §9, `specs/05-timeline.md` §5.2,
+ * WP-M6-04). A pause stops the pause clock until `ended_at`; the partial unique
+ * index allows at most one open pause per ticket.
+ */
+export const ticketPauses = pgTable(
+  'ticket_pauses',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    reason: text('reason').notNull(),
+    startedAt: timestamp('started_at', timestampOptions).notNull().defaultNow(),
+    endedAt: timestamp('ended_at', timestampOptions),
+    startedByUserId: uuid('started_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    endedByUserId: uuid('ended_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('ticket_pauses_ticket_id_idx').on(table.ticketId),
+    uniqueIndex('ticket_pauses_one_open_per_ticket')
+      .on(table.ticketId)
+      .where(sql`${table.endedAt} IS NULL`),
+  ],
+)
+
+/**
  * Photo metadata of a report (`specs/02-data-model.md` §4.10). The bytes live on
  * the uploads volume below `UPLOAD_DIR`; the directory is never served directly
  * (`PLAN.md` §15), so the path is stored relative to it.

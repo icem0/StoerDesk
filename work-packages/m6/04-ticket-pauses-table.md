@@ -1,7 +1,7 @@
 # WP-M6-04: ticket_pauses table and migration 0014
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-02
 phase: 6
 milestone: m6
@@ -66,3 +66,4 @@ named reason.
 - Verified: typecheck, lint, test:run
 - Follow-up WP: WP-M6-05 (pause service)
 - Open question: none
+- Deviation: `drizzle-kit generate` rejected the hand-written `0013_snapshot.json` (missing snapshot keys); the snapshot was rebuilt from the real schema and migration `0014` is hand-written. The snapshot chain now generates cleanly.
