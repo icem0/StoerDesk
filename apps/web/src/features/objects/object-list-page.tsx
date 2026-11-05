@@ -27,31 +27,17 @@ function useObjects(query: {
   search?: string
   active?: string
   city?: string
-  systemType?: string
 }) {
   const params = new URLSearchParams()
   if (query.search) params.set('search', query.search)
   if (query.active !== undefined && query.active !== 'all') params.set('active', query.active)
   if (query.city) params.set('city', query.city)
-  if (query.systemType) params.set('systemType', query.systemType)
 
   return useQuery({
     queryKey: ['objects', 'list', query],
     queryFn: () => apiFetch<ObjectListResponse>(`/v1/objects?${params.toString()}`),
     retry: false,
   })
-}
-
-function systemChips(systems: ObjectSummary['systems']) {
-  return systems.map((system) => (
-    <span
-      key={system.id}
-      className="inline-flex items-center gap-1 rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200"
-    >
-      {system.type}
-      <span className="text-slate-400">{` · ${system.label}`}</span>
-    </span>
-  ))
 }
 
 function ObjectRow({ object }: { object: ObjectSummary }) {
@@ -107,7 +93,6 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
           .filter(Boolean)
           .join(', ') || '-'}
       </td>
-      <td className="p-3 text-sm">{systemChips(object.systems)}</td>
       <td className="p-3 text-sm">
         <span
           className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
@@ -143,9 +128,8 @@ export function ObjectListPage() {
   const [search, setSearch] = useState('')
   const [active, setActive] = useState<'true' | 'false' | 'all'>('true')
   const [city, setCity] = useState('')
-  const [systemType, setSystemType] = useState('')
 
-  const objects = useObjects({ search, active, city, systemType })
+  const objects = useObjects({ search, active, city })
 
   const filtered = useMemo(() => {
     const allRows = objects.data?.objects ?? []
@@ -206,22 +190,6 @@ export function ObjectListPage() {
             onChange={(event) => setCity(event.target.value)}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t('list.systemType')}
-          <select
-            className="rounded bg-slate-900 p-2 text-slate-100"
-            value={systemType}
-            onChange={(event) => setSystemType(event.target.value)}
-          >
-            <option value="">{t('list.systemTypeAll')}</option>
-            <option value="BMA">BMA</option>
-            <option value="LICHTRUF">LICHTRUF</option>
-            <option value="RWA">RWA</option>
-            <option value="EMA">EMA</option>
-            <option value="SPRACHALARM">SPRACHALARM</option>
-            <option value="SONSTIGE">SONSTIGE</option>
-          </select>
-        </label>
       </div>
 
       {objects.isPending ? (
@@ -248,9 +216,6 @@ export function ObjectListPage() {
                 </th>
                 <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {t('list.columns.city')}
-                </th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {t('list.columns.systems')}
                 </th>
                 <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {t('list.columns.active')}

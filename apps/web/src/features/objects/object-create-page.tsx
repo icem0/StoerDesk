@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  OBJECT_SYSTEM_TYPES,
   type CreateObjectRequest,
 } from '@stoerdesk/shared'
 
@@ -16,16 +15,6 @@ import { apiFetch } from '../../lib/api'
    contact fields, and a dynamic systems array (type + label). Submits
    `POST /api/v1/objects` and redirects to the object list on success.
  */
-
-type SystemEntry = {
-  id?: string
-  type: (typeof OBJECT_SYSTEM_TYPES)[number]
-  label: string
-}
-
-function emptySystem(): SystemEntry {
-  return { type: OBJECT_SYSTEM_TYPES[0], label: '' }
-}
 
 export function ObjectCreatePage() {
   const { t } = useTranslation('object')
@@ -42,39 +31,8 @@ export function ObjectCreatePage() {
   const [contactEmail, setContactEmail] = useState('')
   const [externalId, setExternalId] = useState('')
   const [notes, setNotes] = useState('')
-  const [systems, setSystems] = useState<SystemEntry[]>([emptySystem()])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  function addSystem() {
-    setSystems((current) => [...current, emptySystem()])
-  }
-
-  function removeSystem(index: number) {
-    setSystems((current) => current.filter((_entry, i) => i !== index))
-  }
-
-  function setSystemType(index: number, value: (typeof OBJECT_SYSTEM_TYPES)[number]) {
-    setSystems((current) => {
-      const next = [...current]
-      const entry = next[index]
-      if (entry) {
-        next[index] = { ...entry, type: value }
-      }
-      return next
-    })
-  }
-
-  function setSystemLabel(index: number, value: string) {
-    setSystems((current) => {
-      const next = [...current]
-      const entry = next[index]
-      if (entry) {
-        next[index] = { ...entry, label: value }
-      }
-      return next
-    })
-  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -94,7 +52,6 @@ export function ObjectCreatePage() {
         contactEmail: contactEmail || null,
         externalId: externalId || null,
         notes: notes || null,
-        systems: systems.filter((entry) => entry.label !== ''),
       }
 
       await apiFetch<CreateObjectRequest>('/v1/objects', {
@@ -263,63 +220,6 @@ export function ObjectCreatePage() {
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
           />
-        </div>
-
-        <div className="col-span-full">
-          <h2 className="text-sm font-semibold text-slate-200 mb-2">
-            {t('create.systems.title')}
-          </h2>
-          <div className="space-y-2">
-            {systems.map((entry, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-end gap-2">
-                <div className="flex-1 min-w-0">
-                  <label className="text-xs font-medium text-slate-400 block mb-1">
-                    {t('create.systems.type')}
-                  </label>
-                  <select
-                    className="rounded bg-slate-900 p-2 text-slate-100 text-sm"
-                    value={entry.type}
-                    onChange={(event) =>
-                      setSystemType(index, event.target.value as (typeof OBJECT_SYSTEM_TYPES)[number])
-                    }
-                  >
-                    {OBJECT_SYSTEM_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-xs font-medium text-slate-400 block mb-1">
-                    {t('create.systems.label')}
-                  </label>
-                  <input
-                    className="rounded bg-slate-900 p-2 text-slate-100 text-sm"
-                    maxLength={120}
-                    value={entry.label}
-                    onChange={(event) => setSystemLabel(index, event.target.value)}
-                    placeholder={t('create.systems.placeholder')}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="rounded bg-rose-600 px-2 py-2 text-sm text-white"
-                  onClick={() => removeSystem(index)}
-                  disabled={systems.length === 1}
-                >
-                  −
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              className="rounded bg-slate-700 px-2 py-2 text-sm text-slate-200 hover:bg-slate-600"
-              onClick={addSystem}
-            >
-              + {t('create.systems.add')}
-            </button>
-          </div>
         </div>
 
         <div className="col-span-full flex gap-3">

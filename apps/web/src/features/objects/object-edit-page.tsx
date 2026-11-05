@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { ObjectSummary } from '@stoerdesk/shared'
-
 import { apiFetch } from '../../lib/api'
 
 /**
@@ -14,16 +13,6 @@ import { apiFetch } from '../../lib/api'
    and systems, submits `PATCH /api/v1/objects/:objectNo` and redirects to the
    object list on success.
  */
-
-type SystemEntry = {
-  id?: string
-  type: string
-  label: string
-}
-
-function emptySystem(): SystemEntry {
-  return { type: '', label: '' }
-}
 
 export function ObjectEditPage() {
   const { t } = useTranslation('object')
@@ -47,41 +36,8 @@ export function ObjectEditPage() {
   const [contactEmail, setContactEmail] = useState(objectQuery.data?.contactEmail ?? '')
   const [externalId, setExternalId] = useState(objectQuery.data?.externalId ?? '')
   const [notes, setNotes] = useState(objectQuery.data?.notes ?? '')
-  const [systems, setSystems] = useState<SystemEntry[]>(
-    objectQuery.data?.systems.map((s) => ({ id: s.id, type: s.type, label: s.label })) ?? [emptySystem()],
-  )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  function addSystem() {
-    setSystems((current) => [...current, emptySystem()])
-  }
-
-  function removeSystem(index: number) {
-    setSystems((current) => current.filter((_entry, i) => i !== index))
-  }
-
-  function setSystemType(index: number, value: string) {
-    setSystems((current) => {
-      const next = [...current]
-      const entry = next[index]
-      if (entry) {
-        next[index] = { ...entry, type: value }
-      }
-      return next
-    })
-  }
-
-  function setSystemLabel(index: number, value: string) {
-    setSystems((current) => {
-      const next = [...current]
-      const entry = next[index]
-      if (entry) {
-        next[index] = { ...entry, label: value }
-      }
-      return next
-    })
-  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -101,11 +57,6 @@ export function ObjectEditPage() {
       if (contactEmail !== objectQuery.data?.contactEmail) payload.contactEmail = contactEmail || null
       if (externalId !== objectQuery.data?.externalId) payload.externalId = externalId || null
       if (notes !== objectQuery.data?.notes) payload.notes = notes || null
-
-      const systemsPayload = systems
-        .filter((entry) => entry.label !== '')
-        .map(({ id, type, label }) => ({ id, type, label }))
-      payload.systems = systemsPayload
 
       await apiFetch<unknown>(`/v1/objects/${objectNo ?? ''}`, {
         method: 'PATCH',
@@ -280,62 +231,6 @@ export function ObjectEditPage() {
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
           />
-        </div>
-
-        <div className="col-span-full">
-          <h2 className="text-sm font-semibold text-slate-200 mb-2">
-            {t('edit.systems.title')}
-          </h2>
-          <div className="space-y-2">
-            {systems.map((entry, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-end gap-2">
-                <div className="flex-1 min-w-0">
-                  <label className="text-xs font-medium text-slate-400 block mb-1">
-                    {t('edit.systems.type')}
-                  </label>
-                  <select
-                    className="rounded bg-slate-900 p-2 text-slate-100 text-sm"
-                    value={entry.type}
-                    onChange={(event) => setSystemType(index, event.target.value)}
-                  >
-                    <option value="BMA">BMA</option>
-                    <option value="LICHTRUF">LICHTRUF</option>
-                    <option value="RWA">RWA</option>
-                    <option value="EMA">EMA</option>
-                    <option value="SPRACHALARM">SPRACHALARM</option>
-                    <option value="SONSTIGE">SONSTIGE</option>
-                  </select>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-xs font-medium text-slate-400 block mb-1">
-                    {t('edit.systems.label')}
-                  </label>
-                  <input
-                    className="rounded bg-slate-900 p-2 text-slate-100 text-sm"
-                    maxLength={120}
-                    value={entry.label}
-                    onChange={(event) => setSystemLabel(index, event.target.value)}
-                    placeholder={t('edit.systems.placeholder')}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="rounded bg-rose-600 px-2 py-2 text-sm text-white"
-                  onClick={() => removeSystem(index)}
-                  disabled={systems.length === 1}
-                >
-                  −
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              className="rounded bg-slate-700 px-2 py-2 text-sm text-slate-200 hover:bg-slate-600"
-              onClick={addSystem}
-            >
-              + {t('edit.systems.add')}
-            </button>
-          </div>
         </div>
 
         <div className="col-span-full flex gap-3">
