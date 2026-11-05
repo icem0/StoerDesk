@@ -153,10 +153,17 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > build-time `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC` pair, and a `deepLink` switch renders the
 > `ntfy://<topic>` payload of the app instead. The labels `ntfy.subscribe`, `ntfy.qrLabel` and
 > `ntfy.appHint` are added to the `common` namespace in `de` and `en`, and the card renders nothing
-> while the channel is not configured. Its follow-up chain **WP-M7-04** (the outbox tables and one
-> `PENDING` row per configured channel inside the create transaction) and **WP-M7-04b** (the worker
-> that drains them with three retries and backoff, the `notification_sent`/`notification_failed`
-> events and the localized ntfy `view` action label through the shared `t()`) are planned — the
+> while the channel is not configured. **WP-M7-04** (`04-notification-outbox.md`) is implemented:
+> `0019_notification_outbox` adds the `notification_channels`, `push_subscriptions` and `outbox`
+> tables (the `state` check `PENDING`/`SENT`/`FAILED`, `attempts` default `0`, the
+> `outbox(state, created_at)` index, `notification_channels` and `push_subscriptions` are rows only,
+> no routes yet), `notifications/outbox.ts` exposes `enqueueOutbox(database, ticket, env)` that inserts
+> one `PENDING` row per channel of `configuredChannels(env)` (never an HTTP call), and `report.ts`
+> calls it inside the create transaction after the ticket and its `created` event so a channel failure
+> can never lose the event; the row carries only the machine-readable message parameters
+> `{ ticketNo, priority, objectName }` (no photo, no contact data). Its follow-up **WP-M7-04b**
+> (the worker that drains them with three retries and backoff, the `notification_sent`/`notification_failed`
+> events and the localized ntfy `view` action label through the shared `t()`) is planned — the
 > German `Öffnen` label of WP-M7-01 stays hard-coded until WP-M7-04b replaces it.
 
 ## Open follow-ups
@@ -379,7 +386,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-01  | ntfy channel adapter and its env wiring                             | done                    | yes     |
 | WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |
-| WP-M7-04  | outbox rows in the ticket create transaction                        | planned                 | yes     |
+| WP-M7-04  | outbox rows in the ticket create transaction                        | done                    | yes     |
 | WP-M7-04b | the outbox worker, its retries and the localized ntfy label         | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

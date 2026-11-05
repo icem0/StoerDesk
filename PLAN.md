@@ -757,7 +757,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-01  | ntfy channel adapter and its env wiring                            | done   |
 | WP-M7-02  | ntfy channel unit test                                             | done   |
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                            | done    |
-| WP-M7-04  | outbox rows in the ticket create transaction                       | planned |
+| WP-M7-04  | outbox rows in the ticket create transaction                       | done   |
 | WP-M7-04b | the outbox worker, its retries and the localized ntfy label        | planned |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
@@ -1019,11 +1019,18 @@ renders the subscription QR of `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}` with the `ntfy
 deep-link switch and the labels `ntfy.subscribe`, `ntfy.qrLabel` and `ntfy.appHint` in the
 `common` namespace (`de` and `en`), props with a `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC`
 build fallback (no API route, non-goal of the WP) and an empty card while the channel is
-unconfigured. Its announced follow-up chain **WP-M7-04** (the `outbox`, `notification_channels`
-and `push_subscriptions` tables plus one `PENDING` row per configured channel inside the create
-transaction) and **WP-M7-04b** (the worker that drains them with three retries and backoff, the
-`notification_sent`/`notification_failed` ticket events and the localized ntfy `view` action label
-through the shared `t()` — closing the hard-coded German `Öffnen` label of WP-M7-01) is planned.
+unconfigured. **WP-M7-04** is implemented as well: `0019_notification_outbox` adds the
+`outbox`, `notification_channels` and `push_subscriptions` tables (the `state` check
+`PENDING`/`SENT`/`FAILED`, `attempts` default `0`, the `outbox(state, created_at)` index,
+`notification_channels` and `push_subscriptions` are rows only, no routes), `notifications/outbox.ts`
+exposes `enqueueOutbox(database, ticket, env)` that inserts one `PENDING` row per channel of
+`configuredChannels(env)` with no HTTP call, and `report.ts` calls it inside the create transaction
+after the ticket and its `created` event — the row carries only the machine-readable message
+parameters `{ ticketNo, priority, objectName }` (no photo, no contact data), so a channel failure can
+never lose the event. Its announced follow-up **WP-M7-04b** (the worker that drains them with three
+retries and backoff, the `notification_sent`/`notification_failed` ticket events and the localized
+ntfy `view` action label through the shared `t()` — closing the hard-coded German `Öffnen` label of
+WP-M7-01) is **planned**.
 
 **Out-of-band phase 2 — the klarmname columns (WP-M2-93).** `users.given_name` and
 `users.family_name` are text, `NOT NULL`, default `''`, length ≤ 64, stored trimmed, with

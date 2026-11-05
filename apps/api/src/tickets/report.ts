@@ -14,6 +14,7 @@ import {
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, settings, ticketEvents, ticketPhotos, tickets } from '../db/schema'
+import { enqueueOutbox } from '../notifications/outbox'
 import { generateQrToken } from '../objects/qr'
 import { readDeadlineHours } from './deadline'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
@@ -242,6 +243,8 @@ export async function createPublicReport(
     ...times,
   }
 
+  const env = loadEnv()
+
   let created: typeof tickets.$inferSelect | undefined
 
   try {
@@ -269,6 +272,21 @@ export async function createPublicReport(
           title: titleEnabled ? (input.title ?? null) : null,
         },
       })
+
+      // §12: one PENDING outbox row per configured channel, written with the
+      // created event. enqueueOutbox never calls a channel, so a channel
+      // failure can never lose this event. The params are machine-readable only
+      // — no photo, no contact data.
+      await enqueueOutbox(
+        tx,
+        {
+          id: row.id,
+          ticketNo: row.ticketNo,
+          priority: row.priority,
+          objectName: object.name,
+        },
+        env,
+      )
 
       return row
     })

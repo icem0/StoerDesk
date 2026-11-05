@@ -213,8 +213,35 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0018_user_klarmname')
+    expect(entries.at(-1)?.tag).toBe('0019_notification_outbox')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
+  })
+})
+
+describe('migration 0019 notification outbox', () => {
+  const sql = readMigration('0019_notification_outbox')
+
+  it.each(['notification_channels', 'push_subscriptions', 'outbox'])(
+    'creates table %s',
+    (table) => {
+      expect(sql).toContain(`CREATE TABLE "${table}"`)
+    },
+  )
+
+  it('defaults an enqueued row to pending, zero attempts and a soft object link', () => {
+    expect(sql).toContain(`"state" text DEFAULT 'PENDING' NOT NULL`)
+    expect(sql).toContain('"attempts" integer DEFAULT 0 NOT NULL')
+    expect(sql).toContain(
+      'ALTER TABLE "outbox" ADD CONSTRAINT "outbox_ticket_id_tickets_id_fk" FOREIGN KEY ("ticket_id") REFERENCES "public"."tickets"("id") ON DELETE cascade',
+    )
+  })
+
+  it('locks the delivery state and indexes the drain order', () => {
+    expect(sql).toContain(
+      `CONSTRAINT "outbox_state_check" CHECK ("outbox"."state" IN ('PENDING', 'SENT', 'FAILED'))`,
+    )
+    expect(sql).toContain('CREATE INDEX "outbox_state_created_at_idx" ON "outbox" USING btree ("state","created_at")')
+    expect(sql).toContain('CREATE UNIQUE INDEX "notification_channels_name_key"')
   })
 })
 

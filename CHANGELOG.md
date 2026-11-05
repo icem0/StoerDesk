@@ -9,7 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- The ntfy subscription QR arrives in the web app (WP-M7-03):
+- The notification outbox is written with the ticket (WP-M7-04): the
+  `notification_channels`, `push_subscriptions` and `outbox` tables land in
+  migration `0019_notification_outbox` (the `state` check `PENDING`/`SENT`/`FAILED`,
+  `attempts` default `0`, the `outbox(state, created_at)` index; the first two are
+  rows only, no routes). `notifications/outbox.ts` adds `enqueueOutbox(database, ticket, env)`,
+  which inserts one `PENDING` row per channel of `configuredChannels(env)` with a pure insert
+  and no HTTP call, and `apps/api/src/tickets/report.ts` calls it inside the create transaction
+  right after the ticket and its `created` event — the row carries only the machine-readable
+  message parameters `{ ticketNo, priority, objectName }` (no photo, no contact data). The
+  channel failure can therefore never lose the event; draining the rows with retries and the
+  localized ntfy action label remains the announced follow-up WP-M7-04b.
+
   `apps/web/src/features/settings/NtfySubscription.tsx` renders a `qrcode.react`
   card whose QR carries the public subscription address
   `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}` from `docs/DEPLOYMENT.md` — the values are

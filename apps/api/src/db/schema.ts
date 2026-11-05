@@ -516,6 +516,72 @@ export const ticketPurges = pgTable(
 )
 
 /**
+ * Admin-facing channel registry and web-push subscription store (`PLAN.md` §6,
+ * §12, WP-M7-04). Rows only in this WP — the settings UI and the web-push
+ * channel are later work packages. `notification_channels` names the channels
+ * the admin may offer, `push_subscriptions` holds one VAPID subscription per
+ * user.
+ */
+export const notificationChannels = pgTable(
+  'notification_channels',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    name: text('name').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('notification_channels_name_key').on(table.name)],
+)
+
+export const pushSubscriptions = pgTable(
+  'push_subscriptions',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [index('push_subscriptions_created_at_idx').on(table.createdAt)],
+)
+
+/** Delivery state of an outbox row (`PLAN.md` §12, WP-M7-04). */
+export const OUTBOX_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
+
+/**
+ * Notification outbox (`PLAN.md` §12, WP-M7-04). One row per configured channel
+ * is written by `enqueueOutbox` in the same transaction as the ticket and its
+ * `created` event; the create path never calls a channel, so a channel failure
+ * can never lose the event. `target` carries only the machine-readable message
+ * parameters (ticket number, priority, object name) — never a photo, never
+ * contact data. The `state` check and the `(state, created_at)` index serve the
+ * drain worker of WP-M7-04b.
+ */
+export const outbox = pgTable(
+  'outbox',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    channel: text('channel').notNull(),
+    target: jsonb('target').notNull().default({}),
+    state: text('state').notNull().default('PENDING'),
+    attempts: integer('attempts').notNull().default(0),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('outbox_state_created_at_idx').on(table.state, table.createdAt),
+    check('outbox_state_check', sql`${table.state} IN (${checkList(OUTBOX_STATUSES)})`),
+  ],
+)
+
+/**
  * Server-side receipts for replayed internal actions (`PLAN.md` §10,
  * WP-M5-01/WP-M5-02). The `client_uuid` unique key mirrors the client
  * outbox and makes a replayed acknowledge/comment/decline idempotent:
@@ -656,6 +722,13 @@ export type TicketPurge = typeof ticketPurges.$inferSelect
 export type NewTicketPurge = typeof ticketPurges.$inferInsert
 export type InternalActionReceipt = typeof internalActionReceipts.$inferSelect
 export type NewInternalActionReceipt = typeof internalActionReceipts.$inferInsert
+export type NotificationChannelRow = typeof notificationChannels.$inferSelect
+export type NewNotificationChannelRow = typeof notificationChannels.$inferInsert
+export type PushSubscription = typeof pushSubscriptions.$inferSelect
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert
+export type OutboxRow = typeof outbox.$inferSelect
+export type NewOutboxRow = typeof outbox.$inferInsert
+export type OutboxStatus = (typeof OUTBOX_STATUSES)[number]
 export type ReportThrottle = typeof reportThrottle.$inferSelect
 export type NewReportThrottle = typeof reportThrottle.$inferInsert
 export type BmaSyncRun = typeof bmaSyncRuns.$inferSelect

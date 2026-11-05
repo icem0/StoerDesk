@@ -134,6 +134,13 @@
       "when": 1793877424000,
       "tag": "0018_user_klarmname",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793877425000,
+      "tag": "0019_notification_outbox",
+      "breakpoints": true
     }
   ]
 }

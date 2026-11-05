@@ -1,7 +1,7 @@
 # WP-M7-04: notification outbox rows written with the ticket event
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M7-01 (ntfy adapter), WP-M7-03 (subscription card)
 phase: 7
 context-budget: 20k tokens
@@ -65,8 +65,8 @@ PostgreSQL and is skipped (reported as unverified) without one — CI has the se
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
-- Deviation: —
+- Files changed: `apps/api/src/db/schema.ts`, `apps/api/src/db/migrations/0019_notification_outbox.sql` (plus its `_journal.json` entry idx 19), `apps/api/src/notifications/outbox.ts`, `apps/api/src/tickets/report.ts`, and the test `apps/api/src/notifications/__tests__/outbox.unit.spec.ts` (test files are excluded from the file limit of §17)
+- Interfaces added: `notificationChannels`, `pushSubscriptions`, `outbox` tables (+ `OUTBOX_STATUSES`, `OutboxRow`/`NewOutboxRow`/`OutboxStatus` types in `db/schema.ts`); `enqueueOutbox(database, ticket, env): number` and the `OutboxRow`/`OutboxTicket` types in `notifications/outbox.ts`; `report.ts` calls `enqueueOutbox` in the create transaction after the `created` event
+- Deviation: `enqueueOutbox` takes `Pick<Db, 'insert'>` (the `DbLike` pattern of `tickets/pauses.ts`) so both the live database and the transaction node `tx` fit; the `target` jsonb of a row carries the machine-readable message parameters `{ ticketNo, priority, objectName }` (no photo, no contact data)
 - Follow-up WP: WP-M7-04b (the outbox worker, the retries and the localized ntfy action label)
 - Open question: none
