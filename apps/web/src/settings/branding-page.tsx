@@ -96,7 +96,10 @@ export function BrandingPage() {
         onSubmit={(event) => {
           event.preventDefault()
           const form = new FormData(event.currentTarget)
-          mutation.mutate({ companyName: String(form.get('companyName') ?? ''), titleEnabled: false })
+          mutation.mutate({
+            companyName: String(form.get('companyName') ?? ''),
+            titleEnabled: form.get('titleEnabled') === 'on',
+          })
         }}
       >
         <label className="flex flex-col gap-1 text-sm">
@@ -106,6 +109,17 @@ export function BrandingPage() {
             className="rounded bg-slate-950 p-2 text-slate-100"
             defaultValue={branding.data?.companyName ?? ''}
             disabled={!mayWrite}
+          />
+        </label>
+        <p className="text-xs text-slate-400">{t('branding.hintTitleEnabled')}</p>
+        <label className="flex flex-col gap-1 text-sm">
+          {t('branding.field.titleEnabled')}
+          <input
+            name="titleEnabled"
+            className="rounded bg-slate-950 p-2 text-slate-100"
+            checked={branding.data?.titleEnabled === true}
+            disabled={!mayWrite}
+            type="checkbox"
           />
         </label>
         {mutation.isError ? (

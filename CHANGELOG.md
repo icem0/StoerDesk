@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The branding page gains a `titleEnabled` checkbox (WP-M2-90b): it prefills
+  from the branding response, is disabled without `settings.write` and the
+  `PUT` body carries the switch together with the company name; new i18n keys
+  `branding.field.titleEnabled` and `branding.hintTitleEnabled` in de and en.
+
 - `scripts/update.sh` compares the version of the running `api` container with
   GitHub instead of the folder `VERSION` (WP-M3-16); a folder that is already
   newer than the containers no longer blocks the rebuild.
@@ -248,6 +253,15 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The ticket workflow E2E asserted the localized actor kind of the audit trail with
+  `getByTestId('ticket-history').locator('.text-xs.text-slate-400')` against a single
+  text: all seven history rows carry those classes, so the strict-mode locator
+  resolved to seven elements and both locale runs of the test aborted. The
+  expectation is an array now — one localized `actorKind.user` label per element —
+  with a `toHaveCount(7)` guard, and the history must not contain the raw
+  `actorKind.` key any more. The check runs of the versions v1.0.7 and v1.0.8 stay
+  red: they predate the repair, and a published tag cannot be changed afterwards.
+  The working build is the version v1.0.9.
 - The ticket workflow and the offline internal E2E expect the labels of the
   internal detail page again: the status badge and the history rows render
   `status.values.*` and `status.events.*`, so the six Playwright tests of

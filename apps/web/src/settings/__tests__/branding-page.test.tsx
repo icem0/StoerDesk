@@ -23,7 +23,7 @@ function renderPage() {
   )
 }
 
-function stubSessionAndBranding(permissions: string[], branding: { companyName: string }) {
+function stubSessionAndBranding(permissions: string[], branding: { companyName: string; titleEnabled: boolean }) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
 
@@ -37,8 +37,11 @@ function stubSessionAndBranding(permissions: string[], branding: { companyName: 
       const request = input as Request
 
       if (request.method === 'PUT') {
-        const body = (await request.json()) as { companyName?: string }
-        return Response.json({ companyName: body.companyName ?? '' })
+        const body = (await request.json()) as { companyName?: string; titleEnabled?: boolean }
+        return Response.json({
+          companyName: body.companyName ?? '',
+          titleEnabled: body.titleEnabled ?? false,
+        })
       }
 
       return Response.json(branding)
@@ -56,7 +59,7 @@ describe('BrandingPage', () => {
   it('prefills the company name from the API and saves the typed value', async () => {
     const fetchMock = stubSessionAndBranding(
       ['settings.read', 'settings.write'],
-      { companyName: 'Beispiel GmbH' },
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
     )
     vi.stubGlobal('fetch', fetchMock)
 
@@ -64,6 +67,11 @@ describe('BrandingPage', () => {
 
     const input = (await screen.findByLabelText(/Firmenname|Company name/i)) as HTMLInputElement
     expect(input.value).toBe('Beispiel GmbH')
+
+    const checkbox = (await screen.findByLabelText(
+      /Ticket titel collecting enabled\?|Enable ticket title collection\?/i
+    )) as HTMLInputElement
+    expect(checkbox.checked).toBe(false)
 
     fireEvent.change(input, { target: { value: 'Neue GmbH' } })
     fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
@@ -81,9 +89,39 @@ describe('BrandingPage', () => {
     )
   })
 
+  it('saves a checked title switch as titleEnabled true', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: true },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const checkbox = (await screen.findByLabelText(
+      /Ticket titel collecting enabled\?|Enable ticket title collection\?/i
+    )) as HTMLInputElement
+    expect(checkbox.checked).toBe(true)
+
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(
+      screen.findByText(/Gespeichert\.|Saved\./i),
+    ).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true }),
+      }),
+    )
+  })
+
   it('disables the save button without settings.write', async () => {
     const fetchMock = stubSessionAndBranding(['settings.read'], {
       companyName: 'Beispiel GmbH',
+      titleEnabled: true,
     })
     vi.stubGlobal('fetch', fetchMock)
 

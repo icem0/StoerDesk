@@ -1,7 +1,7 @@
 # WP-M2-90b: title switch checkbox on the branding page
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-90
 phase: 2
 context-budget: 14k tokens
@@ -61,8 +61,13 @@ Expected: all green.
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
-- Verified: —
-- Follow-up WP: WP-M2-90c (report form title field)
+- Files changed: `apps/web/src/settings/branding-page.tsx`,
+  `apps/web/src/settings/__tests__/branding-page.test.tsx`,
+  `apps/web/src/i18n/locales/de/common.json`, `apps/web/src/i18n/locales/en/common.json`
+- Interfaces added: `PUT /api/v1/settings/branding` carries `titleEnabled`,
+  the checkbox prefills from `BrandingResponse.titleEnabled`; i18n keys
+  `common:branding.field.titleEnabled` and `common:branding.hintTitleEnabled` (de, en)
+- Verified: local gates green (`npm run check` after the change); e2e skipped
+  locally (no Chromium) — CI carries the check run of this tag
+- Follow-up WP: WP-M2-90c (report form title field) — still open, next M2 item
 - Open question: none

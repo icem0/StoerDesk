@@ -36,10 +36,12 @@
  "branding": {
   "title": "GUI anpassen",
   "hint": "Firmenname, der neben dem Logo im Header angezeigt wird. Leer zeigt nur „StörDesk“.",
-  "back": "Zurück zur Verwaltung",
-  "field": {
-   "companyName": "Firmenname"
-  },
+ "back": "Zurück zur Verwaltung",
+ "hintTitleEnabled": "If a short title is to be collected via the Meldeformular: it is only offered as long as the checkbox is switched on.",
+ "field": {
+  "companyName": "Firmenname",
+  "titleEnabled": "Ticket titel collecting enabled?"
+ },
   "save": "Speichern",
   "saved": "Gespeichert.",
   "errors": {

@@ -303,8 +303,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-88b | remove systems level from API tests part 2                          | done                    | yes     |
 | WP-M2-88c | remove systems level from web test and seed                         | done                    | yes     |
 | WP-M2-89  | public report optional title with the branding switch (backend)     | done                    | yes     |
-| WP-M2-90  | public QR resolve carries `titleEnabled`                            | planned                 | yes     |
-| WP-M2-90b | report form title field and branding checkbox                       | planned                 | yes     |
+| WP-M2-90  | public QR resolve carries `titleEnabled`                            | done                    | yes     |
+| WP-M2-90b | branding page title checkbox                                        | done                    | yes     |
+| WP-M2-90c | report form optional title field                                    | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |
