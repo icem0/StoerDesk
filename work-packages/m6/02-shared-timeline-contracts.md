@@ -1,7 +1,7 @@
 # WP-M6-02: shared deadline and timeline contracts
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-01
 phase: 6
 milestone: m6
