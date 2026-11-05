@@ -75,6 +75,7 @@ const ACTION_SEGMENTS: Record<string, string> = {
   closed: 'close',
   reopened: 'reopen',
   cancelled: 'cancel',
+  uncancelled: 'uncancel',
 }
 
 export function TicketDetailPage() {
@@ -513,17 +514,34 @@ export function TicketDetailPage() {
                 </button>
             )
 
-            if (status === 'CANCELLED' && mayDelete) {
+            if (status === 'CANCELLED') {
               buttons.push(
                 <button
-                  key="delete"
+                  key="uncancel"
                   className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
                   type="button"
-                  onClick={handleDelete}
+                  onClick={() => {
+                    const reason = window.prompt(t('detail.prompt.uncancelReason'))
+                    if (reason !== null && reason.trim() !== '') {
+                      void handleAction('uncancelled', { reason: reason.trim() })
+                    }
+                  }}
                 >
-                  {t('detail.action.delete')}
+                  {t('detail.action.uncancel')}
                 </button>
               )
+              if (mayDelete) {
+                buttons.push(
+                  <button
+                    key="delete"
+                    className="rounded bg-rose-600 px-4 py-2 text-sm text-slate-200 hover:bg-rose-500"
+                    type="button"
+                    onClick={handleDelete}
+                  >
+                    {t('detail.action.delete')}
+                  </button>
+                )
+              }
             }
 
             return buttons

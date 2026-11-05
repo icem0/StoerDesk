@@ -72,6 +72,9 @@ const TRANSITIONS: Record<string, Record<string, { to: string }>> = {
   CLOSED: {
     reopened: { to: 'NEW' },
   },
+  CANCELLED: {
+    uncancelled: { to: 'NEW' },
+  },
   '*': {
     cancelled: { to: 'CANCELLED' },
   },

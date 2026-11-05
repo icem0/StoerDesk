@@ -134,6 +134,7 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       { path: '/api/v1/tickets/:ticketNo/close', event: 'closed', permission: PERM(PERMISSIONS.ticket.close) },
       { path: '/api/v1/tickets/:ticketNo/reopen', event: 'reopened', permission: PERM(PERMISSIONS.ticket.reopen), body: z.object({ reason: DECLINE_REASON }) },
       { path: '/api/v1/tickets/:ticketNo/cancel', event: 'cancelled', permission: PERM(PERMISSIONS.ticket.cancel), body: z.object({ reason: DECLINE_REASON }) },
+      { path: '/api/v1/tickets/:ticketNo/uncancel', event: 'uncancelled', permission: PERM(PERMISSIONS.ticket.cancel), body: z.object({ reason: DECLINE_REASON }) },
     ]
 
     for (const route of routes) {

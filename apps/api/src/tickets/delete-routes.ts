@@ -36,7 +36,7 @@ export const deleteRoutes = fp<DeleteRoutesOptions>(
           return reply.code(401).send({ code: 'session_invalid', params: {} })
         }
 
-        const result = BODY.safeParse(request.body)
+        const result = BODY.safeParse(request.body ?? {})
         if (!result.success) {
           return reply.code(400).send({ code: 'invalid_request', params: {} })
         }

@@ -179,7 +179,8 @@
       "commented": "Kommentiert",
       "closed": "Vorgang abgeschlossen",
       "reopened": "Wieder eröffnet",
-      "cancelled": "Storniert"
+      "cancelled": "Storniert",
+      "uncancelled": "Stornierung aufgehoben"
     },
     "errors": {
       "invalidToken": "Dieser Statuslink ist ungültig. Bitte den Link aus der Bestätigung erneut öffnen.",
@@ -321,6 +322,7 @@
       "close": "Schließen",
       "reopen": "Wieder eröffnen",
       "cancel": "Stornieren",
+      "uncancel": "Stornierung aufheben",
       "comment": "Kommentar hinzufügen",
       "delete": "Endgültig löschen"
     },
@@ -330,6 +332,7 @@
       "declineReason": "Ablehnungsgrund (mind. 5 Zeichen):",
       "reopenReason": "Wiedereröffnungsgrund (mind. 5 Zeichen):",
       "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):",
+      "uncancelReason": "Grund für Aufhebung (mind. 5 Zeichen):",
       "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt.",
       "acknowledgeResult": "Ergebnis (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Notiz (optional):",
