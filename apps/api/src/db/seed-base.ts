@@ -24,6 +24,23 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
+/**
+ * Mirrors the `derive_user_family_name()` helper of migration `0018_user_klarmname`:
+ * the letters of the local part, first letter upper case. A seed never stores an
+ * invented given name, so the bootstrap user keeps `given_name = ''`.
+ */
+function deriveFamilyName(email: string): string {
+  const [localPart] = email.split('@')
+  const letters = (localPart ?? '').replaceAll(/[^\p{L}]/gu, '')
+  const [first, ...rest] = letters
+
+  if (first === undefined) {
+    return ''
+  }
+
+  return `${first.toUpperCase()}${rest.join('').toLowerCase()}`
+}
+
 function onlyRow<T>(rows: T[], what: string): T {
   const [row] = rows
 
@@ -85,7 +102,12 @@ export async function seedBaseUser(
       user = onlyRow(
         await tx
           .insert(schema.users)
-          .values({ email, passwordHash })
+          .values({
+            email,
+            passwordHash,
+            givenName: '',
+            familyName: deriveFamilyName(email),
+          })
           .onConflictDoNothing({ target: schema.users.email })
           .returning({ id: schema.users.id }),
         'bootstrap_user',

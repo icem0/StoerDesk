@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Every user gets a sortable klarmname (WP-M2-93): the `users` table gains
+  `given_name` and `family_name` (`NOT NULL`, default `''`, length ≤ 64, stored
+  trimmed) behind migration `0018_user_klarmname`, indexed by `users_name_idx` over
+  `lower(family_name), lower(given_name)`. The migration and the base seed derive the
+  family name of the bootstrap administrator from the e-mail local part, so a fresh
+  deployment has a sortable name without inventing a given name.
+
 - Every user gets a theme in the user management (WP-M2-92e): the create and the
   edit form of `/admin/users` carry a select for `auto` (the system preference),
   `light` and `dark`; the value is stored with the user and the shell applies it.

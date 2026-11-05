@@ -127,6 +127,13 @@
       "when": 1793877423000,
       "tag": "0017_fix_ticket_event_delete_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793877424000,
+      "tag": "0018_user_klarmname",
+      "breakpoints": true
     }
   ]
 }

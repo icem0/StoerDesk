@@ -95,7 +95,7 @@ describe('base schema', () => {
     )
 
     expect(columnsByTable).toEqual([
-      ['id', 'email', 'passwordHash', 'locale', 'theme', 'active', 'createdAt', 'updatedAt'],
+      ['id', 'email', 'givenName', 'familyName', 'passwordHash', 'locale', 'theme', 'active', 'createdAt', 'updatedAt'],
       ['id', 'userId', 'tokenHash', 'expiresAt', 'createdAt'],
       ['id', 'name', 'createdAt', 'updatedAt'],
       ['userId', 'groupId', 'createdAt'],
@@ -213,7 +213,7 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0017_fix_ticket_event_delete_trigger')
+    expect(entries.at(-1)?.tag).toBe('0018_user_klarmname')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
   })
 })
@@ -231,5 +231,39 @@ describe('migration 0016 user theme', () => {
   it('touches the users table only', () => {
     expect(sql).not.toContain('tickets')
     expect(sql).not.toContain('sessions')
+  })
+})
+
+describe('migration 0018 user klarmname columns', () => {
+  const sql = readMigration('0018_user_klarmname')
+
+  it('derives the sortable family name before the columns are filled', () => {
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION derive_user_family_name(email text)')
+    expect(sql.indexOf('derive_user_family_name(email text)')).toBeLessThan(
+      sql.indexOf('ALTER TABLE "users" ADD COLUMN "given_name"'),
+    )
+  })
+
+  it('adds both name columns as not-null text with an empty default', () => {
+    expect(sql).toContain(`ALTER TABLE "users" ADD COLUMN "given_name" text DEFAULT '' NOT NULL;`)
+    expect(sql).toContain(`ALTER TABLE "users" ADD COLUMN "family_name" text DEFAULT '' NOT NULL;`)
+    expect(sql.match(/ADD COLUMN/g)).toHaveLength(2)
+  })
+
+  it('caps the length and stores both names trimmed', () => {
+    expect(sql).toContain(`ALTER TABLE "users" ADD CONSTRAINT "users_given_name_length_check" CHECK (LENGTH("users"."given_name") <= 64);`)
+    expect(sql).toContain(`ALTER TABLE "users" ADD CONSTRAINT "users_family_name_length_check" CHECK (LENGTH("users"."family_name") <= 64);`)
+    expect(sql).toContain(
+      `ALTER TABLE "users" ADD CONSTRAINT "users_klarmname_trimmed_check" CHECK (TRIM("users"."given_name") = "users"."given_name" AND TRIM("users"."family_name") = "users"."family_name");`,
+    )
+  })
+
+  it('fills the existing rows and indexes the sortable order', () => {
+    expect(sql).toContain(
+      `UPDATE "users" SET "family_name" = derive_user_family_name("email") WHERE "family_name" = '';`,
+    )
+    expect(sql).toContain(
+      'CREATE INDEX "users_name_idx" ON "users" USING btree (lower("family_name") , lower("given_name") );',
+    )
   })
 })

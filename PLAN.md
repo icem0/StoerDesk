@@ -194,6 +194,10 @@ Core tables:
 - `users`, `groups`, `user_groups`, `sessions`, `api_keys`
   - `users.theme` — `auto` (follows `prefers-color-scheme`), `light` or `dark`
     (WP-M2-92)
+  - `users.given_name` / `users.family_name` — sortable klarmname, `''` when unset,
+    max. 64 characters, stored trimmed, indexed by `users_name_idx` over
+    `lower(family_name), lower(given_name)`; the seed and the migration derive the
+    family name from the e-mail local part (WP-M2-93)
 - `notification_channels`, `push_subscriptions`, `outbox`
 - `settings`
 - `oncall_pools`, `oncall_shifts`, `oncall_swap_requests`, `oncall_events`
@@ -1004,6 +1008,14 @@ real API on a throwaway database. The phase-6 exit criterion — an overdue tick
 `rule = deadline_exceeded`, the ticket detail timeline turns `red`, and a second escalation scan
 adds no event — is proven by `apps/api/src/tickets/__tests__/escalation-exit.integration.spec.ts`.
 Phase 7 (notifications) starts with its `m7` packages.
+
+**Out-of-band phase 2 — the klarmname columns (WP-M2-93).** `users.given_name` and
+`users.family_name` are text, `NOT NULL`, default `''`, length ≤ 64, stored trimmed, with
+`users_name_idx` over `lower(family_name), lower(given_name)` and the helper
+`derive_user_family_name()` behind migration `0018_user_klarmname`; the seed derives the
+same family name and never invents a given name (`email` stays the login key). Its
+announced follow-up **WP-M2-94** (`work-packages/m2/94-user-name-fields-api.md`) carries
+the names into the shared user schemas and the admin user API and is **planned**.
 
 ## 17. Work package rules for small models
 

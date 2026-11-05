@@ -29,6 +29,8 @@ export const users = pgTable(
   {
     id: uuid('id').primaryKey().default(uuidDefault),
     email: text('email').notNull(),
+    givenName: text('given_name').notNull().default(''),
+    familyName: text('family_name').notNull().default(''),
     passwordHash: text('password_hash').notNull(),
     locale: text('locale').notNull().default('de'),
     theme: text('theme').notNull().default('auto'),
@@ -38,8 +40,15 @@ export const users = pgTable(
   },
   (table) => [
     uniqueIndex('users_email_key').on(table.email),
+    index('users_name_idx').on(sql`lower(${table.familyName})`, sql`lower(${table.givenName})`),
     check('users_locale_check', sql`${table.locale} IN ('de', 'en')`),
     check('users_theme_check', sql`${table.theme} IN ('auto', 'light', 'dark')`),
+    check('users_given_name_length_check', sql`LENGTH(${table.givenName}) <= 64`),
+    check('users_family_name_length_check', sql`LENGTH(${table.familyName}) <= 64`),
+    check(
+      'users_klarmname_trimmed_check',
+      sql`TRIM(${table.givenName}) = ${table.givenName} AND TRIM(${table.familyName}) = ${table.familyName}`,
+    ),
   ],
 )
 

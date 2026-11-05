@@ -313,6 +313,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-92c | theme in the shared schemas and in the admin user API              | done                    | yes     |
 | WP-M2-92d | theme class in the shell and light palette in styles.css            | done                    | yes     |
 | WP-M2-92e | theme select in the user settings (users page)                      | done                    | yes     |
+| WP-M2-93  | `users.given_name`/`users.family_name` and migration 0018          | done                    | yes     |
+| WP-M2-94  | name fields in the shared schemas and the admin user API            | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |
@@ -675,6 +677,16 @@ receipts table, idempotent helper, action routes, queue UI, conflict UI, offline
 E2E exit criterion and the cache clear on sign-out). Phase 5 is closed. Claiming from the
 pool and confirm/decline of shifts stay out of phase 5 (online-only rule of §9.6,
 on-call is phase 8).
+
+**The klarmname columns (WP-M2-93, out-of-band phase 2).** Every user gets a sortable
+name: `users.given_name` and `users.family_name` (text, `NOT NULL`, default `''`, length
+≤ 64, stored trimmed) behind migration `0018_user_klarmname`, with `users_name_idx` over
+`lower(family_name), lower(given_name)` and the helper `derive_user_family_name()`, which
+fills the already existing rows from the e-mail local part. The bootstrap seed derives the
+same family name in `seed-base.ts` and never invents a given name; `email` stays the login
+key. The names are not in the shared user schemas and not in the admin user API yet — that
+is the announced follow-up **WP-M2-94** (`work-packages/m2/94-user-name-fields-api.md`,
+planned).
 
 ## Validation
 
