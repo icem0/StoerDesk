@@ -21,7 +21,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped report integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, oldQrTokens, systems, ticketEvents, ticketPhotos, tickets } = schema
+const { objects, oldQrTokens, ticketEvents, ticketPhotos, tickets } = schema
 
 const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/
 const PHOTO_FILE_PATTERN =
@@ -285,7 +285,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('answers the 422 rules of the form', async () => {
       const object = await createObject('7105_01')
-      const foreign = await createObject('7106_01')
 
       const withoutText = await submit({
         qrToken: object.qrToken,
@@ -298,46 +297,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         text: 'Melder defekt',
         contact: { name: 'Niemand' },
       })
-      const foreignSystem = onlyRow(
-        await db
-          .insert(systems)
-          .values({ objectId: foreign.id, type: 'BMA', label: 'BMA der anderen Anlage' })
-          .returning({ id: systems.id }),
-        'system',
-      )
-      const wrongSystem = await submit({
-        qrToken: object.qrToken,
-        clientUuid: crypto.randomUUID(),
-        text: 'Melder defekt',
-        systemId: foreignSystem.id,
-        contact: { phone: '+49 170 0000000' },
-      })
 
       expect(withoutText.json<ErrorBody>().code).toBe('report_text_required')
       expect(withoutContact.json<ErrorBody>().code).toBe('contact_required')
-      expect(wrongSystem.json<ErrorBody>().code).toBe('system_not_found')
       expect([
         withoutText.statusCode,
         withoutContact.statusCode,
-        wrongSystem.statusCode,
-      ]).toEqual([422, 422, 422])
+      ]).toEqual([422, 422])
     })
 
-    it('accepts a system of the same object and template keys without free text', async () => {
+    it('accepts template keys without free text', async () => {
       const object = await createObject('7107_01')
-      const system = onlyRow(
-        await db
-          .insert(systems)
-          .values({ objectId: object.id, type: 'RWA', label: 'RWA Treppenhaus' })
-          .returning({ id: systems.id }),
-        'system',
-      )
 
       const response = await submit({
         qrToken: object.qrToken,
         clientUuid: crypto.randomUUID(),
         faultTemplateKeys: ['beleuchtung'],
-        systemId: system.id,
         contact: { phone: '+49 170 0000000' },
       })
 

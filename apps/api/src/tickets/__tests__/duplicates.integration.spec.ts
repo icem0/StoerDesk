@@ -21,7 +21,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped duplicate hint integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, systems, ticketEvents, tickets } = schema
+const { objects, ticketEvents, tickets } = schema
 
 type ErrorBody = { code?: string; params?: Record<string, unknown> }
 type OpenTicketsBody = {
@@ -89,15 +89,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return onlyRow(inserted, `object ${objectNo}`)
     }
 
-    async function createSystem(objectId: string, label: string) {
-      const inserted = await db
-        .insert(systems)
-        .values({ objectId, type: 'BMA', label })
-        .returning()
-
-      return onlyRow(inserted, `system ${label}`)
-    }
-
     async function createTicket(
       objectId: string,
       overrides: Partial<typeof tickets.$inferInsert> = {},
@@ -145,11 +136,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('lists the open tickets of the object, oldest first', async () => {
       const object = await createObject('7201_01')
-      const system = await createSystem(object.id, 'BMA Mitte')
       const other = await createObject('7202_01')
 
       const first = await createTicket(object.id, {
-        systemId: system.id,
         status: 'NEW',
         reportedAt: new Date('2026-11-01T08:00:00.000Z'),
       })
@@ -159,12 +148,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
       // A closed ticket and a suspected spam report never appear in the hint.
       await createTicket(object.id, {
-        systemId: system.id,
         status: 'CLOSED',
         reportedAt: new Date('2026-11-01T10:00:00.000Z'),
       })
       await createTicket(object.id, {
-        systemId: system.id,
         status: 'NEW',
         suspectedSpam: true,
         reportedAt: new Date('2026-11-01T11:00:00.000Z'),
@@ -190,45 +177,26 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ])
     })
 
-    it('narrows the answer to the chosen system and keeps the tickets without one', async () => {
+    it('lists all open tickets of the object regardless of system', async () => {
       const object = await createObject('7203_01')
-      const first = await createSystem(object.id, 'BMA Mitte')
-      const second = await createSystem(object.id, 'BMA Keller')
 
-      const withSystem = await createTicket(object.id, { systemId: first.id })
-      const withoutSystem = await createTicket(object.id, {})
-      const otherSystem = await createTicket(object.id, { systemId: second.id })
+      const withTicket = await createTicket(object.id, { status: 'NEW' })
+      const withoutTicket = await createTicket(object.id, {})
 
-      const response = await openTickets({
-        qrToken: object.qrToken ?? '',
-        systemId: first.id,
-      })
+      const response = await openTickets({ qrToken: object.qrToken ?? '' })
       const body = response.json<OpenTicketsBody>()
 
       expect(body.tickets?.map((ticket) => ticket.ticketNo)).toEqual([
-        withSystem.ticketNo,
-        withoutSystem.ticketNo,
+        withTicket.ticketNo,
+        withoutTicket.ticketNo,
       ])
-      expect(body.tickets?.map((ticket) => ticket.ticketNo)).not.toContain(otherSystem.ticketNo)
     })
 
-    it('answers 404 for an unknown token and 422 for a foreign system', async () => {
-      const object = await createObject('7204_01')
-      const foreign = await createObject('7205_01')
-      const foreignSystem = await createSystem(foreign.id, 'BMA der anderen Anlage')
-
+    it('answers 404 for an unknown token', async () => {
       const unknownToken = await openTickets({ qrToken: 'unknownTokenXXXXXXXXXX' })
 
       expect(unknownToken.statusCode).toBe(404)
       expect(unknownToken.json<ErrorBody>().code).toBe('qr_token_not_found')
-
-      const foreignSystemResponse = await openTickets({
-        qrToken: object.qrToken ?? '',
-        systemId: foreignSystem.id,
-      })
-
-      expect(foreignSystemResponse.statusCode).toBe(422)
-      expect(foreignSystemResponse.json<ErrorBody>().code).toBe('system_not_found')
     })
 
     it('writes one comment event on the open ticket', async () => {
