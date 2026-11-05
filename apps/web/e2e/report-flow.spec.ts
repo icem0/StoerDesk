@@ -132,19 +132,12 @@ for (const language of ['de', 'en'] as const) {
       throw new Error('the created object carries no QR token')
     }
 
-    const system = object.systems[0]
-
-    if (system === undefined) {
-      throw new Error('the created object carries no system')
-    }
-
     await page.goto(`/m/${token}`)
 
-    // §7.1/§7.2: object header, the single prefilled system and the 112 notice.
+    // §7.1: object header and the 112 notice.
     await expect(page.getByRole('heading', { level: 1, name: objectName })).toBeVisible()
     await expect(page.getByText(objectNo)).toBeVisible()
     await expect(page.getByText(texts.emergencyNotice ?? '')).toBeVisible()
-    await expect(page.locator('select[name="system"]')).toHaveValue(system.id)
 
     // Fault chip, free text and the required phone contact (§7.2).
     await page.getByRole('button', { name: texts.faultChip }).click()

@@ -86,7 +86,7 @@ async function findByObjectNo(database: Executor, objectNo: string): Promise<Obj
   return row
 }
 
-function whereFromQuery(database: Executor, query: ObjectListQuery) {
+function whereFromQuery(query: ObjectListQuery) {
   const conditions = []
 
   if (query.active !== 'all') {
@@ -117,7 +117,7 @@ export async function listObjects(database: Db, query: ObjectListQuery): Promise
   const rows = await database
     .select()
     .from(objects)
-    .where(whereFromQuery(database, query))
+    .where(whereFromQuery(query))
     .orderBy(objects.objectNo)
 
   return rows.map((row) => summarize(row))

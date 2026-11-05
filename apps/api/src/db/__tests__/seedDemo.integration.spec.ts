@@ -16,7 +16,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped demo seed integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, systems, textTemplates, textTemplateTranslations } = schema
+const { objects, textTemplates, textTemplateTranslations } = schema
 
 const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/
 

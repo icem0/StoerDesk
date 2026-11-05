@@ -26,7 +26,6 @@ function object(objectNo: string, name: string, qrToken: string | null): ObjectS
     active: true,
     notes: null,
     qrToken,
-    systems: [{ id: '22222222-2222-4222-8222-222222222222', type: 'BMA', label: 'BMA Mitte' }],
   }
 }
 

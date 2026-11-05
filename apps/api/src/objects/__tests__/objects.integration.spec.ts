@@ -17,9 +17,8 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped objects integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, roles, systems, userRoles, users } = schema
+const { objects, roles, userRoles, users } = schema
 
-type SystemBody = { id: string; type: string; label: string }
 type ObjectBody = {
   id: string
   objectNo: string
@@ -27,7 +26,6 @@ type ObjectBody = {
   city: string | null
   externalType: string | null
   active: boolean
-  systems: SystemBody[]
 }
 type ListBody = { objects?: ObjectBody[] }
 type ErrorBody = { code?: string; params?: Record<string, unknown> }

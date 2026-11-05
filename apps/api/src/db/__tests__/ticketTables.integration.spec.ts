@@ -6,7 +6,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres, { PostgresError } from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { objects, systems, ticketEvents, ticketPhotos, tickets } from '../schema'
+import { objects, ticketEvents, ticketPhotos, tickets } from '../schema'
 import { migrationsFolder, openTestDatabase } from './helpers/testDatabase'
 
 const testDatabase = await openTestDatabase()
