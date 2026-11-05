@@ -60,6 +60,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket list becomes mobile first (WP-M2-91b): instead of a wide table with
+  horizontal scrolling every ticket is a card — number and status badge, priority,
+  object and object number, the mini timeline with the remaining time and the
+  reported time, then the link to the ticket. One column on the phone, two from
+  `sm` and three from `xl`; status and priority are read from the i18n keys now
+  (the hardcoded German labels are gone) and the list controls get 44 px touch
+  targets.
+
 - The update menu tells the failures of a start apart (WP-M3-14): a refused
   webhook, an unknown answer of the API (with its HTTP status) and a **lost
   connection** — the last one is the normal case of a deployment that replaces

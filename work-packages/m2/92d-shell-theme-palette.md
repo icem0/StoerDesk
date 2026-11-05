@@ -1,11 +1,11 @@
-# WP-M2-92c: theme class in the shell and the light palette in styles.css
+# WP-M2-92d: theme class in the shell and the light palette in styles.css
 
 format: small-model
 status: planned
 depends-on: WP-M2-92b (`/me` answers `theme`), WP-M1-13/17 (shell)
 phase: 2
 context-budget: 16k tokens
-spec: PLAN.md §14 (dark mode, theme), PLAN.md §4.1 (CSS)
+spec: PLAN.md §14 (dark mode, theme, AA contrast)
 spec-lines: 10
 
 files-read:
@@ -31,17 +31,17 @@ interfaces:
 
 ## Task
 
-1. `Shell.tsx`: shell container class list gains
-   `theme-${me.data?.user.theme ?? 'auto'}` (no hardcoded user text).
+1. `Shell.tsx`: the shell container class list gains
+   `theme-${me.data?.user.theme ?? 'auto'}` (no user text in the class).
 2. `styles.css`: one custom-property block for the light palette; apply it to
    `.theme-light` and to `.theme-auto` under a `prefers-color-scheme: light` media
    query; add the `body:has(...)` background rules.
-3. `Shell.test.tsx`: assert the `theme-auto` class without `/me` data and that a
-   stubbed `theme: 'light'` yields `theme-light`.
+3. `Shell.test.tsx`: the `theme-auto` class without `/me` data and `theme-light` with a
+   stubbed `theme: 'light'`.
 
 ## Non-goals
 
-- No users-settings UI (WP-M2-92d) and no theme labels there.
+- No users-settings UI (WP-M2-92e) and no theme labels there.
 - No theme on public token pages.
 
 ## Acceptance

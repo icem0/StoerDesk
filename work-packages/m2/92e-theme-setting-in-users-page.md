@@ -1,8 +1,8 @@
-# WP-M2-92d: theme select in the user settings
+# WP-M2-92e: theme select in the user settings
 
 format: small-model
 status: planned
-depends-on: WP-M2-92b (PATCH accepts `theme`), WP-M2-92c (theme classes)
+depends-on: WP-M2-92c (admin API carries the theme)
 phase: 2
 context-budget: 14k tokens
 spec: PLAN.md §14 (theme per user), PLAN.md §7 (admin users API)
@@ -23,7 +23,7 @@ files-write:
 interfaces:
 
 - `EditUserForm` renders a `select` `name="theme"` initialized from the user summary
-  with options `auto`/`light`/`dark` labeled by `admin.users.themeValues.*`
+  with the options `auto`/`light`/`dark`, labeled by `admin.users.themeValues.*`
 - the PATCH body carries `theme`
 
 ## Task
@@ -33,12 +33,12 @@ interfaces:
 2. `admin.json` de/en: `admin.users.fields.theme` (de "Design", en "Appearance") and
    `admin.users.themeValues.{auto,light,dark}` (de "Automatik (System)", "Light",
    "Dark"; en "Auto (system)", "Light", "Dark").
-3. `users-page.test.tsx`: the select renders; changing it reaches the PATCH body.
+3. `users-page.test.tsx`: the select renders; a changed value reaches the PATCH body.
 
 ## Non-goals
 
 - No new users-list column, no self-service route (the admin edits users).
-- No DB or schema change (WP-M2-92/92b).
+- No DB or schema change (WP-M2-92/92b/92c).
 
 ## Acceptance
 

@@ -82,28 +82,35 @@ afterEach(() => {
 })
 
 describe('TicketListPage mini timeline', () => {
-  it('renders an overdue row in red with the overdue time and the deadline title', async () => {
+  it('renders an overdue card in red with the overdue time and the deadline title', async () => {
     const { overdue } = renderList()
-    const row = (await screen.findByText('M-4712')).closest('tr')
+    const card = (await screen.findByText('M-4712')).closest<HTMLElement>('[data-testid="ticket-card"]')
 
-    if (row === null) {
-      throw new Error('row missing')
+    if (card === null) {
+      throw new Error('card missing')
     }
 
-    expect(within(row).getByText(/Seit \d+ Std\. überfällig/)).toBeTruthy()
-    expect(row.querySelector('.bg-rose-500')).toBeTruthy()
-    expect(within(row).getByTitle(new Date(overdue.deadlineAt).toLocaleString('de-DE'))).toBeTruthy()
+    expect(within(card).getByText(/Seit \d+ Std\. überfällig/)).toBeTruthy()
+    expect(card.querySelector('.bg-rose-500')).toBeTruthy()
+    expect(within(card).getByTitle(new Date(overdue.deadlineAt).toLocaleString('de-DE'))).toBeTruthy()
   })
 
-  it('renders a green running row with a partial bar and the remaining time', async () => {
+  it('renders a green running card with a partial bar and the remaining time', async () => {
     renderList()
-    const row = (await screen.findByText('M-4713')).closest('tr')
+    const card = (await screen.findByText('M-4713')).closest<HTMLElement>('[data-testid="ticket-card"]')
 
-    if (row === null) {
-      throw new Error('row missing')
+    if (card === null) {
+      throw new Error('card missing')
     }
 
-    expect(within(row).getByText(/Noch \d+ Std\./)).toBeTruthy()
-    expect(row.querySelector('.bg-green-500')).toBeTruthy()
+    expect(within(card).getByText(/Noch \d+ Std\./)).toBeTruthy()
+    expect(card.querySelector('.bg-green-500')).toBeTruthy()
+  })
+
+  it('shows the localized status and priority labels', async () => {
+    renderList()
+
+    expect(await screen.findByText('Neu')).toBeTruthy()
+    expect(await screen.findByText('Hoch')).toBeTruthy()
   })
 })

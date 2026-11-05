@@ -96,5 +96,6 @@ Chromium (locally skipped — no browser, reported as unverified).
 - Verified: `npm run check` green; e2e skipped locally (no Chromium) — the two
   adapted E2E specs run in the CI `check` run and must be green there.
 - Follow-up WP: WP-M2-91b (mobile-first ticket list) and the WP-M2-92 chain
-  (92 DB column, 92b schemas/API, 92c shell + palette, 92d users settings) — WP files created.
+  (92 DB column, 92b schemas/session, 92c admin API, 92d shell + palette, 92e users
+  settings) — WP files created.
 - Open question: none

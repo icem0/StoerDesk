@@ -17,18 +17,6 @@ import { apiFetch } from '../../lib/api'
  * disabled until then).
  */
 
-const STATUS_LABELS: Record<string, string> = {
-  NEW: 'Neu',
-  IN_REVIEW: 'In Prüfung',
-  WORK_ORDER_CREATED: 'Auftrag angelegt',
-  OFFERED: 'Angeboten',
-  ASSIGNED: 'Zugewiesen',
-  ACCEPTED: 'Angenommen',
-  ACKNOWLEDGED: 'Rückmeldung erfolgt',
-  CLOSED: 'Abgeschlossen',
-  CANCELLED: 'Storniert',
-}
-
 const STATUS_COLORS: Record<string, string> = {
   NEW: 'bg-slate-900/30 text-slate-300',
   IN_REVIEW: 'bg-blue-900/30 text-blue-300',
@@ -39,13 +27,6 @@ const STATUS_COLORS: Record<string, string> = {
   ACKNOWLEDGED: 'bg-emerald-900/60 text-emerald-200',
   CLOSED: 'bg-slate-500/30 text-slate-400',
   CANCELLED: 'bg-rose-900/30 text-rose-300',
-}
-
-const PRIORITY_LABELS: Record<string, string> = {
-  low: 'Niedrig',
-  normal: 'Normal',
-  high: 'Hoch',
-  critical: 'Kritisch',
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -89,7 +70,13 @@ function useTickets(query: {
   })
 }
 
-function TicketRow({ ticket }: { ticket: TicketListItem }) {
+/**
+ * One ticket as a card (WP-M2-91b, `PLAN.md` §14 mobile-first): the number and the
+ * status badge on the first line, object and priority below, the mini timeline
+ * (WP-M6-12) and the reported time at the bottom. One column on the phone, two from
+ * `sm` and three from `xl` — no horizontal scrolling any more.
+ */
+function TicketCard({ ticket }: { ticket: TicketListItem }) {
   const { t } = useTranslation('ticket')
 
   const [fetchedAt] = useState(() => Date.now())
@@ -107,32 +94,35 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
         : t('list.remaining.left', { hours: hoursLeft })
 
   return (
-    <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
-      <td className="p-3 text-sm font-mono">
-        <Link className="text-sky-300 hover:text-sky-200 hover:underline" to={`/tickets/${ticket.ticketNo}`}>
+    <article
+      data-testid="ticket-card"
+      className="flex min-h-11 flex-col gap-2 rounded-lg border border-slate-700 bg-slate-900/40 p-3 transition-colors hover:border-slate-600 hover:bg-slate-800/50"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <Link
+          className="font-mono text-sm font-semibold text-sky-300 hover:text-sky-200 hover:underline"
+          to={`/tickets/${ticket.ticketNo}`}
+        >
           {ticket.ticketNo}
         </Link>
-      </td>
-      <td className="p-3 text-sm text-slate-200">{ticket.objectName}</td>
-      <td className="p-3 text-sm font-mono text-slate-400">{ticket.objectNo}</td>
-      <td className="p-3 text-sm">
         <span
           className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
         >
-          {STATUS_LABELS[ticket.status] ?? ticket.status}
+          {t(`status.values.${ticket.status}`) ?? ticket.status}
         </span>
-      </td>
-      <td className="p-3 text-sm">
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
         <span
           className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? 'bg-slate-900/30 text-slate-300'}`}
         >
-          {PRIORITY_LABELS[ticket.priority] ?? ticket.priority}
+          {t(`priority.${ticket.priority}`) ?? ticket.priority}
         </span>
-      </td>
-      <td className="p-3 text-sm text-slate-400">
-        {new Date(ticket.reportedAt).toLocaleString('de-DE')}
-      </td>
-      <td className="p-3 text-sm text-slate-400">
+        <span className="text-sm text-slate-200">{ticket.objectName}</span>
+        <span className="text-xs font-mono text-slate-400">{ticket.objectNo}</span>
+      </div>
+
+      <div className="flex items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
           <div className="relative h-1 w-24 rounded bg-slate-700 overflow-hidden">
             <div
@@ -140,17 +130,25 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
               style={{ width: `${Math.min(100, Math.max(0, ticket.percent))}%` }}
             />
           </div>
-          <span title={new Date(ticket.deadlineAt).toLocaleString('de-DE')}>
+          <span
+            className="text-xs text-slate-400"
+            title={new Date(ticket.deadlineAt).toLocaleString('de-DE')}
+          >
             {remainingLabel}
           </span>
         </div>
-      </td>
-      <td className="p-3 text-sm text-right">
-        <Link className="text-sky-300 hover:text-sky-200 hover:underline" to={`/tickets/${ticket.ticketNo}`}>
-          {t('list.actions.view')}
-        </Link>
-      </td>
-    </tr>
+        <span className="text-xs text-slate-400">
+          {new Date(ticket.reportedAt).toLocaleString('de-DE')}
+        </span>
+      </div>
+
+      <Link
+        className="text-sm text-sky-300 hover:text-sky-200 hover:underline"
+        to={`/tickets/${ticket.ticketNo}`}
+      >
+        {t('list.actions.view')}
+      </Link>
+    </article>
   )
 }
 
@@ -211,7 +209,7 @@ export function TicketListPage() {
           <p className="text-sm text-slate-400">{t('list.hint')}</p>
         </div>
         <button
-          className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+          className="min-h-11 rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
           type="button"
           onClick={() => navigate('/tickets/create')}
         >
@@ -223,7 +221,7 @@ export function TicketListPage() {
         <label className="flex flex-col gap-1 text-sm">
           {t('list.search')}
           <input
-            className="rounded bg-slate-900 p-2 text-slate-100"
+            className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
             type="search"
             value={search}
             onChange={(event) => updateFilter('search', event.target.value, true)}
@@ -232,7 +230,7 @@ export function TicketListPage() {
         <label className="flex flex-col gap-1 text-sm">
           {t('list.status')}
           <select
-            className="rounded bg-slate-900 p-2 text-slate-100"
+            className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
             value={status}
             onChange={(event) => updateFilter('status', event.target.value, true)}
           >
@@ -251,7 +249,7 @@ export function TicketListPage() {
         <label className="flex flex-col gap-1 text-sm">
           {t('list.priority')}
           <select
-            className="rounded bg-slate-900 p-2 text-slate-100"
+            className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
             onChange={(event) => updateFilter('priority', event.target.value, true)}
           >
@@ -287,26 +285,10 @@ export function TicketListPage() {
       ) : filtered.length === 0 ? (
         <p className="text-slate-400">{t('list.noTickets')}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-700">
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.ticketNo')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.object')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.objectNo')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.status')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.priority')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.reportedAt')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('list.columns.deadlineAt')}</th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">{t('list.columns.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((ticket) => (
-                <TicketRow key={ticket.ticketNo} ticket={ticket} />
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((ticket) => (
+            <TicketCard key={ticket.ticketNo} ticket={ticket} />
+          ))}
         </div>
       )}
 
@@ -315,7 +297,7 @@ export function TicketListPage() {
           <span>{t('list.range', { from: offset + 1, to: Math.min(offset + filtered.length, tickets.data.total), total: tickets.data.total })}</span>
           {offset > 0 && (
             <button
-              className="rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"
+              className="min-h-11 rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"
               onClick={() => updateFilter('offset', String(Math.max(0, offset - 25)), true)}
             >
               {t('list.prev')}
@@ -323,7 +305,7 @@ export function TicketListPage() {
           )}
           {offset + filtered.length < tickets.data.total && (
             <button
-              className="rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"
+              className="min-h-11 rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"
               onClick={() => updateFilter('offset', String(offset + 25), true)}
             >
               {t('list.next')}
