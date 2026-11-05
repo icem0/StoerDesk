@@ -2,6 +2,8 @@ import { and, count, eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
+  DEADLINE_HOURS,
+  deadlineAtFor,
   isOpenTicketStatus,
   publicReportRequestSchema,
   publicReportResponseSchema,
@@ -13,6 +15,7 @@ import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, systems, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { generateQrToken } from '../objects/qr'
+import { readDeadlineHours } from './deadline'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
 import { MAX_REPORT_PHOTOS, saveReportPhotos } from './photos'
 import { isReportSuspicious, recordReportAttempt } from './spam'
@@ -33,8 +36,7 @@ type Db = Database['database']
 /** §4.8.1: more than ten minutes of deviation in either direction is a skew. */
 const CLOCK_SKEW_TOLERANCE_MS = 10 * 60 * 1000
 
-/** §7.3.4: the 72 h default until the per-priority rules of phase 6 arrive. */
-const REPORT_DEADLINE_MS = 72 * 60 * 60 * 1000
+/** §7.3.4: QR reports are always `normal` (`PLAN.md` §10, ADR-0008). */
 
 class ReportRouteError extends Error {
   readonly statusCode: number
@@ -69,14 +71,23 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 /** §7.3.4 — the server clock wins as soon as the device clock is untrustworthy. */
-export function reportTimes(input: PublicReportRequest, receivedAt = new Date()) {
+export function reportTimes(
+  input: PublicReportRequest,
+  receivedAt = new Date(),
+  hours: number = DEADLINE_HOURS.normal,
+) {
   const deviceTime = input.reportedAt === undefined ? undefined : new Date(input.reportedAt)
   const clockSkewed =
     deviceTime !== undefined &&
     Math.abs(deviceTime.getTime() - receivedAt.getTime()) > CLOCK_SKEW_TOLERANCE_MS
   const reportedAt = deviceTime === undefined || clockSkewed ? receivedAt : deviceTime
 
-  return { reportedAt, receivedAt, clockSkewed, deadlineAt: new Date(reportedAt.getTime() + REPORT_DEADLINE_MS) }
+  return {
+    reportedAt,
+    receivedAt,
+    clockSkewed,
+    deadlineAt: deadlineAtFor(reportedAt, 'normal', { normal: hours }),
+  }
 }
 
 async function photoCount(database: Db, ticketId: string): Promise<number> {
@@ -208,7 +219,8 @@ export async function createPublicReport(
     }
   }
 
-  const times = reportTimes(input)
+  const deadlineHours = await readDeadlineHours(database)
+  const times = reportTimes(input, new Date(), deadlineHours.normal)
 
   const insertValues = {
     objectId: object.id,

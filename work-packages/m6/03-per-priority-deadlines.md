@@ -1,7 +1,7 @@
 # WP-M6-03: per-priority deadlines on ticket creation
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-02
 phase: 6
 milestone: m6

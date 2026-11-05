@@ -321,7 +321,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-09  | sign-out clears the `internal-tickets` cache                        | done                    | yes     |
 | WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
 | WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
-| WP-M6-03  | per-priority deadlines on ticket creation                           | planned                 | yes     |
+| WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
 | WP-M6-04  | `ticket_pauses` table and migration 0014                            | planned                 | yes     |
 | WP-M6-05  | pause service                                                       | planned                 | yes     |
 | WP-M6-06  | pause routes and acknowledge auto-close                             | planned                 | yes     |

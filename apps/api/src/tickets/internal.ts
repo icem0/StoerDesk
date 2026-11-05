@@ -12,6 +12,7 @@ import {
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects, systems, ticketEvents, tickets } from '../db/schema'
+import { deadlineAtForPriority } from './deadline'
 import { applyInternalAction } from './internal-actions'
 
 /**
@@ -41,8 +42,6 @@ class InternalTicketRouteError extends Error {
 function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
 }
-
-const INTERNAL_DEADLINE_MS = 72 * 60 * 60 * 1000
 
 export async function createInternalTicket(
   database: Db,
@@ -79,7 +78,7 @@ export async function createInternalTicket(
   }
 
   const now = new Date()
-  const deadlineAt = new Date(now.getTime() + INTERNAL_DEADLINE_MS)
+  const deadlineAt = await deadlineAtForPriority(database, now, input.priority)
 
   return await database.transaction(async (tx) => {
     const [ticket] = await tx
