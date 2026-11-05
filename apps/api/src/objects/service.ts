@@ -1,4 +1,4 @@
-import { and, eq, exists, ilike, or, sql } from 'drizzle-orm'
+import { and, eq, ilike, or, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -106,18 +106,6 @@ function whereFromQuery(database: Executor, query: ObjectListQuery) {
         ilike(objects.street, pattern),
         ilike(objects.city, pattern),
         ilike(objects.externalId, pattern),
-      ),
-    )
-  }
-
-  if (query.systemType !== undefined) {
-    const systemType = query.systemType
-    conditions.push(
-      exists(
-        database
-          .select({ one: sql`1` })
-          .from(systems)
-          .where(and(eq(systems.objectId, objects.id), eq(systems.type, systemType))),
       ),
     )
   }

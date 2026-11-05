@@ -100,7 +100,7 @@ async function rotateQrToken(
   })
 }
 
-async function publicObject(database: Executor, row: ObjectRow): Promise<PublicQrObject> {
+async function publicObject(row: ObjectRow): Promise<PublicQrObject> {
   return publicQrObjectSchema.parse({
     objectNo: row.objectNo,
     name: row.name,
@@ -122,7 +122,7 @@ async function resolveQrToken(database: Db, token: string) {
     return qrResolveResponseSchema.parse({
       token: current.qrToken,
       redirected: false,
-      object: await publicObject(database, current),
+      object: await publicObject(current),
     })
   }
 
@@ -143,7 +143,7 @@ async function resolveQrToken(database: Db, token: string) {
     return qrResolveResponseSchema.parse({
       token: retired.object.qrToken,
       redirected: true,
-      object: await publicObject(database, retired.object),
+      object: await publicObject(retired.object),
     })
   }
 

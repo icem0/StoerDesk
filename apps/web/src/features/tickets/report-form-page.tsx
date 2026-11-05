@@ -520,7 +520,6 @@ export function ReportFormPage() {
   const qr = usePublicQr(pathTokenValue)
   const locale = localeOf(i18n.language)
   const catalog = usePublicFaultCatalog(locale)
-  const [text, setText] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [contact, setContact] = useState<PublicReportContact>({ name: '', phone: '', email: '' })
   /** The honeypot of §7.6: it stays empty for a human, a filled one flags the report. */

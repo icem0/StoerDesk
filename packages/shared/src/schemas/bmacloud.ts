@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-import type { ObjectSystemType } from './object.js'
-
 /**
  * Schemas of the BMAcloud object sync (`specs/17-bmacloud-sync.md` §17.3–§17.4,
  * ADR-0003). The API validates every Anlage of a pull with `bmaAnlageSchema`
@@ -50,6 +48,8 @@ export type BmaAnlagentyp = z.infer<typeof bmaAnlagentypSchema>
  * generic `RWA` ones, so "Brandmeldeanlage mit Rauchmeldern" stays `BMA`. An
  * unknown name answers `null` — StörDesk never guesses `SONSTIGE`.
  */
+export type ObjectSystemType = 'BMA' | 'LICHTRUF' | 'RWA' | 'EMA' | 'SPRACHALARM' | 'SONSTIGE'
+
 const EXTERNAL_TYPE_KEYWORDS: ReadonlyArray<readonly [ObjectSystemType, readonly string[]]> = [
   ['LICHTRUF', ['lichtruf']],
   ['SPRACHALARM', ['sprachalarm', 'sprechanlage']],
