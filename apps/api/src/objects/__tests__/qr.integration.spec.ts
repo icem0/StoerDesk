@@ -17,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped qr integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, oldQrTokens, roles, userRoles, users } = schema
+const { objects, oldQrTokens, roles, settings, userRoles, users } = schema
 
 const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/
 
@@ -31,6 +31,7 @@ type ResolveBody = {
   token?: string
   redirected?: boolean
   object?: { objectNo?: string }
+  titleEnabled?: boolean
 }
 type ErrorBody = { code?: string; params?: Record<string, unknown> }
 
@@ -258,5 +259,30 @@ describe.skipIf(testDatabase.status === 'unavailable')('objects QR API (integrat
     expect(removed.statusCode).toBe(204)
     expect((await resolve(token)).statusCode).toBe(404)
     expect(await currentToken('9104_01')).toBe(token)
+  })
+
+  it('carries the branding title switch in the public resolve', async () => {
+    const created = await createAsAdmin('9105_01')
+    const token = created.qrToken ?? ''
+
+    await db
+      .insert(settings)
+      .values({ key: 'branding', value: { companyName: 'Switch GmbH', titleEnabled: true } })
+
+    const enabled = await resolve(token)
+    const enabledBody = enabled.json<ResolveBody>()
+
+    expect(enabled.statusCode).toBe(200)
+    expect(enabledBody.titleEnabled).toBe(true)
+
+    await db
+      .update(settings)
+      .set({ value: { companyName: 'Switch GmbH', titleEnabled: false } })
+      .where(eq(settings.key, 'branding'))
+
+    const disabled = await resolve(token)
+
+    expect(disabled.statusCode).toBe(200)
+    expect(disabled.json<ResolveBody>().titleEnabled).toBe(false)
   })
 })

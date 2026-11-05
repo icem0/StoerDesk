@@ -1,7 +1,7 @@
 # WP-M2-90: public QR resolve carries the title switch
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-89
 phase: 2
 context-budget: 14k tokens
@@ -59,8 +59,10 @@ Expected: all green.
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
-- Verified: —
+- Files changed: the two source files above plus the extended QR test and the
+  `QrResolveResponse` stub in `apps/web/src/features/tickets/__tests__/report-form-page.test.tsx`
+- Interfaces added: `titleEnabled` on `qrResolveResponseSchema`, public QR resolve answers the switch
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run` (465 tests), `npm run i18n:check`,
+  `npm run wp:check` all green.
 - Follow-up WP: WP-M2-90b (report form title field, branding checkbox)
 - Open question: none

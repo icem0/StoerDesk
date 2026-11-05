@@ -84,6 +84,7 @@ export const qrResolveResponseSchema = z.object({
   token: qrTokenSchema,
   redirected: z.boolean(),
   object: publicQrObjectSchema,
+  titleEnabled: z.boolean(),
 })
 
 const objectFields = {

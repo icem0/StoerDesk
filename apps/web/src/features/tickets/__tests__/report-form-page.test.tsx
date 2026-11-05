@@ -46,6 +46,7 @@ const SOLVED = {
 const RESOLVE: QrResolveResponse = {
   token: CURRENT_TOKEN,
   redirected: true,
+  titleEnabled: false,
   object: {
     objectNo: '12345_01',
     name: 'Rathaus',
