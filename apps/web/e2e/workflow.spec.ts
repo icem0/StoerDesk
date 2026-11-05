@@ -276,10 +276,24 @@ for (const language of ['de', 'en'] as const) {
       texts.event.acknowledged,
       texts.event.closed,
     ])
-    // Every internal transition writes its event with actor kind `user`, so the
-    // localized actor label must appear in the history rows instead of the raw key.
-    await expect(history(page).locator('.text-xs.text-slate-400')).toContainText(
+    // Every internal transition (create, review, work order, assign, accept,
+    // acknowledge, close) writes its event with actor kind `user`, so all seven
+    // actor cells carry the localized label. The seven cells share the same
+    // classes, so a single text would resolve to seven elements (strict mode
+    // violation): the expectation is an array, one text per element.
+    const actorRows = history(page).locator('.text-xs.text-slate-400')
+    await expect(actorRows).toHaveCount(7)
+    await expect(actorRows).toContainText([
       texts.actorKind.user,
-    )
+      texts.actorKind.user,
+      texts.actorKind.user,
+      texts.actorKind.user,
+      texts.actorKind.user,
+      texts.actorKind.user,
+      texts.actorKind.user,
+    ])
+    // The localized label replaced the raw key (`actorKind.<kind>`): none of it
+    // survives in the rendered history.
+    await expect(history(page)).not.toContainText('actorKind.')
   })
 }

@@ -20,6 +20,10 @@ function stubTicketError(code: string, status: number) {
         return Response.json({ code, params: {} }, { status })
       }
 
+      if (path.includes('/v1/text-templates')) {
+        return Response.json({ templates: [] })
+      }
+
       // Everything else (objects query, etc.) returns the demo object.
       return Response.json({
         objects: [
@@ -43,6 +47,10 @@ function stubNetworkFailure() {
 
       if (path.includes('/v1/tickets')) {
         throw new TypeError('failed to fetch')
+      }
+
+      if (path.includes('/v1/text-templates')) {
+        return Response.json({ templates: [] })
       }
 
       return Response.json({
@@ -76,6 +84,8 @@ function renderPage() {
 }
 
 async function pickObjectAndSubmit() {
+  const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+  fireEvent.change(searchInput, { target: { value: '1234' } })
   await screen.findByText('Rathaus')
   fireEvent.click(screen.getByText('12345_01'))
   fireEvent.click(screen.getByRole('button', { name: 'Meldung erstellen' }))
