@@ -271,6 +271,7 @@
         "deleteConfirmMismatch": "Bitte die Vorgangsnummer zur Bestätigung erneut eingeben.",
         "ticket_not_cancelled": "Diese Meldung ist nicht storniert und kann nicht gelöscht werden. Bitte zuerst stornieren.",
         "ticket_delete_audit_trigger": "Die Datenbank blockiert das Löschen (Audit-Sperre). Bitte migrieren Sie die Datenbank (Migration 0017).",
+        "ticket_delete_missing_table": "Die Datenbank ist nicht aktuell: eine benötigte Tabelle fehlt. Bitte migrieren Sie die Datenbank (Migrationen 0012 und 0017).",
         "ticket_delete_fk_violation": "Die Meldung kann nicht gelöscht werden, weil abhängige Datensätze existieren.",
         "ticket_delete_permission_denied": "Die Datenbank verweigert das Löschen (fehlende Berechtigung).",
         "ticket_delete_failed": "Die Meldung konnte nicht gelöscht werden (Datenbankfehler {{sqlState}})."

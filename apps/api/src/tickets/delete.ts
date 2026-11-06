@@ -59,13 +59,17 @@ class DeleteTicketError extends Error {
         code = 'ticket_delete_fk_violation'
         params = { constraint: pgError?.constraint ?? null }
         break
-      case '42501': // insufficient_privilege
-        code = 'ticket_delete_permission_denied'
-        params = { detail: pgError?.detail ?? pgError?.message ?? 'insufficient database privilege' }
+      case '42P01': // undefined_table (e.g. ticket_purges missing -> migrations not applied)
+        code = 'ticket_delete_missing_table'
+        params = {
+          detail: pgError?.detail ?? pgError?.message ?? 'a required database table is missing',
+          hint: 'apply pending database migrations (0012 ticket_purges, 0017 audit-trigger bypass)',
+        }
         break
       default: // any other PostgreSQL error escaping the transaction
         code = 'ticket_delete_failed'
         params = { sqlState: sqlState ?? 'unknown', message: pgError?.message ?? String(error) }
+        break
     }
     return new DeleteTicketError(500, code, params, error)
   }
