@@ -350,7 +350,13 @@
     "menu": {
       "cancel": "Cancel",
       "uncancel": "Revoke cancellation",
-      "delete": "Delete permanently"
+      "delete": "Delete permanently",
+      "pdf": "Export PDF",
+      "email": "Export E-Mail",
+      "back": "Back to list"
+    },
+    "options": {
+      "title": "Options"
     },
     "prompt": {
       "workOrderType": "Work order type (e. g. AA):",

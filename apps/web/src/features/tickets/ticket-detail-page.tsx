@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -85,7 +85,36 @@ export function TicketDetailPage() {
   const [fields, setFields] = useState<Record<string, string>>({})
   const [lastError, setLastError] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
+  const [optionsOpen, setOptionsOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ id: string; url: string } | null>(null)
+  const optionsMenuRef = useRef<HTMLDivElement>(null)
+  const optionsButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!optionsOpen) {
+      return
+    }
+    function onPointerDown(event: PointerEvent) {
+      if (
+        !optionsMenuRef.current?.contains(event.target as Node) &&
+        !optionsButtonRef.current?.contains(event.target as Node)
+      ) {
+        setOptionsOpen(false)
+      }
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOptionsOpen(false)
+        optionsButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [optionsOpen])
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
@@ -175,6 +204,32 @@ export function TicketDetailPage() {
     }
   }
 
+  async function handleOption(value: string) {
+    if (ticketNo === undefined) {
+      return
+    }
+    setOptionsOpen(false)
+    setLastError(null)
+
+    if (value === 'list') {
+      setSelectedAction(null)
+      navigate('/tickets')
+      return
+    }
+
+    if (value === 'pdf') {
+      navigate(`/tickets/${ticketNo}/pdf`)
+      return
+    }
+
+    if (value === 'email') {
+      navigate(`/tickets/${ticketNo}/email`)
+      return
+    }
+
+    setSelectedAction(value === '' ? null : value)
+  }
+
   if (ticketQuery.isPending) {
     return <p className="text-slate-400">{t('detail.loading')}</p>
   }
@@ -206,7 +261,11 @@ export function TicketDetailPage() {
   const status = ticket.status
   const req = (name: string) => (fields[name] ?? '').trim()
 
-  const menuEntries: { value: string; labelKey: string }[] = []
+  const menuEntries: { value: string; labelKey: string; divider?: boolean }[] = []
+
+  menuEntries.push({ value: 'pdf', labelKey: 'detail.menu.pdf' })
+  menuEntries.push({ value: 'email', labelKey: 'detail.menu.email' })
+  menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
 
   if (status === 'NEW') {
     menuEntries.push({ value: 'review_started', labelKey: 'detail.action.review' })
@@ -230,6 +289,8 @@ export function TicketDetailPage() {
     menuEntries.push({ value: 'commented', labelKey: 'detail.action.comment' })
   }
 
+  menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
+
   if (status !== 'CANCELLED') {
     menuEntries.push({ value: 'cancel', labelKey: 'detail.menu.cancel' })
   }
@@ -239,6 +300,8 @@ export function TicketDetailPage() {
       menuEntries.push({ value: 'delete', labelKey: 'detail.menu.delete' })
     }
   }
+
+  menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
 
   // "Zurück zur Liste" replaces the removed standalone button.
   menuEntries.push({ value: 'list', labelKey: 'detail.back' })
@@ -620,9 +683,45 @@ export function TicketDetailPage() {
     }
   }
 
+  function renderOptionsMenu(): ReactNode {
+    return (
+      <div ref={optionsMenuRef} className="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl z-40">
+        <div className="border-b border-slate-800 px-3 py-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            {t('detail.options.title')}
+          </p>
+        </div>
+        <ul>
+          {menuEntries.map((entry) => {
+            if (entry.divider) {
+              return (
+                <li key={entry.value} className="border-t border-slate-800 my-1" />
+              )
+            }
+            const confirmShowing = selectedAction === entry.value && entry.value !== 'pdf' && entry.value !== 'email' && entry.value !== 'list'
+            return (
+              <li key={entry.value}>
+                <button
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  onClick={() => void handleOption(entry.value)}
+                  type="button"
+                >
+                  {t(entry.labelKey)}
+                </button>
+                {confirmShowing && (
+                  <div className="ml-10 mt-1">{renderConfirmPanel()}</div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    )
+  }
+
   return (
     <section className="flex flex-col gap-4">
-      {/* Header: title left, status + priority right */}
+      {/* Header: title left, status + priority + options right */}
       <div className="flex flex-col sm:flex-row sm:items-between sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">
@@ -640,8 +739,24 @@ export function TicketDetailPage() {
           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
             {t(`priority.${ticket.priority}`) ?? ticket.priority}
           </span>
+          <button
+            ref={optionsButtonRef}
+            aria-haspopup="menu"
+            aria-expanded={optionsOpen}
+            aria-label={t('detail.options.title')}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/80 text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            onClick={() => setOptionsOpen((current) => !current)}
+            title={t('detail.options.title')}
+            type="button"
+          >
+            <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M12 6h.01M12 18h.01" />
+            </svg>
+          </button>
         </div>
       </div>
+
+      {optionsOpen && renderOptionsMenu()}
 
       {pendingCount > 0 && (
         <div className="col-span-full rounded bg-amber-900/20 border border-amber-500/30 p-3 text-sm">
@@ -868,42 +983,6 @@ export function TicketDetailPage() {
             ))
           )}
         </div>
-      </div>
-
-      {/* Actions dropdown */}
-      <div className="col-span-full">
-        <label className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-          {t('detail.actions')}
-        </label>
-        <select
-          name="ticketAction"
-          value={selectedAction ?? ''}
-          onChange={(event) => {
-            const value = event.target.value
-
-            if (value === 'list') {
-              setSelectedAction(null)
-              setLastError(null)
-              navigate('/tickets')
-
-              return
-            }
-
-            setSelectedAction(value === '' ? null : value)
-            setLastError(null)
-          }}
-          className="w-full min-w-[200px] rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
-        >
-          <option value="">{t('detail.action.choose')}</option>
-          {menuEntries.map((entry) => (
-            <option key={entry.value} value={entry.value}>
-              {t(entry.labelKey)}
-            </option>
-          ))}
-        </select>
-        {selectedAction !== null && (
-          <div className="mt-2">{renderConfirmPanel()}</div>
-        )}
       </div>
 
       {lastError !== null && (

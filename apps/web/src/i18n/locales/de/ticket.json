@@ -350,7 +350,13 @@
     "menu": {
       "cancel": "Stornieren",
       "uncancel": "Stornierung aufheben",
-      "delete": "Endgültig löschen"
+      "delete": "Endgültig löschen",
+      "pdf": "PDF exportieren",
+      "email": "E-Mail exportieren",
+      "back": "Zurück zur Liste"
+    },
+    "options": {
+      "title": "Optionen"
     },
     "prompt": {
       "workOrderType": "Auftragsart (z. B. AA):",
