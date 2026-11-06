@@ -15,6 +15,7 @@ import { settingsBrandingRoutes } from './settings/branding'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
+import { runMigrations } from './db/migrate'
 import { objectRoutes } from './objects/service'
 import { oncallPoolsRoutes } from './oncall/pools'
 import { seedBaseUser } from './db/seed-base'
@@ -58,6 +59,12 @@ export async function buildServer() {
 
   // The pool belongs to the server, so `app.close()` always releases it.
   const { client, database } = createDatabase()
+
+  // Apply pending database migrations before the server accepts requests, so
+  // the schema is always up to date (e.g. ticket_purges from migration 0012,
+  // audit-trigger bypass from migration 0017). Runs on every start; drizzle
+  // skips already-applied migrations.
+  await runMigrations()
 
   app.addHook('onClose', async () => {
     await client.end({ timeout: 5 })
