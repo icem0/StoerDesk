@@ -42,6 +42,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
       })
       .returning({ id: users.id })
 
+    if (!user) throw new Error('expected the seeded admin user')
+
     const [adminRole] = await db
       .select({ id: roles.id })
       .from(roles)
@@ -49,17 +51,19 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
 
     if (!adminRole) throw new Error('expected the seeded admin role')
 
-    await db.insert(userRoles).values({ userId: user!.id, roleId: adminRole.id })
+    await db.insert(userRoles).values({ userId: user.id, roleId: adminRole.id })
 
     const [object] = await db
       .insert(objects)
       .values({ objectNo: '7201_01', name: 'Rathaus', city: 'Musterstadt' })
       .returning({ id: objects.id })
 
+    if (!object) throw new Error('expected to insert the probe object')
+
     const [ticket] = await db
       .insert(tickets)
       .values({
-        objectId: object!.id,
+        objectId: object.id,
         ticketNo: `ST-2026-DELETE-${Date.now().toString(36)}`,
         status: 'CANCELLED',
         priority: 'normal',
@@ -70,8 +74,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
       })
       .returning({ id: tickets.id, ticketNo: tickets.ticketNo })
 
-    ticketId = ticket!.id
-    ticketNo = ticket!.ticketNo
+    if (!ticket) throw new Error('expected to insert the cancelled ticket')
+
+    ticketId = ticket.id
+    ticketNo = ticket.ticketNo
 
     await db.insert(ticketEvents).values({
       ticketId,
@@ -83,7 +89,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
     })
 
     // Create a session directly, like requirePermission tests do
-    const session = await createSession(db, user!.id, 1)
+    const session = await createSession(db, user.id, 1)
     sessionCookie = `session=${session.token}`
 
     process.env.DATABASE_URL = url
@@ -131,10 +137,12 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
   it('returns 409 for a non-cancelled ticket', async () => {
     const [objectRow] = await db.select({ id: objects.id }).from(objects).limit(1)
 
+    if (!objectRow) throw new Error('expected an object to exist')
+
     const [openTicket] = await db
       .insert(tickets)
       .values({
-        objectId: objectRow!.id,
+        objectId: objectRow.id,
         ticketNo: `ST-2026-OPEN-${Date.now().toString(36)}`,
         status: 'NEW',
         priority: 'normal',
@@ -145,9 +153,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
       })
       .returning({ ticketNo: tickets.ticketNo })
 
+    if (!openTicket) throw new Error('expected to insert the open ticket')
+
     const response = await app.inject({
       method: 'DELETE',
-      url: `/api/v1/tickets/${openTicket!.ticketNo}`,
+      url: `/api/v1/tickets/${openTicket.ticketNo}`,
       headers: { cookie: sessionCookie },
     })
 
