@@ -18,6 +18,7 @@ import { createDatabase } from './db/client'
 import { runMigrations } from './db/migrate'
 import { objectRoutes } from './objects/service'
 import { oncallPoolsRoutes } from './oncall/pools'
+import { oncallRoutes } from './oncall/routes'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { seedStandardTexts } from './db/seed-standard-texts'
@@ -118,6 +119,7 @@ export async function buildServer() {
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(oncallPoolsRoutes, { database, prefix: '/api/v1/oncall' })
+  await app.register(oncallRoutes, { database })
   await app.register(bmaSyncRoutes, { database, env })
   await app.register(updateRoutes, { database, env })
   await app.register(publicReportRoutes, {

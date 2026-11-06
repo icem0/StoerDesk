@@ -1,0 +1,314 @@
+import { and, eq, gte, lt } from 'drizzle-orm'
+import fp from 'fastify-plugin'
+import { z } from 'zod'
+
+import {
+  createShiftRequestSchema,
+  generateShiftsRequestSchema,
+  generateShiftsResponseSchema,
+  oncallShiftSchema,
+  oncallSettingsResponseSchema,
+  PERMISSIONS,
+  shiftListResponseSchema,
+  updateOncallSettingsRequestSchema,
+  updateShiftRequestSchema,
+} from '@stoerdesk/shared'
+
+import { requirePermission } from '../auth/requirePermission'
+import type { Database } from '../db/client'
+import { oncallShifts } from '../db/schema'
+import { createShift, deleteShift, generateShifts, updateShift } from './service'
+import { readOncallSettings, writeOncallSettings } from './settings'
+
+type Db = Database['database']
+
+const MAX_RANGE_DAYS = 366
+const MAX_RANGE_MS = MAX_RANGE_DAYS * 24 * 60 * 60 * 1000
+
+function invalidRequest(fields: string[]) {
+  return { code: 'invalid_request', params: { fields } as Record<string, unknown> }
+}
+
+function parseUuidParam(value: unknown): string | null {
+  return typeof value === 'string' && z.uuid().safeParse(value).success ? value : null
+}
+
+function shiftRow(row: {
+  id: string
+  poolId: string
+  userId: string | null
+  state: string
+  startsAt: Date
+  endsAt: Date
+  createdAt: Date
+  updatedAt: Date
+}) {
+  return {
+    id: row.id,
+    poolId: row.poolId,
+    userId: row.userId,
+    state: row.state,
+    startsAt: row.startsAt,
+    endsAt: row.endsAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }
+}
+
+async function requireShift(database: Db, shiftId: string) {
+  const [shift] = await database
+    .select({
+      id: oncallShifts.id,
+      poolId: oncallShifts.poolId,
+      userId: oncallShifts.userId,
+      state: oncallShifts.state,
+      startsAt: oncallShifts.startsAt,
+      endsAt: oncallShifts.endsAt,
+      createdAt: oncallShifts.createdAt,
+      updatedAt: oncallShifts.updatedAt,
+    })
+    .from(oncallShifts)
+    .where(eq(oncallShifts.id, shiftId))
+    .limit(1)
+
+  if (shift === undefined) {
+    throw { statusCode: 404, code: 'oncall_shift_not_found', params: { fields: ['id'] } }
+  }
+
+  return shiftRow(shift)
+}
+
+export type OncallRoutesOptions = {
+  database: Db
+}
+
+export const oncallRoutes = fp<OncallRoutesOptions>(
+  async (app, { database }) => {
+    app.get<{ Querystring: { from?: string; to?: string; poolId?: string } }>(
+      '/api/v1/oncall/shifts',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.read) },
+      async (request, reply) => {
+        const parsed = z
+          .object({
+            from: z.string().datetime(),
+            to: z.string().datetime(),
+            poolId: z.string().uuid().optional(),
+          })
+          .safeParse(request.query)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        const { from, to, poolId } = parsed.data
+
+        const fromDate = new Date(from)
+        const toDate = new Date(to)
+
+        if (
+          fromDate.getTime() >= toDate.getTime() ||
+          toDate.getTime() - fromDate.getTime() > MAX_RANGE_MS
+        ) {
+          return reply.code(422).send({
+            code: 'oncall_range_too_large',
+            params: { fields: ['from', 'to'], maxDays: MAX_RANGE_DAYS },
+          })
+        }
+
+        const rows = await database
+          .select({
+            id: oncallShifts.id,
+            poolId: oncallShifts.poolId,
+            userId: oncallShifts.userId,
+            state: oncallShifts.state,
+            startsAt: oncallShifts.startsAt,
+            endsAt: oncallShifts.endsAt,
+            createdAt: oncallShifts.createdAt,
+            updatedAt: oncallShifts.updatedAt,
+          })
+          .from(oncallShifts)
+          .where(
+            poolId === undefined
+              ? and(gte(oncallShifts.startsAt, fromDate), lt(oncallShifts.startsAt, toDate))
+              : and(
+                  eq(oncallShifts.poolId, poolId),
+                  gte(oncallShifts.startsAt, fromDate),
+                  lt(oncallShifts.startsAt, toDate),
+                ),
+          )
+          .orderBy(oncallShifts.startsAt)
+
+        return reply.send(
+          shiftListResponseSchema.parse({
+            shifts: rows.map(shiftRow),
+          }),
+        )
+      },
+    )
+
+    app.post(
+      '/api/v1/oncall/shifts',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.plan) },
+      async (request, reply) => {
+        const parsed = createShiftRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        const { poolId, userId, publish, startsAt, endsAt, createdByUserId } = parsed.data
+
+        const created = await createShift(database, {
+          poolId,
+          userId: userId ?? null,
+          publish,
+          startsAt: startsAt === undefined ? undefined : new Date(startsAt),
+          endsAt: endsAt === undefined ? undefined : new Date(endsAt),
+          createdByUserId: createdByUserId ?? null,
+        })
+
+        const full = await requireShift(database, created.id)
+
+        return reply.code(201).send(oncallShiftSchema.parse(full))
+      },
+    )
+
+    app.post(
+      '/api/v1/oncall/shifts/generate',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.plan) },
+      async (request, reply) => {
+        const parsed = generateShiftsRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        const { poolId, from, to, createdByUserId } = parsed.data
+
+        const result = await generateShifts(database, {
+          poolId,
+          from: new Date(from),
+          to: new Date(to),
+          createdByUserId: createdByUserId ?? null,
+        })
+
+        return reply.send(generateShiftsResponseSchema.parse(result))
+      },
+    )
+
+    app.patch<{ Params: { id: string } }>(
+      '/api/v1/oncall/shifts/:id',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.admin) },
+      async (request, reply) => {
+        const shiftId = parseUuidParam(request.params.id)
+
+        if (shiftId === null) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const parsed = updateShiftRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        const updated = await updateShift(database, shiftId, parsed.data, request.user?.id ?? '')
+
+        const full = await requireShift(database, updated.id)
+
+        return reply.send(oncallShiftSchema.parse(full))
+      },
+    )
+
+    app.delete<{ Params: { id: string } }>(
+      '/api/v1/oncall/shifts/:id',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.admin) },
+      async (request, reply) => {
+        const shiftId = parseUuidParam(request.params.id)
+
+        if (shiftId === null) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        await deleteShift(database, shiftId, request.user?.id ?? '')
+
+        return reply.code(204).send()
+      },
+    )
+
+    app.get(
+      '/api/v1/settings/oncall',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
+      async () => {
+        const settingsResolved = await readOncallSettings(database)
+
+        return oncallSettingsResponseSchema.parse({
+          weekStartWeekday: settingsResolved.weekStartWeekday,
+          startTime: settingsResolved.startTime,
+          durationDays: settingsResolved.durationDays,
+          swapRequiresAdminApproval: settingsResolved.swapRequiresAdminApproval,
+          escalateToGroupAfterMin: settingsResolved.escalateToGroupAfterMin,
+          reminderUnconfirmedH: settingsResolved.reminderUnconfirmedH,
+          unfilledWarningDays: settingsResolved.unfilledWarningDays,
+          defaultPoolId: settingsResolved.defaultPoolId ?? null,
+        })
+      },
+    )
+
+    app.put(
+      '/api/v1/settings/oncall',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.write) },
+      async (request, reply) => {
+        const parsed = updateOncallSettingsRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        const written = await writeOncallSettings(database, parsed.data)
+
+        return oncallSettingsResponseSchema.parse({
+          weekStartWeekday: written.weekStartWeekday,
+          startTime: written.startTime,
+          durationDays: written.durationDays,
+          swapRequiresAdminApproval: written.swapRequiresAdminApproval,
+          escalateToGroupAfterMin: written.escalateToGroupAfterMin,
+          reminderUnconfirmedH: written.reminderUnconfirmedH,
+          unfilledWarningDays: written.unfilledWarningDays,
+          defaultPoolId: written.defaultPoolId ?? null,
+        })
+      },
+    )
+  },
+  { name: 'stoerdesk-oncall-routes' },
+)
