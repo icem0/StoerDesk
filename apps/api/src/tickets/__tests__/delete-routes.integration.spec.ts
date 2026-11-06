@@ -49,7 +49,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
 
     if (!adminRole) throw new Error('expected the seeded admin role')
 
-    await db.insert(userRoles).values({ userId: user.id, roleId: adminRole.id })
+    await db.insert(userRoles).values({ userId: user!.id, roleId: adminRole.id })
 
     const [object] = await db
       .insert(objects)
@@ -59,7 +59,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
     const [ticket] = await db
       .insert(tickets)
       .values({
-        objectId: object.id,
+        objectId: object!.id,
         ticketNo: `ST-2026-DELETE-${Date.now().toString(36)}`,
         status: 'CANCELLED',
         priority: 'normal',
@@ -70,8 +70,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
       })
       .returning({ id: tickets.id, ticketNo: tickets.ticketNo })
 
-    ticketId = ticket.id
-    ticketNo = ticket.ticketNo
+    ticketId = ticket!.id
+    ticketNo = ticket!.ticketNo
 
     await db.insert(ticketEvents).values({
       ticketId,
@@ -83,7 +83,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
     })
 
     // Create a session directly, like requirePermission tests do
-    const session = await createSession(db, user.id, 1)
+    const session = await createSession(db, user!.id, 1)
     sessionCookie = `session=${session.token}`
 
     process.env.DATABASE_URL = url
@@ -147,7 +147,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
 
     const response = await app.inject({
       method: 'DELETE',
-      url: `/api/v1/tickets/${openTicket.ticketNo}`,
+      url: `/api/v1/tickets/${openTicket!.ticketNo}`,
       headers: { cookie: sessionCookie },
     })
 

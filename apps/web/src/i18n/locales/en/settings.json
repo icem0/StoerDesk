@@ -91,13 +91,14 @@
    "loading": "Loading …",
    "sessionNotice": "User management requires a valid sign-in.",
    "forbiddenNotice": "No permission for user management.",
-   "table": {
-    "email": "E-mail",
-    "locale": "Language",
-    "active": "Active",
-    "roles": "Roles",
-    "actions": "Actions"
-   },
+    "table": {
+     "email": "E-mail",
+     "name": "Name",
+     "locale": "Language",
+     "active": "Active",
+     "roles": "Roles",
+     "actions": "Actions"
+    },
    "active": "active",
    "inactive": "inactive",
    "createTitle": "Create user",
@@ -105,11 +106,13 @@
    "create": "Create",
    "edit": "Edit",
    "save": "Save",
-   "fields": {
-    "email": "E-mail",
-    "password": "Password",
-    "passwordNew": "New password (optional)",
-    "locale": "Language",
+    "fields": {
+     "email": "E-mail",
+     "password": "Password",
+     "passwordNew": "New password (optional)",
+     "givenName": "First name",
+     "familyName": "Last name",
+     "locale": "Language",
     "theme": "Appearance",
     "activeLabel": "Active",
     "rolesLabel": "Roles"

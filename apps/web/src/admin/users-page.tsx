@@ -144,14 +144,36 @@ function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
           value={values.email}
           onChange={(event) => setValues({ ...values, email: event.target.value })}
         />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.users.fields.password')}
-        <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          type="password"
-          required
-          minLength={12}
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('admin.users.fields.givenName')}
+            <input
+              className="rounded bg-slate-900 p-2 text-slate-100"
+              type="text"
+              maxLength={64}
+              value={values.givenName}
+              onChange={(event) =>
+                setValues({ ...values, givenName: event.target.value.trim() })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('admin.users.fields.familyName')}
+            <input
+              className="rounded bg-slate-900 p-2 text-slate-100"
+              type="text"
+              maxLength={64}
+              value={values.familyName}
+              onChange={(event) =>
+                setValues({ ...values, familyName: event.target.value.trim() })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('admin.users.fields.password')}
+            <input
+              className="rounded bg-slate-900 p-2 text-slate-100"
+              type="password"
+              required
+              minLength={12}
           value={values.password}
           onChange={(event) => setValues({ ...values, password: event.target.value })}
         />
@@ -269,11 +291,33 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
           value={values.password}
           onChange={(event) => setValues({ ...values, password: event.target.value })}
         />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.users.fields.locale')}
-        <select
-          className="rounded bg-slate-950 p-2 text-slate-100"
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('admin.users.fields.givenName')}
+            <input
+              className="rounded bg-slate-950 p-2 text-slate-100"
+              type="text"
+              maxLength={64}
+              value={values.givenName}
+              onChange={(event) =>
+                setValues({ ...values, givenName: event.target.value.trim() })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('admin.users.fields.familyName')}
+            <input
+              className="rounded bg-slate-950 p-2 text-slate-100"
+              type="text"
+              maxLength={64}
+              value={values.familyName}
+              onChange={(event) =>
+                setValues({ ...values, familyName: event.target.value.trim() })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('admin.users.fields.locale')}
+            <select
+              className="rounded bg-slate-950 p-2 text-slate-100"
           value={values.locale}
           onChange={(event) => setValues({ ...values, locale: event.target.value as UserLocale })}
         >
@@ -383,6 +427,7 @@ export function UsersPage() {
         <thead>
           <tr className="border-b border-slate-700 text-slate-400">
             <th>{t('admin.users.table.email')}</th>
+            <th>{t('admin.users.table.name')}</th>
             <th>{t('admin.users.table.locale')}</th>
             <th>{t('admin.users.table.active')}</th>
             <th>{t('admin.users.table.roles')}</th>
@@ -393,6 +438,9 @@ export function UsersPage() {
           {(users.data?.users ?? []).map((user) => (
             <tr key={user.id} className="border-b border-slate-800">
               <td>{user.email}</td>
+              <td>
+                {user.givenName} {user.familyName}
+              </td>
               <td>{t(`admin.users.locales.${user.locale}`)}</td>
               <td>{user.active ? t('admin.users.active') : t('admin.users.inactive')}</td>
               <td>{user.roleKeys.join(', ')}</td>

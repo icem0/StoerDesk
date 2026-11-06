@@ -91,13 +91,14 @@
    "loading": "Lädt …",
    "sessionNotice": "Die Benutzerverwaltung benötigt eine gültige Anmeldung.",
    "forbiddenNotice": "Keine Berechtigung für die Benutzerverwaltung.",
-   "table": {
-     "email": "E-Mail",
-     "locale": "Sprache",
-     "active": "Aktiv",
-     "roles": "Rollen",
-     "actions": "Aktionen"
-   },
+    "table": {
+      "email": "E-Mail",
+      "name": "Name",
+      "locale": "Sprache",
+      "active": "Aktiv",
+      "roles": "Rollen",
+      "actions": "Aktionen"
+    },
    "active": "aktiv",
    "inactive": "inaktiv",
    "createTitle": "Benutzer anlegen",
@@ -105,11 +106,13 @@
    "create": "Anlegen",
    "edit": "Bearbeiten",
    "save": "Speichern",
-   "fields": {
-     "email": "E-Mail",
-     "password": "Passwort",
-     "passwordNew": "Neues Passwort (optional)",
-     "locale": "Sprache",
+    "fields": {
+      "email": "E-Mail",
+      "password": "Passwort",
+      "passwordNew": "Neues Passwort (optional)",
+      "givenName": "Vorname",
+      "familyName": "Nachname",
+      "locale": "Sprache",
      "theme": "Design",
      "activeLabel": "Aktiv",
      "rolesLabel": "Rollen"
