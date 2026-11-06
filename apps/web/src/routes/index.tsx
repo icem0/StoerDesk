@@ -19,7 +19,6 @@ import { ObjectEditPage } from '../features/objects/object-edit-page'
 import { InternalCreatePage } from '../features/tickets/internal-create-page'
 import { TicketListPage } from '../features/tickets/ticket-list-page'
 import { TicketDetailPage } from '../features/tickets/ticket-detail-page'
-import { TicketPdfPage } from '../features/tickets/ticket-pdf-page'
 import { TicketEmailPage } from '../features/tickets/ticket-email-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
@@ -160,14 +159,6 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <TicketDetailPage />
-          </RequireSession>
-        ),
-      },
-      {
-        path: '/tickets/:ticketNo/pdf',
-        element: (
-          <RequireSession>
-            <TicketPdfPage />
           </RequireSession>
         ),
       },

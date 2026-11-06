@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   computeTicketTimeline,
-  type TimelinePause,
   type TimelineState,
 } from '@stoerdesk/shared'
 
@@ -18,19 +17,11 @@ const STATE_COLOUR: Record<TimelineState, string> = {
   stopped: 'bg-slate-500',
 }
 
-const PAUSABLE_STATUSES = new Set(['NEW', 'IN_REVIEW', 'WORK_ORDER_CREATED', 'OFFERED', 'ASSIGNED', 'ACCEPTED'])
-
-type PauseRow = TimelinePause & { reason: string }
-
 type TicketTimelineProps = {
   reportedAt: string
   deadlineAt: string
   stoppedAt: string | null
-  pauses: readonly PauseRow[]
   markers: readonly { type: string; at: string }[]
-  status: string
-  onPause?: (reason: string) => Promise<void>
-  onResume?: () => Promise<void>
   /** Deadline length in hours, shown next to the deadline label ("72 Std / 72 h"). */
   deadlineHours: number
   /** Suffix appended to scale numbers ("Std" / "h"). */
@@ -59,26 +50,21 @@ export function TicketTimeline({
   reportedAt,
   deadlineAt,
   stoppedAt,
-  pauses,
   markers,
-  status,
-  onPause,
-  onResume,
   deadlineHours,
   scaleSuffix,
 }: TicketTimelineProps) {
   const { t } = useTranslation('ticket')
-  const [pauseReason, setPauseReason] = useState('')
 
   const [timeline, setTimeline] = useState(() =>
-    computeTicketTimeline({ reportedAt, deadlineAt, stoppedAt, pauses, now: new Date() }),
+    computeTicketTimeline({ reportedAt, deadlineAt, stoppedAt, pauses: [], now: new Date() }),
   )
 
   const recompute = useCallback(() => {
     setTimeline(
-      computeTicketTimeline({ reportedAt, deadlineAt, stoppedAt, pauses, now: new Date() }),
+      computeTicketTimeline({ reportedAt, deadlineAt, stoppedAt, pauses: [], now: new Date() }),
     )
-  }, [reportedAt, deadlineAt, stoppedAt, pauses])
+  }, [reportedAt, deadlineAt, stoppedAt])
 
   useEffect(() => {
     const immediate = setTimeout(recompute, 0)
@@ -104,26 +90,12 @@ export function TicketTimeline({
     [reportedMs, deadlineMs],
   )
 
-  const openPause = pauses.find((pause) => pause.endedAt === null)
-  const canPause = PAUSABLE_STATUSES.has(status)
-
   const remainingLabel =
     state === 'stopped'
       ? t('timeline.stopped')
       : remainingMs <= 0
         ? t('timeline.overdue', { hours: hoursOver })
         : t('timeline.remaining', { hours: hoursLeft })
-
-  async function handlePause() {
-    const reason = window.prompt(t('timeline.prompt.reason'))
-    if (reason === null || reason.trim() === '') return
-    setPauseReason(reason.trim())
-    try {
-      await onPause?.(reason.trim())
-    } finally {
-      setPauseReason('')
-    }
-  }
 
   const reportedTime = reportedMs !== undefined ? new Date(reportedMs).toLocaleString() : ''
   const deadlineTime = deadlineMs !== undefined ? new Date(deadlineMs).toLocaleString() : ''
@@ -200,35 +172,6 @@ export function TicketTimeline({
           {remainingLabel}
         </span>
       </div>
-
-      {canPause && (
-        <div className="flex gap-2">
-          {openPause !== undefined ? (
-            <button
-              className="rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-amber-500 disabled:opacity-50"
-              type="button"
-              onClick={() => void onResume?.()}
-              disabled={pauseReason !== ''}
-            >
-              {t('timeline.resume')}
-            </button>
-          ) : (
-            <button
-              className="rounded bg-slate-600 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-500 disabled:opacity-50"
-              type="button"
-              onClick={handlePause}
-              disabled={pauseReason !== ''}
-            >
-              {t('timeline.pause')}
-            </button>
-          )}
-          {openPause !== undefined && (
-            <span className="text-xs text-slate-500">
-              {t('timeline.pauseReason', { reason: openPause.reason })}
-            </span>
-          )}
-        </div>
-      )}
     </section>
   )
 }

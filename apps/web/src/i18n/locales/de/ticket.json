@@ -204,15 +204,9 @@
     "remaining": "Noch {{hours}} Std.",
     "overdue": "Seit {{hours}} Std. überfällig",
     "stopped": "Bei Quittierung angehalten",
-    "pause": "Pause starten",
-    "resume": "Pause beenden",
-    "pauseReason": "Offene Pause: {{reason}}",
     "reportedAtLabel": "Gemeldet am",
     "deadlineLabel": "Reaktionszeit bis",
-    "scaleSuffix": "Std",
-    "prompt": {
-      "reason": "Wartegrund (mind. 3 Zeichen):"
-    }
+    "scaleSuffix": "Std"
   },
   "list": {
     "title": "Meldungen",
@@ -351,7 +345,6 @@
       "cancel": "Stornieren",
       "uncancel": "Stornierung aufheben",
       "delete": "Endgültig löschen",
-      "pdf": "PDF exportieren",
       "email": "E-Mail exportieren",
       "back": "Zurück zur Liste"
     },
@@ -380,20 +373,6 @@
         "commentText": "Kommentartext:",
         "deleteConfirmNumber": "Ticketnumber for confirmation:"
     }
-  },
-  "pdf": {
-    "title": "Vorgang {{ticketNo}}",
-    "save": "Als PDF speichern",
-    "object": "Objekt",
-    "objectNo": "Objektnummer",
-    "status": "Status",
-    "priority": "Priorität",
-    "reportedAt": "Gemeldet am",
-    "deadlineAt": "Frist bis",
-    "erfasser": "Erfasser",
-    "source": "Quelle",
-    "noPhotos": "Keine Fotos.",
-    "printHint": "Drucken und als PDF speichern (Strg+P / Cmd+P)."
   },
   "email": {
     "title": "Vorgang {{ticketNo}} per E-Mail",

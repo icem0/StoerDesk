@@ -179,34 +179,6 @@ export function TicketDetailPage() {
     }
   }
 
-  async function handlePause(reason: string) {
-    if (ticketNo === undefined) return
-    try {
-      await apiFetch<never>(`/v1/tickets/${ticketNo}/pause`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ reason }),
-      })
-      void ticketQuery.refetch()
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setLastError(error.code ?? t('detail.errors.actionFailed'))
-      }
-    }
-  }
-
-  async function handleResume() {
-    if (ticketNo === undefined) return
-    try {
-      await apiFetch<never>(`/v1/tickets/${ticketNo}/resume`, { method: 'POST' })
-      void ticketQuery.refetch()
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setLastError(error.code ?? t('detail.errors.actionFailed'))
-      }
-    }
-  }
-
   async function handleOption(value: string) {
     if (ticketNo === undefined) {
       return
@@ -217,12 +189,6 @@ export function TicketDetailPage() {
       setSelectedAction(null)
       setOptionsOpen(false)
       navigate('/tickets')
-      return
-    }
-
-    if (value === 'pdf') {
-      setOptionsOpen(false)
-      navigate(`/tickets/${ticketNo}/pdf`)
       return
     }
 
@@ -294,8 +260,6 @@ export function TicketDetailPage() {
 
   const menuEntries: { value: string; labelKey: string; divider?: boolean }[] = []
 
-  menuEntries.push({ value: 'pdf', labelKey: 'detail.menu.pdf' })
-  menuEntries.push({ value: 'email', labelKey: 'detail.menu.email' })
   menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
 
   if (status === 'NEW') {
@@ -716,7 +680,7 @@ export function TicketDetailPage() {
 
   function renderOptionsMenu(): ReactNode {
     return (
-      <div ref={optionsMenuRef} className="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl z-40">
+      <div ref={optionsMenuRef} className="absolute left-0 mt-1 w-64 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl z-40">
         <div className="border-b border-slate-800 px-3 py-2">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {t('detail.options.title')}
@@ -842,7 +806,7 @@ export function TicketDetailPage() {
             type="button"
           >
             <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M12 6h.01M12 18h.01" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         </div>
@@ -862,11 +826,7 @@ export function TicketDetailPage() {
         reportedAt={timelineData.reportedAt}
         deadlineAt={timelineData.deadlineAt}
         stoppedAt={timelineData.stoppedAt}
-        pauses={ticketQuery.data!.pauses}
         markers={timelineData.markers}
-        status={ticket.status}
-        onPause={handlePause}
-        onResume={handleResume}
         deadlineHours={Math.max(1, Math.round(timelineData.totalMs / 3_600_000))}
         scaleSuffix={t('timeline.scaleSuffix')}
       />
@@ -1058,7 +1018,7 @@ export function TicketDetailPage() {
           ) : (
             events.map((event) => (
               <div key={event.id} className="p-3 flex gap-3">
-                <div className="w-24 shrink-0 whitespace-nowrap">
+                <div className="w-32 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-mono text-slate-500">
                     {formatEventTime(event.createdAt)}
                   </span>

@@ -204,15 +204,9 @@
     "remaining": "{{hours}} h left",
     "overdue": "Overdue for {{hours}} h",
     "stopped": "Stopped at acknowledgement",
-    "pause": "Start pause",
-    "resume": "End pause",
-    "pauseReason": "Open pause: {{reason}}",
     "reportedAtLabel": "Reported on",
     "deadlineLabel": "Response by",
-    "scaleSuffix": "h",
-    "prompt": {
-      "reason": "Wait reason (min. 3 chars):"
-    }
+    "scaleSuffix": "h"
   },
   "list": {
     "title": "Tickets",
@@ -351,7 +345,6 @@
       "cancel": "Cancel",
       "uncancel": "Revoke cancellation",
       "delete": "Delete permanently",
-      "pdf": "Export PDF",
       "email": "Export E-Mail",
       "back": "Back to list"
     },
@@ -380,20 +373,6 @@
         "commentText": "Comment text:",
         "deleteConfirmNumber": "Ticket number to confirm:"
     }
-  },
-  "pdf": {
-    "title": "Ticket {{ticketNo}}",
-    "save": "Save as PDF",
-    "object": "Object",
-    "objectNo": "Object no.",
-    "status": "Status",
-    "priority": "Priority",
-    "reportedAt": "Reported on",
-    "deadlineAt": "Deadline",
-    "erfasser": "Recorded by",
-    "source": "Source",
-    "noPhotos": "No photos.",
-    "printHint": "Print and save as PDF (Ctrl+P / Cmd+P)."
   },
   "email": {
     "title": "Ticket {{ticketNo}} by e-mail",
