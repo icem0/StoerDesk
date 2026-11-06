@@ -323,7 +323,11 @@
     "historyEmpty": "Keine Ereignisse.",
     "photos": {
       "title": "Fotos",
-      "sizeKB": "{{size}} kB"
+      "sizeKB": "{{size}} kB",
+      "alt": "Foto {{index}}",
+      "download": "Herunterladen",
+      "lightbox": "Foto vergrößert",
+      "close": "Schließen"
     },
     "action": {
       "review": "In Prüfung setzen",

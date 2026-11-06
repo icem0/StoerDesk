@@ -323,7 +323,11 @@
     "historyEmpty": "No events.",
     "photos": {
       "title": "Photos",
-      "sizeKB": "{{size}} kB"
+      "sizeKB": "{{size}} kB",
+      "alt": "Photo {{index}}",
+      "download": "Download",
+      "lightbox": "Enlarged photo",
+      "close": "Close"
     },
     "action": {
       "review": "Set in review",

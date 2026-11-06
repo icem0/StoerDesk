@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { TicketDetailResponse } from '@stoerdesk/shared'
 import { type StandardTextLocale } from '@stoerdesk/shared'
 
-import { apiFetch, ApiError } from '../../lib/api'
+import { apiBaseUrl, apiFetch, ApiError } from '../../lib/api'
 import { i18n } from '../../i18n'
 import { usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
@@ -85,6 +85,7 @@ export function TicketDetailPage() {
   const [fields, setFields] = useState<Record<string, string>>({})
   const [lastError, setLastError] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<{ id: string; url: string } | null>(null)
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
@@ -185,11 +186,6 @@ export function TicketDetailPage() {
   const ticket = ticketQuery.data?.ticket
   const events = ticketQuery.data?.events ?? []
   const photos = ticketQuery.data?.photos ?? []
-
-  if (ticket === undefined) {
-    return <p className="text-rose-400 text-sm" role="alert">{t('detail.errors.notFound')}</p>
-  }
-
   const timelineData = ticketQuery.data!.timeline
 
   const sourceLabels: Record<string, string> = {
@@ -762,21 +758,83 @@ export function TicketDetailPage() {
         </div>
       )}
 
-      {/* Photos */}
+      {/* Photos: image gallery with click-to-enlarge overlay */}
       {photos.length > 0 && (
         <div className="col-span-full">
           <label className="text-xs text-slate-500 uppercase tracking-wider mb-2">
             {t('detail.photos.title')}
           </label>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {photos.map((photo) => (
-              <div key={photo.id} className="text-xs text-slate-400">
-                <div className="truncate">{photo.filePath}</div>
-                <div className="text-slate-500">
-                  {photo.mimeType} · {t('detail.photos.sizeKB', { size: (photo.sizeBytes / 1024).toFixed(1) })}
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {photos.map((photo, index) => {
+              const url = `${apiBaseUrl}/v1/tickets/${ticketNo}/photos/${photo.id}`
+              return (
+                <div
+                  key={photo.id}
+                  className="rounded overflow-hidden border border-slate-700 bg-slate-800 aspect-[4/3] group cursor-pointer"
+                  onClick={() => setLightbox({ id: photo.id, url })}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setLightbox({ id: photo.id, url })
+                    }
+                  }}
+                >
+                  <img
+                    src={url}
+                    alt={t('detail.photos.alt', { index: index + 1 })}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    loading="lazy"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/60 text-[10px] text-slate-200 text-center">
+                    {t('detail.photos.sizeKB', { size: (photo.sizeBytes / 1024).toFixed(1) })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox: enlarged photo with download link (JS overlay, no new route) */}
+      {lightbox !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('detail.photos.lightbox')}
+        >
+          <button
+            onClick={(event) => {
+              event.stopPropagation()
+              setLightbox(null)
+            }}
+            className="absolute top-4 right-4 z-10 p-2 rounded bg-white/10 text-white hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={t('detail.photos.close')}
+            type="button"
+          >
+            <svg aria-hidden="true" className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="relative max-w-2xl max-h-[75vh] flex flex-col items-center p-2">
+            <img
+              src={lightbox.url}
+              alt={t('detail.photos.alt', { index: photos.findIndex((p) => p.id === lightbox.id) + 1 })}
+              className="max-w-full max-h-[60vh] object-contain rounded border border-slate-600 shadow-2xl"
+            />
+            <a
+              href={lightbox.url}
+              download
+              className="mt-3 inline-flex items-center gap-1.5 rounded bg-sky-600 px-3 py-1.5 text-xs text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            >
+              {t('detail.photos.download')}
+              <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            </a>
           </div>
         </div>
       )}

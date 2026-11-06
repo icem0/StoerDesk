@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { and, eq } from 'drizzle-orm'
+import fp from 'fastify-plugin'
 
+import { PERMISSIONS } from '@stoerdesk/shared'
+import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { ticketPhotos } from '../db/schema'
+import { ticketPhotos, tickets } from '../db/schema'
 
 /**
  * Report photo upload (`specs/06-report-form.md` §7.4, WP-M2-04c).
@@ -150,3 +154,72 @@ export async function saveReportPhotos(
 
   return stored
 }
+
+/**
+ * Authenticated photo download (`PLAN.md` §4.10, WP-M4-08).
+ *
+ * The uploads volume is never served directly. This guard-protected endpoint
+ * streams a single stored photo back to the session holder with its original
+ * MIME type, so the web app can render ticket photos as images. Errors keep the
+ * `{ code, params }` envelope — never translated text.
+ */
+
+class PhotoServeRouteError extends Error {
+  readonly statusCode: number
+  readonly code: string
+  readonly params: Record<string, unknown>
+
+  constructor(statusCode: number, code: string, params: Record<string, unknown> = {}) {
+    super(code)
+    this.name = 'PhotoServeRouteError'
+    this.statusCode = statusCode
+    this.code = code
+    this.params = params
+  }
+}
+
+type PhotoServeOptions = {
+  database: Db
+  uploadDir: string
+}
+
+export const photoServeRoutes = fp<PhotoServeOptions>(
+  async (app, { database, uploadDir }) => {
+    app.get<{ Params: { ticketNo: string; photoId: string } }>(
+      '/api/v1/tickets/:ticketNo/photos/:photoId',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.read) },
+      async (request, reply) => {
+        const { ticketNo, photoId } = request.params
+
+        const [ticketRow] = await database
+          .select({ id: tickets.id })
+          .from(tickets)
+          .where(eq(tickets.ticketNo, ticketNo))
+          .limit(1)
+
+        if (ticketRow === undefined) {
+          throw new PhotoServeRouteError(404, 'ticket_not_found', { fields: ['ticketNo'] })
+        }
+
+        const [photoRow] = await database
+          .select({ id: ticketPhotos.id, filePath: ticketPhotos.filePath, mimeType: ticketPhotos.mimeType })
+          .from(ticketPhotos)
+          .where(and(eq(ticketPhotos.id, photoId), eq(ticketPhotos.ticketId, ticketRow.id)))
+          .limit(1)
+
+        if (photoRow === undefined) {
+          throw new PhotoServeRouteError(404, 'photo_not_found', { fields: ['photoId'] })
+        }
+
+        const buffer = await readFile(join(uploadDir, photoRow.filePath))
+
+        return reply
+          .code(200)
+          .header('content-type', photoRow.mimeType)
+          .header('content-disposition', 'inline')
+          .send(buffer)
+      },
+    )
+  },
+  { name: 'stoerdesk-ticket-photo-serve' },
+)

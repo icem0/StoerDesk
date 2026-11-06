@@ -29,6 +29,7 @@ import { publicDuplicateRoutes } from './tickets/duplicates'
 import { internalTicketRoutes } from './tickets/internal'
 import { ticketListRoutes } from './tickets/list'
 import { ticketDetailRoutes } from './tickets/detail'
+import { photoServeRoutes } from './tickets/photos'
 import { workflowRoutes } from './tickets/workflow-routes'
 import { pauseRoutes } from './tickets/pauses'
 import { publicReportRoutes } from './tickets/report'
@@ -124,6 +125,7 @@ export async function buildServer() {
   await app.register(internalTicketRoutes, { database })
   await app.register(ticketListRoutes, { database })
   await app.register(ticketDetailRoutes, { database })
+  await app.register(photoServeRoutes, { database, uploadDir: env.UPLOAD_DIR })
   await app.register(deleteRoutes, { database, uploadDir: env.UPLOAD_DIR })
   await app.register(workflowRoutes, { database })
   await app.register(pauseRoutes, { database })
