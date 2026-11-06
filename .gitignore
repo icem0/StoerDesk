@@ -31,3 +31,6 @@ server/var/
 
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# Security audit findings — never tracked
+.security/

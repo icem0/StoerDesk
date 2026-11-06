@@ -182,3 +182,13 @@ From three sub-steps onwards keep a todo list via `todowrite`:
 - Before changing the report form, its confirmation or a printed sticker, re-read the
   emergency rule of `PLAN.md` §2: the 112 notice stays visible, StörDesk is never an
   emergency call path, and no other emergency number enters product text.
+
+### Security audit discipline
+
+- Before touching authentication, routes, DB queries, input handling or uploads,
+  read `docs/SECURITY-PLAN.md` and the open findings in `.security/findings.md`
+  (gitignored — the only place findings live; never in tracked files, commit
+  messages or work-package titles).
+- After such a change update the audit SHA in `docs/SECURITY-PLAN.md`
+  (procedure + repeat rules are there); areas A and B are always re-checked,
+  C–K only the files the diff touched.
