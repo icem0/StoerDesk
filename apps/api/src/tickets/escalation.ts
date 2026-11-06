@@ -102,7 +102,7 @@ function overrideValue(value: unknown, field: 'minutes' | 'critical_minutes'): n
     : undefined
 }
 
-async function readOverrides(
+export async function readOverrides(
   database: Db,
 ): Promise<Partial<Record<EscalationRuleKey, EscalationRuleOverride>>> {
   const rows = await database
