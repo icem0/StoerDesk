@@ -91,5 +91,32 @@
     "subscribe": "In der ntfy-App abonnieren",
     "qrLabel": "ntfy-Abo QR-Code",
     "appHint": "mit dem Handy scannen"
+  },
+  "my": {
+   "title": "Meine Einstellungen",
+   "fields": {
+    "givenName": "Vorname",
+    "familyName": "Nachname",
+    "locale": "Sprache",
+    "theme": "Design",
+    "password": "Neues Passwort (optional)"
+   },
+   "locales": {
+    "de": "Deutsch",
+    "en": "English"
+   },
+   "themeValues": {
+    "auto": "Automatik (System)",
+    "light": "Light",
+    "dark": "Dark"
+   },
+   "save": "Speichern",
+   "saved": "Gespeichert.",
+   "errors": {
+    "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+    "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+    "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+    "unknown": "Speichern fehlgeschlagen."
+   }
   }
  }

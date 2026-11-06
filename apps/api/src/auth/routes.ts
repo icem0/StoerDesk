@@ -1,10 +1,15 @@
 import { eq } from 'drizzle-orm'
 import type { FastifyPluginAsync } from 'fastify'
-import { loginRequestSchema, meResponseSchema } from '@stoerdesk/shared'
+import {
+  loginRequestSchema,
+  meResponseSchema,
+  updateMyUserRequestSchema,
+  userSummarySchema,
+} from '@stoerdesk/shared'
 
-import { users } from '../db/schema'
+import { roles, userRoles, users } from '../db/schema'
 import type { Env } from '../config/env'
-import { verifyPassword } from './password'
+import { hashPassword, verifyPassword } from './password'
 import { effectivePermissions, loadEffectivePermissions } from './requirePermission'
 import {
   createSession,
@@ -127,4 +132,87 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
 
     return meResponseSchema.parse({ user: { ...request.user, permissions } })
   })
+
+  // Self-service: every authenticated user may edit their own profile. Roles,
+  // active state and e-mail stay admin-only (`PATCH /api/v1/users/:id`,
+  // WP-M1-09). Password is optional — left unset means "keep the current one".
+  app.patch(
+    '/api/v1/users/me',
+    { preHandler: [requireUser] },
+    async (request, reply) => {
+      const user = request.user
+
+      if (user === undefined) {
+        return reply.code(401).send({ code: 'session_invalid', params: {} })
+      }
+
+      const userId = user.id
+      const parsed = updateMyUserRequestSchema.safeParse(request.body)
+
+      if (!parsed.success) {
+        return reply.code(400).send({
+          code: 'invalid_request',
+          params: {
+            fields: [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))],
+          },
+        })
+      }
+
+      const { givenName, familyName, locale, theme, password } = parsed.data
+      const passwordHash =
+        password === undefined ? undefined : await hashPassword(password)
+
+      const targetRows = await database
+        .select({
+          id: users.id,
+          email: users.email,
+          givenName: users.givenName,
+          familyName: users.familyName,
+          locale: users.locale,
+          theme: users.theme,
+          active: users.active,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+
+      const [target] = targetRows
+
+      if (target === undefined) {
+        return reply.code(404).send({ code: 'user_not_found', params: { fields: ['id'] } })
+      }
+
+      const roleRows = await database
+        .select({ key: roles.key })
+        .from(userRoles)
+        .innerJoin(roles, eq(roles.id, userRoles.roleId))
+        .where(eq(userRoles.userId, userId))
+      const currentRoleKeys = roleRows.map((row) => row.key).sort()
+
+      await database
+        .update(users)
+        .set({
+          givenName: givenName ?? target.givenName,
+          familyName: familyName ?? target.familyName,
+          locale: locale ?? target.locale,
+          theme: theme ?? target.theme,
+          updatedAt: new Date(),
+          ...(passwordHash === undefined ? {} : { passwordHash }),
+        })
+        .where(eq(users.id, userId))
+
+      return reply.code(200).send(
+        userSummarySchema.parse({
+          id: target.id,
+          email: target.email,
+          givenName: givenName ?? target.givenName,
+          familyName: familyName ?? target.familyName,
+          locale: locale ?? target.locale,
+          theme: theme ?? target.theme,
+          active: target.active,
+          roleKeys: currentRoleKeys,
+        }),
+      )
+    },
+  )
 }

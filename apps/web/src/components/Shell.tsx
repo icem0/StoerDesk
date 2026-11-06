@@ -163,9 +163,13 @@ function SettingsMenu({ email }: { email: string }) {
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               {t('app.settings')}
             </p>
-            <p className="mt-1 truncate text-sm text-slate-300">
+            <Link
+              className="mt-1 block truncate text-sm text-sky-400 hover:text-sky-300"
+              onClick={() => setOpen(false)}
+              to="/settings/me"
+            >
               {t('auth.signedInAs', { email })}
-            </p>
+            </Link>
           </div>
 
           {navGroups.map((group) => (

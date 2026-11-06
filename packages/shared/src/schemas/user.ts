@@ -59,7 +59,18 @@ export const updateUserRequestSchema = z.object({
   password: z.string().min(12).max(256).optional(),
 })
 
+/** A user may only edit their own profile: names, language, theme, password.
+ * Roles, active state and e-mail stay admin-only (WP-M1-09). */
+export const updateMyUserRequestSchema = z.object({
+  givenName: userNameSchema.optional(),
+  familyName: userNameSchema.optional(),
+  locale: userLocaleSchema.optional(),
+  theme: userThemeSchema.optional(),
+  password: z.string().min(12).max(256).optional(),
+})
+
 export type UserSummary = z.infer<typeof userSummarySchema>
 export type UserListResponse = z.infer<typeof userListResponseSchema>
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>
+export type UpdateMyUserRequest = z.infer<typeof updateMyUserRequestSchema>

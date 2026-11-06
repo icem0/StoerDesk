@@ -91,5 +91,32 @@
     "subscribe": "Subscribe in the ntfy app",
     "qrLabel": "ntfy subscription QR code",
     "appHint": "scan it with your phone"
+  },
+  "my": {
+   "title": "My settings",
+   "fields": {
+    "givenName": "First name",
+    "familyName": "Last name",
+    "locale": "Language",
+    "theme": "Appearance",
+    "password": "New password (optional)"
+   },
+   "locales": {
+    "de": "German",
+    "en": "English"
+   },
+   "themeValues": {
+    "auto": "Auto (system)",
+    "light": "Light",
+    "dark": "Dark"
+   },
+   "save": "Save",
+   "saved": "Saved.",
+   "errors": {
+    "session_invalid": "Session expired – please sign in again.",
+    "forbidden": "Access denied – missing permission.",
+    "invalid_request": "Invalid input – please check the fields.",
+    "unknown": "Saving failed."
+   }
   }
  }
