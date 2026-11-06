@@ -470,7 +470,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)        | done                    | yes     |
 | WP-M7-10  | matrix and signal channels — locale, deep link and the localized label | done                    | yes     |
 | WP-M8-01  | phase-8 specification, ADR-0011 and the work-package split          | done                    | yes     |
-| WP-M8-02  | on-call tables and migration 0020                                   | planned                 | yes     |
+| WP-M8-02  | on-call tables and migration 0020                                   | done                    | yes     |
 | WP-M8-03  | DST-safe on-call slot calculation                                   | planned                 | yes     |
 | WP-M8-04  | on-call pool API                                                    | planned                 | yes     |
 | WP-M8-05  | on-call settings and shift planning service                         | planned                 | yes     |

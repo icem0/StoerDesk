@@ -1,7 +1,7 @@
 # WP-M8-02: on-call tables and migration 0020
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-01
 phase: 8
 milestone: m8
@@ -69,8 +69,20 @@ rejected direct `DELETE`.
 
 ## Handoff
 
-- Files changed: schema, generated migration and snapshot, integration test
-- Interfaces added: the four tables, the state constants, the trigger
-- Verified: typecheck, lint, test:run
-- Follow-up WP: WP-M8-03 (slot calculation) and WP-M8-04 (pool API)
-- Open question: none
+- Files changed: `apps/api/src/db/schema.ts` (four tables, two state constants,
+  type exports), generated migration `0020_oncall_tables.sql` with the
+  hand-appended `oncall_event_append_only` trigger, `meta/_journal.json` entry
+  20 and `apps/api/src/db/__tests__/oncallTables.integration.spec.ts` (new);
+  `meta/0020_snapshot.json` not written — drizzle-kit cannot run non-interactively
+  here and migrations 0015–0019 were registered the same way (migration + journal
+  only).
+- Interfaces added: `oncallPools`, `oncallShifts`, `oncallSwapRequests`,
+  `oncallEvents`; `ONCALL_SHIFT_STATES`, `ONCALL_SWAP_STATES`;
+  trigger `oncall_event_append_only` (blocks UPDATE/direct DELETE, permits the
+  `ON DELETE CASCADE` of a shift via `pg_trigger_depth() > 1` or the
+  `stoerdesk.allow_oncall_event_delete` session setting); `oncallEvents.clientUuid`
+  unique for idempotent confirm/decline replays.
+- Verified: typecheck, lint, test:run (7/7 on-call integration tests pass
+  against PostgreSQL; skip without a reachable database), wp:check.
+- Follow-up WP: WP-M8-03 (slot calculation) and WP-M8-04 (pool API).
+- Open question: none.

@@ -213,8 +213,69 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0019_notification_outbox')
+    expect(entries.at(-1)?.tag).toBe('0020_oncall_tables')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
+  })
+})
+
+describe('migration 0020 on-call tables', () => {
+  const sql = readMigration('0020_oncall_tables')
+
+  it.each(['oncall_pools', 'oncall_shifts', 'oncall_swap_requests', 'oncall_events'])(
+    'creates table %s',
+    (table) => {
+      expect(sql).toContain(`CREATE TABLE "${table}"`)
+    },
+  )
+
+  it('constrains pool names, shift states and swap statuses', () => {
+    expect(sql).toContain(
+      `CONSTRAINT "oncall_pools_name_trimmed_length_check" CHECK (TRIM("oncall_pools"."name") = "oncall_pools"."name" AND LENGTH("oncall_pools"."name") BETWEEN 1 AND 100)`,
+    )
+    expect(sql).toContain(
+      `CONSTRAINT "oncall_shifts_state_check" CHECK ("oncall_shifts"."state" IN ('UNFILLED', 'DRAFT', 'PLANNED', 'CONFIRMED', 'DECLINED', 'SWAP_REQUESTED'))`,
+    )
+    expect(sql).toContain(
+      `CONSTRAINT "oncall_shifts_ends_at_after_starts_at_check" CHECK ("oncall_shifts"."ends_at" > "oncall_shifts"."starts_at")`,
+    )
+    expect(sql).toContain(
+      `CONSTRAINT "oncall_swap_requests_status_check" CHECK ("oncall_swap_requests"."status" IN ('PENDING', 'ACCEPTED', 'APPROVED', 'DECLINED', 'CANCELLED', 'EXPIRED'))`,
+    )
+    expect(sql).toContain(
+      `CONSTRAINT "oncall_events_actor_kind_check" CHECK ("oncall_events"."actor_kind" IN ('user', 'system'))`,
+    )
+  })
+
+  it('indexes the shift range, keeps one slot start per pool and one pending swap per shift', () => {
+    expect(sql).toContain(
+      'CREATE INDEX "oncall_shifts_pool_id_starts_at_ends_at_idx" ON "oncall_shifts" USING btree ("pool_id","starts_at","ends_at")',
+    )
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "oncall_shifts_pool_id_starts_at_key" ON "oncall_shifts" USING btree ("pool_id","starts_at")',
+    )
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "oncall_swap_requests_one_pending_per_shift" ON "oncall_swap_requests" USING btree ("shift_id") WHERE "oncall_swap_requests"."status" = \'PENDING\'',
+    )
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "oncall_pools_name_key" ON "oncall_pools" USING btree (lower("name"))',
+    )
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "oncall_events_client_uuid_key" ON "oncall_events" USING btree ("client_uuid")',
+    )
+  })
+
+  it('cascades pool, shift and user deletions and protects events with the append-only trigger', () => {
+    expect(sql).toContain(
+      'ALTER TABLE "oncall_shifts" ADD CONSTRAINT "oncall_shifts_pool_id_oncall_pools_id_fk" FOREIGN KEY ("pool_id") REFERENCES "public"."oncall_pools"("id") ON DELETE cascade ON UPDATE no action;',
+    )
+    expect(sql).toContain(
+      'ALTER TABLE "oncall_events" ADD CONSTRAINT "oncall_events_shift_id_oncall_shifts_id_fk" FOREIGN KEY ("shift_id") REFERENCES "public"."oncall_shifts"("id") ON DELETE cascade ON UPDATE no action;',
+    )
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION oncall_event_append_only()')
+    expect(sql).toContain("RAISE EXCEPTION 'oncall_event_append_only'")
+    expect(sql).toContain('CREATE TRIGGER oncall_events_is_append_only')
+    expect(sql).toContain('BEFORE UPDATE OR DELETE ON "oncall_events"')
+    expect(sql).toContain('EXECUTE FUNCTION oncall_event_append_only()')
   })
 })
 

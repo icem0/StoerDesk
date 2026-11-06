@@ -697,6 +697,171 @@ export const updateRuns = pgTable(
   ],
 )
 
+/** Actor kinds of on-call events (`specs/04-oncall.md` §4a.4, §4a.5). */
+export const ONCALL_EVENT_ACTOR_KINDS = ['user', 'system'] as const
+
+/** Shift states of the on-call state machine (`specs/04-oncall.md` §4a.3). */
+export const ONCALL_SHIFT_STATES = [
+  'UNFILLED',
+  'DRAFT',
+  'PLANNED',
+  'CONFIRMED',
+  'DECLINED',
+  'SWAP_REQUESTED',
+] as const
+
+/** Swap request statuses (`specs/04-oncall.md` §4a.5). */
+export const ONCALL_SWAP_STATES = [
+  'PENDING',
+  'ACCEPTED',
+  'APPROVED',
+  'DECLINED',
+  'CANCELLED',
+  'EXPIRED',
+] as const
+
+/**
+ * One on-call calendar (`specs/04-oncall.md` §4a.2). An optional `group_id`
+ * defines membership: a pool without a group uses every active user holding
+ * the `oncall` role. A pool name is unique case-insensitively.
+ */
+export const oncallPools = pgTable(
+  'oncall_pools',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    name: text('name').notNull(),
+    /** NULL: every active `oncall` user is eligible for this pool. */
+    groupId: uuid('group_id').references(() => groups.id, { onDelete: 'set null' }),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('oncall_pools_name_key').on(sql`lower(${table.name})`),
+    check(
+      'oncall_pools_name_trimmed_length_check',
+      sql`TRIM(${table.name}) = ${table.name} AND LENGTH(${table.name}) BETWEEN 1 AND 100`,
+    ),
+  ],
+)
+
+/**
+ * Shifts of one pool, generated from local wall-clock weeks
+ * (`specs/04-oncall.md` §4a.3 / §4a.3.1). `ends_at > starts_at`, one slot per
+ * `(pool_id, starts_at)`, range index over `(pool_id, starts_at, ends_at)`.
+ */
+export const oncallShifts = pgTable(
+  'oncall_shifts',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    poolId: uuid('pool_id')
+      .notNull()
+      .references(() => oncallPools.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    state: text('state').notNull().default('UNFILLED'),
+    startsAt: timestamp('starts_at', timestampOptions).notNull(),
+    endsAt: timestamp('ends_at', timestampOptions).notNull(),
+    confirmedAt: timestamp('confirmed_at', timestampOptions),
+    declinedAt: timestamp('declined_at', timestampOptions),
+    createdByUserId: uuid('created_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('oncall_shifts_pool_id_starts_at_ends_at_idx').on(
+      table.poolId,
+      table.startsAt,
+      table.endsAt,
+    ),
+    uniqueIndex('oncall_shifts_pool_id_starts_at_key').on(table.poolId, table.startsAt),
+    check(
+      'oncall_shifts_state_check',
+      sql`${table.state} IN (${checkList(ONCALL_SHIFT_STATES)})`,
+    ),
+    check(
+      'oncall_shifts_ends_at_after_starts_at_check',
+      sql`${table.endsAt} > ${table.startsAt}`,
+    ),
+  ],
+)
+
+/**
+ * Swap requests for one shift; at most one `PENDING` request per shift
+ * (`specs/04-oncall.md` §4a.5).
+ */
+export const oncallSwapRequests = pgTable(
+  'oncall_swap_requests',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    shiftId: uuid('shift_id')
+      .notNull()
+      .references(() => oncallShifts.id, { onDelete: 'cascade' }),
+    requestedByUserId: uuid('requested_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    targetUserId: uuid('target_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    status: text('status').notNull().default('PENDING'),
+    acceptedByUserId: uuid('accepted_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    acceptedAt: timestamp('accepted_at', timestampOptions),
+    approvedByUserId: uuid('approved_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    approvedAt: timestamp('approved_at', timestampOptions),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('oncall_swap_requests_shift_id_idx').on(table.shiftId),
+    uniqueIndex('oncall_swap_requests_one_pending_per_shift')
+      .on(table.shiftId)
+      .where(sql`${table.status} = 'PENDING'`),
+    check(
+      'oncall_swap_requests_status_check',
+      sql`${table.status} IN (${checkList(ONCALL_SWAP_STATES)})`,
+    ),
+  ],
+)
+
+/**
+ * Append-only audit trail of on-call actions (`specs/04-oncall.md` §4a.4,
+ * §4a.5, `PLAN.md` §15 Audit). `client_uuid` makes confirm/decline replays
+ * idempotent. UPDATE and direct DELETE are blocked by the
+ * `oncall_event_append_only` trigger of migration 0020; only the `ON DELETE
+ * CASCADE` of a shift removes its events.
+ */
+export const oncallEvents = pgTable(
+  'oncall_events',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    shiftId: uuid('shift_id')
+      .notNull()
+      .references(() => oncallShifts.id, { onDelete: 'cascade' }),
+    actorKind: text('actor_kind').notNull(),
+    /** NULL for `system` actors. */
+    actorUserId: uuid('actor_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    payload: jsonb('payload').notNull().default({}),
+    /** Idempotency key for confirm/decline replays; NULL otherwise. */
+    clientUuid: uuid('client_uuid'),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('oncall_events_shift_id_idx').on(table.shiftId),
+    uniqueIndex('oncall_events_client_uuid_key').on(table.clientUuid),
+    check(
+      'oncall_events_actor_kind_check',
+      sql`${table.actorKind} IN (${checkList(ONCALL_EVENT_ACTOR_KINDS)})`,
+    ),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -742,3 +907,14 @@ export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
 export type TicketSource = (typeof TICKET_SOURCES)[number]
 export type TicketEventActorKind = (typeof TICKET_EVENT_ACTOR_KINDS)[number]
+export type OnCallPool = typeof oncallPools.$inferSelect
+export type NewOnCallPool = typeof oncallPools.$inferInsert
+export type OnCallShift = typeof oncallShifts.$inferSelect
+export type NewOnCallShift = typeof oncallShifts.$inferInsert
+export type OnCallShiftState = (typeof ONCALL_SHIFT_STATES)[number]
+export type OnCallSwapRequest = typeof oncallSwapRequests.$inferSelect
+export type NewOnCallSwapRequest = typeof oncallSwapRequests.$inferInsert
+export type OnCallSwapState = (typeof ONCALL_SWAP_STATES)[number]
+export type OnCallEvent = typeof oncallEvents.$inferSelect
+export type NewOnCallEvent = typeof oncallEvents.$inferInsert
+export type OnCallEventActorKind = (typeof ONCALL_EVENT_ACTOR_KINDS)[number]

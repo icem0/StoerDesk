@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `work-packages/m8/`, implemented in numeric order; the exit criterion is the DST and
   atomic-swap test of WP-M8-16. No product code in this commit.
 
+- The on-call schema lands with migration `0020_oncall_tables` (WP-M8-02):
+  `oncall_pools` (unique case-insensitive trimmed name, optional `group_id` with
+  `ON DELETE SET NULL`), `oncall_shifts` (range index on
+  `(pool_id, starts_at, ends_at)`, unique `(pool_id, starts_at)`, six-state check,
+  `ends_at > starts_at`), `oncall_swap_requests` (partial unique `PENDING` per
+  shift) and append-only `oncall_events` with a unique nullable `client_uuid` for
+  idempotent confirm/decline replays. The `oncall_event_append_only` trigger
+  blocks `UPDATE` and direct `DELETE`; the `ON DELETE CASCADE` of a shift still
+  passes (`stoerdesk.allow_oncall_event_delete` session bypass, like ticket
+  hard-delete). Covered by
+  `apps/api/src/db/__tests__/oncallTables.integration.spec.ts`.
+
 - The Web Push channel sends notifications to installed PWAs (WP-M7-09): `apps/api/src/notifications/channels/web-push.ts`
   is the sixth channel adapter of the phase-7 chain and delivers `${title}\n${body}` plus the
   `\n\n<label>: <pwaUrl>` deep link labelled `t(locale, 'notification.action_label')` through the

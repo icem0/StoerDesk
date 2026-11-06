@@ -1141,7 +1141,7 @@ before any migration runs; `BACKUP_RETENTION_DAYS` also bounds these dumps. The 
 `backup` profile service is unchanged. `npm run check` and `npm run build` are green; the
 Docker commands of §18.1 are unverified in this container (no Docker daemon).
 
-**Phase 8 is split and started (WP-M8-01).** Phase 7 is complete, so the roadmap moves
+**Phase 8 is split and started (WP-M8-01, WP-M8-02).** Phase 7 is complete, so the roadmap moves
 to phase 8 (on-call calendar). The phase had no work packages and `specs/04-oncall.md`
 was a placeholder, so the split required by §16 happened before any code: **WP-M8-01**
 fills the slice, resolves the open swap-approval decision with ADR-0011 (approval
