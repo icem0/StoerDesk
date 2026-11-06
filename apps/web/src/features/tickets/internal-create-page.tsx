@@ -181,27 +181,25 @@ export function InternalCreatePage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          {search.trim() !== '' ? (
-            <div className="flex flex-col gap-1 border border-slate-700 rounded bg-slate-900/80">
-              {objects.length === 0 ? (
-                <div className="p-2 text-xs text-slate-400">
-                  {t('internal.create.errors.noMatch')}
-                </div>
-              ) : (
-                objects.map((object) => (
-                  <button
-                    key={object.id}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                    type="button"
-                    onClick={() => pickObject(object)}
-                  >
-                    <span className="font-mono text-slate-400">{object.objectNo}</span>
-                    <span>{object.name}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          ) : null}
+          <div className="flex flex-col gap-1 border border-slate-700 rounded bg-slate-900/80">
+            {objects.length === 0 ? (
+              <div className="p-2 text-xs text-slate-400">
+                {search.trim() !== '' ? t('internal.create.errors.noMatch') : t('internal.create.errors.noObjects')}
+              </div>
+            ) : (
+              objects.map((object) => (
+                <button
+                  key={object.id}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                  type="button"
+                  onClick={() => pickObject(object)}
+                >
+                  <span className="font-mono text-slate-400">{object.objectNo}</span>
+                  <span>{object.name}</span>
+                </button>
+              ))
+            )}
+          </div>
           {pickedObject !== undefined ? (
             <p className="text-xs text-slate-400">
               <span className="font-mono">{pickedObject.objectNo}</span>{' — '}

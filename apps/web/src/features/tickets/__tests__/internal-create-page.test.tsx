@@ -39,6 +39,46 @@ function stubTicketError(code: string, status: number) {
   )
 }
 
+function stubMultipleObjects() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const path = String(input)
+
+      if (path.includes('/v1/tickets')) {
+        return Response.json({ ok: true }, { status: 201 })
+      }
+
+      if (path.includes('/v1/text-templates')) {
+        return Response.json({ templates: [] })
+      }
+
+      return Response.json({
+        objects: [
+          {
+            id: '33333333-3333-4333-8333-333333333333',
+            objectNo: '10000_01',
+            name: 'Feuerwache',
+            systems: [],
+          },
+          {
+            id: OBJECT_ID,
+            objectNo: '12345_01',
+            name: 'Rathaus',
+            systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
+          },
+          {
+            id: '44444444-4444-4444-8444-444444444444',
+            objectNo: '90000_01',
+            name: 'Schule',
+            systems: [],
+          },
+        ],
+      })
+    }),
+  )
+}
+
 function stubNetworkFailure() {
   vi.stubGlobal(
     'fetch',
@@ -155,5 +195,29 @@ describe('InternalCreatePage', () => {
     await waitFor(() =>
       expect(screen.getByText('Die Meldung konnte nicht erstellt werden.')).toBeTruthy(),
     )
+  })
+
+  it('shows all objects sorted by default and filters them live while typing', async () => {
+    stubMultipleObjects()
+    renderPage()
+
+    // The picker is open immediately — no typing required — and sorted by objectNo.
+    await screen.findByText('10000_01')
+    await screen.findByText('12345_01')
+    await screen.findByText('90000_01')
+
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+    fireEvent.change(searchInput, { target: { value: 'schule' } })
+
+    // Live filter: only the matching object remains (debounced).
+    await waitFor(() => expect(screen.queryByText('12345_01')).toBeNull())
+    await waitFor(() => expect(screen.queryByText('10000_01')).toBeNull())
+    await screen.findByText('90000_01')
+
+    // Clearing the search shows all objects again, still sorted.
+    fireEvent.change(searchInput, { target: { value: '' } })
+    await screen.findByText('10000_01')
+    await screen.findByText('12345_01')
+    await screen.findByText('90000_01')
   })
 })
