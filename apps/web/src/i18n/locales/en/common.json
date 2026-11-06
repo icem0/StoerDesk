@@ -40,14 +40,18 @@
  "hintTitleEnabled": "Whether the report form also collects a short ticket title: it is only offered while the checkbox is switched on.",
  "field": {
   "companyName": "Company name",
-  "titleEnabled": "Enable ticket title collection?"
+  "titleEnabled": "Enable ticket title collection?",
+  "logo": "Company logo"
  },
+ "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",
+ "logoRemove": "Remove logo",
   "save": "Save",
   "saved": "Saved.",
   "errors": {
    "session_invalid": "Your session has expired. Please sign in again.",
    "forbidden": "You are not authorized to change the branding.",
    "invalid_request": "The company name is invalid.",
+   "logoInvalid": "The logo is invalid (PNG/JPEG, at most 500 kB).",
    "unknown": "An unexpected error occurred."
   }
  },

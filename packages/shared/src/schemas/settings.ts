@@ -7,16 +7,21 @@ import { z } from 'zod'
  * `companyName` is what an admin configures in the administration
  * (WP-M2-30). The empty string means "no company name configured — show the
  * product name alone" (WP-M2-31).
+ *
+ * `logo` (WP-M4-09) is an optional base64 data URL of the company logo. The
+ * empty string means "no logo — show only the product name / company name".
  */
 
 export const brandingResponseSchema = z.object({
   companyName: z.string().max(80),
   titleEnabled: z.boolean(),
+  logo: z.string(),
 })
 
 export const updateBrandingRequestSchema = z.object({
   companyName: z.string().trim().max(80),
   titleEnabled: z.boolean().default(false),
+  logo: z.string().optional(),
 })
 
 export type BrandingResponse = z.infer<typeof brandingResponseSchema>

@@ -40,14 +40,18 @@
  "hintTitleEnabled": "If a short title is to be collected via the Meldeformular: it is only offered as long as the checkbox is switched on.",
  "field": {
   "companyName": "Firmenname",
-  "titleEnabled": "Ticket titel collecting enabled?"
+  "titleEnabled": "Ticket titel collecting enabled?",
+  "logo": "Firmenlogo"
  },
+ "hintLogo": "PNG oder JPEG, höchstens 500 kB. Wird im Header, in PDFs und E-Mails verwendet.",
+ "logoRemove": "Logo entfernen",
   "save": "Speichern",
   "saved": "Gespeichert.",
   "errors": {
    "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
    "forbidden": "Sie sind nicht autorisiert, die Beschriftung zu ändern.",
    "invalid_request": "Der Firmenname ist ungültig.",
+   "logoInvalid": "Das Logo ist ungültig (PNG/JPEG, maximal 500 kB).",
    "unknown": "Ein unerwarteter Fehler ist aufgetreten."
   }
  },

@@ -84,7 +84,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false }),
+        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '' }),
       }),
     )
   })
@@ -113,7 +113,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '' }),
       }),
     )
   })

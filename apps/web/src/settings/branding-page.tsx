@@ -11,14 +11,27 @@ import type { BrandingResponse, UpdateBrandingRequest } from '@stoerdesk/shared'
 
 /**
  * Administration page for the public branding (WP-M2-30). An administrator
- * configures the company name that is shown next to the logo in the shell
- * header (WP-M2-31). The server guard (`settings.write`) is the only
- * enforcement point; the UI hides the save button without the permission.
+ * configures the company name and an optional company logo that is shown next
+ * to the name in the shell header (WP-M2-31, WP-M4-09). The logo travels as a
+ * base64 data URL inside the `branding` settings row, so every branded view
+ * (header, PDF, e-mail) can render it without an extra round trip.
  */
 
 const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
 
 const jsonHeaders = { 'content-type': 'application/json' }
+
+/** At most 500 kB of logo payload (mirrors the server cap). */
+const MAX_LOGO_BYTES = 500 * 1024
+
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
 
 function errorMessage(t: TFunction<'common'>, error: unknown): string {
   const code =
@@ -27,6 +40,15 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
     (handledErrorCodes as readonly string[]).includes(error.code)
       ? error.code
       : 'unknown'
+
+  const fields =
+    error instanceof ApiError && error.params && Array.isArray(error.params.fields)
+      ? (error.params.fields as string[])
+      : []
+
+  if (code === 'invalid_request' && fields.includes('logo')) {
+    return t('branding.errors.logoInvalid')
+  }
 
   return t(`branding.errors.${code}`)
 }
@@ -37,12 +59,16 @@ export function BrandingPage() {
   const mayWrite = usePermission('settings.write')
   const queryClient = useQueryClient()
   const [saved, setSaved] = useState(false)
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState<string | null>(null)
 
   const branding = useQuery({
     queryKey: ['branding'],
     queryFn: () => apiFetch<BrandingResponse>('/v1/settings/branding'),
     retry: false,
   })
+
+  const currentLogo = branding.data?.logo ?? ''
 
   const mutation = useMutation({
     mutationFn: (body: UpdateBrandingRequest) =>
@@ -54,6 +80,8 @@ export function BrandingPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['branding'] })
       setSaved(true)
+      setLogoDataUrl(null)
+      setLogoError(null)
     },
   })
 
@@ -95,10 +123,14 @@ export function BrandingPage() {
         className="mt-6 flex flex-col gap-3 rounded border border-slate-700 bg-slate-900 p-4"
         onSubmit={(event) => {
           event.preventDefault()
+          setLogoError(null)
           const form = new FormData(event.currentTarget)
+          const logoToSend =
+            logoDataUrl === null ? currentLogo : logoDataUrl
           mutation.mutate({
             companyName: String(form.get('companyName') ?? ''),
             titleEnabled: form.get('titleEnabled') === 'on',
+            logo: logoToSend,
           })
         }}
       >
@@ -122,6 +154,74 @@ export function BrandingPage() {
             type="checkbox"
           />
         </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          {t('branding.field.logo')}
+          <input
+            accept="image/jpeg,image/png"
+            disabled={!mayWrite || mutation.isPending}
+            onChange={(event) => {
+              setLogoError(null)
+              const file = event.target.files?.[0] ?? null
+              if (file === null) {
+                setLogoDataUrl(null)
+                return
+              }
+              if (
+                !file.type.includes('jpeg') &&
+                !file.type.includes('png')
+              ) {
+                setLogoError(t('branding.errors.logoInvalid'))
+                setLogoDataUrl(null)
+                return
+              }
+              if (file.size > MAX_LOGO_BYTES) {
+                setLogoError(t('branding.errors.logoInvalid'))
+                setLogoDataUrl(null)
+                return
+              }
+              void readAsDataUrl(file).then((dataUrl) => {
+                setLogoError(null)
+                setLogoDataUrl(dataUrl)
+              })
+            }}
+            type="file"
+          />
+        </label>
+        <p className="text-xs text-slate-400">{t('branding.hintLogo')}</p>
+
+        {currentLogo && !logoDataUrl && (
+          <div className="flex items-center gap-2">
+            <img
+              src={currentLogo}
+              alt={t('branding.field.logo')}
+              className="h-10 w-auto rounded border border-slate-700 bg-slate-800"
+            />
+            <button
+              type="button"
+              disabled={!mayWrite || mutation.isPending}
+              className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+              onClick={() => {
+                setLogoError(null)
+                setLogoDataUrl('')
+              }}
+            >
+              {t('branding.logoRemove')}
+            </button>
+          </div>
+        )}
+        {logoDataUrl !== null && logoDataUrl !== '' && (
+          <div className="flex items-center gap-2">
+            <img
+              src={logoDataUrl}
+              alt={t('branding.field.logo')}
+              className="h-10 w-auto rounded border border-sky-500 bg-slate-800"
+            />
+          </div>
+        )}
+        {logoError !== null && (
+          <p role="alert" className="text-xs text-rose-400">{logoError}</p>
+        )}
         {mutation.isError ? (
           <p role="alert" className="text-sm text-red-400">
             {errorMessage(t, mutation.error)}
