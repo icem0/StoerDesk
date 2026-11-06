@@ -385,5 +385,25 @@
     "source": "Quelle",
     "noPhotos": "Keine Fotos.",
     "printHint": "Drucken und als PDF speichern (Strg+P / Cmd+P)."
+  },
+  "email": {
+    "title": "Vorgang {{ticketNo}} per E-Mail",
+    "write": "E-Mail schreiben",
+    "subject": "StörDesk – Vorgang {{ticketNo}}",
+    "bodyGreeting": "Hallo,",
+    "bodyTicket": "Vorgangsnummer: {{ticketNo}}",
+    "bodyObject": "Objekt: {{object}} ({{objectNo}})",
+    "bodyStatus": "Status: {{status}}",
+    "bodyPriority": "Priorität: {{priority}}",
+    "bodyReported": "Gemeldet am: {{reportedAt}}",
+    "bodyDescription": "Beschreibung: {{description}}",
+    "object": "Objekt",
+    "objectNo": "Objektnummer",
+    "status": "Status",
+    "priority": "Priorität",
+    "reportedAt": "Gemeldet am",
+    "deadlineAt": "Frist bis",
+    "erfasser": "Erfasser",
+    "source": "Quelle"
   }
 }
