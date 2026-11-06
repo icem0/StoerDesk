@@ -19,6 +19,17 @@ const ONCALL_KEYS = [
 
 type OncallSettingKey = (typeof ONCALL_KEYS)[number]
 
+const SETTING_KEY_TO_CAMEL: Record<OncallSettingKey, keyof OncallSettings> = {
+  'oncall.week_start_weekday': 'weekStartWeekday',
+  'oncall.start_time': 'startTime',
+  'oncall.duration_days': 'durationDays',
+  'oncall.swap_requires_admin_approval': 'swapRequiresAdminApproval',
+  'oncall.escalate_to_group_after_min': 'escalateToGroupAfterMin',
+  'oncall.reminder_unconfirmed_h': 'reminderUnconfirmedH',
+  'oncall.unfilled_warning_days': 'unfilledWarningDays',
+  'oncall.default_pool_id': 'defaultPoolId',
+}
+
 function asOncallSettingKey(key: string): OncallSettingKey | undefined {
   return ONCALL_KEYS.includes(key as OncallSettingKey) ? (key as OncallSettingKey) : undefined
 }
@@ -49,8 +60,10 @@ export async function readOncallSettings(database: Db): Promise<OncallSettings> 
   const values: Record<string, unknown> = {}
 
   for (const row of rows) {
-    if (typeof row.key === 'string' && row.key.startsWith('oncall.')) {
-      values[row.key] = row.value
+    const settingKey = typeof row.key === 'string' ? asOncallSettingKey(row.key) : undefined
+
+    if (settingKey !== undefined) {
+      values[SETTING_KEY_TO_CAMEL[settingKey]] = row.value
     }
   }
 
@@ -61,7 +74,7 @@ export async function writeOncallSettings(
   database: Db,
   patch: Record<string, unknown>,
 ): Promise<OncallSettings> {
-  const entries: Array<[string, unknown]> = []
+  const entries: Array<[OncallSettingKey, unknown]> = []
 
   for (const [key, value] of Object.entries(patch)) {
     const settingKey = asOncallSettingKey(key)
@@ -90,7 +103,7 @@ export async function writeOncallSettings(
   }
 
   for (const [key, value] of entries) {
-    merged[key] = value
+    merged[SETTING_KEY_TO_CAMEL[key]] = value
   }
 
   const resolved = resolveOncallSettings(merged)
