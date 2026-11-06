@@ -413,6 +413,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-92e | theme select in the user settings (users page)                      | done                    | yes     |
 | WP-M2-93  | `users.given_name`/`users.family_name` and migration 0018          | done                    | yes     |
 | WP-M2-94  | name fields in the shared schemas and the admin user API            | planned                 | yes     |
+| WP-M2-95  | internal ticket creation honours the branding title switch          | done                    | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |
