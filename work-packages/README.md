@@ -472,9 +472,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-10  | matrix and signal channels — locale, deep link and the localized label | done                    | yes     |
 | WP-M8-01  | phase-8 specification, ADR-0011 and the work-package split          | done                    | yes     |
 | WP-M8-02  | on-call tables and migration 0020                                   | done                    | yes     |
-| WP-M8-03  | DST-safe on-call slot calculation                                   | planned                 | yes     |
-| WP-M8-04  | on-call pool API                                                    | planned                 | yes     |
-| WP-M8-05  | on-call settings and shift planning service                         | planned                 | yes     |
+| WP-M8-03  | DST-safe on-call slot calculation                                   | done                    | yes     |
+| WP-M8-04  | on-call pool API                                                    | done                    | yes     |
+| WP-M8-05  | on-call settings and shift planning service                         | done                    | yes     |
 | WP-M8-06  | on-call shift and settings routes                                   | planned                 | yes     |
 | WP-M8-07  | shift confirm and decline                                           | planned                 | yes     |
 | WP-M8-08  | swap request and atomic acceptance service                          | planned                 | yes     |
