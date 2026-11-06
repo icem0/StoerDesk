@@ -92,14 +92,14 @@ describe('RolesPage', () => {
     expect(screen.queryByText('Rolle anlegen')).toBeNull()
   })
 
-  it('offers create and edit controls with role.write and keeps system roles read-only', async () => {
+  it('offers create and edit controls with role.write; only admin stays read-only', async () => {
     stubRoutes({ '/v1/me': meResponse(['role.read', 'role.write']), '/v1/roles': roleList })
     renderPage()
 
     expect(await screen.findByText('dispatcher')).toBeTruthy()
     expect(screen.getByText('Rolle anlegen')).toBeTruthy()
-    expect(screen.getByText('Bearbeiten')).toBeTruthy()
-    expect(screen.getAllByText('schreibgeschützt')).toHaveLength(2)
+    expect(screen.getAllByText('Bearbeiten')).toHaveLength(2)
+    expect(screen.getAllByText('schreibgeschützt')).toHaveLength(1)
   })
 
   it('shows the session notice when /me answers 401', async () => {
