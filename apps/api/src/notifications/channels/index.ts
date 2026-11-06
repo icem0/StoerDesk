@@ -70,6 +70,19 @@ const emailChannel = async (env: Env, message: NotificationMessage): Promise<voi
   )
 }
 
+const telegramChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+  const { sendTelegramNotification } = await import('./telegram.js')
+
+  await sendTelegramNotification(
+    {
+      token: env.TELEGRAM_BOT_TOKEN,
+      chatId: env.TELEGRAM_CHAT_ID,
+    },
+    message,
+    env.PWA_URL,
+  )
+}
+
 /**
  * Notification channels that are configured in the environment.
  *
@@ -104,6 +117,13 @@ export function configuredChannels(env: Env): NotificationChannel[] {
     channels.push({
       name: 'email',
       send: (message) => emailChannel(env, message),
+    })
+  }
+
+  if (env.TELEGRAM_BOT_TOKEN !== '' && env.TELEGRAM_CHAT_ID !== '') {
+    channels.push({
+      name: 'telegram',
+      send: (message) => telegramChannel(env, message),
     })
   }
 

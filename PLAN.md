@@ -764,6 +764,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-05  | the notification channel fallback chain                                      | done    |
 | WP-M7-06  | the phase-7 exit criterion and record                                        | done    |
 | WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done    |
+| WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                   | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1076,6 +1077,21 @@ deep link labelled `t(locale, 'notification.action_label')`, no photo, no contac
 signal → matrix → ntfy → email; `drainOutbox`, `escalationChain` and migration `0019` needed
 no change. Telegram and Web Push (VAPID) keep their own WPs, and the user choice of channels
 per event type plus the mandatory minimum for `critical` (§12 admin rule) stay unimplemented.
+
+**Phase 7 continued — the Telegram channel (WP-M7-08).** `PLAN.md` §12 lists Telegram as an
+external channel and the `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` keys are already part of the
+environment, so WP-M7-08 adds the fifth channel to the chain:
+`apps/api/src/notifications/channels/telegram.ts` posts the notification as JSON (`chat_id`,
+`text`) to `sendMessage` of the Telegram Bot API with plain `fetch` — no library, no ADR, the
+transport of ntfy and Matrix — keeping the adapter shape of WP-M7-07 (`TelegramConfig` from the
+`TELEGRAM_*` keys, `TelegramError` with the codes `no_token` and `http_error`, `fetch` as its
+injectable last parameter) and the message content of WP-M7-04 (`${title}\n${body}` plus a
+`\n\n<label>: <pwaUrl>` deep link labelled `t(locale, 'notification.action_label')`, no photo,
+no contact data). `configuredChannels(env)` gained the `telegram` entry — configured only when
+both keys are set — appended last, so the escalation chain of WP-M7-05 is now signal → matrix
+→ ntfy → email → telegram; `drainOutbox`, `escalationChain` and migration `0019` needed no
+change. Web Push (VAPID) keeps its own WP and the Telegram account linking via a one-time code
+(§12) stays unimplemented.
 
 **Repair — red CI runs of WP-M4-07 / WP-M7-02 / WP-M7-03 / WP-M7-04 / WP-M7-04b
 (v1.0.25 … v1.0.29).** WP-M4-07 moved every workflow action into one dropdown menu but

@@ -17,7 +17,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 15  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter | 9 |
+| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter | 10 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -208,6 +208,19 @@ contact data). `configuredChannels(env)` gained the `email` entry — configured
 `SMTP_HOST` and `SMTP_FROM` are set — appended last, so the escalation chain of WP-M7-05
 is signal → matrix → ntfy → email; the worker, `escalationChain` and migration `0019`
 needed no change.
+
+**WP-M7-08** (`08-telegram-channel-adapter.md`) is **implemented** as the Telegram channel:
+`apps/api/src/notifications/channels/telegram.ts` posts the notification as JSON (`chat_id`,
+`text`) to `sendMessage` of the Telegram Bot API with plain `fetch` — no library, no ADR, the
+transport of ntfy and Matrix — keeping the adapter shape of WP-M7-07 (`TelegramConfig` from the
+existing `TELEGRAM_*` keys, `TelegramError` with `no_token`/`http_error`, `fetch` as its
+injectable last parameter) and the message content of WP-M7-04 (`${title}\n${body}` plus a
+`\n\n<label>: <pwaUrl>` deep link labelled `t(locale, 'notification.action_label')`, no photo,
+no contact data). `configuredChannels(env)` gained the `telegram` entry — configured only when
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are both set — appended last, so the escalation
+chain of WP-M7-05 is now signal → matrix → ntfy → email → telegram; the worker, `escalationChain`
+and migration `0019` needed no change. Telegram account linking via a one-time code (§12) and
+Web Push (VAPID) stay later WPs.
 
 ## Open follow-ups
 
@@ -437,6 +450,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-05  | the notification channel fallback chain                                       | done                    | yes     |
 | WP-M7-06  | the phase-7 exit criterion and record                                         | done                    | yes     |
 | WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done                    | yes     |
+| WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The Telegram channel sends notifications over the Telegram Bot API (WP-M7-08): `apps/api/src/notifications/channels/telegram.ts`
+  is the fifth channel adapter of the phase-7 chain and posts the notification as JSON (`chat_id`,
+  `text`) to `sendMessage` of an existing bot with plain `fetch` — no library, no ADR, the transport
+  of ntfy and Matrix. It keeps the adapter shape of WP-M7-07 — `TelegramConfig` from the existing
+  `TELEGRAM_*` keys, `TelegramError` with the codes `no_token` (no request) and `http_error` (status
+  only, never the token), `fetch` as its injectable last parameter — and the message content of
+  WP-M7-04: `${title}\n${body}` plus a `\n\n<label>: <pwaUrl>` deep link labelled
+  `t(locale, 'notification.action_label')` while a PWA url exists, never a photo, never contact
+  data. `configuredChannels(env)` gained the `telegram` entry (configured when `TELEGRAM_BOT_TOKEN`
+  and `TELEGRAM_CHAT_ID` are both set, appended last), so the escalation chain of WP-M7-05 is now
+  signal → matrix → ntfy → email → telegram; `drainOutbox`, `escalationChain` and migration `0019`
+  needed no change. Telegram account linking via a one-time code and Web Push (VAPID) keep their
+  own WPs.
+
 - The CI pipeline is hardened (WP-M1-28). `.husky/pre-push` refuses a push with more
   than three tags, because GitHub creates no tag push event for such a batch, and
   `AGENTS.md` now requires a push after every work package. The `promote` job of
