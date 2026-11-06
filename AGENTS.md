@@ -98,6 +98,12 @@ Docker checks a Docker-related WP adds and which development commands exist is
   (`git commit -s`).
 - **One work package = one commit.** The subject names the work package
   (e.g. `feat(web): WP-M1-09 admin ui users and roles`).
+- **Push after every work package.** Run `git push --follow-tags` immediately
+  after the commit; never collect several work packages into one push. GitHub
+  creates no tag push event when more than three tags arrive at once, so a batch
+  push leaves the older commits without a check run and without published images.
+  `.husky/pre-push` refuses a push with more than three tags. `npm run release:push`
+  stays the command that pushes the branch plus older missing tags, one tag per push.
 - `commitlint` enforces the format and the sign-off (Husky hook `commit-msg`).
 - Never commit secrets, tokens or PII.
 

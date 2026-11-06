@@ -29,6 +29,8 @@ recognisable by its children: `WP-M1-07` → `WP-M1-07b`, `WP-M1-09` → `WP-M1-
 `WP-M2-19d`. `WP-M1-23` … `WP-M1-27` are **retroactive records**: they do not announce
 work, they document phase 1 commits that landed without a work package, so that the
 record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
+**WP-M1-28** hardens the CI chain itself: the pre-push tag guard, the publish-gated
+promotion, the post-promote deploy job and the Docker smoke test that no longer skips.
 
 ## Status
 
@@ -295,6 +297,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M1-25  | record of the CI db tests and publish queue (3 commits)             | done                    | yes     |
 | WP-M1-26  | record of the configurable login rate limit (2 commits)             | done                    | yes     |
 | WP-M1-27  | record of the end-of-session commit rule (7e64dd1)                  | done                    | yes     |
+| WP-M1-28  | CI hardening: pre-push guard, promote gate, deploy job, smoke fails  | done                    | yes     |
 | WP-M2-25  | grouped settings menu in the shell                                  | done                    | yes     |
 | WP-M2-26  | back links in the admin pages                                       | done                    | yes     |
 | WP-M2-27  | show a hint when internal ticket creation fails                     | done                    | yes     |

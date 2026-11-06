@@ -186,6 +186,40 @@ logging to `deploy-hook.log`.
 - **Without a hook** leave `UPDATE_WEBHOOK_URL` empty: the check still works and
   the start button says that no deploy webhook is configured.
 
+### Deploy after a publish (CI)
+
+The `publish images` workflow (`build.yml`) deploys after a successful build and
+promotion: the `deploy` job runs only when both images were published and
+`promote` moved `latest`, and only when its version is the highest `v[0-9]*` tag
+in the repository. A late older run therefore never overwrites a newer
+deployment.
+
+Two repository secrets configure it:
+
+| Secret                  | Meaning                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `DEPLOY_WEBHOOK_URL`    | URL of the redeploy receiver, for example `https://deploy.example.org/hooks/deploy`; empty skips the job with a notice |
+| `DEPLOY_WEBHOOK_SECRET` | Shared secret of the receiver; empty skips the job with a notice                              |
+
+The job sends `POST` with a JSON body and a 30-second timeout:
+
+```json
+{ "version": "v1.0.34", "sha": "<full commit sha>" }
+```
+
+It sends the HMAC-SHA256 of the body as
+`X-Signature-256: sha256=<hex>` (key `DEPLOY_WEBHOOK_SECRET`) and — for the
+receiver shipped in this repository — also `X-Deploy-Token:
+$DEPLOY_WEBHOOK_SECRET`. `scripts/deploy-hook.mjs` authenticates with
+`X-Deploy-Token` and ignores the body, so set `DEPLOY_HOOK_TOKEN` to the same
+value as `DEPLOY_WEBHOOK_SECRET`. The job writes the version, the HTTP status
+and `deployed` or `skipped` into its step summary.
+
+The shipped hook binds to the Docker bridge and is reachable from the host and
+its containers, not from a GitHub-hosted runner. Use a receiver the runner can
+reach (a small public endpoint or a self-hosted runner on the Docker network), or
+leave `DEPLOY_WEBHOOK_URL` empty and keep the manual host update.
+
 ## Configuration
 
 `.env.example` documents every variable with its purpose and default.

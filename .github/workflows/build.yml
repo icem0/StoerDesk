@@ -197,6 +197,9 @@ jobs:
   # happened to finish last. The promotion reads the registry, takes the highest version
   # tag that really exists there and points `latest` at that manifest.
   #
+  # Promotion waits for a successful publish of both images: a failed api build must
+  # not leave `latest` with a new web image and an old api image.
+  #
   # The promotions of one image are serialised: the group is per image, so the read of
   # the registry and the write of `latest` never interleave with another promotion of
   # the same image and `latest` can only move forward. The api image and the web image
@@ -204,7 +207,7 @@ jobs:
   promote:
     name: Promote latest for ${{ matrix.service }}
     needs: [version, publish]
-    if: ${{ !cancelled() }}
+    if: ${{ needs.publish.result == 'success' }}
     runs-on: ubuntu-latest
     concurrency:
       group: latest-${{ matrix.service }}
@@ -256,3 +259,78 @@ jobs:
             echo "- version: \`${VERSION}\`"
             echo "- \`latest\`: \`${image}:latest\` -> \`${newest}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # The redeploy is a host concern (`docs/DEPLOYMENT.md`): the documented receiver is
+  # `POST <webhook>` with `X-Deploy-Token` and ignores the body. The job only runs after
+  # both images were published and promoted, and only for the highest version tag, so a
+  # late older run cannot overwrite a newer deployment. A missing webhook is a notice,
+  # not a red run: a deployment without a redeploy target stays valid.
+  deploy:
+    name: Deploy ${{ needs.version.outputs.version }}
+    needs: [version, publish, promote]
+    if: ${{ needs.promote.result == 'success' }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Deploy the promoted version
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+          VERSION: ${{ needs.version.outputs.version }}
+          SHA: ${{ needs.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          summary() {
+            {
+              echo "## Deploy ${VERSION}"
+              echo ""
+              echo "- version: \`${VERSION}\`"
+              echo "- HTTP status: ${1}"
+              echo "- result: ${2}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then
+            summary "n/a" "skipped, DEPLOY_WEBHOOK_URL is not configured"
+            exit 0
+          fi
+
+          if [ -z "${DEPLOY_WEBHOOK_SECRET}" ]; then
+            summary "n/a" "skipped, DEPLOY_WEBHOOK_SECRET is not configured"
+            exit 0
+          fi
+
+          newest=$(git tag --list --sort=-v:refname 'v[0-9]*' | head -n 1)
+          if [ "${VERSION}" != "${newest}" ]; then
+            summary "n/a" "skipped, newer version exists (${newest})"
+            exit 0
+          fi
+
+          body=$(jq -cn --arg version "${VERSION}" --arg sha "${SHA}" '{version: $version, sha: $sha}')
+          signature=$(printf '%s' "${body}" | openssl dgst -sha256 -hmac "${DEPLOY_WEBHOOK_SECRET}" -hex | awk '{print $NF}')
+
+          status=000
+          if ! status=$(curl --fail --silent --show-error --max-time 30 \
+            --output /dev/null --write-out '%{http_code}' \
+            --request POST "${DEPLOY_WEBHOOK_URL}" \
+            --header 'content-type: application/json' \
+            --header "X-Signature-256: sha256=${signature}" \
+            --header "X-Deploy-Token: ${DEPLOY_WEBHOOK_SECRET}" \
+            --data "${body}"); then
+            summary "${status:-000}" "failed"
+            exit 1
+          fi
+
+          summary "${status}" "deployed"

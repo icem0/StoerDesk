@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The CI pipeline is hardened (WP-M1-28). `.husky/pre-push` refuses a push with more
+  than three tags, because GitHub creates no tag push event for such a batch, and
+  `AGENTS.md` now requires a push after every work package. The `promote` job of
+  `build.yml` runs only after a successful `publish`, so a failed image build cannot
+  split `latest`. A new `deploy` job runs after `promote`, only for the highest
+  `v[0-9]*` tag, and calls `DEPLOY_WEBHOOK_URL` with `X-Signature-256` and
+  `X-Deploy-Token`; a missing target is a skipped notice. `docs/DEPLOYMENT.md`
+  documents both secrets and the payload. The `docker-smoke` job now fails when the
+  runner has no usable Docker instead of skipping silently.
+
 - A database dump is forced before the API applies pending migrations (WP-M3-17):
   `docker-compose.yml` gained the one-shot `db-backup-pre-migrate` service. It has no
   profile, writes and verifies `/backups/pre-migrate-<stamp>.sql.gz` in the backup

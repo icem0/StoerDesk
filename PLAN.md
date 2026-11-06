@@ -676,6 +676,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M1-25  | record: CI database tests, publish queue                            | done   |
 | WP-M1-26  | record: configurable login rate limit                               | done   |
 | WP-M1-27  | record: the end-of-session commit rule                              | done   |
+| WP-M1-28  | CI hardening: push guard, promote gate, deploy, no silent smoke     | done   |
 | WP-M2-26  | back links in the admin pages                                       | done   |
 | WP-M2-32  | record: the BMAcloud contract commit                                | done   |
 | WP-M2-33  | BMAcloud read-only client and env                                   | done   |
@@ -1268,6 +1269,15 @@ goes through the optional override `docker-compose.debug.yml`.
   leave the older commits without a check run and without published images.
   `npm run release:push` therefore pushes the branch first and every missing version
   tag in its own push, so every commit gets its own run.
+- **The pre-push hook enforces it.** `.husky/pre-push` counts the `refs/tags/*`
+  lines on stdin and refuses a push with more than three tags. Every work package is
+  pushed immediately with `git push --follow-tags`, never batched (WP-M1-28).
+- **Promotion requires a successful publish, and a deploy follows it.** The `promote`
+  job runs only when `needs.publish.result == 'success'`, so a failed image build
+  cannot split `latest`. The `deploy` job runs after `promote`, only for the highest
+  `v[0-9]*` tag, and calls `DEPLOY_WEBHOOK_URL` (HMAC `X-Signature-256` plus the
+  `X-Deploy-Token` of the documented receiver); a missing target is a skipped
+  notice, never a red run (WP-M1-28).
 - The version in the web shell is the application version produced by the
   development workflow. `.husky/pre-commit` writes the next version into the
   tracked `VERSION` file and stages it; `.husky/post-commit` tags exactly that

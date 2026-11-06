@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+# GitHub creates no tag push event when more than three tags arrive in one push,
+# so a batch push silently skips `check.yml` and the publish run. Read the refs
+# from stdin and refuse a push with more than three tags.
+
+count=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_ref" in
+    refs/tags/*) count=$((count + 1)) ;;
+  esac
+done
+
+if [ "$count" -gt 3 ]; then
+  echo "pre-push: this push carries $count tags; GitHub creates no push event for more than three." >&2
+  echo "pre-push: push one work package at a time with 'git push --follow-tags' (or 'npm run release:push')." >&2
+  exit 1
+fi
+
+exit 0

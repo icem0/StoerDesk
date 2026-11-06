@@ -91,19 +91,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # GitHub-hosted runners provide Docker; self-hosted ones might not.
+      # The smoke test is part of the gate. GitHub-hosted runners provide Docker;
+      # a runner without it cannot prove the stack, so that is a failed prerequisite,
+      # never a silent skip that lets `Dispatch publish run` continue.
       - name: Detect Docker
         id: docker
         run: |
           if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
             echo 'available=true' >>"$GITHUB_OUTPUT"
           else
-            echo 'available=false' >>"$GITHUB_OUTPUT"
-            echo 'No usable Docker on this runner - skipping the smoke test.'
+            echo 'No usable Docker on this runner - the Docker smoke test cannot be skipped.' >&2
+            exit 1
           fi
 
       - name: Smoke test
-        if: steps.docker.outputs.available == 'true'
         run: sh scripts/docker-smoke.sh
 
   # Every gate of this workflow has to be listed in `needs`: this job is the only way a
