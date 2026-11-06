@@ -5,7 +5,6 @@ import { z } from 'zod'
 import {
   confirmShiftRequestSchema,
   createShiftRequestSchema,
-  declineShiftRequestSchema,
   generateShiftsRequestSchema,
   generateShiftsResponseSchema,
   oncallShiftSchema,
@@ -27,6 +26,12 @@ type Db = Database['database']
 
 const MAX_RANGE_DAYS = 366
 const MAX_RANGE_MS = MAX_RANGE_DAYS * 24 * 60 * 60 * 1000
+
+// The reason length is checked in the service, after existence and state (409 first).
+const declineBodySchema = z.object({
+  reason: z.string().optional(),
+  clientUuid: z.string().uuid().optional(),
+})
 
 function invalidRequest(fields: string[]) {
   return { code: 'invalid_request', params: { fields } as Record<string, unknown> }
@@ -323,7 +328,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           return reply.code(400).send(invalidRequest(['id']))
         }
 
-        const parsed = confirmShiftRequestSchema.safeParse(request.body)
+        const parsed = confirmShiftRequestSchema.safeParse(request.body ?? {})
 
         if (!parsed.success) {
           return reply
@@ -371,7 +376,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           return reply.code(400).send(invalidRequest(['id']))
         }
 
-        const parsed = declineShiftRequestSchema.safeParse(request.body)
+        const parsed = declineBodySchema.safeParse(request.body ?? {})
 
         if (!parsed.success) {
           return reply
@@ -387,7 +392,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           const result = await declineShift(database, {
             shiftId,
             actorUserId: request.user?.id ?? '',
-            reason: parsed.data.reason,
+            reason: parsed.data.reason ?? '',
             clientUuid: parsed.data.clientUuid ?? null,
           })
 

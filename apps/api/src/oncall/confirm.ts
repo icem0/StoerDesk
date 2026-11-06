@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
 import { oncallEvents, oncallShifts, type OnCallShiftState } from '../db/schema'
@@ -91,22 +91,14 @@ function requireAssignedOrAdmin(
   return isAdmin(database, actorUserId)
 }
 
-async function replayedByClientUuid(
-  database: Db,
-  clientUuid: string,
-): Promise<{ replayed: true; shift: ShiftActionResult } | null> {
+async function hasReplay(database: Db, shiftId: string, clientUuid: string): Promise<boolean> {
   const [existing] = await database
     .select({ id: oncallEvents.id })
     .from(oncallEvents)
-    .where(eq(oncallEvents.clientUuid, clientUuid))
+    .where(and(eq(oncallEvents.shiftId, shiftId), eq(oncallEvents.clientUuid, clientUuid)))
     .limit(1)
 
-  if (existing === undefined) {
-    return null
-  }
-
-  // The caller re-loads the shift after this check; return a marker only.
-  return { replayed: true, shift: null as unknown as ShiftActionResult }
+  return existing !== undefined
 }
 
 /**
@@ -131,6 +123,12 @@ export async function confirmShift(
     throw new OncallConfirmError(403, 'forbidden', {})
   }
 
+  if (clientUuid !== undefined && clientUuid !== null) {
+    if (await hasReplay(database, shiftId, clientUuid)) {
+      return { replayed: true, shift: toResult(shift) }
+    }
+  }
+
   if (shift.startsAt <= new Date()) {
     throw new OncallConfirmError(409, 'oncall_shift_started', { shiftId })
   }
@@ -141,14 +139,6 @@ export async function confirmShift(
       from: shift.state,
       to: 'CONFIRMED',
     })
-  }
-
-  if (clientUuid !== undefined && clientUuid !== null) {
-    const replay = await replayedByClientUuid(database, clientUuid)
-
-    if (replay !== null) {
-      return { replayed: true, shift: toResult(shift) }
-    }
   }
 
   return await database.transaction(async (tx) => {
@@ -207,6 +197,12 @@ export async function declineShift(
     throw new OncallConfirmError(403, 'forbidden', {})
   }
 
+  if (clientUuid !== undefined && clientUuid !== null) {
+    if (await hasReplay(database, shiftId, clientUuid)) {
+      return { replayed: true, shift: toResult(shift) }
+    }
+  }
+
   if (shift.startsAt <= new Date()) {
     throw new OncallConfirmError(409, 'oncall_shift_started', { shiftId })
   }
@@ -219,12 +215,10 @@ export async function declineShift(
     })
   }
 
-  if (clientUuid !== undefined && clientUuid !== null) {
-    const replay = await replayedByClientUuid(database, clientUuid)
+  const trimmedReason = reason.trim()
 
-    if (replay !== null) {
-      return { replayed: true, shift: toResult(shift) }
-    }
+  if (trimmedReason.length < 5 || trimmedReason.length > 500) {
+    throw new OncallConfirmError(422, 'oncall_decline_reason_required', { fields: ['reason'] })
   }
 
   return await database.transaction(async (tx) => {
@@ -253,7 +247,7 @@ export async function declineShift(
       shiftId: updated.id,
       type: 'declined',
       actorUserId,
-      payload: { reason },
+      payload: { reason: trimmedReason },
       clientUuid: clientUuid ?? null,
     })
 
