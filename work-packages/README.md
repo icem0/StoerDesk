@@ -18,6 +18,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
+| [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -467,6 +468,22 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                | done                    | yes     |
 | WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)        | done                    | yes     |
 | WP-M7-10  | matrix and signal channels — locale, deep link and the localized label | done                    | yes     |
+| WP-M8-01  | phase-8 specification, ADR-0011 and the work-package split          | done                    | yes     |
+| WP-M8-02  | on-call tables and migration 0020                                   | planned                 | yes     |
+| WP-M8-03  | DST-safe on-call slot calculation                                   | planned                 | yes     |
+| WP-M8-04  | on-call pool API                                                    | planned                 | yes     |
+| WP-M8-05  | on-call settings and shift planning service                         | planned                 | yes     |
+| WP-M8-06  | on-call shift and settings routes                                   | planned                 | yes     |
+| WP-M8-07  | shift confirm and decline                                           | planned                 | yes     |
+| WP-M8-08  | swap request and atomic acceptance service                          | planned                 | yes     |
+| WP-M8-09  | swap routes                                                         | planned                 | yes     |
+| WP-M8-10  | on-call ticket coupling and warnings                                | planned                 | yes     |
+| WP-M8-11  | on-call offer timeout to the group                                  | planned                 | yes     |
+| WP-M8-12  | personal on-call iCal feed                                          | planned                 | yes     |
+| WP-M8-13  | on-call administration page                                         | planned                 | yes     |
+| WP-M8-14  | my on-call shifts page                                              | planned                 | yes     |
+| WP-M8-15  | offline shift confirm and decline                                   | planned                 | yes     |
+| WP-M8-16  | phase-8 exit criterion and record                                   | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -806,6 +823,17 @@ same family name in `seed-base.ts` and never invents a given name; `email` stays
 key. The names are not in the shared user schemas and not in the admin user API yet — that
 is the announced follow-up **WP-M2-94** (`work-packages/m2/94-user-name-fields-api.md`,
 planned).
+
+**Phase 8 is split and started (the `m8` packages).** Phase 7 is complete, so the
+roadmap moves to phase 8 (on-call calendar). The phase had no work packages and
+`specs/04-oncall.md` was still a placeholder, so the split required by `PLAN.md` §16
+happened first: **WP-M8-01** fills the slice, resolves the open swap-approval decision
+with ADR-0011 (approval defaults to `true`, local wall-clock weeks, group-based pool
+membership, default pool by setting, stateless iCal token) and names **WP-M8-02 …
+WP-M8-16** in numeric order (tables → DST slot math → pools → planning → routes →
+confirm/decline → swaps → ticket coupling → offer timeout → iCal → admin and my-shifts
+UI → offline shift actions → exit criterion). The phase-8 exit criterion "DST tests and
+atomic swap tests pass" is proven by WP-M8-16.
 
 ## Validation
 

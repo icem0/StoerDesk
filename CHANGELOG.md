@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Phase 8 (on-call calendar) is split and started (WP-M8-01): `specs/04-oncall.md` now
+  carries the reviewed contract for pools, local-time weekly slots, the six shift states,
+  confirm/decline, swap requests, ticket coupling, warnings and the personal iCal feed.
+  ADR-0011 settles the open swap-approval decision (default `true`, atomic first
+  acceptance, original technician responsible until approval) plus local wall-clock weeks
+  in `Europe/Berlin`, group-based pool membership, `oncall.default_pool_id` and the
+  stateless HMAC iCal token. The phase is split into WP-M8-02 … WP-M8-16 in
+  `work-packages/m8/`, implemented in numeric order; the exit criterion is the DST and
+  atomic-swap test of WP-M8-16. No product code in this commit.
+
 - The Web Push channel sends notifications to installed PWAs (WP-M7-09): `apps/api/src/notifications/channels/web-push.ts`
   is the sixth channel adapter of the phase-7 chain and delivers `${title}\n${body}` plus the
   `\n\n<label>: <pwaUrl>` deep link labelled `t(locale, 'notification.action_label')` through the

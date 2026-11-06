@@ -17,8 +17,7 @@ files-read:
 files-write:
 
 - apps/web/src/features/tickets/ticket-detail-page.tsx — `stornieren` / `stornierung aufheben` open a JS dialog overlay for the comment instead of an inline text field in the menu; the dialog validates the min-5-char reason and calls the existing `cancelled`/`uncancelled` transition; delete confirmation stays inline
-- apps/web/src/i18n/locales/de/ticket.json — `detail.storno.*` keys
-- apps/web/src/i18n/locales/en/ticket.json — `detail.storno.*` keys in English
+- apps/web/src/i18n/locales/{de,en}/ticket.json — `detail.storno.*` keys in both locales
 - apps/web/e2e/workflow.spec.ts — drive the options dropdown instead of the removed `select[name="ticketAction"]`
 - apps/web/e2e/offline-internal.spec.ts — same
 

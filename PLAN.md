@@ -1141,6 +1141,19 @@ before any migration runs; `BACKUP_RETENTION_DAYS` also bounds these dumps. The 
 `backup` profile service is unchanged. `npm run check` and `npm run build` are green; the
 Docker commands of §18.1 are unverified in this container (no Docker daemon).
 
+**Phase 8 is split and started (WP-M8-01).** Phase 7 is complete, so the roadmap moves
+to phase 8 (on-call calendar). The phase had no work packages and `specs/04-oncall.md`
+was a placeholder, so the split required by §16 happened before any code: **WP-M8-01**
+fills the slice, resolves the open swap-approval decision with ADR-0011 (approval
+defaults to `true`, local wall-clock weeks in `Europe/Berlin`, group-based pool
+membership, `oncall.default_pool_id`, stateless iCal token) and names **WP-M8-02 …
+WP-M8-16** in `work-packages/m8/`, implemented in numeric order: tables (02), DST slot
+math (03), pools (04), planning service (05), shift/settings routes (06),
+confirm/decline (07), swap service (08), swap routes (09), ticket coupling (10), offer
+timeout (11), iCal (12), admin page (13), my-shifts page (14), offline shift actions
+(15) and the exit criterion (16). The exit criterion "DST tests and atomic swap tests
+pass" is proven by WP-M8-16; the dashboard tile stays in phase 9.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
@@ -1342,7 +1355,7 @@ These decisions need an ADR or explicit approval before the related WP starts:
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
 - contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03),
-- whether shift swaps require admin approval by default (default: yes),
+- whether shift swaps require admin approval by default (default: yes) — **resolved by ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the original technician remains responsible until approval,
 - name and logo (working title: StörDesk).
 
 Technical defaults already chosen in this plan:
