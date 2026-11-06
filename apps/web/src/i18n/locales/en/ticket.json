@@ -355,6 +355,15 @@
       "email": "Export E-Mail",
       "back": "Back to list"
     },
+    "storno": {
+      "title": "Cancel",
+      "uncancelTitle": "Revoke cancellation",
+      "reasonLabel": "Cancel reason (min. 5 chars)",
+      "confirm": "Cancel",
+      "uncancelConfirm": "Revoke",
+      "abort": "Abort",
+      "error": "At least 5 characters required."
+    },
     "options": {
       "title": "Options"
     },

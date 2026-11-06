@@ -355,6 +355,15 @@
       "email": "E-Mail exportieren",
       "back": "Zurück zur Liste"
     },
+    "storno": {
+      "title": "Stornieren",
+      "uncancelTitle": "Stornierung aufheben",
+      "reasonLabel": "Stornierungsgrund (mind. 5 Zeichen)",
+      "confirm": "Stornieren",
+      "uncancelConfirm": "Aufheben",
+      "abort": "Abbrechen",
+      "error": "Mindestens 5 Zeichen erforderlich."
+    },
     "options": {
       "title": "Optionen"
     },

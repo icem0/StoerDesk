@@ -194,22 +194,18 @@ function history(page: Page) {
 }
 
 /**
- * The workflow actions live in the single dropdown menu of the detail page
- * (`WP-M4-07`): choosing the localized entry shows its "Bestätigen"/"Abbrechen"
- * pair, and confirming performs the transition, so every step selects the entry
- * of its action value and clicks the confirm button.
+ * The workflow actions live in the options dropdown of the detail page
+ * (`WP-M4-10`): clicking the options button opens the dropdown, choosing an
+ * entry shows its "Bestätigen"/"Abbrechen" pair inline below it, and
+ * confirming performs the transition.
  */
 async function performAction(
   page: Page,
-  actionValue: string,
   actionLabel: string,
   confirmLabel: string,
 ): Promise<void> {
-  const actions = page.locator('select[name="ticketAction"]')
-
-  await expect(actions).toContainText(actionLabel)
-
-  await actions.selectOption(actionValue)
+  await page.getByRole('button', { name: /Optionen|Options/ }).click()
+  await page.getByRole('button', { name: actionLabel }).click()
   await page.getByRole('button', { name: confirmLabel }).click()
 }
 
@@ -240,7 +236,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.created)).toBeVisible()
 
     // 1. Review: NEW → IN_REVIEW (dropdown entry, no body).
-    await performAction(page, 'review_started', texts.action.review, texts.confirm)
+    await performAction(page, texts.action.review, texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'IN_REVIEW'))
     await expect(history(page).getByText(texts.event.review_started)).toBeVisible()
 
@@ -251,12 +247,12 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
     // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (dropdown entry, no body).
-    await performAction(page, 'assigned', texts.action.assign, texts.confirm)
+    await performAction(page, texts.action.assign, texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ASSIGNED'))
     await expect(history(page).getByText(texts.event.assigned)).toBeVisible()
 
     // 4. Accept: ASSIGNED → ACCEPTED (dropdown entry, no body).
-    await performAction(page, 'accepted', texts.action.accept, texts.confirm)
+    await performAction(page, texts.action.accept, texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ACCEPTED'))
     await expect(history(page).getByText(texts.event.accepted)).toBeVisible()
 
@@ -267,7 +263,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.acknowledged)).toBeVisible()
 
     // 6. Close: ACKNOWLEDGED → CLOSED (UI button, no body).
-    await performAction(page, 'closed', texts.action.close, texts.confirm)
+    await performAction(page, texts.action.close, texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'CLOSED'))
     await expect(history(page).getByText(texts.event.closed)).toBeVisible()
 

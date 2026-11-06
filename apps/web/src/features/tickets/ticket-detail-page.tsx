@@ -87,6 +87,9 @@ export function TicketDetailPage() {
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ id: string; url: string } | null>(null)
+  const [stornoOpen, setStornoOpen] = useState(false)
+  const [stornoReason, setStornoReason] = useState('')
+  const [stornoMode, setStornoMode] = useState<'cancel' | 'uncancel'>('cancel')
   const optionsMenuRef = useRef<HTMLDivElement>(null)
   const optionsButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -208,26 +211,54 @@ export function TicketDetailPage() {
     if (ticketNo === undefined) {
       return
     }
-    setOptionsOpen(false)
     setLastError(null)
 
     if (value === 'list') {
       setSelectedAction(null)
+      setOptionsOpen(false)
       navigate('/tickets')
       return
     }
 
     if (value === 'pdf') {
+      setOptionsOpen(false)
       navigate(`/tickets/${ticketNo}/pdf`)
       return
     }
 
     if (value === 'email') {
+      setOptionsOpen(false)
       navigate(`/tickets/${ticketNo}/email`)
       return
     }
 
+    if (value === 'cancel' || value === 'uncancel') {
+      setStornoMode(value)
+      setStornoReason('')
+      setStornoOpen(true)
+      setOptionsOpen(false)
+      return
+    }
+
+    // Workflow actions keep the dropdown open so their inline confirmation
+    // panel renders below the chosen entry (review, assign, accept, close …).
     setSelectedAction(value === '' ? null : value)
+  }
+
+  async function handleStornoConfirm() {
+    if (ticketNo === undefined) {
+      return
+    }
+    const reason = stornoReason.trim()
+    if (reason.length < 5) {
+      setLastError(t('detail.storno.error'))
+      return
+    }
+    setStornoOpen(false)
+    setLastError(null)
+    void handleAction(stornoMode === 'cancel' ? 'cancelled' : 'uncancelled', {
+      reason,
+    })
   }
 
   if (ticketQuery.isPending) {
@@ -719,6 +750,67 @@ export function TicketDetailPage() {
     )
   }
 
+  function renderStornoDialog(): ReactNode {
+    const isCancel = stornoMode === 'cancel'
+    const missing = stornoReason.trim().length < 5
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        onClick={() => setStornoOpen(false)}
+        role="dialog"
+        aria-modal="true"
+        aria-label={isCancel ? t('detail.storno.title') : t('detail.storno.uncancelTitle')}
+      >
+        <button
+          onClick={(event) => {
+            event.stopPropagation()
+            setStornoOpen(false)
+          }}
+          className="absolute top-4 right-4 z-10 p-2 rounded bg-white/10 text-white hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          aria-label={t('detail.photos.close')}
+          type="button"
+        >
+          <svg aria-hidden="true" className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="w-full max-w-md p-6 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
+          <h2 className="text-lg font-semibold text-slate-100 mb-3">
+            {isCancel ? t('detail.storno.title') : t('detail.storno.uncancelTitle')}
+          </h2>
+          <label className="flex flex-col gap-1 text-sm text-slate-300 mb-3">
+            {t('detail.storno.reasonLabel')}
+            <input
+              className="rounded border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm text-slate-200 focus:border-blue-500 focus:outline-none"
+              value={stornoReason}
+              onChange={(event) => setStornoReason(event.target.value)}
+            />
+          </label>
+          {missing && (
+            <p className="text-xs text-rose-400 mb-3">{t('detail.storno.error')}</p>
+          )}
+          <div className="flex gap-2">
+            <button
+              disabled={missing}
+              className={`min-w-[90px] rounded px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500`}
+              onClick={() => void handleStornoConfirm()}
+              type="button"
+            >
+              {isCancel ? t('detail.storno.confirm') : t('detail.storno.uncancelConfirm')}
+            </button>
+            <button
+              className="min-w-[90px] rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+              onClick={() => setStornoOpen(false)}
+              type="button"
+            >
+              {t('detail.storno.abort')}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section className="flex flex-col gap-4">
       {/* Header: title left, status + priority + options right */}
@@ -757,6 +849,7 @@ export function TicketDetailPage() {
       </div>
 
       {optionsOpen && renderOptionsMenu()}
+      {stornoOpen && renderStornoDialog()}
 
       {pendingCount > 0 && (
         <div className="col-span-full rounded bg-amber-900/20 border border-amber-500/30 p-3 text-sm">
