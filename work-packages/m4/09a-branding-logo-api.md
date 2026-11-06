@@ -1,4 +1,4 @@
-# WP-M4-09: Branding company logo — API, schema and administration UI
+# WP-M4-09a: Branding company logo — API and schema
 
 format: small-model
 status: done
@@ -12,18 +12,12 @@ files-read:
 
 - packages/shared/src/schemas/settings.ts
 - apps/api/src/settings/branding.ts
-- apps/web/src/settings/branding-page.tsx
-- apps/web/src/i18n/locales/de/common.json
-- apps/web/src/i18n/locales/en/common.json
 
 files-write:
 
 - packages/shared/src/schemas/settings.ts — add `logo` (base64 data URL) to `brandingResponseSchema` and `updateBrandingRequestSchema`
 - apps/api/src/settings/branding.ts — read/write `logo` on the `branding` settings row; validate a provided logo is a `data:image/jpeg`/`data:image/png` URL within `MAX_LOGO_BYTES`; answer `{ code, params }` on violation
-- apps/web/src/settings/branding-page.tsx — logo file input with client-side type/size validation, current-logo preview, remove button
-- apps/web/src/i18n/locales/{de,en}/common.json — `branding.field.logo`, `branding.hintLogo`, `branding.logoRemove`, `branding.errors.logoInvalid`
 - apps/api/src/settings/__tests__/branding.integration.spec.ts — expect the new `logo` field
-- apps/web/src/settings/__tests__/branding-page.test.tsx — expect `logo` in the PUT body
 
 interfaces:
 
@@ -34,13 +28,13 @@ interfaces:
 
 1. Extend `brandingResponseSchema` / `updateBrandingRequestSchema` with `logo`.
 2. In `settings/branding.ts`, read `logo` from the stored jsonb value (default `''`) and include it in the `BrandingResponse`. On `PUT`, accept an optional `logo`; validate it matches `^data:image\/(jpeg|png);base64,` and is below `MAX_LOGO_BYTES` (500 kB), otherwise answer `400 invalid_request` with `params.fields = ['logo']`. Store `logo` alongside `companyName` and `titleEnabled`.
-3. Web UI: logo file input (`accept="image/jpeg,image/png"`), client-side type/size validation, preview of the current/selected logo, remove button; the PUT always sends `logo` so an unchanged logo is preserved.
-4. i18n keys `branding.field.logo`, `branding.hintLogo`, `branding.logoRemove`, `branding.errors.logoInvalid` in `de` and `en`.
 
 ## Non-goals
 
+- No web UI (WP-M4-09b).
 - No logo image-serving route (logo travels as a data URL embedded in settings).
 - No migration (logo lives in the existing `settings` jsonb row, WP-M2-29).
+- No change to `companyName` / `titleEnabled` behavior.
 
 ## Acceptance
 
@@ -57,8 +51,8 @@ Expected: all green; `PUT` with a non-image or oversized logo answers `400 inval
 
 ## Handoff
 
-- Files changed: `packages/shared/src/schemas/settings.ts`, `apps/api/src/settings/branding.ts`, `apps/web/src/settings/branding-page.tsx`, `apps/web/src/i18n/locales/de/common.json`, `apps/web/src/i18n/locales/en/common.json`, plus the two test updates
+- Files changed: `packages/shared/src/schemas/settings.ts`, `apps/api/src/settings/branding.ts`, `apps/api/src/settings/__tests__/branding.integration.spec.ts`
 - Interfaces added: `logo` field on `GET`/`PUT /api/v1/settings/branding`
-- Verified: typecheck, eslint, vitest (544 tests), i18n:check (651/651), wp:check (233/233)
-- Follow-up WP: top-right options dropdown + PDF/E-Mail (WP-M4-10)
+- Verified: typecheck, eslint, vitest, i18n:check, wp:check
+- Follow-up WP: branding logo web UI (WP-M4-09b)
 - Open question: none
