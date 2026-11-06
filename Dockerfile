@@ -36,10 +36,6 @@ COPY packages/shared/package.json packages/shared/package.json
 # repository — neither exists in the runtime image.
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=api-build /app/apps/api/dist apps/api/dist
-# The migration folder comes straight from the source tree, including the
-# meta/_journal.json that the Drizzle migrator reads; it does not depend on the
-# copy step of the build script.
-COPY apps/api/src/db/migrations apps/api/dist/db/migrations
 # The version of record of this commit; the fallback of the installed version.
 COPY VERSION ./VERSION
 # Uploads are written by the unprivileged `node` user.
