@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The e-mail channel sends notifications over SMTP (WP-M7-07): `apps/api/src/notifications/channels/email.ts`
+  is the fourth channel adapter of the phase-7 chain and talks to an existing mail server through
+  `nodemailer` (ADR-0009 — the plan fixed no SMTP library and the `SMTP_PORT=587` default needs a
+  STARTTLS upgrade Node cannot express). It keeps the adapter shape of WP-M7-01 — `EmailConfig`
+  from the existing `SMTP_*` keys (`user`/`password` become an `auth` block only when a user is set),
+  `EmailError` with the codes `no_sender` and `send_failed`, the transport factory as its injectable
+  last parameter — and the message content of WP-M7-04: ticket number as subject, priority and object
+  name as body, plus a `\n\n<label>: <pwaUrl>` deep link labelled `t(locale, 'notification.action_label')`
+  while a PWA url exists, never a photo, never contact data. `configuredChannels(env)` gained the
+  `email` entry (configured when `SMTP_HOST` and `SMTP_FROM` are both set, appended last), so the
+  escalation chain of WP-M7-05 is now signal → matrix → ntfy → email and an exhausted row of ntfy
+  falls back to e-mail; `drainOutbox`, `escalationChain` and migration `0019` needed no change.
+  Telegram and Web Push keep their own WPs, and so do the per-event-type channel choice and the
+  mandatory minimum channel for `critical`.
+
 - The phase-7 exit criterion is proven (WP-M7-06): `apps/api/src/notifications/__tests__/notification-exit.integration.spec.ts`
   runs the real API on a throwaway database — a ticket whose only outbox row sits
   on the failing signal channel gets that row `FAILED` after three attempts, the

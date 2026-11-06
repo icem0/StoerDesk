@@ -762,6 +762,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done    |
 | WP-M7-05  | the notification channel fallback chain                                      | done    |
 | WP-M7-06  | the phase-7 exit criterion and record                                        | done    |
+| WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1060,6 +1061,21 @@ the chain ends `FAILED` without a fallback. The phase-7 exit criterion — "chan
 failure retries and falls back; history shows it" — is proven by that test; phase
 7 is closed, no product code changed.
 
+**Phase 7 continued — the e-mail channel (WP-M7-07).** `PLAN.md` §16 lists SMTP in the
+content of phase 7 and `PLAN.md` §12 lists it as an external channel, so WP-M7-07 adds the
+fourth channel to the chain: `apps/api/src/notifications/channels/email.ts` sends the
+notification over SMTP with `nodemailer` (ADR-0009 — the plan fixed no SMTP library and a
+hand-written client cannot upgrade the `SMTP_PORT=587` STARTTLS default), keeping the adapter
+shape of WP-M7-01 — `EmailConfig` from the existing `SMTP_*` keys, `EmailError` with the codes
+`no_sender` and `send_failed`, the transport factory as injectable last parameter — and the
+message content of WP-M7-04 (subject `message.title`, body plus a `\n\n<label>: <pwaUrl>`
+deep link labelled `t(locale, 'notification.action_label')`, no photo, no contact data).
+`configuredChannels(env)` gained the `email` entry, configured only when `SMTP_HOST` and
+`SMTP_FROM` are both set, appended last, so the escalation chain of WP-M7-05 is now
+signal → matrix → ntfy → email; `drainOutbox`, `escalationChain` and migration `0019` needed
+no change. Telegram and Web Push (VAPID) keep their own WPs, and the user choice of channels
+per event type plus the mandatory minimum for `critical` (§12 admin rule) stay unimplemented.
+
 **Repair — red CI runs of WP-M4-07 / WP-M7-02 / WP-M7-03 / WP-M7-04 / WP-M7-04b
 (v1.0.25 … v1.0.29).** WP-M4-07 moved every workflow action into one dropdown menu but
 never wired body-less actions (review, assign, accept, close) nor "`Zurück zur Liste`",
@@ -1281,7 +1297,8 @@ Technical defaults already chosen in this plan:
 - `date-fns-tz` for time zones and DST,
 - printable HTML QR stickers; optional `pdf-lib` later,
 - Fastify OpenAPI stack,
-- external notification services only.
+- external notification services only,
+- `nodemailer` as the SMTP transport of the e-mail channel (ADR-0009, WP-M7-07).
 
 ## 20. Acceptance summary
 

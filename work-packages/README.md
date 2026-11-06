@@ -17,7 +17,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 14  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion | 8   |
+| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter | 9 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -193,6 +193,19 @@ answer carries exactly one `notification_failed` (`attempts: 3`) and one
 `notification_sent` event next to the `created` event; a second drain over the terminal
 rows writes no event and no row and the last channel of the chain ends `FAILED`
 without a fallback. Phase 7 is closed, no product code changed.
+
+**WP-M7-07** (`07-smtp-channel-adapter.md`) is **implemented** as the e-mail channel the
+phase-7 content line of `PLAN.md` §16 and `PLAN.md` §12 name: `apps/api/src/notifications/channels/email.ts`
+sends the notification over SMTP with `nodemailer` (ADR-0009 — the plan fixes no SMTP
+library and the `SMTP_PORT=587` default needs a STARTTLS upgrade Node cannot do), keeps
+the adapter shape of WP-M7-01 (`EmailConfig` from the existing `SMTP_*` keys, `EmailError`
+with `no_sender`/`send_failed`, the transport factory as injectable last parameter) and
+the message content of WP-M7-04 (subject `message.title`, body plus a `\n\n<label>:
+<pwaUrl>` deep link labelled `t(locale, 'notification.action_label')`, no photo, no
+contact data). `configuredChannels(env)` gained the `email` entry — configured only when
+`SMTP_HOST` and `SMTP_FROM` are set — appended last, so the escalation chain of WP-M7-05
+is signal → matrix → ntfy → email; the worker, `escalationChain` and migration `0019`
+needed no change.
 
 ## Open follow-ups
 
@@ -419,6 +432,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done                    | yes     |
 | WP-M7-05  | the notification channel fallback chain                                       | done                    | yes     |
 | WP-M7-06  | the phase-7 exit criterion and record                                         | done                    | yes     |
+| WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

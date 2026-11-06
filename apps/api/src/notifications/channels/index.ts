@@ -53,6 +53,23 @@ const ntfyChannel = async (env: Env, message: NotificationMessage): Promise<void
   )
 }
 
+const emailChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+  const { sendEmailNotification } = await import('./email.js')
+
+  await sendEmailNotification(
+    {
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_SECURE,
+      user: env.SMTP_USER,
+      password: env.SMTP_PASSWORD,
+      from: env.SMTP_FROM,
+    },
+    message,
+    env.PWA_URL,
+  )
+}
+
 /**
  * Notification channels that are configured in the environment.
  *
@@ -80,6 +97,13 @@ export function configuredChannels(env: Env): NotificationChannel[] {
     channels.push({
       name: 'ntfy',
       send: (message) => ntfyChannel(env, message),
+    })
+  }
+
+  if (env.SMTP_HOST !== '' && env.SMTP_FROM !== '') {
+    channels.push({
+      name: 'email',
+      send: (message) => emailChannel(env, message),
     })
   }
 

@@ -40,3 +40,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0006](DECISIONS/0006-host-update-agent.md)             | Host update agent topology (profile `update`, same project)    | superseded by ADR-0007 |
 | [ADR-0007](DECISIONS/0007-update-check-and-deploy-webhook.md) | Update check in the API and deployment over a deploy webhook | accepted |
 | [ADR-0008](DECISIONS/0008-deadline-and-escalation-defaults.md) | Deadline and escalation defaults per priority | accepted |
+| [ADR-0009](DECISIONS/0009-smtp-over-nodemailer.md) | SMTP transport for the e-mail channel (nodemailer) | accepted |
