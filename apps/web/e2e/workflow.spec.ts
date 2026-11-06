@@ -204,8 +204,15 @@ async function performAction(
   actionLabel: string,
   confirmLabel: string,
 ): Promise<void> {
-  await page.getByTestId('ticket-options-button').click()
-  await page.getByRole('button', { name: actionLabel }).click()
+  const optionsButton = page.getByTestId('ticket-options-button')
+  const actionButton = page.getByRole('button', { name: actionLabel })
+  // The dropdown stays open after a confirmed workflow action, so the Options
+  // button only needs to be clicked when the menu is closed. Toggling it while
+  // open would close the menu and hide the action entry.
+  if (!(await actionButton.isVisible())) {
+    await optionsButton.click()
+  }
+  await actionButton.click()
   await page.getByRole('button', { name: confirmLabel }).click()
 }
 
