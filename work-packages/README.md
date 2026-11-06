@@ -17,7 +17,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 15  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter | 10 |
+| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -466,6 +466,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done                    | yes     |
 | WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                | done                    | yes     |
 | WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)        | done                    | yes     |
+| WP-M7-10  | matrix and signal channels — locale, deep link and the localized label | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
