@@ -36,7 +36,7 @@
     },
     "deadlines": {
      "title": "Fristen",
-     "hint": "Reaktionsfristen je Priorität und Objektart."
+     "hint": "Fristen und Reaktionsfristen je Priorität."
     },
     "oncall": {
      "title": "Bereitschaftsplan",
@@ -202,6 +202,44 @@
       "group_in_use": "Die Gruppe wird noch von Benutzern verwendet.",
       "unknown": "Speichern fehlgeschlagen."
     }
+  },
+  "deadlines": {
+   "title": "Fristen",
+   "hint": "Fristen je Priorität und Reaktionsfristen der Eskalation. Neue Tickets nutzen die neuen Werte; bestehende Tickets behalten ihre gespeicherte Frist.",
+   "loading": "Lädt …",
+   "sessionNotice": "Die Fristen-Verwaltung benötigt eine gültige Anmeldung.",
+   "forbiddenNotice": "Keine Berechtigung für die Fristen-Verwaltung.",
+   "hoursTitle": "Fristen in Stunden",
+   "reactionTitle": "Reaktionsfristen in Minuten",
+   "reactionHint": "Standard gilt für niedrige, normale und hohe Priorität; kritisch gilt für kritische Tickets.",
+   "readOnly": "Nur lesbar: Zum Ändern fehlt die Berechtigung „Einstellungen schreiben“.",
+   "rule": "Regel",
+   "standard": "Standard",
+   "critical": "Kritisch",
+   "save": "Speichern",
+   "saved": "Gespeichert.",
+   "unit": {
+    "hours": "h",
+    "minutes": "min"
+   },
+   "priority": {
+    "low": "Niedrig",
+    "normal": "Normal",
+    "high": "Hoch",
+    "critical": "Kritisch"
+   },
+   "rules": {
+    "new_without_review": "Neu ohne Prüfung",
+    "work_order_without_distribution": "Arbeitsauftrag ohne Verteilung",
+    "offered_without_claim": "Angeboten ohne Annahme",
+    "assigned_without_accept": "Zugewiesen ohne Bestätigung"
+   },
+   "errors": {
+    "session_invalid": "Die Anmeldung ist abgelaufen.",
+    "forbidden": "Keine Berechtigung für diese Aktion.",
+    "invalid_request": "Mindestens ein Wert ist ungültig: Fristen 1 bis 8760 Stunden, Reaktionsfristen 1 bis 10080 Minuten.",
+    "unknown": "Speichern fehlgeschlagen."
+   }
   },
   "textTemplates": {
    "title": "Störungsarten",

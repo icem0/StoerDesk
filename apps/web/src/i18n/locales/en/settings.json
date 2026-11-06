@@ -36,7 +36,7 @@
     },
     "deadlines": {
      "title": "Deadlines",
-     "hint": "Response deadlines per priority and contract."
+     "hint": "Deadlines and reaction deadlines per priority."
     },
     "oncall": {
      "title": "On-call plan",
@@ -202,6 +202,44 @@
       "group_in_use": "Users still belong to this group.",
       "unknown": "Saving failed."
     }
+  },
+  "deadlines": {
+   "title": "Deadlines",
+   "hint": "Deadlines per priority and the reaction deadlines of the escalation. New tickets use the new values; existing tickets keep their stored deadline.",
+   "loading": "Loading …",
+   "sessionNotice": "The deadline administration requires a valid sign-in.",
+   "forbiddenNotice": "No permission for the deadline administration.",
+   "hoursTitle": "Deadlines in hours",
+   "reactionTitle": "Reaction deadlines in minutes",
+   "reactionHint": "Standard applies to low, normal and high priority; critical applies to critical tickets.",
+   "readOnly": "Read only: changing requires the permission \"Write settings\".",
+   "rule": "Rule",
+   "standard": "Standard",
+   "critical": "Critical",
+   "save": "Save",
+   "saved": "Saved.",
+   "unit": {
+    "hours": "h",
+    "minutes": "min"
+   },
+   "priority": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "critical": "Critical"
+   },
+   "rules": {
+    "new_without_review": "New without review",
+    "work_order_without_distribution": "Work order without distribution",
+    "offered_without_claim": "Offered without claim",
+    "assigned_without_accept": "Assigned without acceptance"
+   },
+   "errors": {
+    "session_invalid": "The sign-in has expired.",
+    "forbidden": "No permission for this action.",
+    "invalid_request": "At least one value is invalid: deadlines 1 to 8760 hours, reaction deadlines 1 to 10080 minutes.",
+    "unknown": "Saving failed."
+   }
   },
   "textTemplates": {
    "title": "Fault types",
