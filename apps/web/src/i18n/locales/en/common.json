@@ -40,7 +40,7 @@
  "hintTitleEnabled": "Whether the report form also collects a short ticket title: it is only offered while the checkbox is switched on.",
  "field": {
   "companyName": "Company name",
-  "titleEnabled": "Enable ticket title collection?",
+  "titleEnabled": "Ticket title",
   "logo": "Company logo"
  },
  "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",

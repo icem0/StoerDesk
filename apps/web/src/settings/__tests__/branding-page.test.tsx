@@ -69,7 +69,7 @@ describe('BrandingPage', () => {
     expect(input.value).toBe('Beispiel GmbH')
 
     const checkbox = (await screen.findByLabelText(
-      /Ticket titel collecting enabled\?|Enable ticket title collection\?/i
+      /Titel bei Ticket erfassen|Ticket title/i
     )) as HTMLInputElement
     expect(checkbox.checked).toBe(false)
 
@@ -99,7 +99,7 @@ describe('BrandingPage', () => {
     renderPage()
 
     const checkbox = (await screen.findByLabelText(
-      /Ticket titel collecting enabled\?|Enable ticket title collection\?/i
+      /Titel bei Ticket erfassen|Ticket title/i
     )) as HTMLInputElement
     expect(checkbox.checked).toBe(true)
 
