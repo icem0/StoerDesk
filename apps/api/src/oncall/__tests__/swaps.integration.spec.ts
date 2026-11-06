@@ -290,7 +290,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(winner).not.toBeNull()
       expect(winner!.swap.status).toBe('ACCEPTED')
-      expect(loser).toMatchObject({ statusCode: 409, code: 'swap_taken' })
+
+      // The loser either lost the atomic UPDATE (`swap_taken`) or read the swap
+      // after it was already accepted (`swap_not_pending`); both mean "did not
+      // win the race". Exactly one acceptance succeeds.
+      expect(loser).toMatchObject({ statusCode: 409 })
+      const loserCode = (loser as { code?: string }).code
+      expect(['swap_taken', 'swap_not_pending']).toContain(loserCode)
 
       const stored = await swapOf(first.swap.id)
       expect(onlyRow(stored, 'swap').status).toBe('ACCEPTED')
