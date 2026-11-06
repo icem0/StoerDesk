@@ -66,16 +66,19 @@
    "email": "E-Mail",
    "password": "Passwort"
   },
-  "links": {
-   "tickets": "Meldungen",
-   "ticketCreate": "Neue Störung melden",
-   "objects": "Objekte",
-   "users": "Benutzerverwaltung",
-   "roles": "Rollenverwaltung",
-   "stickers": "QR-Aufkleber",
-   "admin": "Verwaltung öffnen",
-   "branding": "Darstellung"
-  },
+   "links": {
+    "tickets": "Meldungen",
+    "ticketCreate": "Neue Störung melden",
+    "objects": "Objekte",
+    "users": "Benutzerverwaltung",
+    "roles": "Rollenverwaltung",
+    "groups": "Gruppen",
+    "bmaSync": "BMAcloud-Abgleich",
+    "standardTexts": "Störungsarten",
+    "stickers": "QR-Aufkleber",
+    "admin": "Verwaltung öffnen",
+    "branding": "Darstellung"
+   },
   "errors": {
    "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
    "rate_limited": "Zu viele Anmeldeversuche. Bitte in einer Minute erneut versuchen.",

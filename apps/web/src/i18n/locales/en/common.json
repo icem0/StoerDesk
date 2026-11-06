@@ -66,16 +66,19 @@
    "email": "E-mail",
    "password": "Password"
   },
-  "links": {
-   "tickets": "Tickets",
-   "ticketCreate": "Report a malfunction",
-   "objects": "Objects",
-   "users": "User administration",
-   "roles": "Role administration",
-   "stickers": "QR stickers",
-   "admin": "Open administration",
-   "branding": "Appearance"
-  },
+   "links": {
+    "tickets": "Tickets",
+    "ticketCreate": "Report a malfunction",
+    "objects": "Objects",
+    "users": "User administration",
+    "roles": "Role administration",
+    "groups": "Groups",
+    "bmaSync": "BMAcloud sync",
+    "standardTexts": "Fault types",
+    "stickers": "QR stickers",
+    "admin": "Open administration",
+    "branding": "Appearance"
+   },
   "errors": {
    "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
    "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
