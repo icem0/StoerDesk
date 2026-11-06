@@ -172,8 +172,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('answers 401 before any permission check for an anonymous request', async () => {
-      const confirm = await postConfirm(cookies['admin'], '00000000-0000-0000-0000-000000000000')
-      const decline = await postDecline(cookies['admin'], '00000000-0000-0000-0000-000000000000')
+      const confirm = await app.inject({
+        method: 'POST',
+        url: '/api/v1/oncall/shifts/00000000-0000-0000-0000-000000000000/confirm',
+      })
+      const decline = await app.inject({
+        method: 'POST',
+        url: '/api/v1/oncall/shifts/00000000-0000-0000-0000-000000000000/decline',
+        payload: { reason: 'no session' },
+      })
 
       expect(confirm.statusCode).toBe(401)
       expect(confirm.json<ErrorResponseBody>().code).toBe('session_invalid')
@@ -206,14 +213,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(onlyRow(stored, 'shift').confirmedAt).not.toBeNull()
 
       const events = await eventsFor(shiftId)
-      expect(events.some((event) => (event.payload as { type?: string }).type === 'confirmed')).toBe(true)
+      expect(
+        events.some((event) => (event.payload as { type?: string }).type === 'confirmed'),
+      ).toBe(true)
     })
 
     it('declines a PLANNED shift with a reason as the assigned technician', async () => {
       const created = await createPlannedShift(cookies['admin'], oncallId)
       const shiftId = created.json<ShiftRow>().id
 
-      const response = await postDecline(cookies['oncall'], shiftId, { reason: 'not available tonight' })
+      const response = await postDecline(cookies['oncall'], shiftId, {
+        reason: 'not available tonight',
+      })
 
       expect(response.statusCode).toBe(200)
       const body = response.json<ShiftRow>()
@@ -259,7 +270,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(decline.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
     })
 
-    it('allows an admin to confirm another technician\'s shift', async () => {
+    it("allows an admin to confirm another technician's shift", async () => {
       const created = await createPlannedShift(cookies['admin'], oncallId)
       const shiftId = created.json<ShiftRow>().id
 
