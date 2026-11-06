@@ -8,6 +8,7 @@ import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
 import { GroupsPage } from '../admin/groups-page'
 import { RouteErrorPage } from '../components/route-error-page'
+import { DeadlinesPage } from '../admin/deadlines-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
@@ -87,6 +88,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <BmaSyncPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/deadlines',
+        element: (
+          <RequireSession>
+            <DeadlinesPage />
           </RequireSession>
         ),
       },

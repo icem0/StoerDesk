@@ -47,16 +47,12 @@ describe('AdminHomePage', () => {
     expect(screen.getAllByText(/geplant|planned/i).length).toBeGreaterThan(0)
   })
 
-  it('marks the groups module as available and deadlines as planned phase 6', async () => {
+  it('links the deadlines card to the deadline page as an available module', async () => {
     renderHome()
 
-    const groupsText = await screen.findByText(/^Gruppen$|^Groups$/i)
-    const groups = groupsText.closest('a')
-    expect(groups?.getAttribute('href')).toBe('/admin/groups')
+    const deadlines = await screen.findByRole('link', { name: /Fristen|Deadlines/ })
 
-    const deadlines = await screen.findByText(/^Fristen$|^Deadlines$/i)
-    const card = deadlines.closest('li')
-    expect(card?.textContent).toMatch(/Phase 6/)
-    expect(card?.textContent).not.toMatch(/Phase 1\b/)
+    expect(deadlines.getAttribute('href')).toBe('/admin/deadlines')
+    expect(deadlines.closest('li')?.textContent).not.toMatch(/geplant|planned/)
   })
 })
