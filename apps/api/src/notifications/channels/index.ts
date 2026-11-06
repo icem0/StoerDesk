@@ -27,6 +27,7 @@ const signalChannel = async (env: Env, message: NotificationMessage): Promise<vo
       recipients,
     },
     message,
+    env.PWA_URL,
   )
 }
 
@@ -40,6 +41,7 @@ const matrixChannel = async (env: Env, message: NotificationMessage): Promise<vo
       accessToken: env.MATRIX_ACCESS_TOKEN,
     },
     message,
+    env.PWA_URL,
   )
 }
 
