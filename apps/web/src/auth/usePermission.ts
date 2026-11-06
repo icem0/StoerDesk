@@ -19,7 +19,7 @@ export function useMe(): UseQueryResult<MeResponse> {
  */
 export function usePermission(...keys: string[]): boolean {
   const me = useMe()
-  const permissions = me.data?.user.permissions ?? []
+  const permissions = me.data?.user?.permissions ?? []
 
   return keys.some((key) => permissions.includes(key))
 }
