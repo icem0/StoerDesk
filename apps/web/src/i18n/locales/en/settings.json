@@ -168,7 +168,7 @@
     "invalid_request": "Invalid input – please check the fields.",
     "role_not_found": "Role not found.",
     "role_key_taken": "This role key is already taken.",
-    "system_role_protected": "System roles are protected – the seed rewrites their grants.",
+    "system_role_protected": "admin keeps all rights – the role is protected.",
     "role_in_use": "Users still hold this role.",
     "unknown_permission_key": "Unknown permission in the selection.",
     "unknown": "Saving failed."

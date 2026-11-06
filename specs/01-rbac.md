@@ -138,9 +138,11 @@ API guard and the UI all read the **same** source.
   the seed twice changes nothing.
 - Custom (non-system) roles and all `user_permissions` rows are never touched by
   the seed.
-- A database trigger blocks `DELETE` on roles with `is_system = true`, so `admin`
-  cannot be lost: the trigger raises the message `system_role_protected`
-  (SQLSTATE `P0001`). The service-level guards are part of the role API (§3.8).
+- A database trigger blocks `DELETE` only on the `admin` role, so `admin` can
+  never be lost and always keeps all rights: the trigger raises the message
+  `system_role_protected` (SQLSTATE `P0001`). Every other system role and every
+  custom role may be deleted by an admin when it is no longer held by users.
+  The service-level guards are part of the role API (§3.8).
 - Role changes are not audited in phase 1; an audit event for role and permission
   edits arrives with the admin UI (WP-M1-09).
 
@@ -188,8 +190,8 @@ for the five system roles (§3.1, §3.5).
 | `GET /api/v1/roles` (`role.read`)   | all roles ordered by key with `key`, `isSystem`, the sorted `permissionKeys` and `userCount` (holders from `user_roles`); keys only, never translated text **(plan)**                                                                                                                                      |
 | `POST /api/v1/roles` (`role.write`) | creates a **custom** role (`is_system = false`): `key` matches `^[a-z][a-z0-9_]{1,63}$`, `permissionKeys` de-duplicated; an existing or reserved key answers `409 { code: 'role_key_taken' }`; `201` with the role summary **(plan)**                                                                      |
 | Permission validation               | every key must be in the catalog (`isPermissionKey`, §3.4) before anything is written: `422 { code: 'unknown_permission_key', params: { fields: ['permissionKeys'], permissionKeys } }` **(plan)**                                                                                                         |
-| `PATCH /api/v1/roles/:key`          | replaces `permissionKeys` when supplied; `key` and `isSystem` are immutable; a system role answers `409 { code: 'system_role_protected' }` because its grant set is rewritten by every seed run (§3.1), an unknown role `404 { code: 'role_not_found' }` **(plan)**                                        |
-| `DELETE /api/v1/roles/:key`         | custom roles only — system roles `409 system_role_protected` (the service guard of §3.5, the `protect_system_roles` trigger stays the backstop), a role still held by users `409 { code: 'role_in_use', params: { fields: ['key'], userCount } }`; success `204` and `role_permissions` cascade **(plan)** |
+| `PATCH /api/v1/roles/:key`          | replaces `permissionKeys` when supplied; `key` and `isSystem` are immutable; `admin` answers `409 { code: 'system_role_protected' }` because it always keeps all rights, every other role may be edited, an unknown role `404 { code: 'role_not_found' }` **(plan)**                                        |
+| `DELETE /api/v1/roles/:key`         | `admin` answers `409 system_role_protected` (the service guard of §3.5, the `protect_system_roles` trigger stays the backstop); every other role may be deleted when it is no longer held by users (`409 { code: 'role_in_use', params: { fields: ['key'], userCount } }` otherwise); success `204` and `role_permissions` cascade **(plan)** |
 | Effect                              | grants are resolved per request (§3.2), so a changed role acts on the next request without a new login — asserted through `GET /api/v1/me` **(plan)**                                                                                                                                                      |
 | Body and path errors                | parsed manually like the user API: `400 { code: 'invalid_request', params: { fields } }` with field paths, never e-mail addresses or secrets **(plan)**                                                                                                                                                    |
 

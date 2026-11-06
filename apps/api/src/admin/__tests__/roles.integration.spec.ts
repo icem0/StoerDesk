@@ -291,16 +291,23 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(after.json<MeResponseBody>().user?.roles).toEqual(['stats_viewer'])
     })
 
-    it('protects system roles and reports unknown roles', async () => {
-      const system = await patchRole(cookies['admin'], 'office', { permissionKeys: [] })
+    it('protects admin from edits and reports unknown roles', async () => {
+      const protectedAdmin = await patchRole(cookies['admin'], 'admin', {
+        permissionKeys: [],
+      })
+      const editableSystem = await patchRole(cookies['admin'], 'office', {
+        permissionKeys: ['ticket.read'],
+      })
       const unknown = await patchRole(cookies['admin'], 'ghost_role', { permissionKeys: [] })
       const badKey = await patchRole(cookies['admin'], 'Bad Key', { permissionKeys: [] })
 
-      expect(system.statusCode).toBe(409)
-      expect(system.json<ErrorResponseBody>()).toEqual({
+      expect(protectedAdmin.statusCode).toBe(409)
+      expect(protectedAdmin.json<ErrorResponseBody>()).toEqual({
         code: 'system_role_protected',
         params: { fields: ['key'] },
       })
+      expect(editableSystem.statusCode).toBe(200)
+      expect(editableSystem.json<RoleSummary>().permissionKeys).toEqual(['ticket.read'])
       expect(unknown.statusCode).toBe(404)
       expect(unknown.json<ErrorResponseBody>()).toEqual({
         code: 'role_not_found',
@@ -309,12 +316,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(badKey.statusCode).toBe(400)
       expect(badKey.json<ErrorResponseBody>().params?.fields).toEqual(['key'])
 
-      const officeGrantsAfter = roleOf(
+      const adminGrantsAfter = roleOf(
         (await getRoles(cookies['admin'])).json<RolesResponseBody>(),
-        'office',
+        'admin',
       )
 
-      expect(officeGrantsAfter.permissionKeys).toHaveLength(19)
+      expect(adminGrantsAfter.permissionKeys).toHaveLength(39)
     })
 
     it('refuses to delete a protected or still assigned role and then removes it', async () => {

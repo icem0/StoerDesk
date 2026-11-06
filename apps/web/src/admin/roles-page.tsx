@@ -265,7 +265,7 @@ export function RolesPage() {
               <td>{role.userCount}</td>
               {canWrite ? (
                 <td>
-                  {role.isSystem ? (
+                  {role.key === 'admin' ? (
                     <span className="text-xs text-slate-400">{t('admin.roles.readOnly')}</span>
                   ) : (
                     <button
@@ -282,7 +282,7 @@ export function RolesPage() {
           ))}
         </tbody>
       </table>
-      {canWrite && editingRole && !editingRole.isSystem ? (
+      {canWrite && editingRole && editingRole.key !== 'admin' ? (
         <EditRoleForm role={editingRole} />
       ) : null}
       {canWrite ? <CreateRoleForm /> : null}

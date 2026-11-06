@@ -168,7 +168,7 @@
     "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
     "role_not_found": "Rolle nicht gefunden.",
     "role_key_taken": "Dieser Rollenschlüssel ist bereits vergeben.",
-    "system_role_protected": "Systemrollen sind geschützt – ihre Rechte setzt der Seed.",
+    "system_role_protected": "admin behält alle Rechte – die Rolle ist geschützt.",
     "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
     "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
     "unknown": "Speichern fehlgeschlagen."

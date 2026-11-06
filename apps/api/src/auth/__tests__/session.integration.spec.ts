@@ -102,6 +102,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('session core (integratio
     expect(await loadSession(db, session.token)).toEqual({
       id: userId,
       email: 'session@example.org',
+      givenName: '',
+      familyName: '',
       locale: 'de',
       theme: 'auto',
     })

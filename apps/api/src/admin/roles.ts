@@ -18,9 +18,11 @@ import { permissions, rolePermissions, roles, userRoles } from '../db/schema'
 
 /**
  * Admin role API (`specs/01-rbac.md` §3.8): the only runtime path that creates or
- * changes roles. Seeded system roles keep their grants from `seed-rbac.ts`, so the
- * service-level guards of §3.5 refuse every write against them; the
- * `protect_system_roles` trigger of migration 0001 stays the backstop.
+ * changes roles. Only `admin` stays protected: it always keeps all rights and can
+ * neither be edited nor deleted. Every other system role and every custom role may
+ * be edited and (when unused) deleted by an admin; the
+ * `protect_system_roles` trigger of migration 0001 / 0022 stays the backstop for
+ * `admin`.
  */
 
 type Transaction = Parameters<Parameters<Database['database']['transaction']>[0]>[0]
@@ -287,7 +289,7 @@ export const adminRolesRoutes = fp<AdminRolesRouteOptions>(
         const updated = await database.transaction(async (tx) => {
           const role = await findRole(tx, parsedKey.data)
 
-          if (role.isSystem) {
+          if (role.key === 'admin') {
             throw new RoleRouteError(409, 'system_role_protected', { fields: ['key'] })
           }
 
@@ -320,7 +322,7 @@ export const adminRolesRoutes = fp<AdminRolesRouteOptions>(
         await database.transaction(async (tx) => {
           const role = await findRole(tx, parsedKey.data)
 
-          if (role.isSystem) {
+          if (role.key === 'admin') {
             throw new RoleRouteError(409, 'system_role_protected', { fields: ['key'] })
           }
 
