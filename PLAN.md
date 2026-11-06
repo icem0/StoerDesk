@@ -761,6 +761,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-04b | the localized ntfy action label                                    | done   |
 | WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done    |
 | WP-M7-05  | the notification channel fallback chain                                      | done    |
+| WP-M7-06  | the phase-7 exit criterion and record                                        | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1046,7 +1047,18 @@ when a row exhausts its three attempts, ends it `FAILED` with its `notification_
 event and queues one `PENDING` fallback row with the same ticket and the same machine-readable
 target params in the same transaction — unless the ticket already has a pending row for that
 channel, so a channel is never notified twice — and the drain claims it in the same run;
-`OutboxDrainResult` gained `fallback` and the log code `channel_fallback`.
+`OutboxDrainResult` gained `fallback` and the log code `channel_fallback`. **WP-M7-06** (`work-packages/m7/06-phase-7-exit-criterion.md`,
+**implemented**) closes the phase: `notification-exit.integration.spec.ts` drives the
+real API on a throwaway database — the only `PENDING` row of a ticket sits on the
+failing signal channel, `drainOutbox` ends it `FAILED` after three attempts, queues
+the `PENDING` fallback row of the next channel of `escalationChain` in the same
+transaction, claims it in the same run and ends it `SENT` on a local Matrix mock —
+and the `GET /api/v1/tickets/:ticketNo` answer carries exactly one
+`notification_failed` (`attempts: 3`) and one `notification_sent` event next to the
+`created` event, a second drain writes no event and no row and the last channel of
+the chain ends `FAILED` without a fallback. The phase-7 exit criterion — "channel
+failure retries and falls back; history shows it" — is proven by that test; phase
+7 is closed, no product code changed.
 
 **Repair — red CI runs of WP-M4-07 / WP-M7-02 / WP-M7-03 / WP-M7-04 / WP-M7-04b
 (v1.0.25 … v1.0.29).** WP-M4-07 moved every workflow action into one dropdown menu but

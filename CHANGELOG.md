@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The phase-7 exit criterion is proven (WP-M7-06): `apps/api/src/notifications/__tests__/notification-exit.integration.spec.ts`
+  runs the real API on a throwaway database — a ticket whose only outbox row sits
+  on the failing signal channel gets that row `FAILED` after three attempts, the
+  fallback row of the next chain channel (`matrix`) is queued in the same
+  transaction, drains `SENT` in the same run and really reaches a local Matrix
+  mock — and the `GET /api/v1/tickets/:ticketNo` answer carries exactly one
+  `notification_failed` (`attempts: 3`) and one `notification_sent` event next to
+  the `created` event; a second drain over the terminal rows writes no event and
+  no row, and the last channel of the chain ends `FAILED` without a fallback.
+  Phase 7 is closed: channel failure retries and falls back, and the history shows
+  it (`PLAN.md` §16 phase 7, §20 acceptance 10). No product code changed.
+
 - The channel fallback chain (WP-M7-05): an outbox row that exhausts its three attempts no
   longer simply ends `FAILED` — `drainOutbox` takes the next channel of
   `escalationChain(env)` (the configured channels in `configuredChannels` order,
