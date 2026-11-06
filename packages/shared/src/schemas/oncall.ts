@@ -96,6 +96,17 @@ export const updateShiftRequestSchema = z.object({
   publish: z.boolean().optional(),
 })
 
+const clientUuidOptional = z.string().uuid().optional()
+
+export const confirmShiftRequestSchema = z.object({
+  clientUuid: clientUuidOptional,
+})
+
+export const declineShiftRequestSchema = z.object({
+  reason: z.string().trim().min(5).max(500),
+  clientUuid: clientUuidOptional,
+})
+
 export const oncallSettingsResponseSchema = z.object({
   weekStartWeekday: z.number().int().min(0).max(6),
   startTime: z.string(),
@@ -107,19 +118,21 @@ export const oncallSettingsResponseSchema = z.object({
   defaultPoolId: z.string().uuid().nullable(),
 })
 
-export const updateOncallSettingsRequestSchema = z.object({
-  'oncall.week_start_weekday': z.number().int().min(0).max(6).optional(),
-  'oncall.start_time': z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
-    .optional(),
-  'oncall.duration_days': z.number().int().min(1).max(28).optional(),
-  'oncall.swap_requires_admin_approval': z.boolean().optional(),
-  'oncall.escalate_to_group_after_min': z.number().int().min(1).max(1440).optional(),
-  'oncall.reminder_unconfirmed_h': z.number().int().min(1).max(720).optional(),
-  'oncall.unfilled_warning_days': z.number().int().min(1).max(365).optional(),
-  'oncall.default_pool_id': z.string().uuid().nullable().optional(),
-})
+export const updateOncallSettingsRequestSchema = z
+  .object({
+    'oncall.week_start_weekday': z.number().int().min(0).max(6).optional(),
+    'oncall.start_time': z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .optional(),
+    'oncall.duration_days': z.number().int().min(1).max(28).optional(),
+    'oncall.swap_requires_admin_approval': z.boolean().optional(),
+    'oncall.escalate_to_group_after_min': z.number().int().min(1).max(1440).optional(),
+    'oncall.reminder_unconfirmed_h': z.number().int().min(1).max(720).optional(),
+    'oncall.unfilled_warning_days': z.number().int().min(1).max(365).optional(),
+    'oncall.default_pool_id': z.string().uuid().nullable().optional(),
+  })
+  .strict()
 
 export type OnCallShift = z.infer<typeof oncallShiftSchema>
 export type CreateShiftRequest = z.infer<typeof createShiftRequestSchema>

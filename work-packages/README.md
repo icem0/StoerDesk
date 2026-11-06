@@ -476,7 +476,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M8-04  | on-call pool API                                                    | done                    | yes     |
 | WP-M8-05  | on-call settings and shift planning service                         | done                    | yes     |
 | WP-M8-06  | on-call shift and settings routes                                   | done                    | yes     |
-| WP-M8-07  | shift confirm and decline                                           | planned                 | yes     |
+| WP-M8-07  | shift confirm and decline                                           | done                    | yes     |
 | WP-M8-08  | swap request and atomic acceptance service                          | planned                 | yes     |
 | WP-M8-09  | swap routes                                                         | planned                 | yes     |
 | WP-M8-10  | on-call ticket coupling and warnings                                | planned                 | yes     |

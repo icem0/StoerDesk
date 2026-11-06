@@ -3,7 +3,9 @@ import fp from 'fastify-plugin'
 import { z } from 'zod'
 
 import {
+  confirmShiftRequestSchema,
   createShiftRequestSchema,
+  declineShiftRequestSchema,
   generateShiftsRequestSchema,
   generateShiftsResponseSchema,
   oncallShiftSchema,
@@ -18,6 +20,7 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { oncallShifts } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
+import { confirmShift, declineShift } from './confirm'
 import { readOncallSettings, writeOncallSettings } from './settings'
 
 type Db = Database['database']
@@ -113,7 +116,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
 
         if (
           fromDate.getTime() >= toDate.getTime() ||
-          toDate.getTime() - fromDate.getTime() > MAX_RANGE_MS
+          toDate.getTime() - fromDate.getTime() >= MAX_RANGE_MS
         ) {
           return reply.code(422).send({
             code: 'oncall_range_too_large',
@@ -307,6 +310,103 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           unfilledWarningDays: written.unfilledWarningDays,
           defaultPoolId: written.defaultPoolId ?? null,
         })
+      },
+    )
+
+    app.post<{ Params: { id: string } }>(
+      '/api/v1/oncall/shifts/:id/confirm',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.confirm) },
+      async (request, reply) => {
+        const shiftId = parseUuidParam(request.params.id)
+
+        if (shiftId === null) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const parsed = confirmShiftRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        try {
+          const result = await confirmShift(database, {
+            shiftId,
+            actorUserId: request.user?.id ?? '',
+            clientUuid: parsed.data.clientUuid ?? null,
+          })
+
+          const full = await requireShift(database, result.shift.id)
+
+          return reply.send(oncallShiftSchema.parse(full))
+        } catch (error) {
+          const err = error as {
+            statusCode?: number
+            code?: string
+            params?: Record<string, unknown>
+          }
+
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+
+          throw error
+        }
+      },
+    )
+
+    app.post<{ Params: { id: string } }>(
+      '/api/v1/oncall/shifts/:id/decline',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.confirm) },
+      async (request, reply) => {
+        const shiftId = parseUuidParam(request.params.id)
+
+        if (shiftId === null) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const parsed = declineShiftRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        try {
+          const result = await declineShift(database, {
+            shiftId,
+            actorUserId: request.user?.id ?? '',
+            reason: parsed.data.reason,
+            clientUuid: parsed.data.clientUuid ?? null,
+          })
+
+          const full = await requireShift(database, result.shift.id)
+
+          return reply.send(oncallShiftSchema.parse(full))
+        } catch (error) {
+          const err = error as {
+            statusCode?: number
+            code?: string
+            params?: Record<string, unknown>
+          }
+
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+
+          throw error
+        }
       },
     )
   },
