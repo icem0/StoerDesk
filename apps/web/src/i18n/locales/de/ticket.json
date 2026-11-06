@@ -371,5 +371,19 @@
         "commentText": "Kommentartext:",
         "deleteConfirmNumber": "Ticketnumber for confirmation:"
     }
+  },
+  "pdf": {
+    "title": "Vorgang {{ticketNo}}",
+    "save": "Als PDF speichern",
+    "object": "Objekt",
+    "objectNo": "Objektnummer",
+    "status": "Status",
+    "priority": "Priorität",
+    "reportedAt": "Gemeldet am",
+    "deadlineAt": "Frist bis",
+    "erfasser": "Erfasser",
+    "source": "Quelle",
+    "noPhotos": "Keine Fotos.",
+    "printHint": "Drucken und als PDF speichern (Strg+P / Cmd+P)."
   }
 }

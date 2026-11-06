@@ -371,5 +371,19 @@
         "commentText": "Comment text:",
         "deleteConfirmNumber": "Ticket number to confirm:"
     }
+  },
+  "pdf": {
+    "title": "Ticket {{ticketNo}}",
+    "save": "Save as PDF",
+    "object": "Object",
+    "objectNo": "Object no.",
+    "status": "Status",
+    "priority": "Priority",
+    "reportedAt": "Reported on",
+    "deadlineAt": "Deadline",
+    "erfasser": "Recorded by",
+    "source": "Source",
+    "noPhotos": "No photos.",
+    "printHint": "Print and save as PDF (Ctrl+P / Cmd+P)."
   }
 }
