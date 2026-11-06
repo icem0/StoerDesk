@@ -41,12 +41,7 @@ class DeleteTicketError extends Error {
   }
 
   static failed(error: unknown) {
-    const pgError = error as {
-      code?: string
-      detail?: string
-      message?: string
-      constraint?: string
-    } | undefined
+    const pgError = findPgError(error)
     const sqlState = pgError?.code
     let code: string
     let params: Record<string, unknown> = {}
@@ -73,6 +68,30 @@ class DeleteTicketError extends Error {
     }
     return new DeleteTicketError(500, code, params, error)
   }
+}
+
+type PgErrorLike = {
+  code?: string
+  detail?: string
+  message?: string
+  constraint?: string
+}
+
+/**
+ * Drizzle wraps driver failures in `DrizzleQueryError`, whose own `code` is
+ * absent; the PostgreSQL error (with the SQLSTATE) sits in `cause`. Walk the
+ * cause chain so the specific error code is not lost.
+ */
+function findPgError(error: unknown): PgErrorLike | undefined {
+  let current: unknown = error
+  for (let depth = 0; depth < 5 && typeof current === 'object' && current !== null; depth++) {
+    const candidate = current as PgErrorLike & { cause?: unknown }
+    if (typeof candidate.code === 'string' && /^[0-9A-Z]{5}$/.test(candidate.code)) {
+      return candidate
+    }
+    current = candidate.cause
+  }
+  return error as PgErrorLike | undefined
 }
 
 export type DeleteTicketResult = {
