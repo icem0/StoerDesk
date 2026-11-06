@@ -15,6 +15,7 @@ FROM base AS api-build
 COPY tsconfig.base.json ./
 COPY packages/shared packages/shared
 COPY apps/api apps/api
+COPY scripts scripts
 RUN npm run build --workspace @stoerdesk/api
 
 FROM node:22-alpine AS api
