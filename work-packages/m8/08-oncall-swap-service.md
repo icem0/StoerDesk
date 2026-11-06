@@ -1,7 +1,7 @@
 # WP-M8-08: swap request and atomic acceptance service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-02, WP-M8-05, WP-M8-07
 phase: 8
 milestone: m8
