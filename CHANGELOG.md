@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The Web Push channel sends notifications to installed PWAs (WP-M7-09): `apps/api/src/notifications/channels/web-push.ts`
+  is the sixth channel adapter of the phase-7 chain and delivers `${title}\n${body}` plus the
+  `\n\n<label>: <pwaUrl>` deep link labelled `t(locale, 'notification.action_label')` through the
+  `web-push` library (ADR-0010 — encrypted payloads and VAPID JWT signing are not hand-written
+  locally). `WebPushConfig` reads `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` — configured
+  only when all three are set — `sendWebPushNotification` throws `WebPushError('no_keys')` without
+  keys and wraps transport failures as `send_failed`, never leaking the endpoint, the keys or the
+  private key; an empty subscription list is a successful no-op. The chain entry in
+  `channels/index.ts` reads the `push_subscriptions` rows of WP-M2-95 (endpoint, p256dh, auth) over
+  a short-lived database pool, so the escalation chain of WP-M7-05 is now signal → matrix → ntfy →
+  email → telegram → webpush. PWA push registration (subscribe in the web app, `notification_permissions`
+  and the admin failure warning of §12), per-event channel selection and `pushUrl` as an escalation
+  parameter stay unimplemented.
+
 - The Telegram channel sends notifications over the Telegram Bot API (WP-M7-08): `apps/api/src/notifications/channels/telegram.ts`
   is the fifth channel adapter of the phase-7 chain and posts the notification as JSON (`chat_id`,
   `text`) to `sendMessage` of an existing bot with plain `fetch` — no library, no ADR, the transport

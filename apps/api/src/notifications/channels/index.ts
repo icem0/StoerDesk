@@ -1,4 +1,7 @@
 import type { Env } from '../../config/env'
+import { databaseConnectionUrl } from '../../config/env'
+import { createDatabase } from '../../db/client'
+import { pushSubscriptions } from '../../db/schema'
 
 export interface NotificationMessage {
   title: string
@@ -84,6 +87,41 @@ const telegramChannel = async (env: Env, message: NotificationMessage): Promise<
 }
 
 /**
+ * The recipients of the web-push channel are the `push_subscriptions` rows of
+ * migration `0019` (WP-M7-04 — rows only, no route yet). `configuredChannels(env)`
+ * carries the environment alone, so the closure opens its own short-lived pool for
+ * that one read, the same shape the pg-boss jobs use (`jobs/bma-sync.ts`,
+ * WP-M2-36): the drain never hands its pool to a channel.
+ */
+const webPushChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+  const { sendWebPushNotification } = await import('./web-push.js')
+  const { client, database } = createDatabase(databaseConnectionUrl(env))
+
+  try {
+    const subscriptions = await database
+      .select({
+        endpoint: pushSubscriptions.endpoint,
+        p256dh: pushSubscriptions.p256dh,
+        auth: pushSubscriptions.auth,
+      })
+      .from(pushSubscriptions)
+
+    await sendWebPushNotification(
+      {
+        publicKey: env.VAPID_PUBLIC_KEY,
+        privateKey: env.VAPID_PRIVATE_KEY,
+        subject: env.VAPID_SUBJECT,
+      },
+      message,
+      env.PWA_URL,
+      subscriptions,
+    )
+  } finally {
+    await client.end({ timeout: 5 })
+  }
+}
+
+/**
  * Notification channels that are configured in the environment.
  *
  * A channel is only used when all of its required variables are set; missing
@@ -124,6 +162,17 @@ export function configuredChannels(env: Env): NotificationChannel[] {
     channels.push({
       name: 'telegram',
       send: (message) => telegramChannel(env, message),
+    })
+  }
+
+  if (
+    env.VAPID_PUBLIC_KEY !== '' &&
+    env.VAPID_PRIVATE_KEY !== '' &&
+    env.VAPID_SUBJECT !== ''
+  ) {
+    channels.push({
+      name: 'webpush',
+      send: (message) => webPushChannel(env, message),
     })
   }
 

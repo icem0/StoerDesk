@@ -41,3 +41,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0007](DECISIONS/0007-update-check-and-deploy-webhook.md) | Update check in the API and deployment over a deploy webhook | accepted |
 | [ADR-0008](DECISIONS/0008-deadline-and-escalation-defaults.md) | Deadline and escalation defaults per priority | accepted |
 | [ADR-0009](DECISIONS/0009-smtp-over-nodemailer.md) | SMTP transport for the e-mail channel (nodemailer) | accepted |
+| [ADR-0010](DECISIONS/0010-web-push-over-the-web-push-library.md) | Web Push transport (web-push library, `push_subscriptions` rows) | accepted |

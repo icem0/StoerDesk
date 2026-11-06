@@ -219,8 +219,22 @@ injectable last parameter) and the message content of WP-M7-04 (`${title}\n${bod
 no contact data). `configuredChannels(env)` gained the `telegram` entry — configured only when
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are both set — appended last, so the escalation
 chain of WP-M7-05 is now signal → matrix → ntfy → email → telegram; the worker, `escalationChain`
-and migration `0019` needed no change. Telegram account linking via a one-time code (§12) and
-Web Push (VAPID) stay later WPs.
+and migration `0019` needed no change. Telegram account linking via a one-time code (§12) stays
+a later WP; Web Push (VAPID) is WP-M7-09.
+
+**WP-M7-09** (`09-web-push-channel-adapter.md`) is **implemented** as the sixth notification
+channel: `apps/api/src/notifications/channels/web-push.ts` delivers `${title}\n${body}` plus the
+deep link labelled `notification.action_label` through the `web-push` library
+(ADR-0010 — encrypted payloads and VAPID JWT signing are not hand-written locally);
+`WebPushConfig` reads `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` — configured
+only when all three are set — `sendWebPushNotification` throws `WebPushError('no_keys')`
+without keys and wraps transport failures as `send_failed`, never leaking the endpoint,
+the keys or the private key; an empty subscription list is a successful no-op. The chain entry
+in `channels/index.ts` reads the `push_subscriptions` rows of WP-M2-95 (endpoint, p256dh,
+auth) over a short-lived database pool, so the escalation chain of WP-M7-05 is now
+signal → matrix → ntfy → email → telegram → webpush. The PWA push registration (subscribe
+in the web app, `notification_permissions` and the admin failure warning of §12), per-event
+channel selection and `pushUrl` as an escalation parameter stay unimplemented.
 
 ## Open follow-ups
 
@@ -451,6 +465,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-06  | the phase-7 exit criterion and record                                         | done                    | yes     |
 | WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done                    | yes     |
 | WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                | done                    | yes     |
+| WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)        | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
