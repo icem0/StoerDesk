@@ -268,7 +268,12 @@
         "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
         "deleteFailed": "Die Meldung konnte nicht gelöscht werden.",
         "fieldRequired": "Please enter the required fields first.",
-        "deleteConfirmMismatch": "To confirm the deletion, re-enter the ticket number."
+        "deleteConfirmMismatch": "Bitte die Vorgangsnummer zur Bestätigung erneut eingeben.",
+        "ticket_not_cancelled": "Diese Meldung ist nicht storniert und kann nicht gelöscht werden. Bitte zuerst stornieren.",
+        "ticket_delete_audit_trigger": "Die Datenbank blockiert das Löschen (Audit-Sperre). Bitte migrieren Sie die Datenbank (Migration 0017).",
+        "ticket_delete_fk_violation": "Die Meldung kann nicht gelöscht werden, weil abhängige Datensätze existieren.",
+        "ticket_delete_permission_denied": "Die Datenbank verweigert das Löschen (fehlende Berechtigung).",
+        "ticket_delete_failed": "Die Meldung konnte nicht gelöscht werden (Datenbankfehler {{sqlState}})."
       },
     "offlineQueued": "Nicht versendet – wird automatisch nachgesendet ({{count}} ausstehend).",
     "offlineTitle": "Nicht versendete Aktionen",

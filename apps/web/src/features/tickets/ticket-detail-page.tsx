@@ -150,7 +150,7 @@ export function TicketDetailPage() {
       setSelectedAction(null)
     } catch (error) {
       if (error instanceof ApiError) {
-        setLastError(error.code ?? t('detail.errors.actionFailed'))
+        setLastError(ticketDeleteErrorMessage(error.code, error.params))
         return
       }
       // Network error (no ApiError): queue the write offline and show the
@@ -175,8 +175,21 @@ export function TicketDetailPage() {
       navigate('/tickets')
     } catch (error) {
       const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
-      setLastError(err.code ?? t('detail.errors.deleteFailed'))
+      setLastError(ticketDeleteErrorMessage(err.code, err.params))
     }
+  }
+
+  // Translate an API error code into a user-visible message instead of showing
+  // a raw code such as `internal_error` (WP-M2-77).
+  function ticketDeleteErrorMessage(
+    code: string | undefined,
+    params: Record<string, string | number> | undefined,
+  ): string {
+    if (!code) return t('detail.errors.deleteFailed')
+    return t(`detail.errors.${code}`, {
+      ...(params ?? {}),
+      defaultValue: t('detail.errors.deleteFailed'),
+    })
   }
 
   async function handleOption(value: string) {

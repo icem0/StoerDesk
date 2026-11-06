@@ -24,8 +24,8 @@ class DeleteTicketError extends Error {
   readonly code: string
   readonly params: Record<string, unknown>
 
-  constructor(statusCode: number, code: string, params: Record<string, unknown> = {}) {
-    super(code)
+  constructor(statusCode: number, code: string, params: Record<string, unknown> = {}, cause?: unknown) {
+    super(code, { cause })
     this.name = 'DeleteTicketError'
     this.statusCode = statusCode
     this.code = code
@@ -38,6 +38,36 @@ class DeleteTicketError extends Error {
 
   static notCancelled(ticketNo: string, status: string) {
     return new DeleteTicketError(409, 'ticket_not_cancelled', { ticketNo, status })
+  }
+
+  static failed(error: unknown) {
+    const pgError = error as {
+      code?: string
+      detail?: string
+      message?: string
+      constraint?: string
+    } | undefined
+    const sqlState = pgError?.code
+    let code: string
+    let params: Record<string, unknown> = {}
+    switch (sqlState) {
+      case 'P0001': // raise_exception (append-only trigger of migration 0004)
+        code = 'ticket_delete_audit_trigger'
+        params = { detail: pgError?.detail ?? pgError?.message ?? 'audit trigger blocked deletion' }
+        break
+      case '23503': // foreign_key_violation
+        code = 'ticket_delete_fk_violation'
+        params = { constraint: pgError?.constraint ?? null }
+        break
+      case '42501': // insufficient_privilege
+        code = 'ticket_delete_permission_denied'
+        params = { detail: pgError?.detail ?? pgError?.message ?? 'insufficient database privilege' }
+        break
+      default: // any other PostgreSQL error escaping the transaction
+        code = 'ticket_delete_failed'
+        params = { sqlState: sqlState ?? 'unknown', message: pgError?.message ?? String(error) }
+    }
+    return new DeleteTicketError(500, code, params, error)
   }
 }
 
@@ -128,6 +158,12 @@ export async function deleteTicket(input: DeleteTicketInput): Promise<DeleteTick
       deletedEventsCount,
       deletedPhotosCount: photos.length,
     }
+  // A raw PostgreSQL error escaping the transaction (e.g. the append-only
+  // trigger when migration 0017 is not applied) must not leave the API as a
+  // generic 500 `internal_error`; classify it into a specific error code.
+  }).catch((error) => {
+    if (error instanceof DeleteTicketError) throw error
+    throw DeleteTicketError.failed(error)
   }).then(async (result) => {
     // Best-effort cleanup of the photo files on the volume; never fail the
     // deletion because a file is missing or unreadable.

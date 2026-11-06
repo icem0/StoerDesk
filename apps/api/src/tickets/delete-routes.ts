@@ -54,6 +54,9 @@ export const deleteRoutes = fp<DeleteRoutesOptions>(
         } catch (error) {
           const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
           if (err.statusCode !== undefined) {
+            if (err.statusCode >= 500) {
+              request.log.error({ err: error }, 'ticket delete failed')
+            }
             return reply.code(err.statusCode).send({ code: err.code, params: err.params })
           }
           throw error

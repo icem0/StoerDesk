@@ -268,7 +268,12 @@
         "actionFailed": "The action could not be performed.",
         "deleteFailed": "The ticket could not be deleted.",
         "fieldRequired": "Please complete the required fields first.",
-        "deleteConfirmMismatch": "To confirm the deletion, type the ticket number again."
+        "deleteConfirmMismatch": "To confirm the deletion, type the ticket number again.",
+        "ticket_not_cancelled": "This report is not cancelled and cannot be deleted. Cancel it first.",
+        "ticket_delete_audit_trigger": "The database blocks deletion (audit trigger). Please migrate the database (migration 0017).",
+        "ticket_delete_fk_violation": "The report cannot be deleted because dependent records exist.",
+        "ticket_delete_permission_denied": "The database refuses deletion (insufficient privilege).",
+        "ticket_delete_failed": "The report could not be deleted (database error {{sqlState}})."
       },
     "offlineQueued": "Not sent – will be sent automatically when you are back online ({{count}} pending).",
     "offlineTitle": "Unsent actions",
