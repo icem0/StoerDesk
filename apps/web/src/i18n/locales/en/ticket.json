@@ -301,8 +301,9 @@
       "status": "Status",
       "priority": "Priority",
       "source": "Source",
-      "recordedBy": "Recorded by",
-      "reportedBy": "Reported by",
+      "erfasser": "Recorded by",
+      "meldender": "Reported by",
+      "system": "System",
       "unknown": "–",
       "reportedAt": "Reported at",
       "deadlineAt": "Deadline",
@@ -312,6 +313,11 @@
       "title": "Title",
       "description": "Description",
       "faults": "Fault types"
+    },
+    "source": {
+      "qr": "QR code report",
+      "internal": "Internal entry",
+      "api": "API"
     },
     "history": "History",
     "historyEmpty": "No events.",

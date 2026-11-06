@@ -373,6 +373,8 @@ export const ticketDetailResponseSchema = z.object({
     reporterName: z.string().nullable(),
     reporterPhone: z.string().nullable(),
     reporterEmail: z.string().nullable(),
+    /** Name of the user who recorded the ticket, or null (e. g. QR / e-mail report). */
+    recordedBy: z.string().nullable(),
     statusToken: z.string().nullable(),
   }),
   events: z.array(

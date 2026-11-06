@@ -301,8 +301,9 @@
       "status": "Status",
       "priority": "Priorität",
       "source": "Quelle",
-      "recordedBy": "Erfasser",
-      "reportedBy": "Meldender",
+      "erfasser": "Erfasser",
+      "meldender": "Meldender",
+      "system": "System",
       "unknown": "–",
       "reportedAt": "Gemeldet am",
       "deadlineAt": "Frist bis",
@@ -312,6 +313,11 @@
       "title": "Titel",
       "description": "Beschreibung",
       "faults": "Störungsarten"
+    },
+    "source": {
+      "qr": "QR-Code-Meldung",
+      "internal": "Interne Erfassung",
+      "api": "Schnittstelle (API)"
     },
     "history": "Verlauf",
     "historyEmpty": "Keine Ereignisse.",

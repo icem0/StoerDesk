@@ -117,15 +117,37 @@ export async function getTicketDetail(
   }
 
   const actorNames: Map<string, string> = new Map()
+  const actorFullNames: Map<string, string> = new Map()
   if (actorUserIds.size > 0) {
     const actorRows = await database
-      .select({ id: users.id, email: users.email })
+      .select({
+        id: users.id,
+        email: users.email,
+        givenName: users.givenName,
+        familyName: users.familyName,
+      })
       .from(users)
       .where(inArray(users.id, [...actorUserIds]))
 
     for (const row of actorRows) {
       actorNames.set(row.id, row.email)
+      const fullName = `${row.givenName ?? ''} ${row.familyName ?? ''}`.trim()
+      if (fullName !== '') {
+        actorFullNames.set(row.id, fullName)
+      }
     }
+  }
+
+  /** Erfasser: der Nutzer, der den Vorgang eingetragen hat (Actor 'user' des `created`-Events),
+   *  andernfalls null (QR-/E-Mail-/System-Meldung → "System" wird in der UI übersetzt). */
+  const createdEvent = events.find((event) => event.type === 'created')
+  let recordedBy: string | null = null
+  if (
+    createdEvent !== undefined &&
+    createdEvent.actorUserId !== null &&
+    createdEvent.actorUserId !== undefined
+  ) {
+    recordedBy = actorFullNames.get(createdEvent.actorUserId) ?? null
   }
 
   const terminal = ticketRow.status === 'CLOSED' || ticketRow.status === 'CANCELLED'
@@ -187,6 +209,7 @@ export async function getTicketDetail(
       reporterName: ticketRow.reporterName,
       reporterPhone: ticketRow.reporterPhone,
       reporterEmail: ticketRow.reporterEmail,
+      recordedBy,
       statusToken: ticketRow.statusToken,
     },
     events: events.map((e) => ({

@@ -192,6 +192,17 @@ export function TicketDetailPage() {
 
   const timelineData = ticketQuery.data!.timeline
 
+  const sourceLabels: Record<string, string> = {
+    QR: t('detail.source.qr'),
+    INTERNAL: t('detail.source.internal'),
+    API: t('detail.source.api'),
+  }
+  /** Erfasser: name of the user who recorded the ticket, "System" for QR / e-mail reports. */
+  const erfasser =
+    ticket.recordedBy ??
+    (ticket.source === 'QR' ? t('detail.field.system') : t('detail.field.unknown'))
+  const quelle = sourceLabels[ticket.source] ?? t('detail.field.unknown')
+
   /**
    * Builds the list of dropdown menu entries for the current status.
    * Each entry: { value, labelKey, needsConfirm, confirmLabelKey, abortLabelKey, fieldRenderer? }
@@ -656,45 +667,64 @@ export function TicketDetailPage() {
         scaleSuffix={t('timeline.scaleSuffix')}
       />
 
-      {/* Object: name + number side by side, labels above */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="col-span-full">
-          <label className="text-xs text-slate-500 uppercase tracking-wider">
-            {t('detail.field.object')}
-          </label>
-          <span className="text-sm text-slate-200">{ticket.objectName}</span>
-        </div>
-        <div className="col-span-full">
-          <label className="text-xs text-slate-500 uppercase tracking-wider">
-            {t('detail.field.objectNo')}
-          </label>
-          <span className="text-sm font-mono text-slate-300">{ticket.objectNo}</span>
-        </div>
-      </div>
+      {/* Objekt: 2 Spalten × 2 Zeilen (Labelzeile + Wertzeile) */}
+      <table className="w-full border-collapse rounded-lg border border-slate-700 bg-slate-900/50">
+        <tbody>
+          <tr>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.object')}
+            </th>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.objectNo')}
+            </th>
+          </tr>
+          <tr>
+            <td className="text-left text-sm text-slate-200 px-3 py-2">{ticket.objectName}</td>
+            <td className="text-left text-sm font-mono text-slate-300 px-3 py-2">
+              {ticket.objectNo}
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-      {/* Three fields side by side: Erfasser, Meldender, Quelle */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="col-span-full">
-          <label className="text-xs text-slate-500 uppercase tracking-wider">
-            {t('detail.field.recordedBy')}
-          </label>
-          <span className="text-sm text-slate-200">{ticket.reporterName ?? t('detail.field.unknown')}</span>
-        </div>
-        <div className="col-span-full">
-          <label className="text-xs text-slate-500 uppercase tracking-wider">
-            {t('detail.field.reportedBy')}
-          </label>
-          <span className="text-sm text-slate-200">
-            {ticket.reporterPhone ?? ticket.reporterEmail ?? t('detail.field.unknown')}
-          </span>
-        </div>
-        <div className="col-span-full">
-          <label className="text-xs text-slate-500 uppercase tracking-wider">
-            {t('detail.field.source')}
-          </label>
-          <span className="text-sm text-slate-200">{ticket.source}</span>
-        </div>
-      </div>
+      {/* Erfasser / Meldender / Quelle: 3 Spalten × 2 Zeilen (Labelzeile + Wertzeile) */}
+      <table className="w-full border-collapse mt-4 rounded-lg border border-slate-700 bg-slate-900/50">
+        <tbody>
+          <tr>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.erfasser')}
+            </th>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.meldender')}
+            </th>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.source')}
+            </th>
+          </tr>
+          <tr>
+            <td className="text-left text-sm text-slate-200 px-3 py-2">{erfasser}</td>
+            <td className="text-left text-sm text-slate-200 px-3 py-2">
+              {ticket.reporterName ?? t('detail.field.unknown')}
+            </td>
+            <td className="text-left text-sm text-slate-200 px-3 py-2">{quelle}</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Title */}
       {ticket.title !== null && (
