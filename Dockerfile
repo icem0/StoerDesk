@@ -17,6 +17,9 @@ COPY packages/shared packages/shared
 COPY apps/api apps/api
 COPY scripts scripts
 RUN npm run build --workspace @stoerdesk/api
+# Drizzle's migrator needs meta/_journal.json next to the SQL files. Fail the
+# build here rather than at container start if the copy step left it out.
+RUN test -f apps/api/dist/db/migrations/meta/_journal.json
 
 FROM node:22-alpine AS api
 WORKDIR /app
@@ -33,6 +36,10 @@ COPY packages/shared/package.json packages/shared/package.json
 # repository — neither exists in the runtime image.
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=api-build /app/apps/api/dist apps/api/dist
+# The migration folder comes straight from the source tree, including the
+# meta/_journal.json that the Drizzle migrator reads; it does not depend on the
+# copy step of the build script.
+COPY apps/api/src/db/migrations apps/api/dist/db/migrations
 # The version of record of this commit; the fallback of the installed version.
 COPY VERSION ./VERSION
 # Uploads are written by the unprivileged `node` user.
