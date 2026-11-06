@@ -13,6 +13,9 @@ export const userLocaleSchema = z.enum(['de', 'en'])
 /** Theme of a user: `auto` follows `prefers-color-scheme` (WP-M2-92, `PLAN.md` §14). */
 export const userThemeSchema = z.enum(['auto', 'light', 'dark'])
 
+/** Name of a user: `''` means unset, max 64 characters, stored trimmed (WP-M2-93/WP-M2-94). */
+export const userNameSchema = z.string().trim().max(64)
+
 const roleKeySchema = z.string().trim().min(1).max(64)
 
 const roleKeysSchema = z
@@ -23,6 +26,8 @@ const roleKeysSchema = z
 export const userSummarySchema = z.object({
   id: z.uuid(),
   email: z.email(),
+  givenName: userNameSchema,
+  familyName: userNameSchema,
   locale: userLocaleSchema,
   theme: userThemeSchema,
   active: z.boolean(),
@@ -36,6 +41,8 @@ export const userListResponseSchema = z.object({
 export const createUserRequestSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()),
   password: z.string().min(12).max(256),
+  givenName: userNameSchema.default(''),
+  familyName: userNameSchema.default(''),
   locale: userLocaleSchema.default('de'),
   theme: userThemeSchema.default('auto'),
   active: z.boolean().default(true),
@@ -43,6 +50,8 @@ export const createUserRequestSchema = z.object({
 })
 
 export const updateUserRequestSchema = z.object({
+  givenName: userNameSchema.optional(),
+  familyName: userNameSchema.optional(),
   locale: userLocaleSchema.optional(),
   theme: userThemeSchema.optional(),
   active: z.boolean().optional(),

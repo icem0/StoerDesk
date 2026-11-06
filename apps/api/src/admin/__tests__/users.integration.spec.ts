@@ -22,6 +22,8 @@ const { roles, userRoles, users } = schema
 type UserSummary = {
   id: string
   email: string
+  givenName: string
+  familyName: string
   locale: string
   theme: string
   active: boolean
@@ -171,10 +173,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(create.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
     })
 
-    it('creates an active user and assigns roles in one call', async () => {
+    it('creates an active user with names and assigns roles in one call', async () => {
       const response = await postUsers(cookies['admin'], {
         email: 'NewUser@Example.org',
         password: 'a-test-password',
+        givenName: 'Max',
+        familyName: 'Mustermann',
         roleKeys: ['office', 'oncall'],
       })
 
@@ -182,6 +186,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<UserResponseBody>()).toEqual({
         id: expect.any(String),
         email: 'newuser@example.org',
+        givenName: 'Max',
+        familyName: 'Mustermann',
         locale: 'de',
         theme: 'auto',
         active: true,
@@ -189,6 +195,21 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
 
       createdId = response.json<UserResponseBody>().id ?? ''
+    })
+
+    it('stores names in the user list', async () => {
+      const listed = await getUsers(cookies['admin'])
+
+      expect(listed.statusCode).toBe(200)
+      expect(listed.json<UsersResponseBody>().users).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: createdId,
+            givenName: 'Max',
+            familyName: 'Mustermann',
+          }),
+        ]),
+      )
     })
 
     it('rejects a duplicate e-mail without revealing the stored account', async () => {
@@ -203,6 +224,31 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         code: 'email_taken',
         params: { fields: ['email'] },
       })
+    })
+
+    it('updates one name and keeps the other', async () => {
+      const response = await patchUser(cookies['admin'], createdId, {
+        givenName: 'Maximilian',
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<UserResponseBody>()).toMatchObject({
+        id: createdId,
+        givenName: 'Maximilian',
+        familyName: 'Mustermann',
+      })
+
+      const listed = await getUsers(cookies['admin'])
+
+      expect(listed.json<UsersResponseBody>().users).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: createdId,
+            givenName: 'Maximilian',
+            familyName: 'Mustermann',
+          }),
+        ]),
+      )
     })
 
     it('updates role keys for an existing user', async () => {

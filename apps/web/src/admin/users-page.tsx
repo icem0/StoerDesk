@@ -19,6 +19,8 @@ type UserTheme = 'auto' | 'light' | 'dark'
 interface UserFormValues {
   email: string
   password: string
+  givenName: string
+  familyName: string
   locale: UserLocale
   theme: UserTheme
   active: boolean
@@ -94,6 +96,8 @@ function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
   const [values, setValues] = useState<UserFormValues>({
     email: '',
     password: '',
+    givenName: '',
+    familyName: '',
     locale: 'de',
     theme: 'auto',
     active: true,
@@ -112,6 +116,8 @@ function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
       setValues({
         email: '',
         password: '',
+        givenName: '',
+        familyName: '',
         locale: 'de',
         theme: 'auto',
         active: true,
@@ -217,6 +223,8 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
   const [values, setValues] = useState<UserFormValues>({
     email: user.email,
     password: '',
+    givenName: user.givenName,
+    familyName: user.familyName,
     locale: user.locale,
     theme: user.theme,
     active: user.active,
@@ -229,6 +237,8 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
         method: 'PATCH',
         headers: jsonHeaders,
         body: JSON.stringify({
+          givenName: values.givenName,
+          familyName: values.familyName,
           locale: values.locale,
           theme: values.theme,
           active: values.active,

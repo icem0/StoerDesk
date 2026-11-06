@@ -19,6 +19,8 @@ type Transaction = Parameters<Parameters<Database['database']['transaction']>[0]
 type UserRow = {
   id: string
   email: string
+  givenName: string
+  familyName: string
   locale: string
   theme: string
   active: boolean
@@ -107,6 +109,8 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
           .select({
             id: users.id,
             email: users.email,
+            givenName: users.givenName,
+            familyName: users.familyName,
             locale: users.locale,
             theme: users.theme,
             active: users.active,
@@ -149,7 +153,8 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
             )
         }
 
-        const { email, password, locale, theme, active, roleKeys } = parsed.data
+        const { email, password, givenName, familyName, locale, theme, active, roleKeys } =
+          parsed.data
         const duplicate = await database
           .select({ id: users.id })
           .from(users)
@@ -165,10 +170,20 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
           const roleIds = await loadRoleIds(tx, roleKeys)
           const inserted = await tx
             .insert(users)
-            .values({ email, passwordHash, locale, theme, active })
+            .values({
+              email,
+              passwordHash,
+              givenName,
+              familyName,
+              locale,
+              theme,
+              active,
+            })
             .returning({
               id: users.id,
               email: users.email,
+              givenName: users.givenName,
+              familyName: users.familyName,
               locale: users.locale,
               theme: users.theme,
               active: users.active,
@@ -225,6 +240,8 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
             .select({
               id: users.id,
               email: users.email,
+              givenName: users.givenName,
+              familyName: users.familyName,
               locale: users.locale,
               theme: users.theme,
               active: users.active,
@@ -251,12 +268,16 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
             await assertNotLastAdmin(tx, targetId)
           }
 
+          const nextGivenName = body.givenName ?? target.givenName
+          const nextFamilyName = body.familyName ?? target.familyName
           const nextLocale = body.locale ?? target.locale
           const nextTheme = body.theme ?? target.theme
 
           await tx
             .update(users)
             .set({
+              givenName: nextGivenName,
+              familyName: nextFamilyName,
               locale: nextLocale,
               theme: nextTheme,
               active: nextActive,
@@ -280,6 +301,8 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
             {
               id: target.id,
               email: target.email,
+              givenName: nextGivenName,
+              familyName: nextFamilyName,
               locale: nextLocale,
               theme: nextTheme,
               active: nextActive,

@@ -1,7 +1,7 @@
 # WP-M2-94: name fields in the shared user schemas and the admin user API
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-93 (`given_name` and `family_name` columns)
 phase: 2
 context-budget: 14k tokens
@@ -14,11 +14,13 @@ files-read:
 - apps/api/src/admin/users.ts — `UserRow`, the list select, the POST and PATCH routes (WP-M1-09)
 - apps/api/src/admin/__tests__/users.integration.spec.ts — route tests
 - apps/api/src/db/schema.ts — `users.given_name` / `users.family_name` (WP-M2-93)
+- apps/web/src/admin/users-page.tsx — `UserFormValues` and create/PATCH payloads
 
 files-write:
 
 - packages/shared/src/schemas/user.ts — `userNameSchema`, names in the schemas
 - apps/api/src/admin/users.ts — list, create and PATCH carry the names
+- apps/web/src/admin/users-page.tsx — form state mirrors the new required create fields (mechanical)
 
 interfaces:
 
@@ -59,7 +61,8 @@ and reported as unverified locally — the CI run has the service.
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
+- Files changed: `packages/shared/src/schemas/user.ts`, `apps/api/src/admin/users.ts`, `apps/web/src/admin/users-page.tsx` (mechanical: `UserFormValues` mirrors the now-required create fields), `apps/api/src/admin/__tests__/users.integration.spec.ts` (test)
+- Interfaces added: `userNameSchema = z.string().trim().max(64)`; `givenName`/`familyName` on `userSummarySchema`, `createUserRequestSchema` (`.default('')`) and `updateUserRequestSchema` (`.optional()`); `GET /api/v1/users` answers both names, `POST /api/v1/users` stores them, `PATCH /api/v1/users/:id` writes a name only when the body carries one
+- Verified: `npm run typecheck` green, `eslint` 0 errors (pre-existing warnings only), `vitest run` 544 tests green, `i18n:check` ok (651/651 keys); `wp:check` reports 233 checked / 1 failed — the single failure is the pre-existing, unrelated `work-packages/m4/09-branding-logo-api.md` (6 files-write entries > max 4), untouched by this WP
 - Follow-up WP: none
 - Open question: none
