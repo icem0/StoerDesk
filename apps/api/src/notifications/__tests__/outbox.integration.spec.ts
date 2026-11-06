@@ -122,7 +122,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const result = await drainOutbox(db, env)
 
-      expect(result).toEqual({ sent: 0, failed: 1, attempts: 3 })
+      expect(result).toEqual({ sent: 0, failed: 1, fallback: 0, attempts: 3 })
 
       const drained = onlyRow(await drainedWithState('FAILED'), 'outbox row')
 
@@ -166,7 +166,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const result = await drainOutbox(db, env)
 
-      expect(result).toEqual({ sent: 1, failed: 0, attempts: 1 })
+      expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
 
       const drained = onlyRow(await drainedWithState('SENT'), 'outbox row')
 
@@ -197,7 +197,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const result = await drainOutbox(db, env)
 
-      expect(result).toEqual({ sent: 0, failed: 1, attempts: 1 })
+      expect(result).toEqual({ sent: 0, failed: 1, fallback: 0, attempts: 1 })
 
       const drained = await drainedWithState('FAILED')
 
@@ -218,6 +218,92 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(failedEvent).toBeDefined()
       expect(failedEvent?.payload).toEqual({ channel: 'telegram', ticketNo, attempts: 1 })
+    })
+
+    it('escalates an exhausted row to the next channel of the chain', async () => {
+      const bodies: unknown[] = []
+
+      const server = http.createServer((req, res) => {
+        let data = ''
+
+        req.on('data', (chunk) => {
+          data += chunk
+        })
+
+        req.on('end', () => {
+          bodies.push(JSON.parse(data || '{}'))
+          res.writeHead(200)
+          res.end('ok')
+        })
+      })
+
+      await new Promise<void>((resolve) =>
+        server.listen(48000 + Math.floor(Math.random() * 1000), '127.0.0.1', resolve),
+      )
+
+      const port = (server.address() as { port: number }).port
+
+      const env = loadEnv({
+        SIGNAL_CLI_URL: 'http://127.0.0.1:1/',
+        SIGNAL_SOURCE_NUMBER: '+491234567890',
+        SIGNAL_RECIPIENTS: '+491234567891',
+        MATRIX_HOMESERVER: `http://127.0.0.1:${port}`,
+        MATRIX_ROOM_ID: '!outbox-test:mock',
+        MATRIX_ACCESS_TOKEN: 'outbox-test-token',
+      })
+
+      await db.insert(outbox).values(rowOf('signal'))
+
+      const result = await drainOutbox(db, env)
+
+      expect(result).toEqual({ sent: 1, failed: 0, fallback: 1, attempts: 4 })
+
+      const rows = await db
+        .select({
+          channel: outbox.channel,
+          state: outbox.state,
+          attempts: outbox.attempts,
+        })
+        .from(outbox)
+        .where(eq(outbox.ticketId, ticketId))
+
+      const signalRow = onlyRow(rows.filter((row) => row.channel === 'signal'), 'signal row')
+
+      expect(signalRow.state).toBe('FAILED')
+      expect(signalRow.attempts).toBe(3)
+
+      const matrixRow = onlyRow(rows.filter((row) => row.channel === 'matrix'), 'matrix row')
+
+      expect(matrixRow.state).toBe('SENT')
+      expect(matrixRow.attempts).toBe(1)
+
+      const events = await eventsOf()
+
+      expect(events.map((event) => event.type)).toContain('created')
+
+      const failedEvent = events.find(
+        (event) =>
+          event.type === 'notification_failed' &&
+          (event.payload as { channel?: string })?.channel === 'signal',
+      )
+
+      expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+
+      const sentEvent = events.find(
+        (event) =>
+          event.type === 'notification_sent' &&
+          (event.payload as { channel?: string })?.channel === 'matrix',
+      )
+
+      expect(sentEvent?.payload).toEqual({ channel: 'matrix', ticketNo, attempts: 1 })
+
+      // The fallback send really reached the Matrix homeserver mock.
+      expect(bodies).toHaveLength(1)
+      const body = bodies[0] as { msgtype?: string }
+
+      expect(body.msgtype).toBe('m.text')
+
+      server.close()
     })
   },
 )

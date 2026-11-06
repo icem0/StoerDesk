@@ -123,7 +123,18 @@ export async function claimOutboxRow(database: Db): Promise<ClaimedOutboxRow | u
 export interface OutboxDrainResult {
   sent: number
   failed: number
+  fallback: number
   attempts: number
+}
+
+/**
+ * The escalation chain of `PLAN.md` §12 ("3 retries with backoff, then the next
+ * channel in the escalation chain"): the configured channel names in
+ * `configuredChannels` order. A row whose channel is the last entry has no next
+ * channel, so its retries end `FAILED` without a fallback.
+ */
+function escalationChain(env: Env): string[] {
+  return configuredChannels(env).map((channel) => channel.name)
 }
 
 /**
@@ -139,15 +150,42 @@ const messageOf = (target: Record<string, unknown>): NotificationMessage => ({
 /**
  * Marks one row `SENT` or `FAILED` and appends exactly one
  * `notification_sent`/`notification_failed` event to the ticket history, both
- * in the same transaction.
+ * in the same transaction. With a `fallbackChannel` the exhausted row
+ * additionally queues one `PENDING` fallback row for the next channel of the
+ * escalation chain — same ticket, same machine-readable `target` params, no
+ * photo, no contact data. The pending guard of the same transaction makes
+ * sure a channel that is still waiting for its own WP-M7-04 row is never
+ * notified twice. Returns `true` only when a fallback row was really queued.
  */
 async function finishRow(
   database: Db,
   row: ClaimedOutboxRow,
   state: 'SENT' | 'FAILED',
   eventType: 'notification_sent' | 'notification_failed',
-): Promise<void> {
+  fallbackChannel?: string,
+): Promise<boolean> {
+  let fallbackQueued = false
+
   await database.transaction(async (tx) => {
+    if (fallbackChannel !== undefined) {
+      const pending = await tx
+        .select({ channel: outbox.channel })
+        .from(outbox)
+        .where(and(eq(outbox.ticketId, row.ticketId), eq(outbox.state, 'PENDING')))
+
+      const alreadyPending = pending.some((candidate) => candidate.channel === fallbackChannel)
+
+      if (!alreadyPending) {
+        await tx.insert(outbox).values({
+          ticketId: row.ticketId,
+          channel: fallbackChannel,
+          target: row.target,
+        })
+
+        fallbackQueued = true
+      }
+    }
+
     await tx.update(outbox).set({ state, updatedAt: new Date() }).where(eq(outbox.id, row.id))
 
     await tx.insert(ticketEvents).values({
@@ -161,6 +199,8 @@ async function finishRow(
       },
     })
   })
+
+  return fallbackQueued
 }
 
 const sleep = (ms: number): Promise<void> =>
@@ -173,6 +213,10 @@ const sleep = (ms: number): Promise<void> =>
  * sends it through the channel named by the row, retries up to
  * `NOTIFICATION_OUTBOX_MAX_ATTEMPTS` times with backoff and writes `SENT` /
  * `FAILED` plus the `notification_sent` / `notification_failed` event per row.
+ * An exhausted row falls back to the next channel of the escalation chain
+ * (`PLAN.md` §12, WP-M7-05): a `PENDING` fallback row for that channel is
+ * queued unless the ticket already has a pending row there, and the drain
+ * loop claims it in the same run — the chain length bounds the run.
  * A row whose channel name is no longer configured ends `FAILED`.
  */
 export async function drainOutbox(
@@ -183,7 +227,8 @@ export async function drainOutbox(
   const channelsByName = new Map<string, NotificationChannel>(
     configuredChannels(env).map((channel) => [channel.name, channel]),
   )
-  const result: OutboxDrainResult = { sent: 0, failed: 0, attempts: 0 }
+  const chain = escalationChain(env)
+  const result: OutboxDrainResult = { sent: 0, failed: 0, fallback: 0, attempts: 0 }
 
   while (true) {
     const row = await claimOutboxRow(database)
@@ -235,10 +280,32 @@ export async function drainOutbox(
         },
         'notification send failed',
       )
-
       if (row.attempts >= NOTIFICATION_OUTBOX_MAX_ATTEMPTS) {
-        await finishRow(database, row, 'FAILED', 'notification_failed')
-        result.failed += 1
+        const nextChannel = chain.at(chain.indexOf(row.channel) + 1)
+        const fallbackQueued = await finishRow(
+          database,
+          row,
+          'FAILED',
+          'notification_failed',
+          nextChannel,
+        )
+
+        if (fallbackQueued) {
+          log?.info(
+            {
+              queue: NOTIFICATION_OUTBOX_QUEUE,
+              channel: row.channel,
+              ticketNo,
+              attempts: row.attempts,
+              code: 'channel_fallback',
+            },
+            'notification escalated to next channel',
+          )
+
+          result.fallback += 1
+        } else {
+          result.failed += 1
+        }
       } else {
         // The row stays `PENDING`; the next loop iteration claims it again.
         await sleep(NOTIFICATION_OUTBOX_RETRY_BACKOFF_MS * 2 ** (row.attempts - 1))
@@ -275,10 +342,10 @@ export async function startNotificationOutboxJob(
     const { client, database } = createDatabase(connectionString)
 
     try {
-      const { sent, failed, attempts } = await drainOutbox(database, env, log)
+      const { sent, failed, fallback, attempts } = await drainOutbox(database, env, log)
 
       log?.info(
-        { queue: NOTIFICATION_OUTBOX_QUEUE, sent, failed, attempts },
+        { queue: NOTIFICATION_OUTBOX_QUEUE, sent, failed, fallback, attempts },
         'notification outbox drain finished',
       )
     } finally {

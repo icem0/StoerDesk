@@ -760,6 +760,7 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-04  | outbox rows in the ticket create transaction                       | done   |
 | WP-M7-04b | the localized ntfy action label                                    | done   |
 | WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done    |
+| WP-M7-05  | the notification channel fallback chain                                      | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1038,7 +1039,14 @@ which exceeds the four-file budget together with the label files): **WP-M7-04b**
 gone. The remaining half is **WP-M7-04c** (`work-packages/m7/04c-outbox-drain-worker.md`,
 **planned**): the worker that drains the rows oldest first with three retries and backoff,
 writes `SENT`/`FAILED`, appends the `notification_sent`/`notification_failed` ticket events
-and is scheduled per minute from the direct API start only.
+and is scheduled per minute from the direct API start only. **WP-M7-05** (`work-packages/m7/05-channel-fallback-chain.md`,
+**implemented**) adds the second half of the exit criterion: `drainOutbox` takes the next
+channel of `escalationChain(env)` (the configured channels in `configuredChannels` order)
+when a row exhausts its three attempts, ends it `FAILED` with its `notification_failed`
+event and queues one `PENDING` fallback row with the same ticket and the same machine-readable
+target params in the same transaction — unless the ticket already has a pending row for that
+channel, so a channel is never notified twice — and the drain claims it in the same run;
+`OutboxDrainResult` gained `fallback` and the log code `channel_fallback`.
 
 **Repair — red CI runs of WP-M4-07 / WP-M7-02 / WP-M7-03 / WP-M7-04 / WP-M7-04b
 (v1.0.25 … v1.0.29).** WP-M4-07 moved every workflow action into one dropdown menu but

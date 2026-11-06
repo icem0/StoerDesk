@@ -17,7 +17,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 14  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox | 6   |
+| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker | 7   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -175,7 +175,13 @@ record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 > `SENT`/`FAILED` plus one `notification_sent`/`notification_failed` event per row, and
 > `startNotificationOutboxJob` follows the `jobs/bma-sync.ts` shape (one short-lived pool per
 > job, `createQueue`/`work`/`schedule` every minute) and is started only from the direct API
-> start next to the other pg-boss jobs.
+> start next to the other pg-boss jobs. **WP-M7-05** (`05-channel-fallback-chain.md`) is
+> implemented as the second half of the phase 7 exit criterion: an exhausted row escalates
+> to the next channel of the chain in `configuredChannels` order (`escalationChain`), a
+> `PENDING` fallback row with the same ticket and the same machine-readable target params
+> is queued in the same transaction as the `notification_failed` event — only when the
+> ticket has no pending row for that channel already — and the drain claims it in the same
+> run; `OutboxDrainResult` gained `fallback` with the log code `channel_fallback`.
 
 ## Open follow-ups
 
@@ -400,6 +406,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M7-04  | outbox rows in the ticket create transaction                        | done                    | yes     |
 | WP-M7-04b | the localized ntfy action label                                   | done                    | yes     |
 | WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done                    | yes     |
+| WP-M7-05  | the notification channel fallback chain                                       | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

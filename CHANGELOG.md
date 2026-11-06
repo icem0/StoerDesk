@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The channel fallback chain (WP-M7-05): an outbox row that exhausts its three attempts no
+  longer simply ends `FAILED` — `drainOutbox` takes the next channel of
+  `escalationChain(env)` (the configured channels in `configuredChannels` order,
+  `PLAN.md` §12 "then the next channel in the escalation chain"), ends the row `FAILED`
+  with its `notification_failed` event and queues one `PENDING` fallback row for that
+  channel in the same transaction — same ticket, same machine-readable `{ ticketNo,
+  priority, objectName }` target params, no photo, no contact data — but only if the ticket
+  has no pending row for that channel already, so a channel is never notified twice. The
+  drain loop claims the fallback row in the same run, which the chain length bounds.
+  `OutboxDrainResult` gained `fallback` (log code `channel_fallback`). Covered by a
+  mocked-channel unit spec (escalation, pending guard, chain end) and a PostgreSQL
+  integration spec asserting both rows, both states and both events of one escalation.
+
 - The ntfy `view` action label is localized (WP-M7-04b): `server.de.json` and
   `server.en.json` gained the `notification.action_label` key (`Öffnen` in the German
   reference locale, `Open` in English) and `NtfyConfig` in

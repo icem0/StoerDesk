@@ -1,7 +1,8 @@
 import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
-import { drainOutbox, type ClaimedOutboxRow } from '../outbox'
+import { drainOutbox, type ClaimedOutboxRow, type OutboxRow } from '../outbox'
+import { outbox } from '../../db/schema'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 type Db = Database['database']
@@ -28,6 +29,39 @@ const row = (channel: string): MutableRow => ({
 
 const envNtfy = (): Env =>
   loadEnv({ NTFY_URL: 'https://ntfy.mock/stoerdesk', NTFY_TOPIC: 'stoerdesk' })
+
+/** Signal and Matrix configured: the escalation chain is `signal → matrix`. */
+const envSignalMatrix = (): Env =>
+  loadEnv({
+    SIGNAL_CLI_URL: 'https://signal.mock',
+    SIGNAL_SOURCE_NUMBER: '+491234567890',
+    SIGNAL_RECIPIENTS: '+491234567891',
+    MATRIX_HOMESERVER: 'https://matrix.mock',
+    MATRIX_ROOM_ID: '!room:mock',
+    MATRIX_ACCESS_TOKEN: 'mock-token',
+  })
+
+/** Only Matrix configured: it is the last entry of the chain. */
+const envMatrix = (): Env =>
+  loadEnv({
+    MATRIX_HOMESERVER: 'https://matrix.mock',
+    MATRIX_ROOM_ID: '!room:mock',
+    MATRIX_ACCESS_TOKEN: 'mock-token',
+  })
+
+/**
+ * Mocks `fetch` so the i-th call answers with `statuses[i - 1]` (`500` past the
+ * end). Every channel adapter uses `fetch`, so one mock drives every channel.
+ */
+function mockFetch(statuses: number[]) {
+  let calls = 0
+
+  return vi.fn(async () => {
+    calls += 1
+
+    return new Response('{}', { status: statuses[calls - 1] ?? 500 })
+  })
+}
 
 /** A draineable in-memory `outbox`: exactly the Drizzle chain the worker uses, nothing more. */
 function inMemoryDatabase(rows: MutableRow[]) {
@@ -75,8 +109,31 @@ function inMemoryDatabase(rows: MutableRow[]) {
         }
       },
     }),
-    insert: (_table: unknown) => ({
+    select: (_columns: unknown) => ({
+      from: (_table: unknown) => ({
+        where: (_where: unknown): Array<{ channel: string }> =>
+          rows
+            .filter((row) => row.state === 'PENDING')
+            .map((row) => ({ channel: row.channel })),
+      }),
+    }),
+    insert: (table: unknown) => ({
       values: async (value: unknown) => {
+        if (table === outbox) {
+          const fallback = value as OutboxRow
+
+          rows.push({
+            id: `fallback-row-${rows.length}`,
+            ticketId: fallback.ticketId,
+            channel: fallback.channel,
+            target: fallback.target as Record<string, unknown>,
+            state: 'PENDING',
+            attempts: 0,
+          })
+
+          return
+        }
+
         events.push(
           value as {
             ticketId: string
@@ -107,7 +164,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     const result = await drainOutbox(fakeDatabase, envNtfy())
 
-    expect(result).toEqual({ sent: 0, failed: 0, attempts: 0 })
+    expect(result).toEqual({ sent: 0, failed: 0, fallback: 0, attempts: 0 })
     expect(events).toEqual([])
   })
 
@@ -128,7 +185,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
 
-    expect(result).toEqual({ sent: 1, failed: 0, attempts: 3 })
+    expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 3 })
     expect(calls).toBe(3)
     expect(rows[0]?.state).toBe('SENT')
     expect(rows[0]?.attempts).toBe(3)
@@ -154,7 +211,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
 
-    expect(result).toEqual({ sent: 0, failed: 1, attempts: 3 })
+    expect(result).toEqual({ sent: 0, failed: 1, fallback: 0, attempts: 3 })
     expect(rows[0]?.state).toBe('FAILED')
     expect(rows[0]?.attempts).toBe(3)
 
@@ -178,7 +235,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
 
-    expect(result).toEqual({ sent: 0, failed: 1, attempts: 1 })
+    expect(result).toEqual({ sent: 0, failed: 1, fallback: 0, attempts: 1 })
     expect(fetchMock).not.toHaveBeenCalled()
     expect(rows[0]?.state).toBe('FAILED')
     expect(rows[0]?.attempts).toBe(1)
@@ -210,7 +267,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
 
-    expect(result).toEqual({ sent: 2, failed: 0, attempts: 2 })
+    expect(result).toEqual({ sent: 2, failed: 0, fallback: 0, attempts: 2 })
     expect(rows[0]?.state).toBe('SENT')
     expect(rows[1]?.state).toBe('SENT')
     expect(events).toHaveLength(2)
@@ -235,5 +292,91 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     expect(events).toContainEqual(created)
     expect(events.filter((event) => event.type === 'notification_failed')).toHaveLength(1)
+  })
+
+  it('falls back to the next channel when an exhausted row escalates', async () => {
+    const fetchMock = mockFetch([500, 500, 500, 200])
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch = fetchMock as unknown as typeof fetch
+
+    const rows = [row('signal')]
+    const { fakeDatabase, events } = inMemoryDatabase(rows)
+
+    const result = await drainOutbox(fakeDatabase, envSignalMatrix())
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(result).toEqual({ sent: 1, failed: 0, fallback: 1, attempts: 4 })
+    expect(rows).toHaveLength(2)
+    expect(rows[0]?.state).toBe('FAILED')
+    expect(rows[0]?.attempts).toBe(3)
+    expect(rows[1]?.channel).toBe('matrix')
+    expect(rows[1]?.state).toBe('SENT')
+    expect(rows[1]?.attempts).toBe(1)
+
+    const failedEvent = events.find((event) => event.type === 'notification_failed')
+
+    expect(failedEvent).toBeDefined()
+    expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+
+    const sentEvent = events.find((event) => event.type === 'notification_sent')
+
+    expect(sentEvent).toBeDefined()
+    expect(sentEvent?.payload).toEqual({ channel: 'matrix', ticketNo, attempts: 1 })
+  })
+
+  it('queues no fallback while the next channel still has a pending row', async () => {
+    const fetchMock = mockFetch([500, 500, 500, 200])
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch = fetchMock as unknown as typeof fetch
+
+    const pendingNext = row('matrix')
+    pendingNext.id = 'row-id-2'
+    const rows = [row('signal'), pendingNext]
+    const { fakeDatabase, events } = inMemoryDatabase(rows)
+
+    const result = await drainOutbox(fakeDatabase, envSignalMatrix())
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(result).toEqual({ sent: 1, failed: 1, fallback: 0, attempts: 4 })
+    expect(rows).toHaveLength(2)
+    expect(rows[0]?.state).toBe('FAILED')
+    expect(rows[0]?.attempts).toBe(3)
+    expect(rows[1]?.state).toBe('SENT')
+    expect(rows[1]?.attempts).toBe(1)
+
+    const failedEvent = events.find((event) => event.type === 'notification_failed')
+
+    expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+
+    const sentEvent = events.find((event) => event.type === 'notification_sent')
+
+    expect(sentEvent?.payload).toEqual({ channel: 'matrix', ticketNo, attempts: 1 })
+  })
+
+  it('ends FAILED without a fallback at the end of the chain', async () => {
+    const fetchMock = mockFetch([])
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch = fetchMock as unknown as typeof fetch
+
+    const rows = [row('matrix')]
+    const { fakeDatabase, events } = inMemoryDatabase(rows)
+
+    const result = await drainOutbox(fakeDatabase, envMatrix())
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(result).toEqual({ sent: 0, failed: 1, fallback: 0, attempts: 3 })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.state).toBe('FAILED')
+    expect(rows[0]?.attempts).toBe(3)
+
+    const failedEvent = events.find((event) => event.type === 'notification_failed')
+
+    expect(failedEvent?.payload).toEqual({ channel: 'matrix', ticketNo, attempts: 3 })
   })
 })
