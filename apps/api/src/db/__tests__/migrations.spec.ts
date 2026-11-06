@@ -213,8 +213,38 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0020_oncall_tables')
+    expect(entries.at(-1)?.tag).toBe('0021_ticket_purges_repair')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
+  })
+})
+
+describe('migration journal integrity', () => {
+  const entries = readJournal().entries as { idx: number; tag: string; when: number }[]
+
+  it('uses millisecond timestamps for every entry', () => {
+    // Drizzle applies an entry only when its `when` is newer than the latest
+    // applied one; a seconds value (10 digits) is silently skipped.
+    for (const entry of entries) {
+      expect(entry.when, entry.tag).toBeGreaterThan(1_000_000_000_000)
+    }
+  })
+
+  it('keeps the timestamps strictly increasing in journal order', () => {
+    for (let index = 1; index < entries.length; index += 1) {
+      expect(entries[index]?.when, entries[index]?.tag).toBeGreaterThan(
+        entries[index - 1]?.when ?? Number.POSITIVE_INFINITY,
+      )
+    }
+  })
+})
+
+describe('migration 0021 ticket purges repair', () => {
+  const sql = readMigration('0021_ticket_purges_repair')
+
+  it('recreates ticket_purges idempotently', () => {
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS "ticket_purges"')
+    expect(sql).toContain('CREATE INDEX IF NOT EXISTS "ticket_purges_created_at_idx"')
+    expect(sql).toContain('WHEN duplicate_object THEN NULL')
   })
 })
 
