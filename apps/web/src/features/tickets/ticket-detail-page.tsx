@@ -800,6 +800,7 @@ export function TicketDetailPage() {
             aria-haspopup="menu"
             aria-expanded={optionsOpen}
             aria-label={t('detail.options.title')}
+            data-testid="ticket-options-button"
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/80 text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
             onClick={() => setOptionsOpen((current) => !current)}
             title={t('detail.options.title')}

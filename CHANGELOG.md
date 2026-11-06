@@ -454,6 +454,12 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The ticket workflow E2E timed out clicking the top-right options button of the
+  ticket detail (`getByRole('button', { name: /Optionen|Options/ })`). The button now
+  carries `data-testid="ticket-options-button"` and the workflow E2E targets it by test
+  id instead of the localized accessible name, and waits for network idle after
+  navigating to the ticket detail. Both `de` and `en` runs of
+  `full ticket workflow with audit trail` pass again.
 - The ticket workflow E2E asserted the localized actor kind of the audit trail with
   `getByTestId('ticket-history').locator('.text-xs.text-slate-400')` against a single
   text: all seven history rows carry those classes, so the strict-mode locator

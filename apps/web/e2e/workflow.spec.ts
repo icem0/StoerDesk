@@ -204,7 +204,7 @@ async function performAction(
   actionLabel: string,
   confirmLabel: string,
 ): Promise<void> {
-  await page.getByRole('button', { name: /Optionen|Options/ }).click()
+  await page.getByTestId('ticket-options-button').click()
   await page.getByRole('button', { name: actionLabel }).click()
   await page.getByRole('button', { name: confirmLabel }).click()
 }
@@ -229,6 +229,7 @@ for (const language of ['de', 'en'] as const) {
 
     // Navigate to the ticket detail page.
     await page.goto(`/tickets/${ticketNo}`)
+    await page.waitForLoadState('networkidle')
 
     // Expect NEW status and the created event in the history.
     await expect(page.getByRole('heading', { level: 1 })).toContainText(ticketNo)
