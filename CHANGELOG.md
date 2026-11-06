@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- A database dump is forced before the API applies pending migrations (WP-M3-17):
+  `docker-compose.yml` gained the one-shot `db-backup-pre-migrate` service. It has no
+  profile, writes and verifies `/backups/pre-migrate-<stamp>.sql.gz` in the backup
+  volume and `api` depends on it with `condition: service_completed_successfully`, so a
+  failed or empty dump stops the deployment before any migration runs. A broken
+  migration therefore never reaches the database without a fresh dump. The dump lives
+  in the existing backup volume and `BACKUP_RETENTION_DAYS` also bounds these copies;
+  the periodic `backup` profile service is unchanged. `README.md`, `docs/DEPLOYMENT.md`
+  and `.env.example` document the gate. The Docker commands remain unverified in the
+  development container (no Docker daemon).
+
 - The e-mail channel sends notifications over SMTP (WP-M7-07): `apps/api/src/notifications/channels/email.ts`
   is the fourth channel adapter of the phase-7 chain and talks to an existing mail server through
   `nodemailer` (ADR-0009 — the plan fixed no SMTP library and the `SMTP_PORT=587` default needs a

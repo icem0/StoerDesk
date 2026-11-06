@@ -37,12 +37,20 @@ docker compose up -d web
 
 ## Services
 
-| Service  | Profile  | Host port  | Purpose                                            |
-| -------- | -------- | ---------- | -------------------------------------------------- |
-| `db`     | —        | none       | PostgreSQL 16, source of truth                     |
-| `api`    | —        | none       | Fastify API on port 3000; runs migrations on start |
-| `web`    | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
-| `backup` | `backup` | none       | periodic `pg_dump` into the backup volume          |
+| Service                 | Profile  | Host port  | Purpose                                            |
+| ----------------------- | -------- | ---------- | -------------------------------------------------- |
+| `db`                    | —        | none       | PostgreSQL 16, source of truth                     |
+| `db-backup-pre-migrate` | —        | none       | one-shot `pg_dump` before the API migrates         |
+| `api`                   | —        | none       | Fastify API on port 3000; runs migrations on start |
+| `web`                   | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
+| `backup`                | `backup` | none       | periodic `pg_dump` into the backup volume          |
+
+Before the API container starts, `db-backup-pre-migrate` writes
+`/backups/pre-migrate-<timestamp>.sql.gz` into the backup volume and verifies the
+archive. `api` waits for that container to exit successfully
+(`service_completed_successfully`); a failed or empty dump stops the deployment
+before any migration runs. The service has no profile, so the gate stays active
+when the periodic `backup` profile is off.
 
 The `web` container starts independently of the API: nginx resolves the API
 host per request, so the UI is reachable while the API is starting or
@@ -227,7 +235,10 @@ docker run --rm -v stoerdesk_backups:/backups alpine ls -l /backups
 ```
 
 `BACKUP_INTERVAL_SECONDS` controls the interval, `BACKUP_RETENTION_DAYS` how
-long dumps are kept. To restore a dump:
+long dumps are kept. That window also bounds the `pre-migrate-*.sql.gz` dumps
+that every compose deployment writes before the API migrates. The dump holds the
+ticket data, including personal data, and is not encrypted at rest beyond the
+protection of the `backups` volume. To restore a dump:
 
 ```bash
 gunzip -c stoerdesk-20260101T120000Z.sql.gz | \

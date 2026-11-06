@@ -35,6 +35,51 @@ services:
     networks:
       - backend
 
+  # One-shot dump before the API applies pending migrations (WP-M3-17). The
+  # `api` service waits for this container to finish successfully, so a broken
+  # migration can never run on a database without a fresh dump. No profile:
+  # the gate stays active when the periodic `backup` profile is switched off.
+  db-backup-pre-migrate:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: 'no'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        stamp="$$(date -u +%Y%m%dT%H%M%SZ)"
+        dump="/backups/.pre-migrate-$$stamp.sql"
+        tmp="/backups/pre-migrate-$$stamp.sql.gz.tmp"
+        out="/backups/pre-migrate-$$stamp.sql.gz"
+        trap 'rm -f "$$dump" "$$tmp"' EXIT
+        echo "writing pre-migration backup $$out"
+        PGPASSWORD="$${POSTGRES_PASSWORD}" pg_dump \
+          --host=db --username="$${POSTGRES_USER}" --dbname="$${POSTGRES_DB}" \
+          --file="$$dump"
+        test -s "$$dump"
+        gzip -c "$$dump" > "$$tmp"
+        gzip -t "$$tmp"
+        mv "$$tmp" "$$out"
+        find /backups -name 'pre-migrate-*.sql.gz' -mtime "+$${BACKUP_RETENTION_DAYS}" -delete
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stoerdesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is missing - run "npm run env:create"}
+      POSTGRES_DB: ${POSTGRES_DB:-stoerdesk}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      TZ: ${TZ:-Europe/Berlin}
+    volumes:
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    networks:
+      - backend
+
   # Applies pending Drizzle migrations at start (Dockerfile CMD), then serves.
   api:
     build:
@@ -80,6 +125,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-backup-pre-migrate:
+        condition: service_completed_successfully
     # No published host port: `web` reaches the API over the internal `backend`
     # network (API_UPSTREAM). Direct access for curl/monitoring is opt-in with
     # docker-compose.debug.yml.

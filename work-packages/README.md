@@ -14,7 +14,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
 | [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
 | [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 14  |
+| [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 15  |
 | [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter | 9 |
@@ -400,6 +400,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M3-14  | the update menu tells a lost connection from a refused webhook     | done                    | yes     |
 | WP-M3-15  | host deploy hook for the update menu (`npm run deploy:hook`)         | done                    | yes     |
 | WP-M3-16  | update.sh compares the running version, not the folder             | done                    | yes     |
+| WP-M3-17  | forced pre-migration database dump before the API starts            | done                    | yes     |
 | WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
 | WP-M4-06  | fix ticket hard-delete blocked by append-only trigger               | done                    | yes     |
 | WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
@@ -665,6 +666,15 @@ it snapshots the image ids of the three owned names before the rebuild, removes 
 whatever neither a current tag nor a container of the project needs, keeps the
 project-labelled prune as its last best-effort command and never prunes a time window —
 `--gc` stays a property of the script. That closes the last open item of phase 3.
+
+**Deploy safety, out of band (WP-M3-17).** The API applies migrations in its container
+start, so a broken migration hits the product database and an image rollback does not undo
+it. `docker-compose.yml` gained the one-shot `db-backup-pre-migrate` service (no profile):
+it writes and verifies `/backups/pre-migrate-<stamp>.sql.gz` into the backup volume, and
+`api` depends on it with `condition: service_completed_successfully`, so a failed dump
+stops the deployment before any migration runs. `BACKUP_RETENTION_DAYS` also bounds these
+dumps; the periodic `backup` profile is unchanged. Phase 3 is reopened only for this safety
+item and closes with it.
 
 **Record correction (WP-M3-02b commit).** The rows of **WP-M2-75 … WP-M2-78** still said
 `planned` although `e61b5fe`, `afacc9a`, `16e29a8`/`07e6490` and `ad00476` had shipped the

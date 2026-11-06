@@ -49,6 +49,11 @@ npm run env:create                # writes .env with generated secrets
 docker compose up -d --build
 ```
 
+Before the API applies pending migrations, the one-shot `db-backup-pre-migrate`
+service writes a compressed dump into the `backups` volume. The API container is
+not created until that dump exists, so a failed dump stops the deployment instead
+of migrating an unprotected database.
+
 `npm run env:create` is a plain Node script (no `npm install` needed, Node ≥ 22.12).
 Without Node on the host, write the two required secrets into `.env` yourself — the
 stack refuses to start without them:
@@ -119,9 +124,10 @@ and [`docs/REPO-MAP.md`](docs/REPO-MAP.md):
 | `apps/api`        | Fastify, Drizzle, PostgreSQL 16, pg-boss                   | Source of truth: tickets, RBAC, outbox     |
 | `packages/shared` | Zod schemas, types, permissions, i18n resources            | Contracts shared by web and API            |
 
-The Compose stack consists of `db` (PostgreSQL 16), `api` (Fastify, applies pending
-migrations at start) and `web` (nginx: PWA + reverse proxy), plus the optional
-`backup` service.
+The Compose stack consists of `db` (PostgreSQL 16), `db-backup-pre-migrate` (a
+one-shot dump before every migration), `api` (Fastify, applies pending migrations
+at start) and `web` (nginx: PWA + reverse proxy), plus the optional `backup`
+service.
 
 Conventions across the code base: UUID v7 for ids, server time as the authoritative
 clock, errors as `{ code, params }` (never translated text on the wire), structured

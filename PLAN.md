@@ -1096,6 +1096,17 @@ same family name and never invents a given name (`email` stays the login key). I
 announced follow-up **WP-M2-94** (`work-packages/m2/94-user-name-fields-api.md`) carries
 the names into the shared user schemas and the admin user API and is **planned**.
 
+**Deploy safety — the pre-migration dump (WP-M3-17, out-of-band phase 3).** The API
+applies pending Drizzle migrations in its container `CMD`, so a broken migration reaches
+the production database before the server answers and an image rollback does not undo
+it. `docker-compose.yml` therefore gained the one-shot service `db-backup-pre-migrate`
+(no profile, Postgres image, `backups` volume): it writes and verifies
+`/backups/pre-migrate-<stamp>.sql.gz`, and `api` depends on it with
+`condition: service_completed_successfully`. A failed or empty dump stops the deployment
+before any migration runs; `BACKUP_RETENTION_DAYS` also bounds these dumps. The periodic
+`backup` profile service is unchanged. `npm run check` and `npm run build` are green; the
+Docker commands of §18.1 are unverified in this container (no Docker daemon).
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
