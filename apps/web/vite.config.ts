@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg'],
+        includeAssets: ['logo.png'],
         srcDir: 'src',
         filename: 'sw.ts',
         strategies: 'injectManifest',
@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           start_url: '/',
           lang: 'de',
-          icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }],
+          icons: [{ src: '/logo.png', sizes: 'any', type: 'image/png' }],
         },
       }),
     ],
