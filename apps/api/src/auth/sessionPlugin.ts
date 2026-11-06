@@ -17,6 +17,8 @@ import { loadSession, loadUserRoleKeys, SESSION_COOKIE_NAME } from './session'
 export type AuthUser = {
   id: string
   email: string
+  givenName: string
+  familyName: string
   locale: string
   theme: string
   roles: string[]

@@ -24,6 +24,8 @@ type SessionDatabase = Database['database']
 export type SessionUser = {
   id: string
   email: string
+  givenName: string
+  familyName: string
   locale: string
   theme: string
 }
@@ -88,6 +90,8 @@ export async function loadSession(
     .select({
       id: users.id,
       email: users.email,
+      givenName: users.givenName,
+      familyName: users.familyName,
       locale: users.locale,
       theme: users.theme,
       active: users.active,
@@ -109,7 +113,14 @@ export async function loadSession(
     return undefined
   }
 
-  return { id: current.id, email: current.email, locale: current.locale, theme: current.theme }
+  return {
+    id: current.id,
+    email: current.email,
+    givenName: current.givenName,
+    familyName: current.familyName,
+    locale: current.locale,
+    theme: current.theme,
+  }
 }
 
 /** Logout: the row is gone, an unknown token is not an error. */

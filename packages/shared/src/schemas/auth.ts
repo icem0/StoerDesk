@@ -24,6 +24,8 @@ export const meResponseSchema = z.object({
   user: z.object({
     id: z.uuid(),
     email: z.email(),
+    givenName: z.string(),
+    familyName: z.string(),
     locale: z.enum(['de', 'en']),
     theme: z.enum(['auto', 'light', 'dark']),
     roles: z.array(z.string().min(1)),

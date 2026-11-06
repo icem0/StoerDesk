@@ -67,6 +67,8 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
         .select({
           id: users.id,
           email: users.email,
+          givenName: users.givenName,
+          familyName: users.familyName,
           locale: users.locale,
           theme: users.theme,
           passwordHash: users.passwordHash,
@@ -102,6 +104,8 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           user: {
             id: account.id,
             email: account.email,
+            givenName: account.givenName,
+            familyName: account.familyName,
             locale: account.locale,
             theme: account.theme,
             roles,

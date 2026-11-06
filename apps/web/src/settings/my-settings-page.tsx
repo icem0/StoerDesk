@@ -41,13 +41,23 @@ export function MySettingsPage() {
   const { t } = useTranslation('common')
   const me = useQuery({
     queryKey: ['me'],
-    queryFn: () => apiFetch<{ user: { id: string; email: string; locale: UserLocale; theme: UserTheme } }>('/v1/me'),
+    queryFn: () =>
+      apiFetch<{
+        user: {
+          id: string
+          email: string
+          givenName: string
+          familyName: string
+          locale: UserLocale
+          theme: UserTheme
+        }
+      }>('/v1/me'),
     retry: false,
   })
 
   const [values, setValues] = useState<MySettingsFormValues>({
-    givenName: '',
-    familyName: '',
+    givenName: me.data?.user.givenName ?? '',
+    familyName: me.data?.user.familyName ?? '',
     locale: me.data?.user.locale ?? 'de',
     theme: me.data?.user.theme ?? 'auto',
     password: '',
