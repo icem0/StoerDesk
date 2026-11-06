@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The deadline administration (WP-M6-14, WP-M6-14b, WP-M6-15, WP-M6-16): the four deadline
+  hours per priority and the reaction minutes (standard and critical) of the escalation rules
+  are editable at `/admin/deadlines`, backed by `GET/PUT /api/v1/settings/deadlines`. The menu
+  entry "Fristen" of the administration is now available. Per-object-type deadlines are not
+  implemented; no spec defines them yet.
+
 - Phase 8 (on-call calendar) is split and started (WP-M8-01): `specs/04-oncall.md` now
   carries the reviewed contract for pools, local-time weekly slots, the six shift states,
   confirm/decline, swap requests, ticket coupling, warnings and the personal iCal feed.

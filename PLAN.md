@@ -1019,6 +1019,12 @@ exit-criterion integration test "overdue ticket escalates and appears in the his
 real API on a throwaway database. The phase-6 exit criterion — an overdue ticket escalates with
 `rule = deadline_exceeded`, the ticket detail timeline turns `red`, and a second escalation scan
 adds no event — is proven by `apps/api/src/tickets/__tests__/escalation-exit.integration.spec.ts`.
+The administration menu of the deadlines was missing after that record: **WP-M6-14** (shared
+deadline and reaction schema), **WP-M6-14b** (`GET/PUT /api/v1/settings/deadlines`, 6/6 integration
+tests against PostgreSQL), **WP-M6-15** (`/admin/deadlines` page) and **WP-M6-16** (route and the
+available menu entry) implement the per-priority hours and the reaction minutes of ADR-0008. The
+per-object-type deadlines (Objektart) are not part of phase 6: no spec or ADR defines them, so they
+stay an open decision (§19) until an ADR exists.
 Phase 7 (notifications) starts with its `m7` packages: **WP-M7-01** and **WP-M7-02**
 are implemented (the ntfy channel adapter, its `configuredChannels` entry and its unit test),
 and **WP-M7-03** is implemented as well — `apps/web/src/features/settings/NtfySubscription.tsx`
@@ -1354,7 +1360,7 @@ These decisions need an ADR or explicit approval before the related WP starts:
   out-of-band host update agent, never shell execution in the `api` container and
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
-- contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03),
+- contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03), editable in the administration (WP-M6-16); per-object-type deadlines (Objektart) are undecided — they need an ADR before a work package,
 - whether shift swaps require admin approval by default (default: yes) — **resolved by ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the original technician remains responsible until approval,
 - name and logo (working title: StörDesk).
 
