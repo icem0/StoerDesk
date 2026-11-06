@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import {
   type InternalCreateTicketRequest,
   type StandardTextLocale,
@@ -19,6 +19,10 @@ import { useFaultCatalog } from './use-fault-catalog'
  * fields, then POST to `/api/v1/tickets`. The server enforces `ticket.create`.
  * The object is identified by its UUID `id`, not by `objectNo`, so the server
  * lookup in `createInternalTicket` resolves.
+ *
+ * The object picker is a bounded dropdown: closed by default, opens on focus,
+ * lists matches in a scrollable box so a large object table never unfolds the
+ * page, and the search is debounced so the API is not hit on every keystroke.
  */
 
 type ObjectOption = {
@@ -43,12 +47,141 @@ function useObjects(search: string) {
   })
 }
 
+/**
+ * Bounded object picker for the internal create form.
+ *
+ * The list stays closed until the search field is focused. Matches render inside
+ * a fixed-height, scrollable box (`max-h-64`, `overflow-y-auto`), so even a
+ * hundred matching objects cannot push the rest of the form out of view. The
+ * query key carries the debounced search, so the object list API is only called
+ * after the user has paused typing — never on every keystroke.
+ */
+function ObjectPicker({ onPick }: { onPick: (object: ObjectOption) => void }) {
+  const { t } = useTranslation('ticket')
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const [highlighted, setHighlighted] = useState(-1)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const objectsQuery = useObjects(debouncedSearch)
+  const objects = objectsQuery.data?.objects ?? []
+  const isLoading = objectsQuery.isPending
+  const isError = objectsQuery.isError
+
+  // Debounce the search so the object list API is not hit on every keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 150)
+
+    return () => clearTimeout(timer)
+  }, [search])
+
+  function handleFocus() {
+    setOpen(true)
+  }
+
+  function handleBlur() {
+    setOpen(false)
+    setHighlighted(-1)
+  }
+
+  function handlePick(object: ObjectOption) {
+    onPick(object)
+    setOpen(false)
+    setHighlighted(-1)
+    setSearch('')
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Escape') {
+      setOpen(false)
+      setHighlighted(-1)
+      return
+    }
+
+    if (!open || objects.length === 0) {
+      return
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setHighlighted((current) => (current + 1) % objects.length)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setHighlighted((current) => (current - 1 + objects.length) % objects.length)
+    } else if (event.key === 'Enter') {
+      event.preventDefault()
+
+      if (highlighted >= 0) {
+        handlePick(objects[highlighted]!)
+      }
+    }
+  }
+
+  const noMatch = search.trim() !== '' && !isLoading && !isError && objects.length === 0
+
+  return (
+    <div className="flex flex-col gap-1">
+      <input
+        ref={inputRef}
+        type="search"
+        placeholder={t('internal.create.fields.objectSearchPlaceholder')}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        aria-expanded={open}
+        aria-controls="object-picker-list"
+        className="rounded bg-slate-900 p-2 text-slate-100"
+      />
+      {open ? (
+        <div
+          id="object-picker-list"
+          role="listbox"
+          aria-label={t('internal.create.fields.object')}
+          className="flex flex-col gap-1 border border-slate-700 rounded bg-slate-900/80 max-h-64 overflow-y-auto"
+        >
+          {isLoading ? (
+            <div className="p-2 text-xs text-slate-400">{t('internal.loading')}</div>
+          ) : isError ? (
+            <div className="p-2 text-xs text-slate-400" role="alert">
+              {t('internal.errors.noObjects')}
+            </div>
+          ) : noMatch ? (
+            <div className="p-2 text-xs text-slate-400">{t('internal.create.errors.noMatch')}</div>
+          ) : (
+            objects.map((object, index) => (
+              <button
+                key={object.id}
+                id={`object-picker-option-${index}`}
+                role="option"
+                aria-selected={highlighted === index}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 ${
+                  highlighted === index ? 'bg-sky-600/20 text-white' : 'hover:bg-slate-800'
+                }`}
+                type="button"
+                onMouseDown={(event) => {
+                  // Keep the input focused so the option click really selects it.
+                  event.preventDefault()
+                }}
+                onClick={() => handlePick(object)}
+              >
+                <span className="font-mono text-slate-400">{object.objectNo}</span>
+                <span>{object.name}</span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function InternalCreatePage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
 
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedObjectId, setSelectedObjectId] = useState('')
   const [pickedObject, setPickedObject] = useState<ObjectOption | undefined>(undefined)
   const [title, setTitle] = useState('')
@@ -61,16 +194,6 @@ export function InternalCreatePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Debounce the search so the object list API is not hit on every keystroke.
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 150)
-
-    return () => clearTimeout(timer)
-  }, [search])
-
-  const objectsQuery = useObjects(debouncedSearch)
-
-  const objects = objectsQuery.data?.objects ?? []
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
   const activeCatalog = catalog.filter((entry) => entry.archived === false)
@@ -141,12 +264,8 @@ export function InternalCreatePage() {
     }
   }
 
-  if (objectsQuery.isPending) {
-    return <p className="text-slate-400">{t('internal.loading')}</p>
-  }
-
-  if (objectsQuery.isError) {
-    return <p className="text-rose-400 text-sm" role="alert">{t('internal.errors.noObjects')}</p>
+  if (error !== null) {
+    return <p className="text-rose-400 text-sm" role="alert">{error}</p>
   }
 
   return (
@@ -165,41 +284,12 @@ export function InternalCreatePage() {
         </button>
       </div>
 
-      {error !== null ? (
-        <p className="text-rose-400 text-sm" role="alert">{error}</p>
-      ) : null}
-
       <form className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-2 col-span-full">
           <label className="text-sm font-medium text-slate-200">
             {t('internal.create.fields.object')}
           </label>
-          <input
-            className="rounded bg-slate-900 p-2 text-slate-100"
-            type="search"
-            placeholder={t('internal.create.fields.objectSearchPlaceholder')}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="flex flex-col gap-1 border border-slate-700 rounded bg-slate-900/80">
-            {objects.length === 0 ? (
-              <div className="p-2 text-xs text-slate-400">
-                {search.trim() !== '' ? t('internal.create.errors.noMatch') : t('internal.create.errors.noObjects')}
-              </div>
-            ) : (
-              objects.map((object) => (
-                <button
-                  key={object.id}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                  type="button"
-                  onClick={() => pickObject(object)}
-                >
-                  <span className="font-mono text-slate-400">{object.objectNo}</span>
-                  <span>{object.name}</span>
-                </button>
-              ))
-            )}
-          </div>
+          <ObjectPicker onPick={pickObject} />
           {pickedObject !== undefined ? (
             <p className="text-xs text-slate-400">
               <span className="font-mono">{pickedObject.objectNo}</span>{' — '}

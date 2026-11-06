@@ -125,6 +125,9 @@ function renderPage() {
 
 async function pickObjectAndSubmit() {
   const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+  // The picker is closed by default — open it on focus first.
+  fireEvent.focus(searchInput)
+  await screen.findByText('Rathaus')
   fireEvent.change(searchInput, { target: { value: '1234' } })
   await screen.findByText('Rathaus')
   fireEvent.click(screen.getByText('12345_01'))
@@ -201,12 +204,15 @@ describe('InternalCreatePage', () => {
     stubMultipleObjects()
     renderPage()
 
-    // The picker is open immediately — no typing required — and sorted by objectNo.
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+
+    // The picker is closed by default — opening it on focus shows all objects,
+    // sorted by objectNo, inside a bounded scrollable list.
+    fireEvent.focus(searchInput)
     await screen.findByText('10000_01')
     await screen.findByText('12345_01')
     await screen.findByText('90000_01')
 
-    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
     fireEvent.change(searchInput, { target: { value: 'schule' } })
 
     // Live filter: only the matching object remains (debounced).
