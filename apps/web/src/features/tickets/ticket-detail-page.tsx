@@ -730,19 +730,31 @@ export function TicketDetailPage() {
   function renderStornoDialog(): ReactNode {
     const isCancel = stornoMode === 'cancel'
     const missing = stornoReason.trim().length < 5
+    const titleId = 'storno-dialog-title'
+    const hintId = 'storno-dialog-hint'
     return (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-        onClick={() => setStornoOpen(false)}
-        role="dialog"
-        aria-modal="true"
-        aria-label={isCancel ? t('detail.storno.title') : t('detail.storno.uncancelTitle')}
-      >
-        <button
-          onClick={(event) => {
+        // Only a click on the backdrop itself closes the dialog; clicks inside
+        // the panel (e.g. into the text field) must not reach this handler.
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            setStornoOpen(false)
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
             event.stopPropagation()
             setStornoOpen(false)
-          }}
+          }
+        }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={hintId}
+      >
+        <button
+          onClick={() => setStornoOpen(false)}
           className="absolute top-4 right-4 z-10 p-2 rounded bg-white/10 text-white hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           aria-label={t('detail.photos.close')}
           type="button"
@@ -751,27 +763,36 @@ export function TicketDetailPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <div className="w-full max-w-md p-6 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
-          <h2 className="text-lg font-semibold text-slate-100 mb-3">
+        <form
+          className="w-full max-w-md p-6 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!missing) {
+              void handleStornoConfirm()
+            }
+          }}
+        >
+          <h2 id={titleId} className="text-lg font-semibold text-slate-100 mb-3">
             {isCancel ? t('detail.storno.title') : t('detail.storno.uncancelTitle')}
           </h2>
-          <label className="flex flex-col gap-1 text-sm text-slate-300 mb-3">
+          <label className="flex flex-col gap-1 text-sm text-slate-300 mb-1">
             {t('detail.storno.reasonLabel')}
             <input
+              autoFocus
+              autoComplete="off"
               className="rounded border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm text-slate-200 focus:border-blue-500 focus:outline-none"
               value={stornoReason}
               onChange={(event) => setStornoReason(event.target.value)}
             />
           </label>
-          {missing && (
-            <p className="text-xs text-rose-400 mb-3">{t('detail.storno.error')}</p>
-          )}
+          <p id={hintId} className={`text-xs mb-3 min-h-4 ${missing && stornoReason.length > 0 ? 'text-rose-400' : 'text-slate-500'}`}>
+            {missing && stornoReason.length > 0 ? t('detail.storno.error') : ''}
+          </p>
           <div className="flex gap-2">
             <button
               disabled={missing}
-              className={`min-w-[90px] rounded px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500`}
-              onClick={() => void handleStornoConfirm()}
-              type="button"
+              className="min-w-[90px] rounded px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+              type="submit"
             >
               {isCancel ? t('detail.storno.confirm') : t('detail.storno.uncancelConfirm')}
             </button>
@@ -783,7 +804,7 @@ export function TicketDetailPage() {
               {t('detail.storno.abort')}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     )
   }
