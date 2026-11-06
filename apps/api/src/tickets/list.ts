@@ -51,7 +51,8 @@ export async function listTickets(
   const conditions = []
 
   if (query.search) {
-    const pattern = `%${query.search}%`
+    const safe = query.search.replace(/[%_]/g, '\\$&')
+    const pattern = `%${safe}%`
     conditions.push(
       or(
         ilike(objects.objectNo, pattern),
