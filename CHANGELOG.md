@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- On-call ticket coupling and warnings (WP-M8-10): `POST /api/v1/tickets/:ticketNo/offer`
+  now resolves the on-call person of the default pool in one transaction — a `CONFIRMED`
+  (or `SWAP_REQUESTED`) shift wins over a `PLANNED` one and sets `offered_to_user_id` plus
+  `offer_escalated_at`; an unstaffed slot clears both and returns the `oncall_unstaffed`
+  warning. The `offered` event carries `onCall`, `shiftId`, `poolId` and an optional
+  `warning`, and the route accepts an optional `poolId`. `GET /api/v1/oncall/warnings`
+  (`oncall.read`) lists unstaffed shifts inside `oncall.unfilled_warning_days` and
+  `PLANNED` shifts starting within `oncall.reminder_unconfirmed_h` next to the default
+  pool. Offer timeout and group escalation stay in WP-M8-11.
+
 - The deadline administration (WP-M6-14, WP-M6-14b, WP-M6-15, WP-M6-16): the four deadline
   hours per priority and the reaction minutes (standard and critical) of the escalation rules
   are editable at `/admin/deadlines`, backed by `GET/PUT /api/v1/settings/deadlines`. The menu

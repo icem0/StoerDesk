@@ -1,4 +1,4 @@
-import { and, eq, gte, lt } from 'drizzle-orm'
+import { and, eq, gt, gte, inArray, lt, lte } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 
@@ -20,6 +20,7 @@ import type { Database } from '../db/client'
 import { oncallShifts } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
+import { resolveDefaultPool } from './coupling'
 import { readOncallSettings, writeOncallSettings } from './settings'
 import { swapRoutes } from './swap-routes'
 
@@ -266,6 +267,67 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
         await deleteShift(database, shiftId, request.user?.id ?? '')
 
         return reply.code(204).send()
+      },
+    )
+
+    // Unstaffed slots inside `unfilled_warning_days` and `PLANNED` slots that
+    // start within `reminder_unconfirmed_h` (`specs/04-oncall.md` §4a.6).
+    app.get(
+      '/api/v1/oncall/warnings',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.read) },
+      async () => {
+        const now = new Date()
+        const settingsResolved = await readOncallSettings(database)
+        const defaultPoolId = await resolveDefaultPool(database)
+
+        const unstaffedUntil = new Date(
+          now.getTime() + settingsResolved.unfilledWarningDays * 24 * 60 * 60 * 1000,
+        )
+        const unconfirmedUntil = new Date(
+          now.getTime() + settingsResolved.reminderUnconfirmedH * 60 * 60 * 1000,
+        )
+
+        const columns = {
+          id: oncallShifts.id,
+          poolId: oncallShifts.poolId,
+          userId: oncallShifts.userId,
+          state: oncallShifts.state,
+          startsAt: oncallShifts.startsAt,
+          endsAt: oncallShifts.endsAt,
+          createdAt: oncallShifts.createdAt,
+          updatedAt: oncallShifts.updatedAt,
+        }
+
+        const [unstaffedRows, unconfirmedRows] = await Promise.all([
+          database
+            .select(columns)
+            .from(oncallShifts)
+            .where(
+              and(
+                inArray(oncallShifts.state, ['UNFILLED', 'DECLINED']),
+                lte(oncallShifts.startsAt, unstaffedUntil),
+                gt(oncallShifts.endsAt, now),
+              ),
+            )
+            .orderBy(oncallShifts.startsAt),
+          database
+            .select(columns)
+            .from(oncallShifts)
+            .where(
+              and(
+                eq(oncallShifts.state, 'PLANNED'),
+                lte(oncallShifts.startsAt, unconfirmedUntil),
+                gt(oncallShifts.endsAt, now),
+              ),
+            )
+            .orderBy(oncallShifts.startsAt),
+        ])
+
+        return {
+          defaultPoolId,
+          unstaffed: unstaffedRows.map(shiftRow),
+          unconfirmed: unconfirmedRows.map(shiftRow),
+        }
       },
     )
 

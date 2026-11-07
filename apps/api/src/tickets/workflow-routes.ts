@@ -8,6 +8,7 @@ import { PERMISSIONS } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { tickets } from '../db/schema'
+import { offerTicket } from '../oncall/coupling'
 import { transitionTicket } from './workflow'
 import { applyInternalAction } from './internal-actions'
 
@@ -23,6 +24,7 @@ import { applyInternalAction } from './internal-actions'
 type Db = Database['database']
 
 const DECLINE_REASON = z.string().trim().min(5)
+const OFFER_BODY = z.object({ poolId: z.string().uuid().optional() })
 const ACK_RESULT = z.enum(['fixed', 'partially_fixed', 'follow_up_required', 'no_fault_found'])
 const WORK_ORDER = z.object({
   type: z.string().trim().min(1).max(40),
@@ -126,7 +128,6 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       { path: '/api/v1/tickets/:ticketNo/review', event: 'review_started', permission: PERM(PERMISSIONS.ticket.review) },
       { path: '/api/v1/tickets/:ticketNo/work-order', event: 'work_order_set', permission: PERM(PERMISSIONS.ticket.review), body: WORK_ORDER },
       { path: '/api/v1/tickets/:ticketNo/assign', event: 'assigned', permission: PERM(PERMISSIONS.ticket.assign) },
-      { path: '/api/v1/tickets/:ticketNo/offer', event: 'offered', permission: PERM(PERMISSIONS.ticket.offer) },
       { path: '/api/v1/tickets/:ticketNo/claim', event: 'claimed', permission: PERM(PERMISSIONS.ticket.claim) },
       { path: '/api/v1/tickets/:ticketNo/accept', event: 'accepted', permission: PERM(PERMISSIONS.ticket.accept) },
       { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.accept), body: z.object({ reason: DECLINE_REASON, clientUuid: z.string().uuid().optional() }), action: 'decline' },
@@ -144,6 +145,53 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
         makeHandler(route.event, route.body, route.action),
       )
     }
+
+    // The offer is the only transition coupled to the on-call calendar
+    // (`specs/04-oncall.md` §4a.6): it resolves the on-call person and assigns
+    // the ticket inside the same transaction.
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/offer',
+      { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.offer)) },
+      async (request, reply) => {
+        const actor = request.user
+
+        if (actor === undefined) {
+          return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        const parsed = OFFER_BODY.safeParse(request.body ?? {})
+
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: {} })
+        }
+
+        try {
+          const { ticket, warning } = await offerTicket({
+            database,
+            ticketNo: request.params.ticketNo,
+            actorUserId: actor.id,
+            poolId: parsed.data.poolId,
+          })
+
+          return reply.code(200).send({
+            ...ticket,
+            ...(warning === undefined ? {} : { warning }),
+          })
+        } catch (error) {
+          const err = error as {
+            statusCode?: number
+            code?: string
+            params?: Record<string, unknown>
+          }
+
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+
+          throw error
+        }
+      },
+    )
   },
   { name: 'stoerdesk-workflow-routes' },
 )

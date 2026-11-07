@@ -1160,6 +1160,21 @@ timeout (11), iCal (12), admin page (13), my-shifts page (14), offline shift act
 (15) and the exit criterion (16). The exit criterion "DST tests and atomic swap tests
 pass" is proven by WP-M8-16; the dashboard tile stays in phase 9.
 
+**On-call ticket coupling (WP-M8-10).** `apps/api/src/oncall/coupling.ts` resolves the
+responsible technician for an instant: `resolveOnCallPerson` picks the default pool
+(`oncall.default_pool_id`, otherwise the first active pool by lower-case name) and a
+covering `CONFIRMED`/`SWAP_REQUESTED` shift before a `PLANNED` one, otherwise answers
+`unstaffed`. `offerTicket` replaces the generic `offered` route: in one transaction it
+moves `WORK_ORDER_CREATED` to `OFFERED`, sets `offered_to_user_id` and
+`offer_escalated_at = now + oncall.escalate_to_group_after_min` for a staffed shift,
+clears both when unstaffed, and appends the `offered` event with `onCall`, `shiftId` and
+`poolId` (plus `warning = oncall_unconfirmed`/`oncall_unstaffed`). The route accepts an
+optional `poolId` (`400 invalid_request` for a malformed id). `GET
+/api/v1/oncall/warnings` (`oncall.read`) answers the unstaffed (`UNFILLED`/`DECLINED`)
+shifts inside `oncall.unfilled_warning_days`, the `PLANNED` shifts starting within
+`oncall.reminder_unconfirmed_h`, and the resolved default pool. Offer timeout and the
+group escalation remain WP-M8-11.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

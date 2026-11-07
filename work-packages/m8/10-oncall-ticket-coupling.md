@@ -1,7 +1,7 @@
 # WP-M8-10: on-call ticket coupling and warnings
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-05, WP-M8-06, WP-M8-07
 phase: 8
 milestone: m8
@@ -74,6 +74,6 @@ Expected: all green; tests use a real database or skip with a named reason.
 - Files changed: the coupling service, the offer route, the warnings route,
   plus tests
 - Interfaces added: `resolveOnCallPerson`, `offerTicket` and the warnings route
-- Verified: typecheck, lint, test:run
+- Verified: typecheck, lint, test:run (integration test ran against PostgreSQL)
 - Follow-up WP: WP-M8-11 (offer timeout)
 - Open question: none
