@@ -77,8 +77,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket detail (integrati
   }
 
   it('answers the timeline and an empty pause list for a normal ticket', async () => {
-    const reportedAt = new Date('2026-11-05T08:00:00.000Z')
-    const deadlineAt = new Date('2026-11-08T08:00:00.000Z')
+    const reportedAt = new Date(Date.now() - 60 * 60 * 1000)
+    const deadlineAt = new Date(reportedAt.getTime() + 72 * 60 * 60 * 1000)
     const { ticketNo } = await insertTicket({
       status: 'NEW',
       priority: 'normal',
