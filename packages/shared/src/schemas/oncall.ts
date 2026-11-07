@@ -107,6 +107,42 @@ export const declineShiftRequestSchema = z.object({
   clientUuid: clientUuidOptional,
 })
 
+export const swapStatus = z.enum([
+  'PENDING',
+  'ACCEPTED',
+  'APPROVED',
+  'DECLINED',
+  'CANCELLED',
+  'EXPIRED',
+])
+
+export const oncallSwapSchema = z.object({
+  id: z.uuid(),
+  shiftId: z.uuid(),
+  requestedByUserId: z.string().uuid().nullable(),
+  targetUserId: z.string().uuid().nullable(),
+  status: swapStatus,
+  acceptedByUserId: z.string().uuid().nullable(),
+  acceptedAt: z.date().nullable(),
+  approvedByUserId: z.string().uuid().nullable(),
+  approvedAt: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const swapRequestSchema = z.object({
+  targetUserId: z.string().uuid().optional(),
+})
+
+export const swapIdParamSchema = z.object({
+  id: z.string().uuid(),
+})
+
+export const swapAcceptResponseSchema = z.object({
+  swap: oncallSwapSchema,
+  shiftChanged: z.boolean(),
+})
+
 export const oncallSettingsResponseSchema = z.object({
   weekStartWeekday: z.number().int().min(0).max(6),
   startTime: z.string(),
@@ -139,5 +175,8 @@ export type CreateShiftRequest = z.infer<typeof createShiftRequestSchema>
 export type GenerateShiftsRequest = z.infer<typeof generateShiftsRequestSchema>
 export type GenerateShiftsResponse = z.infer<typeof generateShiftsResponseSchema>
 export type UpdateShiftRequest = z.infer<typeof updateShiftRequestSchema>
+export type OnCallSwap = z.infer<typeof oncallSwapSchema>
+export type SwapRequest = z.infer<typeof swapRequestSchema>
+export type SwapAcceptResponse = z.infer<typeof swapAcceptResponseSchema>
 export type OnCallSettingsResponse = z.infer<typeof oncallSettingsResponseSchema>
 export type UpdateOncallSettingsRequest = z.infer<typeof updateOncallSettingsRequestSchema>

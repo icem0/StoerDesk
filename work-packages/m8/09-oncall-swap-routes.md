@@ -1,7 +1,7 @@
 # WP-M8-09: swap routes
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-06, WP-M8-08
 phase: 8
 milestone: m8
@@ -64,9 +64,11 @@ Expected: all green; tests use a real database or skip with a named reason.
 
 ## Handoff
 
-- Files changed: the swap route plugin, its registration, the shared schemas,
-  plus tests
-- Interfaces added: the swap routes and schemas above
-- Verified: typecheck, lint, test:run
+- Files changed: `apps/api/src/oncall/swap-routes.ts`,
+  `apps/api/src/oncall/routes.ts`, `packages/shared/src/schemas/oncall.ts`
+  and the route integration test
+- Interfaces added: the swap routes above; `oncallSwapSchema`, `swapStatus`,
+  `swapRequestSchema`, `swapIdParamSchema`, `swapAcceptResponseSchema`
+- Verified: typecheck, lint, test:run (integration test ran against PostgreSQL)
 - Follow-up WP: WP-M8-13 (admin page) and WP-M8-14 (my-shifts page)
 - Open question: none

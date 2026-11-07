@@ -21,6 +21,7 @@ import { oncallShifts } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
 import { readOncallSettings, writeOncallSettings } from './settings'
+import { swapRoutes } from './swap-routes'
 
 type Db = Database['database']
 
@@ -414,6 +415,8 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
         }
       },
     )
+
+    await app.register(swapRoutes, { database })
   },
   { name: 'stoerdesk-oncall-routes' },
 )
