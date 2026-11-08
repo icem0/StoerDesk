@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, lte, sql } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, isNotNull, lte, sql } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
 import { oncallPools, oncallShifts, ticketEvents, tickets } from '../db/schema'
@@ -210,4 +210,70 @@ export async function offerTicket(input: OfferTicketInput): Promise<OfferTicketR
 
     return { ticket: updated, warning }
   })
+}
+
+export type EscalateOnCallOffersResult = {
+  scanned: number
+  escalated: number
+}
+
+/**
+ * Escalates timed-out on-call offers to the group (`specs/04-oncall.md` §4a.6,
+ * WP-M8-11). Selects `OFFERED` tickets whose `offer_escalated_at` has passed and
+ * clears `offered_to_user_id`, resets `offer_escalated_at` and appends one
+ * `offer_escalated` event per ticket in its own transaction. A ticket that was
+ * already cleared or left `OFFERED` is skipped, so a second scan is a no-op.
+ */
+export async function escalateOnCallOffers(
+  database: Db,
+  now: Date = new Date(),
+): Promise<EscalateOnCallOffersResult> {
+  const candidates = await database
+    .select({ id: tickets.id })
+    .from(tickets)
+    .where(
+      and(
+        eq(tickets.status, 'OFFERED'),
+        isNotNull(tickets.offeredToUserId),
+        isNotNull(tickets.offerEscalatedAt),
+        lte(tickets.offerEscalatedAt, now),
+      ),
+    )
+
+  let escalated = 0
+
+  for (const candidate of candidates) {
+    await database.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(tickets)
+        .set({
+          offeredToUserId: null,
+          offerEscalatedAt: null,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(tickets.id, candidate.id),
+            eq(tickets.status, 'OFFERED'),
+            isNotNull(tickets.offeredToUserId),
+          ),
+        )
+        .returning({ id: tickets.id })
+
+      if (updated === undefined) {
+        return
+      }
+
+      await tx.insert(ticketEvents).values({
+        ticketId: updated.id,
+        type: 'offer_escalated',
+        actorKind: 'system',
+        payload: { reason: 'oncall_timeout' },
+      })
+
+      escalated += 1
+    })
+  }
+
+  return { scanned: candidates.length, escalated }
 }

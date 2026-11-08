@@ -37,9 +37,12 @@ export async function startTicketEscalation(
     const { client, database } = createDatabase(connectionString)
 
     try {
-      const { scanned, fired } = await evaluateEscalations(database)
+      const { scanned, fired, offerScanned, offerEscalated } = await evaluateEscalations(database)
 
-      log?.info({ queue: TICKET_ESCALATION_QUEUE, scanned, fired }, 'escalation scan finished')
+      log?.info(
+        { queue: TICKET_ESCALATION_QUEUE, scanned, fired, offerScanned, offerEscalated },
+        'escalation scan finished',
+      )
     } finally {
       await client.end({ timeout: 5 })
     }

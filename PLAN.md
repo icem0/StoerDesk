@@ -1172,8 +1172,16 @@ clears both when unstaffed, and appends the `offered` event with `onCall`, `shif
 optional `poolId` (`400 invalid_request` for a malformed id). `GET
 /api/v1/oncall/warnings` (`oncall.read`) answers the unstaffed (`UNFILLED`/`DECLINED`)
 shifts inside `oncall.unfilled_warning_days`, the `PLANNED` shifts starting within
-`oncall.reminder_unconfirmed_h`, and the resolved default pool. Offer timeout and the
-group escalation remain WP-M8-11.
+`oncall.reminder_unconfirmed_h`, and the resolved default pool.
+
+**On-call offer timeout (WP-M8-11).** `escalateOnCallOffers(database, now)` in
+`coupling.ts` selects `OFFERED` tickets with a non-null `offered_to_user_id` and an
+`offer_escalated_at` at or before `now`. In one transaction per ticket it clears
+`offered_to_user_id`, resets `offer_escalated_at` and appends one `offer_escalated`
+event with `{ reason: 'oncall_timeout' }`. A ticket already cleared or no longer
+`OFFERED` is skipped, so a repeat scan is a no-op. `evaluateEscalations` runs the
+sweep before the rule scan and reports `offerScanned`/`offerEscalated`; the existing
+`ticket-escalation` job therefore carries it every minute without a second queue.
 
 ## 17. Work package rules for small models
 

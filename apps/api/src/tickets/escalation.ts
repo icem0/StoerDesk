@@ -10,6 +10,7 @@ import {
 
 import type { Database } from '../db/client'
 import { settings, ticketEvents, ticketPauses, tickets } from '../db/schema'
+import { escalateOnCallOffers } from '../oncall/coupling'
 
 /**
  * Escalation scan (`PLAN.md` §9, `specs/07-escalation.md` §7.1–§7.2, WP-M6-08).
@@ -62,6 +63,8 @@ export type EscalationScanResult = {
   scanned: number
   fired: number
   skipped: number
+  offerScanned: number
+  offerEscalated: number
 }
 
 function toMs(value: Date | string | null | undefined): number | undefined {
@@ -274,6 +277,8 @@ export async function evaluateEscalations(
   database: Db,
   now: Date = new Date(),
 ): Promise<EscalationScanResult> {
+  const offers = await escalateOnCallOffers(database, now)
+
   const candidates = await database
     .select()
     .from(tickets)
@@ -285,7 +290,13 @@ export async function evaluateEscalations(
     )
 
   if (candidates.length === 0) {
-    return { scanned: 0, fired: 0, skipped: 0 }
+    return {
+      scanned: 0,
+      fired: 0,
+      skipped: 0,
+      offerScanned: offers.scanned,
+      offerEscalated: offers.escalated,
+    }
   }
 
   const ids = candidates.map((ticket) => ticket.id)
@@ -311,7 +322,13 @@ export async function evaluateEscalations(
     fired += ticketFired.length
   }
 
-  return { scanned: candidates.length, fired, skipped: candidates.length - fired }
+  return {
+    scanned: candidates.length,
+    fired,
+    skipped: candidates.length - fired,
+    offerScanned: offers.scanned,
+    offerEscalated: offers.escalated,
+  }
 }
 
 /** Evaluates one ticket; useful for a targeted scan and the exit-criterion test. */

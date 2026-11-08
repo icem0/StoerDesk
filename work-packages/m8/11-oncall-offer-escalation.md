@@ -1,7 +1,7 @@
 # WP-M8-11: on-call offer timeout to the group
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-10
 phase: 8
 milestone: m8
@@ -64,9 +64,13 @@ Expected: all green; tests use a real database or skip with a named reason.
 
 ## Handoff
 
-- Files changed: the coupling service, the escalation scan, the job wiring,
-  plus tests
-- Interfaces added: `escalateOnCallOffers` and the two new scan counters
-- Verified: typecheck, lint, test:run
+- Files changed: the coupling service (`escalateOnCallOffers`), the escalation
+  scan (runs it before the rule scan and returns the offer counters), the job
+  wiring (logs `offerScanned`/`offerEscalated`), plus tests
+- Interfaces added: `escalateOnCallOffers(database, now)` and the
+  `offerScanned`/`offerEscalated` counters of `EscalationScanResult`
+- Verified: typecheck, lint, test:run (five integration tests against a real
+  database: exactly at the threshold, before it, second scan no-op, ticket that
+  left `OFFERED`, and the wiring inside `evaluateEscalations`)
 - Follow-up WP: WP-M8-12 (iCal feed)
 - Open question: none
