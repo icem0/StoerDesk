@@ -62,6 +62,7 @@ const navGroups = [
       { key: 'roles', path: '/admin/roles' },
       { key: 'groups', path: '/admin/groups' },
       { key: 'bmaSync', path: '/admin/bma-sync' },
+      { key: 'oncall', path: '/admin/oncall' },
       { key: 'standardTexts', path: '/admin/text-templates' },
       { key: 'branding', path: '/admin/branding' },
     ],

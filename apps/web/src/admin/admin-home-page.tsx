@@ -21,7 +21,7 @@ const MODULES: Module[] = [
   { key: 'bmaSync', to: '/admin/bma-sync' },
   { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', to: '/admin/deadlines' },
-  { key: 'oncall', phase: 'phase8' },
+  { key: 'oncall', to: '/admin/oncall' },
   { key: 'channels', phase: 'phase7' },
   { key: 'apiKeys', phase: 'phase10' },
 ]

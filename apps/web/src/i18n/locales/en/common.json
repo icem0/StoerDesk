@@ -74,6 +74,7 @@
     "roles": "Role administration",
     "groups": "Groups",
     "bmaSync": "BMAcloud sync",
+    "oncall": "On-call plan",
     "standardTexts": "Fault types",
     "stickers": "QR stickers",
     "admin": "Open administration",

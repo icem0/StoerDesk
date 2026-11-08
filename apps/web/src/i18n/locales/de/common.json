@@ -74,6 +74,7 @@
     "roles": "Rollenverwaltung",
     "groups": "Gruppen",
     "bmaSync": "BMAcloud-Abgleich",
+    "oncall": "Bereitschaftsplan",
     "standardTexts": "Störungsarten",
     "stickers": "QR-Aufkleber",
     "admin": "Verwaltung öffnen",

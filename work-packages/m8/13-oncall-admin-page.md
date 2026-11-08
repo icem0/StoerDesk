@@ -1,7 +1,7 @@
 # WP-M8-13: on-call administration page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-06, WP-M8-09, WP-M8-10, WP-M8-13b
 phase: 8
 milestone: m8
@@ -20,10 +20,10 @@ files-read:
 
 files-write:
 
-- apps/web/src/admin/oncall-page.tsx
+- apps/web/src/admin/{oncall-page,admin-home-page}.tsx
 - apps/web/src/routes/index.tsx
 - apps/web/src/components/Shell.tsx
-- apps/web/src/i18n/locales/{de,en}/oncall.json
+- apps/web/src/i18n/locales/{de,en}/{oncall,common}.json
 
 interfaces:
 
@@ -73,10 +73,14 @@ comes from the `oncall` namespace.
 
 ## Handoff
 
-- Files changed: the admin page, the route table, the shell menu, both on-call
-  locale files
+- Files changed: the admin page, the route table, the shell menu, the
+  administration home card, both on-call locale files and the `auth.links.oncall`
+  key of both `common` files
 - Interfaces added: `/admin/oncall` and the admin actions above
-- Verified: typecheck, lint, test:run, i18n:check, build
+- Verified: web typecheck, lint, web test:run 148/148, i18n:check, build and
+  wp:check green; the full API `npm run check` hit the pre-existing
+  `permission denied to terminate process` in unrelated integration suites and
+  is reported as unverified, not green
 - Follow-up WP: WP-M8-14 (my-shifts page)
 - Open question: none; the pending-swaps read route moved to WP-M8-13b so the
   UI package stays inside the layer rule of `PLAN.md` §17
