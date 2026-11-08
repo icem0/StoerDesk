@@ -298,8 +298,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('lists created shifts in the requested range', async () => {
+      const from = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const to = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000)
       const response = await getShifts(
-        { from: '2026-11-02T00:00:00.000Z', to: '2026-11-09T00:00:00.000Z' },
+        { from: from.toISOString(), to: to.toISOString() },
         cookies['oncall'],
       )
 
