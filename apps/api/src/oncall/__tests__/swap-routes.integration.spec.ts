@@ -127,6 +127,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('on-call swap routes (int
     })
   }
 
+  function listSwaps(cookie: string, status?: string) {
+    const query = status === undefined ? '' : `?status=${status}`
+
+    return app.inject({
+      method: 'GET',
+      url: `/api/v1/oncall/swaps${query}`,
+      headers: { cookie },
+    })
+  }
+
   async function shiftRow() {
     return onlyRow(
       await db
@@ -260,6 +270,37 @@ describe.skipIf(testDatabase.status === 'unavailable')('on-call swap routes (int
     expect(body.targetUserId).toBe(techBId)
 
     expect((await shiftRow()).state).toBe('SWAP_REQUESTED')
+  })
+
+  it('lists pending and accepted swaps with shift data for an admin', async () => {
+    const pending = await requestSwap(cookies['techA'], shiftId, { targetUserId: techBId })
+
+    const response = await listSwaps(cookies['admin'])
+
+    expect(response.statusCode).toBe(200)
+    const body = response.json<{
+      swaps: Array<SwapRow & { shift: { id: string; poolName: string } }>
+    }>()
+    const row = body.swaps.find((swap) => swap.id === pending.json<SwapRow>().id)
+
+    expect(row).toBeDefined()
+    expect(row?.status).toBe('PENDING')
+    expect(row?.shift.id).toBe(shiftId)
+    expect(row?.shift.poolName).toBe('Feuerwehr')
+
+    const filtered = await listSwaps(cookies['admin'], 'ACCEPTED')
+    expect(filtered.statusCode).toBe(200)
+    expect(filtered.json<{ swaps: unknown[] }>().swaps).toEqual([])
+  })
+
+  it('refuses the swap list without oncall.admin and an invalid status', async () => {
+    const forbidden = await listSwaps(cookies['techA'])
+    const invalid = await listSwaps(cookies['admin'], 'DONE')
+
+    expect(forbidden.statusCode).toBe(403)
+    expect(forbidden.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
+    expect(invalid.statusCode).toBe(400)
+    expect(invalid.json<ErrorResponseBody>().code).toBe('invalid_request')
   })
 
   it('refuses an invalid swap id with 400', async () => {

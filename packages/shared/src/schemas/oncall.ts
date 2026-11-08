@@ -143,6 +143,20 @@ export const swapAcceptResponseSchema = z.object({
   shiftChanged: z.boolean(),
 })
 
+export const oncallSwapListResponseSchema = z.object({
+  swaps: z.array(
+    oncallSwapSchema.extend({
+      shift: z.object({
+        id: z.uuid(),
+        poolId: z.uuid(),
+        poolName: z.string(),
+        startsAt: z.date(),
+        endsAt: z.date(),
+      }),
+    }),
+  ),
+})
+
 export const oncallSettingsResponseSchema = z.object({
   weekStartWeekday: z.number().int().min(0).max(6),
   startTime: z.string(),
@@ -178,5 +192,6 @@ export type UpdateShiftRequest = z.infer<typeof updateShiftRequestSchema>
 export type OnCallSwap = z.infer<typeof oncallSwapSchema>
 export type SwapRequest = z.infer<typeof swapRequestSchema>
 export type SwapAcceptResponse = z.infer<typeof swapAcceptResponseSchema>
+export type OncallSwapListResponse = z.infer<typeof oncallSwapListResponseSchema>
 export type OnCallSettingsResponse = z.infer<typeof oncallSettingsResponseSchema>
 export type UpdateOncallSettingsRequest = z.infer<typeof updateOncallSettingsRequestSchema>

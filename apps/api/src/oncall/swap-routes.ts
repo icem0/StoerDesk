@@ -1,5 +1,8 @@
+import { asc, eq, inArray } from 'drizzle-orm'
 import fp from 'fastify-plugin'
+import { z } from 'zod'
 import {
+  oncallSwapListResponseSchema,
   oncallSwapSchema,
   PERMISSIONS,
   swapAcceptResponseSchema,
@@ -9,6 +12,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
+import { oncallPools, oncallShifts, oncallSwapRequests } from '../db/schema'
 import { acceptSwap, approveSwap, cancelSwap, rejectSwap, requestSwap } from './swaps'
 
 type Db = Database['database']
@@ -37,6 +41,75 @@ export type SwapRoutesOptions = {
 
 export const swapRoutes = fp<SwapRoutesOptions>(
   async (app, { database }) => {
+    // Administration overview of the open and accepted swap requests
+    // (`specs/04-oncall.md` §4a.5; WP-M8-13b). The pending list is the input of
+    // the admin page's approve/reject actions.
+    app.get<{ Querystring: { status?: string } }>(
+      '/api/v1/oncall/swaps',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.admin) },
+      async (request, reply) => {
+        const parsed = z
+          .object({ status: z.enum(['PENDING', 'ACCEPTED']).optional() })
+          .safeParse(request.query)
+
+        if (!parsed.success) {
+          return reply.code(400).send(invalidRequest(['status']))
+        }
+
+        const statuses =
+          parsed.data.status === undefined ? ['PENDING', 'ACCEPTED'] : [parsed.data.status]
+
+        const rows = await database
+          .select({
+            id: oncallSwapRequests.id,
+            shiftId: oncallSwapRequests.shiftId,
+            requestedByUserId: oncallSwapRequests.requestedByUserId,
+            targetUserId: oncallSwapRequests.targetUserId,
+            status: oncallSwapRequests.status,
+            acceptedByUserId: oncallSwapRequests.acceptedByUserId,
+            acceptedAt: oncallSwapRequests.acceptedAt,
+            approvedByUserId: oncallSwapRequests.approvedByUserId,
+            approvedAt: oncallSwapRequests.approvedAt,
+            createdAt: oncallSwapRequests.createdAt,
+            updatedAt: oncallSwapRequests.updatedAt,
+            poolId: oncallShifts.poolId,
+            poolName: oncallPools.name,
+            startsAt: oncallShifts.startsAt,
+            endsAt: oncallShifts.endsAt,
+          })
+          .from(oncallSwapRequests)
+          .innerJoin(oncallShifts, eq(oncallShifts.id, oncallSwapRequests.shiftId))
+          .innerJoin(oncallPools, eq(oncallPools.id, oncallShifts.poolId))
+          .where(inArray(oncallSwapRequests.status, statuses))
+          .orderBy(asc(oncallShifts.startsAt))
+
+        return reply.send(
+          oncallSwapListResponseSchema.parse({
+            swaps: rows.map((row) => ({
+              id: row.id,
+              shiftId: row.shiftId,
+              requestedByUserId: row.requestedByUserId,
+              targetUserId: row.targetUserId,
+              status: row.status,
+              acceptedByUserId: row.acceptedByUserId,
+              acceptedAt: row.acceptedAt,
+              approvedByUserId: row.approvedByUserId,
+              approvedAt: row.approvedAt,
+              createdAt: row.createdAt,
+              updatedAt: row.updatedAt,
+              shift: {
+                id: row.shiftId,
+                poolId: row.poolId,
+                poolName: row.poolName,
+                startsAt: row.startsAt,
+                endsAt: row.endsAt,
+              },
+            })),
+          }),
+        )
+      },
+    )
+
     app.post<{ Params: { id: string } }>(
       '/api/v1/oncall/shifts/:id/swap',
       { preHandler: requirePermission(database, PERMISSIONS.oncall.swap) },

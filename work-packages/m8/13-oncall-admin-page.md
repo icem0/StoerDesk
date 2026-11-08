@@ -2,7 +2,7 @@
 
 format: small-model
 status: planned
-depends-on: WP-M8-06, WP-M8-09, WP-M8-10
+depends-on: WP-M8-06, WP-M8-09, WP-M8-10, WP-M8-13b
 phase: 8
 milestone: m8
 context-budget: 24k tokens
@@ -42,8 +42,9 @@ interfaces:
 3. Grid section: choose pool and week, "generate slots", assign a technician
    from the pool members, publish a draft, reassign a slot, delete an unlocked
    slot. Every action refetches the grid and warnings.
-4. Warnings and swap section: list unstaffed/unconfirmed slots and pending swap
-   requests; approve or reject with the current user as admin.
+4. Warnings and swap section: list unstaffed/unconfirmed slots and the
+   `PENDING`/`ACCEPTED` swap requests of `GET /api/v1/oncall/swaps` (WP-M8-13b);
+   approve or reject with the current user as admin.
 5. Settings form: the eight keys of §4a.1 plus the default pool select; save
    through `PUT /api/v1/settings/oncall`.
 6. Register the route, add the entry to the settings menu and the administration
@@ -77,4 +78,5 @@ comes from the `oncall` namespace.
 - Interfaces added: `/admin/oncall` and the admin actions above
 - Verified: typecheck, lint, test:run, i18n:check, build
 - Follow-up WP: WP-M8-14 (my-shifts page)
-- Open question: none
+- Open question: none; the pending-swaps read route moved to WP-M8-13b so the
+  UI package stays inside the layer rule of `PLAN.md` §17
