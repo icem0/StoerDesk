@@ -5,5 +5,11 @@
   },
   "notification": {
     "action_label": "Öffnen"
+  },
+  "oncall": {
+    "ical": {
+      "summary": "Bereitschaft: {{pool}}",
+      "description": "Bereitschaftsdienst im Pool {{pool}}."
+    }
   }
 }

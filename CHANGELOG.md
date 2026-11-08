@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The personal on-call iCal feed (WP-M8-12): `GET /api/v1/oncall/ical/:token.ics` is
+  public and answers the `PLANNED` and `CONFIRMED` shifts of one user from 30 days ago
+  to 180 days ahead as an RFC 5545 calendar with UTC `DTSTART`/`DTEND`, stable UIDs and
+  escaped text. The token is the stateless HMAC of ADR-0011 and is verified with a
+  timing-safe comparison; any malformed, forged or unknown-user token answers
+  `404 ical_not_found`. `SUMMARY`/`DESCRIPTION` come from the user's server locale.
+
 - On-call ticket coupling and warnings (WP-M8-10): `POST /api/v1/tickets/:ticketNo/offer`
   now resolves the on-call person of the default pool in one transaction — a `CONFIRMED`
   (or `SWAP_REQUESTED`) shift wins over a `PLANNED` one and sets `offered_to_user_id` plus

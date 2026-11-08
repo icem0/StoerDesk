@@ -485,7 +485,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M8-09  | swap routes                                                         | done                    | yes     |
 | WP-M8-10  | on-call ticket coupling and warnings                                | done                    | yes     |
 | WP-M8-11  | on-call offer timeout to the group                                  | done                    | yes     |
-| WP-M8-12  | personal on-call iCal feed                                          | planned                 | yes     |
+| WP-M8-12  | personal on-call iCal feed                                          | done                    | yes     |
 | WP-M8-13  | on-call administration page                                         | planned                 | yes     |
 | WP-M8-14  | my on-call shifts page                                              | planned                 | yes     |
 | WP-M8-15  | offline shift confirm and decline                                   | planned                 | yes     |

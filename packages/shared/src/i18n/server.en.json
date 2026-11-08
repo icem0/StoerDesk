@@ -5,5 +5,11 @@
   },
   "notification": {
     "action_label": "Open"
+  },
+  "oncall": {
+    "ical": {
+      "summary": "On-call: {{pool}}",
+      "description": "On-call shift in pool {{pool}}."
+    }
   }
 }

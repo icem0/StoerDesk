@@ -1,7 +1,7 @@
 # WP-M8-12: personal on-call iCal feed
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-05, WP-M8-06
 phase: 8
 milestone: m8
@@ -71,9 +71,11 @@ skips without one.
 
 ## Handoff
 
-- Files changed: the iCal module, the route plugin, both server locale files,
-  plus tests
-- Interfaces added: the token helpers, the serializer and the public route
-- Verified: typecheck, lint, test:run, i18n:check
+- Files changed: `apps/api/src/oncall/ical.ts` (new), `apps/api/src/oncall/routes.ts`,
+  `packages/shared/src/i18n/server.{de,en}.json`, plus the unit and integration tests
+- Interfaces added: `icalTokenFor`, `verifyIcalToken`, `serializeIcal`, `IcalShift`,
+  `escapeIcalText`, `GET /api/v1/oncall/ical/:token.ics` (public, token is the only
+  authorization)
+- Verified: typecheck, lint, test:run, i18n:check, wp:check
 - Follow-up WP: WP-M8-14 (my-shifts page shows the URL)
 - Open question: none

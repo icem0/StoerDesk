@@ -16,11 +16,13 @@ import {
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
+import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { oncallShifts } from '../db/schema'
+import { oncallPools, oncallShifts, users } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
 import { resolveDefaultPool } from './coupling'
+import { serializeIcal, verifyIcalToken } from './ical'
 import { readOncallSettings, writeOncallSettings } from './settings'
 import { swapRoutes } from './swap-routes'
 
@@ -94,6 +96,57 @@ export type OncallRoutesOptions = {
 
 export const oncallRoutes = fp<OncallRoutesOptions>(
   async (app, { database }) => {
+    // Public: the signed token is the only authorization (ADR-0011 decision 5).
+    app.get<{ Params: { token: string } }>(
+      '/api/v1/oncall/ical/:token.ics',
+      async (request, reply) => {
+        const notFound = { code: 'ical_not_found', params: {} }
+        const userId = verifyIcalToken(request.params.token, loadEnv().SESSION_SECRET)
+
+        if (userId === null) {
+          return reply.code(404).send(notFound)
+        }
+
+        const [user] = await database
+          .select({ locale: users.locale })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1)
+
+        if (user === undefined) {
+          return reply.code(404).send(notFound)
+        }
+
+        const now = Date.now()
+        const from = new Date(now - 30 * 24 * 60 * 60 * 1000)
+        const to = new Date(now + 180 * 24 * 60 * 60 * 1000)
+
+        const rows = await database
+          .select({
+            id: oncallShifts.id,
+            startsAt: oncallShifts.startsAt,
+            endsAt: oncallShifts.endsAt,
+            updatedAt: oncallShifts.updatedAt,
+            poolName: oncallPools.name,
+          })
+          .from(oncallShifts)
+          .innerJoin(oncallPools, eq(oncallPools.id, oncallShifts.poolId))
+          .where(
+            and(
+              eq(oncallShifts.userId, userId),
+              inArray(oncallShifts.state, ['PLANNED', 'CONFIRMED']),
+              gte(oncallShifts.startsAt, from),
+              lt(oncallShifts.startsAt, to),
+            ),
+          )
+          .orderBy(oncallShifts.startsAt)
+
+        return reply
+          .header('content-type', 'text/calendar; charset=utf-8')
+          .send(serializeIcal(rows, user.locale))
+      },
+    )
+
     app.get<{ Querystring: { from?: string; to?: string; poolId?: string } }>(
       '/api/v1/oncall/shifts',
       { preHandler: requirePermission(database, PERMISSIONS.oncall.read) },
