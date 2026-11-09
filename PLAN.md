@@ -1218,6 +1218,12 @@ services (10, 11), the statistics routes (12), the CSV export (13), the web dash
 statistics match reference data" is proven by WP-M9-18. No product code in this
 package.
 
+**Data flag for test data (WP-M9-02).** Migration 0023 adds `tickets.is_test` as a
+boolean column, not null with default false, and a partial `reported_at` index for
+`is_test = false`. Drizzle declares `isTest`, so existing insert paths and future
+statistics reads share the typed column. The ticket-table integration test proves
+default false, explicit true, not-null rejection and the metadata of the column.
+
 **Out-of-band phase 9 — the office view of the shipped app (WP-M9-19 … WP-M9-22).** The
 office asked for a leaner dashboard and a denser ticket list. The work does not wait for
 the phase-9 chain, because it changes the product the users see today and not the

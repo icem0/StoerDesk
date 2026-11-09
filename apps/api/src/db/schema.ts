@@ -358,6 +358,14 @@ export const tickets = pgTable(
     clientUuid: uuid('client_uuid'),
     statusToken: text('status_token'),
     suspectedSpam: boolean('suspected_spam').notNull().default(false),
+    /**
+     * Test data of the reference-data seed (ADR-0012 decision 5) — the fault-free counter
+     * of `specs/11-dashboard.md` §11.3 and the filters of `specs/12-stats.md` §12.1 exclude
+     * these rows by default; spam stays a separate flag. A ticket inserted without the flag
+     * counts as real data, so the default is `false` and no row is backfilled (migration
+     * 0023).
+     */
+    isTest: boolean('is_test').notNull().default(false),
     parentTicketId: uuid('parent_ticket_id').references((): AnyPgColumn => tickets.id, {
       onDelete: 'set null',
     }),
@@ -391,6 +399,9 @@ export const tickets = pgTable(
     index('tickets_status_idx').on(table.status),
     index('tickets_parent_ticket_id_idx').on(table.parentTicketId),
     index('tickets_assigned_user_id_status_idx').on(table.assignedUserId, table.status),
+    index('tickets_is_test_reported_at_idx')
+      .on(table.reportedAt)
+      .where(sql`${table.isTest} = false`),
     check('tickets_status_check', sql`${table.status} IN (${checkList(TICKET_STATUSES)})`),
     check('tickets_priority_check', sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`),
     check('tickets_source_check', sql`${table.source} IN (${checkList(TICKET_SOURCES)})`),

@@ -139,6 +139,34 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
     await expectPgError('23514', () => newTicket(objectId, { source: 'PHONE' }))
   })
 
+  it('carries the is_test flag of migration 0023', async () => {
+    const objectId = await newObject()
+
+    const real = await newTicket(objectId)
+    const marked = await newTicket(objectId, { isTest: true })
+
+    expect(real.isTest).toBe(false)
+    expect(marked.isTest).toBe(true)
+
+    const columns = await client<{ column_name: string; is_nullable: string; column_default: string }[]>`
+      select column_name, is_nullable, column_default
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'tickets'
+        and column_name = 'is_test'`
+
+    const column = onlyRow(columns, 'is_test column')
+    expect(String(column.is_nullable)).toMatch(/^(n|no)$/i)
+    expect(String(column.column_default)).toBe('false')
+
+    await expectPgError('23502', () =>
+      client.unsafe(
+        `insert into "tickets" ("object_id", "reported_at", "deadline_at", "is_test")` +
+          ` values ('${objectId}', now(), now(), NULL)`,
+      ),
+    )
+  })
+
   it('blocks updates and deletes on ticket_events', async () => {
     const objectId = await newObject()
     const ticket = await newTicket(objectId)

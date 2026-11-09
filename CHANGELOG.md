@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
+  adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
+  `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the
+  column as `isTest`, and the ticket-table integration test proves that default inserts
+  are real data, explicit test data survives, and `NULL` is rejected.
+
 - The dashboard of the office ends with its tiles (WP-M9-19): the "Brennt jetzt" list is
   gone from the start page — the wall display of phase 9 keeps it
   (`specs/11-dashboard.md` §11.5) — and every tile ("Meldungen gesamt", "offen",

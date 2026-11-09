@@ -1,7 +1,7 @@
 # WP-M9-02: `tickets.is_test` flag and migration 0023
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-01
 phase: 9
 milestone: m9
@@ -64,7 +64,7 @@ skips with a named reason otherwise.
 ## Handoff
 
 - Files changed: migration 0023, the ticket schema declaration, the ticket-table test
-- Interfaces added: `tickets.is_test`
-- Verified: typecheck, lint, test:run, wp:check
+- Interfaces added: `tickets.is_test`, `TicketRow.isTest` / `NewTicketRow.isTest`
+- Verified: typecheck, lint, targeted `test:run`, `wp:check`
 - Follow-up WP: WP-M9-03 (statistics views use the flag)
 - Open question: none

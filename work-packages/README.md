@@ -494,7 +494,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M8-15  | offline shift confirm and decline                                   | done                    | yes     |
 | WP-M8-16  | phase-8 exit criterion and record                                   | done                    | yes     |
 | WP-M9-01  | dashboard and statistics specification, ADR-0012 and phase-9 split  | done                    | yes     |
-| WP-M9-02  | `tickets.is_test` flag                                              | planned                 | yes     |
+| WP-M9-02  | `tickets.is_test` flag                                              | done                    | yes     |
 | WP-M9-03  | statistics SQL views                                                | planned                 | yes     |
 | WP-M9-04  | shared dashboard and statistics contracts                           | planned                 | yes     |
 | WP-M9-05  | dashboard service                                                   | planned                 | yes     |
@@ -879,7 +879,8 @@ token, `tickets.is_test`, inline SVG charts, `stats.conspicuous_threshold`) and 
 **WP-M9-02 … WP-M9-18** in numeric order (test flag → SQL views → shared contracts →
 dashboard service → dashboard route → SSE → dashboard settings → TV route → statistics
 services → statistics routes → CSV export → web dashboard → web statistics page → web TV
-page → web dashboard settings → exit criterion). Only the split has landed so far; the
+page → web dashboard settings → exit criterion). **WP-M9-02** adds the `tickets.is_test`
+column, default false, and the partial counter index over `reported_at` where false; the
 packages are implemented in numeric order.
 
 **Out-of-band phase 9 — the office view of the shipped app (WP-M9-19 … WP-M9-22).** The
