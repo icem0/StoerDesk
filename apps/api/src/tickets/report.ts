@@ -19,7 +19,7 @@ import { generateQrToken } from '../objects/qr'
 import { readTitleEnabled } from '../settings/branding-state'
 import { readDeadlineHours } from './deadline'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
-import { MAX_REPORT_PHOTOS, saveReportPhotos } from './photos'
+import { MAX_REPORT_PHOTOS, saveReportPhotos, validateReportPhotos } from './photos'
 import { isReportSuspicious, recordReportAttempt } from './spam'
 
 /**
@@ -235,6 +235,23 @@ export async function createPublicReport(
   const env = loadEnv()
 
   let created: typeof tickets.$inferSelect | undefined
+
+  // §7.4/SEC-014: an invalid photo array (count, data URL, decoded size, magic bytes)
+  // must be rejected BEFORE the ticket transaction, so an over-limit or bad-Type
+  // report never leaves an orphan ticket row with reporter PII in the database.
+  // A repeat (clientUuid already in `tickets`) keeps its old gallery and is not
+  // re-validated here.
+  if (input.photos.length > 0) {
+    const [repeat] = await database
+      .select({ id: tickets.id })
+      .from(tickets)
+      .where(eq(tickets.clientUuid, input.clientUuid))
+      .limit(1)
+
+    if (repeat === undefined) {
+      validateReportPhotos(input.photos, storage.maxPhotoBytes)
+    }
+  }
 
   try {
     created = await database.transaction(async (tx) => {

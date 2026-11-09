@@ -1270,7 +1270,9 @@ the next phase starts. **WP-M9-30** hardens the workflow, delete, photo and comm
 (SEC-007 decline reason capped, SEC-008 decline uses `ticket.decline`, SEC-015 `ticketNo`
 validated at every path parameter, SEC-017 raw PG message removed from `delete` response,
 SEC-018 photo route permission-gated with a containment check and `Cache-Control: private,
-no-store`).
+no-store`). **WP-M9-31** runs the report photo preflight (count, data URL, decoded size,
+magic bytes) before the ticket transaction (SEC-014), so an over-limit or bad-Type report
+no longer leaves an orphan ticket row with reporter PII in the database.
 
 ## 17. Work package rules for small models
 

@@ -103,6 +103,28 @@ function decodePhoto(dataUrl: string, index: number, maxBytes: number): DecodedP
 }
 
 /**
+ * §7.4/SEC-014: photo preflight (count, data URL, decoded size, magic bytes) BEFORE
+ * the ticket transaction, so an over-limit or invalid gallery never leaves an
+ * orphan ticket row behind. `saveReportPhotos` still re-runs the checks as the last
+ * line of defence.
+ */
+export function validateReportPhotos(
+  photos: string[],
+  maxPhotoBytes: number,
+): void {
+  if (photos.length > MAX_REPORT_PHOTOS) {
+    throw new PhotoUploadError('photo_limit_exceeded', {
+      limit: MAX_REPORT_PHOTOS,
+      received: photos.length,
+    })
+  }
+
+  for (const [index, photo] of photos.entries()) {
+    decodePhoto(photo, index, maxPhotoBytes)
+  }
+}
+
+/**
  * Decodes, verifies and stores the photos of one created report. A rejected photo
  * aborts the whole request before a single byte is written (§7.4), so the caller
  * either gets every `StoredPhoto` or an error and no half-written ticket gallery.

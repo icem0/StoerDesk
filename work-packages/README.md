@@ -523,6 +523,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-28  | shared LIKE escaping for ticket and object search (SEC-012)       | done                    | yes     |
 | WP-M9-29  | ticket number validated at the entry points (SEC-015)             | done                    | yes     |
 | WP-M9-30  | workflow, delete, photo and comment route hardening               | done                    | yes     |
+| WP-M9-31  | report photo preflight before the ticket transaction (SEC-014)    | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

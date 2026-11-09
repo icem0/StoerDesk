@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Workflow, delete, photo and comment routes are hardened (WP-M9-30): the decline reason is capped at 1000 characters, decline requires `ticket.decline` (not `ticket.accept`), `ticketNo` is validated at every path parameter, `delete` no longer leaks the raw PostgreSQL message, photo serve is permission-gated with a containment check and `Cache-Control: private, no-store`.
 
+- A report with an invalid photo array no longer leaves an orphan ticket behind (WP-M9-31, SEC-014): `validateReportPhotos` runs count, data-URL prefix, decoded size and magic-byte checks before the ticket transaction; a repeat keeps its old gallery and is not re-validated.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

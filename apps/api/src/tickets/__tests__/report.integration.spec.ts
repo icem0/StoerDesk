@@ -479,12 +479,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         // The first pair is valid, so it may not survive the broken second one.
         photos: [dataUrl('image/jpeg', JPEG_1X1), dataUrl('image/png', JPEG_1X1)],
       })
-      const ticket = await ticketOfClient(clientUuid)
 
       expect(response.statusCode).toBe(422)
       expect(response.json<ErrorBody>().code).toBe('photo_type_unsupported')
-      expect(await photoRowsOf(ticket.id)).toHaveLength(0)
-      expect(await uploadedFilesOf(ticket.id)).toEqual([])
+      // SEC-014: the preflight runs before the ticket transaction, so the rejected
+      // report leaves no orphan ticket row behind (no reporter PII stored either).
+      expect((await db.select().from(tickets).where(eq(tickets.clientUuid, clientUuid)))).toEqual([])
     })
 
     it('answers 422 photo_limit_exceeded for a seventh photo', async () => {
@@ -499,12 +499,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         contact: { phone: '+49 170 0000000' },
         photos,
       })
-      const ticket = await ticketOfClient(clientUuid)
 
       expect(response.statusCode).toBe(422)
       expect(response.json<ErrorBody>().code).toBe('photo_limit_exceeded')
-      expect(await photoRowsOf(ticket.id)).toHaveLength(0)
-      expect(await uploadedFilesOf(ticket.id)).toEqual([])
+      expect((await db.select().from(tickets).where(eq(tickets.clientUuid, clientUuid)))).toEqual([])
     })
 
     it('answers 422 photo_too_large for a photo above UPLOAD_MAX_BYTES', async () => {
@@ -519,12 +517,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         contact: { phone: '+49 170 0000000' },
         photos: [dataUrl('image/png', oversized)],
       })
-      const ticket = await ticketOfClient(clientUuid)
 
       expect(response.statusCode).toBe(422)
       expect(response.json<ErrorBody>().code).toBe('photo_too_large')
-      expect(await photoRowsOf(ticket.id)).toHaveLength(0)
-      expect(await uploadedFilesOf(ticket.id)).toEqual([])
+      expect((await db.select().from(tickets).where(eq(tickets.clientUuid, clientUuid)))).toEqual([])
     })
 
     it('stores a honeypot report as suspected spam without asking for a captcha', async () => {
