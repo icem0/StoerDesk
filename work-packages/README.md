@@ -496,7 +496,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-01  | dashboard and statistics specification, ADR-0012 and phase-9 split  | done                    | yes     |
 | WP-M9-02  | `tickets.is_test` flag                                              | done                    | yes     |
 | WP-M9-03  | statistics SQL views                                                | done                    | yes     |
-| WP-M9-04  | shared dashboard and statistics contracts                           | planned                 | yes     |
+| WP-M9-04  | shared dashboard and statistics contracts                           | done                    | yes     |
 | WP-M9-05  | dashboard service                                                   | planned                 | yes     |
 | WP-M9-06  | dashboard route                                                     | planned                 | yes     |
 | WP-M9-07  | dashboard SSE stream                                                | planned                 | yes     |

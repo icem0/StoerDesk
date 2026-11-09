@@ -1,7 +1,7 @@
 # WP-M9-04: shared dashboard and statistics contracts
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-01
 phase: 9
 milestone: m9
