@@ -118,6 +118,38 @@ describe('BrandingPage', () => {
     )
   })
 
+  it('toggles the title switch and saves the new value', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const checkbox = (await screen.findByLabelText(
+      /Titel bei Ticket erfassen|Ticket title/i
+    )) as HTMLInputElement
+    expect(checkbox.checked).toBe(false)
+
+    fireEvent.click(checkbox)
+    expect(checkbox.checked).toBe(true)
+
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(
+      screen.findByText(/Gespeichert\.|Saved\./i),
+    ).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '' }),
+      }),
+    )
+  })
+
   it('disables the save button without settings.write', async () => {
     const fetchMock = stubSessionAndBranding(['settings.read'], {
       companyName: 'Beispiel GmbH',

@@ -59,6 +59,7 @@ export function BrandingPage() {
   const mayWrite = usePermission('settings.write')
   const queryClient = useQueryClient()
   const [saved, setSaved] = useState(false)
+  const [titleEnabled, setTitleEnabled] = useState<boolean | null>(null)
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
   const [logoError, setLogoError] = useState<string | null>(null)
 
@@ -80,6 +81,7 @@ export function BrandingPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['branding'] })
       setSaved(true)
+      setTitleEnabled(null)
       setLogoDataUrl(null)
       setLogoError(null)
     },
@@ -149,8 +151,9 @@ export function BrandingPage() {
           <input
             name="titleEnabled"
             className="rounded bg-slate-950 p-2 text-slate-100"
-            checked={branding.data?.titleEnabled === true}
+            checked={titleEnabled ?? branding.data?.titleEnabled === true}
             disabled={!mayWrite}
+            onChange={(event) => setTitleEnabled(event.target.checked)}
             type="checkbox"
           />
         </label>
