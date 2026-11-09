@@ -5,6 +5,7 @@ import {
   internalCreateTicketRequestSchema,
   internalCreateTicketResponseSchema,
   PERMISSIONS,
+  ticketNoSchema,
   type InternalCreateTicketRequest,
   type InternalCreateTicketResponse,
 } from '@stoerdesk/shared'
@@ -166,6 +167,10 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
 
         if (user === undefined) {
           return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(request.params.ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
         }
 
         try {

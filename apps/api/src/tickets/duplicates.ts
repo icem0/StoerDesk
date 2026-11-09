@@ -8,6 +8,7 @@ import {
   publicOpenTicketsResponseSchema,
   publicTicketCommentRequestSchema,
   publicTicketCommentResponseSchema,
+  ticketNoSchema,
   type PublicOpenTickets,
   type PublicTicketComment,
   type PublicTicketCommentRequest,
@@ -141,6 +142,10 @@ export async function addPublicComment(
   database: Db,
   input: PublicTicketCommentRequest & { ticketNo: string },
 ): Promise<PublicTicketComment> {
+  if (!ticketNoSchema.safeParse(input.ticketNo).success) {
+    throw new DuplicateRouteError(400, 'invalid_request', { fields: ['ticketNo'] })
+  }
+
   const object = await resolveObject(database, input.qrToken)
 
   const [ticket] = await database

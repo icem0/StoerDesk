@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Ticket and object search match literally now (WP-M9-28, SEC-012): both searches escape `\`, `%` and `_` through one shared helper (`escapeLikePattern`), so a search string is matched exactly instead of widening the result set (the ticket list search had fixed `%`/`_` — the object search had inherited the same drift).
 
+- Ticket numbers are validated at the entry points (WP-M9-29, SEC-015): `GET /api/v1/tickets/:ticketNo` and the two comment routes reject a malformed `ticketNo` (`ST-<year>-<counter>`) with `400 invalid_request` before touching the database.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

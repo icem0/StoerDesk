@@ -4,6 +4,7 @@ import {
   computeTicketTimeline,
   PERMISSIONS,
   ticketDetailResponseSchema,
+  ticketNoSchema,
   type TicketDetailResponse,
 } from '@stoerdesk/shared'
 
@@ -246,6 +247,10 @@ export const ticketDetailRoutes = fp<TicketDetailRouteOptions>(
       { preHandler: requirePermission(database, PERMISSIONS.ticket.read) },
       async (request, reply) => {
         const { ticketNo } = request.params
+
+        if (!ticketNoSchema.safeParse(ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+        }
 
         try {
           const result = await getTicketDetail(database, ticketNo)
