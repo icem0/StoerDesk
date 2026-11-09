@@ -1,7 +1,7 @@
 # WP-M9-03: statistics SQL views and migration 0024
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-02
 phase: 9
 milestone: m9

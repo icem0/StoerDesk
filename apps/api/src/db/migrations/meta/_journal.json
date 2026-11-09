@@ -176,6 +176,13 @@
       "when": 1794103203000,
       "tag": "0024_ticket_purges_append_only",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": 7,
+      "when": 1794103204000,
+      "tag": "0025_stats_views",
+      "breakpoints": true
     }
   ]
 }
