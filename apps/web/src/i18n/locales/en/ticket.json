@@ -195,6 +195,7 @@
   "timeline": {
     "title": "Timeline",
     "deadline": "Deadline",
+    "markerTitle": "{{label}} · {{time}}",
     "remaining": "{{hours}} h left",
     "overdue": "Overdue for {{hours}} h",
     "stopped": "Stopped at acknowledgement",

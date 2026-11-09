@@ -16,6 +16,12 @@ afterEach(() => {
   void i18n.changeLanguage('de')
 })
 
+/** The position of a marker on the axis in percent. */
+function markerLeft(marker: Element): number {
+  const match = /left:\s*([\d.]+)%/.exec(marker.getAttribute('style') ?? '')
+  return match === null ? Number.NaN : Number(match[1])
+}
+
 describe('TicketTimeline', () => {
   it('renders a green running bar with the remaining time', () => {
     const reportedAt = at(-2)
@@ -38,8 +44,46 @@ describe('TicketTimeline', () => {
     expect(rendered.container.querySelector('.bg-green-500')).toBeTruthy()
     expect(screen.getByText(/Noch \d+ Std\./)).toBeTruthy()
 
-    const marker = rendered.container.querySelector('[title]')
-    expect(marker?.getAttribute('title')).toBe(`created · ${reportedAt}`)
+    const marker = rendered.container.querySelector('[data-testid="timeline-marker"]')
+    expect(marker?.getAttribute('title')).toContain('Meldung eingegangen')
+  })
+
+  it('puts the milestone markers on the bar and the report on the start point', () => {
+    const reportedAt = at(-2)
+    const deadlineAt = at(70)
+
+    const rendered = render(
+      <I18nextProvider i18n={i18n}>
+        <TicketTimeline
+          reportedAt={reportedAt}
+          deadlineAt={deadlineAt}
+          stoppedAt={null}
+          markers={[
+            { type: 'created', at: reportedAt },
+            { type: 'accepted', at: at(34) },
+          ]}
+          deadlineHours={72}
+          scaleSuffix="Std"
+        />
+      </I18nextProvider>,
+    )
+
+    const markers = rendered.container.querySelectorAll('[data-testid="timeline-marker"]')
+    expect(markers).toHaveLength(2)
+
+    const created = markers.item(0)
+    // The report marker is a whole dot on the start point of the axis.
+    expect(markerLeft(created)).toBeCloseTo(0, 5)
+    expect(created.getAttribute('style')).toContain('translate(-50%, -50%)')
+    expect(created.closest('.overflow-hidden')).toBeNull()
+    expect(created.getAttribute('title')).toContain('Meldung eingegangen')
+
+    const accepted = markers.item(1)
+    expect(markerLeft(accepted)).toBeCloseTo(50, 5)
+    expect(accepted.getAttribute('title')).toContain('Auftrag angenommen')
+
+    const deadline = rendered.container.querySelector('[data-testid="timeline-deadline"]')
+    expect(deadline?.getAttribute('title')).toContain('Frist')
   })
 
   it('marks an overdue running ticket in red with the overdue time', () => {

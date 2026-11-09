@@ -1218,7 +1218,7 @@ services (10, 11), the statistics routes (12), the CSV export (13), the web dash
 statistics match reference data" is proven by WP-M9-18. No product code in this
 package.
 
-**Out-of-band phase 9 — the office view of the shipped app (WP-M9-19 … WP-M9-21).** The
+**Out-of-band phase 9 — the office view of the shipped app (WP-M9-19 … WP-M9-22).** The
 office asked for a leaner dashboard and a denser ticket list. The work does not wait for
 the phase-9 chain, because it changes the product the users see today and not the
 contract of a later package. **WP-M9-19** removes the "Brennt jetzt" list from the start
@@ -1226,7 +1226,10 @@ page — the wall display keeps it (`specs/11-dashboard.md` §11.5) — and make
 one link over its whole area; **WP-M9-20** orders the ticket list by the deadline, the
 open tickets first and the finished ones behind them; **WP-M9-21** renders one line per
 ticket with the mini timeline in the middle and the whole line as a link to the ticket.
-The files of the three packages exist since the commit of WP-M9-19.
+The files of the three packages exist since the commit of WP-M9-19. **WP-M9-22** puts the
+milestone markers of the ticket timeline onto the bar: the report marker is a whole dot
+on the start point of the axis instead of a half dot above it, and the tooltip names the
+milestone in the language of the interface.
 
 ## 17. Work package rules for small models
 

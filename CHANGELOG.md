@@ -536,6 +536,16 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The milestone markers of the ticket timeline sat above the bar instead of on it: the
+  report marker (`created`) was a half dot floating over the start point of the axis,
+  because the markers were drawn inside the clipped box of the bar. The markers now live
+  in an overlay next to the bar — every dot is a whole circle centered on its own time
+  position and on the bar, so the report marker sits on the start point of the axis. The
+  tooltip names the milestone in the language of the interface ("Meldung eingegangen ·
+  09.11.26, 08:00") instead of the machine key and the raw ISO string, the tick of the
+  deadline is no longer clipped at the end of the axis, and the numbers of the scale start
+  and end with the axis (WP-M9-22).
+
 - The iCal token test was flaky: the "tampered" signature replaced the last character of
   the base64url HMAC with `A`, but that character carries only four significant bits, so in
   about one of sixteen runs the tampered token was byte-identical to the valid one and the

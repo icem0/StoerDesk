@@ -86,6 +86,13 @@ server computes the timeline in the API answer; the client recomputes it every
 minute from the same shared function, so a phone with a wrong clock never
 becomes the source of truth.
 
+In the web app a marker is a dot **on** the bar: it is centered on its own time
+position and on the bar itself, so the report marker is the start point of the
+axis and the last marker is the end of it. The dots are drawn in an overlay
+next to the bar and not inside it, so none of them is clipped by the bar. The
+tooltip of a dot names the milestone and its time in the language of the
+interface (WP-M9-22).
+
 ## 5.4 API representation
 
 `GET /api/v1/tickets/:ticketNo` answers a `timeline` object in addition to the

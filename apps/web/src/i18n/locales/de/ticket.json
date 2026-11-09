@@ -195,6 +195,7 @@
   "timeline": {
     "title": "Zeitlinie",
     "deadline": "Frist",
+    "markerTitle": "{{label}} · {{time}}",
     "remaining": "Noch {{hours}} Std.",
     "overdue": "Seit {{hours}} Std. überfällig",
     "stopped": "Bei Quittierung angehalten",
