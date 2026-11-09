@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   externalTypeCategory,
   type InternalCreateTicketRequest,
+  type InternalCreateTicketResponse,
   type StandardTextLocale,
 } from '@stoerdesk/shared'
 
@@ -270,13 +271,13 @@ export function InternalCreatePage() {
         },
       }
 
-      await apiFetch<InternalCreateTicketRequest>('/v1/tickets', {
+      const created = await apiFetch<InternalCreateTicketResponse>('/v1/tickets', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
-      navigate('/objects')
+      navigate(`/tickets/${created.ticketNo}`)
     } catch (known) {
       setSubmitting(false)
 

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 
@@ -112,6 +112,48 @@ function stubNetworkFailure() {
   )
 }
 
+function stubTicketCreated(ticketNo: string) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const path = String(input)
+
+      if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
+        return Response.json({
+          ticketId: '55555555-5555-4555-8555-555555555555',
+          ticketNo,
+          status: 'NEW',
+          statusToken: 'st-1234',
+          reportedAt: '2025-01-01T08:00:00Z',
+          receivedAt: '2025-01-01T08:00:00Z',
+          deadlineAt: '2025-01-04T08:00:00Z',
+        }, { status: 201 })
+      }
+
+      if (path.includes('/v1/text-templates')) {
+        return Response.json({ templates: [] })
+      }
+
+      return Response.json({
+        objects: [
+          {
+            id: OBJECT_ID,
+            objectNo: '12345_01',
+            name: 'Rathaus',
+            externalType: 'Brandmeldeanlage',
+            systems: [],
+          },
+        ],
+      })
+    }),
+  )
+}
+
+function TicketDetailStub() {
+  const { ticketNo } = useParams()
+  return <p data-testid="ticket-detail">{ticketNo ?? '-'}</p>
+}
+
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
@@ -121,6 +163,23 @@ function renderPage() {
         <MemoryRouter initialEntries={['/objects/new']}>
           <Routes>
             <Route path="/objects/new" element={<InternalCreatePage />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nextProvider>
+    </QueryClientProvider>,
+  )
+}
+
+function renderPageWithRoutes() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+  return render(
+    <QueryClientProvider client={client}>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter initialEntries={['/objects/new']}>
+          <Routes>
+            <Route path="/objects/new" element={<InternalCreatePage />} />
+            <Route path="/tickets/:ticketNo" element={<TicketDetailStub />} />
           </Routes>
         </MemoryRouter>
       </I18nextProvider>
@@ -246,5 +305,15 @@ describe('InternalCreatePage', () => {
     // The pick replaces the search text inside the field and closes the overlay.
     expect(searchInput.value).toBe('12345_01 — Rathaus (BMA)')
     expect(screen.queryByRole('listbox')).toBeNull()
+  })
+
+  it('navigates to the ticket detail after a successful creation', async () => {
+    stubTicketCreated('ST-2025-0001')
+    renderPageWithRoutes()
+    await pickObjectAndSubmit()
+
+    await waitFor(() =>
+      expect(screen.getByText('ST-2025-0001')).toBeTruthy(),
+    )
   })
 })
