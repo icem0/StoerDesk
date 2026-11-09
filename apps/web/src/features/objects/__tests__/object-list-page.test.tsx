@@ -7,18 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { i18n } from '../../../i18n'
 import { ObjectListPage } from '../object-list-page'
 
-/**
- * Object list badge of WP-M2-39 (`specs/17-bmacloud-sync.md` §17.4/§17.5): an object whose
- * `external_id` is set carries the quiet "extern gepflegt" badge next to its number, the
- * locally maintained object does not, and the active badge stays independent. The system
- * type column of WP-M2-66 renders the derived category of `external_type` as a quiet
- * badge with the stored name as its title.
- */
-function objectSummary(
-  objectNo: string,
-  externalId: string | null,
-  externalType: string | null = null,
-) {
+function objectSummary(objectNo: string) {
   return {
     id: `11111111-1111-4111-8111-${objectNo
       .replace(/[^0-9a-f]/gi, '')
@@ -33,8 +22,8 @@ function objectSummary(
     contactName: null,
     contactPhone: null,
     contactEmail: null,
-    externalId,
-    externalType,
+    externalId: null,
+    externalType: null,
     active: true,
     notes: null,
     qrToken: null,
@@ -47,10 +36,7 @@ function renderList() {
     'fetch',
     vi.fn(async () =>
       Response.json({
-        objects: [
-          objectSummary('EXT-1', 'aid-7', 'Brandmeldeanlage Notifier'),
-          objectSummary('LOK-1', null),
-        ],
+        objects: [objectSummary('EXT-1'), objectSummary('LOK-1')],
       }),
     ),
   )
@@ -73,40 +59,38 @@ afterEach(() => {
 })
 
 describe('ObjectListPage', () => {
-  it('badges only the externally maintained object and keeps the active badge', async () => {
+  it('renders object number, name, address and active badge per row', async () => {
     renderList()
 
-    const externalRow = (await screen.findByText('EXT-1')).closest('tr')
-    const localRow = screen.getByText('LOK-1').closest('tr')
+    await screen.findByText('EXT-1')
 
-    if (externalRow === null || localRow === null) {
-      throw new Error('rows missing')
-    }
-
-    expect(
-      await within(externalRow).findByText(/extern gepflegt|externally maintained/i),
-    ).toBeTruthy()
-    expect(within(localRow).queryByText(/extern gepflegt|externally maintained/i)).toBeNull()
-    expect(within(externalRow).getByTitle(/BMAcloud/)).toBeTruthy()
-    expect(within(externalRow).getByText(/Aktiv|Active/i)).toBeTruthy()
-    expect(within(localRow).getByText(/Aktiv|Active/i)).toBeTruthy()
+    const firstRow = screen.getByText('EXT-1').closest('tr')
+    expect(firstRow).toBeTruthy()
+    expect(within(firstRow!).getByText('Objekt EXT-1')).toBeTruthy()
+    expect(within(firstRow!).getByText('Beispielstraße, 1, 12345, Beispielstadt')).toBeTruthy()
+    expect(within(firstRow!).getByText(/Aktiv|Active/i)).toBeTruthy()
   })
 
-  it('shows the derived system type of the synced object and a dash for a local one', async () => {
+  it('shows edit and delete buttons side by side in the actions cell', async () => {
     renderList()
 
-    const externalRow = (await screen.findByText('EXT-1')).closest('tr')
-    const localRow = screen.getByText('LOK-1').closest('tr')
+    await screen.findByText('EXT-1')
 
-    if (externalRow === null || localRow === null) {
-      throw new Error('rows missing')
-    }
+    const row = screen.getByText('EXT-1').closest('tr')
+    expect(row).toBeTruthy()
+    const lastCell = row!.querySelector('td:last-child') as HTMLElement
+    expect(lastCell).toBeTruthy()
+    expect(within(lastCell!).getByText(/Bearbeiten|Edit/i)).toBeTruthy()
+    expect(within(lastCell!).getByText(/Löschen|Delete/i)).toBeTruthy()
+  })
 
-    expect(await screen.findByText('Typ')).toBeTruthy()
-    const badge = within(externalRow).getByTitle('Brandmeldeanlage Notifier')
+  it('has no external badge or type column', async () => {
+    renderList()
 
-    expect(badge.textContent).toBe('BMA')
-    expect(within(localRow).queryByTitle('Brandmeldeanlage Notifier')).toBeNull()
-    expect(within(localRow).getByText('—')).toBeTruthy()
+    await screen.findByText('EXT-1')
+
+    expect(screen.queryByText(/extern gepflegt|externally maintained/i)).toBeNull()
+    expect(screen.queryByText(/Brandmeldeanlage|BMA/i)).toBeNull()
+    expect(screen.queryByText(/Typ|Type/i)).toBeNull()
   })
 })

@@ -21,8 +21,6 @@
     "search": "Search",
     "active": "Active",
     "inactive": "Inactive",
-    "externalBadge": "externally maintained",
-    "externalHint": "This object is maintained externally: name and address come from BMAcloud and the next sync overwrites them.",
     "activeTrue": "active only",
     "activeFalse": "inactive only",
     "activeAll": "all",
@@ -33,7 +31,6 @@
     "columns": {
       "objectNo": "Object no.",
       "name": "Name",
-      "type": "Type",
       "city": "City",
       "active": "Active",
       "actions": "Actions"

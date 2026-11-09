@@ -21,8 +21,6 @@
     "search": "Suchen",
     "active": "Aktiv",
     "inactive": "Inaktiv",
-    "externalBadge": "extern gepflegt",
-    "externalHint": "Dieses Objekt wird extern gepflegt: Name und Anschrift kommen aus der BMAcloud und werden beim nächsten Abgleich überschrieben.",
     "activeTrue": "nur aktiv",
     "activeFalse": "nur inaktiv",
     "activeAll": "alle",
@@ -33,7 +31,6 @@
     "columns": {
       "objectNo": "Objektnummer",
       "name": "Name",
-      "type": "Typ",
       "city": "Ort",
       "active": "Aktiv",
       "actions": "Aktionen"

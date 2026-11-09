@@ -2,11 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import {
-  externalTypeCategory,
-  type ObjectListResponse,
-  type ObjectSummary,
-} from '@stoerdesk/shared'
+import { type ObjectListResponse, type ObjectSummary } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
@@ -15,19 +11,12 @@ import { apiFetch } from '../../lib/api'
  *
  * View of the object list: search over object number, name and city, server-side
  * filters for `active`, `city` and `systemType`, one row per object with its
- * systems and an active/inactive badge. An object that BMAcloud owns (`external_id`
- * set, `specs/17-bmacloud-sync.md` §17.4) carries a second, independent badge next to
- * its number (WP-M2-39) and shows the system type the sync stored in
- * `external_type` (§17.3, WP-M2-66). Each row links to the edit page
-   (WP-M2-13) and has a delete button (WP-M2-14). Create lives on `/objects/create`
-   (WP-M2-12).
+ * systems and an active/inactive badge. Each row links to the edit page
+ * (WP-M2-13) and has an actions menu with edit and delete (WP-M2-14). Create lives
+ * on `/objects/create` (WP-M2-12).
  */
 
-function useObjects(query: {
-  search?: string
-  active?: string
-  city?: string
-}) {
+function useObjects(query: { search?: string; active?: string; city?: string }) {
   const params = new URLSearchParams()
   if (query.search) params.set('search', query.search)
   if (query.active !== undefined && query.active !== 'all') params.set('active', query.active)
@@ -64,30 +53,8 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
 
   return (
     <tr className="border-b border-slate-700 hover:bg-slate-800/50 transition-colors">
-      <td className="p-3 text-sm font-mono text-slate-300">
-        {object.objectNo}
-        {object.externalId !== null ? (
-          <span
-            className="ml-2 inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-300"
-            title={t('list.externalHint')}
-          >
-            {t('list.externalBadge')}
-          </span>
-        ) : null}
-      </td>
+      <td className="p-3 text-sm font-mono text-slate-300">{object.objectNo}</td>
       <td className="p-3 text-sm text-slate-200">{object.name}</td>
-      <td className="p-3 text-sm">
-        {object.externalType === null ? (
-          <span className="text-slate-500">—</span>
-        ) : (
-          <span
-            className="inline-flex items-center rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200"
-            title={object.externalType}
-          >
-            {externalTypeCategory(object.externalType) ?? object.externalType}
-          </span>
-        )}
-      </td>
       <td className="p-3 text-sm text-slate-400">
         {[object.street, object.houseNumber, object.postalCode, object.city]
           .filter(Boolean)
@@ -102,21 +69,23 @@ function ObjectRow({ object }: { object: ObjectSummary }) {
           {object.active ? t('list.active') : t('list.inactive')}
         </span>
       </td>
-      <td className="p-3 text-sm text-right text-slate-500">
-        <button
-          className="rounded bg-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-500"
-          type="button"
-          onClick={() => navigate(`/objects/${object.objectNo}/edit`)}
-        >
-          {t('list.actions.edit')}
-        </button>{' '}
-        <button
-          className="rounded bg-rose-600 px-2 py-1 text-xs text-white hover:bg-rose-500"
-          type="button"
-          onClick={handleDelete}
-        >
-          {t('list.actions.delete')}
-        </button>
+      <td className="p-3 text-sm">
+        <div className="flex gap-2 justify-end">
+          <button
+            className="rounded bg-slate-600 px-3 py-1 text-xs text-slate-200 hover:bg-slate-500"
+            type="button"
+            onClick={() => navigate(`/objects/${object.objectNo}/edit`)}
+          >
+            {t('list.actions.edit')}
+          </button>
+          <button
+            className="rounded bg-rose-600 px-3 py-1 text-xs text-white hover:bg-rose-500"
+            type="button"
+            onClick={handleDelete}
+          >
+            {t('list.actions.delete')}
+          </button>
+        </div>
       </td>
     </tr>
   )
@@ -210,9 +179,6 @@ export function ObjectListPage() {
                 </th>
                 <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {t('list.columns.name')}
-                </th>
-                <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {t('list.columns.type')}
                 </th>
                 <th className="p-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   {t('list.columns.city')}
