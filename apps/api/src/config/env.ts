@@ -29,7 +29,9 @@ const envSchema = z
     CORS_ORIGIN: z.string().default('http://localhost:5173'),
     /** Trust `X-Forwarded-*` headers — required behind the nginx reverse proxy. */
     TRUST_PROXY: booleanValue(false),
-    SESSION_SECRET: z.string().default(developmentSecret),
+    // SEC-016: SESSION_SECRET is the HMAC key of the iCal capability token (and the
+    // session cookie sign); a too-short operator value makes that HMAC brute-forceable.
+    SESSION_SECRET: z.string().min(32).default(developmentSecret),
     SESSION_TTL_HOURS: z.coerce.number().int().positive().default(72),
     COOKIE_SECURE: booleanValue(false),
     COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),

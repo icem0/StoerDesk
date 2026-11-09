@@ -117,7 +117,14 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
   )
 
   app.post('/api/v1/auth/logout', async (request, reply) => {
-    await destroySession(database, request.cookies[SESSION_COOKIE_NAME] ?? '')
+    // SEC-006: without the session cookie there is nothing to destroy; answering 204
+    // keeps the response shape stable so a cross-site POST (which browsers drop
+    // cookies for under SameSite) can never force a logout on another origin.
+    const token = request.cookies[SESSION_COOKIE_NAME]
+
+    if (token !== undefined && token !== '') {
+      await destroySession(database, token)
+    }
 
     reply.clearCookie(SESSION_COOKIE_NAME, {
       path: '/',

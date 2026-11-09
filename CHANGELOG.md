@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The iCal feed expires and rechecks (WP-M9-33, SEC-005/SEC-011): the HMAC of the capability token is salted with a rolling 1-year bucket so an abandoned URL expires within ~2 years; the route filters `users.active = true` and re-checks `PERMISSIONS.oncall.read` on every request; `Cache-Control: no-store` and a raised route `logLevel` keep the token out of the JSON file log, `docker logs` and browser/proxy caches.
 
+- `SESSION_SECRET` needs 32 characters (WP-M9-34, SEC-016) and logout requires the session cookie (SEC-006): the env schema adds `.min(32)` (the 37-char dev default still passes), and the logout route only calls `destroySession` when the `SESSION_COOKIE_NAME` cookie is present, so a cross-site POST (which browsers strip cookies for under SameSite) can no longer force a logout.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

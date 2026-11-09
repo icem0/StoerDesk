@@ -22,7 +22,7 @@ if (testDatabase.status === 'unavailable') {
 }
 
 const { oncallPools, oncallShifts, roles, userRoles, users } = schema
-const secret = 'ical-integration-secret'
+const secret = 'ical-integration-secret-0123456789abcdef-never-real' // ≥ 32 for SEC-016
 const DAY = 24 * 60 * 60 * 1000
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }

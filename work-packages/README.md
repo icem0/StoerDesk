@@ -526,6 +526,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-31  | report photo preflight before the ticket transaction (SEC-014)    | done                    | yes     |
 | WP-M9-32  | branding logo magic-byte check (SEC-019)                          | done                    | yes     |
 | WP-M9-33  | iCal feed expiry, active recheck, log redaction (SEC-005/011)     | done                    | yes     |
+| WP-M9-34  | SESSION_SECRET min length + logout cookie presence (SEC-016/006)  | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

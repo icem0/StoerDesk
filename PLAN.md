@@ -1279,7 +1279,10 @@ use (SEC-019), so a data URL whose bytes disagree with the claim is refused with
 checks the iCal capability: the HMAC salt is a rolling 1-year bucket (max ~2 years per
 token, one grace window), the route filters `users.active = true` and re-runs `loadEffectivePermissions`
 against `oncall.read`, and `Cache-Control: no-store` plus a raised route `logLevel` keep the
-token out of the JSON file log, `docker logs` and browser/proxy caches (SEC-005/SEC-011).
+token out of the JSON file log, `docker logs` and browser/proxy caches (SEC-005/SEC-011). **WP-M9-34**
+enforces `SESSION_SECRET` at `.min(32)` (dev default still passes) and makes logout require
+the session cookie before destroying, so a cross-site POST cannot force a logout (SEC-016 /
+SEC-006).
 
 ## 17. Work package rules for small models
 
