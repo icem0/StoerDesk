@@ -40,6 +40,7 @@ import { pauseRoutes } from './tickets/pauses'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
 import { dashboardRoutes } from './dashboard/routes'
+import { tvRoutes } from './dashboard/tv-routes'
 import { updateRoutes } from './update/routes'
 
 loadDotEnvFile()
@@ -138,6 +139,7 @@ export async function buildServer() {
   })
   await app.register(publicStatusRoutes, { database })
   await app.register(publicDuplicateRoutes, { database })
+  await app.register(tvRoutes, { database })
   await app.register(internalTicketRoutes, { database })
   await app.register(ticketListRoutes, { database })
   await app.register(ticketDetailRoutes, { database })

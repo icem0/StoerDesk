@@ -232,9 +232,17 @@ export async function resolveChannelStatus(database: Db): Promise<ChannelTile[] 
 
 type BurningNowRow = NonNullable<DashboardSnapshot['burningNow']>[number]
 
-export async function resolveBurningNow(database: Db): Promise<BurningNowRow[]> {
+/** A burning-now row that additionally carries the object id for TV
+ *  anonymisation (`specs/11-dashboard.md` §11.7). The `objectId` is stripped
+ *  by `dashboardSnapshotSchema` before the snapshot leaves the dashboard API. */
+type BurningNowRowWithId = BurningNowRow & { objectId: string }
+
+export async function resolveBurningNow(
+  database: Db,
+): Promise<BurningNowRowWithId[]> {
   const rows = (await database.execute(sql`
-    SELECT ticket_no, object_name, status, priority, deadline_at, reported_at
+    SELECT ticket_no, object_id, object_name, status, priority, deadline_at,
+      reported_at
     FROM stats_tickets
     WHERE status NOT IN ('CLOSED', 'CANCELLED')
       AND is_test = false
@@ -242,6 +250,7 @@ export async function resolveBurningNow(database: Db): Promise<BurningNowRow[]> 
     LIMIT 10
   `)) as {
     ticket_no: string
+    object_id: string
     object_name: string
     status: string
     priority: string
@@ -252,6 +261,7 @@ export async function resolveBurningNow(database: Db): Promise<BurningNowRow[]> 
   return rows.map((row) => ({
     ticketNo: row.ticket_no,
     objectName: row.object_name,
+    objectId: row.object_id,
     status: row.status as TicketStatus,
     priority: row.priority as TicketPriority,
     deadlineAt: new Date(row.deadline_at).toISOString(),
