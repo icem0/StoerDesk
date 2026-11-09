@@ -6,11 +6,14 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { eq } from 'drizzle-orm'
+
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { buildServer } from '../../index'
 import { tamperedSignature } from './helpers/icalToken'
 import { icalTokenFor } from '../ical'
+import { seedRbac } from '../../db/seed-rbac'
 
 const testDatabase = await openTestDatabase()
 
@@ -18,7 +21,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped on-call iCal integration: ${testDatabase.reason}\n`)
 }
 
-const { oncallPools, oncallShifts, users } = schema
+const { oncallPools, oncallShifts, roles, userRoles, users } = schema
 const secret = 'ical-integration-secret'
 const DAY = 24 * 60 * 60 * 1000
 
@@ -79,6 +82,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('on-call iCal feed (integ
 
   beforeAll(async () => {
     await migrate(db, { migrationsFolder })
+    await seedRbac(db)
 
     userId = await userIdFor('ical-user@example.org', 'en')
     otherUserId = await userIdFor('ical-other@example.org', 'de')
@@ -106,6 +110,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('on-call iCal feed (integ
     process.env.SESSION_SECRET = secret
 
     app = await buildServer()
+
+    // SEC-005: the iCal handler re-checks `oncall.read` at request time — the test
+    // user needs the system `oncall` role for the feed to work. Grant it after
+    // `buildServer()` (which seeds `roles` and `role_permissions`).
+    const [oncallRole] = await db
+      .select({ id: roles.id })
+      .from(roles)
+      .where(eq(roles.key, 'oncall'))
+      .limit(1)
+    await db.insert(userRoles).values({ userId, roleId: onlyRow(oncallRole ? [oncallRole] : [], 'the oncall role').id })
   })
 
   afterAll(async () => {

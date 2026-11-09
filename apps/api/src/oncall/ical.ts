@@ -15,17 +15,27 @@ export type IcalShift = {
 
 const tokenPattern = /^[A-Za-z0-9_-]+$/
 
-function signatureFor(userId: string, secret: string): Buffer {
-  return createHmac('sha256', secret).update(userId).digest()
+// SEC-005/SEC-011: a rolling 1-year bucket feeds the HMAC. A token from the previous
+// bucket still validates (one grace window, max ~2 years); older tokens fail, so an
+// abandoned feed URL has a natural expiry without a per-token DB row and without
+// rotating `SESSION_SECRET`. Rotation still revokes everything at once (ADR-0011).
+const IcalTokenBucketMs = 365 * 24 * 60 * 60 * 1000
+
+function bucketFor(now: number): number {
+  return Math.floor(now / IcalTokenBucketMs)
 }
 
-/** `<userId>.<base64url(HMAC-SHA256(userId, SESSION_SECRET))>` (ADR-0011). */
-export function icalTokenFor(userId: string, secret: string): string {
-  return `${userId}.${signatureFor(userId, secret).toString('base64url')}`
+function signatureFor(userId: string, secret: string, bucket: number): Buffer {
+  return createHmac('sha256', secret).update(`${userId}.${bucket}`).digest()
+}
+
+/** `<userId>.<base64url(HMAC-SHA256(userId + "." + bucket, SESSION_SECRET))>` (ADR-0011). */
+export function icalTokenFor(userId: string, secret: string, now = Date.now()): string {
+  return `${userId}.${signatureFor(userId, secret, bucketFor(now)).toString('base64url')}`
 }
 
 /** Returns the user id for a valid token and `null` for any malformed or forged one. */
-export function verifyIcalToken(token: string, secret: string): string | null {
+export function verifyIcalToken(token: string, secret: string, now = Date.now()): string | null {
   const separator = token.indexOf('.')
 
   if (separator <= 0 || separator !== token.lastIndexOf('.')) {
@@ -40,13 +50,17 @@ export function verifyIcalToken(token: string, secret: string): string | null {
   }
 
   const provided = Buffer.from(encoded, 'base64url')
-  const expected = signatureFor(userId, secret)
+  const currentBucket = bucketFor(now)
 
-  if (provided.length !== expected.length) {
-    return null
+  for (const bucket of [currentBucket, currentBucket - 1]) {
+    const expected = signatureFor(userId, secret, bucket)
+
+    if (provided.length === expected.length && timingSafeEqual(provided, expected)) {
+      return userId
+    }
   }
 
-  return timingSafeEqual(provided, expected) ? userId : null
+  return null
 }
 
 function formatUtc(date: Date): string {

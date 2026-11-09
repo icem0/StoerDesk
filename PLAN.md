@@ -1275,7 +1275,11 @@ magic bytes) before the ticket transaction (SEC-014), so an over-limit or bad-Ty
 no longer leaves an orphan ticket row with reporter PII in the database. **WP-M9-32**
 byte-checks the branding logo with the same `detectImageType` table the report photos
 use (SEC-019), so a data URL whose bytes disagree with the claim is refused with
-`400 invalid_request` before it enters the settings jsonb.
+`400 invalid_request` before it enters the settings jsonb. **WP-M9-33** expires and re-
+checks the iCal capability: the HMAC salt is a rolling 1-year bucket (max ~2 years per
+token, one grace window), the route filters `users.active = true` and re-runs `loadEffectivePermissions`
+against `oncall.read`, and `Cache-Control: no-store` plus a raised route `logLevel` keep the
+token out of the JSON file log, `docker logs` and browser/proxy caches (SEC-005/SEC-011).
 
 ## 17. Work package rules for small models
 

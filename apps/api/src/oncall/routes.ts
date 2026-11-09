@@ -17,7 +17,7 @@ import {
   oncallMemberListResponseSchema,
 } from '@stoerdesk/shared'
 
-import { requirePermission } from '../auth/requirePermission'
+import { loadEffectivePermissions, requirePermission } from '../auth/requirePermission'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { oncallPools, oncallShifts, roles, userGroups, userRoles, users } from '../db/schema'
@@ -101,6 +101,10 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
     // Public: the signed token is the only authorization (ADR-0011 decision 5).
     app.get<{ Params: { token: string } }>(
       '/api/v1/oncall/ical/:token.ics',
+      // SEC-011: a raised `logLevel` keeps Fastify from writing every request/response
+      // log line for the feed at the app's default `info` level; capability tokens
+      // never land in `docker logs`, the JSON file log or a log aggregator.
+      { logLevel: 'warn' },
       async (request, reply) => {
         const notFound = { code: 'ical_not_found', params: {} }
         const userId = verifyIcalToken(request.params.token, loadEnv().SESSION_SECRET)
@@ -109,13 +113,22 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           return reply.code(404).send(notFound)
         }
 
+        // SEC-005: the route re-checks the live ACL — a deactivated user or a role
+        // change that removes `oncall.read` invalidates the feed immediately, not
+        // only on the next `SESSION_SECRET` rotation.
         const [user] = await database
-          .select({ locale: users.locale })
+          .select({ locale: users.locale, active: users.active })
           .from(users)
-          .where(eq(users.id, userId))
+          .where(and(eq(users.id, userId), eq(users.active, true)))
           .limit(1)
 
         if (user === undefined) {
+          return reply.code(404).send(notFound)
+        }
+
+        const held = await loadEffectivePermissions(database, userId)
+
+        if (!held.includes(PERMISSIONS.oncall.read)) {
           return reply.code(404).send(notFound)
         }
 
@@ -145,6 +158,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
 
         return reply
           .header('content-type', 'text/calendar; charset=utf-8')
+          .header('cache-control', 'no-store')
           .send(serializeIcal(rows, user.locale))
       },
     )
