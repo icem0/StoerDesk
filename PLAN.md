@@ -1260,6 +1260,14 @@ stopped presenting them. The record also corrects the off-by-one WP references o
 `branding-state.ts` module comment, the only place that ever named WP-M9-26 (the internal
 creation gate is WP-M9-25, the ticket view gate WP-M9-24).
 
+**Out-of-band phase 9 — security audit closure (WP-M9-27 … WP-M9-38).** The repeat pass
+of the security audit (against `6351037`, diff `1ff37b1f..HEAD`, 181 files) found 17 open
+items: areas A and B were re-checked in full, areas C–K only the changed files. **WP-M9-27**
+starts the chain and makes `ticket_purges` append-only (audit SEC-013: migration `0024`
+adds triggers that reject any `UPDATE`/`DELETE` of the purge log and cap `reason` at 1000
+characters). The remaining findings follow in WP-M9-28 … WP-M9-38 in numeric order before
+the next phase starts.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

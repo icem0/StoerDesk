@@ -504,7 +504,9 @@ export const ticketPhotos = pgTable(
  * Append-only log of permanently deleted tickets (`PLAN.md` §7 rule 10,
  * WP-M2-76). A hard-deleted ticket takes its events and photo rows with it;
  * this table keeps the accountability record without any reporter contact
- * data or ticket content.
+ * data or ticket content. Migration 0024 makes it append-only: `UPDATE`/`DELETE`
+ * raise `ticket_purges_append_only`, `reason` is capped at 1000 characters
+ * on insert.
  */
 export const ticketPurges = pgTable(
   'ticket_purges',

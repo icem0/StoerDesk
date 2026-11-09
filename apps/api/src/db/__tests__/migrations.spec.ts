@@ -213,8 +213,25 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0023_ticket_is_test')
+    expect(entries.at(-1)?.tag).toBe('0024_ticket_purges_append_only')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
+  })
+})
+
+describe('migration 0024 ticket_purges append-only', () => {
+  const sql = readMigration('0024_ticket_purges_append_only')
+
+  it('keeps the purge log append-only', () => {
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION ticket_purges_append_only()')
+    expect(sql).toContain("RAISE EXCEPTION 'ticket_purges_append_only: %', TG_OP USING ERRCODE = 'raise_exception'")
+    expect(sql).toContain('BEFORE UPDATE OR DELETE ON "ticket_purges"')
+  })
+
+  it('caps the purge reason length on insert', () => {
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION ticket_purges_reason_length()')
+    expect(sql).toContain("RAISE EXCEPTION 'ticket_purges_reason_too_long' USING ERRCODE = '23514'")
+    expect(sql).toContain('BEFORE INSERT ON "ticket_purges"')
+    expect(sql).toContain("LENGTH(NEW.reason) > 1000")
   })
 })
 
