@@ -4,7 +4,7 @@
 
 # StörDesk
 
-**Malfunction desk for buildings and technical assets — malfunction reports only, never emergency calls.**
+**The malfunction desk for buildings and technical assets — structured reports, a ticketed workflow, on-call escalation. Never an emergency call path.**
 
 [![CI](https://github.com/icem0/StoerDesk/actions/workflows/check.yml/badge.svg)](https://github.com/icem0/StoerDesk/actions/workflows/check.yml)
 [![Docker](https://img.shields.io/badge/install-docker%20compose-blue)](docs/DEPLOYMENT.md)
@@ -29,67 +29,202 @@ structured way, handled as tickets through a state machine, escalated to the rig
 on-call shift and recorded in a traceable audit trail. Emergency service dispatch
 (fire brigade, ambulance, police) is out of scope by design.
 
-- **Report form** for reporters (works without login, offline-capable as a PWA)
-- **Tickets** with an immutable event log (audit trail)
-- **Objects and assets** as the reference point of every report
-- **On-call and escalation** based on shift schedules and pg-boss jobs
-- **Dashboard and statistics** for evaluation and malfunction trends
-- **Offline support**: Dexie in the browser, sync with quarantine on conflicts
+## Features
 
-## Installation (Docker Compose)
+### Reporting — public QR form, no login
+
+- The QR code of an object opens the report form at `/m/<token>`. The token is the
+  only credential, so anyone on site can report a fault without an account.
+- Fault types from the live catalogue as chips, free text, optional contact details
+  and up to **six photos** (compressed in the browser, verified on the server).
+- **Offline capable**: a report made without a connection is stored in the browser
+  (IndexedDB) and sent later — exactly once, thanks to the idempotent client id.
+- Spam protection: a hidden honeypot, a throttle per IP and per QR token and an
+  optional Altcha proof of work that is only demanded for suspicious reports.
+- Duplicate hint: open tickets of the same object are shown, so the reporter can
+  comment on an existing ticket instead of opening a second one.
+- Confirmation with the ticket number and a link to the public status page
+  `/s/<token>`; the status page shows the state and the public timeline only.
+- The 112 emergency notice sits directly above the send button.
+
+### Tickets and workflow
+
+- Nine states — new, in review, work order created, offered, assigned, accepted,
+  acknowledged, closed, cancelled — plus reopen and uncancel. Every transition is
+  validated server side and written to the history; an invalid one is refused.
+- Twelve workflow actions: review, work order, assign, offer, claim, accept,
+  decline, acknowledge, close, reopen, cancel, uncancel.
+- Four priorities (low, normal, high, critical) with a deadline per priority —
+  168 h / 72 h / 24 h / 8 h by default, configurable in the administration — and a
+  timeline bar from green to red in the ticket list and in the ticket view.
+- Pauses with a reason: the paused time does not count towards the deadline.
+- Escalation: rules on the reaction time and on the deadline (80 % and 100 %) write
+  escalation events into the history; an on-call offer that is not accepted in time
+  falls back to the group.
+- Audit trail: an append-only event log per ticket, protected by a database
+  trigger. A permanent deletion is recorded separately with its reason.
+- Internal creation of tickets (object, fault types, priority, contact), comments,
+  and a branded e-mail preview with a prefilled `mailto:` for the reporter.
+
+### Objects, QR codes and stickers
+
+- Object list with search and filters, object number, name, address, contact, notes.
+- A QR token per object, regenerable; a retired token stays resolvable for 30 days.
+- Printable sticker sheets (A6 or A4) with the QR code, the object data, the report
+  call and the 112 notice — one sheet per object.
+
+### On-call
+
+- Pools, weekly slot grid, shift planning and generation, confirm and decline of a
+  shift, including offline.
+- Swaps: request, accept, approve, reject, cancel.
+- Personal iCal feed of the own shifts.
+- Coupling: a new ticket is offered to the on-call shift, the responsible
+  technician is resolved and the offer is time-limited.
+
+### Administration
+
+- Users (name, locale, theme, active, roles, password), roles (system roles are
+  read-only, custom roles pick from 39 permission keys) and groups.
+- Fault type catalogue with German and English texts, deadline and reaction
+  settings, branding with company name, logo and the title switch.
+- BMAcloud sync: a read-only daily import of assets into the object list, with run
+  history, conflicts and a manual trigger. Nothing is ever written back.
+- Update control: the header shows the installed version and starts a deployment
+  through a webhook after a check on GitHub.
+
+### Dashboard
+
+- The start page carries the primary action "new malfunction" and the counts the
+  office needs at a glance: total, open, overdue and not yet reviewed. Every tile
+  is a link to the filtered ticket list.
+
+### Notifications — optional
+
+- The API holds an outbox; the worker sends the message, retries it and falls back
+  to the next channel. The ticket history shows `notification_sent` and
+  `notification_failed`.
+- Channels: **e-mail** (SMTP), **ntfy**, **Telegram**, **Signal**, **Matrix** and
+  **Web Push**. Each channel stays disabled while its address in `.env` is empty —
+  StörDesk ships no notification server of its own.
+- Today the outbox is filled by the public QR report; an internally created ticket
+  does not notify yet. The browser registration for Web Push is not implemented
+  yet — the channel sends to the subscriptions that are already stored.
+
+### Offline, PWA and languages
+
+- Installable PWA with an offline report form, offline acknowledge, comment and
+  decline of a ticket. A rejected write stays visible as a conflict and is never
+  retried silently.
+- German (default) and English, both complete. The code base is English; only
+  user-facing text is translated.
+
+### Security
+
+- Sessions in an httpOnly cookie, password hashes with Argon2id, a login rate limit
+  per IP, helmet, CORS, a global rate limit and error answers as `{ code, params }`.
+- No personal data in the logs, no secrets in the repository, `.env` is ignored.
+
+## Installation
 
 Docker Compose is the supported way to run StörDesk — Docker is the only
-prerequisite. Database, migrations, API and web frontend come up as one stack;
-runtime configuration is read from `.env`, the compose file is never edited.
+prerequisite. Database, migrations, API and web frontend come up as one stack.
+**You only adjust the variables in `.env` and deploy the compose file**; the
+compose file itself is never edited and Node.js is not needed on the host.
 
 ```bash
 git clone https://github.com/icem0/StoerDesk.git
 cd StoerDesk
-npm run env:create                # writes .env with generated secrets
-docker compose up -d --build
+cp .env.example .env        # 1. copy the configuration template
+$EDITOR .env                # 2. set the secrets (see below)
+docker compose up -d --build  # 3. deploy the stack
 ```
+
+Then open **http://localhost:3080** — the port comes from `WEB_PORT` (3080 by
+default, because 8080 collides with many other tools).
+
+### 2. The `.env` file
+
+Two variables are required; the stack refuses to start without them:
+
+```env
+POSTGRES_PASSWORD=...    # password of the database user
+SESSION_SECRET=...       # signs the session cookies, minimum 32 characters
+```
+
+Generate them, for example:
+
+```bash
+openssl rand -hex 18   # POSTGRES_PASSWORD
+openssl rand -hex 32   # SESSION_SECRET
+```
+
+Recommended — the first administrator account. The API creates it on the first
+start and never touches it again:
+
+```env
+SEED_ADMIN_EMAIL=admin@example.org
+SEED_ADMIN_PASSWORD=...      # at least 12 characters
+```
+
+> **Change the seed password before the first start.** The template ships
+> `SEED_ADMIN_PASSWORD=change-me-admin-password`; a stack that keeps it has a
+> publicly known administrator password. Empty the two `SEED_ADMIN_*` variables
+> instead and create the account in the administration.
+
+`npm run env:create` writes the same file with generated secrets (a plain Node
+script, no `npm install` needed, Node ≥ 22.12) — a convenience, not a
+prerequisite.
+
+### 3. The variables that matter
+
+| Variable                                                            | Default                   | Meaning                                                    |
+| ------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------- |
+| `POSTGRES_PASSWORD`                                                 | —                         | **required** — password of the database user               |
+| `SESSION_SECRET`                                                    | —                         | **required** — signs the session cookies (≥ 32 characters) |
+| `SEED_ADMIN_EMAIL`                                                  | `admin@example.org`       | e-mail of the bootstrap administrator                      |
+| `SEED_ADMIN_PASSWORD`                                               | —                         | password of the bootstrap administrator (≥ 12 characters)  |
+| `WEB_PORT`                                                          | `3080`                    | published port of the web frontend                         |
+| `WEB_BIND_ADDRESS`                                                  | `0.0.0.0`                 | address the web frontend binds to                          |
+| `CORS_ORIGIN`                                                       | `http://localhost:5173,…` | allowed browser origins — the public URL of the frontend   |
+| `COOKIE_SECURE`                                                     | `false`                   | set to `true` behind an HTTPS reverse proxy                |
+| `TZ`                                                                | `Europe/Berlin`           | timezone of the containers                                 |
+| `IMAGE_BUILD_CONTEXT`                                               | `.`                       | Git URL for a panel that clones the repository itself      |
+| `PGDATA_VOLUME`                                                     | `stoerdesk_pgdata`        | volume of the database                                     |
+| `UPLOADS_VOLUME`                                                    | `stoerdesk_uploads`       | volume of the uploaded photos                              |
+| `BACKUP_VOLUME`                                                     | `stoerdesk_backups`       | volume of the database dumps                               |
+| `BACKUP_INTERVAL_SECONDS`                                           | `86400`                   | seconds between two dumps                                  |
+| `BACKUP_RETENTION_DAYS`                                             | `14`                      | days a dump is kept                                        |
+| `ALTCHA_SECRET`                                                     | empty                     | enables the proof-of-work captcha                          |
+| `SMTP_*`, `NTFY_*`, `TELEGRAM_*`, `SIGNAL_*`, `MATRIX_*`, `VAPID_*` | empty                     | notification channels — a channel stays off while empty    |
+| `BMA_API_BASE_URL`, `BMA_API_KEY`                                   | `…/api/v2/`, empty        | BMAcloud sync                                              |
+| `GITHUB_REPO`, `GITHUB_BRANCH`                                      | empty, `main`             | the update check                                           |
+| `UPDATE_WEBHOOK_URL`, `UPDATE_WEBHOOK_TOKEN`                        | empty                     | the deploy hook the update starts                          |
+
+Every variable the stack understands is documented in
+[`.env.example`](.env.example). The version of the application is **not** a
+variable: the commit hooks write it into [`VERSION`](VERSION) and tag exactly that
+value, so every commit and every image carries the version of the development
+workflow.
+
+### 4. What comes up
+
+| Service         | URL                                 | Purpose                             |
+| --------------- | ----------------------------------- | ----------------------------------- |
+| Web (PWA)       | http://localhost:3080               | the app; nginx also proxies `/api/` |
+| API (proxied)   | http://localhost:3080/api/v1/health | health of API and database          |
+| Frontend health | http://localhost:3080/healthz       | health of the frontend              |
+
+Only the web frontend publishes a host port. The API and Postgres stay inside the
+internal network and are reached by container name, so the stack cannot collide
+with other projects on the same Docker host.
 
 Before the API applies pending migrations, the one-shot `db-backup-pre-migrate`
 service writes a compressed dump into the `backups` volume. The API container is
 not created until that dump exists, so a failed dump stops the deployment instead
 of migrating an unprotected database.
 
-`npm run env:create` is a plain Node script (no `npm install` needed, Node ≥ 22.12).
-Without Node on the host, write the two required secrets into `.env` yourself — the
-stack refuses to start without them:
-
-```bash
-{
-  echo "POSTGRES_PASSWORD=$(openssl rand -hex 18)"
-  echo "SESSION_SECRET=$(openssl rand -hex 32)"
-  echo "SEED_ADMIN_PASSWORD=$(openssl rand -hex 12)"
-} > .env
-docker compose up -d
-```
-
-The version shown in the web shell comes from the repository itself: the commit
-hooks write the next version into [`VERSION`](VERSION) and tag exactly that value,
-so every commit and every image carries the version produced by the development
-workflow. It is not a frontend or framework version and must not be set in `.env`.
-
-The images are built from the local checkout by default
-(`IMAGE_BUILD_CONTEXT=.`, see [`.env.example`](.env.example)). A deployment panel
-such as Arcane can clone the repository itself by setting `IMAGE_BUILD_CONTEXT` to
-the Git URL; the panel then always finds the `Dockerfile`
-([Arcane setup](docs/DEPLOYMENT.md#arcane)).
-
-Then open **http://localhost:3080**. The API is reached through the web frontend
-(nginx proxies `/api/`); its own port stays internal. The web port is configurable
-through `WEB_PORT` (default `3080`, chosen because `8080` collides with many tools).
-
-| Service         | URL                                 |
-| --------------- | ----------------------------------- |
-| Web (PWA)       | http://localhost:3080               |
-| API (proxied)   | http://localhost:3080/api/v1/health |
-| Frontend health | http://localhost:3080/healthz       |
-
-Services, volumes, backups, HTTPS and troubleshooting:
-[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+### 5. Operating the stack
 
 ```bash
 docker compose ps                # status of all services
@@ -98,19 +233,43 @@ docker compose down              # stops the stack, keeps the volumes
 docker compose down -v           # stops the stack and DELETES all data
 ```
 
-A repeatable smoke test builds the images from the current checkout, starts the
-core stack, checks both health endpoints and removes the project with its volumes
-again. It uses its own Compose project, its own volumes and its own web port
-(`3180`), so a running developer stack on `3080` is untouched:
-
-```bash
-sh scripts/docker-smoke.sh       # needs Docker + Compose plugin; exits 0 when healthy
-```
-
 Periodic database dumps run as an opt-in profile:
 
 ```bash
 docker compose --profile backup up -d
+```
+
+An update is a pull and a rebuild:
+
+```bash
+git pull
+docker compose up -d --build --remove-orphans
+```
+
+The administration can do the same from the browser: the version badge in the
+header checks GitHub and starts the deployment through a webhook. Services,
+volumes, backups, HTTPS, panels and troubleshooting:
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+### 6. HTTPS
+
+The stack serves plain HTTP. Put a reverse proxy (nginx, Caddy, Traefik) in front
+of `WEB_PORT` for a public installation and set
+
+```env
+COOKIE_SECURE=true
+CORS_ORIGIN=https://stoerdesk.example.org
+```
+
+### Smoke test
+
+A repeatable smoke test builds the images from the current checkout, starts the
+core stack, checks both health endpoints and removes the project with its volumes
+again. It uses its own Compose project, its own volumes and its own web port
+(`3180`), so a running stack on `3080` is untouched:
+
+```bash
+sh scripts/docker-smoke.sh       # needs Docker + Compose plugin; exits 0 when healthy
 ```
 
 ## Architecture
@@ -134,37 +293,6 @@ clock, errors as `{ code, params }` (never translated text on the wire), structu
 Pino logs, no monetary amounts. **The code base is English** — identifiers, comments
 and developer docs; only user-facing text is multilingual via i18n (`de` default,
 `en` complete).
-
-## Notifications and integrations
-
-**No notification channel is integrated yet** — the current release sends nothing
-out, no mail, no push, no messaging. Notifications are designed to run through an
-outbox in the API, but the channels themselves are not implemented as a running
-feature.
-
-Connected to **existing** systems, integration is possible by design — StörDesk
-never ships its own notification servers:
-
-- a **webhook** to whatever downstream system you already run,
-- an existing **ntfy** server, **Matrix** homeserver, **Signal** bridge, **mail**
-  server or Telegram bot.
-
-Nothing of that is part of a release today; each channel would be delivered as its
-own work package from [`work-packages/`](work-packages/). Do not configure or expect
-working notifications in the current stack.
-
-## Status
-
-The environment is in place — the plan is implemented work package by work
-package (currently WP-M1-01 to WP-M1-04, see [`CHANGELOG.md`](CHANGELOG.md)).
-
-- Build plan: [`PLAN.md`](PLAN.md) (binding scope, stack, phases, WP limits)
-- Expanded slices: [`specs/`](specs/) (17 chapters; placeholders fall back to `PLAN.md`)
-- Work plan: [`work-packages/`](work-packages/) (M0, M1, M2)
-- Decisions: [`docs/DECISIONS.md`](docs/DECISIONS.md) and `docs/DECISIONS/`
-
-Domain logic (auth, tickets, objects, on-call, notifications, UI) is created **only**
-as the implementation of a work package — package by package, never in bulk.
 
 ## Local development
 
@@ -204,6 +332,21 @@ npm run dev
 
 API integration tests run against a real database via `TEST_DATABASE_URL`
 (fallback `DATABASE_URL`); without a reachable database they are skipped.
+
+## Status
+
+The plan is implemented work package by work package; the phases 0 to 8 are
+complete, phase 9 (dashboard and statistics) is in progress. The start page with
+the counts is live, the statistics pages are still planned. The history is in
+[`CHANGELOG.md`](CHANGELOG.md).
+
+- Build plan: [`PLAN.md`](PLAN.md) (binding scope, stack, phases, WP limits)
+- Expanded slices: [`specs/`](specs/) (17 chapters; placeholders fall back to `PLAN.md`)
+- Work plan: [`work-packages/`](work-packages/) (M0 … M9)
+- Decisions: [`docs/DECISIONS.md`](docs/DECISIONS.md) and `docs/DECISIONS/`
+
+Domain logic (auth, tickets, objects, on-call, notifications, UI) is created **only**
+as the implementation of a work package — package by package, never in bulk.
 
 ## Contributing
 
