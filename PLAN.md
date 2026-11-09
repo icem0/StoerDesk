@@ -1287,7 +1287,10 @@ bounds the public comment route on the API side (SEC-004): the schema requires t
 `statusToken` and a fresh `clientUuid`, the service rejects a mismatched status token with
 `403 comment_status_token_mismatch`, replays the same `clientUuid` through `internal_action_receipts`
 and reuses the report spam throttle (suspicious submissions carry `suspected_spam: true`
-in the event payload).
+in the event payload). **WP-M9-37** threads the same fields through the web comment
+path (SEC-004 web side): the form adds `clientUuid`, `website`, `verification` and
+the reporter's own `statusToken` to the comment POST, and the module handles
+`comment_status_token_mismatch` so a foreign open ticket shows the API notice.
 
 ## 17. Work package rules for small models
 

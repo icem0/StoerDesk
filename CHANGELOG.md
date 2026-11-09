@@ -59,6 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The public comment route is bounded (WP-M9-36, SEC-004, API side): the schema requires the ticket's `statusToken` and a fresh `clientUuid` per submission; the service rejects a comment whose `statusToken` disagrees with the stored one with `403 comment_status_token_mismatch`, replays the same `clientUuid` via `internal_action_receipts` and runs the report spam throttle (suspicious comments are tagged with `suspected_spam: true` in the event payload).
 
+- The web comment path now carries the report spam contract (WP-M9-37, SEC-004 web side): the comment POST body adds `clientUuid`, `website`, `verification` and the reporter's own `statusToken`; `handledErrorCodes` grows `comment_status_token_mismatch` so the form shows the API notice instead of an unhandled error page.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

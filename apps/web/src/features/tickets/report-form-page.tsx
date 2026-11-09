@@ -44,7 +44,9 @@ import { usePublicFaultCatalog, type FaultCatalogEntry } from './use-fault-catal
  *
  * The spam protection of §7.6 is WP-M2-07d: the body always carries the hidden
  * honeypot `website`, and the Altcha widget only appears after the server answered
- * `400 captcha_required` — a normal report never sees a captcha.
+ * `400 captcha_required` — a normal report never sees a captcha. WP-M9-37 threads
+ * the same fields through the public comment path and shows the API's `403
+ * comment_status_token_mismatch` notice.
  */
 
 const TEXT_MAX_LENGTH = 4000
@@ -67,6 +69,7 @@ const handledErrorCodes = [
   'ticket_closed',
   'ticket_object_mismatch',
   'comment_text_required',
+  'comment_status_token_mismatch',
   'duplicate_parent_invalid',
 ] as const
 
@@ -791,6 +794,15 @@ export function ReportFormPage() {
           headers: jsonHeaders,
           body: JSON.stringify({
             qrToken,
+            clientUuid,
+            // SEC-004: the API needs the ticket's own status token — the reporter
+            // only has it for the ticket they created from this form. For any
+            // other open ticket the API answers 403 comment_status_token_mismatch
+            // and this form shows the notice.
+            statusToken: report?.statusToken ?? qrToken,
+            // §7.6: honeypot + captcha ride the same session as the report.
+            website,
+            verification,
             text: trimmedText === '' ? undefined : trimmedText,
             faultTemplateKeys: faultKeys,
             contact,
