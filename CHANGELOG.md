@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The object list lost its external indicator (record WP-M9-26 — the commit `d1e34eb`
+  landed without a work package): the rows no longer carry the "extern gepflegt" badge of
+  WP-M2-39 next to the object number and the `Typ` column of WP-M2-66 (header, cells and the
+  `externalTypeCategory` import) is gone, so the list shows object number, name, address,
+  active badge and the edit/delete actions as a flex row side by side. The keys
+  `list.externalBadge`, `list.externalHint` and `list.columns.type` were deleted in `de` and
+  `en`. Nothing else changed: the API still answers `externalId` and `externalType`, the BMAcloud
+  sync still writes them and the object detail still carries the external information — the
+  list simply stopped presenting them. The record also corrects the off-by-one WP references
+  in the `branding-state.ts` module comment (internal creation gate WP-M9-25, ticket view
+  gate WP-M9-24).
+
 - The branding title switch has one reading point (WP-M9-23): the `titleEnabled`
   flag of the branding row was read four times with four copies of the same rule.
   `apps/api/src/settings/branding-state.ts` exports `readTitleEnabled` (the row

@@ -11,10 +11,10 @@ import { settings } from '../db/schema'
  * decides whether a ticket carries a title at all:
  *
  * - the public report form offers a title input (WP-M2-90c),
- * - the internal creation form offers a title input (WP-M9-26),
+ * - the internal creation form offers a title input (WP-M9-25),
  * - a new ticket stores its title only while the flag is on (WP-M2-89, WP-M2-95),
  * - the ticket detail and the e-mail view show a title only while the flag is on
- *   (WP-M9-25).
+ *   (WP-M9-24).
  *
  * A missing or malformed row means `false` — the same rule everywhere.
  */

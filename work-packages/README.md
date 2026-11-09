@@ -518,6 +518,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-23  | one reading point for the branding title switch                     | done                    | yes     |
 | WP-M9-24  | ticket view honours the branding title switch                     | done                    | yes     |
 | WP-M9-25  | internal creation form honours the branding title switch          | done                    | yes     |
+| WP-M9-26  | record: object list facelift (commit `d1e34eb` without a WP)      | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -907,6 +908,20 @@ the switch is on. **WP-M9-23** gives the flag one reading point
 **WP-M9-24** answers `title: null` in the ticket view while the switch is off and offers
 `GET /api/v1/settings/title-switch` (guarded by `ticket.create`); **WP-M9-25** renders the
 title field of the internal creation form only while the switch is on. All three are done.
+
+**Out-of-band phase 9 — the record gap (WP-M9-26).** The commit `d1e34eb`
+(`feat(web): object list facelift`) landed with the title switch chain without a work
+package and without a WP id in its subject. **WP-M9-26** is the retroactive record of that
+commit: the object list rows lost the "extern gepflegt" badge of WP-M2-39 and the `Typ`
+column of WP-M2-66 (header, cells and the `externalTypeCategory` import left the DOM
+together), the edit and the delete action became a flex row side by side, the keys
+`list.externalBadge`, `list.externalHint` and `list.columns.type` were deleted in `de` and
+`en` and the page test was rewritten for the leaner row. The data contract is untouched:
+the API still answers `externalId` and `externalType`, the BMAcloud sync still writes them
+and the object detail keeps the external information. The same record corrects the
+off-by-one WP references in the `branding-state.ts` module comment (the internal creation
+gate is WP-M9-25, the ticket view gate WP-M9-24) — that comment was the only place in the
+repository that ever named WP-M9-26.
 
 ## Validation
 

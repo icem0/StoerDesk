@@ -1247,6 +1247,19 @@ and offers `GET /api/v1/settings/title-switch` (`ticket.create`), and **WP-M9-25
 the title field of the internal creation form only while the switch is on — all three are
 done.
 
+**Out-of-band phase 9 — the record gap (WP-M9-26).** The commit `d1e34eb`
+(`feat(web): object list facelift`) landed in the same chain without a work package and
+without a WP id in its subject, so **WP-M9-26** is its retroactive record: the object list
+rows lost the "extern gepflegt" badge of WP-M2-39 and the `Typ` column of WP-M2-66
+(header, cells and the `externalTypeCategory` import left the DOM together), the edit and
+the delete action became a flex row side by side and the keys `list.externalBadge`,
+`list.externalHint` and `list.columns.type` were deleted in `de` and `en`. The data
+contract stays: the API still answers `externalId` and `externalType`, the BMAcloud sync
+still writes them and the object detail keeps the external information — the list simply
+stopped presenting them. The record also corrects the off-by-one WP references of the
+`branding-state.ts` module comment, the only place that ever named WP-M9-26 (the internal
+creation gate is WP-M9-25, the ticket view gate WP-M9-24).
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
