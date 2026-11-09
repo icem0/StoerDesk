@@ -10,11 +10,20 @@ import { InternalCreatePage } from '../internal-create-page'
 const OBJECT_ID = '11111111-1111-4111-8111-111111111111'
 const SYSTEM_ID = '22222222-2222-4222-8222-222222222222'
 
-function stubTicketError(code: string, status: number) {
+/**
+ * The branding title switch (WP-M9-25): the form reads it from
+ * `GET /v1/settings/title-switch` before it renders the title field. The stub
+ * answers it explicitly, so a test decides whether the field exists.
+ */
+function stubTicketError(code: string, status: number, titleEnabled = false) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const path = String(input)
+
+      if (path.includes('/v1/settings/title-switch')) {
+        return Response.json({ titleEnabled })
+      }
 
       if (path.includes('/v1/tickets')) {
         return Response.json({ code, params: {} }, { status })
@@ -147,6 +156,61 @@ function stubTicketCreated(ticketNo: string) {
       })
     }),
   )
+}
+
+/**
+ * Stubs the whole path of the internal form with a chosen title switch and
+ * records the body of the create request (WP-M9-25).
+ */
+function stubInternalForm(titleEnabled: boolean) {
+  const bodies: Record<string, unknown>[] = []
+  /** Every answer of the title switch — a test waits for it. */
+  const switchCalls: boolean[] = []
+
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+
+      if (path.includes('/v1/settings/title-switch')) {
+        switchCalls.push(titleEnabled)
+
+        return Response.json({ titleEnabled })
+      }
+
+      if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
+        bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+
+        return Response.json({
+          ticketId: '55555555-5555-4555-8555-555555555555',
+          ticketNo: 'ST-2025-0001',
+          status: 'NEW',
+          statusToken: 'st-1234',
+          reportedAt: '2025-01-01T08:00:00Z',
+          receivedAt: '2025-01-01T08:00:00Z',
+          deadlineAt: '2025-01-04T08:00:00Z',
+        }, { status: 201 })
+      }
+
+      if (path.includes('/v1/text-templates')) {
+        return Response.json({ templates: [] })
+      }
+
+      return Response.json({
+        objects: [
+          {
+            id: OBJECT_ID,
+            objectNo: '12345_01',
+            name: 'Rathaus',
+            externalType: 'Brandmeldeanlage',
+            systems: [],
+          },
+        ],
+      })
+    }),
+  )
+
+  return { bodies, switchCalls }
 }
 
 function TicketDetailStub() {
@@ -315,5 +379,35 @@ describe('InternalCreatePage', () => {
     await waitFor(() =>
       expect(screen.getByText('ST-2025-0001')).toBeTruthy(),
     )
+  })
+
+  it('offers no title field while the branding title switch is off', async () => {
+    const { switchCalls } = stubInternalForm(false)
+    renderPage()
+
+    // The form asks the switch before it renders the title field.
+    await waitFor(() => expect(switchCalls.length).toBeGreaterThan(0))
+
+    // The title input never reaches the DOM, so the office cannot fill in a
+    // title the installation does not keep.
+    expect(screen.queryByLabelText('Titel')).toBeNull()
+    expect(screen.queryByDisplayValue('Rauchmelder 2. OG')).toBeNull()
+  })
+
+  it('offers the title field and sends it while the switch is on', async () => {
+    const { bodies, switchCalls } = stubInternalForm(true)
+    renderPage()
+
+    await waitFor(() => expect(switchCalls.length).toBeGreaterThan(0))
+
+    const titleField = (await screen.findByLabelText(
+      'Titel',
+    )) as HTMLInputElement
+    fireEvent.change(titleField, { target: { value: 'Rauchmelder 2. OG' } })
+
+    await pickObjectAndSubmit()
+
+    await waitFor(() => expect(bodies.length).toBe(1))
+    expect(bodies[0]?.title).toBe('Rauchmelder 2. OG')
   })
 })

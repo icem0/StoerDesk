@@ -517,6 +517,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-22  | milestone markers on the timeline bar                               | done                    | yes     |
 | WP-M9-23  | one reading point for the branding title switch                     | done                    | yes     |
 | WP-M9-24  | ticket view honours the branding title switch                     | done                    | yes     |
+| WP-M9-25  | internal creation form honours the branding title switch          | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -902,8 +903,10 @@ milestone in the language of the interface.
 asked that the menu entry "Titel bei Ticket erfassen" have a complete effect: a new ticket
 carries a title only while the switch is on, and the ticket view shows a title only while
 the switch is on. **WP-M9-23** gives the flag one reading point
-(`apps/api/src/settings/branding-state.ts`) instead of four copies of the same rule. The
-display gate and the internal form follow in WP-M9-24 and WP-M9-25.
+(`apps/api/src/settings/branding-state.ts`) instead of four copies of the same rule.
+**WP-M9-24** answers `title: null` in the ticket view while the switch is off and offers
+`GET /api/v1/settings/title-switch` (guarded by `ticket.create`); **WP-M9-25** renders the
+title field of the internal creation form only while the switch is on. All three are done.
 
 ## Validation
 

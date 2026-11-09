@@ -7,6 +7,7 @@ import {
   type InternalCreateTicketRequest,
   type InternalCreateTicketResponse,
   type StandardTextLocale,
+  type TitleSwitchResponse,
 } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
@@ -25,6 +26,11 @@ import { useFaultCatalog } from './use-fault-catalog'
  * The object picker is a bounded dropdown: closed by default, opens on focus,
  * lists matches in a scrollable box so a large object table never unfolds the
  * page, and the search is debounced so the API is not hit on every keystroke.
+ *
+ * The title field exists only while the branding title switch is on
+ * (WP-M9-25): the form reads `GET /v1/settings/title-switch` and renders no
+ * title input while the switch is off, so the office never fills in a title
+ * the installation does not keep.
  */
 
 type ObjectOption = {
@@ -58,6 +64,27 @@ function useObjects(search: string) {
     },
     retry: false,
   })
+}
+
+/**
+ * Whether the installation captures a ticket title at all (WP-M9-25).
+ *
+ * The switch lives in the branding row and decides whether a ticket carries a
+ * title. The form learns it from `GET /v1/settings/title-switch`, which is
+ * guarded by `ticket.create` — the permission every user of this form holds.
+ *
+ * A missing, pending or failed answer means **off**: the title field stays
+ * hidden, so the office never sees a field it may not fill in. The server
+ * drops the title anyway while the switch is off (WP-M2-95).
+ */
+function useTitleSwitch() {
+  const query = useQuery<TitleSwitchResponse>({
+    queryKey: ['title-switch'],
+    queryFn: () => apiFetch<TitleSwitchResponse>('/v1/settings/title-switch'),
+    retry: false,
+  })
+
+  return query.data?.titleEnabled === true
 }
 
 /**
@@ -240,6 +267,8 @@ export function InternalCreatePage() {
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
   const activeCatalog = catalog.filter((entry) => entry.archived === false)
+  /** WP-M9-25: the title field exists only while the branding switch is on. */
+  const titleEnabled = useTitleSwitch()
 
   function toggleFaultKey(key: string) {
     setFaultKeys((current) =>
@@ -260,7 +289,8 @@ export function InternalCreatePage() {
     try {
       const payload: InternalCreateTicketRequest = {
         objectId: selectedObjectId,
-        title: title || undefined,
+        // WP-M9-25: the title travels only while the branding switch is on.
+        title: titleEnabled && title.trim() !== '' ? title.trim() : undefined,
         description: description || undefined,
         faultTemplateKeys: faultKeys,
         priority,
@@ -339,17 +369,23 @@ export function InternalCreatePage() {
           <ObjectPicker selected={pickedObject} onPick={pickObject} />
         </div>
 
-        <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">
-            {t('internal.create.fields.title')}
-          </label>
-          <input
-            className="rounded bg-slate-900 p-2 text-slate-100"
-            maxLength={200}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-        </div>
+        {titleEnabled ? (
+          <div className="flex flex-col gap-2 col-span-full">
+            <label
+              className="text-sm font-medium text-slate-200"
+              htmlFor="internal-create-title"
+            >
+              {t('internal.create.fields.title')}
+            </label>
+            <input
+              className="rounded bg-slate-900 p-2 text-slate-100"
+              id="internal-create-title"
+              maxLength={200}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-2 col-span-full">
           <label className="text-sm font-medium text-slate-200">

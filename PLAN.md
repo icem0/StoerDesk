@@ -1242,8 +1242,10 @@ asked that the menu entry "Titel bei Ticket erfassen" have a complete effect: a 
 carries a title only while the switch is on, and the ticket view shows a title only while
 the switch is on. **WP-M9-23** gives the `titleEnabled` flag of the branding row one
 reading point (`apps/api/src/settings/branding-state.ts`) instead of four copies of the
-same rule; the display gate and the internal creation form follow in WP-M9-24 and
-WP-M9-25.
+same rule; **WP-M9-24** answers `title: null` in the ticket view while the switch is off
+and offers `GET /api/v1/settings/title-switch` (`ticket.create`), and **WP-M9-25** renders
+the title field of the internal creation form only while the switch is on — all three are
+done.
 
 ## 17. Work package rules for small models
 
