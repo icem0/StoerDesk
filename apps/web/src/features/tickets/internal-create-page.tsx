@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
+  externalTypeCategory,
   type InternalCreateTicketRequest,
   type StandardTextLocale,
 } from '@stoerdesk/shared'
@@ -29,6 +30,17 @@ type ObjectOption = {
   id: string
   objectNo: string
   name: string
+  externalType: string | null
+}
+
+function objectType(object: ObjectOption): string | null {
+  return externalTypeCategory(object.externalType) ?? object.externalType
+}
+
+function objectLabel(object: ObjectOption): string {
+  const type = objectType(object)
+
+  return `${object.objectNo} — ${object.name}${type === null ? '' : ` (${type})`}`
 }
 
 function useObjects(search: string) {
@@ -50,13 +62,21 @@ function useObjects(search: string) {
 /**
  * Bounded object picker for the internal create form.
  *
- * The list stays closed until the search field is focused. Matches render inside
- * a fixed-height, scrollable box (`max-h-64`, `overflow-y-auto`), so even a
- * hundred matching objects cannot push the rest of the form out of view. The
- * query key carries the debounced search, so the object list API is only called
- * after the user has paused typing — never on every keystroke.
+ * The list stays closed until the search field is focused. When closed, the field
+ * shows the picked object (number, name and type) as its value, so the choice
+ * stays inside the field instead of adding a line below it. Matches render in an
+ * absolutely positioned, fixed-height, scrollable overlay (`max-h-64`,
+ * `overflow-y-auto`), so opening the list never pushes the form down. The query
+ * key carries the debounced search, so the object list API is only called after
+ * the user has paused typing — never on every keystroke.
  */
-function ObjectPicker({ onPick }: { onPick: (object: ObjectOption) => void }) {
+function ObjectPicker({
+  selected,
+  onPick,
+}: {
+  selected?: ObjectOption
+  onPick: (object: ObjectOption) => void
+}) {
   const { t } = useTranslation('ticket')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -78,6 +98,8 @@ function ObjectPicker({ onPick }: { onPick: (object: ObjectOption) => void }) {
 
   function handleFocus() {
     setOpen(true)
+    setSearch('')
+    setHighlighted(-1)
   }
 
   function handleBlur() {
@@ -119,28 +141,39 @@ function ObjectPicker({ onPick }: { onPick: (object: ObjectOption) => void }) {
   }
 
   const noMatch = search.trim() !== '' && !isLoading && !isError && objects.length === 0
+  const value = open ? search : selected !== undefined ? objectLabel(selected) : ''
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="relative">
       <input
         ref={inputRef}
         type="search"
-        placeholder={t('internal.create.fields.objectSearchPlaceholder')}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
+        placeholder={
+          open
+            ? t('internal.create.fields.objectSearchPlaceholder')
+            : selected === undefined
+              ? t('internal.create.fields.objectPlaceholder')
+              : undefined
+        }
+        value={value}
+        onChange={(event) => {
+          setSearch(event.target.value)
+          setOpen(true)
+        }}
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         aria-expanded={open}
         aria-controls="object-picker-list"
-        className="rounded bg-slate-900 p-2 text-slate-100"
+        aria-autocomplete="list"
+        className="w-full rounded bg-slate-900 p-2 text-slate-100"
       />
       {open ? (
         <div
           id="object-picker-list"
           role="listbox"
           aria-label={t('internal.create.fields.object')}
-          className="flex flex-col gap-1 border border-slate-700 rounded bg-slate-900/80 max-h-64 overflow-y-auto"
+          className="absolute left-0 right-0 top-full z-20 mt-1 flex flex-col gap-1 border border-slate-700 rounded bg-slate-900 shadow-lg max-h-64 overflow-y-auto"
         >
           {isLoading ? (
             <div className="p-2 text-xs text-slate-400">{t('internal.loading')}</div>
@@ -151,26 +184,35 @@ function ObjectPicker({ onPick }: { onPick: (object: ObjectOption) => void }) {
           ) : noMatch ? (
             <div className="p-2 text-xs text-slate-400">{t('internal.create.errors.noMatch')}</div>
           ) : (
-            objects.map((object, index) => (
-              <button
-                key={object.id}
-                id={`object-picker-option-${index}`}
-                role="option"
-                aria-selected={highlighted === index}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 ${
-                  highlighted === index ? 'bg-sky-600/20 text-white' : 'hover:bg-slate-800'
-                }`}
-                type="button"
-                onMouseDown={(event) => {
-                  // Keep the input focused so the option click really selects it.
-                  event.preventDefault()
-                }}
-                onClick={() => handlePick(object)}
-              >
-                <span className="font-mono text-slate-400">{object.objectNo}</span>
-                <span>{object.name}</span>
-              </button>
-            ))
+            objects.map((object, index) => {
+              const type = objectType(object)
+
+              return (
+                <button
+                  key={object.id}
+                  id={`object-picker-option-${index}`}
+                  role="option"
+                  aria-selected={highlighted === index}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-slate-200 ${
+                    highlighted === index ? 'bg-sky-600/20 text-white' : 'hover:bg-slate-800'
+                  }`}
+                  type="button"
+                  onMouseDown={(event) => {
+                    // Keep the input focused so the option click really selects it.
+                    event.preventDefault()
+                  }}
+                  onClick={() => handlePick(object)}
+                >
+                  <span className="font-mono text-slate-400">{object.objectNo}</span>
+                  <span className="flex-1">{object.name}</span>
+                  {type !== null ? (
+                    <span className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200">
+                      {type}
+                    </span>
+                  ) : null}
+                </button>
+              )
+            })
           )}
         </div>
       ) : null}
@@ -265,7 +307,11 @@ export function InternalCreatePage() {
   }
 
   if (error !== null) {
-    return <p className="text-rose-400 text-sm" role="alert">{error}</p>
+    return (
+      <p className="text-rose-400 text-sm" role="alert">
+        {error}
+      </p>
+    )
   }
 
   return (
@@ -289,13 +335,7 @@ export function InternalCreatePage() {
           <label className="text-sm font-medium text-slate-200">
             {t('internal.create.fields.object')}
           </label>
-          <ObjectPicker onPick={pickObject} />
-          {pickedObject !== undefined ? (
-            <p className="text-xs text-slate-400">
-              <span className="font-mono">{pickedObject.objectNo}</span>{' — '}
-              {pickedObject.name}
-            </p>
-          ) : null}
+          <ObjectPicker selected={pickedObject} onPick={pickObject} />
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
@@ -348,7 +388,9 @@ export function InternalCreatePage() {
           <select
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
-            onChange={(event) => setPriority(event.target.value as 'low' | 'normal' | 'high' | 'critical')}
+            onChange={(event) =>
+              setPriority(event.target.value as 'low' | 'normal' | 'high' | 'critical')
+            }
           >
             <option value="low">{t('internal.create.priority.low')}</option>
             <option value="normal">{t('internal.create.priority.normal')}</option>
@@ -365,7 +407,9 @@ export function InternalCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('internal.create.fields.contactName')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('internal.create.fields.contactName')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={120}
@@ -375,7 +419,9 @@ export function InternalCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('internal.create.fields.contactPhone')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('internal.create.fields.contactPhone')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={60}
@@ -385,7 +431,9 @@ export function InternalCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('internal.create.fields.contactEmail')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('internal.create.fields.contactEmail')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={320}

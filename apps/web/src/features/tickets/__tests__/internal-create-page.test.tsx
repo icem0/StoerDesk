@@ -31,6 +31,7 @@ function stubTicketError(code: string, status: number) {
             id: OBJECT_ID,
             objectNo: '12345_01',
             name: 'Rathaus',
+            externalType: 'Brandmeldeanlage',
             systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
           },
         ],
@@ -59,18 +60,21 @@ function stubMultipleObjects() {
             id: '33333333-3333-4333-8333-333333333333',
             objectNo: '10000_01',
             name: 'Feuerwache',
+            externalType: 'Brandmeldeanlage',
             systems: [],
           },
           {
             id: OBJECT_ID,
             objectNo: '12345_01',
             name: 'Rathaus',
+            externalType: 'Brandmeldeanlage',
             systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
           },
           {
             id: '44444444-4444-4444-8444-444444444444',
             objectNo: '90000_01',
             name: 'Schule',
+            externalType: null,
             systems: [],
           },
         ],
@@ -99,6 +103,7 @@ function stubNetworkFailure() {
             id: OBJECT_ID,
             objectNo: '12345_01',
             name: 'Rathaus',
+            externalType: 'Brandmeldeanlage',
             systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
           },
         ],
@@ -185,9 +190,7 @@ describe('InternalCreatePage', () => {
     renderPage()
     await pickObjectAndSubmit()
 
-    await waitFor(() =>
-      expect(screen.getByText('Bitte prüfen Sie die Eingaben.')).toBeTruthy(),
-    )
+    await waitFor(() => expect(screen.getByText('Bitte prüfen Sie die Eingaben.')).toBeTruthy())
   })
 
   it('keeps the generic unknown message for a non-ApiError failure', async () => {
@@ -225,5 +228,23 @@ describe('InternalCreatePage', () => {
     await screen.findByText('10000_01')
     await screen.findByText('12345_01')
     await screen.findByText('90000_01')
+  })
+
+  it('shows number, name and type in the list and keeps the pick inside the field', async () => {
+    stubMultipleObjects()
+    renderPage()
+
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+    fireEvent.focus(searchInput)
+    await screen.findByText('12345_01')
+
+    // The type of the object is part of every option.
+    expect(screen.getAllByText('BMA')).toHaveLength(2)
+
+    fireEvent.click(screen.getByText('12345_01'))
+
+    // The pick replaces the search text inside the field and closes the overlay.
+    expect(searchInput.value).toBe('12345_01 — Rathaus (BMA)')
+    expect(screen.queryByRole('listbox')).toBeNull()
   })
 })
