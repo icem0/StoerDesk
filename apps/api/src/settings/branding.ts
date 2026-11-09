@@ -1,7 +1,12 @@
 import { eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 
-import { brandingResponseSchema, PERMISSIONS, updateBrandingRequestSchema } from '@stoerdesk/shared'
+import {
+  brandingResponseSchema,
+  PERMISSIONS,
+  titleSwitchResponseSchema,
+  updateBrandingRequestSchema,
+} from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { settings } from '../db/schema'
@@ -85,6 +90,25 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           titleEnabled: storedTitleEnabled(rows[0]?.value),
           logo: storedLogo(rows[0]?.value),
         })
+      },
+    )
+
+    // Whether the installation captures a ticket title at all. The internal
+    // creation form needs this before it renders its title field; `ticket.create`
+    // is exactly the permission of everyone who may use that form (`reporter_internal`
+    // holds it but not `settings.read`), and the flag is already public through
+    // the QR resolve, so this route discloses nothing new.
+    app.get(
+      '/api/v1/settings/title-switch',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.create) },
+      async () => {
+        const rows = await database
+          .select({ value: settings.value })
+          .from(settings)
+          .where(eq(settings.key, BRANDING_KEY))
+          .limit(1)
+
+        return titleSwitchResponseSchema.parse({ titleEnabled: storedTitleEnabled(rows[0]?.value) })
       },
     )
 

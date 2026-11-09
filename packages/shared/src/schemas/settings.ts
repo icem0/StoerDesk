@@ -18,6 +18,13 @@ export const brandingResponseSchema = z.object({
   logo: z.string(),
 })
 
+/** Whether the installation captures a ticket title at all (`PLAN.md` §14, WP-M9-24). */
+export const titleSwitchResponseSchema = z.object({
+  titleEnabled: z.boolean(),
+})
+
+export type TitleSwitchResponse = z.infer<typeof titleSwitchResponseSchema>
+
 export const updateBrandingRequestSchema = z.object({
   companyName: z.string().trim().max(80),
   titleEnabled: z.boolean().default(false),

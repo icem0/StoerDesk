@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ticket view honours the branding title switch (WP-M9-24): `GET /api/v1/tickets/:ticketNo` answers `title: null` while `titleEnabled` is off, so the ticket detail view and the branded e-mail view show no title; the stored title stays in the database and reappears when the switch is turned back on. `GET /api/v1/settings/title-switch` (guarded by `ticket.create`) lets the internal creation form learn the switch before it renders its title field; all reads share `readTitleEnabled` from `apps/api/src/settings/branding-state.ts` (WP-M9-23).
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

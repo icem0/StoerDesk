@@ -516,6 +516,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-21  | ticket list rows with the timeline in the middle                    | done                    | yes     |
 | WP-M9-22  | milestone markers on the timeline bar                               | done                    | yes     |
 | WP-M9-23  | one reading point for the branding title switch                     | done                    | yes     |
+| WP-M9-24  | ticket view honours the branding title switch                     | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

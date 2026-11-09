@@ -9,6 +9,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
+import { readTitleEnabled } from '../settings/branding-state'
 import {
   objects,
   ticketEvents,
@@ -77,6 +78,8 @@ export async function getTicketDetail(
   if (ticketRow === undefined) {
     throw new TicketDetailRouteError(404, 'ticket_not_found', { fields: ['ticketNo'] })
   }
+
+  const titleEnabled = await readTitleEnabled(database)
 
   const events = await database
     .select({
@@ -199,7 +202,7 @@ export async function getTicketDetail(
       objectName: ticketRow.objectName,
       status: ticketRow.status,
       priority: ticketRow.priority,
-      title: ticketRow.title,
+      title: titleEnabled ? ticketRow.title : null,
       description: ticketRow.description,
       faultTemplateKeys: ticketRow.faultTemplateKeys,
       source: ticketRow.source,
