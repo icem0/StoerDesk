@@ -6,6 +6,11 @@ Repeat pass: 2026-11-09, diff `1ff37b1f..6351037` (181 files) — areas A and B 
 areas C–K for the changed files. The findings of that pass live in
 `.security/findings.md` (gitignored).
 
+Closure pass: 2026-11-09, diff `6351037..249c8a0` (13 commits, WP-M9-26 … WP-M9-38) —
+areas A and B re-checked in full (91 routes, no new route in the diff), C–K re-checked
+only for the files the diff touched. Every finding SEC-004 … SEC-020 of the repeat pass
+now resolves against a shipped fix; `.security/findings.md` carries the FIXED status.
+
 Findings never live in the repository. They go into **`.security/findings.md`**
 (gitignored via `.gitignore` line `.security/`). Tracked files, commit messages and
 work-package titles never carry the location or description of an open gap.
@@ -96,17 +101,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (re-checked in full at the repeat pass) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| B Autorisation | complete (re-checked in full at the repeat pass, 91 routes) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| C Injection | complete (re-checked for the changed files) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| D Frontend | complete (web/src read, tokens cookie-only) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| E HTTP-Hardening | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| G Files/Uploads | complete (re-checked for the changed files) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| I Docker/Compose | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| J CI/CD | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| K Logging/PII | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
+| A Authentication | complete (re-checked in full at the closure pass) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| B Autorisation | complete (re-checked in full at the closure pass, 91 routes) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| C Injection | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| D Frontend | complete (web/src read, tokens cookie-only) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| E HTTP-Hardening | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| K Logging/PII | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future
