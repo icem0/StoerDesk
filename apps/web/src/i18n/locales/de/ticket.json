@@ -246,8 +246,10 @@
       "overdue": "Seit {{hours}} Std. überfällig",
       "stopped": "Bei Quittierung angehalten"
     },
+    "row": {
+      "times": "gemeldet {{reported}} · Frist {{deadline}}"
+    },
     "actions": {
-      "view": "Anzeigen",
       "create": "Neue Meldung"
     }
   },

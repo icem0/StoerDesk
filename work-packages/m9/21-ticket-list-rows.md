@@ -1,7 +1,7 @@
 # WP-M9-21: ticket list rows with the timeline in the middle
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-20
 phase: 9
 milestone: m9

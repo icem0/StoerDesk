@@ -246,8 +246,10 @@
       "overdue": "Overdue for {{hours}} h",
       "stopped": "Stopped at acknowledgement"
     },
+    "row": {
+      "times": "reported {{reported}} · due {{deadline}}"
+    },
     "actions": {
-      "view": "View",
       "create": "New report"
     }
   },

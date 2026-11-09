@@ -15,10 +15,10 @@ function at(hours: number): string {
 }
 
 /**
- * Mini timeline of WP-M6-12 (`specs/05-timeline.md` §5.4): every list row renders
- * a small bar from the API fields `percent` and `timelineState` and the deadline
- * column shows the remaining or overdue time with the absolute deadline kept as
- * the `title` attribute.
+ * Mini timeline of WP-M6-12 (`specs/05-timeline.md` §5.4): every row renders
+ * a small bar from the API fields `percent` and `timelineState` and the row
+ * shows the remaining or overdue time with the absolute deadline kept as the
+ * `title` attribute. WP-M9-21 makes the whole row one link to the ticket.
  */
 function renderList() {
   const overdue = {
@@ -50,17 +50,16 @@ function renderList() {
     remainingMs: 65 * HOUR,
   }
 
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () =>
-      Response.json({
-        tickets: [overdue, running],
-        total: 2,
-        limit: 25,
-        offset: 0,
-      }),
-    ),
+  const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+    Response.json({
+      tickets: [overdue, running],
+      total: 2,
+      limit: 25,
+      offset: 0,
+    }),
   )
+
+  vi.stubGlobal('fetch', fetchMock)
 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
@@ -74,37 +73,44 @@ function renderList() {
     </QueryClientProvider>,
   )
 
-  return { rendered, overdue, running }
+  return { rendered, overdue, running, fetchMock }
 }
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('TicketListPage mini timeline', () => {
-  it('renders an overdue card in red with the overdue time and the deadline title', async () => {
+describe('TicketListPage rows', () => {
+  it('renders an overdue row in red with the overdue time and the deadline title', async () => {
     const { overdue } = renderList()
-    const card = (await screen.findByText('M-4712')).closest<HTMLElement>('[data-testid="ticket-card"]')
+    const row = (await screen.findByText('M-4712')).closest<HTMLElement>('[data-testid="ticket-row"]')
 
-    if (card === null) {
-      throw new Error('card missing')
+    if (row === null) {
+      throw new Error('row missing')
     }
 
-    expect(within(card).getByText(/Seit \d+ Std\. überfällig/)).toBeTruthy()
-    expect(card.querySelector('.bg-rose-500')).toBeTruthy()
-    expect(within(card).getByTitle(new Date(overdue.deadlineAt).toLocaleString('de-DE'))).toBeTruthy()
+    expect(within(row).getByText(/Seit \d+ Std\. überfällig/)).toBeTruthy()
+    expect(row.querySelector('.bg-rose-500')).toBeTruthy()
+    expect(
+      within(row).getByTitle(
+        new Date(overdue.deadlineAt).toLocaleString(i18n.language, {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        }),
+      ),
+    ).toBeTruthy()
   })
 
-  it('renders a green running card with a partial bar and the remaining time', async () => {
+  it('renders a green running row with a partial bar and the remaining time', async () => {
     renderList()
-    const card = (await screen.findByText('M-4713')).closest<HTMLElement>('[data-testid="ticket-card"]')
+    const row = (await screen.findByText('M-4713')).closest<HTMLElement>('[data-testid="ticket-row"]')
 
-    if (card === null) {
-      throw new Error('card missing')
+    if (row === null) {
+      throw new Error('row missing')
     }
 
-    expect(within(card).getByText(/Noch \d+ Std\./)).toBeTruthy()
-    expect(card.querySelector('.bg-green-500')).toBeTruthy()
+    expect(within(row).getByText(/Noch \d+ Std\./)).toBeTruthy()
+    expect(row.querySelector('.bg-green-500')).toBeTruthy()
   })
 
   it('shows the localized status and priority labels', async () => {
@@ -112,5 +118,25 @@ describe('TicketListPage mini timeline', () => {
 
     expect(await screen.findByText('Neu')).toBeTruthy()
     expect(await screen.findByText('Hoch')).toBeTruthy()
+  })
+
+  it('makes the whole row one link to the ticket detail', async () => {
+    renderList()
+
+    const link = await screen.findByRole('link', { name: /M-4712/ })
+    expect(link.getAttribute('href')).toBe('/tickets/M-4712')
+    expect(link.textContent).toContain('Objekt Ein')
+    expect(link.textContent).toContain('OBJ-1')
+  })
+
+  it('asks the API for the deadline order with the nearest deadline on top', async () => {
+    const { fetchMock } = renderList()
+
+    await screen.findByText('M-4712')
+
+    const requested = fetchMock.mock.calls.map((call) => String(call[0])).join(' ')
+
+    expect(requested).toContain('order=deadlineAt')
+    expect(requested).toContain('direction=asc')
   })
 })

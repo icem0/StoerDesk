@@ -7,14 +7,13 @@ import type { TicketListItem, TicketListResponse, TimelineState } from '@stoerde
 import { apiFetch } from '../../lib/api'
 
 /**
- * Ticket list page (`PLAN.md` §13, §14, WP-M2-17b).
+ * Ticket list page (`PLAN.md` §13, §14, WP-M2-17b, WP-M9-21).
  *
- * Paginated ticket list with search and filters (status, priority). Each row
- * shows ticket number, object, status badge, priority badge, reported time and
- * a mini timeline (WP-M6-12): a small bar from `percent` coloured by
- * `timelineState` with the remaining or overdue time as label and the absolute
- * deadline as its title. Row click navigates to ticket detail (WP-M2-18,
- * disabled until then).
+ * Paginated ticket list with search and filters (status, priority). Every
+ * ticket is one line: the ticket number and the object on the left, the mini
+ * timeline (WP-M6-12) in the middle, the status, the priority and the times
+ * on the right. The whole line is one link to the ticket detail, and the rows
+ * come in the deadline order of WP-M9-20 — the nearest deadline is on top.
  */
 
 const STATUS_COLORS: Record<string, string> = {
@@ -63,6 +62,11 @@ function useTickets(query: {
   if (query.limit !== undefined) params.set('limit', String(query.limit))
   if (query.offset !== undefined) params.set('offset', String(query.offset))
 
+  // The office reads the list by the deadline: the nearest one is on top
+  // (WP-M9-20, `specs/05-timeline.md` §5.4).
+  params.set('order', 'deadlineAt')
+  params.set('direction', 'asc')
+
   return useQuery({
     queryKey: ['tickets', 'list', query],
     queryFn: () => apiFetch<TicketListResponse>(`/v1/tickets?${params.toString()}`),
@@ -71,13 +75,14 @@ function useTickets(query: {
 }
 
 /**
- * One ticket as a card (WP-M2-91b, `PLAN.md` §14 mobile-first): the number and the
- * status badge on the first line, object and priority below, the mini timeline
- * (WP-M6-12) and the reported time at the bottom. One column on the phone, two from
- * `sm` and three from `xl` — no horizontal scrolling any more.
+ * One ticket as a line (WP-M9-21, `PLAN.md` §14): the ticket number and the
+ * object on the left, the mini timeline in the middle, the status, the priority
+ * and the times on the right. The whole line is one link to the ticket detail.
+ * Below `md` the line stacks, so the phone shows the same information without
+ * a horizontal scroll.
  */
-function TicketCard({ ticket }: { ticket: TicketListItem }) {
-  const { t } = useTranslation('ticket')
+function TicketRow({ ticket }: { ticket: TicketListItem }) {
+  const { t, i18n } = useTranslation('ticket')
 
   const [fetchedAt] = useState(() => Date.now())
 
@@ -93,62 +98,55 @@ function TicketCard({ ticket }: { ticket: TicketListItem }) {
         ? t('list.remaining.overdue', { hours: hoursOver })
         : t('list.remaining.left', { hours: hoursLeft })
 
+  const timeFormat: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'short' }
+  const deadline = new Date(ticket.deadlineAt).toLocaleString(i18n.language, timeFormat)
+  const reported = new Date(ticket.reportedAt).toLocaleString(i18n.language, timeFormat)
+
   return (
-    <article
-      data-testid="ticket-card"
-      className="flex min-h-11 flex-col gap-2 rounded-lg border border-slate-700 bg-slate-900/40 p-3 transition-colors hover:border-slate-600 hover:bg-slate-800/50"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <Link
-          className="font-mono text-sm font-semibold text-sky-300 hover:text-sky-200 hover:underline"
-          to={`/tickets/${ticket.ticketNo}`}
-        >
-          {ticket.ticketNo}
-        </Link>
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
-        >
-          {t(`status.values.${ticket.status}`) ?? ticket.status}
-        </span>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? 'bg-slate-900/30 text-slate-300'}`}
-        >
-          {t(`priority.${ticket.priority}`) ?? ticket.priority}
-        </span>
-        <span className="text-sm text-slate-200">{ticket.objectName}</span>
-        <span className="text-xs font-mono text-slate-400">{ticket.objectNo}</span>
-      </div>
-
-      <div className="flex items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <div className="relative h-1 w-24 rounded bg-slate-700 overflow-hidden">
-            <div
-              className={`h-full rounded ${STATE_COLOUR[ticket.timelineState]}`}
-              style={{ width: `${Math.min(100, Math.max(0, ticket.percent))}%` }}
-            />
-          </div>
-          <span
-            className="text-xs text-slate-400"
-            title={new Date(ticket.deadlineAt).toLocaleString('de-DE')}
-          >
-            {remainingLabel}
-          </span>
-        </div>
-        <span className="text-xs text-slate-400">
-          {new Date(ticket.reportedAt).toLocaleString('de-DE')}
-        </span>
-      </div>
-
+    <li data-testid="ticket-row">
       <Link
-        className="text-sm text-sky-300 hover:text-sky-200 hover:underline"
+        className="grid min-h-11 grid-cols-1 gap-x-4 gap-y-2 px-3 py-3 transition-colors hover:bg-slate-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] md:items-center"
         to={`/tickets/${ticket.ticketNo}`}
       >
-        {t('list.actions.view')}
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 font-mono text-sm font-semibold text-sky-300">
+              {ticket.ticketNo}
+            </span>
+            <span className="truncate text-sm font-medium text-slate-200">{ticket.objectName}</span>
+          </span>
+          <span className="truncate font-mono text-xs text-slate-500">{ticket.objectNo}</span>
+        </span>
+
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="relative h-1.5 min-w-16 flex-1 overflow-hidden rounded bg-slate-700">
+            <span
+              className={`block h-full rounded ${STATE_COLOUR[ticket.timelineState]}`}
+              style={{ width: `${Math.min(100, Math.max(0, ticket.percent))}%` }}
+            />
+          </span>
+          <span className="shrink-0 whitespace-nowrap text-xs text-slate-400" title={deadline}>
+            {remainingLabel}
+          </span>
+        </span>
+
+        <span className="flex flex-wrap items-center gap-2 md:justify-end">
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
+          >
+            {t(`status.values.${ticket.status}`) ?? ticket.status}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? 'bg-slate-900/30 text-slate-300'}`}
+          >
+            {t(`priority.${ticket.priority}`) ?? ticket.priority}
+          </span>
+          <span className="w-full text-xs text-slate-500 md:w-auto">
+            {t('list.row.times', { reported, deadline })}
+          </span>
+        </span>
       </Link>
-    </article>
+    </li>
   )
 }
 
@@ -188,9 +186,10 @@ export function TicketListPage() {
     limit: 25,
     offset,
   })
-  const rows = tickets.data?.tickets ?? []
 
   const filtered = useMemo(() => {
+    const rows = tickets.data?.tickets ?? []
+
     if (search === '') return rows
     const needle = search.toLowerCase()
     return rows.filter(
@@ -199,11 +198,11 @@ export function TicketListPage() {
         row.objectName.toLowerCase().includes(needle) ||
         row.objectNo.toLowerCase().includes(needle),
     )
-  }, [rows, search])
+  }, [tickets.data?.tickets, search])
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-between sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">{t('list.title')}</h1>
           <p className="text-sm text-slate-400">{t('list.hint')}</p>
@@ -285,11 +284,11 @@ export function TicketListPage() {
       ) : filtered.length === 0 ? (
         <p className="text-slate-400">{t('list.noTickets')}</p>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-700 bg-slate-900/40">
           {filtered.map((ticket) => (
-            <TicketCard key={ticket.ticketNo} ticket={ticket} />
+            <TicketRow key={ticket.ticketNo} ticket={ticket} />
           ))}
-        </div>
+        </ul>
       )}
 
       {tickets.data !== undefined && (

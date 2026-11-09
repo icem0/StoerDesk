@@ -307,6 +307,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket list shows one line per ticket (WP-M9-21): instead of a card grid every
+  ticket is a line — the ticket number and the object on the left, the mini timeline with
+  the remaining or overdue time in the middle, the status, the priority and the times on
+  the right. The whole line is one link to the ticket detail instead of a link on the
+  ticket number only, and the rows come in the deadline order of WP-M9-20, so the nearest
+  deadline is on top. Below `md` the line stacks, so the phone shows the same information
+  without a horizontal scroll, and the dates follow the language of the interface.
+
 - The ticket list can be ordered by the deadline (WP-M9-20): `GET /api/v1/tickets` with
   `order=deadlineAt` sorts the rows by the deadline in the requested direction and puts the
   open tickets before the finished ones, so the nearest deadline is on top and the list
