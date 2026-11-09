@@ -2,6 +2,10 @@
 
 Erste Durchgang: 2026-11-06, HEAD `1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7`.
 
+Repeat pass: 2026-11-09, diff `1ff37b1f..6351037` (181 files) — areas A and B in full,
+areas C–K for the changed files. The findings of that pass live in
+`.security/findings.md` (gitignored).
+
 Findings never live in the repository. They go into **`.security/findings.md`**
 (gitignored via `.gitignore` line `.security/`). Tracked files, commit messages and
 work-package titles never carry the location or description of an open gap.
@@ -36,21 +40,39 @@ Findings format (in `.security/findings.md`): `SEC-nnn` + short title; lines
 
 ## Route table (checked structure — B)
 
+Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
+`requireUser`, 1 test-only probe, 11 public.
+
 | Method | Pfad | Guard / Capability |
 | --- | --- | --- |
 | POST | /api/v1/auth/login | public (rate limit by IP) |
 | POST | /api/v1/auth/logout | session cookie destroy |
 | GET | /api/v1/me | requireUser |
+| PATCH | /api/v1/users/me | requireUser |
 | GET/POST/PATCH | /api/v1/users[/:id] | user.read / user.write |
 | GET/POST/PATCH/DELETE | /api/v1/roles[/:key] | role.read / role.write |
 | GET/POST/PATCH/DELETE | /api/v1/groups[/:id] | user.read / user.write |
 | GET/PUT | /api/v1/settings/branding | settings.read / settings.write |
+| GET | /api/v1/settings/title-switch | ticket.create |
+| GET/PUT | /api/v1/settings/deadlines | settings.read / settings.write |
+| GET/PUT | /api/v1/settings/oncall | settings.read / settings.write |
 | GET/POST/PATCH/DELETE | /api/v1/text-templates[/:id] | settings.read / settings.write |
 | GET | /api/v1/public/text-templates | public catalog (active only) |
 | GET/POST/PATCH/DELETE | /api/v1/objects[/:objectNo] | object.read / object.write / object.delete |
-| POST | /api/v1/objects/:objectNo/regenerate-qr | object.regenerateQr (qr.ts:186) |
+| POST | /api/v1/objects/:objectNo/regenerate-qr | object.regenerate_qr (objects/qr.ts:164) |
 | GET | /api/v1/public/qr/:token | public QR resolve |
-| GET/POST/PATCH/PUT/DELETE | /api/v1/admin/bma-sync/* | object.read / object.import / object.write |
+| GET/POST/PATCH/DELETE | /api/v1/oncall/pools[/:id] | oncall.read / oncall.admin |
+| GET | /api/v1/oncall/pools/:id/members | oncall.read |
+| GET/POST/PATCH/DELETE | /api/v1/oncall/shifts[/:id] | oncall.read / oncall.plan / oncall.admin |
+| POST | /api/v1/oncall/shifts/generate | oncall.plan |
+| POST | /api/v1/oncall/shifts/:id/{confirm,decline} | oncall.confirm (+ service-level owner/admin check) |
+| POST | /api/v1/oncall/shifts/:id/swap | oncall.swap (+ service: must own the shift) |
+| GET | /api/v1/oncall/swaps | oncall.admin |
+| POST | /api/v1/oncall/swaps/:id/{accept,approve,reject,cancel} | oncall.swap / oncall.admin (service-level pool-member and self checks) |
+| GET | /api/v1/oncall/warnings | oncall.read |
+| GET | /api/v1/oncall/ical-url | oncall.read |
+| GET | /api/v1/oncall/ical/:token.ics | public (HMAC capability) |
+| GET/POST/PATCH/DELETE | /api/v1/admin/bma-sync/* | object.read / object.import / object.write |
 | GET/POST | /api/v1/admin/update/* | system.update |
 | POST | /api/v1/tickets | ticket.create |
 | GET | /api/v1/tickets | ticket.read (list) |
@@ -63,8 +85,8 @@ Findings format (in `.security/findings.md`): `SEC-nnn` + short title; lines
 | POST | /api/v1/public/tickets | public report (IP+QR-token throttle) |
 | GET/POST | /api/v1/public/tickets[/open\|:ticketNo/comments] | public duplicate hint (QR-token capability) |
 | GET | /api/v1/public/tickets/:token/status | public status (status_token capability) |
-| POST | /api/v1/public/altcha/challenge + verify | public altcha |
-| GET | /api/v1/_test/require-permission/:keys | test-only (NODE_ENV=test, index.ts:135) |
+| POST | /api/v1/public/altcha/challenge | public altcha (verification runs inline in the report handler) |
+| GET | /api/v1/_test/require-permission/:keys | test-only (NODE_ENV=test, index.ts:148) |
 | GET | /api/v1/health | public health |
 
 IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
@@ -74,14 +96,14 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| B Autorisation | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| C Injection | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
+| A Authentication | complete (re-checked in full at the repeat pass) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
+| B Autorisation | complete (re-checked in full at the repeat pass, 91 routes) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
+| C Injection | complete (re-checked for the changed files) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
 | D Frontend | complete (web/src read, tokens cookie-only) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
 | E HTTP-Hardening | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| G Files/Uploads | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
-| H Dependencies | complete (npm audit clean, 4 scopes) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
+| G Files/Uploads | complete (re-checked for the changed files) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
+| H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
 | I Docker/Compose | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
 | J CI/CD | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
 | K Logging/PII | complete | 1ff37b1fefca1a1549ee3a090517d6ab66a4eaf7 |
