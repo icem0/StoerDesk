@@ -15,7 +15,8 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { objects, ticketEvents, tickets } from '../db/schema'
+import { internalActionReceipts, objects, ticketEvents, tickets } from '../db/schema'
+import { isReportSuspicious, recordReportAttempt } from './spam'
 
 /**
  * Duplicate hint of the public report path (`specs/06-report-form.md` §7.8,
@@ -141,6 +142,7 @@ function contactPayload(contact: PublicTicketCommentRequest['contact']) {
 export async function addPublicComment(
   database: Db,
   input: PublicTicketCommentRequest & { ticketNo: string },
+  context: { ip: string },
 ): Promise<PublicTicketComment> {
   if (!ticketNoSchema.safeParse(input.ticketNo).success) {
     throw new DuplicateRouteError(400, 'invalid_request', { fields: ['ticketNo'] })
@@ -172,30 +174,80 @@ export async function addPublicComment(
     })
   }
 
-  const [event] = await database
-    .insert(ticketEvents)
-    .values({
-      ticketId: ticket.id,
-      type: 'comment',
-      actorKind: 'public',
-      actorUserId: null,
-      payload: {
-        source: 'duplicate_hint',
-        locale: input.locale,
-        text: input.text ?? '',
-        faultTemplateKeys: input.faultTemplateKeys,
-        contact: contactPayload(input.contact),
-      },
-    })
-    .returning({ createdAt: ticketEvents.createdAt })
-
-  if (event === undefined) {
-    throw new DuplicateRouteError(500, 'comment_not_written', { fields: ['ticketNo'] })
+  // SEC-004: only the reporter who still holds the ticket's own status token
+  // (delivered once by the report) may comment — the object QR alone is not
+  // enough; it would let every holder of the printed QR comment every open
+  // ticket of that object.
+  if (ticket.statusToken === null || ticket.statusToken !== input.statusToken) {
+    throw new DuplicateRouteError(403, 'comment_status_token_mismatch', { fields: ['statusToken'] })
   }
 
-  return publicTicketCommentResponseSchema.parse({
-    ticketNo: ticket.ticketNo,
-    at: event.createdAt.toISOString(),
+  // SEC-004 idempotency: the client UUID doubles as the replay key. A second
+  // submission with the same UUID short-circuits, mirroring the internal
+  // `applyInternalAction` pattern (WP-M5-03) — an attacker cannot fan out
+  // one comment into the history by replaying it.
+  const [existing] = await database
+    .select({ eventId: internalActionReceipts.eventId })
+    .from(internalActionReceipts)
+    .where(eq(internalActionReceipts.clientUuid, input.clientUuid))
+    .limit(1)
+
+  if (existing !== undefined) {
+    const [prior] = await database
+      .select({ createdAt: ticketEvents.createdAt })
+      .from(ticketEvents)
+      .where(eq(ticketEvents.id, existing.eventId))
+      .limit(1)
+
+    if (prior !== undefined) {
+      return publicTicketCommentResponseSchema.parse({
+        ticketNo: ticket.ticketNo,
+        at: prior.createdAt.toISOString(),
+      })
+    }
+  }
+
+  const attempt = { ip: context.ip, qrToken: input.qrToken }
+  await recordReportAttempt(database, attempt)
+  const suspicious = await isReportSuspicious(database, attempt)
+
+  return await database.transaction(async (tx) => {
+    const [event] = await tx
+      .insert(ticketEvents)
+      .values({
+        ticketId: ticket.id,
+        type: 'comment',
+        actorKind: 'public',
+        actorUserId: null,
+        payload: {
+          source: 'duplicate_hint',
+          locale: input.locale,
+          text: input.text ?? '',
+          faultTemplateKeys: input.faultTemplateKeys,
+          contact: contactPayload(input.contact),
+          ...(suspicious ? { suspected_spam: true } : {}),
+        },
+      })
+      .returning({ id: ticketEvents.id, createdAt: ticketEvents.createdAt })
+
+    if (event === undefined) {
+      throw new DuplicateRouteError(500, 'comment_not_written', { fields: ['ticketNo'] })
+    }
+
+    await tx
+      .insert(internalActionReceipts)
+      .values({
+        clientUuid: input.clientUuid,
+        ticketId: ticket.id,
+        actorUserId: null,
+        action: 'comment',
+        eventId: event.id,
+      })
+
+    return publicTicketCommentResponseSchema.parse({
+      ticketNo: ticket.ticketNo,
+      at: event.createdAt.toISOString(),
+    })
   })
 }
 
@@ -226,10 +278,14 @@ export const publicDuplicateRoutes = fp<PublicDuplicateRouteOptions>(
           return reply.code(400).send(invalidRequest(fieldPaths(parsed.error)))
         }
 
-        const comment = await addPublicComment(database, {
-          ...parsed.data,
-          ticketNo: request.params.ticketNo,
-        })
+        const comment = await addPublicComment(
+          database,
+          {
+            ...parsed.data,
+            ticketNo: request.params.ticketNo,
+          },
+          { ip: request.ip },
+        )
 
         return reply.code(201).send(comment)
       },

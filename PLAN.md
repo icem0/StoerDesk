@@ -1282,7 +1282,12 @@ against `oncall.read`, and `Cache-Control: no-store` plus a raised route `logLev
 token out of the JSON file log, `docker logs` and browser/proxy caches (SEC-005/SEC-011). **WP-M9-34**
 enforces `SESSION_SECRET` at `.min(32)` (dev default still passes) and makes logout require
 the session cookie before destroying, so a cross-site POST cannot force a logout (SEC-016). **WP-M9-35** removes the dead `prefix: '/api/v1/oncall'` option from the
-`fastify-plugin` skip-override on-call pools registration (SEC-010).
+`fastify-plugin` skip-override on-call pools registration (SEC-010). **WP-M9-36**
+bounds the public comment route on the API side (SEC-004): the schema requires the ticket's
+`statusToken` and a fresh `clientUuid`, the service rejects a mismatched status token with
+`403 comment_status_token_mismatch`, replays the same `clientUuid` through `internal_action_receipts`
+and reuses the report spam throttle (suspicious submissions carry `suspected_spam: true`
+in the event payload).
 
 ## 17. Work package rules for small models
 

@@ -57,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The dead `prefix: '/api/v1/oncall'` option on the on-call pools plugin is gone (WP-M9-35, SEC-010): `fastify-plugin` skip-override ignored it, so the option was misleading dead code that would have doubled the prefix if the plugin ever became encapsulating.
 
+- The public comment route is bounded (WP-M9-36, SEC-004, API side): the schema requires the ticket's `statusToken` and a fresh `clientUuid` per submission; the service rejects a comment whose `statusToken` disagrees with the stored one with `403 comment_status_token_mismatch`, replays the same `clientUuid` via `internal_action_receipts` and runs the report spam throttle (suspicious comments are tagged with `suspected_spam: true` in the event payload).
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

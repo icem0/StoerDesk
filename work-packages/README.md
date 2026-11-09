@@ -528,6 +528,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-33  | iCal feed expiry, active recheck, log redaction (SEC-005/011)     | done                    | yes     |
 | WP-M9-34  | SESSION_SECRET min length + logout cookie presence (SEC-016/006)  | done                    | yes     |
 | WP-M9-35  | remove the dead prefix on the on-call pools plugin (SEC-010)      | done                    | yes     |
+| WP-M9-36  | public comment route: status token + throttle (SEC-004, API)      | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

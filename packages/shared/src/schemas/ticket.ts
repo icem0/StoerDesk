@@ -208,6 +208,9 @@ export const publicOpenTicketsResponseSchema = z.object({
  */
 export const publicTicketCommentRequestSchema = z.object({
   qrToken: qrTokenSchema,
+  clientUuid: z.uuid(),
+  /** SEC-004: only the reporter who holds the ticket's status token may comment. */
+  statusToken: qrTokenSchema,
   text: trimmedText(2000),
   faultTemplateKeys: z
     .array(faultTemplateKeySchema)

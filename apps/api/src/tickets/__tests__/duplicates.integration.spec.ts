@@ -201,10 +201,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('writes one comment event on the open ticket', async () => {
       const object = await createObject('7206_01')
-      const ticket = await createTicket(object.id, { status: 'ASSIGNED' })
+      const ticket = await createTicket(object.id, { status: 'ASSIGNED', statusToken: object.qrToken })
 
       const response = await comment(ticket.ticketNo, {
         qrToken: object.qrToken ?? '',
+        clientUuid: crypto.randomUUID(),
+        statusToken: object.qrToken ?? '',
         text: 'Die Störung besteht weiterhin.',
         locale: 'de',
         contact: { phone: '030 123456' },
@@ -238,18 +240,26 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const unknown = await comment('ST-1970-0001', {
         qrToken: object.qrToken ?? '',
+        clientUuid: crypto.randomUUID(),
+        statusToken: object.qrToken ?? '',
         text: 'Text',
       })
       const foreignResponse = await comment(foreign.ticketNo, {
         qrToken: object.qrToken ?? '',
+        clientUuid: crypto.randomUUID(),
+        statusToken: object.qrToken ?? '',
         text: 'Text',
       })
       const closedResponse = await comment(closed.ticketNo, {
         qrToken: object.qrToken ?? '',
+        clientUuid: crypto.randomUUID(),
+        statusToken: object.qrToken ?? '',
         text: 'Text',
       })
       const unknownToken = await comment(foreign.ticketNo, {
         qrToken: 'unknownTokenXXXXXXXXXX',
+        clientUuid: crypto.randomUUID(),
+        statusToken: object.qrToken ?? '',
         text: 'Text',
       })
 
@@ -267,7 +277,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const object = await createObject('7209_01')
       const ticket = await createTicket(object.id, { status: 'NEW' })
 
-      const response = await comment(ticket.ticketNo, { qrToken: object.qrToken ?? '' })
+      const response = await comment(ticket.ticketNo, { qrToken: object.qrToken ?? '', clientUuid: crypto.randomUUID(), statusToken: object.qrToken ?? '' })
 
       expect(response.statusCode).toBe(422)
       expect(response.json<ErrorBody>().code).toBe('comment_text_required')
