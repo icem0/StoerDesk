@@ -1,7 +1,7 @@
 # WP-M9-07: dashboard Server-Sent-Events stream
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-06
 phase: 9
 milestone: m9

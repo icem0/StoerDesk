@@ -3,6 +3,7 @@ import { effectivePermissions, requirePermission } from '../auth/requirePermissi
 import { PERMISSIONS } from '@stoerdesk/shared'
 import { buildDashboardSnapshot } from './service'
 import { dashboardSnapshotSchema } from '@stoerdesk/shared'
+import { registerDashboardStream } from './stream'
 import type { Database } from '../db/client'
 
 type Db = Database['database']
@@ -38,6 +39,8 @@ export const dashboardRoutes = fp<DashboardRoutesOptions>(
         return reply.send(dashboardSnapshotSchema.parse(snapshot))
       },
     )
+
+    registerDashboardStream(app, { database })
   },
   { name: 'stoerdesk-dashboard' },
 )
