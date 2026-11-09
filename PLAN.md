@@ -1272,7 +1272,10 @@ validated at every path parameter, SEC-017 raw PG message removed from `delete` 
 SEC-018 photo route permission-gated with a containment check and `Cache-Control: private,
 no-store`). **WP-M9-31** runs the report photo preflight (count, data URL, decoded size,
 magic bytes) before the ticket transaction (SEC-014), so an over-limit or bad-Type report
-no longer leaves an orphan ticket row with reporter PII in the database.
+no longer leaves an orphan ticket row with reporter PII in the database. **WP-M9-32**
+byte-checks the branding logo with the same `detectImageType` table the report photos
+use (SEC-019), so a data URL whose bytes disagree with the claim is refused with
+`400 invalid_request` before it enters the settings jsonb.
 
 ## 17. Work package rules for small models
 

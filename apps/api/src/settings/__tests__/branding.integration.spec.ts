@@ -214,5 +214,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(200)
       expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '' })
     })
+
+    it('rejects a logo whose bytes do not match the claim', async () => {
+      const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0x00, 0x00, 0x00])
+      const response = await putBranding(
+        cookies['admin'],
+        { companyName: 'Beispiel GmbH', logo: `data:image/png;base64,${jpeg.toString('base64')}` },
+      )
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json<ErrorResponseBody>()).toEqual({ code: 'invalid_request', params: { fields: ['logo'] } })
+    })
   },
 )

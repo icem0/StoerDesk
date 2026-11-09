@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - A report with an invalid photo array no longer leaves an orphan ticket behind (WP-M9-31, SEC-014): `validateReportPhotos` runs count, data-URL prefix, decoded size and magic-byte checks before the ticket transaction; a repeat keeps its old gallery and is not re-validated.
 
+- The branding logo is byte-checked now (WP-M9-32, SEC-019): `validateLogo` reuses `detectImageType` and rejects any `data:image/png`/`data:image/jpeg` payload whose magic bytes disagree with the claim, so arbitrary bytes no longer land in the settings jsonb.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

@@ -11,6 +11,7 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { settings } from '../db/schema'
 import { BRANDING_KEY, parseTitleEnabled } from './branding-state'
+import { detectImageType } from '../tickets/photos'
 
 /**
  * Public branding settings (`PLAN.md` §14, WP-M2-29 / WP-M4-09).
@@ -23,7 +24,8 @@ import { BRANDING_KEY, parseTitleEnabled } from './branding-state'
  * `PUT /api/v1/settings/branding` — `settings.write`, upserts the row and
  * answers the stored value. A malformed body answers `400 invalid_request`.
  * `logo` is an optional `data:image/jpeg` / `data:image/png` base64 URL (at most
- * `MAX_LOGO_BYTES`); `''` or `null` removes the logo.
+ * `MAX_LOGO_BYTES`); `''` or `null` removes the logo. WP-M2-04c and WP-M9-32 both
+ * verify the bytes with `detectImageType` — the claim never wins.
  */
 
 /** At most 500 kB of logo payload stored in the settings row. */
@@ -66,8 +68,15 @@ function validateLogo(logo: unknown): string | { code: string; params: Record<st
   if (typeof logo !== 'string' || !LOGO_DATA_URL.test(logo)) {
     return { code: 'invalid_request', params: { fields: ['logo'] } }
   }
+  const claimed = (logo.split('/')[2] ?? '').split(';')[0] // image/jpeg | image/png
   const payload = logo.split(',')[1] ?? ''
-  if (Buffer.from(payload, 'base64').byteLength > MAX_LOGO_BYTES) {
+  const buffer = Buffer.from(payload, 'base64')
+  if (buffer.byteLength > MAX_LOGO_BYTES) {
+    return { code: 'invalid_request', params: { fields: ['logo'] } }
+  }
+  // SEC-019: the bytes win over the claim, like the ticket photos do (WP-M2-04c).
+  const detected = detectImageType(buffer)
+  if (detected === null || detected.mime !== claimed) {
     return { code: 'invalid_request', params: { fields: ['logo'] } }
   }
   return logo
