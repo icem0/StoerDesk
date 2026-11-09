@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Phase 9 (dashboard and statistics) is split and started (WP-M9-01): `specs/11-dashboard.md`
+  and `specs/12-stats.md` carry the reviewed contract of the live dashboard, the wall display
+  `/tv/:token` and the statistics slices with their API shapes and boundaries. ADR-0012
+  settles the phase-9 decisions: SSE instead of a five-second polling probe, plain SQL views
+  instead of materialized views, a computed fault-free record, a stored rotatable TV token,
+  `tickets.is_test` for test data, inline SVG charts and `stats.conspicuous_threshold`. The
+  phase is split into WP-M9-02 … WP-M9-18 in `work-packages/m9/`, implemented in numeric
+  order; the exit criterion is the test flag, the counter reset and the reference data of
+  WP-M9-18. No product code in this commit.
+
 - The phase-8 exit criterion (WP-M8-16): the new integration test
   `apps/api/src/oncall/__tests__/phase8-exit.integration.spec.ts` proves the DST
   rule of the slot generator (167 h in the spring week of 2026-03-23, 169 h in the

@@ -19,6 +19,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
 | [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
+| [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -492,6 +493,24 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M8-14b | on-call self-service read routes                                    | done                    | yes     |
 | WP-M8-15  | offline shift confirm and decline                                   | done                    | yes     |
 | WP-M8-16  | phase-8 exit criterion and record                                   | done                    | yes     |
+| WP-M9-01  | dashboard and statistics specification, ADR-0012 and phase-9 split  | done                    | yes     |
+| WP-M9-02  | `tickets.is_test` flag                                              | planned                 | yes     |
+| WP-M9-03  | statistics SQL views                                                | planned                 | yes     |
+| WP-M9-04  | shared dashboard and statistics contracts                           | planned                 | yes     |
+| WP-M9-05  | dashboard service                                                   | planned                 | yes     |
+| WP-M9-06  | dashboard route                                                     | planned                 | yes     |
+| WP-M9-07  | dashboard SSE stream                                                | planned                 | yes     |
+| WP-M9-08  | dashboard settings                                                  | planned                 | yes     |
+| WP-M9-09  | TV display route                                                    | planned                 | yes     |
+| WP-M9-10  | statistics: reaction times and frequency                           | planned                 | yes     |
+| WP-M9-11  | statistics: objects and compliance                                 | planned                 | yes     |
+| WP-M9-12  | statistics routes                                                   | planned                 | yes     |
+| WP-M9-13  | statistics CSV export                                               | planned                 | yes     |
+| WP-M9-14  | web dashboard                                                       | planned                 | yes     |
+| WP-M9-15  | web statistics page                                                 | planned                 | yes     |
+| WP-M9-16  | web TV page                                                         | planned                 | yes     |
+| WP-M9-17  | web dashboard settings                                              | planned                 | yes     |
+| WP-M9-18  | phase-9 exit criterion and record                                   | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -845,6 +864,19 @@ phase-8 exit criterion "DST tests and atomic swap tests pass" is proven by
 **WP-M8-16**: the exit test asserts 167/169/168-hour weeks in `Europe/Berlin` and that
 exactly one of two concurrent swap acceptances wins, with the losing request answered
 `409`.
+
+**Phase 9 is split and started (the `m9` packages).** Phase 8 is complete, so the
+roadmap moves to phase 9 (dashboard and statistics). The phase had no work packages and
+`specs/11-dashboard.md` and `specs/12-stats.md` were placeholders, so the split
+required by `PLAN.md` §16 happened first: **WP-M9-01** fills both slices, resolves the
+open phase-9 decisions with ADR-0012 (SSE over a five-second polling probe, plain SQL
+views instead of materialized views, a computed fault-free record, a stored rotatable TV
+token, `tickets.is_test`, inline SVG charts, `stats.conspicuous_threshold`) and names
+**WP-M9-02 … WP-M9-18** in numeric order (test flag → SQL views → shared contracts →
+dashboard service → dashboard route → SSE → dashboard settings → TV route → statistics
+services → statistics routes → CSV export → web dashboard → web statistics page → web TV
+page → web dashboard settings → exit criterion). Only the split has landed so far; the
+packages are implemented in numeric order.
 
 ## Validation
 

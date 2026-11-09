@@ -1200,6 +1200,24 @@ fields; under the shipped `TZ=Europe/Berlin` that shifted every slot by the UTC 
 The generator now uses local getters and `setDate`, so the DST rule holds under any
 process time zone. The dashboard tile and statistics stay in phase 9.
 
+**Phase 9 is split and started (WP-M9-01).** Phase 8 is complete, so the roadmap moves
+to phase 9 (dashboard and statistics). The phase had no work packages and
+`specs/11-dashboard.md` and `specs/12-stats.md` were placeholders, so the split required
+by §16 happened before any code: **WP-M9-01** fills both slices with the reviewed
+contract of §13 and resolves the open phase-9 decisions with ADR-0012 — an SSE stream
+instead of a five-second polling probe, plain SQL views instead of materialized views, a
+computed fault-free record, a stored rotatable token for the wall display `/tv/:token`,
+`tickets.is_test` for test data, inline SVG charts and the threshold
+`stats.conspicuous_threshold`. The phase is split into **WP-M9-02 … WP-M9-18** in
+`work-packages/m9/`, implemented in numeric order: the test flag (02), the SQL views
+(03), the shared contracts (04), the dashboard service (05), the dashboard route (06),
+the SSE stream (07), the dashboard settings (08), the TV route (09), the statistics
+services (10, 11), the statistics routes (12), the CSV export (13), the web dashboard
+(14), the web statistics page (15), the web TV page (16), the web dashboard settings
+(17) and the exit criterion (18). The exit criterion "counter resets on new ticket;
+statistics match reference data" is proven by WP-M9-18. No product code in this
+package.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
