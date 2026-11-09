@@ -1,4 +1,5 @@
 {
+ "back": "Back",
  "app": {
   "title": "StörDesk",
   "setupNotice": "Environment is set up. Implementation follows after specification approval.",
@@ -75,6 +76,7 @@
     "groups": "Groups",
     "bmaSync": "BMAcloud sync",
     "oncall": "On-call plan",
+    "myShifts": "My on-call shifts",
     "standardTexts": "Fault types",
     "stickers": "QR stickers",
     "admin": "Open administration",

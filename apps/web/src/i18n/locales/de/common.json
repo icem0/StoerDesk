@@ -1,4 +1,5 @@
 {
+ "back": "Zurück",
  "app": {
   "title": "StörDesk",
   "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
@@ -75,6 +76,7 @@
     "groups": "Gruppen",
     "bmaSync": "BMAcloud-Abgleich",
     "oncall": "Bereitschaftsplan",
+    "myShifts": "Meine Bereitschaft",
     "standardTexts": "Störungsarten",
     "stickers": "QR-Aufkleber",
     "admin": "Verwaltung öffnen",

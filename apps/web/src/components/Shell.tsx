@@ -45,6 +45,7 @@ const navGroups = [
     items: [
       { key: 'tickets', path: '/tickets' },
       { key: 'ticketCreate', path: '/tickets/create' },
+      { key: 'myShifts', path: '/oncall' },
     ],
   },
   {

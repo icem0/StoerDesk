@@ -14,6 +14,7 @@ import { OncallPage } from '../admin/oncall-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
+import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { StartPage } from '../features/dashboard/start-page'
 import { StickerPage } from '../features/objects/sticker-page'
 import { ObjectListPage } from '../features/objects/object-list-page'
@@ -106,6 +107,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <OncallPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/oncall',
+        element: (
+          <RequireSession>
+            <MyShiftsPage />
           </RequireSession>
         ),
       },

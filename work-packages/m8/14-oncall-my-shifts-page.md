@@ -1,7 +1,7 @@
 # WP-M8-14: my on-call shifts page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-07, WP-M8-09, WP-M8-12, WP-M8-14b
 phase: 8
 milestone: m8
@@ -75,7 +75,8 @@ roles without `oncall.confirm`/`oncall.swap`.
 - Files changed: the my-shifts page, the route table, the shell menu, both
   on-call locale files
 - Interfaces added: `/oncall` and the technician actions above
-- Verified: typecheck, lint, test:run, i18n:check, build
+- Verified: typecheck, lint, test:run, i18n:check, build, wp:check
 - Follow-up WP: WP-M8-15 (offline confirm/decline)
-- Open question: the iCal URL route for the page may be a small authenticated
-  helper route; if added, it shares `icalTokenFor` and is not public.
+- Open question: none; the iCal URL and pool-members read routes were added by
+  WP-M8-14b (`GET /api/v1/oncall/ical-url`, `GET /api/v1/oncall/pools/:id/members`,
+  both `oncall.read`).

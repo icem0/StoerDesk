@@ -97,6 +97,33 @@
       "CANCELLED": "Cancelled",
       "EXPIRED": "Expired"
     },
+    "myShifts": {
+      "title": "My on-call shifts",
+      "hint": "Your planned and confirmed shifts as well as past shifts. Times use Europe/Berlin.",
+      "upcoming": "Upcoming shifts",
+      "past": "Past shifts",
+      "none": "No shifts.",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "pool": "On-call pool",
+      "confirm": "Confirm",
+      "decline": "Decline",
+      "declineReason": "Reason",
+      "swap": "Request swap",
+      "swapColleague": "Colleague",
+      "swapWholePool": "Ask the whole pool",
+      "cancel": "Withdraw",
+      "openSwap": "Open swap request",
+      "swapSent": "Swap request sent",
+      "icalTitle": "Calendar URL",
+      "icalHint": "Subscribe to your shifts in a calendar app.",
+      "icalSubscribe": "Enter the URL in your calendar app to subscribe to your shifts.",
+      "copy": "Copy",
+      "copied": "Copied.",
+      "errors": {
+        "reasonTooShort": "Please enter a reason of at least 5 characters."
+      }
+    },
     "weekday": {
       "0": "Sunday",
       "1": "Monday",
@@ -122,6 +149,8 @@
       "swap_not_pending": "The swap is no longer pending.",
       "swap_not_accepted": "The swap has not been accepted yet.",
       "oncall_swap_request_not_found": "The swap request was not found.",
+      "oncall_decline_reason_required": "A reason of 5 to 500 characters is required.",
+      "swap_already_open": "There is already an open swap request for this shift.",
       "unknown": "The action failed. Please try again later."
     }
   }

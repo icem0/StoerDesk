@@ -97,6 +97,33 @@
       "CANCELLED": "Zurückgezogen",
       "EXPIRED": "Abgelaufen"
     },
+    "myShifts": {
+      "title": "Meine Bereitschaftsschichten",
+      "hint": "Deine geplanten und bestätigten Schichten sowie die bisherigen Schichten. Die Zeiten gelten in Europe/Berlin.",
+      "upcoming": "Kommende Schichten",
+      "past": "Bisherige Schichten",
+      "none": "Keine Schichten.",
+      "startsAt": "Beginn",
+      "endsAt": "Ende",
+      "pool": "Bereitschaftspool",
+      "confirm": "Bestätigen",
+      "decline": "Ablehnen",
+      "declineReason": "Grund",
+      "swap": "Tausch anfragen",
+      "swapColleague": "Kollegin / Kollege",
+      "swapWholePool": "Ganzen Pool fragen",
+      "cancel": "Zurückziehen",
+      "openSwap": "Offener Tauschwunsch",
+      "swapSent": "Tauschwunsch gesendet",
+      "icalTitle": "Kalender-URL",
+      "icalHint": "Abonniere deine Schichten in einer Kalender-App.",
+      "icalSubscribe": "Die URL in die Kalender-App eintragen, um die Schichten zu abonnieren.",
+      "copy": "Kopieren",
+      "copied": "Kopiert.",
+      "errors": {
+        "reasonTooShort": "Bitte einen Grund von mindestens 5 Zeichen angeben."
+      }
+    },
     "weekday": {
       "0": "Sonntag",
       "1": "Montag",
@@ -122,6 +149,8 @@
       "swap_not_pending": "Der Tausch ist nicht mehr offen.",
       "swap_not_accepted": "Der Tausch wurde noch nicht angenommen.",
       "oncall_swap_request_not_found": "Der Tauschwunsch wurde nicht gefunden.",
+      "oncall_decline_reason_required": "Ein Grund von 5 bis 500 Zeichen ist erforderlich.",
+      "swap_already_open": "Für diese Schicht liegt bereits ein offener Tauschwunsch vor.",
       "unknown": "Die Aktion ist fehlgeschlagen. Bitte später erneut versuchen."
     }
   }
