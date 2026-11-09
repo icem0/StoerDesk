@@ -1,7 +1,7 @@
 # WP-M9-05: dashboard snapshot service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-03, WP-M9-04
 phase: 9
 milestone: m9

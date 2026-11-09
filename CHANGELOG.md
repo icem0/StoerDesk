@@ -69,6 +69,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   column as `isTest`, and the ticket-table integration test proves that default inserts
   are real data, explicit test data survives, and `NULL` is rejected.
 
+- The dashboard snapshot service lands (WP-M9-05): `apps/api/src/dashboard/service.ts`
+  computes the dashboard snapshot — fault-free counter and record, the open/per-status/
+  overdue/unreviewed/pool-size tiles, the on-call tile (name, shift end, warning) and the
+  per-channel outbox status (last sent/failed, pending/failed), plus the ten nearest
+  burning-now deadlines. Every read goes through the `stats_tickets` view, `outbox` or
+  the on-call coupling, never a ticket detail; optional sections (`onCall`, `channels`)
+  are `null` when the caller lacks the permission. Covered by an integration test against
+  a throwaway database (`dashboardService.integration.spec.ts`, skips without
+  `TEST_DATABASE_URL`).
+
 - The dashboard of the office ends with its tiles (WP-M9-19): the "Brennt jetzt" list is
   gone from the start page — the wall display of phase 9 keeps it
   (`specs/11-dashboard.md` §11.5) — and every tile ("Meldungen gesamt", "offen",
