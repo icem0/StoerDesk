@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { and, eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 
-import { PERMISSIONS } from '@stoerdesk/shared'
+import { PERMISSIONS, ticketNoSchema } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { ticketPhotos, tickets } from '../db/schema'
@@ -187,9 +187,13 @@ export const photoServeRoutes = fp<PhotoServeOptions>(
   async (app, { database, uploadDir }) => {
     app.get<{ Params: { ticketNo: string; photoId: string } }>(
       '/api/v1/tickets/:ticketNo/photos/:photoId',
-      { preHandler: requirePermission(database, PERMISSIONS.ticket.read) },
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.photoRead) },
       async (request, reply) => {
         const { ticketNo, photoId } = request.params
+
+        if (!ticketNoSchema.safeParse(ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+        }
 
         const [ticketRow] = await database
           .select({ id: tickets.id })
@@ -211,12 +215,18 @@ export const photoServeRoutes = fp<PhotoServeOptions>(
           throw new PhotoServeRouteError(404, 'photo_not_found', { fields: ['photoId'] })
         }
 
-        const buffer = await readFile(join(uploadDir, photoRow.filePath))
+        const resolved = resolve(uploadDir, photoRow.filePath)
+        if (!resolved.startsWith(uploadDir + sep)) {
+          throw new PhotoServeRouteError(400, 'invalid_request', { fields: ['photoId'] })
+        }
+
+        const buffer = await readFile(resolved)
 
         return reply
           .code(200)
           .header('content-type', photoRow.mimeType)
           .header('content-disposition', 'inline')
+          .header('cache-control', 'private, no-store')
           .send(buffer)
       },
     )

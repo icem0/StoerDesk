@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import type { PermissionKey } from '@stoerdesk/shared'
 
-import { PERMISSIONS } from '@stoerdesk/shared'
+import { PERMISSIONS, ticketNoSchema } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
@@ -23,7 +23,7 @@ import { applyInternalAction } from './internal-actions'
 
 type Db = Database['database']
 
-const DECLINE_REASON = z.string().trim().min(5)
+const DECLINE_REASON = z.string().trim().min(5).max(1000)
 const OFFER_BODY = z.object({ poolId: z.string().uuid().optional() })
 const ACK_RESULT = z.enum(['fixed', 'partially_fixed', 'follow_up_required', 'no_fault_found'])
 const WORK_ORDER = z.object({
@@ -48,6 +48,10 @@ function makeHandler(event: string, bodySchema?: z.ZodTypeAny, action?: RouteDef
 
     if (actor === undefined) {
       return reply.code(401).send({ code: 'session_invalid', params: {} })
+    }
+
+    if (!ticketNoSchema.safeParse(ticketNo).success) {
+      return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
     }
 
     // Resolve public ticket_no → internal UUID.
@@ -130,7 +134,7 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       { path: '/api/v1/tickets/:ticketNo/assign', event: 'assigned', permission: PERM(PERMISSIONS.ticket.assign) },
       { path: '/api/v1/tickets/:ticketNo/claim', event: 'claimed', permission: PERM(PERMISSIONS.ticket.claim) },
       { path: '/api/v1/tickets/:ticketNo/accept', event: 'accepted', permission: PERM(PERMISSIONS.ticket.accept) },
-      { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.accept), body: z.object({ reason: DECLINE_REASON, clientUuid: z.string().uuid().optional() }), action: 'decline' },
+      { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.decline), body: z.object({ reason: DECLINE_REASON, clientUuid: z.string().uuid().optional() }), action: 'decline' },
       { path: '/api/v1/tickets/:ticketNo/acknowledge', event: 'acknowledged', permission: PERM(PERMISSIONS.ticket.acknowledge), body: z.object({ result: ACK_RESULT, note: z.string().trim().max(2000).optional(), clientUuid: z.string().uuid().optional() }), action: 'acknowledge' },
       { path: '/api/v1/tickets/:ticketNo/close', event: 'closed', permission: PERM(PERMISSIONS.ticket.close) },
       { path: '/api/v1/tickets/:ticketNo/reopen', event: 'reopened', permission: PERM(PERMISSIONS.ticket.reopen), body: z.object({ reason: DECLINE_REASON }) },
@@ -157,6 +161,10 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
 
         if (actor === undefined) {
           return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(request.params.ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
         }
 
         const parsed = OFFER_BODY.safeParse(request.body ?? {})

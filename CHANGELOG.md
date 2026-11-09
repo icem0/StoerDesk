@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Ticket numbers are validated at the entry points (WP-M9-29, SEC-015): `GET /api/v1/tickets/:ticketNo` and the two comment routes reject a malformed `ticketNo` (`ST-<year>-<counter>`) with `400 invalid_request` before touching the database.
 
+- Workflow, delete, photo and comment routes are hardened (WP-M9-30): the decline reason is capped at 1000 characters, decline requires `ticket.decline` (not `ticket.accept`), `ticketNo` is validated at every path parameter, `delete` no longer leaks the raw PostgreSQL message, photo serve is permission-gated with a containment check and `Cache-Control: private, no-store`.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

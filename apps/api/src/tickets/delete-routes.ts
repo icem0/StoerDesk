@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 
-import { PERMISSIONS } from '@stoerdesk/shared'
+import { PERMISSIONS, ticketNoSchema } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
@@ -34,6 +34,10 @@ export const deleteRoutes = fp<DeleteRoutesOptions>(
 
         if (actor === undefined) {
           return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
         }
 
         const result = BODY.safeParse(request.body ?? {})

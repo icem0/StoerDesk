@@ -63,7 +63,7 @@ class DeleteTicketError extends Error {
         break
       default: // any other PostgreSQL error escaping the transaction
         code = 'ticket_delete_failed'
-        params = { sqlState: sqlState ?? 'unknown', message: pgError?.message ?? String(error) }
+        params = { sqlState: sqlState ?? 'unknown' }
         break
     }
     return new DeleteTicketError(500, code, params, error)

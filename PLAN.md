@@ -1266,7 +1266,11 @@ items: areas A and B were re-checked in full, areas C–K only the changed files
 starts the chain and makes `ticket_purges` append-only (audit SEC-013: migration `0024`
 adds triggers that reject any `UPDATE`/`DELETE` of the purge log and cap `reason` at 1000
 characters). The remaining findings follow in WP-M9-28 … WP-M9-38 in numeric order before
-the next phase starts.
+the next phase starts. **WP-M9-30** hardens the workflow, delete, photo and comment routes
+(SEC-007 decline reason capped, SEC-008 decline uses `ticket.decline`, SEC-015 `ticketNo`
+validated at every path parameter, SEC-017 raw PG message removed from `delete` response,
+SEC-018 photo route permission-gated with a containment check and `Cache-Control: private,
+no-store`).
 
 ## 17. Work package rules for small models
 

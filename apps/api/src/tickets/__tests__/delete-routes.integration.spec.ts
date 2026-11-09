@@ -64,7 +64,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
       .insert(tickets)
       .values({
         objectId: object.id,
-        ticketNo: `ST-2026-DELETE-${Date.now().toString(36)}`,
+        ticketNo: 'ST-2026-0002',
         status: 'CANCELLED',
         priority: 'normal',
         source: 'INTERNAL',
@@ -143,7 +143,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket delete routes (ht
       .insert(tickets)
       .values({
         objectId: objectRow.id,
-        ticketNo: `ST-2026-OPEN-${Date.now().toString(36)}`,
+        ticketNo: 'ST-2026-0001',
         status: 'NEW',
         priority: 'normal',
         source: 'INTERNAL',

@@ -95,7 +95,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .insert(tickets)
         .values({
           objectId,
-          ticketNo: `ST-2026-COUPLING-${Date.now().toString(36)}-${sequence}`,
+          ticketNo: `ST-2026-${String(sequence).padStart(4, '0')}`,
           status,
           priority: 'normal',
           source: 'INTERNAL',
