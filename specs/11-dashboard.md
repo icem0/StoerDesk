@@ -73,7 +73,8 @@ type DashboardSnapshot = {
 ```
 
 `burningNow` is the open, non-cancelled, non-test list ordered by
-`deadline_at` ascending, limited to the ten nearest deadlines. The on-call tile
+`deadline_at` ascending, limited to the ten nearest deadlines. It is read by the
+wall display (§11.7), not by the start page. The on-call tile
 reuses `resolveOnCallPerson` of `specs/04-oncall.md` §4a.6; `phone` comes from
 the user contact data and is never part of the wall display.
 
@@ -110,6 +111,11 @@ can raise or leave the record, exactly as `PLAN.md` §20 item 8 requires.
 The list shows `ticketNo`, object name, status, priority and the absolute
 deadline; the web renders the remaining or overdue time and the mini timeline of
 `specs/05-timeline.md` §5.4 from the same fields. It links to the ticket detail.
+
+The list belongs to the wall display (§11.7), not to the start page: the
+dashboard of the office ends with the tiles and the counter, the deadlines live
+in the ticket list behind the tiles (WP-M9-19). Every tile of the start page is
+one link over its whole area.
 
 ## 11.6 Live updates (Server-Sent Events)
 

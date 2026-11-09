@@ -11,7 +11,7 @@ spec-lines: 110
 
 files-read:
 
-- specs/11-dashboard.md (§11.2 snapshot, §11.3 counter, §11.4 tiles, §11.5 burning now, §11.6 SSE)
+- specs/11-dashboard.md (§11.2 snapshot, §11.3 counter, §11.4 tiles, §11.6 SSE)
 - apps/web/src/features/dashboard/start-page.tsx (current start page)
 - apps/web/src/lib/api.ts (`apiFetch`)
 - apps/web/src/auth/use-permission.tsx (permission gating)
@@ -28,7 +28,7 @@ files-write:
 interfaces:
 
 - `useDashboard()` — initial snapshot, `EventSource` subscription and 30-second refetch fallback
-- `StartPage` — fault-free counter, tiles, "burning now" with mini timelines and links
+- `StartPage` — fault-free counter and tiles; every tile is one link over its whole area
 - dashboard labels in `de` and `en`
 
 ## Task
@@ -40,9 +40,11 @@ interfaces:
 2. Rewrite `StartPage`: the fault-free counter with days and record, the
    open/overdue/unreviewed/pool tiles, the on-call tile (warning state in text,
    not colour alone) and the channel tile when present. Keep the primary action
-   "Neue Störung melden".
-3. Render "Brennt jetzt" from `burningNow` with the mini timeline of
-   `ticket-timeline.tsx`, remaining/overdue time and a link to the detail.
+   "Neue Störung melden". The page ends with the tiles — the burning-now list
+   belongs to the wall display (WP-M9-19, `specs/11-dashboard.md` §11.5).
+3. Keep every tile one link over its whole area and the keyboard reachable with
+   a 44 px touch target; the tiles of the current start page already do
+   (WP-M9-19).
 4. Replace the old client-side count queries of the page; keep the tiles
    keyboard reachable and the 44 px touch target.
 5. Add every new label to the `dashboard` section of both `ticket` locale files;

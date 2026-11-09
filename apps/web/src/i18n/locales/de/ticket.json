@@ -9,14 +9,8 @@
       "overdue": "überfällig",
       "unreviewed": "ohne Prüfung"
     },
-    "burningTitle": "Brennt jetzt",
     "loading": "Meldungen werden geladen …",
-    "loadError": "Die Meldungen konnten nicht geladen werden.",
-    "noOpenTickets": "Keine offenen Meldungen.",
-    "remaining": {
-      "hours": "noch {{hours}} Std",
-      "overdue": "seit {{hours}} Std überfällig"
-    }
+    "loadError": "Die Meldungen konnten nicht geladen werden."
   },
   "report": {
     "title": "Störung melden",

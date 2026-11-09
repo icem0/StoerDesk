@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The dashboard of the office ends with its tiles (WP-M9-19): the "Brennt jetzt" list is
+  gone from the start page — the wall display of phase 9 keeps it
+  (`specs/11-dashboard.md` §11.5) — and every tile ("Meldungen gesamt", "offen",
+  "überfällig", "ohne Prüfung") is one link over its whole area instead of a link on the
+  text only. The pending and the failed state of the four count queries stays visible
+  below the tiles.
+
 - Phase 9 (dashboard and statistics) is split and started (WP-M9-01): `specs/11-dashboard.md`
   and `specs/12-stats.md` carry the reviewed contract of the live dashboard, the wall display
   `/tv/:token` and the statistics slices with their API shapes and boundaries. ADR-0012

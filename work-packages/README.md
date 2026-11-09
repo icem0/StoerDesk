@@ -511,6 +511,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-16  | web TV page                                                         | planned                 | yes     |
 | WP-M9-17  | web dashboard settings                                              | planned                 | yes     |
 | WP-M9-18  | phase-9 exit criterion and record                                   | planned                 | yes     |
+| WP-M9-19  | dashboard tiles without the burning-now list                        | done                    | yes     |
+| WP-M9-20  | ticket list order: open tickets by the deadline                     | planned                 | yes     |
+| WP-M9-21  | ticket list rows with the timeline in the middle                    | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -877,6 +880,16 @@ dashboard service → dashboard route → SSE → dashboard settings → TV rout
 services → statistics routes → CSV export → web dashboard → web statistics page → web TV
 page → web dashboard settings → exit criterion). Only the split has landed so far; the
 packages are implemented in numeric order.
+
+**Out-of-band phase 9 — the office view of the shipped app (WP-M9-19 … WP-M9-21).** The
+office asked for a leaner dashboard and a denser ticket list. This work does not wait for
+the phase-9 chain, because it changes the product the users see today and not a contract
+of a later package. **WP-M9-19** removes the "Brennt jetzt" list from the start page — the
+wall display keeps it (`specs/11-dashboard.md` §11.5) — and makes every tile one link over
+its whole area. **WP-M9-20** orders the ticket list by the deadline, the open tickets
+first and the finished ones behind them, and **WP-M9-21** renders one line per ticket with
+the mini timeline in the middle and the whole line as a link to the ticket. The files of
+the three packages exist since the commit of WP-M9-19.
 
 ## Validation
 

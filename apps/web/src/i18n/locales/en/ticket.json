@@ -9,14 +9,8 @@
       "overdue": "overdue",
       "unreviewed": "not reviewed"
     },
-    "burningTitle": "Burning now",
     "loading": "Loading tickets …",
-    "loadError": "The tickets could not be loaded.",
-    "noOpenTickets": "No open tickets.",
-    "remaining": {
-      "hours": "{{hours}} h left",
-      "overdue": "overdue for {{hours}} h"
-    }
+    "loadError": "The tickets could not be loaded."
   },
   "report": {
     "title": "Report a malfunction",
