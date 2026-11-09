@@ -120,7 +120,7 @@ export async function buildServer() {
   await app.register(settingsDeadlineRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
-  await app.register(oncallPoolsRoutes, { database, prefix: '/api/v1/oncall' })
+  await app.register(oncallPoolsRoutes, { database })
   await app.register(oncallRoutes, { database })
   await app.register(bmaSyncRoutes, { database, env })
   await app.register(updateRoutes, { database, env })

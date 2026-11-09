@@ -55,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `SESSION_SECRET` needs 32 characters (WP-M9-34, SEC-016) and logout requires the session cookie (SEC-006): the env schema adds `.min(32)` (the 37-char dev default still passes), and the logout route only calls `destroySession` when the `SESSION_COOKIE_NAME` cookie is present, so a cross-site POST (which browsers strip cookies for under SameSite) can no longer force a logout.
 
+- The dead `prefix: '/api/v1/oncall'` option on the on-call pools plugin is gone (WP-M9-35, SEC-010): `fastify-plugin` skip-override ignored it, so the option was misleading dead code that would have doubled the prefix if the plugin ever became encapsulating.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

@@ -1281,8 +1281,8 @@ token, one grace window), the route filters `users.active = true` and re-runs `l
 against `oncall.read`, and `Cache-Control: no-store` plus a raised route `logLevel` keep the
 token out of the JSON file log, `docker logs` and browser/proxy caches (SEC-005/SEC-011). **WP-M9-34**
 enforces `SESSION_SECRET` at `.min(32)` (dev default still passes) and makes logout require
-the session cookie before destroying, so a cross-site POST cannot force a logout (SEC-016 /
-SEC-006).
+the session cookie before destroying, so a cross-site POST cannot force a logout (SEC-016). **WP-M9-35** removes the dead `prefix: '/api/v1/oncall'` option from the
+`fastify-plugin` skip-override on-call pools registration (SEC-010).
 
 ## 17. Work package rules for small models
 
