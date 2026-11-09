@@ -1,7 +1,7 @@
 # WP-M8-15: offline shift confirm and decline
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-07, WP-M8-14
 phase: 8
 milestone: m8
@@ -74,9 +74,15 @@ Expected: all green; the unit tests use `fake-indexeddb` and need no server.
 
 ## Handoff
 
-- Files changed: the outbox, the shift-action hook, the my-shifts page, the app
-  start/online replay, plus tests
-- Interfaces added: the Dexie v3 table and the queue/replay helpers
-- Verified: typecheck, lint, test:run, i18n:check
+- Files changed: the outbox (Dexie v3 `shift_actions` plus
+  `enqueueShiftAction`/`queuedShiftActions`/`updateShiftAction`/
+  `removeShiftAction`/`deliverShiftAction`/`replayShiftActions`), the new
+  `use-shift-actions` hook, the my-shifts page (online-first actions with an
+  inline queued/rejected banner on the shift card) and the app start/online
+  replay chain, plus tests
+- Interfaces added: `ShiftActionKind`, `QueuedShiftAction`, the Dexie v3 table
+  keyed by `client_uuid`, the queue/replay helpers and `useShiftActions(shiftId)`
+- Verified: typecheck (all workspaces), lint, test:run, i18n:check, wp:check,
+  build (web)
 - Follow-up WP: WP-M8-16 (exit criterion)
 - Open question: none

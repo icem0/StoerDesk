@@ -7,6 +7,7 @@ import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
 import { apiFetch, ApiError } from '../../lib/api'
 import { useMe, usePermission } from '../../auth/usePermission'
+import { useShiftActions } from './use-shift-actions'
 
 /**
  * My on-call shifts (`specs/04-oncall.md` §4a.4, §4a.5, §4a.7; WP-M8-14).
@@ -130,26 +131,6 @@ function MyShiftsPageContent({
     void queryClient.invalidateQueries({ queryKey: ['oncall', 'my-shifts'] })
   }
 
-  const confirm = useMutation({
-    mutationFn: (shiftId: string) =>
-      apiFetch(`/v1/oncall/shifts/${shiftId}/confirm`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({}),
-      }),
-    onSuccess: invalidate,
-  })
-
-  const decline = useMutation({
-    mutationFn: (input: { shiftId: string; reason: string }) =>
-      apiFetch(`/v1/oncall/shifts/${input.shiftId}/decline`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ reason: input.reason }),
-      }),
-    onSuccess: invalidate,
-  })
-
   const requestSwapFn = useCallback(
     async (shiftId: string, targetUserId: string | undefined) => {
       return apiFetch(`/v1/oncall/shifts/${shiftId}/swap`, {
@@ -233,16 +214,10 @@ function MyShiftsPageContent({
                 maySwap={maySwap}
                 membersOf={membersOf}
                 meUserId={meUserId}
-                onConfirm={(shiftId) => void confirm.mutate(shiftId)}
-                onDecline={(shiftId, reason) =>
-                  void decline.mutate({ shiftId, reason })
-                }
                 onRequestSwap={(shiftId, targetUserId) =>
                   void requestSwapFn(shiftId, targetUserId).then(() => void invalidate())
                 }
                 onCancelSwap={(swapId) => void cancelSwapFn(swapId).then(() => void invalidate())}
-                confirmPending={confirm.isPending}
-                declinePending={decline.isPending}
               />
             ))}
           </div>
@@ -281,30 +256,24 @@ function ShiftCard({
   maySwap,
   membersOf,
   meUserId,
-  onConfirm,
-  onDecline,
   onRequestSwap,
   onCancelSwap,
-  confirmPending,
-  declinePending,
 }: {
   shift: OnCallShift & { poolName: string | null }
   mayConfirm?: boolean
   maySwap?: boolean
   membersOf: (poolId: string) => PoolMember[]
   meUserId: string
-  onConfirm?: (shiftId: string) => void
-  onDecline?: (shiftId: string, reason: string) => void
   onRequestSwap?: (shiftId: string, targetUserId: string | undefined) => void
   onCancelSwap?: (swapId: string) => void
-  confirmPending?: boolean
-  declinePending?: boolean
 }) {
   const { t, i18n } = useTranslation('oncall')
   const queryClient = useQueryClient()
+  const shiftActions = useShiftActions(shift.id)
   const [declineOpen, setDeclineOpen] = useState(false)
   const [declineReason, setDeclineReason] = useState('')
   const [declineError, setDeclineError] = useState<string | null>(null)
+  const [confirmError, setConfirmError] = useState<string | null>(null)
   const [swapOpen, setSwapOpen] = useState(false)
   const [swapTarget, setSwapTarget] = useState<string | undefined>(undefined)
   const [swapError, setSwapError] = useState<string | null>(null)
@@ -316,10 +285,19 @@ function ShiftCard({
 
   const members = swapOpen || openSwap !== null ? membersOf(shift.poolId) : []
 
-  const declineMut = useMutation({
-    mutationFn: async () => {
-      void onDecline?.(shift.id, declineReason)
+  const confirmMut = useMutation({
+    mutationFn: () => shiftActions.confirm(),
+    onSuccess: () => {
+      setConfirmError(null)
+      void queryClient.invalidateQueries({ queryKey: ['oncall', 'my-shifts'] })
     },
+    onError: (error) => {
+      setConfirmError(errorMessage(t, error))
+    },
+  })
+
+  const declineMut = useMutation({
+    mutationFn: () => shiftActions.decline(declineReason),
     onSuccess: () => {
       setDeclineError(null)
       setDeclineOpen(false)
@@ -385,19 +363,19 @@ function ShiftCard({
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        {shift.state === 'PLANNED' && mayConfirm && onConfirm ? (
+        {shift.state === 'PLANNED' && mayConfirm ? (
           <button
             className="rounded bg-emerald-700 px-3 py-1 text-white disabled:opacity-50"
-            disabled={confirmPending}
-            onClick={() => void onConfirm?.(shift.id)}
+            disabled={shiftActions.isPending}
+            onClick={() => void confirmMut.mutate()}
           >
             {t('admin.myShifts.confirm')}
           </button>
         ) : null}
-        {(shift.state === 'PLANNED' || shift.state === 'CONFIRMED') && mayConfirm && onDecline ? (
+        {(shift.state === 'PLANNED' || shift.state === 'CONFIRMED') && mayConfirm ? (
           <button
             className="rounded border border-rose-800 px-3 py-1 text-rose-300 disabled:opacity-50"
-            disabled={declinePending}
+            disabled={shiftActions.isPending}
             onClick={() => setDeclineOpen(true)}
           >
             {t('admin.myShifts.decline')}
@@ -422,6 +400,51 @@ function ShiftCard({
           </button>
         ) : null}
       </div>
+
+      {confirmError ? (
+        <p role="alert" className="mt-2 text-xs text-rose-400">{confirmError}</p>
+      ) : null}
+
+      {shiftActions.rows.length > 0 ? (
+        <div className="mt-2 rounded border border-amber-500/30 bg-amber-900/20 p-2">
+          <p className="text-xs font-medium text-amber-200">
+            {t('ticket:detail.offlineTitle')}
+          </p>
+          {shiftActions.rows.map((row) => (
+            <div
+              key={row.client_uuid}
+              className="mt-1 flex flex-wrap items-baseline gap-2 text-xs"
+            >
+              <span className="text-slate-300">{shiftActionLabel(t, row.action)}</span>
+              <span className="text-slate-500">{shiftActionStatus(t, row.status)}</span>
+              <span className="text-slate-500">
+                {t('ticket:detail.offlineAge', { minutes: row.ageMinutes })}
+              </span>
+              {row.status === 'conflict' ? (
+                <span className="text-rose-400">{row.error_code ?? 'unknown'}</span>
+              ) : null}
+              <button
+                type="button"
+                className="rounded bg-slate-600 px-2 py-1 text-slate-200 disabled:opacity-50"
+                disabled={shiftActions.isPending}
+                onClick={() => void shiftActions.retry(row)}
+              >
+                {t('ticket:detail.offlineAction.retry')}
+              </button>
+              {row.status === 'conflict' ? (
+                <button
+                  type="button"
+                  className="rounded bg-rose-600 px-2 py-1 text-slate-200 disabled:opacity-50"
+                  disabled={shiftActions.isPending}
+                  onClick={() => void shiftActions.discard(row)}
+                >
+                  {t('ticket:detail.offlineAction.discard')}
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {openSwap !== null ? (
         <div className="mt-2 rounded border border-slate-800 bg-slate-950/60 p-2 text-sm text-slate-300">
@@ -486,6 +509,31 @@ function stateColor(state: string): string {
     DECLINED: 'text-rose-400',
     SWAP_REQUESTED: 'text-purple-400',
   }[state] ?? 'text-slate-400'
+}
+
+function shiftActionLabel(
+  t: ReturnType<typeof useTranslation>['t'],
+  action: 'confirm' | 'decline',
+): string {
+  return action === 'confirm'
+    ? t('admin.myShifts.confirm')
+    : t('admin.myShifts.decline')
+}
+
+function shiftActionStatus(
+  t: ReturnType<typeof useTranslation>['t'],
+  status: 'queued' | 'sending' | 'failed' | 'conflict',
+): string {
+  switch (status) {
+    case 'queued':
+      return t('ticket:detail.offlineStatus.queued')
+    case 'sending':
+      return t('ticket:detail.offlineStatus.sending')
+    case 'failed':
+      return t('ticket:detail.offlineStatus.failed')
+    case 'conflict':
+      return t('ticket:detail.offlineStatus.conflict')
+  }
 }
 
 function DeclineForm({

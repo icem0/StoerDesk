@@ -6,7 +6,7 @@ import { RouterProvider } from 'react-router-dom'
 
 import { i18n } from './i18n'
 import { router } from './routes'
-import { replayInternalActions, replayOutbox } from './lib/outbox'
+import { replayInternalActions, replayOutbox, replayShiftActions } from './lib/outbox'
 import './styles.css'
 
 const queryClient = new QueryClient()
@@ -26,11 +26,16 @@ if (typeof navigator.serviceWorker !== 'undefined') {
 
 // Reports written while offline are replayed on app start and whenever the
 // browser comes back online (WP-M2-09a). Internal writes use the same triggers
-// (WP-M5-01): reports first, then the actions queued after them.
+// (WP-M5-01): reports first, then internal actions, then on-call shift writes
+// (WP-M8-15).
 void replayOutbox()
   .catch(() => undefined)
   .finally(() => {
-    void replayInternalActions().catch(() => undefined)
+    void replayInternalActions()
+      .catch(() => undefined)
+      .finally(() => {
+        void replayShiftActions().catch(() => undefined)
+      })
   })
 
 if (typeof window.addEventListener === 'function') {
@@ -38,7 +43,11 @@ if (typeof window.addEventListener === 'function') {
     void replayOutbox()
       .catch(() => undefined)
       .finally(() => {
-        void replayInternalActions().catch(() => undefined)
+        void replayInternalActions()
+          .catch(() => undefined)
+          .finally(() => {
+            void replayShiftActions().catch(() => undefined)
+          })
       })
   })
 }

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Offline on-call shift confirm and decline (WP-M8-15): the web outbox gains a
+  Dexie v3 `shift_actions` table keyed by `client_uuid`. `useShiftActions(shiftId)`
+  tries the online route first and, while the browser is offline, queues the write
+  for replay on app start and `online`; the decline reason is validated before it
+  is queued. The my-shifts page shows the queued/failed/rejected state on the shift
+  card with retry and, for server rejections such as `oncall_shift_started`, discard.
+
 - The personal on-call iCal feed (WP-M8-12): `GET /api/v1/oncall/ical/:token.ics` is
   public and answers the `PLANNED` and `CONFIRMED` shifts of one user from 30 days ago
   to 180 days ahead as an RFC 5545 calendar with UTC `DTSTART`/`DTEND`, stable UIDs and

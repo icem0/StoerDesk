@@ -39,10 +39,35 @@ export interface QueuedAction {
   created_at: number
 }
 
+/**
+ * The two on-call writes phase 8 allows offline (`specs/04-oncall.md` §4a.4,
+ * §4a.9; WP-M8-15): confirm and decline. Claiming from the pool and accepting a
+ * swap stay online-only.
+ */
+export type ShiftActionKind = 'confirm' | 'decline'
+
+/**
+ * One queued on-call shift write, keyed by its idempotency key `client_uuid`.
+ * `conflict` rows are server-side rejections (for example
+ * `oncall_shift_started`) and are never auto-retried, like the ticket conflict
+ * rows of WP-M5-06.
+ */
+export interface QueuedShiftAction {
+  client_uuid: string
+  shift_id: string
+  action: ShiftActionKind
+  payload: Record<string, unknown>
+  status: 'queued' | 'sending' | 'failed' | 'conflict'
+  error_code?: string
+  retries: number
+  created_at: number
+}
+
 /** IndexedDB-backed outbox for reports and internal actions written offline. */
 class OutboxDb extends Dexie {
   outbox!: Table<QueuedReport, number>
   internal_actions!: Table<QueuedAction, number>
+  shift_actions!: Table<QueuedShiftAction, string>
 
   constructor() {
     super('StörDeskOutbox')
@@ -53,9 +78,15 @@ class OutboxDb extends Dexie {
       outbox: '++id, client_uuid, status, created_at',
       internal_actions: '++id, client_uuid, ticket_no, status, created_at',
     })
+    this.version(3).stores({
+      outbox: '++id, client_uuid, status, created_at',
+      internal_actions: '++id, client_uuid, ticket_no, status, created_at',
+      shift_actions: 'client_uuid, shift_id, status, created_at',
+    })
 
     this.outbox = this.table('outbox')
     this.internal_actions = this.table('internal_actions')
+    this.shift_actions = this.table('shift_actions')
   }
 }
 
@@ -215,6 +246,112 @@ export async function deliverAction(row: QueuedAction): Promise<boolean> {
 
     return false
   }
+}
+
+/** Persist one on-call shift write for later delivery. Resolves with its key. */
+export async function enqueueShiftAction(input: {
+  shiftId: string
+  action: ShiftActionKind
+  payload?: Record<string, unknown>
+}): Promise<string> {
+  const clientUuid = crypto.randomUUID()
+
+  await outboxDb.shift_actions.add({
+    client_uuid: clientUuid,
+    shift_id: input.shiftId,
+    action: input.action,
+    payload: input.payload ?? {},
+    status: 'queued',
+    retries: 0,
+    created_at: Date.now(),
+  })
+
+  return clientUuid
+}
+
+/** All waiting shift writes, oldest first. */
+export async function queuedShiftActions(): Promise<QueuedShiftAction[]> {
+  return outboxDb.shift_actions.orderBy('created_at').toArray()
+}
+
+/** Merge changes into one queued shift write. */
+export async function updateShiftAction(
+  clientUuid: string,
+  changes: Partial<QueuedShiftAction>,
+): Promise<void> {
+  await outboxDb.shift_actions.update(clientUuid, changes)
+}
+
+/** Drop a delivered shift write from the outbox. */
+export async function removeShiftAction(clientUuid: string): Promise<void> {
+  await outboxDb.shift_actions.delete(clientUuid)
+}
+
+/** Route segment of every shift action kind. */
+const SHIFT_ACTION_SEGMENTS: Record<ShiftActionKind, string> = {
+  confirm: 'confirm',
+  decline: 'decline',
+}
+
+/**
+ * Deliver one queued shift write. The row keeps its `client_uuid` in the body,
+ * so a repeated delivery is idempotent on the server (`specs/04-oncall.md`
+ * §4a.4). A server rejection keeps its code and becomes a `conflict` row that
+ * is never retried; a network failure is retried later.
+ */
+export async function deliverShiftAction(row: QueuedShiftAction): Promise<boolean> {
+  try {
+    await apiFetch<never>(
+      `/v1/oncall/shifts/${row.shift_id}/${SHIFT_ACTION_SEGMENTS[row.action]}`,
+      {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ clientUuid: row.client_uuid, ...row.payload }),
+      },
+    )
+
+    await removeShiftAction(row.client_uuid)
+
+    return true
+  } catch (error) {
+    if (error instanceof ApiError) {
+      await updateShiftAction(row.client_uuid, {
+        status: 'conflict',
+        error_code: error.code ?? 'unknown',
+        retries: row.retries,
+      })
+      return false
+    }
+
+    await updateShiftAction(row.client_uuid, {
+      status: 'failed',
+      retries: row.retries + 1,
+    })
+
+    return false
+  }
+}
+
+/** Replay every waiting shift write, oldest first. */
+export async function replayShiftActions(): Promise<{ sent: number; failed: number }> {
+  let sent = 0
+  let failed = 0
+
+  for (const action of await queuedShiftActions()) {
+    if (action.status !== 'queued' && action.status !== 'failed') {
+      continue
+    }
+
+    await updateShiftAction(action.client_uuid, { status: 'sending' })
+
+    if (await deliverShiftAction({ ...action, status: 'sending' })) {
+      sent += 1
+    } else {
+      failed += 1
+    }
+  }
+
+  return { sent, failed }
 }
 
 /** Replay every waiting internal action, oldest first. */

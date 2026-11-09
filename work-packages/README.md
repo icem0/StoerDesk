@@ -490,7 +490,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M8-13b | pending swap list route `GET /api/v1/oncall/swaps`                  | done                    | yes     |
 | WP-M8-14  | my on-call shifts page                                              | done                    | yes     |
 | WP-M8-14b | on-call self-service read routes                                    | done                    | yes     |
-| WP-M8-15  | offline shift confirm and decline                                   | planned                 | yes     |
+| WP-M8-15  | offline shift confirm and decline                                   | done                    | yes     |
 | WP-M8-16  | phase-8 exit criterion and record                                   | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
