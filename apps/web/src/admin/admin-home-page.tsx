@@ -22,6 +22,7 @@ const MODULES: Module[] = [
   { key: 'standardTexts', to: '/admin/text-templates' },
   { key: 'deadlines', to: '/admin/deadlines' },
   { key: 'oncall', to: '/admin/oncall' },
+  { key: 'branding', to: '/admin/branding' },
   { key: 'channels', phase: 'phase7' },
   { key: 'apiKeys', phase: 'phase10' },
 ]

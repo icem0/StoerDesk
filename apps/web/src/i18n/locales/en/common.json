@@ -13,6 +13,7 @@
   },
   "titleWithCompany": "{{company}} @ {{product}}",
   "settingsGroups": {
+   "personal": "Personal",
    "operations": "Operations",
    "objects": "Objects",
    "administration": "Administration"
@@ -77,6 +78,8 @@
     "bmaSync": "BMAcloud sync",
     "oncall": "On-call plan",
     "myShifts": "My on-call shifts",
+    "mySettings": "My settings",
+    "deadlines": "Deadlines",
     "standardTexts": "Fault types",
     "stickers": "QR stickers",
     "admin": "Open administration",

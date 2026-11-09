@@ -13,6 +13,7 @@
   },
   "titleWithCompany": "{{company}} @ {{product}}",
   "settingsGroups": {
+   "personal": "Persönlich",
    "operations": "Meldungen",
    "objects": "Objekte",
    "administration": "Verwaltung"
@@ -77,6 +78,8 @@
     "bmaSync": "BMAcloud-Abgleich",
     "oncall": "Bereitschaftsplan",
     "myShifts": "Meine Bereitschaft",
+    "mySettings": "Meine Einstellungen",
+    "deadlines": "Fristen",
     "standardTexts": "Störungsarten",
     "stickers": "QR-Aufkleber",
     "admin": "Verwaltung öffnen",

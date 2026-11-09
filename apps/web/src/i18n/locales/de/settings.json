@@ -42,6 +42,10 @@
      "title": "Bereitschaftsplan",
      "hint": "Schichten, Bestätigungen und Schichttausch."
     },
+    "branding": {
+     "title": "Darstellung",
+     "hint": "Firmenname, Logo und die Titelauswahl des Meldeformulars anpassen."
+    },
     "channels": {
      "title": "Kanäle",
      "hint": "Benachrichtigungskanäle wie ntfy, E-Mail und Web Push."

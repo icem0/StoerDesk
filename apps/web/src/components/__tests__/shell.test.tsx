@@ -152,6 +152,20 @@ describe('Shell settings menu', () => {
     expect(branding.getAttribute('href')).toBe('/admin/branding')
   })
 
+  it('links the deadlines and personal settings pages from the settings menu', async () => {
+    stubMe(signedInMe())
+    renderShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
+
+    expect(screen.getByRole('link', { name: 'Fristen' }).getAttribute('href')).toBe(
+      '/admin/deadlines',
+    )
+    expect(screen.getByRole('link', { name: 'Meine Einstellungen' }).getAttribute('href')).toBe(
+      '/settings/me',
+    )
+  })
+
 
   it('shows the top-level header links without opening the menu', async () => {
     stubMe(signedInMe())

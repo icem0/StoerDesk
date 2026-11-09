@@ -505,6 +505,13 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The settings gear and the administration home did not link every available page:
+  the menu now carries "Fristen" (`/admin/deadlines`) and an explicit "Meine
+  Einstellungen" (`/settings/me`) entry in a new personal group, and the
+  administration home links "Darstellung" (`/admin/branding`) after the on-call
+  module. The administration menu order now matches the module order of the
+  administration home.
+
 - `generateOncallSlots` produced wrong UTC instants when the process time zone was
   not UTC: it read the zoned wall clock with `getUTC*` while `fromZonedTime` reads the
   candidate's local fields, so under the shipped `TZ=Europe/Berlin` every slot moved

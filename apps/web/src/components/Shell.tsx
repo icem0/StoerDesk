@@ -41,11 +41,17 @@ function useSystemTheme(): 'light' | 'dark' {
 
 const navGroups = [
   {
+    key: 'personal',
+    items: [
+      { key: 'mySettings', path: '/settings/me' },
+      { key: 'myShifts', path: '/oncall' },
+    ],
+  },
+  {
     key: 'operations',
     items: [
       { key: 'tickets', path: '/tickets' },
       { key: 'ticketCreate', path: '/tickets/create' },
-      { key: 'myShifts', path: '/oncall' },
     ],
   },
   {
@@ -63,8 +69,9 @@ const navGroups = [
       { key: 'roles', path: '/admin/roles' },
       { key: 'groups', path: '/admin/groups' },
       { key: 'bmaSync', path: '/admin/bma-sync' },
-      { key: 'oncall', path: '/admin/oncall' },
       { key: 'standardTexts', path: '/admin/text-templates' },
+      { key: 'deadlines', path: '/admin/deadlines' },
+      { key: 'oncall', path: '/admin/oncall' },
       { key: 'branding', path: '/admin/branding' },
     ],
   },

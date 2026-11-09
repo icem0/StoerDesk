@@ -55,4 +55,13 @@ describe('AdminHomePage', () => {
     expect(deadlines.getAttribute('href')).toBe('/admin/deadlines')
     expect(deadlines.closest('li')?.textContent).not.toMatch(/geplant|planned/)
   })
+
+  it('links the appearance page as an available module', async () => {
+    renderHome()
+
+    const branding = await screen.findByRole('link', { name: /Darstellung|Appearance/ })
+
+    expect(branding.getAttribute('href')).toBe('/admin/branding')
+    expect(branding.closest('li')?.textContent).not.toMatch(/geplant|planned/)
+  })
 })

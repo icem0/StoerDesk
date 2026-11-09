@@ -42,6 +42,10 @@
      "title": "On-call plan",
      "hint": "Shifts, confirmations and shift swaps."
     },
+    "branding": {
+     "title": "Appearance",
+     "hint": "Adjust the company name, the logo and the title option of the report form."
+    },
     "channels": {
      "title": "Channels",
      "hint": "Notification channels like ntfy, e-mail and Web Push."
