@@ -50,7 +50,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket list (integration
     deadlineAt: Date
     acknowledgedAt?: Date | null
   }) {
-    return await db
+    const inserted = await db
       .insert(tickets)
       .values({
         objectId,
@@ -59,6 +59,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket list (integration
         faultTemplateKeys: [],
       })
       .returning({ ticketNo: tickets.ticketNo, status: tickets.status })
+
+    const ticket = inserted[0]
+
+    if (ticket === undefined) {
+      throw new Error('the ticket was not inserted')
+    }
+
+    return ticket
   }
 
   it('adds timelineState, percent and remainingMs to every list item', async () => {
@@ -102,21 +110,21 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket list (integration
   })
 
   it('orders the deadline list with the open tickets first and the nearest deadline on top', async () => {
-    const [far] = await insertTicket({
+    const far = await insertTicket({
       status: 'NEW',
       priority: 'normal',
       reportedAt: new Date('2026-11-05T08:00:00.000Z'),
       deadlineAt: new Date('2026-11-20T08:00:00.000Z'),
     })
 
-    const [near] = await insertTicket({
+    const near = await insertTicket({
       status: 'IN_REVIEW',
       priority: 'normal',
       reportedAt: new Date('2026-11-09T08:00:00.000Z'),
       deadlineAt: new Date('2026-11-10T08:00:00.000Z'),
     })
 
-    const [closed] = await insertTicket({
+    const closed = await insertTicket({
       status: 'CLOSED',
       priority: 'normal',
       reportedAt: new Date('2026-10-01T08:00:00.000Z'),
