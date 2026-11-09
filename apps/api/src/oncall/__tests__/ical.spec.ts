@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { tamperedSignature } from './helpers/icalToken'
 import { escapeIcalText, icalTokenFor, serializeIcal, verifyIcalToken } from '../ical.js'
 
 const secret = 'unit-test-secret'
@@ -26,7 +27,7 @@ describe('iCal token', () => {
     const [id, signature] = token.split('.') as [string, string]
 
     expect(verifyIcalToken(`${otherId}.${signature}`, secret)).toBeNull()
-    expect(verifyIcalToken(`${id}.${signature.slice(0, -1)}A`, secret)).toBeNull()
+    expect(verifyIcalToken(`${id}.${tamperedSignature(signature)}`, secret)).toBeNull()
   })
 
   it('rejects malformed tokens', () => {

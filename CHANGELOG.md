@@ -515,6 +515,13 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
 
 ### Fixed
 
+- The iCal token test was flaky: the "tampered" signature replaced the last character of
+  the base64url HMAC with `A`, but that character carries only four significant bits, so in
+  about one of sixteen runs the tampered token was byte-identical to the valid one and the
+  route answered `200` instead of `404` (this is what failed the check run `v1.0.115`). Both
+  tests now tamper with the first character of the signature, which always changes the
+  signature; the assertion itself is unchanged.
+
 - The settings gear and the administration home did not link every available page:
   the menu now carries "Fristen" (`/admin/deadlines`) and an explicit "Meine
   Einstellungen" (`/settings/me`) entry in a new personal group, and the

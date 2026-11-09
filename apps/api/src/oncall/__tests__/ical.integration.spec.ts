@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { buildServer } from '../../index'
+import { tamperedSignature } from './helpers/icalToken'
 import { icalTokenFor } from '../ical'
 
 const testDatabase = await openTestDatabase()
@@ -141,7 +142,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('on-call iCal feed (integ
 
     for (const token of [
       'not-a-token',
-      `${id}.${signature.slice(0, -1)}A`,
+      `${id}.${tamperedSignature(signature)}`,
       unknownUser,
       icalTokenFor(userId, 'another-secret'),
     ]) {
