@@ -33,12 +33,23 @@ import { objects, tickets } from '../db/schema'
  * Authenticated `GET /api/v1/tickets` for staff. Paginated list with object
  * number/name, status, priority, reportedAt and deadlineAt. Filters: search
  * (object number / name), status, objectId, priority. Requires `ticket.read`.
+ *
+ * `order=deadlineAt` sorts by the deadline in the requested direction and
+ * puts the open tickets before the finished ones (WP-M9-20,
+ * `specs/05-timeline.md` §5.4).
  */
 
 type Db = Database['database']
 
 /** A ticket is open while it is neither closed nor cancelled (`specs/06-report-form.md` §7.8). */
 const CLOSED_STATUSES: string[] = ['CLOSED', 'CANCELLED']
+
+/**
+ * The deadline order puts the open tickets before the finished ones (WP-M9-20):
+ * the nearest deadline is on top and the closed and cancelled tickets keep the
+ * last places, so the list does not start with the oldest closed ticket.
+ */
+const OPEN_FIRST = sql`CASE WHEN ${tickets.status} IN ('CLOSED', 'CANCELLED') THEN 1 ELSE 0 END`
 
 function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
@@ -100,18 +111,23 @@ export async function listTickets(
   const total = Number(totalResult?.count ?? 0)
 
   const orderColumn =
-    query.order === 'deadlineAt'
-      ? tickets.deadlineAt
-      : query.order === 'priority'
-        ? sql`CASE ${tickets.priority}
+    query.order === 'priority'
+      ? sql`CASE ${tickets.priority}
             WHEN 'critical' THEN 1
             WHEN 'high' THEN 2
             WHEN 'normal' THEN 3
             ELSE 4
           END`
-        : tickets.reportedAt
+      : tickets.reportedAt
 
   const orderDirection = query.direction === 'asc' ? asc : desc
+
+  // The ticket number is the tie-breaker, so the pages of a list stay stable
+  // when two tickets share a deadline.
+  const orderColumns =
+    query.order === 'deadlineAt'
+      ? [asc(OPEN_FIRST), orderDirection(tickets.deadlineAt), asc(tickets.ticketNo)]
+      : [orderDirection(orderColumn)]
 
   const rows = await database
     .select({
@@ -130,7 +146,7 @@ export async function listTickets(
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
     .where(where)
-    .orderBy(orderDirection(orderColumn))
+    .orderBy(...orderColumns)
     .limit(query.limit)
     .offset(query.offset)
 

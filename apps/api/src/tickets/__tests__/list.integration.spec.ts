@@ -100,4 +100,42 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket list (integration
     const stopped = result.tickets.find((item) => item.status === 'ACKNOWLEDGED')
     expect(stopped?.timelineState).toBe('stopped')
   })
+
+  it('orders the deadline list with the open tickets first and the nearest deadline on top', async () => {
+    const [far] = await insertTicket({
+      status: 'NEW',
+      priority: 'normal',
+      reportedAt: new Date('2026-11-05T08:00:00.000Z'),
+      deadlineAt: new Date('2026-11-20T08:00:00.000Z'),
+    })
+
+    const [near] = await insertTicket({
+      status: 'IN_REVIEW',
+      priority: 'normal',
+      reportedAt: new Date('2026-11-09T08:00:00.000Z'),
+      deadlineAt: new Date('2026-11-10T08:00:00.000Z'),
+    })
+
+    const [closed] = await insertTicket({
+      status: 'CLOSED',
+      priority: 'normal',
+      reportedAt: new Date('2026-10-01T08:00:00.000Z'),
+      deadlineAt: new Date('2026-10-04T08:00:00.000Z'),
+    })
+
+    const result = await listTickets(db, {
+      open: undefined,
+      overdue: undefined,
+      order: 'deadlineAt',
+      direction: 'asc',
+      limit: 25,
+      offset: 0,
+    })
+
+    const numbers = result.tickets.map((item) => item.ticketNo)
+
+    expect(numbers.indexOf(near.ticketNo)).toBeGreaterThanOrEqual(0)
+    expect(numbers.indexOf(near.ticketNo)).toBeLessThan(numbers.indexOf(far.ticketNo))
+    expect(numbers.indexOf(far.ticketNo)).toBeLessThan(numbers.indexOf(closed.ticketNo))
+  })
 })

@@ -307,6 +307,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket list can be ordered by the deadline (WP-M9-20): `GET /api/v1/tickets` with
+  `order=deadlineAt` sorts the rows by the deadline in the requested direction and puts the
+  open tickets before the finished ones, so the nearest deadline is on top and the list
+  does not start with the oldest closed ticket. The ticket number is the tie-breaker, so
+  the pages of a long list stay stable.
+
 - The ticket list becomes mobile first (WP-M2-91b): instead of a wide table with
   horizontal scrolling every ticket is a card — number and status badge, priority,
   object and object number, the mini timeline with the remaining time and the

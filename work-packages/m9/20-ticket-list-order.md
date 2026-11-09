@@ -1,7 +1,7 @@
 # WP-M9-20: ticket list order — open tickets by deadline
 
 format: small-model
-status: planned
+status: done
 depends-on: —
 phase: 9
 milestone: m9

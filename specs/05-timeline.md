@@ -109,5 +109,6 @@ ticket and its history:
 
 `pause` is `{ id, reason, startedAt }` while a pause is open, otherwise `null`.
 `GET /api/v1/tickets` carries `timelineState`, `percent` and `remainingMs` per
-row for the mini timeline and the "least remaining time" order
-(`PLAN.md` §9).
+row for the mini timeline. With `order=deadlineAt` the list sorts by the
+deadline in the requested direction and puts the open tickets before the
+finished ones, so the least remaining time is on top (`PLAN.md` §9, WP-M9-20).

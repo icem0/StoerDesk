@@ -512,7 +512,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-17  | web dashboard settings                                              | planned                 | yes     |
 | WP-M9-18  | phase-9 exit criterion and record                                   | planned                 | yes     |
 | WP-M9-19  | dashboard tiles without the burning-now list                        | done                    | yes     |
-| WP-M9-20  | ticket list order: open tickets by the deadline                     | planned                 | yes     |
+| WP-M9-20  | ticket list order: open tickets by the deadline                     | done                    | yes     |
 | WP-M9-21  | ticket list rows with the timeline in the middle                    | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
