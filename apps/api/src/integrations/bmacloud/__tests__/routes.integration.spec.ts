@@ -233,13 +233,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(remove.statusCode).toBe(401)
     })
 
-    it('reads the credential status with object.read but refuses the write and delete', async () => {
+    it('refuses the credential status without object.import', async () => {
       const read = await getCredentials(reporterCookie)
       const write = await putCredentials(reporterCookie, { apiKey: 'deadbeef' })
       const remove = await deleteCredentials(reporterCookie)
 
-      expect(read.statusCode).toBe(200)
-      expect(read.json<CredentialsResponseBody>()).toEqual({ configured: false, source: 'none' })
+      // SEC-009 (WP-M9-38): the GET is now guarded by object.import, so a
+      // role that can read objects but not import them no longer sees the
+      // credentials metadata.
+      expect(read.statusCode).toBe(403)
+      expect(read.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
       expect(write.statusCode).toBe(403)
       expect(write.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
       expect(remove.statusCode).toBe(403)

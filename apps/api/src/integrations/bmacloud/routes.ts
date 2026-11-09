@@ -283,7 +283,10 @@ export const bmaSyncRoutes = fp<BmaSyncRouteOptions>(
 
     app.get(
       '/api/v1/admin/bma-sync/credentials',
-      { preHandler: requirePermission(database, PERMISSIONS.object.read) },
+      // SEC-009: only an importer sees whether the BMAcloud key is configured and
+      // where it came from; `object.read` alone is not enough (reporter_internal,
+      // office, oncall and manager all hold it).
+      { preHandler: requirePermission(database, PERMISSIONS.object.import) },
       async () => readBmaCredentials(database, env),
     )
 

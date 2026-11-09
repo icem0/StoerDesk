@@ -61,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The web comment path now carries the report spam contract (WP-M9-37, SEC-004 web side): the comment POST body adds `clientUuid`, `website`, `verification` and the reporter's own `statusToken`; `handledErrorCodes` grows `comment_status_token_mismatch` so the form shows the API notice instead of an unhandled error page.
 
+- BMAcloud credentials GET now needs `object.import` (WP-M9-38, SEC-009): the route used to be readable by every role with `object.read` (reporter_internal, office, oncall, manager), which exposed the metadata of "is the API key set and where does it come from"; the admin-side PUT/DELETE already required `object.import`, so the GET now matches.
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

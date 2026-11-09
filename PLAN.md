@@ -1290,7 +1290,12 @@ and reuses the report spam throttle (suspicious submissions carry `suspected_spa
 in the event payload). **WP-M9-37** threads the same fields through the web comment
 path (SEC-004 web side): the form adds `clientUuid`, `website`, `verification` and
 the reporter's own `statusToken` to the comment POST, and the module handles
-`comment_status_token_mismatch` so a foreign open ticket shows the API notice.
+`comment_status_token_mismatch` so a foreign open ticket shows the API notice. **WP-M9-38**
+tightens the BMAcloud credentials GET (SEC-009) to `object.import`, matching PUT and DELETE.
+The phase 9 audit chain WP-M9-27 … WP-M9-38 is now closed: every finding SEC-004 … SEC-020
+of the repeat pass is fixed, and the only remaining open item in `.security/findings.md`
+is SEC-011's `Cache-Control` header on the iCal feed (already delivered by WP-M9-33) —
+the log redaction via Fastify `logLevel: 'warn'` is in place.
 
 ## 17. Work package rules for small models
 
