@@ -1,7 +1,7 @@
 # WP-M8-16: phase-8 exit criterion and record
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-02 … WP-M8-15
 phase: 8
 milestone: m8
@@ -20,6 +20,7 @@ files-read:
 files-write:
 
 - apps/api/src/oncall/__tests__/phase8-exit.integration.spec.ts
+- packages/shared/src/oncall.ts (process-time-zone independence exposed by the exit test)
 - work-packages/README.md, PLAN.md §16, docs/REPO-MAP.md, CHANGELOG.md (record)
 
 interfaces:
@@ -66,9 +67,13 @@ reason. The atomic test result `exactly one winner` is asserted, not inferred.
 
 ## Handoff
 
-- Files changed: the phase-8 exit test plus the backlog, plan, repo-map and
-  changelog record
+- Files changed: the phase-8 exit test, the time-zone independence fix in
+  `generateOncallSlots` plus the backlog, plan, repo-map and changelog record
 - Interfaces added: none (verification and record only)
-- Verified: typecheck, lint, test:run, wp:check
+- Verified: typecheck, lint, test:run, wp:check; the exit test ran against
+  PostgreSQL (5/5) and exposed that `generateOncallSlots` produced wrong UTC
+  instants when the process `TZ` was `Europe/Berlin` (the shipped `.env`);
+  reading the zoned wall clock with local getters and `fromZonedTime` restores
+  the 167/169/168-hour rule under any `TZ`
 - Follow-up WP: none; phase 8 closes with this package
 - Open question: none

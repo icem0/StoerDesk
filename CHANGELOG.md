@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The phase-8 exit criterion (WP-M8-16): the new integration test
+  `apps/api/src/oncall/__tests__/phase8-exit.integration.spec.ts` proves the DST
+  rule of the slot generator (167 h in the spring week of 2026-03-23, 169 h in the
+  autumn week of 2026-10-19, 168 h in a neutral week) and the atomic swap rule of
+  `specs/04-oncall.md` §4a.5 — two concurrent acceptances of one `PENDING` request
+  yield exactly one winner, one acceptance event and a `409` for the loser, with the
+  shift carrying the winner after approval (approval on) or immediately (approval
+  off). Phase 8 is complete.
+
 - Offline on-call shift confirm and decline (WP-M8-15): the web outbox gains a
   Dexie v3 `shift_actions` table keyed by `client_uuid`. `useShiftActions(shiftId)`
   tries the online route first and, while the browser is offline, queues the write
@@ -495,6 +504,13 @@ prune -f` — with the command runner injected, so the whole logic is tested wit
   permission) stays planned. New `specs/18-self-update.md`.
 
 ### Fixed
+
+- `generateOncallSlots` produced wrong UTC instants when the process time zone was
+  not UTC: it read the zoned wall clock with `getUTC*` while `fromZonedTime` reads the
+  candidate's local fields, so under the shipped `TZ=Europe/Berlin` every slot moved
+  by the UTC offset and the 167/169-hour DST weeks came out wrong. The generator now
+  uses local getters and `setDate`, making the DST rule independent of `TZ`
+  (WP-M8-16).
 
 - The ticket workflow E2E timed out clicking the top-right options button of the
   ticket detail (`getByRole('button', { name: /Optionen|Options/ })`). The button now

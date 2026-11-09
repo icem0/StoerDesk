@@ -491,7 +491,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M8-14  | my on-call shifts page                                              | done                    | yes     |
 | WP-M8-14b | on-call self-service read routes                                    | done                    | yes     |
 | WP-M8-15  | offline shift confirm and decline                                   | done                    | yes     |
-| WP-M8-16  | phase-8 exit criterion and record                                   | planned                 | yes     |
+| WP-M8-16  | phase-8 exit criterion and record                                   | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -832,16 +832,19 @@ key. The names are not in the shared user schemas and not in the admin user API 
 is the announced follow-up **WP-M2-94** (`work-packages/m2/94-user-name-fields-api.md`,
 planned).
 
-**Phase 8 is split and started (the `m8` packages).** Phase 7 is complete, so the
-roadmap moves to phase 8 (on-call calendar). The phase had no work packages and
+**Phase 8 is complete (the `m8` packages).** Phase 7 is complete, so the
+roadmap moved to phase 8 (on-call calendar). The phase had no work packages and
 `specs/04-oncall.md` was still a placeholder, so the split required by `PLAN.md` §16
-happened first: **WP-M8-01** fills the slice, resolves the open swap-approval decision
+happened first: **WP-M8-01** filled the slice, resolved the open swap-approval decision
 with ADR-0011 (approval defaults to `true`, local wall-clock weeks, group-based pool
-membership, default pool by setting, stateless iCal token) and names **WP-M8-02 …
+membership, default pool by setting, stateless iCal token) and named **WP-M8-02 …
 WP-M8-16** in numeric order (tables → DST slot math → pools → planning → routes →
 confirm/decline → swaps → ticket coupling → offer timeout → iCal → admin and my-shifts
-UI → offline shift actions → exit criterion). The phase-8 exit criterion "DST tests and
-atomic swap tests pass" is proven by WP-M8-16.
+UI → offline shift actions → exit criterion). Every package is implemented. The
+phase-8 exit criterion "DST tests and atomic swap tests pass" is proven by
+**WP-M8-16**: the exit test asserts 167/169/168-hour weeks in `Europe/Berlin` and that
+exactly one of two concurrent swap acceptances wins, with the losing request answered
+`409`.
 
 ## Validation
 

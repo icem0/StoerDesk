@@ -155,28 +155,27 @@ export function generateOncallSlots({
   const fromLocal = toZonedTime(from, ONCALL_TIMEZONE)
 
   // Candidate slot start: target weekday on/after `from`'s local date at
-  // `startTime`, expressed as local wall-clock.
+  // `startTime`, expressed as local wall-clock. `fromZonedTime` reads the
+  // candidate's local fields, so the whole calculation stays independent of
+  // the process time zone (`TZ`).
   const candidate = new Date(
-    Date.UTC(
-      fromLocal.getUTCFullYear(),
-      fromLocal.getUTCMonth(),
-      fromLocal.getUTCDate(),
-      startHour,
-      startMinute,
-      0,
-      0,
-    ),
+    fromLocal.getFullYear(),
+    fromLocal.getMonth(),
+    fromLocal.getDate(),
+    startHour,
+    startMinute,
+    0,
+    0,
   )
-  candidate.setUTCDate(
-    candidate.getUTCDate() +
-      ((weekStartWeekday - candidate.getUTCDay() + 7) % 7),
+  candidate.setDate(
+    candidate.getDate() + ((weekStartWeekday - candidate.getDay() + 7) % 7),
   )
 
   let startsAt = fromZonedTime(candidate, ONCALL_TIMEZONE)
 
   // A candidate that falls before `from` moves to the next week.
   if (startsAt < from) {
-    candidate.setUTCDate(candidate.getUTCDate() + 7)
+    candidate.setDate(candidate.getDate() + 7)
     startsAt = fromZonedTime(candidate, ONCALL_TIMEZONE)
   }
 
@@ -184,12 +183,12 @@ export function generateOncallSlots({
 
   while (startsAt < to) {
     const endsLocal = new Date(candidate.getTime())
-    endsLocal.setUTCDate(endsLocal.getUTCDate() + durationDays)
+    endsLocal.setDate(endsLocal.getDate() + durationDays)
     const endsAt = fromZonedTime(endsLocal, ONCALL_TIMEZONE)
 
     slots.push({ startsAt, endsAt })
 
-    candidate.setUTCDate(candidate.getUTCDate() + durationDays)
+    candidate.setDate(candidate.getDate() + durationDays)
     startsAt = fromZonedTime(candidate, ONCALL_TIMEZONE)
   }
 

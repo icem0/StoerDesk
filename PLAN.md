@@ -1183,6 +1183,23 @@ event with `{ reason: 'oncall_timeout' }`. A ticket already cleared or no longer
 sweep before the rule scan and reports `offerScanned`/`offerEscalated`; the existing
 `ticket-escalation` job therefore carries it every minute without a second queue.
 
+**Phase 8 is complete (WP-M8-02 … WP-M8-16).** The on-call calendar is implemented in
+numeric order: tables and migration `0020` (02), the DST-safe slot generator (03), the
+pool API (04), the settings and planning service (05), the shift/settings routes (06),
+confirm and decline (07), the atomic swap service (08) and routes (09), ticket coupling
+(10), offer timeout (11), the personal iCal feed (12), the admin page (13), the pending
+swap list route (13b), the my-shifts page (14), the self-service read routes (14b),
+offline confirm/decline (15) and the exit criterion (16). **WP-M8-16** proves the exit
+criterion against a throwaway PostgreSQL: `generateOncallSlots` yields 167 h for the
+spring DST week of 2026-03-23, 169 h for the autumn week of 2026-10-19 and 168 h for a
+neutral week, and two concurrent acceptances of one `PENDING` swap produce exactly one
+winner, the request `ACCEPTED` (approval on) or immediately effective (approval off),
+one acceptance event and a `409` for the loser. The exit test also exposed that the
+generator read the zoned wall clock with `getUTC*` while `fromZonedTime` reads local
+fields; under the shipped `TZ=Europe/Berlin` that shifted every slot by the UTC offset.
+The generator now uses local getters and `setDate`, so the DST rule holds under any
+process time zone. The dashboard tile and statistics stay in phase 9.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
