@@ -520,6 +520,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-25  | internal creation form honours the branding title switch          | done                    | yes     |
 | WP-M9-26  | record: object list facelift (commit `d1e34eb` without a WP)      | done                    | yes     |
 | WP-M9-27  | ticket_purges append-only and reason length cap (SEC-013)         | done                    | yes     |
+| WP-M9-28  | shared LIKE escaping for ticket and object search (SEC-012)       | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

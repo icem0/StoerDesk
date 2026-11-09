@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The ticket purge log is append-only (WP-M9-27, audit SEC-013): migration `0024_ticket_purges_append_only` adds triggers to `ticket_purges` — any `UPDATE`/`DELETE` raises `ticket_purges_append_only`, and an inserted `reason` longer than 1000 characters raises `ticket_purges_reason_too_long`.
 
+- Ticket and object search match literally now (WP-M9-28, SEC-012): both searches escape `\`, `%` and `_` through one shared helper (`escapeLikePattern`), so a search string is matched exactly instead of widening the result set (the ticket list search had fixed `%`/`_` — the object search had inherited the same drift).
+
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
   adds `tickets.is_test` as a not-null boolean with default `false`, plus the partial
   `tickets_is_test_reported_at_idx` index for `is_test = false`. Drizzle declares the

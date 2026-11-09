@@ -16,6 +16,7 @@ import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
   computeTicketTimeline,
+  escapeLikePattern,
   PERMISSIONS,
   ticketListQuerySchema,
   ticketListResponseSchema,
@@ -62,8 +63,7 @@ export async function listTickets(
   const conditions = []
 
   if (query.search) {
-    const safe = query.search.replace(/[%_]/g, '\\$&')
-    const pattern = `%${safe}%`
+    const pattern = `%${escapeLikePattern(query.search)}%`
     conditions.push(
       or(
         ilike(objects.objectNo, pattern),

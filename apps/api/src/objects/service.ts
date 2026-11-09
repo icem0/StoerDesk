@@ -2,6 +2,7 @@ import { and, eq, ilike, or, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
+  escapeLikePattern,
   createObjectRequestSchema,
   objectListQuerySchema,
   objectListResponseSchema,
@@ -98,7 +99,7 @@ function whereFromQuery(query: ObjectListQuery) {
   }
 
   if (query.search !== undefined) {
-    const pattern = `%${query.search}%`
+    const pattern = `%${escapeLikePattern(query.search)}%`
     conditions.push(
       or(
         ilike(objects.objectNo, pattern),

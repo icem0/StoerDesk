@@ -1,6 +1,7 @@
 export * from './i18n/t.js'
 export * from './oncall.js'
 export * from './permissions.js'
+export * from './search.js'
 export * from './timeline.js'
 export * from './escalation.js'
 export * from './schemas/index.js'
