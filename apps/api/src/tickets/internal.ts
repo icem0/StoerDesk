@@ -11,7 +11,8 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, settings, ticketEvents, tickets } from '../db/schema'
+import { objects, ticketEvents, tickets } from '../db/schema'
+import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
 import { applyInternalAction } from './internal-actions'
 
@@ -59,19 +60,7 @@ export async function createInternalTicket(
     throw new InternalTicketRouteError(404, 'object_not_found', { fields: ['objectId'] })
   }
 
-  const [brandingRow] = await database
-    .select({ value: settings.value })
-    .from(settings)
-    .where(eq(settings.key, 'branding'))
-    .limit(1)
-
-  const titleEnabled =
-    brandingRow?.value !== null &&
-    brandingRow?.value !== undefined &&
-    typeof brandingRow?.value === 'object' &&
-    typeof (brandingRow?.value as { titleEnabled?: unknown }).titleEnabled === 'boolean'
-      ? (brandingRow?.value as { titleEnabled: boolean }).titleEnabled
-      : false
+  const titleEnabled = await readTitleEnabled(database)
 
   const now = new Date()
   const deadlineAt = await deadlineAtForPriority(database, now, input.priority)

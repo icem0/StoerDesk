@@ -515,6 +515,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-20  | ticket list order: open tickets by the deadline                     | done                    | yes     |
 | WP-M9-21  | ticket list rows with the timeline in the middle                    | done                    | yes     |
 | WP-M9-22  | milestone markers on the timeline bar                               | done                    | yes     |
+| WP-M9-23  | one reading point for the branding title switch                     | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -895,6 +896,13 @@ the three packages exist since the commit of WP-M9-19. **WP-M9-22** moves the mi
 markers of the ticket timeline onto the bar: the report marker is a whole dot on the
 start point of the axis instead of a half dot above it, and the tooltip names the
 milestone in the language of the interface.
+
+**Out-of-band phase 9 — the title switch of the office (WP-M9-23 … WP-M9-25).** The office
+asked that the menu entry "Titel bei Ticket erfassen" have a complete effect: a new ticket
+carries a title only while the switch is on, and the ticket view shows a title only while
+the switch is on. **WP-M9-23** gives the flag one reading point
+(`apps/api/src/settings/branding-state.ts`) instead of four copies of the same rule. The
+display gate and the internal form follow in WP-M9-24 and WP-M9-25.
 
 ## Validation
 

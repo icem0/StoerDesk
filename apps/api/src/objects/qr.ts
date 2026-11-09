@@ -15,7 +15,8 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, oldQrTokens, settings } from '../db/schema'
+import { objects, oldQrTokens } from '../db/schema'
+import { readTitleEnabled } from '../settings/branding-state'
 
 /**
  * QR token generation, regeneration and public resolution
@@ -111,31 +112,10 @@ async function publicObject(row: ObjectRow): Promise<PublicQrObject> {
   })
 }
 
-/**
- * The `titleEnabled` flag of the branding row (WP-M2-89, WP-M2-90): the public QR
- * resolve is the only unauthenticated carrier, so the report form learns from it
- * whether a title input exists at all. A missing or malformed row defaults to
- * `false` — same read rule as `createPublicReport` of WP-M2-89.
- */
-async function titleEnabledOf(database: Db | Tx): Promise<boolean> {
-  const [row] = await database
-    .select({ value: settings.value })
-    .from(settings)
-    .where(eq(settings.key, 'branding'))
-    .limit(1)
-
-  return (
-    row?.value !== null &&
-    row?.value !== undefined &&
-    typeof row.value === 'object' &&
-    typeof (row.value as { titleEnabled?: unknown }).titleEnabled === 'boolean'
-      ? (row.value as { titleEnabled: boolean }).titleEnabled
-      : false
-  )
-}
-
 async function resolveQrToken(database: Db, token: string) {
-  const titleEnabled = await titleEnabledOf(database)
+  // The public QR resolve is the only unauthenticated carrier of the flag, so the
+  // report form learns from it whether a title input exists at all (WP-M2-90).
+  const titleEnabled = await readTitleEnabled(database)
   const [current] = await database
     .select()
     .from(objects)

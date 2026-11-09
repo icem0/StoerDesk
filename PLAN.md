@@ -1237,6 +1237,14 @@ milestone markers of the ticket timeline onto the bar: the report marker is a wh
 on the start point of the axis instead of a half dot above it, and the tooltip names the
 milestone in the language of the interface.
 
+**Out-of-band phase 9 — the title switch of the office (WP-M9-23 … WP-M9-25).** The office
+asked that the menu entry "Titel bei Ticket erfassen" have a complete effect: a ticket
+carries a title only while the switch is on, and the ticket view shows a title only while
+the switch is on. **WP-M9-23** gives the `titleEnabled` flag of the branding row one
+reading point (`apps/api/src/settings/branding-state.ts`) instead of four copies of the
+same rule; the display gate and the internal creation form follow in WP-M9-24 and
+WP-M9-25.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

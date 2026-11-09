@@ -5,6 +5,7 @@ import { brandingResponseSchema, PERMISSIONS, updateBrandingRequestSchema } from
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { settings } from '../db/schema'
+import { BRANDING_KEY, parseTitleEnabled } from './branding-state'
 
 /**
  * Public branding settings (`PLAN.md` §14, WP-M2-29 / WP-M4-09).
@@ -19,8 +20,6 @@ import { settings } from '../db/schema'
  * `logo` is an optional `data:image/jpeg` / `data:image/png` base64 URL (at most
  * `MAX_LOGO_BYTES`); `''` or `null` removes the logo.
  */
-
-const BRANDING_KEY = 'branding'
 
 /** At most 500 kB of logo payload stored in the settings row. */
 const MAX_LOGO_BYTES = 500 * 1024
@@ -40,14 +39,7 @@ function storedCompanyName(value: unknown): string {
 }
 
 function storedTitleEnabled(value: unknown): boolean {
-  return (
-    value !== null &&
-    value !== undefined &&
-    typeof value === 'object' &&
-    typeof (value as { titleEnabled?: unknown }).titleEnabled === 'boolean'
-      ? (value as { titleEnabled: boolean }).titleEnabled
-      : false
-  )
+  return parseTitleEnabled(value)
 }
 
 function storedLogo(value: unknown): string {

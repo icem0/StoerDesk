@@ -13,9 +13,10 @@ import {
 
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { objects, settings, ticketEvents, ticketPhotos, tickets } from '../db/schema'
+import { objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
 import { generateQrToken } from '../objects/qr'
+import { readTitleEnabled } from '../settings/branding-state'
 import { readDeadlineHours } from './deadline'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
 import { MAX_REPORT_PHOTOS, saveReportPhotos } from './photos'
@@ -211,19 +212,7 @@ export async function createPublicReport(
   const deadlineHours = await readDeadlineHours(database)
   const times = reportTimes(input, new Date(), deadlineHours.normal)
 
-  const [brandingRow] = await database
-    .select({ value: settings.value })
-    .from(settings)
-    .where(eq(settings.key, 'branding'))
-    .limit(1)
-
-  const titleEnabled =
-    brandingRow?.value !== null &&
-    brandingRow?.value !== undefined &&
-    typeof brandingRow?.value === 'object' &&
-    typeof (brandingRow?.value as { titleEnabled?: unknown }).titleEnabled === 'boolean'
-      ? (brandingRow?.value as { titleEnabled: boolean }).titleEnabled
-      : false
+  const titleEnabled = await readTitleEnabled(database)
 
   const insertValues = {
     objectId: object.id,

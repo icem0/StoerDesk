@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The branding title switch has one reading point (WP-M9-23): the `titleEnabled`
+  flag of the branding row was read four times with four copies of the same rule.
+  `apps/api/src/settings/branding-state.ts` exports `readTitleEnabled` (the row
+  read), `parseTitleEnabled` (the value rule) and the `BRANDING_KEY` constant;
+  the branding route, the public QR resolve, the public report and the internal
+  creation read the flag through it. A missing or malformed row still means
+  `false`, so the behaviour is unchanged.
+
 ### Added
 
 - The ticket data model gains the test-data flag (WP-M9-02): migration `0023_ticket_is_test`
