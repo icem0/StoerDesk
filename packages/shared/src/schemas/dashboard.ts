@@ -78,6 +78,7 @@ export const dashboardSettingsSchema = z.object({
 
 export const updateDashboardSettingsRequestSchema = z.object({
   tvToken: z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),
+  rotateTvToken: z.boolean().optional(),
   tvAnonymize: z.boolean().optional(),
   conspicuousThreshold: z.number().int().min(1).max(100).optional(),
 })

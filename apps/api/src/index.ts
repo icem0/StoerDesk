@@ -12,6 +12,7 @@ import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
 import { bmaSyncRoutes } from './integrations/bmacloud/routes'
 import { settingsBrandingRoutes } from './settings/branding'
+import { settingsDashboardRoutes } from './settings/dashboard'
 import { settingsDeadlineRoutes } from './settings/deadlines'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
@@ -118,6 +119,7 @@ export async function buildServer() {
   await app.register(adminRolesRoutes, { database })
   await app.register(adminGroupsRoutes, { database })
   await app.register(settingsBrandingRoutes, { database })
+  await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
