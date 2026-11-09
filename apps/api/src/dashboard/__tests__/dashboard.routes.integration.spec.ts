@@ -94,10 +94,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard routes (integr
     await migrate(db, { migrationsFolder })
     await seedRbac(db)
 
-    const [adminRole] = await db
-      .select({ id: roles.id })
-      .from(roles)
-      .where(eq(roles.key, 'admin'))
+    const [adminRole] = await db.select({ id: roles.id }).from(roles).where(eq(roles.key, 'admin'))
 
     if (adminRole === undefined) {
       throw new Error('expected the seeded admin role')
@@ -132,7 +129,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard routes (integr
     ).id
 
     const poolId = onlyRow(
-      await db.insert(oncallPools).values({ name: 'Alpha Bereitschaft' }).returning({ id: oncallPools.id }),
+      await db
+        .insert(oncallPools)
+        .values({ name: 'Alpha Bereitschaft' })
+        .returning({ id: oncallPools.id }),
       'the inserted pool',
     ).id
 

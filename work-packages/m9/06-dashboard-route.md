@@ -1,7 +1,7 @@
 # WP-M9-06: dashboard snapshot route
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-05
 phase: 9
 milestone: m9
