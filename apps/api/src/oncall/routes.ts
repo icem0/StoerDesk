@@ -13,16 +13,18 @@ import {
   shiftListResponseSchema,
   updateOncallSettingsRequestSchema,
   updateShiftRequestSchema,
+  icalUrlResponseSchema,
+  oncallMemberListResponseSchema,
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { oncallPools, oncallShifts, users } from '../db/schema'
+import { oncallPools, oncallShifts, roles, userGroups, userRoles, users } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
 import { resolveDefaultPool } from './coupling'
-import { serializeIcal, verifyIcalToken } from './ical'
+import { serializeIcal, verifyIcalToken, icalTokenFor } from './ical'
 import { readOncallSettings, writeOncallSettings } from './settings'
 import { swapRoutes } from './swap-routes'
 
@@ -532,6 +534,98 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
     )
 
     await app.register(swapRoutes, { database })
+
+    // Personal iCal URL: the caller resolves the relative path against its own
+    // origin; the token itself never leaves this route and is never logged.
+    app.get(
+      '/api/v1/oncall/ical-url',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.read) },
+      async (request, reply) => {
+        const secret = loadEnv().SESSION_SECRET
+        const userId = request.user?.id ?? ''
+        const url = `/api/v1/oncall/ical/${icalTokenFor(userId, secret)}.ics`
+
+        return reply.send(icalUrlResponseSchema.parse({ url }))
+      },
+    )
+
+    // Pool members eligible as a swap target (`specs/04-oncall.md` §4a.5):
+    // group members for grouped pools, every active `oncall` user otherwise.
+    app.get<{ Params: { id: string } }>(
+      '/api/v1/oncall/pools/:id/members',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.read) },
+      async (request, reply) => {
+        const parsedId = z.uuid().safeParse(request.params.id)
+
+        if (!parsedId.success) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const [pool] = await database
+          .select({ id: oncallPools.id, groupId: oncallPools.groupId })
+          .from(oncallPools)
+          .where(eq(oncallPools.id, parsedId.data))
+          .limit(1)
+
+        if (pool === undefined) {
+          return reply.code(404).send({ code: 'oncall_pool_not_found', params: { fields: ['id'] } })
+        }
+
+        let memberUserIds: string[] = []
+
+        if (pool.groupId !== null && pool.groupId !== undefined) {
+          const rows = await database
+            .select({ userId: userGroups.userId })
+            .from(userGroups)
+            .innerJoin(users, eq(users.id, userGroups.userId))
+            .where(
+              and(
+                eq(userGroups.groupId, pool.groupId),
+                eq(users.active, true),
+              ),
+            )
+          memberUserIds = rows.map((row) => row.userId)
+        } else {
+          const rows = await database
+            .select({ userId: userRoles.userId })
+            .from(userRoles)
+            .innerJoin(roles, eq(roles.id, userRoles.roleId))
+            .innerJoin(users, eq(users.id, userRoles.userId))
+            .where(
+              and(
+                eq(roles.key, 'oncall'),
+                eq(users.active, true),
+              ),
+            )
+          memberUserIds = rows.map((row) => row.userId)
+        }
+
+        const members =
+          memberUserIds.length === 0
+            ? []
+            : await database
+                .select({
+                  id: users.id,
+                  givenName: users.givenName,
+                  familyName: users.familyName,
+                  email: users.email,
+                })
+                .from(users)
+                .where(inArray(users.id, memberUserIds))
+                .orderBy(users.familyName, users.givenName, users.email)
+
+        return reply.send(
+          oncallMemberListResponseSchema.parse({
+            members: members.map((member) => ({
+              id: member.id,
+              givenName: member.givenName,
+              familyName: member.familyName,
+              email: member.email,
+            })),
+          }),
+        )
+      },
+    )
   },
   { name: 'stoerdesk-oncall-routes' },
 )

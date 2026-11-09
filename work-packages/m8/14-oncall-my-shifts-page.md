@@ -2,7 +2,7 @@
 
 format: small-model
 status: planned
-depends-on: WP-M8-07, WP-M8-09, WP-M8-12
+depends-on: WP-M8-07, WP-M8-09, WP-M8-12, WP-M8-14b
 phase: 8
 milestone: m8
 context-budget: 22k tokens
@@ -30,8 +30,8 @@ interfaces:
 - `MyShiftsPage` at `/oncall`, guarded by `RequireSession`
 - shift cards with state, pool, local start/end, confirm and decline
 - decline form with a mandatory reason (5–500 characters)
-- swap request form with "one colleague" and "whole pool"
-- copyable iCal URL and a subscribe hint
+- swap request form with "one colleague" (from `GET /api/v1/oncall/pools/:id/members`) and "whole pool"
+- copyable iCal URL from `GET /api/v1/oncall/ical-url` and a subscribe hint
 
 ## Task
 

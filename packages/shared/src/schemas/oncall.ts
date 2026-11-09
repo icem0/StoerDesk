@@ -195,3 +195,26 @@ export type SwapAcceptResponse = z.infer<typeof swapAcceptResponseSchema>
 export type OncallSwapListResponse = z.infer<typeof oncallSwapListResponseSchema>
 export type OnCallSettingsResponse = z.infer<typeof oncallSettingsResponseSchema>
 export type UpdateOncallSettingsRequest = z.infer<typeof updateOncallSettingsRequestSchema>
+
+/** Response of `GET /api/v1/oncall/ical-url`: a relative URL the caller resolves
+ * against its own origin; the token itself stays on the server (WP-M8-14b). */
+export const icalUrlResponseSchema = z.object({
+  url: z.string(),
+})
+
+export type IcalUrlResponse = z.infer<typeof icalUrlResponseSchema>
+
+/** One pool member offered as a swap target (WP-M8-14b). */
+export const oncallMemberSchema = z.object({
+  id: z.string().uuid(),
+  givenName: z.string(),
+  familyName: z.string(),
+  email: z.string().email(),
+})
+
+export const oncallMemberListResponseSchema = z.object({
+  members: z.array(oncallMemberSchema),
+})
+
+export type OncallMember = z.infer<typeof oncallMemberSchema>
+export type OncallMemberListResponse = z.infer<typeof oncallMemberListResponseSchema>
