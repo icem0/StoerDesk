@@ -1,7 +1,7 @@
 # WP-M9-08: dashboard settings and TV token
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-04
 phase: 9
 milestone: m9
