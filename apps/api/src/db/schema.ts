@@ -402,6 +402,12 @@ export const TICKET_PRIORITIES = ['low', 'normal', 'high', 'critical'] as const
 /** Report source, used by the statistics of `PLAN.md` §13. */
 export const TICKET_SOURCES = ['QR', 'INTERNAL', 'API'] as const
 
+/** Meldungskanal einer intern erfassten Meldung (WP-M2-98). */
+export const TICKET_REPORTER_CHANNELS = ['phone', 'email', 'messenger'] as const
+
+/** Ob der Melder ein interner Mitarbeiter oder eine externe Person ist (WP-M2-98). */
+export const TICKET_REPORTER_KINDS = ['internal', 'external'] as const
+
 export const TICKET_EVENT_ACTOR_KINDS = ['user', 'public', 'system'] as const
 
 export const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png'] as const
@@ -454,6 +460,14 @@ export const tickets = pgTable(
     reporterName: text('reporter_name'),
     reporterPhone: text('reporter_phone'),
     reporterEmail: text('reporter_email'),
+    /** Meldungskanal der internen Erfassung (WP-M2-98). */
+    reporterChannel: text('reporter_channel'),
+    /** Interner Mitarbeiter oder externe Person als Melder (WP-M2-98). */
+    reporterKind: text('reporter_kind'),
+    /** Der interne Benutzer, der die Meldung an den Erfasser gegeben hat. */
+    reportedByUserId: uuid('reported_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     /** Idempotency key of the offline outbox replay — unique over all tickets. */
     clientUuid: uuid('client_uuid'),
     statusToken: text('status_token'),
@@ -498,6 +512,7 @@ export const tickets = pgTable(
     index('tickets_object_id_reported_at_idx').on(table.objectId, table.reportedAt),
     index('tickets_status_idx').on(table.status),
     index('tickets_parent_ticket_id_idx').on(table.parentTicketId),
+    index('tickets_reported_by_user_id_idx').on(table.reportedByUserId),
     index('tickets_assigned_user_id_status_idx').on(table.assignedUserId, table.status),
     index('tickets_is_test_reported_at_idx')
       .on(table.reportedAt)
@@ -505,6 +520,14 @@ export const tickets = pgTable(
     check('tickets_status_check', sql`${table.status} IN (${checkList(TICKET_STATUSES)})`),
     check('tickets_priority_check', sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`),
     check('tickets_source_check', sql`${table.source} IN (${checkList(TICKET_SOURCES)})`),
+    check(
+      'tickets_reporter_channel_check',
+      sql`${table.reporterChannel} IS NULL OR ${table.reporterChannel} IN (${checkList(TICKET_REPORTER_CHANNELS)})`,
+    ),
+    check(
+      'tickets_reporter_kind_check',
+      sql`${table.reporterKind} IS NULL OR ${table.reporterKind} IN (${checkList(TICKET_REPORTER_KINDS)})`,
+    ),
   ],
 )
 

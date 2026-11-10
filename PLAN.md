@@ -1274,6 +1274,17 @@ and offers `GET /api/v1/settings/title-switch` (`ticket.create`), and **WP-M9-25
 the title field of the internal creation form only while the switch is on — all three are
 done.
 
+**Out-of-band phase 2 — report time, channel and reporter kind of an internal report
+(WP-M2-98 … WP-M2-98e).** The office must be able to record a fault that was reported
+earlier (for example the previous evening) with its real report time, choose the channel
+(phone, e-mail, messenger) and mark whether the report came from an internal employee or
+an external reporter. **WP-M2-98** adds the reporter metadata columns and migration 0028,
+**WP-M2-98b** teaches the internal create API the backdated `reportedAt` (future values are
+rejected), the channel, the kind and an active internal user, **WP-M2-98c** builds the
+three form sections and the reporter picker, **WP-M2-98d** shows report and capture time in
+the timeline, and **WP-M2-98e** adds the report-time history row plus channel and kind to
+the ticket detail. The public QR path and the external API stay unchanged.
+
 **Out-of-band phase 9 — the record gap (WP-M9-26).** The commit `d1e34eb`
 (`feat(web): object list facelift`) landed in the same chain without a work package and
 without a WP id in its subject, so **WP-M9-26** is its retroactive record: the object list

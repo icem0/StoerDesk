@@ -213,7 +213,7 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0027_webhooks')
+    expect(entries.at(-1)?.tag).toBe('0028_ticket_reporter_metadata')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
   })
 })
@@ -435,5 +435,27 @@ describe('migration 0026 api keys', () => {
     expect(sql).toContain('"token_hash" text NOT NULL')
     expect(sql).not.toContain('"token" text')
     expect(sql).toContain('api_keys_scopes_check')
+  })
+})
+
+describe('migration 0028 ticket reporter metadata', () => {
+  const sql = readMigration('0028_ticket_reporter_metadata')
+
+  it('adds the three nullable reporter columns', () => {
+    expect(sql).toContain('ALTER TABLE "tickets" ADD COLUMN "reporter_channel" text;')
+    expect(sql).toContain('ALTER TABLE "tickets" ADD COLUMN "reporter_kind" text;')
+    expect(sql).toContain('ALTER TABLE "tickets" ADD COLUMN "reported_by_user_id" uuid;')
+  })
+
+  it('constrains channel and kind and keeps the reporting user optional', () => {
+    expect(sql).toContain(
+      `CHECK ("tickets"."reporter_channel" IS NULL OR "tickets"."reporter_channel" IN ('phone', 'email', 'messenger'))`,
+    )
+    expect(sql).toContain(
+      `CHECK ("tickets"."reporter_kind" IS NULL OR "tickets"."reporter_kind" IN ('internal', 'external'))`,
+    )
+    expect(sql).toContain(
+      'FOREIGN KEY ("reported_by_user_id") REFERENCES "public"."users"("id") ON DELETE set null',
+    )
   })
 })
