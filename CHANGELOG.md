@@ -38,6 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   thing.
 =======
 =======
+=======
+- The report form and the internal office form now order their fault checkboxes by
+  how often a fault was reported in the last 30 days (WP-M10-20): most frequent first,
+  ties by key, so the top-left checkbox in reading order is the fault the installation
+  saw most often. The fault-catalog administration screen keeps a stable alphabetical
+  list and re-sorts itself (WP-M10-20b).
+- The dashboard snapshot and start page now surface the most frequent fault of the
+  last 30 days (WP-M10-21, WP-M10-21b): a language-neutral `topFault` block (`key` plus
+  `count`, ADR-0015 window) rendered on the start page with the localized fault label
+  and the ticket count. The block is absent (not shown) when no fault qualifies.
 - The uploads volume joins the backup cycle (WP-M10-17): the `backup` profile of
   `docker-compose.yml` mounts the `uploads` volume read-only and every cycle writes a
   pair into the `backups` volume — the database dump `stoerdesk-<timestamp>.sql.gz` and

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 
 import { useDashboard } from './use-dashboard'
 import { OpenTickets } from './open-tickets'
+=======
+import { useFaultCatalog } from '../../features/tickets/use-fault-catalog'
 
 /**
  * Start page of the internal app (`specs/11-dashboard.md` §11.2–§11.6, WP-M9-14).
@@ -51,8 +53,15 @@ export function StartPage() {
 
   const faultFree = snapshot?.faultFree
   const evaluations = snapshot?.evaluations
+  const topFault = snapshot?.topFault
   const tiles = snapshot?.tiles
   const channels = tiles?.channels ?? null
+  const catalogLocale = i18n.language === 'en' ? 'en' : 'de'
+  const faultCatalog = useFaultCatalog(catalogLocale)
+  const topFaultLabel =
+    topFault === null || topFault === undefined
+      ? ''
+      : faultCatalog.find((entry) => entry.key === topFault.key)?.text ?? topFault.key
 
   const minutesLabel = (minutes: number | null): string =>
     minutes === null
@@ -164,6 +173,42 @@ export function StartPage() {
               linkRows
               rows={snapshot.burningNow}
             />
+=======
+          {topFault !== undefined && topFault !== null ? (
+            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                {t('dashboard.topFault.title')}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-sky-200">
+                {topFaultLabel}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                {t('dashboard.topFault.count', { count: topFault.count })}
+              </p>
+            </div>
+          ) : null}
+
+          {onCall !== null ? (
+            <Link className={`${TILE_CLASS} min-h-11`} to="/oncall">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                {t('dashboard.onCall.title')}
+              </p>
+              <p className="mt-1 text-lg font-semibold text-slate-200">
+                {onCall.kind === 'unstaffed'
+                  ? t('dashboard.onCall.unstaffed')
+                  : (onCall.name ?? t(`dashboard.onCall.${onCall.kind}`))}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                {onCallEndsAt === null
+                  ? t('dashboard.onCall.noEnd')
+                  : t('dashboard.onCall.endsAt', { time: onCallEndsAt })}
+              </p>
+              {onCall.warning !== null ? (
+                <p className="mt-2 inline-block rounded bg-amber-900/40 px-2 py-1 text-xs font-medium text-amber-200">
+                  {t(`dashboard.onCall.warning.${onCall.warning}`)}
+                </p>
+              ) : null}
+            </Link>
           ) : null}
 
           {channels !== null && channels.length > 0 ? (

@@ -20,7 +20,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
 | [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
 | [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
-| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages | 20 |
+| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault | 24 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -575,6 +575,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-33  | the readiness calendar of the office                                   | done                    | yes     |
 | WP-M10-34  | the on-call page shows the calendar and the own readiness              | done                    | yes     |
 | WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | done                    | yes     |
+=======
+| WP-M10-20 | fault catalog ordered by recent usage in the report and office forms | done                    | yes     |
+| WP-M10-20b | fault catalog management screen keeps its alphabetical order    | done                    | yes     |
+| WP-M10-21 | dashboard snapshot carries the most frequent fault              | done                    | yes     |
+| WP-M10-21b | most frequent fault on the dashboard start page                | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

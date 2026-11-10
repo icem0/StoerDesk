@@ -24,6 +24,23 @@
       "minutes": "{{count}} min",
       "noData": "keine Daten"
     },
+=======
+    "topFault": {
+      "title": "Frequentest fault",
+      "count": "{{count}}-mal in the last 30 days"
+    },
+    "onCall": {
+      "title": "Bereitschaft",
+      "confirmed": "bestätigt",
+      "planned": "geplant",
+      "unstaffed": "nicht besetzt",
+      "endsAt": "bis {{time}}",
+      "noEnd": "kein Ende angegeben",
+      "warning": {
+        "oncall_unconfirmed": "Bereitschaft noch nicht bestätigt",
+        "oncall_unstaffed": "Bereitschaft nicht besetzt"
+      }
+    },
     "channels": {
       "title": "Kanäle",
       "pending": "{{count}} ausstehend",
@@ -46,8 +63,7 @@
   "report": {
     "title": "Störung melden",
     "loading": "Objekt wird geladen …",
-    "object": {
-    },
+    "object": {},
     "faults": {
       "label": "Art der Störung",
       "hint": "Mehrere auswählbar — zusätzlich oder alternativ zur Beschreibung."
@@ -312,20 +328,20 @@
     "loading": "Meldung wird geladen …",
     "back": "Zurück zur Liste",
     "actions": "Aktionen",
-      "errors": {
-        "notFound": "Meldung nicht gefunden.",
-        "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
-        "dismiss": "Hinweis schließen",
-        "deleteFailed": "Die Meldung konnte nicht gelöscht werden.",
-        "fieldRequired": "Please enter the required fields first.",
-        "deleteConfirmMismatch": "Bitte die Vorgangsnummer zur Bestätigung erneut eingeben.",
-        "ticket_not_cancelled": "Diese Meldung ist nicht storniert und kann nicht gelöscht werden. Bitte zuerst stornieren.",
-        "ticket_delete_audit_trigger": "Die Datenbank blockiert das Löschen (Audit-Sperre). Bitte migrieren Sie die Datenbank (Migration 0017).",
-        "ticket_delete_missing_table": "Die Datenbank ist nicht aktuell: eine benötigte Tabelle fehlt. Bitte migrieren Sie die Datenbank (Migrationen 0012 und 0017).",
-        "ticket_delete_fk_violation": "Die Meldung kann nicht gelöscht werden, weil abhängige Datensätze existieren.",
-        "ticket_delete_permission_denied": "Die Datenbank verweigert das Löschen (fehlende Berechtigung).",
-        "ticket_delete_failed": "Die Meldung konnte nicht gelöscht werden (Datenbankfehler {{sqlState}})."
-      },
+    "errors": {
+      "notFound": "Meldung nicht gefunden.",
+      "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
+      "dismiss": "Hinweis schließen",
+      "deleteFailed": "Die Meldung konnte nicht gelöscht werden.",
+      "fieldRequired": "Please enter the required fields first.",
+      "deleteConfirmMismatch": "Bitte die Vorgangsnummer zur Bestätigung erneut eingeben.",
+      "ticket_not_cancelled": "Diese Meldung ist nicht storniert und kann nicht gelöscht werden. Bitte zuerst stornieren.",
+      "ticket_delete_audit_trigger": "Die Datenbank blockiert das Löschen (Audit-Sperre). Bitte migrieren Sie die Datenbank (Migration 0017).",
+      "ticket_delete_missing_table": "Die Datenbank ist nicht aktuell: eine benötigte Tabelle fehlt. Bitte migrieren Sie die Datenbank (Migrationen 0012 und 0017).",
+      "ticket_delete_fk_violation": "Die Meldung kann nicht gelöscht werden, weil abhängige Datensätze existieren.",
+      "ticket_delete_permission_denied": "Die Datenbank verweigert das Löschen (fehlende Berechtigung).",
+      "ticket_delete_failed": "Die Meldung konnte nicht gelöscht werden (Datenbankfehler {{sqlState}})."
+    },
     "offlineQueued": "Nicht versendet – wird automatisch nachgesendet ({{count}} ausstehend).",
     "offlineTitle": "Nicht versendete Aktionen",
     "offlineAction": {
@@ -453,8 +469,8 @@
       "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt.",
       "acknowledgeResult": "Ergebnis (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Notiz (optional):",
-        "commentText": "Kommentartext:",
-        "deleteConfirmNumber": "Ticketnumber for confirmation:"
+      "commentText": "Kommentartext:",
+      "deleteConfirmNumber": "Ticketnumber for confirmation:"
     }
   },
   "email": {
