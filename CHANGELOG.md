@@ -29,6 +29,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   creation read the flag through it. A missing or malformed row still means
   `false`, so the behaviour is unchanged.
 
+### Fixed
+
+- The dashboard stream no longer drops a change that arrives while a client reacts to the
+  first snapshot (WP-M9-39): `GET /api/v1/dashboard/stream` sent its first snapshot **before**
+  it captured the probe baseline. A client that reacts to the snapshot — the integration test
+  inserts a ticket right away — could commit its change before the baseline query read the
+  table, and the baseline then already contained it. The probe saw no difference and sent no
+  second snapshot, so the client waited for a snapshot that never came. The window is one
+  database round trip: on a developer machine it is a millisecond, on a loaded CI runner it
+  grew past the five-second test budget and the run failed with a timeout in
+  `dashboardStream.integration.spec.ts` while the rest of the suite passed. The baseline is
+  now captured before the first snapshot, so every change that arrives after the baseline is
+  visible to the probe; a change between the baseline and the snapshot is delivered twice,
+  which the client ignores.
+
 ### Added
 
 - The statistics services of the phase 9 read the tickets and answer the reaction times and
