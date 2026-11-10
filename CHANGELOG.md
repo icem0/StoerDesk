@@ -37,6 +37,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   when the ticket has no event yet). The dashboard and the wall display can show the same
   thing.
 =======
+=======
+- The uploads volume joins the backup cycle (WP-M10-17): the `backup` profile of
+  `docker-compose.yml` mounts the `uploads` volume read-only and every cycle writes a
+  pair into the `backups` volume — the database dump `stoerdesk-<timestamp>.sql.gz` and
+  the uploads archive `stoerdesk-<timestamp>-uploads.tar.gz` — bounded by the same
+  `BACKUP_RETENTION_DAYS`. `docs/DEPLOYMENT.md` documents restoring database and uploads
+  **of one cycle together** (a `ticket_photos` row without its file is a broken ticket
+  gallery). `scripts/restore-drill.sh` proves the pair end to end on throw-away targets:
+  it starts the real `db` and `backup` services in its own Compose project and volumes,
+  seeds rows and two photo files, lets the profile write dump + archive, restores both
+  into a fresh database and a fresh uploads volume and compares the row counts and the
+  photo manifest; without a Docker daemon it exits 1 as `UNVERIFIED`, never green.
+  `scripts/docker-smoke.sh` runs the drill after the health checks, so the Docker CI job
+  proves it (ADR-0014 decisions 5 and 6).
 - A saved comment is visible at once (WP-M5-17): the service worker serves the ticket
   detail from its `internal-tickets` cache, so the read after a write answered with the
   copy from before the write and the comment stayed invisible until the next reload. A

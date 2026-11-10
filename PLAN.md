@@ -1370,7 +1370,7 @@ numeric order: API-key schema and contracts → admin routes → admin UI → be
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
 export/erasure → uploads backup and restore drill → exit criterion. Implemented so
-far: **WP-M10-02 … WP-M10-16** — API-key schema, admin routes and page, bearer
+far: **WP-M10-02 … WP-M10-17** — API-key schema, admin routes and page, bearer
 authentication, OpenAPI, external object and ticket API, webhook endpoints, the
 per-minute HMAC delivery worker, the webhook admin page with its OpenAPI paths,
 the CSV import service and its two routes
@@ -1408,6 +1408,22 @@ Idempotency is the event itself: a repeat finds that event, writes nothing and a
 `alreadyErased`; the ticket, its photos and its trail stay and full deletion remains the
 `ticket.delete` path of WP-M2-77 (ADR-0014 decision 4). The shared contracts live in
 `packages/shared/src/schemas/privacy.ts`.
+
+**Uploads backup and the restore drill (WP-M10-17).** The `backup` profile now
+mounts the `uploads` volume read-only and writes a pair every cycle: the
+database dump `stoerdesk-<stamp>.sql.gz` and the uploads archive
+`stoerdesk-<stamp>-uploads.tar.gz`; `BACKUP_RETENTION_DAYS` bounds both.
+`docs/DEPLOYMENT.md` documents restoring database and uploads **of one cycle
+together** — a `ticket_photos` row without its file is a broken ticket gallery
+(ADR-0014 consequence). `scripts/restore-drill.sh` proves the pair on throw-away
+targets: it starts the `db` and `backup` services of the real
+`docker-compose.yml` in its own Compose project with its own volumes, seeds
+rows and two photo files, waits until the profile wrote a dump + archive pair,
+replays the dump into a fresh database and extracts the archive into a fresh
+uploads volume, then compares the row counts and the photo manifest.
+`scripts/docker-smoke.sh` runs the drill after the health checks, so the Docker
+CI job proves it; without a usable Docker daemon the drill exits 1 reporting
+itself `UNVERIFIED`, never green (ADR-0014 decision 6).
 
 **Dashboard evaluations (WP-M10-19 … WP-M10-19b, out of band in phase 10).** The office
 asked for evaluations in the dashboard's own view — average durations such as the

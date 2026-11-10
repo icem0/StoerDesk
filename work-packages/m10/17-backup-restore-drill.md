@@ -1,7 +1,7 @@
 # WP-M10-17: Uploads backup, restore procedure and drill
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-16
 phase: 10
 milestone: m10

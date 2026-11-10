@@ -2,9 +2,10 @@
 # Repeatable Docker smoke test (WP-M0-04, PLAN.md §18).
 #
 # Builds the images from the working tree, starts the core stack (db, api, web),
-# waits for both health endpoints and tears the project down again including its
-# volumes. Runs in its own Compose project with its own volumes and host ports,
-# so it never touches the `.env` or the data of a developer stack.
+# waits for both health endpoints, runs the restore drill (scripts/restore-drill.sh)
+# and tears the project down again including its volumes. Runs in its own Compose
+# project with its own volumes and host ports, so it never touches the `.env` or
+# the data of a developer stack.
 #
 #   sh scripts/docker-smoke.sh
 #
@@ -98,6 +99,11 @@ if ! wait_for "$base_url/healthz" || ! wait_for "$base_url/api/v1/health"; then
   compose logs --tail 40 >&2
   exit 1
 fi
+
+# --- 5. restore drill (WP-M10-17): the backup pair survives a full round trip ---
+# Runs in its own Compose project with its own throw-away volumes; without a
+# Docker daemon it exits 1 with "UNVERIFIED", never silently green.
+sh "$repo_root/scripts/restore-drill.sh"
 
 compose down -v --remove-orphans
 trap - EXIT INT TERM
