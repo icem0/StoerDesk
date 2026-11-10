@@ -1,7 +1,7 @@
 # WP-M10-02: API-key table, shared contracts and migration
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-01
 phase: 10
 milestone: m10

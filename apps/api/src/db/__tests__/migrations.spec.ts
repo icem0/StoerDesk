@@ -213,7 +213,7 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0025_stats_views')
+    expect(entries.at(-1)?.tag).toBe('0026_api_keys')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
   })
 })
@@ -400,5 +400,16 @@ describe('migration 0018 user klarmname columns', () => {
     expect(sql).toContain(
       'CREATE INDEX "users_name_idx" ON "users" USING btree (lower("family_name") , lower("given_name") );',
     )
+  })
+})
+
+describe('migration 0026 api keys', () => {
+  const sql = readMigration('0026_api_keys')
+
+  it('stores only the token hash and enforces the scope set', () => {
+    expect(sql).toContain('CREATE TABLE "api_keys"')
+    expect(sql).toContain('"token_hash" text NOT NULL')
+    expect(sql).not.toContain('"token" text')
+    expect(sql).toContain('api_keys_scopes_check')
   })
 })

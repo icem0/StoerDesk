@@ -70,6 +70,38 @@ export const sessions = pgTable(
   ],
 )
 
+/**
+ * Machine credentials of the external API (`specs/08-objects-api.md` §9.5,
+ * ADR-0013, WP-M10-02). Only the SHA-256 hash of a token is stored; the plaintext
+ * exists once in the create answer and never again.
+ */
+export const apiKeys = pgTable(
+  'api_keys',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    tokenHash: text('token_hash').notNull(),
+    prefix: text('prefix').notNull(),
+    name: text('name').notNull(),
+    scopes: text('scopes').array().notNull(),
+    createdByUserId: uuid('created_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    lastUsedAt: timestamp('last_used_at', timestampOptions),
+    expiresAt: timestamp('expires_at', timestampOptions),
+    revokedAt: timestamp('revoked_at', timestampOptions),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('api_keys_token_hash_key').on(table.tokenHash),
+    index('api_keys_created_at_idx').on(table.createdAt),
+    check(
+      'api_keys_scopes_check',
+      sql`${table.scopes} <@ ARRAY['objects:read','objects:write','tickets:read','tickets:write']::text[] AND cardinality(${table.scopes}) > 0`,
+    ),
+  ],
+)
+
 export const groups = pgTable(
   'groups',
   {

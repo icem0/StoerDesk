@@ -44,7 +44,7 @@ packages/
 └── shared/                      source package, no build step
     ├── src/
     │   ├── permissions.ts       permission catalog + DEFAULT_ROLES (single source)
-    │   ├── schemas/             auth.ts, user.ts, role.ts, object.ts, ticket.ts, text-template.ts, update.ts, dashboard.ts, stats.ts (api + web)
+    │   ├── schemas/             api-key.ts, auth.ts, user.ts, role.ts, object.ts, ticket.ts, text-template.ts, update.ts, dashboard.ts, stats.ts (api + web)
     │   ├── seed/, i18n/         standard-texts.ts (WP-M2-00, WP-M2-41); t.ts + server.{de,en}.json
     │   └── index.ts             barrel export
     └── ...
