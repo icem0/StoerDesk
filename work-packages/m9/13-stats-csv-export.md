@@ -1,7 +1,7 @@
 # WP-M9-13: statistics CSV export
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-12
 phase: 9
 milestone: m9

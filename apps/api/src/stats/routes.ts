@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream'
+
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 
@@ -13,7 +15,9 @@ import {
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { readDashboardSettings } from '../settings/dashboard'
-import { queryCompliance } from './compliance'
+import { queryCompliance, queryDeclines } from './compliance'
+import { toStatisticsCsv } from './export'
+import { resolveStatsRange } from './filters'
 import { queryFrequency } from './frequency'
 import { queryTopObjects } from './objects'
 import { queryReactionTimes } from './reaction-times'
@@ -194,6 +198,50 @@ export const statsRoutes = fp<StatsRoutesOptions>(
 
         const result = await queryCompliance(database, parsed.filter)
         return reply.code(200).send(complianceResponseSchema.parse(result))
+      },
+    )
+
+    app.get(
+      '/api/v1/stats/export.csv',
+      { preHandler: requirePermission(database, PERMISSIONS.stats.export) },
+      async (request, reply) => {
+        const parsed = parseFilter(request.query)
+
+        if (!parsed.ok) {
+          return reply
+            .code(422)
+            .send({ code: parsed.code, params: parsed.fields ? { fields: parsed.fields } : {} })
+        }
+
+        const now = new Date()
+        const range = resolveStatsRange(parsed.filter, now)
+        const bucket = parsed.filter.bucket ?? 'day'
+        const settings = await readDashboardSettings(database)
+
+        const [reactionTimes, frequency, objects, compliance, declines] = await Promise.all([
+          queryReactionTimes(database, parsed.filter, now),
+          queryFrequency(database, parsed.filter, now),
+          queryTopObjects(
+            database,
+            parsed.filter,
+            { conspicuousThreshold: settings.conspicuousThreshold },
+            now,
+          ),
+          queryCompliance(database, parsed.filter, now),
+          queryDeclines(database, parsed.filter, now),
+        ])
+
+        reply.header('content-type', 'text/csv; charset=utf-8')
+        reply.header(
+          'content-disposition',
+          `attachment; filename="stoerdesk-statistik-${range.fromDate}-${range.toDate}.csv"`,
+        )
+
+        return reply.send(
+          Readable.from(
+            toStatisticsCsv({ reactionTimes, frequency, objects, compliance, declines }, bucket),
+          ),
+        )
       },
     )
   },
