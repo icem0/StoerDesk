@@ -1,4 +1,12 @@
 {
+  "readiness": {
+    "title": "Readiness calendar",
+    "hint": "Every shift of the week with the person who has the readiness. The times are Europe/Berlin.",
+    "previous": "Previous week",
+    "next": "Next week",
+    "empty": "No readiness is planned for this week.",
+    "unassigned": "not staffed"
+  },
   "admin": {
     "back": "Back to administration",
     "title": "On-call plan",

@@ -570,7 +570,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-30  | the open tickets of the snapshot carry the mini timeline and the last event | done                    | yes     |
 | WP-M10-31  | one list of the open tickets for the dashboard and the wall display    | done                    | yes     |
 | WP-M10-32  | the start page shows the statistics and the open tickets               | done                    | yes     |
-| WP-M10-33  | the readiness calendar of the office                                   | planned                 | yes     |
+| WP-M10-33  | the readiness calendar of the office                                   | done                    | yes     |
 | WP-M10-34  | the on-call page shows the calendar and the own readiness              | planned                 | yes     |
 | WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | planned                 | yes     |
 

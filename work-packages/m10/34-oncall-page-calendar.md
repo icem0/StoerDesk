@@ -6,7 +6,7 @@ depends-on: WP-M10-33
 phase: 10
 milestone: m10
 context-budget: 20k tokens
-spec: specs/04-oncall.md §4a.4, §4a.7; PLAN.md §8, §14
+spec: PLAN.md §8, §14; specs/04-oncall.md §4a.2, §4a.3
 spec-lines: 60
 
 files-read:

@@ -1,4 +1,12 @@
 {
+  "readiness": {
+    "title": "Bereitschaftskalender",
+    "hint": "Alle Schichten der Woche mit der Person, die die Bereitschaft hat. Die Zeiten gelten in Europe/Berlin.",
+    "previous": "Vorherige Woche",
+    "next": "Nächste Woche",
+    "empty": "Für diese Woche ist keine Bereitschaft eingetragen.",
+    "unassigned": "nicht besetzt"
+  },
   "admin": {
     "back": "Zurück zur Verwaltung",
     "title": "Bereitschaftsplan",

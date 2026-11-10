@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The readiness calendar of the office (WP-M10-33): the new `ReadinessCalendar` component
+  shows the week of everybody who has the readiness — every shift with its pool, the
+  technician and its state — and can step a week back and forward. The names of the
+  technicians come from the members of the pool; the times stay Europe/Berlin.
 - The start page shows the statistics and the open tickets (WP-M10-32): the fault-free
   counter, the four tiles and the evaluation averages come first, below them the list of
   the open tickets with the mini timeline and the last entry of the history — every row

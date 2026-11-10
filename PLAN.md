@@ -316,8 +316,11 @@ Ticket coupling:
   to the group.
 - Without an on-call person, the offer goes to the group immediately and the
   admin is warned.
-- The dashboard tile shows name, phone number and shift end, or a red
-  "on-call not staffed" banner.
+- The readiness has its own page `/oncall` (WP-M10-33, WP-M10-34): the
+  readiness calendar shows every shift of the week with the person who has it,
+  the own readiness (own shifts, iCal feed, confirm, decline, swap) is below it
+  and an admin reaches the administration of the readiness from there. The
+  dashboard shows no readiness any more (WP-M10-32).
 
 ## 9. Timeline and escalation
 
@@ -1432,6 +1435,16 @@ ticket list; WP-M10-31 writes the list once for both pages and drops the on-call
 the wall display; WP-M10-32 puts the statistics first on the start page and removes its
 on-call tile; WP-M10-33 and WP-M10-34 build the readiness calendar and hang it above the
 own readiness of `/oncall`; WP-M10-35 adds "Bereitschaft" to the header navigation.
+
+**WP-M10-30** is implemented: every row of the snapshot's open-ticket list carries the
+mini timeline of the ticket and the last entry of its history, the timeline computed with
+the shared function and the same inputs as the ticket list. **WP-M10-31** writes the list
+once for both pages — the new `OpenTickets` component — and drops the on-call panel of the
+wall display; the wording "Brennt jetzt" is gone. **WP-M10-32** puts the statistics first on
+the start page and removes its on-call tile; the snapshot keeps the section for the API.
+**WP-M10-33** adds the readiness calendar of the office — the week of everybody who has the
+readiness, with the pool, the person and the state of every shift — as the component the
+on-call page hangs above the own readiness.
 
 ## 17. Work package rules for small models
 
