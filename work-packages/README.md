@@ -22,6 +22,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
 | [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault | 24 |
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
+| [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -239,6 +240,15 @@ auth) over a short-lived database pool, so the escalation chain of WP-M7-05 is n
 signal → matrix → ntfy → email → telegram → webpush. The PWA push registration (subscribe
 in the web app, `notification_permissions` and the admin failure warning of §12), per-event
 channel selection and `pushUrl` as an escalation parameter stay unimplemented.
+
+**Phase 11 is complete and phase 12 acceptance starts.** Every phase-11 follow-up
+is closed — `WP-M11-02` … `WP-M11-10` plus `WP-M11-11` and `WP-M11-12` are done and
+no `Follow-up WP:` or `Open question:` line stays open in `work-packages/m11/`.
+**WP-M12-01** mirrors the acceptance summary of `PLAN.md` §20 (items 1–12) into
+`specs/16-acceptance.md` — the original book chapters 18 + 19 were not supplied —
+maps every item to the implemented surfaces and announces the split **WP-M12-02**,
+the acceptance end-to-end suite for items 1–12
+(`scripts/e2e-acceptance.mjs`, planned — its file exists, its code does not yet).
 
 ## Open follow-ups
 
@@ -592,6 +602,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M11-08  | Statistik-UI `byDetectedError`-Chart                           | done                    | yes     |
 | WP-M11-09  | Integrationstests (API, Close, Statistik)                      | done                    | yes     |
 | WP-M11-10  | Phase-11 Exit-Kriterium und Record                             | done                    | yes     |
+| WP-M12-01  | acceptance criteria slice and phase-12 split                     | done                    | yes     |
+| WP-M12-02  | acceptance end-to-end suite for items 1–12                      | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
