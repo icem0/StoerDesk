@@ -1,7 +1,7 @@
 # WP-M9-12: statistics JSON routes
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-10, WP-M9-11
 phase: 9
 milestone: m9
