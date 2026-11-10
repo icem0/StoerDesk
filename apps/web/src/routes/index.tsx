@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 import { App } from '../App'
 import { AdminHomePage } from '../admin/admin-home-page'
 import { ApiKeysPage } from '../admin/api-keys-page'
+import { WebhooksPage } from '../admin/webhooks-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
@@ -95,6 +96,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <ApiKeysPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/webhooks',
+        element: (
+          <RequireSession>
+            <WebhooksPage />
           </RequireSession>
         ),
       },

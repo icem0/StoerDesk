@@ -1,7 +1,7 @@
 # WP-M10-11: Webhook admin page and OpenAPI paths
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-10, WP-M10-06
 phase: 10
 milestone: m10
@@ -19,9 +19,9 @@ files-read:
 files-write:
 
 - apps/web/src/admin/webhooks-page.tsx
-- apps/web/src/routes/index.tsx
+- apps/web/src/routes/index.tsx and apps/web/src/components/Shell.tsx
 - apps/api/src/openapi.ts
-- apps/web/src/i18n/de.ts / en.ts
+- apps/web/src/i18n/locales/{de,en}/{common,settings}.json
 
 interfaces:
 

@@ -1355,7 +1355,13 @@ surface under `/api/docs`. The phase is split into **WP-M10-02 … WP-M10-18** i
 numeric order: API-key schema and contracts → admin routes → admin UI → bearer auth
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
-export/erasure → uploads backup and restore drill → exit criterion.
+export/erasure → uploads backup and restore drill → exit criterion. Implemented so
+far: **WP-M10-02 … WP-M10-11** — API-key schema, admin routes and page, bearer
+authentication, OpenAPI, external object and ticket API, webhook endpoints, the
+per-minute HMAC delivery worker and the webhook admin page with its OpenAPI paths.
+The webhook chain stores the secret once, delivers `ticket.created` and
+`ticket.status_changed` with the 1/5/25/125-second retry ladder and keeps the
+delivery history after an endpoint is deleted.
 
 ## 17. Work package rules for small models
 

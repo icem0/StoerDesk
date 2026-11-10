@@ -45,6 +45,8 @@ describe('OpenAPI document', () => {
         '/tickets',
         '/tickets/{ticketNo}/work-order',
         '/api-keys',
+        '/webhooks',
+        '/webhooks/{id}',
       ]),
     )
   })

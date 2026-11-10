@@ -86,6 +86,7 @@
     "stats": "Statistik",
     "dashboardSettings": "Dashboard und Statistik",
     "apiKeys": "API-Schlüssel",
+    "webhooks": "Webhooks",
     "branding": "Darstellung"
    },
   "errors": {

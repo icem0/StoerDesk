@@ -70,6 +70,7 @@ const navGroups = [
       { key: 'roles', path: '/admin/roles' },
       { key: 'groups', path: '/admin/groups' },
       { key: 'apiKeys', path: '/admin/api-keys' },
+      { key: 'webhooks', path: '/admin/webhooks' },
       { key: 'bmaSync', path: '/admin/bma-sync' },
       { key: 'standardTexts', path: '/admin/text-templates' },
       { key: 'deadlines', path: '/admin/deadlines' },

@@ -543,7 +543,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-08 | external ticket API and API-key work-order update                 | done                    | yes     |
 | WP-M10-09 | webhook endpoints, table and admin API                            | done                    | yes     |
 | WP-M10-10 | webhook delivery worker with HMAC and backoff                     | done                    | yes     |
-| WP-M10-11 | webhook admin page and OpenAPI paths                              | planned                 | yes     |
+| WP-M10-11 | webhook admin page and OpenAPI paths                              | done                    | yes     |
 | WP-M10-12 | CSV parsing, mapping and preview service                          | planned                 | yes     |
 | WP-M10-13 | CSV import preview and commit routes                             | planned                 | yes     |
 | WP-M10-14 | CSV import page                                                   | planned                 | yes     |

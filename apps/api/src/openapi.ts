@@ -9,6 +9,8 @@ import {
   createApiKeyRequestSchema,
   createApiKeyResponseSchema,
   createObjectRequestSchema,
+  createWebhookRequestSchema,
+  createWebhookResponseSchema,
   internalCreateTicketRequestSchema,
   objectListResponseSchema,
   objectNoSchema,
@@ -16,6 +18,9 @@ import {
   ticketListItemSchema,
   updateApiKeyRequestSchema,
   updateObjectRequestSchema,
+  updateWebhookRequestSchema,
+  webhookListResponseSchema,
+  webhookSummarySchema,
 } from '@stoerdesk/shared'
 
 /**
@@ -119,6 +124,11 @@ export function buildOpenApiDocument(): OpenAPIV3.Document {
         },
         TicketCreateRequest: schemaOf(externalTicketCreateSchema, 'input'),
         WorkOrderRequest: schemaOf(workOrderSchema, 'input'),
+        WebhookSummary: schemaOf(webhookSummarySchema, 'output'),
+        WebhookListResponse: schemaOf(webhookListResponseSchema, 'output'),
+        CreateWebhookRequest: schemaOf(createWebhookRequestSchema, 'input'),
+        CreateWebhookResponse: schemaOf(createWebhookResponseSchema, 'output'),
+        UpdateWebhookRequest: schemaOf(updateWebhookRequestSchema, 'input'),
       },
     },
     paths: {
@@ -283,6 +293,57 @@ export function buildOpenApiDocument(): OpenAPIV3.Document {
             200: { description: 'Work order recorded.' },
             404: response('Unknown ticket.', '#/components/schemas/Error'),
             409: response('Invalid transition.', '#/components/schemas/Error'),
+          },
+        },
+      },
+      '/webhooks': {
+        get: {
+          tags: ['Webhooks'],
+          summary: 'List webhook endpoints',
+          description: 'Session-only administration; API keys cannot manage webhooks.',
+          security: [],
+          responses: {
+            200: response('Endpoint list without the signing secret.', '#/components/schemas/WebhookListResponse'),
+            401: response('Missing session.', '#/components/schemas/Error'),
+            403: response('Missing settings.read permission.', '#/components/schemas/Error'),
+          },
+        },
+        post: {
+          tags: ['Webhooks'],
+          summary: 'Create a webhook endpoint',
+          description: 'The signing secret is answered only here. Requires settings.write.',
+          security: [],
+          requestBody: jsonBody('#/components/schemas/CreateWebhookRequest'),
+          responses: {
+            201: response('Created endpoint and its one-time secret.', '#/components/schemas/CreateWebhookResponse'),
+            400: response('Invalid URL or event set.', '#/components/schemas/Error'),
+            403: response('Missing settings.write permission.', '#/components/schemas/Error'),
+          },
+        },
+      },
+      '/webhooks/{id}': {
+        patch: {
+          tags: ['Webhooks'],
+          summary: 'Update URL, events or the active flag',
+          description: 'Session-only administration; requires settings.write.',
+          security: [],
+          parameters: [parameter('id', 'path', { type: 'string', format: 'uuid' })],
+          requestBody: jsonBody('#/components/schemas/UpdateWebhookRequest'),
+          responses: {
+            200: response('Updated endpoint.', '#/components/schemas/WebhookSummary'),
+            400: response('Invalid request.', '#/components/schemas/Error'),
+            404: response('Unknown endpoint.', '#/components/schemas/Error'),
+          },
+        },
+        delete: {
+          tags: ['Webhooks'],
+          summary: 'Delete an endpoint',
+          description: 'The delivery history stays with a detached endpoint reference.',
+          security: [],
+          parameters: [parameter('id', 'path', { type: 'string', format: 'uuid' })],
+          responses: {
+            204: { description: 'Deleted.' },
+            404: response('Unknown endpoint.', '#/components/schemas/Error'),
           },
         },
       },

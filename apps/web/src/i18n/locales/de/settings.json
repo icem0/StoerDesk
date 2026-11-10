@@ -384,6 +384,44 @@
    "unknown": "Aktion fehlgeschlagen."
   }
  },
+ "webhooks": {
+  "title": "Webhooks",
+  "hint": "Endpunkte, die bei neuen oder geänderten Meldungen benachrichtigt werden.",
+  "createTitle": "Neuen Endpunkt anlegen",
+  "listTitle": "Vorhandene Endpunkte",
+  "url": "URL",
+  "urlPlaceholder": "https://example.org/webhook",
+  "events": "Ereignisse",
+  "eventLabels": {
+   "ticket.created": "Meldung angelegt",
+   "ticket.status_changed": "Status geändert"
+  },
+  "active": "Aktiv",
+  "activeLabel": "Endpunkt aktiv",
+  "activeBadge": "Aktiv",
+  "inactiveBadge": "Inaktiv",
+  "create": "Endpunkt anlegen",
+  "save": "Speichern",
+  "edit": "Bearbeiten",
+  "delete": "Löschen",
+  "deleteConfirm": "Wirklich löschen?",
+  "cancel": "Abbrechen",
+  "copy": "Kopieren",
+  "copied": "Kopiert",
+  "close": "Schließen",
+  "secretTitle": "Signatur-Schlüssel einmalig sichtbar",
+  "secretHint": "Der Schlüssel für „{{url}}“ wird nur jetzt angezeigt. Bitte sicher hinterlegen.",
+  "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung settings.write.",
+  "loading": "Endpunkte werden geladen …",
+  "empty": "Noch keine Endpunkte angelegt.",
+  "errors": {
+   "invalid_request": "Bitte prüfen Sie die Eingaben.",
+   "forbidden": "Keine Berechtigung.",
+   "session_invalid": "Die Sitzung ist abgelaufen.",
+   "webhook_not_found": "Der Endpunkt wurde nicht gefunden.",
+   "unknown": "Aktion fehlgeschlagen."
+  }
+ },
  "dashboardSettings": {
   "title": "Dashboard und Statistik",
   "hint": "Wandmonitor, Anonymisierung und die Schwelle für auffällige Objekte.",

@@ -384,6 +384,44 @@
    "unknown": "The action failed."
   }
  },
+ "webhooks": {
+  "title": "Webhooks",
+  "hint": "Endpoints notified when a ticket is created or changes status.",
+  "createTitle": "Create an endpoint",
+  "listTitle": "Existing endpoints",
+  "url": "URL",
+  "urlPlaceholder": "https://example.org/webhook",
+  "events": "Events",
+  "eventLabels": {
+   "ticket.created": "Ticket created",
+   "ticket.status_changed": "Ticket status changed"
+  },
+  "active": "Active",
+  "activeLabel": "Endpoint active",
+  "activeBadge": "Active",
+  "inactiveBadge": "Inactive",
+  "create": "Create endpoint",
+  "save": "Save",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete now?",
+  "cancel": "Cancel",
+  "copy": "Copy",
+  "copied": "Copied",
+  "close": "Close",
+  "secretTitle": "Signing secret shown once",
+  "secretHint": "The secret for “{{url}}” is shown only now. Store it securely.",
+  "readOnly": "Read-only: you lack the settings.write permission.",
+  "loading": "Loading endpoints …",
+  "empty": "No endpoints created yet.",
+  "errors": {
+   "invalid_request": "Please check the input.",
+   "forbidden": "No permission.",
+   "session_invalid": "The session has expired.",
+   "webhook_not_found": "The endpoint was not found.",
+   "unknown": "The action failed."
+  }
+ },
  "dashboardSettings": {
   "title": "Dashboard and statistics",
   "hint": "Wall display, anonymisation and the threshold for conspicuous objects.",
