@@ -53,6 +53,15 @@ function useTextTemplates() {
   })
 }
 
+/**
+ * The management list stays alphabetical by key (WP-M10-20b). The catalog endpoint is
+ * now frequency-ordered to serve the report and office forms (WP-M10-20), so the
+ * administration table re-sorts its own rows and keeps the predictable key order.
+ */
+function alphabeticalTemplates(templates: TextTemplateSummary[]): TextTemplateSummary[] {
+  return [...templates].sort((a, b) => a.key.localeCompare(b.key))
+}
+
 function TranslationFields({
   values,
   onChange,
@@ -336,7 +345,7 @@ export function TextTemplatesPage() {
             </tr>
           </thead>
           <tbody>
-            {(templates.data?.templates ?? []).map((template) => (
+            {alphabeticalTemplates(templates.data?.templates ?? []).map((template) => (
               <tr key={template.id} className="border-b border-slate-800 align-top">
                 <td className="py-2 font-mono text-xs text-slate-400">{template.key}</td>
                 <td className="py-2">{template.translations.de}</td>
