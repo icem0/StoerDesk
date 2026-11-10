@@ -36,9 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the ticket list — plus `lastEvent`, the newest entry of the history of the ticket (`null`
   when the ticket has no event yet). The dashboard and the wall display can show the same
   thing.
-=======
-=======
-=======
 - The report form and the internal office form now order their fault checkboxes by
   how often a fault was reported in the last 30 days (WP-M10-20): most frequent first,
   ties by key, so the top-left checkbox in reading order is the fault the installation
@@ -158,6 +155,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket detail names the fault field "Gemeldete Störungsart" ("Reported fault type",
+  WP-M11-11): the chips under title and description are the fault types this report was made
+  for, not the whole catalogue. The shared key `ticket:detail.field.faults` changed in `de`
+  and `en`, so the ticket e-mail export shows the same label; the report form, the internal
+  creation form and the fault-catalog administration keep their wording.
 - The object list lost its external indicator (record WP-M9-26 — the commit `d1e34eb`
   landed without a work package): the rows no longer carry the "extern gepflegt" badge of
   WP-M2-39 next to the object number and the `Typ` column of WP-M2-66 (header, cells and the
