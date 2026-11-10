@@ -82,6 +82,10 @@ export function* toStatisticsCsv(
     yield `${row('frequency', 'bySource', bucket, entry.key, String(entry.count))}\n`
   }
 
+  for (const entry of sections.frequency.byDetectedError) {
+    yield `${row('frequency', 'byDetectedError', bucket, entry.key, String(entry.count))}\n`
+  }
+
   for (const object of sections.objects) {
     yield `${row('objects', 'count', '', object.objectNo, String(object.count))}\n`
     yield `${row('objects', 'conspicuous', '', object.objectNo, String(object.conspicuous))}\n`

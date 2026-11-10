@@ -60,6 +60,7 @@
     "bySystemType": "By system type",
     "byFaultTemplate": "By fault type",
     "bySource": "By source",
+    "byDetectedError": "By detected error",
     "key": "Key",
     "count": "Count",
     "source": {

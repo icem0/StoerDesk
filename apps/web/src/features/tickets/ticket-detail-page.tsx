@@ -99,6 +99,12 @@ export function TicketDetailPage() {
   const [stornoReason, setStornoReason] = useState('')
   const [stornoMode, setStornoMode] = useState<'cancel' | 'uncancel'>('cancel')
   const [commentConfirmOpen, setCommentConfirmOpen] = useState(false)
+  const [detectedErrorKeysSelected, setDetectedErrorKeysSelected] = useState<string[]>([])
+  const [detectedErrorsOptions, setDetectedErrorsOptions] = useState<{
+    key: string
+    labelDe: string
+    labelEn: string
+  }[]>([])
   const optionsMenuRef = useRef<HTMLDivElement>(null)
   const optionsButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -135,6 +141,25 @@ export function TicketDetailPage() {
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [optionsOpen])
+
+  useEffect(() => {
+    if (selectedAction !== 'closed') return
+
+    void (async () => {
+      try {
+        const data = await apiFetch<{ detectedErrors: { key: string; labelDe: string; labelEn: string; archivedAt: string | null; createdAt: string; updatedAt: string }[] }>(
+          '/v1/detected-errors',
+        )
+        setDetectedErrorsOptions(
+          data.detectedErrors
+            .filter((e) => e.archivedAt === null)
+            .map((e) => ({ key: e.key, labelDe: e.labelDe, labelEn: e.labelEn })),
+        )
+      } catch {
+        setDetectedErrorsOptions([])
+      }
+    })()
+  }, [selectedAction])
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
@@ -686,6 +711,72 @@ export function TicketDetailPage() {
               onClick={() => {
                 setSelectedAction(null)
                 setFields({})
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
+      case 'closed': {
+        const comment = fields.closeComment ?? ''
+        const selected = detectedErrorKeysSelected
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <textarea
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="closeComment"
+              placeholder={t('detail.prompt.closeComment')}
+              value={comment}
+              onChange={(event) => setFields({ ...fields, closeComment: event.target.value })}
+            />
+            <div className="flex items-end gap-2">
+              <label className="text-xs text-slate-400">{t('detail.prompt.detectedErrors')}</label>
+              <select
+                className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+                multiple
+                size={3}
+                value={selected}
+                onChange={(event) => {
+                  const values = Array.from(event.target.selectedOptions).map(
+                    (option) => option.value,
+                  )
+                  setDetectedErrorKeysSelected(values)
+                }}
+              >
+                {detectedErrorsOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.labelDe} / {option.labelEn}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                void handleAction('closed', {
+                  comment: comment === '' ? undefined : comment,
+                  detectedErrorKeys:
+                    detectedErrorKeysSelected.length > 0
+                      ? detectedErrorKeysSelected
+                      : undefined,
+                })
+                setFields({})
+                setDetectedErrorKeysSelected([])
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setDetectedErrorKeysSelected([])
                 setLastError(null)
               }}
             >

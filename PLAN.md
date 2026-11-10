@@ -612,7 +612,8 @@ explanation. Offline is a core feature and appears early.
 | **7**  | Notifications: outbox, worker, Web Push, ntfy, Matrix, Signal, SMTP, Telegram                               | channel failure retries and falls back; history shows it                                        |
 | **8**  | On-call calendar: pools, slots, planning, confirm/decline, swaps, ticket coupling, iCal                     | DST tests and atomic swap tests pass                                                            |
 | **9**  | Dashboard and statistics: counter, SSE, tiles, TV, queries, charts, CSV                                     | counter resets on new ticket; statistics match reference data                                   |
-| **10** | API and hardening: API keys, object/ticket API, webhooks, OpenAPI, CSV import, privacy, backup/restore      | API contract tests and restore drill pass                                                       |
+| **10** | API and hardening: API keys, object/ticket API, webhooks, OpenAPI, CSV import, privacy, backup/restore | API contract tests and restore drill pass |
+| **11** | Detected errors: admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | Close stores detected errors; statistics groups by detected error; admin catalog editable |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -769,6 +770,16 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done    |
 | WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                   | done    |
 | WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)          | done    |
+| WP-M11-01 | detected errors — specification, ADR and phase-11 split                  | done    |
+| WP-M11-02 | `detected_errors`-Tabelle und `tickets.detected_error_keys`              | done    |
+| WP-M11-03 | API CRUD `/api/v1/detected-errors`                                       | done    |
+| WP-M11-04 | Close-Route akzeptiert Kommentar und festgestellte Fehler                | done    |
+| WP-M11-05 | Statistik: `byDetectedError` und View-Erweiterung                        | done    |
+| WP-M11-06 | Admin-UI `DetectedErrorsPage` (CRUD, archivieren)                        | done    |
+| WP-M11-07 | Ticket-Detail Close-Panel mit festgestellten Fehlern                     | done    |
+| WP-M11-08 | Statistik-UI `byDetectedError`-Chart                                     | done    |
+| WP-M11-09 | Integrationstests (API, Close, Statistik)                                | done    |
+| WP-M11-10 | Phase-11 Exit-Kriterium und Record                                       | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is

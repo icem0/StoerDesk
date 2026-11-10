@@ -129,7 +129,7 @@ function CreateTemplateForm() {
       <label className="flex flex-col gap-1 text-sm">
         {t('admin.textTemplates.fields.key')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded bg-slate-950 p-2 text-slate-100"
           type="text"
           required
           value={key}

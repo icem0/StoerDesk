@@ -38,6 +38,10 @@
      "title": "Fristen",
      "hint": "Fristen und Reaktionsfristen je Priorität."
     },
+    "detectedErrors": {
+     "title": "Festgestellte Fehler",
+     "hint": "Katalog der bei der Bearbeitung festgestellten Fehler pflegen."
+    },
     "oncall": {
      "title": "Bereitschaftsplan",
      "hint": "Schichten, Bestätigungen und Schichttausch."
@@ -427,7 +431,48 @@
    "unknown": "Aktion fehlgeschlagen."
   }
  },
- "dashboardSettings": {
+  "detectedErrors": {
+    "title": "Festgestellte Fehler",
+    "hint": "Fehler, die bei der Bearbeitung eines Tickets festgestellt wurden — unabhängig von der gemeldeten Störung. Archivierte Fehler bleiben an bestehenden Tickets sichtbar, werden aber im Abschluss-Dialog nicht mehr angeboten.",
+    "loading": "Lädt …",
+    "sessionNotice": "Die Verwaltung der festgestellten Fehler benötigt eine gültige Anmeldung.",
+    "forbiddenNotice": "Keine Berechtigung für die Verwaltung der festgestellten Fehler.",
+    "createTitle": "Festgestellten Fehler anlegen",
+    "editTitle": "Festgestellten Fehler {{key}} bearbeiten",
+    "create": "Anlegen",
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "archive": "Archivieren",
+    "unarchive": "Reaktivieren",
+    "delete": "Löschen",
+    "deleteBlocked": "Wird von Vorgängen verwendet",
+    "fields": {
+      "key": "Schlüssel",
+      "de": "Deutscher Text",
+      "en": "Englischer Text"
+    },
+    "table": {
+      "key": "Schlüssel",
+      "de": "Deutsch",
+      "en": "Englisch",
+      "status": "Status",
+      "usage": "Vorgänge",
+      "actions": "Aktionen"
+    },
+    "active": "aktiv",
+    "archived": "archiviert",
+    "errors": {
+      "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+      "forbidden": "Keine Berechtigung für diese Aktion.",
+      "invalid_request": "Eingabe ungültig – bitte beide Texte ausfüllen.",
+      "detected_error_not_found": "Festgestellter Fehler nicht gefunden.",
+      "detected_error_in_use": "Der Fehler wird noch von Vorgängen verwendet und kann nicht gelöscht werden.",
+      "detected_error_key_taken": "Ein Fehler mit diesem Schlüssel existiert bereits.",
+      "unknown": "Speichern fehlgeschlagen."
+    }
+  },
+  "dashboardSettings": {
   "title": "Dashboard und Statistik",
   "hint": "Wandmonitor, Anonymisierung und die Schwelle für auffällige Objekte.",
   "loading": "Einstellungen werden geladen …",

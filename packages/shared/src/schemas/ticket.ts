@@ -309,6 +309,20 @@ export const workOrderRequestSchema = z.object({
   number: z.string().trim().min(1).max(60),
 })
 
+/**
+ * Close request (`specs/13-detected-errors.md` §13.3, WP-M11-04).
+ *
+ * Both fields are optional: a ticket can be closed without a comment and
+ * without any detected error. `comment` is written as a `comment` event,
+ * `detectedErrorKeys` is stored on `tickets.detected_error_keys`.
+ */
+export const closeRequestSchema = z.object({
+  comment: z.string().trim().max(2000).optional().transform((value) => (value === '' ? undefined : value)),
+  detectedErrorKeys: z.array(z.uuid()).max(20).default([]).transform((value) => (value.length === 0 ? undefined : value)),
+})
+
+export type CloseRequest = z.infer<typeof closeRequestSchema>
+
 export type ExternalTicketCreateRequest = z.infer<typeof externalTicketCreateRequestSchema>
 export type ExternalTicketListQuery = z.infer<typeof externalTicketListQuerySchema>
 export type WorkOrderRequest = z.infer<typeof workOrderRequestSchema>

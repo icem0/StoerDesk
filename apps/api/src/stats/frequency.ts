@@ -12,10 +12,12 @@ export type Frequency = {
   bySystemType: { key: string; count: number }[]
   byFaultTemplate: { key: string; count: number }[]
   bySource: { key: string; count: number }[]
+  byDetectedError: { key: string; count: number }[]
 }
 
 type SeriesRow = { bucket_start: Date | string; total: string }
 type GroupRow = { key: string; count: string }
+type DetectedErrorRow = { key: string; count: string }
 
 /** Coerces a database timestamp value (Date or string) to a valid Date. */
 function asDate(value: Date | string): Date {
@@ -105,6 +107,14 @@ export async function queryFrequency(
     ORDER BY COUNT(*) DESC, key
   `)) as GroupRow[]
 
+  const byDetectedError = (await database.execute(sql`
+    SELECT "detected_error_key" AS key, COUNT(*)::text AS count
+    FROM "stats_ticket_detected_errors"
+    WHERE ${where}
+    GROUP BY "detected_error_key"
+    ORDER BY COUNT(*) DESC, key
+  `)) as DetectedErrorRow[]
+
   return {
     series: series.map((row) => ({
       bucketStart: asDate(row.bucket_start).toISOString(),
@@ -113,5 +123,6 @@ export async function queryFrequency(
     bySystemType: bySystemType.map((row) => ({ key: row.key, count: Number(row.count) })),
     byFaultTemplate: byFaultTemplate.map((row) => ({ key: row.key, count: Number(row.count) })),
     bySource: bySource.map((row) => ({ key: row.key, count: Number(row.count) })),
+    byDetectedError: byDetectedError.map((row) => ({ key: row.key, count: Number(row.count) })),
   }
 }

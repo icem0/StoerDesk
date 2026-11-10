@@ -21,6 +21,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
 | [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
 | [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault | 24 |
+| [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -580,6 +581,16 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-21 | dashboard snapshot carries the most frequent fault              | done                    | yes     |
 | WP-M10-21b | most frequent fault on the dashboard start page                | done                    | yes     |
 | WP-M11-11  | ticket detail names the reported fault type                      | done                    | yes     |
+| WP-M11-01  | detected errors — specification, ADR and phase-11 split        | done                    | yes     |
+| WP-M11-02  | `detected_errors`-Tabelle und `tickets.detected_error_keys`    | done                    | yes     |
+| WP-M11-03  | API CRUD `/api/v1/detected-errors`                             | done                    | yes     |
+| WP-M11-04  | Close-Route akzeptiert Kommentar und festgestellte Fehler      | done                    | yes     |
+| WP-M11-05  | Statistik: `byDetectedError` und View-Erweiterung              | done                    | yes     |
+| WP-M11-06  | Admin-UI `DetectedErrorsPage` (CRUD, archivieren)              | done                    | yes     |
+| WP-M11-07  | Ticket-Detail Close-Panel mit festgestellten Fehlern           | done                    | yes     |
+| WP-M11-08  | Statistik-UI `byDetectedError`-Chart                           | done                    | yes     |
+| WP-M11-09  | Integrationstests (API, Close, Statistik)                      | done                    | yes     |
+| WP-M11-10  | Phase-11 Exit-Kriterium und Record                             | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

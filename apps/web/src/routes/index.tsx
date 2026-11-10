@@ -13,6 +13,7 @@ import { RolesPage } from '../admin/roles-page'
 import { GroupsPage } from '../admin/groups-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { DeadlinesPage } from '../admin/deadlines-page'
+import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { OncallPage } from '../admin/oncall-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
@@ -121,6 +122,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <DeadlinesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/detected-errors',
+        element: (
+          <RequireSession>
+            <DetectedErrorsPage />
           </RequireSession>
         ),
       },

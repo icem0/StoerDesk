@@ -3,11 +3,11 @@ import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import type { PermissionKey } from '@stoerdesk/shared'
 
-import { PERMISSIONS, ticketNoSchema } from '@stoerdesk/shared'
+import { closeRequestSchema, PERMISSIONS, ticketNoSchema } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { tickets } from '../db/schema'
+import { ticketEvents, tickets } from '../db/schema'
 import { offerTicket } from '../oncall/coupling'
 import { transitionTicket } from './workflow'
 import { applyInternalAction } from './internal-actions'
@@ -24,6 +24,10 @@ import { applyInternalAction } from './internal-actions'
 type Db = Database['database']
 
 const DECLINE_REASON = z.string().trim().min(5).max(1000)
+
+function fieldPaths(error: z.ZodError): string[] {
+  return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
+}
 const OFFER_BODY = z.object({ poolId: z.string().uuid().optional() })
 const ACK_RESULT = z.enum(['fixed', 'partially_fixed', 'follow_up_required', 'no_fault_found'])
 const WORK_ORDER = z.object({
@@ -136,7 +140,6 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       { path: '/api/v1/tickets/:ticketNo/accept', event: 'accepted', permission: PERM(PERMISSIONS.ticket.accept) },
       { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.decline), body: z.object({ reason: DECLINE_REASON, clientUuid: z.string().uuid().optional() }), action: 'decline' },
       { path: '/api/v1/tickets/:ticketNo/acknowledge', event: 'acknowledged', permission: PERM(PERMISSIONS.ticket.acknowledge), body: z.object({ result: ACK_RESULT, note: z.string().trim().max(2000).optional(), clientUuid: z.string().uuid().optional() }), action: 'acknowledge' },
-      { path: '/api/v1/tickets/:ticketNo/close', event: 'closed', permission: PERM(PERMISSIONS.ticket.close) },
       { path: '/api/v1/tickets/:ticketNo/reopen', event: 'reopened', permission: PERM(PERMISSIONS.ticket.reopen), body: z.object({ reason: DECLINE_REASON }) },
       { path: '/api/v1/tickets/:ticketNo/cancel', event: 'cancelled', permission: PERM(PERMISSIONS.ticket.cancel), body: z.object({ reason: DECLINE_REASON }) },
       { path: '/api/v1/tickets/:ticketNo/uncancel', event: 'uncancelled', permission: PERM(PERMISSIONS.ticket.cancel), body: z.object({ reason: DECLINE_REASON }) },
@@ -149,6 +152,85 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
         makeHandler(route.event, route.body, route.action),
       )
     }
+
+    // Close accepts an optional body: `comment` is written as a `comment`
+    // event, `detectedErrorKeys` is stored on `tickets.detected_error_keys`.
+    // Both are optional; the `closed` state transition runs in the same
+    // transaction (specs/13-detected-errors.md §13.3, WP-M11-04).
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/close',
+      { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.close)) },
+      async (request, reply) => {
+        const actor = request.user
+
+        if (actor === undefined) {
+          return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(request.params.ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+        }
+
+        const parsed = closeRequestSchema.safeParse(request.body ?? {})
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        const { comment, detectedErrorKeys } = parsed.data
+
+        // Resolve public ticket_no → internal UUID.
+        const [row] = await database
+          .select({ id: tickets.id, status: tickets.status })
+          .from(tickets)
+          .where(eq(tickets.ticketNo, request.params.ticketNo))
+          .limit(1)
+
+        if (row === undefined) {
+          return reply.code(404).send({ code: 'ticket_not_found', params: { ticketNo: request.params.ticketNo } })
+        }
+
+        try {
+          const result = await database.transaction(async (tx) => {
+            // 1. Optional comment event (append-only, like applyInternalAction).
+            if (comment !== undefined && comment !== null) {
+              await tx.insert(ticketEvents).values({
+                ticketId: row.id,
+                type: 'comment',
+                actorKind: 'user',
+                actorUserId: actor.id,
+                payload: { text: comment },
+              })
+            }
+
+            // 2. Optional detected_error_keys on the ticket row.
+            if (detectedErrorKeys !== undefined && detectedErrorKeys !== null) {
+              await tx
+                .update(tickets)
+                .set({ detectedErrorKeys, updatedAt: new Date() })
+                .where(eq(tickets.id, row.id))
+            }
+
+            // 3. The closed state transition (its own event + timestamp).
+            const { ticket: updated } = await transitionTicket({
+              database: tx as unknown as Db,
+              ticketId: row.id,
+              event: 'closed',
+              actorUserId: actor.id,
+            })
+
+            return updated
+          })
+
+          return reply.code(200).send(result)
+        } catch (error) {
+          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+          throw error
+        }
+      },
+    )
 
     // The offer is the only transition coupled to the on-call calendar
     // (`specs/04-oncall.md` §4a.6): it resolves the on-call person and assigns

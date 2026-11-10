@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the ticket list — plus `lastEvent`, the newest entry of the history of the ticket (`null`
   when the ticket has no event yet). The dashboard and the wall display can show the same
   thing.
+- Festgestellte Fehler (Phase 11): ein Admin-Katalog unter `/admin/detected-errors` (anlegen, bearbeiten, archivieren, löschen mit `409` bei Nutzung) ergänzt die Schließung eines Tickets: im Close-Dialog sind neben dem optionalen Kommentar ein oder mehrere festgestellte Fehler auswählbar, unabhängig von der gemeldeten Störung (WP-M11-01 … WP-M11-07). Die Statistik gruppiert neu nach `byDetectedError` (WP-M11-05, WP-M11-08), Integrationstests decken CRUD, Close-Speicherung und Frequency ab (WP-M11-09).
 - The report form and the internal office form now order their fault checkboxes by
   how often a fault was reported in the last 30 days (WP-M10-20): most frequent first,
   ties by key, so the top-left checkbox in reading order is the fault the installation
