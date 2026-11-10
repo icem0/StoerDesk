@@ -24,18 +24,6 @@
       "minutes": "{{count}} min",
       "noData": "keine Daten"
     },
-    "onCall": {
-      "title": "Bereitschaft",
-      "confirmed": "bestätigt",
-      "planned": "geplant",
-      "unstaffed": "nicht besetzt",
-      "endsAt": "bis {{time}}",
-      "noEnd": "kein Ende angegeben",
-      "warning": {
-        "oncall_unconfirmed": "Bereitschaft noch nicht bestätigt",
-        "oncall_unstaffed": "Bereitschaft nicht besetzt"
-      }
-    },
     "channels": {
       "title": "Kanäle",
       "pending": "{{count}} ausstehend",

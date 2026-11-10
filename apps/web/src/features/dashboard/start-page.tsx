@@ -2,18 +2,20 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { useDashboard } from './use-dashboard'
+import { OpenTickets } from './open-tickets'
 
 /**
  * Start page of the internal app (`specs/11-dashboard.md` §11.2–§11.6, WP-M9-14).
  *
- * The index route `/` of the guarded shell. It shows the fault-free counter with
- * its record, the open/overdue/unreviewed/pool tiles, the evaluation block of
- * averages (WP-M10-19b, §11.4a), the on-call tile and the channel tile when
- * present, plus the primary action "Neue Störung melden".
- * The page ends with the tiles; the burning-now list belongs to the wall display
- * (`specs/11-dashboard.md` §11.5). Every tile is one link over its whole area
- * with a 44 px touch target. The evaluation block shows averages only — the
- * worst reaction time is neither calculated nor displayed (ADR-0015).
+ * The index route `/` of the guarded shell. It shows the statistics first —
+ * the fault-free counter with its record, the open/overdue/unreviewed/pool
+ * tiles and the evaluation block of averages (WP-M10-19b, §11.4a) — and below
+ * them the list of the open tickets with the mini timeline and the last entry
+ * of the history (WP-M10-32). The readiness has its own page (`/oncall`),
+ * so nothing about the on-call shift is left here. The primary action "Neue
+ * Störung melden" stays at the top; every tile is one link over its whole
+ * area with a 44 px touch target. The evaluation block shows averages only —
+ * the worst reaction time is neither calculated nor displayed (ADR-0015).
  */
 
 const TILE_CLASS =
@@ -43,26 +45,19 @@ function EvaluationRow(props: { label: string; value: string }) {
 }
 
 export function StartPage() {
-  const { t, i18n } = useTranslation('ticket')
+  const { t } = useTranslation('ticket')
   const dashboard = useDashboard()
   const snapshot = dashboard.data
 
   const faultFree = snapshot?.faultFree
   const evaluations = snapshot?.evaluations
   const tiles = snapshot?.tiles
-  const onCall = tiles?.onCall ?? null
   const channels = tiles?.channels ?? null
 
   const minutesLabel = (minutes: number | null): string =>
     minutes === null
       ? t('dashboard.evaluations.noData')
       : t('dashboard.evaluations.minutes', { count: minutes })
-
-  const timeFormat: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'short' }
-  const onCallEndsAt =
-    onCall?.endsAt === null || onCall?.endsAt === undefined
-      ? null
-      : new Date(onCall.endsAt).toLocaleString(i18n.language, timeFormat)
 
   return (
     <section className="flex flex-col gap-6">
@@ -163,27 +158,12 @@ export function StartPage() {
             </div>
           ) : null}
 
-          {onCall !== null ? (
-            <Link className={`${TILE_CLASS} min-h-11`} to="/oncall">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                {t('dashboard.onCall.title')}
-              </p>
-              <p className="mt-1 text-lg font-semibold text-slate-200">
-                {onCall.kind === 'unstaffed'
-                  ? t('dashboard.onCall.unstaffed')
-                  : (onCall.name ?? t(`dashboard.onCall.${onCall.kind}`))}
-              </p>
-              <p className="mt-1 text-sm text-slate-400">
-                {onCallEndsAt === null
-                  ? t('dashboard.onCall.noEnd')
-                  : t('dashboard.onCall.endsAt', { time: onCallEndsAt })}
-              </p>
-              {onCall.warning !== null ? (
-                <p className="mt-2 inline-block rounded bg-amber-900/40 px-2 py-1 text-xs font-medium text-amber-200">
-                  {t(`dashboard.onCall.warning.${onCall.warning}`)}
-                </p>
-              ) : null}
-            </Link>
+          {snapshot !== undefined ? (
+            <OpenTickets
+              generatedAt={snapshot.generatedAt}
+              linkRows
+              rows={snapshot.burningNow}
+            />
           ) : null}
 
           {channels !== null && channels.length > 0 ? (

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The start page shows the statistics and the open tickets (WP-M10-32): the fault-free
+  counter, the four tiles and the evaluation averages come first, below them the list of
+  the open tickets with the mini timeline and the last entry of the history — every row
+  links to its ticket. The on-call tile is gone: the readiness has its own page
+  (`/oncall`), the snapshot keeps the section for the API.
 - One list of the open tickets for the dashboard and the wall display (WP-M10-31): the new
   `OpenTickets` component renders the object, the ticket number, the status, the priority,
   the mini timeline and the last entry of the history of every open ticket. The wall

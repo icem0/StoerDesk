@@ -24,18 +24,6 @@
       "minutes": "{{count}} min",
       "noData": "no data"
     },
-    "onCall": {
-      "title": "On call",
-      "confirmed": "confirmed",
-      "planned": "planned",
-      "unstaffed": "not staffed",
-      "endsAt": "until {{time}}",
-      "noEnd": "no end given",
-      "warning": {
-        "oncall_unconfirmed": "On-call shift not yet confirmed",
-        "oncall_unstaffed": "On-call shift not staffed"
-      }
-    },
     "channels": {
       "title": "Channels",
       "pending": "{{count}} pending",

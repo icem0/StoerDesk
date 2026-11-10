@@ -52,13 +52,27 @@ const snapshot: DashboardSnapshot = {
       },
     ],
   },
-  burningNow: [],
+  burningNow: [
+    {
+      ticketNo: 'ST-2026-0042',
+      objectName: 'Feuerwache Nord',
+      status: 'IN_REVIEW',
+      priority: 'high',
+      deadlineAt: '2026-03-10T14:00:00.000Z',
+      reportedAt: '2026-03-09T08:00:00.000Z',
+      timelineState: 'yellow',
+      percent: 54,
+      remainingMs: 3_600_000,
+      lastEvent: { type: 'review_started', at: '2026-03-09T09:00:00.000Z' },
+    },
+  ],
 }
 
 /**
- * Start page of phase 9 (WP-M9-14): the fault-free counter, the four tiles, the
- * on-call tile and the channel tile render from the dashboard snapshot. Every
- * tile is one link over its whole area; the burning-now list is not on the page.
+ * Start page (WP-M9-14, WP-M10-32): the statistics first — the fault-free
+ * counter, the four tiles and the evaluation averages — and below them the
+ * list of the open tickets with the mini timeline and the last entry of the
+ * history. The readiness has its own page, so no on-call tile is left.
  */
 function renderPage(data: DashboardSnapshot = snapshot) {
   vi.stubGlobal(
@@ -114,17 +128,6 @@ describe('StartPage dashboard', () => {
     expect(pool.textContent).toContain('3')
   })
 
-  it('renders the on-call name without the phone and the channel warning as text', async () => {
-    renderPage()
-
-    await screen.findByText('12 Tag(e) ohne Störung')
-
-    expect(screen.getByRole('link', { name: /Bereitschaft/ }).textContent).toContain(
-      'Anna Bereitschaft',
-    )
-    expect(screen.getByText('Zustellung gestört')).toBeTruthy()
-  })
-
   it('renders the evaluation averages, averages only', async () => {
     renderPage()
 
@@ -152,11 +155,39 @@ describe('StartPage dashboard', () => {
     expect(screen.getByRole('link', { name: /offen/ })).toBeTruthy()
   })
 
-  it('has no burning-now list any more', async () => {
+  it('shows the open tickets below the statistics', async () => {
     renderPage()
 
     await screen.findByText('12 Tag(e) ohne Störung')
 
+    const list = screen.getByRole('heading', { name: 'Offene Tickets' })
+    const tile = screen.getByRole('link', { name: /offen/ })
+
+    expect(tile.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText('Feuerwache Nord')).toBeTruthy()
+    expect(screen.getByText('ST-2026-0042')).toBeTruthy()
+    expect(screen.getByText('noch 6 h')).toBeTruthy()
+    expect(screen.getByText(/In Prüfung gesetzt/)).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'ST-2026-0042' }).getAttribute('href')).toBe(
+      '/tickets/ST-2026-0042',
+    )
+  })
+
+  it('has no on-call tile and no "Brennt jetzt" any more', async () => {
+    renderPage()
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
+    expect(screen.queryByText('Anna Bereitschaft')).toBeNull()
+    expect(screen.queryByText(/Bereitschaft/)).toBeNull()
     expect(screen.queryByText('Brennt jetzt')).toBeNull()
+  })
+
+  it('keeps the channel warning as text', async () => {
+    renderPage()
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
+    expect(screen.getByText('Zustellung gestört')).toBeTruthy()
   })
 })

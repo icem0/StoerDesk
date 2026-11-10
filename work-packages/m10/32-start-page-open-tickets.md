@@ -1,7 +1,7 @@
 # WP-M10-32: the start page shows the statistics and the open tickets
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-31
 phase: 10
 milestone: m10
