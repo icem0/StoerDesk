@@ -9,6 +9,7 @@ import { InternalCreatePage } from '../internal-create-page'
 
 const OBJECT_ID = '11111111-1111-4111-8111-111111111111'
 const SYSTEM_ID = '22222222-2222-4222-8222-222222222222'
+const REPORTER_USER_ID = '66666666-6666-4666-8666-666666666666'
 
 /**
  * The branding title switch (WP-M9-25): the form reads it from
@@ -180,6 +181,14 @@ function stubInternalForm(titleEnabled: boolean) {
 
       if (path.includes('/v1/settings/deadline-hours')) {
         return Response.json({ low: 168, normal: 72, high: 24, critical: 8 })
+      }
+
+      if (path.includes('/v1/tickets/reporter-users')) {
+        return Response.json({
+          users: [
+            { id: REPORTER_USER_ID, name: 'Rita Ruf', email: 'rita.ruf@example.invalid' },
+          ],
+        })
       }
 
       if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
@@ -423,5 +432,45 @@ describe('InternalCreatePage', () => {
 
     await waitFor(() => expect(bodies.length).toBe(1))
     expect(bodies[0]?.title).toBe('Rauchmelder 2. OG')
+  })
+
+  it('defaults the report time to now and sends channel and reporter kind', async () => {
+    const { bodies } = stubInternalForm(false)
+    renderPage()
+
+    const reportTime = (await screen.findByLabelText('Gemeldet am')) as HTMLInputElement
+    expect(reportTime.value).not.toBe('')
+    fireEvent.change(reportTime, { target: { value: '2026-11-09T20:00' } })
+
+    expect((screen.getByRole('radio', { name: 'Telefon' }) as HTMLInputElement).checked).toBe(
+      true,
+    )
+    fireEvent.click(screen.getByRole('radio', { name: 'E-Mail' }))
+
+    await pickObjectAndSubmit()
+
+    await waitFor(() => expect(bodies.length).toBe(1))
+    expect(bodies[0]?.reporterChannel).toBe('email')
+    expect(bodies[0]?.reporterKind).toBe('external')
+    expect(new Date(String(bodies[0]?.reportedAt)).getTime()).not.toBeNaN()
+  })
+
+  it('lets an internal reporter be picked from the user list', async () => {
+    const { bodies } = stubInternalForm(false)
+    renderPage()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Mitarbeiter (intern)' }))
+
+    const select = (await screen.findByLabelText('Mitarbeiter auswählen')) as HTMLSelectElement
+    await waitFor(() => expect(select.options.length).toBeGreaterThan(1))
+    fireEvent.change(select, { target: { value: REPORTER_USER_ID } })
+
+    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('Rita Ruf')
+
+    await pickObjectAndSubmit()
+
+    await waitFor(() => expect(bodies.length).toBe(1))
+    expect(bodies[0]?.reporterKind).toBe('internal')
+    expect(bodies[0]?.reportedByUserId).toBe(REPORTER_USER_ID)
   })
 })

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The internal create form at `/tickets/create` groups the reporter fields
+  (WP-M2-98c): a `Meldender` section with the internal/external radio, the active-user
+  picker and name/phone/e-mail, a `Meldezeit` field defaulting to now and accepting past
+  times, and a `Meldungskanal` radio with exactly one of Telefon, E-Mail or Messenger.
 - The internal ticket API accepts a backdated `reportedAt`, the reporter channel,
   the reporter kind and the internal reporter (WP-M2-98b): a report time in the future
   answers `400 invalid_request` (five-minute grace), `received_at` stays server time,

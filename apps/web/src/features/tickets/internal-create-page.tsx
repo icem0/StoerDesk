@@ -7,6 +7,7 @@ import {
   type DeadlineHours,
   type InternalCreateTicketRequest,
   type InternalCreateTicketResponse,
+  type ReporterUserListResponse,
   type StandardTextLocale,
   type TitleSwitchResponse,
 } from '@stoerdesk/shared'
@@ -102,6 +103,21 @@ function useDeadlineHours() {
     queryFn: () => apiFetch<DeadlineHours>('/v1/settings/deadline-hours'),
     retry: false,
   })
+}
+
+/** Active internal users for the reporter picker (WP-M2-98c). */
+function useReporterUsers(enabled: boolean) {
+  return useQuery<ReporterUserListResponse>({
+    queryKey: ['reporter-users'],
+    queryFn: () => apiFetch<ReporterUserListResponse>('/v1/tickets/reporter-users'),
+    enabled,
+    retry: false,
+  })
+}
+
+/** `datetime-local` value of a date in the browser's local time. */
+function localDateTimeValue(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
 }
 
 /**
@@ -278,6 +294,10 @@ export function InternalCreatePage() {
   const [contactName, setContactName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [contactEmail, setContactEmail] = useState('')
+  const [reporterKind, setReporterKind] = useState<'internal' | 'external'>('external')
+  const [reportedByUserId, setReportedByUserId] = useState('')
+  const [reporterChannel, setReporterChannel] = useState<'phone' | 'email' | 'messenger'>('phone')
+  const [reportedAt, setReportedAt] = useState(() => localDateTimeValue(new Date()))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -288,6 +308,8 @@ export function InternalCreatePage() {
   const titleEnabled = useTitleSwitch()
   /** WP-M6-18: every priority option carries its configured deadline. */
   const deadlineHours = useDeadlineHours().data
+  /** WP-M2-98c: the internal reporter picker only loads for the internal kind. */
+  const reporterUsers = useReporterUsers(reporterKind === 'internal').data?.users ?? []
 
   function priorityLabel(
     priority: 'low' | 'normal' | 'high' | 'critical',
@@ -311,6 +333,24 @@ export function InternalCreatePage() {
     setSelectedObjectId(object.id)
   }
 
+  function changeReporterKind(kind: 'internal' | 'external') {
+    setReporterKind(kind)
+
+    if (kind === 'external') {
+      setReportedByUserId('')
+    }
+  }
+
+  function pickReporterUser(userId: string) {
+    setReportedByUserId(userId)
+    const picked = reporterUsers.find((user) => user.id === userId)
+
+    if (picked !== undefined) {
+      setContactName(picked.name)
+      setContactEmail(picked.email)
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
@@ -329,6 +369,10 @@ export function InternalCreatePage() {
           phone: contactPhone || undefined,
           email: contactEmail || undefined,
         },
+        reporterChannel,
+        reporterKind,
+        reportedByUserId: reporterKind === 'internal' ? reportedByUserId : undefined,
+        reportedAt: new Date(reportedAt).toISOString(),
       }
 
       const created = await apiFetch<InternalCreateTicketResponse>('/v1/tickets', {
@@ -474,55 +518,163 @@ export function InternalCreatePage() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">
-            {t('internal.create.fields.contact')}
-          </label>
-          <p className="text-xs text-slate-500">{t('internal.create.fields.contactHint')}</p>
-        </div>
+        <fieldset className="col-span-full rounded border border-slate-700 p-3">
+          <legend className="px-1 text-sm font-medium text-slate-200">
+            {t('internal.create.fields.reporter')}
+          </legend>
+          <p className="mb-3 text-xs text-slate-500">{t('internal.create.fields.contactHint')}</p>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">
-            {t('internal.create.fields.contactName')}
-          </label>
-          <input
-            className="rounded bg-slate-900 p-2 text-slate-100"
-            maxLength={120}
-            value={contactName}
-            onChange={(event) => setContactName(event.target.value)}
-          />
-        </div>
+          <div className="mb-3 flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="radio"
+                name="reporter-kind"
+                checked={reporterKind === 'external'}
+                onChange={() => changeReporterKind('external')}
+              />
+              {t('internal.create.fields.reporterKindExternal')}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="radio"
+                name="reporter-kind"
+                checked={reporterKind === 'internal'}
+                onChange={() => changeReporterKind('internal')}
+              />
+              {t('internal.create.fields.reporterKindInternal')}
+            </label>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">
-            {t('internal.create.fields.contactPhone')}
-          </label>
-          <input
-            className="rounded bg-slate-900 p-2 text-slate-100"
-            maxLength={60}
-            value={contactPhone}
-            onChange={(event) => setContactPhone(event.target.value)}
-          />
-        </div>
+          {reporterKind === 'internal' ? (
+            <div className="mb-3 flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-200" htmlFor="internal-reporter-user">
+                {t('internal.create.fields.reporterUser')}
+              </label>
+              <select
+                className="rounded bg-slate-900 p-2 text-slate-100"
+                id="internal-reporter-user"
+                value={reportedByUserId}
+                onChange={(event) => pickReporterUser(event.target.value)}
+              >
+                <option value="">{t('internal.create.fields.reporterUserPlaceholder')}</option>
+                {reporterUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} · {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">
-            {t('internal.create.fields.contactEmail')}
-          </label>
-          <input
-            className="rounded bg-slate-900 p-2 text-slate-100"
-            maxLength={320}
-            type="email"
-            value={contactEmail}
-            onChange={(event) => setContactEmail(event.target.value)}
-          />
-        </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-200" htmlFor="internal-contact-name">
+                {t('internal.create.fields.contactName')}
+              </label>
+              <input
+                className="rounded bg-slate-900 p-2 text-slate-100 read-only:opacity-70"
+                id="internal-contact-name"
+                maxLength={120}
+                readOnly={reporterKind === 'internal'}
+                value={contactName}
+                onChange={(event) => setContactName(event.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-200" htmlFor="internal-contact-phone">
+                {t('internal.create.fields.contactPhone')}
+              </label>
+              <input
+                className="rounded bg-slate-900 p-2 text-slate-100"
+                id="internal-contact-phone"
+                maxLength={60}
+                value={contactPhone}
+                onChange={(event) => setContactPhone(event.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-200" htmlFor="internal-contact-email">
+                {t('internal.create.fields.contactEmail')}
+              </label>
+              <input
+                className="rounded bg-slate-900 p-2 text-slate-100 read-only:opacity-70"
+                id="internal-contact-email"
+                maxLength={320}
+                readOnly={reporterKind === 'internal'}
+                type="email"
+                value={contactEmail}
+                onChange={(event) => setContactEmail(event.target.value)}
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset className="col-span-full rounded border border-slate-700 p-3">
+          <legend className="px-1 text-sm font-medium text-slate-200">
+            {t('internal.create.fields.reportedAt')}
+          </legend>
+          <div className="flex flex-col gap-2 sm:max-w-xs">
+            <label className="text-sm font-medium text-slate-200" htmlFor="internal-reported-at">
+              {t('internal.create.fields.reportedAtLabel')}
+            </label>
+            <input
+              className="rounded bg-slate-900 p-2 text-slate-100"
+              id="internal-reported-at"
+              type="datetime-local"
+              value={reportedAt}
+              onChange={(event) => setReportedAt(event.target.value)}
+            />
+            <p className="text-xs text-slate-500">{t('internal.create.fields.reportedAtHint')}</p>
+          </div>
+        </fieldset>
+
+        <fieldset className="col-span-full rounded border border-slate-700 p-3">
+          <legend className="px-1 text-sm font-medium text-slate-200">
+            {t('internal.create.fields.channel')}
+          </legend>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="radio"
+                name="reporter-channel"
+                checked={reporterChannel === 'phone'}
+                onChange={() => setReporterChannel('phone')}
+              />
+              {t('internal.create.fields.channelPhone')}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="radio"
+                name="reporter-channel"
+                checked={reporterChannel === 'email'}
+                onChange={() => setReporterChannel('email')}
+              />
+              {t('internal.create.fields.channelEmail')}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="radio"
+                name="reporter-channel"
+                checked={reporterChannel === 'messenger'}
+                onChange={() => setReporterChannel('messenger')}
+              />
+              {t('internal.create.fields.channelMessenger')}
+            </label>
+          </div>
+        </fieldset>
 
         <div className="col-span-full flex gap-3">
           <button
             className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             type="submit"
-            disabled={submitting || selectedObjectId === ''}
+            disabled={
+              submitting ||
+              selectedObjectId === '' ||
+              reportedAt === '' ||
+              (reporterKind === 'internal' && reportedByUserId === '')
+            }
           >
             {submitting ? t('internal.create.submitting') : t('internal.create.submit')}
           </button>

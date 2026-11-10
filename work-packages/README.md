@@ -419,7 +419,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-95  | internal ticket creation honours the branding title switch          | done                    | yes     |
 | WP-M2-98  | reporter metadata columns and migration 0028                       | done                    | yes     |
 | WP-M2-98b | internal create accepts report time, channel and reporter kind      | done                    | yes     |
-| WP-M2-98c | internal create form captures reporter, channel and report time     | planned                 | yes     |
+| WP-M2-98c | internal create form captures reporter, channel and report time     | done                    | yes     |
 | WP-M2-98d | timeline shows report time and capture time                         | planned                 | yes     |
 | WP-M2-98e | ticket detail shows report time, channel and reporter kind          | planned                 | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
