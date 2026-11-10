@@ -470,6 +470,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-14b | deadline settings route `GET/PUT /api/v1/settings/deadlines`        | done                    | yes     |
 | WP-M6-15  | deadline admin page `DeadlinesPage` (de/en)                         | done                    | yes     |
 | WP-M6-16  | `/admin/deadlines` route and the available menu entry               | done                    | yes     |
+| WP-M6-17  | effective deadline hours readable with `ticket.create`             | done                    | yes     |
+| WP-M6-18  | priority select shows the configured deadline                      | pending                 | yes     |
 | WP-M7-01  | ntfy channel adapter and its env wiring                             | done                    | yes     |
 | WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |

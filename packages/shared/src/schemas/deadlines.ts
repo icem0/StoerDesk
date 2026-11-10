@@ -15,13 +15,18 @@ const minutes = z.number().int().min(1).max(10080)
 
 const reactionRule = z.object({ standard: minutes, critical: minutes })
 
+/** Effective deadline hours per priority, defaults applied. */
+export const deadlineHoursSchema = z.object({
+  low: hours,
+  normal: hours,
+  high: hours,
+  critical: hours,
+})
+
+export type DeadlineHours = z.infer<typeof deadlineHoursSchema>
+
 export const deadlineSettingsSchema = z.object({
-  hours: z.object({
-    low: hours,
-    normal: hours,
-    high: hours,
-    critical: hours,
-  }),
+  hours: deadlineHoursSchema,
   reactionMinutes: z.object({
     new_without_review: reactionRule,
     work_order_without_distribution: reactionRule,

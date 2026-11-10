@@ -65,7 +65,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     const db = drizzle(client, { schema })
 
     let app: FastifyInstance
-    const cookies: Record<'admin' | 'office', string> = { admin: '', office: '' }
+    const cookies: Record<'admin' | 'office' | 'reporter', string> = {
+      admin: '',
+      office: '',
+      reporter: '',
+    }
 
     async function userIdFor(email: string): Promise<string> {
       const inserted = await db
@@ -95,6 +99,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function getDeadlineHours(cookie?: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/settings/deadline-hours',
+        headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
     function putDeadlines(cookie: string, payload: unknown) {
       return app.inject({
         method: 'PUT',
@@ -111,14 +123,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const adminId = await userIdFor('admin-deadlines@example.org')
       const officeId = await userIdFor('office-deadlines@example.org')
+      const reporterId = await userIdFor('reporter-deadlines@example.org')
 
       await db.insert(userRoles).values([
         { userId: adminId, roleId: await roleIdFor('admin') },
         { userId: officeId, roleId: await roleIdFor('office') },
+        { userId: reporterId, roleId: await roleIdFor('reporter_internal') },
       ])
 
       cookies['admin'] = await sessionCookieFor(adminId)
       cookies['office'] = await sessionCookieFor(officeId)
+      cookies['reporter'] = await sessionCookieFor(reporterId)
 
       process.env.DATABASE_URL = url
       process.env.NODE_ENV = 'test'
@@ -139,6 +154,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('answers 401 to an anonymous GET and PUT', async () => {
       expect((await getDeadlines()).statusCode).toBe(401)
+      expect((await getDeadlineHours()).statusCode).toBe(401)
       expect((await putDeadlines('session=invalid', changed)).statusCode).toBe(401)
     })
 
@@ -158,6 +174,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<DeadlineBody>()).toEqual(defaults)
     })
 
+    it('lets a ticket creator read the deadline hours without settings.read', async () => {
+      const response = await getDeadlineHours(cookies['reporter'])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<Record<string, number>>()).toEqual(defaults.hours)
+    })
+
     it('stores the values and returns them on the next read', async () => {
       const put = await putDeadlines(cookies['admin'], changed)
 
@@ -167,6 +190,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const get = await getDeadlines(cookies['admin'])
 
       expect(get.json<DeadlineBody>()).toEqual(changed)
+
+      const hours = await getDeadlineHours(cookies['reporter'])
+
+      expect(hours.json<Record<string, number>>()).toEqual(changed.hours)
     })
 
     it('feeds the stored values into the deadline and escalation calculation', async () => {

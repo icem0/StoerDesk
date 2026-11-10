@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin'
 
 import {
+  deadlineHoursSchema,
   deadlineSettingsSchema,
   escalationRulesFor,
   PERMISSIONS,
@@ -20,6 +21,10 @@ import { readOverrides } from '../tickets/escalation'
  * `GET /api/v1/settings/deadlines` — `settings.read`, answers the effective values:
  * the deadline hours per priority and the four reaction minutes (standard and
  * critical), defaults where no row exists.
+ * `GET /api/v1/settings/deadline-hours` — `ticket.create`, answers only the
+ * effective deadline hours. Everyone who may create a ticket holds that
+ * permission, including `reporter_internal` without `settings.read`; the create
+ * form labels its priority options with these hours.
  * `PUT /api/v1/settings/deadlines` — `settings.write`, replaces all values in one
  * transaction. The values are stored as the bare numbers that `deadline.ts` and
  * the escalation scan already read: `ticket.deadline_hours.<priority>`,
@@ -74,6 +79,12 @@ async function readDeadlineSettings(database: Db): Promise<DeadlineSettings> {
 
 export const settingsDeadlineRoutes = fp<{ database: Db }>(
   async (app, { database }) => {
+    app.get(
+      '/api/v1/settings/deadline-hours',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.create) },
+      async () => deadlineHoursSchema.parse(await readDeadlineHours(database)),
+    )
+
     app.get(
       '/api/v1/settings/deadlines',
       { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
