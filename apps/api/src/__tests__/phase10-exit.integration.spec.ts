@@ -66,16 +66,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     async function adminIdFor(email: string): Promise<string> {
       return onlyRow(
-        await db.insert(users).values({ email, passwordHash: 'no-login' }).returning({ id: users.id }),
+        await db
+          .insert(users)
+          .values({ email, passwordHash: 'no-login' })
+          .returning({ id: users.id }),
         email,
       ).id
     }
 
     async function roleIdFor(key: string): Promise<string> {
-      return onlyRow(
-        await db.select({ id: roles.id }).from(roles).where(eq(roles.key, key)),
-        key,
-      ).id
+      return onlyRow(await db.select({ id: roles.id }).from(roles).where(eq(roles.key, key)), key)
+        .id
     }
 
     beforeAll(async () => {
@@ -99,20 +100,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
       authorization = `Bearer ${key.token}`
 
-      const webhook = await appInject(
-        'POST',
-        '/api/v1/webhooks',
-        { url: 'http://127.0.0.1:1/hook', events: ['ticket.created', 'ticket.status_changed'] },
-      )
-      expect(webhook.statusCode).toBe(201)
-      webhookSecret = webhook.json<{ secret: string }>().secret
-
       process.env.DATABASE_URL = url
       process.env.NODE_ENV = 'test'
       process.env.API_LOG_LEVEL = 'silent'
       process.env.RATE_LIMIT_MAX = '10000'
 
       app = await buildServer()
+
+      const webhook = await appInject('POST', '/api/v1/webhooks', {
+        url: 'http://127.0.0.1:1/hook',
+        events: ['ticket.created', 'ticket.status_changed'],
+      })
+      expect(webhook.statusCode).toBe(201)
+      webhookSecret = webhook.json<{ secret: string }>().secret
     })
 
     afterAll(async () => {
@@ -154,7 +154,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('mints an API key whose scopes gate the external object and ticket routes', async () => {
       const list = await appInject('GET', '/api/v1/api-keys')
       expect(list.statusCode).toBe(200)
-      expect(list.json<{ keys: Array<{ id: string, scopes: string[] }> }>().keys).toHaveLength(1)
+      expect(list.json<{ keys: Array<{ id: string; scopes: string[] }> }>().keys).toHaveLength(1)
     })
 
     it('creates an object through the external object API (PUT)', async () => {
@@ -203,7 +203,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ticketNo = body.ticketNo
 
       const stored = await db
-        .select({ ticketNo: tickets.ticketNo, source: tickets.source, reporterName: tickets.reporterName })
+        .select({
+          ticketNo: tickets.ticketNo,
+          source: tickets.source,
+          reporterName: tickets.reporterName,
+        })
         .from(tickets)
         .where(eq(tickets.ticketNo, ticketNo))
 
@@ -213,6 +217,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('sets the work order through the external ticket API (PATCH)', async () => {
+      const reviewed = await appInject('POST', `/api/v1/tickets/${ticketNo}/review`)
+
+      expect(reviewed.statusCode).toBe(200)
+
       const response = await bearer('PATCH', `/api/v1/tickets/${ticketNo}/work-order`, {
         type: 'AA',
         number: '12345',
@@ -232,24 +240,24 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('delivers the signed ticket.created and ticket.status_changed webhooks', async () => {
       const queued = await collectPendingWebhooks(db)
 
-      expect(queued).toBe(2)
+      expect(queued).toBe(3)
 
       const result = await processWebhookDeliveries(db, new Date(), undefined, captureFetch)
 
-      expect(result.sent).toBe(2)
+      expect(result.sent).toBe(3)
       expect(result.failed).toBe(0)
-      expect(captured).toHaveLength(2)
+      expect(captured).toHaveLength(3)
 
       const events = captured.map((call) => call.headers['x-stoerdesk-event']).sort()
 
-      expect(events).toEqual(['ticket.created', 'ticket.status_changed'])
+      expect(events).toEqual(['ticket.created', 'ticket.status_changed', 'ticket.status_changed'])
 
       for (const call of captured) {
         const header = call.headers['x-stoerdesk-signature'] as string
 
         expect(header).toMatch(/^t=\d+,v1=[0-9a-f]{64}$/)
 
-        const [tPart, v1Part] = header.split(',')
+        const [tPart = '', v1Part = ''] = header.split(',')
         const timestamp = tPart.slice(2)
         const expected = createHmac('sha256', webhookSecret)
           .update(`${timestamp}.${call.body}`)
@@ -266,14 +274,20 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       // The secret is stored once and never leaves again.
       const listed = await appInject('GET', '/api/v1/webhooks')
-      const listedSecrets = JSON.stringify(listed.json<{ webhooks: Array<{ secret?: string }> }>().webhooks)
+      const listedSecrets = JSON.stringify(
+        listed.json<{ webhooks: Array<{ secret?: string }> }>().webhooks,
+      )
 
       expect(listed.statusCode).toBe(200)
       expect(listedSecrets).not.toContain(webhookSecret)
     })
 
     it('previews and commits a CSV import under object.import (session only)', async () => {
-      const csv = ['objektnummer;bezeichnung;ort', 'CSV-201;Pump house;Berlin', 'CSV-202;Depot two;Cologne'].join('\r\n')
+      const csv = [
+        'objektnummer;bezeichnung;ort',
+        'CSV-201;Pump house;Berlin',
+        'CSV-202;Depot two;Cologne',
+      ].join('\r\n')
 
       const preview = await appInject('POST', '/api/v1/objects/import/preview', { csv })
 
@@ -305,11 +319,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('erases the reporter contact data of a ticket (user.write, session only)', async () => {
-      const erase = await appInject(
-        'POST',
-        `/api/v1/privacy/tickets/${ticketNo}/erase`,
-        { reason: 'GDPR request of the data subject' },
-      )
+      const erase = await appInject('POST', `/api/v1/privacy/tickets/${ticketNo}/erase`, {
+        reason: 'GDPR request of the data subject',
+      })
 
       expect(erase.statusCode).toBe(200)
       expect(erase.json<{ alreadyErased: boolean }>().alreadyErased).toBe(false)
@@ -339,11 +351,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
 
       // Idempotent: a repeat writes no second event.
-      const again = await appInject(
-        'POST',
-        `/api/v1/privacy/tickets/${ticketNo}/erase`,
-        { reason: 'the same subject request again' },
-      )
+      const again = await appInject('POST', `/api/v1/privacy/tickets/${ticketNo}/erase`, {
+        reason: 'the same subject request again',
+      })
 
       expect(again.statusCode).toBe(200)
       expect(again.json<{ alreadyErased: boolean }>().alreadyErased).toBe(true)

@@ -567,7 +567,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-15 | privacy retention job                                             | done                    | yes     |
 | WP-M10-16 | personal-data export and erasure routes                           | done                    | yes     |
 | WP-M10-17 | uploads backup, restore procedure and drill                       | done                    | yes     |
-| WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
+| WP-M10-18 | phase-10 exit criterion and record                                | done                    | yes     |
 | WP-M10-19 | dashboard evaluations: average durations, no worst value          | done                    | yes     |
 | WP-M10-19b | evaluation block on the dashboard start page                     | done                    | yes     |
 | WP-M10-30  | the open tickets of the snapshot carry the mini timeline and the last event | done                    | yes     |
@@ -581,6 +581,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-21 | dashboard snapshot carries the most frequent fault              | done                    | yes     |
 | WP-M10-21b | most frequent fault on the dashboard start page                | done                    | yes     |
 | WP-M11-11  | ticket detail names the reported fault type                      | done                    | yes     |
+| WP-M11-12  | the internal report-time warning is German again                | done                    | yes     |
 | WP-M11-01  | detected errors — specification, ADR and phase-11 split        | done                    | yes     |
 | WP-M11-02  | `detected_errors`-Tabelle und `tickets.detected_error_keys`    | done                    | yes     |
 | WP-M11-03  | API CRUD `/api/v1/detected-errors`                             | done                    | yes     |

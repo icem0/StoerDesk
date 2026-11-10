@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   photo manifest; without a Docker daemon it exits 1 as `UNVERIFIED`, never green.
   `scripts/docker-smoke.sh` runs the drill after the health checks, so the Docker CI job
   proves it (ADR-0014 decisions 5 and 6).
+- Phase 10 is complete (WP-M10-18): the exit integration test mints an API key, drives
+  the external object and ticket API, verifies the signed webhook delivery, and covers
+  the CSV import and the personal-data export and erasure paths. The phase closes with
+  no open follow-up; phase 11 starts next.
 - A saved comment is visible at once (WP-M5-17): the service worker serves the ticket
   detail from its `internal-tickets` cache, so the read after a write answered with the
   copy from before the write and the comment stayed invisible until the next reload. A
@@ -183,6 +187,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The future-report-time warning of the internal creation form is German again (WP-M11-12):
+  the `de` value of `ticket:internal.create.errors.reportTimeFuture` held an English
+  sentence inside a German article (`Die reported time must not be in the future. …`). It now
+  reads `Die Meldezeit cannot be in the future. Please choose now or a past time.`, using the
+  `Meldezeit` term of the form; `en` already carried the correct English text and stays
+  unchanged, so `i18n:check` keeps de/en parity.
 - The dashboard stream no longer drops a change that arrives while a client reacts to the
   first snapshot (WP-M9-39): `GET /api/v1/dashboard/stream` sent its first snapshot **before**
   it captured the probe baseline. A client that reacts to the snapshot — the integration test

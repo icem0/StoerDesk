@@ -1380,14 +1380,14 @@ surface under `/api/docs`. The phase is split into **WP-M10-02 … WP-M10-18** i
 numeric order: API-key schema and contracts → admin routes → admin UI → bearer auth
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
-export/erasure → uploads backup and restore drill → exit criterion. Implemented so
-far: **WP-M10-02 … WP-M10-17** — API-key schema, admin routes and page, bearer
+export/erasure → uploads backup and restore drill → exit criterion. Implemented: **WP-M10-02 … WP-M10-18** — API-key schema, admin routes and page, bearer
 authentication, OpenAPI, external object and ticket API, webhook endpoints, the
 per-minute HMAC delivery worker, the webhook admin page with its OpenAPI paths,
 the CSV import service and its two routes
 (`POST /api/v1/objects/import/preview` and `POST /api/v1/objects/import` under
 `object.import`), the CSV import page at `/objects/import` (WP-M10-14) and the
-personal-data export and erasure routes (WP-M10-16). The CSV service parses comma or semicolon files
+personal-data export and erasure routes (WP-M10-16), closed by the phase-10 exit
+criterion (WP-M10-18). Phase 10 is complete. The CSV service parses comma or semicolon files
 (quoted fields, 2 MB / 5,000 rows), maps the header case-insensitively through
 the German aliases of §9.4, previews every row as `new`, `changed`,
 `unchanged` or `error` and commits the valid rows in one transaction where a
