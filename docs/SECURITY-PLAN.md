@@ -20,6 +20,18 @@ only the object numbers of the file through `lower(object_no)` with drizzle-boun
 values, every row passes through the existing create-object contract and the commit
 runs in one transaction with per-row `{ code, params }` errors. No new finding.
 
+CSV-route pass: 2026-11-10, diff `b087bd2..6087bd4` (WP-M10-13, 3 Dateien + die
+Versionfile) — areas A and B re-checked in full (93 routes: the package adds
+`POST /api/v1/objects/import` and `POST /api/v1/objects/import/preview`, both with
+the `object.import` preHandler, no public capability and no bearer scope; die
+guard answer `401 session_invalid` before `403 forbidden`), C–K re-checked for
+`apps/api/src/objects/import-routes.ts` and `apps/api/src/index.ts`: the request
+body passes through `objectImportRequestSchema` before anything is read (die
+`csv` string is length-bound, an unknown mapping target is rejected with the
+field path `mapping.<header>`), no value is interpolated into SQL there (the
+service of WP-M10-12 binds its values through drizzle) and neither answer noch
+log carries contact data or a token. No new finding.
+
 Findings never live in the repository. They go into **`.security/findings.md`**
 (gitignored via `.gitignore` line `.security/`). Tracked files, commit messages and
 work-package titles never carry the location or description of an open gap.
@@ -73,6 +85,7 @@ Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
 | GET/POST/PATCH/DELETE | /api/v1/text-templates[/:id] | settings.read / settings.write |
 | GET | /api/v1/public/text-templates | public catalog (active only) |
 | GET/POST/PATCH/DELETE | /api/v1/objects[/:objectNo] | object.read / object.write / object.delete |
+| POST | /api/v1/objects/import and /api/v1/objects/import/preview | object.import (objects/import-routes.ts:42) |
 | POST | /api/v1/objects/:objectNo/regenerate-qr | object.regenerate_qr (objects/qr.ts:164) |
 | GET | /api/v1/public/qr/:token | public QR resolve |
 | GET/POST/PATCH/DELETE | /api/v1/oncall/pools[/:id] | oncall.read / oncall.admin |
