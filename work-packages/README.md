@@ -537,7 +537,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-02 | API-key table, shared contracts and migration                     | done                    | yes     |
 | WP-M10-03 | admin API-key routes and hashing service                          | done                    | yes     |
 | WP-M10-04 | admin API-key page                                                | done                    | yes     |
-| WP-M10-05 | bearer API-key authentication and scope guard                     | planned                 | yes     |
+| WP-M10-05 | bearer API-key authentication and scope guard                     | done                    | yes     |
 | WP-M10-06 | OpenAPI document under `/api/docs`                                | planned                 | yes     |
 | WP-M10-07 | external object API with updated-since, upsert and bulk           | planned                 | yes     |
 | WP-M10-08 | external ticket API and API-key work-order update                 | planned                 | yes     |

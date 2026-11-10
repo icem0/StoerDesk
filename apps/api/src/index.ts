@@ -8,6 +8,7 @@ import { adminApiKeyRoutes } from './admin/api-keys'
 import { adminGroupsRoutes } from './admin/groups'
 import { adminRolesRoutes } from './admin/roles'
 import { adminUsersRoutes } from './admin/users'
+import { apiKeyPlugin, apiKeyProbeRoutes } from './auth/apiKeyPlugin'
 import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
 import { sessionPlugin } from './auth/sessionPlugin'
@@ -117,6 +118,7 @@ export async function buildServer() {
 
   // The session hook has to run before the routes that read `request.user`.
   await app.register(sessionPlugin, { database, env })
+  await app.register(apiKeyPlugin, { database })
   await app.register(authRoutes, { database, env })
   await app.register(adminUsersRoutes, { database })
   await app.register(adminRolesRoutes, { database })
@@ -157,6 +159,7 @@ export async function buildServer() {
   // or production (`specs/01-rbac.md` §3.7).
   if (env.NODE_ENV === 'test') {
     await app.register(permissionProbeRoutes, { database })
+    await app.register(apiKeyProbeRoutes, { database })
   }
 
   app.get('/api/v1/health', async () => ({ status: 'ok' }))

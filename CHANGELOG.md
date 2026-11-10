@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- External requests can authenticate with `Authorization: Bearer sk_...` (WP-M10-05): `apiKeyPlugin` verifies the hashed key, rejects malformed, revoked and expired keys with `401 api_key_invalid`, and the dual guard `requireScopeOrPermission` accepts a session permission or an API-key scope while a key without its scope gets `403 forbidden`.
 - The admin page `/admin/api-keys` lists, creates and revokes external API keys (WP-M10-04): scope checkboxes, optional expiry, the plaintext token shown exactly once with a dismiss action, and read-only mode without `apikey.write`.
 - Phase 10 (API and hardening) is split and started (WP-M10-01): `specs/08-objects-api.md`
   now defines CSV object import (§9.4) and the external REST API (§9.5) — bearer API keys

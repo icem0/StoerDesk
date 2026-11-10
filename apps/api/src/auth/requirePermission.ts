@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest, preHandlerHookHandler } from 'fastify'
 import fp from 'fastify-plugin'
-import { isPermissionKey, type PermissionKey } from '@stoerdesk/shared'
+import { isPermissionKey, type ApiKeyScope, type PermissionKey } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
 import { permissions, rolePermissions, roles, userPermissions, userRoles } from '../db/schema'
@@ -106,6 +106,32 @@ async function checkPermission(
   request.log.debug({ code: 'forbidden', required: keys })
 
   await reply.code(403).send({ code: 'forbidden', params: {} })
+}
+
+/**
+ * Dual guard of the external routes (`specs/08-objects-api.md` §9.5, WP-M10-05):
+ * a valid bearer key needs the scope, a session needs the permission. A key
+ * without its scope answers `403 forbidden` and never falls back to a session.
+ */
+export function requireScopeOrPermission(
+  database: PermissionDatabase,
+  scope: ApiKeyScope,
+  permission: PermissionKey,
+): preHandlerHookHandler {
+  return async (request, reply) => {
+    if (request.apiKey !== undefined) {
+      if (request.apiKey.scopes.includes(scope)) {
+        return
+      }
+
+      request.log.debug({ code: 'forbidden', requiredScope: scope })
+      await reply.code(403).send({ code: 'forbidden', params: {} })
+
+      return
+    }
+
+    return checkPermission(database, [permission], request, reply)
+  }
 }
 
 /** preHandler factory around `checkPermission`, used by every guarded route. */

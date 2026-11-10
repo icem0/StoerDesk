@@ -1,7 +1,7 @@
 # WP-M10-05: Bearer API-key authentication and scope guard
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-03
 phase: 10
 milestone: m10
@@ -18,7 +18,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/auth/apiKeyPlugin.ts
+- apps/api/src/auth/{apiKeyPlugin.ts,__tests__/apiKeyPlugin.integration.spec.ts}
 - apps/api/src/auth/requirePermission.ts
 - apps/api/src/index.ts
 
@@ -56,7 +56,7 @@ scope and the session path.
 
 ## Handoff
 
-- Files changed: the plugin, the guard and the server registration
+- Files changed: the plugin, the dual guard, the server registration, the test-only probe routes and an integration test
 - Interfaces added: `request.apiKey`, `requireScopeOrPermission`
 - Verified: the commands above
 - Follow-up WP: WP-M10-06, WP-M10-07, WP-M10-08
