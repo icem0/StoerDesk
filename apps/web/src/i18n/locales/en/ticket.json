@@ -357,6 +357,9 @@
     },
     "history": "History",
     "historyEmpty": "No events.",
+    "actor": {
+      "external": "External: {{name}}"
+    },
     "photos": {
       "title": "Photos",
       "sizeKB": "{{size}} kB",

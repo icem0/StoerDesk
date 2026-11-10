@@ -1149,8 +1149,13 @@ export function TicketDetailPage() {
                     {t(`status.events.${event.type}`) ?? event.type}
                   </div>
                   <div className="text-xs text-slate-400">
-                    {t(`actorKind.${event.actorKind}`) ?? event.actorKind}
-                    {event.actorName !== null ? ` (${event.actorName})` : ''}
+                    {event.actorKind === 'user'
+                      ? (event.actorName ?? t('detail.field.unknown'))
+                      : event.actorKind === 'public'
+                        ? t('detail.actor.external', {
+                            name: event.actorName ?? t('detail.field.unknown'),
+                          })
+                        : t(`actorKind.${event.actorKind}`)}
                   </div>
                   {(() => {
                     const text =
