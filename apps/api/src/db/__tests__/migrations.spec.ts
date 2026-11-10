@@ -213,8 +213,32 @@ describe('migration 0011 update run error detail', () => {
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
 
-    expect(entries.at(-1)?.tag).toBe('0026_api_keys')
+    expect(entries.at(-1)?.tag).toBe('0027_webhooks')
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
+  })
+})
+
+describe('migration 0027 webhooks', () => {
+  const sql = readMigration('0027_webhooks')
+
+  it('creates the endpoint and delivery tables with the idempotency key', () => {
+    expect(sql).toContain('CREATE TABLE "webhook_endpoints"')
+    expect(sql).toContain('CREATE TABLE "webhook_deliveries"')
+    expect(sql).toContain(
+      'CREATE UNIQUE INDEX "webhook_deliveries_endpoint_event_key" ON "webhook_deliveries" USING btree ("endpoint_id","event_id")',
+    )
+  })
+
+  it('restricts events and delivery states and keeps history on endpoint delete', () => {
+    expect(sql).toContain(
+      'CHECK ("webhook_endpoints"."events" <@ ARRAY[\'ticket.created\',\'ticket.status_changed\']::text[]',
+    )
+    expect(sql).toContain(
+      'CHECK ("webhook_deliveries"."status" IN (\'PENDING\', \'SENT\', \'FAILED\'))',
+    )
+    expect(sql).toContain(
+      'FOREIGN KEY ("endpoint_id") REFERENCES "public"."webhook_endpoints"("id") ON DELETE set null',
+    )
   })
 })
 

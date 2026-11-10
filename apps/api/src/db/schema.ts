@@ -102,6 +102,74 @@ export const apiKeys = pgTable(
   ],
 )
 
+export const WEBHOOK_EVENT_TYPES = ['ticket.created', 'ticket.status_changed'] as const
+
+export const WEBHOOK_DELIVERY_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
+
+/**
+ * Admin-managed webhook endpoints of the external API
+ * (`specs/08-objects-api.md` §9.5, ADR-0013, WP-M10-09). Delivery is a separate
+ * subsystem and never part of the ticket transaction.
+ */
+export const webhookEndpoints = pgTable(
+  'webhook_endpoints',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    url: text('url').notNull(),
+    secret: text('secret').notNull(),
+    events: text('events').array().notNull(),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('webhook_endpoints_active_idx').on(table.active),
+    check(
+      'webhook_endpoints_events_check',
+      sql`${table.events} <@ ARRAY['ticket.created','ticket.status_changed']::text[] AND cardinality(${table.events}) > 0`,
+    ),
+  ],
+)
+
+/**
+ * One delivery attempt chain per endpoint and ticket event. The unique
+ * `(endpoint_id, event_id)` key makes the collection scan idempotent. A deleted
+ * endpoint keeps its delivery history: the reference is set to `NULL`.
+ */
+export const webhookDeliveries = pgTable(
+  'webhook_deliveries',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    endpointId: uuid('endpoint_id').references(() => webhookEndpoints.id, {
+      onDelete: 'set null',
+    }),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => ticketEvents.id, { onDelete: 'cascade' }),
+    eventType: text('event_type').notNull(),
+    status: text('status').notNull().default('PENDING'),
+    attempts: integer('attempts').notNull().default(0),
+    lastStatus: integer('last_status'),
+    lastDurationMs: integer('last_duration_ms'),
+    nextAttemptAt: timestamp('next_attempt_at', timestampOptions).notNull().defaultNow(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('webhook_deliveries_endpoint_event_key').on(table.endpointId, table.eventId),
+    index('webhook_deliveries_status_next_attempt_idx').on(table.status, table.nextAttemptAt),
+    index('webhook_deliveries_event_id_idx').on(table.eventId),
+    check(
+      'webhook_deliveries_event_type_check',
+      sql`${table.eventType} IN (${checkList(WEBHOOK_EVENT_TYPES)})`,
+    ),
+    check(
+      'webhook_deliveries_status_check',
+      sql`${table.status} IN (${checkList(WEBHOOK_DELIVERY_STATUSES)})`,
+    ),
+  ],
+)
+
 export const groups = pgTable(
   'groups',
   {

@@ -1,7 +1,7 @@
 # WP-M10-09: Webhook endpoints, table and admin API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-08
 phase: 10
 milestone: m10
