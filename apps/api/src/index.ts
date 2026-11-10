@@ -22,6 +22,7 @@ import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './c
 import { createDatabase } from './db/client'
 import { runMigrations } from './db/migrate'
 import { externalObjectRoutes } from './objects/external'
+import { objectImportRoutes } from './objects/import-routes'
 import { objectRoutes } from './objects/service'
 import { openApiPlugin } from './openapi'
 import { oncallPoolsRoutes } from './oncall/pools'
@@ -137,6 +138,7 @@ export async function buildServer() {
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(externalObjectRoutes, { database })
+  await app.register(objectImportRoutes, { database })
   await app.register(oncallPoolsRoutes, { database })
   await app.register(oncallRoutes, { database })
   await app.register(bmaSyncRoutes, { database, env })

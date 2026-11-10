@@ -448,6 +448,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | done                    | yes     |
 | WP-M5-09  | sign-out clears the `internal-tickets` cache                        | done                    | yes     |
 | WP-M5-10  | comment POST sends its client uuid; standalone comment box           | done                    | no      |
+| WP-M5-11  | comment composer facelift and readable history entries               | done                    | no      |
 | WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
 | WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
 | WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
@@ -546,7 +547,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-10 | webhook delivery worker with HMAC and backoff                     | done                    | yes     |
 | WP-M10-11 | webhook admin page and OpenAPI paths                              | done                    | yes     |
 | WP-M10-12 | CSV parsing, mapping and preview service                          | done                    | yes     |
-| WP-M10-13 | CSV import preview and commit routes                             | planned                 | yes     |
+| WP-M10-13 | CSV import preview and commit routes                             | done                    | yes     |
 | WP-M10-14 | CSV import page                                                   | planned                 | yes     |
 | WP-M10-15 | privacy retention job                                             | planned                 | yes     |
 | WP-M10-16 | personal-data export and erasure routes                           | planned                 | yes     |

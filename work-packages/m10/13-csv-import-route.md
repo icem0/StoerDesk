@@ -1,7 +1,7 @@
 # WP-M10-13: CSV import preview and commit routes
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-12
 phase: 10
 milestone: m10
