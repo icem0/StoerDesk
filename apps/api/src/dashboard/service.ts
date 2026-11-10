@@ -4,6 +4,7 @@ import type { Database } from '../db/client'
 import { TICKET_STATUSES } from '../db/schema'
 import { resolveOnCallPerson } from '../oncall/coupling'
 import {
+  computeTicketTimeline,
   dashboardSnapshotSchema,
   type DashboardSnapshot,
   type DashboardEvaluations,
@@ -297,16 +298,33 @@ type BurningNowRow = NonNullable<DashboardSnapshot['burningNow']>[number]
  *  by `dashboardSnapshotSchema` before the snapshot leaves the dashboard API. */
 type BurningNowRowWithId = BurningNowRow & { objectId: string }
 
+/**
+ * The open tickets of the dashboard (WP-M10-30), ordered by the nearest
+ * deadline. Every row carries the mini timeline of `specs/05-timeline.md`
+ * §5.3 — computed with the shared function and the same inputs as the ticket
+ * list (`apps/api/src/tickets/list.ts`) — and the last entry of the history
+ * of the ticket.
+ */
 export async function resolveBurningNow(
   database: Db,
+  now: Date = new Date(),
 ): Promise<BurningNowRowWithId[]> {
   const rows = (await database.execute(sql`
-    SELECT ticket_no, object_id, object_name, status, priority, deadline_at,
-      reported_at
-    FROM stats_tickets
-    WHERE status NOT IN ('CLOSED', 'CANCELLED')
-      AND is_test = false
-    ORDER BY deadline_at ASC
+    SELECT t.ticket_no, t.object_id, t.object_name, t.status, t.priority,
+      t.deadline_at, t.reported_at, t.acknowledged_at,
+      e.type AS last_event_type, e.created_at AS last_event_at
+    FROM stats_tickets AS t
+    LEFT JOIN LATERAL (
+      SELECT te.type, te.created_at
+      FROM ticket_events AS te
+      JOIN tickets AS tk ON tk.id = te.ticket_id
+      WHERE tk.ticket_no = t.ticket_no
+      ORDER BY te.created_at DESC, te.id DESC
+      LIMIT 1
+    ) AS e ON TRUE
+    WHERE t.status NOT IN ('CLOSED', 'CANCELLED')
+      AND t.is_test = false
+    ORDER BY t.deadline_at ASC
     LIMIT 10
   `)) as {
     ticket_no: string
@@ -316,17 +334,39 @@ export async function resolveBurningNow(
     priority: string
     deadline_at: Date
     reported_at: Date
+    acknowledged_at: Date | null
+    last_event_type: string | null
+    last_event_at: Date | null
   }[]
 
-  return rows.map((row) => ({
-    ticketNo: row.ticket_no,
-    objectName: row.object_name,
-    objectId: row.object_id,
-    status: row.status as TicketStatus,
-    priority: row.priority as TicketPriority,
-    deadlineAt: new Date(row.deadline_at).toISOString(),
-    reportedAt: new Date(row.reported_at).toISOString(),
-  }))
+  return rows.map((row) => {
+    const timeline = computeTicketTimeline({
+      reportedAt: row.reported_at,
+      deadlineAt: row.deadline_at,
+      stoppedAt: row.acknowledged_at,
+      now,
+    })
+
+    return {
+      ticketNo: row.ticket_no,
+      objectName: row.object_name,
+      objectId: row.object_id,
+      status: row.status as TicketStatus,
+      priority: row.priority as TicketPriority,
+      deadlineAt: new Date(row.deadline_at).toISOString(),
+      reportedAt: new Date(row.reported_at).toISOString(),
+      timelineState: timeline.state,
+      percent: timeline.percent,
+      remainingMs: timeline.remainingMs,
+      lastEvent:
+        row.last_event_type === null || row.last_event_at === null
+          ? null
+          : {
+              type: row.last_event_type,
+              at: new Date(row.last_event_at).toISOString(),
+            },
+    }
+  })
 }
 
 /** One dashboard snapshot, computed in the database (`specs/11-dashboard.md` §11.2).
@@ -355,6 +395,6 @@ export async function buildDashboardSnapshot(
     faultFree: { since, days, recordDays },
     evaluations,
     tiles,
-    burningNow: await resolveBurningNow(database),
+    burningNow: await resolveBurningNow(database, now),
   })
 }

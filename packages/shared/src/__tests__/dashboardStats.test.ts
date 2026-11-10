@@ -107,6 +107,10 @@ describe('dashboardSnapshotSchema', () => {
         priority: 'critical',
         deadlineAt: '2026-03-12T07:00:00Z',
         reportedAt: '2026-03-09T08:00:00Z',
+        timelineState: 'stopped',
+        percent: 12.5,
+        remainingMs: 2_700_000,
+        lastEvent: { type: 'acknowledged', at: '2026-03-09T11:00:00Z' },
       },
     ],
   }

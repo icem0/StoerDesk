@@ -76,6 +76,10 @@ type DashboardSnapshot = {
     priority: TicketPriority
     deadlineAt: string
     reportedAt: string
+    timelineState: 'green' | 'yellow' | 'orange' | 'red' | 'stopped'
+    percent: number
+    remainingMs: number
+    lastEvent: null | { type: string; at: string }
   }>
 }
 ```
@@ -85,6 +89,11 @@ type DashboardSnapshot = {
 wall display (§11.7), not by the start page. The on-call tile
 reuses `resolveOnCallPerson` of `specs/04-oncall.md` §4a.6; `phone` comes from
 the user contact data and is never part of the wall display.
+
+Every row carries the mini timeline of `specs/05-timeline.md` §5.3 —
+`timelineState`, `percent` and `remainingMs`, computed with the shared
+function and the same inputs as the ticket list — and the last entry of the
+history of the ticket (`lastEvent`, `null` when the ticket has no event yet).
 
 ## 11.3 Fault-free counter and record
 

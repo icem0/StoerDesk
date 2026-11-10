@@ -567,6 +567,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
 | WP-M10-19 | dashboard evaluations: average durations, no worst value          | done                    | yes     |
 | WP-M10-19b | evaluation block on the dashboard start page                     | done                    | yes     |
+| WP-M10-30  | the open tickets of the snapshot carry the mini timeline and the last event | planned              | yes     |
+| WP-M10-31  | one list of the open tickets for the dashboard and the wall display    | planned                 | yes     |
+| WP-M10-32  | the start page shows the statistics and the open tickets               | planned                 | yes     |
+| WP-M10-33  | the readiness calendar of the office                                   | planned                 | yes     |
+| WP-M10-34  | the on-call page shows the calendar and the own readiness              | planned                 | yes     |
+| WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

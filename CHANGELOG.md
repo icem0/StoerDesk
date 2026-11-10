@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The open tickets of the dashboard carry the mini timeline and the last event (WP-M10-30):
+  every row of the snapshot's `burningNow` list answers `timelineState`, `percent` and
+  `remainingMs` — computed with the shared `computeTicketTimeline` and the same inputs as
+  the ticket list — plus `lastEvent`, the newest entry of the history of the ticket (`null`
+  when the ticket has no event yet). The dashboard and the wall display can show the same
+  thing.
 
 - Dashboard evaluation block on the start page (WP-M10-19b): below the tiles the page
   shows the four averages of the snapshot's `evaluations` block — review, first response,

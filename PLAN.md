@@ -1420,6 +1420,19 @@ addition. Its follow-up WP-M10-19b renders the block on the start page below the
 (one labelled line per average, `keine Daten` for a `null` average, no max/p90/median line)
 with the labels under `dashboard.evaluations.*` in `de` and `en`.
 
+**The dashboard of the wall display (WP-M10-30 … WP-M10-35, out of band in phase 10).**
+The office asked for the start page to show what the wall display shows: first the
+statistics, then the open tickets — with the last entry of the history and the timeline
+in every row — and no readiness any more; the readiness becomes a page of its own with
+the calendar of everybody who has it. The wording "Brennt jetzt" is gone: the category is
+called "offene Tickets". WP-M10-30 gives every row of the snapshot the mini timeline of
+`specs/05-timeline.md` §5.3 (`timelineState`, `percent`, `remainingMs`) and the last event
+of the ticket (`lastEvent`), computed with the shared function and the same inputs as the
+ticket list; WP-M10-31 writes the list once for both pages and drops the on-call panel of
+the wall display; WP-M10-32 puts the statistics first on the start page and removes its
+on-call tile; WP-M10-33 and WP-M10-34 build the readiness calendar and hang it above the
+own readiness of `/oncall`; WP-M10-35 adds "Bereitschaft" to the header navigation.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

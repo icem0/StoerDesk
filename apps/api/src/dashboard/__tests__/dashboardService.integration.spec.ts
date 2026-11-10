@@ -5,7 +5,7 @@ import postgres from 'postgres'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
-import { objects, oncallPools, oncallShifts, outbox, tickets, users } from '../../db/schema'
+import { objects, oncallPools, oncallShifts, outbox, ticketEvents, tickets, users } from '../../db/schema'
 import {
   buildDashboardSnapshot,
   resolveBurningNow,
@@ -181,6 +181,22 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
       state: 'PENDING',
       createdAt: new Date('2026-03-10T09:45:00Z'),
     })
+
+    // Two events of the same ticket: the newest one is the last entry of
+    // the history the dashboard shows.
+    await db.insert(ticketEvents).values({
+      ticketId: ticketAId,
+      type: 'review_started',
+      actorKind: 'user',
+      createdAt: new Date('2026-03-09T09:00:00Z'),
+    })
+
+    await db.insert(ticketEvents).values({
+      ticketId: ticketAId,
+      type: 'commented',
+      actorKind: 'user',
+      createdAt: new Date('2026-03-10T09:15:00Z'),
+    })
   })
 
   it('resolves the fault-free counter: since is the newest qualifying report', async () => {
@@ -270,16 +286,57 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
     })
   })
 
-  it('resolves burning now ordered by nearest deadline', async () => {
-    const burning = await resolveBurningNow(db)
+    it('resolves burning now ordered by nearest deadline', async () => {
+      const burning = await resolveBurningNow(db, now)
 
-    expect(burning).toHaveLength(3)
-    const [first, second, third] = burning
+      expect(burning).toHaveLength(3)
+      const [first, second, third] = burning
 
-    expect(onlyRow(first, 'first burning row').ticketNo).toBe('ST-2026-0001')
-    expect(onlyRow(second, 'second burning row').ticketNo).toBe('ST-2026-0005')
-    expect(onlyRow(third, 'third burning row').ticketNo).toBe('ST-2026-0002')
-  })
+      expect(onlyRow(first, 'first burning row').ticketNo).toBe('ST-2026-0001')
+      expect(onlyRow(second, 'second burning row').ticketNo).toBe('ST-2026-0005')
+      expect(onlyRow(third, 'third burning row').ticketNo).toBe('ST-2026-0002')
+    })
+
+    it('carries the mini timeline of every open ticket', async () => {
+      const burning = await resolveBurningNow(db, now)
+      const [first, second, third] = burning
+
+      // Reported and due at the same instant: the bar is full and overdue.
+      expect(onlyRow(first, 'first burning row')).toMatchObject({
+        ticketNo: 'ST-2026-0001',
+        timelineState: 'red',
+        percent: 100,
+        remainingMs: 0,
+      })
+
+      // Reported 07:00, due 12:00, now 10:00: three of five hours are gone.
+      expect(onlyRow(second, 'second burning row')).toMatchObject({
+        ticketNo: 'ST-2026-0005',
+        timelineState: 'yellow',
+        percent: 60,
+        remainingMs: 7_200_000,
+      })
+
+      // Acknowledged at 09:00: the timeline stopped there.
+      expect(onlyRow(third, 'third burning row')).toMatchObject({
+        ticketNo: 'ST-2026-0002',
+        timelineState: 'stopped',
+        percent: 4.17,
+        remainingMs: 82_800_000,
+      })
+    })
+
+    it('carries the last entry of the history of a ticket', async () => {
+      const burning = await resolveBurningNow(db, now)
+      const [first, second, third] = burning
+
+      expect(onlyRow(first, 'first burning row').lastEvent).toEqual({
+        type: 'commented',
+        at: '2026-03-10T09:15:00.000Z',
+      })
+      expect(onlyRow(second, 'second burning row').lastEvent).toBeNull()
+      expect(onlyRow(third, 'third burning row').lastEvent).toBeNull()
+    })
 
   it('builds the full snapshot', async () => {
     const snapshot = await buildDashboardSnapshot(db, { now })

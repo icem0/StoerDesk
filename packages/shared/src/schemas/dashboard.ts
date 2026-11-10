@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { TICKET_PRIORITIES } from '../timeline.js'
+import { TICKET_PRIORITIES, type TimelineState } from '../timeline.js'
 import { ticketNoSchema, ticketStatusSchema } from './ticket.js'
 
 /**
@@ -29,6 +29,25 @@ const channelTileSchema = z.object({
   failed: z.number().int().nonnegative(),
 })
 
+/**
+ * The five states of the bar (`specs/05-timeline.md` §5.3). The tuple is
+ * checked against the type of the shared timeline function, so a state
+ * cannot exist in one place only.
+ */
+const timelineStates = [
+  'green',
+  'yellow',
+  'orange',
+  'red',
+  'stopped',
+] as const satisfies readonly TimelineState[]
+
+/**
+ * One open ticket of the dashboard (WP-M10-30). Besides the fields of the
+ * ticket the row carries the mini timeline of `specs/05-timeline.md` §5.3 —
+ * the same values the ticket list answers — and the last entry of the
+ * history, so the dashboard and the wall display show the same thing.
+ */
 const burningNowRowSchema = z.object({
   ticketNo: ticketNoSchema,
   objectName: z.string(),
@@ -36,6 +55,10 @@ const burningNowRowSchema = z.object({
   priority: z.enum(TICKET_PRIORITIES),
   deadlineAt: z.iso.datetime(),
   reportedAt: z.iso.datetime(),
+  timelineState: z.enum(timelineStates),
+  percent: z.number().min(0).max(100),
+  remainingMs: z.number().int().nonnegative(),
+  lastEvent: z.object({ type: z.string(), at: z.iso.datetime() }).nullable(),
 })
 
 /**
