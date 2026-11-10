@@ -459,6 +459,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-14  | history actor names from the directory, not the login                | done                    | no      |
 | WP-M5-15  | history actors as name or "Extern: name"                             | done                    | no      |
 | WP-M5-16  | workflow E2E expects the actor name, not the actor kind              | done                    | yes     |
+| WP-M5-17  | the ticket view shows a write immediately                             | done                    | yes     |
+| WP-M5-18  | comment confirmation and browser spell check                          | done                    | yes     |
 | WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
 | WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
 | WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
@@ -994,6 +996,23 @@ header, the labels under `dashboard.evaluations.*` in `de` and `en`, and no
 max/p90/median line anywhere — the worst reaction time is not part of the page.
 
 ## Validation
+**The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
+office asked for three things on the ticket detail page: a saved comment must be
+visible at once, the save must warn that the comment can no longer be corrected,
+and the comment field should have a spell check. **WP-M5-17** fixes the first
+one: the detail of a ticket is served from the `internal-tickets` cache with
+`StaleWhileRevalidate` (WP-M5-07), so the refetch after a write answered with
+the copy from before the write and the comment stayed invisible until the next
+reload. A write to a ticket now drops that copy — the service worker owns the
+cache, so the invalidation belongs to the service worker
+(`apps/web/src/sw.ts`, `isInternalTicketWrite`, `invalidateCachedTicket`).
+**WP-M5-18** adds the warning: clicking "Kommentar speichern" opens a dialog
+that names the append-only rule of `PLAN.md` §6.1, shows the text again and
+offers "Speichern" and "Abbrechen"; the write runs only after the
+confirmation. The spell check is the one of the browser — the field carries the
+interface language and `spellCheck`, so it works offline and ships no extra
+download.
+
 
 ```bash
 npm run wp:check

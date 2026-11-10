@@ -36,6 +36,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the ticket list — plus `lastEvent`, the newest entry of the history of the ticket (`null`
   when the ticket has no event yet). The dashboard and the wall display can show the same
   thing.
+=======
+- A saved comment is visible at once (WP-M5-17): the service worker serves the ticket
+  detail from its `internal-tickets` cache, so the read after a write answered with the
+  copy from before the write and the comment stayed invisible until the next reload. A
+  write to a ticket now drops that copy — the service worker owns the cache, so it
+  invalidates it itself.
+- The comment composer warns before it writes (WP-M5-18): clicking "Kommentar speichern"
+  opens a dialog that names the append-only rule — a saved comment can no longer be
+  changed or deleted — shows the text again and offers "Speichern" and "Abbrechen". The
+  write runs only after the confirmation.
+- The comment field checks the spelling with the dictionary of the browser (WP-M5-18): it
+  carries the interface language (`de` or `en`) and `spellCheck`, and a line under the
+  field names the browser spell check. It works offline and ships no extra download.
+
 
 - Dashboard evaluation block on the start page (WP-M10-19b): below the tiles the page
   shows the four averages of the snapshot's `evaluations` block — review, first response,

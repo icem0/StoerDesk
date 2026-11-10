@@ -1451,6 +1451,23 @@ navigation: the entries are "Dashboard", "Tickets" and "Bereitschaft", the last 
 the readiness page `/oncall`.
 
 ## 17. Work package rules for small models
+**The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
+office asked for three things on the ticket detail page: a saved comment must be
+visible at once, the save must warn that the comment can no longer be corrected,
+and the comment field should have a spell check. **WP-M5-17** fixes the first
+one: the detail of a ticket is served from the `internal-tickets` cache with
+`StaleWhileRevalidate` (WP-M5-07), so the refetch after a write answered with
+the copy from before the write and the comment stayed invisible until the next
+reload — a write to a ticket now drops that copy, and the service worker owns
+the cache, so the invalidation belongs to the service worker
+(`apps/web/src/sw.ts`, `isInternalTicketWrite`, `invalidateCachedTicket`).
+**WP-M5-18** adds the warning: clicking "Kommentar speichern" opens a dialog
+that names the append-only rule of §6.1, shows the text again and offers
+"Speichern" and "Abbrechen"; the write runs only after the confirmation. The
+spell check is the one of the browser — the field carries the interface language
+and `spellCheck`, so it works offline and ships no extra download.
+
+
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
 the thread.

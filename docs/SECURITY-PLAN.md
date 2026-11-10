@@ -69,6 +69,19 @@ Findings never live in the repository. They go into **`.security/findings.md`**
 work-package titles never carry the location or description of an open gap.
 
 ## Run procedure
+Comment pass: 2026-11-10, diff `979f19e..` (WP-M5-17, WP-M5-18, the two web modules
+and the two locale files) — areas A and B re-checked in full (still 95 routes: the
+packages add no route, no capability and no bearer scope, so the guard answers are
+unchanged), C re-checked for the two changed web modules (the comment text is rendered
+as text by React and never assembled as HTML, the dialog only displays what the field
+holds) and D re-checked for `apps/web/src/sw.ts`, `apps/web/src/lib/sw-routes.ts` and
+`apps/web/src/features/tickets/ticket-detail-page.tsx`: the write route matches only
+`<api-base>/v1/tickets/<no>/<action>` (the public report and comment routes stay
+outside), the invalidation deletes the cached copy of the written ticket from the
+`internal-tickets` cache and touches no other cache, and the sign-out clear of that
+cache stays the only place that empties it. No new finding.
+
+
 
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token

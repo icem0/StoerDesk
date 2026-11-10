@@ -28,6 +28,18 @@ export function isInternalTicketRead(pathname: string): boolean {
   return detail.test(pathname)
 }
 
+/**
+ * Matches a write to a ticket: `POST <api-base>/v1/tickets/<ticketNo>/<action>`
+ * — the internal comment, acknowledge, decline and workflow routes. The public
+ * comment route `<api-base>/v1/public/tickets/<ticketNo>/comments`, the ticket
+ * reads and the ticket list do not match.
+ */
+export function isInternalTicketWrite(pathname: string): boolean {
+  const prefix = `${apiBaseUrl}/v1/tickets`
+  const write = new RegExp(`^${escapeRegExp(prefix)}/[^/]+/[^/]+$`)
+  return write.test(pathname)
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

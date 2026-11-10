@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isInternalTicketRead, isPublicReportPath } from '../sw-routes'
+import { isInternalTicketRead, isInternalTicketWrite, isPublicReportPath } from '../sw-routes'
 
 describe('isPublicReportPath', () => {
   it('matches the public report POST through the default API base', () => {
@@ -41,5 +41,26 @@ describe('isInternalTicketRead', () => {
   it('rejects anything under a non-default API base', () => {
     expect(isInternalTicketRead('/other/v1/tickets')).toBe(false)
     expect(isInternalTicketRead('/other/v1/tickets/ST-2026-0001')).toBe(false)
+  })
+})
+
+describe('isInternalTicketWrite', () => {
+  it('matches a comment on a ticket detail', () => {
+    expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001/comments')).toBe(true)
+  })
+
+  it('matches the workflow actions on a ticket detail', () => {
+    expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001/accept')).toBe(true)
+    expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001/acknowledge')).toBe(true)
+  })
+
+  it('rejects the ticket reads', () => {
+    expect(isInternalTicketWrite('/api/v1/tickets')).toBe(false)
+    expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001')).toBe(false)
+  })
+
+  it('rejects the public report and comment routes', () => {
+    expect(isInternalTicketWrite('/api/v1/public/tickets')).toBe(false)
+    expect(isInternalTicketWrite('/api/v1/public/tickets/ST-2026-0001/comments')).toBe(false)
   })
 })
