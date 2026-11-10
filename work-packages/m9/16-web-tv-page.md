@@ -1,7 +1,7 @@
 # WP-M9-16: web TV wall display
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-09, WP-M9-14
 phase: 9
 milestone: m9

@@ -16,6 +16,7 @@ import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { StartPage } from '../features/dashboard/start-page'
+import { TvPage } from '../features/dashboard/tv-page'
 import { StatsPage } from '../features/stats/stats-page'
 import { StickerPage } from '../features/objects/sticker-page'
 import { ObjectListPage } from '../features/objects/object-list-page'
@@ -245,6 +246,12 @@ export const routes: RouteObject[] = [
   {
     path: '/s/:token',
     element: <StatusPage />,
+  },
+  // The wall display has no session either: `/tv/:token` is public, outside the
+  // `Shell`, and more specific than the catch-all (WP-M9-16, specs/11-dashboard.md §11.7).
+  {
+    path: '/tv/:token',
+    element: <TvPage />,
   },
 ]
 

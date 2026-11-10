@@ -33,6 +33,14 @@
       "failed": "{{count}} failed",
       "failing": "Delivery failing"
     },
+    "tv": {
+      "notFound": "This wall display is not configured or has been reset.",
+      "onCallUnstaffed": "On-call shift not staffed",
+      "burningNow": "Burning now",
+      "empty": "No open tickets",
+      "remaining": "{{hours}} h left",
+      "overdue": "{{hours}} h overdue"
+    },
     "loading": "Loading dashboard …",
     "loadError": "The dashboard could not be loaded."
   },
