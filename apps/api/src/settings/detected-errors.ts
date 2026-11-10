@@ -52,16 +52,22 @@ function fieldPaths(error: z.ZodError) {
 }
 
 function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
-  )
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+
+  if ((error as { code?: string }).code === '23505') {
+    return true
+  }
+
+  return isUniqueViolation((error as { cause?: unknown }).cause)
 }
 
 async function usageCount(database: Db, key: string): Promise<number> {
   const [row] = await database
     .select({ total: sql<number>`count(*)` })
     .from(tickets)
-    .where(sql`${tickets.detectedErrorKeys} @> ${[key]}`)
+    .where(sql`${tickets.detectedErrorKeys} @> ARRAY[${key}]::text[]`)
 
   return Number(row?.total ?? 0)
 }

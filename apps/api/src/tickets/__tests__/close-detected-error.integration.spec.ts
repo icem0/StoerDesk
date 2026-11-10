@@ -72,6 +72,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return app.inject({
         method: 'GET',
         url: `/api/v1/tickets/${ticketNo}`,
+        headers: { cookie: officeCookie },
       })
     }
 
@@ -139,11 +140,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(200)
 
       const detail = await getTicket('ST-2026-9900')
-      const ticket = detail.json<{
-        status: string; detectedErrorKeys: string[]
-      }>()
-      expect(ticket.status).toBe('CLOSED')
-      expect(ticket.detectedErrorKeys).toEqual([])
+      expect(detail.json<{ ticket: { status: string } }>().ticket.status).toBe('CLOSED')
+
+      const [stored] = await db
+        .select({ detectedErrorKeys: tickets.detectedErrorKeys })
+        .from(tickets)
+        .where(eq(tickets.ticketNo, 'ST-2026-9900'))
+        .limit(1)
+
+      expect(stored?.detectedErrorKeys ?? []).toEqual([])
     })
 
     it('closes with comment and detected error keys', async () => {
@@ -157,11 +162,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(200)
 
       const detail = await getTicket('ST-2026-9900')
-      const ticket = detail.json<{
-        status: string; detectedErrorKeys: string[]
-      }>()
-      expect(ticket.status).toBe('CLOSED')
-      expect(ticket.detectedErrorKeys).toEqual([
+      expect(detail.json<{ ticket: { status: string } }>().ticket.status).toBe('CLOSED')
+
+      const [stored] = await db
+        .select({ detectedErrorKeys: tickets.detectedErrorKeys })
+        .from(tickets)
+        .where(eq(tickets.ticketNo, 'ST-2026-9900'))
+        .limit(1)
+
+      expect(stored?.detectedErrorKeys ?? []).toEqual([
         '00000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000002',
       ])

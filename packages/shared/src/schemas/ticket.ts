@@ -318,7 +318,11 @@ export const workOrderRequestSchema = z.object({
  */
 export const closeRequestSchema = z.object({
   comment: z.string().trim().max(2000).optional().transform((value) => (value === '' ? undefined : value)),
-  detectedErrorKeys: z.array(z.uuid()).max(20).default([]).transform((value) => (value.length === 0 ? undefined : value)),
+  detectedErrorKeys: z
+    .array(z.string().trim().min(1).max(100))
+    .max(20)
+    .default([])
+    .transform((value) => (value.length === 0 ? undefined : value)),
 })
 
 export type CloseRequest = z.infer<typeof closeRequestSchema>

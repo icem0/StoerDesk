@@ -17,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped detected-errors integration: ${testDatabase.reason}\n`)
 }
 
-const { users, roles, userRoles, tickets } = schema
+const { users, roles, userRoles, objects, tickets } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
@@ -198,6 +198,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('refuses delete of a key in use with 409 detected_error_in_use', async () => {
       await db
+        .insert(objects)
+        .values({
+          id: '00000000-0000-0000-0000-000000000000',
+          objectNo: 'OBJ-DETECTED-1',
+          name: 'Testobjekt Detected',
+          qrToken: 'qr-detected-1',
+        })
+
+      await db
         .insert(tickets)
         .values({
           objectId: '00000000-0000-0000-0000-000000000000',
@@ -215,7 +224,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(409)
       expect(response.json<ErrorResponseBody>()).toEqual({
         code: 'detected_error_in_use',
-        params: { key: 'verkabelung_defekt', usageCount: 1 },
+        params: { fields: ['key'], key: 'verkabelung_defekt', usageCount: 1 },
       })
     })
 
