@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { useDashboard } from './use-dashboard'
 import { OpenTickets } from './open-tickets'
-=======
+import { i18n } from '../../i18n'
 import { useFaultCatalog } from '../../features/tickets/use-fault-catalog'
 
 /**
@@ -173,7 +173,8 @@ export function StartPage() {
               linkRows
               rows={snapshot.burningNow}
             />
-=======
+          ) : null}
+
           {topFault !== undefined && topFault !== null ? (
             <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -186,29 +187,6 @@ export function StartPage() {
                 {t('dashboard.topFault.count', { count: topFault.count })}
               </p>
             </div>
-          ) : null}
-
-          {onCall !== null ? (
-            <Link className={`${TILE_CLASS} min-h-11`} to="/oncall">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                {t('dashboard.onCall.title')}
-              </p>
-              <p className="mt-1 text-lg font-semibold text-slate-200">
-                {onCall.kind === 'unstaffed'
-                  ? t('dashboard.onCall.unstaffed')
-                  : (onCall.name ?? t(`dashboard.onCall.${onCall.kind}`))}
-              </p>
-              <p className="mt-1 text-sm text-slate-400">
-                {onCallEndsAt === null
-                  ? t('dashboard.onCall.noEnd')
-                  : t('dashboard.onCall.endsAt', { time: onCallEndsAt })}
-              </p>
-              {onCall.warning !== null ? (
-                <p className="mt-2 inline-block rounded bg-amber-900/40 px-2 py-1 text-xs font-medium text-amber-200">
-                  {t(`dashboard.onCall.warning.${onCall.warning}`)}
-                </p>
-              ) : null}
-            </Link>
           ) : null}
 
           {channels !== null && channels.length > 0 ? (

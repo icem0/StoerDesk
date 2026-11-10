@@ -24,7 +24,6 @@
       "minutes": "{{count}} min",
       "noData": "no data"
     },
-=======
     "topFault": {
       "title": "Most frequent fault",
       "count": "{{count}}× in the last 30 days"

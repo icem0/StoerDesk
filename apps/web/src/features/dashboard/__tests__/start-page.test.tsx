@@ -203,14 +203,17 @@ describe('StartPage dashboard', () => {
   })
 
   it('keeps the channel warning as text', async () => {
-=======
-  it('renders the most frequent fault with its localized label and count', async () => {
     renderPage()
 
     await screen.findByText('12 Tag(e) ohne Störung')
 
     expect(screen.getByText('Zustellung gestört')).toBeTruthy()
-=======
+  })
+  it('renders the most frequent fault with its localized label and count', async () => {
+    renderPage()
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
     expect(screen.getByText('Frequentest fault')).toBeTruthy()
     expect(screen.getByText('Feueralarm ausgelöst')).toBeTruthy()
     expect(screen.getByText('3-mal in the last 30 days')).toBeTruthy()
@@ -226,4 +229,5 @@ describe('StartPage dashboard', () => {
 
     expect(screen.queryByText('Frequentest fault')).toBeNull()
   })
+
 })
