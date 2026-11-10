@@ -3,14 +3,38 @@
     "greeting": "StörDesk",
     "hint": "Hier erfassen Sie neue Störungen und behalten die offenen Vorgänge im Blick.",
     "primaryAction": "Neue Störung melden",
+    "faultFree": {
+      "title": "Störungsfreie Zeit",
+      "none": "Keine Störung seit Inbetriebnahme",
+      "days": "{{count}} Tag(e) ohne Störung",
+      "record": "Rekord: {{count}} Tag(e)"
+    },
     "tiles": {
-      "total": "Meldungen gesamt",
       "open": "offen",
       "overdue": "überfällig",
-      "unreviewed": "ohne Prüfung"
+      "unreviewed": "ohne Prüfung",
+      "pool": "im Pool"
     },
-    "loading": "Meldungen werden geladen …",
-    "loadError": "Die Meldungen konnten nicht geladen werden."
+    "onCall": {
+      "title": "Bereitschaft",
+      "confirmed": "bestätigt",
+      "planned": "geplant",
+      "unstaffed": "nicht besetzt",
+      "endsAt": "bis {{time}}",
+      "noEnd": "kein Ende angegeben",
+      "warning": {
+        "oncall_unconfirmed": "Bereitschaft noch nicht bestätigt",
+        "oncall_unstaffed": "Bereitschaft nicht besetzt"
+      }
+    },
+    "channels": {
+      "title": "Kanäle",
+      "pending": "{{count}} ausstehend",
+      "failed": "{{count}} fehlgeschlagen",
+      "failing": "Zustellung gestört"
+    },
+    "loading": "Dashboard wird geladen …",
+    "loadError": "Das Dashboard konnte nicht geladen werden."
   },
   "report": {
     "title": "Störung melden",

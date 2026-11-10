@@ -506,7 +506,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-11  | statistics: objects and compliance                                 | done                    | yes     |
 | WP-M9-12  | statistics routes                                                   | done                    | yes     |
 | WP-M9-13  | statistics CSV export                                               | done                    | yes     |
-| WP-M9-14  | web dashboard                                                       | planned                 | yes     |
+| WP-M9-14  | web dashboard                                                       | done                    | yes     |
 | WP-M9-15  | web statistics page                                                 | planned                 | yes     |
 | WP-M9-16  | web TV page                                                         | planned                 | yes     |
 | WP-M9-17  | web dashboard settings                                              | planned                 | yes     |

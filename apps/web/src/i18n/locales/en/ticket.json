@@ -3,14 +3,38 @@
     "greeting": "StörDesk",
     "hint": "Report new faults here and keep an eye on the open tickets.",
     "primaryAction": "Report a malfunction",
+    "faultFree": {
+      "title": "Fault-free time",
+      "none": "No fault since commissioning",
+      "days": "{{count}} day(s) without a fault",
+      "record": "Record: {{count}} day(s)"
+    },
     "tiles": {
-      "total": "tickets total",
       "open": "open",
       "overdue": "overdue",
-      "unreviewed": "not reviewed"
+      "unreviewed": "not reviewed",
+      "pool": "in the pool"
     },
-    "loading": "Loading tickets …",
-    "loadError": "The tickets could not be loaded."
+    "onCall": {
+      "title": "On call",
+      "confirmed": "confirmed",
+      "planned": "planned",
+      "unstaffed": "not staffed",
+      "endsAt": "until {{time}}",
+      "noEnd": "no end given",
+      "warning": {
+        "oncall_unconfirmed": "On-call shift not yet confirmed",
+        "oncall_unstaffed": "On-call shift not staffed"
+      }
+    },
+    "channels": {
+      "title": "Channels",
+      "pending": "{{count}} pending",
+      "failed": "{{count}} failed",
+      "failing": "Delivery failing"
+    },
+    "loading": "Loading dashboard …",
+    "loadError": "The dashboard could not be loaded."
   },
   "report": {
     "title": "Report a malfunction",

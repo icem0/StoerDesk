@@ -1,7 +1,7 @@
 # WP-M9-14: web dashboard with live updates
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-06, WP-M9-07, WP-M9-04
 phase: 9
 milestone: m9
