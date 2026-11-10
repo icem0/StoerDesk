@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { and, arrayContains, asc, count, eq, inArray, isNull } from 'drizzle-orm'
+import { and, arrayContains, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -92,6 +92,48 @@ async function usageCount(database: Db, key: string): Promise<number> {
   return Number(row?.total ?? 0)
 }
 
+/**
+ * Selection UIs (public report form + internal office form, WP-M10-20) order the
+ * fault catalog by how often a fault was reported in the last 30 days - most frequent
+ * first, ties by key - so the top-left checkbox in reading order is the fault the
+ * installation saw most often. The window matches the dashboard evaluation window
+ * (ADR-0015); test and suspected-spam tickets stay out. The management screen keeps
+ * an alphabetical list and re-sorts itself (text-templates-page.tsx, WP-M10-20b).
+ */
+const FAULT_CATALOG_WINDOW_DAYS = 30
+
+function recentCatalogWindowStart(now: Date = new Date()): Date {
+  return new Date(now.getTime() - FAULT_CATALOG_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+}
+
+async function recentFaultCounts(database: Db, windowStart: Date): Promise<Map<string, number>> {
+  const rows = (await database.execute(sql`
+    SELECT COALESCE("fault_template_key", '') AS key, COUNT(*)::text AS count
+    FROM "stats_ticket_faults"
+    WHERE "reported_at" >= ${sql.raw(`'${windowStart.toISOString()}'`)}::timestamptz
+      AND "is_test" = false
+      AND "suspected_spam" = false
+    GROUP BY "fault_template_key"
+  `)) as { key: string; count: string }[]
+
+  const counts = new Map<string, number>()
+
+  for (const row of rows) {
+    counts.set(row.key, Number(row.count))
+  }
+
+  return counts
+}
+
+/** Most frequent first, ties by key ascending - reading order for the checkbox grid. */
+function byRecentUsage(counts: Map<string, number>) {
+  return (a: { key: string }, b: { key: string }) => {
+    const difference = (counts.get(b.key) ?? 0) - (counts.get(a.key) ?? 0)
+
+    return difference !== 0 ? difference : a.key.localeCompare(b.key)
+  }
+}
+
 async function summaryOf(database: Db, row: TextTemplate): Promise<TextTemplateSummary> {
   const translationRows = await database
     .select({
@@ -179,7 +221,11 @@ export const settingsTextTemplateRoutes = fp<{ database: Db }>(
           ),
         )
 
-        return textTemplateListResponseSchema.parse({ templates: summaries })
+        const adminCounts = await recentFaultCounts(database, recentCatalogWindowStart())
+
+        return textTemplateListResponseSchema.parse({
+          templates: summaries.sort(byRecentUsage(adminCounts)),
+        })
       },
     )
 
@@ -319,9 +365,12 @@ export const settingsTextTemplateRoutes = fp<{ database: Db }>(
           ),
         )
         .where(isNull(textTemplates.archivedAt))
-        .orderBy(asc(textTemplates.key))
 
-      return publicTextTemplateListResponseSchema.parse({ templates: rows })
+      const counts = await recentFaultCounts(database, recentCatalogWindowStart())
+
+      return publicTextTemplateListResponseSchema.parse({
+        templates: rows.sort(byRecentUsage(counts)),
+      })
     })
   },
   { name: 'stoerdesk-settings-text-templates' },
