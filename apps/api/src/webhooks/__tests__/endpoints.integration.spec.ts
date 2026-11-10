@@ -10,7 +10,6 @@ import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/t
 import * as schema from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { buildServer } from '../../index'
-import { webhookRoutes } from '../endpoints'
 
 const testDatabase = await openTestDatabase()
 
@@ -101,7 +100,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.RATE_LIMIT_MAX = '10000'
 
       app = await buildServer()
-      await app.register(webhookRoutes, { database: db })
     })
 
     afterAll(async () => {
