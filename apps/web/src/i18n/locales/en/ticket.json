@@ -295,6 +295,7 @@
       "errors": {
         "notFound": "Ticket not found.",
         "actionFailed": "The action could not be performed.",
+        "dismiss": "Dismiss notice",
         "deleteFailed": "The ticket could not be deleted.",
         "fieldRequired": "Please complete the required fields first.",
         "deleteConfirmMismatch": "To confirm the deletion, type the ticket number again.",
@@ -396,7 +397,12 @@
       "title": "Options"
     },
     "comment": {
-      "submit": "Save comment"
+      "submit": "Save comment",
+      "hint": "Saved to the history",
+      "placeholder": "What happened? A note for the team …",
+      "counter": "{{count}} / {{max}} characters",
+      "shortcut": "Ctrl/⌘ + Enter to save",
+      "saved": "Comment saved."
     },
     "prompt": {
       "workOrderType": "Work order type (e. g. AA):",

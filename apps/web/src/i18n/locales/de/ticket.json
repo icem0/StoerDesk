@@ -295,6 +295,7 @@
       "errors": {
         "notFound": "Meldung nicht gefunden.",
         "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
+        "dismiss": "Hinweis schließen",
         "deleteFailed": "Die Meldung konnte nicht gelöscht werden.",
         "fieldRequired": "Please enter the required fields first.",
         "deleteConfirmMismatch": "Bitte die Vorgangsnummer zur Bestätigung erneut eingeben.",
@@ -396,7 +397,12 @@
       "title": "Optionen"
     },
     "comment": {
-      "submit": "Kommentar speichern"
+      "submit": "Kommentar speichern",
+      "hint": "Wird im Verlauf gespeichert",
+      "placeholder": "Was ist passiert? Notiz für das Team …",
+      "counter": "{{count}} / {{max}} Zeichen",
+      "shortcut": "Strg/⌘ + Enter zum Speichern",
+      "saved": "Kommentar gespeichert."
     },
     "prompt": {
       "workOrderType": "Auftragsart (z. B. AA):",

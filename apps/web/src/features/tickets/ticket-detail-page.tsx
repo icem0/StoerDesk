@@ -84,6 +84,7 @@ export function TicketDetailPage() {
   const { ticketNo } = useParams()
   const [fields, setFields] = useState<Record<string, string>>({})
   const [lastError, setLastError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ id: string; url: string } | null>(null)
@@ -92,6 +93,14 @@ export function TicketDetailPage() {
   const [stornoMode, setStornoMode] = useState<'cancel' | 'uncancel'>('cancel')
   const optionsMenuRef = useRef<HTMLDivElement>(null)
   const optionsButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (notice === null) {
+      return
+    }
+    const timeout = window.setTimeout(() => setNotice(null), 4000)
+    return () => window.clearTimeout(timeout)
+  }, [notice])
 
   useEffect(() => {
     if (!optionsOpen) {
@@ -127,12 +136,12 @@ export function TicketDetailPage() {
   const catalog = useFaultCatalog(locale)
   const labels = Object.fromEntries(catalog.map((entry) => [entry.key, entry.text]))
 
-  async function handleAction(event: string, body?: Record<string, unknown>) {
-    if (ticketNo === undefined) return
+  async function handleAction(event: string, body?: Record<string, unknown>): Promise<boolean> {
+    if (ticketNo === undefined) return false
 
     const segment = ACTION_SEGMENTS[event]
 
-    if (segment === undefined) return
+    if (segment === undefined) return false
 
     // The comment route requires an idempotency key; the outbox replay sends the
     // same shape (`outbox.ts`), so both paths share one receipt per write.
@@ -155,10 +164,11 @@ export function TicketDetailPage() {
       setLastError(null)
       setFields({})
       setSelectedAction(null)
+      return true
     } catch (error) {
       if (error instanceof ApiError) {
         setLastError(actionErrorMessage(error.code, error.params))
-        return
+        return false
       }
       // Network error (no ApiError): queue the write offline and show the
       // queued notice instead of an error (WP-M5-05).
@@ -166,6 +176,7 @@ export function TicketDetailPage() {
         ? 'comment'
         : segment) as 'acknowledge' | 'comment' | 'decline'
       await queueAction(actionKind, body ?? {})
+      return false
     }
   }
 
@@ -289,6 +300,18 @@ export function TicketDetailPage() {
    */
   const status = ticket.status
   const req = (name: string) => (fields[name] ?? '').trim()
+
+  async function submitComment() {
+    const text = req('commentText')
+    if (text === '') {
+      setLastError(t('detail.errors.fieldRequired'))
+      return
+    }
+    setLastError(null)
+    if (await handleAction('commented', { text })) {
+      setNotice(t('detail.comment.saved'))
+    }
+  }
 
   const menuEntries: { value: string; labelKey: string; divider?: boolean }[] = []
 
@@ -826,12 +849,37 @@ export function TicketDetailPage() {
       {stornoOpen && renderStornoDialog()}
 
       {lastError !== null && (
-        <p
-          className="rounded border border-rose-500/40 bg-rose-900/20 px-3 py-2 text-sm text-rose-300"
+        <div
+          className="flex items-start gap-3 rounded-lg border border-rose-500/40 bg-rose-900/20 px-3 py-2.5 text-sm text-rose-200"
           role="alert"
         >
-          {lastError}
-        </p>
+          <svg aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          </svg>
+          <p className="flex-1">{lastError}</p>
+          <button
+            className="rounded p-0.5 text-rose-300 hover:bg-rose-500/20 hover:text-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            type="button"
+            aria-label={t('detail.errors.dismiss')}
+            onClick={() => setLastError(null)}
+          >
+            <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {notice !== null && (
+        <div
+          className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-900/20 px-3 py-2.5 text-sm text-emerald-200"
+          role="status"
+        >
+          <svg aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m5 13 4 4L19 7" />
+          </svg>
+          {notice}
+        </div>
       )}
 
       {pendingCount > 0 && (
@@ -1026,40 +1074,56 @@ export function TicketDetailPage() {
         </div>
       )}
 
-      {/* Comment: always visible on active tickets, no trip through the options menu */}
+      {/* Comment composer: always visible on active tickets, no trip through the options menu */}
       {status !== 'CLOSED' && status !== 'CANCELLED' && (
-        <div className="col-span-full rounded-lg border border-slate-700 bg-slate-900/50 p-3">
-          <label
-            htmlFor="ticket-comment"
-            className="text-xs text-slate-500 uppercase tracking-wider"
-          >
-            {t('detail.action.comment')}
-          </label>
-          <textarea
-            id="ticket-comment"
-            className="mt-2 w-full rounded border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm text-slate-200 focus:border-blue-500 focus:outline-none"
-            rows={3}
-            name="commentText"
-            placeholder={t('detail.prompt.commentText')}
-            value={fields.commentText ?? ''}
-            onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
-          />
-          <div className="mt-2 flex justify-end">
-            <button
-              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-500 disabled:opacity-50"
-              type="button"
-              disabled={req('commentText') === ''}
-              onClick={() => {
-                if (req('commentText') === '') {
-                  setLastError(t('detail.errors.fieldRequired'))
-                  return
+        <div className="col-span-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-700/70 bg-slate-800/50 px-4 py-2.5">
+            <svg aria-hidden="true" className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h8M8 14h5m-9 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11l-4 4H6a2 2 0 0 1-2-2z" />
+            </svg>
+            <label htmlFor="ticket-comment" className="text-sm font-medium text-slate-200">
+              {t('detail.action.comment')}
+            </label>
+            <span className="ml-auto text-xs text-slate-500">{t('detail.comment.hint')}</span>
+          </div>
+          <div className="p-4">
+            <textarea
+              id="ticket-comment"
+              className="min-h-24 w-full resize-y rounded-lg border border-slate-600 bg-slate-950/40 px-3.5 py-3 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+              rows={3}
+              maxLength={2000}
+              name="commentText"
+              placeholder={t('detail.comment.placeholder')}
+              value={fields.commentText ?? ''}
+              onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                  event.preventDefault()
+                  void submitComment()
                 }
-                setLastError(null)
-                void handleAction('commented', { text: req('commentText') })
               }}
-            >
-              {t('detail.comment.submit')}
-            </button>
+            />
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-slate-500">
+                {req('commentText').length > 0
+                  ? t('detail.comment.counter', {
+                      count: (fields.commentText ?? '').length,
+                      max: 2000,
+                    })
+                  : t('detail.comment.shortcut')}
+              </span>
+              <button
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-sky-600 shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                type="button"
+                disabled={req('commentText') === ''}
+                onClick={() => void submitComment()}
+              >
+                <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19V5m0 0-6 6m6-6 6 6" />
+                </svg>
+                {t('detail.comment.submit')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1088,6 +1152,24 @@ export function TicketDetailPage() {
                     {t(`actorKind.${event.actorKind}`) ?? event.actorKind}
                     {event.actorName !== null ? ` (${event.actorName})` : ''}
                   </div>
+                  {(() => {
+                    const text =
+                      typeof event.payload.text === 'string'
+                        ? event.payload.text
+                        : typeof event.payload.reason === 'string'
+                          ? event.payload.reason
+                          : null
+                    if (text === null || text.trim() === '') {
+                      return null
+                    }
+                    return event.type === 'comment' ? (
+                      <p className="mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200">
+                        {text}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-slate-400">{text}</p>
+                    )
+                  })()}
                 </div>
               </div>
             ))
