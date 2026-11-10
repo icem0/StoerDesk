@@ -1,7 +1,7 @@
 # WP-M9-17: dashboard settings page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-08, WP-M9-16
 phase: 9
 milestone: m9

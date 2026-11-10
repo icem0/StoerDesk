@@ -4,6 +4,7 @@ import { App } from '../App'
 import { AdminHomePage } from '../admin/admin-home-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
+import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
 import { MySettingsPage } from '../settings/my-settings-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
@@ -133,6 +134,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <BrandingPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/dashboard',
+        element: (
+          <RequireSession>
+            <DashboardSettingsPage />
           </RequireSession>
         ),
       },

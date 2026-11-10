@@ -346,5 +346,32 @@
     "unknown": "Abgleich fehlgeschlagen."
    }
   }
+ },
+ "dashboardSettings": {
+  "title": "Dashboard und Statistik",
+  "hint": "Wandmonitor, Anonymisierung und die Schwelle für auffällige Objekte.",
+  "loading": "Einstellungen werden geladen …",
+  "tvToken": "TV-Token",
+  "tvTokenHint": "Das Token schützt den Wandmonitor. Ein neues Token macht alle offenen Anzeigen sofort ungültig.",
+  "copy": "Kopieren",
+  "copied": "Kopiert",
+  "wallUrl": "Adresse des Wandmonitors",
+  "rotate": "Token erneuern",
+  "rotateConfirm": "Token wirklich erneuern? Alle Wandmonitore müssen neu eingerichtet werden.",
+  "rotateCancel": "Abbrechen",
+  "anonymize": "Objektnamen anonymisieren",
+  "anonymizeHint": "Ersetzt Objektnamen auf dem Wandmonitor durch stabile Pseudonyme.",
+  "threshold": "Schwelle für auffällige Objekte",
+  "thresholdHint": "Ein Objekt gilt als auffällig, wenn es in den letzten 90 Tagen mehr als diese Anzahl Meldungen hat.",
+  "save": "Speichern",
+  "saved": "Gespeichert.",
+  "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung zum Ändern.",
+  "errors": {
+   "invalid_request": "Bitte prüfen Sie die Eingaben.",
+   "forbidden": "Keine Berechtigung.",
+   "session_invalid": "Die Sitzung ist abgelaufen.",
+   "unknown": "Speichern fehlgeschlagen.",
+   "threshold": "Die Schwelle muss eine ganze Zahl zwischen 1 und 100 sein."
+  }
  }
 }

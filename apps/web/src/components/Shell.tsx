@@ -74,6 +74,7 @@ const navGroups = [
       { key: 'deadlines', path: '/admin/deadlines' },
       { key: 'oncall', path: '/admin/oncall' },
       { key: 'branding', path: '/admin/branding' },
+      { key: 'dashboardSettings', path: '/admin/dashboard' },
     ],
   },
 ] as const

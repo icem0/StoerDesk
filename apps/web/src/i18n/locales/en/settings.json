@@ -346,5 +346,32 @@
     "unknown": "Sync failed."
    }
   }
+ },
+ "dashboardSettings": {
+  "title": "Dashboard and statistics",
+  "hint": "Wall display, anonymisation and the threshold for conspicuous objects.",
+  "loading": "Loading settings …",
+  "tvToken": "TV token",
+  "tvTokenHint": "The token protects the wall display. A new token invalidates every open display immediately.",
+  "copy": "Copy",
+  "copied": "Copied",
+  "wallUrl": "Wall display address",
+  "rotate": "Rotate token",
+  "rotateConfirm": "Rotate the token? Every wall display must be set up again.",
+  "rotateCancel": "Cancel",
+  "anonymize": "Anonymise object names",
+  "anonymizeHint": "Replaces object names on the wall display with stable pseudonyms.",
+  "threshold": "Conspicuous-object threshold",
+  "thresholdHint": "An object is conspicuous when it has more tickets in the last 90 days than this number.",
+  "save": "Save",
+  "saved": "Saved.",
+  "readOnly": "Read-only: you lack the permission to change these settings.",
+  "errors": {
+   "invalid_request": "Please check the inputs.",
+   "forbidden": "No permission.",
+   "session_invalid": "The session has expired.",
+   "unknown": "Saving failed.",
+   "threshold": "The threshold must be a whole number between 1 and 100."
+  }
  }
 }
