@@ -17,10 +17,6 @@ files-read:
 files-write:
 
 - work-packages/m11/10-phase-11-exit-criterion.md (diese Datei)
-- PLAN.md §16 (Phase-11-Tabelle mit `done`)
-- work-packages/README.md (Backlog-Tabelle)
-- docs/REPO-MAP.md (neue Module)
-- CHANGELOG.md (Unreleased/Added)
 
 interfaces:
 

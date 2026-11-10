@@ -22,7 +22,6 @@ files-write:
 - apps/api/src/db/migrations/0030_stats_detected_errors.sql (neu: View-Erweiterung + `stats_ticket_detected_errors`)
 - apps/api/src/stats/frequency.ts (Änderung: `byDetectedError`)
 - packages/shared/src/schemas/stats.ts (Änderung: `frequencyResponseSchema`)
-- apps/api/src/stats/routes.ts (keine Änderung nötig, Schema reicht — oder minimale Anpassung)
 - apps/api/src/stats/export.ts (CSV-Export inkludiert `byDetectedError`)
 
 interfaces:

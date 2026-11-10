@@ -22,7 +22,6 @@ files-write:
 - docs/DECISIONS/0016-detected-errors.md (neu)
 - docs/DECISIONS.md (Index ergänzen)
 - work-packages/m11/ (WP-M11-02 … WP-M11-10, jede Datei in diesem Commit)
-- PLAN.md §16, work-packages/README.md, docs/REPO-MAP.md, CHANGELOG.md
 
 interfaces:
 
