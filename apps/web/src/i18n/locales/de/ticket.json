@@ -380,7 +380,7 @@
       "reporterKind": "Meldeart",
       "title": "Titel",
       "description": "Beschreibung",
-      "faults": "Störungsarten"
+      "faults": "Gemeldete Störungsart"
     },
     "source": {
       "qr": "QR-Code-Meldung",
@@ -470,6 +470,8 @@
       "acknowledgeResult": "Ergebnis (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Notiz (optional):",
       "commentText": "Kommentartext:",
+      "closeComment": "Kommentar beim Abschluss (optional):",
+      "detectedErrors": "Festgestellte Fehler (optional, mehrere möglich):",
       "deleteConfirmNumber": "Ticketnumber for confirmation:"
     }
   },

@@ -381,7 +381,7 @@
       "reporterKind": "Report type",
       "title": "Title",
       "description": "Description",
-      "faults": "Fault types"
+      "faults": "Reported fault type"
     },
     "source": {
       "qr": "QR code report",
@@ -471,6 +471,8 @@
       "acknowledgeResult": "Result (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Note (optional):",
         "commentText": "Comment text:",
+        "closeComment": "Comment on close (optional):",
+        "detectedErrors": "Detected errors (optional, multiple):",
         "deleteConfirmNumber": "Ticket number to confirm:"
     }
   },
