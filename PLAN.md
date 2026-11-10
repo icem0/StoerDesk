@@ -1416,8 +1416,9 @@ calculated nor displayed there. WP-M10-19 adds the `evaluations` block of
 phases and `averageProcessingMinutes` (`closed_at - reported_at`) as nullable whole-minute
 averages; the query contains no median, p90 or max. The statistics API and statistics page
 keep their p90 columns; `specs/12-stats.md` §12.10 names the block as the only allowed
-addition. Its follow-up WP-M10-19b (file created in the same commit) renders the block on
-the start page.
+addition. Its follow-up WP-M10-19b renders the block on the start page below the tiles
+(one labelled line per average, `keine Daten` for a `null` average, no max/p90/median line)
+with the labels under `dashboard.evaluations.*` in `de` and `en`.
 
 ## 17. Work package rules for small models
 

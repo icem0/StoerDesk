@@ -7,11 +7,13 @@ import { useDashboard } from './use-dashboard'
  * Start page of the internal app (`specs/11-dashboard.md` §11.2–§11.6, WP-M9-14).
  *
  * The index route `/` of the guarded shell. It shows the fault-free counter with
- * its record, the open/overdue/unreviewed/pool tiles, the on-call tile and the
- * channel tile when present, plus the primary action "Neue Störung melden".
+ * its record, the open/overdue/unreviewed/pool tiles, the evaluation block of
+ * averages (WP-M10-19b, §11.4a), the on-call tile and the channel tile when
+ * present, plus the primary action "Neue Störung melden".
  * The page ends with the tiles; the burning-now list belongs to the wall display
  * (`specs/11-dashboard.md` §11.5). Every tile is one link over its whole area
- * with a 44 px touch target.
+ * with a 44 px touch target. The evaluation block shows averages only — the
+ * worst reaction time is neither calculated nor displayed (ADR-0015).
  */
 
 const TILE_CLASS =
@@ -31,15 +33,30 @@ function Tile(props: {
   )
 }
 
+function EvaluationRow(props: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+      <dt className="text-sm text-slate-400">{props.label}</dt>
+      <dd className="text-lg font-semibold text-sky-300">{props.value}</dd>
+    </div>
+  )
+}
+
 export function StartPage() {
   const { t, i18n } = useTranslation('ticket')
   const dashboard = useDashboard()
   const snapshot = dashboard.data
 
   const faultFree = snapshot?.faultFree
+  const evaluations = snapshot?.evaluations
   const tiles = snapshot?.tiles
   const onCall = tiles?.onCall ?? null
   const channels = tiles?.channels ?? null
+
+  const minutesLabel = (minutes: number | null): string =>
+    minutes === null
+      ? t('dashboard.evaluations.noData')
+      : t('dashboard.evaluations.minutes', { count: minutes })
 
   const timeFormat: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'short' }
   const onCallEndsAt =
@@ -119,6 +136,32 @@ export function StartPage() {
               value={String(tiles.poolSize)}
             />
           </div>
+
+          {evaluations !== undefined ? (
+            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                {t('dashboard.evaluations.title', { count: evaluations.tickets })}
+              </p>
+              <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <EvaluationRow
+                  label={t('dashboard.evaluations.review')}
+                  value={minutesLabel(evaluations.averageReviewMinutes)}
+                />
+                <EvaluationRow
+                  label={t('dashboard.evaluations.firstResponse')}
+                  value={minutesLabel(evaluations.averageFirstResponseMinutes)}
+                />
+                <EvaluationRow
+                  label={t('dashboard.evaluations.acknowledge')}
+                  value={minutesLabel(evaluations.averageAcknowledgeMinutes)}
+                />
+                <EvaluationRow
+                  label={t('dashboard.evaluations.processing')}
+                  value={minutesLabel(evaluations.averageProcessingMinutes)}
+                />
+              </dl>
+            </div>
+          ) : null}
 
           {onCall !== null ? (
             <Link className={`${TILE_CLASS} min-h-11`} to="/oncall">

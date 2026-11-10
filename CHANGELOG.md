@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Dashboard evaluation block on the start page (WP-M10-19b): below the tiles the page
+  shows the four averages of the snapshot's `evaluations` block — review, first response,
+  acknowledge and processing time — as whole minutes, `keine Daten` for a `null` average,
+  with the ticket count of the 30-day window in the panel header. Averages only: the
+  worst reaction time (max/p90) is neither part of the snapshot query nor of the page.
 - Dashboard evaluations (WP-M10-19): the snapshot gains an `evaluations` block
   (`specs/11-dashboard.md` §11.4a, ADR-0015) with the last-30-day ticket count of the
   counter's qualifying set and four nullable whole-minute averages —

@@ -1,7 +1,7 @@
 # WP-M10-19b: the start page shows the evaluation block
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-19, WP-M9-14, WP-M9-19
 phase: 10
 milestone: m10
@@ -33,8 +33,8 @@ interfaces:
 
 1. Below the four tiles, render the `evaluations` block of the snapshot: a
    panel titled "Auswertungen" with one line per average —
-   `Ø Reactionsplit Prüfung`, `Ø Erstmal Rückmeldung`, `Ø Bestätigung`,
-   `Ø Bearbeitung` — each value formatted as whole minutes, `null` shown as
+   `Ø Zeit bis Prüfung`, `Ø Zeit bis Rückmeldung`, `Ø Zeit bis Bestätigung`,
+   `Ø Bearbeitungszeit` — each value formatted as whole minutes, `null` shown as
    "keine Daten". Include the ticket count of the window in the panel header.
 2. Every label comes from the `dashboard.evaluations.*` keys of the `ticket`
    namespace in `de` and `en` — no literal string.
@@ -67,6 +67,6 @@ Expected: all green; the locale keys are complete in `de` and `en`.
 
 - Files changed: the start page, both ticket locale files, the page test
 - Interfaces added: the rendered evaluation block
-- Verified: —
+- Verified: typecheck, lint, test:run, i18n:check, wp:check, build
 - Follow-up WP: none
 - Open question: none

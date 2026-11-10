@@ -15,6 +15,15 @@
       "unreviewed": "not reviewed",
       "pool": "in the pool"
     },
+    "evaluations": {
+      "title": "Evaluations ({{count}} tickets, 30 days)",
+      "review": "Avg time to review",
+      "firstResponse": "Avg time to first response",
+      "acknowledge": "Avg time to acknowledge",
+      "processing": "Avg processing time",
+      "minutes": "{{count}} min",
+      "noData": "no data"
+    },
     "onCall": {
       "title": "On call",
       "confirmed": "confirmed",

@@ -566,7 +566,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-17 | uploads backup, restore procedure and drill                       | planned                 | yes     |
 | WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
 | WP-M10-19 | dashboard evaluations: average durations, no worst value          | done                    | yes     |
-| WP-M10-19b | evaluation block on the dashboard start page                     | planned                 | yes     |
+| WP-M10-19b | evaluation block on the dashboard start page                     | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -981,9 +981,11 @@ calculated nor displayed. **WP-M10-19** adds the `evaluations` block of
 `averageProcessingMinutes` as `closed_at - reported_at` over the last 30 days of
 the counter's qualifying set; no median, no p90, no max — ADR-0015). The
 statistics API and page keep their p90 columns; `specs/12-stats.md` §12.10 names
-the block as the only allowed addition. Its follow-up **WP-M10-19b** (file
-created in this commit) renders the block on the start page and is implemented
-next.
+the block as the only allowed addition. Its follow-up **WP-M10-19b** renders the
+block on the start page below the tiles: one labelled line per average, whole
+minutes, `keine Daten` for a `null` average, the window count in the panel
+header, the labels under `dashboard.evaluations.*` in `de` and `en`, and no
+max/p90/median line anywhere — the worst reaction time is not part of the page.
 
 ## Validation
 

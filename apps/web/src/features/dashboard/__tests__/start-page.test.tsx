@@ -11,6 +11,14 @@ import { StartPage } from '../start-page'
 const snapshot: DashboardSnapshot = {
   generatedAt: '2026-03-10T08:00:00.000Z',
   faultFree: { since: '2026-02-26T08:00:00.000Z', days: 12, recordDays: 30 },
+  evaluations: {
+    windowDays: 30,
+    tickets: 4,
+    averageReviewMinutes: 60,
+    averageFirstResponseMinutes: null,
+    averageAcknowledgeMinutes: 90,
+    averageProcessingMinutes: 360,
+  },
   tiles: {
     open: 2,
     openByStatus: {
@@ -52,10 +60,10 @@ const snapshot: DashboardSnapshot = {
  * on-call tile and the channel tile render from the dashboard snapshot. Every
  * tile is one link over its whole area; the burning-now list is not on the page.
  */
-function renderPage() {
+function renderPage(data: DashboardSnapshot = snapshot) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => Response.json(snapshot)),
+    vi.fn(async () => Response.json(data)),
   )
 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -115,6 +123,33 @@ describe('StartPage dashboard', () => {
       'Anna Bereitschaft',
     )
     expect(screen.getByText('Zustellung gestört')).toBeTruthy()
+  })
+
+  it('renders the evaluation averages, averages only', async () => {
+    renderPage()
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
+    expect(screen.getByText('Auswertungen (4 Meldungen, 30 Tage)')).toBeTruthy()
+    expect(screen.getByText('Ø Zeit bis Prüfung')).toBeTruthy()
+    expect(screen.getByText('60 min')).toBeTruthy()
+    expect(screen.getByText('Ø Zeit bis Rückmeldung')).toBeTruthy()
+    expect(screen.getByText('keine Daten')).toBeTruthy()
+    expect(screen.getByText('Ø Bearbeitungszeit')).toBeTruthy()
+    expect(screen.getByText('360 min')).toBeTruthy()
+    expect(screen.queryByText(/P90|Median|Maximum|höchste/i)).toBeNull()
+  })
+
+  it('omits the evaluation block for an older snapshot', async () => {
+    const withoutEvaluations: DashboardSnapshot = { ...snapshot }
+    delete withoutEvaluations.evaluations
+
+    renderPage(withoutEvaluations)
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
+    expect(screen.queryByText(/Auswertungen/)).toBeNull()
+    expect(screen.getByRole('link', { name: /offen/ })).toBeTruthy()
   })
 
   it('has no burning-now list any more', async () => {
