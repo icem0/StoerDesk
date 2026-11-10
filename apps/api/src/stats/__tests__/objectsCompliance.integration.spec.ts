@@ -57,11 +57,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const [topObject] = await db
         .insert(objects)
-        .values({ objectNo: `STAT_${SUFFIX}_A`, name: 'Objekt A', externalType: 'BMA' })
+        .values({ objectNo: `STAT_${SUFFIX}_A`, name: 'Objekt A', externalType: `TYPE_${SUFFIX}` })
         .returning({ id: objects.id, objectNo: objects.objectNo })
       const [sparseObject] = await db
         .insert(objects)
-        .values({ objectNo: `STAT_${SUFFIX}_B`, name: 'Objekt B', externalType: 'RWA' })
+        .values({ objectNo: `STAT_${SUFFIX}_B`, name: 'Objekt B', externalType: `TYPE_${SUFFIX}` })
         .returning({ id: objects.id, objectNo: objects.objectNo })
       const [complianceObject] = await db
         .insert(objects)
@@ -228,7 +228,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('answers the top objects and marks the conspicuous one above the threshold', async () => {
-      const filter: StatsFilter = { from: '2026-03-10', to: '2026-03-11' }
+      // The test scopes itself to the two objects it inserted through their
+      // unique external type, so the compliance and decline objects of the same
+      // file (which also have tickets in range) cannot enter the top list.
+      const filter: StatsFilter = {
+        from: '2026-03-10',
+        to: '2026-03-11',
+        systemType: `TYPE_${SUFFIX}`,
+      }
 
       const result = await queryTopObjects(db, filter, { conspicuousThreshold: 3 }, NOW)
 
