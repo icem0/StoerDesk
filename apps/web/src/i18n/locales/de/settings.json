@@ -381,6 +381,8 @@
    "invalid_request": "Bitte prüfen Sie die Eingaben.",
    "forbidden": "Keine Berechtigung.",
    "session_invalid": "Die Sitzung ist abgelaufen.",
+   "api_key_not_found": "Der Schlüssel wurde nicht gefunden.",
+   "api_key_create_failed": "Der Schlüssel konnte nicht angelegt werden.",
    "unknown": "Aktion fehlgeschlagen."
   }
  },
@@ -419,6 +421,7 @@
    "forbidden": "Keine Berechtigung.",
    "session_invalid": "Die Sitzung ist abgelaufen.",
    "webhook_not_found": "Der Endpunkt wurde nicht gefunden.",
+   "webhook_create_failed": "Der Endpunkt konnte nicht angelegt werden.",
    "unknown": "Aktion fehlgeschlagen."
   }
  },

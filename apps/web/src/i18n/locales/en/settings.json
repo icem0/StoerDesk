@@ -381,6 +381,8 @@
    "invalid_request": "Please check the input.",
    "forbidden": "No permission.",
    "session_invalid": "The session has expired.",
+   "api_key_not_found": "The key was not found.",
+   "api_key_create_failed": "The key could not be created.",
    "unknown": "The action failed."
   }
  },
@@ -419,6 +421,7 @@
    "forbidden": "No permission.",
    "session_invalid": "The session has expired.",
    "webhook_not_found": "The endpoint was not found.",
+   "webhook_create_failed": "The endpoint could not be created.",
    "unknown": "The action failed."
   }
  },

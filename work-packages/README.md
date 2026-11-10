@@ -450,6 +450,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-10  | comment POST sends its client uuid; standalone comment box           | done                    | no      |
 | WP-M5-11  | comment composer facelift and readable history entries               | done                    | no      |
 | WP-M5-12  | missing ticket event and source translations                         | done                    | no      |
+| WP-M5-13  | remaining admin error-code translations                              | done                    | no      |
 | WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
 | WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
 | WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
