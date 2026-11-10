@@ -319,8 +319,9 @@
     "title": "Meldung {{ticketNo}}",
     "subtitle": "Objekt {{object}}",
     "loading": "Meldung wird geladen …",
-    "back": "Zurück zur Liste",
-    "actions": "Aktionen",
+   "back": "Zurück zur Liste",
+   "actions": "Aktionen",
+   "escalationLabel": "Eskalation: {{label}}",
       "errors": {
         "notFound": "Meldung nicht gefunden.",
         "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",

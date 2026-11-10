@@ -319,8 +319,9 @@
     "title": "Ticket {{ticketNo}}",
     "subtitle": "Object {{object}}",
     "loading": "Loading ticket …",
-    "back": "Back to list",
-    "actions": "Actions",
+   "back": "Back to list",
+   "actions": "Actions",
+   "escalationLabel": "Escalation: {{label}}",
       "errors": {
         "notFound": "Ticket not found.",
         "actionFailed": "The action could not be performed.",

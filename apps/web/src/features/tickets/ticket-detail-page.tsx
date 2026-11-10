@@ -66,10 +66,31 @@ function formatEventDateTime(iso: string): string {
 }
 
 /**
+ * The name and the description of an escalation stage travel with the event in
+ * both languages (`WP-M6-19c`); the history shows the one of the interface
+ * language. An event of an older installation carries neither, so the helper
+ * answers `null` and the history falls back to the event label alone.
+ */
+function localizedStageText(
+  payload: Record<string, unknown>,
+  field: 'label' | 'description',
+  language: string,
+): string | null {
+  const value = payload[field]
+
+  if (value === null || typeof value !== 'object') {
+    return null
+  }
+
+  const text = (value as Record<string, unknown>)[language === 'en' ? 'en' : 'de']
+
+  return typeof text === 'string' && text.trim() !== '' ? text : null
+}
+
+/**
  * Workflow events are not URL segments (`WP-M2-19c`): the detail page maps each
  * event to the route path of `apps/api/src/tickets/workflow-routes.ts`.
- */
-const ACTION_SEGMENTS: Record<string, string> = {
+ */const ACTION_SEGMENTS: Record<string, string> = {
   review_started: 'review',
   work_order_set: 'work-order',
   assigned: 'assign',
@@ -1226,6 +1247,32 @@ export function TicketDetailPage() {
                         : t(`actorKind.${event.actorKind}`)}
                   </div>
                   {(() => {
+                    if (event.type === 'escalated') {
+                      const label = localizedStageText(event.payload, 'label', i18n.language)
+                      const description = localizedStageText(
+                        event.payload,
+                        'description',
+                        i18n.language,
+                      )
+
+                      if (label === null && description === null) {
+                        return null
+                      }
+
+                      return (
+                        <>
+                          {label === null ? null : (
+                            <p className="mt-1 text-xs text-slate-300">
+                              {t('detail.escalationLabel', { label })}
+                            </p>
+                          )}
+                          {description === null ? null : (
+                            <p className="mt-1 text-xs text-slate-400">{description}</p>
+                          )}
+                        </>
+                      )
+                    }
+
                     const text =
                       typeof event.payload.text === 'string'
                         ? event.payload.text
