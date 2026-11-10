@@ -1,7 +1,7 @@
 # WP-M10-10: Webhook delivery worker with HMAC and backoff
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-09
 phase: 10
 milestone: m10

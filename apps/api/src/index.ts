@@ -8,6 +8,7 @@ import { adminApiKeyRoutes } from './admin/api-keys'
 import { adminGroupsRoutes } from './admin/groups'
 import { adminRolesRoutes } from './admin/roles'
 import { adminUsersRoutes } from './admin/users'
+import { webhookRoutes } from './webhooks/endpoints'
 import { apiKeyPlugin, apiKeyProbeRoutes } from './auth/apiKeyPlugin'
 import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
@@ -32,6 +33,7 @@ import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startTicketEscalation } from './jobs/escalation'
 import { startNotificationOutboxJob } from './notifications/outbox'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
+import { startWebhookDeliveryJob } from './jobs/webhooks'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { deleteRoutes } from './tickets/delete-routes'
 import { externalTicketRoutes } from './tickets/external'
@@ -128,6 +130,7 @@ export async function buildServer() {
   await app.register(adminRolesRoutes, { database })
   await app.register(adminGroupsRoutes, { database })
   await app.register(adminApiKeyRoutes, { database })
+  await app.register(webhookRoutes, { database })
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })
@@ -206,11 +209,13 @@ if (invokedDirectly) {
     env,
     app.log,
   )
+  const webhookDelivery = await startWebhookDeliveryJob(databaseConnectionUrl(env), app.log)
 
   app.addHook('onClose', async () => {
     await cleanup.stop({ timeout: 5000 })
     await escalation.stop({ timeout: 5000 })
     await notificationOutbox.stop({ timeout: 5000 })
+    await webhookDelivery.stop({ timeout: 5000 })
 
     if (bmaSync !== undefined) {
       await bmaSync.stop({ timeout: 5000 })
