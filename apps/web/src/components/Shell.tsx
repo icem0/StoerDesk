@@ -281,9 +281,10 @@ export function Shell() {
               className={({ isActive: routerActive }) => {
                 const active = routerActive
 
-                return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${active
-                  ? 'bg-sky-600/10 text-sky-300'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                  active
+                    ? 'bg-sky-600/10 text-sky-300'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
                 }`
               }}
               key={link.key}

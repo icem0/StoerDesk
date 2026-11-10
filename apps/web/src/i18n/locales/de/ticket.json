@@ -186,6 +186,7 @@
       "errors": {
         "systemNotFound": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
         "invalidRequest": "Bitte prüfen Sie die Eingaben.",
+        "reportTimeFuture": "Die reported time must not be in the future. Please choose now or a past time.",
         "objectNotFound": "Dieses Objekt existiert nicht mehr. Bitte wählen Sie ein anderes Objekt.",
         "sessionInvalid": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
         "ticketCreateFailed": "Die Meldung konnte technisch nicht angelegt werden. Bitte versuchen Sie es später erneut.",
@@ -445,7 +446,12 @@
       "placeholder": "Was ist passiert? Notiz für das Team …",
       "counter": "{{count}} / {{max}} Zeichen",
       "shortcut": "Strg/⌘ + Enter zum Speichern",
-      "saved": "Kommentar gespeichert."
+      "saved": "Kommentar gespeichert.",
+      "confirmTitle": "Kommentar speichern?",
+      "confirmText": "Ein gespeicherter Kommentar kann nicht mehr geändert oder gelöscht werden. Prüfen Sie den Text.",
+      "confirmSubmit": "Speichern",
+      "confirmAbort": "Abbrechen",
+      "spellcheck": "Die Rechtschreibprüfung des Browsers prüft dieses Feld."
     },
     "prompt": {
       "workOrderType": "Auftragsart (z. B. AA):",
