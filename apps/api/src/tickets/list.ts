@@ -4,6 +4,7 @@ import {
   count,
   desc,
   eq,
+  gt,
   gte,
   ilike,
   inArray,
@@ -17,6 +18,7 @@ import { z } from 'zod'
 import {
   computeTicketTimeline,
   escapeLikePattern,
+  externalTicketListQuerySchema,
   PERMISSIONS,
   ticketListQuerySchema,
   ticketListResponseSchema,
@@ -24,7 +26,7 @@ import {
   type TicketListResponse,
 } from '@stoerdesk/shared'
 
-import { requirePermission } from '../auth/requirePermission'
+import { requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects, tickets } from '../db/schema'
 
@@ -56,9 +58,11 @@ function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
 }
 
+type TicketListFilter = TicketListQuery & { updated_since?: string; objectNo?: string }
+
 export async function listTickets(
   database: Db,
-  query: TicketListQuery,
+  query: TicketListFilter,
 ): Promise<TicketListResponse> {
   const conditions = []
 
@@ -96,6 +100,14 @@ export async function listTickets(
     conditions.push(eq(tickets.objectId, query.objectId))
   }
 
+  if (query.objectNo !== undefined) {
+    conditions.push(eq(objects.objectNo, query.objectNo))
+  }
+
+  if (query.updated_since !== undefined) {
+    conditions.push(gt(tickets.updatedAt, new Date(query.updated_since)))
+  }
+
   if (query.priority !== undefined) {
     conditions.push(eq(tickets.priority, query.priority))
   }
@@ -125,9 +137,11 @@ export async function listTickets(
   // The ticket number is the tie-breaker, so the pages of a list stay stable
   // when two tickets share a deadline.
   const orderColumns =
-    query.order === 'deadlineAt'
-      ? [asc(OPEN_FIRST), orderDirection(tickets.deadlineAt), asc(tickets.ticketNo)]
-      : [orderDirection(orderColumn)]
+    query.updated_since !== undefined
+      ? [asc(tickets.updatedAt), asc(tickets.ticketNo)]
+      : query.order === 'deadlineAt'
+        ? [asc(OPEN_FIRST), orderDirection(tickets.deadlineAt), asc(tickets.ticketNo)]
+        : [orderDirection(orderColumn)]
 
   const rows = await database
     .select({
@@ -190,15 +204,29 @@ export const ticketListRoutes = fp<TicketListRouteOptions>(
   async (app, { database }) => {
     app.get(
       '/api/v1/tickets',
-      { preHandler: requirePermission(database, PERMISSIONS.ticket.read) },
+      { preHandler: requireScopeOrPermission(database, 'tickets:read', PERMISSIONS.ticket.read) },
       async (request, reply) => {
-        const parsed = ticketListQuerySchema.safeParse(request.query)
+        const parsed =
+          request.apiKey === undefined
+            ? ticketListQuerySchema.safeParse(request.query)
+            : externalTicketListQuerySchema.safeParse(request.query)
 
         if (!parsed.success) {
           return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
 
-        const result = await listTickets(database, parsed.data)
+        const query =
+          request.apiKey === undefined
+            ? parsed.data
+            : {
+                ...parsed.data,
+                open: undefined,
+                overdue: undefined,
+                order: 'reportedAt' as const,
+                direction: 'desc' as const,
+                offset: 0,
+              }
+        const result = await listTickets(database, query as TicketListFilter)
         return reply.code(200).send(ticketListResponseSchema.parse(result))
       },
     )

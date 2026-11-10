@@ -84,12 +84,19 @@ type TransitionContext = {
   database: Db
   ticketId: string
   event: string
-  actorUserId: string
+  actorUserId?: string
+  /** `system` for an API-key action, `user` for the office session (WP-M10-08). */
+  actorKind?: 'user' | 'system'
+  /** Recorded in the event payload for a system action, never the token. */
+  apiKeyId?: string
   payload?: Record<string, unknown>
 }
 
 export async function transitionTicket(ctx: TransitionContext) {
-  const { database, ticketId, event, actorUserId, payload = {} } = ctx
+  const { database, ticketId, event, actorUserId, apiKeyId, payload = {} } = ctx
+  const actorKind = ctx.actorKind ?? 'user'
+  const eventPayload =
+    actorKind === 'system' && apiKeyId !== undefined ? { ...payload, apiKeyId } : payload
 
   const [ticket] = await database
     .select({
@@ -129,9 +136,9 @@ export async function transitionTicket(ctx: TransitionContext) {
       .values({
         ticketId: updated.id,
         type: event,
-        actorKind: 'user',
-        actorUserId,
-        payload,
+        actorKind,
+        actorUserId: actorKind === 'system' ? null : actorUserId,
+        payload: eventPayload,
       })
       .returning()
 
@@ -144,7 +151,7 @@ export async function transitionTicket(ctx: TransitionContext) {
     if (event === 'acknowledged' || event === 'closed' || event === 'cancelled') {
       await closeOpenPause(tx, {
         ticketId,
-        actorUserId,
+        actorUserId: actorUserId ?? null,
         at: new Date(),
       })
     }

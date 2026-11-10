@@ -1,7 +1,7 @@
 # WP-M10-08: External ticket API and API-key work-order update
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-07
 phase: 10
 milestone: m10
@@ -18,8 +18,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/tickets/external.ts
-- apps/api/src/tickets/workflow.ts
+- apps/api/src/tickets/{external.ts,internal.ts,list.ts,workflow.ts,pauses.ts,__tests__/external.integration.spec.ts}
 - packages/shared/src/schemas/ticket.ts
 - apps/api/src/index.ts
 
@@ -61,8 +60,9 @@ transitions answer `409`, events carry the system actor and key id.
 
 ## Handoff
 
-- Files changed: the external ticket module, the workflow extension, the shared
-  schemas and the server registration
+- Files changed: the external ticket module, the internal/list dispatch, the
+  workflow extension, the shared schemas, the server registration and an
+  integration test
 - Interfaces added: the external ticket endpoints and system actor support
 - Verified: the commands above
 - Follow-up WP: WP-M10-09, WP-M10-10

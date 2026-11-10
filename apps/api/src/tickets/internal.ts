@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
+  externalTicketCreateRequestSchema,
   internalCreateTicketRequestSchema,
   internalCreateTicketResponseSchema,
   PERMISSIONS,
@@ -10,11 +11,12 @@ import {
   type InternalCreateTicketResponse,
 } from '@stoerdesk/shared'
 
-import { requirePermission } from '../auth/requirePermission'
+import { requirePermission, requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects, ticketEvents, tickets } from '../db/schema'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
+import { createExternalTicket, fieldPaths as externalFieldPaths } from './external'
 import { applyInternalAction } from './internal-actions'
 
 /**
@@ -122,8 +124,33 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
   async (app, { database }) => {
     app.post(
       '/api/v1/tickets',
-      { preHandler: requirePermission(database, PERMISSIONS.ticket.create) },
+      { preHandler: requireScopeOrPermission(database, 'tickets:write', PERMISSIONS.ticket.create) },
       async (request, reply) => {
+        const apiKey = request.apiKey
+
+        if (apiKey !== undefined) {
+          const external = externalTicketCreateRequestSchema.safeParse(request.body)
+
+          if (!external.success) {
+            return reply
+              .code(400)
+              .send({ code: 'invalid_request', params: { fields: externalFieldPaths(external.error) } })
+          }
+
+          try {
+            const result = await createExternalTicket(database, external.data, apiKey.id)
+            return reply.code(201).send(internalCreateTicketResponseSchema.parse(result))
+          } catch (error) {
+            const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+
+            if (err.statusCode !== undefined) {
+              return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+            }
+
+            throw error
+          }
+        }
+
         const parsed = internalCreateTicketRequestSchema.safeParse(request.body)
 
         if (!parsed.success) {

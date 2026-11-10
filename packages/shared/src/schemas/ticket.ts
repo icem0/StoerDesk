@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { qrTokenSchema } from './object.js'
+import { objectNoSchema, qrTokenSchema } from './object.js'
 import { textTemplateKeySchema } from './text-template.js'
 
 /**
@@ -263,6 +263,27 @@ export const internalCreateTicketResponseSchema = z.object({
 
 export type InternalCreateTicketRequest = z.infer<typeof internalCreateTicketRequestSchema>
 export type InternalCreateTicketResponse = z.infer<typeof internalCreateTicketResponseSchema>
+
+/** External ticket API (`specs/08-objects-api.md` §9.5, WP-M10-08). */
+export const externalTicketCreateRequestSchema = internalCreateTicketRequestSchema
+  .omit({ objectId: true })
+  .extend({ objectNo: objectNoSchema })
+
+export const externalTicketListQuerySchema = z.object({
+  updated_since: z.iso.datetime().optional(),
+  status: z.enum(['NEW', 'IN_REVIEW', 'WORK_ORDER_CREATED', 'OFFERED', 'ASSIGNED', 'ACCEPTED', 'ACKNOWLEDGED', 'CLOSED', 'CANCELLED']).optional(),
+  objectNo: objectNoSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(500),
+})
+
+export const workOrderRequestSchema = z.object({
+  type: z.string().trim().min(1).max(40),
+  number: z.string().trim().min(1).max(60),
+})
+
+export type ExternalTicketCreateRequest = z.infer<typeof externalTicketCreateRequestSchema>
+export type ExternalTicketListQuery = z.infer<typeof externalTicketListQuerySchema>
+export type WorkOrderRequest = z.infer<typeof workOrderRequestSchema>
 
 export type PublicOpenTicket = z.infer<typeof publicOpenTicketSchema>
 export type PublicOpenTickets = z.infer<typeof publicOpenTicketsResponseSchema>

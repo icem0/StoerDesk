@@ -240,7 +240,7 @@ export const pauseRoutes = fp<{ database: Db }>(
 /** Ends the open pause of a ticket inside an existing transaction. */
 export async function closeOpenPause(
   executor: DbLike,
-  input: { ticketId: string; actorUserId: string; at: Date },
+  input: { ticketId: string; actorUserId: string | null; at: Date },
 ): Promise<boolean> {
   const closed = await executor
     .update(ticketPauses)

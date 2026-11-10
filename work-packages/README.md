@@ -540,7 +540,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-05 | bearer API-key authentication and scope guard                     | done                    | yes     |
 | WP-M10-06 | OpenAPI document under `/api/docs`                                | done                    | yes     |
 | WP-M10-07 | external object API with updated-since, upsert and bulk           | done                    | yes     |
-| WP-M10-08 | external ticket API and API-key work-order update                 | planned                 | yes     |
+| WP-M10-08 | external ticket API and API-key work-order update                 | done                    | yes     |
 | WP-M10-09 | webhook endpoints, table and admin API                            | planned                 | yes     |
 | WP-M10-10 | webhook delivery worker with HMAC and backoff                     | planned                 | yes     |
 | WP-M10-11 | webhook admin page and OpenAPI paths                              | planned                 | yes     |

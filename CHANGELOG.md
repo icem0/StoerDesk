@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The external ticket API accepts bearer keys (WP-M10-08): `POST /api/v1/tickets` resolves the object by `objectNo`, writes `source = API` and records a `system` actor with the key id; `GET /api/v1/tickets` supports `updated_since`, `status`, `objectNo` and `limit`; `PATCH /api/v1/tickets/:ticketNo/work-order` uses the existing state machine and answers `409 invalid_transition` or `404 ticket_not_found`.
 - The external object API accepts bearer keys (WP-M10-07): `GET /api/v1/objects` supports `updated_since` and `limit`, `PUT /api/v1/objects/:objectNo` creates or replaces an object, `POST /api/v1/objects/bulk` reports one result per item without rolling back valid rows, and the soft delete accepts the `objects:write` scope.
 - The external API is published as OpenAPI 3.1 under `/api/docs` and `/api/docs/json` (WP-M10-06): bearer authentication, API-key management, object list/read/upsert/bulk/soft-delete and ticket list/create/work-order paths, generated from the shared Zod contracts; office-internal routes stay out.
 - External requests can authenticate with `Authorization: Bearer sk_...` (WP-M10-05): `apiKeyPlugin` verifies the hashed key, rejects malformed, revoked and expired keys with `401 api_key_invalid`, and the dual guard `requireScopeOrPermission` accepts a session permission or an API-key scope while a key without its scope gets `403 forbidden`.

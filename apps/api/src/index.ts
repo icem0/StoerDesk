@@ -34,6 +34,7 @@ import { startNotificationOutboxJob } from './notifications/outbox'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { deleteRoutes } from './tickets/delete-routes'
+import { externalTicketRoutes } from './tickets/external'
 import { publicDuplicateRoutes } from './tickets/duplicates'
 import { internalTicketRoutes } from './tickets/internal'
 import { ticketListRoutes } from './tickets/list'
@@ -150,6 +151,7 @@ export async function buildServer() {
   await app.register(publicDuplicateRoutes, { database })
   await app.register(tvRoutes, { database })
   await app.register(internalTicketRoutes, { database })
+  await app.register(externalTicketRoutes, { database })
   await app.register(ticketListRoutes, { database })
   await app.register(ticketDetailRoutes, { database })
   await app.register(photoServeRoutes, { database, uploadDir: env.UPLOAD_DIR })
