@@ -415,8 +415,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-92d | theme class in the shell and light palette in styles.css            | done                    | yes     |
 | WP-M2-92e | theme select in the user settings (users page)                      | done                    | yes     |
 | WP-M2-93  | `users.given_name`/`users.family_name` and migration 0018          | done                    | yes     |
-| WP-M2-94  | name fields in the shared schemas and the admin user API            | planned                 | yes     |
-| WP-M2-94b | name fields in the users page UI                                    | planned                 | yes     |
+| WP-M2-94  | name fields in the shared schemas and the admin user API            | done                    | yes     |
+| WP-M2-94b | name fields in the users page UI                                    | done                    | yes     |
 | WP-M2-95  | internal ticket creation honours the branding title switch          | done                    | yes     |
 | WP-M2-98  | reporter metadata columns and migration 0028                       | done                    | yes     |
 | WP-M2-98b | internal create accepts report time, channel and reporter kind      | done                    | yes     |
