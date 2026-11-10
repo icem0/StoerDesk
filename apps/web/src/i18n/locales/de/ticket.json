@@ -203,10 +203,16 @@
       "declined": "Abgelehnt",
       "acknowledged": "Störung bearbeitet",
       "commented": "Kommentiert",
+      "comment": "Kommentiert",
       "closed": "Vorgang abgeschlossen",
       "reopened": "Wieder eröffnet",
       "cancelled": "Storniert",
-      "uncancelled": "Stornierung aufgehoben"
+      "uncancelled": "Stornierung aufgehoben",
+      "escalated": "Eskaliert",
+      "paused": "Pausiert",
+      "resumed": "Fortgesetzt",
+      "notification_sent": "Benachrichtigung gesendet",
+      "notification_failed": "Benachrichtigung fehlgeschlagen"
     },
     "errors": {
       "invalidToken": "Dieser Statuslink ist ungültig. Bitte den Link aus der Bestätigung erneut öffnen.",

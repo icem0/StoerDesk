@@ -199,7 +199,9 @@ export function TicketEmailPage() {
               {t('email.source')}
             </td>
             <td className="px-3 py-2 text-sm text-slate-200 text-xs" colSpan={3}>
-              {t(`detail.source.${ticket.source}`) ?? ticket.source}
+              {t(`detail.source.${ticket.source.toLowerCase()}`, {
+                defaultValue: ticket.source,
+              })}
             </td>
           </tr>
         </tbody>

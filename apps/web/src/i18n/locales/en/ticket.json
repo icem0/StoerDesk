@@ -203,10 +203,16 @@
       "declined": "Declined",
       "acknowledged": "Malfunction handled",
       "commented": "Commented",
+      "comment": "Commented",
       "closed": "Ticket closed",
       "reopened": "Reopened",
       "cancelled": "Cancelled",
-      "uncancelled": "Cancellation revoked"
+      "uncancelled": "Cancellation revoked",
+      "escalated": "Escalated",
+      "paused": "Paused",
+      "resumed": "Resumed",
+      "notification_sent": "Notification sent",
+      "notification_failed": "Notification failed"
     },
     "errors": {
       "invalidToken": "This status link is invalid. Please open the link from the confirmation again.",
