@@ -61,6 +61,12 @@ function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
 }
 
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' && error !== null && (error as { code?: string }).code === '23505'
+  )
+}
+
 function translationsOf(rows: { templateId: string; locale: string; text: string }[]) {
   const byTemplate = new Map<string, TextTemplateTranslations>()
 
@@ -187,19 +193,40 @@ export const settingsTextTemplateRoutes = fp<{ database: Db }>(
           throw invalidRequest(fieldPaths(parsed.error))
         }
 
+        const { key: providedKey, translations } = parsed.data
+
         const created = await database.transaction(async (tx) => {
+          const key = providedKey ?? `custom.${randomUUID().replaceAll('-', '')}`
+
+          const existing = await tx
+            .select({ id: textTemplates.id })
+            .from(textTemplates)
+            .where(eq(textTemplates.key, key))
+            .limit(1)
+
+          if (existing.length > 0) {
+            throw new TextTemplateRouteError(409, 'text_template_key_taken', { fields: ['key'] })
+          }
+
           const [row] = await tx
             .insert(textTemplates)
-            .values({ key: `custom.${randomUUID().replaceAll('-', '')}` })
+            .values({ key })
             .returning()
 
           if (row === undefined) {
             throw new TextTemplateRouteError(500, 'text_template_create_failed')
           }
 
-          await writeTranslations(tx, row.id, parsed.data.translations)
+          await writeTranslations(tx, row.id, translations)
 
           return row
+        })
+        // A parallel create of the same key: the unique index decides, not the probe.
+        .catch((error: unknown) => {
+          if (isUniqueViolation(error)) {
+            throw new TextTemplateRouteError(409, 'text_template_key_taken', { fields: ['key'] })
+          }
+          throw error
         })
 
         return reply.code(201).send(await summaryOf(database, created))

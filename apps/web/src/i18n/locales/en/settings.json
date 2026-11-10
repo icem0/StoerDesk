@@ -264,6 +264,7 @@
    "delete": "Delete",
    "deleteBlocked": "Used by tickets",
    "fields": {
+    "key": "Key",
     "de": "German text",
     "en": "English text"
    },
@@ -281,6 +282,7 @@
     "invalid_request": "Invalid input – please fill in both texts.",
     "text_template_not_found": "Fault type not found.",
     "text_template_in_use": "Tickets still use this fault type, so it cannot be deleted.",
+    "text_template_key_taken": "A fault type with this key already exists.",
     "unknown": "Saving failed."
    }
   },

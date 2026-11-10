@@ -29,6 +29,7 @@ const handledErrorCodes = [
   'invalid_request',
   'text_template_not_found',
   'text_template_in_use',
+  'text_template_key_taken',
 ] as const
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -90,6 +91,7 @@ function TranslationFields({
 function CreateTemplateForm() {
   const { t } = useTranslation('settings')
   const queryClient = useQueryClient()
+  const [key, setKey] = useState('')
   const [values, setValues] = useState<TextTemplateTranslations>({ de: '', en: '' })
 
   const mutation = useMutation({
@@ -101,6 +103,7 @@ function CreateTemplateForm() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['text-templates'] })
+      setKey('')
       setValues({ de: '', en: '' })
     },
   })
@@ -110,10 +113,20 @@ function CreateTemplateForm() {
       className="mt-6 flex flex-col gap-3 rounded border border-slate-700 bg-slate-900 p-4"
       onSubmit={(event) => {
         event.preventDefault()
-        mutation.mutate({ translations: values })
+        mutation.mutate({ key, translations: values })
       }}
     >
       <h2 className="text-lg font-semibold">{t('admin.textTemplates.createTitle')}</h2>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.textTemplates.fields.key')}
+        <input
+          className="rounded bg-slate-900 p-2 text-slate-100"
+          type="text"
+          required
+          value={key}
+          onChange={(event) => setKey(event.target.value)}
+        />
+      </label>
       <TranslationFields values={values} onChange={setValues} />
       {mutation.isError ? (
         <p role="alert" className="text-sm text-red-400">

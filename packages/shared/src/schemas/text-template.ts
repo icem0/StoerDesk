@@ -30,6 +30,7 @@ export const textTemplateListResponseSchema = z.object({
 })
 
 export const createTextTemplateRequestSchema = z.object({
+  key: textTemplateKeySchema.optional(),
   translations: textTemplateTranslationsSchema,
 })
 

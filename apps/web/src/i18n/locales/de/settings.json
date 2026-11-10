@@ -264,6 +264,7 @@
    "delete": "Löschen",
    "deleteBlocked": "Wird von Vorgängen verwendet",
    "fields": {
+    "key": "Schlüssel",
     "de": "Deutscher Text",
     "en": "Englischer Text"
    },
@@ -281,6 +282,7 @@
     "invalid_request": "Eingabe ungültig – bitte beide Texte ausfüllen.",
     "text_template_not_found": "Störungsart nicht gefunden.",
     "text_template_in_use": "Die Störungsart wird noch von Vorgängen verwendet und kann nicht gelöscht werden.",
+    "text_template_key_taken": "Ein Störungsart mit diesem Schlüssel existiert bereits.",
     "unknown": "Speichern fehlgeschlagen."
    }
   },

@@ -186,6 +186,33 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(created.usageCount).toBe(0)
     })
 
+    it('creates a template with a provided key', async () => {
+      const response = await createTemplate(cookies['admin'], {
+        key: 'feueralarm_ausloesung',
+        translations: { de: 'Feueralarm ausgelöst', en: 'Fire alarm triggered' },
+      })
+
+      expect(response.statusCode).toBe(201)
+      const body = response.json<TemplateSummary>()
+      expect(body.key).toBe('feueralarm_ausloesung')
+      expect(body.translations).toEqual({ de: 'Feueralarm ausgelöst', en: 'Fire alarm triggered' })
+    })
+
+    it('rejects a duplicate key with text_template_key_taken', async () => {
+      const first = await createForTest('Erst', 'First')
+
+      const duplicate = await createTemplate(cookies['admin'], {
+        key: first.key,
+        translations: { de: 'Zweit', en: 'Second' },
+      })
+
+      expect(duplicate.statusCode).toBe(409)
+      expect(duplicate.json<ErrorResponseBody>()).toEqual({
+        code: 'text_template_key_taken',
+        params: { fields: ['key'] },
+      })
+    })
+
     it('offers active templates to the public catalog and hides archived ones', async () => {
       const created = await createForTest('Störung Archiv', 'Archive fault')
 
