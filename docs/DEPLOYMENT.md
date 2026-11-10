@@ -43,7 +43,7 @@ docker compose up -d web
 | `db-backup-pre-migrate` | —        | none       | one-shot `pg_dump` before the API migrates         |
 | `api`                   | —        | none       | Fastify API on port 3000; runs migrations on start |
 | `web`                   | —        | `WEB_PORT` | nginx: PWA + reverse proxy for `/api/`             |
-| `backup`                | `backup` | none       | periodic `pg_dump` into the backup volume          |
+| `backup`                | `backup` | none       | periodic `pg_dump` + uploads archive into the backup volume |
 
 Before the API container starts, `db-backup-pre-migrate` writes
 `/backups/pre-migrate-<timestamp>.sql.gz` into the backup volume and verifies the
@@ -247,11 +247,11 @@ docker compose up -d --force-recreate api
 All state lives in named Docker volumes, so the data survives
 `docker compose down` and container restarts.
 
-| Volume    | Content                              | Variable         |
-| --------- | ------------------------------------ | ---------------- |
-| `pgdata`  | database cluster, roles, all tickets | `PGDATA_VOLUME`  |
-| `uploads` | photos uploaded via the report form  | `UPLOADS_VOLUME` |
-| `backups` | compressed database dumps            | `BACKUP_VOLUME`  |
+| Volume    | Content                                       | Variable         |
+| --------- | --------------------------------------------- | ---------------- |
+| `pgdata`  | database cluster, roles, all tickets          | `PGDATA_VOLUME`  |
+| `uploads` | photos uploaded via the report form           | `UPLOADS_VOLUME` |
+| `backups` | compressed database dumps and uploads archives | `BACKUP_VOLUME` |
 
 The volume names are configurable via `.env`, so several installations can run
 side by side on one host. To inspect or copy data out of a volume:
@@ -264,20 +264,41 @@ docker run --rm -v stoerdesk_pgdata:/data -v "$PWD":/backup alpine \
 ### Backups
 
 ```bash
-docker compose --profile backup up -d      # starts the periodic dumps
+docker compose --profile backup up -d      # starts the periodic dumps and uploads archives
 docker run --rm -v stoerdesk_backups:/backups alpine ls -l /backups
 ```
 
-`BACKUP_INTERVAL_SECONDS` controls the interval, `BACKUP_RETENTION_DAYS` how
-long dumps are kept. That window also bounds the `pre-migrate-*.sql.gz` dumps
-that every compose deployment writes before the API migrates. The dump holds the
-ticket data, including personal data, and is not encrypted at rest beyond the
-protection of the `backups` volume. To restore a dump:
+Every backup cycle writes a pair into the `backups` volume: the database dump
+`stoerdesk-<timestamp>.sql.gz` and the uploads archive
+`stoerdesk-<timestamp>-uploads.tar.gz` of the `uploads` volume — the service
+mounts the photos read-only, it never writes into them. `BACKUP_INTERVAL_SECONDS`
+controls the interval, `BACKUP_RETENTION_DAYS` how long both are kept; that
+window also bounds the `pre-migrate-*.sql.gz` dumps that every compose
+deployment writes before the API migrates. The dump holds the ticket data,
+including personal data, and is not encrypted at rest beyond the protection of
+the `backups` volume.
+
+Restore database and uploads **of one cycle together**: a `ticket_photos` row
+whose file is missing leaves a broken ticket gallery. The dump goes back into
+the `db` service, the matching archive into the `uploads` volume:
 
 ```bash
 gunzip -c stoerdesk-20260101T120000Z.sql.gz | \
   docker compose exec -T db psql -U stoerdesk -d stoerdesk
+docker run --rm \
+  -v "$BACKUP_VOLUME:/backups:ro" \
+  -v "$UPLOADS_VOLUME:/data/uploads" \
+  alpine sh -c 'cd /data/uploads && tar xzf /backups/stoerdesk-20260101T120000Z-uploads.tar.gz'
 ```
+
+Restoring the archive into a fresh volume replaces the whole gallery; extracting
+it over the running volume keeps the files the archive does not contain.
+`scripts/restore-drill.sh` proves the pair end to end: it starts the `db` and
+`backup` services in a throw-away Compose project, seeds rows and a photo, lets
+the profile write dump and archive, restores both into fresh targets and
+compares the row counts and the photo manifest. The Docker CI job runs the drill
+inside `scripts/docker-smoke.sh`; without a Docker daemon the drill reports
+itself as unverified, never green.
 
 ## Notifications
 

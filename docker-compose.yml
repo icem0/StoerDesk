@@ -4,7 +4,7 @@
 # This file never has to be edited for a deployment.
 #
 #   docker compose up -d --build                 # core stack (db, api, web)
-#   docker compose --profile backup up -d       # + periodic database dumps
+#   docker compose --profile backup up -d       # + periodic database dumps and uploads archives
 #
 # Profiles are independent and can be combined.
 
@@ -188,7 +188,7 @@ services:
     networks:
       - backend
 
-  # Periodic database dumps into the backup volume (profile "backup").
+  # Periodic database dumps and uploads archives into the backup volume (profile "backup").
   backup:
     image: ${POSTGRES_IMAGE:-postgres:16-alpine}
     profiles:
@@ -205,7 +205,9 @@ services:
           PGPASSWORD="$${POSTGRES_PASSWORD}" pg_dump \
             --host=db --username="$${POSTGRES_USER}" --dbname="$${POSTGRES_DB}" \
             | gzip > "/backups/stoerdesk-$$stamp.sql.gz"
+          tar -czf "/backups/stoerdesk-$$stamp-uploads.tar.gz" -C /data/uploads .
           find /backups -name 'stoerdesk-*.sql.gz' -mtime "+$${BACKUP_RETENTION_DAYS}" -delete
+          find /backups -name 'stoerdesk-*.tar.gz' -mtime "+$${BACKUP_RETENTION_DAYS}" -delete
           sleep "$${BACKUP_INTERVAL_SECONDS}"
         done
     environment:
@@ -217,6 +219,8 @@ services:
       TZ: ${TZ:-Europe/Berlin}
     volumes:
       - backups:/backups
+      # Read-only: the backup only tars the photos, it never writes into them.
+      - uploads:/data/uploads:ro
     depends_on:
       db:
         condition: service_healthy
@@ -235,7 +239,7 @@ volumes:
   # Uploaded photos of the report form.
   uploads:
     name: ${UPLOADS_VOLUME:-stoerdesk_uploads}
-  # Compressed database dumps.
+  # Compressed database dumps and uploads archives.
   backups:
     name: ${BACKUP_VOLUME:-stoerdesk_backups}
 

@@ -15,6 +15,7 @@ import {
   resolveFaultFreeCounter,
   resolveFaultFreeRecord,
   resolveOnCallTile,
+  resolveTopFault,
 } from '../service'
 
 const testDatabase = await openTestDatabase()
@@ -361,6 +362,34 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
     expect(snapshot.tiles.onCall?.kind).toBe('confirmed')
     expect(snapshot.tiles.channels).toHaveLength(2)
     expect(snapshot.burningNow).toHaveLength(3)
+  })
+
+  it('resolves the most frequent fault of the last 30 days', async () => {
+    const reportedAt = new Date('2026-03-09T08:00:00Z')
+    const deadlineAt = new Date('2026-03-10T08:00:00Z')
+    let counter = 9000
+
+    const addFaultTicket = async (key: string) => {
+      counter += 1
+      await db.insert(tickets).values({
+        objectId,
+        ticketNo: `ST-2026-${counter}`,
+        faultTemplateKeys: [key],
+        reportedAt,
+        deadlineAt,
+      })
+    }
+
+    await addFaultTicket('feueralarm_ausloesung')
+    await addFaultTicket('feueralarm_ausloesung')
+    await addFaultTicket('feueralarm_ausloesung')
+    await addFaultTicket('strom')
+
+    expect(await resolveTopFault(db, now)).toEqual({
+      key: 'feueralarm_ausloesung',
+      count: 3,
+    })
+    expect(await resolveTopFault(db, new Date('2025-01-05T10:00:00Z'))).toBeNull()
   })
 
   it('omits optional sections when not requested', async () => {

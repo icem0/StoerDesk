@@ -8,6 +8,7 @@ import {
   dashboardSnapshotSchema,
   type DashboardSnapshot,
   type DashboardEvaluations,
+  type DashboardTopFault,
   type TicketPriority,
   type TicketStatus,
 } from '@stoerdesk/shared'
@@ -156,6 +157,41 @@ export async function resolveDashboardEvaluations(
     averageAcknowledgeMinutes: minutes(row?.acknowledge_minutes),
     averageProcessingMinutes: minutes(row?.processing_minutes),
   }
+}
+
+/**
+ * Most frequent fault template of the last 30 days (`specs/11-dashboard.md` §11.2,
+ * WP-M10-21): one aggregate over `stats_ticket_faults` over the same window and
+ * qualifying set as the evaluations (non-test, non-spam, not cancelled). The answer
+ * is language-neutral — the fault `key` plus its `count`; the dashboard resolves the
+ * label from the fault catalog. `null` when no qualifying fault was reported.
+ */
+export async function resolveTopFault(
+  database: Db,
+  now: Date,
+): Promise<DashboardTopFault | null> {
+  const windowStart = new Date(now.getTime() - EVALUATION_WINDOW_DAYS * MS_PER_DAY)
+
+  const rows = (await database.execute(sql`
+    SELECT "fault_template_key" AS key, COUNT(*)::text AS count
+    FROM "stats_ticket_faults"
+    WHERE "reported_at" >= ${sql.raw(`'${windowStart.toISOString()}'`)}::timestamptz
+      AND "reported_at" <= ${sql.raw(`'${now.toISOString()}'`)}::timestamptz
+      AND is_test = false
+      AND suspected_spam = false
+      AND status <> 'CANCELLED'
+    GROUP BY "fault_template_key"
+    ORDER BY COUNT(*) DESC, "fault_template_key" ASC
+    LIMIT 1
+  `)) as { key: string | null; count: string }[]
+
+  const row = rows[0]
+
+  if (row === undefined || row.key === null || Number(row.count) <= 0) {
+    return null
+  }
+
+  return { key: row.key, count: Number(row.count) }
 }
 
 type BaseTiles = {
@@ -380,6 +416,7 @@ export async function buildDashboardSnapshot(
   const { since, days } = await resolveFaultFreeCounter(database, now)
   const recordDays = await resolveFaultFreeRecord(database, now)
   const evaluations = await resolveDashboardEvaluations(database, now)
+  const topFault = await resolveTopFault(database, now)
   const baseTiles = await resolveDashboardTiles(database, now)
   const onCall = includeOnCall ? await resolveOnCallTile(database, now) : null
   const channels = includeChannels ? await resolveChannelStatus(database) : null
@@ -394,6 +431,7 @@ export async function buildDashboardSnapshot(
     generatedAt: now.toISOString(),
     faultFree: { since, days, recordDays },
     evaluations,
+    topFault,
     tiles,
     burningNow: await resolveBurningNow(database, now),
   })
