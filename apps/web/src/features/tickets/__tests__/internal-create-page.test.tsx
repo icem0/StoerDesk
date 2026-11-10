@@ -129,15 +129,18 @@ function stubTicketCreated(ticketNo: string) {
       const path = String(input)
 
       if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
-        return Response.json({
-          ticketId: '55555555-5555-4555-8555-555555555555',
-          ticketNo,
-          status: 'NEW',
-          statusToken: 'st-1234',
-          reportedAt: '2025-01-01T08:00:00Z',
-          receivedAt: '2025-01-01T08:00:00Z',
-          deadlineAt: '2025-01-04T08:00:00Z',
-        }, { status: 201 })
+        return Response.json(
+          {
+            ticketId: '55555555-5555-4555-8555-555555555555',
+            ticketNo,
+            status: 'NEW',
+            statusToken: 'st-1234',
+            reportedAt: '2025-01-01T08:00:00Z',
+            receivedAt: '2025-01-01T08:00:00Z',
+            deadlineAt: '2025-01-04T08:00:00Z',
+          },
+          { status: 201 },
+        )
       }
 
       if (path.includes('/v1/text-templates')) {
@@ -185,24 +188,25 @@ function stubInternalForm(titleEnabled: boolean) {
 
       if (path.includes('/v1/tickets/reporter-users')) {
         return Response.json({
-          users: [
-            { id: REPORTER_USER_ID, name: 'Rita Ruf', email: 'rita.ruf@example.invalid' },
-          ],
+          users: [{ id: REPORTER_USER_ID, name: 'Rita Ruf', email: 'rita.ruf@example.invalid' }],
         })
       }
 
       if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
         bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
 
-        return Response.json({
-          ticketId: '55555555-5555-4555-8555-555555555555',
-          ticketNo: 'ST-2025-0001',
-          status: 'NEW',
-          statusToken: 'st-1234',
-          reportedAt: '2025-01-01T08:00:00Z',
-          receivedAt: '2025-01-01T08:00:00Z',
-          deadlineAt: '2025-01-04T08:00:00Z',
-        }, { status: 201 })
+        return Response.json(
+          {
+            ticketId: '55555555-5555-4555-8555-555555555555',
+            ticketNo: 'ST-2025-0001',
+            status: 'NEW',
+            statusToken: 'st-1234',
+            reportedAt: '2025-01-01T08:00:00Z',
+            receivedAt: '2025-01-01T08:00:00Z',
+            deadlineAt: '2025-01-04T08:00:00Z',
+          },
+          { status: 201 },
+        )
       }
 
       if (path.includes('/v1/text-templates')) {
@@ -389,9 +393,7 @@ describe('InternalCreatePage', () => {
     renderPageWithRoutes()
     await pickObjectAndSubmit()
 
-    await waitFor(() =>
-      expect(screen.getByText('ST-2025-0001')).toBeTruthy(),
-    )
+    await waitFor(() => expect(screen.getByText('ST-2025-0001')).toBeTruthy())
   })
 
   it('offers no title field while the branding title switch is off', async () => {
@@ -423,9 +425,7 @@ describe('InternalCreatePage', () => {
 
     await waitFor(() => expect(switchCalls.length).toBeGreaterThan(0))
 
-    const titleField = (await screen.findByLabelText(
-      'Titel',
-    )) as HTMLInputElement
+    const titleField = (await screen.findByLabelText('Titel')) as HTMLInputElement
     fireEvent.change(titleField, { target: { value: 'Rauchmelder 2. OG' } })
 
     await pickObjectAndSubmit()
@@ -442,9 +442,7 @@ describe('InternalCreatePage', () => {
     expect(reportTime.value).not.toBe('')
     fireEvent.change(reportTime, { target: { value: '2026-11-09T20:00' } })
 
-    expect((screen.getByRole('radio', { name: 'Telefon' }) as HTMLInputElement).checked).toBe(
-      true,
-    )
+    expect((screen.getByRole('radio', { name: 'Telefon' }) as HTMLInputElement).checked).toBe(true)
     fireEvent.click(screen.getByRole('radio', { name: 'E-Mail' }))
 
     await pickObjectAndSubmit()
@@ -472,5 +470,31 @@ describe('InternalCreatePage', () => {
     await waitFor(() => expect(bodies.length).toBe(1))
     expect(bodies[0]?.reporterKind).toBe('internal')
     expect(bodies[0]?.reportedByUserId).toBe(REPORTER_USER_ID)
+  })
+
+  it('warns about a future report time and never sends the blind report', async () => {
+    const { bodies } = stubInternalForm(false)
+    renderPage()
+
+    // Pick an object first so the submit button is enabled.
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+    fireEvent.focus(searchInput)
+    await screen.findByText('Rathaus')
+    fireEvent.click(screen.getByText('12345_01'))
+
+    // A report time far in the future is rejected by the API (§7 rule 1, WP-M2-98b).
+    const reportTime = (await screen.findByLabelText('Gemeldet am')) as HTMLInputElement
+    fireEvent.change(reportTime, { target: { value: '2099-01-01T00:00' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Meldung erstellen' }))
+
+    // The form warns immediately and the create request never reaches the server,
+    // so the office cannot forward to a ticket that was never created.
+    await waitFor(() =>
+      expect(
+        screen.getByText('Die reported time must not be in the future. Please choose now or a past time.'),
+      ).toBeTruthy(),
+    )
+    expect(bodies.length).toBe(0)
   })
 })

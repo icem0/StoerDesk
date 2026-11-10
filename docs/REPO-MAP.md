@@ -10,7 +10,7 @@ apps/
 │   ├── src/
 │   │   ├── admin/               UsersPage, RolesPage, GroupsPage, BmaSyncPage, DeadlinesPage, TextTemplatesPage, OncallPage (`/admin/oncall`, WP-M8-13), ApiKeysPage (`/admin/api-keys`, WP-M10-04), WebhooksPage (`/admin/webhooks`, WP-M10-11) — the guarded admin screens
 │   │   ├── auth/                LoginForm, LogoutButton, RequireSession, usePermission
-│   │   ├── components/          Shell, AppVersion, NotFoundPage, RouteErrorPage — layout shell, version badge, not found page
+│   │   ├── components/          Shell, AppVersion, NotFoundPage, RouteErrorPage — layout shell with centred header menu and mobile drawer, version badge, not found page
 │   │   ├── features/            dashboard/start-page.tsx, dashboard/use-dashboard.ts (WP-M9-14/19, WP-M10-19b/32), dashboard/open-tickets.tsx (WP-M10-31), dashboard/tv-page.tsx (WP-M9-16/31); objects/sticker-page.tsx (WP-M2-03), objects/object-import-page.tsx (WP-M10-14); tickets/report-form-page.tsx, image-compress.ts, photo-upload.tsx (WP-M2-05/05b), status-page.tsx (WP-M2-06b), ticket-detail-page.tsx (WP-M2-18b/19d/M4-05/M4-06/91/07), offline-action-banner.tsx, use-internal-actions.ts (WP-M5-05/06), ticket-timeline.tsx (WP-M6-11); settings/NtfySubscription.tsx (WP-M7-03); oncall/my-shifts-page.tsx (WP-M8-14, WP-M10-34), oncall/use-shift-actions.ts (WP-M8-15), oncall/readiness-calendar.tsx (WP-M10-33), stats/stats-page.tsx (WP-M9-15)
 │   │   ├── i18n/                i18next setup + locales/{de,en}/<ns>.json
 │   │   ├── lib/                 apiFetch client (credentials, ApiError), build version, service-worker route predicates (sw-routes.ts) and the precache/background-sync/stale-while-revalidate routes (sw.ts)

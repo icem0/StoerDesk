@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -281,6 +281,16 @@ function ObjectPicker({
   )
 }
 
+/**
+ * How far into the future a `reportedAt` may still be accepted (WP-M2-98b).
+ *
+ * `createInternalTicket` on the API rejects a report time more than five minutes
+ * ahead of server time with `400 invalid_request`. The form mirrors that grace so
+ * the office sees a warning the moment it types a future time, instead of blindly
+ * sending it and getting the generic check-your-inputs notice.
+ */
+const REPORT_TIME_GRACE_MS = 5 * 60 * 1000
+
 export function InternalCreatePage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
@@ -300,6 +310,7 @@ export function InternalCreatePage() {
   const [reportedAt, setReportedAt] = useState(() => localDateTimeValue(new Date()))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reportTimeWarning, setReportTimeWarning] = useState(false)
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
@@ -311,10 +322,7 @@ export function InternalCreatePage() {
   /** WP-M2-98c: the internal reporter picker only loads for the internal kind. */
   const reporterUsers = useReporterUsers(reporterKind === 'internal').data?.users ?? []
 
-  function priorityLabel(
-    priority: 'low' | 'normal' | 'high' | 'critical',
-    label: string,
-  ): string {
+  function priorityLabel(priority: 'low' | 'normal' | 'high' | 'critical', label: string): string {
     const hours = deadlineHours?.[priority]
 
     return hours === undefined
@@ -351,10 +359,35 @@ export function InternalCreatePage() {
     }
   }
 
+  /**
+   * Whether the entered report time is too far in the future (WP-M2-98b).
+   *
+   * The check lives in a `useCallback` so the impure clock read runs at call
+   * time, not during render. The API rejects a `reportedAt` more than five
+   * minutes ahead of server time with `400 invalid_request`; the form shows the
+   * same problem in the reportedAt field and blocks the send before the round
+   * trip, so the office never forwards to a ticket that was never created.
+   */
+  const reportTimeFuture = useCallback(
+    () => reportedAt !== '' && new Date(reportedAt).getTime() > Date.now() + REPORT_TIME_GRACE_MS,
+    [reportedAt],
+  )
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
+    setReportTimeWarning(false)
     setSubmitting(true)
+
+    // WP-M2-98b: the office may backdate a report, but not send it into the
+    // future beyond the API's five-minute grace. Warn in the form and keep the
+    // send closed so the office never reaches the (non-created) ticket detail.
+    if (reportTimeFuture()) {
+      setReportTimeWarning(true)
+      setSubmitting(false)
+
+      return
+    }
 
     try {
       const payload: InternalCreateTicketRequest = {
@@ -445,10 +478,7 @@ export function InternalCreatePage() {
 
         {titleEnabled ? (
           <div className="flex flex-col gap-2 col-span-full">
-            <label
-              className="text-sm font-medium text-slate-200"
-              htmlFor="internal-create-title"
-            >
+            <label className="text-sm font-medium text-slate-200" htmlFor="internal-create-title">
               {t('internal.create.fields.title')}
             </label>
             <input
@@ -503,9 +533,7 @@ export function InternalCreatePage() {
               setPriority(event.target.value as 'low' | 'normal' | 'high' | 'critical')
             }
           >
-            <option value="low">
-              {priorityLabel('low', t('internal.create.priority.low'))}
-            </option>
+            <option value="low">{priorityLabel('low', t('internal.create.priority.low'))}</option>
             <option value="normal">
               {priorityLabel('normal', t('internal.create.priority.normal'))}
             </option>
@@ -547,7 +575,10 @@ export function InternalCreatePage() {
 
           {reporterKind === 'internal' ? (
             <div className="mb-3 flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-200" htmlFor="internal-reporter-user">
+              <label
+                className="text-sm font-medium text-slate-200"
+                htmlFor="internal-reporter-user"
+              >
                 {t('internal.create.fields.reporterUser')}
               </label>
               <select
@@ -582,7 +613,10 @@ export function InternalCreatePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-200" htmlFor="internal-contact-phone">
+              <label
+                className="text-sm font-medium text-slate-200"
+                htmlFor="internal-contact-phone"
+              >
                 {t('internal.create.fields.contactPhone')}
               </label>
               <input
@@ -595,7 +629,10 @@ export function InternalCreatePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-200" htmlFor="internal-contact-email">
+              <label
+                className="text-sm font-medium text-slate-200"
+                htmlFor="internal-contact-email"
+              >
                 {t('internal.create.fields.contactEmail')}
               </label>
               <input
@@ -627,6 +664,11 @@ export function InternalCreatePage() {
               onChange={(event) => setReportedAt(event.target.value)}
             />
             <p className="text-xs text-slate-500">{t('internal.create.fields.reportedAtHint')}</p>
+            {reportTimeWarning ? (
+              <p className="text-sm text-rose-400" role="alert">
+                {t('internal.create.errors.reportTimeFuture')}
+              </p>
+            ) : null}
           </div>
         </fieldset>
 
