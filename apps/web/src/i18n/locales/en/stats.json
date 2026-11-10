@@ -1,1 +1,102 @@
-{}
+{
+  "title": "Statistics",
+  "hint": "Figures for the tickets in the selected period.",
+  "forbidden": "You do not have permission to view the statistics.",
+  "loading": "Loading statistics …",
+  "loadError": "The statistics could not be loaded.",
+  "range": {
+    "label": "Period",
+    "week": "Week",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year",
+    "custom": "Custom",
+    "from": "from",
+    "to": "to"
+  },
+  "filters": {
+    "objectNo": "Object number",
+    "systemType": "System type",
+    "priority": "Priority",
+    "technician": "Technician ID",
+    "bucket": "Resolution",
+    "includeTest": "Include test tickets",
+    "includeSpam": "Include suspected spam",
+    "apply": "Apply",
+    "reset": "Reset",
+    "all": "all"
+  },
+  "bucket": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
+  },
+  "priority": {
+    "low": "low",
+    "normal": "normal",
+    "high": "high",
+    "critical": "critical"
+  },
+  "reaction": {
+    "title": "Reaction times",
+    "hint": "In minutes; pauses are reported separately.",
+    "phase": {
+      "review": "Review",
+      "firstResponse": "First response",
+      "acknowledge": "Acknowledge"
+    },
+    "count": "Count",
+    "median": "Median",
+    "average": "Average",
+    "p90": "P90",
+    "minutes": "{{value}} min",
+    "pausedTickets": "{{count}} tickets with a pause",
+    "pauseMinutes": "{{count}} pause minutes"
+  },
+  "frequency": {
+    "title": "Frequency",
+    "seriesAria": "Ticket series per {{bucket}}",
+    "empty": "No tickets in the period.",
+    "bySystemType": "By system type",
+    "byFaultTemplate": "By fault type",
+    "bySource": "By source",
+    "key": "Key",
+    "count": "Count",
+    "source": {
+      "QR": "QR code",
+      "INTERNAL": "Internal",
+      "API": "Interface"
+    }
+  },
+  "objects": {
+    "title": "Conspicuous objects",
+    "hint": "The 25 most frequent objects; the marker shows objects above the threshold of the last 90 days.",
+    "objectNo": "Object number",
+    "objectName": "Object",
+    "count": "Tickets",
+    "conspicuous": "conspicuous",
+    "drilldown": "Show tickets",
+    "empty": "No objects in the period."
+  },
+  "compliance": {
+    "title": "Deadlines",
+    "acknowledged": "Acknowledged",
+    "onTime": "On time",
+    "late": "Late",
+    "openOverdue": "Open overdue",
+    "onTimeRate": "On-time rate",
+    "noRate": "no data"
+  },
+  "declines": {
+    "title": "Declines",
+    "declineRate": "Decline rate",
+    "topReasons": "Top reasons",
+    "reason": "Reason",
+    "count": "Count",
+    "noRate": "no data",
+    "empty": "No declines in the period."
+  },
+  "export": {
+    "button": "Download CSV"
+  }
+}

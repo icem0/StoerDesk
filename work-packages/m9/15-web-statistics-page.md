@@ -1,7 +1,7 @@
 # WP-M9-15: web statistics page, filters and charts
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-12, WP-M9-13, WP-M9-04
 phase: 9
 milestone: m9

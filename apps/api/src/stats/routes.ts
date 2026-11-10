@@ -6,6 +6,7 @@ import { z } from 'zod'
 import {
   PERMISSIONS,
   complianceResponseSchema,
+  declinesResponseSchema,
   frequencyResponseSchema,
   reactionTimesResponseSchema,
   statsFilterSchema,
@@ -198,6 +199,23 @@ export const statsRoutes = fp<StatsRoutesOptions>(
 
         const result = await queryCompliance(database, parsed.filter)
         return reply.code(200).send(complianceResponseSchema.parse(result))
+      },
+    )
+
+    app.get(
+      '/api/v1/stats/declines',
+      { preHandler: guard },
+      async (request, reply) => {
+        const parsed = parseFilter(request.query)
+
+        if (!parsed.ok) {
+          return reply
+            .code(422)
+            .send({ code: parsed.code, params: parsed.fields ? { fields: parsed.fields } : {} })
+        }
+
+        const result = await queryDeclines(database, parsed.filter)
+        return reply.code(200).send(declinesResponseSchema.parse(result))
       },
     )
 

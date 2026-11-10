@@ -175,6 +175,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('statistics routes (integ
     })
     expect(compliance.statusCode).toBe(200)
     expect(compliance.json<{ onTimeRate: number | null }>().onTimeRate).toBe(1)
+
+    const declines = await app.inject({
+      method: 'GET',
+      url: '/api/v1/stats/declines',
+      headers: { cookie: managerCookie },
+    })
+    expect(declines.statusCode).toBe(200)
+    expect(Array.isArray(declines.json<{ topReasons: unknown[] }>().topReasons)).toBe(true)
   })
 
   it('rejects a user without stats.read', async () => {

@@ -1,1 +1,102 @@
-{}
+{
+  "title": "Statistik",
+  "hint": "Kennzahlen der Meldungen im gewählten Zeitraum.",
+  "forbidden": "Sie haben keine Berechtigung, die Statistik zu sehen.",
+  "loading": "Statistik wird geladen …",
+  "loadError": "Die Statistik konnte nicht geladen werden.",
+  "range": {
+    "label": "Zeitraum",
+    "week": "Woche",
+    "month": "Monat",
+    "quarter": "Quartal",
+    "year": "Jahr",
+    "custom": "Benutzerdefiniert",
+    "from": "von",
+    "to": "bis"
+  },
+  "filters": {
+    "objectNo": "Objektnummer",
+    "systemType": "Anlagentyp",
+    "priority": "Priorität",
+    "technician": "Techniker-ID",
+    "bucket": "Auflösung",
+    "includeTest": "Testmeldungen einbeziehen",
+    "includeSpam": "Spamverdacht einbeziehen",
+    "apply": "Anwenden",
+    "reset": "Zurücksetzen",
+    "all": "alle"
+  },
+  "bucket": {
+    "day": "Tag",
+    "week": "Woche",
+    "month": "Monat"
+  },
+  "priority": {
+    "low": "niedrig",
+    "normal": "normal",
+    "high": "hoch",
+    "critical": "kritisch"
+  },
+  "reaction": {
+    "title": "Reaktionszeiten",
+    "hint": "In Minuten; Pausen werden separat ausgewiesen.",
+    "phase": {
+      "review": "Prüfung",
+      "firstResponse": "Erste Rückmeldung",
+      "acknowledge": "Bestätigung"
+    },
+    "count": "Anzahl",
+    "median": "Median",
+    "average": "Mittelwert",
+    "p90": "P90",
+    "minutes": "{{value}} min",
+    "pausedTickets": "{{count}} Meldungen mit Pause",
+    "pauseMinutes": "{{count}} Pausenminuten"
+  },
+  "frequency": {
+    "title": "Häufigkeit",
+    "seriesAria": "Verlauf der Meldungen je {{bucket}}",
+    "empty": "Keine Meldungen im Zeitraum.",
+    "bySystemType": "Nach Anlagentyp",
+    "byFaultTemplate": "Nach Störungsart",
+    "bySource": "Nach Quelle",
+    "key": "Schlüssel",
+    "count": "Anzahl",
+    "source": {
+      "QR": "QR-Code",
+      "INTERNAL": "Intern",
+      "API": "Schnittstelle"
+    }
+  },
+  "objects": {
+    "title": "Auffällige Objekte",
+    "hint": "Die 25 häufigsten Objekte; der Marker zeigt Objekte über der Schwelle der letzten 90 Tage.",
+    "objectNo": "Objektnummer",
+    "objectName": "Objekt",
+    "count": "Meldungen",
+    "conspicuous": "auffällig",
+    "drilldown": "Meldungen anzeigen",
+    "empty": "Keine Objekte im Zeitraum."
+  },
+  "compliance": {
+    "title": "Fristen",
+    "acknowledged": "Bestätigt",
+    "onTime": "Fristgerecht",
+    "late": "Verspätet",
+    "openOverdue": "Offen überfällig",
+    "onTimeRate": "Quote fristgerecht",
+    "noRate": "keine Daten"
+  },
+  "declines": {
+    "title": "Ablehnungen",
+    "declineRate": "Ablehnungsquote",
+    "topReasons": "Häufigste Gründe",
+    "reason": "Grund",
+    "count": "Anzahl",
+    "noRate": "keine Daten",
+    "empty": "Keine Ablehnungen im Zeitraum."
+  },
+  "export": {
+    "button": "CSV herunterladen"
+  }
+}

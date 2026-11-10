@@ -16,6 +16,7 @@ import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { StartPage } from '../features/dashboard/start-page'
+import { StatsPage } from '../features/stats/stats-page'
 import { StickerPage } from '../features/objects/sticker-page'
 import { ObjectListPage } from '../features/objects/object-list-page'
 import { ObjectCreatePage } from '../features/objects/object-create-page'
@@ -187,6 +188,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <TicketListPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/stats',
+        element: (
+          <RequireSession>
+            <StatsPage />
           </RequireSession>
         ),
       },
