@@ -1,5 +1,5 @@
-import { createChallenge, verifySolution } from 'altcha-lib'
-import type { Challenge, Payload } from 'altcha-lib/types'
+import { createChallenge, verifySolution } from 'altcha-lib/v1'
+import type { Challenge, Payload } from 'altcha-lib/v1/types'
 import fp from 'fastify-plugin'
 
 /**
@@ -13,6 +13,10 @@ import fp from 'fastify-plugin'
  * format** (`{ algorithm, challenge, salt, signature, maxnumber }`): that is the
  * format the `altcha` web component of the form answers with and the one the
  * `tickets.suspected_spam` decision of WP-M2-07c validates.
+ *
+ * The library moved its v1 API to the `altcha-lib/v1` subpath with the release of
+ * its v2 format; the import path pins that format, so a dependency update to 2.x
+ * cannot change the challenge the form solves.
  *
  * Challenges carry an expiry inside their `salt`: without it a single solved payload
  * could be replayed for every later report of that IP or token.
