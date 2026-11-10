@@ -238,6 +238,12 @@ export const publicTicketCommentResponseSchema = z.object({
  * server sets `source = 'INTERNAL'` and `status = 'NEW'`.
  */
 
+/** Meldungskanal einer intern erfassten Meldung (WP-M2-98). */
+export const TICKET_REPORTER_CHANNELS = ['phone', 'email', 'messenger'] as const
+
+/** Interner Mitarbeiter oder externe Person als Melder (WP-M2-98). */
+export const TICKET_REPORTER_KINDS = ['internal', 'external'] as const
+
 export const internalCreateTicketRequestSchema = z.object({
   objectId: z.uuid(),
   title: trimmedText(200),
@@ -249,7 +255,29 @@ export const internalCreateTicketRequestSchema = z.object({
     .refine((keys) => new Set(keys).size === keys.length),
   priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
   contact: publicReportContactSchema.optional(),
+  /** Meldungskanal der Erfassung (WP-M2-98). */
+  reporterChannel: z.enum(TICKET_REPORTER_CHANNELS).optional(),
+  /** Interner Mitarbeiter oder externe Person (WP-M2-98). */
+  reporterKind: z.enum(TICKET_REPORTER_KINDS).optional(),
+  /** Der interne Benutzer, der die Meldung an den Erfasser gegeben hat. */
+  reportedByUserId: z.uuid().optional(),
+  /** Meldezeitpunkt mit Offset; der Server verhindert nur die Zukunft. */
+  reportedAt: z.iso.datetime({ offset: true, local: true }).optional(),
 })
+
+/** Aktive interne Benutzer für die Melder-Auswahl (WP-M2-98b). */
+export const reporterUserSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  email: z.email(),
+})
+
+export const reporterUserListResponseSchema = z.object({
+  users: z.array(reporterUserSchema),
+})
+
+export type ReporterUser = z.infer<typeof reporterUserSchema>
+export type ReporterUserListResponse = z.infer<typeof reporterUserListResponseSchema>
 
 export const internalCreateTicketResponseSchema = z.object({
   ticketId: z.uuid(),

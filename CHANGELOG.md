@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The internal ticket API accepts a backdated `reportedAt`, the reporter channel,
+  the reporter kind and the internal reporter (WP-M2-98b): a report time in the future
+  answers `400 invalid_request` (five-minute grace), `received_at` stays server time,
+  the deadline starts at `reportedAt`, an internal kind requires an active
+  `reportedByUserId` (name and e-mail are filled from that user) and
+  `GET /api/v1/tickets/reporter-users` lists the active users for the form.
 - Internal reports carry reporter metadata (WP-M2-98): `tickets.reporter_channel`
   (`phone`, `email`, `messenger`), `tickets.reporter_kind` (`internal`, `external`) and
   `tickets.reported_by_user_id` (the internal employee who handed the fault to the

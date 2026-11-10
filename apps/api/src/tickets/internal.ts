@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -6,6 +6,7 @@ import {
   internalCreateTicketRequestSchema,
   internalCreateTicketResponseSchema,
   PERMISSIONS,
+  reporterUserListResponseSchema,
   ticketNoSchema,
   type InternalCreateTicketRequest,
   type InternalCreateTicketResponse,
@@ -13,7 +14,7 @@ import {
 
 import { requirePermission, requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, ticketEvents, tickets } from '../db/schema'
+import { objects, ticketEvents, tickets, users } from '../db/schema'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
 import { createExternalTicket, fieldPaths as externalFieldPaths } from './external'
@@ -65,8 +66,49 @@ export async function createInternalTicket(
 
   const titleEnabled = await readTitleEnabled(database)
 
-  const now = new Date()
-  const deadlineAt = await deadlineAtForPriority(database, now, input.priority)
+  const receivedAt = new Date()
+  const reportedAt = input.reportedAt === undefined ? receivedAt : new Date(input.reportedAt)
+
+  // Intentional backdating is allowed; a report time in the future is not.
+  if (reportedAt.getTime() > receivedAt.getTime() + 5 * 60 * 1000) {
+    throw new InternalTicketRouteError(400, 'invalid_request', { fields: ['reportedAt'] })
+  }
+
+  const deadlineAt = await deadlineAtForPriority(database, reportedAt, input.priority)
+
+  let reporterName = input.contact?.name ?? null
+  let reporterEmail = input.contact?.email ?? null
+  let reportedByUserId: string | null = null
+
+  if (input.reporterKind === 'internal') {
+    if (input.reportedByUserId === undefined) {
+      throw new InternalTicketRouteError(422, 'reporter_user_not_found', {
+        fields: ['reportedByUserId'],
+      })
+    }
+
+    const [reporter] = await database
+      .select({
+        id: users.id,
+        email: users.email,
+        givenName: users.givenName,
+        familyName: users.familyName,
+      })
+      .from(users)
+      .where(and(eq(users.id, input.reportedByUserId), eq(users.active, true)))
+      .limit(1)
+
+    if (reporter === undefined) {
+      throw new InternalTicketRouteError(422, 'reporter_user_not_found', {
+        fields: ['reportedByUserId'],
+      })
+    }
+
+    reportedByUserId = reporter.id
+    const fullName = `${reporter.givenName} ${reporter.familyName}`.trim()
+    reporterName = reporterName ?? (fullName === '' ? reporter.email : fullName)
+    reporterEmail = reporterEmail ?? reporter.email
+  }
 
   return await database.transaction(async (tx) => {
     const [ticket] = await tx
@@ -78,12 +120,15 @@ export async function createInternalTicket(
         faultTemplateKeys: input.faultTemplateKeys,
         priority: input.priority,
         source: 'INTERNAL',
-        reportedAt: now,
-        receivedAt: now,
+        reportedAt,
+        receivedAt,
         deadlineAt,
-        reporterName: input.contact?.name ?? null,
+        reporterName,
         reporterPhone: input.contact?.phone ?? null,
-        reporterEmail: input.contact?.email ?? null,
+        reporterEmail,
+        reporterChannel: input.reporterChannel ?? null,
+        reporterKind: input.reporterKind ?? null,
+        reportedByUserId,
       })
       .returning()
 
@@ -101,6 +146,10 @@ export async function createInternalTicket(
         priority: input.priority,
         faultTemplateKeys: input.faultTemplateKeys,
         hasContact: Boolean(input.contact?.name || input.contact?.phone || input.contact?.email),
+        reportedAt: reportedAt.toISOString(),
+        reporterChannel: input.reporterChannel ?? null,
+        reporterKind: input.reporterKind ?? null,
+        reportedByUserId,
       },
     })
 
@@ -172,6 +221,31 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
           }
           throw error
         }
+      },
+    )
+
+    app.get(
+      '/api/v1/tickets/reporter-users',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.create) },
+      async () => {
+        const rows = await database
+          .select({
+            id: users.id,
+            email: users.email,
+            givenName: users.givenName,
+            familyName: users.familyName,
+          })
+          .from(users)
+          .where(eq(users.active, true))
+          .orderBy(users.familyName, users.givenName, users.email)
+
+        return reporterUserListResponseSchema.parse({
+          users: rows.map((row) => {
+            const fullName = `${row.givenName} ${row.familyName}`.trim()
+
+            return { id: row.id, name: fullName === '' ? row.email : fullName, email: row.email }
+          }),
+        })
       },
     )
 
