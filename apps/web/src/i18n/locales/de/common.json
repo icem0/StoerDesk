@@ -9,7 +9,8 @@
   "navigation": "Hauptnavigation",
   "nav": {
    "dashboard": "Dashboard",
-   "tickets": "Tickets"
+   "tickets": "Tickets",
+   "oncall": "Bereitschaft"
   },
   "titleWithCompany": "{{company}} @ {{product}}",
   "settingsGroups": {

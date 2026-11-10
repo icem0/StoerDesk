@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- "Bereitschaft" becomes a menu entry of its own (WP-M10-35): the header navigation shows
+  `Dashboard`, `Tickets` and `Bereitschaft` ("On call"), the entry leads to the readiness
+  page `/oncall` and stays active there.
 - The readiness page of the office (WP-M10-34): `/oncall` shows the readiness calendar of
   everybody first and the own readiness below it — the personal iCal feed, the own shifts
   with confirm, decline and swap. A button to the administration of the readiness

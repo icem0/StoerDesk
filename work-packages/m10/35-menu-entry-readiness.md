@@ -1,7 +1,7 @@
 # WP-M10-35: "Bereitschaft" becomes a menu entry of its own
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-34
 phase: 10
 milestone: m10

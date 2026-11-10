@@ -1446,7 +1446,9 @@ the start page and removes its on-call tile; the snapshot keeps the section for 
 readiness, with the pool, the person and the state of every shift — as the component the
 on-call page hangs above the own readiness. **WP-M10-34** puts the calendar above the own
 readiness on `/oncall` and adds the button to the administration of the readiness, visible
-only with the permission `oncall.admin`.
+only with the permission `oncall.admin`. **WP-M10-35** adds "Bereitschaft" to the header
+navigation: the entries are "Dashboard", "Tickets" and "Bereitschaft", the last one leads to
+the readiness page `/oncall`.
 
 ## 17. Work package rules for small models
 

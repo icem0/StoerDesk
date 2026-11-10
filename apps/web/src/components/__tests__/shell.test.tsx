@@ -173,10 +173,24 @@ describe('Shell settings menu', () => {
 
     const dashboard = screen.getByRole('link', { name: 'Dashboard' })
     const tickets = screen.getByRole('link', { name: 'Tickets' })
+    const oncall = screen.getByRole('link', { name: 'Bereitschaft' })
     expect(dashboard.getAttribute('href')).toBe('/')
     expect(tickets.getAttribute('href')).toBe('/tickets')
+    expect(oncall.getAttribute('href')).toBe('/oncall')
     expect(dashboard.getAttribute('aria-current')).toBeNull()
     expect(tickets.getAttribute('aria-current')).toBeNull()
+    expect(oncall.getAttribute('aria-current')).toBeNull()
+  })
+
+  it('marks the readiness link as active on /oncall', async () => {
+    stubMe(signedInMe())
+    renderShell('/oncall')
+
+    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Tickets' }).getAttribute('aria-current')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Bereitschaft' }).getAttribute('aria-current')).toBe(
+      'page',
+    )
   })
 
   it('marks the ticket link as active on /tickets', async () => {

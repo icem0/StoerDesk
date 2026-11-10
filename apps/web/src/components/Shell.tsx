@@ -82,13 +82,15 @@ const navGroups = [
 ] as const
 
 /**
- * Top-level entries of the header nav (WP-M2-28): the two pages the internal user
- * needs without opening the settings menu. `/` is matched exactly, `/tickets` by
- * prefix, so a ticket detail keeps the `tickets` entry active.
+ * Top-level entries of the header nav (WP-M2-28, WP-M10-35): the three pages the
+ * internal user needs without opening the settings menu. `/` is matched exactly,
+ * `/tickets` and `/oncall` by prefix, so a ticket detail keeps the `tickets`
+ * entry and the readiness page its own entry active.
  */
 const headerLinks = [
   { key: 'dashboard', path: '/' },
   { key: 'tickets', path: '/tickets' },
+  { key: 'oncall', path: '/oncall' },
 ] as const
 
 function SettingsIcon() {

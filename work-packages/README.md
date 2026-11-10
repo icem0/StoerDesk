@@ -572,7 +572,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-32  | the start page shows the statistics and the open tickets               | done                    | yes     |
 | WP-M10-33  | the readiness calendar of the office                                   | done                    | yes     |
 | WP-M10-34  | the on-call page shows the calendar and the own readiness              | done                    | yes     |
-| WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | planned                 | yes     |
+| WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
