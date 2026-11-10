@@ -5,7 +5,10 @@
     "previous": "Previous week",
     "next": "Next week",
     "empty": "No readiness is planned for this week.",
-    "unassigned": "not staffed"
+    "unassigned": "not staffed",
+    "pageTitle": "Readiness",
+    "pageHint": "The calendar shows who has the readiness. Below it you find your own shifts.",
+    "adminSettings": "Readiness settings"
   },
   "admin": {
     "back": "Back to administration",

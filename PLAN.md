@@ -1444,7 +1444,9 @@ wall display; the wording "Brennt jetzt" is gone. **WP-M10-32** puts the statist
 the start page and removes its on-call tile; the snapshot keeps the section for the API.
 **WP-M10-33** adds the readiness calendar of the office — the week of everybody who has the
 readiness, with the pool, the person and the state of every shift — as the component the
-on-call page hangs above the own readiness.
+on-call page hangs above the own readiness. **WP-M10-34** puts the calendar above the own
+readiness on `/oncall` and adds the button to the administration of the readiness, visible
+only with the permission `oncall.admin`.
 
 ## 17. Work package rules for small models
 

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The readiness page of the office (WP-M10-34): `/oncall` shows the readiness calendar of
+  everybody first and the own readiness below it — the personal iCal feed, the own shifts
+  with confirm, decline and swap. A button to the administration of the readiness
+  (`/admin/oncall`) is visible only for a user with the permission `oncall.admin`.
 - The readiness calendar of the office (WP-M10-33): the new `ReadinessCalendar` component
   shows the week of everybody who has the readiness — every shift with its pool, the
   technician and its state — and can step a week back and forward. The names of the

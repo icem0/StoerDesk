@@ -1,7 +1,7 @@
 # WP-M10-34: the on-call page shows the calendar and the own readiness
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-33
 phase: 10
 milestone: m10

@@ -5,19 +5,28 @@ import { toZonedTime } from 'date-fns-tz'
 import type { OnCallShift } from '@stoerdesk/shared'
 import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
+import { Link } from 'react-router-dom'
+
 import { apiFetch, ApiError } from '../../lib/api'
 import { useMe, usePermission } from '../../auth/usePermission'
 import { useShiftActions } from './use-shift-actions'
+import { ReadinessCalendar } from './readiness-calendar'
 
 /**
  * My on-call shifts (`specs/04-oncall.md` §4a.4, §4a.5, §4a.7; WP-M8-14).
  *
- * The signed-in technician sees their own shifts grouped into upcoming and past
- * shifts, confirms and declines planned shifts, requests swaps of confirmed
- * shifts and cancels their own pending swap requests. The personal iCal URL is
- * fetched through `GET /api/v1/oncall/ical-url` so the token never leaves this
- * route as a value the page could log; the page only displays and copies the
- * feed URL it received.
+ * The page is the readiness page of the office (WP-M10-34): the readiness
+ * calendar of everybody who has the readiness comes first, the own readiness
+ * (own shifts grouped into upcoming and past shifts, the personal iCal feed,
+ * confirm, decline and swap) below it. An admin reaches the administration of
+ * the readiness from a button at the top; for everybody else the button stays
+ * hidden.
+ *
+ * The signed-in technician confirms and declines planned shifts, requests swaps
+ * of confirmed shifts and cancels their own pending swap requests. The personal
+ * iCal URL is fetched through `GET /api/v1/oncall/ical-url` so the token never
+ * leaves this route as a value the page could log; the page only displays and
+ * copies the feed URL it received.
  *
  * Server guards (`oncall.read`/`oncall.confirm`/`oncall.swap`) are the only
  * enforcement point — the page only hides what the role may not do.
@@ -66,11 +75,13 @@ function MyShiftsPageContent({
   pools,
   mayConfirm,
   maySwap,
+  mayAdmin,
 }: {
   meUserId: string
   pools: { id: string; name: string }[]
   mayConfirm: boolean
   maySwap: boolean
+  mayAdmin: boolean
 }) {
   const { t } = useTranslation('oncall')
   const queryClient = useQueryClient()
@@ -171,7 +182,24 @@ function MyShiftsPageContent({
 
   return (
     <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
-      <h1 className="text-2xl font-semibold">{t('admin.myShifts.title')}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">{t('readiness.pageTitle')}</h1>
+          <p className="mt-1 text-sm text-slate-400">{t('readiness.pageHint')}</p>
+        </div>
+        {mayAdmin ? (
+          <Link
+            className="rounded bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700"
+            to="/admin/oncall"
+          >
+            {t('readiness.adminSettings')}
+          </Link>
+        ) : null}
+      </div>
+
+      <ReadinessCalendar pools={pools} shifts={shiftsQuery.data?.shifts ?? []} />
+
+      <h2 className="mt-8 text-xl font-semibold">{t('admin.myShifts.title')}</h2>
       <p className="mt-1 text-sm text-slate-400">{t('admin.myShifts.hint')}</p>
 
       {ical.data ? (
@@ -688,6 +716,7 @@ function MyShiftsPage() {
   const mayRead = usePermission('oncall.read')
   const mayConfirm = usePermission('oncall.confirm')
   const maySwap = usePermission('oncall.swap')
+  const mayAdmin = usePermission('oncall.admin')
   const pools = useQuery({
     queryKey: ['oncall', 'pools'],
     queryFn: () => apiFetch<{ pools: { id: string; name: string }[] }>('/v1/oncall/pools'),
@@ -722,6 +751,7 @@ function MyShiftsPage() {
       pools={pools.data?.pools ?? []}
       mayConfirm={mayConfirm}
       maySwap={maySwap}
+      mayAdmin={mayAdmin}
     />
   )
 }

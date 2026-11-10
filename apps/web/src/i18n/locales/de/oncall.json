@@ -5,7 +5,10 @@
     "previous": "Vorherige Woche",
     "next": "Nächste Woche",
     "empty": "Für diese Woche ist keine Bereitschaft eingetragen.",
-    "unassigned": "nicht besetzt"
+    "unassigned": "nicht besetzt",
+    "pageTitle": "Bereitschaft",
+    "pageHint": "Der Kalender zeigt, wer die Bereitschaft hat. Darunter stehen deine eigenen Schichten.",
+    "adminSettings": "Einstellungen der Bereitschaft"
   },
   "admin": {
     "back": "Zurück zur Verwaltung",

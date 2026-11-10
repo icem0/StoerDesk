@@ -82,19 +82,27 @@ export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] 
     })
   }, [props.shifts, fromIso, toIso])
 
-  const poolIds = useMemo(
-    () => [...new Set(shifts.map((shift) => shift.poolId))],
+  // The key of the pools keeps the queries stable — a new array on every
+  // render would restart them for every render.
+  const poolKey = useMemo(
+    () => [...new Set(shifts.map((shift) => shift.poolId))].sort().join(','),
     [shifts],
   )
 
   const memberQueries = useQueries({
-    queries: poolIds.map((poolId) => ({
-      queryKey: ['oncall', 'pool-members', poolId],
-      queryFn: () =>
-        apiFetch<{ members: Member[] }>(`/v1/oncall/pools/${poolId}/members`),
-      retry: false,
-      staleTime: 60_000,
-    })),
+    queries: useMemo(
+      () =>
+        poolKey === ''
+          ? []
+          : poolKey.split(',').map((poolId) => ({
+              queryKey: ['oncall', 'pool-members', poolId],
+              queryFn: () =>
+                apiFetch<{ members: Member[] }>(`/v1/oncall/pools/${poolId}/members`),
+              retry: false,
+              staleTime: 60_000,
+            })),
+      [poolKey],
+    ),
   })
 
   const namesByUser = new Map<string, string>()
