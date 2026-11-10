@@ -6,6 +6,7 @@ import { resolveOnCallPerson } from '../oncall/coupling'
 import {
   dashboardSnapshotSchema,
   type DashboardSnapshot,
+  type DashboardEvaluations,
   type TicketPriority,
   type TicketStatus,
 } from '@stoerdesk/shared'
@@ -95,6 +96,65 @@ export async function resolveFaultFreeRecord(database: Db, now: Date): Promise<n
   }
 
   return recordDays
+}
+
+/** Evaluation window of the snapshot (`specs/11-dashboard.md` §11.4a, ADR-0015):
+ * the last 30 days before `now`, not a dashboard setting. */
+const EVALUATION_WINDOW_DAYS = 30
+
+/** Average durations of the last 30 days over the counter's qualifying set
+ * (`specs/11-dashboard.md` §11.4a, ADR-0015 decision 2). Averages only — the
+ * query has no median, no p90 and no max, so the worst reaction time is never
+ * calculated here. Rows without the end column or with a negative duration are
+ * excluded; an average without any sample is `null`. */
+export async function resolveDashboardEvaluations(
+  database: Db,
+  now: Date,
+): Promise<DashboardEvaluations> {
+  const windowStart = new Date(now.getTime() - EVALUATION_WINDOW_DAYS * MS_PER_DAY)
+
+  const rows = (await database.execute(sql`
+    SELECT
+      COUNT(*)::text AS tickets,
+      ROUND(AVG(EXTRACT(EPOCH FROM ("review_started_at" - "reported_at")) / 60.0)
+        FILTER (WHERE "review_started_at" IS NOT NULL
+          AND "review_started_at" >= "reported_at"))::text AS review_minutes,
+      ROUND(AVG(EXTRACT(EPOCH FROM ("first_response_at" - "reported_at")) / 60.0)
+        FILTER (WHERE "first_response_at" IS NOT NULL
+          AND "first_response_at" >= "reported_at"))::text AS first_response_minutes,
+      ROUND(AVG(EXTRACT(EPOCH FROM ("acknowledged_at" - "reported_at")) / 60.0)
+        FILTER (WHERE "acknowledged_at" IS NOT NULL
+          AND "acknowledged_at" >= "reported_at"))::text AS acknowledge_minutes,
+      ROUND(AVG(EXTRACT(EPOCH FROM ("closed_at" - "reported_at")) / 60.0)
+        FILTER (WHERE "closed_at" IS NOT NULL
+          AND "closed_at" >= "reported_at"))::text AS processing_minutes
+    FROM "stats_tickets"
+    WHERE "reported_at" >= ${sql.raw(`'${windowStart.toISOString()}'`)}::timestamptz
+      AND "reported_at" <= ${sql.raw(`'${now.toISOString()}'`)}::timestamptz
+      AND is_test = false
+      AND suspected_spam = false
+      AND status <> 'CANCELLED'
+  `)) as {
+    tickets: string
+    review_minutes: string | null
+    first_response_minutes: string | null
+    acknowledge_minutes: string | null
+    processing_minutes: string | null
+  }[]
+
+  const row = rows[0]
+
+  const minutes = (value: string | null | undefined): number | null =>
+    value === null || value === undefined ? null : Math.round(Number(value))
+
+  return {
+    windowDays: EVALUATION_WINDOW_DAYS,
+    tickets: Number(row?.tickets ?? 0),
+    averageReviewMinutes: minutes(row?.review_minutes),
+    averageFirstResponseMinutes: minutes(row?.first_response_minutes),
+    averageAcknowledgeMinutes: minutes(row?.acknowledge_minutes),
+    averageProcessingMinutes: minutes(row?.processing_minutes),
+  }
 }
 
 type BaseTiles = {
@@ -279,6 +339,7 @@ export async function buildDashboardSnapshot(
   const { now, includeOnCall = true, includeChannels = true } = input
   const { since, days } = await resolveFaultFreeCounter(database, now)
   const recordDays = await resolveFaultFreeRecord(database, now)
+  const evaluations = await resolveDashboardEvaluations(database, now)
   const baseTiles = await resolveDashboardTiles(database, now)
   const onCall = includeOnCall ? await resolveOnCallTile(database, now) : null
   const channels = includeChannels ? await resolveChannelStatus(database) : null
@@ -292,6 +353,7 @@ export async function buildDashboardSnapshot(
   return dashboardSnapshotSchema.parse({
     generatedAt: now.toISOString(),
     faultFree: { since, days, recordDays },
+    evaluations,
     tiles,
     burningNow: await resolveBurningNow(database),
   })

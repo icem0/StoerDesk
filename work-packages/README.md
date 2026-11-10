@@ -20,7 +20,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
 | [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
 | [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
-| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion | 18 |
+| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages | 20 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -565,6 +565,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-16 | personal-data export and erasure routes                           | done                    | yes     |
 | WP-M10-17 | uploads backup, restore procedure and drill                       | planned                 | yes     |
 | WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
+| WP-M10-19 | dashboard evaluations: average durations, no worst value          | done                    | yes     |
+| WP-M10-19b | evaluation block on the dashboard start page                     | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -968,6 +970,20 @@ and the object detail keeps the external information. The same record corrects t
 off-by-one WP references in the `branding-state.ts` module comment (the internal creation
 gate is WP-M9-25, the ticket view gate WP-M9-24) — that comment was the only place in the
 repository that ever named WP-M9-26.
+
+**Dashboard evaluations (WP-M10-19, out of band in phase 10).** The office asked
+to enrich the dashboard with evaluations — average durations such as the
+bearbeitung time — while the worst reaction time stays out: it is neither
+calculated nor displayed. **WP-M10-19** adds the `evaluations` block of
+`specs/11-dashboard.md` §11.4a to the shared snapshot contract and one
+`AVG`-only aggregate query to `apps/api/src/dashboard/service.ts`
+(`resolveDashboardEvaluations`: the three §12.2 phases and
+`averageProcessingMinutes` as `closed_at - reported_at` over the last 30 days of
+the counter's qualifying set; no median, no p90, no max — ADR-0015). The
+statistics API and page keep their p90 columns; `specs/12-stats.md` §12.10 names
+the block as the only allowed addition. Its follow-up **WP-M10-19b** (file
+created in this commit) renders the block on the start page and is implemented
+next.
 
 ## Validation
 

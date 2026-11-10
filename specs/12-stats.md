@@ -161,7 +161,8 @@ read-only statistics viewer cannot.
 ## 12.10 Boundaries
 
 - No statistics tile on the dashboard beyond the tiles of
-  `specs/11-dashboard.md` §11.4; the dashboard and the statistics page read the
+  `specs/11-dashboard.md` §11.4 and the evaluations block of §11.4a
+  (WP-M10-19, averages only); the dashboard and the statistics page read the
   same views but answer different shapes.
 - No scheduled report, no PDF, no e-mail delivery of statistics.
 - No object-type deadline analysis (`PLAN.md` §19 leaves it undecided).

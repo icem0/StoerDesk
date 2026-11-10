@@ -38,6 +38,22 @@ const burningNowRowSchema = z.object({
   reportedAt: z.iso.datetime(),
 })
 
+/**
+ * Evaluation block of the snapshot (`specs/11-dashboard.md` §11.4a, WP-M10-19,
+ * ADR-0015): averages only — no median, no p90, no max, so the worst
+ * reaction time is never calculated and never displayed on the dashboard.
+ * Optional in the contract so a browser holding an older SSE frame still
+ * parses; the dashboard service always answers it.
+ */
+const dashboardEvaluationsSchema = z.object({
+  windowDays: z.number().int().positive(),
+  tickets: z.number().int().nonnegative(),
+  averageReviewMinutes: z.number().int().nonnegative().nullable(),
+  averageFirstResponseMinutes: z.number().int().nonnegative().nullable(),
+  averageAcknowledgeMinutes: z.number().int().nonnegative().nullable(),
+  averageProcessingMinutes: z.number().int().nonnegative().nullable(),
+})
+
 export const dashboardSnapshotSchema = z.object({
   generatedAt: z.iso.datetime(),
   faultFree: z.object({
@@ -45,6 +61,7 @@ export const dashboardSnapshotSchema = z.object({
     days: z.number().int().nonnegative(),
     recordDays: z.number().int().nonnegative(),
   }),
+  evaluations: dashboardEvaluationsSchema.optional(),
   tiles: z.object({
     open: z.number().int().nonnegative(),
     openByStatus: z.record(ticketStatusSchema, z.number().int().nonnegative()),
@@ -58,6 +75,7 @@ export const dashboardSnapshotSchema = z.object({
 })
 
 export type DashboardSnapshot = z.infer<typeof dashboardSnapshotSchema>
+export type DashboardEvaluations = z.infer<typeof dashboardEvaluationsSchema>
 
 /**
  * Dashboard settings (`specs/11-dashboard.md` §11.8,

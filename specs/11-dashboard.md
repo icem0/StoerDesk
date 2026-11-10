@@ -40,6 +40,14 @@ type DashboardSnapshot = {
     days: number                      // whole local days since `since`
     recordDays: number                // longest fault-free period ever
   }
+  evaluations: {                        // §11.4a block (WP-M10-19, ADR-0015)
+    windowDays: number                  // fixed 30
+    tickets: number
+    averageReviewMinutes: number | null
+    averageFirstResponseMinutes: number | null
+    averageAcknowledgeMinutes: number | null
+    averageProcessingMinutes: number | null
+  }
   tiles: {
     open: number
     openByStatus: Record<TicketStatus, number>
@@ -99,6 +107,21 @@ can raise or leave the record, exactly as `PLAN.md` §20 item 8 requires.
 - `unreviewed`: tickets still `NEW`.
 - `poolSize`: `OFFERED` tickets without an assigned technician — the claimable
   pool of `PLAN.md` §7 step 4.
+
+### 11.4a Evaluations (WP-M10-19, ADR-0015)
+
+The snapshot carries one evaluation block next to the tiles: the average
+durations of the last 30 days over the qualifying set of the counter
+(`is_test = false`, `suspected_spam = false`, `status <> 'CANCELLED'`,
+`reported_at` in the window) read from `stats_tickets` —
+`averageReviewMinutes`, `averageFirstResponseMinutes` and
+`averageAcknowledgeMinutes` (the three phases of `specs/12-stats.md` §12.2,
+measured from `reported_at`) and `averageProcessingMinutes` (`closed_at` minus
+`reported_at`). Rows without the end column or with a negative duration are
+excluded; an average without any sample is `null`. **Averages only:** no
+median, no p90 and no max — the worst reaction time is neither calculated nor
+displayed on the dashboard; it stays out of the contract and out of the SQL.
+Percentiles remain a statistics-page concern (`specs/12-stats.md` §12.2).
 - `onCall`: `resolveOnCallPerson(database, { at: now })`, labelled with the
   warning of `specs/04-oncall.md` §4a.6.
 - `channels`: one row per channel that appears in `outbox`, with the last

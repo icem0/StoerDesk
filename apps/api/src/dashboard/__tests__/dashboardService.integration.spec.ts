@@ -10,6 +10,7 @@ import {
   buildDashboardSnapshot,
   resolveBurningNow,
   resolveChannelStatus,
+  resolveDashboardEvaluations,
   resolveDashboardTiles,
   resolveFaultFreeCounter,
   resolveFaultFreeRecord,
@@ -143,6 +144,23 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
       assignedUserId: null,
     })
 
+    await db.insert(tickets).values({
+      objectId,
+      ticketNo: 'ST-2026-0006',
+      status: 'CLOSED',
+      priority: 'normal',
+      source: 'QR',
+      reportedAt: new Date('2026-03-09T08:00:00Z'),
+      receivedAt: new Date('2026-03-09T08:00:00Z'),
+      deadlineAt: new Date('2026-03-09T12:00:00Z'),
+      isTest: false,
+      suspectedSpam: false,
+      reviewStartedAt: new Date('2026-03-09T09:00:00Z'),
+      firstResponseAt: new Date('2026-03-09T09:30:00Z'),
+      acknowledgedAt: new Date('2026-03-09T10:00:00Z'),
+      closedAt: new Date('2026-03-09T14:00:00Z'),
+    })
+
     await db.insert(outbox).values({
       ticketId: ticketAId,
       channel: 'ntfy',
@@ -198,6 +216,30 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
     expect(tiles.poolSize).toBe(1)
   })
 
+  it('resolves evaluation averages over the last 30 days', async () => {
+    const evaluations = await resolveDashboardEvaluations(db, now)
+
+    expect(evaluations.windowDays).toBe(30)
+    // Qualifying in the window: ST-2026-0001, ST-2026-0002, ST-2026-0005 and
+    // the closed ST-2026-0006 — not the test ticket, not the cancelled one.
+    expect(evaluations.tickets).toBe(4)
+    expect(evaluations.averageReviewMinutes).toBe(60)
+    expect(evaluations.averageFirstResponseMinutes).toBe(90)
+    expect(evaluations.averageAcknowledgeMinutes).toBe(90)
+    expect(evaluations.averageProcessingMinutes).toBe(360)
+  })
+
+  it('answers null averages when the window holds no ticket', async () => {
+    const evaluations = await resolveDashboardEvaluations(
+      db,
+      new Date('2026-01-05T10:00:00Z'),
+    )
+
+    expect(evaluations.tickets).toBe(0)
+    expect(evaluations.averageReviewMinutes).toBeNull()
+    expect(evaluations.averageProcessingMinutes).toBeNull()
+  })
+
   it('resolves the on-call tile from a confirmed shift', async () => {
     const onCall = await resolveOnCallTile(db, now)
 
@@ -247,6 +289,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
       since: '2026-03-10T08:00:00.000Z',
       days: 0,
       recordDays: 1,
+    })
+    expect(snapshot.evaluations).toMatchObject({
+      windowDays: 30,
+      tickets: 4,
+      averageReviewMinutes: 60,
+      averageFirstResponseMinutes: 90,
+      averageAcknowledgeMinutes: 90,
+      averageProcessingMinutes: 360,
     })
     expect(snapshot.tiles.open).toBe(4)
     expect(snapshot.tiles.overdue).toBe(1)

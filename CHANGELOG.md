@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Dashboard evaluations (WP-M10-19): the snapshot gains an `evaluations` block
+  (`specs/11-dashboard.md` §11.4a, ADR-0015) with the last-30-day ticket count of the
+  counter's qualifying set and four nullable whole-minute averages —
+  `averageReviewMinutes`, `averageFirstResponseMinutes`, `averageAcknowledgeMinutes`
+  (the §12.2 phases measured from `reported_at`) and `averageProcessingMinutes`
+  (`closed_at` minus `reported_at`). Averages only: the SQL has no median, no p90 and no
+  max, so the worst reaction time is never calculated and never displayed on the
+  dashboard; a window without samples answers `null`. The statistics API and the
+  statistics page keep their p90 columns.
 - Personal-data export and erasure routes (WP-M10-16): `GET /api/v1/privacy/tickets/:ticketNo/export`
   answers the reporter contact fields, the photo metadata and the audit rows without their
   payloads (never the status token, never the internal notes of other users) and

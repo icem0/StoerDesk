@@ -1406,6 +1406,19 @@ Idempotency is the event itself: a repeat finds that event, writes nothing and a
 `ticket.delete` path of WP-M2-77 (ADR-0014 decision 4). The shared contracts live in
 `packages/shared/src/schemas/privacy.ts`.
 
+**Dashboard evaluations (WP-M10-19 … WP-M10-19b, out of band in phase 10).** The office
+asked for evaluations in the dashboard's own view — average durations such as the
+bearbeitung time — and explicitly leaves the worst reaction time out: it is neither
+calculated nor displayed there. WP-M10-19 adds the `evaluations` block of
+`specs/11-dashboard.md` §11.4a (ADR-0015) to the shared snapshot contract and
+`resolveDashboardEvaluations` to the dashboard service: one `AVG`-only aggregate over
+`stats_tickets` for the last 30 days of the counter's qualifying set — the three §12.2
+phases and `averageProcessingMinutes` (`closed_at - reported_at`) as nullable whole-minute
+averages; the query contains no median, p90 or max. The statistics API and statistics page
+keep their p90 columns; `specs/12-stats.md` §12.10 names the block as the only allowed
+addition. Its follow-up WP-M10-19b (file created in the same commit) renders the block on
+the start page.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
