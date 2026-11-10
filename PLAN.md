@@ -1356,7 +1356,7 @@ numeric order: API-key schema and contracts → admin routes → admin UI → be
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
 export/erasure → uploads backup and restore drill → exit criterion. Implemented so
-far: **WP-M10-02 … WP-M10-14** — API-key schema, admin routes and page, bearer
+far: **WP-M10-02 … WP-M10-15** — API-key schema, admin routes and page, bearer
 authentication, OpenAPI, external object and ticket API, webhook endpoints, the
 per-minute HMAC delivery worker, the webhook admin page with its OpenAPI paths,
 the CSV import service and its two routes
@@ -1371,7 +1371,14 @@ reaches them — answer a malformed body or an unknown mapping target with `400
 invalid_request` and the field paths, keep the preview write-free and return the
 preview shape plus the `applied` counters on the commit route. The page at `/objects/import` reads the file in the browser and posts its text, shows the header mapping (the submitted mapping over the German aliases) with a control per column, keeps every row error in its preview line and adds the commit action with its `applied` counters; without `object.import` it stays read-only and the file never leaves the browser. The webhook chain stores the secret once, delivers `ticket.created` and
 `ticket.status_changed` with the 1/5/25/125-second retry ladder and keeps the
-delivery history after an endpoint is deleted.
+delivery history after an endpoint is deleted. The daily 03:30 `privacy-retention`
+job anonymises `reporter_name`, `reporter_phone` and `reporter_email` of tickets
+closed at or before `now - privacy.contact_retention_months` (24-month default) in
+batches of 500, removes the expired `ticket_photos` rows and their files below
+`UPLOAD_DIR` after `privacy.photo_retention_months`, drops `report_throttle` rows
+after 30 days and `bma_sync_runs` rows after 365 days, is idempotent, never touches
+an append-only event row or a ticket row, logs the four aggregate counters only and
+starts only from the direct API start (WP-M10-15).
 
 ## 17. Work package rules for small models
 

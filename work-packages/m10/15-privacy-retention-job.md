@@ -1,7 +1,7 @@
 # WP-M10-15: Privacy retention job
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-14
 phase: 10
 milestone: m10
@@ -15,6 +15,8 @@ files-read:
 - docs/DECISIONS/0014-privacy-retention-and-restore-drill.md
 - apps/api/src/jobs/qr-cleanup.ts (job pattern)
 - apps/api/src/db/schema.ts (tickets, photos, throttle, bma runs)
+- apps/api/src/settings/dashboard.ts (settings keys with defaults)
+- apps/api/src/index.ts (direct-start job wiring)
 
 files-write:
 
@@ -59,6 +61,6 @@ idempotency and untouched open tickets.
 
 - Files changed: the job, the settings helper and the server start
 - Interfaces added: the retention job
-- Verified: the commands above
+- Verified: the commands above; `apps/api/src/jobs/__tests__/privacy-retention.integration.spec.ts` proves the anonymisation, the photo row and file deletion with a missing file, the throttle and sync-run windows, the idempotency, the untouched open ticket and the 24-month defaults against a real database
 - Follow-up WP: WP-M10-16, WP-M10-17
 - Open question: none

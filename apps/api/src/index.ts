@@ -34,6 +34,7 @@ import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startTicketEscalation } from './jobs/escalation'
 import { startNotificationOutboxJob } from './notifications/outbox'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
+import { startPrivacyRetentionJob } from './jobs/privacy-retention'
 import { startWebhookDeliveryJob } from './jobs/webhooks'
 import { publicAltchaRoutes } from './tickets/altcha'
 import { deleteRoutes } from './tickets/delete-routes'
@@ -212,12 +213,18 @@ if (invokedDirectly) {
     app.log,
   )
   const webhookDelivery = await startWebhookDeliveryJob(databaseConnectionUrl(env), app.log)
+  const privacyRetention = await startPrivacyRetentionJob(
+    databaseConnectionUrl(env),
+    env.UPLOAD_DIR,
+    app.log,
+  )
 
   app.addHook('onClose', async () => {
     await cleanup.stop({ timeout: 5000 })
     await escalation.stop({ timeout: 5000 })
     await notificationOutbox.stop({ timeout: 5000 })
     await webhookDelivery.stop({ timeout: 5000 })
+    await privacyRetention.stop({ timeout: 5000 })
 
     if (bmaSync !== undefined) {
       await bmaSync.stop({ timeout: 5000 })

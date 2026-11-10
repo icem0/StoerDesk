@@ -32,6 +32,21 @@ field path `mapping.<header>`), no value is interpolated into SQL there (the
 service of WP-M10-12 binds its values through drizzle) and neither answer noch
 log carries contact data or a token. No new finding.
 
+Retention pass: 2026-11-10, diff `7349e01..` (WP-M10-15, two new modules, the
+server registration and the version file) — areas A and B re-checked in full (still
+93 routes: the package adds no route and no capability, the retention run is a
+scheduled process started only from the direct API start, so no client input reaches
+it), C–K re-checked for `apps/api/src/jobs/privacy-retention.ts`,
+`apps/api/src/settings/privacy.ts` and `apps/api/src/index.ts`: every window
+comparison, update and delete binds its values through drizzle (no SQL
+interpolation, the batch ids come from the same select that carries the where clause),
+the photo path is resolved against `UPLOAD_DIR` and a path that escapes the volume is
+never touched, a missing file never fails the run and never reveals its name, stored
+retention values are accepted only as whole months of one or more (a malformed row
+falls back to the 24-month default), and both the job log and the settings module
+carry aggregate counters, machine keys and setting keys only — no ticket number, no
+name, no phone number, no e-mail and no IP. No new finding.
+
 Findings never live in the repository. They go into **`.security/findings.md`**
 (gitignored via `.gitignore` line `.security/`). Tracked files, commit messages and
 work-package titles never carry the location or description of an open gap.
