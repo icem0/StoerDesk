@@ -1325,7 +1325,16 @@ export function TicketDetailPage() {
         </div>
       </div>
 
-      <OfflineActionBanner rows={rows} onRetry={deliverNow} onDiscard={discard} />
+      <OfflineActionBanner
+        rows={rows}
+        onRetry={async (row) => {
+          await deliverNow(row)
+          // The replayed comment is an event of the ticket: read the ticket
+          // again, so it shows up in the history at once (WP-M5-17).
+          void ticketQuery.refetch()
+        }}
+        onDiscard={discard}
+      />
     </section>
   )
 }
