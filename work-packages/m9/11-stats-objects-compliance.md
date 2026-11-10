@@ -1,7 +1,7 @@
 # WP-M9-11: statistics objects, compliance and decline services
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-10
 phase: 9
 milestone: m9
