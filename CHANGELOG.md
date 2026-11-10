@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Phase 9 (dashboard and statistics) is complete (WP-M9-01 … WP-M9-18): the live
+  dashboard at `/` reads one snapshot (`GET /api/v1/dashboard`) and updates through the
+  authenticated SSE stream (`/api/v1/dashboard/stream`, 30-second refetch fallback) with
+  the fault-free counter and record, the open/overdue/unreviewed/pool tiles, the on-call
+  and channel tiles; the token-protected wall display `/tv/:token` polls every 15 seconds
+  without a session and never renders contact data; `/admin/dashboard` rotates the TV
+  token, toggles anonymisation and sets the conspicuous threshold; the statistics page
+  `/stats` filters by range and dimensions in the URL and renders reaction times, an
+  inline-SVG frequency series, the three groupings, top objects with the conspicuous
+  marker and the compliance and decline cards; `/api/v1/stats/*` answers the JSON sections
+  and `/api/v1/stats/export.csv` streams the semicolon-separated export under `stats.export`.
+  The exit criterion (counter reset on a new report, ignored test/cancelled tickets and the
+  printed reaction-time median) is proven by `phase9-exit.integration.spec.ts`.
+
 ### Changed
 
 - The object list lost its external indicator (record WP-M9-26 — the commit `d1e34eb`

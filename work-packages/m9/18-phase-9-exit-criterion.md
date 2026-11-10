@@ -1,7 +1,7 @@
 # WP-M9-18: phase-9 exit criterion and record
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-02 … WP-M9-17
 phase: 9
 milestone: m9

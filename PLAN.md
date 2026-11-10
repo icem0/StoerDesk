@@ -1324,6 +1324,23 @@ of the repeat pass is fixed, and the only remaining open item in `.security/find
 is SEC-011's `Cache-Control` header on the iCal feed (already delivered by WP-M9-33) —
 the log redaction via Fastify `logLevel: 'warn'` is in place.
 
+**Phase 9 is complete (WP-M9-02 … WP-M9-18).** Dashboard and statistics are
+implemented in numeric order: the `tickets.is_test` flag (02), the two SQL views
+(03), the shared contracts (04), the dashboard service, route and SSE stream
+(05–07), the dashboard settings and the TV route (08–09), the statistics services
+(10–11), the statistics routes and the CSV export (12–13), the live start page
+(14), the statistics page (15), the wall display (16), the settings page (17) and
+the exit criterion (18). The exit test
+`apps/api/src/stats/__tests__/phase9-exit.integration.spec.ts` seeds an idempotent
+reference set (`apps/api/src/db/seed-stats-reference.ts`) and proves `PLAN.md` §20
+item 8 and item 9: a later `is_test = true` ticket and a later cancelled ticket do
+not move the fault-free counter, a new qualifying report resets it, the review
+median of the five real reference reports equals the printed 30 minutes, and the
+`stats_tickets` view and the dashboard snapshot agree on the open and overdue
+counts. Every skipped gate is reported as skipped; the PostgreSQL integration tests
+skip with a named reason when no database is reachable, and the Docker smoke test
+runs only in CI (§18). Phase 10 (API and hardening) is next.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

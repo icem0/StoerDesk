@@ -254,13 +254,19 @@ branding jsonb row (`{ companyName, titleEnabled }`, default `false`): the repor
 puts `titleEnabled` into the public QR resolve response, **WP-M2-90b** the title input of the
 report form and the checkbox on `/admin/branding`.
 >
-> **Phase 9 is split and started (WP-M9-01)**: `specs/11-dashboard.md` and
+> **Phase 9 is complete (WP-M9-01 … WP-M9-18)**: `specs/11-dashboard.md` and
 > `specs/12-stats.md` carry the reviewed contract of the live dashboard, the wall
 > display and the statistics slices; ADR-0012 settles the phase-9 decisions (SSE over a
 > five-second polling probe, plain SQL views, a computed fault-free record, a stored
-> rotatable TV token, `tickets.is_test`, inline SVG charts, `stats.conspicuous_threshold`);
-> the phase is split into **WP-M9-02 … WP-M9-18** in `work-packages/m9/` and implemented
-> in numeric order. No product code yet.
+> rotatable TV token, `tickets.is_test`, inline SVG charts, `stats.conspicuous_threshold`).
+> Implemented in numeric order: the test flag (02), the SQL views (03), the shared
+> contracts (04), the dashboard service, route and SSE stream (05–07), the dashboard
+> settings and the TV route (08–09), the statistics services (10–11), the JSON routes and
+> the CSV export (12–13), the live start page (14), the statistics page (15), the wall
+> display (16), the settings page (17) and the exit criterion (18). The exit test
+> `apps/api/src/stats/__tests__/phase9-exit.integration.spec.ts` proves the fault-free
+> counter reset and the printed reaction-time median against a throwaway PostgreSQL; it
+> skips with a named reason when no database is reachable.
 >
 > **Out-of-band phase 9 (WP-M9-19 … WP-M9-21)**: the office view of the shipped app. The
 > start page ends with its tiles — the burning-now list moves to the wall display

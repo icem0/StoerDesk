@@ -510,7 +510,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-15  | web statistics page                                                 | done                    | yes     |
 | WP-M9-16  | web TV page                                                         | done                    | yes     |
 | WP-M9-17  | web dashboard settings                                              | done                    | yes     |
-| WP-M9-18  | phase-9 exit criterion and record                                   | planned                 | yes     |
+| WP-M9-18  | phase-9 exit criterion and record                                   | done                    | yes     |
 | WP-M9-19  | dashboard tiles without the burning-now list                        | done                    | yes     |
 | WP-M9-20  | ticket list order: open tickets by the deadline                     | done                    | yes     |
 | WP-M9-21  | ticket list rows with the timeline in the middle                    | done                    | yes     |
