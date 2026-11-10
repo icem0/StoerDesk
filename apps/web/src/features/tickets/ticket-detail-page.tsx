@@ -134,14 +134,21 @@ export function TicketDetailPage() {
 
     if (segment === undefined) return
 
+    // The comment route requires an idempotency key; the outbox replay sends the
+    // same shape (`outbox.ts`), so both paths share one receipt per write.
+    const payload =
+      segment === 'comments'
+        ? { ...(body ?? {}), clientUuid: crypto.randomUUID() }
+        : body
+
     try {
       await apiFetch<never>(`/v1/tickets/${ticketNo}/${segment}`, {
         method: 'POST',
-        ...(body === undefined
+        ...(payload === undefined
           ? {}
           : {
               headers: { 'content-type': 'application/json' },
-              body: JSON.stringify(body),
+              body: JSON.stringify(payload),
             }),
       })
       void ticketQuery.refetch()
@@ -150,7 +157,7 @@ export function TicketDetailPage() {
       setSelectedAction(null)
     } catch (error) {
       if (error instanceof ApiError) {
-        setLastError(ticketDeleteErrorMessage(error.code, error.params))
+        setLastError(actionErrorMessage(error.code, error.params))
         return
       }
       // Network error (no ApiError): queue the write offline and show the
@@ -177,6 +184,18 @@ export function TicketDetailPage() {
       const err = error as { status?: number; code?: string; params?: Record<string, string | number> }
       setLastError(ticketDeleteErrorMessage(err.code, err.params))
     }
+  }
+
+  // Workflow action errors never fall back to the delete text (WP-M5-10).
+  function actionErrorMessage(
+    code: string | undefined,
+    params: Record<string, string | number> | undefined,
+  ): string {
+    if (!code) return t('detail.errors.actionFailed')
+    return t(`detail.errors.${code}`, {
+      ...(params ?? {}),
+      defaultValue: t('detail.errors.actionFailed'),
+    })
   }
 
   // Translate an API error code into a user-visible message instead of showing
@@ -291,10 +310,6 @@ export function TicketDetailPage() {
     menuEntries.push({ value: 'closed', labelKey: 'detail.action.close' })
   } else if (status === 'CLOSED') {
     menuEntries.push({ value: 'reopened', labelKey: 'detail.action.reopen' })
-  }
-
-  if (status !== 'CLOSED' && status !== 'CANCELLED') {
-    menuEntries.push({ value: 'commented', labelKey: 'detail.action.comment' })
   }
 
   menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
@@ -482,47 +497,6 @@ export function TicketDetailPage() {
                 }
                 setSelectedAction(null)
                 void handleAction('reopened', { reason: req('reopenReason') })
-              }}
-            >
-              {t('detail.action.confirm')}
-            </button>
-            <button
-              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
-              type="button"
-              onClick={() => {
-                setSelectedAction(null)
-                setFields({})
-                setLastError(null)
-              }}
-            >
-              {t('detail.action.abort')}
-            </button>
-          </div>
-        )
-      }
-      case 'commented': {
-        const text = req('commentText')
-        const missing = text === ''
-        return (
-          <div className="flex flex-wrap gap-2 items-end">
-            <input
-              className="w-full rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
-              name="commentText"
-              placeholder={t('detail.prompt.commentText')}
-              value={fields.commentText ?? ''}
-              onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
-            />
-            <button
-              className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
-              type="button"
-              disabled={missing}
-              onClick={() => {
-                if (missing) {
-                  setLastError(t('detail.errors.fieldRequired'))
-                  return
-                }
-                setSelectedAction(null)
-                void handleAction('commented', { text: req('commentText') })
               }}
             >
               {t('detail.action.confirm')}
@@ -851,6 +825,15 @@ export function TicketDetailPage() {
         </div>
       {stornoOpen && renderStornoDialog()}
 
+      {lastError !== null && (
+        <p
+          className="rounded border border-rose-500/40 bg-rose-900/20 px-3 py-2 text-sm text-rose-300"
+          role="alert"
+        >
+          {lastError}
+        </p>
+      )}
+
       {pendingCount > 0 && (
         <div className="col-span-full rounded bg-amber-900/20 border border-amber-500/30 p-3 text-sm">
           {t('detail.offlineQueued', { count: pendingCount })}
@@ -1043,6 +1026,44 @@ export function TicketDetailPage() {
         </div>
       )}
 
+      {/* Comment: always visible on active tickets, no trip through the options menu */}
+      {status !== 'CLOSED' && status !== 'CANCELLED' && (
+        <div className="col-span-full rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+          <label
+            htmlFor="ticket-comment"
+            className="text-xs text-slate-500 uppercase tracking-wider"
+          >
+            {t('detail.action.comment')}
+          </label>
+          <textarea
+            id="ticket-comment"
+            className="mt-2 w-full rounded border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm text-slate-200 focus:border-blue-500 focus:outline-none"
+            rows={3}
+            name="commentText"
+            placeholder={t('detail.prompt.commentText')}
+            value={fields.commentText ?? ''}
+            onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
+          />
+          <div className="mt-2 flex justify-end">
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-500 disabled:opacity-50"
+              type="button"
+              disabled={req('commentText') === ''}
+              onClick={() => {
+                if (req('commentText') === '') {
+                  setLastError(t('detail.errors.fieldRequired'))
+                  return
+                }
+                setLastError(null)
+                void handleAction('commented', { text: req('commentText') })
+              }}
+            >
+              {t('detail.comment.submit')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* History / Verlauf */}
       <div className="col-span-full">
         <label className="text-xs text-slate-500 uppercase tracking-wider mb-2">
@@ -1073,10 +1094,6 @@ export function TicketDetailPage() {
           )}
         </div>
       </div>
-
-      {lastError !== null && (
-        <p className="text-rose-400 text-sm" role="alert">{lastError}</p>
-      )}
 
       <OfflineActionBanner rows={rows} onRetry={deliverNow} onDiscard={discard} />
     </section>

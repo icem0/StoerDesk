@@ -395,6 +395,9 @@
     "options": {
       "title": "Optionen"
     },
+    "comment": {
+      "submit": "Kommentar speichern"
+    },
     "prompt": {
       "workOrderType": "Auftragsart (z. B. AA):",
       "workOrderNumber": "Auftragsnummer:",
