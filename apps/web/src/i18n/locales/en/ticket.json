@@ -360,6 +360,8 @@
       "reporterName": "Reporter name",
       "reporterPhone": "Phone",
       "reporterEmail": "E‑mail",
+      "channel": "Channel",
+      "reporterKind": "Report type",
       "title": "Title",
       "description": "Description",
       "faults": "Fault types"
@@ -368,6 +370,15 @@
       "qr": "QR code report",
       "internal": "Internal entry",
       "api": "API"
+    },
+    "channel": {
+      "phone": "Phone",
+      "email": "E‑mail",
+      "messenger": "Messenger"
+    },
+    "reporterKind": {
+      "internal": "Internal employee",
+      "external": "External reporter"
     },
     "history": "History",
     "historyEmpty": "No events.",

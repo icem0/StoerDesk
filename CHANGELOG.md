@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ticket detail shows the reporter metadata (WP-M2-98e): a backdated report gets
+  a `Meldung gemeldet` history row at its real `reportedAt`, and the info table adds
+  the channel (Telefon/E-Mail/Messenger) and the reporter kind (intern/extern) from
+  the `created` event payload; historic tickets without the payload show `–`.
 - The ticket timeline shows `Gemeldet am` and `Erfasst am` (WP-M2-98d): a backdated
   report draws a `reported` marker at the start of the bar while the `created` marker
   stays at the server capture time, so both times are visible; a normal report keeps

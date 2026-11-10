@@ -64,6 +64,7 @@ Expected: all green, including `i18n:check` and the new page test.
 
 - Files changed: detail page, both locale files, new test
 - Interfaces added: the two info cells and the synthetic history row
-- Verified: `npm run wp:check`, `npm run check`
+- Verified: `npm run wp:check` green; `npm run check` green (DB integration skipped:
+  role `stoerdesk` missing; e2e skipped: no Chromium)
 - Follow-up WP: none
 - Open question: none

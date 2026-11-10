@@ -360,6 +360,8 @@
       "reporterName": "Melder Name",
       "reporterPhone": "Telefon",
       "reporterEmail": "E-Mail",
+      "channel": "Kanal",
+      "reporterKind": "Meldeart",
       "title": "Titel",
       "description": "Beschreibung",
       "faults": "Störungsarten"
@@ -368,6 +370,15 @@
       "qr": "QR-Code-Meldung",
       "internal": "Interne Erfassung",
       "api": "Schnittstelle (API)"
+    },
+    "channel": {
+      "phone": "Telefon",
+      "email": "E-Mail",
+      "messenger": "Messenger"
+    },
+    "reporterKind": {
+      "internal": "Interner Mitarbeiter",
+      "external": "Externer Melder"
     },
     "history": "Verlauf",
     "historyEmpty": "Keine Ereignisse.",

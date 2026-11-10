@@ -58,6 +58,13 @@ function formatEventTime(iso: string): string {
   }).format(new Date(iso))
 }
 
+function formatEventDateTime(iso: string): string {
+  const locale = i18n.language === 'en' ? 'en-US' : 'de-DE'
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(
+    new Date(iso),
+  )
+}
+
 /**
  * Workflow events are not URL segments (`WP-M2-19c`): the detail page maps each
  * event to the route path of `apps/api/src/tickets/workflow-routes.ts`.
@@ -287,12 +294,29 @@ export function TicketDetailPage() {
   const createdMs =
     createdEvent === undefined ? Number.NaN : Date.parse(createdEvent.createdAt)
   /** A backdated report gets its own marker at the start of the bar (WP-M2-98d). */
-  const timelineMarkers =
+  const backdatedReport =
     Number.isFinite(reportedMs) &&
     Number.isFinite(createdMs) &&
     Math.abs(createdMs - reportedMs) > 60_000
-      ? [{ type: 'reported', at: ticket.reportedAt }, ...timelineData.markers]
-      : timelineData.markers
+  const timelineMarkers = backdatedReport
+    ? [{ type: 'reported', at: ticket.reportedAt }, ...timelineData.markers]
+    : timelineData.markers
+
+  const payloadString = (key: string) => {
+    const value = createdEvent?.payload[key]
+
+    return typeof value === 'string' ? value : null
+  }
+  const reporterChannel = payloadString('reporterChannel')
+  const reporterKind = payloadString('reporterKind')
+  const channelLabel =
+    reporterChannel === null
+      ? t('detail.field.unknown')
+      : t(`detail.channel.${reporterChannel}`, { defaultValue: reporterChannel })
+  const reporterKindLabel =
+    reporterKind === null
+      ? t('detail.field.unknown')
+      : t(`detail.reporterKind.${reporterKind}`, { defaultValue: reporterKind })
 
   const sourceLabels: Record<string, string> = {
     QR: t('detail.source.qr'),
@@ -958,6 +982,18 @@ export function TicketDetailPage() {
             >
               {t('detail.field.source')}
             </th>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.channel')}
+            </th>
+            <th
+              className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+              scope="col"
+            >
+              {t('detail.field.reporterKind')}
+            </th>
           </tr>
           <tr>
             <td className="text-left text-sm text-slate-200 px-3 py-2">{erfasser}</td>
@@ -965,6 +1001,8 @@ export function TicketDetailPage() {
               {ticket.reporterName ?? t('detail.field.unknown')}
             </td>
             <td className="text-left text-sm text-slate-200 px-3 py-2">{quelle}</td>
+            <td className="text-left text-sm text-slate-200 px-3 py-2">{channelLabel}</td>
+            <td className="text-left text-sm text-slate-200 px-3 py-2">{reporterKindLabel}</td>
           </tr>
         </tbody>
       </table>
@@ -1149,7 +1187,25 @@ export function TicketDetailPage() {
           {events.length === 0 ? (
             <p className="p-3 text-slate-400">{t('detail.historyEmpty')}</p>
           ) : (
-            events.map((event) => (
+            <>
+              {backdatedReport ? (
+                <div className="p-3 flex gap-3" data-testid="history-reported">
+                  <div className="w-32 shrink-0 whitespace-nowrap">
+                    <span className="text-xs font-mono text-slate-500">
+                      {formatEventDateTime(ticket.reportedAt)}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-200">
+                      {t('status.events.reported')}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {ticket.reporterName ?? t('detail.field.unknown')}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              {events.map((event) => (
               <div key={event.id} className="p-3 flex gap-3">
                 <div className="w-32 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-mono text-slate-500">
@@ -1189,7 +1245,8 @@ export function TicketDetailPage() {
                   })()}
                 </div>
               </div>
-            ))
+              ))}
+            </>
           )}
         </div>
       </div>

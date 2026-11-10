@@ -421,7 +421,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-98b | internal create accepts report time, channel and reporter kind      | done                    | yes     |
 | WP-M2-98c | internal create form captures reporter, channel and report time     | done                    | yes     |
 | WP-M2-98d | timeline shows report time and capture time                         | done                    | yes     |
-| WP-M2-98e | ticket detail shows report time, channel and reporter kind          | planned                 | yes     |
+| WP-M2-98e | ticket detail shows report time, channel and reporter kind          | done                    | yes     |
 | WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
 | WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
 | WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |
