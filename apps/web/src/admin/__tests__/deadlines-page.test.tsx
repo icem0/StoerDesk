@@ -12,7 +12,9 @@ import { DeadlinesPage } from '../deadlines-page'
  * the PUT body, and without `settings.write` the inputs stay read-only.
  *
  * The number inputs are read in document order: four hour inputs (low, normal, high,
- * critical), then the reaction rows with standard and critical per rule.
+ * critical), then the reaction rows with standard and critical per rule. The stage
+ * texts of WP-M6-19b are text inputs below them, one name and one description per
+ * language and per escalation rule.
  */
 
 const settingsBody = {
@@ -22,6 +24,41 @@ const settingsBody = {
     work_order_without_distribution: { standard: 30, critical: 30 },
     offered_without_claim: { standard: 20, critical: 10 },
     assigned_without_accept: { standard: 15, critical: 15 },
+  },
+  stageTexts: {
+    new_without_review: {
+      label: { de: 'Prüfung', en: 'Review' },
+      description: { de: 'Meldung noch nicht geprüft', en: 'Report not reviewed yet' },
+    },
+    work_order_without_distribution: {
+      label: { de: 'Arbeitsauftrag', en: 'Work order' },
+      description: {
+        de: 'Arbeitsauftrag noch nicht erstellt',
+        en: 'Work order not created yet',
+      },
+    },
+    offered_without_claim: {
+      label: { de: 'Übernahme', en: 'Claim' },
+      description: { de: 'Angebot noch nicht übernommen', en: 'Offer not claimed yet' },
+    },
+    assigned_without_accept: {
+      label: { de: 'Annahme', en: 'Acceptance' },
+      description: { de: 'Auftrag noch nicht angenommen', en: 'Work order not accepted yet' },
+    },
+    deadline_80_percent: {
+      label: { de: 'Frist zu 80 %', en: '80 % of the deadline' },
+      description: {
+        de: '80 % der Bearbeitungsfrist erreicht',
+        en: '80 % of the processing deadline reached',
+      },
+    },
+    deadline_exceeded: {
+      label: { de: 'Frist überschritten', en: 'Deadline exceeded' },
+      description: {
+        de: 'Bearbeitungsfrist überschritten',
+        en: 'Processing deadline exceeded',
+      },
+    },
   },
 }
 
@@ -125,5 +162,43 @@ describe('DeadlinesPage', () => {
 
     expect(inputs.every((input) => input.disabled)).toBe(true)
     expect(screen.queryByRole('button', { name: /Speichern|Save/ })).toBeNull()
+  })
+
+  it('shows the stage names of every escalation rule', async () => {
+    stubRoutes(['settings.read'])
+    renderPage()
+
+    const names = (await screen.findAllByLabelText(
+      /Bezeichnung \(Deutsch\)|Name \(German\)/,
+    )) as HTMLInputElement[]
+
+    expect(names).toHaveLength(6)
+    expect(names.map((input) => input.value)).toEqual([
+      'Prüfung',
+      'Arbeitsauftrag',
+      'Übernahme',
+      'Annahme',
+      'Frist zu 80 %',
+      'Frist überschritten',
+    ])
+  })
+
+  it('sends a changed stage name in the PUT body', async () => {
+    stubRoutes(['settings.read', 'settings.write'])
+    renderPage()
+
+    const names = (await screen.findAllByLabelText(
+      /Bezeichnung \(Deutsch\)|Name \(German\)/,
+    )) as HTMLInputElement[]
+    fireEvent.change(names[0]!, { target: { value: 'Sichtung' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/ }))
+
+    await waitFor(() => {
+      const put = fetchCalls.find((call) => call.method === 'PUT')
+      const body = put?.body as { stageTexts: Record<string, { label: { de: string } }> }
+
+      expect(body.stageTexts.new_without_review?.label.de).toBe('Sichtung')
+      expect(body.stageTexts.deadline_exceeded?.label.de).toBe('Frist überschritten')
+    })
   })
 })

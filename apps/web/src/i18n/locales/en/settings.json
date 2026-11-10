@@ -216,6 +216,12 @@
    "hoursTitle": "Deadlines in hours",
    "reactionTitle": "Reaction deadlines in minutes",
    "reactionHint": "Standard applies to low, normal and high priority; critical applies to critical tickets.",
+   "stageTitle": "Escalation stage names",
+   "stageHint": "The name and the description appear in the ticket history when the stage fired.",
+   "stageLabel": "Name",
+   "stageDescription": "Description",
+   "localeDe": "German",
+   "localeEn": "English",
    "readOnly": "Read only: changing requires the permission \"Write settings\".",
    "rule": "Rule",
    "standard": "Standard",
@@ -232,18 +238,20 @@
     "high": "High",
     "critical": "Critical"
    },
-   "rules": {
-    "new_without_review": "New without review",
-    "work_order_without_distribution": "Work order without distribution",
-    "offered_without_claim": "Offered without claim",
-    "assigned_without_accept": "Assigned without acceptance"
-   },
-   "errors": {
-    "session_invalid": "The sign-in has expired.",
-    "forbidden": "No permission for this action.",
-    "invalid_request": "At least one value is invalid: deadlines 1 to 8760 hours, reaction deadlines 1 to 10080 minutes.",
-    "unknown": "Saving failed."
-   }
+    "rules": {
+     "new_without_review": "New without review",
+     "work_order_without_distribution": "Work order without distribution",
+     "offered_without_claim": "Offered without claim",
+     "assigned_without_accept": "Assigned without acceptance",
+     "deadline_80_percent": "80 % of the deadline",
+     "deadline_exceeded": "Deadline exceeded"
+    },
+    "errors": {
+     "session_invalid": "The sign-in has expired.",
+     "forbidden": "No permission for this action.",
+     "invalid_request": "At least one value is invalid: deadlines 1 to 8760 hours, reaction deadlines 1 to 10080 minutes, names 1 to 120 and descriptions 1 to 500 characters.",
+     "unknown": "Saving failed."
+    }
   },
   "textTemplates": {
    "title": "Fault types",

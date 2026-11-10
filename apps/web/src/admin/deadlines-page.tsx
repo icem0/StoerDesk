@@ -3,7 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
-import { TICKET_PRIORITIES, type DeadlineSettings, type TicketPriority } from '@stoerdesk/shared'
+import {
+  ESCALATION_RULES,
+  TICKET_PRIORITIES,
+  type DeadlineSettings,
+  type TicketPriority,
+} from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
@@ -11,9 +16,12 @@ import { ApiError, apiFetch } from '../lib/api'
 /**
  * Deadline administration (`specs/05-timeline.md` §5.1, ADR-0008, WP-M6-15).
  *
- * Four deadline hours (one per priority) and the four reaction minutes, each with
- * a standard and a critical value. The server enforces `settings.read` and
- * `settings.write`; without the write permission the inputs stay read-only.
+ * Four deadline hours (one per priority), the four reaction minutes, each with
+ * a standard and a critical value, and the name and the description of every
+ * escalation stage. The stage texts decide what the ticket history shows when
+ * a stage fired, so they are editable next to the reaction minutes they belong
+ * to (WP-M6-19b). The server enforces `settings.read` and `settings.write`;
+ * without the write permission the inputs stay read-only.
  */
 
 const REACTION_RULES = [
@@ -23,9 +31,15 @@ const REACTION_RULES = [
   'assigned_without_accept',
 ] as const
 
+/** Every escalation rule carries a stage name and a stage description. */
+const STAGE_RULES = ESCALATION_RULES.map((rule) => rule.key)
+
 const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
 
 const jsonHeaders = { 'content-type': 'application/json' }
+
+const LABEL_MAX = 120
+const DESCRIPTION_MAX = 500
 
 function errorMessage(t: TFunction<'settings'>, error: unknown): string {
   const code =
@@ -77,6 +91,33 @@ function NumberField({
   )
 }
 
+function TextField({
+  label,
+  value,
+  max,
+  disabled,
+  onChange,
+}: {
+  label: string
+  value: string
+  max: number
+  disabled: boolean
+  onChange: (value: string) => void
+}) {
+  return (
+    <input
+      aria-label={label}
+      className="w-full rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-60"
+      disabled={disabled}
+      maxLength={max}
+      required
+      type="text"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  )
+}
+
 function DeadlineForm({ initial, canWrite }: { initial: DeadlineSettings; canWrite: boolean }) {
   const { t } = useTranslation('settings')
   const queryClient = useQueryClient()
@@ -108,6 +149,24 @@ function DeadlineForm({ initial, canWrite }: { initial: DeadlineSettings; canWri
       reactionMinutes: {
         ...values.reactionMinutes,
         [rule]: { ...values.reactionMinutes[rule], [field]: minutes },
+      },
+    })
+  }
+
+  function setStageText(
+    rule: (typeof STAGE_RULES)[number],
+    field: 'label' | 'description',
+    locale: 'de' | 'en',
+    text: string,
+  ) {
+    setValues({
+      ...values,
+      stageTexts: {
+        ...values.stageTexts,
+        [rule]: {
+          ...values.stageTexts[rule],
+          [field]: { ...values.stageTexts[rule][field], [locale]: text },
+        },
       },
     })
   }
@@ -182,6 +241,63 @@ function DeadlineForm({ initial, canWrite }: { initial: DeadlineSettings; canWri
                     />
                     <span className="text-slate-400">{t('admin.deadlines.unit.minutes')}</span>
                   </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-3 rounded border border-slate-700 bg-slate-900 p-4">
+        <legend className="px-1 text-lg font-semibold">{t('admin.deadlines.stageTitle')}</legend>
+        <p className="text-sm text-slate-400">{t('admin.deadlines.stageHint')}</p>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="text-slate-400">
+              <th className="py-2 font-medium">{t('admin.deadlines.rule')}</th>
+              <th className="py-2 font-medium">{t('admin.deadlines.stageLabel')}</th>
+              <th className="py-2 font-medium">{t('admin.deadlines.stageDescription')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STAGE_RULES.map((rule) => (
+              <tr key={rule} className="border-t border-slate-800 align-top">
+                <td className="py-2 pr-3">{t(`admin.deadlines.rules.${rule}`)}</td>
+                <td className="py-2 pr-3">
+                  <div className="flex flex-col gap-2">
+                    <TextField
+                      label={`${t('admin.deadlines.stageLabel')} (${t('admin.deadlines.localeDe')})`}
+                      disabled={!canWrite}
+                      max={LABEL_MAX}
+                      value={values.stageTexts[rule].label.de}
+                      onChange={(text) => setStageText(rule, 'label', 'de', text)}
+                    />
+                    <TextField
+                      label={`${t('admin.deadlines.stageLabel')} (${t('admin.deadlines.localeEn')})`}
+                      disabled={!canWrite}
+                      max={LABEL_MAX}
+                      value={values.stageTexts[rule].label.en}
+                      onChange={(text) => setStageText(rule, 'label', 'en', text)}
+                    />
+                  </div>
+                </td>
+                <td className="py-2">
+                  <div className="flex flex-col gap-2">
+                    <TextField
+                      label={`${t('admin.deadlines.stageDescription')} (${t('admin.deadlines.localeDe')})`}
+                      disabled={!canWrite}
+                      max={DESCRIPTION_MAX}
+                      value={values.stageTexts[rule].description.de}
+                      onChange={(text) => setStageText(rule, 'description', 'de', text)}
+                    />
+                    <TextField
+                      label={`${t('admin.deadlines.stageDescription')} (${t('admin.deadlines.localeEn')})`}
+                      disabled={!canWrite}
+                      max={DESCRIPTION_MAX}
+                      value={values.stageTexts[rule].description.en}
+                      onChange={(text) => setStageText(rule, 'description', 'en', text)}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
