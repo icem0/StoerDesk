@@ -132,7 +132,9 @@ printf 'backup pair: %s + %s\n' "$dump_name" "$archive_name"
 
 # --- 4. restore both into fresh targets ---
 compose exec -T db psql -U "$db_user" -d "$db_name" -q \
-  -c "drop database if exists $restore_db; create database $restore_db;"
+  -c "drop database if exists $restore_db"
+compose exec -T db psql -U "$db_user" -d "$db_name" -q \
+  -c "create database $restore_db"
 compose exec -T backup sh -c "gunzip -c /backups/$dump_name" \
   | compose exec -T db psql -U "$db_user" -d "$restore_db" -q
 docker run --rm -v "$backup_vol:/backups:ro" -v "$restored_uploads_vol:/data/uploads" "$postgres_image" \
