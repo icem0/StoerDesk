@@ -1,7 +1,7 @@
 # WP-M10-03: Admin API-key routes and hashing service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-02
 phase: 10
 milestone: m10

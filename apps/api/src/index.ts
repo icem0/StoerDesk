@@ -4,6 +4,7 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 
+import { adminApiKeyRoutes } from './admin/api-keys'
 import { adminGroupsRoutes } from './admin/groups'
 import { adminRolesRoutes } from './admin/roles'
 import { adminUsersRoutes } from './admin/users'
@@ -120,6 +121,7 @@ export async function buildServer() {
   await app.register(adminUsersRoutes, { database })
   await app.register(adminRolesRoutes, { database })
   await app.register(adminGroupsRoutes, { database })
+  await app.register(adminApiKeyRoutes, { database })
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })

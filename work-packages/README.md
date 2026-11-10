@@ -535,7 +535,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-39  | the dashboard stream captures its baseline before the first snapshot | done                  | yes     |
 | WP-M10-01 | API and hardening specification, ADR-0013/0014 and phase-10 split | done                    | yes     |
 | WP-M10-02 | API-key table, shared contracts and migration                     | done                    | yes     |
-| WP-M10-03 | admin API-key routes and hashing service                          | planned                 | yes     |
+| WP-M10-03 | admin API-key routes and hashing service                          | done                    | yes     |
 | WP-M10-04 | admin API-key page                                                | planned                 | yes     |
 | WP-M10-05 | bearer API-key authentication and scope guard                     | planned                 | yes     |
 | WP-M10-06 | OpenAPI document under `/api/docs`                                | planned                 | yes     |

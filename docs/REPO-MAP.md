@@ -22,8 +22,8 @@ apps/
 ├── api/                         Fastify + Drizzle + postgres-js + pg-boss
 │   ├── src/
 │   │   ├── index.ts             buildServer: plugins, error envelope, health route
-│   │   ├── admin/               users.ts, roles.ts, groups.ts — admin HTTP layer
-│   │   ├── auth/                password, session, sessionPlugin, routes, guard
+│   │   ├── admin/               users.ts, roles.ts, groups.ts, api-keys.ts — admin HTTP layer
+│   │   ├── auth/                password, session, sessionPlugin, routes, guard, api-keys.ts (hash/verify/generate)
 │   │   ├── config/              env schema (Zod), .env lookup
 │   │   ├── db/                  schema, client, migrate, seeds, migrations/, __tests__/
 │   │   ├── update/              routes.ts, github.ts, installed-version.ts — the admin API of the update control
