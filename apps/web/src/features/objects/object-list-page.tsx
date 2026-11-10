@@ -126,6 +126,13 @@ export function ObjectListPage() {
         >
           {t('list.actions.create')}
         </button>
+        <button
+          className="rounded bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-500"
+          type="button"
+          onClick={() => navigate('/objects/import')}
+        >
+          {t('list.actions.import')}
+        </button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">

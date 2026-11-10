@@ -1,7 +1,7 @@
 # WP-M10-14: CSV import page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-13
 phase: 10
 milestone: m10
@@ -12,21 +12,22 @@ spec-lines: 80
 files-read:
 
 - specs/08-objects-api.md (§9.4)
-- apps/web/src/features/objects or the current object list page
+- apps/web/src/features/objects/object-list-page.tsx
 - apps/web/src/routes/index.tsx
-- apps/web/src/i18n/de.ts or the active locale module
+- apps/web/src/i18n/locales/de/object.json
+- apps/web/src/settings/branding-page.tsx (browser file read)
+- apps/api/src/objects/import.ts (mapping and preview contract)
 
 files-write:
 
 - apps/web/src/features/objects/object-import-page.tsx
-- apps/web/src/routes/index.tsx
-- apps/web/src/i18n/de.ts
-- apps/web/src/i18n/en.ts
+- apps/web/src/routes/index.tsx and apps/web/src/features/objects/object-list-page.tsx
+- apps/web/src/i18n/locales/{de,en}/object.json
 
 interfaces:
 
 - `ObjectImportPage` at `/objects/import`
-- file input, mapping controls, preview table, summary and commit action
+- file input, header mapping controls, preview table, summary and commit action
 
 ## Task
 
@@ -57,8 +58,8 @@ commit summary.
 
 ## Handoff
 
-- Files changed: the page, the route and both locales
+- Files changed: the page, the route, the object list link and both locales
 - Interfaces added: `ObjectImportPage`
-- Verified: the commands above
+- Verified: the commands above; `apps/web/src/features/objects/__tests__/object-import-page.test.tsx` covers the file text, the mapping select, the preview rows with their inline error and the applied counters; the database-backed API suites skip without a database
 - Follow-up WP: WP-M10-15
 - Open question: none

@@ -38,7 +38,8 @@
     "actions": {
       "create": "Objekt anlegen",
       "edit": "Bearbeiten",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "import": "CSV Import"
     }
   },
   "create": {
@@ -104,6 +105,58 @@
     "errors": {
       "objectNotFound": "Objekt nicht gefunden.",
       "unknown": "Das Objekt konnte nicht gelöscht werden."
+    }
+  },
+  "import": {
+    "back": "Objekte",
+    "title": "Objekte CSV Import",
+    "hint": "The CSV file is read in the browser and its text is sent — the file itself is never uploaded. The first line is the header, comma or semicolon separated. Objects are compared by object number.",
+    "readOnly": "Read-only: You lack object.import — the file is not sent and nothing is imported.",
+    "fileLabel": "CSV file",
+    "fileHint": "UTF-8, max. 2 MB and 5,000 rows.",
+    "mapTitle": "Header mapping",
+    "mapAuto": "auto",
+    "mapUnmapped": "not imported",
+    "preview": "Preview",
+    "commit": "Import",
+    "working": "Processing …",
+    "previewTitle": "Preview rows",
+    "columns": {
+      "line": "Row",
+      "objectNo": "Objektnummer",
+      "action": "Action",
+      "changed": "Changed fields",
+      "errors": "Errors"
+    },
+    "actions": {
+      "new": "new",
+      "changed": "changed",
+      "unchanged": "unchanged",
+      "error": "error"
+    },
+    "rowErrors": "Invalid or missing: {{fields}}",
+    "rowErrorsUnknown": "Row error.",
+    "summaryTitle": "Summary",
+    "summary": {
+      "new": "new objects",
+      "changed": "changed objects",
+      "unchanged": "unchanged objects",
+      "error": "row errors"
+    },
+    "appliedTitle": "Written to the database",
+    "applied": {
+      "created": "created",
+      "updated": "updated",
+      "unchanged": "unchanged",
+      "failed": "failed"
+    },
+    "errors": {
+      "fileRead": "The file could not be read.",
+      "invalidRequest": "The file was rejected: Please check the header and the mapping.",
+      "objectNoTaken": "This object number is already taken.",
+      "forbidden": "You lack object.import.",
+      "sessionInvalid": "The session has expired, please log in again.",
+      "unknown": "The import failed."
     }
   }
 }

@@ -1356,12 +1356,12 @@ numeric order: API-key schema and contracts → admin routes → admin UI → be
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
 export/erasure → uploads backup and restore drill → exit criterion. Implemented so
-far: **WP-M10-02 … WP-M10-13** — API-key schema, admin routes and page, bearer
+far: **WP-M10-02 … WP-M10-14** — API-key schema, admin routes and page, bearer
 authentication, OpenAPI, external object and ticket API, webhook endpoints, the
 per-minute HMAC delivery worker, the webhook admin page with its OpenAPI paths,
 the CSV import service and its two routes
 (`POST /api/v1/objects/import/preview` and `POST /api/v1/objects/import` under
-`object.import`). The CSV service parses comma or semicolon files
+`object.import`) and the CSV import page at `/objects/import` (WP-M10-14). The CSV service parses comma or semicolon files
 (quoted fields, 2 MB / 5,000 rows), maps the header case-insensitively through
 the German aliases of §9.4, previews every row as `new`, `changed`,
 `unchanged` or `error` and commits the valid rows in one transaction where a
@@ -1369,7 +1369,7 @@ row error never blocks the others and a repeated identical import writes
 nothing. The two routes need a session with `object.import` — no bearer scope
 reaches them — answer a malformed body or an unknown mapping target with `400
 invalid_request` and the field paths, keep the preview write-free and return the
-preview shape plus the `applied` counters on the commit route. The webhook chain stores the secret once, delivers `ticket.created` and
+preview shape plus the `applied` counters on the commit route. The page at `/objects/import` reads the file in the browser and posts its text, shows the header mapping (the submitted mapping over the German aliases) with a control per column, keeps every row error in its preview line and adds the commit action with its `applied` counters; without `object.import` it stays read-only and the file never leaves the browser. The webhook chain stores the secret once, delivers `ticket.created` and
 `ticket.status_changed` with the 1/5/25/125-second retry ladder and keeps the
 delivery history after an endpoint is deleted.
 

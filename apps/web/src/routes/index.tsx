@@ -24,6 +24,7 @@ import { StatsPage } from '../features/stats/stats-page'
 import { StickerPage } from '../features/objects/sticker-page'
 import { ObjectListPage } from '../features/objects/object-list-page'
 import { ObjectCreatePage } from '../features/objects/object-create-page'
+import { ObjectImportPage } from '../features/objects/object-import-page'
 import { ObjectEditPage } from '../features/objects/object-edit-page'
 import { InternalCreatePage } from '../features/tickets/internal-create-page'
 import { TicketListPage } from '../features/tickets/ticket-list-page'
@@ -192,6 +193,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <ObjectCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The CSV import page keeps the office spreadsheet in the browser (WP-M10-14);
+        // the API only ever sees the posted file text.
+        path: '/objects/import',
+        element: (
+          <RequireSession>
+            <ObjectImportPage />
           </RequireSession>
         ),
       },
