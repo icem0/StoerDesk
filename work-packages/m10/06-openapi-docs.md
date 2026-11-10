@@ -1,7 +1,7 @@
 # WP-M10-06: OpenAPI document under /api/docs
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-05
 phase: 10
 milestone: m10
@@ -18,7 +18,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/openapi.ts
+- apps/api/src/{openapi.ts,__tests__/openapi.spec.ts}
 - apps/api/src/index.ts
 - apps/api/package.json
 
@@ -55,8 +55,8 @@ bearer scheme and the external object/ticket paths.
 
 ## Handoff
 
-- Files changed: the OpenAPI module, the server registration and the API
-  dependencies
+- Files changed: the OpenAPI module, its unit test, the server registration
+  and the API dependencies
 - Interfaces added: `/api/docs`, `/api/docs/json`
 - Verified: the commands above
 - Follow-up WP: WP-M10-11 (webhook paths in the document)

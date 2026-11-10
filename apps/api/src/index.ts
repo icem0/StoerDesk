@@ -21,6 +21,7 @@ import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './c
 import { createDatabase } from './db/client'
 import { runMigrations } from './db/migrate'
 import { objectRoutes } from './objects/service'
+import { openApiPlugin } from './openapi'
 import { oncallPoolsRoutes } from './oncall/pools'
 import { oncallRoutes } from './oncall/routes'
 import { seedBaseUser } from './db/seed-base'
@@ -119,6 +120,7 @@ export async function buildServer() {
   // The session hook has to run before the routes that read `request.user`.
   await app.register(sessionPlugin, { database, env })
   await app.register(apiKeyPlugin, { database })
+  await app.register(openApiPlugin)
   await app.register(authRoutes, { database, env })
   await app.register(adminUsersRoutes, { database })
   await app.register(adminRolesRoutes, { database })
