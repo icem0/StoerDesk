@@ -1,7 +1,7 @@
 # WP-M10-07: External object API with updated-since, upsert and bulk
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-05
 phase: 10
 milestone: m10
@@ -18,9 +18,8 @@ files-read:
 
 files-write:
 
-- apps/api/src/objects/service.ts
+- apps/api/src/objects/{service.ts,external.ts,__tests__/external.integration.spec.ts}
 - packages/shared/src/schemas/object.ts
-- apps/api/src/objects/external.ts
 
 interfaces:
 
@@ -60,7 +59,7 @@ answers `403`, invalid payloads `422`.
 
 ## Handoff
 
-- Files changed: the object service, the shared schemas and the external module
+- Files changed: the object service, the shared schemas, the external module, its integration test and the server registration
 - Interfaces added: the external object endpoints
 - Verified: the commands above
 - Follow-up WP: WP-M10-08

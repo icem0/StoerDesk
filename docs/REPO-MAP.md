@@ -32,7 +32,7 @@ apps/
 │   │   ├── oncall/              pools.ts pool routes guarded by `oncall.read`/`oncall.admin` (WP-M8-04); routes.ts shift/settings routes (WP-M8-06); planning service (WP-M8-05); confirm/decline (WP-M8-07), swap service (WP-M8-08), swap routes incl. the `oncall.admin` swap list (WP-M8-09, WP-M8-13b), coupling.ts ticket coupling and warnings (WP-M8-10), ical.ts personal iCal feed (WP-M8-12)
 │   │   ├── dashboard/           service.ts snapshot builder (WP-M9-05), routes.ts snapshot+stream routes (WP-M9-06/07), stream.ts SSE change probe (WP-M9-07)
 │   │   ├── stats/               filters.ts shared range and dimension predicate (WP-M9-10), reaction-times.ts phase aggregates (WP-M9-10), frequency.ts bucket series and groupings (WP-M9-10), objects.ts top objects (WP-M9-11), compliance.ts compliance and declines (WP-M9-11), routes.ts JSON + CSV routes (WP-M9-12/13), export.ts CSV serializer (WP-M9-13)
-│   │   ├── objects/             service.ts CRUD + qr.ts token/regenerate/resolve (WP-M2-01/02)
+│   │   ├── objects/             service.ts CRUD + external.ts PUT upsert/bulk (WP-M10-07) + qr.ts token/regenerate/resolve (WP-M2-01/02)
 │   │   ├── settings/            branding.ts (WP-M2-29), dashboard.ts TV token + thresholds (WP-M9-08), deadlines.ts per-priority hours (WP-M6-14b), text-templates.ts fault catalog (WP-M2-40b)
 │   │   ├── jobs/                qr-cleanup.ts, bma-sync.ts — daily QR and BMA sync jobs via pg-boss
 │   │   ├── integrations/        bmacloud/{client,sync,routes}.ts — read client, sync, admin API

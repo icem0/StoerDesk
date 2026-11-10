@@ -20,6 +20,7 @@ import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
 import { runMigrations } from './db/migrate'
+import { externalObjectRoutes } from './objects/external'
 import { objectRoutes } from './objects/service'
 import { openApiPlugin } from './openapi'
 import { oncallPoolsRoutes } from './oncall/pools'
@@ -131,6 +132,7 @@ export async function buildServer() {
   await app.register(settingsDeadlineRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(objectRoutes, { database })
+  await app.register(externalObjectRoutes, { database })
   await app.register(oncallPoolsRoutes, { database })
   await app.register(oncallRoutes, { database })
   await app.register(bmaSyncRoutes, { database, env })

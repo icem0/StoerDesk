@@ -60,6 +60,10 @@ export const objectListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
   active: z.enum(['true', 'false', 'all']).default('true'),
   city: z.string().trim().max(120).optional(),
+  /** External delta sync: only objects changed after this instant (WP-M10-07). */
+  updated_since: z.iso.datetime().optional(),
+  /** External page size, 1–1000; absent keeps the office list unlimited. */
+  limit: z.coerce.number().int().min(1).max(1000).optional(),
 })
 
 export const regenerateQrRequestSchema = z.object({
@@ -126,5 +130,29 @@ export type CreateObjectRequest = z.infer<typeof createObjectRequestSchema>
 export type UpdateObjectRequest = z.infer<typeof updateObjectRequestSchema>
 export type RegenerateQrRequest = z.infer<typeof regenerateQrRequestSchema>
 export type RegenerateQrResponse = z.infer<typeof regenerateQrResponseSchema>
+
+/** External object API (`specs/08-objects-api.md` §9.5, WP-M10-07). */
+export const objectUpsertRequestSchema = createObjectRequestSchema.omit({ objectNo: true })
+
+export const objectBulkRequestSchema = z.object({
+  items: z.array(createObjectRequestSchema).min(1).max(500),
+})
+
+export const objectBulkResultSchema = z.object({
+  objectNo: z.string(),
+  action: z.enum(['created', 'updated', 'error']),
+  error: z
+    .object({ code: z.string(), params: z.record(z.string(), z.unknown()) })
+    .nullable(),
+})
+
+export const objectBulkResponseSchema = z.object({
+  results: z.array(objectBulkResultSchema),
+})
+
+export type ObjectUpsertRequest = z.infer<typeof objectUpsertRequestSchema>
+export type ObjectBulkRequest = z.infer<typeof objectBulkRequestSchema>
+export type ObjectBulkResult = z.infer<typeof objectBulkResultSchema>
+export type ObjectBulkResponse = z.infer<typeof objectBulkResponseSchema>
 export type PublicQrObject = z.infer<typeof publicQrObjectSchema>
 export type QrResolveResponse = z.infer<typeof qrResolveResponseSchema>

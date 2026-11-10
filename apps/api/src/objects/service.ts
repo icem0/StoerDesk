@@ -1,4 +1,4 @@
-import { and, eq, ilike, or, sql } from 'drizzle-orm'
+import { and, eq, gt, ilike, or, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
@@ -16,7 +16,7 @@ import {
   type UpdateObjectRequest,
 } from '@stoerdesk/shared'
 
-import { requirePermission } from '../auth/requirePermission'
+import { requirePermission, requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects } from '../db/schema'
 import { generateQrToken, qrRoutes } from './qr'
@@ -98,6 +98,10 @@ function whereFromQuery(query: ObjectListQuery) {
     conditions.push(sql`lower(${objects.city}) = lower(${query.city})`)
   }
 
+  if (query.updated_since !== undefined) {
+    conditions.push(gt(objects.updatedAt, new Date(query.updated_since)))
+  }
+
   if (query.search !== undefined) {
     const pattern = `%${escapeLikePattern(query.search)}%`
     conditions.push(
@@ -115,11 +119,13 @@ function whereFromQuery(query: ObjectListQuery) {
 }
 
 export async function listObjects(database: Db, query: ObjectListQuery): Promise<ObjectSummary[]> {
-  const rows = await database
+  const ordered = database
     .select()
     .from(objects)
     .where(whereFromQuery(query))
-    .orderBy(objects.objectNo)
+    .orderBy(query.updated_since === undefined ? objects.objectNo : objects.updatedAt)
+
+  const rows = query.limit === undefined ? await ordered : await ordered.limit(query.limit)
 
   return rows.map((row) => summarize(row))
 }
@@ -233,7 +239,7 @@ export const objectRoutes = fp<ObjectRouteOptions>(
   async (app, { database }) => {
     app.get(
       '/api/v1/objects',
-      { preHandler: requirePermission(database, PERMISSIONS.object.read) },
+      { preHandler: requireScopeOrPermission(database, 'objects:read', PERMISSIONS.object.read) },
       async (request, reply) => {
         const parsed = objectListQuerySchema.safeParse(request.query)
 
@@ -241,13 +247,18 @@ export const objectRoutes = fp<ObjectRouteOptions>(
           return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
 
-        return objectListResponseSchema.parse({ objects: await listObjects(database, parsed.data) })
+        const query =
+          parsed.data.limit === undefined && request.apiKey !== undefined
+            ? { ...parsed.data, limit: 500 }
+            : parsed.data
+
+        return objectListResponseSchema.parse({ objects: await listObjects(database, query) })
       },
     )
 
     app.get<{ Params: { objectNo: string } }>(
       '/api/v1/objects/:objectNo',
-      { preHandler: requirePermission(database, PERMISSIONS.object.read) },
+      { preHandler: requireScopeOrPermission(database, 'objects:read', PERMISSIONS.object.read) },
       async (request, reply) => {
         const parsed = objectNoSchema.safeParse(request.params.objectNo)
 
@@ -295,7 +306,7 @@ export const objectRoutes = fp<ObjectRouteOptions>(
 
     app.delete<{ Params: { objectNo: string } }>(
       '/api/v1/objects/:objectNo',
-      { preHandler: requirePermission(database, PERMISSIONS.object.delete) },
+      { preHandler: requireScopeOrPermission(database, 'objects:write', PERMISSIONS.object.delete) },
       async (request, reply) => {
         const parsed = objectNoSchema.safeParse(request.params.objectNo)
 
