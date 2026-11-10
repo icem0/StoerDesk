@@ -51,7 +51,7 @@ packages/
 
 PLAN.md                          binding build plan (scope, stack, phases, WP limits)
 specs/                           expanded slices 00–18 (a placeholder defers to PLAN.md)
-work-packages/                   one Markdown file per WP (m0, m1, m2, m3, m7) + README backlog
+work-packages/                   one Markdown file per WP (m0–m3, m5, m7–m10) + README backlog
 docs/                            ARCHITECTURE, COMPLIANCE, DECISIONS + DECISIONS/ (ADRs), DEPLOYMENT,
                                  GLOSSARY, I18N, REPO-MAP, WP-TEMPLATE, SYSTEMPROMPT, material/
 .github/workflows/               check.yml (quality gates, tag trigger) + build.yml (GHCR)

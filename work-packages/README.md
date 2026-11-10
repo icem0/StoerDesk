@@ -20,6 +20,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
 | [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
 | [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
+| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion | 18 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -532,6 +533,24 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-37  | public comment web flow: honeypot + captcha + mismatch notice     | done                    | yes     |
 | WP-M9-38  | BMAcloud credentials GET needs object.import (SEC-009)            | done                    | yes     |
 | WP-M9-39  | the dashboard stream captures its baseline before the first snapshot | done                  | yes     |
+| WP-M10-01 | API and hardening specification, ADR-0013/0014 and phase-10 split | done                    | yes     |
+| WP-M10-02 | API-key table, shared contracts and migration                     | planned                 | yes     |
+| WP-M10-03 | admin API-key routes and hashing service                          | planned                 | yes     |
+| WP-M10-04 | admin API-key page                                                | planned                 | yes     |
+| WP-M10-05 | bearer API-key authentication and scope guard                     | planned                 | yes     |
+| WP-M10-06 | OpenAPI document under `/api/docs`                                | planned                 | yes     |
+| WP-M10-07 | external object API with updated-since, upsert and bulk           | planned                 | yes     |
+| WP-M10-08 | external ticket API and API-key work-order update                 | planned                 | yes     |
+| WP-M10-09 | webhook endpoints, table and admin API                            | planned                 | yes     |
+| WP-M10-10 | webhook delivery worker with HMAC and backoff                     | planned                 | yes     |
+| WP-M10-11 | webhook admin page and OpenAPI paths                              | planned                 | yes     |
+| WP-M10-12 | CSV parsing, mapping and preview service                          | planned                 | yes     |
+| WP-M10-13 | CSV import preview and commit routes                             | planned                 | yes     |
+| WP-M10-14 | CSV import page                                                   | planned                 | yes     |
+| WP-M10-15 | privacy retention job                                             | planned                 | yes     |
+| WP-M10-16 | personal-data export and erasure routes                           | planned                 | yes     |
+| WP-M10-17 | uploads backup, restore procedure and drill                       | planned                 | yes     |
+| WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

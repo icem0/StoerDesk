@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Phase 10 (API and hardening) is split and started (WP-M10-01): `specs/08-objects-api.md`
+  now defines CSV object import (§9.4) and the external REST API (§9.5) — bearer API keys
+  with the four scopes `objects:read`, `objects:write`, `tickets:read`, `tickets:write`,
+  object upsert/bulk/updated-since, external ticket creation and work-order updates,
+  HMAC-signed webhooks with five backoff retries and OpenAPI under `/api/docs`.
+  `specs/14-nfr.md` defines the privacy retention (contact data and photos 24 months after
+  closing, throttle rows 30 days, BMA sync history 365 days), personal-data export and
+  erasure, the uploads backup and the restore drill. ADR-0013 and ADR-0014 record the
+  decisions; the phase is split into WP-M10-02 … WP-M10-18.
 - Phase 9 (dashboard and statistics) is complete (WP-M9-01 … WP-M9-18): the live
   dashboard at `/` reads one snapshot (`GET /api/v1/dashboard`) and updates through the
   authenticated SSE stream (`/api/v1/dashboard/stream`, 30-second refetch fallback) with

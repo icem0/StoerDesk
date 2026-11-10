@@ -7,8 +7,8 @@
 WP-M2-01. §9.2 (QR tokens) is filled from `PLAN.md` §11 and
 `specs/02-data-model.md` §4.3/§4.7 and was reviewed for WP-M2-02. §9.3 (printable QR
 stickers) is filled from `PLAN.md` §4/§11 and `PLAN.md` §2 (the 112 notice) and was
-reviewed for WP-M2-03. §9.4–§9.5 stay owned by `PLAN.md` §11 until their own work
-package.
+reviewed for WP-M2-03. §9.4 (CSV import) and §9.5 (external REST API, API keys,
+webhooks, OpenAPI) were filled from `PLAN.md` §11 and reviewed for WP-M10-01.
 
 > The source of this slice is `PLAN.md` §11 (objects, QR, stickers, CSV, REST
 > API). The data contract of the object list comes from
@@ -158,12 +158,111 @@ stickers per page in a 2 × 2 grid. The selected format writes one `@page` rule
 The app chrome (header, navigation, toolbar) is `print:hidden`; print colours are
 black on white. No print-dialog automation and no PDF endpoint.
 
-### 9.4 CSV import (planned)
+### 9.4 CSV import (WP-M10-12 … WP-M10-14)
 
-Upload, column mapping, preview and upsert by `object_no` stay in `PLAN.md` §11
-until their work package exists.
+The office imports its object list from a spreadsheet without writing to the
+database by hand. The browser reads the file and posts its text as JSON, so no
+multipart parser and no temporary upload directory are needed.
 
-### 9.5 REST API for external systems (planned)
+**Contract.** `POST /api/v1/objects/import/preview` and
+`POST /api/v1/objects/import` take
+`{ csv: string, mapping?: Record<string, string>, commit?: boolean }`. Both
+require `object.import`. `csv` is UTF-8 text, comma or semicolon separated, first
+row is the header, at most 2 MB and 5,000 data rows. An empty file, a duplicate
+header or an over-limit row count answers `400 invalid_request` with field
+`csv`.
 
-API keys, scopes, `PUT /objects/{object_no}`, bulk upsert, webhooks and OpenAPI
-stay in `PLAN.md` §11 (phase 10) until their work package exists.
+**Column mapping.** Targets are `objectNo`, `name`, `street`, `houseNumber`,
+`postalCode`, `city`, `contactName`, `contactPhone`, `contactEmail`, `notes`.
+Without a submitted mapping the header is matched case-insensitively against
+these names and the German aliases `objektnummer`, `bezeichnung`, `strasse`,
+`hausnummer`, `plz`, `ort`, `ansprechpartner`, `telefon`, `email`, `notiz`.
+A row without `objectNo` or `name` is a row error, never a silent skip.
+`objectNo` follows §4.3.1.
+
+**Preview.** The preview answers
+`{ rows, summary }`: every row carries `line`, `objectNo`, `action`
+(`new`, `changed`, `unchanged`, `error`), `errors` and the changed field names.
+`summary` counts each action. The preview writes nothing. `changed` compares the
+mapped fields with the stored object; `qrToken`, `externalId`, `externalType`
+and `active` are never import fields.
+
+**Commit.** The import route repeats the preview and upserts every valid row by
+`object_no` inside one transaction. New rows get a generated QR token (§9.2);
+changed rows update only the mapped fields and `updated_at`; unchanged rows stay
+untouched. Row errors are returned per line and never block the other rows
+(quarantine, `PLAN.md` §6.1). The answer is the same preview shape plus
+`applied: { created, updated, unchanged, failed }`. A second identical import
+reports `unchanged` and writes nothing.
+
+### 9.5 REST API for external systems (WP-M10-02 … WP-M10-11)
+
+The external API uses the same `/api/v1` routes as the office UI. A request is
+authenticated either by the session cookie with the matching permission or by
+`Authorization: Bearer <api-key>` with the matching scope. The session path keeps
+its existing permission checks; the key path never elevates a scope.
+
+**API keys.** `api_keys` stores only `sha256(token)`, a display prefix, a name,
+the scope set, `created_by_user_id`, `last_used_at`, `expires_at` and
+`revoked_at`. A key is generated once as `sk_` plus 32 random bytes in
+`base64url`; the plaintext is answered only by the create route. Scopes are
+`objects:read`, `objects:write`, `tickets:read`, `tickets:write`. A revoked or
+expired key answers `401 api_key_invalid`; a valid key without the required
+scope answers `403 forbidden`. Key management itself is session-only and guarded
+by `apikey.read` / `apikey.write`:
+
+| Method | Path | Result |
+| --- | --- | --- |
+| GET | `/api/v1/api-keys` | `200 { keys }` — never the token or its hash |
+| POST | `/api/v1/api-keys` | `201 { key, token }` — token shown once |
+| PATCH | `/api/v1/api-keys/:id` | `200 { key }` — name, scopes, expiry |
+| DELETE | `/api/v1/api-keys/:id` | `204` — revokes, keeps the row |
+
+**Objects.**
+
+| Method | Path | Scope | Result |
+| --- | --- | --- | --- |
+| GET | `/api/v1/objects?updated_since=&active=&limit=` | `objects:read` | `200 { objects }` ordered by `updatedAt`, `limit` 1–1000 (default 500) |
+| GET | `/api/v1/objects/:objectNo` | `objects:read` | `200` object summary |
+| PUT | `/api/v1/objects/:objectNo` | `objects:write` | `200` upsert by `object_no`; `201` when created |
+| POST | `/api/v1/objects/bulk` | `objects:write` | `200 { results }`, at most 500 items, one result per item |
+| DELETE | `/api/v1/objects/:objectNo` | `objects:write` | `204` soft delete (§9.1) |
+
+`updated_since` is an ISO timestamp; invalid values answer `400
+invalid_request`. `PUT` carries the §9.1 create body (without `objectNo`, which
+comes from the path) and replaces the maintained fields. A bulk item carries the
+same body plus `objectNo`; an item error is returned in its result and does not
+roll back the other items. Invalid payloads answer `422
+invalid_request`/field errors exactly like §9.1.
+
+**Tickets.**
+
+| Method | Path | Scope | Result |
+| --- | --- | --- | --- |
+| GET | `/api/v1/tickets?updated_since=&status=&objectNo=&limit=` | `tickets:read` | `200 { tickets }` with the list item shape |
+| POST | `/api/v1/tickets` | `tickets:write` | `201` created ticket; external creation is recorded with `source = 'api'` |
+| PATCH | `/api/v1/tickets/:ticketNo/work-order` | `tickets:write` | `200` after `work_order_set`, body `{ type, number }` |
+
+External ticket creation uses the internal creation contract (`internalCreateTicketRequestSchema`)
+and resolves the object by `objectNo`. The external work-order update uses the
+state machine of §7; an invalid transition answers `409 invalid_transition`, an
+unknown ticket `404 ticket_not_found`. Append-only events of an API-key action
+carry `actor_kind = 'system'` and the key id in the payload, never the token.
+
+**Webhooks.** An admin registers endpoints through
+`GET/POST/PATCH/DELETE /api/v1/webhooks` (`settings.read` / `settings.write`).
+An endpoint has a URL, a secret, the subscribed events `ticket.created` and
+`ticket.status_changed`, and an active flag. Delivery is asynchronous and never
+part of the ticket transaction: a ticket event enqueues a delivery row, the
+worker signs the body with HMAC-SHA256 over `<timestamp>.<body>` and sends
+`X-StoerDesk-Signature: t=<timestamp>,v1=<hex>` plus `X-StoerDesk-Event`. A
+non-2xx answer or a timeout retries with exponential backoff (1, 5, 25, 125 s,
+then failed); every attempt is logged with status and duration, never with the
+secret. A disabled endpoint is not called; a deleted endpoint keeps its
+delivery history.
+
+**OpenAPI.** `GET /api/docs` and `GET /api/docs/json` serve an OpenAPI 3.1
+document generated from the shared Zod contracts of the external object, ticket,
+API-key and webhook routes. The document lists bearer authentication and the
+scope per operation; internal office routes stay out of the published document.
+The documentation routes are public but never expose data.

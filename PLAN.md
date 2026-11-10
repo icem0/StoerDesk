@@ -1339,7 +1339,23 @@ median of the five real reference reports equals the printed 30 minutes, and the
 `stats_tickets` view and the dashboard snapshot agree on the open and overdue
 counts. Every skipped gate is reported as skipped; the PostgreSQL integration tests
 skip with a named reason when no database is reachable, and the Docker smoke test
-runs only in CI (§18). Phase 10 (API and hardening) is next.
+runs only in CI (§18).
+
+**Phase 10 is split and started (WP-M10-01).** The phase had no work packages and
+`specs/08-objects-api.md` §9.4–§9.5 as well as `specs/14-nfr.md` were placeholders,
+so the split required by `PLAN.md` §16 happened first: WP-M10-01 fills the CSV
+import and external REST API slice (`specs/08-objects-api.md`), the privacy,
+retention, backup and restore slice (`specs/14-nfr.md`) and resolves the open
+retention questions of phase 2 (`report_throttle.ip`, `bma_sync_runs.conflicts`)
+with ADR-0014. ADR-0013 settles the external API: the same `/api/v1` paths accept
+either the session permission or a bearer key with a scope; keys are stored only
+as SHA-256 hashes and shown once; webhooks are a separate endpoint/delivery
+subsystem with HMAC-SHA256 and exponential backoff; OpenAPI documents the external
+surface under `/api/docs`. The phase is split into **WP-M10-02 … WP-M10-18** in
+numeric order: API-key schema and contracts → admin routes → admin UI → bearer auth
+→ OpenAPI → external object API → external ticket API → webhook endpoints → webhook
+worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
+export/erasure → uploads backup and restore drill → exit criterion.
 
 ## 17. Work package rules for small models
 
