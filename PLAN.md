@@ -1224,6 +1224,16 @@ boolean column, not null with default false, and a partial `reported_at` index f
 statistics reads share the typed column. The ticket-table integration test proves
 default false, explicit true, not-null rejection and the metadata of the column.
 
+**Dashboard stream baseline order (WP-M9-39).** The SSE stream of `specs/11-dashboard.md`
+§11.6 sent its first snapshot before it captured the probe baseline. A change that landed in
+that window — the client reacts to the snapshot, the integration test inserts a ticket right
+away — was swallowed: the baseline already contained it, the probe saw no difference and no
+second snapshot followed. The baseline is now captured first, so every change after it is
+visible to the probe. The defect was found while resolving the Dependabot pull request
+`altcha-lib` 2.8.0, whose CI run failed on this timeout while the rest of the suite passed;
+the same run proves the order, because the old order with a delayed baseline fails with the
+same five-second timeout and the new order passes.
+
 **Statistics services (WP-M9-10).** The statistics of §13 are read from the
 `stats_tickets` and `stats_ticket_faults` views of WP-M9-03 (migration
 `0025_stats_views` — WP-M9-03 numbered it `0024` before WP-M9-27 took

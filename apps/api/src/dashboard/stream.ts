@@ -113,8 +113,14 @@ export function registerDashboardStream(
 
       void (async () => {
         try {
-          await sendSnapshot()
+          // The baseline is captured **before** the first snapshot goes out. A
+          // change that lands between the snapshot and the baseline would
+          // otherwise be swallowed: the client already holds the older snapshot
+          // and the probe compares against a value that already contains the
+          // change, so no new snapshot follows. The baseline first makes every
+          // change that arrives after the snapshot visible to the probe.
           lastProbeValue = await dashboardChangeProbe(database)
+          await sendSnapshot()
         } catch {
           stream.end()
           return
