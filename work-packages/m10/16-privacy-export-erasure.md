@@ -1,7 +1,7 @@
 # WP-M10-16: Personal-data export and erasure routes
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-15
 phase: 10
 milestone: m10

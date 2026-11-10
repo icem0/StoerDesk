@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Personal-data export and erasure routes (WP-M10-16): `GET /api/v1/privacy/tickets/:ticketNo/export`
+  answers the reporter contact fields, the photo metadata and the audit rows without their
+  payloads (never the status token, never the internal notes of other users) and
+  `POST /api/v1/privacy/tickets/:ticketNo/erase` takes a 5–1000-character reason, nulls
+  `reporter_name`/`reporter_phone`/`reporter_email` and appends exactly one `personal_data_erased`
+  event with the reason length and the actor; both are session routes guarded by `user.write` (no
+  API-key scope reaches them), erasure is idempotent (a repeat answers `200 alreadyErased` and
+  writes no second event) and never deletes the ticket.
 - The ticket detail shows the reporter metadata (WP-M2-98e): a backdated report gets
   a `Meldung gemeldet` history row at its real `reportedAt`, and the info table adds
   the channel (Telefon/E-Mail/Messenger) and the reporter kind (intern/extern) from

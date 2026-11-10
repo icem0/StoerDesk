@@ -1367,12 +1367,13 @@ numeric order: API-key schema and contracts → admin routes → admin UI → be
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
 export/erasure → uploads backup and restore drill → exit criterion. Implemented so
-far: **WP-M10-02 … WP-M10-15** — API-key schema, admin routes and page, bearer
+far: **WP-M10-02 … WP-M10-16** — API-key schema, admin routes and page, bearer
 authentication, OpenAPI, external object and ticket API, webhook endpoints, the
 per-minute HMAC delivery worker, the webhook admin page with its OpenAPI paths,
 the CSV import service and its two routes
 (`POST /api/v1/objects/import/preview` and `POST /api/v1/objects/import` under
-`object.import`) and the CSV import page at `/objects/import` (WP-M10-14). The CSV service parses comma or semicolon files
+`object.import`), the CSV import page at `/objects/import` (WP-M10-14) and the
+personal-data export and erasure routes (WP-M10-16). The CSV service parses comma or semicolon files
 (quoted fields, 2 MB / 5,000 rows), maps the header case-insensitively through
 the German aliases of §9.4, previews every row as `new`, `changed`,
 `unchanged` or `error` and commits the valid rows in one transaction where a
@@ -1390,6 +1391,20 @@ batches of 500, removes the expired `ticket_photos` rows and their files below
 after 30 days and `bma_sync_runs` rows after 365 days, is idempotent, never touches
 an append-only event row or a ticket row, logs the four aggregate counters only and
 starts only from the direct API start (WP-M10-15).
+
+**Personal-data export and erasure (WP-M10-16).** `apps/api/src/privacy/routes.ts` carries the
+two session routes of `specs/14-nfr.md` §15.2, both guarded by `user.write` and reachable by no
+API-key scope: `GET /api/v1/privacy/tickets/:ticketNo/export` answers the reporter contact fields,
+the `ticket_photos` metadata and the audit rows as `{ type, actorKind, actorUserId, at }` — never
+the `status_token`, never an event payload, so the export can never leave the internal notes of
+another user — and `POST /api/v1/privacy/tickets/:ticketNo/erase` requires a trimmed reason of 5
+to 1000 characters, sets `reporter_name`, `reporter_phone` and `reporter_email` to `NULL` in one
+transaction and appends exactly one `personal_data_erased` event whose payload carries the reason
+**length** and whose actor columns carry the admin (`reasonLength` only, never the reason text).
+Idempotency is the event itself: a repeat finds that event, writes nothing and answers `200` with
+`alreadyErased`; the ticket, its photos and its trail stay and full deletion remains the
+`ticket.delete` path of WP-M2-77 (ADR-0014 decision 4). The shared contracts live in
+`packages/shared/src/schemas/privacy.ts`.
 
 ## 17. Work package rules for small models
 

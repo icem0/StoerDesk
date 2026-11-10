@@ -562,7 +562,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-13 | CSV import preview and commit routes                             | done                    | yes     |
 | WP-M10-14 | CSV import page                                                   | done                    | yes     |
 | WP-M10-15 | privacy retention job                                             | done                    | yes     |
-| WP-M10-16 | personal-data export and erasure routes                           | planned                 | yes     |
+| WP-M10-16 | personal-data export and erasure routes                           | done                    | yes     |
 | WP-M10-17 | uploads backup, restore procedure and drill                       | planned                 | yes     |
 | WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
 

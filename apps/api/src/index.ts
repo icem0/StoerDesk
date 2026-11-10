@@ -12,6 +12,7 @@ import { webhookRoutes } from './webhooks/endpoints'
 import { apiKeyPlugin, apiKeyProbeRoutes } from './auth/apiKeyPlugin'
 import { authRoutes } from './auth/routes'
 import { permissionProbeRoutes } from './auth/requirePermission'
+import { privacyRoutes } from './privacy/routes'
 import { sessionPlugin } from './auth/sessionPlugin'
 import { bmaSyncRoutes } from './integrations/bmacloud/routes'
 import { settingsBrandingRoutes } from './settings/branding'
@@ -162,6 +163,7 @@ export async function buildServer() {
   await app.register(ticketDetailRoutes, { database })
   await app.register(photoServeRoutes, { database, uploadDir: env.UPLOAD_DIR })
   await app.register(deleteRoutes, { database, uploadDir: env.UPLOAD_DIR })
+  await app.register(privacyRoutes, { database })
   await app.register(workflowRoutes, { database })
   await app.register(pauseRoutes, { database })
   await app.register(dashboardRoutes, { database })

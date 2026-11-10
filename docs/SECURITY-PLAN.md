@@ -47,6 +47,23 @@ falls back to the 24-month default), and both the job log and the settings modul
 carry aggregate counters, machine keys and setting keys only — no ticket number, no
 name, no phone number, no e-mail and no IP. No new finding.
 
+Privacy-routes pass: 2026-11-10, diff `28852ee..` (WP-M10-16, two new modules, the
+server registration and the version file) — areas A and B re-checked in full (95 routes:
+the package adds `GET /api/v1/privacy/tickets/:ticketNo/export` and
+`POST /api/v1/privacy/tickets/:ticketNo/erase`, both with the `user.write`
+preHandler, no public capability and no bearer scope, so the guard answers
+`401 session_invalid` before `403 forbidden`) — the route table gained those two rows;
+C–K re-checked for `apps/api/src/privacy/routes.ts`,
+`packages/shared/src/schemas/privacy.ts` and `apps/api/src/index.ts`: the
+`ticketNo` path parameter is format-validated by `ticketNoSchema` before it is used
+(SEC-015 class), the request body passes through `personalDataEraseRequestSchema` with
+a trimmed 5–1000-character bound before anything is written, every lookup and update
+binds its values through drizzle, the export answers no `status_token` and no event
+payload (the erasure payload carries the reason length only, never the reason text), the
+erased event is inserted (never updated or deleted) so the append-only trigger keeps it,
+the idempotency probe reads the same event type in the same transaction and neither the
+answer nor a log line carries a contact value. No new finding.
+
 Findings never live in the repository. They go into **`.security/findings.md`**
 (gitignored via `.gitignore` line `.security/`). Tracked files, commit messages and
 work-package titles never carry the location or description of an open gap.
@@ -122,6 +139,7 @@ Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
 | POST | /api/v1/tickets/:ticketNo/comments | ticket.comment |
 | GET | /api/v1/tickets/:ticketNo/photos/:photoId | ticket.read |
 | DELETE | /api/v1/tickets/:ticketNo | ticket.delete |
+| GET/POST | /api/v1/privacy/tickets/:ticketNo/{export,erase} | user.write (apps/api/src/privacy/routes.ts) |
 | POST | /api/v1/tickets/:ticketNo/pause\|resume | ticket.review |
 | POST | /api/v1/tickets/:ticketNo/{review,work-order,assign,offer,claim,accept,decline,acknowledge,close,reopen,cancel,uncancel} | workflow routes, ticket.* per route |
 | POST | /api/v1/public/tickets | public report (IP+QR-token throttle) |
