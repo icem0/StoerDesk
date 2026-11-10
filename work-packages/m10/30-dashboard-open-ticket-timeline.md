@@ -1,7 +1,7 @@
 # WP-M10-30: the dashboard snapshot carries the timeline and the last event
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-19, WP-M9-05
 phase: 10
 milestone: m10

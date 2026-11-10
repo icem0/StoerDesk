@@ -138,16 +138,19 @@ Percentiles remain a statistics-page concern (`specs/12-stats.md` §12.2).
   `FAILED` row newer than its last `SENT` row is shown as failing; the admin
   warning of `PLAN.md` §12 uses that flag.
 
-## 11.5 Burning now
+## 11.5 The open tickets
 
 The list shows `ticketNo`, object name, status, priority and the absolute
 deadline; the web renders the remaining or overdue time and the mini timeline of
-`specs/05-timeline.md` §5.4 from the same fields. It links to the ticket detail.
+`specs/05-timeline.md` §5.4 from the same fields. Every row carries the last
+entry of the history of the ticket (§11.2). The start page links every row to
+the ticket detail; the wall display has no session and shows the rows without a
+link.
 
-The list belongs to the wall display (§11.7), not to the start page: the
-dashboard of the office ends with the tiles and the counter, the deadlines live
-in the ticket list behind the tiles (WP-M9-19). Every tile of the start page is
-one link over its whole area.
+The list belongs to the wall display (§11.7) **and** to the start page: both
+show the same blocks — the statistics first, then the open tickets (WP-M10-31,
+WP-M10-32). The category is called "offene Tickets"; the wording "Brennt jetzt"
+is gone. Every tile of the start page is one link over its whole area.
 
 ## 11.6 Live updates (Server-Sent Events)
 

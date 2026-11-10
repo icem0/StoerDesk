@@ -43,12 +43,14 @@
       "failing": "Zustellung gestört"
     },
     "tv": {
-      "notFound": "Dieser Wandmonitor ist nicht eingerichtet oder wurde zurückgesetzt.",
-      "onCallUnstaffed": "Bereitschaft nicht besetzt",
-      "burningNow": "Brennt jetzt",
+      "notFound": "Dieser Wandmonitor ist nicht eingerichtet oder wurde zurückgesetzt."
+    },
+    "openTickets": {
+      "title": "Offene Tickets",
       "empty": "Keine offenen Meldungen",
       "remaining": "noch {{hours}} h",
-      "overdue": "{{hours}} h überfällig"
+      "overdue": "{{hours}} h überfällig",
+      "lastEvent": "Letztes Ereignis: {{label}} · {{time}}"
     },
     "loading": "Dashboard wird geladen …",
     "loadError": "Das Dashboard konnte nicht geladen werden."

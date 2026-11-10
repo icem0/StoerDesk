@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- One list of the open tickets for the dashboard and the wall display (WP-M10-31): the new
+  `OpenTickets` component renders the object, the ticket number, the status, the priority,
+  the mini timeline and the last entry of the history of every open ticket. The wall
+  display uses it and loses its on-call panel, so both pages show the same blocks. The
+  wording "Brennt jetzt" ("Burning now") is gone — the category is called "offene Tickets"
+  ("Open tickets") in `de` and `en`.
 - The open tickets of the dashboard carry the mini timeline and the last event (WP-M10-30):
   every row of the snapshot's `burningNow` list answers `timelineState`, `percent` and
   `remainingMs` — computed with the shared `computeTicketTimeline` and the same inputs as

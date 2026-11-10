@@ -1,7 +1,7 @@
 # WP-M10-31: one list of the open tickets for the dashboard and the wall display
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-30
 phase: 10
 milestone: m10
@@ -26,7 +26,7 @@ files-write:
 
 interfaces:
 
-- `OpenTickets({ rows, now })` — the list of the open tickets with the mini timeline and the last event
+- `OpenTickets({ rows, generatedAt, linkRows })` — the list of the open tickets with the mini timeline and the last event
 - `dashboard.openTickets.*` — the labels of the list in `de` and `en`
 
 ## Task
