@@ -11,6 +11,15 @@ areas A and B re-checked in full (91 routes, no new route in the diff), C–K re
 only for the files the diff touched. Every finding SEC-004 … SEC-020 of the repeat pass
 now resolves against a shipped fix; `.security/findings.md` carries the FIXED status.
 
+CSV-import pass: 2026-11-10, diff `6a94e62..` (WP-M10-12, 5 files) — areas A and B
+re-checked in full (still 91 routes, the package adds a service and shared contracts
+only, no route), C–K re-checked for `apps/api/src/objects/import.ts`,
+`packages/shared/src/schemas/object-import.ts` and `packages/shared/src/schemas/index.ts`:
+the byte and row limits are enforced before parsing, the object-number lookup reads
+only the object numbers of the file through `lower(object_no)` with drizzle-bound
+values, every row passes through the existing create-object contract and the commit
+runs in one transaction with per-row `{ code, params }` errors. No new finding.
+
 Findings never live in the repository. They go into **`.security/findings.md`**
 (gitignored via `.gitignore` line `.security/`). Tracked files, commit messages and
 work-package titles never carry the location or description of an open gap.

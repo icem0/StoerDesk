@@ -1,7 +1,7 @@
 # WP-M10-12: CSV parsing, mapping and preview service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-03
 phase: 10
 milestone: m10
