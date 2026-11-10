@@ -162,6 +162,7 @@
         "high": "Hoch",
         "critical": "Kritisch"
       },
+      "priorityOption": "{{priority}} ({{hours}}h)",
       "errors": {
         "systemNotFound": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
         "invalidRequest": "Bitte prüfen Sie die Eingaben.",

@@ -178,6 +178,10 @@ function stubInternalForm(titleEnabled: boolean) {
         return Response.json({ titleEnabled })
       }
 
+      if (path.includes('/v1/settings/deadline-hours')) {
+        return Response.json({ low: 168, normal: 72, high: 24, critical: 8 })
+      }
+
       if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
         bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
 
@@ -392,6 +396,16 @@ describe('InternalCreatePage', () => {
     // title the installation does not keep.
     expect(screen.queryByLabelText('Titel')).toBeNull()
     expect(screen.queryByDisplayValue('Rauchmelder 2. OG')).toBeNull()
+  })
+
+  it('shows the configured deadline next to every priority', async () => {
+    stubInternalForm(false)
+    renderPage()
+
+    await screen.findByRole('option', { name: 'Niedrig (168h)' })
+    await screen.findByRole('option', { name: 'Normal (72h)' })
+    await screen.findByRole('option', { name: 'Hoch (24h)' })
+    await screen.findByRole('option', { name: 'Kritisch (8h)' })
   })
 
   it('offers the title field and sends it while the switch is on', async () => {

@@ -162,6 +162,7 @@
         "high": "High",
         "critical": "Critical"
       },
+      "priorityOption": "{{priority}} ({{hours}}h)",
       "errors": {
         "systemNotFound": "The chosen system does not belong to this object.",
         "invalidRequest": "Please check your inputs.",

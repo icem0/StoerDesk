@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   externalTypeCategory,
+  type DeadlineHours,
   type InternalCreateTicketRequest,
   type InternalCreateTicketResponse,
   type StandardTextLocale,
@@ -85,6 +86,22 @@ function useTitleSwitch() {
   })
 
   return query.data?.titleEnabled === true
+}
+
+/**
+ * Effective deadline hours per priority (WP-M6-17, WP-M6-18).
+ *
+ * The create form labels every priority with the configured deadline, e.g.
+ * `Normal (72h)`. The route is guarded by `ticket.create`, so the form's users
+ * can read it without `settings.read`. Until the answer arrives the options keep
+ * their plain priority name instead of showing a guessed default.
+ */
+function useDeadlineHours() {
+  return useQuery<DeadlineHours>({
+    queryKey: ['deadline-hours'],
+    queryFn: () => apiFetch<DeadlineHours>('/v1/settings/deadline-hours'),
+    retry: false,
+  })
 }
 
 /**
@@ -269,6 +286,19 @@ export function InternalCreatePage() {
   const activeCatalog = catalog.filter((entry) => entry.archived === false)
   /** WP-M9-25: the title field exists only while the branding switch is on. */
   const titleEnabled = useTitleSwitch()
+  /** WP-M6-18: every priority option carries its configured deadline. */
+  const deadlineHours = useDeadlineHours().data
+
+  function priorityLabel(
+    priority: 'low' | 'normal' | 'high' | 'critical',
+    label: string,
+  ): string {
+    const hours = deadlineHours?.[priority]
+
+    return hours === undefined
+      ? label
+      : t('internal.create.priorityOption', { priority: label, hours })
+  }
 
   function toggleFaultKey(key: string) {
     setFaultKeys((current) =>
@@ -429,10 +459,18 @@ export function InternalCreatePage() {
               setPriority(event.target.value as 'low' | 'normal' | 'high' | 'critical')
             }
           >
-            <option value="low">{t('internal.create.priority.low')}</option>
-            <option value="normal">{t('internal.create.priority.normal')}</option>
-            <option value="high">{t('internal.create.priority.high')}</option>
-            <option value="critical">{t('internal.create.priority.critical')}</option>
+            <option value="low">
+              {priorityLabel('low', t('internal.create.priority.low'))}
+            </option>
+            <option value="normal">
+              {priorityLabel('normal', t('internal.create.priority.normal'))}
+            </option>
+            <option value="high">
+              {priorityLabel('high', t('internal.create.priority.high'))}
+            </option>
+            <option value="critical">
+              {priorityLabel('critical', t('internal.create.priority.critical'))}
+            </option>
           </select>
         </div>
 
