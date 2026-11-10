@@ -206,6 +206,7 @@
     },
     "events": {
       "created": "Meldung eingegangen",
+      "reported": "Meldung gemeldet",
       "work_order_set": "Auftrag angelegt",
       "review_started": "In Prüfung gesetzt",
       "assigned": "Zugewiesen",
@@ -250,6 +251,7 @@
     "overdue": "Seit {{hours}} Std. überfällig",
     "stopped": "Bei Quittierung angehalten",
     "reportedAtLabel": "Gemeldet am",
+    "capturedAtLabel": "Erfasst am",
     "deadlineLabel": "Reaktionszeit bis",
     "scaleSuffix": "Std"
   },

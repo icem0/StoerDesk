@@ -206,6 +206,7 @@
     },
     "events": {
       "created": "Report received",
+      "reported": "Reported",
       "work_order_set": "Work order created",
       "review_started": "Set in review",
       "assigned": "Assigned",
@@ -250,6 +251,7 @@
     "overdue": "Overdue for {{hours}} h",
     "stopped": "Stopped at acknowledgement",
     "reportedAtLabel": "Reported on",
+    "capturedAtLabel": "Recorded on",
     "deadlineLabel": "Response by",
     "scaleSuffix": "h"
   },

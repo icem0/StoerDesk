@@ -25,6 +25,8 @@ const MARKER_CLASS =
 
 type TicketTimelineProps = {
   reportedAt: string
+  /** Server capture time; falls back to `reportedAt` for callers without it. */
+  receivedAt?: string
   deadlineAt: string
   stoppedAt: string | null
   markers: readonly { type: string; at: string }[]
@@ -54,6 +56,7 @@ function scaleTicks(reportedMs: number, deadlineMs: number): number[] {
 
 export function TicketTimeline({
   reportedAt,
+  receivedAt,
   deadlineAt,
   stoppedAt,
   markers,
@@ -109,7 +112,9 @@ export function TicketTimeline({
         ? t('timeline.overdue', { hours: hoursOver })
         : t('timeline.remaining', { hours: hoursLeft })
 
+  const capturedAt = receivedAt ?? reportedAt
   const reportedTime = reportedMs !== undefined ? formatTime(reportedAt) : ''
+  const capturedTime = parseMs(capturedAt) !== undefined ? formatTime(capturedAt) : ''
   const deadlineTime = deadlineMs !== undefined ? formatTime(deadlineAt) : ''
 
   return (
@@ -121,6 +126,10 @@ export function TicketTimeline({
       <div className="flex items-baseline gap-2 text-xs text-slate-400 mb-1">
         <span className="font-medium">{t('timeline.reportedAtLabel')}</span>
         <span>{reportedTime}</span>
+      </div>
+      <div className="flex items-baseline gap-2 text-xs text-slate-400 mb-1">
+        <span className="font-medium">{t('timeline.capturedAtLabel')}</span>
+        <span>{capturedTime}</span>
       </div>
       <div className="flex items-baseline gap-2 text-xs text-slate-400 justify-end mb-2">
         <span className="font-medium">{t('timeline.deadlineLabel')}</span>

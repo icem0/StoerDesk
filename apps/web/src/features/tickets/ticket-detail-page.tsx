@@ -282,6 +282,17 @@ export function TicketDetailPage() {
   const events = ticketQuery.data?.events ?? []
   const photos = ticketQuery.data?.photos ?? []
   const timelineData = ticketQuery.data!.timeline
+  const createdEvent = events.find((event) => event.type === 'created')
+  const reportedMs = Date.parse(ticket.reportedAt)
+  const createdMs =
+    createdEvent === undefined ? Number.NaN : Date.parse(createdEvent.createdAt)
+  /** A backdated report gets its own marker at the start of the bar (WP-M2-98d). */
+  const timelineMarkers =
+    Number.isFinite(reportedMs) &&
+    Number.isFinite(createdMs) &&
+    Math.abs(createdMs - reportedMs) > 60_000
+      ? [{ type: 'reported', at: ticket.reportedAt }, ...timelineData.markers]
+      : timelineData.markers
 
   const sourceLabels: Record<string, string> = {
     QR: t('detail.source.qr'),
@@ -891,9 +902,10 @@ export function TicketDetailPage() {
       {/* Timeline on top */}
       <TicketTimeline
         reportedAt={timelineData.reportedAt}
+        receivedAt={ticket.receivedAt}
         deadlineAt={timelineData.deadlineAt}
         stoppedAt={timelineData.stoppedAt}
-        markers={timelineData.markers}
+        markers={timelineMarkers}
         deadlineHours={Math.max(1, Math.round(timelineData.totalMs / 3_600_000))}
         scaleSuffix={t('timeline.scaleSuffix')}
       />

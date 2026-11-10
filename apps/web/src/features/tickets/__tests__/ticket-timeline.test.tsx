@@ -48,6 +48,33 @@ describe('TicketTimeline', () => {
     expect(marker?.getAttribute('title')).toContain('Meldung eingegangen')
   })
 
+  it('shows the capture time next to the report time of a backdated report', () => {
+    const reportedAt = at(-20)
+    const receivedAt = at(0)
+
+    const rendered = render(
+      <I18nextProvider i18n={i18n}>
+        <TicketTimeline
+          reportedAt={reportedAt}
+          receivedAt={receivedAt}
+          deadlineAt={at(52)}
+          stoppedAt={null}
+          markers={[
+            { type: 'reported', at: reportedAt },
+            { type: 'created', at: receivedAt },
+          ]}
+          deadlineHours={72}
+          scaleSuffix="Std"
+        />
+      </I18nextProvider>,
+    )
+
+    expect(screen.getByText('Erfasst am')).toBeTruthy()
+    const marker = rendered.container.querySelector('[data-testid="timeline-marker"]')
+    expect(markerLeft(marker as Element)).toBeCloseTo(0, 5)
+    expect(marker?.getAttribute('title')).toContain('Meldung gemeldet')
+  })
+
   it('puts the milestone markers on the bar and the report on the start point', () => {
     const reportedAt = at(-2)
     const deadlineAt = at(70)

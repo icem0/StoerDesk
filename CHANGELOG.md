@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The ticket timeline shows `Gemeldet am` and `Erfasst am` (WP-M2-98d): a backdated
+  report draws a `reported` marker at the start of the bar while the `created` marker
+  stays at the server capture time, so both times are visible; a normal report keeps
+  the single `created` marker.
 - The internal create form at `/tickets/create` groups the reporter fields
   (WP-M2-98c): a `Meldender` section with the internal/external radio, the active-user
   picker and name/phone/e-mail, a `Meldezeit` field defaulting to now and accepting past
