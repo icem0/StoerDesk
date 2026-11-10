@@ -1224,6 +1224,23 @@ boolean column, not null with default false, and a partial `reported_at` index f
 statistics reads share the typed column. The ticket-table integration test proves
 default false, explicit true, not-null rejection and the metadata of the column.
 
+**Statistics services (WP-M9-10).** The statistics of §13 are read from the
+`stats_tickets` and `stats_ticket_faults` views of WP-M9-03 (migration
+`0025_stats_views` — WP-M9-03 numbered it `0024` before WP-M9-27 took
+`0024_ticket_purges_append_only`). `apps/api/src/stats/filters.ts` turns the shared
+filter of `specs/12-stats.md` §12.1 into a SQL predicate: the local days `from` …
+`to` of `Europe/Berlin` become UTC instants with `date-fns-tz`, so a DST day keeps
+its real length, `objectNo` matches case-insensitively, `systemType`, `priority` and
+`technician` match exactly, and test and suspected-spam tickets stay excluded unless
+the caller opts in. `apps/api/src/stats/reaction-times.ts` answers §12.2 with one
+aggregate per phase (count, median, average, p90 in whole minutes) and reports the
+paused tickets and the pause minutes next to the phases, never subtracted from them
+(ADR-0012 decision 8). `apps/api/src/stats/frequency.ts` answers §12.3: the bucket
+series (`day`, `week`, `month`, a week starts on Monday) is computed on the Berlin
+local date of `reported_at` and zero-filled, and the `bySystemType`, `byFaultTemplate`
+and `bySource` groupings count the same filtered set. The routes and the CSV export
+follow in WP-M9-11 and WP-M9-12.
+
 **Out-of-band phase 9 — the office view of the shipped app (WP-M9-19 … WP-M9-22).** The
 office asked for a leaner dashboard and a denser ticket list. The work does not wait for
 the phase-9 chain, because it changes the product the users see today and not the

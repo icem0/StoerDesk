@@ -31,6 +31,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The statistics services of the phase 9 read the tickets and answer the reaction times and
+  the frequency (WP-M9-10): `apps/api/src/stats/filters.ts` turns the shared statistics filter
+  into a SQL predicate over the `stats_tickets` view — the local days `from` … `to` of
+  `Europe/Berlin` become UTC instants with `date-fns-tz`, so a DST day keeps its real length,
+  `objectNo` matches case-insensitively, `systemType`, `priority` and `technician` match
+  exactly, and test and suspected-spam tickets stay excluded unless the caller opts in.
+  `apps/api/src/stats/reaction-times.ts` computes one aggregate per phase (`review`,
+  `firstResponse`, `acknowledge`) with the count, the median, the average and the p90 in whole
+  minutes, and reports the paused tickets and the pause minutes next to the phases without
+  subtracting them (ADR-0012 decision 8). `apps/api/src/stats/frequency.ts` answers the bucket
+  series (`day`, `week`, `month` — a week starts on Monday) on the Berlin local date of
+  `reported_at`; an empty bucket is answered with `total: 0`, so the chart has a continuous
+  axis, and the `bySystemType`, `byFaultTemplate` and `bySource` groupings count the same
+  filtered set. The routes, the CSV export and the statistics page follow in WP-M9-11 and
+  WP-M9-12.
+
 - The internal creation form honours the branding title switch (WP-M9-25): the form reads
   `GET /api/v1/settings/title-switch` before it renders and shows its title field only while
   `titleEnabled` is on, so the office never fills in a title the installation does not keep;

@@ -502,7 +502,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M9-07  | dashboard SSE stream                                                | done                    | yes     |
 | WP-M9-08  | dashboard settings                                                  | done                    | yes     |
 | WP-M9-09  | TV display route                                                    | done                    | yes     |
-| WP-M9-10  | statistics: reaction times and frequency                           | planned                 | yes     |
+| WP-M9-10  | statistics: reaction times and frequency                           | done                    | yes     |
 | WP-M9-11  | statistics: objects and compliance                                 | planned                 | yes     |
 | WP-M9-12  | statistics routes                                                   | planned                 | yes     |
 | WP-M9-13  | statistics CSV export                                               | planned                 | yes     |

@@ -22,6 +22,7 @@
     "@stoerdesk/shared": "*",
     "altcha-lib": "^1.4.1",
     "argon2": "^0.45.1",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^18.0.9",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.7",
