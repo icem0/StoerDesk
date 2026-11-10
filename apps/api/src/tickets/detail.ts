@@ -134,9 +134,9 @@ export async function getTicketDetail(
       .where(inArray(users.id, [...actorUserIds]))
 
     for (const row of actorRows) {
-      actorNames.set(row.id, row.email)
       const fullName = `${row.givenName ?? ''} ${row.familyName ?? ''}`.trim()
       if (fullName !== '') {
+        actorNames.set(row.id, fullName)
         actorFullNames.set(row.id, fullName)
       }
     }
@@ -220,9 +220,11 @@ export async function getTicketDetail(
       id: e.id,
       type: e.type,
       actorKind: e.actorKind,
-      actorName: e.actorUserId !== null && e.actorUserId !== undefined
-        ? (actorNames.get(e.actorUserId) ?? null)
-        : null,
+      actorName: e.actorKind === 'public'
+        ? (ticketRow.reporterName ?? null)
+        : e.actorUserId !== null && e.actorUserId !== undefined
+          ? (actorNames.get(e.actorUserId) ?? null)
+          : null,
       payload: e.payload as Record<string, unknown>,
       createdAt: e.createdAt.toISOString(),
     })),
