@@ -42,11 +42,23 @@ Every fired rule writes exactly one append-only event:
   "payload": {
     "rule": "deadline_exceeded",
     "level": "manager",
+    "label": { "de": "Frist überschritten", "en": "Deadline exceeded" },
+    "description": {
+      "de": "Bearbeitungsfrist überschritten",
+      "en": "Processing deadline exceeded"
+    },
     "thresholdAt": "…",
     "deadlineAt": "…"
   }
 }
 ```
+
+`label` and `description` are the name and the reason of the stage. Both texts are
+editable per stage in the deadline settings (`ticket.escalation.<rule>.label` and
+`.description` hold the same `{ de, en }` shape); the defaults are the resource
+`ESCALATION_STAGE_TEXTS` of the shared package. The event carries the texts of the
+moment the stage fired, so the history keeps the wording of that time, and the web app
+shows the language of the interface.
 
 `level` names the addressee of the rule so phase 7 can route it:
 `office`, `group`, `assignee` or `manager`. The event is the history entry the

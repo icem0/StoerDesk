@@ -1420,6 +1420,17 @@ addition. Its follow-up WP-M10-19b renders the block on the start page below the
 (one labelled line per average, `keine Daten` for a `null` average, no max/p90/median line)
 with the labels under `dashboard.evaluations.*` in `de` and `en`.
 
+**Escalation stage texts (WP-M6-19 … WP-M6-19c, out of band after phase 6).** The office
+asked for a readable reason in the ticket history: an `escalated` event named only the
+rule, so it was not obvious *why* a ticket had escalated. The name and the description of
+every escalation stage are now editable per stage in the deadline administration, in German
+and in English, next to the reaction minutes they belong to. The shared package ships the
+default texts (`ESCALATION_STAGE_TEXTS`), the installation replaces them per stage
+(`ticket.escalation.<rule>.label` and `.description`), and the `escalated` event carries the
+effective texts in both languages — so the history keeps the wording of the moment the stage
+fired and shows `Eskalation: <Name>` plus the description in the language of the interface.
+A stage whose text equals the shipped default is not stored, so the default stays changeable.
+
 ## 17. Work package rules for small models
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Configurable escalation stage names and descriptions (WP-M6-19, WP-M6-19b,
+  WP-M6-19c): the name and the description of every escalation stage are editable in the
+  deadline administration next to the reaction minutes they belong to, in German and in
+  English. The `escalated` event carries the texts of the stage in both languages, so the
+  ticket history says *why* a ticket escalated and not only *that* it escalated: it shows
+  `Eskalation: <Name>` and the description below it, in the language of the interface.
+  The defaults ship with the shared package (`ESCALATION_STAGE_TEXTS`); a stage whose
+  text equals the default is not stored, so the shipped wording stays changeable.
 - Dashboard evaluation block on the start page (WP-M10-19b): below the tiles the page
   shows the four averages of the snapshot's `evaluations` block — review, first response,
   acknowledge and processing time — as whole minutes, `keine Daten` for a `null` average,

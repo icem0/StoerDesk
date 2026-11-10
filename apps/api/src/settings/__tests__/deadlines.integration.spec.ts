@@ -11,7 +11,7 @@ import * as schema from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { buildServer } from '../../index'
 import { readDeadlineHours } from '../../tickets/deadline'
-import { readOverrides } from '../../tickets/escalation'
+import { readOverrides, readStageTexts } from '../../tickets/escalation'
 
 const testDatabase = await openTestDatabase()
 
@@ -22,9 +22,19 @@ if (testDatabase.status === 'unavailable') {
 const { users, roles, userRoles, settings } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
+type StageText = { label: { de: string; en: string }; description: { de: string; en: string } }
+type StageTexts = {
+  new_without_review: StageText
+  work_order_without_distribution: StageText
+  offered_without_claim: StageText
+  assigned_without_accept: StageText
+  deadline_80_percent: StageText
+  deadline_exceeded: StageText
+}
 type DeadlineBody = {
   hours: Record<string, number>
   reactionMinutes: Record<string, { standard: number; critical: number }>
+  stageTexts: StageTexts
 }
 
 const defaults: DeadlineBody = {
@@ -35,6 +45,41 @@ const defaults: DeadlineBody = {
     offered_without_claim: { standard: 20, critical: 10 },
     assigned_without_accept: { standard: 15, critical: 15 },
   },
+  stageTexts: {
+    new_without_review: {
+      label: { de: 'Prüfung', en: 'Review' },
+      description: { de: 'Meldung noch nicht geprüft', en: 'Report not reviewed yet' },
+    },
+    work_order_without_distribution: {
+      label: { de: 'Arbeitsauftrag', en: 'Work order' },
+      description: {
+        de: 'Arbeitsauftrag noch nicht erstellt',
+        en: 'Work order not created yet',
+      },
+    },
+    offered_without_claim: {
+      label: { de: 'Übernahme', en: 'Claim' },
+      description: { de: 'Angebot noch nicht übernommen', en: 'Offer not claimed yet' },
+    },
+    assigned_without_accept: {
+      label: { de: 'Annahme', en: 'Acceptance' },
+      description: { de: 'Auftrag noch nicht angenommen', en: 'Work order not accepted yet' },
+    },
+    deadline_80_percent: {
+      label: { de: 'Frist zu 80 %', en: '80 % of the deadline' },
+      description: {
+        de: '80 % der Bearbeitungsfrist erreicht',
+        en: '80 % of the processing deadline reached',
+      },
+    },
+    deadline_exceeded: {
+      label: { de: 'Frist überschritten', en: 'Deadline exceeded' },
+      description: {
+        de: 'Bearbeitungsfrist überschritten',
+        en: 'Processing deadline exceeded',
+      },
+    },
+  },
 }
 
 const changed: DeadlineBody = {
@@ -44,6 +89,38 @@ const changed: DeadlineBody = {
     work_order_without_distribution: { standard: 40, critical: 35 },
     offered_without_claim: { standard: 30, critical: 12 },
     assigned_without_accept: { standard: 20, critical: 18 },
+  },
+  stageTexts: {
+    new_without_review: {
+      label: { de: 'Sichtung', en: 'Triage' },
+      description: { de: 'Sichtung noch nicht erfolgt', en: 'Triage not done yet' },
+    },
+    work_order_without_distribution: {
+      label: { de: 'Disposition', en: 'Dispatch' },
+      description: { de: 'Disposition noch nicht erfolgt', en: 'Dispatch not done yet' },
+    },
+    offered_without_claim: {
+      label: { de: 'Übernahme', en: 'Claim' },
+      description: { de: 'Angebot noch nicht übernommen', en: 'Offer not claimed yet' },
+    },
+    assigned_without_accept: {
+      label: { de: 'Annahme', en: 'Acceptance' },
+      description: { de: 'Auftrag noch nicht angenommen', en: 'Work order not accepted yet' },
+    },
+    deadline_80_percent: {
+      label: { de: 'Frist zu 80 %', en: '80 % of the deadline' },
+      description: {
+        de: '80 % der Bearbeitungsfrist erreicht',
+        en: '80 % of the processing deadline reached',
+      },
+    },
+    deadline_exceeded: {
+      label: { de: 'Frist überschritten', en: 'Deadline exceeded' },
+      description: {
+        de: 'Bearbeitungsfrist überschritten',
+        en: 'Processing deadline exceeded',
+      },
+    },
   },
 }
 
@@ -202,6 +279,33 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(hours).toEqual(changed.hours)
       expect(overrides.new_without_review).toEqual({ minutes: 25, criticalMinutes: 7 })
+    })
+
+    it('stores a stage text that differs from the default and drops an unchanged one', async () => {
+      await putDeadlines(cookies['admin'], changed)
+
+      const rows = await db
+        .select({ key: settings.key, value: settings.value })
+        .from(settings)
+        .where(like(settings.key, 'ticket.escalation.%'))
+
+      const byKey = Object.fromEntries(rows.map((row) => [row.key, row.value]))
+
+      expect(byKey['ticket.escalation.new_without_review.label']).toEqual(
+        changed.stageTexts.new_without_review.label,
+      )
+      expect(byKey['ticket.escalation.new_without_review.description']).toEqual(
+        changed.stageTexts.new_without_review.description,
+      )
+      expect(byKey['ticket.escalation.deadline_exceeded.label']).toBeUndefined()
+      expect(byKey['ticket.escalation.deadline_80_percent.description']).toBeUndefined()
+    })
+
+    it('reads the effective stage texts back, defaults included', async () => {
+      const texts = await readStageTexts(db)
+
+      expect(texts.new_without_review).toEqual(changed.stageTexts.new_without_review)
+      expect(texts.deadline_exceeded).toEqual(defaults.stageTexts.deadline_exceeded)
     })
 
     it('rejects an out-of-range value with 400 invalid_request and the field path', async () => {

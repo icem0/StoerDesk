@@ -239,6 +239,16 @@ signal → matrix → ntfy → email → telegram → webpush. The PWA push regi
 in the web app, `notification_permissions` and the admin failure warning of §12), per-event
 channel selection and `pushUrl` as an escalation parameter stay unimplemented.
 
+**WP-M6-19** (`19-escalation-stage-texts-api.md`) makes the escalation stage texts configurable:
+the shared package ships the default name and description of every stage in `de` and `en`
+(`ESCALATION_STAGE_TEXTS`), the installation replaces them per stage in the deadline settings
+(`ticket.escalation.<rule>.label` and `.description`, both a `{ de, en }` object), and the
+`escalated` event carries the effective texts in its payload — so the ticket history says *why*
+the ticket escalated and not only *that* it escalated. **WP-M6-19b**
+(`19b-escalation-stage-texts-admin.md`) puts the texts next to the reaction minutes they belong
+to on the deadline page, **WP-M6-19c** (`19c-escalation-stage-texts-history.md`) shows them in
+the history as `Eskalation: <name>` plus the description, in the language of the interface.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -478,6 +488,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M6-16  | `/admin/deadlines` route and the available menu entry               | done                    | yes     |
 | WP-M6-17  | effective deadline hours readable with `ticket.create`             | done                    | yes     |
 | WP-M6-18  | priority select shows the configured deadline                      | done                    | yes     |
+| WP-M6-19  | configurable escalation stage names and descriptions (API)         | done                    | yes     |
+| WP-M6-19b | deadline page edits the escalation stage names                    | done                    | yes     |
+| WP-M6-19c | ticket history shows the escalation reason                         | done                    | yes     |
 | WP-M7-01  | ntfy channel adapter and its env wiring                             | done                    | yes     |
 | WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
 | WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |

@@ -204,7 +204,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(200)
 
       const body = response.json<{
-        events: Array<{ type: string; payload: { rule: string; thresholdAt: string } }>
+        events: Array<{
+          type: string
+          payload: { rule: string; thresholdAt: string; label: { de: string; en: string } }
+        }>
       }>()
 
       const event = body.events.find(
@@ -213,6 +216,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(event).toBeDefined()
       expect(event!.payload.thresholdAt).toBeDefined()
+      expect(event!.payload.label.de).toBe('Frist überschritten')
+      expect(event!.payload.label.en).toBe('Deadline exceeded')
     })
   },
 )

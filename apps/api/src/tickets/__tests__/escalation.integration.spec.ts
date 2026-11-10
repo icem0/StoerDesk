@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, like } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -16,8 +16,14 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped escalation integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, ticketEvents, ticketPauses, tickets } = schema
+const { objects, settings, ticketEvents, ticketPauses, tickets } = schema
 const MINUTE = 60 * 1000
+
+type EscalationPayload = {
+  rule: string
+  label: { de: string; en: string }
+  description: { de: string; en: string }
+}
 
 describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integration)', () => {
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
@@ -55,6 +61,18 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     return events
       .filter((event) => event.type === 'escalated')
       .map((event) => (event.payload as { rule: string }).rule)
+  }
+
+  async function escalationPayloads(ticketId: string): Promise<EscalationPayload[]> {
+    const events = await db
+      .select({ type: ticketEvents.type, payload: ticketEvents.payload })
+      .from(ticketEvents)
+      .where(eq(ticketEvents.ticketId, ticketId))
+      .orderBy(asc(ticketEvents.createdAt))
+
+    return events
+      .filter((event) => event.type === 'escalated')
+      .map((event) => event.payload as EscalationPayload)
   }
 
   beforeAll(async () => {
@@ -131,5 +149,41 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       'deadline_80_percent',
       'deadline_exceeded',
     ])
+  })
+
+  it('writes the configured stage name and description into the event', async () => {
+    await db.insert(settings).values([
+      {
+        key: 'ticket.escalation.new_without_review.label',
+        value: { de: 'Sichtung', en: 'Triage' },
+      },
+      {
+        key: 'ticket.escalation.new_without_review.description',
+        value: { de: 'Sichtung noch nicht erfolgt', en: 'Triage not done yet' },
+      },
+    ])
+
+    try {
+      const ticket = await createTicket({
+        status: 'NEW',
+        priority: 'critical',
+        reportedAt: new Date(now.getTime() - 6 * MINUTE),
+        deadlineAt: new Date(now.getTime() + 2 * 60 * MINUTE),
+      })
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const payload = (await escalationPayloads(ticket.id)).find(
+        (entry) => entry.rule === 'new_without_review',
+      )
+
+      expect(payload?.label).toEqual({ de: 'Sichtung', en: 'Triage' })
+      expect(payload?.description).toEqual({
+        de: 'Sichtung noch nicht erfolgt',
+        en: 'Triage not done yet',
+      })
+    } finally {
+      await db.delete(settings).where(like(settings.key, 'ticket.escalation.%'))
+    }
   })
 })

@@ -1,8 +1,12 @@
 import fp from 'fastify-plugin'
 
+import { eq } from 'drizzle-orm'
+
 import {
   deadlineHoursSchema,
   deadlineSettingsSchema,
+  ESCALATION_RULES,
+  ESCALATION_STAGE_TEXTS,
   escalationRulesFor,
   PERMISSIONS,
   TICKET_PRIORITIES,
@@ -12,15 +16,16 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { settings } from '../db/schema'
 import { readDeadlineHours } from '../tickets/deadline'
-import { readOverrides } from '../tickets/escalation'
+import { readOverrides, readStageTexts } from '../tickets/escalation'
 
 /**
  * Deadline and reaction settings (`specs/05-timeline.md` §5.1, ADR-0008,
  * WP-M6-14).
  *
  * `GET /api/v1/settings/deadlines` — `settings.read`, answers the effective values:
- * the deadline hours per priority and the four reaction minutes (standard and
- * critical), defaults where no row exists.
+ * the deadline hours per priority, the four reaction minutes (standard and
+ * critical) and the name and description of every escalation stage, defaults
+ * where no row exists.
  * `GET /api/v1/settings/deadline-hours` — `ticket.create`, answers only the
  * effective deadline hours. Everyone who may create a ticket holds that
  * permission, including `reporter_internal` without `settings.read`; the create
@@ -29,7 +34,10 @@ import { readOverrides } from '../tickets/escalation'
  * transaction. The values are stored as the bare numbers that `deadline.ts` and
  * the escalation scan already read: `ticket.deadline_hours.<priority>`,
  * `ticket.escalation.<rule>.minutes` and `ticket.escalation.<rule>.critical_minutes`.
- * A malformed body answers `400 invalid_request`.
+ * The stage texts are stored as `{ de, en }` under
+ * `ticket.escalation.<rule>.label` and `ticket.escalation.<rule>.description`; a
+ * text that equals the shipped default is not stored, so the default stays
+ * changeable. A malformed body answers `400 invalid_request`.
  *
  * Existing tickets keep the deadline stored at their creation; the values apply
  * to tickets created and rules evaluated after the change.
@@ -49,9 +57,10 @@ function minutesOf(thresholdMs: number): number {
 }
 
 async function readDeadlineSettings(database: Db): Promise<DeadlineSettings> {
-  const [hours, overrides] = await Promise.all([
+  const [hours, overrides, stageTexts] = await Promise.all([
     readDeadlineHours(database),
     readOverrides(database),
+    readStageTexts(database),
   ])
   const standard = escalationRulesFor('normal', overrides)
   const critical = escalationRulesFor('critical', overrides)
@@ -74,6 +83,7 @@ async function readDeadlineSettings(database: Db): Promise<DeadlineSettings> {
       critical: hours.critical,
     },
     reactionMinutes,
+    stageTexts,
   })
 }
 
@@ -121,11 +131,44 @@ export const settingsDeadlineRoutes = fp<{ database: Db }>(
           ]),
         ]
 
+        const stageRows = ESCALATION_RULES.flatMap((rule) => {
+          const text = body.stageTexts[rule.key]
+          const fallback = ESCALATION_STAGE_TEXTS[rule.key]
+
+          return [
+            {
+              key: `ticket.escalation.${rule.key}.label`,
+              value: text.label,
+              fallback: fallback.label,
+            },
+            {
+              key: `ticket.escalation.${rule.key}.description`,
+              value: text.description,
+              fallback: fallback.description,
+            },
+          ]
+        })
+
         await database.transaction(async (tx) => {
           for (const row of rows) {
             await tx
               .insert(settings)
               .values(row)
+              .onConflictDoUpdate({
+                target: settings.key,
+                set: { value: row.value, updatedAt: new Date() },
+              })
+          }
+
+          for (const row of stageRows) {
+            if (row.value.de === row.fallback.de && row.value.en === row.fallback.en) {
+              await tx.delete(settings).where(eq(settings.key, row.key))
+              continue
+            }
+
+            await tx
+              .insert(settings)
+              .values({ key: row.key, value: row.value })
               .onConflictDoUpdate({
                 target: settings.key,
                 set: { value: row.value, updatedAt: new Date() },

@@ -2,10 +2,13 @@ import { and, eq, inArray, like, notInArray } from 'drizzle-orm'
 
 import {
   computeTicketTimeline,
+  ESCALATION_RULES,
+  ESCALATION_STAGE_TEXTS,
   escalationRulesFor,
   type EscalationRule,
   type EscalationRuleKey,
   type EscalationRuleOverride,
+  type EscalationStageText,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -55,6 +58,8 @@ export class EscalationError extends Error {
 export type EscalationFired = {
   rule: EscalationRuleKey
   level: string
+  label: EscalationStageText['label']
+  description: EscalationStageText['description']
   thresholdAt: string
   deadlineAt: string
 }
@@ -135,6 +140,70 @@ export async function readOverrides(
   }
 
   return overrides
+}
+
+/** Reads a stored `{ de, en }` stage text; a malformed row falls back to the default. */
+function stageTextOf(value: unknown): { de: string; en: string } | undefined {
+  if (value === null || typeof value !== 'object') {
+    return undefined
+  }
+
+  const candidate = value as Record<string, unknown>
+
+  if (typeof candidate.de !== 'string' || typeof candidate.en !== 'string') {
+    return undefined
+  }
+
+  return { de: candidate.de, en: candidate.en }
+}
+
+/**
+ * The effective name and description of every escalation stage: the shipped
+ * defaults of `ESCALATION_STAGE_TEXTS`, replaced by the installation's own
+ * texts from `ticket.escalation.<rule>.label` and `.description`.
+ */
+export async function readStageTexts(
+  database: Db,
+): Promise<Record<EscalationRuleKey, EscalationStageText>> {
+  const texts = {} as Record<EscalationRuleKey, EscalationStageText>
+
+  for (const rule of ESCALATION_RULES) {
+    const fallback = ESCALATION_STAGE_TEXTS[rule.key]
+
+    texts[rule.key] = {
+      label: { ...fallback.label },
+      description: { ...fallback.description },
+    }
+  }
+
+  const rows = await database
+    .select({ key: settings.key, value: settings.value })
+    .from(settings)
+    .where(like(settings.key, 'ticket.escalation.%'))
+
+  for (const row of rows) {
+    const match = /^ticket\.escalation\.([a-z0-9_]+)\.(label|description)$/.exec(row.key)
+    const ruleKey = match?.[1]
+    const field = match?.[2]
+
+    if (ruleKey === undefined || field === undefined || !Object.hasOwn(texts, ruleKey)) {
+      continue
+    }
+
+    const rule = ruleKey as EscalationRuleKey
+    const text = stageTextOf(row.value)
+
+    if (text === undefined) {
+      continue
+    }
+
+    texts[rule] =
+      field === 'label'
+        ? { ...texts[rule], label: text }
+        : { ...texts[rule], description: text }
+  }
+
+  return texts
 }
 
 function hasEscalated(events: readonly EventRow[], rule: string, thresholdAt: string): boolean {
@@ -234,6 +303,7 @@ async function evaluateOne(
   events: readonly EventRow[],
   pauses: readonly PauseRow[],
   overrides: Partial<Record<EscalationRuleKey, EscalationRuleOverride>>,
+  texts: Record<EscalationRuleKey, EscalationStageText>,
   now: number,
 ): Promise<EscalationFired[]> {
   const fired: EscalationFired[] = []
@@ -245,9 +315,13 @@ async function evaluateOne(
       continue
     }
 
+    const text = texts[rule.key]
+
     const payload = {
       rule: rule.key,
       level: rule.level,
+      label: text.label,
+      description: text.description,
       thresholdAt: decision.thresholdAt,
       deadlineAt: ticket.deadlineAt.toISOString(),
     }
@@ -264,6 +338,8 @@ async function evaluateOne(
     fired.push({
       rule: rule.key,
       level: rule.level,
+      label: payload.label,
+      description: payload.description,
       thresholdAt: payload.thresholdAt,
       deadlineAt: payload.deadlineAt,
     })
@@ -300,10 +376,11 @@ export async function evaluateEscalations(
   }
 
   const ids = candidates.map((ticket) => ticket.id)
-  const [events, pauses, overrides] = await Promise.all([
+  const [events, pauses, overrides, texts] = await Promise.all([
     database.select().from(ticketEvents).where(inArray(ticketEvents.ticketId, ids)),
     database.select().from(ticketPauses).where(inArray(ticketPauses.ticketId, ids)),
     readOverrides(database),
+    readStageTexts(database),
   ])
 
   const nowMs = now.getTime()
@@ -316,6 +393,7 @@ export async function evaluateEscalations(
       events.filter((event) => event.ticketId === ticket.id),
       pauses.filter((pause) => pause.ticketId === ticket.id),
       overrides,
+      texts,
       nowMs,
     )
 
@@ -339,5 +417,10 @@ export async function evaluateTicketEscalations(
 ): Promise<EscalationFired[]> {
   const { ticket, events, pauses } = await ticketContext(database, eq(tickets.id, ticketId))
 
-  return await evaluateOne(database, ticket, events, pauses, await readOverrides(database), now.getTime())
+  const [overrides, texts] = await Promise.all([
+    readOverrides(database),
+    readStageTexts(database),
+  ])
+
+  return await evaluateOne(database, ticket, events, pauses, overrides, texts, now.getTime())
 }

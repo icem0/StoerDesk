@@ -87,6 +87,55 @@ export type EscalationRuleOverride = {
   criticalMinutes?: number
 }
 
+/** A localized text of an escalation stage: the name and the reason. */
+export type EscalationStageText = {
+  /** Name of the stage, shown as "Escalation: <label>" in the ticket history. */
+  label: { de: string; en: string }
+  /** Why the stage escalated, shown below the name. */
+  description: { de: string; en: string }
+}
+
+/**
+ * The default name and description of every escalation stage.
+ *
+ * The texts are a localized resource like the standard texts (`PLAN.md` §3),
+ * never a German literal in the API. An installation replaces them per stage in
+ * the deadline settings: `ticket.escalation.<rule>.label` and
+ * `ticket.escalation.<rule>.description` hold the same `{ de, en }` shape.
+ */
+export const ESCALATION_STAGE_TEXTS: Record<EscalationRuleKey, EscalationStageText> = {
+  new_without_review: {
+    label: { de: 'Prüfung', en: 'Review' },
+    description: { de: 'Meldung noch nicht geprüft', en: 'Report not reviewed yet' },
+  },
+  work_order_without_distribution: {
+    label: { de: 'Arbeitsauftrag', en: 'Work order' },
+    description: {
+      de: 'Arbeitsauftrag noch nicht erstellt',
+      en: 'Work order not created yet',
+    },
+  },
+  offered_without_claim: {
+    label: { de: 'Übernahme', en: 'Claim' },
+    description: { de: 'Angebot noch nicht übernommen', en: 'Offer not claimed yet' },
+  },
+  assigned_without_accept: {
+    label: { de: 'Annahme', en: 'Acceptance' },
+    description: { de: 'Auftrag noch nicht angenommen', en: 'Work order not accepted yet' },
+  },
+  deadline_80_percent: {
+    label: { de: 'Frist zu 80 %', en: '80 % of the deadline' },
+    description: {
+      de: '80 % der Bearbeitungsfrist erreicht',
+      en: '80 % of the processing deadline reached',
+    },
+  },
+  deadline_exceeded: {
+    label: { de: 'Frist überschritten', en: 'Deadline exceeded' },
+    description: { de: 'Bearbeitungsfrist überschritten', en: 'Processing deadline exceeded' },
+  },
+}
+
 export type EscalationRule = {
   key: EscalationRuleKey
   level: EscalationLevel
