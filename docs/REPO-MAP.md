@@ -8,7 +8,7 @@ Updated after every work package. Max. 200 lines, one sentence per module, direc
 apps/
 ├── web/                         React + Vite PWA: i18next, TanStack Query, Tailwind
 │   ├── src/
-│   │   ├── admin/               UsersPage, RolesPage, GroupsPage, BmaSyncPage, DeadlinesPage, TextTemplatesPage, OncallPage (`/admin/oncall`, WP-M8-13) — the guarded admin screens
+│   │   ├── admin/               UsersPage, RolesPage, GroupsPage, BmaSyncPage, DeadlinesPage, TextTemplatesPage, OncallPage (`/admin/oncall`, WP-M8-13), ApiKeysPage (`/admin/api-keys`, WP-M10-04) — the guarded admin screens
 │   │   ├── auth/                LoginForm, LogoutButton, RequireSession, usePermission
 │   │   ├── components/          Shell, AppVersion, NotFoundPage, RouteErrorPage — layout shell, version badge, not found page
 │   │   ├── features/            dashboard/start-page.tsx, dashboard/use-dashboard.ts (WP-M9-14/19), dashboard/tv-page.tsx (WP-M9-16); objects/sticker-page.tsx (WP-M2-03); tickets/report-form-page.tsx, image-compress.ts, photo-upload.tsx (WP-M2-05/05b), status-page.tsx (WP-M2-06b), ticket-detail-page.tsx (WP-M2-18b/19d/M4-05/M4-06/91/07), offline-action-banner.tsx, use-internal-actions.ts (WP-M5-05/06), ticket-timeline.tsx (WP-M6-11); settings/NtfySubscription.tsx (WP-M7-03); oncall/my-shifts-page.tsx (WP-M8-14), oncall/use-shift-actions.ts (WP-M8-15), stats/stats-page.tsx (WP-M9-15)

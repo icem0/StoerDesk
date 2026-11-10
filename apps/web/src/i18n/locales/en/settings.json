@@ -347,6 +347,43 @@
    }
   }
  },
+ "apiKeys": {
+  "title": "API keys",
+  "hint": "Keys for the external API. A key is shown only once.",
+  "createTitle": "Create a key",
+  "listTitle": "Existing keys",
+  "name": "Label",
+  "scopes": "Permissions",
+  "expiresAt": "Valid until (optional)",
+  "create": "Create key",
+  "copy": "Copy",
+  "close": "Close",
+  "copied": "Copied",
+  "tokenTitle": "Key shown once",
+  "tokenHint": "The key “{{name}}” is shown only now. Store it securely.",
+  "neverUsed": "Never used",
+  "lastUsed": "Last used: {{date}}",
+  "expires": "Valid until {{date}}",
+  "revoke": "Revoke",
+  "revokeConfirm": "Revoke now?",
+  "cancel": "Cancel",
+  "revoked": "Revoked",
+  "readOnly": "Read-only: you lack the apikey.write permission.",
+  "loading": "Loading keys …",
+  "empty": "No keys created yet.",
+  "scopeLabels": {
+   "objects:read": "Read objects",
+   "objects:write": "Write objects",
+   "tickets:read": "Read tickets",
+   "tickets:write": "Write tickets"
+  },
+  "errors": {
+   "invalid_request": "Please check the input.",
+   "forbidden": "No permission.",
+   "session_invalid": "The session has expired.",
+   "unknown": "The action failed."
+  }
+ },
  "dashboardSettings": {
   "title": "Dashboard and statistics",
   "hint": "Wall display, anonymisation and the threshold for conspicuous objects.",

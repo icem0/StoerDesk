@@ -1,7 +1,7 @@
 # WP-M10-04: Admin API-key page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-03
 phase: 10
 milestone: m10
@@ -18,10 +18,10 @@ files-read:
 
 files-write:
 
-- apps/web/src/admin/api-keys-page.tsx
+- apps/web/src/admin/{api-keys-page.tsx,admin-home-page.tsx,__tests__/api-keys-page.test.tsx}
 - apps/web/src/routes/index.tsx
-- apps/web/src/i18n/de.ts
-- apps/web/src/i18n/en.ts
+- apps/web/src/components/Shell.tsx
+- apps/web/src/i18n/locales/{de,en}/{settings,common}.json
 
 interfaces:
 
@@ -56,7 +56,7 @@ creation and disappears after closing the panel.
 
 ## Handoff
 
-- Files changed: the page, the route and both locale modules
+- Files changed: the page, the route, the admin home and shell links, both locale JSON modules and a component test
 - Interfaces added: `ApiKeysPage`
 - Verified: the commands above
 - Follow-up WP: none

@@ -23,8 +23,8 @@ const MODULES: Module[] = [
   { key: 'deadlines', to: '/admin/deadlines' },
   { key: 'oncall', to: '/admin/oncall' },
   { key: 'branding', to: '/admin/branding' },
+  { key: 'apiKeys', to: '/admin/api-keys' },
   { key: 'channels', phase: 'phase7' },
-  { key: 'apiKeys', phase: 'phase10' },
 ]
 
 export function AdminHomePage() {

@@ -347,6 +347,43 @@
    }
   }
  },
+ "apiKeys": {
+  "title": "API-Schlüssel",
+  "hint": "Schlüssel für die Schnittstelle nach außen. Der Schlüssel wird nur einmal angezeigt.",
+  "createTitle": "Neuen Schlüssel anlegen",
+  "listTitle": "Vorhandene Schlüssel",
+  "name": "Bezeichnung",
+  "scopes": "Berechtigungen",
+  "expiresAt": "Gültig bis (optional)",
+  "create": "Schlüssel anlegen",
+  "copy": "Kopieren",
+  "close": "Schließen",
+  "copied": "Kopiert",
+  "tokenTitle": "Schlüssel einmalig sichtbar",
+  "tokenHint": "Der Schlüssel „{{name}}“ wird nur jetzt angezeigt. Bitte sicher hinterlegen.",
+  "neverUsed": "Noch nicht verwendet",
+  "lastUsed": "Zuletzt verwendet: {{date}}",
+  "expires": "Gültig bis {{date}}",
+  "revoke": "Widerrufen",
+  "revokeConfirm": "Wirklich widerrufen?",
+  "cancel": "Abbrechen",
+  "revoked": "Widerrufen",
+  "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung apikey.write.",
+  "loading": "Schlüssel werden geladen …",
+  "empty": "Noch keine Schlüssel angelegt.",
+  "scopeLabels": {
+   "objects:read": "Objekte lesen",
+   "objects:write": "Objekte schreiben",
+   "tickets:read": "Tickets lesen",
+   "tickets:write": "Tickets schreiben"
+  },
+  "errors": {
+   "invalid_request": "Bitte prüfen Sie die Eingaben.",
+   "forbidden": "Keine Berechtigung.",
+   "session_invalid": "Die Sitzung ist abgelaufen.",
+   "unknown": "Aktion fehlgeschlagen."
+  }
+ },
  "dashboardSettings": {
   "title": "Dashboard und Statistik",
   "hint": "Wandmonitor, Anonymisierung und die Schwelle für auffällige Objekte.",

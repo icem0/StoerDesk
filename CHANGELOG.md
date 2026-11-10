@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The admin page `/admin/api-keys` lists, creates and revokes external API keys (WP-M10-04): scope checkboxes, optional expiry, the plaintext token shown exactly once with a dismiss action, and read-only mode without `apikey.write`.
 - Phase 10 (API and hardening) is split and started (WP-M10-01): `specs/08-objects-api.md`
   now defines CSV object import (§9.4) and the external REST API (§9.5) — bearer API keys
   with the four scopes `objects:read`, `objects:write`, `tickets:read`, `tickets:write`,

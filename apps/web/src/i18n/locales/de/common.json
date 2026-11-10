@@ -85,6 +85,7 @@
     "admin": "Verwaltung öffnen",
     "stats": "Statistik",
     "dashboardSettings": "Dashboard und Statistik",
+    "apiKeys": "API-Schlüssel",
     "branding": "Darstellung"
    },
   "errors": {

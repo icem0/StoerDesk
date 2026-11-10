@@ -85,6 +85,7 @@
     "admin": "Open administration",
     "stats": "Statistics",
     "dashboardSettings": "Dashboard and statistics",
+    "apiKeys": "API keys",
     "branding": "Appearance"
    },
   "errors": {
