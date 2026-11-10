@@ -453,6 +453,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-13  | remaining admin error-code translations                              | done                    | no      |
 | WP-M5-14  | history actor names from the directory, not the login                | done                    | no      |
 | WP-M5-15  | history actors as name or "Extern: name"                             | done                    | no      |
+| WP-M5-16  | workflow E2E expects the actor name, not the actor kind              | done                    | yes     |
 | WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
 | WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
 | WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |

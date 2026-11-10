@@ -26,6 +26,25 @@ import type { Page } from '@playwright/test'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@e2e.invalid'
 const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? 'e2e-only-admin-password-1'
 
+/**
+ * The bootstrap seed leaves `given_name` empty and derives the family name from
+ * the e-mail local part (`seed-base.ts`). The history renders exactly that name
+ * (WP-M5-14/WP-M5-15), so the expectation follows an `E2E_ADMIN_EMAIL` override.
+ */
+function seededFamilyName(email: string): string {
+  const [localPart] = email.split('@')
+  const letters = (localPart ?? '').replaceAll(/[^\p{L}]/gu, '')
+  const [first, ...rest] = letters
+
+  if (first === undefined) {
+    return ''
+  }
+
+  return `${first.toUpperCase()}${rest.join('').toLowerCase()}`
+}
+
+const adminActorName = seededFamilyName(adminEmail)
+
 const ui = {
   de: {
     loginTitle: 'Anmeldung',
@@ -64,11 +83,7 @@ const ui = {
       acknowledged: 'Störung bearbeitet',
       closed: 'Vorgang abgeschlossen',
     },
-    actorKind: {
-      user: 'Nutzer',
-      system: 'System',
-      public: 'Öffentlich',
-    },
+    actorName: adminActorName,
   },
   en: {
     loginTitle: 'Sign in',
@@ -107,11 +122,7 @@ const ui = {
       acknowledged: 'Malfunction handled',
       closed: 'Ticket closed',
     },
-    actorKind: {
-      user: 'User',
-      system: 'System',
-      public: 'Public',
-    },
+    actorName: adminActorName,
   },
 } as const
 
@@ -287,20 +298,20 @@ for (const language of ['de', 'en'] as const) {
       texts.event.closed,
     ])
     // Every internal transition (create, review, work order, assign, accept,
-    // acknowledge, close) writes its event with actor kind `user`, so all seven
-    // actor cells carry the localized label. The seven cells share the same
-    // classes, so a single text would resolve to seven elements (strict mode
-    // violation): the expectation is an array, one text per element.
+    // acknowledge, close) is written by the same signed-in administrator, so all
+    // seven actor cells carry that user's full name. The seven cells share the
+    // same classes, so a single text would resolve to seven elements (strict
+    // mode violation): the expectation is an array, one text per element.
     const actorRows = history(page).locator('.text-xs.text-slate-400')
     await expect(actorRows).toHaveCount(7)
     await expect(actorRows).toContainText([
-      texts.actorKind.user,
-      texts.actorKind.user,
-      texts.actorKind.user,
-      texts.actorKind.user,
-      texts.actorKind.user,
-      texts.actorKind.user,
-      texts.actorKind.user,
+      texts.actorName,
+      texts.actorName,
+      texts.actorName,
+      texts.actorName,
+      texts.actorName,
+      texts.actorName,
+      texts.actorName,
     ])
     // The localized label replaced the raw key (`actorKind.<kind>`): none of it
     // survives in the rendered history.
