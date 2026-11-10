@@ -191,7 +191,7 @@
       "errors": {
         "systemNotFound": "Die gewählte Anlage gehört nicht zu diesem Objekt.",
         "invalidRequest": "Bitte prüfen Sie die Eingaben.",
-        "reportTimeFuture": "Die reported time must not be in the future. Please choose now or a past time.",
+        "reportTimeFuture": "Die Meldezeit cannot be in the future. Please choose now or a past time.",
         "objectNotFound": "Dieses Objekt existiert nicht mehr. Bitte wählen Sie ein anderes Objekt.",
         "sessionInvalid": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
         "ticketCreateFailed": "Die Meldung konnte technisch nicht angelegt werden. Bitte versuchen Sie es später erneut.",
