@@ -11,6 +11,19 @@ export const webhookEventTypeSchema = z.enum(WEBHOOK_EVENT_TYPES)
 
 export type WebhookEventType = z.infer<typeof webhookEventTypeSchema>
 
+/**
+ * The event types a delivery may carry. Beside the two types an endpoint
+ * subscribes to, the escalation delivers `ticket.escalated` to the endpoints
+ * that the rule of the ticket selected (`specs/07-escalation.md` §7.5,
+ * ADR-0017) — the subscription list of an endpoint stays untouched.
+ */
+export const WEBHOOK_DELIVERY_EVENT_TYPES = [
+  ...WEBHOOK_EVENT_TYPES,
+  'ticket.escalated',
+] as const
+
+export type WebhookDeliveryEventType = (typeof WEBHOOK_DELIVERY_EVENT_TYPES)[number]
+
 const webhookUrlSchema = z
   .string()
   .trim()

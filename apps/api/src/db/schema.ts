@@ -104,6 +104,13 @@ export const apiKeys = pgTable(
 
 export const WEBHOOK_EVENT_TYPES = ['ticket.created', 'ticket.status_changed'] as const
 
+/**
+ * The event types a delivery may carry: the two types an endpoint subscribes
+ * to and `ticket.escalated`, which the escalation delivers to the endpoints
+ * that its rule selected (`specs/07-escalation.md` §7.5, ADR-0017).
+ */
+export const WEBHOOK_DELIVERY_EVENT_TYPES = [...WEBHOOK_EVENT_TYPES, 'ticket.escalated'] as const
+
 export const WEBHOOK_DELIVERY_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
 
 /**
@@ -161,7 +168,7 @@ export const webhookDeliveries = pgTable(
     index('webhook_deliveries_event_id_idx').on(table.eventId),
     check(
       'webhook_deliveries_event_type_check',
-      sql`${table.eventType} IN (${checkList(WEBHOOK_EVENT_TYPES)})`,
+      sql`${table.eventType} IN (${checkList(WEBHOOK_DELIVERY_EVENT_TYPES)})`,
     ),
     check(
       'webhook_deliveries_status_check',
