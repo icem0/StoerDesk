@@ -255,8 +255,9 @@ export function Shell() {
       className={`theme-${effectiveTheme} flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white`}
     >
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm print:hidden">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3">
-          <span className="flex min-w-0 items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:flex-nowrap sm:px-6 sm:py-3">
+          {/* Left (desktop): logo sits at the very left edge when there is enough space. */}
+          <span className="order-1 flex min-w-0 items-center gap-2">
             <img
               alt={t('app.logoAlt')}
               className="h-8 w-auto shrink-0 rounded-lg sm:h-9"
@@ -265,37 +266,47 @@ export function Shell() {
               src="/logo.png"
               width="128"
             />
-            <span className="min-w-0 truncate font-semibold tracking-tight">{title}</span>
+            <span className="hidden min-w-0 truncate font-semibold tracking-tight sm:block">
+              {title}
+            </span>
           </span>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+
+          {/* Right: version and settings. On phones this stays in the first row. */}
+          <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
             {me.data ? <SettingsMenu email={me.data.user.email} /> : null}
           </div>
+
+          {/*
+           * Single navigation element for both layouts (one DOM node, so no duplicate
+           * links): on desktop it takes the middle of the header row and stays centred
+           * between logo and actions; on phones it wraps onto its own row and scrolls
+           * horizontally as a broad tab strip (44 px touch targets).
+           */}
+          <nav
+            aria-label={t('app.navigation')}
+            className="order-3 -mx-3 flex w-full items-center gap-1 overflow-x-auto px-3 pb-1 sm:order-2 sm:mx-0 sm:w-auto sm:flex-1 sm:justify-center sm:px-0 sm:pb-0"
+          >
+            {headerLinks.map((link) => (
+              <NavLink
+                end={link.path === '/'}
+                className={({ isActive: routerActive }) => {
+                  const active = routerActive
+
+                  return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                    active
+                      ? 'bg-sky-600/10 text-sky-300'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                  }`
+                }}
+                key={link.key}
+                to={link.path}
+              >
+                {t(`app.nav.${link.key}`)}
+              </NavLink>
+            ))}
+          </nav>
         </div>
-
-        <nav
-          aria-label={t('app.navigation')}
-          className="mx-auto flex w-full max-w-5xl gap-1 overflow-x-auto px-2 pb-1 sm:px-5"
-        >
-          {headerLinks.map((link) => (
-            <NavLink
-              end={link.path === '/'}
-              className={({ isActive: routerActive }) => {
-                const active = routerActive
-
-                return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                  active
-                    ? 'bg-sky-600/10 text-sky-300'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
-                }`
-              }}
-              key={link.key}
-              to={link.path}
-            >
-              {t(`app.nav.${link.key}`)}
-            </NavLink>
-          ))}
-        </nav>
       </header>
 
       <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">
