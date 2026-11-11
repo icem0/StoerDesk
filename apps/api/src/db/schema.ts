@@ -1025,6 +1025,139 @@ export const detectedErrors = pgTable(
   ],
 )
 
+/**
+ * The escalation configuration (`specs/07-escalation.md` §7.6, ADR-0017).
+ *
+ * The stages are the five milestones of the ticket workflow; their keys are
+ * fixed, their names and their active flag are maintained in the
+ * administration. The rules carry the waiting deadline per priority, the
+ * condition and their actions. The firing log makes a rule fire exactly once
+ * per ticket, rule and threshold.
+ */
+export const escalationStages = pgTable(
+  'escalation_stages',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    /** The workflow milestone; the key is the identity of the stage. */
+    key: text('key').notNull(),
+    /** One display name per locale (`de`, `en`). */
+    names: jsonb('names').notNull().default({}),
+    position: integer('position').notNull().default(0),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('escalation_stages_key_key').on(table.key),
+    index('escalation_stages_position_idx').on(table.position),
+    check(
+      'escalation_stages_key_check',
+      sql`${table.key} IN ('review','work_order','assignment','acceptance','acknowledgement')`,
+    ),
+  ],
+)
+
+/**
+ * One waiting deadline with its condition and its actions. A rule with a
+ * `reference` and `minutes` waits for a milestone; a rule with a `percent`
+ * waits for the deadline of the ticket and belongs to no stage.
+ */
+export const escalationRules = pgTable(
+  'escalation_rules',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    key: text('key').notNull(),
+    /** The stage of the rule; NULL for a deadline rule. */
+    stageKey: text('stage_key'),
+    /** The event that starts the waiting clock. */
+    reference: text('reference'),
+    /** The deadline per priority: `{ low, normal, high, critical }`. */
+    minutes: jsonb('minutes'),
+    /** The percentage of the timeline of a deadline rule. */
+    percent: integer('percent'),
+    /** The condition tree of the shared contract. */
+    condition: jsonb('condition').notNull().default({ all: [] }),
+    position: integer('position').notNull().default(0),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('escalation_rules_key_key').on(table.key),
+    index('escalation_rules_stage_key_idx').on(table.stageKey),
+    check(
+      'escalation_rules_stage_key_check',
+      sql`${table.stageKey} IS NULL OR ${table.stageKey} IN ('review','work_order','assignment','acceptance','acknowledgement')`,
+    ),
+    check(
+      'escalation_rules_reference_check',
+      sql`${table.reference} IS NULL OR ${table.reference} IN ('received_at','review_started','work_order_set','offered','assigned','accepted')`,
+    ),
+    check(
+      'escalation_rules_clock_check',
+      sql`((${table.reference} IS NOT NULL AND ${table.minutes} IS NOT NULL) OR (${table.percent} IS NOT NULL AND ${table.percent} BETWEEN 1 AND 100))`,
+    ),
+  ],
+)
+
+/** The actions of a rule: notify (channels), webhook (endpoints), history. */
+export const escalationActions = pgTable(
+  'escalation_actions',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    /** The key of the action inside its rule. */
+    key: text('key').notNull(),
+    ruleKey: text('rule_key')
+      .notNull()
+      .references(() => escalationRules.key, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    /** The configuration of the action, per its type. */
+    config: jsonb('config').notNull().default({}),
+    /** The condition of the action; an empty condition always matches. */
+    condition: jsonb('condition').notNull().default({ all: [] }),
+    position: integer('position').notNull().default(0),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('escalation_actions_rule_key_key').on(table.ruleKey, table.key),
+    index('escalation_actions_rule_key_idx').on(table.ruleKey),
+    check(
+      'escalation_actions_type_check',
+      sql`${table.type} IN ('notify','webhook','history')`,
+    ),
+  ],
+)
+
+/**
+ * The firing log of the escalation: the unique key over the ticket, the rule
+ * and the threshold makes a rule fire exactly once, even when two scans run
+ * in the same minute.
+ */
+export const escalationFirings = pgTable(
+  'escalation_firings',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    ruleKey: text('rule_key').notNull(),
+    stageKey: text('stage_key'),
+    thresholdAt: timestamp('threshold_at', timestampOptions).notNull(),
+    firedAt: timestamp('fired_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('escalation_firings_ticket_rule_threshold_key').on(
+      table.ticketId,
+      table.ruleKey,
+      table.thresholdAt,
+    ),
+    index('escalation_firings_ticket_id_idx').on(table.ticketId),
+    index('escalation_firings_rule_key_idx').on(table.ruleKey),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -1083,3 +1216,11 @@ export type NewOnCallEvent = typeof oncallEvents.$inferInsert
 export type OnCallEventActorKind = (typeof ONCALL_EVENT_ACTOR_KINDS)[number]
 export type DetectedError = typeof detectedErrors.$inferSelect
 export type NewDetectedError = typeof detectedErrors.$inferInsert
+export type EscalationStage = typeof escalationStages.$inferSelect
+export type NewEscalationStage = typeof escalationStages.$inferInsert
+export type EscalationRule = typeof escalationRules.$inferSelect
+export type NewEscalationRule = typeof escalationRules.$inferInsert
+export type EscalationAction = typeof escalationActions.$inferSelect
+export type NewEscalationAction = typeof escalationActions.$inferInsert
+export type EscalationFiring = typeof escalationFirings.$inferSelect
+export type NewEscalationFiring = typeof escalationFirings.$inferInsert

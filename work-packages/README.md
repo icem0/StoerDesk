@@ -645,7 +645,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M12-09  | ticket detail — e-mail icon and cancel in the header, no back button | done                  | yes     |
 | WP-M13-01  | escalation stages as the workflow milestones — spec, ADR-0017, phase split | done                  | yes     |
 | WP-M13-02  | shared contracts of the escalation configuration                   | done                    | yes     |
-| WP-M13-03  | the escalation tables and the migration `0031`                     | planned                 | yes     |
+| WP-M13-03  | the escalation tables and the migration `0031`                     | done                    | yes     |
 | WP-M13-04  | the seed of the stages and the rules                              | planned                 | yes     |
 | WP-M13-05  | the configuration API of the escalation                           | planned                 | yes     |
 | WP-M13-06  | the engine on the database rules                                 | planned                 | yes     |

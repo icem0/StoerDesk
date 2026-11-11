@@ -1,7 +1,7 @@
 # WP-M13-03: The escalation tables and the migration
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-02
 phase: 13
 milestone: m13
@@ -22,6 +22,7 @@ files-write:
 - apps/api/src/db/schema.ts
 - apps/api/src/db/migrations/0031_escalation_config.sql
 - apps/api/src/db/migrations/meta/_journal.json
+- specs/07-escalation.md (the `stage_key` of the data model, corrected)
 
 interfaces:
 
@@ -38,8 +39,8 @@ interfaces:
    condition; the firings with the ticket, the rule key, the threshold and the
    firing time.
 2. Write the migration `0031_escalation_config.sql` with the tables, the foreign
-   keys (`ON DELETE CASCADE` for the actions, `ON DELETE RESTRICT` for the rules
-   of a stage), the indexes and the checks of the enums.
+   keys (`ON DELETE CASCADE` for the actions, `ON DELETE CASCADE` for the
+   firings of a ticket), the indexes and the checks of the enums.
 3. Register the migration in the journal (`idx 31`).
 
 ## Non-goals
@@ -61,8 +62,9 @@ tables exist with their constraints.
 
 ## Handoff
 
-- Files changed: the schema, the migration, the journal
+- Files changed: the schema, the migration, the journal, the corrected line of
+  the spec
 - Interfaces added: the four tables and their unique key
-- Verified: typecheck, lint
+- Verified: typecheck, lint, the migration on a throwaway database
 - Follow-up WP: WP-M13-04 — the seed of the stages and the rules
 - Open question: none

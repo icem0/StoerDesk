@@ -128,8 +128,8 @@ no deadline. A rule writes the `escalated` event and performs its actions.
 | Table | Columns |
 | --- | --- |
 | `escalation_stages` | `id`, `key` (unique, the fixed stage key), `names` (jsonb, one label per locale), `position`, `active` |
-| `escalation_rules` | `id`, `key` (unique), `stage_key` (nullable foreign key), `reference`, `minutes` (jsonb, per priority), `percent` (nullable), `condition` (jsonb), `position`, `active` |
-| `escalation_actions` | `id`, `key` (unique), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active` |
+| `escalation_rules` | `id`, `key` (unique), `stage_key` (the key of a stage, nullable), `reference`, `minutes` (jsonb, per priority), `percent` (nullable), `condition` (jsonb), `position`, `active` |
+| `escalation_actions` | `id`, `key` (unique per rule), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active` |
 | `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)` |
 
 The `key` is the identity of a stage, a rule and an action, not the UUID: the
