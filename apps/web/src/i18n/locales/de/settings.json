@@ -38,6 +38,10 @@
      "title": "Fristen",
      "hint": "Fristen und Reaktionsfristen je Priorität."
     },
+    "escalationStages": {
+     "title": "Eskalationsstufen",
+     "hint": "Stufen, Namen und Fristen der manuellen Eskalation pflegen."
+    },
     "detectedErrors": {
      "title": "Festgestellte Fehler",
      "hint": "Katalog der bei der Bearbeitung festgestellten Fehler pflegen."
@@ -246,6 +250,35 @@
     "session_invalid": "Die Anmeldung ist abgelaufen.",
     "forbidden": "Keine Berechtigung für diese Aktion.",
     "invalid_request": "Mindestens ein Wert ist ungültig: Fristen 1 bis 8760 Stunden, Reaktionsfristen 1 bis 10080 Minuten.",
+    "unknown": "Speichern fehlgeschlagen."
+   }
+  },
+  "escalationStages": {
+   "title": "Eskalationsstufen",
+   "hint": "Die Stufen der manuellen Eskalation. Die Reihenfolge der Liste ist die Eskalationsreihenfolge und wird per Drag and Drop geändert. Die Frist gilt für alle Prioritäten.",
+   "loading": "Lädt …",
+   "sessionNotice": "Die Eskalationsstufen benötigen eine gültige Anmeldung.",
+   "forbiddenNotice": "Keine Berechtigung für die Eskalationsstufen.",
+   "orderHint": "Zeilen ziehen, um die Reihenfolge zu ändern. Die letzte Stufe bleibt das Ende der Kette.",
+   "dragHandle": "Zum Verschieben ziehen",
+   "add": "Stufe hinzufügen",
+   "remove": "Entfernen",
+   "save": "Speichern",
+   "saved": "Gespeichert.",
+   "readOnly": "Nur lesbar: Zum Ändern fehlt die Berechtigung „Einstellungen schreiben“.",
+   "fields": {
+    "key": "Schlüssel",
+    "nameDe": "Name (Deutsch)",
+    "nameEn": "Name (Englisch)",
+    "deadline": "Frist"
+   },
+   "unit": {
+    "minutes": "min"
+   },
+   "errors": {
+    "session_invalid": "Die Anmeldung ist abgelaufen.",
+    "forbidden": "Keine Berechtigung für diese Aktion.",
+    "invalid_request": "Eingabe ungültig: eindeutiger Schlüssel, deutscher und englischer Name sowie eine Frist von 1 bis 10080 Minuten.",
     "unknown": "Speichern fehlgeschlagen."
    }
   },

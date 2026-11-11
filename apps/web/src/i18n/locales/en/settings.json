@@ -38,6 +38,10 @@
      "title": "Deadlines",
      "hint": "Deadlines and reaction deadlines per priority."
     },
+    "escalationStages": {
+     "title": "Escalation stages",
+     "hint": "Maintain the stages, names and deadlines of the manual escalation."
+    },
     "detectedErrors": {
      "title": "Detected errors",
      "hint": "Maintain the catalog of errors detected during ticket handling."
@@ -246,6 +250,35 @@
     "session_invalid": "The sign-in has expired.",
     "forbidden": "No permission for this action.",
     "invalid_request": "At least one value is invalid: deadlines 1 to 8760 hours, reaction deadlines 1 to 10080 minutes.",
+    "unknown": "Saving failed."
+   }
+  },
+  "escalationStages": {
+   "title": "Escalation stages",
+   "hint": "The stages of the manual escalation. The list order is the escalation order and is changed by drag and drop. The deadline applies to all priorities.",
+   "loading": "Loading …",
+   "sessionNotice": "The escalation stages need a valid sign-in.",
+   "forbiddenNotice": "No permission for the escalation stages.",
+   "orderHint": "Drag a row to change the order. The last stage stays the end of the chain.",
+   "dragHandle": "Drag to move",
+   "add": "Add stage",
+   "remove": "Remove",
+   "save": "Save",
+   "saved": "Saved.",
+   "readOnly": "Read-only: changing needs the permission \"settings write\".",
+   "fields": {
+    "key": "Key",
+    "nameDe": "Name (German)",
+    "nameEn": "Name (English)",
+    "deadline": "Deadline"
+   },
+   "unit": {
+    "minutes": "min"
+   },
+   "errors": {
+    "session_invalid": "The sign-in has expired.",
+    "forbidden": "No permission for this action.",
+    "invalid_request": "Invalid input: unique key, German and English name, deadline 1 to 10080 minutes.",
     "unknown": "Saving failed."
    }
   },

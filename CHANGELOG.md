@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Escalation-stage administration (WP-M12-04): `/admin/escalation-stages` manages the
+  ordered stages with key, German and English name and deadline minutes, reorders them
+  by drag and drop, and stays read-only without `settings.write`.
 - Freely definable manual escalation stages (WP-M12-03): the shared contract
   `packages/shared/src/schemas/escalation-stages.ts` orders stages by array position,
   requires German and English names (more locales stay possible) and a deadline per
