@@ -10,6 +10,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
+import { readReachableStages } from '../escalation/config'
 import { readTitleEnabled } from '../settings/branding-state'
 import {
   objects,
@@ -186,6 +187,7 @@ export async function getTicketDetail(
         .filter((event) => markerTypes.has(event.type))
         .map((event) => ({ type: event.type, at: event.createdAt.toISOString() })),
     },
+    availableStages: await readReachableStages(database, ticketRow.status),
     pauses: pauses.map((pause) => ({
       id: pause.id,
       ticketId: pause.ticketId,

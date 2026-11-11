@@ -472,6 +472,18 @@ export const ticketDetailResponseSchema = z.object({
   ),
   timeline: ticketTimelineSchema,
   pauses: z.array(ticketPauseSchema),
+  /**
+   * The stages the ticket can still reach (`specs/07-escalation.md` §7.10).
+   * The view offers them instead of one button per workflow step; `events`
+   * names the workflow transitions that reach the stage.
+   */
+  availableStages: z.array(
+    z.object({
+      key: z.string(),
+      names: z.record(z.string(), z.string()),
+      events: z.array(z.string()),
+    }),
+  ),
 })
 
 export type TicketDetailResponse = z.infer<typeof ticketDetailResponseSchema>

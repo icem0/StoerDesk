@@ -7,6 +7,7 @@ import {
   escalationStageConfigSchema,
   type EscalationActionConfig,
   type EscalationConfig,
+  type EscalationStageKey,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -64,6 +65,73 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
     default:
       return {}
   }
+}
+
+/**
+ * The stages a ticket can still reach, by its status. The stage is a
+ * milestone of the workflow; the variants are the events that reach it (the
+ * stage "assignment" is reached by an assignment and by an offer).
+ */
+export const ESCALATION_REACHABLE_STAGES: Record<string, readonly EscalationStageKey[]> = {
+  NEW: ['review'],
+  IN_REVIEW: ['work_order'],
+  WORK_ORDER_CREATED: ['assignment'],
+  OFFERED: ['acceptance'],
+  ASSIGNED: ['acceptance'],
+  ACCEPTED: ['acknowledgement'],
+  ACKNOWLEDGED: [],
+  CLOSED: [],
+  CANCELLED: [],
+}
+
+/** The events that reach a stage of the workflow. */
+export const ESCALATION_STAGE_EVENTS: Record<EscalationStageKey, readonly string[]> = {
+  review: ['review_started'],
+  work_order: ['work_order_set'],
+  assignment: ['assigned', 'offered'],
+  acceptance: ['accepted'],
+  acknowledgement: ['acknowledged'],
+}
+
+/** Reads the five stages with their names, ordered by their position. */
+export async function readEscalationStages(database: Db): Promise<
+  { key: string; names: Record<string, string>; position: number; active: boolean }[]
+> {
+  const rows = await database
+    .select()
+    .from(escalationStages)
+    .orderBy(asc(escalationStages.position))
+
+  return rows.map((row) => ({
+    key: row.key,
+    names: row.names as Record<string, string>,
+    position: row.position,
+    active: row.active,
+  }))
+}
+
+/**
+ * The stages the ticket can still reach, with the events that reach them. The
+ * ticket view offers them instead of one button per workflow step
+ * (`specs/07-escalation.md` §7.10).
+ */
+export async function readReachableStages(
+  database: Db,
+  status: string,
+): Promise<{ key: string; names: Record<string, string>; events: string[] }[]> {
+  const reachable = ESCALATION_REACHABLE_STAGES[status] ?? []
+  const stages = await readEscalationStages(database)
+  const byKey = new Map(stages.map((stage) => [stage.key, stage]))
+
+  return reachable.flatMap((key) => {
+    const stage = byKey.get(key)
+
+    if (stage === undefined) {
+      return []
+    }
+
+    return [{ key, names: stage.names, events: [...ESCALATION_STAGE_EVENTS[key]] }]
+  })
 }
 
 /** Reads the whole configuration: the stages, the rules and their actions. */

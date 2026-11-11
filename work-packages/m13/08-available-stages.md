@@ -1,7 +1,7 @@
 # WP-M13-08: The reachable stages of a ticket
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-04
 phase: 13
 milestone: m13
@@ -19,6 +19,7 @@ files-read:
 
 files-write:
 
+- apps/api/src/escalation/config.ts
 - apps/api/src/tickets/detail.ts
 - packages/shared/src/schemas/ticket.ts
 - apps/api/src/tickets/__tests__/detail-stages.integration.spec.ts
@@ -35,8 +36,8 @@ interfaces:
    the stage key, its name and the events of its variants (the stage
    `assignment` has the variants `assigned` and `offered`).
 2. Add the field to the shared ticket contract and to the detail answer.
-3. Move the staff read of the stages to the new table: `GET
-   /api/v1/escalation-stages` answers the five stages with their names.
+3. The staff read of the stages moves to the new table in WP-M13-10,
+   where the route of the former catalogue is removed and replaced.
 4. Add the integration test: the answer of a `NEW` ticket offers the stage
    `review`, an `OFFERED` ticket offers `acceptance`, an acknowledged ticket
    offers nothing.
@@ -62,6 +63,6 @@ staff read of the stage names.
 
 - Files changed: the detail service, the shared contract, the integration test
 - Interfaces added: `availableStages` and the stage read
-- Verified: typecheck, the integration test
+- Verified: typecheck, the integration test (the reachable stages per status, the variants, the renamed stage)
 - Follow-up WP: WP-M13-09 — the stage selection in the ticket view
 - Open question: none

@@ -651,7 +651,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M13-06  | the engine on the database rules                                 | done                    | yes     |
 | WP-M13-07a | the webhook event type of the escalation                          | done                    | yes     |
 | WP-M13-07b | the actions of a fired rule (notify, webhook, history)            | done                    | yes     |
-| WP-M13-08  | the reachable stages of a ticket                                 | planned                 | yes     |
+| WP-M13-08  | the reachable stages of a ticket                                 | done                    | yes     |
 | WP-M13-09  | the stage selection replaces the workflow buttons                 | planned                 | yes     |
 | WP-M13-10  | the removal of the old escalation API                            | planned                 | yes     |
 | WP-M13-11  | the removal of the old shared contracts                          | planned                 | yes     |
