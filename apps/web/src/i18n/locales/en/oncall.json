@@ -1,10 +1,11 @@
 {
   "readiness": {
     "title": "Readiness calendar",
-    "hint": "Every shift of the week with the person who has the readiness. The times are Europe/Berlin.",
-    "previous": "Previous week",
-    "next": "Next week",
-    "empty": "No readiness is planned for this week.",
+    "hint": "The current and the following month with every shift. The colour of a day shows the state of the shift. The times are Europe/Berlin.",
+    "previous": "Previous month",
+    "next": "Next month",
+    "weekColumn": "Wk",
+    "empty": "No readiness is planned for this period.",
     "unassigned": "not staffed",
     "pageTitle": "Readiness",
     "pageHint": "The calendar shows who has the readiness. Below it you find your own shifts.",

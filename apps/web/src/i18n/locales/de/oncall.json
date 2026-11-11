@@ -1,10 +1,11 @@
 {
   "readiness": {
     "title": "Bereitschaftskalender",
-    "hint": "Alle Schichten der Woche mit der Person, die die Bereitschaft hat. Die Zeiten gelten in Europe/Berlin.",
-    "previous": "Vorherige Woche",
-    "next": "Nächste Woche",
-    "empty": "Für diese Woche ist keine Bereitschaft eingetragen.",
+    "hint": "Das aktuelle und das kommende Monat mit allen Schichten. Die Farbe eines Tages zeigt den Status der Schicht. Die Zeiten gelten in Europe/Berlin.",
+    "previous": "Vorheriger Monat",
+    "next": "Nächster Monat",
+    "weekColumn": "KW",
+    "empty": "Für diesen Zeitraum ist keine Bereitschaft eingetragen.",
     "unassigned": "nicht besetzt",
     "pageTitle": "Bereitschaft",
     "pageHint": "Der Kalender zeigt, wer die Bereitschaft hat. Darunter stehen deine eigenen Schichten.",

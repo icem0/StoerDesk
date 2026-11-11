@@ -587,6 +587,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-34  | the on-call page shows the calendar and the own readiness              | done                    | yes     |
 | WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | done                    | yes     |
 | WP-M10-40  | shell header: logo left, menu centred, mobile tab strip                 | done                    | yes     |
+| WP-M10-41  | readiness calendar: two month grids, KW column, state colours           | done                    | yes     |
 | WP-M10-20 | fault catalog ordered by recent usage in the report and office forms | done                    | yes     |
 | WP-M10-20b | fault catalog management screen keeps its alphabetical order    | done                    | yes     |
 | WP-M10-21 | dashboard snapshot carries the most frequent fault              | done                    | yes     |

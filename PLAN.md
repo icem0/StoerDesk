@@ -1477,6 +1477,16 @@ only with the permission `oncall.admin`. **WP-M10-35** adds "Bereitschaft" to th
 navigation: the entries are "Dashboard", "Tickets" and "Bereitschaft", the last one leads to
 the readiness page `/oncall`.
 
+**The readiness calendar becomes a real calendar (WP-M10-41, out of band in phase 10).** The
+office asked for the current and the coming month as a calendar grid, one week per row from
+Monday to Sunday, the calendar week numbers to the left of the grid and the state of a shift
+recognisable from the colour of its day. `ReadinessCalendar` now renders two month tables
+with an ISO week-number column and coloured day cells (confirmed green, planned amber, swap
+requested purple, declined and unfilled rose, draft slate), keeps the technician name, the
+pool and the state in every day cell and explains the colours in a legend. The two-month
+window starts with the current month and moves by one month with the previous and next
+buttons; the signature of the component, the API and the on-call page stay unchanged.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
