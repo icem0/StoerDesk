@@ -1,7 +1,7 @@
 # WP-M13-05: The configuration API of the escalation
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-02, WP-M13-03
 phase: 13
 milestone: m13
@@ -64,6 +64,6 @@ cases.
 
 - Files changed: the configuration service, the routes, the registration, the test
 - Interfaces added: the three routes and the two service functions
-- Verified: typecheck, the integration test
+- Verified: typecheck, the integration test (read, replace, the unknown stage key, the malformed body, the stages)
 - Follow-up WP: WP-M13-06 — the engine on the database rules
 - Open question: none

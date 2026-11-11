@@ -647,7 +647,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M13-02  | shared contracts of the escalation configuration                   | done                    | yes     |
 | WP-M13-03  | the escalation tables and the migration `0031`                     | done                    | yes     |
 | WP-M13-04  | the seed of the stages and the rules                              | done                    | yes     |
-| WP-M13-05  | the configuration API of the escalation                           | planned                 | yes     |
+| WP-M13-05  | the configuration API of the escalation                           | done                    | yes     |
 | WP-M13-06  | the engine on the database rules                                 | planned                 | yes     |
 | WP-M13-07  | the actions of a fired rule (notify, webhook, history)            | planned                 | yes     |
 | WP-M13-08  | the reachable stages of a ticket                                 | planned                 | yes     |
