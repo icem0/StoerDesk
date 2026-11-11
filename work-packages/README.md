@@ -249,6 +249,11 @@ no `Follow-up WP:` or `Open question:` line stays open in `work-packages/m11/`.
 maps every item to the implemented surfaces and announces the split **WP-M12-02**,
 the acceptance end-to-end suite for items 1–12
 (`scripts/e2e-acceptance.mjs`, planned — its file exists, its code does not yet).
+The phase-5 offline E2E `apps/web/e2e/offline-internal.spec.ts` was repaired out of band
+after WP-M12-06 and WP-M12-08 removed both dropdowns: the two acknowledge tests still
+opened the options dropdown and waited for a button that no longer exists, so they now
+click the acknowledge button of the escalation section directly (14/14 Playwright tests
+green against the real database and Chromium).
 
 ## Open follow-ups
 

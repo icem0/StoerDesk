@@ -201,9 +201,9 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // Choose the acknowledge entry of the options dropdown (WP-M4-10), go offline
-    // and confirm it: the acknowledge cannot reach the server and is queued instead.
-    await page.getByRole('button', { name: /Optionen|Options/ }).click()
+    // The acknowledge button of the escalation section (WP-M12-06) opens its
+    // inline confirmation panel; go offline and confirm it: the acknowledge
+    // cannot reach the server and is queued instead.
     await page.getByRole('button', { name: texts.acknowledge }).click()
     await page.context().setOffline(true)
     await page.locator('input[name="acknowledgeResult"]').fill('fixed')
@@ -256,10 +256,9 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // Queue an acknowledge while offline: open the options dropdown, choose the
-    // acknowledge entry, then confirm offline. The confirmation panel renders inline
-    // below the chosen entry while the dropdown stays open.
-    await page.getByRole('button', { name: /Optionen|Options/ }).click()
+    // Queue an acknowledge while offline: the acknowledge button of the escalation
+    // section (WP-M12-06) renders its confirmation panel inline, so the confirm
+    // button and the result field are addressed right below it.
     await page.getByRole('button', { name: texts.acknowledge }).click()
     await page.context().setOffline(true)
     await page.locator('input[name="acknowledgeResult"]').fill('fixed')

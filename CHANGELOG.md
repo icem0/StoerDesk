@@ -242,6 +242,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The phase-5 offline E2E (`apps/web/e2e/offline-internal.spec.ts`) is green again after
+  WP-M12-06 and WP-M12-08 removed the dropdowns: both tests still opened the options
+  dropdown with `getByRole('button', { name: /Optionen|Options/ })` before choosing the
+  acknowledge entry, so the locator waited 30 s for a button that no longer exists and four
+  of the fourteen Playwright tests failed. The acknowledge button of the escalation section
+  is clicked directly; its inline confirmation panel is addressed as before.
+
 - The administration-home test located the deadlines card by `/Fristen|Deadlines/`, which
   stopped being unique once WP-M12-04 added the escalation-stage card with the hint
   "Stufen, Namen und Fristen …": `screen.findByRole('link', …)` found two links and the
