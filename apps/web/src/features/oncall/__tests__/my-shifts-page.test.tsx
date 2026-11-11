@@ -152,7 +152,7 @@ async function waitForText(text: string, timeout = 10000): Promise<void> {
 
   for (;;) {
     try {
-      screen.getByText(text)
+      screen.getAllByText(text)
       return
     } catch {
       if (Date.now() - start >= timeout) {
