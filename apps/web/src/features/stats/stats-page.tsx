@@ -460,6 +460,12 @@ export function StatsPage() {
               rows={frequency.data.bySource}
               translateKey={(key) => t(`frequency.source.${key}`, { defaultValue: key })}
             />
+            <GroupTable
+              caption={t('frequency.byDetectedError')}
+              countLabel={t('frequency.count')}
+              keyLabel={t('frequency.key')}
+              rows={frequency.data.byDetectedError}
+            />
           </div>
         ) : null}
       </div>

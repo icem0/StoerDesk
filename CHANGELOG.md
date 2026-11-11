@@ -8,11 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+
 - One display for both surfaces (WP-M10-36): the wall monitor no longer has its own
   view — `/tv/:token` renders the shared `DashboardDisplay` the start page renders
   (statistics first, then the open tickets). On the wall nothing is clickable: the
   tiles, the ticket numbers and the channel tile are plain blocks and the primary
   action is not offered — a display is never interactive.
+
+- Acceptance criteria as a reviewable slice (WP-M12-01): `specs/16-acceptance.md` is
+  filled by mirroring the acceptance summary of `PLAN.md` §20 (items 1–12) — the
+  original book chapters 18 + 19 were not supplied — and adds the mapping of every
+  item to the already-implemented surfaces (QR report path, offline flight mode,
+  offer claim, decline, acknowledge, escalation, object API, dashboard counter,
+  statistics, notification fallback, web push, on-call calendar). Documentation only;
+  the phase-12 split announces WP-M12-02, an acceptance end-to-end suite for items
+  1–12 (`scripts/e2e-acceptance.mjs`, planned).
+
 - "Bereitschaft" becomes a menu entry of its own (WP-M10-35): the header navigation shows
   `Dashboard`, `Tickets` and `Bereitschaft` ("On call"), the entry leads to the readiness
   page `/oncall` and stays active there.
@@ -41,6 +52,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the ticket list — plus `lastEvent`, the newest entry of the history of the ticket (`null`
   when the ticket has no event yet). The dashboard and the wall display can show the same
   thing.
+- Festgestellte Fehler (Phase 11): ein Admin-Katalog unter `/admin/detected-errors` (anlegen, bearbeiten, archivieren, löschen mit `409` bei Nutzung) ergänzt die Schließung eines Tickets: im Close-Dialog sind neben dem optionalen Kommentar ein oder mehrere festgestellte Fehler auswählbar, unabhängig von der gemeldeten Störung (WP-M11-01 … WP-M11-07). Die Statistik gruppiert neu nach `byDetectedError` (WP-M11-05, WP-M11-08), Integrationstests decken CRUD, Close-Speicherung und Frequency ab (WP-M11-09).
+- The report form and the internal office form now order their fault checkboxes by
+  how often a fault was reported in the last 30 days (WP-M10-20): most frequent first,
+  ties by key, so the top-left checkbox in reading order is the fault the installation
+  saw most often. The fault-catalog administration screen keeps a stable alphabetical
+  list and re-sorts itself (WP-M10-20b).
+- The dashboard snapshot and start page now surface the most frequent fault of the
+  last 30 days (WP-M10-21, WP-M10-21b): a language-neutral `topFault` block (`key` plus
+  `count`, ADR-0015 window) rendered on the start page with the localized fault label
+  and the ticket count. The block is absent (not shown) when no fault qualifies.
+- The uploads volume joins the backup cycle (WP-M10-17): the `backup` profile of
+  `docker-compose.yml` mounts the `uploads` volume read-only and every cycle writes a
+  pair into the `backups` volume — the database dump `stoerdesk-<timestamp>.sql.gz` and
+  the uploads archive `stoerdesk-<timestamp>-uploads.tar.gz` — bounded by the same
+  `BACKUP_RETENTION_DAYS`. `docs/DEPLOYMENT.md` documents restoring database and uploads
+  **of one cycle together** (a `ticket_photos` row without its file is a broken ticket
+  gallery). `scripts/restore-drill.sh` proves the pair end to end on throw-away targets:
+  it starts the real `db` and `backup` services in its own Compose project and volumes,
+  seeds rows and two photo files, lets the profile write dump + archive, restores both
+  into a fresh database and a fresh uploads volume and compares the row counts and the
+  photo manifest; without a Docker daemon it exits 1 as `UNVERIFIED`, never green.
+  `scripts/docker-smoke.sh` runs the drill after the health checks, so the Docker CI job
+  proves it (ADR-0014 decisions 5 and 6).
+- Phase 10 is complete (WP-M10-18): the exit integration test mints an API key, drives
+  the external object and ticket API, verifies the signed webhook delivery, and covers
+  the CSV import and the personal-data export and erasure paths. The phase closes with
+  no open follow-up; phase 11 starts next.
+- A saved comment is visible at once (WP-M5-17): the service worker serves the ticket
+  detail from its `internal-tickets` cache, so the read after a write answered with the
+  copy from before the write and the comment stayed invisible until the next reload. A
+  write to a ticket now drops that copy — the service worker owns the cache, so it
+  invalidates it itself.
+- The comment composer warns before it writes (WP-M5-18): clicking "Kommentar speichern"
+  opens a dialog that names the append-only rule — a saved comment can no longer be
+  changed or deleted — shows the text again and offers "Speichern" and "Abbrechen". The
+  write runs only after the confirmation.
+- The comment field checks the spelling with the dictionary of the browser (WP-M5-18): it
+  carries the interface language (`de` or `en`) and `spellCheck`, and a line under the
+  field names the browser spell check. It works offline and ships no extra download.
+
 
 - Dashboard evaluation block on the start page (WP-M10-19b): below the tiles the page
   shows the four averages of the snapshot's `evaluations` block — review, first response,
@@ -125,6 +176,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket detail names the fault field "Gemeldete Störungsart" ("Reported fault type",
+  WP-M11-11): the chips under title and description are the fault types this report was made
+  for, not the whole catalogue. The shared key `ticket:detail.field.faults` changed in `de`
+  and `en`, so the ticket e-mail export shows the same label; the report form, the internal
+  creation form and the fault-catalog administration keep their wording.
 - The object list lost its external indicator (record WP-M9-26 — the commit `d1e34eb`
   landed without a work package): the rows no longer carry the "extern gepflegt" badge of
   WP-M2-39 next to the object number and the `Typ` column of WP-M2-66 (header, cells and the
@@ -147,6 +203,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The future-report-time warning of the internal creation form is German again (WP-M11-12):
+  the `de` value of `ticket:internal.create.errors.reportTimeFuture` held an English
+  sentence inside a German article (`Die reported time must not be in the future. …`). It now
+  reads `Die Meldezeit cannot be in the future. Please choose now or a past time.`, using the
+  `Meldezeit` term of the form; `en` already carried the correct English text and stays
+  unchanged, so `i18n:check` keeps de/en parity.
 - The dashboard stream no longer drops a change that arrives while a client reacts to the
   first snapshot (WP-M9-39): `GET /api/v1/dashboard/stream` sent its first snapshot **before**
   it captured the probe baseline. A client that reacts to the snapshot — the integration test

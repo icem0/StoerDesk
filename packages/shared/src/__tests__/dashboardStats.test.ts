@@ -244,12 +244,14 @@ describe('statistics response schemas', () => {
         bySystemType: [{ key: 'BMA', count: 5 }],
         byFaultTemplate: [{ key: 'bma_alarm', count: 3 }],
         bySource: [{ key: 'QR', count: 2 }],
+        byDetectedError: [{ key: 'verkabelung_defekt', count: 1 }],
       }),
     ).toEqual({
       series: [{ bucketStart: '2026-01-05T00:00:00Z', total: 7 }],
       bySystemType: [{ key: 'BMA', count: 5 }],
       byFaultTemplate: [{ key: 'bma_alarm', count: 3 }],
       bySource: [{ key: 'QR', count: 2 }],
+      byDetectedError: [{ key: 'verkabelung_defekt', count: 1 }],
     })
   })
 

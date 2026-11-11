@@ -306,6 +306,57 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     })
 
+    it('orders the catalog by recent fault usage, most frequent first', async () => {
+      const rareResponse = await createTemplate(cookies['admin'], {
+        key: 'a_rare',
+        translations: { de: 'Rare fault', en: 'Rare fault' },
+      })
+      const frequentResponse = await createTemplate(cookies['admin'], {
+        key: 'z_frequent',
+        translations: { de: 'Frequent fault', en: 'Frequent fault' },
+      })
+
+      expect(rareResponse.statusCode).toBe(201)
+      expect(frequentResponse.statusCode).toBe(201)
+
+      const rareKey = rareResponse.json<TemplateSummary>().key
+      const frequentKey = frequentResponse.json<TemplateSummary>().key
+
+      const object = onlyRow(
+        await db
+          .insert(objects)
+          .values({ objectNo: 'CATALOG-ORDER-1', name: 'Catalog order object' })
+          .returning(),
+        'object',
+      )
+      const now = new Date()
+
+      const report = async (key: string) => {
+        await db.insert(tickets).values({
+          objectId: object.id,
+          faultTemplateKeys: [key],
+          reportedAt: now,
+          deadlineAt: new Date(now.getTime() + 60_000),
+        })
+      }
+
+      await report(frequentKey)
+      await report(frequentKey)
+      await report(rareKey)
+
+      const publicKeys = ((await publicTemplates('de')).json<PublicListBody>().templates ?? []).map(
+        (entry) => entry.key,
+      )
+
+      expect(publicKeys.indexOf(frequentKey)).toBeLessThan(publicKeys.indexOf(rareKey))
+
+      const adminKeys = ((await listTemplates(cookies['admin']))
+        .json<TemplateListBody>()
+        .templates ?? []).map((template) => template.key)
+
+      expect(adminKeys.indexOf(frequentKey)).toBeLessThan(adminKeys.indexOf(rareKey))
+    })
+
     it('rejects a body without both translations', async () => {
       const response = await createTemplate(cookies['admin'], {
         translations: { de: 'Nur Deutsch' },

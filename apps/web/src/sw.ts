@@ -4,7 +4,7 @@ import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { registerRoute } from 'workbox-routing'
 
-import { isInternalTicketRead, isPublicReportPath } from './lib/sw-routes'
+import { isInternalTicketRead, isInternalTicketWrite, isPublicReportPath } from './lib/sw-routes'
 
 /**
  * The cache that holds the offline copies of assigned tickets (WP-M5-07).
@@ -50,6 +50,78 @@ registerRoute(
     plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 12 * 3600 })],
   }),
   'GET',
+)
+
+/**
+ * The detail URL of a write URL: `<base>/v1/tickets/<ticketNo>/<action>` becomes
+ * `<base>/v1/tickets/<ticketNo>`. Returns `null` for a URL that is not a write
+ * to a ticket.
+ */
+export function ticketDetailUrl(writeUrl: string): string | null {
+  let url: URL
+
+  try {
+    url = new URL(writeUrl)
+  } catch {
+    return null
+  }
+
+  if (!isInternalTicketWrite(url.pathname)) {
+    return null
+  }
+
+  const segments = url.pathname.split('/')
+
+  segments.pop()
+  url.pathname = segments.join('/')
+  url.search = ''
+  return url.toString()
+}
+
+/**
+ * Drops the cached copy of a ticket whose detail was just written. Without
+ * this invalidation the next read of that ticket is answered from the cache
+ * with the copy from before the write, so a new comment stays invisible until
+ * the next reload (WP-M5-17).
+ */
+export async function invalidateCachedTicket(
+  cacheStorage: CacheStorage,
+  writeUrl: string,
+): Promise<void> {
+  const detailUrl = ticketDetailUrl(writeUrl)
+
+  if (detailUrl === null) {
+    return
+  }
+
+  const cache = await cacheStorage.open(CACHE_INTERNAL_TICKETS)
+  const keys = await cache.keys()
+
+  await Promise.all(
+    keys
+      .filter((request) => request.url === detailUrl)
+      .map((request) => cache.delete(request)),
+  )
+}
+
+/**
+ * A write to a ticket (comment, acknowledge, decline, workflow action) goes to
+ * the network and invalidates the cached copy of that ticket, so the next read
+ * sees the new event (WP-M5-17).
+ */
+registerRoute(
+  ({ url }) => isInternalTicketWrite(url.pathname),
+  new NetworkOnly({
+    plugins: [
+      {
+        fetchDidSucceed: async ({ request, response }) => {
+          await invalidateCachedTicket(caches, request.url)
+          return response
+        },
+      },
+    ],
+  }),
+  'POST',
 )
 
 /**

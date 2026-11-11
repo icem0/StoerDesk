@@ -60,6 +60,7 @@
     "bySystemType": "Nach Anlagentyp",
     "byFaultTemplate": "Nach Störungsart",
     "bySource": "Nach Quelle",
+    "byDetectedError": "Nach festgestelltem Fehler",
     "key": "Schlüssel",
     "count": "Anzahl",
     "source": {

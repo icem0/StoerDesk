@@ -93,6 +93,7 @@ export const frequencyResponseSchema = z.object({
   bySystemType: z.array(frequencyGroupSchema),
   byFaultTemplate: z.array(frequencyGroupSchema),
   bySource: z.array(frequencyGroupSchema),
+  byDetectedError: z.array(frequencyGroupSchema),
 })
 
 export type FrequencyResponse = z.infer<typeof frequencyResponseSchema>

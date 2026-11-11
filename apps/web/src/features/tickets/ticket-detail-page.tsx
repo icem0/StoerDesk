@@ -98,6 +98,13 @@ export function TicketDetailPage() {
   const [stornoOpen, setStornoOpen] = useState(false)
   const [stornoReason, setStornoReason] = useState('')
   const [stornoMode, setStornoMode] = useState<'cancel' | 'uncancel'>('cancel')
+  const [commentConfirmOpen, setCommentConfirmOpen] = useState(false)
+  const [detectedErrorKeysSelected, setDetectedErrorKeysSelected] = useState<string[]>([])
+  const [detectedErrorsOptions, setDetectedErrorsOptions] = useState<{
+    key: string
+    labelDe: string
+    labelEn: string
+  }[]>([])
   const optionsMenuRef = useRef<HTMLDivElement>(null)
   const optionsButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -134,6 +141,25 @@ export function TicketDetailPage() {
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [optionsOpen])
+
+  useEffect(() => {
+    if (selectedAction !== 'closed') return
+
+    void (async () => {
+      try {
+        const data = await apiFetch<{ detectedErrors: { key: string; labelDe: string; labelEn: string; archivedAt: string | null; createdAt: string; updatedAt: string }[] }>(
+          '/v1/detected-errors',
+        )
+        setDetectedErrorsOptions(
+          data.detectedErrors
+            .filter((e) => e.archivedAt === null)
+            .map((e) => ({ key: e.key, labelDe: e.labelDe, labelEn: e.labelEn })),
+        )
+      } catch {
+        setDetectedErrorsOptions([])
+      }
+    })()
+  }, [selectedAction])
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
@@ -343,6 +369,14 @@ export function TicketDetailPage() {
       return
     }
     setLastError(null)
+    // A comment is append-only: it can neither be changed nor be deleted after
+    // it was saved (PLAN.md §6.1). The dialog names that before the write.
+    setCommentConfirmOpen(true)
+  }
+
+  async function saveComment() {
+    const text = req('commentText')
+    setCommentConfirmOpen(false)
     if (await handleAction('commented', { text })) {
       setNotice(t('detail.comment.saved'))
     }
@@ -685,6 +719,72 @@ export function TicketDetailPage() {
           </div>
         )
       }
+      case 'closed': {
+        const comment = fields.closeComment ?? ''
+        const selected = detectedErrorKeysSelected
+        return (
+          <div className="flex flex-wrap gap-2 items-end">
+            <textarea
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+              name="closeComment"
+              placeholder={t('detail.prompt.closeComment')}
+              value={comment}
+              onChange={(event) => setFields({ ...fields, closeComment: event.target.value })}
+            />
+            <div className="flex items-end gap-2">
+              <label className="text-xs text-slate-400">{t('detail.prompt.detectedErrors')}</label>
+              <select
+                className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+                multiple
+                size={3}
+                value={selected}
+                onChange={(event) => {
+                  const values = Array.from(event.target.selectedOptions).map(
+                    (option) => option.value,
+                  )
+                  setDetectedErrorKeysSelected(values)
+                }}
+              >
+                {detectedErrorsOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.labelDe} / {option.labelEn}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                void handleAction('closed', {
+                  comment: comment === '' ? undefined : comment,
+                  detectedErrorKeys:
+                    detectedErrorKeysSelected.length > 0
+                      ? detectedErrorKeysSelected
+                      : undefined,
+                })
+                setFields({})
+                setDetectedErrorKeysSelected([])
+              }}
+            >
+              {t('detail.action.confirm')}
+            </button>
+            <button
+              className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+              type="button"
+              onClick={() => {
+                setSelectedAction(null)
+                setFields({})
+                setDetectedErrorKeysSelected([])
+                setLastError(null)
+              }}
+            >
+              {t('detail.action.abort')}
+            </button>
+          </div>
+        )
+      }
       default: {
         const segment = selectedAction === null ? undefined : ACTION_SEGMENTS[selectedAction]
 
@@ -841,6 +941,67 @@ export function TicketDetailPage() {
     )
   }
 
+  /**
+   * The warning before a comment is written: the comment is an append-only
+   * event of the ticket and can neither be changed nor be deleted afterwards
+   * (PLAN.md §6.1). The text is shown again in the dialog, so the last check
+   * happens before the write.
+   */
+  function renderCommentConfirmDialog(): ReactNode {
+    const titleId = 'comment-confirm-title'
+    const hintId = 'comment-confirm-hint'
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        // Only a click on the backdrop itself closes the dialog; clicks inside
+        // the panel must not reach this handler.
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            setCommentConfirmOpen(false)
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation()
+            setCommentConfirmOpen(false)
+          }
+        }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={hintId}
+      >
+        <div className="w-full max-w-md p-6 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
+          <h2 id={titleId} className="text-lg font-semibold text-slate-100 mb-3">
+            {t('detail.comment.confirmTitle')}
+          </h2>
+          <p id={hintId} className="text-sm text-slate-300 mb-3">
+            {t('detail.comment.confirmText')}
+          </p>
+          <p className="mb-4 max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg border-l-2 border-amber-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200">
+            {fields.commentText ?? ''}
+          </p>
+          <div className="flex gap-2">
+            <button
+              className="min-w-[90px] rounded px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              onClick={() => void saveComment()}
+              type="button"
+            >
+              {t('detail.comment.confirmSubmit')}
+            </button>
+            <button
+              className="min-w-[90px] rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+              onClick={() => setCommentConfirmOpen(false)}
+              type="button"
+            >
+              {t('detail.comment.confirmAbort')}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section className="flex flex-col gap-4">
       {/* Header: title left, status + priority + options right */}
@@ -882,6 +1043,7 @@ export function TicketDetailPage() {
           </div>
         </div>
       {stornoOpen && renderStornoDialog()}
+      {commentConfirmOpen && renderCommentConfirmDialog()}
 
       {lastError !== null && (
         <div
@@ -1143,6 +1305,8 @@ export function TicketDetailPage() {
               rows={3}
               maxLength={2000}
               name="commentText"
+              lang={locale}
+              spellCheck
               placeholder={t('detail.comment.placeholder')}
               value={fields.commentText ?? ''}
               onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
@@ -1153,6 +1317,7 @@ export function TicketDetailPage() {
                 }
               }}
             />
+            <p className="mt-2 text-xs text-slate-500">{t('detail.comment.spellcheck')}</p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs text-slate-500">
                 {req('commentText').length > 0
@@ -1251,7 +1416,16 @@ export function TicketDetailPage() {
         </div>
       </div>
 
-      <OfflineActionBanner rows={rows} onRetry={deliverNow} onDiscard={discard} />
+      <OfflineActionBanner
+        rows={rows}
+        onRetry={async (row) => {
+          await deliverNow(row)
+          // The replayed comment is an event of the ticket: read the ticket
+          // again, so it shows up in the history at once (WP-M5-17).
+          void ticketQuery.refetch()
+        }}
+        onDiscard={discard}
+      />
     </section>
   )
 }

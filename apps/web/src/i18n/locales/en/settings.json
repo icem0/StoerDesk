@@ -38,6 +38,10 @@
      "title": "Deadlines",
      "hint": "Deadlines and reaction deadlines per priority."
     },
+    "detectedErrors": {
+     "title": "Detected errors",
+     "hint": "Maintain the catalog of errors detected during ticket handling."
+    },
     "oncall": {
      "title": "On-call plan",
      "hint": "Shifts, confirmations and shift swaps."
@@ -427,7 +431,48 @@
    "unknown": "The action failed."
   }
  },
- "dashboardSettings": {
+  "detectedErrors": {
+    "title": "Detected errors",
+    "hint": "Errors found during ticket handling — independent of the reported fault. Archived errors stay visible on existing tickets but are no longer offered in the close dialog.",
+    "loading": "Loading …",
+    "sessionNotice": "The detected errors administration requires a valid sign-in.",
+    "forbiddenNotice": "No permission for the detected errors administration.",
+    "createTitle": "Create detected error",
+    "editTitle": "Edit detected error {{key}}",
+    "create": "Create",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "archive": "Archive",
+    "unarchive": "Reactivate",
+    "delete": "Delete",
+    "deleteBlocked": "Used by tickets",
+    "fields": {
+      "key": "Key",
+      "de": "German text",
+      "en": "English text"
+    },
+    "table": {
+      "key": "Key",
+      "de": "German",
+      "en": "English",
+      "status": "Status",
+      "usage": "Tickets",
+      "actions": "Actions"
+    },
+    "active": "active",
+    "archived": "archived",
+    "errors": {
+      "session_invalid": "Session expired – please sign in again.",
+      "forbidden": "No permission for this action.",
+      "invalid_request": "Invalid input – please fill in both texts.",
+      "detected_error_not_found": "Detected error not found.",
+      "detected_error_in_use": "The error is still used by tickets and cannot be deleted.",
+      "detected_error_key_taken": "A detected error with this key already exists.",
+      "unknown": "Saving failed."
+    }
+  },
+  "dashboardSettings": {
   "title": "Dashboard and statistics",
   "hint": "Wall display, anonymisation and the threshold for conspicuous objects.",
   "loading": "Loading settings …",

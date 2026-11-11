@@ -1,7 +1,7 @@
 # WP-M2-94b: name fields in the users page UI
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M2-94 (name fields in shared schemas and admin user API)
 phase: 2
 context-budget: 14k tokens

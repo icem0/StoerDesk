@@ -19,6 +19,7 @@ const snapshot: DashboardSnapshot = {
     averageAcknowledgeMinutes: 90,
     averageProcessingMinutes: 360,
   },
+  topFault: { key: 'feueralarm_ausloesung', count: 3 },
   tiles: {
     open: 2,
     openByStatus: {
@@ -77,7 +78,25 @@ const snapshot: DashboardSnapshot = {
 function renderPage(data: DashboardSnapshot = snapshot) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => Response.json(data)),
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.includes('/v1/text-templates')) {
+        return Response.json({
+          templates: [
+            {
+              id: '11111111-1111-4111-8111-111111111111',
+              key: 'feueralarm_ausloesung',
+              archivedAt: null,
+              translations: { de: 'Feueralarm ausgelöst', en: 'Fire alarm triggered' },
+              usageCount: 3,
+            },
+          ],
+        })
+      }
+
+      return Response.json(data)
+    }),
   )
 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -190,4 +209,26 @@ describe('StartPage dashboard', () => {
 
     expect(screen.getByText('Zustellung gestört')).toBeTruthy()
   })
+  it('renders the most frequent fault with its localized label and count', async () => {
+    renderPage()
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
+    expect(screen.getByText('Frequentest fault')).toBeTruthy()
+    // the fault catalog arrives async — poll for the resolved label
+    expect(await screen.findByText('Feueralarm ausgelöst')).toBeTruthy()
+    expect(screen.getByText('3-mal in the last 30 days')).toBeTruthy()
+  })
+
+  it('omits the top fault for a snapshot without it', async () => {
+    const withoutTopFault: DashboardSnapshot = { ...snapshot }
+    delete withoutTopFault.topFault
+
+    renderPage(withoutTopFault)
+
+    await screen.findByText('12 Tag(e) ohne Störung')
+
+    expect(screen.queryByText('Frequentest fault')).toBeNull()
+  })
+
 })

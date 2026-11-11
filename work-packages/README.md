@@ -20,7 +20,9 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
 | [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
 | [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
-| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages | 20 |
+| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault | 24 |
+| [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
+| [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -239,6 +241,15 @@ signal → matrix → ntfy → email → telegram → webpush. The PWA push regi
 in the web app, `notification_permissions` and the admin failure warning of §12), per-event
 channel selection and `pushUrl` as an escalation parameter stay unimplemented.
 
+**Phase 11 is complete and phase 12 acceptance starts.** Every phase-11 follow-up
+is closed — `WP-M11-02` … `WP-M11-10` plus `WP-M11-11` and `WP-M11-12` are done and
+no `Follow-up WP:` or `Open question:` line stays open in `work-packages/m11/`.
+**WP-M12-01** mirrors the acceptance summary of `PLAN.md` §20 (items 1–12) into
+`specs/16-acceptance.md` — the original book chapters 18 + 19 were not supplied —
+maps every item to the implemented surfaces and announces the split **WP-M12-02**,
+the acceptance end-to-end suite for items 1–12
+(`scripts/e2e-acceptance.mjs`, planned — its file exists, its code does not yet).
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -414,8 +425,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M2-92d | theme class in the shell and light palette in styles.css            | done                    | yes     |
 | WP-M2-92e | theme select in the user settings (users page)                      | done                    | yes     |
 | WP-M2-93  | `users.given_name`/`users.family_name` and migration 0018          | done                    | yes     |
-| WP-M2-94  | name fields in the shared schemas and the admin user API            | planned                 | yes     |
-| WP-M2-94b | name fields in the users page UI                                    | planned                 | yes     |
+| WP-M2-94  | name fields in the shared schemas and the admin user API            | done                    | yes     |
+| WP-M2-94b | name fields in the users page UI                                    | done                    | yes     |
 | WP-M2-95  | internal ticket creation honours the branding title switch          | done                    | yes     |
 | WP-M2-98  | reporter metadata columns and migration 0028                       | done                    | yes     |
 | WP-M2-98b | internal create accepts report time, channel and reporter kind      | done                    | yes     |
@@ -459,6 +470,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M5-14  | history actor names from the directory, not the login                | done                    | no      |
 | WP-M5-15  | history actors as name or "Extern: name"                             | done                    | no      |
 | WP-M5-16  | workflow E2E expects the actor name, not the actor kind              | done                    | yes     |
+| WP-M5-17  | the ticket view shows a write immediately                             | done                    | yes     |
+| WP-M5-18  | comment confirmation and browser spell check                          | done                    | yes     |
 | WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
 | WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
 | WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
@@ -563,8 +576,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-14 | CSV import page                                                   | done                    | yes     |
 | WP-M10-15 | privacy retention job                                             | done                    | yes     |
 | WP-M10-16 | personal-data export and erasure routes                           | done                    | yes     |
-| WP-M10-17 | uploads backup, restore procedure and drill                       | planned                 | yes     |
-| WP-M10-18 | phase-10 exit criterion and record                                | planned                 | yes     |
+| WP-M10-17 | uploads backup, restore procedure and drill                       | done                    | yes     |
+| WP-M10-18 | phase-10 exit criterion and record                                | done                    | yes     |
 | WP-M10-19 | dashboard evaluations: average durations, no worst value          | done                    | yes     |
 | WP-M10-19b | evaluation block on the dashboard start page                     | done                    | yes     |
 | WP-M10-30  | the open tickets of the snapshot carry the mini timeline and the last event | done                    | yes     |
@@ -573,7 +586,29 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-33  | the readiness calendar of the office                                   | done                    | yes     |
 | WP-M10-34  | the on-call page shows the calendar and the own readiness              | done                    | yes     |
 | WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | done                    | yes     |
+
 | WP-M10-36  | one display for the dashboard and the wall monitor, links off on the wall | done                  | yes     |
+
+| WP-M10-40  | shell header: logo left, menu centred, mobile tab strip                 | done                    | yes     |
+| WP-M10-20 | fault catalog ordered by recent usage in the report and office forms | done                    | yes     |
+| WP-M10-20b | fault catalog management screen keeps its alphabetical order    | done                    | yes     |
+| WP-M10-21 | dashboard snapshot carries the most frequent fault              | done                    | yes     |
+| WP-M10-21b | most frequent fault on the dashboard start page                | done                    | yes     |
+| WP-M11-11  | ticket detail names the reported fault type                      | done                    | yes     |
+| WP-M11-12  | the internal report-time warning is German again                | done                    | yes     |
+| WP-M11-01  | detected errors — specification, ADR and phase-11 split        | done                    | yes     |
+| WP-M11-02  | `detected_errors`-Tabelle und `tickets.detected_error_keys`    | done                    | yes     |
+| WP-M11-03  | API CRUD `/api/v1/detected-errors`                             | done                    | yes     |
+| WP-M11-04  | Close-Route akzeptiert Kommentar und festgestellte Fehler      | done                    | yes     |
+| WP-M11-05  | Statistik: `byDetectedError` und View-Erweiterung              | done                    | yes     |
+| WP-M11-06  | Admin-UI `DetectedErrorsPage` (CRUD, archivieren)              | done                    | yes     |
+| WP-M11-07  | Ticket-Detail Close-Panel mit festgestellten Fehlern           | done                    | yes     |
+| WP-M11-08  | Statistik-UI `byDetectedError`-Chart                           | done                    | yes     |
+| WP-M11-09  | Integrationstests (API, Close, Statistik)                      | done                    | yes     |
+| WP-M11-10  | Phase-11 Exit-Kriterium und Record                             | done                    | yes     |
+| WP-M12-01  | acceptance criteria slice and phase-12 split                     | done                    | yes     |
+| WP-M12-02  | acceptance end-to-end suite for items 1–12                      | planned                 | yes     |
+
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -995,6 +1030,23 @@ header, the labels under `dashboard.evaluations.*` in `de` and `en`, and no
 max/p90/median line anywhere — the worst reaction time is not part of the page.
 
 ## Validation
+**The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
+office asked for three things on the ticket detail page: a saved comment must be
+visible at once, the save must warn that the comment can no longer be corrected,
+and the comment field should have a spell check. **WP-M5-17** fixes the first
+one: the detail of a ticket is served from the `internal-tickets` cache with
+`StaleWhileRevalidate` (WP-M5-07), so the refetch after a write answered with
+the copy from before the write and the comment stayed invisible until the next
+reload. A write to a ticket now drops that copy — the service worker owns the
+cache, so the invalidation belongs to the service worker
+(`apps/web/src/sw.ts`, `isInternalTicketWrite`, `invalidateCachedTicket`).
+**WP-M5-18** adds the warning: clicking "Kommentar speichern" opens a dialog
+that names the append-only rule of `PLAN.md` §6.1, shows the text again and
+offers "Speichern" and "Abbrechen"; the write runs only after the
+confirmation. The spell check is the one of the browser — the field carries the
+interface language and `spellCheck`, so it works offline and ships no extra
+download.
+
 
 ```bash
 npm run wp:check

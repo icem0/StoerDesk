@@ -483,6 +483,11 @@ export const tickets = pgTable(
     parentTicketId: uuid('parent_ticket_id').references((): AnyPgColumn => tickets.id, {
       onDelete: 'set null',
     }),
+    /** Festgestellte Fehler bei Abschluss (WP-M11-02): Keys aus `detected_errors`, leer bei unbekannt. */
+    detectedErrorKeys: text('detected_error_keys')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /**
      * Workflow columns of `PLAN.md` §7 — added by the hand-written migration 0006
      * (WP-M2-19a) and declared here so the snapshot chain describes the real database.
@@ -998,6 +1003,28 @@ export const oncallEvents = pgTable(
   ],
 )
 
+/**
+ * Festgestellte Fehler (WP-M11-02): ein von der Administration gepflegter
+ * Katalog, der bei Ticket-Abschluss ausgewählt wird. Archiviert statt gelöscht:
+ * `archived_at` entfernt einen Key aus dem Close-Dialog, aber nicht aus
+ * bestehenden Tickets.
+ */
+export const detectedErrors = pgTable(
+  'detected_errors',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    key: text('key').notNull().unique(),
+    labelDe: text('label_de').notNull(),
+    labelEn: text('label_en').notNull(),
+    archivedAt: timestamp('archived_at', timestampOptions),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    index('detected_errors_key_idx').on(table.key),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -1054,3 +1081,5 @@ export type OnCallSwapState = (typeof ONCALL_SWAP_STATES)[number]
 export type OnCallEvent = typeof oncallEvents.$inferSelect
 export type NewOnCallEvent = typeof oncallEvents.$inferInsert
 export type OnCallEventActorKind = (typeof ONCALL_EVENT_ACTOR_KINDS)[number]
+export type DetectedError = typeof detectedErrors.$inferSelect
+export type NewDetectedError = typeof detectedErrors.$inferInsert

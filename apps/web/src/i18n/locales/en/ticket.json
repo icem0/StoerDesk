@@ -24,6 +24,22 @@
       "minutes": "{{count}} min",
       "noData": "no data"
     },
+    "topFault": {
+      "title": "Most frequent fault",
+      "count": "{{count}}× in the last 30 days"
+    },
+    "onCall": {
+      "title": "On call",
+      "confirmed": "confirmed",
+      "planned": "planned",
+      "unstaffed": "not staffed",
+      "endsAt": "until {{time}}",
+      "noEnd": "no end given",
+      "warning": {
+        "oncall_unconfirmed": "On-call shift not yet confirmed",
+        "oncall_unstaffed": "On-call shift not staffed"
+      }
+    },
     "channels": {
       "title": "Channels",
       "pending": "{{count}} pending",
@@ -364,7 +380,7 @@
       "reporterKind": "Report type",
       "title": "Title",
       "description": "Description",
-      "faults": "Fault types"
+      "faults": "Reported fault type"
     },
     "source": {
       "qr": "QR code report",
@@ -454,6 +470,8 @@
       "acknowledgeResult": "Result (fixed, partially_fixed, follow_up_required, no_fault_found):",
       "acknowledgeNote": "Note (optional):",
         "commentText": "Comment text:",
+        "closeComment": "Comment on close (optional):",
+        "detectedErrors": "Detected errors (optional, multiple):",
         "deleteConfirmNumber": "Ticket number to confirm:"
     }
   },

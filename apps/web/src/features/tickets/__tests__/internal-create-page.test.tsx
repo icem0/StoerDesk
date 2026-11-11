@@ -492,7 +492,7 @@ describe('InternalCreatePage', () => {
     // so the office cannot forward to a ticket that was never created.
     await waitFor(() =>
       expect(
-        screen.getByText('Die reported time must not be in the future. Please choose now or a past time.'),
+        screen.getByText('Die Meldezeit cannot be in the future. Please choose now or a past time.'),
       ).toBeTruthy(),
     )
     expect(bodies.length).toBe(0)

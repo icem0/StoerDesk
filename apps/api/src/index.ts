@@ -19,6 +19,7 @@ import { settingsBrandingRoutes } from './settings/branding'
 import { settingsDashboardRoutes } from './settings/dashboard'
 import { settingsDeadlineRoutes } from './settings/deadlines'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
+import { detectedErrorsRoutes } from './settings/detected-errors'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
 import { runMigrations } from './db/migrate'
@@ -138,6 +139,7 @@ export async function buildServer() {
   await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
+  await app.register(detectedErrorsRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(externalObjectRoutes, { database })
   await app.register(objectImportRoutes, { database })

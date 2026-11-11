@@ -77,6 +77,18 @@ const dashboardEvaluationsSchema = z.object({
   averageProcessingMinutes: z.number().int().nonnegative().nullable(),
 })
 
+/**
+ * Most frequent fault template of the last 30 days (`specs/11-dashboard.md` §11.2,
+ * WP-M10-21). The block is language-neutral — only the machine `key` and a positive
+ * `count` travel; the dashboard resolves the label from the fault catalog, so the
+ * API never answers translated text (PLAN.md §3). `optional()` so an older SSE frame
+ * still parses; `null` when no qualifying fault was reported.
+ */
+const topFaultSchema = z.object({
+  key: z.string(),
+  count: z.number().int().positive(),
+})
+
 export const dashboardSnapshotSchema = z.object({
   generatedAt: z.iso.datetime(),
   faultFree: z.object({
@@ -85,6 +97,7 @@ export const dashboardSnapshotSchema = z.object({
     recordDays: z.number().int().nonnegative(),
   }),
   evaluations: dashboardEvaluationsSchema.optional(),
+  topFault: topFaultSchema.nullable().optional(),
   tiles: z.object({
     open: z.number().int().nonnegative(),
     openByStatus: z.record(ticketStatusSchema, z.number().int().nonnegative()),
@@ -99,6 +112,7 @@ export const dashboardSnapshotSchema = z.object({
 
 export type DashboardSnapshot = z.infer<typeof dashboardSnapshotSchema>
 export type DashboardEvaluations = z.infer<typeof dashboardEvaluationsSchema>
+export type DashboardTopFault = z.infer<typeof topFaultSchema>
 
 /**
  * Dashboard settings (`specs/11-dashboard.md` §11.8,

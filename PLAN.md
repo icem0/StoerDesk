@@ -614,7 +614,8 @@ explanation. Offline is a core feature and appears early.
 | **7**  | Notifications: outbox, worker, Web Push, ntfy, Matrix, Signal, SMTP, Telegram                               | channel failure retries and falls back; history shows it                                        |
 | **8**  | On-call calendar: pools, slots, planning, confirm/decline, swaps, ticket coupling, iCal                     | DST tests and atomic swap tests pass                                                            |
 | **9**  | Dashboard and statistics: counter, SSE, tiles, TV, queries, charts, CSV                                     | counter resets on new ticket; statistics match reference data                                   |
-| **10** | API and hardening: API keys, object/ticket API, webhooks, OpenAPI, CSV import, privacy, backup/restore      | API contract tests and restore drill pass                                                       |
+| **10** | API and hardening: API keys, object/ticket API, webhooks, OpenAPI, CSV import, privacy, backup/restore | API contract tests and restore drill pass |
+| **11** | Detected errors: admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | Close stores detected errors; statistics groups by detected error; admin catalog editable |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -771,6 +772,16 @@ package; do not duplicate it here or in `AGENTS.md`.
 | WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done    |
 | WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                   | done    |
 | WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)          | done    |
+| WP-M11-01 | detected errors — specification, ADR and phase-11 split                  | done    |
+| WP-M11-02 | `detected_errors`-Tabelle und `tickets.detected_error_keys`              | done    |
+| WP-M11-03 | API CRUD `/api/v1/detected-errors`                                       | done    |
+| WP-M11-04 | Close-Route akzeptiert Kommentar und festgestellte Fehler                | done    |
+| WP-M11-05 | Statistik: `byDetectedError` und View-Erweiterung                        | done    |
+| WP-M11-06 | Admin-UI `DetectedErrorsPage` (CRUD, archivieren)                        | done    |
+| WP-M11-07 | Ticket-Detail Close-Panel mit festgestellten Fehlern                     | done    |
+| WP-M11-08 | Statistik-UI `byDetectedError`-Chart                                     | done    |
+| WP-M11-09 | Integrationstests (API, Close, Statistik)                                | done    |
+| WP-M11-10 | Phase-11 Exit-Kriterium und Record                                       | done    |
 
 WP-M1-09e closed the login-UI gap: `LoginForm`, `LogoutButton` and the `RequireSession`
 guard live in `apps/web/src/auth`, so the exit criterion "login as admin works" is
@@ -1371,14 +1382,14 @@ surface under `/api/docs`. The phase is split into **WP-M10-02 … WP-M10-18** i
 numeric order: API-key schema and contracts → admin routes → admin UI → bearer auth
 → OpenAPI → external object API → external ticket API → webhook endpoints → webhook
 worker → webhook UI → CSV service → CSV route → CSV UI → retention job → privacy
-export/erasure → uploads backup and restore drill → exit criterion. Implemented so
-far: **WP-M10-02 … WP-M10-16** — API-key schema, admin routes and page, bearer
+export/erasure → uploads backup and restore drill → exit criterion. Implemented: **WP-M10-02 … WP-M10-18** — API-key schema, admin routes and page, bearer
 authentication, OpenAPI, external object and ticket API, webhook endpoints, the
 per-minute HMAC delivery worker, the webhook admin page with its OpenAPI paths,
 the CSV import service and its two routes
 (`POST /api/v1/objects/import/preview` and `POST /api/v1/objects/import` under
 `object.import`), the CSV import page at `/objects/import` (WP-M10-14) and the
-personal-data export and erasure routes (WP-M10-16). The CSV service parses comma or semicolon files
+personal-data export and erasure routes (WP-M10-16), closed by the phase-10 exit
+criterion (WP-M10-18). Phase 10 is complete. The CSV service parses comma or semicolon files
 (quoted fields, 2 MB / 5,000 rows), maps the header case-insensitively through
 the German aliases of §9.4, previews every row as `new`, `changed`,
 `unchanged` or `error` and commits the valid rows in one transaction where a
@@ -1410,6 +1421,22 @@ Idempotency is the event itself: a repeat finds that event, writes nothing and a
 `alreadyErased`; the ticket, its photos and its trail stay and full deletion remains the
 `ticket.delete` path of WP-M2-77 (ADR-0014 decision 4). The shared contracts live in
 `packages/shared/src/schemas/privacy.ts`.
+
+**Uploads backup and the restore drill (WP-M10-17).** The `backup` profile now
+mounts the `uploads` volume read-only and writes a pair every cycle: the
+database dump `stoerdesk-<stamp>.sql.gz` and the uploads archive
+`stoerdesk-<stamp>-uploads.tar.gz`; `BACKUP_RETENTION_DAYS` bounds both.
+`docs/DEPLOYMENT.md` documents restoring database and uploads **of one cycle
+together** — a `ticket_photos` row without its file is a broken ticket gallery
+(ADR-0014 consequence). `scripts/restore-drill.sh` proves the pair on throw-away
+targets: it starts the `db` and `backup` services of the real
+`docker-compose.yml` in its own Compose project with its own volumes, seeds
+rows and two photo files, waits until the profile wrote a dump + archive pair,
+replays the dump into a fresh database and extracts the archive into a fresh
+uploads volume, then compares the row counts and the photo manifest.
+`scripts/docker-smoke.sh` runs the drill after the health checks, so the Docker
+CI job proves it; without a usable Docker daemon the drill exits 1 reporting
+itself `UNVERIFIED`, never green (ADR-0014 decision 6).
 
 **Dashboard evaluations (WP-M10-19 … WP-M10-19b, out of band in phase 10).** The office
 asked for evaluations in the dashboard's own view — average durations such as the
@@ -1455,6 +1482,23 @@ the shared `DashboardDisplay` shows the same blocks on both surfaces, and on the
 link is active — a monitor is a display only.
 
 ## 17. Work package rules for small models
+**The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
+office asked for three things on the ticket detail page: a saved comment must be
+visible at once, the save must warn that the comment can no longer be corrected,
+and the comment field should have a spell check. **WP-M5-17** fixes the first
+one: the detail of a ticket is served from the `internal-tickets` cache with
+`StaleWhileRevalidate` (WP-M5-07), so the refetch after a write answered with
+the copy from before the write and the comment stayed invisible until the next
+reload — a write to a ticket now drops that copy, and the service worker owns
+the cache, so the invalidation belongs to the service worker
+(`apps/web/src/sw.ts`, `isInternalTicketWrite`, `invalidateCachedTicket`).
+**WP-M5-18** adds the warning: clicking "Kommentar speichern" opens a dialog
+that names the append-only rule of §6.1, shows the text again and offers
+"Speichern" and "Abbrechen"; the write runs only after the confirmation. The
+spell check is the one of the browser — the field carries the interface language
+and `spellCheck`, so it works offline and ships no extra download.
+
+
 
 Target: a 64k–128k context model such as Qwen can finish one WP without losing
 the thread.

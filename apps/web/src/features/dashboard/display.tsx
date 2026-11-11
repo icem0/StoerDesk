@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom'
 import type { DashboardSnapshot } from '@stoerdesk/shared'
 import type { TFunction } from 'i18next'
 
+import { i18n } from '../../i18n'
+import { useFaultCatalog } from '../../features/tickets/use-fault-catalog'
+
 import { OpenTickets } from './open-tickets'
 
 /**
@@ -95,8 +98,14 @@ export function DashboardDisplay(props: { snapshot: DashboardSnapshot; interacti
   const { t } = useTranslation('ticket')
   const { snapshot, interactive } = props
 
-  const { faultFree, evaluations, tiles, burningNow } = snapshot
+  const { faultFree, evaluations, tiles, burningNow, topFault } = snapshot
   const channels = tiles.channels ?? null
+  const catalogLocale = i18n.language === 'en' ? 'en' : 'de'
+  const faultCatalog = useFaultCatalog(catalogLocale)
+  const topFaultLabel =
+    topFault === undefined || topFault === null
+      ? ''
+      : faultCatalog.find((entry) => entry.key === topFault.key)?.text ?? topFault.key
 
   return (
     <section className="flex flex-col gap-6">
@@ -192,6 +201,18 @@ export function DashboardDisplay(props: { snapshot: DashboardSnapshot; interacti
       ) : null}
 
       <OpenTickets generatedAt={snapshot.generatedAt} linkRows={interactive} rows={burningNow} />
+
+      {topFault !== undefined && topFault !== null ? (
+        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            {t('dashboard.topFault.title')}
+          </p>
+          <p className="mt-1 text-lg font-semibold text-sky-200">{topFaultLabel}</p>
+          <p className="mt-1 text-sm text-slate-400">
+            {t('dashboard.topFault.count', { count: topFault.count })}
+          </p>
+        </div>
+      ) : null}
 
       {channels !== null && channels.length > 0 ? (
         interactive ? (
