@@ -8,6 +8,7 @@ import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
 import { MySettingsPage } from '../settings/my-settings-page'
+import { SettingsPage } from '../settings/settings-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
 import { GroupsPage } from '../admin/groups-page'
@@ -179,6 +180,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <DashboardSettingsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/settings',
+        element: (
+          <RequireSession>
+            <SettingsPage />
           </RequireSession>
         ),
       },

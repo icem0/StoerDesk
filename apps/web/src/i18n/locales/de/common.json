@@ -5,6 +5,7 @@
   "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
   "version": "Version",
   "settings": "Einstellungen",
+  "settingsHint": "Alle Einstellungen und Bereiche an einem Ort, nach Themen gruppiert.",
   "logoAlt": "Logo von StörDesk",
   "navigation": "Hauptnavigation",
   "nav": {
@@ -15,9 +16,11 @@
   "titleWithCompany": "{{company}} @ {{product}}",
   "settingsGroups": {
    "personal": "Persönlich",
+   "appearance": "Darstellung",
    "operations": "Meldungen",
    "objects": "Objekte",
-   "administration": "Verwaltung"
+   "administration": "Verwaltung",
+   "account": "Konto"
   },
   "notFound": {
    "title": "Seite nicht gefunden",
@@ -81,6 +84,7 @@
     "myShifts": "Meine Bereitschaft",
     "mySettings": "Meine Einstellungen",
     "deadlines": "Fristen",
+    "escalationStages": "Eskalationsstufen",
     "standardTexts": "Störungsarten",
     "stickers": "QR-Aufkleber",
     "admin": "Verwaltung öffnen",

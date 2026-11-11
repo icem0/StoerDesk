@@ -5,6 +5,7 @@
   "setupNotice": "Environment is set up. Implementation follows after specification approval.",
   "version": "Version",
   "settings": "Settings",
+  "settingsHint": "All settings and areas in one place, grouped by topic.",
   "logoAlt": "StörDesk logo",
   "navigation": "Main navigation",
   "nav": {
@@ -15,9 +16,11 @@
   "titleWithCompany": "{{company}} @ {{product}}",
   "settingsGroups": {
    "personal": "Personal",
+   "appearance": "Appearance",
    "operations": "Operations",
    "objects": "Objects",
-   "administration": "Administration"
+   "administration": "Administration",
+   "account": "Account"
   },
   "notFound": {
    "title": "Page not found",
@@ -81,6 +84,7 @@
     "myShifts": "My on-call shifts",
     "mySettings": "My settings",
     "deadlines": "Deadlines",
+    "escalationStages": "Escalation stages",
     "standardTexts": "Fault types",
     "stickers": "QR stickers",
     "admin": "Open administration",

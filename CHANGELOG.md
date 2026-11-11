@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Settings overview page (WP-M12-07): `/settings` lists every settings and administration
+  destination as a link card, grouped by topic — "Persönlich" (own settings, own
+  readiness), "Darstellung" (appearance, dashboard and statistics), "Meldungen"
+  (tickets, new report, statistics), "Objekte" (objects, QR stickers), "Verwaltung"
+  (administration, users, roles, groups, fault types, detected errors, deadlines,
+  escalation stages, on-call plan, BMAcloud sync, API keys, webhooks) and "Konto" with
+  the signed-in e-mail and the logout button.
 - Ticket detail escalation section (WP-M12-06): the top-right hamburger menu is gone and
   its actions live in one section under the photos — the status-dependent workflow
   buttons, e-mail, cancel, delete and "Zurück zur Liste" as visible buttons with their
