@@ -207,6 +207,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket detail view carries its e-mail export and its cancel button in the header
+  (WP-M12-09): the export is an icon button (envelope, 44 px target, the localized label
+  as `aria-label`) next to the cancel button, both at the top right beside the status and
+  priority badges. The escalation section keeps the status-dependent workflow actions and
+  the permanent delete. The way back to the list is deleted for good — the button, its
+  handler branch and the `detail.back` / `detail.menu.back` labels of `de` and `en` are
+  gone.
+
 - The i18next line of the web app is aligned so one copy resolves: `apps/web/package.json`
   now pins `i18next: ^27.0.1` and `react-i18next: ^17.1.13` instead of `^26.5.11` and
   `^17.1.9`. `react-i18next` 18 declares the peer `i18next >= 27.0.0`, so Dependabot's

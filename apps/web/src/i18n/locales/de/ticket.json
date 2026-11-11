@@ -326,7 +326,6 @@
     "title": "Meldung {{ticketNo}}",
     "subtitle": "Objekt {{object}}",
     "loading": "Meldung wird geladen …",
-    "back": "Zurück zur Liste",
     "actions": "Aktionen",
     "errors": {
       "notFound": "Meldung nicht gefunden.",
@@ -431,8 +430,7 @@
       "cancel": "Stornieren",
       "uncancel": "Stornierung aufheben",
       "delete": "Endgültig löschen",
-      "email": "E-Mail exportieren",
-      "back": "Zurück zur Liste"
+      "email": "E-Mail exportieren"
     },
     "storno": {
       "title": "Stornieren",

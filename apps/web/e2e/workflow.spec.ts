@@ -56,7 +56,6 @@ const ui = {
     objectLabel: 'Objekt',
     titleLabel: 'Titel',
     submit: 'Meldung erstellen',
-    back: 'Zurück zur Liste',
     history: 'Verlauf',
     status: {
       NEW: 'Neu',
@@ -95,7 +94,6 @@ const ui = {
     objectLabel: 'Object',
     titleLabel: 'Title',
     submit: 'Create report',
-    back: 'Back to list',
     history: 'History',
     status: {
       NEW: 'New',

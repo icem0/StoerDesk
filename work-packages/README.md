@@ -259,6 +259,14 @@ after a CI run lost the reload race of the conflict banner: `onActionChange` in
 `useInternalActions` re-reads the rows of its ticket and the conflict is asserted on the
 open page before the reload (WP-M5-06 conflict UI).
 
+**WP-M12-09** moves the e-mail export and the cancel button of the ticket detail view
+into the header: the export is an icon button (envelope, 44 px target, `aria-label` from
+`detail.menu.email`) next to the cancel button, both sit at the top right next to the
+status and priority badges and leave the escalation section, which keeps the workflow
+actions and the permanent delete. The way back to the list is deleted for good: the
+`list` entry of the action list, its handler branch and the `detail.back` /
+`detail.menu.back` labels of `de` and `en` are gone.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -624,6 +632,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M12-06  | ticket detail — menu removed, escalation section added          | done                    | yes     |
 | WP-M12-07  | settings overview page `/settings`, grouped by topic                | done                    | yes     |
 | WP-M12-08  | shell gear opens the settings page — dropdown removed             | done                    | yes     |
+| WP-M12-09  | ticket detail — e-mail icon and cancel in the header, no back button | done                  | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -327,7 +327,6 @@
     "title": "Ticket {{ticketNo}}",
     "subtitle": "Object {{object}}",
     "loading": "Loading ticket …",
-    "back": "Back to list",
     "actions": "Actions",
       "errors": {
         "notFound": "Ticket not found.",
@@ -432,8 +431,7 @@
       "cancel": "Cancel",
       "uncancel": "Revoke cancellation",
       "delete": "Delete permanently",
-      "email": "Export E-Mail",
-      "back": "Back to list"
+      "email": "Export E-Mail"
     },
     "storno": {
       "title": "Cancel",

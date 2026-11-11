@@ -18,7 +18,9 @@ import { TicketTimeline } from './ticket-timeline'
  * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d / WP-M4-07 / WP-M12-06).
  *
  * Layout per user request:
- * - Header: ticket number + object on the left, status + priority badges on the top right.
+ * - Header: ticket number + object on the left, status + priority badges on the top
+ *   right, next to them the e-mail export as an icon button and the cancel button
+ *   (WP-M12-09).
  * - Timeline bar directly under the header: "Gemeldet am" left, "Reaktionszeit bis" right,
  *   6 h scale markings below the bar, milestone dots on the bar.
  * - Object row: object name + object number side by side, labels above.
@@ -27,7 +29,7 @@ import { TicketTimeline } from './ticket-timeline'
  * - The escalation section carries the stage dropdown, the text field and the
  *   status-dependent workflow actions as visible buttons (WP-M12-06); the
  *   top-right hamburger menu is gone.
- * - The standalone "Zurück zur Liste" button is removed.
+ * - The way back to the list is gone for good (WP-M12-09).
  */
 
 const STATUS_COLORS: Record<string, string> = {
@@ -235,12 +237,6 @@ export function TicketDetailPage() {
     }
     setLastError(null)
 
-    if (value === 'list') {
-      setSelectedAction(null)
-      navigate('/tickets')
-      return
-    }
-
     if (value === 'email') {
       navigate(`/tickets/${ticketNo}/email`)
       return
@@ -345,7 +341,8 @@ export function TicketDetailPage() {
 
   /**
    * Builds the list of workflow entries for the current status. The entries are
-   * visible buttons in the escalation/action section; the menu was removed.
+   * visible buttons in the escalation/action section; the menu was removed. The
+   * e-mail export and the cancel button live in the header (WP-M12-09).
    */
   const status = ticket.status
   const req = (name: string) => (fields[name] ?? '').trim()
@@ -407,9 +404,7 @@ export function TicketDetailPage() {
     }
   }
 
-  const menuEntries: { value: string; labelKey: string; divider?: boolean }[] = []
-
-  menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
+  const menuEntries: { value: string; labelKey: string }[] = []
 
   if (status === 'NEW') {
     menuEntries.push({ value: 'review_started', labelKey: 'detail.action.review' })
@@ -429,22 +424,9 @@ export function TicketDetailPage() {
     menuEntries.push({ value: 'reopened', labelKey: 'detail.action.reopen' })
   }
 
-  menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
-
-  if (status !== 'CANCELLED') {
-    menuEntries.push({ value: 'cancel', labelKey: 'detail.menu.cancel' })
+  if (status === 'CANCELLED' && mayDelete) {
+    menuEntries.push({ value: 'delete', labelKey: 'detail.menu.delete' })
   }
-  if (status === 'CANCELLED') {
-    menuEntries.push({ value: 'uncancel', labelKey: 'detail.menu.uncancel' })
-    if (mayDelete) {
-      menuEntries.push({ value: 'delete', labelKey: 'detail.menu.delete' })
-    }
-  }
-
-  menuEntries.push({ value: '__divider__', labelKey: '', divider: true })
-
-  // "Zurück zur Liste" replaces the removed standalone button.
-  menuEntries.push({ value: 'list', labelKey: 'detail.back' })
 
   function renderConfirmPanel(): ReactNode {
     switch (selectedAction) {
@@ -1001,7 +983,7 @@ export function TicketDetailPage() {
           </h1>
           <p className="text-sm text-slate-400">{t('detail.subtitle', { object: ticket.objectName })}</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           <span
             data-testid="ticket-status-badge"
             className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
@@ -1011,6 +993,33 @@ export function TicketDetailPage() {
           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
             {t(`priority.${ticket.priority}`) ?? ticket.priority}
           </span>
+          {/* The header actions: the e-mail export as an icon and the cancel
+              button next to it (WP-M12-09). */}
+          <div
+            data-testid="ticket-header-actions"
+            className="flex items-center gap-2 sm:ml-1"
+          >
+            <button
+              aria-label={t('detail.menu.email')}
+              title={t('detail.menu.email')}
+              data-testid="ticket-email-button"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              onClick={() => void handleOption('email')}
+              type="button"
+            >
+              <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l9 6 9-6M4.5 6h15A1.5 1.5 0 0 1 21 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5v-9A1.5 1.5 0 0 1 4.5 6z" />
+              </svg>
+            </button>
+            <button
+              data-testid="ticket-cancel-button"
+              className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              onClick={() => void handleOption(status === 'CANCELLED' ? 'uncancel' : 'cancel')}
+              type="button"
+            >
+              {status === 'CANCELLED' ? t('detail.menu.uncancel') : t('detail.menu.cancel')}
+            </button>
+          </div>
         </div>
       </div>
       {stornoOpen && renderStornoDialog()}
@@ -1257,7 +1266,8 @@ export function TicketDetailPage() {
         </div>
       )}
 
-      {/* Escalation and workflow actions: the former top-right menu lives here */}
+      {/* Escalation and workflow actions: the e-mail export and the cancel button
+          live in the header (WP-M12-09). */}
       <div
         data-testid="ticket-action-section"
         className="col-span-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60 shadow-sm"
@@ -1274,25 +1284,16 @@ export function TicketDetailPage() {
 
         <div className="flex flex-col gap-3 border-b border-slate-700/70 px-4 py-3">
           <div className="flex flex-wrap gap-2">
-            {menuEntries
-              .filter((entry) => entry.divider !== true)
-              .map((entry) => (
-                <button
-                  key={entry.value}
-                  className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                  onClick={() => void handleOption(entry.value)}
-                  type="button"
-                >
-                  {t(entry.labelKey)}
-                </button>
-              ))}
-            <button
-              className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-              onClick={() => void handleOption('email')}
-              type="button"
-            >
-              {t('detail.menu.email')}
-            </button>
+            {menuEntries.map((entry) => (
+              <button
+                key={entry.value}
+                className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                onClick={() => void handleOption(entry.value)}
+                type="button"
+              >
+                {t(entry.labelKey)}
+              </button>
+            ))}
           </div>
 
           {selectedAction !== null && (
