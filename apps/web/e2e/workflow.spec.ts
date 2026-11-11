@@ -137,7 +137,7 @@ async function signIn(page: Page, language: 'de' | 'en'): Promise<void> {
   await page.locator('input[name="password"]').fill(adminPassword)
   await page.getByRole('button', { name: texts.loginSubmit }).click()
 
-  await page.getByRole('button', { name: texts.settings }).click()
+  await page.getByRole('link', { name: texts.settings }).click()
   await expect(page.getByText(texts.signedInAs)).toBeVisible()
 }
 

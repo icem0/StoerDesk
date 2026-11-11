@@ -1,7 +1,7 @@
 # WP-M12-08: The shell gear opens the settings page
 
 format: small-model
-status: planned
+status: implemented
 depends-on: WP-M12-07
 phase: 12
 context-budget: 12k tokens
@@ -18,6 +18,7 @@ files-write:
 
 - apps/web/src/components/Shell.tsx
 - apps/web/src/components/__tests__/shell.test.tsx
+- apps/web/e2e/auth.spec.ts, offline-internal.spec.ts, offline-report.spec.ts, report-flow.spec.ts, report-form.spec.ts and workflow.spec.ts
 
 interfaces:
 
@@ -32,6 +33,8 @@ interfaces:
    active styling on every settings route and the same 44 px target.
 3. Replace the dropdown tests with a test that the gear is a link to
    `/settings` while the settings destinations stay off the shell page.
+4. Adapt the sign-in helper of the E2E specs: the gear is a link and the
+   signed-in account is on the settings page.
 
 ## Non-goals
 
@@ -51,7 +54,7 @@ Expected: all green; the gear is a link, not a button, and no dialog opens.
 
 ## Handoff
 
-- Files changed: shell header, shell test.
+- Files changed: shell header, shell test, the sign-in helper of the six E2E specs.
 - Interfaces added: `SettingsLink`.
 - Verified: typecheck, shell test, wp check.
 - Follow-up WP: none.

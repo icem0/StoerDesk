@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 
-import { LoginForm, LogoutButton } from '../auth/login-form'
+import { LoginForm } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { AppVersion } from './app-version'
@@ -39,51 +39,9 @@ function useSystemTheme(): 'light' | 'dark' {
   return theme
 }
 
-const navGroups = [
-  {
-    key: 'personal',
-    items: [
-      { key: 'mySettings', path: '/settings/me' },
-      { key: 'myShifts', path: '/oncall' },
-    ],
-  },
-  {
-    key: 'operations',
-    items: [
-      { key: 'tickets', path: '/tickets' },
-      { key: 'ticketCreate', path: '/tickets/create' },
-      { key: 'stats', path: '/stats' },
-    ],
-  },
-  {
-    key: 'objects',
-    items: [
-      { key: 'objects', path: '/objects' },
-      { key: 'stickers', path: '/objects/stickers' },
-    ],
-  },
-  {
-    key: 'administration',
-    items: [
-      { key: 'admin', path: '/admin' },
-      { key: 'users', path: '/admin/users' },
-      { key: 'roles', path: '/admin/roles' },
-      { key: 'groups', path: '/admin/groups' },
-      { key: 'apiKeys', path: '/admin/api-keys' },
-      { key: 'webhooks', path: '/admin/webhooks' },
-      { key: 'bmaSync', path: '/admin/bma-sync' },
-      { key: 'standardTexts', path: '/admin/text-templates' },
-      { key: 'deadlines', path: '/admin/deadlines' },
-      { key: 'oncall', path: '/admin/oncall' },
-      { key: 'branding', path: '/admin/branding' },
-      { key: 'dashboardSettings', path: '/admin/dashboard' },
-    ],
-  },
-] as const
-
 /**
  * Top-level entries of the header nav (WP-M2-28, WP-M10-35): the three pages the
- * internal user needs without opening the settings menu. `/` is matched exactly,
+ * internal user needs without opening the settings page. `/` is matched exactly,
  * `/tickets` and `/oncall` by prefix, so a ticket detail keeps the `tickets`
  * entry and the readiness page its own entry active.
  */
@@ -112,120 +70,28 @@ function SettingsIcon() {
 }
 
 /**
- * Settings access of the shell (WP-M1-17): the gear sits next to the version, so the
- * navigation needs no permanent sidebar and the content keeps the full phone width.
- * Every label reuses an existing `common` key except `app.settings`.
+ * Settings access of the shell (WP-M1-17, WP-M12-08): the gear sits next to the
+ * version and opens the settings overview page directly. There is no dropdown:
+ * every destination lives on the settings page, grouped by topic.
  */
-function SettingsMenu({ email }: { email: string }) {
+function SettingsLink() {
   const { t } = useTranslation('common')
-  const location = useLocation()
-  const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const menuId = useId()
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    function onPointerDown(event: PointerEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false)
-        buttonRef.current?.focus()
-      }
-    }
-
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open])
 
   return (
-    <div ref={containerRef} className="relative shrink-0">
-      <button
-        ref={buttonRef}
-        aria-controls={open ? menuId : undefined}
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        aria-label={t('app.settings')}
-        className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-700/80 text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-        onClick={() => setOpen((current) => !current)}
-        title={t('app.settings')}
-        type="button"
-      >
-        <SettingsIcon />
-      </button>
-
-      {open ? (
-        <div
-          aria-label={t('app.settings')}
-          className="absolute right-0 top-full z-40 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl"
-          id={menuId}
-          role="dialog"
-        >
-          <div className="border-b border-slate-800 px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              {t('app.settings')}
-            </p>
-            <Link
-              className="mt-1 block truncate text-sm text-sky-400 hover:text-sky-300"
-              onClick={() => setOpen(false)}
-              to="/settings/me"
-            >
-              {t('auth.signedInAs', { email })}
-            </Link>
-          </div>
-
-          {navGroups.map((group) => (
-            <div
-              className="border-b border-slate-800 p-2 last:border-b-0"
-              key={group.key}
-              role="group"
-            >
-              <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                {t(`app.settingsGroups.${group.key}`)}
-              </p>
-              <ul>
-                {group.items.map((item) => {
-                  const active = location.pathname === item.path
-
-                  return (
-                    <li key={item.key}>
-                      <Link
-                        className={`flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors ${
-                          active
-                            ? 'bg-sky-600/10 text-sky-300'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
-                        }`}
-                        onClick={() => setOpen(false)}
-                        to={item.path}
-                      >
-                        {t(`auth.links.${item.key}`)}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
-
-          <div className="border-t border-slate-800 p-2 [&>button]:min-h-11 [&>button]:w-full">
-            <LogoutButton />
-          </div>
-        </div>
-      ) : null}
-    </div>
+    <NavLink
+      aria-label={t('app.settings')}
+      className={({ isActive }) =>
+        `flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+          isActive
+            ? 'border-sky-500/40 bg-sky-600/10 text-sky-300'
+            : 'border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100'
+        }`
+      }
+      title={t('app.settings')}
+      to="/settings"
+    >
+      <SettingsIcon />
+    </NavLink>
   )
 }
 
@@ -274,7 +140,7 @@ export function Shell() {
           {/* Right: version and settings. On phones this stays in the first row. */}
           <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
-            {me.data ? <SettingsMenu email={me.data.user.email} /> : null}
+            {me.data ? <SettingsLink /> : null}
           </div>
 
           {/*

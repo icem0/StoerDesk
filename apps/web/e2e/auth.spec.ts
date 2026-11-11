@@ -65,9 +65,9 @@ async function signIn(page: Page, language: 'de' | 'en'): Promise<void> {
   await page.locator('input[name="password"]').fill(adminPassword)
   await page.getByRole('button', { name: texts.submit }).click()
 
-  // WP-M1-17 moved the signed-in account and the navigation into the settings menu next
-  // to the version badge; open it so the account and the links are reachable.
-  await page.getByRole('button', { name: texts.settings }).click()
+  // WP-M12-08: the gear next to the version badge opens the settings page, where the
+  // signed-in account and the navigation are reachable.
+  await page.getByRole('link', { name: texts.settings }).click()
   await expect(page.getByText(texts.signedInAs)).toBeVisible()
 }
 

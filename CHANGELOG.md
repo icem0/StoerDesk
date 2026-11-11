@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The top-right dropdown of the shell is gone (WP-M12-08): the gear next to the version
+  opens the settings page directly, the logout moved to the account group of that page
+  and the header keeps only the logo, the company name, the top-level links and the
+  version.
 - Settings overview page (WP-M12-07): `/settings` lists every settings and administration
   destination as a link card, grouped by topic — "Persönlich" (own settings, own
   readiness), "Darstellung" (appearance, dashboard and statistics), "Meldungen"

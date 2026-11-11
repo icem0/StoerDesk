@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -69,37 +69,18 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('Shell settings menu', () => {
-  it('opens the existing pages from the gear next to the version', async () => {
+describe('Shell settings access', () => {
+  it('opens the settings page from the gear next to the version', async () => {
     stubMe(signedInMe())
     renderShell()
 
     expect(await screen.findByText(marker)).toBeTruthy()
     expect(screen.getByTestId('app-version')).toBeTruthy()
+
+    const gear = screen.getByRole('link', { name: 'Einstellungen' })
+    expect(gear.getAttribute('href')).toBe('/settings')
+    expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).toBeNull()
-
-    const gear = screen.getByRole('button', { name: 'Einstellungen' })
-    fireEvent.click(gear)
-
-    expect(gear.getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getByRole('link', { name: 'Benutzerverwaltung' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Rollenverwaltung' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'QR-Aufkleber' })).toBeTruthy()
-    expect(screen.getByText('Angemeldet als admin@example.com')).toBeTruthy()
-
-    fireEvent.click(gear)
-    expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).toBeNull()
-  })
-
-  it('closes the menu on Escape', async () => {
-    stubMe(signedInMe())
-    renderShell()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
-    expect(screen.getByRole('link', { name: 'Rollenverwaltung' })).toBeTruthy()
-
-    fireEvent.keyDown(document, { key: 'Escape' })
-    expect(screen.queryByRole('link', { name: 'Rollenverwaltung' })).toBeNull()
   })
 
   function stubSessionAndBranding(permissions: string[], branding: { companyName: string }) {
@@ -140,34 +121,7 @@ describe('Shell settings menu', () => {
     expect(await screen.findByText('StörDesk')).toBeTruthy()
   })
 
-  it('links the branding page from the settings menu', async () => {
-    const fetchMock = stubSessionAndBranding(['settings.read'], { companyName: 'Beispiel GmbH' })
-    vi.stubGlobal('fetch', fetchMock)
-
-    renderShell()
-
-    await fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
-
-    const branding = screen.getByRole('link', { name: 'Darstellung' })
-    expect(branding.getAttribute('href')).toBe('/admin/branding')
-  })
-
-  it('links the deadlines and personal settings pages from the settings menu', async () => {
-    stubMe(signedInMe())
-    renderShell()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Einstellungen' }))
-
-    expect(screen.getByRole('link', { name: 'Fristen' }).getAttribute('href')).toBe(
-      '/admin/deadlines',
-    )
-    expect(screen.getByRole('link', { name: 'Meine Einstellungen' }).getAttribute('href')).toBe(
-      '/settings/me',
-    )
-  })
-
-
-  it('shows the top-level header links without opening the menu', async () => {
+  it('shows the top-level header links without opening the settings page', async () => {
     stubMe(signedInMe())
     renderShell()
 
@@ -202,12 +156,12 @@ describe('Shell settings menu', () => {
   })
 
 
-  it('shows no gear while the session is anonymous', async () => {
+  it('shows no settings link while the session is anonymous', async () => {
     stubMe(Response.json({ code: 'session_invalid', params: {} }, { status: 401 }))
     renderShell()
 
     expect(await screen.findByText('Anmeldung')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Einstellungen' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Einstellungen' })).toBeNull()
     expect(screen.getByTestId('app-version')).toBeTruthy()
   })
 

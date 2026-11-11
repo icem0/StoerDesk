@@ -93,8 +93,8 @@ async function signIn(page: Page, language: 'de' | 'en'): Promise<void> {
   await page.locator('input[name="password"]').fill(adminPassword)
   await page.getByRole('button', { name: texts.loginSubmit }).click()
 
-  // WP-M1-17: the signed-in account lives in the settings menu next to the version.
-  await page.getByRole('button', { name: texts.settings }).click()
+  // WP-M12-08: the gear next to the version opens the settings page with the account.
+  await page.getByRole('link', { name: texts.settings }).click()
   await expect(page.getByText(texts.signedInAs)).toBeVisible()
 }
 
