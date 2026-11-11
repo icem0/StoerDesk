@@ -78,3 +78,38 @@ user names (`PLAN.md` §15).
   its own decision, because `acknowledged_at` is not cleared here.
 - The job never edits a `ticket_events` row; corrections are new events
   (`specs/02-data-model.md` §4.9).
+
+## 7.5 Manual escalation stages
+
+The office drives a manual escalation from the ticket detail view. The stages
+are freely defined in the administration (WP-M12-04) and stored as the ordered
+`settings` row `ticket.escalation_stages`:
+
+```json
+{
+  "stages": [
+    { "key": "office", "names": { "de": "Büro", "en": "Office" }, "deadlineMinutes": 15 },
+    { "key": "group", "names": { "de": "Gruppe", "en": "Group" }, "deadlineMinutes": 30 }
+  ]
+}
+```
+
+The array order is the escalation order. Every stage carries at least the names
+`de` and `en`; the `names` record accepts more locales without a schema change.
+`deadlineMinutes` (1–10080) is the reaction deadline of the stage and applies to
+all priorities.
+
+`POST /api/v1/tickets/:ticketNo/escalate` is guarded by `ticket.comment` and
+accepts `{ "stageKey": string | null, "text": string }`. `stageKey = null` writes
+a `comment` event; a known stage key writes one `escalation_set` event with the
+snapshot `{ stageKey, stageName, text }`. The stage may be chosen forwards or
+backwards, so an acknowledged or accepted ticket can return to an earlier stage.
+An unknown stage key answers `400 invalid_request`. A manual escalation changes
+no status, assignment, deadline or notification: it records who escalated to
+which stage and why.
+
+The ticket view preselects the stage after the last `escalation_set` stage (the
+first stage when there is none, the last stage at the end of the chain) and
+offers "Kommentar" next to the configured stages. `GET /api/v1/escalation-stages`
+answers the catalog to every holder of `ticket.read`.
+

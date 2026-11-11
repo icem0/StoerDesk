@@ -18,6 +18,7 @@ import { bmaSyncRoutes } from './integrations/bmacloud/routes'
 import { settingsBrandingRoutes } from './settings/branding'
 import { settingsDashboardRoutes } from './settings/dashboard'
 import { settingsDeadlineRoutes } from './settings/deadlines'
+import { escalationStageRoutes } from './settings/escalation-stages'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { detectedErrorsRoutes } from './settings/detected-errors'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
@@ -138,6 +139,7 @@ export async function buildServer() {
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })
+  await app.register(escalationStageRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(detectedErrorsRoutes, { database })
   await app.register(objectRoutes, { database })
