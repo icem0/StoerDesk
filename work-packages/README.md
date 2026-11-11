@@ -23,6 +23,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault | 24 |
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
+| [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view | 17 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -266,6 +267,15 @@ status and priority badges and leave the escalation section, which keeps the wor
 actions and the permanent delete. The way back to the list is deleted for good: the
 `list` entry of the action list, its handler branch and the `detail.back` /
 `detail.menu.back` labels of `de` and `en` are gone.
+
+**WP-M13-01 … WP-M13-17** implement the escalation logic of ADR-0017: the five
+workflow milestones become the escalation stages, a stage is a milestone to be
+reached and its deadline is the waiting time per priority, the rules, the
+conditions and the actions live in the database and are maintained in
+`/admin/escalation`, the ticket view selects a stage instead of pressing one
+button per workflow step, and the former manual stage catalogue (`office`,
+`group`, `assignee`, `manager`), the `escalation_set` event and
+`POST /api/v1/tickets/:ticketNo/escalate` are removed.
 
 ## Open follow-ups
 
@@ -633,6 +643,23 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M12-07  | settings overview page `/settings`, grouped by topic                | done                    | yes     |
 | WP-M12-08  | shell gear opens the settings page — dropdown removed             | done                    | yes     |
 | WP-M12-09  | ticket detail — e-mail icon and cancel in the header, no back button | done                  | yes     |
+| WP-M13-01  | escalation stages as the workflow milestones — spec, ADR-0017, phase split | planned               | yes     |
+| WP-M13-02  | shared contracts of the escalation configuration                   | planned                 | yes     |
+| WP-M13-03  | the escalation tables and the migration `0031`                     | planned                 | yes     |
+| WP-M13-04  | the seed of the stages and the rules                              | planned                 | yes     |
+| WP-M13-05  | the configuration API of the escalation                           | planned                 | yes     |
+| WP-M13-06  | the engine on the database rules                                 | planned                 | yes     |
+| WP-M13-07  | the actions of a fired rule (notify, webhook, history)            | planned                 | yes     |
+| WP-M13-08  | the reachable stages of a ticket                                 | planned                 | yes     |
+| WP-M13-09  | the stage selection replaces the workflow buttons                 | planned                 | yes     |
+| WP-M13-10  | the removal of the old escalation API                            | planned                 | yes     |
+| WP-M13-11  | the removal of the old shared contracts                          | planned                 | yes     |
+| WP-M13-12  | the removal of the old administration page                       | planned                 | yes     |
+| WP-M13-13  | the cleanup of the texts and of the legacy settings              | planned                 | yes     |
+| WP-M13-14  | the administration page of the escalation                        | planned                 | yes     |
+| WP-M13-15  | the rule editor and the condition builder                        | planned                 | yes     |
+| WP-M13-16  | the action editor                                               | planned                 | yes     |
+| WP-M13-17  | the exit criterion of the escalation phase                       | planned                 | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

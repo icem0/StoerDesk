@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The escalation stages are the workflow milestones (WP-M13-01, ADR-0017):
+  `specs/07-escalation.md` defines the five stages (`review`, `work_order`,
+  `assignment`, `acceptance`, `acknowledgement`), a stage as a milestone to be
+  reached, the waiting deadline per priority, the typed conditions, the actions
+  (`notify`, `webhook`, `history`), the relational data model and the API. The
+  manual stage catalogue and the `level` of the hard-coded rules are gone —
+  phase 13 implements the decision.
+
 ### Added
 - The top-right dropdown of the shell is gone (WP-M12-08): the gear next to the version
   opens the settings page directly, the logout moved to the account group of that page

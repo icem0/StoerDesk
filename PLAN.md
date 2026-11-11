@@ -191,6 +191,11 @@ Core tables:
 - `ticket_photos` — file path, MIME type, size, dimensions, uploader
 - `ticket_pauses` — wait reason, start/end, actor
 - `text_templates` and `text_template_translations` — localized standard texts
+- `escalation_stages`, `escalation_rules`, `escalation_actions` — the escalation
+  configuration (ADR-0017): the five workflow stages, the rules with their
+  deadlines per priority and their conditions, the actions of a rule
+- `escalation_firings` — the firing log of the escalation: unique over
+  `(ticket_id, rule_key, threshold_at)`, so a rule fires once per threshold
 - `users`, `groups`, `user_groups`, `sessions`, `api_keys`
   - `users.theme` — `auto` (follows `prefers-color-scheme`), `light` or `dark`
     (WP-M2-92)
@@ -336,18 +341,27 @@ Every ticket shows a horizontal bar from `reported_at` to `deadline_at`
 - The client updates every minute; the server is authoritative.
 - pg-boss timers calculate thresholds and trigger escalation notifications.
 
-Default escalation rules:
+Default escalation rules — the stages are the milestones of the workflow
+(ADR-0017), a stage is reached when the ticket enters the following workflow
+state, and the deadline of a stage is the time the ticket may wait for that
+milestone:
 
-| Event                                     | Default                  | Action                                |
-| ----------------------------------------- | ------------------------ | ------------------------------------- |
-| `NEW` without review                      | 15 min (critical 5 min)  | remind office, then manager           |
-| `WORK_ORDER_CREATED` without distribution | 30 min                   | remind office                         |
-| `OFFERED` without claim                   | 20 min (critical 10 min) | repeat to group, then manager         |
-| `ASSIGNED` without accept                 | 15 min                   | return to office                      |
-| 80 % of total deadline                    | —                        | notify assignee and manager           |
-| total deadline exceeded                   | —                        | escalate to manager, ticket turns red |
+| Stage (milestone) | Waiting state | Default (critical) | Rule key |
+| ------------------ | ------------- | ------------------- | -------- |
+| Prüfung (review) | `NEW` | 15 min (5 min) | `review` |
+| Auftrag angelegt (work order created) | `IN_REVIEW` | 30 min | `work_order` |
+| Zuweisen oder Anbieten (assign or offer) | `WORK_ORDER_CREATED` | 30 min | `assignment` |
+| Angenommen (accepted) | `OFFERED` / `ASSIGNED` | 20 min (10 min) / 15 min | `acceptance_offer`, `acceptance_assignment` |
+| Quittiert (acknowledged) | `ACCEPTED` | 60 min | `acknowledgement` |
+| 80 % of total deadline | — | — | `deadline_80_percent` |
+| total deadline exceeded | — | — | `deadline_exceeded` |
 
-All rules run 24/7 and are configurable per priority.
+The stages, the deadlines per priority, the conditions and the actions of a rule
+are configuration in the administration (`/admin/escalation`); the rules run
+24/7, pause with the ticket and fire exactly once per ticket, rule and
+threshold. The actions of the first version are non-mutating: `notify` (a subset
+of the configured channels), `webhook` (selected endpoints) and `history` (an
+append-only note).
 
 ## 10. Report form and offline
 
@@ -616,11 +630,21 @@ explanation. Offline is a core feature and appears early.
 | **9**  | Dashboard and statistics: counter, SSE, tiles, TV, queries, charts, CSV                                     | counter resets on new ticket; statistics match reference data                                   |
 | **10** | API and hardening: API keys, object/ticket API, webhooks, OpenAPI, CSV import, privacy, backup/restore | API contract tests and restore drill pass |
 | **11** | Detected errors: admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | Close stores detected errors; statistics groups by detected error; admin catalog editable |
+| **12** | Acceptance: criteria slice, end-to-end acceptance suite for the items of §20                              | every acceptance item is `PASS` or `UNVERIFIED` by design, never a green skip                 |
+| **13** | Escalation logic: the workflow stages, the waiting deadlines per priority, the conditions and the actions | a stage fires its rule once, the actions run, the old stage system is gone                    |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 13 starts the escalation logic** (WP-M13-01 … WP-M13-16, ADR-0017): the
+five workflow milestones become the escalation stages, the deadlines per priority,
+the conditions and the actions move into the database and are maintained in
+`/admin/escalation`, the ticket view selects a stage instead of pressing one
+button per workflow step, and the former manual stage catalogue (`ticket.escalation_stages`,
+the `escalation_set` event, `POST /api/v1/tickets/:ticketNo/escalate`) is removed.
+Phase 12 stays open until **WP-M12-02** and **WP-M12-09** are closed.
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 **WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,
@@ -1709,6 +1733,7 @@ These decisions need an ADR or explicit approval before the related WP starts:
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
 - contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03), editable in the administration (WP-M6-16); per-object-type deadlines (Objektart) are undecided — they need an ADR before a work package,
+- the shape of the escalation configuration — **resolved by ADR-0017**: the workflow milestones are the stages, the deadlines per priority, the conditions and the actions live in the database and are maintained in `/admin/escalation`; the former manual stage catalogue is removed,
 - whether shift swaps require admin approval by default (default: yes) — **resolved by ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the original technician remains responsible until approval,
 - name and logo (working title: StörDesk).
 

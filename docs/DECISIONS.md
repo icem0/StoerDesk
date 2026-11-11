@@ -48,3 +48,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0014](DECISIONS/0014-privacy-retention-and-restore-drill.md) | Privacy retention, export/erasure and the restore drill | accepted |
 | [ADR-0015](DECISIONS/0015-dashboard-evaluation-averages.md) | Dashboard evaluations — average durations only, the worst reaction time stays out | accepted |
 | [ADR-0016](DECISIONS/0016-detected-errors.md) | Detected errors: catalog, close storage, statistics grouping | accepted |
+| [ADR-0017](DECISIONS/0017-workflow-stages-as-escalation-stages.md) | The workflow milestones are the escalation stages | accepted |

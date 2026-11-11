@@ -1,115 +1,193 @@
 # 07 — Escalation
 
 **Chapter:** 8 (escalation) with the rules of `PLAN.md` §9
-**Scope:** ~80 lines
-**Status:** reviewed for phase 6 (WP-M6-01)
+**Scope:** ~190 lines
+**Status:** reviewed for phase 13 (WP-M13-01)
 
-The binding summary is `PLAN.md` §9. This slice details the rules, their
-idempotent representation and the job that runs them.
+The binding summary is `PLAN.md` §9. This slice defines the escalation stages, the
+waiting deadlines of the stages, the conditions under which a rule fires and the
+actions a rule performs. The manual stage catalogue of the former §7.5 is gone: the
+stages are the milestones of the ticket workflow.
 
-## 7.1 Rules
+## 7.1 The stages are the workflow milestones
 
-All rules run 24/7. The minute values are defaults per priority; a rule with a
-critical override uses the shorter value for `critical`.
+A ticket walks through five stages. The stage keys are fixed by the workflow
+(`apps/api/src/tickets/workflow.ts`); the display names are maintained in the
+administration.
 
-| Rule key | Condition | Default | Critical |
+| Key | Stage | Waiting state | Reference of the clock |
 | --- | --- | --- | --- |
-| `new_without_review` | `status = NEW`, measured from `received_at` | 15 min | 5 min |
-| `work_order_without_distribution` | `status = WORK_ORDER_CREATED`, measured from the `work_order_set` event | 30 min | 30 min |
-| `offered_without_claim` | `status = OFFERED`, measured from the last `offered` event | 20 min | 10 min |
-| `assigned_without_accept` | `status = ASSIGNED`, measured from the last `assigned` event | 15 min | 15 min |
-| `deadline_80_percent` | the timeline reached 80 % and the ticket is not acknowledged | — | — |
-| `deadline_exceeded` | `deadline_at` passed and the ticket is not acknowledged | — | — |
+| `review` | Prüfung / Review | `NEW` | `received_at` |
+| `work_order` | Auftrag angelegt / Work order created | `IN_REVIEW` | `review_started` |
+| `assignment` | Zuweisen oder Anbieten / Assign or offer | `WORK_ORDER_CREATED` | `work_order_set` |
+| `acceptance` | Angenommen / Accepted | `OFFERED`, `ASSIGNED` | `offered`, `assigned` |
+| `acknowledgement` | Quittiert / Acknowledged | `ACCEPTED` | `accepted` |
 
-Closed, cancelled, acknowledged and suspected-spam tickets never escalate. An
-open pause pauses the rule clock exactly as it pauses the timeline
-(`specs/05-timeline.md` §5.3): the elapsed time of a rule is measured from its
-reference event to `now` minus the pauses that overlap that interval.
+A stage is **reached** when the ticket enters the workflow state that follows the
+milestone: `review_started`, `work_order_set`, `assigned`/`offered`, `accepted` and
+`acknowledged`. The waiting state of a stage is the state the ticket is in while it
+waits for that milestone.
 
-The default values live in the shared `ESCALATION_RULES` constant; the
-`settings` rows `ticket.escalation.<rule>.minutes` and
-`ticket.escalation.<rule>.critical_minutes` override a default when they hold a
-positive integer.
+Two rules belong to the same stage (`acceptance` waits for the acceptance of an
+offer and of an assignment), because the two cases have different clocks and
+different actions. A stage may therefore carry more than one rule.
 
-## 7.2 Representation and idempotency
+The stages of the former manual catalogue (`office`, `group`, `assignee`,
+`manager`) and the `level` of the former hard-coded rules are removed. They were a
+second hierarchy next to the workflow, and every one of them has a workflow
+counterpart.
 
-Every fired rule writes exactly one append-only event:
+## 7.2 The waiting clock
 
-```json
-{
-  "type": "escalated",
-  "actor_kind": "system",
-  "payload": {
-    "rule": "deadline_exceeded",
-    "level": "manager",
-    "thresholdAt": "…",
-    "deadlineAt": "…"
-  }
-}
+The clock of a stage starts at its reference event and runs until the milestone is
+reached. It stops with the ticket: an open pause (`specs/05-timeline.md` §5.2)
+subtracts its overlapping time from the elapsed time, exactly as the timeline does.
+
+The deadline of a stage is the number of minutes the ticket may wait for the
+milestone. It is stored per priority, so a critical ticket waits less than a low
+one. The defaults of ADR-0008 are the seed of the configuration:
+
+| Rule (stage) | Reference | `low` | `normal` | `high` | `critical` |
+| --- | --- | --- | --- | --- | --- |
+| `review` | `received_at` | 15 | 15 | 15 | 5 |
+| `work_order` | `review_started` | 30 | 30 | 30 | 30 |
+| `assignment` | `work_order_set` | 30 | 30 | 30 | 30 |
+| `acceptance` (offer) | `offered` | 20 | 20 | 20 | 10 |
+| `acceptance` (assignment) | `assigned` | 15 | 15 | 15 | 15 |
+| `acknowledgement` | `accepted` | 60 | 60 | 60 | 60 |
+
+Two rules are not bound to a stage and use the ticket deadline instead of a
+waiting clock: `deadline_80_percent` (80 % of the timeline) and `deadline_exceeded`
+(100 % of the timeline). Their actions are configured like the actions of every
+other rule.
+
+## 7.3 Rules
+
+A rule is the unit of configuration. It holds the trigger (which clock and which
+minutes), the condition (when the rule applies at all) and the actions (what
+happens when it fires).
+
+| Field | Meaning |
+| --- | --- |
+| `key` | stable machine key, unique, the identity of the rule |
+| `stageKey` | the stage the rule belongs to; `null` for the deadline rules |
+| `reference` | the event that starts the clock (`received_at`, `review_started`, `work_order_set`, `offered`, `assigned`, `accepted`) |
+| `minutes` | the deadline per priority (`low`, `normal`, `high`, `critical`) |
+| `percent` | the deadline rule only: the percentage of the timeline |
+| `condition` | the condition group of §7.4; empty means "always" |
+| `actions` | the ordered actions of §7.5 |
+
+A rule fires when its clock has passed its deadline **and** its condition matches.
+The rule of a stage that is already reached never fires again: the ticket has left
+the waiting state.
+
+## 7.4 Conditions
+
+A condition is a typed tree. It never carries free text or an expression: the
+fields and the operators are a closed list, so a condition is validatable and
+testable.
+
+```
+{ "all": [ … ] }   { "any": [ … ] }   { "field": …, "operator": …, "value": … }
 ```
 
-`level` names the addressee of the rule so phase 7 can route it:
-`office`, `group`, `assignee` or `manager`. The event is the history entry the
-exit criterion of phase 6 requires. A rule never fires twice for the same
-ticket, rule and threshold: the scan looks for an existing `escalated` event
-with that `payload.rule` and `payload.thresholdAt` before inserting.
+| Field | Type | Operators |
+| --- | --- | --- |
+| `priority` | `low`, `normal`, `high`, `critical` | `eq`, `ne`, `in`, `notIn` |
+| `status` | ticket status | `eq`, `ne`, `in`, `notIn` |
+| `source` | `QR`, `INTERNAL`, `API` | `eq`, `ne`, `in`, `notIn` |
+| `systemType` | `BMA`, `LICHTRUF`, `RWA`, `EMA`, `SPRACHALARM`, `SONSTIGE` | `eq`, `ne`, `in`, `notIn` |
+| `objectExternalType` | string | `eq`, `ne`, `contains` |
+| `assigned` | boolean | `eq` |
+| `deadlinePercent` | number 0–100 | `gt`, `gte`, `lt`, `lte`, `eq` |
+| `elapsedMinutes` | number | `gt`, `gte`, `lt`, `lte`, `eq` |
+| `paused` | boolean | `eq` |
+| `stageReached` | stage key | `eq`, `ne`, `in`, `notIn` |
 
-The insert is one transaction per ticket. A failed insert never changes the
-ticket row: escalation does not rewrite state, it records it.
+A condition group holds at most two levels and at most 20 leaves. The evaluation
+is a pure function in `packages/shared`, used by the API and by the administration
+form alike.
 
-## 7.3 Job
+## 7.5 Actions
 
-`apps/api/src/jobs/escalation.ts` owns the pg-boss queue
-`ticket-escalation`. It is scheduled every minute (`* * * * *`) and started only
-from the direct API start, like `qr-token-cleanup` and `bma-anlage-sync`;
-`buildServer()` and the integration tests never create the pg-boss schema. Every
-run opens its own short-lived pool, scans the open tickets in one query and
-writes the events with the service of §7.2.
+An action is what happens when a rule fires. Every action carries its own
+condition, so one rule can notify the office always and the management only in
+the night.
 
-The job logs only counts and rule keys, never ticket content, contact data or
+| Type | Configuration | Effect |
+| --- | --- | --- |
+| `notify` | `channels` (a subset of the configured channels) | one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
+| `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
+| `history` | `text` (optional, 1–500 characters) | one append-only `escalation_note` event in the ticket history |
+
+The actions of the first version never change a ticket: no status, no assignment,
+no deadline. A rule writes the `escalated` event and performs its actions.
+
+## 7.6 Data model
+
+| Table | Columns |
+| --- | --- |
+| `escalation_stages` | `id`, `key` (unique, the fixed stage key), `names` (jsonb, one label per locale), `position`, `active` |
+| `escalation_rules` | `id`, `key` (unique), `stage_key` (nullable foreign key), `reference`, `minutes` (jsonb, per priority), `percent` (nullable), `condition` (jsonb), `position`, `active` |
+| `escalation_actions` | `id`, `key` (unique), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active` |
+| `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)` |
+
+The `key` is the identity of a stage, a rule and an action, not the UUID: the
+administration sends the keys, the server keeps the rows stable. The stages of an
+installation are seeded once (the five keys of §7.1) and the rules are seeded from
+the former settings values, so the deadlines of a running installation stay the
+same after the migration.
+
+## 7.7 Idempotency and the audit trail
+
+A rule fires at most once per ticket, rule and threshold. The unique key of
+`escalation_firings` carries that guarantee in the database, so a second scan of
+the same minute cannot write a second event and cannot send a second webhook.
+
+Every firing writes exactly one append-only `escalated` event with the payload
+`{ rule, stage, thresholdAt, deadlineAt }` and performs the actions of the rule.
+The `escalation_note` event of a `history` action carries the configured text.
+
+## 7.8 The job
+
+`apps/api/src/jobs/escalation.ts` keeps the queue `ticket-escalation` and the
+schedule every minute. The scan reads the active rules, the candidate tickets and
+their events, computes the threshold of every rule and fires the rules that are
+due. The job logs counts and rule keys only, never ticket content, contact data or
 user names (`PLAN.md` §15).
 
-## 7.4 Boundaries
+## 7.9 API
 
-- Notifications are phase 7: the `escalated` event is the handoff into the
-  outbox worker, this phase sends nothing.
-- No ticket state change: a red ticket stays red until the office acts.
-- No escalation of an acknowledged ticket; reopening with a later phase needs
-  its own decision, because `acknowledged_at` is not cleared here.
-- The job never edits a `ticket_events` row; corrections are new events
-  (`specs/02-data-model.md` §4.9).
+| Route | Permission | Meaning |
+| --- | --- | --- |
+| `GET /api/v1/escalation/config` | `settings.read` | stages, rules and actions of the installation |
+| `PUT /api/v1/escalation/config` | `settings.write` | replaces the rules and their actions in one transaction |
+| `PUT /api/v1/escalation/stages` | `settings.write` | replaces the names and the active flag of the stages |
+| `GET /api/v1/escalation-stages` | `ticket.read` | the five stages with their names for the ticket view |
 
-## 7.5 Manual escalation stages
+The staff read answers the stages of the ticket view; the administration edits the
+configuration. A malformed body answers `400 invalid_request` with the field
+paths.
 
-The office drives a manual escalation from the ticket detail view. The stages
-are freely defined in the administration (WP-M12-04) and stored as the ordered
-`settings` row `ticket.escalation_stages`:
+## 7.10 The ticket view
 
-```json
-{
-  "stages": [
-    { "key": "office", "names": { "de": "Büro", "en": "Office" }, "deadlineMinutes": 15 },
-    { "key": "group", "names": { "de": "Gruppe", "en": "Group" }, "deadlineMinutes": 30 }
-  ]
-}
-```
+The ticket detail carries one control for the stages: a selection of the stages
+the ticket can still reach. Choosing a stage performs the workflow transition of
+that milestone (with its own form, e.g. the AA/SA number of the work order) and
+marks the stage as reached. The separate buttons of the workflow steps are gone —
+the selection replaces them. The actions that are no milestone (decline, claim,
+e-mail, cancel, delete) stay buttons.
 
-The array order is the escalation order. Every stage carries at least the names
-`de` and `en`; the `names` record accepts more locales without a schema change.
-`deadlineMinutes` (1–10080) is the reaction deadline of the stage and applies to
-all priorities.
+The server answers the reachable stages with the ticket (`availableStages`), so
+the transition map exists only in `apps/api/src/tickets/workflow.ts`.
 
-`POST /api/v1/tickets/:ticketNo/escalate` is guarded by `ticket.comment` and
-accepts `{ "stageKey": string | null, "text": string }`. `stageKey = null` writes
-a `comment` event; a known stage key writes one `escalation_set` event with the
-snapshot `{ stageKey, stageName, text }`. The stage may be chosen forwards or
-backwards, so an acknowledged or accepted ticket can return to an earlier stage.
-An unknown stage key answers `400 invalid_request`. A manual escalation changes
-no status, assignment, deadline or notification: it records who escalated to
-which stage and why.
+## 7.11 Boundaries
 
-The ticket view preselects the stage after the last `escalation_set` stage (the
-first stage when there is none, the last stage at the end of the chain) and
-offers "Kommentar" next to the configured stages. `GET /api/v1/escalation-stages`
-answers the catalog to every holder of `ticket.read`.
-
+- The manual stage catalogue, the `escalation_set` event and
+  `POST /api/v1/tickets/:ticketNo/escalate` are removed: the workflow already
+  records who reached which milestone.
+- The escalation never changes a ticket state, an assignment or a deadline.
+- Closed, cancelled, acknowledged and suspected-spam tickets never escalate.
+- An open pause pauses the rule clock exactly as it pauses the timeline.
+- The notifications of the first version are external systems only; there is no
+  in-app escalation inbox.
