@@ -1,7 +1,7 @@
 # WP-M13-06: The engine on the database rules
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-03, WP-M13-04
 phase: 13
 milestone: m13
@@ -20,9 +20,8 @@ files-read:
 files-write:
 
 - apps/api/src/tickets/escalation.ts
-- packages/shared/src/escalation.ts
 - apps/api/src/tickets/__tests__/escalation.integration.spec.ts
-- packages/shared/src/__tests__/escalation.test.ts
+- apps/api/src/tickets/__tests__/escalation-exit.integration.spec.ts
 
 interfaces:
 
@@ -43,8 +42,9 @@ interfaces:
    no-op), write the `escalated` event with the rule, the stage, the threshold
    and the deadline, and hand the firing to the action dispatcher.
 4. Keep the candidate selection (not acknowledged, not closed, not cancelled,
-   not suspected spam) and the pause behaviour; the shared module keeps the pure
-   helpers and loses the hard-coded rule list.
+   not suspected spam), the on-call offer timeout of the scan and the pause
+   behaviour. The hard-coded rule list of the shared module stays until
+   WP-M13-13, where the deadline route stops reading the former settings rows.
 
 ## Non-goals
 
@@ -67,6 +67,6 @@ condition and the deadline rule.
 
 - Files changed: the scan, the shared module, the two tests
 - Interfaces added: the two scan functions and the firing row
-- Verified: typecheck, the integration test
+- Verified: typecheck, the integration tests (the firing, the idempotency, the pause, the condition, the deadline rules)
 - Follow-up WP: WP-M13-07 — the actions
 - Open question: none

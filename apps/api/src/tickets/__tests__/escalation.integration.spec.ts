@@ -6,8 +6,9 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import * as schema from '../../db/schema'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
+import * as schema from '../../db/schema'
+import { seedEscalation } from '../../db/seed-escalation'
 import { evaluateEscalations, evaluateTicketEscalations } from '../escalation'
 
 const testDatabase = await openTestDatabase()
@@ -16,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped escalation integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, ticketEvents, ticketPauses, tickets } = schema
+const { objects, ticketEvents, ticketPauses, tickets, escalationRules } = schema
 const MINUTE = 60 * 1000
 
 describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integration)', () => {
@@ -59,6 +60,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
 
   beforeAll(async () => {
     await migrate(db, { migrationsFolder })
+    await seedEscalation(db)
 
     const [object] = await db
       .insert(objects)
@@ -76,7 +78,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     }
   })
 
-  it('fires new_without_review for a critical ticket after five minutes', async () => {
+  it('fires the rule of the stage Prüfung for a critical ticket after five minutes', async () => {
     const ticket = await createTicket({
       status: 'NEW',
       priority: 'critical',
@@ -87,10 +89,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     const result = await evaluateEscalations(db, now)
 
     expect(result.scanned).toBeGreaterThan(0)
-    expect(await escalated(ticket.id)).toContain('new_without_review')
+    expect(await escalated(ticket.id)).toContain('review')
 
     await evaluateEscalations(db, now)
-    expect(await escalated(ticket.id)).toEqual(['new_without_review'])
+    expect(await escalated(ticket.id)).toEqual(['review'])
   })
 
   it('does not escalate a ticket that is paused', async () => {
@@ -131,5 +133,37 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       'deadline_80_percent',
       'deadline_exceeded',
     ])
+  })
+
+  it('keeps a rule silent when its condition does not match', async () => {
+    await db.insert(escalationRules).values({
+      key: 'review_critical_only',
+      stageKey: 'review',
+      reference: 'received_at',
+      minutes: { low: 5, normal: 5, high: 5, critical: 5 },
+      percent: null,
+      condition: { all: [{ field: 'priority', operator: 'in', value: ['critical'] }] },
+      position: 90,
+      active: true,
+    })
+
+    const normal = await createTicket({
+      status: 'NEW',
+      priority: 'normal',
+      reportedAt: new Date(now.getTime() - 30 * MINUTE),
+      deadlineAt: new Date(now.getTime() + 2 * 60 * MINUTE),
+    })
+
+    const critical = await createTicket({
+      status: 'NEW',
+      priority: 'critical',
+      reportedAt: new Date(now.getTime() - 30 * MINUTE),
+      deadlineAt: new Date(now.getTime() + 2 * 60 * MINUTE),
+    })
+
+    await evaluateEscalations(db, now)
+
+    expect(await escalated(normal.id)).not.toContain('review_critical_only')
+    expect(await escalated(critical.id)).toContain('review_critical_only')
   })
 })

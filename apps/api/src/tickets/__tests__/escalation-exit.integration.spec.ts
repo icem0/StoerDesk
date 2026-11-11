@@ -11,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
+import { seedEscalation } from '../../db/seed-escalation'
 import { buildServer } from '../../index'
 import { hashPassword } from '../../auth/password'
 import { evaluateEscalations } from '../escalation'
@@ -95,6 +96,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
       await seedRbac(db)
+      await seedEscalation(db)
 
       const inserted = await db
         .insert(users)
