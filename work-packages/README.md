@@ -607,7 +607,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M12-02  | acceptance end-to-end suite for items 1–12                      | planned                 | yes     |
 | WP-M12-03  | escalation-stage catalog — shared contract and settings API     | done                    | yes     |
 | WP-M12-04  | admin UI for escalation stages                                  | done                    | yes     |
-| WP-M12-05  | manual escalation write API                                     | planned                 | yes     |
+| WP-M12-05  | manual escalation write API                                     | done                    | yes     |
 | WP-M12-06  | ticket detail — menu removed, escalation section added          | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

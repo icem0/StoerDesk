@@ -48,6 +48,7 @@ import { ticketListRoutes } from './tickets/list'
 import { ticketDetailRoutes } from './tickets/detail'
 import { photoServeRoutes } from './tickets/photos'
 import { workflowRoutes } from './tickets/workflow-routes'
+import { manualEscalationRoutes } from './tickets/escalation-manual'
 import { pauseRoutes } from './tickets/pauses'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
@@ -169,6 +170,7 @@ export async function buildServer() {
   await app.register(deleteRoutes, { database, uploadDir: env.UPLOAD_DIR })
   await app.register(privacyRoutes, { database })
   await app.register(workflowRoutes, { database })
+  await app.register(manualEscalationRoutes, { database })
   await app.register(pauseRoutes, { database })
   await app.register(dashboardRoutes, { database })
   await app.register(statsRoutes, { database })

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Manual escalation write (WP-M12-05): `POST /api/v1/tickets/:ticketNo/escalate`
+  (guarded by `ticket.comment`) appends either a `comment` event or one
+  `escalation_set` event with the chosen stage and text. The stage may move
+  forwards or backwards; the route changes no status, assignment or deadline.
 - Escalation-stage administration (WP-M12-04): `/admin/escalation-stages` manages the
   ordered stages with key, German and English name and deadline minutes, reorders them
   by drag and drop, and stays read-only without `settings.write`.
