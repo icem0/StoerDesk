@@ -90,7 +90,7 @@ function CreateErrorForm() {
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.key')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
           type="text"
           required
           value={key}
@@ -100,7 +100,7 @@ function CreateErrorForm() {
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.de')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
           required
           value={labelDe}
           onChange={(event) => setLabelDe(event.target.value)}
@@ -109,7 +109,7 @@ function CreateErrorForm() {
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.en')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
           required
           value={labelEn}
           onChange={(event) => setLabelEn(event.target.value)}
@@ -171,7 +171,7 @@ function EditErrorForm({
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.key')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
           type="text"
           required
           value={key}
@@ -181,7 +181,7 @@ function EditErrorForm({
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.de')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
           required
           value={labelDe}
           onChange={(event) => setLabelDe(event.target.value)}
@@ -190,7 +190,7 @@ function EditErrorForm({
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.en')}
         <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
+          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
           required
           value={labelEn}
           onChange={(event) => setLabelEn(event.target.value)}
