@@ -253,7 +253,11 @@ The phase-5 offline E2E `apps/web/e2e/offline-internal.spec.ts` was repaired out
 after WP-M12-06 and WP-M12-08 removed both dropdowns: the two acknowledge tests still
 opened the options dropdown and waited for a button that no longer exists, so they now
 click the acknowledge button of the escalation section directly (14/14 Playwright tests
-green against the real database and Chromium).
+green against the real database and Chromium). The same spec was made deterministic again
+after a CI run lost the reload race of the conflict banner: `onActionChange` in
+`apps/web/src/lib/outbox.ts` announces every write to an `internal_actions` row,
+`useInternalActions` re-reads the rows of its ticket and the conflict is asserted on the
+open page before the reload (WP-M5-06 conflict UI).
 
 ## Open follow-ups
 

@@ -152,7 +152,7 @@ export async function enqueueInternalAction(input: {
   action: InternalActionKind
   payload?: Record<string, unknown>
 }): Promise<number> {
-  return outboxDb.internal_actions.add({
+  const id = await outboxDb.internal_actions.add({
     client_uuid: crypto.randomUUID(),
     ticket_no: input.ticketNo,
     action: input.action,
@@ -161,6 +161,10 @@ export async function enqueueInternalAction(input: {
     retries: 0,
     created_at: Date.now(),
   })
+
+  notifyActionChange(id, input.ticketNo)
+
+  return id
 }
 
 /** All waiting internal actions, oldest first. */
@@ -168,14 +172,42 @@ export async function queuedActions(): Promise<QueuedAction[]> {
   return outboxDb.internal_actions.orderBy('created_at').toArray()
 }
 
+/**
+ * Every write to an internal-action row (enqueue, status update, removal) is
+ * announced to the registered listeners with the row id and its ticket number
+ * (WP-M5-06): the conflict banner of the open detail page re-reads its rows when
+ * the replay of an offline write lands, so a conflict or a removal is shown
+ * without reloading the page.
+ */
+const actionListeners = new Set<(change: { id: number; ticketNo: string }) => void>()
+
+function notifyActionChange(id: number, ticketNo: string): void {
+  for (const listener of actionListeners) listener({ id, ticketNo })
+}
+
+/** Register one listener; the result unregisters it. */
+export function onActionChange(
+  listener: (change: { id: number; ticketNo: string }) => void,
+): () => void {
+  actionListeners.add(listener)
+
+  return () => {
+    actionListeners.delete(listener)
+  }
+}
+
 /** Merge changes into one queued action row. */
 export async function updateAction(id: number, changes: Partial<QueuedAction>): Promise<void> {
+  const row = await outboxDb.internal_actions.get(id)
   await outboxDb.internal_actions.update(id, changes)
+  notifyActionChange(id, row?.ticket_no ?? '')
 }
 
 /** Drop a delivered action from the outbox. */
 export async function removeAction(id: number): Promise<void> {
+  const row = await outboxDb.internal_actions.get(id)
   await outboxDb.internal_actions.delete(id)
+  notifyActionChange(id, row?.ticket_no ?? '')
 }
 
 /** Waiting rows of both kinds, e.g. for the clean-update guard. */

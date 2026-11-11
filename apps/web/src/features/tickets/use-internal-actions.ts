@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   deliverAction,
   enqueueInternalAction,
+  onActionChange,
   queuedActions,
   removeAction,
   type QueuedAction,
@@ -18,7 +19,9 @@ import {
  * `pendingCount` counts queued/failed/conflict rows of this ticket, refreshed on
  * mount so the notice survives a reload. `rows` exposes every row of this ticket
  * (with a pre-computed `ageMinutes`) so the conflict banner can render them
- * (`WP-M5-06`).
+ * (`WP-M5-06`). The rows are re-read whenever the outbox announces a write to
+ * this ticket (`onActionChange` of WP-M5-01's table), so a conflict the replay
+ * of an offline write lands is shown on the open page without reloading.
  */
 type ActionRow = QueuedAction & { ageMinutes: number }
 
@@ -47,6 +50,10 @@ export function useInternalActions(ticketNo: string) {
   useEffect(() => {
     let mounted = true
 
+    const leaveOutbox = onActionChange(({ ticketNo: changed }) => {
+      if (mounted && changed === ticketNo) void refresh()
+    })
+
     queuedActions().then((fetched) => {
       if (!mounted) return
 
@@ -64,6 +71,7 @@ export function useInternalActions(ticketNo: string) {
 
     return () => {
       mounted = false
+      leaveOutbox()
     }
   }, [ticketNo])
 

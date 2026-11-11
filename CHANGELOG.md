@@ -248,6 +248,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The offline conflict banner of the open ticket detail updates without a reload
+  (WP-M5-06): after the replay of an offline write answered `409 invalid_transition`,
+  the conflict row was written to the outbox but the banner of the page kept the rows
+  it had read on mount — a CI run of the phase-5 E2E lost the reload race and reported
+  `getByText('Konflikt: invalid_transition – aktueller Status CANCELLED')` as not found
+  (one of fourteen Playwright tests failed, the check run exited 1). `apps/web/src/lib/outbox.ts`
+  announces every write to an `internal_actions` row through `onActionChange`, the hook
+  `useInternalActions` re-reads the rows of its ticket on that announcement and the E2E
+  asserts the conflict on the open page before it reloads.
+
 - The phase-5 offline E2E (`apps/web/e2e/offline-internal.spec.ts`) is green again after
   WP-M12-06 and WP-M12-08 removed the dropdowns: both tests still opened the options
   dropdown with `getByRole('button', { name: /Optionen|Options/ })` before choosing the

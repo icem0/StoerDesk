@@ -5,6 +5,7 @@ vi.mock('../../lib/outbox', () => ({
   enqueueInternalAction: vi.fn(),
   queuedActions: vi.fn(),
   deliverAction: vi.fn(),
+  onActionChange: vi.fn(),
 }))
 
 vi.mock('../../lib/api', () => ({
@@ -24,6 +25,7 @@ vi.mock('../../lib/api', () => ({
 import { useInternalActions } from '../../features/tickets/use-internal-actions'
 import {
   enqueueInternalAction,
+  onActionChange,
   queuedActions,
   deliverAction,
 } from '../../lib/outbox'
@@ -31,12 +33,14 @@ import {
 const enqueued = vi.mocked(enqueueInternalAction)
 const queued = vi.mocked(queuedActions)
 const delivered = vi.mocked(deliverAction)
+const watchOutbox = vi.mocked(onActionChange)
 
 beforeEach(() => {
   vi.resetAllMocks()
   queued.mockResolvedValue([])
   enqueued.mockResolvedValue(1)
   delivered.mockResolvedValue(true)
+  watchOutbox.mockReturnValue(() => {})
 })
 
 describe('useInternalActions', () => {
@@ -150,5 +154,45 @@ describe('useInternalActions', () => {
     renderHook(() => useInternalActions('ST-1'))
 
     expect(enqueued).not.toHaveBeenCalled()
+  })
+
+  it('re-reads the rows when the outbox announces a write of this ticket', async () => {
+    const listeners: Array<(change: { id: number; ticketNo: string }) => void> = []
+    watchOutbox.mockImplementation((listener) => {
+      listeners.push(listener as (change: { id: number; ticketNo: string }) => void)
+
+      return () => {}
+    })
+    queued.mockResolvedValue([])
+
+    const { result } = renderHook(() => useInternalActions('ST-1'))
+
+    await act(async () => {})
+
+    expect(listeners).toHaveLength(1)
+    expect(queued).toHaveBeenCalledTimes(1)
+
+    queued.mockResolvedValue([
+      {
+        id: 1,
+        ticket_no: 'ST-1',
+        client_uuid: 'uuid-1',
+        action: 'acknowledge',
+        payload: {},
+        status: 'conflict',
+        error_code: 'invalid_transition',
+        ticket_status: 'CANCELLED',
+        retries: 0,
+        created_at: Date.now(),
+      },
+    ])
+
+    await act(async () => {
+      listeners[0]?.({ id: 1, ticketNo: 'ST-1' })
+    })
+
+    expect(queued).toHaveBeenCalledTimes(2)
+    expect(result.current.pendingCount).toBe(1)
+    expect(result.current.rows).toHaveLength(1)
   })
 })

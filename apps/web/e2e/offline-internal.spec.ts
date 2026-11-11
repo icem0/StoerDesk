@@ -273,6 +273,11 @@ for (const language of ['de', 'en'] as const) {
     await page.context().setOffline(false)
     await replay
 
+    // The replay's 409 answers `invalid_transition` from the CANCELLED ticket and
+    // writes the conflict row; `onActionChange` makes the banner of the open page
+    // re-read the rows, so the conflict is shown without reloading (WP-M5-06).
+    await expect(page.getByText(texts.offlineConflict)).toBeVisible()
+
     const detail = awaitDetail(page, ticketNo)
     await page.reload()
     await detail
