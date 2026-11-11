@@ -201,6 +201,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The ticket detail history (`Verlauf`) always names the date next to the clock time: the
+  event rows used to carry a bare `hh:mm:ss` stamp, so two entries of different days were
+  indistinguishable. They now render date and time through the same formatter the
+  backdated-report row already used, and both timestamp columns of the section widened
+  from `w-32` to `w-36` so the en-US form no longer overflows its gutter.
+
 - The ticket detail names the fault field "Gemeldete Störungsart" ("Reported fault type",
   WP-M11-11): the chips under title and description are the fault types this report was made
   for, not the whole catalogue. The shared key `ticket:detail.field.faults` changed in `de`
@@ -227,6 +233,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `false`, so the behaviour is unchanged.
 
 ### Fixed
+
+- The administration-home test located the deadlines card by `/Fristen|Deadlines/`, which
+  stopped being unique once WP-M12-04 added the escalation-stage card with the hint
+  "Stufen, Namen und Fristen …": `screen.findByRole('link', …)` found two links and the
+  assertion failed. The locator is anchored to the card title (`/^(Fristen|Deadlines)/`)
+  and keeps the href and the "not planned" checks.
 
 - The future-report-time warning of the internal creation form is German again (WP-M11-12):
   the `de` value of `ticket:internal.create.errors.reportTimeFuture` held an English

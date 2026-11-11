@@ -50,7 +50,7 @@ describe('AdminHomePage', () => {
   it('links the deadlines card to the deadline page as an available module', async () => {
     renderHome()
 
-    const deadlines = await screen.findByRole('link', { name: /Fristen|Deadlines/ })
+    const deadlines = await screen.findByRole('link', { name: /^(Fristen|Deadlines)/ })
 
     expect(deadlines.getAttribute('href')).toBe('/admin/deadlines')
     expect(deadlines.closest('li')?.textContent).not.toMatch(/geplant|planned/)
