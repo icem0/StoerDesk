@@ -73,31 +73,43 @@ jobs:
       # browser belongs into this job — it already provides the Postgres-16 service whose
       # account the E2E runner uses to create its own throwaway database.
       # `--with-deps` installs the browser through apt, and apt reaches the Ubuntu
-      # package mirrors over the network of the runner: a mirror DNS hiccup ("Temporary
-      # failure resolving 'azure.archive.ubuntu.com'", apt exit 100, "Failed to install
-      # browsers") is an infrastructure failure, not a code failure (ADR-0018). Acquire::
-      # Retries recovers a single download, the loop behind it retries the whole install
-      # with backoff. Neither weakens the gate: after the last attempt the step fails,
-      # the run stays red and no publish run is dispatched for that version.
+      # package mirrors over the network of the runner: a mirror that cannot be resolved
+      # ("Temporary failure resolving 'azure.archive.ubuntu.com'", apt exit 100,
+      # "Failed to install browsers") is an infrastructure failure, not a code failure —
+      # that is what cost the versions v1.1.2 … v1.1.7 their check run (ADR-0018).
+      # Acquire::Retries recovers a single download, the loop repeats the whole install and
+      # the last resort takes the browser alone from the Playwright CDN and says so in the
+      # run summary. Nothing is skipped: a browser that still cannot be installed fails the
+      # job, the run stays red and no publish run is dispatched for that version, and
+      # `scripts/e2e-check.mjs` refuses to run the tests in CI against a browser that does
+      # not start (PLAN.md §18.2).
       - name: Install Chromium for the E2E smoke test
         run: |
           set -euo pipefail
           sudo tee /etc/apt/apt.conf.d/90-stoerdesk-ci >/dev/null <<'APT'
-          Acquire::Retries "15";
-          Acquire::http::Timeout "30";
-          Acquire::ftp::Timeout "30";
+          Acquire::Retries "4";
+          Acquire::http::Timeout "20";
+          Acquire::ftp::Timeout "20";
           DPkg::Lock::Timeout "120";
           APT
-          attempt=0
-          until npx playwright install --with-deps chromium; do
-            attempt=$((attempt + 1))
-            if [ "$attempt" -ge 4 ]; then
-              echo "Chromium install still failed after $attempt attempts - the runner cannot reach its package mirror." >&2
-              exit 1
+          for attempt in 1 2; do
+            if timeout 300 npx playwright install --with-deps chromium; then
+              exit 0
             fi
-            echo "Package mirror hiccup during the Chromium install - retrying in $((attempt * 30))s."
-            sleep $((attempt * 30))
+            echo "Browser install through apt failed (attempt $attempt/2) - the runner package mirror is unreachable."
+            [ "$attempt" = 2 ] || sleep 30
           done
+          if timeout 300 npx playwright install chromium; then
+            {
+              echo "## Chromium without browser dependencies"
+              echo ""
+              echo "- reason: the Ubuntu package mirror of the runner stayed unreachable through both apt attempts"
+              echo "- effect: the E2E smoke test runs the bundled Chromium of the Playwright CDN without the apt dependency packages - this run proves the app, not the dependency install (ADR-0018)"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "No Chromium from apt and none from the Playwright CDN - the E2E gate has no browser." >&2
+          exit 1
 
       - name: Quality gates (typecheck, lint, tests, i18n, wp, e2e)
         run: npm run check
