@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- One display for both surfaces (WP-M10-36): the wall monitor no longer has its own
+  view — `/tv/:token` renders the shared `DashboardDisplay` the start page renders
+  (statistics first, then the open tickets). On the wall nothing is clickable: the
+  tiles, the ticket numbers and the channel tile are plain blocks and the primary
+  action is not offered — a display is never interactive.
 - "Bereitschaft" becomes a menu entry of its own (WP-M10-35): the header navigation shows
   `Dashboard`, `Tickets` and `Bereitschaft` ("On call"), the entry leads to the readiness
   page `/oncall` and stays active there.
