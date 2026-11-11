@@ -51,15 +51,10 @@ function useTicket(ticketNo: string | undefined) {
   })
 }
 
-function formatEventTime(iso: string): string {
-  const locale = i18n.language === 'en' ? 'en-US' : 'de-DE'
-  return new Intl.DateTimeFormat(locale, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(new Date(iso))
-}
-
+/**
+ * Every history entry carries the date next to the clock time, so entries of
+ * different days stay readable.
+ */
 function formatEventDateTime(iso: string): string {
   const locale = i18n.language === 'en' ? 'en-US' : 'de-DE'
   return new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(
@@ -1395,7 +1390,7 @@ export function TicketDetailPage() {
             <>
               {backdatedReport ? (
                 <div className="p-3 flex gap-3" data-testid="history-reported">
-                  <div className="w-32 shrink-0 whitespace-nowrap">
+                  <div className="w-36 shrink-0 whitespace-nowrap">
                     <span className="text-xs font-mono text-slate-500">
                       {formatEventDateTime(ticket.reportedAt)}
                     </span>
@@ -1412,9 +1407,9 @@ export function TicketDetailPage() {
               ) : null}
               {events.map((event) => (
               <div key={event.id} className="p-3 flex gap-3">
-                <div className="w-32 shrink-0 whitespace-nowrap">
+                <div className="w-36 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-mono text-slate-500">
-                    {formatEventTime(event.createdAt)}
+                    {formatEventDateTime(event.createdAt)}
                   </span>
                 </div>
                 <div className="flex-1">
