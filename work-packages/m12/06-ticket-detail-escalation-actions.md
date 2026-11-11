@@ -39,6 +39,8 @@ interfaces:
 4. Integrate the status-dependent workflow actions plus e-mail, cancel, delete and
    back into the same section as visible buttons with their existing confirm panels.
 5. Show the stage name in the history and add the de/en texts.
+6. Re-point the label lookup of the existing comment test to the renamed text field;
+   the test file is excluded from the file limit of `PLAN.md` §17.
 
 ## Non-goals
 
@@ -55,12 +57,14 @@ npm run wp:check
 ```
 
 Expected: all green; the test proves the menu is gone, the default stage is the
-next one and the backwards selection is possible.
+next one and the backwards selection is possible; the existing comment test keeps
+its assertions through the new label of the text field.
 
 ## Handoff
 
-- Files changed: detail page, de/en ticket locale, component test.
+- Files changed: detail page, de/en ticket locale, the new component test and the
+  label lookup of the comment test.
 - Interfaces added: none beyond the two API calls.
-- Verified: typecheck, component test, i18n check.
+- Verified: typecheck, component tests, i18n check.
 - Follow-up WP: none
 - Open question: none

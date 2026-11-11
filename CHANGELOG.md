@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Ticket detail escalation section (WP-M12-06): the top-right hamburger menu is gone and
+  its actions live in one section under the photos — the status-dependent workflow
+  buttons, e-mail, cancel, delete and "Zurück zur Liste" as visible buttons with their
+  existing confirm panels, plus a stage dropdown offering "Kommentar" and every
+  configured escalation stage with the stage after the last manual escalation preselected
+  and the text field next to it. A stage is written as `escalation_set` (forwards or
+  backwards), the chosen stage is named in the history row and all labels come from the
+  new `ticket:detail.escalation.*` keys in `de` and `en`.
 - Manual escalation write (WP-M12-05): `POST /api/v1/tickets/:ticketNo/escalate`
   (guarded by `ticket.comment`) appends either a `comment` event or one
   `escalation_set` event with the chosen stage and text. The stage may move

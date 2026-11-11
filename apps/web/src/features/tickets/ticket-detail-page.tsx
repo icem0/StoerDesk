@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { TicketDetailResponse } from '@stoerdesk/shared'
-import { type StandardTextLocale } from '@stoerdesk/shared'
+import { nextEscalationStage, escalationStageName, type EscalationStage, type StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiBaseUrl, apiFetch, ApiError } from '../../lib/api'
 import { i18n } from '../../i18n'
@@ -15,7 +15,7 @@ import { OfflineActionBanner } from './offline-action-banner'
 import { TicketTimeline } from './ticket-timeline'
 
 /**
- * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d / WP-M4-07).
+ * Ticket detail page (`PLAN.md` §14, WP-M2-18b / WP-M2-19d / WP-M4-07 / WP-M12-06).
  *
  * Layout per user request:
  * - Header: ticket number + object on the left, status + priority badges on the top right.
@@ -24,7 +24,9 @@ import { TicketTimeline } from './ticket-timeline'
  * - Object row: object name + object number side by side, labels above.
  * - Three fields side by side: Erfasser, Meldender, Quelle with labels above.
  * - Description, photos, history follow below.
- * - All workflow actions live in a single dropdown menu; "Zurück zur Liste" is a menu entry.
+ * - The escalation section carries the stage dropdown, the text field and the
+ *   status-dependent workflow actions as visible buttons (WP-M12-06); the
+ *   top-right hamburger menu is gone.
  * - The standalone "Zurück zur Liste" button is removed.
  */
 
@@ -93,7 +95,7 @@ export function TicketDetailPage() {
   const [lastError, setLastError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
-  const [optionsOpen, setOptionsOpen] = useState(false)
+  const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<{ id: string; url: string } | null>(null)
   const [stornoOpen, setStornoOpen] = useState(false)
   const [stornoReason, setStornoReason] = useState('')
@@ -105,8 +107,6 @@ export function TicketDetailPage() {
     labelDe: string
     labelEn: string
   }[]>([])
-  const optionsMenuRef = useRef<HTMLDivElement>(null)
-  const optionsButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (notice === null) {
@@ -115,32 +115,6 @@ export function TicketDetailPage() {
     const timeout = window.setTimeout(() => setNotice(null), 4000)
     return () => window.clearTimeout(timeout)
   }, [notice])
-
-  useEffect(() => {
-    if (!optionsOpen) {
-      return
-    }
-    function onPointerDown(event: PointerEvent) {
-      if (
-        !optionsMenuRef.current?.contains(event.target as Node) &&
-        !optionsButtonRef.current?.contains(event.target as Node)
-      ) {
-        setOptionsOpen(false)
-      }
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOptionsOpen(false)
-        optionsButtonRef.current?.focus()
-      }
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [optionsOpen])
 
   useEffect(() => {
     if (selectedAction !== 'closed') return
@@ -162,6 +136,11 @@ export function TicketDetailPage() {
   }, [selectedAction])
 
   const ticketQuery = useTicket(ticketNo)
+  const stageQuery = useQuery({
+    queryKey: ['escalation-stages'],
+    queryFn: () => apiFetch<{ stages: EscalationStage[] }>('/v1/escalation-stages'),
+    retry: false,
+  })
   const mayDelete = usePermission('ticket.delete')
   const { queueAction, deliverNow, discard, pendingCount, rows } = useInternalActions(ticketNo ?? '')
 
@@ -263,13 +242,11 @@ export function TicketDetailPage() {
 
     if (value === 'list') {
       setSelectedAction(null)
-      setOptionsOpen(false)
       navigate('/tickets')
       return
     }
 
     if (value === 'email') {
-      setOptionsOpen(false)
       navigate(`/tickets/${ticketNo}/email`)
       return
     }
@@ -278,12 +255,11 @@ export function TicketDetailPage() {
       setStornoMode(value)
       setStornoReason('')
       setStornoOpen(true)
-      setOptionsOpen(false)
       return
     }
 
-    // Workflow actions keep the dropdown open so their inline confirmation
-    // panel renders below the chosen entry (review, assign, accept, close …).
+    // Workflow actions render their inline confirmation panel below the buttons
+    // (review, assign, accept, close …).
     setSelectedAction(value === '' ? null : value)
   }
 
@@ -355,9 +331,26 @@ export function TicketDetailPage() {
     (ticket.source === 'QR' ? t('detail.field.system') : t('detail.field.unknown'))
   const quelle = sourceLabels[ticket.source] ?? t('detail.field.unknown')
 
+  const stages = stageQuery.data?.stages ?? []
+  const lastStageKey =
+    [...events]
+      .reverse()
+      .find((event) => event.type === 'escalation_set')?.payload.stageKey ?? null
+  const suggestedStage = nextEscalationStage(
+    stages,
+    typeof lastStageKey === 'string' ? lastStageKey : null,
+  )
+  const defaultStageChoice = suggestedStage?.key ?? '__comment__'
+  const stageChoice = selectedStage ?? defaultStageChoice
+  const stageLabel = (key: string): string => {
+    const stage = stages.find((candidate) => candidate.key === key)
+
+    return stage === undefined ? key : escalationStageName(stage, locale)
+  }
+
   /**
-   * Builds the list of dropdown menu entries for the current status.
-   * Each entry: { value, labelKey, needsConfirm, confirmLabelKey, abortLabelKey, fieldRenderer? }
+   * Builds the list of workflow entries for the current status. The entries are
+   * visible buttons in the escalation/action section; the menu was removed.
    */
   const status = ticket.status
   const req = (name: string) => (fields[name] ?? '').trim()
@@ -379,6 +372,43 @@ export function TicketDetailPage() {
     setCommentConfirmOpen(false)
     if (await handleAction('commented', { text })) {
       setNotice(t('detail.comment.saved'))
+    }
+  }
+
+  async function handleEscalation() {
+    if (ticketNo === undefined) {
+      return
+    }
+
+    if (stageChoice === '__comment__') {
+      void submitComment()
+      return
+    }
+
+    const text = req('commentText')
+
+    if (text === '') {
+      setLastError(t('detail.errors.fieldRequired'))
+      return
+    }
+
+    try {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}/escalate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ stageKey: stageChoice, text }),
+      })
+      void ticketQuery.refetch()
+      setFields({})
+      setSelectedStage(null)
+      setLastError(null)
+      setNotice(t('detail.escalation.saved'))
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setLastError(actionErrorMessage(error.code, error.params))
+        return
+      }
+      setLastError(t('detail.errors.actionFailed'))
     }
   }
 
@@ -823,42 +853,6 @@ export function TicketDetailPage() {
     }
   }
 
-  function renderOptionsMenu(): ReactNode {
-    return (
-      <div ref={optionsMenuRef} className="absolute left-0 mt-1 w-64 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl z-40">
-        <div className="border-b border-slate-800 px-3 py-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t('detail.options.title')}
-          </p>
-        </div>
-        <ul>
-          {menuEntries.map((entry) => {
-            if (entry.divider) {
-              return (
-                <li key={entry.value} className="border-t border-slate-800 my-1" />
-              )
-            }
-            const confirmShowing = selectedAction === entry.value && entry.value !== 'pdf' && entry.value !== 'email' && entry.value !== 'list'
-            return (
-              <li key={entry.value}>
-                <button
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                  onClick={() => void handleOption(entry.value)}
-                  type="button"
-                >
-                  {t(entry.labelKey)}
-                </button>
-                {confirmShowing && (
-                  <div className="ml-10 mt-1">{renderConfirmPanel()}</div>
-                )}
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-    )
-  }
-
   function renderStornoDialog(): ReactNode {
     const isCancel = stornoMode === 'cancel'
     const missing = stornoReason.trim().length < 5
@@ -1004,7 +998,7 @@ export function TicketDetailPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      {/* Header: title left, status + priority + options right */}
+      {/* Header: title left, status + priority right */}
       <div className="flex flex-col sm:flex-row sm:items-between sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">
@@ -1022,26 +1016,8 @@ export function TicketDetailPage() {
           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
             {t(`priority.${ticket.priority}`) ?? ticket.priority}
           </span>
-            <div className="relative inline-flex">
-              <button
-                ref={optionsButtonRef}
-                aria-haspopup="menu"
-                aria-expanded={optionsOpen}
-                aria-label={t('detail.options.title')}
-                data-testid="ticket-options-button"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/80 text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                onClick={() => setOptionsOpen((current) => !current)}
-                title={t('detail.options.title')}
-                type="button"
-              >
-                <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              {optionsOpen && renderOptionsMenu()}
-            </div>
-          </div>
         </div>
+      </div>
       {stornoOpen && renderStornoDialog()}
       {commentConfirmOpen && renderCommentConfirmDialog()}
 
@@ -1286,19 +1262,80 @@ export function TicketDetailPage() {
         </div>
       )}
 
-      {/* Comment composer: always visible on active tickets, no trip through the options menu */}
-      {status !== 'CLOSED' && status !== 'CANCELLED' && (
-        <div className="col-span-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60 shadow-sm">
-          <div className="flex items-center gap-2 border-b border-slate-700/70 bg-slate-800/50 px-4 py-2.5">
-            <svg aria-hidden="true" className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h8M8 14h5m-9 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11l-4 4H6a2 2 0 0 1-2-2z" />
-            </svg>
-            <label htmlFor="ticket-comment" className="text-sm font-medium text-slate-200">
-              {t('detail.action.comment')}
-            </label>
-            <span className="ml-auto text-xs text-slate-500">{t('detail.comment.hint')}</span>
+      {/* Escalation and workflow actions: the former top-right menu lives here */}
+      <div
+        data-testid="ticket-action-section"
+        className="col-span-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60 shadow-sm"
+      >
+        <div className="flex items-center gap-2 border-b border-slate-700/70 bg-slate-800/50 px-4 py-2.5">
+          <svg aria-hidden="true" className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h8M8 14h5m-9 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11l-4 4H6a2 2 0 0 1-2-2z" />
+          </svg>
+          <span className="text-sm font-medium text-slate-200">
+            {t('detail.escalation.title')}
+          </span>
+          <span className="ml-auto text-xs text-slate-500">{t('detail.escalation.hint')}</span>
+        </div>
+
+        <div className="flex flex-col gap-3 border-b border-slate-700/70 px-4 py-3">
+          <div className="flex flex-wrap gap-2">
+            {menuEntries
+              .filter((entry) => entry.divider !== true)
+              .map((entry) => (
+                <button
+                  key={entry.value}
+                  className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  onClick={() => void handleOption(entry.value)}
+                  type="button"
+                >
+                  {t(entry.labelKey)}
+                </button>
+              ))}
+            <button
+              className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              onClick={() => void handleOption('email')}
+              type="button"
+            >
+              {t('detail.menu.email')}
+            </button>
           </div>
+
+          {selectedAction !== null && (
+            <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+              {renderConfirmPanel()}
+            </div>
+          )}
+        </div>
+
+        {status !== 'CLOSED' && status !== 'CANCELLED' && (
           <div className="p-4">
+            <label
+              htmlFor="ticket-escalation-stage"
+              className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
+              {t('detail.escalation.stageLabel')}
+            </label>
+            <select
+              id="ticket-escalation-stage"
+              data-testid="ticket-escalation-stage"
+              className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-950/40 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+              value={stageChoice}
+              onChange={(event) => setSelectedStage(event.target.value)}
+            >
+              <option value="__comment__">{t('detail.escalation.commentOption')}</option>
+              {stages.map((stage) => (
+                <option key={stage.key} value={stage.key}>
+                  {escalationStageName(stage, locale)}
+                </option>
+              ))}
+            </select>
+
+            <label
+              htmlFor="ticket-comment"
+              className="mt-3 mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
+              {t('detail.escalation.textLabel')}
+            </label>
             <textarea
               id="ticket-comment"
               className="min-h-24 w-full resize-y rounded-lg border border-slate-600 bg-slate-950/40 px-3.5 py-3 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
@@ -1307,13 +1344,13 @@ export function TicketDetailPage() {
               name="commentText"
               lang={locale}
               spellCheck
-              placeholder={t('detail.comment.placeholder')}
+              placeholder={t('detail.escalation.placeholder')}
               value={fields.commentText ?? ''}
               onChange={(event) => setFields({ ...fields, commentText: event.target.value })}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
                   event.preventDefault()
-                  void submitComment()
+                  void handleEscalation()
                 }
               }}
             />
@@ -1328,20 +1365,23 @@ export function TicketDetailPage() {
                   : t('detail.comment.shortcut')}
               </span>
               <button
+                data-testid="ticket-escalation-submit"
                 className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-sky-600 shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 type="button"
                 disabled={req('commentText') === ''}
-                onClick={() => void submitComment()}
+                onClick={() => void handleEscalation()}
               >
                 <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19V5m0 0-6 6m6-6 6 6" />
                 </svg>
-                {t('detail.comment.submit')}
+                {stageChoice === '__comment__'
+                  ? t('detail.comment.submit')
+                  : t('detail.escalation.submitStage', { stage: stageLabel(stageChoice) })}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* History / Verlauf */}
       <div className="col-span-full">
@@ -1391,6 +1431,20 @@ export function TicketDetailPage() {
                         : t(`actorKind.${event.actorKind}`)}
                   </div>
                   {(() => {
+                    const stageKey =
+                      typeof event.payload.stageKey === 'string' ? event.payload.stageKey : null
+                    const matchedStage =
+                      stageKey === null
+                        ? undefined
+                        : stages.find((candidate) => candidate.key === stageKey)
+                    const stage =
+                      stageKey === null
+                        ? null
+                        : matchedStage !== undefined
+                          ? escalationStageName(matchedStage, locale)
+                          : typeof event.payload.stageName === 'string'
+                            ? event.payload.stageName
+                            : stageKey
                     const text =
                       typeof event.payload.text === 'string'
                         ? event.payload.text
@@ -1400,12 +1454,23 @@ export function TicketDetailPage() {
                     if (text === null || text.trim() === '') {
                       return null
                     }
-                    return event.type === 'comment' ? (
-                      <p className="mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200">
-                        {text}
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-xs text-slate-400">{text}</p>
+                    return (
+                      <>
+                        {stage !== null && (
+                          <p className="mt-1 text-xs text-sky-300">
+                            {t('detail.escalation.historyStage', { stage })}
+                          </p>
+                        )}
+                        <p
+                          className={
+                            event.type === 'comment' || event.type === 'escalation_set'
+                              ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
+                              : 'mt-1 text-xs text-slate-400'
+                          }
+                        >
+                          {text}
+                        </p>
+                      </>
                     )
                   })()}
                 </div>

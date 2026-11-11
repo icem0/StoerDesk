@@ -237,6 +237,7 @@
       "cancelled": "Storniert",
       "uncancelled": "Stornierung aufgehoben",
       "escalated": "Eskaliert",
+      "escalation_set": "Manuell eskaliert",
       "paused": "Pausiert",
       "resumed": "Fortgesetzt",
       "notification_sent": "Benachrichtigung gesendet",
@@ -444,6 +445,17 @@
     },
     "options": {
       "title": "Optionen"
+    },
+    "escalation": {
+      "title": "Eskalation & Aktionen",
+      "hint": "Stufe wählen und Beschreibung eingeben",
+      "stageLabel": "Eskalationsstufe oder Kommentar",
+      "textLabel": "Beschreibung",
+      "commentOption": "Kommentar",
+      "placeholder": "Beschreibung der Eskalation oder Notiz für das Team …",
+      "submitStage": "Eskalation auf „{{stage}}“ setzen",
+      "historyStage": "Eskalationsstufe: {{stage}}",
+      "saved": "Eskalation gespeichert."
     },
     "comment": {
       "submit": "Kommentar speichern",

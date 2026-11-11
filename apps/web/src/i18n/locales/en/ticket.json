@@ -238,6 +238,7 @@
       "cancelled": "Cancelled",
       "uncancelled": "Cancellation revoked",
       "escalated": "Escalated",
+      "escalation_set": "Manually escalated",
       "paused": "Paused",
       "resumed": "Resumed",
       "notification_sent": "Notification sent",
@@ -445,6 +446,17 @@
     },
     "options": {
       "title": "Options"
+    },
+    "escalation": {
+      "title": "Escalation & actions",
+      "hint": "Choose a stage and enter a description",
+      "stageLabel": "Escalation stage or comment",
+      "textLabel": "Description",
+      "commentOption": "Comment",
+      "placeholder": "Description of the escalation or a note for the team …",
+      "submitStage": "Escalate to \"{{stage}}\"",
+      "historyStage": "Escalation stage: {{stage}}",
+      "saved": "Escalation saved."
     },
     "comment": {
       "submit": "Save comment",
