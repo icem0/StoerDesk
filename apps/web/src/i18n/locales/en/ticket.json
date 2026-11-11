@@ -504,5 +504,24 @@
     "deadlineAt": "Deadline",
     "erfasser": "Recorded by",
     "source": "Source"
+  },
+  "pdf": {
+    "title": "Ticket {{ticketNo}}",
+    "save": "Save as PDF",
+    "notFound": "Ticket not found.",
+    "object": "Object",
+    "objectNo": "Object no.",
+    "status": "Status",
+    "priority": "Priority",
+    "reportedAt": "Reported on",
+    "deadlineAt": "Deadline",
+    "erfasser": "Recorded by",
+    "source": "Source",
+    "fieldTitle": "Title",
+    "fieldDescription": "Description",
+    "fieldFaults": "Reported fault type",
+    "photos": "Photos",
+    "history": "History",
+    "historyEmpty": "No events."
   }
 }

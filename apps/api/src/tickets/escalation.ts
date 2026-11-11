@@ -13,6 +13,7 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
+import { dispatchEscalationActions } from '../escalation/actions'
 import { escalateOnCallOffers } from '../oncall/coupling'
 import {
   escalationFirings,
@@ -366,12 +367,28 @@ async function evaluateOne(
       deadlineAt: ticket.deadlineAt.toISOString(),
     }
 
-    await database.insert(ticketEvents).values({
-      ticketId: ticket.id,
-      type: 'escalated',
-      actorKind: 'system',
-      payload,
-    })
+    const [event] = await database
+      .insert(ticketEvents)
+      .values({
+        ticketId: ticket.id,
+        type: 'escalated',
+        actorKind: 'system',
+        payload,
+      })
+      .returning({ id: ticketEvents.id })
+
+    if (event !== undefined) {
+      await dispatchEscalationActions(
+        database,
+        {
+          ticketId: ticket.id,
+          ruleKey: rule.key,
+          stageKey: rule.stageKey,
+          eventId: event.id,
+        },
+        facts,
+      )
+    }
 
     fired.push({
       rule: rule.key,

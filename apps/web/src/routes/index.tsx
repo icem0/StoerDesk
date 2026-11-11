@@ -33,6 +33,7 @@ import { InternalCreatePage } from '../features/tickets/internal-create-page'
 import { TicketListPage } from '../features/tickets/ticket-list-page'
 import { TicketDetailPage } from '../features/tickets/ticket-detail-page'
 import { TicketEmailPage } from '../features/tickets/ticket-email-page'
+import { TicketPdfPage } from '../features/tickets/ticket-pdf-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
 
@@ -278,6 +279,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <TicketEmailPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/tickets/:ticketNo/pdf',
+        element: (
+          <RequireSession>
+            <TicketPdfPage />
           </RequireSession>
         ),
       },

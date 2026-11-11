@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { and, asc, eq, gte, inArray, lte, notExists, sql } from 'drizzle-orm'
-import type { WebhookEventType } from '@stoerdesk/shared'
+import type { WebhookDeliveryEventType, WebhookEventType } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
 import {
@@ -75,8 +75,34 @@ export function signatureHeader(secret: string, timestamp: string, body: string)
   return `t=${timestamp},v1=${signWebhook(secret, timestamp, body)}`
 }
 
+/**
+ * The context of an escalation, read from the payload of the `escalated`
+ * event. Only the escalation event carries it; every other event type has no
+ * escalation block in its payload.
+ */
+export function escalationContext(
+  eventType: WebhookDeliveryEventType,
+  payload: unknown,
+): WebhookDeliveryPayload['escalation'] {
+  if (eventType !== 'ticket.escalated') {
+    return undefined
+  }
+
+  if (typeof payload !== 'object' || payload === null) {
+    return undefined
+  }
+
+  const source = payload as Record<string, unknown>
+  const rule = typeof source.rule === 'string' ? source.rule : ''
+  const stage = typeof source.stage === 'string' ? source.stage : null
+  const thresholdAt = typeof source.thresholdAt === 'string' ? source.thresholdAt : ''
+  const deadlineAt = typeof source.deadlineAt === 'string' ? source.deadlineAt : ''
+
+  return { rule, stage, thresholdAt, deadlineAt }
+}
+
 export interface WebhookDeliveryPayload {
-  event: WebhookEventType
+  event: WebhookDeliveryEventType
   eventId: string
   occurredAt: string
   ticket: {
@@ -85,6 +111,13 @@ export interface WebhookDeliveryPayload {
     priority: string
     objectNo: string
     objectName: string
+  }
+  /** The context of an escalation; only `ticket.escalated` carries it. */
+  escalation?: {
+    rule: string
+    stage: string | null
+    thresholdAt: string
+    deadlineAt: string
   }
 }
 
@@ -169,7 +202,7 @@ export async function deliverWebhook(
   input: {
     url: string
     secret: string
-    eventType: WebhookEventType
+    eventType: WebhookDeliveryEventType
     body: string
     timestamp: string
   },
@@ -242,6 +275,7 @@ export async function processWebhookDeliveries(
       endpointUrl: webhookEndpoints.url,
       endpointSecret: webhookEndpoints.secret,
       eventAt: ticketEvents.createdAt,
+      eventPayload: ticketEvents.payload,
       ticketNo: tickets.ticketNo,
       status: tickets.status,
       priority: tickets.priority,
@@ -271,7 +305,8 @@ export async function processWebhookDeliveries(
       continue
     }
 
-    const eventType = row.eventType as WebhookEventType
+    const eventType = row.eventType as WebhookDeliveryEventType
+    const escalation = escalationContext(eventType, row.eventPayload)
     const body = JSON.stringify({
       event: eventType,
       eventId: row.eventId,
@@ -283,6 +318,7 @@ export async function processWebhookDeliveries(
         objectNo: row.objectNo,
         objectName: row.objectName,
       },
+      ...(escalation === undefined ? {} : { escalation }),
     } satisfies WebhookDeliveryPayload)
     const timestamp = Math.floor(now.getTime() / 1000).toString()
     const attempt = await deliverWebhook(

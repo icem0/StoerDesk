@@ -503,5 +503,24 @@
     "deadlineAt": "Frist bis",
     "erfasser": "Erfasser",
     "source": "Quelle"
+  },
+  "pdf": {
+    "title": "Vorgang {{ticketNo}}",
+    "save": "Als PDF speichern",
+    "notFound": "Meldung nicht gefunden.",
+    "object": "Objekt",
+    "objectNo": "Objektnummer",
+    "status": "Status",
+    "priority": "Priorität",
+    "reportedAt": "Gemeldet am",
+    "deadlineAt": "Frist bis",
+    "erfasser": "Erfasser",
+    "source": "Quelle",
+    "fieldTitle": "Titel",
+    "fieldDescription": "Beschreibung",
+    "fieldFaults": "Gemeldete Störungsart",
+    "photos": "Fotos",
+    "history": "Verlauf",
+    "historyEmpty": "Keine Ereignisse."
   }
 }
