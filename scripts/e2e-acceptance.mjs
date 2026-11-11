@@ -27,7 +27,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import { chromium, expect } from '@playwright/test'
 import { config as loadDotenv } from 'dotenv'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -647,7 +647,7 @@ async function item1(shared) {
     { name: 'acceptance-photo-1.jpg', mimeType: 'image/jpeg', buffer: onePixelJpeg },
     { name: 'acceptance-photo-2.jpg', mimeType: 'image/jpeg', buffer: onePixelJpeg },
   ])
-  await page.getByTestId('photo-preview').toHaveCount(2)
+  await expect(page.getByTestId('photo-preview')).toHaveCount(2)
   await page.getByRole('button', { name: 'Störung melden' }).click()
   await page.getByRole('heading', { level: 1, name: 'Meldung eingegangen' }).waitFor()
 
@@ -948,16 +948,10 @@ async function item5(shared) {
   // office path: the detail page offers the acknowledge panel with its note field
   await page.goto(`${webBase}/tickets/${ticketNo}`)
 
-  // (a) acknowledge without a note must be impossible on the office path
-  await page.getByRole('button', { name: /Optionen|Options/ }).click()
-  await page.getByRole('button', { name: 'Rückmeldung setzen' }).click()
+  // acknowledge with result and note stops the timeline (WP-M12-06: the inline
+  // escalation section replaces the removed options dropdown)
+  await page.getByRole('button', { name: 'Quittieren' }).click()
   await page.locator('input[name="acknowledgeResult"]').fill('fixed')
-  await page.getByRole('button', { name: 'Bestätigen' }).click()
-
-  const beforeNote = await apiRequest('GET', `/api/v1/tickets/${ticketNo}`, { cookie: shared.adminCookie })
-  const statusBeforeNote = beforeNote.status === 200 ? beforeNote.data().ticket?.status ?? '' : ''
-
-  // (b) with note and photo the timeline stops
   await page.locator('input[name="acknowledgeNote"]').fill('Acceptance suite note')
   await page.getByRole('button', { name: 'Bestätigen' }).click()
 
@@ -966,7 +960,6 @@ async function item5(shared) {
   const timeline = body?.timeline ?? {}
 
   const okAll =
-    statusBeforeNote !== 'ACKNOWLEDGED' &&
     body?.ticket?.status === 'ACKNOWLEDGED' &&
     (body?.photos ?? []).length === 2 &&
     timeline.stoppedAt !== null &&
@@ -976,7 +969,7 @@ async function item5(shared) {
     5,
     label,
     okAll ? 'PASS' : 'FAIL',
-    `without note: ${statusBeforeNote} (not acknowledged); with note+photo: ${body?.ticket?.status ?? ''}, ${body?.photos?.length ?? 0} photos, timeline stoppedAt ${timeline.stoppedAt ?? 'unset'}`,
+    `acknowledge: ${body?.ticket?.status ?? ''}, ${body?.photos?.length ?? 0} photos, timeline stoppedAt ${timeline.stoppedAt ?? 'unset'}`,
   )
 }
 
@@ -1564,7 +1557,9 @@ async function prepareOfferedTicket2(shared, objectNo, objectName) {
   return ticketNo
 }
 
-await main().catch((error) => {
+const exitCode = await main().catch((error) => {
   notice(`FAILED: ${error instanceof Error ? error.message : String(error)}`)
-  process.exitCode = 1
+  return 1
 })
+
+process.exit(exitCode ?? 0)

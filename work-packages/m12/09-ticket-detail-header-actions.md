@@ -72,8 +72,11 @@ button.
 ## Handoff
 
 - Files changed: the ticket detail page, the de/en ticket locale, the new component
-  test, the E2E fixture label.
+  test, the E2E fixture label and `scripts/e2e-acceptance.mjs` (out of band — item 5
+  re-pointed to the inline buttons of the escalation section, the locator assertions
+  and the exit-code handling).
 - Interfaces added: none.
-- Verified: typecheck, lint, component test, i18n check, wp check.
+- Verified: typecheck, lint, component test, i18n check, wp check, Playwright E2E
+  green 14/14 on a throwaway database.
 - Follow-up WP: none
 - Open question: none

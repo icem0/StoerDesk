@@ -644,7 +644,9 @@ the conditions and the actions move into the database and are maintained in
 `/admin/escalation`, the ticket view selects a stage instead of pressing one
 button per workflow step, and the former manual stage catalogue (`ticket.escalation_stages`,
 the `escalation_set` event, `POST /api/v1/tickets/:ticketNo/escalate`) is removed.
-Phase 12 stays open until **WP-M12-02** and **WP-M12-09** are closed.
+**WP-M12-09** is implemented — the ticket detail header carries the e-mail icon and
+the cancel button and the way back to the list is gone. Phase 12 stays open until
+**WP-M12-02**, the acceptance suite, is closed.
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 **WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,

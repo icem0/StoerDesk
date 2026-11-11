@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The acceptance runner `scripts/e2e-acceptance.mjs` drives the ticket detail as it is
+  today (out of band, closes WP-M12-09): item 5 clicks the inline acknowledge button of
+  the escalation section instead of the dropdown removed by WP-M12-06, item 1 asserts the
+  photo previews with `expect(…).toHaveCount(2)` and the run exits with the status code of
+  `main()`.
 - The escalation stages are the workflow milestones (WP-M13-01, ADR-0017):
   `specs/07-escalation.md` defines the five stages (`review`, `work_order`,
   `assignment`, `acceptance`, `acknowledgement`), a stage as a milestone to be
