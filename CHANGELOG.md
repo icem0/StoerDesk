@@ -201,6 +201,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The i18next line of the web app is aligned so one copy resolves: `apps/web/package.json`
+  now pins `i18next: ^27.0.1` and `react-i18next: ^17.1.13` instead of `^26.5.11` and
+  `^17.1.9`. `react-i18next` 18 declares the peer `i18next >= 27.0.0`, so Dependabot's
+  bump of `react-i18next` installed a second, workspace-local copy of `i18next` next to
+  the hoisted one — two different `i18n`/`TFunction` types, and `tsc --noEmit` rejected
+  every hand-over between `apps/web/src`, `packages/shared` and the tests. The 27 line is
+  the one 17.1.13 was released with, so the app keeps its 17-line behaviour.
+
 - The ticket detail history (`Verlauf`) always names the date next to the clock time: the
   event rows used to carry a bare `hh:mm:ss` stamp, so two entries of different days were
   indistinguishable. They now render date and time through the same formatter the
