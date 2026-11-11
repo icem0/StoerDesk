@@ -49,3 +49,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0015](DECISIONS/0015-dashboard-evaluation-averages.md) | Dashboard evaluations — average durations only, the worst reaction time stays out | accepted |
 | [ADR-0016](DECISIONS/0016-detected-errors.md) | Detected errors: catalog, close storage, statistics grouping | accepted |
 | [ADR-0017](DECISIONS/0017-workflow-stages-as-escalation-stages.md) | The workflow milestones are the escalation stages | accepted |
+| [ADR-0018](DECISIONS/0018-ci-package-mirror-retries.md) | A package-mirror failure in CI is retried, never silenced | accepted |

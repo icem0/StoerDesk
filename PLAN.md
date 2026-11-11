@@ -1607,6 +1607,16 @@ npm run build
    notice and stays green locally, but in CI (`CI=true`) a missing prerequisite is
    an error.
 
+The Chromium of that gate is installed in the `check` job with
+`npx playwright install --with-deps chromium`, whose `--with-deps` part downloads the
+browser dependencies through apt from the Ubuntu package mirrors of the runner. A mirror
+that cannot be resolved there (`Temporary failure resolving 'azure.archive.ubuntu.com'`,
+apt exit `100`) is an infrastructure failure, not a code failure — **ADR-0018**: the step
+writes `Acquire::Retries` and apt timeouts into `/etc/apt/apt.conf.d` and repeats the
+whole install with backoff, so a transient outage costs minutes instead of a red version
+without images. The gate stays strict: after the last attempt the step fails, the job is
+red and no publish run is dispatched for that version.
+
 Phase 0 and every Docker-related WP additionally:
 
 ```bash

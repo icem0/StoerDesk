@@ -8,7 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- The acceptance runner `scripts/e2e-acceptance.mjs` drives the ticket detail as it is
+- CI browser install is resilient (no work package, ADR-0018): the runs `v1.1.2` …
+  `v1.1.5` failed in `Install Chromium for the E2E smoke test` with
+  `Temporary failure resolving 'azure.archive.ubuntu.com'` and apt exit `100` — the
+  runner could not reach its Ubuntu package mirror, the app code and the tests were fine.
+  The step now writes `Acquire::Retries "15"`, the apt timeouts and
+  `DPkg::Lock::Timeout` into `/etc/apt/apt.conf.d` and repeats the whole
+  `npx playwright install --with-deps chromium` with a 30/60/90-second backoff, so a
+  mirror hiccup costs minutes instead of a version without images. The gate stays strict:
+  after the fourth attempt the step fails, the run stays red and
+  `Dispatch publish run` never starts.
   today (out of band, closes WP-M12-09): item 5 clicks the inline acknowledge button of
   the escalation section instead of the dropdown removed by WP-M12-06, item 1 asserts the
   photo previews with `expect(…).toHaveCount(2)` and the run exits with the status code of

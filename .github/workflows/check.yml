@@ -72,8 +72,32 @@ jobs:
       # WP-M1-12: the last gate of `npm run check` is the Playwright smoke test, so the
       # browser belongs into this job — it already provides the Postgres-16 service whose
       # account the E2E runner uses to create its own throwaway database.
+      # `--with-deps` installs the browser through apt, and apt reaches the Ubuntu
+      # package mirrors over the network of the runner: a mirror DNS hiccup ("Temporary
+      # failure resolving 'azure.archive.ubuntu.com'", apt exit 100, "Failed to install
+      # browsers") is an infrastructure failure, not a code failure (ADR-0018). Acquire::
+      # Retries recovers a single download, the loop behind it retries the whole install
+      # with backoff. Neither weakens the gate: after the last attempt the step fails,
+      # the run stays red and no publish run is dispatched for that version.
       - name: Install Chromium for the E2E smoke test
-        run: npx playwright install --with-deps chromium
+        run: |
+          set -euo pipefail
+          sudo tee /etc/apt/apt.conf.d/90-stoerdesk-ci >/dev/null <<'APT'
+          Acquire::Retries "15";
+          Acquire::http::Timeout "30";
+          Acquire::ftp::Timeout "30";
+          DPkg::Lock::Timeout "120";
+          APT
+          attempt=0
+          until npx playwright install --with-deps chromium; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 4 ]; then
+              echo "Chromium install still failed after $attempt attempts - the runner cannot reach its package mirror." >&2
+              exit 1
+            fi
+            echo "Package mirror hiccup during the Chromium install - retrying in $((attempt * 30))s."
+            sleep $((attempt * 30))
+          done
 
       - name: Quality gates (typecheck, lint, tests, i18n, wp, e2e)
         run: npm run check
