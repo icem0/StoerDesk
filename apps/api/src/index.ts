@@ -33,6 +33,7 @@ import { oncallRoutes } from './oncall/routes'
 import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { seedStandardTexts } from './db/seed-standard-texts'
+import { seedEscalation } from './db/seed-escalation'
 import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startTicketEscalation } from './jobs/escalation'
 import { startNotificationOutboxJob } from './notifications/outbox'
@@ -202,6 +203,7 @@ if (invokedDirectly) {
     password: env.SEED_ADMIN_PASSWORD,
   })
   await seedStandardTexts(database)
+  await seedEscalation(database)
   await client.end({ timeout: 5 })
 
   const app = await buildServer()

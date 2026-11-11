@@ -1,7 +1,7 @@
 # WP-M13-04: The seed of the stages and the rules
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-03
 phase: 13
 milestone: m13
@@ -22,6 +22,7 @@ files-write:
 - apps/api/src/db/seed-escalation.ts
 - apps/api/src/index.ts
 - apps/api/src/db/__tests__/seed-escalation.integration.spec.ts
+- apps/api/src/db/__tests__/migrations.spec.ts (the journal check reads the newest migration from the folder)
 
 interfaces:
 
@@ -63,6 +64,6 @@ the legacy minutes.
 
 - Files changed: the seed, the startup wiring, the integration test
 - Interfaces added: `seedEscalation`
-- Verified: typecheck, the integration test
+- Verified: typecheck, the integration test (the seed, the idempotency, the import of the legacy minutes)
 - Follow-up WP: WP-M13-05 — the configuration API
 - Open question: none

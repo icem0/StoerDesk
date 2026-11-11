@@ -212,8 +212,12 @@ describe('migration 0011 update run error detail', () => {
 
   it('is the last entry of the journal', () => {
     const entries = readJournal().entries
+    const migrations = readdirSync(migrationsDir)
+      .filter((name) => name.endsWith('.sql'))
+      .map((name) => name.replace('.sql', ''))
+      .sort()
 
-    expect(entries.at(-1)?.tag).toBe('0030_stats_detected_errors')
+    expect(entries.at(-1)?.tag).toBe(migrations.at(-1))
     expect(entries.at(-1)?.idx).toBe(entries.length - 1)
   })
 })
