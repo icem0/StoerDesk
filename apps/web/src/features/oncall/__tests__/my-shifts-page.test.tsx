@@ -191,7 +191,8 @@ describe('MyShiftsPage', () => {
     await waitForText('Kommende Schichten')
     await waitForText('Bisherige Schichten')
     await waitForCount('Bereitschaft, Nord', 3)
-    await waitForText('Geplant')
+    // the state labels may repeat on the calendar row of the week (WP-M10-34)
+    await waitForCount('Geplant', 1)
     // The state label is on the shift of the own readiness and on the row of
     // the readiness calendar (WP-M10-34).
     await waitForCount('Bestätigt', 2)
@@ -202,7 +203,7 @@ describe('MyShiftsPage', () => {
   it('declines a shift with a reason and shows the error inline', async () => {
     renderPage(['oncall.read', 'oncall.confirm'])
 
-    await waitForCount('Bestätigt', 2)
+    await waitForCount('Bestätigt', 1)
     fireEvent.click(screen.getAllByText('Ablehnen')[0]!)
 
     const reason = screen.getByLabelText('Grund')
@@ -216,7 +217,7 @@ describe('MyShiftsPage', () => {
   it('hides confirm and decline for roles without oncall.confirm', async () => {
     renderPage(['oncall.read'])
 
-    await waitForCount('Bestätigt', 2)
+    await waitForCount('Bestätigt', 1)
     expect(screen.queryByText('Bestätigen')).toBeNull()
     expect(screen.queryByText('Ablehnen')).toBeNull()
   })

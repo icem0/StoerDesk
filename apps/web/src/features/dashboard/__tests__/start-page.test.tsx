@@ -215,7 +215,8 @@ describe('StartPage dashboard', () => {
     await screen.findByText('12 Tag(e) ohne Störung')
 
     expect(screen.getByText('Frequentest fault')).toBeTruthy()
-    expect(screen.getByText('Feueralarm ausgelöst')).toBeTruthy()
+    // the fault catalog arrives async — poll for the resolved label
+    expect(await screen.findByText('Feueralarm ausgelöst')).toBeTruthy()
     expect(screen.getByText('3-mal in the last 30 days')).toBeTruthy()
   })
 

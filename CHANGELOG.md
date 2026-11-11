@@ -40,7 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   stage; the settings service stores the catalog in `ticket.escalation_stages`,
   `GET /api/v1/escalation-stages` serves it to every holder of `ticket.read` and the
   `settings.read`/`settings.write` pair under `/api/v1/settings/escalation-stages`
-  administers it.
+   administers it.
+- One display for both surfaces (WP-M10-36): the wall monitor no longer has its own
+  view — `/tv/:token` renders the shared `DashboardDisplay` the start page renders
+  (statistics first, then the open tickets). On the wall nothing is clickable: the
+  tiles, the ticket numbers and the channel tile are plain blocks and the primary
+  action is not offered — a display is never interactive.
 - Acceptance criteria as a reviewable slice (WP-M12-01): `specs/16-acceptance.md` is
   filled by mirroring the acceptance summary of `PLAN.md` §20 (items 1–12) — the
   original book chapters 18 + 19 were not supplied — and adds the mapping of every
@@ -49,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   statistics, notification fallback, web push, on-call calendar). Documentation only;
   the phase-12 split announces WP-M12-02, an acceptance end-to-end suite for items
   1–12 (`scripts/e2e-acceptance.mjs`, planned).
+
 - "Bereitschaft" becomes a menu entry of its own (WP-M10-35): the header navigation shows
   `Dashboard`, `Tickets` and `Bereitschaft` ("On call"), the entry leads to the readiness
   page `/oncall` and stays active there.

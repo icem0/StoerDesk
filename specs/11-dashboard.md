@@ -169,9 +169,12 @@ a 30-second refetch of the snapshot; the dashboard works in both modes.
 
 ## 11.7 Wall display `/tv/:token`
 
-The wall display is a full-screen page outside the guarded shell with large
-tiles, the fault-free counter and the burning-now list, but no contact data and
-no navigation.
+The wall display is a full-screen page outside the guarded shell. It renders
+the **same display as the start page** — the statistics and the list of the
+open tickets — through the shared `DashboardDisplay` (WP-M10-36). A wall
+monitor is a display only: no link is active and the primary action is not
+offered there (`interactive: false`). It never shows contact data, phone
+numbers or channel detail.
 
 `dashboard.tv_token` in `settings` is a random 32-byte `base64url` value. The
 admin page shows it, copies it and rotates it; a rotated token invalidates every

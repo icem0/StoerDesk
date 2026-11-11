@@ -591,6 +591,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M10-33  | the readiness calendar of the office                                   | done                    | yes     |
 | WP-M10-34  | the on-call page shows the calendar and the own readiness              | done                    | yes     |
 | WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | done                    | yes     |
+
+| WP-M10-36  | one display for the dashboard and the wall monitor, links off on the wall | done                  | yes     |
+
 | WP-M10-40  | shell header: logo left, menu centred, mobile tab strip                 | done                    | yes     |
 | WP-M10-41  | readiness calendar: two month grids, KW column, state colours           | done                    | yes     |
 | WP-M10-20 | fault catalog ordered by recent usage in the report and office forms | done                    | yes     |
@@ -617,6 +620,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M12-06  | ticket detail — menu removed, escalation section added          | done                    | yes     |
 | WP-M12-07  | settings overview page `/settings`, grouped by topic                | done                    | yes     |
 | WP-M12-08  | shell gear opens the settings page — dropdown removed             | done                    | yes     |
+
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

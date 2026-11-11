@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import type { DashboardSnapshot } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
-import { OpenTickets } from './open-tickets'
+import { DashboardDisplay } from './display'
 
 /**
  * Wall display at `/tv/:token` (`specs/11-dashboard.md` §11.7, WP-M9-16).
@@ -15,9 +15,10 @@ import { OpenTickets } from './open-tickets'
  * number or channel detail. A wrong or rotated token answers `404 tv_not_found`;
  * the page shows no data and stops polling.
  *
- * The wall display shows the same blocks as the start page (WP-M10-31): the
- * statistics and the list of the open tickets. The readiness has its own page
- * (`/oncall`), so nothing about the on-call shift is left here.
+ * The wall monitor shows the dashboard itself (WP-M10-36): it renders the same
+ * `DashboardDisplay` the start page renders, with `interactive: false` — no
+ * link is active and the primary action is not offered, because a wall monitor
+ * is a display only.
  */
 
 function useTv(token: string | undefined) {
@@ -56,49 +57,9 @@ export function TvPage() {
     )
   }
 
-  const { faultFree, tiles, burningNow } = snapshot
-
-  const tileValues = [
-    { key: 'open', value: tiles.open, tone: 'text-sky-300' },
-    { key: 'overdue', value: tiles.overdue, tone: 'text-rose-300' },
-    { key: 'unreviewed', value: tiles.unreviewed, tone: 'text-amber-300' },
-    { key: 'pool', value: tiles.poolSize, tone: 'text-purple-300' },
-  ] as const
-
   return (
-    <main className="flex min-h-dvh flex-col gap-6 bg-slate-950 p-6 text-slate-100">
-      <div className="rounded-2xl border border-slate-700 bg-slate-900/60 p-6 text-center">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-          {t('dashboard.faultFree.title')}
-        </p>
-        {faultFree.since === null ? (
-          <p className="mt-2 text-4xl font-bold text-emerald-300">
-            {t('dashboard.faultFree.none')}
-          </p>
-        ) : (
-          <>
-            <p className="mt-2 text-5xl font-bold text-emerald-300">
-              {t('dashboard.faultFree.days', { count: faultFree.days })}
-            </p>
-            <p className="mt-1 text-lg text-slate-400">
-              {t('dashboard.faultFree.record', { count: faultFree.recordDays })}
-            </p>
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {tileValues.map((tile) => (
-          <div className="rounded-2xl border border-slate-700 bg-slate-900/60 p-6" key={tile.key}>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              {t(`dashboard.tiles.${tile.key}`)}
-            </p>
-            <p className={`mt-1 text-6xl font-bold tabular-nums ${tile.tone}`}>{tile.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <OpenTickets generatedAt={snapshot.generatedAt} rows={burningNow} />
+    <main className="flex min-h-dvh flex-col bg-slate-950 p-6 text-slate-100">
+      <DashboardDisplay interactive={false} snapshot={snapshot} />
     </main>
   )
 }

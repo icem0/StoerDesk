@@ -494,8 +494,10 @@ Dashboard:
 - tiles: open tickets by status, overdue, without review, pool size, current
   on-call, channel status,
 - "burning now" list sorted by remaining time with mini timelines,
-- `/tv` token-protected wall display with metrics and optionally anonymized
-  object names,
+- `/tv` token-protected wall display: it renders the **same display as the start
+  page** (statistics first, then the open tickets) with the links switched off —
+  a wall monitor is a display only (WP-M10-36); object names stay optionally
+  anonymized,
 - live updates via Server-Sent Events.
 
 Statistics:
@@ -1475,7 +1477,9 @@ on-call page hangs above the own readiness. **WP-M10-34** puts the calendar abov
 readiness on `/oncall` and adds the button to the administration of the readiness, visible
 only with the permission `oncall.admin`. **WP-M10-35** adds "Bereitschaft" to the header
 navigation: the entries are "Dashboard", "Tickets" and "Bereitschaft", the last one leads to
-the readiness page `/oncall`.
+the readiness page `/oncall`. **WP-M10-36** removes the separate wall-display rendering:
+the shared `DashboardDisplay` shows the same blocks on both surfaces, and on the wall no
+link is active — a monitor is a display only.
 
 **The readiness calendar becomes a real calendar (WP-M10-41, out of band in phase 10).** The
 office asked for the current and the coming month as a calendar grid, one week per row from
