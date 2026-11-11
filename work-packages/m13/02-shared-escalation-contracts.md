@@ -1,7 +1,7 @@
 # WP-M13-02: Shared contracts of the escalation configuration
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-01
 phase: 13
 milestone: m13
@@ -22,14 +22,14 @@ files-write:
 - packages/shared/src/schemas/escalation-config.ts
 - packages/shared/src/schemas/index.ts
 - packages/shared/src/__tests__/escalation-config.test.ts
+- docs/DECISIONS/0017-workflow-stages-as-escalation-stages.md (the mapping of the rules, corrected)
 
 interfaces:
 
-- `ESCALATION_STAGE_KEYS`, `EscalationStageKey`, `ESCALATION_STAGES` (the five fixed stages)
-- `escalationConfigSchema`, `EscalationConfig`, `EscalationRule`, `EscalationAction`
+- `ESCALATION_STAGE_KEYS`, `EscalationStageKey`, `DEFAULT_WORKFLOW_ESCALATION_STAGES`
+- `escalationConfigSchema`, `EscalationConfig`, `EscalationRuleConfig`, `EscalationActionConfig`
 - `escalationConditionSchema`, `EscalationCondition`, `evaluateEscalationCondition(condition, facts)`
-- `CONDITION_FIELDS` (the closed field/operator list of §7.4)
-- `escalationMinutesSchema`, `DEFAULT_ESCALATION_RULES` (the seed of §7.2)
+- `ESCALATION_REFERENCE_EVENTS`, `DEFAULT_WORKFLOW_ESCALATION_RULES` (the seed of §7.2)
 
 ## Task
 
@@ -41,8 +41,8 @@ interfaces:
 3. Add the condition contract as a discriminated union (`all`, `any`, leaf) with
    the closed field list of §7.4 and the pure evaluation function
    `evaluateEscalationCondition(condition, facts)`.
-4. Add the defaults of §7.2 as `DEFAULT_ESCALATION_RULES` (the seed of the
-   migration) and the unit tests for the validation and the evaluation.
+4. Add the defaults of §7.2 as `DEFAULT_WORKFLOW_ESCALATION_RULES` (the seed of
+   the migration) and the unit tests for the validation and the evaluation.
 
 ## Non-goals
 
@@ -63,7 +63,8 @@ evaluation (all, any, leaf, every field and operator) and the invalid bodies.
 
 ## Handoff
 
-- Files changed: the shared contract, the barrel export, the unit test
+- Files changed: the shared contract, the barrel export, the unit test, the
+  corrected sentence of ADR-0017
 - Interfaces added: the exports above
 - Verified: typecheck, the shared unit test
 - Follow-up WP: WP-M13-03 — the database tables

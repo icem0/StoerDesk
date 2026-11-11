@@ -43,8 +43,10 @@ condition applies.
 2. **A stage is a milestone to be reached, not a state to sit in.** The deadline
    of a stage is the time a ticket may wait for that milestone; the clock starts
    at the reference event of the stage and pauses with the ticket. The four
-   status rules of ADR-0008 map one to one onto the stages, the two deadline
-   rules stay global.
+   status rules of ADR-0008 map onto the stages `review`, `assignment` and
+   `acceptance` (the last one twice, for the offered and for the assigned
+   ticket), the two stages `work_order` and `acknowledgement` are new, and the
+   two deadline rules stay global.
 3. **The manual catalogue, the `escalation_set` event and the manual escalation
    route are removed.** The workflow records who reached which milestone; the
    ticket view selects a stage and performs the transition of that milestone
