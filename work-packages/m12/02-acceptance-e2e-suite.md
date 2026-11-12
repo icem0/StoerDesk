@@ -105,5 +105,15 @@ the reason. `npm run check` stays untouched and green.
   selection (WP-M13-09) as clickable and aborted the whole run on the first error.
   It now asserts the button stays disabled, and one unexpected error is that item's
   `FAIL` instead of leaving the remaining items without a verdict.
+- Deviation: two more runner defects came out of the strict spot check. Item 5 read
+  the ticket before the acknowledge POST answered (a `CI=true` run lost that race),
+  so it now waits for the response; and a stack that answered but never signed in or
+  never served the web app left every item `UNVERIFIED` with exit 0 even in CI — a
+  green skip the WP forbids. `stackSkipped()` now fails in CI (`CI=true`) and stays
+  unverified elsewhere. The strict run prints `acceptance: 11/12 verified` and exits 0.
+- Note: §16.1/4 names `422` for a decline without a reason; the workflow routes answer
+  `400 invalid_request` for a body that fails their zod schema (the repo's validation
+  convention, while the object API of item 7 uses `422`). The item asserts the rule —
+  impossible without a reason, status unchanged — and accepts both codes.
 - Follow-up WP: none
 - Open question: none

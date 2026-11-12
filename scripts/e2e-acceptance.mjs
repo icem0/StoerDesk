@@ -602,7 +602,17 @@ function browserSkipped(n, label) {
 }
 
 function stackSkipped(n, label) {
-  return verdict(n, label, 'UNVERIFIED', 'the running stack did not answer (see the notices)')
+  // A stack that never signed in or never served the web app is a broken
+  // prerequisite, not a verdict: in CI it fails the run (`PLAN.md` §18.2),
+  // outside CI it stays unverified with the reason.
+  const state = strict ? 'FAIL' : 'UNVERIFIED'
+
+  return verdict(
+    n,
+    label,
+    state,
+    `the running stack did not answer (see the notices)${strict ? ' — CI=true fails' : ''}`,
+  )
 }
 
 async function createTechnicianWithAdmin(adminCookie, email = techEmail, password = techPassword) {
@@ -1045,7 +1055,17 @@ async function item5(shared) {
 
   await page.locator('input[name="acknowledgeResult"]').fill('fixed')
   await page.locator('input[name="acknowledgeNote"]').fill('Acceptance suite note')
+
+  // Wait for the write itself: a click returns before the POST answers, and the
+  // API read below would otherwise race the acknowledge (found in a CI=true run).
+  const acknowledge = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/v1/tickets/${ticketNo}/acknowledge`) &&
+      response.request().method() === 'POST',
+  )
+
   await page.getByRole('button', { name: 'Bestätigen' }).click()
+  await acknowledge
 
   const detail = await apiRequest('GET', `/api/v1/tickets/${ticketNo}`, { cookie: shared.adminCookie })
   const body = detail.status === 200 ? detail.data() : null
