@@ -134,7 +134,7 @@ export function EscalationConditionBuilder({
               >
                 {fields.map((entry) => (
                   <option key={entry.field} value={entry.field}>
-                    {entry.field}
+                    {t(`admin.escalation.condition.fields.${entry.field}`)}
                   </option>
                 ))}
               </select>
@@ -162,7 +162,7 @@ export function EscalationConditionBuilder({
                   .find((entry) => entry.field === leaf.field)
                   ?.operators.map((operator) => (
                     <option key={operator} value={operator}>
-                      {operator}
+                      {t(`admin.escalation.condition.operators.${operator}`)}
                     </option>
                   ))}
               </select>

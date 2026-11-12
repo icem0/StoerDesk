@@ -155,7 +155,7 @@ export function EscalationActionEditor({
                 >
                   {(ESCALATION_ACTION_TYPES as readonly string[]).map((type) => (
                     <option key={type} value={type}>
-                      {type}
+                      {t(`admin.escalation.action.types.${type}`)}
                     </option>
                   ))}
                 </select>
@@ -202,7 +202,7 @@ export function EscalationActionEditor({
                   >
                     {channels.map((channel) => (
                       <option key={channel} value={channel}>
-                        {channel}
+                        {t(`admin.escalation.action.channelLabels.${channel}`, { defaultValue: channel })}
                       </option>
                     ))}
                   </select>

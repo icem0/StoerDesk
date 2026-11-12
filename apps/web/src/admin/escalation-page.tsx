@@ -84,7 +84,7 @@ function useWebhookIds() {
 }
 
 export function EscalationPage() {
-  const { t } = useTranslation('settings')
+  const { t, i18n } = useTranslation('settings')
   const settingsQuery = useDeadlineSettings()
   const configQuery = useEscalationConfig()
   const channelsQuery = useChannelNames()
@@ -143,7 +143,7 @@ export function EscalationPage() {
   function stageName(key: string): string {
     const names = stageNames.get(key)
 
-    return names === undefined ? key : (names.de ?? key)
+    return names === undefined ? key : (names[i18n.language] ?? names.de ?? key)
   }
 
   const rulesOfStage = (key: string) =>
@@ -375,7 +375,7 @@ function RuleForm({
             <option value="">{t('admin.escalation.rule.none')}</option>
             {ESCALATION_REFERENCE_EVENTS.map((event) => (
               <option key={event} value={event}>
-                {event}
+                {t(`admin.escalation.rule.referenceEvents.${event}`)}
               </option>
             ))}
           </select>

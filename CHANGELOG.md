@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The escalation administration speaks the language of the interface (WP-M13-18):
+  the stage headings use the stage name of the current language, the reference
+  events, the condition fields and operators, the action types and the channels of
+  a notify action show their i18n label instead of the raw key and the broken
+  German page texts (English leftovers, the inverted add/remove labels and the
+  nonsensical `any` mode) are repaired; the saved payload keeps its technical keys.
 - The back links of the administration and settings pages lead to the settings
   menu (WP-M14-02): the twelve pages that carry a back link point to
   `/settings` instead of the retired `/admin`, and the three back-link texts

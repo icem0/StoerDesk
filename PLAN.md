@@ -675,6 +675,11 @@ the conditions and the actions move into the database and are maintained in
 `/admin/escalation`, the ticket view selects a stage instead of pressing one
 button per workflow step, and the former manual stage catalogue (`ticket.escalation_stages`,
 the `escalation_set` event, `POST /api/v1/tickets/:ticketNo/escalate`) is removed. The exit test `apps/api/src/escalation/__tests__/phase13-exit.integration.spec.ts` proves the criterion of the phase on a throwaway database: a stage rule fires once per threshold, its condition decides, the three actions write their rows, the deadline rules fire at 80 % and 100 % and the removed routes answer `404`.
+**WP-M13-18** (out of band in phase 13) speaks the language of the interface on that
+page: the stage headings take the stage name of the current language, the reference
+events, the condition fields and operators, the action types and the channels show
+their i18n label instead of the raw key and the broken German texts of the page are
+repaired; the saved payload keeps its technical keys.
 **WP-M12-09** is implemented — the ticket detail header carries the e-mail icon and
 the cancel button and the way back to the list is gone. **Phase 12 is complete**:
 **WP-M12-02** runs the acceptance suite `scripts/e2e-acceptance.mjs` over items 1–12
