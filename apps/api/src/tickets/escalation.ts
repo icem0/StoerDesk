@@ -1,4 +1,4 @@
-import { and, eq, inArray, like, notInArray } from 'drizzle-orm'
+import { and, eq, inArray, notInArray } from 'drizzle-orm'
 
 import {
   computeTicketTimeline,
@@ -19,7 +19,6 @@ import {
   escalationFirings,
   escalationRules,
   objects,
-  settings,
   ticketEvents,
   ticketPauses,
   tickets,
@@ -118,61 +117,6 @@ function pauseMillis(pauses: readonly PauseRow[], from: number, to: number): num
   }
 
   return total
-}
-
-/**
- * Reads the former settings rows of the escalation minutes. They are the
- * source of the seed (WP-M13-04) and of the deadline route until WP-M13-13
- * removes them.
- */
-export async function readOverrides(
-  database: Db,
-): Promise<Partial<Record<string, { minutes?: number; criticalMinutes?: number }>>> {
-  const rows = await database
-    .select({ key: settings.key, value: settings.value })
-    .from(settings)
-    .where(like(settings.key, 'ticket.escalation.%'))
-
-  const overrides: Partial<Record<string, { minutes?: number; criticalMinutes?: number }>> = {}
-
-  for (const row of rows) {
-    const match = /^ticket\.escalation\.([a-z0-9_]+)\.(minutes|critical_minutes)$/.exec(row.key)
-
-    if (match === null) {
-      continue
-    }
-
-    const rule = match[1]
-    const field = match[2]
-
-    if (rule === undefined || field === undefined) {
-      continue
-    }
-
-    const raw =
-      typeof row.value === 'number'
-        ? row.value
-        : typeof row.value === 'object' && row.value !== null
-          ? (row.value as Record<string, unknown>)[field]
-          : undefined
-    const value =
-      typeof raw === 'number' && Number.isFinite(raw) && raw > 0
-        ? raw
-        : undefined
-
-    if (value === undefined) {
-      continue
-    }
-
-    const current = overrides[rule] ?? {}
-
-    overrides[rule] = {
-      ...current,
-      [field === 'minutes' ? 'minutes' : 'criticalMinutes']: value,
-    }
-  }
-
-  return overrides
 }
 
 /** Reads the active rules of the installation. */

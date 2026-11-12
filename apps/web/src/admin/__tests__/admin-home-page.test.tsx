@@ -47,13 +47,13 @@ describe('AdminHomePage', () => {
     expect(screen.getAllByText(/geplant|planned/i).length).toBeGreaterThan(0)
   })
 
-  it('links the deadlines card to the deadline page as an available module', async () => {
+  it('links the escalation card to the escalation page as an available module', async () => {
     renderHome()
 
-    const deadlines = await screen.findByRole('link', { name: /^(Fristen|Deadlines)/ })
+    const escalation = await screen.findByRole('link', { name: /^(Eskalation|Escalation)/ })
 
-    expect(deadlines.getAttribute('href')).toBe('/admin/deadlines')
-    expect(deadlines.closest('li')?.textContent).not.toMatch(/geplant|planned/)
+    expect(escalation.getAttribute('href')).toBe('/admin/escalation')
+    expect(escalation.closest('li')?.textContent).not.toMatch(/geplant|planned/)
   })
 
   it('links the appearance page as an available module', async () => {

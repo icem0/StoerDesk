@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The escalation logic of phase 13 is complete (WP-M13-09 … WP-M13-17): the ticket
+  detail view replaces the workflow buttons with the selection of the stages the
+  server answers as reachable (`availableStages`); a choice runs the workflow route of
+  that milestone and the comment goes to the comment route. The former manual
+  escalation is gone: the route `POST /api/v1/tickets/:ticketNo/escalate`, the settings
+  routes `GET/PUT /api/v1/settings/escalation-stages`, the shared contracts of the
+  former catalogue, the hard-coded `ESCALATION_RULES` and the administration page
+  `/admin/escalation-stages` are removed, `/admin/deadlines` redirects to the new page.
+  The new administration page `/admin/escalation` carries the tabs `Fristen` (deadline
+  hours per priority) and `Stufen & Regeln` (the stages, their rules with reference,
+  minutes per priority, condition and ordered actions); the rule editor saves with one
+  `PUT /api/v1/escalation/config`, the condition builder reads the closed field list and
+  the operators from the shared contract, the action editor offers the configured
+  channels (`GET /api/v1/escalation/channels`), the webhook endpoints and the note text
+  with drag-and-drop order. The reaction minutes leave the deadlines settings
+  (`GET/PUT /api/v1/settings/deadlines` answers the hours only) and the scan never reads
+  the legacy `ticket.escalation.*` rows again — the seed is the only reader. The phase-13
+  exit criterion asserts that a stage rule fires once per threshold, its condition
+  decides, the three actions write their rows, the deadline rules fire at 80 % and 100 %
+  and the removed routes answer `404`.
 - CI browser install is resilient (no work package, ADR-0018): the runs `v1.1.2` …
   `v1.1.7` failed in `Install Chromium for the E2E smoke test` with
   `Temporary failure resolving 'azure.archive.ubuntu.com'` and apt exit `100` — the

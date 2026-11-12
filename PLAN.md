@@ -638,12 +638,12 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
-**Phase 13 starts the escalation logic** (WP-M13-01 … WP-M13-16, ADR-0017): the
+**Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,
 the conditions and the actions move into the database and are maintained in
 `/admin/escalation`, the ticket view selects a stage instead of pressing one
 button per workflow step, and the former manual stage catalogue (`ticket.escalation_stages`,
-the `escalation_set` event, `POST /api/v1/tickets/:ticketNo/escalate`) is removed.
+the `escalation_set` event, `POST /api/v1/tickets/:ticketNo/escalate`) is removed. The exit test `apps/api/src/escalation/__tests__/phase13-exit.integration.spec.ts` proves the criterion of the phase on a throwaway database: a stage rule fires once per threshold, its condition decides, the three actions write their rows, the deadline rules fire at 80 % and 100 % and the removed routes answer `404`.
 **WP-M12-09** is implemented — the ticket detail header carries the e-mail icon and
 the cancel button and the way back to the list is gone. Phase 12 stays open until
 **WP-M12-02**, the acceptance suite, is closed.

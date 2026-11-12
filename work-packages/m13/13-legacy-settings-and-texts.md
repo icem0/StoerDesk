@@ -1,7 +1,7 @@
 # WP-M13-13: The cleanup of the texts and of the legacy settings
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-12
 phase: 13
 milestone: m13
@@ -64,5 +64,6 @@ only read by the seed and the locale files have no orphan key.
 - Files changed: the deadlines route, the scan, the four locale files
 - Interfaces added: none
 - Verified: typecheck, the i18n check, the whole test run
+- Deviation: `packages/shared/src/schemas/deadlines.ts` became hours-only; `readOverrides` is gone from the scan module
 - Follow-up WP: WP-M13-14 — the administration page
 - Open question: none

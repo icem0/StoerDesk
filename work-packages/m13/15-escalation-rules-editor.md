@@ -1,7 +1,7 @@
 # WP-M13-15: The rule editor and the condition builder
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-14
 phase: 13
 milestone: m13
@@ -66,5 +66,6 @@ read-only state without `settings.write`.
 - Files changed: the page, the condition builder, the two locale files, the test
 - Interfaces added: `EscalationConditionBuilder`
 - Verified: typecheck, the component test, the i18n check
+- Deviation: the built rule is validated with `escalationRuleConfigSchema` before the `PUT`, an invalid value never reaches the API
 - Follow-up WP: WP-M13-16 — the action editor
 - Open question: none

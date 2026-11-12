@@ -1,469 +1,464 @@
 {
- "admin": {
-  "back": "Back to administration",
-  "home": {
-   "title": "Administration",
-   "hint": "The administration modules. Modules that are not available yet are marked with their phase.",
-   "available": "available",
-   "planned": "planned · {{phase}}",
+  "admin": {
+    "back": "Back to administration",
+    "home": {
+      "title": "Administration",
+      "hint": "The administration modules. Modules that are not available yet are marked with their phase.",
+      "available": "available",
+      "planned": "planned · {{phase}}",
       "phases": {
         "phase4": "Phase 4",
         "phase6": "Phase 6",
-    "phase7": "Phase 7",
-    "phase8": "Phase 8",
-    "phase10": "Phase 10"
-   },
-   "modules": {
+        "phase7": "Phase 7",
+        "phase8": "Phase 8",
+        "phase10": "Phase 10"
+      },
+      "modules": {
+        "users": {
+          "title": "User administration",
+          "hint": "Create users, edit them and assign roles."
+        },
+        "roles": {
+          "title": "Role administration",
+          "hint": "Manage roles and their permissions."
+        },
+        "bmaSync": {
+          "title": "BMAcloud sync",
+          "hint": "The object list is pulled read-only from BMAcloud and can be triggered manually here."
+        },
+        "groups": {
+          "title": "Groups",
+          "hint": "User groups for the ticket assignment."
+        },
+        "standardTexts": {
+          "title": "Fault types",
+          "hint": "Maintain, archive and delete the fault types of the report form."
+        },
+        "detectedErrors": {
+          "title": "Detected errors",
+          "hint": "Maintain the catalog of errors detected during ticket handling."
+        },
+        "oncall": {
+          "title": "On-call plan",
+          "hint": "Shifts, confirmations and shift swaps."
+        },
+        "branding": {
+          "title": "Appearance",
+          "hint": "Adjust the company name, the logo and the title option of the report form."
+        },
+        "channels": {
+          "title": "Channels",
+          "hint": "Notification channels like ntfy, e-mail and Web Push."
+        },
+        "apiKeys": {
+          "title": "API keys",
+          "hint": "Keys for the external interface."
+        },
+        "escalation": {
+          "title": "Escalation",
+          "hint": "Escalation stages, their rules, their conditions and their actions."
+        }
+      }
+    },
+    "update": {
+      "title": "Update",
+      "hint": "Checks GitHub for a newer commit and starts the deployment of the stack.",
+      "installedVersion": "Installed version",
+      "installedCommit": "Installed commit",
+      "latestCommit": "Newest commit",
+      "unknown": "unknown",
+      "checking": "Checking …",
+      "upToDate": "The installed version is up to date.",
+      "notComparable": "The versions cannot be compared.",
+      "available": "{{count}} commits since the installed version.",
+      "startUpdate": "Start update",
+      "confirm": "Start the update now? The stack is rebuilt and briefly unreachable while it works.",
+      "confirmYes": "Yes, start the update",
+      "confirmNo": "Cancel",
+      "started": "The update was started. The stack restarts — the page is briefly unreachable.",
+      "close": "Close",
+      "errors": {
+        "session_invalid": "The session has expired.",
+        "forbidden": "The update needs the permission system.update.",
+        "update_not_configured": "No repository is configured.",
+        "update_check_failed": "GitHub is not reachable.",
+        "update_github_rate_limited": "GitHub throttled the request.",
+        "update_no_update_available": "No update is available.",
+        "update_webhook_not_configured": "No deploy webhook is configured.",
+        "update_webhook_failed": "The deploy webhook refused the request.",
+        "update_rate_limited": "An update was started recently.",
+        "unknown": "The update could not be started.",
+        "connection": "The connection was interrupted — the stack is probably restarting. Reload the page after a few seconds.",
+        "http": "The update could not be started (HTTP {{status}}).",
+        "checkFailed": "The update check failed."
+      },
+      "reload": "Reload the page"
+    },
     "users": {
-     "title": "User administration",
-     "hint": "Create users, edit them and assign roles."
+      "title": "User management",
+      "loading": "Loading …",
+      "sessionNotice": "User management requires a valid sign-in.",
+      "forbiddenNotice": "No permission for user management.",
+      "table": {
+        "email": "E-mail",
+        "name": "Name",
+        "locale": "Language",
+        "active": "Active",
+        "roles": "Roles",
+        "actions": "Actions"
+      },
+      "active": "active",
+      "inactive": "inactive",
+      "createTitle": "Create user",
+      "editTitle": "Edit user",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "fields": {
+        "email": "E-mail",
+        "password": "Password",
+        "passwordNew": "New password (optional)",
+        "givenName": "First name",
+        "familyName": "Last name",
+        "locale": "Language",
+        "theme": "Appearance",
+        "activeLabel": "Active",
+        "rolesLabel": "Roles"
+      },
+      "themeValues": {
+        "auto": "Auto (system)",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "locales": {
+        "de": "German",
+        "en": "English"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "email_taken": "This e-mail address is already in use.",
+        "last_admin": "The last active administrator cannot be deactivated or saved without a role.",
+        "unknown_role_key": "Unknown role in the selection.",
+        "unknown": "Saving failed."
+      }
     },
     "roles": {
-     "title": "Role administration",
-     "hint": "Manage roles and their permissions."
-    },
-    "bmaSync": {
-     "title": "BMAcloud sync",
-     "hint": "The object list is pulled read-only from BMAcloud and can be triggered manually here."
+      "title": "Role management",
+      "loading": "Loading …",
+      "sessionNotice": "Role management requires a valid sign-in.",
+      "forbiddenNotice": "No permission for role management.",
+      "systemHint": "System roles come from the seed and are read-only.",
+      "table": {
+        "key": "Key",
+        "kind": "Kind",
+        "permissions": "Permissions",
+        "users": "Users",
+        "actions": "Actions"
+      },
+      "system": "system",
+      "custom": "custom",
+      "readOnly": "read-only",
+      "createTitle": "Create role",
+      "editTitle": "Edit role {{key}}",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "fields": {
+        "key": "Key",
+        "permissionsLabel": "Permissions"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "role_not_found": "Role not found.",
+        "role_key_taken": "This role key is already taken.",
+        "system_role_protected": "admin keeps all rights – the role is protected.",
+        "role_in_use": "Users still hold this role.",
+        "unknown_permission_key": "Unknown permission in the selection.",
+        "unknown": "Saving failed."
+      }
     },
     "groups": {
-     "title": "Groups",
-     "hint": "User groups for the ticket assignment."
+      "title": "Group administration",
+      "loading": "Loading …",
+      "sessionNotice": "Group administration requires a valid sign-in.",
+      "forbiddenNotice": "No permission for group administration.",
+      "table": {
+        "name": "Name",
+        "users": "Users",
+        "actions": "Actions"
+      },
+      "createTitle": "Create group",
+      "editTitle": "Edit group {{name}}",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "fields": {
+        "name": "Name"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "group_not_found": "Group not found.",
+        "group_name_taken": "This group name is already taken.",
+        "group_in_use": "Users still belong to this group.",
+        "unknown": "Saving failed."
+      }
     },
-    "standardTexts": {
-     "title": "Fault types",
-     "hint": "Maintain, archive and delete the fault types of the report form."
+    "textTemplates": {
+      "title": "Fault types",
+      "hint": "The fault types offered by the report form. Archived types still label existing tickets but are no longer offered. Deleting is only possible while no ticket uses the type.",
+      "loading": "Loading …",
+      "sessionNotice": "Fault type administration requires a valid sign-in.",
+      "forbiddenNotice": "No permission for fault type administration.",
+      "active": "active",
+      "archived": "archived",
+      "createTitle": "Create fault type",
+      "editTitle": "Edit fault type {{key}}",
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "archive": "Archive",
+      "unarchive": "Reactivate",
+      "delete": "Delete",
+      "deleteBlocked": "Used by tickets",
+      "fields": {
+        "key": "Key",
+        "de": "German text",
+        "en": "English text"
+      },
+      "table": {
+        "key": "Key",
+        "de": "German",
+        "en": "English",
+        "status": "Status",
+        "usage": "Tickets",
+        "actions": "Actions"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please fill in both texts.",
+        "text_template_not_found": "Fault type not found.",
+        "text_template_in_use": "Tickets still use this fault type, so it cannot be deleted.",
+        "text_template_key_taken": "A fault type with this key already exists.",
+        "unknown": "Saving failed."
+      }
     },
-    "deadlines": {
-     "title": "Deadlines",
-     "hint": "Deadlines and reaction deadlines per priority."
+    "bma": {
+      "title": "BMAcloud sync",
+      "hint": "The object list is pulled read-only from BMAcloud. A sync overwrites name and address of externally maintained objects; notes, contact data and QR codes stay local. Objects missing from the pull are deactivated, never deleted.",
+      "loading": "Loading …",
+      "sessionNotice": "The BMAcloud sync needs a valid sign-in.",
+      "forbiddenNotice": "No permission for the BMAcloud sync.",
+      "runNow": "Sync now",
+      "running": "Sync running …",
+      "save": "Save",
+      "saved": "Schedule saved.",
+      "noRuns": "No sync has run yet.",
+      "noConflicts": "The last sync had no conflicts.",
+      "noDetail": "–",
+      "notFinished": "still running",
+      "enabled": "Automatic sync enabled",
+      "cron": "Cron expression",
+      "scheduleTitle": "Schedule",
+      "scheduleHint": "Five fields: minute hour day month weekday. Without a stored value the environment BMA_SYNC_ENABLED / BMA_SYNC_CRON applies.",
+      "credentialsTitle": "API key",
+      "credentialsHint": "The key is only written and never returned. Without a stored value the environment BMA_API_KEY applies.",
+      "credentialsSourceDb": "The API key is stored in this installation.",
+      "credentialsSourceEnv": "The API key comes from the environment (BMA_API_KEY).",
+      "credentialsSourceNone": "No API key is set – the sync cannot run.",
+      "credentialsLabel": "BMAcloud API key",
+      "credentialsSave": "Save key",
+      "credentialsRemove": "Delete stored key",
+      "credentialsSaved": "API key saved.",
+      "credentialsRemoved": "Stored API key deleted.",
+      "runsTitle": "Recent sync runs",
+      "conflictsTitle": "Conflicts of the newest run",
+      "status": {
+        "RUNNING": "running",
+        "SUCCESS": "successful",
+        "PARTIAL": "partial",
+        "FAILED": "failed"
+      },
+      "table": {
+        "started": "Started",
+        "finished": "Finished",
+        "status": "Status",
+        "total": "Total",
+        "created": "Created",
+        "updated": "Updated",
+        "unchanged": "Unchanged",
+        "deactivated": "Deactivated"
+      },
+      "conflicts": {
+        "code": "Conflict",
+        "objectNo": "Object number",
+        "aid": "System id",
+        "detail": "Detail"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the cron expression.",
+        "bma_not_configured": "BMAcloud is not configured – no API key is set. Please enter it in the “BMAcloud API key” field.",
+        "bma_request_failed": "The request to BMAcloud failed.",
+        "bma_bad_response": "BMAcloud answered in an unexpected way.",
+        "unknown": "Sync failed."
+      }
     },
-    "escalationStages": {
-     "title": "Escalation stages",
-     "hint": "Maintain the stages, names and deadlines of the manual escalation."
-    },
-    "detectedErrors": {
-     "title": "Detected errors",
-     "hint": "Maintain the catalog of errors detected during ticket handling."
-    },
-    "oncall": {
-     "title": "On-call plan",
-     "hint": "Shifts, confirmations and shift swaps."
-    },
-    "branding": {
-     "title": "Appearance",
-     "hint": "Adjust the company name, the logo and the title option of the report form."
-    },
-    "channels": {
-     "title": "Channels",
-     "hint": "Notification channels like ntfy, e-mail and Web Push."
-    },
-    "apiKeys": {
-     "title": "API keys",
-     "hint": "Keys for the external interface."
+    "escalation": {
+      "title": "Escalation",
+      "hint": "The escalation stages with their names, their rules and their actions. The deadline of a stage is the waiting time per priority; rules and their actions fire in list order. Change the order with drag and drop.",
+      "loading": "Loading …",
+      "sessionNotice": "The escalation administration requires a valid sign-in.",
+      "forbiddenNotice": "No permission for the escalation administration.",
+      "readOnly": "Read only: changing requires the permission \"Write settings\".",
+      "save": "Save",
+      "saved": "Saved.",
+      "tabs": {
+        "fristen": "Deadlines",
+        "stages": "Stages & rules"
+      },
+      "hours": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "stage": {
+        "nameDe": "Name (German)",
+        "nameEn": "Name (English)",
+        "active": "Active",
+        "on": "Active",
+        "off": "Inactive"
+      },
+      "rule": {
+        "key": "Key",
+        "reference": "Start-Event",
+        "percent": "Percent",
+        "none": "None",
+        "minutes": {
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High",
+          "critical": "Critical"
+        }
+      },
+      "condition": {
+        "modeLabel": "Condition",
+        "mode": {
+          "all": "all",
+          "any": "any of"
+        },
+        "field": "Field",
+        "operator": "Operator",
+        "value": "Value",
+        "add": "Add condition",
+        "remove": "Remove"
+      },
+      "action": {
+        "type": "Type",
+        "key": "Key",
+        "channels": "Channels",
+        "endpoints": "Webhooks",
+        "text": "Note",
+        "add": "Add action",
+        "remove": "Remove"
+      },
+      "errors": {
+        "session_invalid": "The sign-in has expired.",
+        "forbidden": "No permission for this action.",
+        "invalid_request": "At least one value is invalid: a deadline must be between 1 and 8760 hours.",
+        "unknown": "Saving failed."
+      }
     }
-   }
   },
-  "update": {
-   "title": "Update",
-   "hint": "Checks GitHub for a newer commit and starts the deployment of the stack.",
-   "installedVersion": "Installed version",
-   "installedCommit": "Installed commit",
-   "latestCommit": "Newest commit",
-   "unknown": "unknown",
-   "checking": "Checking …",
-   "upToDate": "The installed version is up to date.",
-   "notComparable": "The versions cannot be compared.",
-   "available": "{{count}} commits since the installed version.",
-   "startUpdate": "Start update",
-   "confirm": "Start the update now? The stack is rebuilt and briefly unreachable while it works.",
-   "confirmYes": "Yes, start the update",
-   "confirmNo": "Cancel",
-   "started": "The update was started. The stack restarts — the page is briefly unreachable.",
-   "close": "Close",
-   "errors": {
-    "session_invalid": "The session has expired.",
-    "forbidden": "The update needs the permission system.update.",
-    "update_not_configured": "No repository is configured.",
-    "update_check_failed": "GitHub is not reachable.",
-    "update_github_rate_limited": "GitHub throttled the request.",
-    "update_no_update_available": "No update is available.",
-    "update_webhook_not_configured": "No deploy webhook is configured.",
-    "update_webhook_failed": "The deploy webhook refused the request.",
-    "update_rate_limited": "An update was started recently.",
-    "unknown": "The update could not be started.",
-    "connection": "The connection was interrupted — the stack is probably restarting. Reload the page after a few seconds.",
-    "http": "The update could not be started (HTTP {{status}}).",
-    "checkFailed": "The update check failed."
-   },
-   "reload": "Reload the page"
-  },
-  "users": {
-   "title": "User management",
-   "loading": "Loading …",
-   "sessionNotice": "User management requires a valid sign-in.",
-   "forbiddenNotice": "No permission for user management.",
-    "table": {
-     "email": "E-mail",
-     "name": "Name",
-     "locale": "Language",
-     "active": "Active",
-     "roles": "Roles",
-     "actions": "Actions"
-    },
-   "active": "active",
-   "inactive": "inactive",
-   "createTitle": "Create user",
-   "editTitle": "Edit user",
-   "create": "Create",
-   "edit": "Edit",
-   "save": "Save",
-    "fields": {
-     "email": "E-mail",
-     "password": "Password",
-     "passwordNew": "New password (optional)",
-     "givenName": "First name",
-     "familyName": "Last name",
-     "locale": "Language",
-    "theme": "Appearance",
-    "activeLabel": "Active",
-    "rolesLabel": "Roles"
-   },
-   "themeValues": {
-     "auto": "Auto (system)",
-     "light": "Light",
-     "dark": "Dark"
-   },
-   "locales": {
-     "de": "German",
-     "en": "English"
-   },
-   "errors": {
-    "session_invalid": "Session expired – please sign in again.",
-    "forbidden": "Access denied – missing permission.",
-    "invalid_request": "Invalid input – please check the fields.",
-    "email_taken": "This e-mail address is already in use.",
-    "last_admin": "The last active administrator cannot be deactivated or saved without a role.",
-    "unknown_role_key": "Unknown role in the selection.",
-    "unknown": "Saving failed."
-   }
-  },
-  "roles": {
-   "title": "Role management",
-   "loading": "Loading …",
-   "sessionNotice": "Role management requires a valid sign-in.",
-   "forbiddenNotice": "No permission for role management.",
-   "systemHint": "System roles come from the seed and are read-only.",
-   "table": {
-    "key": "Key",
-    "kind": "Kind",
-    "permissions": "Permissions",
-    "users": "Users",
-    "actions": "Actions"
-   },
-   "system": "system",
-   "custom": "custom",
-   "readOnly": "read-only",
-   "createTitle": "Create role",
-   "editTitle": "Edit role {{key}}",
-   "create": "Create",
-   "edit": "Edit",
-   "save": "Save",
-   "delete": "Delete",
-   "fields": {
-    "key": "Key",
-    "permissionsLabel": "Permissions"
-   },
-   "errors": {
-    "session_invalid": "Session expired – please sign in again.",
-    "forbidden": "Access denied – missing permission.",
-    "invalid_request": "Invalid input – please check the fields.",
-    "role_not_found": "Role not found.",
-    "role_key_taken": "This role key is already taken.",
-    "system_role_protected": "admin keeps all rights – the role is protected.",
-    "role_in_use": "Users still hold this role.",
-    "unknown_permission_key": "Unknown permission in the selection.",
-    "unknown": "Saving failed."
-    }
-  },
-  "groups": {
-    "title": "Group administration",
-    "loading": "Loading …",
-    "sessionNotice": "Group administration requires a valid sign-in.",
-    "forbiddenNotice": "No permission for group administration.",
-    "table": {
-      "name": "Name",
-      "users": "Users",
-      "actions": "Actions"
-    },
-    "createTitle": "Create group",
-    "editTitle": "Edit group {{name}}",
-    "create": "Create",
-    "edit": "Edit",
-    "save": "Save",
-    "delete": "Delete",
-    "fields": {
-      "name": "Name"
+  "apiKeys": {
+    "title": "API keys",
+    "hint": "Keys for the external API. A key is shown only once.",
+    "createTitle": "Create a key",
+    "listTitle": "Existing keys",
+    "name": "Label",
+    "scopes": "Permissions",
+    "expiresAt": "Valid until (optional)",
+    "create": "Create key",
+    "copy": "Copy",
+    "close": "Close",
+    "copied": "Copied",
+    "tokenTitle": "Key shown once",
+    "tokenHint": "The key “{{name}}” is shown only now. Store it securely.",
+    "neverUsed": "Never used",
+    "lastUsed": "Last used: {{date}}",
+    "expires": "Valid until {{date}}",
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke now?",
+    "cancel": "Cancel",
+    "revoked": "Revoked",
+    "readOnly": "Read-only: you lack the apikey.write permission.",
+    "loading": "Loading keys …",
+    "empty": "No keys created yet.",
+    "scopeLabels": {
+      "objects:read": "Read objects",
+      "objects:write": "Write objects",
+      "tickets:read": "Read tickets",
+      "tickets:write": "Write tickets"
     },
     "errors": {
-      "session_invalid": "Session expired – please sign in again.",
-      "forbidden": "Access denied – missing permission.",
-      "invalid_request": "Invalid input – please check the fields.",
-      "group_not_found": "Group not found.",
-      "group_name_taken": "This group name is already taken.",
-      "group_in_use": "Users still belong to this group.",
-      "unknown": "Saving failed."
+      "invalid_request": "Please check the input.",
+      "forbidden": "No permission.",
+      "session_invalid": "The session has expired.",
+      "api_key_not_found": "The key was not found.",
+      "api_key_create_failed": "The key could not be created.",
+      "unknown": "The action failed."
     }
   },
-  "deadlines": {
-   "title": "Deadlines",
-   "hint": "Deadlines per priority and the reaction deadlines of the escalation. New tickets use the new values; existing tickets keep their stored deadline.",
-   "loading": "Loading …",
-   "sessionNotice": "The deadline administration requires a valid sign-in.",
-   "forbiddenNotice": "No permission for the deadline administration.",
-   "hoursTitle": "Deadlines in hours",
-   "reactionTitle": "Reaction deadlines in minutes",
-   "reactionHint": "Standard applies to low, normal and high priority; critical applies to critical tickets.",
-   "readOnly": "Read only: changing requires the permission \"Write settings\".",
-   "rule": "Rule",
-   "standard": "Standard",
-   "critical": "Critical",
-   "save": "Save",
-   "saved": "Saved.",
-   "unit": {
-    "hours": "h",
-    "minutes": "min"
-   },
-   "priority": {
-    "low": "Low",
-    "normal": "Normal",
-    "high": "High",
-    "critical": "Critical"
-   },
-   "rules": {
-    "new_without_review": "New without review",
-    "work_order_without_distribution": "Work order without distribution",
-    "offered_without_claim": "Offered without claim",
-    "assigned_without_accept": "Assigned without acceptance"
-   },
-   "errors": {
-    "session_invalid": "The sign-in has expired.",
-    "forbidden": "No permission for this action.",
-    "invalid_request": "At least one value is invalid: deadlines 1 to 8760 hours, reaction deadlines 1 to 10080 minutes.",
-    "unknown": "Saving failed."
-   }
+  "webhooks": {
+    "title": "Webhooks",
+    "hint": "Endpoints notified when a ticket is created or changes status.",
+    "createTitle": "Create an endpoint",
+    "listTitle": "Existing endpoints",
+    "url": "URL",
+    "urlPlaceholder": "https://example.org/webhook",
+    "events": "Events",
+    "eventLabels": {
+      "ticket.created": "Ticket created",
+      "ticket.status_changed": "Ticket status changed"
+    },
+    "active": "Active",
+    "activeLabel": "Endpoint active",
+    "activeBadge": "Active",
+    "inactiveBadge": "Inactive",
+    "create": "Create endpoint",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete now?",
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "secretTitle": "Signing secret shown once",
+    "secretHint": "The secret for “{{url}}” is shown only now. Store it securely.",
+    "readOnly": "Read-only: you lack the settings.write permission.",
+    "loading": "Loading endpoints …",
+    "empty": "No endpoints created yet.",
+    "errors": {
+      "invalid_request": "Please check the input.",
+      "forbidden": "No permission.",
+      "session_invalid": "The session has expired.",
+      "webhook_not_found": "The endpoint was not found.",
+      "webhook_create_failed": "The endpoint could not be created.",
+      "unknown": "The action failed."
+    }
   },
-  "escalationStages": {
-   "title": "Escalation stages",
-   "hint": "The stages of the manual escalation. The list order is the escalation order and is changed by drag and drop. The deadline applies to all priorities.",
-   "loading": "Loading …",
-   "sessionNotice": "The escalation stages need a valid sign-in.",
-   "forbiddenNotice": "No permission for the escalation stages.",
-   "orderHint": "Drag a row to change the order. The last stage stays the end of the chain.",
-   "dragHandle": "Drag to move",
-   "add": "Add stage",
-   "remove": "Remove",
-   "save": "Save",
-   "saved": "Saved.",
-   "readOnly": "Read-only: changing needs the permission \"settings write\".",
-   "fields": {
-    "key": "Key",
-    "nameDe": "Name (German)",
-    "nameEn": "Name (English)",
-    "deadline": "Deadline"
-   },
-   "unit": {
-    "minutes": "min"
-   },
-   "errors": {
-    "session_invalid": "The sign-in has expired.",
-    "forbidden": "No permission for this action.",
-    "invalid_request": "Invalid input: unique key, German and English name, deadline 1 to 10080 minutes.",
-    "unknown": "Saving failed."
-   }
-  },
-  "textTemplates": {
-   "title": "Fault types",
-   "hint": "The fault types offered by the report form. Archived types still label existing tickets but are no longer offered. Deleting is only possible while no ticket uses the type.",
-   "loading": "Loading …",
-   "sessionNotice": "Fault type administration requires a valid sign-in.",
-   "forbiddenNotice": "No permission for fault type administration.",
-   "active": "active",
-   "archived": "archived",
-   "createTitle": "Create fault type",
-   "editTitle": "Edit fault type {{key}}",
-   "create": "Create",
-   "edit": "Edit",
-   "save": "Save",
-   "cancel": "Cancel",
-   "archive": "Archive",
-   "unarchive": "Reactivate",
-   "delete": "Delete",
-   "deleteBlocked": "Used by tickets",
-   "fields": {
-    "key": "Key",
-    "de": "German text",
-    "en": "English text"
-   },
-   "table": {
-    "key": "Key",
-    "de": "German",
-    "en": "English",
-    "status": "Status",
-    "usage": "Tickets",
-    "actions": "Actions"
-   },
-   "errors": {
-    "session_invalid": "Session expired – please sign in again.",
-    "forbidden": "Access denied – missing permission.",
-    "invalid_request": "Invalid input – please fill in both texts.",
-    "text_template_not_found": "Fault type not found.",
-    "text_template_in_use": "Tickets still use this fault type, so it cannot be deleted.",
-    "text_template_key_taken": "A fault type with this key already exists.",
-    "unknown": "Saving failed."
-   }
-  },
-  "bma": {
-   "title": "BMAcloud sync",
-   "hint": "The object list is pulled read-only from BMAcloud. A sync overwrites name and address of externally maintained objects; notes, contact data and QR codes stay local. Objects missing from the pull are deactivated, never deleted.",
-   "loading": "Loading …",
-   "sessionNotice": "The BMAcloud sync needs a valid sign-in.",
-   "forbiddenNotice": "No permission for the BMAcloud sync.",
-   "runNow": "Sync now",
-   "running": "Sync running …",
-   "save": "Save",
-   "saved": "Schedule saved.",
-   "noRuns": "No sync has run yet.",
-   "noConflicts": "The last sync had no conflicts.",
-   "noDetail": "–",
-   "notFinished": "still running",
-   "enabled": "Automatic sync enabled",
-   "cron": "Cron expression",
-   "scheduleTitle": "Schedule",
-   "scheduleHint": "Five fields: minute hour day month weekday. Without a stored value the environment BMA_SYNC_ENABLED / BMA_SYNC_CRON applies.",
-   "credentialsTitle": "API key",
-   "credentialsHint": "The key is only written and never returned. Without a stored value the environment BMA_API_KEY applies.",
-   "credentialsSourceDb": "The API key is stored in this installation.",
-   "credentialsSourceEnv": "The API key comes from the environment (BMA_API_KEY).",
-   "credentialsSourceNone": "No API key is set – the sync cannot run.",
-   "credentialsLabel": "BMAcloud API key",
-   "credentialsSave": "Save key",
-   "credentialsRemove": "Delete stored key",
-   "credentialsSaved": "API key saved.",
-   "credentialsRemoved": "Stored API key deleted.",
-   "runsTitle": "Recent sync runs",
-   "conflictsTitle": "Conflicts of the newest run",
-   "status": {
-    "RUNNING": "running",
-    "SUCCESS": "successful",
-    "PARTIAL": "partial",
-    "FAILED": "failed"
-   },
-   "table": {
-    "started": "Started",
-    "finished": "Finished",
-    "status": "Status",
-    "total": "Total",
-    "created": "Created",
-    "updated": "Updated",
-    "unchanged": "Unchanged",
-    "deactivated": "Deactivated"
-   },
-   "conflicts": {
-    "code": "Conflict",
-    "objectNo": "Object number",
-    "aid": "System id",
-    "detail": "Detail"
-   },
-   "errors": {
-    "session_invalid": "Session expired – please sign in again.",
-    "forbidden": "Access denied – missing permission.",
-    "invalid_request": "Invalid input – please check the cron expression.",
-    "bma_not_configured": "BMAcloud is not configured – no API key is set. Please enter it in the “BMAcloud API key” field.",
-    "bma_request_failed": "The request to BMAcloud failed.",
-    "bma_bad_response": "BMAcloud answered in an unexpected way.",
-    "unknown": "Sync failed."
-   }
-  }
- },
- "apiKeys": {
-  "title": "API keys",
-  "hint": "Keys for the external API. A key is shown only once.",
-  "createTitle": "Create a key",
-  "listTitle": "Existing keys",
-  "name": "Label",
-  "scopes": "Permissions",
-  "expiresAt": "Valid until (optional)",
-  "create": "Create key",
-  "copy": "Copy",
-  "close": "Close",
-  "copied": "Copied",
-  "tokenTitle": "Key shown once",
-  "tokenHint": "The key “{{name}}” is shown only now. Store it securely.",
-  "neverUsed": "Never used",
-  "lastUsed": "Last used: {{date}}",
-  "expires": "Valid until {{date}}",
-  "revoke": "Revoke",
-  "revokeConfirm": "Revoke now?",
-  "cancel": "Cancel",
-  "revoked": "Revoked",
-  "readOnly": "Read-only: you lack the apikey.write permission.",
-  "loading": "Loading keys …",
-  "empty": "No keys created yet.",
-  "scopeLabels": {
-   "objects:read": "Read objects",
-   "objects:write": "Write objects",
-   "tickets:read": "Read tickets",
-   "tickets:write": "Write tickets"
-  },
-  "errors": {
-   "invalid_request": "Please check the input.",
-   "forbidden": "No permission.",
-   "session_invalid": "The session has expired.",
-   "api_key_not_found": "The key was not found.",
-   "api_key_create_failed": "The key could not be created.",
-   "unknown": "The action failed."
-  }
- },
- "webhooks": {
-  "title": "Webhooks",
-  "hint": "Endpoints notified when a ticket is created or changes status.",
-  "createTitle": "Create an endpoint",
-  "listTitle": "Existing endpoints",
-  "url": "URL",
-  "urlPlaceholder": "https://example.org/webhook",
-  "events": "Events",
-  "eventLabels": {
-   "ticket.created": "Ticket created",
-   "ticket.status_changed": "Ticket status changed"
-  },
-  "active": "Active",
-  "activeLabel": "Endpoint active",
-  "activeBadge": "Active",
-  "inactiveBadge": "Inactive",
-  "create": "Create endpoint",
-  "save": "Save",
-  "edit": "Edit",
-  "delete": "Delete",
-  "deleteConfirm": "Delete now?",
-  "cancel": "Cancel",
-  "copy": "Copy",
-  "copied": "Copied",
-  "close": "Close",
-  "secretTitle": "Signing secret shown once",
-  "secretHint": "The secret for “{{url}}” is shown only now. Store it securely.",
-  "readOnly": "Read-only: you lack the settings.write permission.",
-  "loading": "Loading endpoints …",
-  "empty": "No endpoints created yet.",
-  "errors": {
-   "invalid_request": "Please check the input.",
-   "forbidden": "No permission.",
-   "session_invalid": "The session has expired.",
-   "webhook_not_found": "The endpoint was not found.",
-   "webhook_create_failed": "The endpoint could not be created.",
-   "unknown": "The action failed."
-  }
- },
   "detectedErrors": {
     "title": "Detected errors",
     "hint": "Errors found during ticket handling — independent of the reported fault. Archived errors stay visible on existing tickets but are no longer offered in the close dialog.",
@@ -506,30 +501,30 @@
     }
   },
   "dashboardSettings": {
-  "title": "Dashboard and statistics",
-  "hint": "Wall display, anonymisation and the threshold for conspicuous objects.",
-  "loading": "Loading settings …",
-  "tvToken": "TV token",
-  "tvTokenHint": "The token protects the wall display. A new token invalidates every open display immediately.",
-  "copy": "Copy",
-  "copied": "Copied",
-  "wallUrl": "Wall display address",
-  "rotate": "Rotate token",
-  "rotateConfirm": "Rotate the token? Every wall display must be set up again.",
-  "rotateCancel": "Cancel",
-  "anonymize": "Anonymise object names",
-  "anonymizeHint": "Replaces object names on the wall display with stable pseudonyms.",
-  "threshold": "Conspicuous-object threshold",
-  "thresholdHint": "An object is conspicuous when it has more tickets in the last 90 days than this number.",
-  "save": "Save",
-  "saved": "Saved.",
-  "readOnly": "Read-only: you lack the permission to change these settings.",
-  "errors": {
-   "invalid_request": "Please check the inputs.",
-   "forbidden": "No permission.",
-   "session_invalid": "The session has expired.",
-   "unknown": "Saving failed.",
-   "threshold": "The threshold must be a whole number between 1 and 100."
+    "title": "Dashboard and statistics",
+    "hint": "Wall display, anonymisation and the threshold for conspicuous objects.",
+    "loading": "Loading settings …",
+    "tvToken": "TV token",
+    "tvTokenHint": "The token protects the wall display. A new token invalidates every open display immediately.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "wallUrl": "Wall display address",
+    "rotate": "Rotate token",
+    "rotateConfirm": "Rotate the token? Every wall display must be set up again.",
+    "rotateCancel": "Cancel",
+    "anonymize": "Anonymise object names",
+    "anonymizeHint": "Replaces object names on the wall display with stable pseudonyms.",
+    "threshold": "Conspicuous-object threshold",
+    "thresholdHint": "An object is conspicuous when it has more tickets in the last 90 days than this number.",
+    "save": "Save",
+    "saved": "Saved.",
+    "readOnly": "Read-only: you lack the permission to change these settings.",
+    "errors": {
+      "invalid_request": "Please check the inputs.",
+      "forbidden": "No permission.",
+      "session_invalid": "The session has expired.",
+      "unknown": "Saving failed.",
+      "threshold": "The threshold must be a whole number between 1 and 100."
+    }
   }
- }
 }

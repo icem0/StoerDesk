@@ -103,7 +103,7 @@ function renderPage() {
 }
 
 function composer(): HTMLTextAreaElement {
-  return screen.getByLabelText('Beschreibung') as HTMLTextAreaElement
+  return screen.getByLabelText('Kommentar') as HTMLTextAreaElement
 }
 
 afterEach(() => {

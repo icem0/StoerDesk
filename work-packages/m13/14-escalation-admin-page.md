@@ -1,7 +1,7 @@
 # WP-M13-14: The administration page of the escalation
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-05, WP-M13-12
 phase: 13
 milestone: m13
@@ -65,5 +65,6 @@ read-only without `settings.write`.
   locale files
 - Interfaces added: `EscalationPage`
 - Verified: typecheck, the i18n check
+- Deviation: the `Fristen` tab carries the deadline form itself; the old page and route are removed (WP-M13-12)
 - Follow-up WP: WP-M13-15 — the rule editor and the condition builder
 - Open question: none

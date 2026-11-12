@@ -1,107 +1,106 @@
 {
- "back": "Back",
- "app": {
-  "title": "StörDesk",
-  "setupNotice": "Environment is set up. Implementation follows after specification approval.",
-  "version": "Version",
-  "settings": "Settings",
-  "settingsHint": "All settings and areas in one place, grouped by topic.",
-  "logoAlt": "StörDesk logo",
-  "navigation": "Main navigation",
-  "nav": {
-   "dashboard": "Dashboard",
-   "tickets": "Tickets",
-   "oncall": "On call"
+  "back": "Back",
+  "app": {
+    "title": "StörDesk",
+    "setupNotice": "Environment is set up. Implementation follows after specification approval.",
+    "version": "Version",
+    "settings": "Settings",
+    "settingsHint": "All settings and areas in one place, grouped by topic.",
+    "logoAlt": "StörDesk logo",
+    "navigation": "Main navigation",
+    "nav": {
+      "dashboard": "Dashboard",
+      "tickets": "Tickets",
+      "oncall": "On call"
+    },
+    "titleWithCompany": "{{company}} @ {{product}}",
+    "settingsGroups": {
+      "personal": "Personal",
+      "appearance": "Appearance",
+      "operations": "Operations",
+      "objects": "Objects",
+      "administration": "Administration",
+      "account": "Account"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "hint": "This address does not exist (any more). Maybe the page was renamed or removed.",
+      "back": "Back to the dashboard"
+    },
+    "error": {
+      "notFound": {
+        "title": "Page not found",
+        "hint": "This address does not exist (any more). Maybe the page was renamed or removed."
+      },
+      "failed": {
+        "title": "Unexpected error",
+        "hint": "The page could not be loaded. Please reload it or go back to the dashboard."
+      },
+      "back": "Back to the dashboard"
+    }
   },
-  "titleWithCompany": "{{company}} @ {{product}}",
-  "settingsGroups": {
-   "personal": "Personal",
-   "appearance": "Appearance",
-   "operations": "Operations",
-   "objects": "Objects",
-   "administration": "Administration",
-   "account": "Account"
+  "branding": {
+    "title": "Customize the GUI",
+    "hint": "Company name shown next to the logo in the header. Leave empty to show only “StörDesk”.",
+    "back": "Back to administration",
+    "hintTitleEnabled": "Whether the report form also collects a short ticket title: it is only offered while the checkbox is switched on.",
+    "field": {
+      "companyName": "Company name",
+      "titleEnabled": "Ticket title",
+      "logo": "Company logo"
+    },
+    "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",
+    "logoRemove": "Remove logo",
+    "save": "Save",
+    "saved": "Saved.",
+    "errors": {
+      "session_invalid": "Your session has expired. Please sign in again.",
+      "forbidden": "You are not authorized to change the branding.",
+      "invalid_request": "The company name is invalid.",
+      "logoInvalid": "The logo is invalid (PNG/JPEG, at most 500 kB).",
+      "unknown": "An unexpected error occurred."
+    }
   },
-  "notFound": {
-   "title": "Page not found",
-   "hint": "This address does not exist (any more). Maybe the page was renamed or removed.",
-   "back": "Back to the dashboard"
-  },
-  "error": {
-   "notFound": {
-    "title": "Page not found",
-    "hint": "This address does not exist (any more). Maybe the page was renamed or removed."
-   },
-   "failed": {
-    "title": "Unexpected error",
-    "hint": "The page could not be loaded. Please reload it or go back to the dashboard."
-   },
-   "back": "Back to the dashboard"
-  }
- },
- "branding": {
-  "title": "Customize the GUI",
-  "hint": "Company name shown next to the logo in the header. Leave empty to show only “StörDesk”.",
- "back": "Back to administration",
- "hintTitleEnabled": "Whether the report form also collects a short ticket title: it is only offered while the checkbox is switched on.",
- "field": {
-  "companyName": "Company name",
-  "titleEnabled": "Ticket title",
-  "logo": "Company logo"
- },
- "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",
- "logoRemove": "Remove logo",
-  "save": "Save",
-  "saved": "Saved.",
-  "errors": {
-   "session_invalid": "Your session has expired. Please sign in again.",
-   "forbidden": "You are not authorized to change the branding.",
-   "invalid_request": "The company name is invalid.",
-   "logoInvalid": "The logo is invalid (PNG/JPEG, at most 500 kB).",
-   "unknown": "An unexpected error occurred."
-  }
- },
- "auth": {
-  "title": "Sign in",
-  "loading": "Loading …",
-  "submit": "Sign in",
-  "logout": "Sign out",
-  "invalidHint": "Enter a valid e-mail and password.",
-  "signedInAs": "Signed in as {{email}}",
-  "fields": {
-   "email": "E-mail",
-   "password": "Password"
-  },
-   "links": {
-    "tickets": "Tickets",
-    "ticketCreate": "Report a malfunction",
-    "objects": "Objects",
-    "users": "User administration",
-    "roles": "Role administration",
-    "groups": "Groups",
-    "bmaSync": "BMAcloud sync",
-    "oncall": "On-call plan",
-    "myShifts": "My on-call shifts",
-    "mySettings": "My settings",
-    "deadlines": "Deadlines",
-    "escalationStages": "Escalation stages",
-    "standardTexts": "Fault types",
-    "detectedErrors": "Detected errors",
-    "stickers": "QR stickers",
-    "admin": "Open administration",
-    "stats": "Statistics",
-    "dashboardSettings": "Dashboard and statistics",
-    "apiKeys": "API keys",
-    "webhooks": "Webhooks",
-    "branding": "Appearance"
-   },
-  "errors": {
-   "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
-   "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
-   "invalid_request": "The sign-in data is incomplete or malformed.",
-   "session_invalid": "The session has expired. Please sign in again.",
-    "unknown": "Sign-in is not possible right now. Please try again later."
-   }
+  "auth": {
+    "title": "Sign in",
+    "loading": "Loading …",
+    "submit": "Sign in",
+    "logout": "Sign out",
+    "invalidHint": "Enter a valid e-mail and password.",
+    "signedInAs": "Signed in as {{email}}",
+    "fields": {
+      "email": "E-mail",
+      "password": "Password"
+    },
+    "links": {
+      "tickets": "Tickets",
+      "ticketCreate": "Report a malfunction",
+      "objects": "Objects",
+      "users": "User administration",
+      "roles": "Role administration",
+      "groups": "Groups",
+      "bmaSync": "BMAcloud sync",
+      "oncall": "On-call plan",
+      "myShifts": "My on-call shifts",
+      "mySettings": "My settings",
+      "standardTexts": "Fault types",
+      "detectedErrors": "Detected errors",
+      "stickers": "QR stickers",
+      "admin": "Open administration",
+      "stats": "Statistics",
+      "dashboardSettings": "Dashboard and statistics",
+      "apiKeys": "API keys",
+      "webhooks": "Webhooks",
+      "branding": "Appearance",
+      "escalation": "Escalation"
+    },
+    "errors": {
+      "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
+      "rate_limited": "Too many sign-in attempts. Please try again in a minute.",
+      "invalid_request": "The sign-in data is incomplete or malformed.",
+      "session_invalid": "The session has expired. Please sign in again.",
+      "unknown": "Sign-in is not possible right now. Please try again later."
+    }
   },
   "ntfy": {
     "subscribe": "Subscribe in the ntfy app",
@@ -109,30 +108,30 @@
     "appHint": "scan it with your phone"
   },
   "my": {
-   "title": "My settings",
-   "fields": {
-    "givenName": "First name",
-    "familyName": "Last name",
-    "locale": "Language",
-    "theme": "Appearance",
-    "password": "New password (optional)"
-   },
-   "locales": {
-    "de": "German",
-    "en": "English"
-   },
-   "themeValues": {
-    "auto": "Auto (system)",
-    "light": "Light",
-    "dark": "Dark"
-   },
-   "save": "Save",
-   "saved": "Saved.",
-   "errors": {
-    "session_invalid": "Session expired – please sign in again.",
-    "forbidden": "Access denied – missing permission.",
-    "invalid_request": "Invalid input – please check the fields.",
-    "unknown": "Saving failed."
-   }
+    "title": "My settings",
+    "fields": {
+      "givenName": "First name",
+      "familyName": "Last name",
+      "locale": "Language",
+      "theme": "Appearance",
+      "password": "New password (optional)"
+    },
+    "locales": {
+      "de": "German",
+      "en": "English"
+    },
+    "themeValues": {
+      "auto": "Auto (system)",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "save": "Save",
+    "saved": "Saved.",
+    "errors": {
+      "session_invalid": "Session expired – please sign in again.",
+      "forbidden": "Access denied – missing permission.",
+      "invalid_request": "Invalid input – please check the fields.",
+      "unknown": "Saving failed."
+    }
   }
- }
+}

@@ -6,20 +6,27 @@ import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_ESCALATION_STAGES } from '@stoerdesk/shared'
 import { i18n } from '../../../i18n'
 import { TicketDetailPage } from '../ticket-detail-page'
 
 const TICKET_NO = 'ST-2026-0001'
 
-function fixture() {
+/**
+ * The reachable stages the server answers with the ticket (`WP-M13-08`): the
+ * stage key, its localized names and the events that reach the milestone.
+ */
+function stages(key: string, names: Record<string, string>, events: string[]) {
+  return [{ key, names, events }]
+}
+
+function fixture(status: string, reachable: unknown[]) {
   return {
     ticket: {
       id: '11111111-1111-4111-8111-111111111111',
       ticketNo: TICKET_NO,
       objectNo: '12345_01',
       objectName: 'Rathaus',
-      status: 'NEW',
+      status,
       priority: 'normal',
       title: null,
       description: null,
@@ -44,7 +51,7 @@ function fixture() {
         createdAt: '2026-11-10T08:00:00.000Z',
       },
       {
-        id: '33333333-3333-4333-8333-333333333333',
+        id: '33322222-2222-4222-8222-222222222222',
         type: 'escalation_set',
         actorKind: 'user',
         actorName: 'Max Muster',
@@ -71,11 +78,16 @@ function fixture() {
       markers: [{ type: 'created', at: '2026-11-10T08:00:00.000Z' }],
     },
     pauses: [],
+    availableStages: reachable,
   }
 }
 
-function renderPage() {
-  const escalations: unknown[] = []
+function renderPage(status: string, reachable: unknown[]): {
+  writes: string[]
+  bodies: Record<string, unknown>[]
+} {
+  const writes: string[] = []
+  const bodies: Record<string, unknown>[] = []
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = String(input)
@@ -90,16 +102,16 @@ function renderPage() {
       return Response.json({ templates: [] })
     }
 
-    if (path.includes('/v1/escalation-stages')) {
-      return Response.json({ stages: DEFAULT_ESCALATION_STAGES })
+    if (path.includes(`/v1/tickets/${TICKET_NO}/`)) {
+      const tail = path.split(`/v1/tickets/${TICKET_NO}/`)[1]
+
+      writes.push(tail ?? '')
+      bodies.push(init?.body === undefined ? {} : JSON.parse(String(init.body)))
+
+      return Response.json({ ok: true })
     }
 
-    if (path.includes(`/v1/tickets/${TICKET_NO}/escalate`)) {
-      escalations.push(JSON.parse(String(init?.body ?? '{}')))
-      return Response.json({ type: 'escalation_set', payload: { stageKey: 'group' } })
-    }
-
-    return Response.json(fixture())
+    return Response.json(fixture(status, reachable))
   })
 
   vi.stubGlobal('fetch', fetchMock)
@@ -118,11 +130,13 @@ function renderPage() {
     </QueryClientProvider>,
   )
 
-  return { escalations }
+  return { writes, bodies }
 }
 
-function stageSelect(): HTMLSelectElement {
-  return screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+function stageOptions(): string[] {
+  const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+
+  return Array.from(select.options).map((option) => option.value)
 }
 
 afterEach(() => {
@@ -130,60 +144,70 @@ afterEach(() => {
   void i18n.changeLanguage('de')
 })
 
-describe('TicketDetailPage escalation section', () => {
-  it('replaces the top-right menu with the escalation section', async () => {
-    renderPage()
+describe('TicketDetailPage stage selection', () => {
+  it('offers the reachable stages of the ticket instead of the workflow buttons', async () => {
+    const { writes } = renderPage(
+      'WORK_ORDER_CREATED',
+      stages('assignment', { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' },
+        ['assigned', 'offered']),
+    )
 
     await waitFor(() => expect(screen.getByTestId('ticket-action-section')).toBeTruthy())
-    expect(screen.queryByTestId('ticket-options-button')).toBeNull()
-    expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Zuweisen' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Anbieten' })).toBeNull()
+    expect(stageOptions()).toStrictEqual(['', 'assigned', 'offered'])
+    expect(writes).toHaveLength(0)
   })
 
-  it('offers Kommentar and every configured stage and preselects the next one', async () => {
-    renderPage()
+  it('a choice performs the workflow route of the milestone', async () => {
+    const { writes } = renderPage('NEW', stages('review', { de: 'Prüfung', en: 'Review' },
+      ['review_started']))
 
-    const select = await waitFor(() => stageSelect())
-    const values = Array.from(select.options).map((option) => option.value)
-    expect(values).toStrictEqual([
-      '__comment__',
-      ...DEFAULT_ESCALATION_STAGES.map((stage) => stage.key),
-    ])
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
+    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'review_started' } })
 
-    // The last manual escalation went to `group`, so the next stage is `assignee`.
-    const next = DEFAULT_ESCALATION_STAGES[2]?.names.de ?? ''
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
+
+    await waitFor(() => expect(writes).toHaveLength(1))
+    expect(writes[0]).toBe('review')
+  })
+
+  it('keeps the actions that are no milestone as buttons', async () => {
+    renderPage('OFFERED', stages('acceptance', { de: 'Angenommen', en: 'Accepted' },
+      ['accepted']))
+
+    await waitFor(() => expect(stageOptions()).toStrictEqual(['', 'accepted']))
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: `Eskalation auf „${next}“ setzen` })).toBeTruthy(),
+      expect(screen.getByRole('button', { name: 'Ablehnen' })).toBeTruthy(),
     )
+    expect(screen.queryByRole('button', { name: 'Annehmen' })).toBeNull()
   })
 
-  it('lets an earlier stage be chosen and writes it', async () => {
-    const { escalations } = renderPage()
+  it('the comment stays and goes to the comment route', async () => {
+    const { bodies } = renderPage('NEW', stages('review', { de: 'Prüfung', en: 'Review' },
+      ['review_started']))
 
-    const select = await waitFor(() => stageSelect())
-    fireEvent.change(select, { target: { value: 'office' } })
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
+    const text = screen.getByLabelText('Kommentar') as HTMLTextAreaElement
+    fireEvent.change(text, { target: { value: 'Pump not working' } })
+    fireEvent.click(screen.getByTestId('ticket-escalation-submit'))
 
-    const text = screen.getByLabelText('Beschreibung') as HTMLTextAreaElement
-    fireEvent.change(text, { target: { value: 'Backwards to the office' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Speichern' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }))
 
-    const office = DEFAULT_ESCALATION_STAGES[0]?.names.de ?? ''
-    fireEvent.click(
-      screen.getByRole('button', { name: `Eskalation auf „${office}“ setzen` }),
-    )
-
-    await waitFor(() => expect(escalations).toHaveLength(1))
-    expect(escalations[0]).toStrictEqual({
-      stageKey: 'office',
-      text: 'Backwards to the office',
-    })
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect((bodies[0] ?? {}).text).toBe('Pump not working')
+    expect(typeof (bodies[0] ?? {}).clientUuid).toBe('string')
   })
 
-  it('names the stage of a manual escalation in the history', async () => {
-    renderPage()
+  it('names the stage of a historic manual escalation in the history', async () => {
+    renderPage('NEW', stages('review', { de: 'Prüfung', en: 'Review' }, ['review_started']))
 
     await waitFor(() => expect(screen.getByTestId('ticket-history')).toBeTruthy())
     const history = screen.getByTestId('ticket-history').textContent ?? ''
     expect(history).toContain('Manuell eskaliert')
     expect(history).toContain('Eskalationsstufe: Gruppe')
-    expect(history).toContain('Gruppe in Assignment nominated')
   })
 })

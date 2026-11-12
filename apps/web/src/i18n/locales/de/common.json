@@ -1,107 +1,106 @@
 {
- "back": "Zurück",
- "app": {
-  "title": "StörDesk",
-  "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
-  "version": "Version",
-  "settings": "Einstellungen",
-  "settingsHint": "Alle Einstellungen und Bereiche an einem Ort, nach Themen gruppiert.",
-  "logoAlt": "Logo von StörDesk",
-  "navigation": "Hauptnavigation",
-  "nav": {
-   "dashboard": "Dashboard",
-   "tickets": "Tickets",
-   "oncall": "Bereitschaft"
+  "back": "Zurück",
+  "app": {
+    "title": "StörDesk",
+    "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
+    "version": "Version",
+    "settings": "Einstellungen",
+    "settingsHint": "Alle Einstellungen und Bereiche an einem Ort, nach Themen gruppiert.",
+    "logoAlt": "Logo von StörDesk",
+    "navigation": "Hauptnavigation",
+    "nav": {
+      "dashboard": "Dashboard",
+      "tickets": "Tickets",
+      "oncall": "Bereitschaft"
+    },
+    "titleWithCompany": "{{company}} @ {{product}}",
+    "settingsGroups": {
+      "personal": "Persönlich",
+      "appearance": "Darstellung",
+      "operations": "Meldungen",
+      "objects": "Objekte",
+      "administration": "Verwaltung",
+      "account": "Konto"
+    },
+    "notFound": {
+      "title": "Seite nicht gefunden",
+      "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt.",
+      "back": "Zur Startseite"
+    },
+    "error": {
+      "notFound": {
+        "title": "Seite nicht gefunden",
+        "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt."
+      },
+      "failed": {
+        "title": "Unerwarteter Fehler",
+        "hint": "Die Seite konnte nicht geladen werden. Bitte lade sie neu oder gehe zur Startseite."
+      },
+      "back": "Zur Startseite"
+    }
   },
-  "titleWithCompany": "{{company}} @ {{product}}",
-  "settingsGroups": {
-   "personal": "Persönlich",
-   "appearance": "Darstellung",
-   "operations": "Meldungen",
-   "objects": "Objekte",
-   "administration": "Verwaltung",
-   "account": "Konto"
+  "branding": {
+    "title": "GUI anpassen",
+    "hint": "Firmenname, der neben dem Logo im Header angezeigt wird. Leer zeigt nur „StörDesk“.",
+    "back": "Zurück zur Verwaltung",
+    "hintTitleEnabled": "Ob das Meldeformular auch einen kurzen Ticket-Titel erfasst: Das Feld wird nur angeboten, solange die Checkbox eingeschaltet ist.",
+    "field": {
+      "companyName": "Firmenname",
+      "titleEnabled": "Titel bei Ticket erfassen",
+      "logo": "Firmenlogo"
+    },
+    "hintLogo": "PNG oder JPEG, höchstens 500 kB. Wird im Header, in PDFs und E-Mails verwendet.",
+    "logoRemove": "Logo entfernen",
+    "save": "Speichern",
+    "saved": "Gespeichert.",
+    "errors": {
+      "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+      "forbidden": "Sie sind nicht autorisiert, die Beschriftung zu ändern.",
+      "invalid_request": "Der Firmenname ist ungültig.",
+      "logoInvalid": "Das Logo ist ungültig (PNG/JPEG, maximal 500 kB).",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+    }
   },
-  "notFound": {
-   "title": "Seite nicht gefunden",
-   "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt.",
-   "back": "Zur Startseite"
-  },
-  "error": {
-   "notFound": {
-    "title": "Seite nicht gefunden",
-    "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt."
-   },
-   "failed": {
-    "title": "Unerwarteter Fehler",
-    "hint": "Die Seite konnte nicht geladen werden. Bitte lade sie neu oder gehe zur Startseite."
-   },
-   "back": "Zur Startseite"
-  }
- },
- "branding": {
-  "title": "GUI anpassen",
-  "hint": "Firmenname, der neben dem Logo im Header angezeigt wird. Leer zeigt nur „StörDesk“.",
- "back": "Zurück zur Verwaltung",
-  "hintTitleEnabled": "Ob das Meldeformular auch einen kurzen Ticket-Titel erfasst: Das Feld wird nur angeboten, solange die Checkbox eingeschaltet ist.",
- "field": {
-  "companyName": "Firmenname",
-  "titleEnabled": "Titel bei Ticket erfassen",
-  "logo": "Firmenlogo"
- },
- "hintLogo": "PNG oder JPEG, höchstens 500 kB. Wird im Header, in PDFs und E-Mails verwendet.",
- "logoRemove": "Logo entfernen",
-  "save": "Speichern",
-  "saved": "Gespeichert.",
-  "errors": {
-   "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
-   "forbidden": "Sie sind nicht autorisiert, die Beschriftung zu ändern.",
-   "invalid_request": "Der Firmenname ist ungültig.",
-   "logoInvalid": "Das Logo ist ungültig (PNG/JPEG, maximal 500 kB).",
-   "unknown": "Ein unerwarteter Fehler ist aufgetreten."
-  }
- },
- "auth": {
-  "title": "Anmeldung",
-  "loading": "Lädt …",
-  "submit": "Anmelden",
-  "logout": "Abmelden",
-  "invalidHint": "Bitte eine gültige E-Mail und ein Passwort eingeben.",
-  "signedInAs": "Angemeldet als {{email}}",
-  "fields": {
-   "email": "E-Mail",
-   "password": "Passwort"
-  },
-   "links": {
-    "tickets": "Meldungen",
-    "ticketCreate": "Neue Störung melden",
-    "objects": "Objekte",
-    "users": "Benutzerverwaltung",
-    "roles": "Rollenverwaltung",
-    "groups": "Gruppen",
-    "bmaSync": "BMAcloud-Abgleich",
-    "oncall": "Bereitschaftsplan",
-    "myShifts": "Meine Bereitschaft",
-    "mySettings": "Meine Einstellungen",
-    "deadlines": "Fristen",
-    "escalationStages": "Eskalationsstufen",
-    "standardTexts": "Störungsarten",
-    "detectedErrors": "Festgestellte Fehler",
-    "stickers": "QR-Aufkleber",
-    "admin": "Verwaltung öffnen",
-    "stats": "Statistik",
-    "dashboardSettings": "Dashboard und Statistik",
-    "apiKeys": "API-Schlüssel",
-    "webhooks": "Webhooks",
-    "branding": "Darstellung"
-   },
-  "errors": {
-   "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
-   "rate_limited": "Zu viele Anmeldeversuche. Bitte in einer Minute erneut versuchen.",
-   "invalid_request": "Die Anmeldedaten sind unvollständig oder fehlerhaft.",
-   "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
-    "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
-   }
+  "auth": {
+    "title": "Anmeldung",
+    "loading": "Lädt …",
+    "submit": "Anmelden",
+    "logout": "Abmelden",
+    "invalidHint": "Bitte eine gültige E-Mail und ein Passwort eingeben.",
+    "signedInAs": "Angemeldet als {{email}}",
+    "fields": {
+      "email": "E-Mail",
+      "password": "Passwort"
+    },
+    "links": {
+      "tickets": "Meldungen",
+      "ticketCreate": "Neue Störung melden",
+      "objects": "Objekte",
+      "users": "Benutzerverwaltung",
+      "roles": "Rollenverwaltung",
+      "groups": "Gruppen",
+      "bmaSync": "BMAcloud-Abgleich",
+      "oncall": "Bereitschaftsplan",
+      "myShifts": "Meine Bereitschaft",
+      "mySettings": "Meine Einstellungen",
+      "standardTexts": "Störungsarten",
+      "detectedErrors": "Festgestellte Fehler",
+      "stickers": "QR-Aufkleber",
+      "admin": "Verwaltung öffnen",
+      "stats": "Statistik",
+      "dashboardSettings": "Dashboard und Statistik",
+      "apiKeys": "API-Schlüssel",
+      "webhooks": "Webhooks",
+      "branding": "Darstellung",
+      "escalation": "Eskalation"
+    },
+    "errors": {
+      "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
+      "rate_limited": "Zu viele Anmeldeversuche. Bitte in einer Minute erneut versuchen.",
+      "invalid_request": "Die Anmeldedaten sind unvollständig oder fehlerhaft.",
+      "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+      "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
+    }
   },
   "ntfy": {
     "subscribe": "In der ntfy-App abonnieren",
@@ -109,30 +108,30 @@
     "appHint": "mit dem Handy scannen"
   },
   "my": {
-   "title": "Meine Einstellungen",
-   "fields": {
-    "givenName": "Vorname",
-    "familyName": "Nachname",
-    "locale": "Sprache",
-    "theme": "Design",
-    "password": "Neues Passwort (optional)"
-   },
-   "locales": {
-    "de": "Deutsch",
-    "en": "English"
-   },
-   "themeValues": {
-    "auto": "Automatik (System)",
-    "light": "Light",
-    "dark": "Dark"
-   },
-   "save": "Speichern",
-   "saved": "Gespeichert.",
-   "errors": {
-    "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
-    "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
-    "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
-    "unknown": "Speichern fehlgeschlagen."
-   }
+    "title": "Meine Einstellungen",
+    "fields": {
+      "givenName": "Vorname",
+      "familyName": "Nachname",
+      "locale": "Sprache",
+      "theme": "Design",
+      "password": "Neues Passwort (optional)"
+    },
+    "locales": {
+      "de": "Deutsch",
+      "en": "English"
+    },
+    "themeValues": {
+      "auto": "Automatik (System)",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "save": "Speichern",
+    "saved": "Gespeichert.",
+    "errors": {
+      "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+      "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
+      "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+      "unknown": "Speichern fehlgeschlagen."
+    }
   }
- }
+}

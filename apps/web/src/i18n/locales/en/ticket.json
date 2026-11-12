@@ -447,14 +447,12 @@
     },
     "escalation": {
       "title": "Escalation & actions",
-      "hint": "Choose a stage and enter a description",
-      "stageLabel": "Escalation stage or comment",
-      "textLabel": "Description",
-      "commentOption": "Comment",
-      "placeholder": "Description of the escalation or a note for the team …",
-      "submitStage": "Escalate to \"{{stage}}\"",
-      "historyStage": "Escalation stage: {{stage}}",
-      "saved": "Escalation saved."
+      "hint": "Choose a stage; its workflow step runs",
+      "stageLabel": "Workflow stage",
+      "chooseStage": "Choose a stage…",
+      "textLabel": "Comment",
+      "placeholder": "Comment or a note for the team …",
+      "historyStage": "Escalation stage: {{stage}}"
     },
     "comment": {
       "submit": "Save comment",

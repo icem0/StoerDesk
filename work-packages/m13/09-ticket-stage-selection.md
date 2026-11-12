@@ -1,7 +1,7 @@
 # WP-M13-09: The stage selection replaces the workflow buttons
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-08
 phase: 13
 milestone: m13
@@ -68,5 +68,6 @@ milestone and the remaining buttons.
 - Files changed: the ticket view, the two locale files, the component test
 - Interfaces added: none beyond the answer of WP-M13-08
 - Verified: typecheck, the component test, the i18n check
+- Deviation: the locale texts of the former catalogue (`commentOption`, `submitStage`, `saved`) were removed with WP-M13-13 in the same commit
 - Follow-up WP: WP-M13-10 — the removal of the old API
 - Open question: none

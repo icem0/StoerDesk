@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { TicketDetailResponse } from '@stoerdesk/shared'
-import { nextEscalationStage, escalationStageName, type EscalationStage, type StandardTextLocale } from '@stoerdesk/shared'
+import type { StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiBaseUrl, apiFetch, ApiError } from '../../lib/api'
 import { i18n } from '../../i18n'
@@ -26,9 +26,11 @@ import { TicketTimeline } from './ticket-timeline'
  * - Object row: object name + object number side by side, labels above.
  * - Three fields side by side: Erfasser, Meldender, Quelle with labels above.
  * - Description, photos, history follow below.
- * - The escalation section carries the stage dropdown, the text field and the
- *   status-dependent workflow actions as visible buttons (WP-M12-06); the
- *   top-right hamburger menu is gone.
+ * - The escalation section carries the selection of the stages the ticket can
+ *   still reach: choosing a stage runs the workflow transition of that milestone
+ *   with its own form (WP-M13-09). The actions that are no milestone (decline,
+ *   claim, cancel, delete) stay buttons; the comment goes to the comment route.
+ * - The top-right hamburger menu is gone (WP-M12-06).
  * - The way back to the list is gone for good (WP-M12-09).
  */
 
@@ -84,6 +86,20 @@ const ACTION_SEGMENTS: Record<string, string> = {
   uncancelled: 'uncancel',
 }
 
+/**
+ * The stage selection offers the events that reach a stage; each event carries
+ * the label of its workflow step (`specs/07-escalation.md` §7.10, WP-M13-09).
+ */
+const ACTION_LABELS: Record<string, string> = {
+  review_started: 'detail.action.review',
+  work_order_set: 'detail.action.workOrder',
+  assigned: 'detail.action.assign',
+  offered: 'detail.action.offer',
+  claimed: 'detail.action.assign',
+  accepted: 'detail.action.accept',
+  acknowledged: 'detail.action.acknowledge',
+}
+
 export function TicketDetailPage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
@@ -92,7 +108,6 @@ export function TicketDetailPage() {
   const [lastError, setLastError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
-  const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<{ id: string; url: string } | null>(null)
   const [stornoOpen, setStornoOpen] = useState(false)
   const [stornoReason, setStornoReason] = useState('')
@@ -133,11 +148,6 @@ export function TicketDetailPage() {
   }, [selectedAction])
 
   const ticketQuery = useTicket(ticketNo)
-  const stageQuery = useQuery({
-    queryKey: ['escalation-stages'],
-    queryFn: () => apiFetch<{ stages: EscalationStage[] }>('/v1/escalation-stages'),
-    retry: false,
-  })
   const mayDelete = usePermission('ticket.delete')
   const { queueAction, deliverNow, discard, pendingCount, rows } = useInternalActions(ticketNo ?? '')
 
@@ -322,22 +332,10 @@ export function TicketDetailPage() {
     (ticket.source === 'QR' ? t('detail.field.system') : t('detail.field.unknown'))
   const quelle = sourceLabels[ticket.source] ?? t('detail.field.unknown')
 
-  const stages = stageQuery.data?.stages ?? []
-  const lastStageKey =
-    [...events]
-      .reverse()
-      .find((event) => event.type === 'escalation_set')?.payload.stageKey ?? null
-  const suggestedStage = nextEscalationStage(
-    stages,
-    typeof lastStageKey === 'string' ? lastStageKey : null,
-  )
-  const defaultStageChoice = suggestedStage?.key ?? '__comment__'
-  const stageChoice = selectedStage ?? defaultStageChoice
-  const stageLabel = (key: string): string => {
-    const stage = stages.find((candidate) => candidate.key === key)
-
-    return stage === undefined ? key : escalationStageName(stage, locale)
-  }
+  /** The stages the ticket can still reach; the server owns the transition map. */
+  const availableStages = ticketQuery.data?.availableStages ?? []
+  const stageName = (stage: { names: Record<string, string> }): string =>
+    stage.names[locale] ?? stage.names.en ?? stage.names.de ?? ''
 
   /**
    * Builds the list of workflow entries for the current status. The entries are
@@ -367,57 +365,12 @@ export function TicketDetailPage() {
     }
   }
 
-  async function handleEscalation() {
-    if (ticketNo === undefined) {
-      return
-    }
-
-    if (stageChoice === '__comment__') {
-      void submitComment()
-      return
-    }
-
-    const text = req('commentText')
-
-    if (text === '') {
-      setLastError(t('detail.errors.fieldRequired'))
-      return
-    }
-
-    try {
-      await apiFetch<never>(`/v1/tickets/${ticketNo}/escalate`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ stageKey: stageChoice, text }),
-      })
-      void ticketQuery.refetch()
-      setFields({})
-      setSelectedStage(null)
-      setLastError(null)
-      setNotice(t('detail.escalation.saved'))
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setLastError(actionErrorMessage(error.code, error.params))
-        return
-      }
-      setLastError(t('detail.errors.actionFailed'))
-    }
-  }
-
   const menuEntries: { value: string; labelKey: string }[] = []
 
-  if (status === 'NEW') {
-    menuEntries.push({ value: 'review_started', labelKey: 'detail.action.review' })
-  } else if (status === 'IN_REVIEW') {
-    menuEntries.push({ value: 'work_order_set', labelKey: 'detail.action.workOrder' })
-  } else if (status === 'WORK_ORDER_CREATED') {
-    menuEntries.push({ value: 'assigned', labelKey: 'detail.action.assign' })
-    menuEntries.push({ value: 'offered', labelKey: 'detail.action.offer' })
-  } else if (status === 'OFFERED' || status === 'ASSIGNED') {
-    menuEntries.push({ value: 'accepted', labelKey: 'detail.action.accept' })
+  // The milestones of the workflow are reached through the stage selection
+  // below; the entries here are the actions that are no milestone.
+  if (status === 'OFFERED' || status === 'ASSIGNED') {
     menuEntries.push({ value: 'declined', labelKey: 'detail.action.decline' })
-  } else if (status === 'ACCEPTED') {
-    menuEntries.push({ value: 'acknowledged', labelKey: 'detail.action.acknowledge' })
   } else if (status === 'ACKNOWLEDGED') {
     menuEntries.push({ value: 'closed', labelKey: 'detail.action.close' })
   } else if (status === 'CLOSED') {
@@ -1315,15 +1268,33 @@ export function TicketDetailPage() {
               id="ticket-escalation-stage"
               data-testid="ticket-escalation-stage"
               className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-950/40 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
-              value={stageChoice}
-              onChange={(event) => setSelectedStage(event.target.value)}
+              value=""
+              onChange={(event) => {
+                const event_ = event.target.value
+
+                if (event_ === '') {
+                  return
+                }
+
+                setSelectedAction(event_)
+              }}
             >
-              <option value="__comment__">{t('detail.escalation.commentOption')}</option>
-              {stages.map((stage) => (
-                <option key={stage.key} value={stage.key}>
-                  {escalationStageName(stage, locale)}
-                </option>
-              ))}
+              <option value="">{t('detail.escalation.chooseStage')}</option>
+              {availableStages.map((stage) =>
+                stage.events.length === 1 ? (
+                  <option key={stage.key} value={stage.events[0]}>
+                    {stageName(stage)}
+                  </option>
+                ) : (
+                  <optgroup key={stage.key} label={stageName(stage)}>
+                    {stage.events.map((event_) => (
+                      <option key={event_} value={event_}>
+                        {t(ACTION_LABELS[event_] ?? 'detail.action.assign')}
+                      </option>
+                    ))}
+                  </optgroup>
+                ),
+              )}
             </select>
 
             <label
@@ -1346,7 +1317,7 @@ export function TicketDetailPage() {
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
                   event.preventDefault()
-                  void handleEscalation()
+                  void saveComment()
                 }
               }}
             />
@@ -1365,14 +1336,12 @@ export function TicketDetailPage() {
                 className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-sky-600 shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 type="button"
                 disabled={req('commentText') === ''}
-                onClick={() => void handleEscalation()}
+                onClick={() => void submitComment()}
               >
                 <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19V5m0 0-6 6m6-6 6 6" />
                 </svg>
-                {stageChoice === '__comment__'
-                  ? t('detail.comment.submit')
-                  : t('detail.escalation.submitStage', { stage: stageLabel(stageChoice) })}
+                {t('detail.comment.submit')}
               </button>
             </div>
           </div>
@@ -1429,18 +1398,12 @@ export function TicketDetailPage() {
                   {(() => {
                     const stageKey =
                       typeof event.payload.stageKey === 'string' ? event.payload.stageKey : null
-                    const matchedStage =
-                      stageKey === null
-                        ? undefined
-                        : stages.find((candidate) => candidate.key === stageKey)
                     const stage =
                       stageKey === null
                         ? null
-                        : matchedStage !== undefined
-                          ? escalationStageName(matchedStage, locale)
-                          : typeof event.payload.stageName === 'string'
-                            ? event.payload.stageName
-                            : stageKey
+                        : typeof event.payload.stageName === 'string'
+                          ? event.payload.stageName
+                          : stageKey
                     const text =
                       typeof event.payload.text === 'string'
                         ? event.payload.text

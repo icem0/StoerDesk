@@ -1,7 +1,7 @@
 # WP-M13-01: Escalation stages as the workflow milestones — specification, ADR and phase split
 
 format: small-model
-status: planned
+status: done
 depends-on: —
 phase: 13
 milestone: m13

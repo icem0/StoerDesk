@@ -1,7 +1,7 @@
 # WP-M13-11: The removal of the old shared contracts
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-10
 phase: 13
 milestone: m13
@@ -63,5 +63,6 @@ Expected: all green; no export of the removed contracts is left.
   escalation module
 - Interfaces added: none — exports are removed
 - Verified: typecheck, the whole test run
+- Deviation: `packages/shared/src/__tests__/escalation-stages.test.ts` is removed with the schema; the shared deadlines contract became hours-only together with WP-M13-13
 - Follow-up WP: WP-M13-12 — the removal of the old administration page
 - Open question: none

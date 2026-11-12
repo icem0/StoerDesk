@@ -652,15 +652,15 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M13-07a | the webhook event type of the escalation                          | done                    | yes     |
 | WP-M13-07b | the actions of a fired rule (notify, webhook, history)            | done                    | yes     |
 | WP-M13-08  | the reachable stages of a ticket                                 | done                    | yes     |
-| WP-M13-09  | the stage selection replaces the workflow buttons                 | planned                 | yes     |
-| WP-M13-10  | the removal of the old escalation API                            | planned                 | yes     |
-| WP-M13-11  | the removal of the old shared contracts                          | planned                 | yes     |
-| WP-M13-12  | the removal of the old administration page                       | planned                 | yes     |
-| WP-M13-13  | the cleanup of the texts and of the legacy settings              | planned                 | yes     |
-| WP-M13-14  | the administration page of the escalation                        | planned                 | yes     |
-| WP-M13-15  | the rule editor and the condition builder                        | planned                 | yes     |
-| WP-M13-16  | the action editor                                               | planned                 | yes     |
-| WP-M13-17  | the exit criterion of the escalation phase                       | planned                 | yes     |
+| WP-M13-09  | the stage selection replaces the workflow buttons                 | done                 | yes     |
+| WP-M13-10  | the removal of the old escalation API                            | done                 | yes     |
+| WP-M13-11  | the removal of the old shared contracts                          | done                 | yes     |
+| WP-M13-12  | the removal of the old administration page                       | done                 | yes     |
+| WP-M13-13  | the cleanup of the texts and of the legacy settings              | done                 | yes     |
+| WP-M13-14  | the administration page of the escalation                        | done                 | yes     |
+| WP-M13-15  | the rule editor and the condition builder                        | done                 | yes     |
+| WP-M13-16  | the action editor                                               | done                 | yes     |
+| WP-M13-17  | the exit criterion of the escalation phase                       | done                 | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

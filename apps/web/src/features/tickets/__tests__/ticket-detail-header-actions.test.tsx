@@ -6,7 +6,6 @@ import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_ESCALATION_STAGES } from '@stoerdesk/shared'
 import { i18n } from '../../../i18n'
 import { TicketDetailPage } from '../ticket-detail-page'
 
@@ -74,10 +73,6 @@ function renderPage(status = 'NEW') {
 
     if (path.includes('/v1/text-templates')) {
       return Response.json({ templates: [] })
-    }
-
-    if (path.includes('/v1/escalation-stages')) {
-      return Response.json({ stages: DEFAULT_ESCALATION_STAGES })
     }
 
     return Response.json(fixture(status))

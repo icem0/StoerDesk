@@ -1,7 +1,7 @@
 # WP-M13-10: The removal of the old escalation API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-05
 phase: 13
 milestone: m13
@@ -62,5 +62,6 @@ Expected: all green; no route of the old catalogue is registered any more.
 - Files changed: the two removed modules, the registration, the removed test
 - Interfaces added: none — routes are removed
 - Verified: typecheck, lint
+- Deviation: the staff read `GET /api/v1/escalation-stages` was re-registered in `apps/api/src/escalation/routes.ts` (the module of WP-M13-05) instead of a separate module
 - Follow-up WP: WP-M13-11 — the removal of the old shared contracts
 - Open question: none

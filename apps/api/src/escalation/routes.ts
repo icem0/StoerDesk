@@ -6,10 +6,13 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import {
   EscalationConfigError,
+  readEscalationStages,
   readEscalationConfig,
   writeEscalationConfig,
   writeEscalationStages,
 } from './config'
+import { configuredChannels } from '../notifications/channels'
+import { loadEnv } from '../config/env'
 
 /**
  * The administration routes of the escalation configuration
@@ -41,6 +44,20 @@ function handleError(error: unknown) {
 
 export const escalationRoutes = fp<EscalationRoutesOptions>(
   async (app, { database }) => {
+    app.get(
+      '/api/v1/escalation-stages',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.read) },
+      async () => ({ stages: await readEscalationStages(database) }),
+    )
+
+    app.get(
+      '/api/v1/escalation/channels',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
+      async () => ({
+        channels: configuredChannels(loadEnv()).map((channel) => channel.name),
+      }),
+    )
+
     app.get(
       '/api/v1/escalation/config',
       { preHandler: requirePermission(database, PERMISSIONS.settings.read) },

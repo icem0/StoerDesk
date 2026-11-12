@@ -1,7 +1,7 @@
 # WP-M13-16: The action editor
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-15, WP-M13-07
 phase: 13
 milestone: m13
@@ -63,5 +63,6 @@ Expected: all green; the test proves the editor, the condition and the refusals.
 - Files changed: the page, the action editor, the two locale files, the test
 - Interfaces added: `EscalationActionEditor`
 - Verified: typecheck, the component test, the i18n check
+- Deviation: the channel list of the installation is read from the new staff route `GET /api/v1/escalation/channels` in `apps/api/src/escalation/routes.ts`
 - Follow-up WP: WP-M13-17 — the exit criterion of the phase
 - Open question: none

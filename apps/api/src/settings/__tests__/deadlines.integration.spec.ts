@@ -11,7 +11,6 @@ import * as schema from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { buildServer } from '../../index'
 import { readDeadlineHours } from '../../tickets/deadline'
-import { readOverrides } from '../../tickets/escalation'
 
 const testDatabase = await openTestDatabase()
 
@@ -24,27 +23,14 @@ const { users, roles, userRoles, settings } = schema
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 type DeadlineBody = {
   hours: Record<string, number>
-  reactionMinutes: Record<string, { standard: number; critical: number }>
 }
 
 const defaults: DeadlineBody = {
   hours: { low: 168, normal: 72, high: 24, critical: 8 },
-  reactionMinutes: {
-    new_without_review: { standard: 15, critical: 5 },
-    work_order_without_distribution: { standard: 30, critical: 30 },
-    offered_without_claim: { standard: 20, critical: 10 },
-    assigned_without_accept: { standard: 15, critical: 15 },
-  },
 }
 
 const changed: DeadlineBody = {
   hours: { low: 200, normal: 48, high: 12, critical: 4 },
-  reactionMinutes: {
-    new_without_review: { standard: 25, critical: 7 },
-    work_order_without_distribution: { standard: 40, critical: 35 },
-    offered_without_claim: { standard: 30, critical: 12 },
-    assigned_without_accept: { standard: 20, critical: 18 },
-  },
 }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -196,12 +182,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(hours.json<Record<string, number>>()).toEqual(changed.hours)
     })
 
-    it('feeds the stored values into the deadline and escalation calculation', async () => {
+    it('feeds the stored values into the deadline calculation', async () => {
       const hours = await readDeadlineHours(db)
-      const overrides = await readOverrides(db)
 
       expect(hours).toEqual(changed.hours)
-      expect(overrides.new_without_review).toEqual({ minutes: 25, criticalMinutes: 7 })
     })
 
     it('rejects an out-of-range value with 400 invalid_request and the field path', async () => {

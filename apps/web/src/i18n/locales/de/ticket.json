@@ -447,13 +447,11 @@
     "escalation": {
       "title": "Eskalation & Aktionen",
       "hint": "Stufe wählen und Beschreibung eingeben",
-      "stageLabel": "Eskalationsstufe oder Kommentar",
-      "textLabel": "Beschreibung",
-      "commentOption": "Kommentar",
-      "placeholder": "Beschreibung der Eskalation oder Notiz für das Team …",
-      "submitStage": "Eskalation auf „{{stage}}“ setzen",
-      "historyStage": "Eskalationsstufe: {{stage}}",
-      "saved": "Eskalation gespeichert."
+      "stageLabel": "Workflow Stufen",
+      "chooseStage": "Auswahl Stufen…",
+      "textLabel": "Kommentar",
+      "placeholder": "Was ist passiert? Notiz für das Team …",
+      "historyStage": "Eskalationsstufe: {{stage}}"
     },
     "comment": {
       "submit": "Kommentar speichern",

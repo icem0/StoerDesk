@@ -487,17 +487,3 @@ export const ticketDetailResponseSchema = z.object({
 })
 
 export type TicketDetailResponse = z.infer<typeof ticketDetailResponseSchema>
-
-
-/**
- * Manual escalation write (`specs/07-escalation.md` §7.5, WP-M12-05).
- *
- * `stageKey = null` writes a comment; a known stage key writes one
- * `escalation_set` event. The text is required in both cases.
- */
-export const manualEscalationRequestSchema = z.object({
-  stageKey: z.string().min(1).max(40).nullable(),
-  text: z.string().trim().min(1).max(2000),
-})
-
-export type ManualEscalationRequest = z.infer<typeof manualEscalationRequestSchema>

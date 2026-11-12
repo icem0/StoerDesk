@@ -1,7 +1,7 @@
 # WP-M13-12: The removal of the old administration page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-11
 phase: 13
 milestone: m13
@@ -62,5 +62,6 @@ Expected: all green; no link of the application points to the removed page.
   settings overview
 - Interfaces added: none — the page is removed
 - Verified: typecheck, lint
+- Deviation: `apps/web/src/admin/deadlines-page.tsx` and its component test are removed as well — its deadline form moves into the `Fristen` tab of WP-M13-14
 - Follow-up WP: WP-M13-13 — the cleanup of the texts
 - Open question: none

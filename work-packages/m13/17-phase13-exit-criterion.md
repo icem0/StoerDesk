@@ -1,7 +1,7 @@
 # WP-M13-17: The exit criterion of the escalation phase
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-16
 phase: 13
 milestone: m13
@@ -67,5 +67,6 @@ Expected: all green; the exit test proves the criterion of the phase.
 - Interfaces added: none
 - Verified: typecheck, lint, the whole test run, the i18n check, the wp check,
   the whole check gate
+- Deviation: the exit test also asserts that the removed routes answer `404` and that the deadline rules fire at 80 % and 100 %
 - Follow-up WP: none
 - Open question: none

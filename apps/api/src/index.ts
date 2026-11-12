@@ -18,7 +18,6 @@ import { bmaSyncRoutes } from './integrations/bmacloud/routes'
 import { settingsBrandingRoutes } from './settings/branding'
 import { settingsDashboardRoutes } from './settings/dashboard'
 import { settingsDeadlineRoutes } from './settings/deadlines'
-import { escalationStageRoutes } from './settings/escalation-stages'
 import { escalationRoutes } from './escalation/routes'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { detectedErrorsRoutes } from './settings/detected-errors'
@@ -50,7 +49,6 @@ import { ticketListRoutes } from './tickets/list'
 import { ticketDetailRoutes } from './tickets/detail'
 import { photoServeRoutes } from './tickets/photos'
 import { workflowRoutes } from './tickets/workflow-routes'
-import { manualEscalationRoutes } from './tickets/escalation-manual'
 import { pauseRoutes } from './tickets/pauses'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
@@ -142,7 +140,6 @@ export async function buildServer() {
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })
-  await app.register(escalationStageRoutes, { database })
   await app.register(escalationRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(detectedErrorsRoutes, { database })
@@ -173,7 +170,6 @@ export async function buildServer() {
   await app.register(deleteRoutes, { database, uploadDir: env.UPLOAD_DIR })
   await app.register(privacyRoutes, { database })
   await app.register(workflowRoutes, { database })
-  await app.register(manualEscalationRoutes, { database })
   await app.register(pauseRoutes, { database })
   await app.register(dashboardRoutes, { database })
   await app.register(statsRoutes, { database })
