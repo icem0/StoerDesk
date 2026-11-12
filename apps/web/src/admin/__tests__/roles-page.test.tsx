@@ -87,7 +87,7 @@ describe('RolesPage', () => {
 
     expect(await screen.findByText('dispatcher')).toBeTruthy()
     expect(screen.getByText('Rollenverwaltung')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Zurück zur Verwaltung' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Zurück zu den Einstellungen' })).toBeTruthy()
     expect(screen.getByText('office')).toBeTruthy()
     expect(screen.queryByText('Rolle anlegen')).toBeNull()
   })

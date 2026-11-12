@@ -78,7 +78,7 @@ describe('UsersPage', () => {
 
     expect(await screen.findByText('admin@example.com')).toBeTruthy()
     expect(screen.getByText('Benutzerverwaltung')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Zurück zur Verwaltung' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Zurück zu den Einstellungen' })).toBeTruthy()
   })
 
   it('offers create and edit controls only with user.write', async () => {

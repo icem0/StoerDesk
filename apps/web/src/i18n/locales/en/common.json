@@ -42,7 +42,7 @@
   "branding": {
     "title": "Customize the GUI",
     "hint": "Company name shown next to the logo in the header. Leave empty to show only “StörDesk”.",
-    "back": "Back to administration",
+    "back": "Back to settings",
     "hintTitleEnabled": "Whether the report form also collects a short ticket title: it is only offered while the checkbox is switched on.",
     "field": {
       "companyName": "Company name",

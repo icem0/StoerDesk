@@ -12,7 +12,7 @@
     "adminSettings": "Einstellungen der Bereitschaft"
   },
   "admin": {
-    "back": "Zurück zur Verwaltung",
+    "back": "Zurück zu den Einstellungen",
     "title": "Bereitschaftsplan",
     "hint": "Pools, Wochenplan, Warnungen, Schichttausch und Einstellungen pflegen. Die Zeiten gelten in Europe/Berlin.",
     "loading": "Bereitschaftsplan wird geladen …",

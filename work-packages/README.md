@@ -686,7 +686,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M13-16  | the action editor                                               | done                 | yes     |
 | WP-M13-17  | the exit criterion of the escalation phase                       | done                 | yes     |
 | WP-M14-01  | the administration home disappears — its links live in the settings menu | done              | yes     |
-| WP-M14-02  | the administration pages lead back to the settings menu           | planned                | yes     |
+| WP-M14-02  | the administration pages lead back to the settings menu           | done                    | yes     |
 | WP-M14-03  | the messenger channels — spec, ADR-0019, ADR-0020, phase split     | planned                | yes     |
 
 

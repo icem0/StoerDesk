@@ -1,6 +1,6 @@
 {
   "admin": {
-    "back": "Back to administration",
+    "back": "Back to settings",
     "update": {
       "title": "Update",
       "hint": "Checks GitHub for a newer commit and starts the deployment of the stack.",
@@ -283,8 +283,16 @@
       },
       "rule": {
         "key": "Key",
-        "reference": "Start-Event",
+        "reference": "Start event",
         "percent": "Percent",
+        "referenceEvents": {
+          "received_at": "Report received",
+          "review_started": "Set in review",
+          "work_order_set": "Work order created",
+          "offered": "Offered",
+          "assigned": "Assigned",
+          "accepted": "Work order accepted"
+        },
         "none": "None",
         "minutes": {
           "low": "Low",
@@ -299,16 +307,52 @@
           "all": "all",
           "any": "any of"
         },
+        "fields": {
+          "priority": "Priority",
+          "status": "Status",
+          "source": "Source",
+          "systemType": "System type",
+          "objectExternalType": "Object external type",
+          "assigned": "Assigned",
+          "paused": "Paused",
+          "deadlinePercent": "Deadline in %",
+          "elapsedMinutes": "Elapsed minutes",
+          "stageReached": "Stage reached"
+        },
         "field": "Field",
         "operator": "Operator",
+        "operators": {
+          "eq": "equals",
+          "ne": "not equals",
+          "in": "one of",
+          "notIn": "none of",
+          "gt": "greater than",
+          "gte": "greater or equal",
+          "lt": "less than",
+          "lte": "less or equal",
+          "contains": "contains"
+        },
         "value": "Value",
         "add": "Add condition",
         "remove": "Remove"
       },
       "action": {
         "type": "Type",
+        "types": {
+          "notify": "Notification",
+          "webhook": "Webhook",
+          "history": "History note"
+        },
         "key": "Key",
         "channels": "Channels",
+        "channelLabels": {
+          "signal": "Signal",
+          "matrix": "Matrix",
+          "ntfy": "ntfy",
+          "email": "Email",
+          "telegram": "Telegram",
+          "webpush": "Web Push"
+        },
         "endpoints": "Webhooks",
         "text": "Note",
         "add": "Add action",

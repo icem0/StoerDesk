@@ -220,7 +220,7 @@ export function ApiKeysPage() {
     <section className="flex flex-col gap-4">
       <Link
         className="inline-flex min-h-11 items-center self-start rounded bg-slate-800 px-3 text-sm hover:bg-slate-700"
-        to="/admin"
+        to="/settings"
       >
         {t('admin.back')}
       </Link>

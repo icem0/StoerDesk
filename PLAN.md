@@ -643,9 +643,12 @@ when its exit criteria and its acceptance tests pass.
 `/admin` is gone. Every administration module is a link of the settings menu at
 `/settings`, the retired address `/admin` redirects there and the texts of the
 removed page (`settings:admin.home.*`, `common:auth.links.admin`) are deleted
-in `de` and `en`. The messenger channels of the phase — ntfy, Telegram, Matrix
-and WhatsApp Web — follow: their specification, their decision about the
-WhatsApp Web transport and their split are the next packages of the phase.
+in `de` and `en`. **WP-M14-02** turns the back links of the administration and
+the settings pages to the settings menu and names them "Zurück zu den
+Einstellungen" / "Back to settings". The messenger channels of the phase — ntfy,
+Telegram, Matrix and WhatsApp Web — follow: their specification, their decision
+about the WhatsApp Web transport and their split are the next packages of the
+phase.
 
 **Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,

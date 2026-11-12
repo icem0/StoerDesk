@@ -1,6 +1,6 @@
 {
   "admin": {
-    "back": "Zurück zur Verwaltung",
+    "back": "Zurück zu den Einstellungen",
     "update": {
       "title": "Update",
       "hint": "Prüft GitHub auf einen neueren Commit und startet die Bereitstellung des Stacks.",
@@ -257,7 +257,7 @@
     },
     "escalation": {
       "title": "Eskalation",
-      "hint": "Stufen der Eskalation. Die Reihenfolge der Liste ist die Eskalationsreihenfolge und wird per Drag and Drop geändert. Die Frist gilt für alle Prioritäten. Fristen je Priorität und Fristen der Eskalation.",
+      "hint": "Stages of the escalation with their names, their rules and their actions. The deadline of a stage is the waiting time per priority; rules and their actions fire in list order. Change the order with drag and drop.",
       "loading": "Lädt …",
       "sessionNotice": "Die Eskalation benötigt eine gültige Anmeldung.",
       "forbiddenNotice": "Keine Berechtigung für die Eskalation.",
@@ -283,8 +283,16 @@
       },
       "rule": {
         "key": "Schlüssel",
-        "reference": "Start-Event",
+        "reference": "Start event",
         "percent": "Percent",
+        "referenceEvents": {
+          "received_at": "Notification received",
+          "review_started": "Review in progress set",
+          "work_order_set": "Order created",
+          "offered": "Offer made",
+          "assigned": "Assignment made",
+          "accepted": "Order accepted"
+        },
         "none": "Keine",
         "minutes": {
           "low": "Niedrig",
@@ -297,22 +305,58 @@
         "modeLabel": "Condition",
         "mode": {
           "all": "all",
-          "any": "one after the other"
+          "any": "one of"
+        },
+        "fields": {
+          "priority": "Priority",
+          "status": "Status",
+          "source": "Source",
+          "systemType": "System type",
+          "objectExternalType": "External object type",
+          "assigned": "Assigned",
+          "paused": "Paused (pause)",
+          "deadlinePercent": "Deadline in %",
+          "elapsedMinutes": "Elapsed minutes",
+          "stageReached": "Reached stage"
         },
         "field": "Field",
         "operator": "Operator",
+        "operators": {
+          "eq": "equal",
+          "ne": "different from",
+          "in": "one of",
+          "notIn": "none of",
+          "gt": "larger than",
+          "gte": "at least",
+          "lt": "smaller than",
+          "lte": "at most",
+          "contains": "contains"
+        },
         "value": "Value",
         "add": "Condition add",
-        "remove": "Entfernen"
+        "remove": "Condition remove"
       },
       "action": {
         "type": "Type",
+        "types": {
+          "notify": "Notification",
+          "webhook": "Webhook",
+          "history": "History note"
+        },
         "key": "Schlüssel",
         "channels": "Channels",
+        "channelLabels": {
+          "signal": "Signal",
+          "matrix": "Matrix",
+          "ntfy": "ntfy",
+          "email": "E-Mail",
+          "telegram": "Telegram",
+          "webpush": "Web Push"
+        },
         "endpoints": "Webhooks",
         "text": "Text",
         "add": "Action add",
-        "remove": "Entfernen"
+        "remove": "Action remove"
       },
       "errors": {
         "session_invalid": "Die Anmeldung ist abgelaufen.",

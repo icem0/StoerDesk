@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The back links of the administration and settings pages lead to the settings
+  menu (WP-M14-02): the twelve pages that carry a back link point to
+  `/settings` instead of the retired `/admin`, and the three back-link texts
+  say "Zurück zu den Einstellungen" / "Back to settings".
 - The standalone administration menu is gone (WP-M14-01): the page `/admin` and
   its module cards are deleted, every administration module is a link of the
   settings menu at `/settings`, the retired address `/admin` and the retired

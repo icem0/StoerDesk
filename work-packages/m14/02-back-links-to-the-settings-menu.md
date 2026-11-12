@@ -1,7 +1,7 @@
 # WP-M14-02: The administration pages lead back to the settings menu
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-01
 phase: 14
 milestone: m14

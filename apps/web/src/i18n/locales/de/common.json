@@ -42,7 +42,7 @@
   "branding": {
     "title": "GUI anpassen",
     "hint": "Firmenname, der neben dem Logo im Header angezeigt wird. Leer zeigt nur „StörDesk“.",
-    "back": "Zurück zur Verwaltung",
+    "back": "Zurück zu den Einstellungen",
     "hintTitleEnabled": "Ob das Meldeformular auch einen kurzen Ticket-Titel erfasst: Das Feld wird nur angeboten, solange die Checkbox eingeschaltet ist.",
     "field": {
       "companyName": "Firmenname",

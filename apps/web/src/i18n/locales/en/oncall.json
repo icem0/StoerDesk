@@ -12,7 +12,7 @@
     "adminSettings": "Readiness settings"
   },
   "admin": {
-    "back": "Back to administration",
+    "back": "Back to settings",
     "title": "On-call plan",
     "hint": "Manage pools, the weekly plan, warnings, shift swaps and settings. Times use Europe/Berlin.",
     "loading": "Loading on-call plan …",
