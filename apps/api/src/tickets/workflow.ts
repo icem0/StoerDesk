@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
 import { ticketEvents, tickets } from '../db/schema'
@@ -121,14 +121,18 @@ export async function transitionTicket(ctx: TransitionContext) {
   }
 
   return await database.transaction(async (tx) => {
+    // The UPDATE re-checks the status (`UPDATE … WHERE status = <from>`), so two
+    // concurrent transitions of the same ticket produce exactly one winner —
+    // the first acceptance wins atomically (`PLAN.md` §12, the claim conflict of
+    // §16.1/3). A stale status read alone must never decide the transition.
     const [updated] = await tx
       .update(tickets)
       .set({ status: transition.to, updatedAt: new Date() })
-      .where(eq(tickets.id, ticketId))
+      .where(and(eq(tickets.id, ticketId), eq(tickets.status, fromStatus)))
       .returning()
 
     if (updated === undefined) {
-      throw TICKET_NOT_FOUND(ticketId)
+      throw INVALID_TRANSITION(ticket.ticketNo, fromStatus, event)
     }
 
     const [insertedEvent] = await tx
