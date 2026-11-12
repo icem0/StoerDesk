@@ -645,8 +645,13 @@ the conditions and the actions move into the database and are maintained in
 button per workflow step, and the former manual stage catalogue (`ticket.escalation_stages`,
 the `escalation_set` event, `POST /api/v1/tickets/:ticketNo/escalate`) is removed. The exit test `apps/api/src/escalation/__tests__/phase13-exit.integration.spec.ts` proves the criterion of the phase on a throwaway database: a stage rule fires once per threshold, its condition decides, the three actions write their rows, the deadline rules fire at 80 % and 100 % and the removed routes answer `404`.
 **WP-M12-09** is implemented — the ticket detail header carries the e-mail icon and
-the cancel button and the way back to the list is gone. Phase 12 stays open until
-**WP-M12-02**, the acceptance suite, is closed.
+the cancel button and the way back to the list is gone. **Phase 12 is complete**:
+**WP-M12-02** runs the acceptance suite `scripts/e2e-acceptance.mjs` over items 1–12
+of §20 and prints `acceptance: 11/12 verified` — every provable item `PASS`, item 11
+`UNVERIFIED` by design (no browser-side push registration). The run exposed and closed
+one product defect: the workflow transition never wrote `acknowledged_at`, so the
+timeline did not stop at acknowledgement; `transitionTicket` now writes the workflow
+columns of §7 and the new `workflow-columns.integration.spec.ts` proves it.
 
 Phase 0 is complete (WP-M0-01 … WP-M0-05). Phase 1 is implemented through
 **WP-M1-10e** and, in the phase 1 backlog order, **WP-M1-09b**, **WP-M1-09c**,

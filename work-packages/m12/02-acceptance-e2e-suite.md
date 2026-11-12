@@ -1,7 +1,7 @@
 # WP-M12-02: Acceptance end-to-end suite for items 1–12
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M12-01
 phase: 12
 milestone: m12
@@ -23,7 +23,9 @@ files-read:
 
 files-write:
 
-- scripts/e2e-acceptance.mjs (new — does not exist yet)
+- scripts/e2e-acceptance.mjs (the runner; already present from the earlier runs, repaired here)
+- apps/api/src/tickets/workflow.ts (the defect behind item 5)
+- apps/api/src/tickets/__tests__/workflow-columns.integration.spec.ts (new regression test)
 - work-packages/m12/02-acceptance-e2e-suite.md (this file)
 
 interfaces:
@@ -75,14 +77,33 @@ node scripts/e2e-acceptance.mjs
 ```
 
 Expected: `wp:check` green; the suite prints one verdict per item and the summary
-`acceptance: 12/12 verified` in CI (item 11 `UNVERIFIED` by design until the
-browser side exists — reported as such), or the unverified notice for the missing
-prerequisite in a developer container. `npm run check` stays untouched and green.
+`acceptance: 11/12 verified` — the eleven provable items `PASS`, item 11
+`UNVERIFIED` by design until the browser-side push registration exists, reported
+as such, never as a green skip. In a developer container without Chromium or
+PostgreSQL the browser- or stack-driven items print the unverified notice with
+the reason. `npm run check` stays untouched and green.
 
 ## Handoff
 
-- Files changed: — (planned: `scripts/e2e-acceptance.mjs` new, this document)
+- Files changed: `scripts/e2e-acceptance.mjs`, `apps/api/src/tickets/workflow.ts`,
+  `apps/api/src/tickets/__tests__/workflow-columns.integration.spec.ts`, this
+  document and the backlog/plan/changelog/repo-map bookkeeping
 - Interfaces added: none in the product — the runner of §16.3 only
-- Verified: pending — this document is the plan, WP-M12-02 runs its own acceptance
+- Verified: `node scripts/e2e-acceptance.mjs` prints `acceptance: 11/12 verified`
+  (items 1–10 and 12 `PASS`, item 11 `UNVERIFIED` by design, exit 0); `npm run
+  wp:check`, typecheck, lint, `vitest run` and `i18n:check` are green
+- Deviation: item 5 was a real product defect, not a runner defect — the workflow
+  transition never wrote `acknowledged_at`, so the timeline of an acknowledged
+  ticket never stopped. `transitionTicket` now writes the workflow columns of
+  `PLAN.md` §7 for its milestones (`review_started_at`/`reviewed_by_user_id`,
+  `work_order_type`/`work_order_number`, `accepted_at`, `acknowledged_at`,
+  `closed_at`) in the same statement as the status; the new integration test
+  `workflow-columns.integration.spec.ts` proves it. This is the WP's only product
+  change: the non-goal "no product change" is overridden by the rule that a red
+  verdict is a defect to fix, never a suite to weaken.
+- Deviation: the runner treated the disabled acknowledge confirm button of the stage
+  selection (WP-M13-09) as clickable and aborted the whole run on the first error.
+  It now asserts the button stays disabled, and one unexpected error is that item's
+  `FAIL` instead of leaving the remaining items without a verdict.
 - Follow-up WP: none
 - Open question: none

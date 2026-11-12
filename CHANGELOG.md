@@ -54,6 +54,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   phase 13 implements the decision.
 
 ### Added
+- Acceptance suite for items 1–12 (WP-M12-02, closes phase 12):
+  `scripts/e2e-acceptance.mjs` drives the criteria of `specs/16-acceptance.md` §16.1 in
+  one ordered run against a throwaway database and the running API/web pair — QR report
+  with two photos and office notification, flight-mode report, competing claim, decline
+  and acknowledge rules, deadline escalation, object API, fault-free counter, statistics
+  median, channel retry/fallback, web-push delivery and the on-call calendar. Every item
+  prints `PASS`/`FAIL`/`UNVERIFIED`, the run ends with `acceptance: 11/12 verified`
+  (item 11 `UNVERIFIED` by design: the web app has no push-subscription registration).
 - The top-right dropdown of the shell is gone (WP-M12-08): the gear next to the version
   opens the settings page directly, the logout moved to the account group of that page
   and the header keeps only the logo, the company name, the top-level links and the
@@ -302,6 +310,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Acknowledging a ticket stops its timeline (WP-M12-02, acceptance item 5): the
+  workflow transition only wrote `status` and `updated_at`, so `acknowledged_at`
+  (and with it `timeline.stoppedAt`) stayed `null` even though the status was
+  `ACKNOWLEDGED`. `transitionTicket` now writes the workflow columns of `PLAN.md` §7
+  for its milestones in the same statement as the status — `review_started_at` and
+  `reviewed_by_user_id`, `work_order_type` and `work_order_number`, `accepted_at`,
+  `acknowledged_at` and `closed_at`. A ticket therefore never shows a status whose
+  timestamp is missing; `apps/api/src/tickets/__tests__/workflow-columns.integration.spec.ts`
+  proves it.
 - The offline conflict banner of the open ticket detail updates without a reload
   (WP-M5-06): after the replay of an offline write answered `409 invalid_transition`,
   the conflict row was written to the outbox but the banner of the page kept the rows

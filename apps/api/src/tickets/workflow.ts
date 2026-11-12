@@ -125,9 +125,36 @@ export async function transitionTicket(ctx: TransitionContext) {
     // concurrent transitions of the same ticket produce exactly one winner —
     // the first acceptance wins atomically (`PLAN.md` §12, the claim conflict of
     // §16.1/3). A stale status read alone must never decide the transition.
+    // The workflow columns of `PLAN.md` §7 belong to the transition that sets
+    // them (`specs/05-timeline.md` §5.2: the timeline stops at `acknowledged`).
+    // They are written in the same statement as the status, so a reader never
+    // sees a status whose timestamp is missing.
+    const at = new Date()
+    const workflowColumns: Partial<typeof tickets.$inferInsert> = {}
+
+    if (event === 'review_started') {
+      workflowColumns.reviewStartedAt = at
+      if (actorKind === 'user' && actorUserId !== undefined) {
+        workflowColumns.reviewedByUserId = actorUserId
+      }
+    } else if (event === 'work_order_set') {
+      if (typeof payload.type === 'string') {
+        workflowColumns.workOrderType = payload.type
+      }
+      if (typeof payload.number === 'string') {
+        workflowColumns.workOrderNumber = payload.number
+      }
+    } else if (event === 'accepted') {
+      workflowColumns.acceptedAt = at
+    } else if (event === 'acknowledged') {
+      workflowColumns.acknowledgedAt = at
+    } else if (event === 'closed') {
+      workflowColumns.closedAt = at
+    }
+
     const [updated] = await tx
       .update(tickets)
-      .set({ status: transition.to, updatedAt: new Date() })
+      .set({ ...workflowColumns, status: transition.to, updatedAt: at })
       .where(and(eq(tickets.id, ticketId), eq(tickets.status, fromStatus)))
       .returning()
 

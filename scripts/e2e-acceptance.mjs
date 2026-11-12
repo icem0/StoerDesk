@@ -510,18 +510,35 @@ async function main() {
       item1TicketNo: '',
     }
 
-    await item1(shared)
-    await item2(shared)
-    await item3(shared)
-    await item4(shared)
-    await item5(shared)
-    await item6(shared)
-    await item7(shared)
-    await item8(shared)
-    await item9(shared)
-    await item10(shared)
-    await item11(shared)
-    await item12(shared)
+    // One verdict per item: an unexpected error is that item's FAIL, never an
+    // abort that leaves the remaining items without a verdict.
+    for (const [index, item] of [
+      item1,
+      item2,
+      item3,
+      item4,
+      item5,
+      item6,
+      item7,
+      item8,
+      item9,
+      item10,
+      item11,
+      item12,
+    ].entries()) {
+      try {
+        await item(shared)
+      } catch (error) {
+        if (!results.some((result) => result.n === index + 1)) {
+          verdict(
+            index + 1,
+            itemNames[index],
+            'FAIL',
+            `unexpected error: ${String(error instanceof Error ? error.message : error).split('\n')[0].slice(0, 300)}`,
+          )
+        }
+      }
+    }
 
     const verified = results.filter((item) => item.state === 'PASS').length
 
@@ -1014,8 +1031,11 @@ async function item5(shared) {
 
   // §16.3 open point (acknowledge rule on the office path): the panel refuses an
   // acknowledge without content — the result is the required field, the note is
-  // the optional extra text. Clicking without the required content changes nothing.
-  await page.getByRole('button', { name: 'Bestätigen' }).click()
+  // the optional extra text. Its confirm button stays disabled, so an empty
+  // acknowledge cannot be sent from the office path at all.
+  const confirm = page.getByRole('button', { name: 'Bestätigen' })
+
+  await expect(confirm).toBeDisabled()
 
   const detailWithoutContent = await apiRequest('GET', `/api/v1/tickets/${ticketNo}`, {
     cookie: shared.adminCookie,

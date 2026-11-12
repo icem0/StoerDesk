@@ -119,16 +119,19 @@ items yet (§16.3).
 
 ## 16.3 Verification state and phase-12 split
 
-- Today every item is proven only by its own phase exit criterion or test
-  (named in 16.2) — no single run covers items 1–12 end to end. The phase-12
-  split announces **WP-M12-02** (`work-packages/m12/02-acceptance-e2e-suite.md`,
-  planned): one acceptance suite `scripts/e2e-acceptance.mjs` that reuses the
-  Playwright harness helpers of `scripts/e2e-check.mjs` (throwaway database,
+- **WP-M12-02 is done**: one acceptance suite `scripts/e2e-acceptance.mjs`
+  (`work-packages/m12/02-acceptance-e2e-suite.md`) drives items 1–12 in one
+  ordered run against a throwaway database and the running API/web pair, reusing
+  the Playwright harness helpers of `scripts/e2e-check.mjs` (throwaway database,
   browser probe, CI-strict skip rule) and the existing test flags
-  (`tickets.is_test` of WP-M9-02, `NODE_ENV=test`, the `E2E_*` ports).
+  (`tickets.is_test` of WP-M9-02, `NODE_ENV=test`, the `E2E_*` ports). Each item
+  keeps its phase exit criterion or test of 16.2 as the proof next to the run.
 - The suite reports every item `PASS`/`FAIL`/`UNVERIFIED` and never weakens a
   gate: a missing prerequisite is unverified, never presented as green
-  (`PLAN.md` §18.2).
-- Open verification points the suite has to close, not new features: the
-  acknowledge-note rule of item 5 on the office path (16.2/5), the office-list
-  timing of item 1 and the browser-side push of item 11 (16.2/11).
+  (`PLAN.md` §18.2). The last run prints `acceptance: 11/12 verified`: items
+  1–10 and 12 `PASS`, item 11 `UNVERIFIED` by design.
+- Verification points the suite closed: the acknowledge-on-the-office-path rule
+  of item 5 (16.2/5) — it also exposed that the transition never wrote
+  `acknowledged_at`, fixed in `transitionTicket` — and the office-list timing of
+  item 1. Item 11 (16.2/11) stays `UNVERIFIED` by design until the web app
+  registers push subscriptions.

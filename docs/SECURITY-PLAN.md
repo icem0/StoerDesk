@@ -81,6 +81,17 @@ outside), the invalidation deletes the cached copy of the written ticket from th
 `internal-tickets` cache and touches no other cache, and the sign-out clear of that
 cache stays the only place that empties it. No new finding.
 
+Comment pass: 2026-11-12, diff `d9f7628..` (WP-M12-02, `apps/api/src/tickets/workflow.ts`
+and the new `workflow-columns.integration.spec.ts`) — areas A and B re-checked in full
+(the WP adds no route, no capability and no bearer scope, so the guard answers are
+unchanged), C re-checked for `workflow.ts`: the added `work_order_type`/`work_order_number`
+columns take the strings of the request payload only after the route's zod schema
+(`type` ≤ 40, `number` ≤ 60 characters) and a `typeof` guard, and drizzle binds every
+value — no SQL interpolation, no LIKE, no HTML assembly; the timestamps are derived on
+the server, never read from the body. K re-checked for the new test: it writes one
+throwaway user with a `randomUUID()` e-mail and no contact data, and the runner's log
+lines stay code-level. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

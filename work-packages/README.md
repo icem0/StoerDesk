@@ -249,7 +249,7 @@ no `Follow-up WP:` or `Open question:` line stays open in `work-packages/m11/`.
 `specs/16-acceptance.md` — the original book chapters 18 + 19 were not supplied —
 maps every item to the implemented surfaces and announces the split **WP-M12-02**,
 the acceptance end-to-end suite for items 1–12
-(`scripts/e2e-acceptance.mjs`, planned — its file exists, its code does not yet).
+(`scripts/e2e-acceptance.mjs`).
 The phase-5 offline E2E `apps/web/e2e/offline-internal.spec.ts` was repaired out of band
 after WP-M12-06 and WP-M12-08 removed both dropdowns: the two acknowledge tests still
 opened the options dropdown and waited for a button that no longer exists, so they now
@@ -259,6 +259,19 @@ after a CI run lost the reload race of the conflict banner: `onActionChange` in
 `apps/web/src/lib/outbox.ts` announces every write to an `internal_actions` row,
 `useInternalActions` re-reads the rows of its ticket and the conflict is asserted on the
 open page before the reload (WP-M5-06 conflict UI).
+
+**WP-M12-02 is done and phase 12 is closed.** `scripts/e2e-acceptance.mjs` drives the
+twelve items of `specs/16-acceptance.md` §16.1 in one ordered run against a throwaway
+database and the running API/web pair; the run prints `acceptance: 11/12 verified` —
+items 1–10 and 12 `PASS`, item 11 `UNVERIFIED` by design (the web app has no
+push-subscription registration, so only the delivery side is proven). The run found one
+real product defect: the workflow transition never wrote `acknowledged_at`, so the
+timeline of an acknowledged ticket never stopped (§16.1/5). `transitionTicket` now writes
+the workflow columns of `PLAN.md` §7 for its milestones, and the new integration test
+`apps/api/src/tickets/__tests__/workflow-columns.integration.spec.ts` proves it. The
+runner itself was repaired where it still addressed the pre-WP-M13-09 UI (disabled
+acknowledge confirm) and now turns one unexpected error into that item's `FAIL` instead
+of aborting the remaining verdicts.
 
 **WP-M12-09** moves the e-mail export and the cancel button of the ticket detail view
 into the header: the export is an icon button (envelope, 44 px target, `aria-label` from
@@ -635,7 +648,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M11-09  | Integrationstests (API, Close, Statistik)                      | done                    | yes     |
 | WP-M11-10  | Phase-11 Exit-Kriterium und Record                             | done                    | yes     |
 | WP-M12-01  | acceptance criteria slice and phase-12 split                     | done                    | yes     |
-| WP-M12-02  | acceptance end-to-end suite for items 1–12                      | planned                 | yes     |
+| WP-M12-02  | acceptance end-to-end suite for items 1–12                      | done                    | yes     |
 | WP-M12-03  | escalation-stage catalog — shared contract and settings API     | done                    | yes     |
 | WP-M12-04  | admin UI for escalation stages                                  | done                    | yes     |
 | WP-M12-05  | manual escalation write API                                     | done                    | yes     |
