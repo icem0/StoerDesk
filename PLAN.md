@@ -470,12 +470,16 @@ ticket event, then through a worker. A channel failure never loses the event.
 Channel adapters implement:
 
 ```ts
-interface Notifier {
-  send(target: NotificationTarget, message: NotificationMessage): Promise<Result>
+interface NotificationChannel {
+  readonly name: string
+  send(message: NotificationMessage): Promise<void>
 }
 ```
 
-Phase 1 channels, all external integrations:
+The target of a message travels in the row of the outbox, not in the call of
+the adapter, so a retry reaches the same target again.
+
+Channels, all external integrations:
 
 - **Web Push (VAPID):** for installed PWAs; iOS 16.4+ only in Safari after
   "add to home screen".
@@ -483,13 +487,20 @@ Phase 1 channels, all external integrations:
   tickets.
 - **Telegram:** external bot, account linking via one-time code.
 - **E-mail (SMTP):** external mail server, fallback and escalation.
-- **Matrix:** external homeserver.
+- **Matrix:** external homeserver, account linking per user.
 - **Signal:** external signal-cli bridge.
+- **WhatsApp Web:** external bridge of the operator (ADR-0020) — StörDesk
+  ships no browser and no WhatsApp session.
 
 Rules:
 
-- users choose channels per event type; admin defines mandatory minimum channels
-  for `critical`,
+- the configuration of a channel lives in `notification_channels`, the
+  environment is the fallback; the accounts of the users live in
+  `notification_accounts`; both secrets are write-only (ADR-0019),
+- the event types are `ticket.created`, `ticket.assigned`, `ticket.escalated`
+  and `ticket.resolved`; users choose the channels per event type, the admin
+  defines the mandatory minimum channels for `critical` and the escalation
+  rule decides the channels of an escalation,
 - 3 retries with backoff, then the next channel in the escalation chain,
 - `notification_sent` and `notification_failed` events in the ticket history,
 - message content: ticket number, priority, object name/location, system type,
@@ -497,7 +508,8 @@ Rules:
 - dashboard tile with channel status and last successful delivery,
 - admin warning on channel failure.
 
-No notification server is part of the Compose stack.
+The contract of the channels is `specs/10-notifications.md` §11.1–§11.14. No
+notification server is part of the Compose stack.
 
 ## 13. Dashboard and statistics
 
@@ -645,10 +657,17 @@ when its exit criteria and its acceptance tests pass.
 removed page (`settings:admin.home.*`, `common:auth.links.admin`) are deleted
 in `de` and `en`. **WP-M14-02** turns the back links of the administration and
 the settings pages to the settings menu and names them "Zurück zu den
-Einstellungen" / "Back to settings". The messenger channels of the phase — ntfy,
-Telegram, Matrix and WhatsApp Web — follow: their specification, their decision
-about the WhatsApp Web transport and their split are the next packages of the
-phase.
+Einstellungen" / "Back to settings". **WP-M14-03** is the working plan of the
+messenger channels of the phase: `specs/10-notifications.md` carries the
+reviewed contract, ADR-0019 decides that the configuration of the channels and
+the accounts of the users live in the database, ADR-0020 decides that WhatsApp
+Web is an external bridge of the operator. The phase is split into
+**WP-M14-04 … WP-M14-21**: the configuration in the database, the
+configuration API, the administration page, the content of a message, the
+accounts, the linking of Telegram, Matrix and WhatsApp Web, the ntfy
+onboarding, the selection of the channels per event type, the mandatory
+minimum channels of critical tickets, the warning on a failed channel, the
+notifications of the internal creation and the exit criterion.
 
 **Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,
@@ -1754,8 +1773,11 @@ Definition of done:
 
 These decisions need an ADR or explicit approval before the related WP starts:
 
-- mandatory messenger set for production (default: ntfy, Matrix, Signal, Web
-  Push, SMTP, Telegram available; admin decides which are mandatory),
+- mandatory messenger set for production — **resolved by ADR-0019**: every
+  channel (ntfy, Telegram, Matrix, Signal, SMTP, Web Push, WhatsApp Web) is
+  available; the admin configures them in the administration and names the
+  channels that every critical ticket is notified through
+  (`notifications.minimum_channels`); the environment stays the fallback,
 - hosting model (homelab behind Cloudflare vs. external server) — **resolved for
   the running instance**: a host checkout deployed with `docker compose up -d
 --build` (ADR-0004, `docs/DEPLOYMENT.md`). The admin self-update is an

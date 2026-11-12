@@ -1,7 +1,7 @@
 # WP-M14-03: The messenger channels — specification, decisions and the split of the phase
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-02
 phase: 14
 milestone: m14

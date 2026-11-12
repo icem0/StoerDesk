@@ -63,6 +63,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   phase 13 implements the decision.
 
 ### Added
+- The working plan of the messenger channels (WP-M14-03): `specs/10-notifications.md`
+  carries the reviewed contract of the channels — the configuration in the
+  database with the environment as the fallback, the accounts of the users, the
+  linking of Telegram, Matrix, ntfy and WhatsApp Web, the selection of the
+  channels per event type, the mandatory minimum channels of critical tickets,
+  the content of a message and the warning on a failed channel. ADR-0019 decides
+  that the configuration of a channel and the accounts of the users live in the
+  database (the environment stays the fallback, the secrets stay write-only),
+  ADR-0020 decides that WhatsApp Web is an external bridge of the operator:
+  StörDesk speaks a small HTTP contract to it and ships no browser and no
+  WhatsApp session. The phase is split into WP-M14-04 … WP-M14-21.
 - Acceptance suite for items 1–12 (WP-M12-02, closes phase 12):
   `scripts/e2e-acceptance.mjs` drives the criteria of `specs/16-acceptance.md` §16.1 in
   one ordered run against a throwaway database and the running API/web pair — QR report

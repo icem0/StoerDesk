@@ -50,3 +50,5 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0016](DECISIONS/0016-detected-errors.md) | Detected errors: catalog, close storage, statistics grouping | accepted |
 | [ADR-0017](DECISIONS/0017-workflow-stages-as-escalation-stages.md) | The workflow milestones are the escalation stages | accepted |
 | [ADR-0018](DECISIONS/0018-ci-package-mirror-retries.md) | A package-mirror failure in CI is retried, never silenced | accepted |
+| [ADR-0019](DECISIONS/0019-channel-configuration-and-account-linking.md) | The channel configuration and the account linking live in the database | accepted |
+| [ADR-0020](DECISIONS/0020-whatsapp-web-over-an-external-bridge.md) | WhatsApp Web over an external bridge | accepted |

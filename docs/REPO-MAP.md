@@ -29,7 +29,7 @@ apps/
 │   │   ├── config/              env schema (Zod), .env lookup
 │   │   ├── db/                  schema, client, migrate, seeds, migrations/, __tests__/
 │   │   ├── update/              routes.ts, github.ts, installed-version.ts — the admin API of the update control
-│   │   ├── notifications/       channels/{index,signal,matrix,ntfy,email,telegram,web-push}; Web Push registration planned
+│   │   ├── notifications/       channels/{index,signal,matrix,ntfy,email,telegram,web-push}; the configuration of the channels, the accounts of the users and the linking of Telegram, Matrix, ntfy and WhatsApp Web are specified in `specs/10-notifications.md` (WP-M14-03)
 │   │   ├── privacy/             routes.ts personal-data export and erasure routes guarded by `user.write` (WP-M10-16)
 │   │   ├── oncall/              pools.ts pool routes guarded by `oncall.read`/`oncall.admin` (WP-M8-04); routes.ts shift/settings routes (WP-M8-06); planning service (WP-M8-05); confirm/decline (WP-M8-07), swap service (WP-M8-08), swap routes incl. the `oncall.admin` swap list (WP-M8-09, WP-M8-13b), coupling.ts ticket coupling and warnings (WP-M8-10), ical.ts personal iCal feed (WP-M8-12)
 │   │   ├── dashboard/           service.ts snapshot builder with the evaluation averages (WP-M9-05, WP-M10-19), routes.ts snapshot+stream routes (WP-M9-06/07), stream.ts SSE change probe (WP-M9-07)
@@ -53,7 +53,7 @@ packages/
     └── ...
 
 PLAN.md                          binding build plan (scope, stack, phases, WP limits)
-specs/                           expanded slices 00–18 (a placeholder defers to PLAN.md)
+specs/                           expanded slices 00–18 (a placeholder defers to PLAN.md); the notification slice is reviewed for phase 14 (WP-M14-03)
 work-packages/                   one Markdown file per WP (m0–m3, m5, m7–m10) + README backlog
 docs/                            ARCHITECTURE, COMPLIANCE, DECISIONS + DECISIONS/ (ADRs), DEPLOYMENT,
                                  GLOSSARY, I18N, REPO-MAP, WP-TEMPLATE, SYSTEMPROMPT, material/

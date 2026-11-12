@@ -297,9 +297,12 @@ home at `/admin`: every administration module is a link of the settings menu at
 page are gone in `de` and `en`. **WP-M14-02** turns the back links of the
 administration and settings pages to the settings menu. **WP-M14-03** is the
 working plan of the messenger channels of the phase — ntfy, Telegram, Matrix and
-WhatsApp Web: the configuration of the channels, the linking of the accounts, the
-selection of the channels per event type, the mandatory minimum channels of
-critical tickets and the warning on a failed channel.
+WhatsApp Web: `specs/10-notifications.md` carries the reviewed contract,
+ADR-0019 decides that the configuration of the channels and the accounts of the
+users live in the database (the environment stays the fallback) and ADR-0020
+decides that WhatsApp Web is an external bridge of the operator — StörDesk
+ships no browser and no WhatsApp session. The phase is split into
+**WP-M14-04 … WP-M14-21** and is implemented in numeric order.
 
 ## Open follow-ups
 
@@ -688,6 +691,24 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-01  | the administration home disappears — its links live in the settings menu | done              | yes     |
 | WP-M14-02  | the administration pages lead back to the settings menu           | done                    | yes     |
 | WP-M14-03  | the messenger channels — spec, ADR-0019, ADR-0020, phase split     | planned                | yes     |
+| WP-M14-04  | the configuration of the channels in the database                  | planned                | yes     |
+| WP-M14-05  | the API of the channel configuration                               | planned                | yes     |
+| WP-M14-06  | the administration page of the channels                            | planned                | yes     |
+| WP-M14-07  | the content of a message and the urgency of ntfy                   | planned                | yes     |
+| WP-M14-08  | the accounts of the users                                          | planned                | yes     |
+| WP-M14-09  | the Telegram linking via a one-time code                           | planned                | yes     |
+| WP-M14-10  | the own channels — the page and the Telegram section               | planned                | yes     |
+| WP-M14-11  | the Matrix account linking                                         | planned                | yes     |
+| WP-M14-12  | the Matrix section of the settings page                            | planned                | yes     |
+| WP-M14-13  | the ntfy onboarding with the QR of the subscription                | planned                | yes     |
+| WP-M14-14  | the WhatsApp Web bridge as a channel                               | planned                | yes     |
+| WP-M14-15  | the chats of the bridge and the WhatsApp Web account               | planned                | yes     |
+| WP-M14-16  | the selection of the channels per event type — the API             | planned                | yes     |
+| WP-M14-17  | the selection of the channels per event type in the settings page  | planned                | yes     |
+| WP-M14-18  | the mandatory minimum channels of critical tickets                 | planned                | yes     |
+| WP-M14-19  | the warning on a failed channel                                    | planned                | yes     |
+| WP-M14-20  | the notifications of the internal ticket creation                  | planned                | yes     |
+| WP-M14-21  | the exit criterion of the messenger channels                        | planned                | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
