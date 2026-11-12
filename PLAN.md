@@ -667,7 +667,16 @@ configuration API, the administration page, the content of a message, the
 accounts, the linking of Telegram, Matrix and WhatsApp Web, the ntfy
 onboarding, the selection of the channels per event type, the mandatory
 minimum channels of critical tickets, the warning on a failed channel, the
-notifications of the internal creation and the exit criterion.
+notifications of the internal creation and the exit criterion. **WP-M14-04** is
+implemented: migration `0033_notification_channel_config.sql` (0032 was already
+taken by the escalation webhook event) gives `notification_channels` the columns
+`kind` (unique), `enabled`, `label`, `config` (jsonb) and the write-only `secret`
+and creates the tables `notification_accounts` and `notification_preferences` of
+`specs/10-notifications.md` §11.3 and §11.4; `apps/api/src/notifications/config.ts`
+answers the effective configuration with
+`readChannelConfiguration(database, env)` — a row wins over the environment, a
+kind without a row keeps its environment values, a disabled channel is not
+configured — and carries `secretSet` instead of the secret (ADR-0005 rule).
 
 **Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,

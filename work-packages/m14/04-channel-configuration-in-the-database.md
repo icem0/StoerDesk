@@ -1,7 +1,7 @@
 # WP-M14-04: The configuration of the channels lives in the database
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-03
 phase: 14
 milestone: m14
@@ -19,7 +19,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/db/schema.ts, apps/api/src/db/migrations/0032_notification_channel_config.sql
+- apps/api/src/db/schema.ts, apps/api/src/db/migrations/0033_notification_channel_config.sql
 - apps/api/src/notifications/config.ts
 
 interfaces:
@@ -29,7 +29,7 @@ interfaces:
 
 ## Task
 
-1. The migration `0032_notification_channel_config.sql` extends
+1. The migration `0033_notification_channel_config.sql` extends
    `notification_channels` with the columns `kind` (unique), `enabled`,
    `label`, `config` (jsonb) and `secret` (text, write-only), and creates the
    tables `notification_accounts` and `notification_preferences` of §11.3 and

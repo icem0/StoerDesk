@@ -307,6 +307,14 @@ users live in the database (the environment stays the fallback) and ADR-0020
 decides that WhatsApp Web is an external bridge of the operator — StörDesk
 ships no browser and no WhatsApp session. The phase is split into
 **WP-M14-04 … WP-M14-21** and is implemented in numeric order.
+**WP-M14-04** is implemented: migration `0033_notification_channel_config.sql`
+gives `notification_channels` the columns `kind` (unique), `enabled`, `label`,
+`config` (jsonb) and the write-only `secret` and creates `notification_accounts`
+and `notification_preferences` (§11.3, §11.4); the new service
+`apps/api/src/notifications/config.ts` answers the effective configuration per
+kind with `readChannelConfiguration(database, env)` — a row wins over the
+environment, a kind without a row keeps its environment values, a disabled
+channel is not configured — with `secretSet` instead of the secret (ADR-0005).
 
 ## Open follow-ups
 
@@ -695,8 +703,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M13-18  | the escalation page speaks the language of the interface          | done                 | yes     |
 | WP-M14-01  | the administration home disappears — its links live in the settings menu | done              | yes     |
 | WP-M14-02  | the administration pages lead back to the settings menu           | done                    | yes     |
-| WP-M14-03  | the messenger channels — spec, ADR-0019, ADR-0020, phase split     | planned                | yes     |
-| WP-M14-04  | the configuration of the channels in the database                  | planned                | yes     |
+| WP-M14-03  | the messenger channels — spec, ADR-0019, ADR-0020, phase split     | done                    | yes     |
+| WP-M14-04  | the configuration of the channels in the database (migration 0033)  | done                   | yes     |
 | WP-M14-05  | the API of the channel configuration                               | planned                | yes     |
 | WP-M14-06  | the administration page of the channels                            | planned                | yes     |
 | WP-M14-07  | the content of a message and the urgency of ntfy                   | planned                | yes     |

@@ -92,6 +92,16 @@ the server, never read from the body. K re-checked for the new test: it writes o
 throwaway user with a `randomUUID()` e-mail and no contact data, and the runner's log
 lines stay code-level. No new finding.
 
+Channel-config pass: 2026-11-12, diff `2fbdf80..` (WP-M14-04 — the schema, migration
+`0033_notification_channel_config.sql`, the new config service and its unit test) —
+areas A and B re-checked in full (no new route, no new capability, no bearer scope:
+the package only adds table columns and a service), C–K re-checked for
+`apps/api/src/db/schema.ts` and `apps/api/src/notifications/config.ts`: the service
+runs one schema-bound select without any client input or value interpolation, the
+write-only secret of a row only decides `secretSet` and never enters the answer, a
+log or an event payload (ADR-0005 rule), and the unit test carries mock values
+without contact data. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

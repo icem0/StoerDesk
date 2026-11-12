@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The configuration of the messenger channels lives in the database (WP-M14-04):
+  migration `0033_notification_channel_config.sql` extends `notification_channels`
+  with `kind` (unique), `enabled`, `label`, `config` (jsonb) and the write-only
+  `secret` and creates `notification_accounts` and `notification_preferences`;
+  the service `apps/api/src/notifications/config.ts` answers the effective
+  configuration per kind (`readChannelConfiguration`) — a row wins over the
+  environment, a kind without a row keeps its environment values, a disabled
+  channel is not configured — and carries `secretSet` instead of the secret.
 - The escalation administration speaks the language of the interface (WP-M13-18):
   the stage headings use the stage name of the current language, the reference
   events, the condition fields and operators, the action types and the channels of

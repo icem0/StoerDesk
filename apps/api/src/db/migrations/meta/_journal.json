@@ -232,6 +232,13 @@
       "when": 1794103211000,
       "tag": "0032_escalation_webhook_event",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794103212000,
+      "tag": "0033_notification_channel_config",
+      "breakpoints": true
     }
   ]
 }

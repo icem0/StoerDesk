@@ -668,17 +668,55 @@ export const ticketPurges = pgTable(
  * §12, WP-M7-04). Rows only in this WP — the settings UI and the web-push
  * channel are later work packages. `notification_channels` names the channels
  * the admin may offer, `push_subscriptions` holds one VAPID subscription per
- * user.
+ * user. WP-M14-04 (ADR-0019) gives `notification_channels` the configuration
+ * columns of `specs/10-notifications.md` §11.2: `kind` (unique), `enabled`,
+ * `label`, `config` (jsonb) and the write-only `secret`.
  */
+
+/** The seven channel kinds of `specs/10-notifications.md` §11.1 (§11.10). */
+export const NOTIFICATION_CHANNEL_KINDS = [
+  'signal',
+  'matrix',
+  'ntfy',
+  'email',
+  'telegram',
+  'webpush',
+  'whatsapp',
+] as const
+
+/** The event types a user selects channels for (`specs/10-notifications.md` §11.4). */
+export const NOTIFICATION_EVENT_TYPES = [
+  'ticket.created',
+  'ticket.assigned',
+  'ticket.escalated',
+  'ticket.resolved',
+] as const
+
 export const notificationChannels = pgTable(
   'notification_channels',
   {
     id: uuid('id').primaryKey().default(uuidDefault),
+    /** Registry name kept from migration 0019; the admin-facing key is `kind`. */
     name: text('name').notNull(),
+    /** The machine key of the channel, unique (§11.2). */
+    kind: text('kind').notNull(),
+    enabled: boolean('enabled').notNull().default(true),
+    label: text('label').notNull().default(''),
+    /** The public settings of the channel (url, room, topic, homeserver …). */
+    config: jsonb('config').notNull().default({}),
+    /** Write-only secret (bot token, access token, bridge bearer) — never answered, never logged. */
+    secret: text('secret').notNull().default(''),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('notification_channels_name_key').on(table.name)],
+  (table) => [
+    uniqueIndex('notification_channels_name_key').on(table.name),
+    uniqueIndex('notification_channels_kind_key').on(table.kind),
+    check(
+      'notification_channels_kind_check',
+      sql`${table.kind} IN (${checkList(NOTIFICATION_CHANNEL_KINDS)})`,
+    ),
+  ],
 )
 
 export const pushSubscriptions = pgTable(
@@ -695,6 +733,73 @@ export const pushSubscriptions = pgTable(
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
   (table) => [index('push_subscriptions_created_at_idx').on(table.createdAt)],
+)
+
+/**
+ * The link between a user and a channel (`specs/10-notifications.md` §11.3,
+ * WP-M14-04, ADR-0019): the address at the channel and the write-only secret of
+ * the account (the Matrix access token). A user has at most one account per
+ * channel — unique over `(user_id, channel)`.
+ */
+export const notificationAccounts = pgTable(
+  'notification_accounts',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    channel: text('channel').notNull(),
+    externalId: text('external_id').notNull(),
+    label: text('label').notNull().default(''),
+    /** Write-only secret of the account — never answered, never logged. */
+    secret: text('secret').notNull().default(''),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('notification_accounts_user_channel_key').on(table.userId, table.channel),
+    index('notification_accounts_created_at_idx').on(table.createdAt),
+    check(
+      'notification_accounts_channel_check',
+      sql`${table.channel} IN (${checkList(NOTIFICATION_CHANNEL_KINDS)})`,
+    ),
+  ],
+)
+
+/**
+ * The selection of the channels per event type (`specs/10-notifications.md`
+ * §11.4, WP-M14-04, ADR-0019): one row per user, event type and channel. A
+ * user without a row for an event type is notified through the channels of the
+ * instance (the chain of §11.1).
+ */
+export const notificationPreferences = pgTable(
+  'notification_preferences',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    eventType: text('event_type').notNull(),
+    channel: text('channel').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('notification_preferences_user_event_channel_key').on(
+      table.userId,
+      table.eventType,
+      table.channel,
+    ),
+    index('notification_preferences_created_at_idx').on(table.createdAt),
+    check(
+      'notification_preferences_event_type_check',
+      sql`${table.eventType} IN (${checkList(NOTIFICATION_EVENT_TYPES)})`,
+    ),
+    check(
+      'notification_preferences_channel_check',
+      sql`${table.channel} IN (${checkList(NOTIFICATION_CHANNEL_KINDS)})`,
+    ),
+  ],
 )
 
 /** Delivery state of an outbox row (`PLAN.md` §12, WP-M7-04). */
@@ -1231,3 +1336,7 @@ export type EscalationAction = typeof escalationActions.$inferSelect
 export type NewEscalationAction = typeof escalationActions.$inferInsert
 export type EscalationFiring = typeof escalationFirings.$inferSelect
 export type NewEscalationFiring = typeof escalationFirings.$inferInsert
+export type NotificationAccount = typeof notificationAccounts.$inferSelect
+export type NewNotificationAccount = typeof notificationAccounts.$inferInsert
+export type NotificationPreference = typeof notificationPreferences.$inferSelect
+export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
