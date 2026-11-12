@@ -203,25 +203,32 @@ function history(page: Page) {
 }
 
 /**
- * The workflow actions live in the options dropdown of the detail page
- * (`WP-M4-10`): clicking the options button opens the dropdown, choosing an
- * entry shows its "Bestätigen"/"Abbrechen" pair inline below it, and
- * confirming performs the transition.
+ * The milestones of the workflow are reached through the stage selection of the
+ * detail page (`WP-M13-09`, `specs/07-escalation.md` §7.10): choosing the stage
+ * of the next milestone shows its "Bestätigen"/"Abbrechen" pair inline below
+ * the selection, and confirming performs the transition. The select carries the
+ * event of the milestone as its option value.
  */
-async function performAction(
+async function performStage(
+  page: Page,
+  event: string,
+  confirmLabel: string,
+): Promise<void> {
+  await page.getByTestId('ticket-escalation-stage').selectOption(event)
+  await page.getByRole('button', { name: confirmLabel }).click()
+}
+
+/**
+ * The actions that are no milestone (close, reopen, decline, delete) stay
+ * buttons in the action section (`WP-M13-09`); a click renders the same
+ * "Bestätigen"/"Abbrechen" pair inline.
+ */
+async function performButton(
   page: Page,
   actionLabel: string,
   confirmLabel: string,
 ): Promise<void> {
-  const optionsButton = page.getByTestId('ticket-options-button')
-  const actionButton = page.getByRole('button', { name: actionLabel })
-  // The dropdown stays open after a confirmed workflow action, so the Options
-  // button only needs to be clicked when the menu is closed. Toggling it while
-  // open would close the menu and hide the action entry.
-  if (!(await actionButton.isVisible())) {
-    await optionsButton.click()
-  }
-  await actionButton.click()
+  await page.getByRole('button', { name: actionLabel }).click()
   await page.getByRole('button', { name: confirmLabel }).click()
 }
 
@@ -252,8 +259,8 @@ for (const language of ['de', 'en'] as const) {
     await expect(statusBadge(page)).toHaveText(statusText(language, 'NEW'))
     await expect(history(page).getByText(texts.event.created)).toBeVisible()
 
-    // 1. Review: NEW → IN_REVIEW (dropdown entry, no body).
-    await performAction(page, texts.action.review, texts.confirm)
+    // 1. Review: NEW → IN_REVIEW (stage selection, no body).
+    await performStage(page, 'review_started', texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'IN_REVIEW'))
     await expect(history(page).getByText(texts.event.review_started)).toBeVisible()
 
@@ -263,13 +270,13 @@ for (const language of ['de', 'en'] as const) {
     await expect(statusBadge(page)).toHaveText(statusText(language, 'WORK_ORDER_CREATED'))
     await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
-    // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (dropdown entry, no body).
-    await performAction(page, texts.action.assign, texts.confirm)
+    // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (stage selection, no body).
+    await performStage(page, 'assigned', texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ASSIGNED'))
     await expect(history(page).getByText(texts.event.assigned)).toBeVisible()
 
-    // 4. Accept: ASSIGNED → ACCEPTED (dropdown entry, no body).
-    await performAction(page, texts.action.accept, texts.confirm)
+    // 4. Accept: ASSIGNED → ACCEPTED (stage selection, no body).
+    await performStage(page, 'accepted', texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ACCEPTED'))
     await expect(history(page).getByText(texts.event.accepted)).toBeVisible()
 
@@ -280,7 +287,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.acknowledged)).toBeVisible()
 
     // 6. Close: ACKNOWLEDGED → CLOSED (UI button, no body).
-    await performAction(page, texts.action.close, texts.confirm)
+    await performButton(page, texts.action.close, texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'CLOSED'))
     await expect(history(page).getByText(texts.event.closed)).toBeVisible()
 

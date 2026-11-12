@@ -22,7 +22,6 @@ const ui = {
     loginSubmit: 'Anmelden',
     settings: 'Einstellungen',
     signedInAs: `Angemeldet als ${adminEmail}`,
-    acknowledge: 'Quittieren',
     cancel: 'Stornieren',
     status: {
       ACCEPTED: 'Angenommen',
@@ -46,7 +45,6 @@ const ui = {
     loginSubmit: 'Sign in',
     settings: 'Settings',
     signedInAs: `Signed in as ${adminEmail}`,
-    acknowledge: 'Acknowledge',
     cancel: 'Cancel',
     status: {
       ACCEPTED: 'Accepted',
@@ -201,10 +199,10 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // The acknowledge button of the escalation section (WP-M12-06) opens its
-    // inline confirmation panel; go offline and confirm it: the acknowledge
-    // cannot reach the server and is queued instead.
-    await page.getByRole('button', { name: texts.acknowledge }).click()
+    // The stage selection of the escalation section (WP-M13-09) opens the
+    // confirmation panel of the acknowledge; go offline and confirm it: the
+    // acknowledge cannot reach the server and is queued instead.
+    await page.getByTestId('ticket-escalation-stage').selectOption('acknowledged')
     await page.context().setOffline(true)
     await page.locator('input[name="acknowledgeResult"]').fill('fixed')
     await page.getByRole('button', { name: texts.confirm }).click()
@@ -256,10 +254,10 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // Queue an acknowledge while offline: the acknowledge button of the escalation
-    // section (WP-M12-06) renders its confirmation panel inline, so the confirm
+    // Queue an acknowledge while offline: the stage selection of the escalation
+    // section (WP-M13-09) renders its confirmation panel inline, so the confirm
     // button and the result field are addressed right below it.
-    await page.getByRole('button', { name: texts.acknowledge }).click()
+    await page.getByTestId('ticket-escalation-stage').selectOption('acknowledged')
     await page.context().setOffline(true)
     await page.locator('input[name="acknowledgeResult"]').fill('fixed')
     await page.getByRole('button', { name: texts.confirm }).click()
