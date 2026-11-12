@@ -631,12 +631,21 @@ explanation. Offline is a core feature and appears early.
 | **10** | API and hardening: API keys, object/ticket API, webhooks, OpenAPI, CSV import, privacy, backup/restore | API contract tests and restore drill pass |
 | **11** | Detected errors: admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | Close stores detected errors; statistics groups by detected error; admin catalog editable |
 | **12** | Acceptance: criteria slice, end-to-end acceptance suite for the items of §20                              | every acceptance item is `PASS` or `UNVERIFIED` by design, never a green skip                 |
-| **13** | Escalation logic: the workflow stages, the waiting deadlines per priority, the conditions and the actions | a stage fires its rule once, the actions run, the old stage system is gone                    |
+| **13** | Escalation logic: the workflow stages, the waiting deadlines per priority, the conditions and the actions | a stage fires its rule once, the actions run, the old stage system is gone |
+| **14** | Administration consolidation and messenger channels: the administration home disappears into the settings menu, the channels become configurable (ntfy, Telegram, Matrix, WhatsApp Web), the accounts are linked and the users choose their channels | every channel is configured in the administration, a linked account receives a ticket notification and a failure stays visible |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 14 has started** (WP-M14-01): the standalone administration home at
+`/admin` is gone. Every administration module is a link of the settings menu at
+`/settings`, the retired address `/admin` redirects there and the texts of the
+removed page (`settings:admin.home.*`, `common:auth.links.admin`) are deleted
+in `de` and `en`. The messenger channels of the phase — ntfy, Telegram, Matrix
+and WhatsApp Web — follow: their specification, their decision about the
+WhatsApp Web transport and their split are the next packages of the phase.
 
 **Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,

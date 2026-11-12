@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 
 import { App } from '../App'
-import { AdminHomePage } from '../admin/admin-home-page'
 import { ApiKeysPage } from '../admin/api-keys-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
@@ -64,12 +63,10 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The administration home is gone (WP-M14-01): every administration
+        // module is a link of the settings menu. An old bookmark lands there.
         path: '/admin',
-        element: (
-          <RequireSession>
-            <AdminHomePage />
-          </RequireSession>
-        ),
+        element: <Navigate replace to="/settings" />,
       },
       {
         path: '/admin/users',
@@ -288,9 +285,9 @@ export const routes: RouteObject[] = [
       {
         // The update page of the retired host update (WP-M2-44) is gone: the
         // update menu lives in the version badge of the header (WP-M3-10). An
-        // old bookmark lands on the administration home instead of a 404.
+        // old bookmark lands on the settings menu instead of a 404.
         path: '/admin/update',
-        element: <Navigate replace to="/admin" />,
+        element: <Navigate replace to="/settings" />,
       },
       {
         // Every address that does not exist shows the not found page of the

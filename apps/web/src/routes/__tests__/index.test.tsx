@@ -62,13 +62,23 @@ describe('route table', () => {
     expect(screen.getByRole('link', { name: 'Zur Startseite' })).toBeTruthy()
   })
 
-  it('leads the retired update page to the administration home', async () => {
+  it('leads the retired update page to the settings menu', async () => {
     stubRoutes()
 
     renderRoute('/admin/update')
 
     await waitFor(() => {
-      expect(screen.getByText('Verwaltung')).toBeTruthy()
+      expect(screen.getByText('Einstellungen')).toBeTruthy()
+    })
+  })
+
+  it('leads the retired administration home to the settings menu', async () => {
+    stubRoutes()
+
+    renderRoute('/admin')
+
+    await waitFor(() => {
+      expect(screen.getByText('Einstellungen')).toBeTruthy()
     })
   })
 })

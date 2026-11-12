@@ -63,6 +63,17 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('link', { name: 'QR-Aufkleber' }).getAttribute('href')).toBe(
       '/objects/stickers',
     )
+
+    // The administration home is gone (WP-M14-01): every administration module
+    // is a link of the settings menu, there is no second entry point.
+    const administrationLinks = screen
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('href')?.startsWith('/admin'))
+      .map((link) => link.getAttribute('href'))
+
+    expect(administrationLinks).toContain('/admin/users')
+    expect(administrationLinks).not.toContain('/admin')
+
     expect(screen.getByRole('button', { name: 'Abmelden' })).toBeTruthy()
   })
 })

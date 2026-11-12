@@ -1,65 +1,6 @@
 {
   "admin": {
     "back": "Back to administration",
-    "home": {
-      "title": "Administration",
-      "hint": "The administration modules. Modules that are not available yet are marked with their phase.",
-      "available": "available",
-      "planned": "planned · {{phase}}",
-      "phases": {
-        "phase4": "Phase 4",
-        "phase6": "Phase 6",
-        "phase7": "Phase 7",
-        "phase8": "Phase 8",
-        "phase10": "Phase 10"
-      },
-      "modules": {
-        "users": {
-          "title": "User administration",
-          "hint": "Create users, edit them and assign roles."
-        },
-        "roles": {
-          "title": "Role administration",
-          "hint": "Manage roles and their permissions."
-        },
-        "bmaSync": {
-          "title": "BMAcloud sync",
-          "hint": "The object list is pulled read-only from BMAcloud and can be triggered manually here."
-        },
-        "groups": {
-          "title": "Groups",
-          "hint": "User groups for the ticket assignment."
-        },
-        "standardTexts": {
-          "title": "Fault types",
-          "hint": "Maintain, archive and delete the fault types of the report form."
-        },
-        "detectedErrors": {
-          "title": "Detected errors",
-          "hint": "Maintain the catalog of errors detected during ticket handling."
-        },
-        "oncall": {
-          "title": "On-call plan",
-          "hint": "Shifts, confirmations and shift swaps."
-        },
-        "branding": {
-          "title": "Appearance",
-          "hint": "Adjust the company name, the logo and the title option of the report form."
-        },
-        "channels": {
-          "title": "Channels",
-          "hint": "Notification channels like ntfy, e-mail and Web Push."
-        },
-        "apiKeys": {
-          "title": "API keys",
-          "hint": "Keys for the external interface."
-        },
-        "escalation": {
-          "title": "Escalation",
-          "hint": "Escalation stages, their rules, their conditions and their actions."
-        }
-      }
-    },
     "update": {
       "title": "Update",
       "hint": "Checks GitHub for a newer commit and starts the deployment of the stack.",

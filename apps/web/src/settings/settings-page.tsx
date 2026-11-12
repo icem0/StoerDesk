@@ -8,6 +8,8 @@ import { useMe } from '../auth/usePermission'
  * Settings overview (WP-M12-07): every settings and administration surface in
  * one place, grouped by topic. The gear in the shell header links here instead
  * of opening a dropdown, so a page never hides its destinations behind a menu.
+ * The administration home is gone (WP-M14-01): the administration group lists
+ * every module of the administration directly.
  */
 
 const SETTINGS_SECTIONS = [
@@ -43,7 +45,6 @@ const SETTINGS_SECTIONS = [
   {
     key: 'administration',
     items: [
-      { key: 'admin', path: '/admin' },
       { key: 'users', path: '/admin/users' },
       { key: 'roles', path: '/admin/roles' },
       { key: 'groups', path: '/admin/groups' },

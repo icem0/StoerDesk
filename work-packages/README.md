@@ -24,6 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view | 17 |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked | 21 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -289,6 +290,16 @@ conditions and the actions live in the database and are maintained in
 button per workflow step, and the former manual stage catalogue (`office`,
 `group`, `assignee`, `manager`), the `escalation_set` event and
 `POST /api/v1/tickets/:ticketNo/escalate` are removed.
+
+**Phase 14 has started.** **WP-M14-01** removes the standalone administration
+home at `/admin`: every administration module is a link of the settings menu at
+`/settings`, the retired address redirects there and the texts of the removed
+page are gone in `de` and `en`. **WP-M14-02** turns the back links of the
+administration and settings pages to the settings menu. **WP-M14-03** is the
+working plan of the messenger channels of the phase — ntfy, Telegram, Matrix and
+WhatsApp Web: the configuration of the channels, the linking of the accounts, the
+selection of the channels per event type, the mandatory minimum channels of
+critical tickets and the warning on a failed channel.
 
 ## Open follow-ups
 
@@ -674,6 +685,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M13-15  | the rule editor and the condition builder                        | done                 | yes     |
 | WP-M13-16  | the action editor                                               | done                 | yes     |
 | WP-M13-17  | the exit criterion of the escalation phase                       | done                 | yes     |
+| WP-M14-01  | the administration home disappears — its links live in the settings menu | done              | yes     |
+| WP-M14-02  | the administration pages lead back to the settings menu           | planned                | yes     |
+| WP-M14-03  | the messenger channels — spec, ADR-0019, ADR-0020, phase split     | planned                | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

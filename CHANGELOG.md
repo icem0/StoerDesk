@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The standalone administration menu is gone (WP-M14-01): the page `/admin` and
+  its module cards are deleted, every administration module is a link of the
+  settings menu at `/settings`, the retired address `/admin` and the retired
+  update page `/admin/update` redirect there, and the texts of the removed page
+  (`settings:admin.home.*`, `common:auth.links.admin`) leave `de` and `en`.
 - The escalation logic of phase 13 is complete (WP-M13-09 … WP-M13-17): the ticket
   detail view replaces the workflow buttons with the selection of the stages the
   server answers as reachable (`availableStages`); a choice runs the workflow route of
