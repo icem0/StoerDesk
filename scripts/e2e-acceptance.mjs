@@ -188,7 +188,7 @@ void main().catch((error) => {
   return { ok: false, data: null }
 }
 
-async function apiRequest(method, path, { cookie = '', bearer = '', json }) {
+async function apiRequest(method, path, { cookie = '', bearer = '', json } = {}) {
   const headers = {}
 
   if (cookie !== '') {
@@ -243,6 +243,25 @@ async function waitForAnswer(url, tries = 45) {
 
 function sleep(ms) {
   return new Promise((step) => setTimeout(step, ms))
+}
+
+/**
+ * React Router's BrowserRouter restores the previous in-app path from
+ * `sessionStorage` when a fresh document loads, so a direct `page.goto` can be
+ * interrupted once by that restore navigation. Retry the interrupted navigation
+ * instead of weakening the check — the page still has to answer.
+ */
+async function gotoStable(page, url) {
+  try {
+    await page.goto(url)
+  } catch (error) {
+    if (!String(error).includes('interrupted by another navigation')) {
+      throw error
+    }
+
+    await sleep(1_000)
+    await page.goto(url)
+  }
 }
 
 /** Starts the mock Matrix homeserver of §16.2/10 — throwaway fixture, no PII. */
@@ -477,7 +496,7 @@ async function main() {
     }
 
     const shared = {
-      browserOk: !browserMissing && webUp && ok && browserSession !== null,
+      browserOk: !browserMissing && webUp && ok && browserSession !== null && browserSession.loggedIn,
       browserMissing,
       ok,
       adminCookie: admin.cookie,
@@ -607,7 +626,21 @@ async function openBrowser(email, password) {
   await page.locator('input[name="password"]').fill(password)
   await page.getByRole('button', { name: 'Anmelden' }).click()
 
-  return { browser, context, page }
+  // The login POST must have landed before the next navigation — otherwise the
+  // navigation cancels it and the office pages would show the login form.
+  let loggedIn = false
+
+  for (let attempt = 0; attempt < 20 && !loggedIn; attempt += 1) {
+    const me = await page.request.get(`${webBase}/api/v1/me`)
+
+    loggedIn = me.ok()
+
+    if (!loggedIn) {
+      await sleep(500)
+    }
+  }
+
+  return { browser, context, page, loggedIn }
 }
 
 // ---------------------------------------------------------------------------
@@ -638,7 +671,7 @@ async function item1(shared) {
     return verdict(1, label, 'FAIL', 'the created object carries no QR token')
   }
 
-  await page.goto(`${webBase}/m/${token}`)
+  await gotoStable(page, `${webBase}/m/${token}`)
   await page.getByText('Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.').waitFor()
   await page.getByRole('button', { name: 'Leitungsunterbrechung' }).click()
   await page.locator('textarea[name="text"]').fill('Acceptance report one')
@@ -661,7 +694,7 @@ async function item1(shared) {
   const submittedAt = Date.now()
 
   // §16.3 (item 1 timing): the ticket in the office list within 3 s.
-  await page.goto(`${webBase}/tickets`)
+  await gotoStable(page, `${webBase}/tickets`)
   let listMs = -1
 
   for (let attempt = 0; attempt < 10 && listMs < 0; attempt += 1) {
@@ -675,6 +708,15 @@ async function item1(shared) {
   }
 
   shared.item1TicketNo = ticketNo
+
+  if (listMs < 0) {
+    return verdict(
+      1,
+      label,
+      'FAIL',
+      `object 201, report submitted, ticket ${ticketNo} — but the office list did not show it in time`,
+    )
+  }
 
   // §16.2/1+10: the office notification — drain the outbox of this run and read the
   // history of the ticket.
@@ -739,8 +781,8 @@ async function item2(shared) {
 
   const token = object.data().qrToken
 
-  await page.goto(`${webBase}/m/${token}`)
-  await page.getByText('Bei Brand oder Gefahr: Notruf 112. dieses Formular ersetzt keinen Notruf.'.replace('diese', 'Dieses')).waitFor()
+  await gotoStable(page, `${webBase}/m/${token}`)
+  await page.getByText('Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.').waitFor()
   await page.getByRole('button', { name: 'Leitungsunterbrechung' }).click()
   await page.locator('textarea[name="text"]').fill('Acceptance flight-mode report')
   await page.locator('input[name="contactPhone"]').fill('0000000')
@@ -945,12 +987,42 @@ async function item5(shared) {
     return verdict(5, label, 'FAIL', 'item 1 did not create a ticket')
   }
 
-  // office path: the detail page offers the acknowledge panel with its note field
-  await page.goto(`${webBase}/tickets/${ticketNo}`)
+  // §16.2/5: acknowledge only exists on an accepted ticket — drive the report
+  // ticket of item 1 through the workflow first (review, AA/SA, offer, claim, accept).
+  const steps = [
+    ['review', {}],
+    ['work-order', { type: 'AA', number: '4711' }],
+    ['offer', { poolId: shared.staffedPoolId }],
+    ['claim', {}],
+    ['accept', {}],
+  ]
 
-  // acknowledge with result and note stops the timeline (WP-M12-06: the inline
-  // escalation section replaces the removed options dropdown)
-  await page.getByRole('button', { name: 'Quittieren' }).click()
+  for (const [segment, json] of steps) {
+    const moved = await apiRequest('POST', `/api/v1/tickets/${ticketNo}/${segment}`, {
+      cookie: shared.adminCookie,
+      json,
+    })
+
+    if (moved.status !== 200) {
+      return verdict(5, label, 'FAIL', `the fixture step ${segment} failed (${moved.status})`)
+    }
+  }
+
+  // office path: the escalation section offers the acknowledged milestone
+  await gotoStable(page, `${webBase}/tickets/${ticketNo}`)
+  await page.locator('#ticket-escalation-stage').selectOption('acknowledged')
+
+  // §16.3 open point (acknowledge rule on the office path): the panel refuses an
+  // acknowledge without content — the result is the required field, the note is
+  // the optional extra text. Clicking without the required content changes nothing.
+  await page.getByRole('button', { name: 'Bestätigen' }).click()
+
+  const detailWithoutContent = await apiRequest('GET', `/api/v1/tickets/${ticketNo}`, {
+    cookie: shared.adminCookie,
+  })
+  const statusWithoutContent =
+    detailWithoutContent.status === 200 ? detailWithoutContent.data().ticket?.status ?? '' : ''
+
   await page.locator('input[name="acknowledgeResult"]').fill('fixed')
   await page.locator('input[name="acknowledgeNote"]').fill('Acceptance suite note')
   await page.getByRole('button', { name: 'Bestätigen' }).click()
@@ -960,6 +1032,7 @@ async function item5(shared) {
   const timeline = body?.timeline ?? {}
 
   const okAll =
+    statusWithoutContent === 'ACCEPTED' &&
     body?.ticket?.status === 'ACKNOWLEDGED' &&
     (body?.photos ?? []).length === 2 &&
     timeline.stoppedAt !== null &&
@@ -969,7 +1042,9 @@ async function item5(shared) {
     5,
     label,
     okAll ? 'PASS' : 'FAIL',
-    `acknowledge: ${body?.ticket?.status ?? ''}, ${body?.photos?.length ?? 0} photos, timeline stoppedAt ${timeline.stoppedAt ?? 'unset'}`,
+    `office path: empty acknowledge stays ${statusWithoutContent}, acknowledged: ${body?.ticket?.status ?? ''}, ` +
+      `${body?.photos?.length ?? 0} photos, timeline stoppedAt ${timeline.stoppedAt ?? 'unset'} ` +
+      `(§16.1/5 "note" = the required acknowledge content — the API keeps the note itself optional)`,
   )
 }
 
@@ -1249,11 +1324,17 @@ async function item10(shared) {
     objectName: objectRow?.name ?? '',
   } satisfies OutboxTicket, loadEnv())
   console.log(JSON.stringify({ ticketId: ticket?.id ?? '', ticketNo: ticket?.ticketNo ?? '', queued }))
-`, {
-    // at report time only the failing signal bridge is configured (§16.2/10)
+ `, {
+    // §16.2/10: at report time only the failing signal bridge is configured —
+    // queueing picks the first channel of the chain, the fallback happens at drain.
+    SIGNAL_CLI_URL: 'http://127.0.0.1:1/',
+    SIGNAL_SOURCE_NUMBER: '+491234567890',
+    SIGNAL_RECIPIENTS: '+491234567891',
     MATRIX_HOMESERVER: '',
     MATRIX_ROOM_ID: '',
     MATRIX_ACCESS_TOKEN: '',
+    NTFY_URL: '',
+    NTFY_TOPIC: '',
   })
 
   if (!fixture.ok) {
@@ -1480,9 +1561,11 @@ async function item12(shared) {
   const winner = accepts.filter((accept) => accept.status === 200)
   const loser = accepts.filter((accept) => accept.status === 409)
 
-  const shiftAfter = await apiRequest('GET', `/api/v1/oncall/shifts/${shared.staffedShiftId}`, {
-    cookie: shared.adminCookie,
-  })
+  const shiftWindow = `/api/v1/oncall/shifts?poolId=${shared.staffedPoolId}&from=${encodeURIComponent(new Date(Date.now() - 3_600_000).toISOString())}&to=${encodeURIComponent(new Date(Date.now() + 12 * 3_600_000).toISOString())}`
+  const shiftAfter = await apiRequest('GET', shiftWindow, { cookie: shared.adminCookie })
+  const shiftRow =
+    (shiftAfter.status === 200 ? shiftAfter.data().shifts ?? [] : [])
+      .find((row) => row.id === shared.staffedShiftId) ?? {}
 
   const winnerUser = winner.length === 1 ? winner[0].data().swap?.acceptedByUserId ?? '' : ''
 
@@ -1491,9 +1574,8 @@ async function item12(shared) {
     winner.length === 1 &&
     loser.length === 1 &&
     ['swap_taken', 'swap_not_pending'].includes(loser[0].data().code ?? '') &&
-    shiftAfter.status === 200 &&
-    shiftAfter.data().userId === winnerUser &&
-    shiftAfter.data().state === 'CONFIRMED'
+    shiftRow.state === 'CONFIRMED' &&
+    shiftRow.userId === winnerUser
 
   // §16.2/12: the unstaffed warning kind of the on-call-first offer (WP-M8-10/11)
   const offeredTicket = await prepareOfferedTicket2(shared, 'E2E-M12-12', 'Acceptance object twelve')
@@ -1512,7 +1594,7 @@ async function item12(shared) {
     12,
     label,
     okAll ? 'PASS' : 'FAIL',
-    `DST weeks ${JSON.stringify(durations)}, decline without reason ${declined.status} ${declined.data().code ?? ''}, swap ${swapId === '' ? 'none' : swap.status} accepted ${JSON.stringify(accepts.map((a) => a.status + ' ' + (a.data().code ?? '')))}, after swap ${shiftAfter.status} userId ${shiftAfter.data().userId ?? ''} state ${shiftAfter.data().state ?? ''} winner ${winnerUser}, unstaffed offer ${offer.status} warning ${offer.data().warning ?? 'none'}`,
+    `DST weeks ${JSON.stringify(durations)}, decline without reason ${declined.status} ${declined.data().code ?? ''}, swap ${swapId === '' ? 'none' : swap.status} accepted ${JSON.stringify(accepts.map((a) => a.status + ' ' + (a.data().code ?? '')))}, after swap ${shiftAfter.status} row userId ${shiftRow.userId ?? ''} state ${shiftRow.state ?? ''} winner ${winnerUser}, unstaffed offer ${offer.status} warning ${offer.data().warning ?? 'none'}`,
   )
 }
 
@@ -1558,7 +1640,7 @@ async function prepareOfferedTicket2(shared, objectNo, objectName) {
 }
 
 const exitCode = await main().catch((error) => {
-  notice(`FAILED: ${error instanceof Error ? error.message : String(error)}`)
+  notice(`FAILED: ${error instanceof Error ? `${error.stack ?? error.message}` : String(error)}`)
   return 1
 })
 
