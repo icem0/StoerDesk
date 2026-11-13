@@ -719,6 +719,8 @@ invalid_request` and writes nothing. The shared contracts in
 `packages/shared/src/schemas/notification.ts` name those event types and the
 selection; the check of `notification_preferences` in the database still knows
 the four ticket types and migration `0034` of WP-M14-27 widens it to the seven.
+
+**WP-M14-17** renders that selection on the own channels page: one row per event type of the seven of §11.4 (ADR-0021 — the four ticket events and the three readiness events) with the channels as checkboxes — a channel that is not configured (the enabled channels of `GET /api/v1/admin/channels`) is not offered and a configured channel without a linked account of the user is marked as such; the selection is read from and replaced with one `PUT /api/v1/notifications/preferences` (WP-M14-16, no change of that API) and the section shows the saved state; the hint names the rule of the precedence of §11.4 — the escalation rule of the admin decides the channels of an escalation and the mandatory minimum channels of a critical ticket are added to every event (the minimum channels themselves are WP-M14-18) — and the texts are added in `de` and `en`.
 **WP-M14-22** (out of band in phase 14, requested by the office): the e-mail
 view and the pdf view of a ticket become one prepared send view — the ticket
 detail header replaces the envelope icon with a paper plane ("Versenden" /

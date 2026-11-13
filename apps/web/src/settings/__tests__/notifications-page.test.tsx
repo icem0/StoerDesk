@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -429,6 +429,63 @@ describe('NotificationsPage', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/whatsapp',
       expect.objectContaining({ method: 'DELETE' }),
+    )
+  })
+
+  it('reads the selection, marks a configured channel without an account and saves a new one', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/admin/channels')) {
+        return Response.json({
+          channels: [
+            { kind: 'matrix', enabled: true, label: 'Matrix', config: {}, secretSet: false },
+            { kind: 'ntfy', enabled: true, label: 'ntfy', config: {}, secretSet: false },
+            { kind: 'email', enabled: true, label: 'Email', config: {}, secretSet: false },
+          ],
+        })
+      }
+
+      if (url.endsWith('/v1/notifications/preferences')) {
+        if (init?.method === 'PUT') {
+          const body = JSON.parse(String(init?.body ?? '{}')) as { preferences?: unknown }
+
+          return Response.json(body)
+        }
+
+        return Response.json({ preferences: [{ eventType: 'ticket.created', channel: 'ntfy' }] })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { container } = renderPage()
+
+    await waitFor(() => {
+      expect(screen.queryAllByText('No account connected').length).toBeGreaterThan(0)
+    })
+    expect(screen.getByText('New ticket')).toBeTruthy()
+
+    const ntfyCheckbox = container.querySelector('[id="pref-ticket.created:ntfy"]') as HTMLInputElement
+    const emailCheckbox = container.querySelector('[id="pref-ticket.created:email"]') as HTMLInputElement
+    expect(ntfyCheckbox.checked).toBe(true)
+    expect(emailCheckbox.checked).toBe(false)
+    expect(emailCheckbox.disabled).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save the selection' }))
+
+    await screen.findByText('The selection was saved.')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/notifications/preferences',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ preferences: [{ eventType: 'ticket.created', channel: 'ntfy' }] }),
+      }),
     )
   })
 })

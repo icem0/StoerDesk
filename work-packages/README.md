@@ -773,7 +773,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-14  | the WhatsApp Web bridge as a channel                               | done                   | yes     |
 | WP-M14-15  | the chats of the bridge and the WhatsApp Web account               | done                   | yes     |
 | WP-M14-16  | the selection of the channels per event type — the API             | done                   | yes     |
-| WP-M14-17  | the selection of the channels per event type in the settings page  | planned                | yes     |
+| WP-M14-17  | the selection of the channels per event type in the settings page  | done                   | yes     |
 | WP-M14-18  | the mandatory minimum channels of critical tickets                 | planned                | yes     |
 | WP-M14-19  | the warning on a failed channel                                    | planned                | yes     |
 | WP-M14-20  | the notifications of the internal ticket creation                  | planned                | yes     |

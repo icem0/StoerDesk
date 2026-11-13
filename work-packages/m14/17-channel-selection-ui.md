@@ -1,7 +1,7 @@
 # WP-M14-17: The selection of the channels per event type in the settings page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-16
 phase: 14
 milestone: m14

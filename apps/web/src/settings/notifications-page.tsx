@@ -5,8 +5,13 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import {
   NOTIFICATION_CHANNEL_KINDS,
+  NOTIFICATION_EVENT_TYPES,
+  type ChannelConfigurationListResponse,
   type NotificationAccount,
   type NotificationChannelKind,
+  type NotificationEventType,
+  type NotificationPreferenceEntry,
+  type NotificationPreferencesListResponse,
   type TelegramLinkCodeResponse,
 } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../lib/api'
@@ -33,7 +38,12 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
   * their account via `POST /api/v1/notifications/accounts/whatsapp` and the button to
   * `DELETE` it again; an unreachable bridge shows the chats-are-empty state, never an
   * error — and the code is shown as text — never as an image —
- * and the error of the API arrives as text.
+ * and the error of the API arrives as text. The selection section (WP-M14-17) shows one
+ * row per event type of the seven of §11.4 with the channels as checkboxes: a channel that
+ * is not configured is not offered and a configured channel without a linked account of the
+ * user is marked as such; the saved selection is read from and written to
+ * `GET`/`PUT /api/v1/notifications/preferences` (WP-M14-16) and the hint names the rule of
+ * the precedence of §11.4.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -71,6 +81,19 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
   return (handledErrorCodes as readonly string[]).includes(code)
     ? t(`notifications.errors.${code}`)
     : t('notifications.errors.unknown')
+}
+
+/**
+ * The inline text of a failing selection read or write: a channel list or a
+ * preference load that the API refused. The selection uses its own texts so it
+ * never repeats the error text of a channel section on the same page.
+ */
+function selectionErrorMessage(t: TFunction<'common'>, error: unknown): string {
+  const code = errorCode(error)
+
+  return (handledErrorCodes as readonly string[]).includes(code)
+    ? t(`notifications.selection.errors.${code}`)
+    : t('notifications.selection.errors.unknown')
 }
 
 /**
@@ -180,6 +203,71 @@ export function NotificationsPage() {
 
   const whatsappLinked = whatsappLink.isSuccess && !whatsappRemove.isSuccess
 
+  /** The configured channels of the instance (`specs/10-notifications.md` §11.1). */
+  const channelConfigs = useQuery({
+    queryKey: ['admin-channels'],
+    queryFn: () => apiFetch<ChannelConfigurationListResponse>('/v1/admin/channels'),
+    retry: false,
+  })
+
+  /** The saved selection of the user (`specs/10-notifications.md` §11.4, WP-M14-16). */
+  const preferenceLoad = useQuery({
+    queryKey: ['notifications-preferences'],
+    queryFn: () => apiFetch<NotificationPreferencesListResponse>('/v1/notifications/preferences'),
+    retry: false,
+  })
+
+  /** The saved selection (or the one edited on this page) as `${eventType}:${channel}` keys. */
+  const [selection, setSelection] = useState<Set<string> | null>(null)
+
+  const preferenceSave = useMutation({
+    mutationFn: (preferences: NotificationPreferenceEntry[]) =>
+      apiFetch<NotificationPreferencesListResponse>('/v1/notifications/preferences', {
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify({ preferences }),
+      }),
+    onSuccess: (result) => {
+      setSelection(
+        new Set((result?.preferences ?? []).map((entry) => `${entry.eventType}:${entry.channel}`)),
+      )
+    },
+  })
+
+  const savedKeys = new Set(
+    (preferenceLoad.data?.preferences ?? []).map((entry) => `${entry.eventType}:${entry.channel}`),
+  )
+  const effectiveSelection = new Set(selection ?? savedKeys)
+
+  /** The channels of §11.1 that are configured and enabled for the instance. */
+  const configuredKinds = new Set(
+    (channelConfigs.data?.channels ?? []).filter((channel) => channel.enabled).map(
+      (channel) => channel.kind,
+    ),
+  )
+
+  /** A configured channel that has no linked account of the user cannot be selected. */
+  function channelLinked(kind: NotificationChannelKind): boolean {
+    if (kind === 'telegram') return link.isSuccess
+    if (kind === 'matrix') return matrixLinked
+    if (kind === 'whatsapp') return whatsappLinked
+    if (kind === 'ntfy')
+      return ntfySubscription.isSuccess && (ntfySubscription.data?.publicUrl ?? '') !== ''
+    return true
+  }
+
+  function toggleSelection(key: string, on: boolean): void {
+    const next = new Set(effectiveSelection)
+
+    if (on) {
+      next.add(key)
+    } else {
+      next.delete(key)
+    }
+
+    setSelection(next)
+  }
+
   if (telegramCode.isError) {
     return (
       <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
@@ -222,6 +310,118 @@ export function NotificationsPage() {
           </li>
         ))}
       </ul>
+
+      <section
+        className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+        aria-labelledby="selection-heading"
+      >
+        <h2 id="selection-heading" className="text-lg font-semibold">
+          {t('notifications.selection.heading')}
+        </h2>
+
+        <p className="text-sm text-slate-300">{t('notifications.selection.hint')}</p>
+
+        {channelConfigs.isPending || preferenceLoad.isPending ? (
+          <p className="text-sm text-slate-400">{t('auth.loading')}</p>
+        ) : null}
+
+        {channelConfigs.isError ? (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {selectionErrorMessage(t, channelConfigs.error)}
+          </p>
+        ) : null}
+
+        {preferenceLoad.isError ? (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {selectionErrorMessage(t, preferenceLoad.error)}
+          </p>
+        ) : null}
+
+        {NOTIFICATION_EVENT_TYPES.map((eventType) => (
+          <div
+            key={eventType}
+            className="mt-3 flex flex-wrap items-center gap-2 text-sm"
+          >
+            <span className="text-slate-200">
+              {t(`notifications.selection.events.${eventType}`)}
+            </span>
+
+            {NOTIFICATION_CHANNEL_KINDS.filter((kind) => configuredKinds.has(kind)).map(
+              (kind) => {
+                const key = `${eventType}:${kind}`
+
+                return (
+                  <span
+                    key={kind}
+                    className="flex items-center gap-2 rounded bg-slate-800 px-2 py-1"
+                  >
+                    <input
+                      aria-label={t(`notifications.kinds.${kind}`)}
+                      checked={effectiveSelection.has(key)}
+                      className="rounded bg-slate-950 disabled:opacity-40"
+                      disabled={
+                        !channelLinked(kind) ||
+                        preferenceSave.isPending ||
+                        channelConfigs.isPending ||
+                        preferenceLoad.isPending
+                      }
+                      id={`pref-${key}`}
+                      onChange={(event) =>
+                        toggleSelection(key, (event.target as HTMLInputElement).checked)
+                      }
+                      type="checkbox"
+                    />
+                    <span>{t(`notifications.kinds.${kind}`)}</span>
+                    {!channelLinked(kind) ? (
+                      <span className="text-amber-400">{t('notifications.selection.noAccount')}</span>
+                    ) : null}
+                  </span>
+                )
+              },
+            )}
+          </div>
+        ))}
+
+        <button
+          className="mt-2 rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          disabled={
+            preferenceSave.isPending ||
+            channelConfigs.isPending ||
+            preferenceLoad.isPending ||
+            channelConfigs.isError ||
+            preferenceLoad.isError
+          }
+          onClick={() =>
+            preferenceSave.mutate(
+              [...effectiveSelection].map((key) => {
+                const separator = key.indexOf(':')
+
+                return {
+                  eventType: key.slice(0, separator) as NotificationEventType,
+                  channel: key.slice(separator + 1) as NotificationChannelKind,
+                }
+              }).sort(
+                (a, b) =>
+                  a.eventType.localeCompare(b.eventType) ||
+                    a.channel.localeCompare(b.channel),
+              ),
+            )
+          }
+          type="button"
+        >
+          {t('notifications.selection.save')}
+        </button>
+
+        {preferenceSave.isError ? (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {selectionErrorMessage(t, preferenceSave.error)}
+          </p>
+        ) : null}
+
+        {preferenceSave.isSuccess ? (
+          <p className="mt-2 text-sm text-emerald-400">{t('notifications.selection.saved')}</p>
+        ) : null}
+      </section>
 
       <section
         className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
