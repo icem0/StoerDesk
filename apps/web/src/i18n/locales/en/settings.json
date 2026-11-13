@@ -394,6 +394,13 @@
         "add": "Add action",
         "remove": "Remove"
       },
+      "help": {
+        "deadlines": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",
+        "stages": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a waiting time, a condition and the actions to perform.",
+        "reference": "The start event starts the rule's waiting clock (for example 'Report received'). 'None' means: the rule waits for nothing and fires as soon as its condition matches.",
+        "condition": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'any' is satisfied as soon as at least one matches.",
+        "actions": "The actions run when the rule fires: a notification via the selected channels, a webhook delivery or a note in the ticket history."
+      },
       "errors": {
         "session_invalid": "The sign-in has expired.",
         "forbidden": "No permission for this action.",

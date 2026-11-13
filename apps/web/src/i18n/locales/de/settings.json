@@ -394,6 +394,13 @@
         "add": "Aktion hinzufügen",
         "remove": "Aktion entfernen"
       },
+      "help": {
+        "deadlines": "Die Frist ist die Wartezeit in Stunden pro Priorität. Verstreicht sie, ohne dass die Bedingung zutrifft, feuert die Regel nicht.",
+        "stages": "Eine Stufe ist ein Meilenstein des Workflows (zum Beispiel „Prüfung“). Eine Regel verbindet eine Stufe mit einer Wartezeit, einer Bedingung und den auszuführenden Aktionen.",
+        "reference": "Das Start-Ereignis startet die Warteuhr der Regel (zum Beispiel „Meldung eingegangen“). „Keine“ bedeutet: die Regel wartet auf nichts und feuert, sobald ihre Bedingung zutrifft.",
+        "condition": "Die Bedingung entscheidet, ob eine Regel feuert. „Alle“ verlangt, dass jedes Blatt zutrifft; „eine von“ genügt, wenn mindestens eines zutrifft.",
+        "actions": "Die Aktionen laufen, wenn die Regel feuert: eine Benachrichtigung über die gewählten Kanäle, eine Webhook-Zustellung oder eine Notiz im Ticket-Verlauf."
+      },
       "errors": {
         "session_invalid": "Die Anmeldung ist abgelaufen.",
         "forbidden": "Keine Berechtigung für diese Aktion.",

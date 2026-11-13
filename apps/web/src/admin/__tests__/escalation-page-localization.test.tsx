@@ -77,8 +77,10 @@ async function renderPage(language: string, tabName: string) {
   await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
 
   fireEvent.click(screen.getByRole('button', { name: tabName }))
+}
 
-  await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
+function helpText(key: string): string {
+  return i18n.t(`admin.escalation.help.${key}`, { ns: 'settings' })
 }
 
 function optionTexts(): string[] {
@@ -90,6 +92,11 @@ function optionTexts(): string[] {
 describe('the escalation administration speaks the language of the interface', () => {
   it('labels the closed vocabularies in German', async () => {
     await renderPage('de', 'Stufen & Regeln')
+    await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
+
+    for (const key of ['stages', 'reference', 'condition', 'actions']) {
+      expect(screen.getByText(helpText(key))).toBeTruthy()
+    }
 
     const options = optionTexts()
 
@@ -104,8 +111,20 @@ describe('the escalation administration speaks the language of the interface', (
     }
   })
 
+  it('renders the deadline help text in German', async () => {
+    await renderPage('de', 'Fristen')
+    await waitFor(() => expect(screen.getByTestId('escalation-hours')).toBeTruthy())
+
+    expect(screen.getByText(helpText('deadlines'))).toBeTruthy()
+  })
+
   it('labels the closed vocabularies in English', async () => {
     await renderPage('en', 'Stages & rules')
+    await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
+
+    for (const key of ['stages', 'reference', 'condition', 'actions']) {
+      expect(screen.getByText(helpText(key))).toBeTruthy()
+    }
 
     const options = optionTexts()
 
@@ -118,5 +137,12 @@ describe('the escalation administration speaks the language of the interface', (
     for (const raw of ['work_order_set', 'notify', 'eq', 'priority', 'critical']) {
       expect(options.some((text) => text === raw)).toBe(false)
     }
+  })
+
+  it('renders the deadline help text in English', async () => {
+    await renderPage('en', 'Deadlines')
+    await waitFor(() => expect(screen.getByTestId('escalation-hours')).toBeTruthy())
+
+    expect(screen.getByText(helpText('deadlines'))).toBeTruthy()
   })
 })

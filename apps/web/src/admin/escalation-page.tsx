@@ -201,6 +201,7 @@ export function EscalationPage() {
               </label>
             ))}
           </div>
+          <p className="text-xs text-slate-500">{t('admin.escalation.help.deadlines')}</p>
           {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
           {canWrite ? (
             <button
@@ -216,6 +217,10 @@ export function EscalationPage() {
 
       {tab === 'stages' ? (
         <div className="flex flex-col gap-4">
+          <p className="text-xs text-slate-500">{t('admin.escalation.help.stages')}</p>
+          <p className="text-xs text-slate-500">{t('admin.escalation.help.reference')}</p>
+          <p className="text-xs text-slate-500">{t('admin.escalation.help.condition')}</p>
+          <p className="text-xs text-slate-500">{t('admin.escalation.help.actions')}</p>
           <ol className="flex flex-col gap-4" data-testid="escalation-stage-list">
             {ESCALATION_STAGE_KEYS.map((key) => {
               const stage = config.stages.find((entry) => entry.key === key)
