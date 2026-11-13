@@ -71,6 +71,7 @@ export async function getTicketDetail(
       reporterPhone: tickets.reporterPhone,
       reporterEmail: tickets.reporterEmail,
       statusToken: tickets.statusToken,
+      workOrderText: tickets.workOrderText,
     })
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
@@ -217,6 +218,7 @@ export async function getTicketDetail(
       reporterEmail: ticketRow.reporterEmail,
       recordedBy,
       statusToken: ticketRow.statusToken,
+      workOrderText: ticketRow.workOrderText,
     },
     events: events.map((e) => ({
       id: e.id,

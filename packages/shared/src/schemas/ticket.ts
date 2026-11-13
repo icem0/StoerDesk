@@ -305,8 +305,7 @@ export const externalTicketListQuerySchema = z.object({
 })
 
 export const workOrderRequestSchema = z.object({
-  type: z.string().trim().min(1).max(40),
-  number: z.string().trim().min(1).max(60),
+  text: z.string().trim().min(1).max(200),
 })
 
 /**
@@ -409,6 +408,8 @@ export const ticketListItemSchema = z.object({
   timelineState: ticketTimelineStateSchema,
   percent: z.number().min(0).max(100),
   remainingMs: z.number().nonnegative(),
+  /** Free text of the work order (AA / SA), set at work_order_set. */
+  workOrderText: z.string().nullable(),
 })
 
 export const ticketListResponseSchema = z.object({
@@ -450,6 +451,8 @@ export const ticketDetailResponseSchema = z.object({
     /** Name of the user who recorded the ticket, or null (e. g. QR / e-mail report). */
     recordedBy: z.string().nullable(),
     statusToken: z.string().nullable(),
+    /** Free text of the work order (AA / SA), set at work_order_set. */
+    workOrderText: z.string().nullable(),
   }),
   events: z.array(
     z.object({

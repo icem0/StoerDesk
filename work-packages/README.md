@@ -799,6 +799,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |
 | WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |
 | WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
+| WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | planned | yes     |
+| WP-M14-43  | work order as free text (UI + i18n)                                       | planned | yes     |
+| WP-M14-44  | work order text column in the ticket list API                             | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

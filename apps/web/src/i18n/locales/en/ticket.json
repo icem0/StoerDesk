@@ -239,6 +239,7 @@
       "uncancelled": "Cancellation revoked",
       "escalated": "Escalated",
       "escalation_set": "Manually escalated",
+      "escalation_note": "Escalation note",
       "paused": "Paused",
       "resumed": "Resumed",
       "notification_sent": "Notification sent",
@@ -468,8 +469,7 @@
       "spellcheck": "The browser spell check checks this field."
     },
     "prompt": {
-      "workOrderType": "Work order type (e. g. AA):",
-      "workOrderNumber": "Work order number:",
+      "workOrderText": "Work order (free text, e. g. AA 4711):",
       "declineReason": "Decline reason (min. 5 chars):",
       "reopenReason": "Reopen reason (min. 5 chars):",
       "cancelReason": "Cancel reason (min. 5 chars):",

@@ -138,11 +138,8 @@ export async function transitionTicket(ctx: TransitionContext) {
         workflowColumns.reviewedByUserId = actorUserId
       }
     } else if (event === 'work_order_set') {
-      if (typeof payload.type === 'string') {
-        workflowColumns.workOrderType = payload.type
-      }
-      if (typeof payload.number === 'string') {
-        workflowColumns.workOrderNumber = payload.number
+      if (typeof payload.text === 'string') {
+        workflowColumns.workOrderText = payload.text
       }
     } else if (event === 'accepted') {
       workflowColumns.acceptedAt = at

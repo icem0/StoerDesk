@@ -146,8 +146,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('rejects the work-order update from NEW with 409', async () => {
       const response = await call('PATCH', `/api/v1/tickets/${ticketNo}/work-order`, {
-        type: 'Electric',
-        number: 'WO-1',
+        text: 'Electric WO-1',
       })
 
       expect(response.statusCode).toBe(409)
@@ -158,8 +157,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       await db.update(tickets).set({ status: 'IN_REVIEW' }).where(eq(tickets.ticketNo, ticketNo))
 
       const response = await call('PATCH', `/api/v1/tickets/${ticketNo}/work-order`, {
-        type: 'Electric',
-        number: 'WO-1',
+        text: 'Electric WO-1',
       })
 
       expect(response.statusCode).toBe(200)

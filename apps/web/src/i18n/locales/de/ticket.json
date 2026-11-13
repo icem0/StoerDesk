@@ -238,6 +238,7 @@
       "uncancelled": "Stornierung aufgehoben",
       "escalated": "Eskaliert",
       "escalation_set": "Manuell eskaliert",
+      "escalation_note": "Eskalations-Notiz",
       "paused": "Pausiert",
       "resumed": "Fortgesetzt",
       "notification_sent": "Benachrichtigung gesendet",
@@ -467,8 +468,7 @@
       "spellcheck": "Die Rechtschreibprüfung des Browsers prüft dieses Feld."
     },
     "prompt": {
-      "workOrderType": "Auftragsart (z. B. AA):",
-      "workOrderNumber": "Auftragsnummer:",
+      "workOrderText": "Arbeitsauftrag (freier Text, z. B. AA 4711):",
       "declineReason": "Ablehnungsgrund (mind. 5 Zeichen):",
       "reopenReason": "Wiedereröffnungsgrund (mind. 5 Zeichen):",
       "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):",

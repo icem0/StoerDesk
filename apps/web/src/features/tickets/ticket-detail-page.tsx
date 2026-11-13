@@ -384,24 +384,16 @@ export function TicketDetailPage() {
   function renderConfirmPanel(): ReactNode {
     switch (selectedAction) {
       case 'work_order_set': {
-        const type = req('workOrderType')
-        const number = req('workOrderNumber')
-        const missing = type === '' || number === ''
+        const text = req('workOrderText')
+        const missing = text === ''
         return (
           <div className="flex flex-wrap gap-2 items-end">
             <input
-              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
-              name="workOrderType"
-              placeholder={t('detail.prompt.workOrderType')}
-              value={fields.workOrderType ?? ''}
-              onChange={(event) => setFields({ ...fields, workOrderType: event.target.value })}
-            />
-            <input
-              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
-              name="workOrderNumber"
-              placeholder={t('detail.prompt.workOrderNumber')}
-              value={fields.workOrderNumber ?? ''}
-              onChange={(event) => setFields({ ...fields, workOrderNumber: event.target.value })}
+              className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11 w-full sm:w-80"
+              name="workOrderText"
+              placeholder={t('detail.prompt.workOrderText')}
+              value={fields.workOrderText ?? ''}
+              onChange={(event) => setFields({ ...fields, workOrderText: event.target.value })}
             />
             <button
               className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
@@ -413,8 +405,7 @@ export function TicketDetailPage() {
                   return
                 }
                 void handleAction('work_order_set', {
-                  type: req('workOrderType'),
-                  number: req('workOrderNumber'),
+                  text: req('workOrderText'),
                 })
               }}
             >
@@ -1397,7 +1388,11 @@ export function TicketDetailPage() {
                   </div>
                   {(() => {
                     const stageKey =
-                      typeof event.payload.stageKey === 'string' ? event.payload.stageKey : null
+                      typeof event.payload.stageKey === 'string'
+                        ? event.payload.stageKey
+                        : typeof event.payload.stage === 'string'
+                          ? event.payload.stage
+                          : null
                     const stage =
                       stageKey === null
                         ? null

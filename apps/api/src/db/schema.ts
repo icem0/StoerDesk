@@ -510,6 +510,7 @@ export const tickets = pgTable(
     offerEscalatedAt: timestamp('offer_escalated_at', timestampOptions),
     workOrderType: text('work_order_type'),
     workOrderNumber: text('work_order_number'),
+    workOrderText: text('work_order_text'),
     acceptedAt: timestamp('accepted_at', timestampOptions),
     firstResponseAt: timestamp('first_response_at', timestampOptions),
     acknowledgedAt: timestamp('acknowledged_at', timestampOptions),

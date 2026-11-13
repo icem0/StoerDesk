@@ -156,6 +156,7 @@ export async function listTickets(
       acknowledgedAt: tickets.acknowledgedAt,
       closedAt: tickets.closedAt,
       updatedAt: tickets.updatedAt,
+      workOrderText: tickets.workOrderText,
     })
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
@@ -188,6 +189,7 @@ export async function listTickets(
         timelineState: timeline.state,
         percent: timeline.percent,
         remainingMs: timeline.remainingMs,
+        workOrderText: row.workOrderText,
       }
     }),
     total,

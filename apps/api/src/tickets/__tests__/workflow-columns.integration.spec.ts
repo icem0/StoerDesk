@@ -78,7 +78,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
       ticketId: ticketId ?? '',
       event: 'work_order_set',
       actorUserId,
-      payload: { type: 'AA', number: '4711' },
+      payload: { text: 'AA 4711' },
     })
     await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'assigned', actorUserId })
     await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'accepted', actorUserId })
@@ -96,8 +96,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
         status: tickets.status,
         reviewStartedAt: tickets.reviewStartedAt,
         reviewedByUserId: tickets.reviewedByUserId,
-        workOrderType: tickets.workOrderType,
-        workOrderNumber: tickets.workOrderNumber,
+        workOrderText: tickets.workOrderText,
         acceptedAt: tickets.acceptedAt,
         acknowledgedAt: tickets.acknowledgedAt,
         closedAt: tickets.closedAt,
@@ -109,8 +108,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
     expect(row?.status).toBe('CLOSED')
     expect(row?.reviewStartedAt).toBeInstanceOf(Date)
     expect(row?.reviewedByUserId).toBe(actorUserId)
-    expect(row?.workOrderType).toBe('AA')
-    expect(row?.workOrderNumber).toBe('4711')
+    expect(row?.workOrderText).toBe('AA 4711')
     expect(row?.acceptedAt).toBeInstanceOf(Date)
     expect(row?.acknowledgedAt).toBeInstanceOf(Date)
     expect(row?.closedAt).toBeInstanceOf(Date)
