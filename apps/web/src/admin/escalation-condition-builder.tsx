@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  ESCALATION_SOURCES,
+  ESCALATION_SYSTEM_TYPES,
   escalationConditionLeafSchema,
   type EscalationCondition,
 } from '@stoerdesk/shared'
+import { TICKET_PRIORITIES, TICKET_STATUS_VALUES } from '@stoerdesk/shared'
 
 /**
  * The condition builder of the escalation administration
@@ -28,20 +31,22 @@ export function conditionFields(): { field: string; operators: string[] }[] {
 }
 
 /** Splits the raw text of a value input into the typed value of a leaf. */
-export function conditionValue(field: string, operator: string, raw: string): unknown {
+export function conditionValue(field: string, operator: string, raw: string | string[]): unknown {
   if (operator === 'in' || operator === 'notIn') {
-    return raw.split(',').map((entry) => entry.trim()).filter((entry) => entry !== '')
+    const entries = Array.isArray(raw) ? raw : String(raw).split(',')
+
+    return entries.map((entry) => entry.trim()).filter((entry) => entry !== '')
   }
 
   if (field === 'assigned' || field === 'paused') {
-    return raw.trim().toLowerCase() === 'true'
+    return String(raw).trim().toLowerCase() === 'true'
   }
 
   if (field === 'deadlinePercent' || field === 'elapsedMinutes') {
     return Number(raw)
   }
 
-  return raw.trim()
+  return String(raw).trim()
 }
 
 /** The leaves of a condition tree, in order (the tree has at most two levels). */
@@ -88,6 +93,106 @@ export function EscalationConditionBuilder({
 
   function publish(next: EscalationCondition) {
     onCondition(next)
+  }
+
+  /** The selectable values of a closed field, translated for the interface language. */
+  function valueOptions(field: string): { key: string; label: string }[] | undefined {
+    if (field === 'assigned' || field === 'paused') {
+      return [
+        { key: 'true', label: t('admin.escalation.condition.boolean.true') },
+        { key: 'false', label: t('admin.escalation.condition.boolean.false') },
+      ]
+    }
+
+    switch (field) {
+      case 'priority':
+        return TICKET_PRIORITIES.map((key) => ({
+          key,
+          label: t(`admin.escalation.condition.values.priority.${key}`),
+        }))
+      case 'status':
+        return TICKET_STATUS_VALUES.map((key) => ({
+          key,
+          label: t(`admin.escalation.condition.values.status.${key}`),
+        }))
+      case 'source':
+        return ESCALATION_SOURCES.map((key) => ({
+          key,
+          label: t(`admin.escalation.condition.values.source.${key}`),
+        }))
+      case 'systemType':
+        return ESCALATION_SYSTEM_TYPES.map((key) => ({
+          key,
+          label: t(`admin.escalation.condition.values.systemType.${key}`),
+        }))
+      default:
+        return undefined
+    }
+  }
+
+  function renderValue(leaf: { field: string; operator: string; value: unknown }, index: number) {
+    const options = valueOptions(leaf.field)
+    const multi = leaf.operator === 'in' || leaf.operator === 'notIn'
+    const current = Array.isArray(leaf.value) ? (leaf.value as string[]) : leaf.value == null ? [] : [String(leaf.value)]
+
+    function save(next: string[]) {
+      const updated = leaves.map((entry, position) =>
+        position === index ? { ...entry, value: next } : entry,
+      )
+
+      setLeaves(updated)
+      publish(buildCondition(mode, updated))
+    }
+
+    if (options) {
+      return (
+        <select
+          className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+          disabled={!canWrite}
+          multiple={multi}
+          value={multi ? current : current[0] ?? ''}
+          onChange={(event) => {
+            const target = event.target as HTMLSelectElement
+
+            save(
+              multi
+                ? Array.from(target.selectedOptions).map((option) => option.value)
+                : [target.value],
+            )
+          }}
+        >
+          {options.map((entry) => (
+            <option key={entry.key} value={entry.key}>
+              {entry.label}
+            </option>
+          ))}
+        </select>
+      )
+    }
+
+    if (leaf.field === 'deadlinePercent' || leaf.field === 'elapsedMinutes') {
+      return (
+        <input
+          className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+          disabled={!canWrite}
+          max={leaf.field === 'deadlinePercent' ? 100 : 1000000}
+          min={0}
+          step={1}
+          type="number"
+          value={String(leaf.value ?? '')}
+          onChange={(event) => save([String(event.target.value)])}
+        />
+      )
+    }
+
+    return (
+      <input
+        className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+        disabled={!canWrite}
+        value={Array.isArray(leaf.value) ? leaf.value.join(', ') : String(leaf.value)}
+        onChange={(event) => save([String(event.target.value)])}
+      />
+    )
   }
 
   return (
@@ -169,28 +274,7 @@ export function EscalationConditionBuilder({
             </label>
             <label className="text-xs text-slate-400">
               {t('admin.escalation.condition.value')}
-              <input
-                className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                disabled={!canWrite}
-                value={Array.isArray(leaf.value) ? leaf.value.join(', ') : String(leaf.value)}
-                onChange={(event) => {
-                  const updated = leaves.map((entry, position) =>
-                    position === index
-                      ? {
-                          ...entry,
-                          value: conditionValue(
-                            entry.field,
-                            entry.operator,
-                            String(event.target.value),
-                          ),
-                        }
-                      : entry,
-                  )
-
-                  setLeaves(updated)
-                  publish(buildCondition(mode, updated))
-                }}
-              />
+              {renderValue(leaf, index)}
             </label>
           </li>
         ))}

@@ -257,7 +257,7 @@
     },
     "escalation": {
       "title": "Eskalation",
-      "hint": "Stages of the escalation with their names, their rules and their actions. The deadline of a stage is the waiting time per priority; rules and their actions fire in list order. Change the order with drag and drop.",
+      "hint": "Die Eskalationsstufen mit ihren Namen, ihren Regeln und ihren Aktionen. Die Frist einer Stufe ist die Wartezeit pro Priorität; Regeln und ihre Aktionen feuern in Listenreihenfolge. Die Reihenfolge per Drag & Drop ändern.",
       "loading": "Lädt …",
       "sessionNotice": "Die Eskalation benötigt eine gültige Anmeldung.",
       "forbiddenNotice": "Keine Berechtigung für die Eskalation.",
@@ -278,20 +278,20 @@
         "nameDe": "Name (Deutsch)",
         "nameEn": "Name (Englisch)",
         "active": "Aktiv",
-        "on": "Active",
-        "off": "Inaktiv"
+      "on": "aktiv",
+      "off": "inaktiv"
       },
       "rule": {
         "key": "Schlüssel",
-        "reference": "Start event",
-        "percent": "Percent",
+        "reference": "Start-Ereignis",
+        "percent": "Prozent",
         "referenceEvents": {
-          "received_at": "Notification received",
-          "review_started": "Review in progress set",
-          "work_order_set": "Order created",
-          "offered": "Offer made",
-          "assigned": "Assignment made",
-          "accepted": "Order accepted"
+          "received_at": "Meldung eingegangen",
+          "review_started": "In Prüfung gesetzt",
+          "work_order_set": "Auftrag angelegt",
+          "offered": "Angeboten",
+          "assigned": "Zugewiesen",
+          "accepted": "Auftrag angenommen"
         },
         "none": "Keine",
         "minutes": {
@@ -302,49 +302,85 @@
         }
       },
       "condition": {
-        "modeLabel": "Condition",
+        "modeLabel": "Bedingung",
         "mode": {
-          "all": "all",
-          "any": "one of"
+          "all": "alle",
+          "any": "eine von"
         },
         "fields": {
-          "priority": "Priority",
+          "priority": "Priorität",
           "status": "Status",
-          "source": "Source",
-          "systemType": "System type",
-          "objectExternalType": "External object type",
-          "assigned": "Assigned",
-          "paused": "Paused (pause)",
-          "deadlinePercent": "Deadline in %",
-          "elapsedMinutes": "Elapsed minutes",
-          "stageReached": "Reached stage"
+          "source": "Quelle",
+          "systemType": "Anlagentyp",
+          "objectExternalType": "Externer Objekttyp",
+          "assigned": "Zugewiesen",
+          "paused": "Pausiert",
+          "deadlinePercent": "Frist in %",
+          "elapsedMinutes": "Verstrichene Minuten",
+          "stageReached": "Erreichte Stufe"
         },
-        "field": "Field",
+        "field": "Feld",
         "operator": "Operator",
         "operators": {
-          "eq": "equal",
-          "ne": "different from",
-          "in": "one of",
-          "notIn": "none of",
-          "gt": "larger than",
-          "gte": "at least",
-          "lt": "smaller than",
-          "lte": "at most",
-          "contains": "contains"
+          "eq": "gleich",
+          "ne": "ungleich",
+          "in": "einer von",
+          "notIn": "keiner von",
+          "gt": "größer als",
+          "gte": "mindestens",
+          "lt": "kleiner als",
+          "lte": "höchstens",
+          "contains": "enthält"
         },
-        "value": "Value",
-        "add": "Condition add",
-        "remove": "Condition remove"
+        "value": "Wert",
+        "add": "Bedingung hinzufügen",
+        "remove": "Bedingung entfernen",
+        "values": {
+          "priority": {
+            "low": "Niedrig",
+            "normal": "Normal",
+            "high": "Hoch",
+            "critical": "Kritisch"
+          },
+          "status": {
+            "NEW": "Neu",
+            "IN_REVIEW": "In Prüfung",
+            "WORK_ORDER_CREATED": "Auftrag angelegt",
+            "OFFERED": "Angeboten",
+            "ASSIGNED": "Zugewiesen",
+            "ACCEPTED": "Angenommen",
+            "ACKNOWLEDGED": "Rückmeldung erfolgt",
+            "CLOSED": "Abgeschlossen",
+            "CANCELLED": "Storniert"
+          },
+          "source": {
+            "QR": "QR-Code",
+            "INTERNAL": "Intern",
+            "API": "Schnittstelle"
+          },
+          "systemType": {
+            "BMA": "Brandmeldeanlage",
+            "LICHTRUF": "Lichtruf",
+            "RWA": "Rauchabzug",
+            "EMA": "EMA",
+            "SPRACHALARM": "Sprachalarm",
+            "SONSTIGE": "Sonstige"
+          }
+        },
+        "boolean": {
+          "true": "Ja",
+          "false": "Nein"
+        }
       },
       "action": {
-        "type": "Type",
+        "type": "Typ",
         "types": {
-          "notify": "Notification",
+          "notify": "Benachrichtigung",
           "webhook": "Webhook",
-          "history": "History note"
+          "history": "Notiz"
         },
         "key": "Schlüssel",
-        "channels": "Channels",
+        "channels": "Kanäle",
         "channelLabels": {
           "signal": "Signal",
           "matrix": "Matrix",
@@ -353,10 +389,10 @@
           "telegram": "Telegram",
           "webpush": "Web Push"
         },
-        "endpoints": "Webhooks",
+        "endpoints": "Webhook-Endpunkte",
         "text": "Text",
-        "add": "Action add",
-        "remove": "Action remove"
+        "add": "Aktion hinzufügen",
+        "remove": "Aktion entfernen"
       },
       "errors": {
         "session_invalid": "Die Anmeldung ist abgelaufen.",

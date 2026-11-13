@@ -111,7 +111,7 @@ describe('the rule editor of the escalation page', () => {
     openStagesTab()
     await waitFor(() => expect(screen.getByTestId('escalation-condition-leaves')).toBeTruthy())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Condition add' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
 
     await waitFor(() =>
       expect(saved).toHaveLength(1)
@@ -139,7 +139,7 @@ describe('the rule editor of the escalation page', () => {
     openStagesTab()
     await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
 
-    expect(screen.queryByRole('button', { name: 'Condition add' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Bedingung hinzufügen' })).toBeNull()
     expect(saved).toHaveLength(0)
   })
 })

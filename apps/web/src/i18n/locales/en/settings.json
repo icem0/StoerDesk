@@ -312,7 +312,7 @@
           "status": "Status",
           "source": "Source",
           "systemType": "System type",
-          "objectExternalType": "Object external type",
+          "objectExternalType": "External object type",
           "assigned": "Assigned",
           "paused": "Paused",
           "deadlinePercent": "Deadline in %",
@@ -334,7 +334,43 @@
         },
         "value": "Value",
         "add": "Add condition",
-        "remove": "Remove"
+        "remove": "Remove",
+        "values": {
+          "priority": {
+            "low": "Low",
+            "normal": "Normal",
+            "high": "High",
+            "critical": "Critical"
+          },
+          "status": {
+            "NEW": "New",
+            "IN_REVIEW": "In review",
+            "WORK_ORDER_CREATED": "Work order created",
+            "OFFERED": "Offered",
+            "ASSIGNED": "Assigned",
+            "ACCEPTED": "Accepted",
+            "ACKNOWLEDGED": "Acknowledged",
+            "CLOSED": "Closed",
+            "CANCELLED": "Cancelled"
+          },
+          "source": {
+            "QR": "QR",
+            "INTERNAL": "Internal",
+            "API": "API"
+          },
+          "systemType": {
+            "BMA": "Fire alarm",
+            "LICHTRUF": "Nurse call",
+            "RWA": "Smoke extraction",
+            "EMA": "EMA",
+            "SPRACHALARM": "Voice alarm",
+            "SONSTIGE": "Other"
+          }
+        },
+        "boolean": {
+          "true": "Yes",
+          "false": "No"
+        }
       },
       "action": {
         "type": "Type",
