@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 
 import { App } from '../App'
 import { ApiKeysPage } from '../admin/api-keys-page'
+import { ChannelsPage } from '../admin/channels-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
@@ -97,6 +98,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <ApiKeysPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/channels',
+        element: (
+          <RequireSession>
+            <ChannelsPage />
           </RequireSession>
         ),
       },

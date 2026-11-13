@@ -364,6 +364,64 @@
         "invalid_request": "Mindestens ein Wert ist ungültig: Fristen 1 bis 8760 Stunden.",
         "unknown": "Speichern fehlgeschlagen."
       }
+    },
+    "channels": {
+      "title": "Kanäle",
+      "hint": "Die Benachrichtigungskanäle der Installation. Die Umgebung dient nur als Rückfall; ein gespeicherter Wert hat Vorrang. Geheimnisse werden nur geschrieben und niemals angezeigt.",
+      "loading": "Kanäle werden geladen …",
+      "empty": "Keine Kanäle konfiguriert.",
+      "stateLabel": "Zustand",
+      "state": {
+        "configured": "konfiguriert",
+        "disabled": "deaktiviert",
+        "failed": "fehlgeschlagen"
+      },
+      "kinds": {
+        "signal": "Signal",
+        "matrix": "Matrix",
+        "ntfy": "ntfy",
+        "email": "E-Mail",
+        "telegram": "Telegram",
+        "webpush": "Web Push",
+        "whatsapp": "WhatsApp"
+      },
+      "fields": {
+        "label": "Bezeichnung",
+        "enabled": "Kanal aktiv",
+        "url": "URL",
+        "topic": "Thema",
+        "homeserver": "Homeserver",
+        "roomId": "Raum-ID",
+        "chatId": "Chat-ID",
+        "host": "SMTP-Host",
+        "port": "SMTP-Port",
+        "secure": "Verschlüsselt (true/false)",
+        "user": "SMTP-Benutzer",
+        "from": "Absender",
+        "cliUrl": "signal-cli-Adresse",
+        "sourceNumber": "Absendernummer",
+        "recipients": "Empfänger",
+        "publicKey": "VAPID-Public-Key",
+        "subject": "VAPID-Subject",
+        "baseUrl": "Bridge-Adresse"
+      },
+      "secret": "Geheimnis (nur schreiben)",
+      "secretSet": "Ein Geheimnis ist gespeichert.",
+      "secretUnset": "Kein Geheimnis gespeichert.",
+      "secretKeep": "Leer lassen, um das gespeicherte Geheimnis zu behalten.",
+      "save": "Speichern",
+      "saved": "Gespeichert.",
+      "test": "Testnachricht senden",
+      "testing": "Testnachricht wird gesendet …",
+      "testDelivered": "Testnachricht zugestellt.",
+      "testFailed": "Testnachricht fehlgeschlagen ({{code}}).",
+      "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
+      "errors": {
+        "session_invalid": "Die Sitzung ist abgelaufen.",
+        "forbidden": "Keine Berechtigung.",
+        "invalid_request": "Bitte prüfen Sie die Eingaben.",
+        "unknown": "Aktion fehlgeschlagen."
+      }
     }
   },
   "apiKeys": {

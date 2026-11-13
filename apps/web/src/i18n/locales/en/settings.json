@@ -364,6 +364,64 @@
         "invalid_request": "At least one value is invalid: a deadline must be between 1 and 8760 hours.",
         "unknown": "Saving failed."
       }
+    },
+    "channels": {
+      "title": "Channels",
+      "hint": "The notification channels of the installation. The environment is only a fallback; a stored value wins. Secrets are only written and never shown.",
+      "loading": "Loading channels …",
+      "empty": "No channels configured.",
+      "stateLabel": "State",
+      "state": {
+        "configured": "configured",
+        "disabled": "disabled",
+        "failed": "failed"
+      },
+      "kinds": {
+        "signal": "Signal",
+        "matrix": "Matrix",
+        "ntfy": "ntfy",
+        "email": "Email",
+        "telegram": "Telegram",
+        "webpush": "Web Push",
+        "whatsapp": "WhatsApp"
+      },
+      "fields": {
+        "label": "Label",
+        "enabled": "Channel active",
+        "url": "URL",
+        "topic": "Topic",
+        "homeserver": "Homeserver",
+        "roomId": "Room ID",
+        "chatId": "Chat ID",
+        "host": "SMTP host",
+        "port": "SMTP port",
+        "secure": "Encrypted (true/false)",
+        "user": "SMTP user",
+        "from": "Sender",
+        "cliUrl": "signal-cli address",
+        "sourceNumber": "Source number",
+        "recipients": "Recipients",
+        "publicKey": "VAPID public key",
+        "subject": "VAPID subject",
+        "baseUrl": "Bridge address"
+      },
+      "secret": "Secret (write only)",
+      "secretSet": "A secret is stored.",
+      "secretUnset": "No secret is stored.",
+      "secretKeep": "Leave empty to keep the stored secret.",
+      "save": "Save",
+      "saved": "Saved.",
+      "test": "Send test message",
+      "testing": "Sending test message …",
+      "testDelivered": "Test message delivered.",
+      "testFailed": "Test message failed ({{code}}).",
+      "readOnly": "Read-only: you lack the notification.write permission.",
+      "errors": {
+        "session_invalid": "The session has expired.",
+        "forbidden": "No permission.",
+        "invalid_request": "Please check the input.",
+        "unknown": "The action failed."
+      }
     }
   },
   "apiKeys": {

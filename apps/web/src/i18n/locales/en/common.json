@@ -89,6 +89,7 @@
       "stats": "Statistics",
       "dashboardSettings": "Dashboard and statistics",
       "apiKeys": "API keys",
+      "channels": "Channels",
       "webhooks": "Webhooks",
       "branding": "Appearance",
       "escalation": "Escalation"

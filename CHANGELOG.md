@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The channels have their administration page (WP-M14-06): `/admin/channels`
+  lists the channels of `GET /api/v1/admin/channels` with their state and public
+  configuration, saves the editable fields and an optional write-only secret
+  through `PATCH /api/v1/admin/channels/:kind` and sends a test message through
+  `POST /api/v1/admin/channels/:kind/test`; the secret field never shows a
+  stored value, the settings menu links the page as "Kanäle" / "Channels".
 - The channel configuration has its API (WP-M14-05): `GET /api/v1/admin/channels`
   answers the effective configuration of every channel behind `notification.read`
   and `PATCH /api/v1/admin/channels/:kind` plus

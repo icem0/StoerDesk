@@ -1,7 +1,7 @@
 # WP-M14-06: The administration page of the channels
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-05
 phase: 14
 milestone: m14
@@ -21,7 +21,7 @@ files-write:
 
 - apps/web/src/admin/channels-page.tsx
 - apps/web/src/routes/index.tsx, apps/web/src/settings/settings-page.tsx
-- apps/web/src/i18n/locales/de/settings.json, apps/web/src/i18n/locales/en/settings.json
+- apps/web/src/i18n/locales/{de,en}/{settings,common}.json
 
 interfaces:
 
@@ -62,9 +62,9 @@ stays empty after a save and the test message reports the result.
 
 ## Handoff
 
-- Files changed: the new page, the route table, the settings menu, the two
-  locale files and the tests
+- Files changed: the new page, the route table, the settings menu, the settings
+  and common locale files and the tests
 - Interfaces added: `ChannelsPage`, the route `/admin/channels`
-- Verified: `npm run check`, `npm run build`
+- Verified: targeted `typecheck`, `eslint`, `vitest`, `i18n:check` and `wp:check`
 - Follow-up WP: WP-M14-07 — the content of the message and the urgency of ntfy
 - Open question: none
