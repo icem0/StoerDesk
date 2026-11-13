@@ -2,15 +2,18 @@ import { and, count, eq, ne } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import {
+  addGroupMemberRequestSchema,
   createGroupRequestSchema,
   groupListResponseSchema,
+  groupMemberListResponseSchema,
+  groupMembershipSchema,
   groupSummarySchema,
   updateGroupRequestSchema,
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { groups, userGroups } from '../db/schema'
+import { groups, userGroups, users } from '../db/schema'
 
 type Db = Database['database']
 
@@ -59,6 +62,24 @@ async function findGroup(database: Db, id: string): Promise<{ id: string; name: 
 
 function parseGroupId(raw: string) {
   return z.uuid().safeParse(raw)
+}
+
+function parseUserId(raw: string) {
+  return z.uuid().safeParse(raw)
+}
+
+async function loadMembers(database: Db, groupId: string) {
+  return await database
+    .select({
+      userId: users.id,
+      email: users.email,
+      givenName: users.givenName,
+      familyName: users.familyName,
+    })
+    .from(users)
+    .innerJoin(userGroups, eq(userGroups.userId, users.id))
+    .where(eq(userGroups.groupId, groupId))
+    .orderBy(users.email)
 }
 
 export type AdminGroupsRouteOptions = {
@@ -214,6 +235,128 @@ export const adminGroupsRoutes = fp<AdminGroupsRouteOptions>(
         }
 
         await database.delete(groups).where(eq(groups.id, targetId))
+
+        return reply.code(204).send()
+      },
+    )
+
+    app.get<{ Params: { id: string } }>(
+      '/api/v1/groups/:id/members',
+      { preHandler: requirePermission(database, 'user.read') },
+      async (request, reply) => {
+        const parsedId = parseGroupId(request.params.id)
+
+        if (!parsedId.success) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const group = await findGroup(database, parsedId.data)
+
+        return reply.code(200).send(
+          groupMemberListResponseSchema.parse({ members: await loadMembers(database, group.id) }),
+        )
+      },
+    )
+
+    app.post<{ Params: { id: string } }>(
+      '/api/v1/groups/:id/members',
+      { preHandler: requirePermission(database, 'user.write') },
+      async (request, reply) => {
+        const parsedId = parseGroupId(request.params.id)
+
+        if (!parsedId.success) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const parsed = addGroupMemberRequestSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
+        }
+
+        const groupId = parsedId.data
+        const userId = parsed.data.userId
+
+        await findGroup(database, groupId)
+
+        const unknownUser = await database
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1)
+
+        if (unknownUser.length === 0) {
+          return reply.code(404).send({ code: 'user_not_found', params: { fields: ['userId'] } })
+        }
+
+        const knownMembership = await database
+          .select({ userId: userGroups.userId })
+          .from(userGroups)
+          .where(and(eq(userGroups.userId, userId), eq(userGroups.groupId, groupId)))
+          .limit(1)
+
+        if (knownMembership.length > 0) {
+          return reply
+            .code(409)
+            .send({
+              code: 'membership_exists',
+              params: { fields: ['id', 'userId'], userId, groupId },
+            })
+        }
+
+        const [inserted] = await database
+          .insert(userGroups)
+          .values({ userId, groupId })
+          .returning({ userId: userGroups.userId, groupId: userGroups.groupId })
+
+        if (inserted === undefined) {
+          throw new GroupRouteError(500, 'group_membership_failed', { fields: ['id', 'userId'] })
+        }
+
+        return reply.code(201).send(groupMembershipSchema.parse(inserted))
+      },
+    )
+
+    app.delete<{ Params: { id: string; userId: string } }>(
+      '/api/v1/groups/:id/members/:userId',
+      { preHandler: requirePermission(database, 'user.write') },
+      async (request, reply) => {
+        const parsedId = parseGroupId(request.params.id)
+
+        if (!parsedId.success) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const parsedUserId = parseUserId(request.params.userId)
+
+        if (!parsedUserId.success) {
+          return reply.code(400).send(invalidRequest(['userId']))
+        }
+
+        const groupId = parsedId.data
+        const userId = parsedUserId.data
+
+        await findGroup(database, groupId)
+
+        const [removed] = await database
+          .delete(userGroups)
+          .where(and(eq(userGroups.userId, userId), eq(userGroups.groupId, groupId)))
+          .returning({ userId: userGroups.userId, groupId: userGroups.groupId })
+
+        if (removed === undefined) {
+          return reply
+            .code(404)
+            .send({
+              code: 'membership_not_found',
+              params: { fields: ['id', 'userId'], userId, groupId },
+            })
+        }
 
         return reply.code(204).send()
       },
