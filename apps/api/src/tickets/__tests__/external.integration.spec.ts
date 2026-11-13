@@ -191,8 +191,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     it('answers 404 for an unknown ticket number', async () => {
       const response = await call('PATCH', '/api/v1/tickets/ST-2026-9999/work-order', {
-        type: 'Electric',
-        number: 'WO-2',
+        text: 'Electric WO-2',
       })
 
       expect(response.statusCode).toBe(404)

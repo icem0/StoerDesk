@@ -222,8 +222,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(reviewed.statusCode).toBe(200)
 
       const response = await bearer('PATCH', `/api/v1/tickets/${ticketNo}/work-order`, {
-        type: 'AA',
-        number: '12345',
+        text: 'AA 4711',
       })
 
       expect(response.statusCode).toBe(200)
