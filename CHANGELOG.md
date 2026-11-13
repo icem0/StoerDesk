@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The WhatsApp Web bridge becomes a channel adapter (WP-M14-14):
+  `sendWhatsAppNotification` posts `{ chatId, text }` with
+  `Authorization: Bearer <token>` to `POST {baseUrl}/messages` — the ADR-0020
+  bridge contract of §11.6, StörDesk ships no browser and keeps no WhatsApp
+  session. Only `200` and `202` mean accepted, every other answer is a
+  `WhatsAppError('http_error')` with the status only — the bearer never enters
+  an error message. The chain entry in `channels/index.ts` places
+  `whatsapp` behind `webpush` (§11.1 order); the channel enters the chain only
+  with the `WHATSAPP_BRIDGE_URL` / `WHATSAPP_BRIDGE_TOKEN` environment keys,
+  and the send prefers the row `whatsapp` of `notification_channels`
+  (`config.baseUrl`, `config.chatId`, write-only `secret`) over the
+  environment (§11.2) over its own short-lived pool. No compose service, no
+  user account and no pairing — that stays WP-M14-15.
+
 ### Changed
 - The ntfy onboarding with the subscription QR (WP-M14-13): the ntfy adapter
   gains an optional `userTopic` and prefers the topic of the ntfy account of

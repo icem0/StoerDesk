@@ -1,7 +1,7 @@
 # WP-M14-14: The WhatsApp Web bridge as a channel
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-04
 phase: 14
 milestone: m14
@@ -69,6 +69,16 @@ configured only with a bridge and the docker compose stack is unchanged.
 - Files changed: the new adapter, the registry, the environment schema, the
   example environment and the tests
 - Interfaces added: `sendWhatsAppNotification`, `WhatsAppConfig`
-- Verified: `npm run check`
+- Verified: api typecheck, `eslint` on the changed files, `vitest run` over
+  `notifications/channels/`, `npm run i18n:check`, `npm run wp:check` (no
+  browser, no Docker — WP non-goals)
+- Chosen shape: `configuredChannels(env)` stays sync and env-based — the channel
+  enters the chain only with `WHATSAPP_BRIDGE_URL` and `WHATSAPP_BRIDGE_TOKEN` —
+  but the send closure reads the row `whatsapp` of `notification_channels`
+  first and lets it win over the environment for `baseUrl`, `secret` and the
+  optional `config.chatId` (§11.2), over its own short-lived pool like the
+  webpush closure. A chain whose presence itself comes from the database
+  belongs to the outbox work, not to this registry; `notifications/config.ts`
+  (the admin view) stays untouched.
 - Follow-up WP: WP-M14-15 — the chats of the bridge and the account of a user
 - Open question: none

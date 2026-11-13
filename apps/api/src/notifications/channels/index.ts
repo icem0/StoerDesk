@@ -1,7 +1,9 @@
+import { eq } from 'drizzle-orm'
+
 import type { Env } from '../../config/env'
 import { databaseConnectionUrl } from '../../config/env'
 import { createDatabase } from '../../db/client'
-import { pushSubscriptions } from '../../db/schema'
+import { notificationChannels, pushSubscriptions } from '../../db/schema'
 
 export interface NotificationMessage {
   title: string
@@ -123,6 +125,65 @@ const webPushChannel = async (env: Env, message: NotificationMessage): Promise<v
   }
 }
 
+/** The public `config` jsonb of a channel row as a flat map of string values. */
+const bridgeSettings = (value: unknown): Record<string, string> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return {}
+  }
+
+  const settings: Record<string, string> = {}
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === 'string') {
+      settings[key] = entry
+    }
+  }
+
+  return settings
+}
+
+/**
+ * The WhatsApp Web channel speaks the bridge contract of ADR-0020 (§11.6) —
+ * StörDesk ships no browser and keeps no WhatsApp session. The chain entry stays
+ * environment-based: the channel only enters the chain when both
+ * `WHATSAPP_BRIDGE_URL` and `WHATSAPP_BRIDGE_TOKEN` are set. The effective
+ * values of the send prefer the row of `notification_channels` with that kind
+ * over the environment (§11.2): the row's `config.baseUrl` and `config.chatId`
+ * and its `secret` win when they are there, the environment keys are the
+ * fallback — read over the same short-lived pool the webpush closure opens.
+ * A chain whose presence itself comes from the database belongs to the
+ * outbox work, not to this registry.
+ */
+const whatsappChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+  const { sendWhatsAppNotification } = await import('./whatsapp.js')
+  const { client, database } = createDatabase(databaseConnectionUrl(env))
+
+  try {
+    const [row] = await database
+      .select({
+        config: notificationChannels.config,
+        secret: notificationChannels.secret,
+      })
+      .from(notificationChannels)
+      .where(eq(notificationChannels.kind, 'whatsapp'))
+
+    const settings: Record<string, string> = row === undefined ? {} : bridgeSettings(row.config)
+    const token = row === undefined || row.secret === '' ? env.WHATSAPP_BRIDGE_TOKEN : row.secret
+
+    await sendWhatsAppNotification(
+      {
+        baseUrl: settings.baseUrl ?? env.WHATSAPP_BRIDGE_URL,
+        chatId: settings.chatId ?? '',
+        token,
+      },
+      message,
+      env.PWA_URL,
+    )
+  } finally {
+    await client.end({ timeout: 5 })
+  }
+}
+
 /**
  * Notification channels that are configured in the environment.
  *
@@ -175,6 +236,13 @@ export function configuredChannels(env: Env): NotificationChannel[] {
     channels.push({
       name: 'webpush',
       send: (message) => webPushChannel(env, message),
+    })
+  }
+
+  if (env.WHATSAPP_BRIDGE_URL !== '' && env.WHATSAPP_BRIDGE_TOKEN !== '') {
+    channels.push({
+      name: 'whatsapp',
+      send: (message) => whatsappChannel(env, message),
     })
   }
 

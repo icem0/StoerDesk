@@ -95,6 +95,12 @@ const envSchema = z
     MATRIX_ROOM_ID: z.string().default(''),
     MATRIX_ACCESS_TOKEN: z.string().default(''),
 
+    // --- Push channel WhatsApp Web (external bridge, ADR-0020) ---
+    /** Base URL of the bridge the operator runs; the channel is configured only with URL and bearer. */
+    WHATSAPP_BRIDGE_URL: z.string().default(''),
+    /** Bearer of the bridge; never logged, never part of an error message. */
+    WHATSAPP_BRIDGE_TOKEN: z.string().default(''),
+
     // --- Update control (ADR-0007, specs/18-self-update.md §18.5) ---
     /** The commit the `api` image was built from; `unknown` when unknown. */
     GIT_COMMIT: z.string().default(''),
