@@ -239,6 +239,13 @@
       "when": 1794103212000,
       "tag": "0033_notification_channel_config",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794103213000,
+      "tag": "0034_ticket_statuses",
+      "breakpoints": true
     }
   ]
 }
