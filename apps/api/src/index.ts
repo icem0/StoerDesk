@@ -194,6 +194,13 @@ const invokedDirectly =
 
 if (invokedDirectly) {
   const env = loadEnv()
+
+  // Migrations first: the schema must be complete before any seed inserts,
+  // otherwise a seed such as ticket_statuses (migration 0034) runs against a
+  // table that does not exist yet. `runMigrations` is idempotent; `buildServer`
+  // below runs it again as a no-op on an already migrated database.
+  await runMigrations()
+
   const { client, database } = createDatabase()
 
   // Bootstrap RBAC and the initial administrator on direct start, so a fresh
