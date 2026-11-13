@@ -705,7 +705,21 @@ user picked as the account via `storeAccount` of WP-M14-08 — a chat the bridge
 not know is refused with `422 invalid_request` and nothing is written; the own
 channels page shows the state of the bridge, its chats, the account of the user and
 the button to remove it. There is no pairing inside StörDesk — that stays in the
-bridge (ADR-0020). **WP-M14-22** (out of band in phase 14, requested by the office): the e-mail
+bridge (ADR-0020). **WP-M14-16** gives the selection of the channels per event
+type an API: `apps/api/src/notifications/preferences.ts` reads and writes the
+rows of `notification_preferences` — one row per user, event type and channel —
+with `readPreferences(database, userId)` and `writePreferences(database, userId,
+selection)`, where a write deletes the rows of the user and inserts the given
+selection in one transaction, so the selection of another user is never touched.
+`GET` and `PUT /api/v1/notifications/preferences` are session-only: the answer
+and the body are `{ preferences: [{ eventType, channel }] }` and the accepted
+values are the seven event types of `specs/10-notifications.md` §11.4 (ADR-0021)
+and the channel kinds of §11.1 — an unknown event type or channel is a `422
+invalid_request` and writes nothing. The shared contracts in
+`packages/shared/src/schemas/notification.ts` name those event types and the
+selection; the check of `notification_preferences` in the database still knows
+the four ticket types and migration `0034` of WP-M14-27 widens it to the seven.
+**WP-M14-22** (out of band in phase 14, requested by the office): the e-mail
 view and the pdf view of a ticket become one prepared send view — the ticket
 detail header replaces the envelope icon with a paper plane ("Versenden" /
 "Send") that opens `/tickets/:ticketNo/send`; the prepared view carries the

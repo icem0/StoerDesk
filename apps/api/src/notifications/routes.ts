@@ -8,12 +8,14 @@ import {
   matrixLinkingRequestSchema,
   notificationAccountSchema,
   notificationChannelKindSchema,
+  notificationPreferencesListResponseSchema,
   PERMISSIONS,
   redeemTelegramLinkCodeRequestSchema,
   telegramLinkCodeResponseSchema,
   type ChannelConfiguration,
   type UpdateChannelConfigurationRequest,
   updateChannelConfigurationRequestSchema,
+  updateNotificationPreferencesRequestSchema,
 } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
 import type { preHandlerHookHandler } from 'fastify'
@@ -23,6 +25,7 @@ import { notificationChannels } from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
 import { readChannelConfiguration } from './config'
 import { deleteAccount } from './accounts'
+import { readPreferences, writePreferences } from './preferences'
 import { storeMatrixAccount, MatrixLinkingError, type MatrixLinkingErrorCode } from './matrix-linking'
 import {
   readBridgeStatus,
@@ -40,9 +43,11 @@ import {
 
 /**
  * Admin channel configuration routes, the Telegram, the Matrix and the WhatsApp
- * Web account linking routes and the removal of an own account
- * (`specs/10-notifications.md` §11.2, §11.3, §11.6, §11.11, WP-M14-05, WP-M14-09,
- * WP-M14-11, WP-M14-15). The list is the effective configuration of
+ * Web account linking routes, the removal of an own account and the selection of
+ * the channels per event type of the session user
+ * (`specs/10-notifications.md` §11.2, §11.3, §11.4, §11.6, §11.11, WP-M14-05,
+ * WP-M14-09, WP-M14-11, WP-M14-15, WP-M14-16). The list is the effective
+ * configuration of
  * `readChannelConfiguration` and never carries a secret; the write reports `secretSet`
  * only. A failing test send is a regular answer with `delivered: false` and the adapter
  * code, never an HTTP error of the administration. The linking routes are session-only:
@@ -52,6 +57,10 @@ import {
  * bridge answers `{ connected: false, chats: [] }`, never an error — and `POST
  * /api/v1/notifications/accounts/whatsapp` stores the picked chat id as the account
  * of the user, a chat the bridge does not know is a `422 invalid_request`.
+ * `GET` and `PUT /api/v1/notifications/preferences` (§11.4, §11.11, WP-M14-16)
+ * answer and replace the selection of the session user; the seven event types
+ * of §11.4 and the channel kinds of §11.1 are the only accepted values — an
+ * unknown event type or channel is a `422 invalid_request` and writes nothing.
  */
 
 type Db = Database['database']
@@ -500,6 +509,35 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         }
 
         return ntfySubscriptionOf(configuredUrl, `stoerdesk-${userId}`)
+      },
+    )
+
+    app.get(
+      '/api/v1/notifications/preferences',
+      { preHandler: requireSession },
+      async (request) =>
+        notificationPreferencesListResponseSchema.parse({
+          preferences: await readPreferences(database, request.user?.id ?? ''),
+        }),
+    )
+
+    app.put(
+      '/api/v1/notifications/preferences',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = updateNotificationPreferencesRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply
+            .code(422)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        await writePreferences(database, request.user?.id ?? '', body.data.preferences)
+
+        return notificationPreferencesListResponseSchema.parse({
+          preferences: await readPreferences(database, request.user?.id ?? ''),
+        })
       },
     )
   },

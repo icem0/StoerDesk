@@ -175,6 +175,23 @@ value is interpolated into SQL, and neither the answer, a log nor the error text
 bearer (§11.13) — the PWA section renders bridge chats and the account with no contact data.
 No new finding.
 
+Preferences-routes pass: 2026-11-13, diff `5abab01..` (WP-M14-16 — the new preference
+service, the two session routes in `apps/api/src/notifications/routes.ts`, the shared
+contracts and the unit test) — areas A and B re-checked in full (the package adds
+`GET /api/v1/notifications/preferences` and `PUT /api/v1/notifications/preferences`,
+both session-guarded only — `401 session_invalid` without one, no permission key and
+no bearer scope; the user id is taken from the session, never from the request, and is
+part of both the read and the delete predicate, so the selection of another user can
+never be read or replaced), C–K re-checked for `apps/api/src/notifications/preferences.ts`,
+`apps/api/src/notifications/routes.ts` and `packages/shared/src/schemas/notification.ts`:
+the `PUT` body passes through `updateNotificationPreferencesRequestSchema` (the seven
+event types and the seven channel kinds as enums, max. 100 rows) before anything is
+written, an unknown event type or channel is a `422 invalid_request` that writes nothing,
+the delete and the insert bind their values through drizzle in one transaction (no SQL
+interpolation), a repeated `(event_type, channel)` pair is written once, the selection
+carries machine keys only — no secret, no name, no contact value — and the unit test
+carries mock users and mock channels. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

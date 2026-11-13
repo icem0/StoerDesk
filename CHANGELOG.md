@@ -40,6 +40,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   account of the user and the button to remove it — and the texts in `de` and `en`.
   No pairing inside StörDesk (ADR-0020), no reply of a chat and no change of the
   adapter of WP-M14-14.
+- The selection of the channels per event type — the API (WP-M14-16):
+  `apps/api/src/notifications/preferences.ts` reads and writes the rows of
+  `notification_preferences` — one row per user, event type and channel
+  (§11.4) — with `readPreferences(database, userId)` (ordered by event type
+  and channel) and `writePreferences(database, userId, selection)`, which
+  deletes the rows of the user and writes the given selection in one
+  transaction, so the selection of another user is never touched and a
+  repeated `(event_type, channel)` pair is written once. `GET` and `PUT
+  /api/v1/notifications/preferences` are session routes answering
+  `{ preferences: [{ eventType, channel }] }`; the accepted values are the
+  seven event types of §11.4 (ADR-0021) and the channel kinds of §11.1, an
+  unknown event type or channel is a `422 invalid_request` and writes
+  nothing. The shared contracts in `packages/shared/src/schemas/notification.ts`
+  name the event types and the selection. A user without a row for an event
+  type keeps the channel chain of §11.1; the enqueue is unchanged (WP-M14-18),
+  the settings page is WP-M14-17 and the database check of the three readiness
+  types is widened by migration `0034` of WP-M14-27.
 
 ### Changed
 - The ntfy onboarding with the subscription QR (WP-M14-13): the ntfy adapter

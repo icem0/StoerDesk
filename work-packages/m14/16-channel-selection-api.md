@@ -1,7 +1,7 @@
 # WP-M14-16: The selection of the channels per event type — the API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-04
 phase: 14
 milestone: m14
