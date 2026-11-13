@@ -460,6 +460,7 @@
       "testDelivered": "Test message sent.",
       "testFailed": "Test message failed ({{code}}).",
       "testTopicPlaceholder": "e. g. stoerdesk-test",
+      "curlCommand": "cURL command (copy to terminal)",
       "readOnly": "Read-only: you lack the notification.write permission.",
       "errors": {
         "session_invalid": "The session has expired.",

@@ -53,8 +53,6 @@ export const channelTestResponseSchema = z.object({
   delivered: z.boolean(),
   /** The machine-readable failure code of the adapter; absent on success. */
   code: z.string().optional(),
-  /** The exact curl command that reproduces the test request in a terminal. */
-  curl: z.string().optional(),
 })
 
 /**

@@ -38,6 +38,19 @@ function errorCode(error: unknown): string {
   return error instanceof ApiError && typeof error.code === 'string' ? error.code : 'unknown'
 }
 
+/** Builds a copy-pasteable curl command that reproduces the ntfy POST request. */
+function buildNtfyCurl(url: string, topic: string, pwaUrl: string): string {
+  const base = url.replace(/\/$/, '')
+  const fullUrl = `${base}/${topic}`
+  const body = JSON.stringify({
+    title: 'StörDesk test',
+    message: 'This is a test notification.',
+    priority: 'default',
+    actions: [{ action: 'view', label: 'Öffnen', uri: pwaUrl }],
+  })
+  return `curl -X POST "${fullUrl}" \\\n  -H "Content-Type: application/json" \\\n  -H "Priority: default" \\\n  -d '${body}'`
+}
+
 function fieldId(kind: string, field: string): string {
   return `${kind}-${field}`
 }
@@ -156,16 +169,31 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       </label>
 
       {channel.kind === 'ntfy' && mayWrite ? (
-        <label className="flex flex-col gap-1 text-sm" htmlFor={fieldId(channel.kind, 'testTopic')}>
-          {t('admin.channels.fields.testTopic')}
-          <input
-            className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-60"
-            id={fieldId(channel.kind, 'testTopic')}
-            onChange={(event) => setTestTopic(event.target.value)}
-            placeholder={t('admin.channels.testTopicPlaceholder')}
-            value={testTopic}
-          />
-        </label>
+        <>
+          <label className="flex flex-col gap-1 text-sm" htmlFor={fieldId(channel.kind, 'testTopic')}>
+            {t('admin.channels.fields.testTopic')}
+            <input
+              className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-60"
+              id={fieldId(channel.kind, 'testTopic')}
+              onChange={(event) => setTestTopic(event.target.value)}
+              placeholder={t('admin.channels.testTopicPlaceholder')}
+              value={testTopic}
+            />
+          </label>
+          {config.url && config.topic ? (
+            <div className="flex flex-col gap-1 text-sm">
+              <label htmlFor={fieldId(channel.kind, 'curlCommand')}>
+                {t('admin.channels.curlCommand')}
+              </label>
+              <textarea
+                className="rounded bg-slate-950 p-2 text-slate-100 text-xs font-mono disabled:opacity-60"
+                id={fieldId(channel.kind, 'curlCommand')}
+                readOnly
+                value={buildNtfyCurl(config.url, config.topic, '')}
+              />
+            </div>
+          ) : null}
+        </>
       ) : null}
 
       {!mayWrite ? <p className="text-sm text-slate-400">{t('admin.channels.readOnly')}</p> : null}

@@ -460,6 +460,7 @@
       "testDelivered": "Testnachricht gesendet.",
       "testFailed": "Testnachricht fehlgeschlagen ({{code}}).",
       "testTopicPlaceholder": "z. B. stoerdesk-test",
+      "curlCommand": "cURL-Befehl (ins Terminal kopieren)",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
       "errors": {
         "session_invalid": "Die Sitzung ist abgelaufen.",

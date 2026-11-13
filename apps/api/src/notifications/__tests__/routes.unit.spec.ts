@@ -273,7 +273,7 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual({ delivered: true, curl: expect.any(String) })
+    expect(response.json()).toEqual({ delivered: true })
   })
 
   it('needs notification.write for the test send', async () => {
