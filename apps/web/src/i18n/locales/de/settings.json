@@ -446,7 +446,8 @@
         "recipients": "Empfänger",
         "publicKey": "VAPID-Public-Key",
         "subject": "VAPID-Subject",
-        "baseUrl": "Bridge-Adresse"
+        "baseUrl": "Bridge-Adresse",
+        "testTopic": "Thema für Testnachricht"
       },
       "secret": "Geheimnis (nur schreiben)",
       "secretSet": "Ein Geheimnis ist gespeichert.",
@@ -458,6 +459,7 @@
       "testing": "Testnachricht wird gesendet …",
       "testDelivered": "Testnachricht gesendet.",
       "testFailed": "Testnachricht fehlgeschlagen ({{code}}).",
+      "testTopicPlaceholder": "z. B. stoerdesk-test",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
       "errors": {
         "session_invalid": "Die Sitzung ist abgelaufen.",

@@ -195,7 +195,7 @@ promises a delivery that cannot happen.
 | --- | --- | --- |
 | `GET /api/v1/admin/channels` | `notification.read` | the channels with their state, their public configuration and `secretSet` |
 | `PATCH /api/v1/admin/channels/:kind` | `notification.write` | the configuration of a channel; a secret is write-only |
-| `POST /api/v1/admin/channels/:kind/test` | `notification.write` | sends a test message and answers `{ delivered }` |
+| `POST /api/v1/admin/channels/:kind/test` | `notification.write` | sends a test message and answers `{ delivered }`; an optional body `{ topic }` overrides the test target (for example an ntfy test topic) |
 | `GET /api/v1/notifications/status` | `notification.read` | the status of every channel (§11.8) |
 | `GET /api/v1/notifications/accounts` | session | the own accounts |
 | `POST /api/v1/notifications/accounts/telegram/code` | session | a one-time code for the Telegram bot |

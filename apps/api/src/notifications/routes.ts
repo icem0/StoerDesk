@@ -4,6 +4,7 @@ import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
   channelConfigurationSchema,
+  channelTestRequestSchema,
   channelTestResponseSchema,
   matrixLinkingRequestSchema,
   notificationAccountSchema,
@@ -151,10 +152,13 @@ function failureCode(error: unknown): string {
 /**
  * Builds the test message and hands it to the adapter of the kind. A missing
  * adapter and a failing adapter are both a `delivered: false` with a code.
+ * `testTopic` is an optional target override (for example an ntfy test topic)
+ * that is handed to the adapter through the send options.
  */
 export async function sendTestMessage(
   channels: readonly NotificationChannel[],
   kind: string,
+  testTopic?: string,
 ): Promise<{ delivered: boolean; code?: string }> {
   const channel = channels.find((candidate) => candidate.name === kind)
 
@@ -163,7 +167,7 @@ export async function sendTestMessage(
   }
 
   try {
-    await channel.send(TEST_MESSAGE)
+    await channel.send(TEST_MESSAGE, testTopic ? { topic: testTopic } : undefined)
 
     return { delivered: true }
   } catch (error) {
@@ -367,7 +371,15 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
             .send({ code: 'invalid_request', params: { fields: ['kind'] } })
         }
 
-        const result = await sendTestMessage(registry, kind.data)
+        const body = channelTestRequestSchema.safeParse(request.body ?? {})
+
+        if (!body.success) {
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        const result = await sendTestMessage(registry, kind.data, body.data.topic)
 
         if (result.delivered) {
           request.log.info(

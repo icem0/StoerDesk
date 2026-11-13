@@ -50,6 +50,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
   const [enabled, setEnabled] = useState(channel.enabled)
   const [config, setConfig] = useState<Record<string, string>>({ ...channel.config })
   const [secret, setSecret] = useState('')
+  const [testTopic, setTestTopic] = useState('')
   const [saved, setSaved] = useState(false)
 
   const save = useMutation({
@@ -70,6 +71,8 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
     mutationFn: () =>
       apiFetch<ChannelTestResponse>(`/v1/admin/channels/${channel.kind}/test`, {
         method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ topic: testTopic === '' ? undefined : testTopic }),
       }),
   })
 
@@ -151,6 +154,19 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
           value={secret}
         />
       </label>
+
+      {channel.kind === 'ntfy' && mayWrite ? (
+        <label className="flex flex-col gap-1 text-sm" htmlFor={fieldId(channel.kind, 'testTopic')}>
+          {t('admin.channels.fields.testTopic')}
+          <input
+            className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-60"
+            id={fieldId(channel.kind, 'testTopic')}
+            onChange={(event) => setTestTopic(event.target.value)}
+            placeholder={t('admin.channels.testTopicPlaceholder')}
+            value={testTopic}
+          />
+        </label>
+      ) : null}
 
       {!mayWrite ? <p className="text-sm text-slate-400">{t('admin.channels.readOnly')}</p> : null}
       {save.isError ? (

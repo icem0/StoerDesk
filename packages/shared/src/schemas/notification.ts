@@ -44,6 +44,11 @@ export const updateChannelConfigurationRequestSchema = z.object({
   secret: z.string().max(4096).optional(),
 })
 
+export const channelTestRequestSchema = z.object({
+  /** Optional target for the test message, for example an ntfy test topic. */
+  topic: z.string().trim().min(1).max(500).optional(),
+})
+
 export const channelTestResponseSchema = z.object({
   delivered: z.boolean(),
   /** The machine-readable failure code of the adapter; absent on success. */
@@ -155,6 +160,7 @@ export type ChannelConfigurationListResponse = z.infer<
 export type UpdateChannelConfigurationRequest = z.infer<
   typeof updateChannelConfigurationRequestSchema
 >
+export type ChannelTestRequest = z.infer<typeof channelTestRequestSchema>
 export type ChannelTestResponse = z.infer<typeof channelTestResponseSchema>
 export type NotificationAccount = z.infer<typeof notificationAccountSchema>
 export type NotificationAccountListResponse = z.infer<

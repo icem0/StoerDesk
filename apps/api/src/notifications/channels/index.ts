@@ -12,7 +12,8 @@ export interface NotificationMessage {
 
 export interface NotificationChannel {
   readonly name: string
-  send(message: NotificationMessage): Promise<void>
+  /** `options.topic` is an optional target override, for example an ntfy test topic. */
+  send(message: NotificationMessage, options?: { topic?: string }): Promise<void>
 }
 
 const signalChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
@@ -47,13 +48,14 @@ const matrixChannel = async (env: Env, message: NotificationMessage): Promise<vo
   )
 }
 
-const ntfyChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+const ntfyChannel = async (env: Env, message: NotificationMessage, options?: { topic?: string }): Promise<void> => {
   const { sendNtfyNotification } = await import('./ntfy.js')
 
   await sendNtfyNotification(
     {
       url: env.NTFY_URL,
       topic: env.NTFY_TOPIC,
+      userTopic: options?.topic,
     },
     message,
     env.PWA_URL,
@@ -210,7 +212,7 @@ export function configuredChannels(env: Env): NotificationChannel[] {
   if (env.NTFY_URL !== '' && env.NTFY_TOPIC !== '') {
     channels.push({
       name: 'ntfy',
-      send: (message) => ntfyChannel(env, message),
+      send: (message, options) => ntfyChannel(env, message, options),
     })
   }
 

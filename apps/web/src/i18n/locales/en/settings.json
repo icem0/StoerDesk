@@ -446,7 +446,8 @@
         "recipients": "Recipients",
         "publicKey": "VAPID public key",
         "subject": "VAPID subject",
-        "baseUrl": "Bridge address"
+        "baseUrl": "Bridge address",
+        "testTopic": "Topic for test message"
       },
       "secret": "Secret (write only)",
       "secretSet": "A secret is stored.",
@@ -458,6 +459,7 @@
       "testing": "Sending test message …",
       "testDelivered": "Test message sent.",
       "testFailed": "Test message failed ({{code}}).",
+      "testTopicPlaceholder": "e. g. stoerdesk-test",
       "readOnly": "Read-only: you lack the notification.write permission.",
       "errors": {
         "session_invalid": "The session has expired.",
