@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The Telegram account linking is an API service and two session routes (WP-M14-09):
+  `POST /api/v1/notifications/accounts/telegram/code` creates a one-time code
+  (six unambiguous characters, ten minutes, used once) in the write-only settings
+  row `notifications.telegram.code` bound to the requesting user, and
+  `POST /api/v1/notifications/accounts/telegram` reads the pending updates of the
+  bot (`getUpdates` with the stored offset), matches the code and stores the chat
+  id as the Telegram account of the user via `storeAccount`; a wrong, expired or
+  unknown code and a code of another user answer `422 invalid_request`, and the
+  bot token never appears in an answer, a log or an error message.
 - The e-mail body of the prepared send view keeps real line breaks (WP-M14-22
   follow-up): the `mailto:` body is joined with `\n` and encoded only once —
   the literal `%0A` in the body is gone — and the title, the reported fault

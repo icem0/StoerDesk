@@ -76,6 +76,26 @@ export const storeNotificationAccountRequestSchema = z.object({
   secret: z.string().max(4096).optional(),
 })
 
+/**
+ * The Telegram linking of a user (`specs/10-notifications.md` §11.3, §11.11,
+ * WP-M14-09). The code is bound to the requesting user, valid for ten minutes
+ * and used once; the answer carries the code and its deadline only — the
+ * settings row behind it stays write-only.
+ */
+export const telegramLinkCodeResponseSchema = z.object({
+  code: z.string(),
+  expiresAt: z.string(),
+})
+
+export const redeemTelegramLinkCodeRequestSchema = z.object({
+  code: z.string().trim().min(1).max(64),
+})
+
+export type TelegramLinkCodeResponse = z.infer<typeof telegramLinkCodeResponseSchema>
+export type RedeemTelegramLinkCodeRequest = z.infer<
+  typeof redeemTelegramLinkCodeRequestSchema
+>
+
 export type ChannelConfiguration = z.infer<typeof channelConfigurationSchema>
 export type ChannelConfigurationListResponse = z.infer<
   typeof channelConfigurationListResponseSchema

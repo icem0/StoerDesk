@@ -112,6 +112,26 @@ already sees and pass through `encodeURIComponent`, the deep link carries the
 ticket number not a token, no SQL, no upload path and no log line is touched
 and the locales hold no contact data. No new finding.
 
+Telegram-linking pass: 2026-11-13, diff `7430de2..` (WP-M14-09 — the new linking
+module, two session routes in `apps/api/src/notifications/routes.ts`, the shared
+contracts and the unit test) — areas A and B re-checked in full (the package adds
+`POST /api/v1/notifications/accounts/telegram/code` and
+`POST /api/v1/notifications/accounts/telegram`, both guarded by the session only
+— `401 session_invalid` without one, no permission key and no bearer scope; the
+one-time code is bound to the session user and a foreign user is refused), C–K
+re-checked for `apps/api/src/notifications/telegram-linking.ts`,
+`apps/api/src/notifications/routes.ts` and `packages/shared/src/schemas/notification.ts`:
+the redeem body passes through `redeemTelegramLinkCodeRequestSchema` (trimmed,
+1–64 characters) before anything is read, the six-character code comes from
+`node:crypto`'s `randomInt` over an unambiguous alphabet, the settings row
+`notifications.telegram.code` is write-only and never answered, the Bot API URL
+carries the token only in the request itself — a non-ok answer, an unreachable
+bot and an invalid JSON answer become typed errors with the status or fixed
+English text only, so the token never enters an answer, a log or an error
+message (§11.13) — every settings and account write binds its values through
+drizzle (the service of WP-M14-08), and the unit test carries a mock bot token
+and mock users without contact data. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

@@ -1,7 +1,7 @@
 # WP-M14-09: The Telegram account linking via a one-time code
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-08
 phase: 14
 milestone: m14
