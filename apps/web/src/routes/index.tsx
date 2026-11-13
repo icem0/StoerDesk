@@ -31,8 +31,7 @@ import { ObjectEditPage } from '../features/objects/object-edit-page'
 import { InternalCreatePage } from '../features/tickets/internal-create-page'
 import { TicketListPage } from '../features/tickets/ticket-list-page'
 import { TicketDetailPage } from '../features/tickets/ticket-detail-page'
-import { TicketEmailPage } from '../features/tickets/ticket-email-page'
-import { TicketPdfPage } from '../features/tickets/ticket-pdf-page'
+import { TicketSendPage } from '../features/tickets/ticket-send-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
 import { StatusPage } from '../features/tickets/status-page'
 
@@ -276,18 +275,12 @@ export const routes: RouteObject[] = [
         ),
       },
       {
-        path: '/tickets/:ticketNo/email',
+        // The prepared send view of a ticket (WP-M14-22): it replaces the
+        // former e-mail and pdf views at `/email` and `/pdf`.
+        path: '/tickets/:ticketNo/send',
         element: (
           <RequireSession>
-            <TicketEmailPage />
-          </RequireSession>
-        ),
-      },
-      {
-        path: '/tickets/:ticketNo/pdf',
-        element: (
-          <RequireSession>
-            <TicketPdfPage />
+            <TicketSendPage />
           </RequireSession>
         ),
       },

@@ -9,18 +9,24 @@ import { i18n } from '../../i18n'
 import { useFaultCatalog } from './use-fault-catalog'
 
 /**
- * Branded PDF view for a ticket (`PLAN.md` §4/§11/§14, WP-M4-11).
+ * Prepared send view for a ticket (WP-M14-22) — it replaces the former E-Mail
+ * and PDF views (`WP-M4-11`, `WP-M4-12`).
  *
- * Renders a clean single-column print-optimized ticket (company logo + name
- * from the branding settings, ticket number, object, times, description,
- * faults, photos as images, history). `@media print` hides the shell, sets A4
- * page size and margins. A "Save as PDF" button triggers `window.print()`;
- * `Ctrl+P`/`Cmd+P` works too.
+ * The ticket detail header opens this view from its paper-plane button. The
+ * branded ticket is prepared for both outgoing paths and two buttons sit on
+ * top of the content: "Als PDF speichern" runs `window.print()` with the A4
+ * print CSS, "E-Mail versenden" opens a prefilled `mailto:` link whose
+ * subject and body carry the ticket number, object, description and a deep
+ * link to the ticket detail. Every history event is rendered in full — date,
+ * label, actor and the event text — and each block (every history row, every
+ * photo, every field section) avoids page-break cuts (`print:break-inside-avoid`),
+ * so nothing is truncated in the printout; photos load eagerly and show on
+ * screen and in print.
  */
 
 function useTicket(ticketNo: string | undefined) {
   return useQuery({
-    queryKey: ['tickets', 'detail-pdf', ticketNo],
+    queryKey: ['tickets', 'detail-send', ticketNo],
     queryFn: () => apiFetch<TicketDetailResponse>(`/v1/tickets/${ticketNo ?? ''}`),
     enabled: ticketNo !== undefined,
     retry: false,
@@ -53,13 +59,13 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-rose-900/30 text-rose-300',
 }
 
-export function TicketPdfPage() {
+export function TicketSendPage() {
   const { t, i18n } = useTranslation('ticket')
   const { t: tCommon } = useTranslation('common')
   const { ticketNo } = useParams()
 
   const branding = useQuery<BrandingResponse>({
-    queryKey: ['branding-pdf'],
+    queryKey: ['branding-send'],
     queryFn: () => apiFetch<BrandingResponse>('/v1/settings/branding'),
     retry: false,
   })
@@ -85,6 +91,24 @@ export function TicketPdfPage() {
   if (!ticket) {
     return <p className="text-rose-400 text-sm" role="alert">{t('pdf.notFound')}</p>
   }
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const ticketUrl = `${origin}/tickets/${ticketNo}`
+  const subject = t('email.subject', { ticketNo: ticket.ticketNo })
+  const body = [
+    t('email.bodyGreeting'),
+    '',
+    t('email.bodyTicket', { ticketNo: ticket.ticketNo }),
+    t('email.bodyObject', { object: ticket.objectName, objectNo: ticket.objectNo }),
+    t('email.bodyStatus', { status: t(`status.values.${ticket.status}`) ?? ticket.status }),
+    t('email.bodyPriority', { priority: t(`priority.${ticket.priority}`) ?? ticket.priority }),
+    t('email.bodyReported', { reportedAt: formatDate(ticket.reportedAt) }),
+    ticket.description !== null ? t('email.bodyDescription', { description: ticket.description }) : '',
+    '',
+    ticketUrl,
+  ]
+    .filter((line) => line !== '')
+    .join('%0A')
 
   return (
     <section className="ticket-pdf flex flex-col gap-4">
@@ -116,27 +140,39 @@ export function TicketPdfPage() {
         </div>
       </div>
 
-      <button
-        className="inline-flex items-center gap-1.5 rounded bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600 print:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-        onClick={() => window.print()}
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Two buttons on top of the prepared view: PDF and e-mail. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          className="inline-flex items-center gap-1.5 rounded bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 print:hidden"
+          onClick={() => window.print()}
+          type="button"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2a2 2 0 012 2v0a2 2 0 012-2zM16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-          />
-        </svg>
-        {t('pdf.save')}
-      </button>
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2a2 2 0 012 2v0a2 2 0 012-2zM16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+            />
+          </svg>
+          {t('pdf.save')}
+        </button>
+        <a
+          href={`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}
+          className="inline-flex items-center gap-1.5 rounded bg-sky-600 px-3 py-2 text-sm text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 print:hidden"
+        >
+          <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m22 2-11 16-7-12 22-4z" />
+          </svg>
+          {t('email.write')}
+        </a>
+      </div>
 
       <table className="w-full border-collapse border border-slate-700">
         <tbody>
@@ -190,13 +226,15 @@ export function TicketPdfPage() {
             <td className="px-3 py-2 text-xs font-medium text-slate-500">
               {t('pdf.erfasser')}
             </td>
-            <td className="px-3 py-2 text-sm text-slate-200 text-xs">
+            <td className="px-3 py-2 text-sm text-slate-200 text-xs" colSpan={3}>
               {ticket.recordedBy ?? t('detail.field.system')}
             </td>
+          </tr>
+          <tr>
             <td className="px-3 py-2 text-xs font-medium text-slate-500">
               {t('pdf.source')}
             </td>
-            <td className="px-3 py-2 text-sm text-slate-200 text-xs">
+            <td className="px-3 py-2 text-sm text-slate-200 text-xs" colSpan={3}>
               {t(`detail.source.${ticket.source.toLowerCase()}`, {
                 defaultValue: ticket.source,
               })}
@@ -206,27 +244,23 @@ export function TicketPdfPage() {
       </table>
 
       {ticket.title !== null && (
-        <div className="mt-4">
+        <div className="mt-4 print:break-inside-avoid">
           <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
             {t('pdf.fieldTitle')}
           </label>
-          <p className="text-sm text-slate-200 whitespace-pre-wrap text-xs">
-            {ticket.title}
-          </p>
+          <p className="text-sm text-slate-200 whitespace-pre-wrap text-xs">{ticket.title}</p>
         </div>
       )}
       {ticket.description !== null && (
-        <div className="mt-4">
+        <div className="mt-4 print:break-inside-avoid">
           <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
             {t('pdf.fieldDescription')}
           </label>
-          <p className="text-sm text-slate-200 whitespace-pre-wrap text-xs">
-            {ticket.description}
-          </p>
+          <p className="text-sm text-slate-200 whitespace-pre-wrap text-xs">{ticket.description}</p>
         </div>
       )}
       {ticket.faultTemplateKeys.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 print:break-inside-avoid">
           <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
             {t('pdf.fieldFaults')}
           </label>
@@ -239,6 +273,8 @@ export function TicketPdfPage() {
           </div>
         </div>
       )}
+
+      {/* Photos: show on screen and in print, never cut at a page break. */}
       {photos.length > 0 && (
         <div className="mt-4">
           <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
@@ -248,12 +284,14 @@ export function TicketPdfPage() {
             {photos.map((photo, index) => {
               const url = `${apiBaseUrl}/v1/tickets/${ticketNo}/photos/${photo.id}`
               return (
-                <div key={photo.id} className="aspect-[4/3] rounded overflow-hidden border border-slate-700 bg-slate-800">
+                <div
+                  key={photo.id}
+                  className="aspect-[4/3] rounded overflow-hidden border border-slate-700 bg-slate-800 print:break-inside-avoid"
+                >
                   <img
                     src={url}
                     alt={t('detail.photos.alt', { index: index + 1 })}
                     className="w-full h-full object-cover"
-                    loading="lazy"
                   />
                 </div>
               )
@@ -262,27 +300,43 @@ export function TicketPdfPage() {
         </div>
       )}
 
-      <div className="mt-4 print:break-inside-avoid">
+      {/* History: every event in full — date, label, actor and event text. */}
+      <div className="mt-4">
         <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
           {t('pdf.history')}
         </label>
         {events.length === 0 ? (
           <p className="text-sm text-slate-400">{t('pdf.historyEmpty')}</p>
         ) : (
-          <table className="w-full border-collapse border border-slate-700 mt-1">
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.id} className="border-b border-slate-700 last:border-0">
-                  <td className="px-3 py-1 text-xs font-medium text-slate-500 w-1/3">
+          <div className="flex flex-col gap-2 mt-1">
+            {events.map((event) => {
+              const actor =
+                event.actorKind === 'user'
+                  ? (event.actorName ?? t('detail.field.unknown'))
+                  : event.actorKind === 'public'
+                    ? t('detail.actor.external', {
+                        name: event.actorName ?? t('detail.field.unknown'),
+                      })
+                    : t(`actorKind.${event.actorKind}`, { defaultValue: event.actorKind })
+              const text = typeof event.payload.text === 'string' ? event.payload.text : typeof event.payload.reason === 'string' ? event.payload.reason : null
+              return (
+                <div key={event.id} className="flex gap-3 rounded border border-slate-700 px-3 py-2 print:break-inside-avoid">
+                  <div className="w-36 shrink-0 whitespace-nowrap text-xs font-mono text-slate-500">
                     {formatDate(event.createdAt)}
-                  </td>
-                  <td className="px-3 py-1 text-xs text-slate-200">
-                    {t(`status.events.${event.type}`, { defaultValue: event.type })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <div className="flex-1 flex-col gap-1">
+                    <div className="text-sm font-medium text-slate-200">
+                      {t(`status.events.${event.type}`, { defaultValue: event.type })}
+                    </div>
+                    <div className="text-xs text-slate-400">{actor}</div>
+                    {text !== null && text.trim() !== '' ? (
+                      <p className="text-xs whitespace-pre-wrap text-slate-300">{text}</p>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </section>

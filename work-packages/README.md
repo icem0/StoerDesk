@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked | 21 |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked | 22 |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -315,6 +315,19 @@ and `notification_preferences` (§11.3, §11.4); the new service
 kind with `readChannelConfiguration(database, env)` — a row wins over the
 environment, a kind without a row keeps its environment values, a disabled
 channel is not configured — with `secretSet` instead of the secret (ADR-0005).
+
+**Phase 14, out of band (WP-M14-22, requested by the office):** the e-mail view
+and the pdf view of a ticket become one prepared send view. The ticket detail
+header replaces the envelope icon with a paper plane ("Versenden" / "Send") that
+opens `/tickets/:ticketNo/send` — `apps/web/src/features/tickets/ticket-send-page.tsx`
+prepares the branded ticket and offers the two buttons "Als PDF speichern"
+(`window.print()` with the A4 print CSS) and "E-Mail versenden" (prefilled
+`mailto:` with subject, body and the deep link to the ticket detail) on top.
+All history events show in full (date, label, actor and event text), every
+block — each event row, each photo, each field section — avoids page-break
+cuts (`print:break-inside-avoid`) and the photos are eager so they appear in
+the printout; `ticket-email-page.tsx`, `ticket-pdf-page.tsx` and the routes
+`/tickets/:ticketNo/email` and `/tickets/:ticketNo/pdf` are gone.
 
 ## Open follow-ups
 
@@ -721,7 +734,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-18  | the mandatory minimum channels of critical tickets                 | planned                | yes     |
 | WP-M14-19  | the warning on a failed channel                                    | planned                | yes     |
 | WP-M14-20  | the notifications of the internal ticket creation                  | planned                | yes     |
-| WP-M14-21  | the exit criterion of the messenger channels                        | planned                | yes     |
+| WP-M14-21  | the exit criterion of the messenger channels                        | planned              | yes     |
+| WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -19,8 +19,8 @@ import { TicketTimeline } from './ticket-timeline'
  *
  * Layout per user request:
  * - Header: ticket number + object on the left, status + priority badges on the top
- *   right, next to them the e-mail export as an icon button and the cancel button
- *   (WP-M12-09).
+ *   right, next to them the send view as a paper-plane icon button (WP-M14-22) and the cancel
+ *   button (WP-M12-09).
  * - Timeline bar directly under the header: "Gemeldet am" left, "Reaktionszeit bis" right,
  *   6 h scale markings below the bar, milestone dots on the bar.
  * - Object row: object name + object number side by side, labels above.
@@ -247,8 +247,8 @@ export function TicketDetailPage() {
     }
     setLastError(null)
 
-    if (value === 'email') {
-      navigate(`/tickets/${ticketNo}/email`)
+    if (value === 'send') {
+      navigate(`/tickets/${ticketNo}/send`)
       return
     }
 
@@ -340,7 +340,7 @@ export function TicketDetailPage() {
   /**
    * Builds the list of workflow entries for the current status. The entries are
    * visible buttons in the escalation/action section; the menu was removed. The
-   * e-mail export and the cancel button live in the header (WP-M12-09).
+   * send view and the cancel button live in the header (WP-M12-09, WP-M14-22).
    */
   const status = ticket.status
   const req = (name: string) => (fields[name] ?? '').trim()
@@ -946,22 +946,22 @@ export function TicketDetailPage() {
           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-slate-900/30 text-slate-300">
             {t(`priority.${ticket.priority}`) ?? ticket.priority}
           </span>
-          {/* The header actions: the e-mail export as an icon and the cancel
-              button next to it (WP-M12-09). */}
+          {/* The header actions: the send view as a paper-plane icon (WP-M14-22)
+              and the cancel button next to it (WP-M12-09). */}
           <div
             data-testid="ticket-header-actions"
             className="flex items-center gap-2 sm:ml-1"
           >
             <button
-              aria-label={t('detail.menu.email')}
-              title={t('detail.menu.email')}
-              data-testid="ticket-email-button"
+              aria-label={t('detail.menu.send')}
+              title={t('detail.menu.send')}
+              data-testid="ticket-send-button"
               className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-              onClick={() => void handleOption('email')}
+              onClick={() => void handleOption('send')}
               type="button"
             >
               <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l9 6 9-6M4.5 6h15A1.5 1.5 0 0 1 21 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5v-9A1.5 1.5 0 0 1 4.5 6z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m22 2-11 16-7-12 22-4z" />
               </svg>
             </button>
             <button
@@ -1219,8 +1219,8 @@ export function TicketDetailPage() {
         </div>
       )}
 
-      {/* Escalation and workflow actions: the e-mail export and the cancel button
-          live in the header (WP-M12-09). */}
+      {/* Escalation and workflow actions: the send view and the cancel button
+          live in the header (WP-M12-09, WP-M14-22). */}
       <div
         data-testid="ticket-action-section"
         className="col-span-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60 shadow-sm"

@@ -88,7 +88,7 @@ function renderPage(status = 'NEW') {
         <MemoryRouter initialEntries={[`/tickets/${TICKET_NO}`]}>
           <Routes>
             <Route path="/tickets/:ticketNo" element={<TicketDetailPage />} />
-            <Route path="/tickets/:ticketNo/email" element={<div data-testid="email-page" />} />
+            <Route path="/tickets/:ticketNo/send" element={<div data-testid="send-page" />} />
           </Routes>
         </MemoryRouter>
       </I18nextProvider>
@@ -106,21 +106,21 @@ describe('TicketDetailPage header actions', () => {
     renderPage()
 
     const header = await waitFor(() => screen.getByTestId('ticket-header-actions'))
-    expect(within(header).getByRole('button', { name: 'E-Mail exportieren' })).toBeTruthy()
+    expect(within(header).getByRole('button', { name: 'Versenden' })).toBeTruthy()
     expect(within(header).getByRole('button', { name: 'Stornieren' })).toBeTruthy()
 
     const section = screen.getByTestId('ticket-action-section')
-    expect(within(section).queryByRole('button', { name: 'E-Mail exportieren' })).toBeNull()
+    expect(within(section).queryByRole('button', { name: 'Versenden' })).toBeNull()
     expect(within(section).queryByRole('button', { name: 'Stornieren' })).toBeNull()
   })
 
-  it('opens the e-mail page from the header icon', async () => {
+  it('opens the prepared send view from the header paper-plane icon', async () => {
     renderPage()
 
-    const button = await waitFor(() => screen.getByTestId('ticket-email-button'))
+    const button = await waitFor(() => screen.getByTestId('ticket-send-button'))
     fireEvent.click(button)
 
-    await waitFor(() => expect(screen.getByTestId('email-page')).toBeTruthy())
+    await waitFor(() => expect(screen.getByTestId('send-page')).toBeTruthy())
   })
 
   it('opens the cancel dialog from the header button', async () => {

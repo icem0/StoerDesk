@@ -677,6 +677,15 @@ answers the effective configuration with
 `readChannelConfiguration(database, env)` — a row wins over the environment, a
 kind without a row keeps its environment values, a disabled channel is not
 configured — and carries `secretSet` instead of the secret (ADR-0005 rule).
+**WP-M14-22** (out of band in phase 14, requested by the office): the e-mail
+view and the pdf view of a ticket become one prepared send view — the ticket
+detail header replaces the envelope icon with a paper plane ("Versenden" /
+"Send") that opens `/tickets/:ticketNo/send`; the prepared view carries the
+two buttons "Als PDF speichern" and "E-Mail versenden" on top, shows all
+history events in full and keeps every block (event row, photo, field
+section) clear of page-break cuts, so nothing is truncated in the printout
+and the photos appear on screen and in print; the former
+`ticket-email-page.tsx`, `ticket-pdf-page.tsx` and their routes are gone.
 
 **Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,

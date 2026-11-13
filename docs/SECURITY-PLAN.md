@@ -102,6 +102,16 @@ write-only secret of a row only decides `secretSet` and never enters the answer,
 log or an event payload (ADR-0005 rule), and the unit test carries mock values
 without contact data. No new finding.
 
+Send-view pass: 2026-11-13, diff `a4e0d4f..` (WP-M14-22 — web UI only: the new
+`ticket-send-page.tsx`, the detail header icon, the client route table, the
+locales and the header test) — areas A and B re-checked in full (no new API
+route, no new capability, no bearer scope: the client route `/tickets/:ticketNo/send`
+stays behind `RequireSession` in the `App` shell), C–K re-checked for the touched
+files: the `mailto:` subject and body only interpolate ticket fields the user
+already sees and pass through `encodeURIComponent`, the deep link carries the
+ticket number not a token, no SQL, no upload path and no log line is touched
+and the locales hold no contact data. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

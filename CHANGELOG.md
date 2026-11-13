@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The prepared send view replaces the e-mail and the pdf view (WP-M14-22): the
+  ticket detail header carries a paper-plane button ("Versenden" / "Send") that
+  opens `/tickets/:ticketNo/send` — one branded, prepared view with the two
+  buttons "Als PDF speichern" (`window.print()` with the A4 print CSS) and
+  "E-Mail versenden" (a prefilled `mailto:` link) on top; all history events
+  are visible in full (date, label, actor and event text), every block avoids
+  page-break cuts and the photos appear on screen and in the printout; the
+  former views `ticket-email-page.tsx` and `ticket-pdf-page.tsx` and the routes
+  `/tickets/:ticketNo/email` and `/tickets/:ticketNo/pdf` are gone.
 - A notification message carries the content of `specs/10-notifications.md` §11.5
   (WP-M14-07): the outbox target and `messageOf` now include the ticket number,
   priority, object name and location, system type, short text of the report and
