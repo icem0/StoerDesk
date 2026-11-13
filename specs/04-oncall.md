@@ -2,7 +2,8 @@
 
 **Chapter:** 5a
 **Scope:** ~280 lines
-**Status:** reviewed for phase 8 (WP-M8-01)
+**Status:** reviewed for phase 8 (WP-M8-01), amended for the readiness rules of
+WP-M14-26 (ADR-0021)
 
 The binding summary is `PLAN.md` §8. This slice details the settings, pools,
 weekly slots, the shift state machine, confirm/decline, swaps, ticket coupling
@@ -72,7 +73,7 @@ States:
 | State | Meaning | Counts for ticket coupling |
 | --- | --- | --- |
 | `UNFILLED` | slot without a technician | no |
-| `DRAFT` | technician assigned, not published | no |
+| `DRAFT` | technician assigned, not published, still acceptable (ADR-0021) | no |
 | `PLANNED` | published, technician has not confirmed | yes, with a warning |
 | `CONFIRMED` | technician confirmed | yes |
 | `DECLINED` | technician declined, admin must reassign | no |
@@ -84,6 +85,7 @@ Transitions (admin actions carry `oncall.admin`, technician actions
 ```
 UNFILLED / DRAFT / PLANNED / DECLINED --admin assign--> DRAFT | PLANNED
 DRAFT --admin publish--> PLANNED
+DRAFT --technician confirm--> CONFIRMED (ADR-0021: the acceptance publishes)
 PLANNED --technician confirm--> CONFIRMED
 PLANNED / CONFIRMED --technician decline (reason)--> DECLINED
 CONFIRMED --technician swap request--> SWAP_REQUESTED
@@ -125,8 +127,10 @@ generation never moves or overwrites an existing slot.
 
 - only the assigned technician or an admin may act; anyone else gets `403
   forbidden`,
-- only a `PLANNED` shift can be confirmed, only a `PLANNED` or `CONFIRMED`
-  shift can be declined, and never after `starts_at` (`409 oncall_shift_started`),
+- only a `DRAFT` or `PLANNED` shift can be confirmed, only a `PLANNED` or
+  `CONFIRMED` shift can be declined, and never after `starts_at` (`409
+  oncall_shift_started`) — the acceptance of a `DRAFT` readiness publishes it
+  (ADR-0021),
 - a decline requires a reason of 5–500 characters (`422
   oncall_decline_reason_required`); the ticket decline rule of `PLAN.md` §7
   applies unchanged,
@@ -135,6 +139,16 @@ generation never moves or overwrites an existing slot.
   current shift and does not write a second event,
 - both write one append-only `oncall_events` row: `confirmed` or `declined` with
   `{ reason? }`.
+
+The allocation announces itself (ADR-0021, WP-M14-29): `POST /api/v1/oncall/shifts`
+with a `userId` and `PATCH /api/v1/oncall/shifts/:id` with a `userId` enqueue
+`oncall.assigned` for that technician, `POST /api/v1/oncall/shifts/:id/swap`
+enqueues `oncall.swap_requested` for the requester and for a named target. The
+rows are written in the same transaction as the shift write, through the outbox
+rules of `specs/10-notifications.md` §11.7 — never in a channel call. The
+channel selection of the technician (`notification_preferences`, §11.4) decides
+which channels they are notified through; without a selection the instance chain
+of §11.1 applies.
 
 Confirm and decline are the only offline writes of phase 8 (`PLAN.md` §9). The
 web outbox stores them under a new Dexie table row kind; claiming from the pool
@@ -251,8 +265,11 @@ trigger of `PLAN.md` §15, like `ticket_events`.
 
 ## 4a.9 Boundaries
 
-- No notification delivery in this phase: the coupling sets the target and the
-  event payload; the outbox worker of phase 7 stays untouched.
+- No notification delivery in phase 8: the allocation of a readiness, a swap
+  request and the reminder of an unconfirmed shift notify the technician in
+  phase 14 through the outbox rules of `specs/10-notifications.md` §11.4 and
+  §11.7 (ADR-0021, WP-M14-27 … WP-M14-32); the coupling of a ticket keeps
+  setting target and payload only.
 - The dashboard tile and statistics of `PLAN.md` §13 are phase 9; they read the
   coupling function and the shift table.
 - Claiming from the pool and accepting a swap remain online-only.

@@ -302,7 +302,8 @@ Slots are calculated in `Europe/Berlin` local time, not as fixed 168-hour
 blocks, so DST changes remain correct. Start and end are stored as UTC.
 
 Shift states: `DRAFT` → `PLANNED` → `CONFIRMED` | `DECLINED` |
-`SWAP_REQUESTED`; a slot without a technician is `UNFILLED`.
+`SWAP_REQUESTED`; a slot without a technician is `UNFILLED`. The technician can
+also accept an assigned `DRAFT` readiness — the acceptance publishes it (ADR-0021).
 
 Swap rules:
 
@@ -321,6 +322,14 @@ Ticket coupling:
   to the group.
 - Without an on-call person, the offer goes to the group immediately and the
   admin is warned.
+- Readiness notifications (ADR-0021, WP-M14-27 … WP-M14-32): allocating a
+  technician enqueues `oncall.assigned`, an open swap enqueues
+  `oncall.swap_requested` and the escalation scan enqueues one
+  `oncall.unconfirmed_reminder` per shift that still waits for a decision
+  within `oncall.reminder_unconfirmed_h`; the technician selects those channels
+  in `/settings/notifications` (the rules of §12 apply), the message names the
+  pool, the start and end in `Europe/Berlin`, the state and the link to
+  `/oncall`.
 - The readiness has its own page `/oncall` (WP-M10-33, WP-M10-34): the
   readiness calendar shows every shift of the week with the person who has it,
   the own readiness (own shifts, iCal feed, confirm, decline, swap) is below it
@@ -498,13 +507,17 @@ Rules:
   environment is the fallback; the accounts of the users live in
   `notification_accounts`; both secrets are write-only (ADR-0019),
 - the event types are `ticket.created`, `ticket.assigned`, `ticket.escalated`
-  and `ticket.resolved`; users choose the channels per event type, the admin
-  defines the mandatory minimum channels for `critical` and the escalation
-  rule decides the channels of an escalation,
+  and `ticket.resolved` plus the readiness types `oncall.assigned`,
+  `oncall.swap_requested` and `oncall.unconfirmed_reminder` (ADR-0021); users
+  choose the channels per event type, the admin defines the mandatory minimum
+  channels for `critical` and the escalation rule decides the channels of an
+  escalation,
 - 3 retries with backoff, then the next channel in the escalation chain,
 - `notification_sent` and `notification_failed` events in the ticket history,
 - message content: ticket number, priority, object name/location, system type,
-  short text, AA/SA number if present, deep link; no photos,
+  short text, AA/SA number if present, deep link; a readiness message names pool,
+  start and end in `Europe/Berlin`, state and the link to `/oncall` (ADR-0021);
+  no photos,
 - dashboard tile with channel status and last successful delivery,
 - admin warning on channel failure.
 
@@ -1576,6 +1589,27 @@ pool and the state in every day cell and explains the colours in a legend. The t
 window starts with the current month and moves by one month with the previous and next
 buttons; the signature of the component, the API and the on-call page stay unchanged.
 
+**The readiness allocation announces itself (WP-M14-26 … WP-M14-32, out of band in
+phase 14).** The office complained that an assigned readiness cannot be accepted
+and that the allocation of a shift never reaches the technician. **WP-M14-26**
+writes the contract (`specs/04-oncall.md` §4a.3, §4a.4, §4a.9 and
+`specs/10-notifications.md` §11.4, §11.5, §11.7, §11.10, §11.12, §11.14) and the
+decision ADR-0021: the three readiness events `oncall.assigned`,
+`oncall.swap_requested` and `oncall.unconfirmed_reminder` join the notification
+events, the technician selects their channels for them in
+`/settings/notifications`, the message names pool, start, end, state and the link
+to `/oncall`, and a `DRAFT` readiness is confirmable. The children are planned:
+**WP-M14-27** widens `outbox` (`event_type`, nullable `shift_id`, the exclusive
+choice between `ticket_id` and `shift_id`) and the event check of
+`notification_preferences` in migration `0034`, **WP-M14-28** adds the shared
+readiness contracts, the shift enqueue and the shift branch of the drain,
+**WP-M14-29** enqueues `oncall.assigned` on an allocation and
+`oncall.swap_requested` on a swap request, **WP-M14-30** teaches `confirm.ts` and
+the readiness page that a `DRAFT` readiness answers a confirm, **WP-M14-31** lets
+the escalation scan enqueue one `oncall.unconfirmed_reminder` per unconfirmed
+shift and **WP-M14-32** puts the readiness selection of the technician on
+`/settings/notifications`. No product code in this package.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
@@ -1801,6 +1835,12 @@ These decisions need an ADR or explicit approval before the related WP starts:
   available; the admin configures them in the administration and names the
   channels that every critical ticket is notified through
   (`notifications.minimum_channels`); the environment stays the fallback,
+- how the allocation of a readiness reaches the technician — **resolved by
+  ADR-0021**: `oncall.assigned`, `oncall.swap_requested` and
+  `oncall.unconfirmed_reminder` are notification events, the technician selects
+  the channels in `/settings/notifications`, an allocated `DRAFT` readiness is
+  confirmable and the outbox gains `event_type` plus a nullable `shift_id`
+  (migration `0034`),
 - hosting model (homelab behind Cloudflare vs. external server) — **resolved for
   the running instance**: a host checkout deployed with `docker compose up -d
 --build` (ADR-0004, `docs/DEPLOYMENT.md`). The admin self-update is an

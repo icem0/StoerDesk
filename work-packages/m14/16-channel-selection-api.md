@@ -35,7 +35,7 @@ interfaces:
    a user: one row per user, event type and channel in
    `notification_preferences`.
 2. The routes `GET` and `PUT /api/v1/notifications/preferences` answer the
-   selection of the session; the event types are the four of §11.4 and the
+   selection of the session; the event types are the seven of §11.4 (ADR-0021) and the
    channels are the kinds of §11.1 — a value outside of them is refused with
    `422 invalid_request`.
 3. The shared contracts name the event types and the selection.

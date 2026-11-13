@@ -2,7 +2,8 @@
 
 **Chapter:** 11 (notifications)
 **Scope:** ~190 lines
-**Status:** reviewed for phase 14 (WP-M14-03)
+**Status:** reviewed for phase 14 (WP-M14-03), amended for the readiness rules of
+WP-M14-26 (ADR-0021)
 
 The binding summary is `PLAN.md` §12. This slice defines the channels of the
 outbox, where their configuration lives, how a user links an account, which
@@ -85,26 +86,33 @@ The event types of the notification are fixed:
 | `ticket.assigned` | a ticket is assigned to a person or offered to the on-call person |
 | `ticket.escalated` | an escalation rule fires |
 | `ticket.resolved` | a ticket is acknowledged or closed |
+| `oncall.assigned` | a readiness shift is allocated to a technician |
+| `oncall.swap_requested` | a swap is requested on the own confirmed shift |
+| `oncall.unconfirmed_reminder` | a shift still waits for a decision within `oncall.reminder_unconfirmed_h` |
 
 `notification_preferences` holds the selection of a user: one row per
 `(user_id, event_type, channel)`. A user without a row for an event type is
-notified through the channels of the instance (the chain of §11.1).
+notified through the channels of the instance (the chain of §11.1). Migration
+`0034` widens the event check of that table to the seven types (ADR-0021).
 
 The precedence of the rules is fixed:
 
 1. The **escalation rule** of the admin decides the channels of
    `ticket.escalated` — the selection of the user does not change it.
 2. The **selection of the user** decides the channels of `ticket.created`,
-   `ticket.assigned` and `ticket.resolved`.
+   `ticket.assigned` and `ticket.resolved` as well as the three readiness
+   events.
 3. The **mandatory minimum channels** of the admin (§11.9) are added to every
    event of a critical ticket. They cannot be switched off by a user.
 
 ## 11.5 The content of a message
 
-A message carries the ticket number, the priority, the object name and its
+A ticket message carries the ticket number, the priority, the object name and its
 location, the system type, the short text of the report, the AA/SA number if
-there is one and the deep link into the ticket. It carries no photo and no
-contact data of the reporter.
+there is one and the deep link into the ticket. A readiness message carries the
+pool name, the start and the end in `Europe/Berlin`, the state of the shift and
+the deep link to `/oncall` (ADR-0021). Neither message carries a photo or the
+contact data of a reporter.
 
 ntfy receives the priority of the ticket: `urgent` for a critical ticket, the
 normal priority otherwise. Telegram, Matrix, WhatsApp Web, Signal and e-mail
@@ -135,7 +143,12 @@ fallback in the same transaction. The successful row ends as `SENT` with the
 event `notification_sent`.
 
 The row of the outbox carries the event type of §11.4 next to its channel, so
-the status view can tell a new ticket from an escalation.
+the status view can tell a new ticket from an escalation. A readiness row
+carries `shift_id` instead of `ticket_id` (ADR-0021): exactly one of the two is
+set, and the worker builds the readiness message of §11.5 for it. The
+`oncall.unconfirmed_reminder` rows are written by the per-minute escalation scan
+for a `PLANNED` or `DRAFT` shift that starts within
+`oncall.reminder_unconfirmed_h` and has no such row yet — one reminder per shift.
 
 ## 11.8 The status and the warning on a failure
 
@@ -173,7 +186,7 @@ promises a delivery that cannot happen.
 | `notification_channels` | the columns `kind` (unique), `enabled`, `label`, `config` (jsonb) and `secret` (write-only) |
 | `notification_accounts` | new: the accounts of the users (§11.3) |
 | `notification_preferences` | new: the selection of the channels per event type (§11.4) |
-| `outbox` | the column `event_type` |
+| `outbox` | the column `event_type` (check over the seven types) and the column `shift_id` (FK to `oncall_shifts`, cascade, nullable); `ticket_id` becomes nullable with the check that exactly one of the two is set (ADR-0021, migration 0034) |
 | `settings` | the row `notifications.minimum_channels` (§11.9) |
 
 ## 11.11 The API
@@ -199,7 +212,7 @@ promises a delivery that cannot happen.
   failing channels with the time of the last failure.
 - `/settings/notifications` — the own channels: the linked accounts (Telegram,
   Matrix, ntfy, WhatsApp Web), the subscription QR of ntfy and the selection of
-  the channels per event type.
+  the channels per event type, the seven event types of §11.4 (ADR-0021).
 - Both pages are entries of the settings menu (§14 of `PLAN.md`).
 
 ## 11.13 The security
@@ -220,5 +233,7 @@ promises a delivery that cannot happen.
 - an integration test of the outbox: the account of a user is used, the
   selection of the user decides the channels, the mandatory minimum channels of
   a critical ticket are notified, a failure falls back to the next channel,
-- the exit criterion of the phase proves the three rules of §11.4 and the
-  warning of §11.8.
+- the exit criterion of the phase proves the three rules of §11.4, the warning
+  of §11.8 and the readiness rule of ADR-0021: the allocation of a technician
+  notifies that technician over the channels they selected, and a `DRAFT`
+  readiness answers a confirm.

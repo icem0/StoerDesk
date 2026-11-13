@@ -26,7 +26,8 @@ interfaces:
 
 ## Task
 
-1. The own channels page shows one row per event type of §11.4 with the
+1. The own channels page shows one row per event type of the seven of §11.4
+   (ADR-0021 — the four ticket events and the three readiness events) with the
    channels as checkboxes; a channel that is not configured is not offered and
    a channel without a linked account of the user is marked as such.
 2. The selection is saved with one `PUT /api/v1/notifications/preferences` and

@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The readiness allocation announces itself (WP-M14-26, spec and ADR-0021 only —
+  no product code): `oncall.assigned`, `oncall.swap_requested` and
+  `oncall.unconfirmed_reminder` join the notification event types, the
+  technician selects their channels for them in `/settings/notifications`, an
+  allocated technician and a swap request enqueue outbox rows in the transaction
+  of the shift write, the escalation scan writes one
+  `oncall.unconfirmed_reminder` per unconfirmed shift within
+  `oncall.reminder_unconfirmed_h`, the outbox gains `event_type` and a nullable
+  `shift_id` with the rule that exactly one of `ticket_id` and `shift_id` is set
+  (migration `0034`) and an assigned `DRAFT` readiness becomes confirmable — the
+  acceptance publishes it. `specs/04-oncall.md` §4a.3, §4a.4, §4a.9 and
+  `specs/10-notifications.md` §11.4, §11.5, §11.7, §11.10, §11.12, §11.14 carry
+  the contract, ADR-0021 the decision.
 - The own channels page `/settings/notifications` lists the channels of §11.1 with
   the state of the account of the signed-in user (WP-M14-10): the Telegram section
   asks the linking API of WP-M14-09 for a one-time code, shows it as text with the

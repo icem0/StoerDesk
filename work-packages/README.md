@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked | 22 |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself | 32  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -328,6 +328,24 @@ block — each event row, each photo, each field section — avoids page-break
 cuts (`print:break-inside-avoid`) and the photos are eager so they appear in
 the printout; `ticket-email-page.tsx`, `ticket-pdf-page.tsx` and the routes
 `/tickets/:ticketNo/email` and `/tickets/:ticketNo/pdf` are gone.
+
+**Phase 14, out of band (WP-M14-26 … WP-M14-32, requested by the office):** the
+readiness allocation announces itself. The office complained that an assigned
+readiness cannot be accepted and that the allocation never reaches the
+technician. **WP-M14-26** is the spec and decision package: `specs/04-oncall.md`
+§4a.3, §4a.4 and §4a.9 plus `specs/10-notifications.md` §11.4, §11.5, §11.7,
+§11.10, §11.12 and §11.14 carry the rules, ADR-0021 decides that `oncall.assigned`,
+`oncall.swap_requested` and `oncall.unconfirmed_reminder` are notification events,
+that the technician selects their channels for them in
+`/settings/notifications`, that the outbox gains `event_type` and a nullable
+`shift_id` and that a `DRAFT` readiness is confirmable. The children are
+implemented in numeric order: **WP-M14-27** (migration `0034`), **WP-M14-28**
+(the readiness message, the shift enqueue, the shift branch of the drain),
+**WP-M14-29** (the allocation and a swap request enqueue their rows),
+**WP-M14-30** (a `DRAFT` readiness answers a confirm), **WP-M14-31** (one
+reminder per unconfirmed shift from the escalation scan) and **WP-M14-32**
+(the readiness selection on the settings page). No product code in the spec
+package.
 
 ## Open follow-ups
 
@@ -736,6 +754,16 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-20  | the notifications of the internal ticket creation                  | planned                | yes     |
 | WP-M14-21  | the exit criterion of the messenger channels                        | planned              | yes     |
 | WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
+| WP-M14-23  | the escalation administration fully localized (out of band)                 | done    | yes     |
+| WP-M14-24  | the escalation administration explains itself (out of band)                 | done    | yes     |
+| WP-M14-25  | stage names label the reached-stage condition values (out of band)          | done    | yes     |
+| WP-M14-26  | the readiness allocation — spec, ADR-0021 and the split of the chain       | done    | yes     |
+| WP-M14-27  | the outbox and the preferences know the readiness (migration 0034)          | planned | yes     |
+| WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | planned | yes     |
+| WP-M14-29  | the allocation and a swap request enqueue their rows                       | planned | yes     |
+| WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | planned | yes     |
+| WP-M14-31  | an unconfirmed readiness reminds once                                       | planned | yes     |
+| WP-M14-32  | the readiness selection of the technician in the settings page              | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
