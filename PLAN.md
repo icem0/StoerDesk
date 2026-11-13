@@ -690,7 +690,22 @@ answers the effective configuration with
 `readChannelConfiguration(database, env)` — a row wins over the environment, a
 kind without a row keeps its environment values, a disabled channel is not
 configured — and carries `secretSet` instead of the secret (ADR-0005 rule).
-**WP-M14-22** (out of band in phase 14, requested by the office): the e-mail
+**WP-M14-15** links the WhatsApp Web account over the external bridge of the
+operator (ADR-0020): `apps/api/src/notifications/whatsapp-linking.ts` reads the
+chats of the bridge with `readBridgeStatus(config)` over `GET {baseUrl}/status`
+and answers `{ connected, chats: [{ id, label }] }` — a missing base URL, an
+unreachable bridge, a non-ok answer and an invalid JSON answer all resolve to
+`{ connected: false, chats: [] }` and never an error of the administration (§11.6);
+the bearer of the row `whatsapp` of `notification_channels` (with the
+`WHATSAPP_BRIDGE_URL` / `WHATSAPP_BRIDGE_TOKEN` environment fallback) travels only
+in that request and never into an answer, a log or an error message (§11.13).
+`GET /api/v1/notifications/accounts/whatsapp/status` (session) answers those chats
+and `POST /api/v1/notifications/accounts/whatsapp` (session) stores the chat id the
+user picked as the account via `storeAccount` of WP-M14-08 — a chat the bridge does
+not know is refused with `422 invalid_request` and nothing is written; the own
+channels page shows the state of the bridge, its chats, the account of the user and
+the button to remove it. There is no pairing inside StörDesk — that stays in the
+bridge (ADR-0020). **WP-M14-22** (out of band in phase 14, requested by the office): the e-mail
 view and the pdf view of a ticket become one prepared send view — the ticket
 detail header replaces the envelope icon with a paper plane ("Versenden" /
 "Send") that opens `/tickets/:ticketNo/send`; the prepared view carries the

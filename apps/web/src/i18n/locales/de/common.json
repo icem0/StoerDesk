@@ -152,6 +152,15 @@
         "unknown": "An unexpected error has occurred."
       }
     },
+    "whatsapp": {
+      "guidance": "The chats are owned by the bridge of the operator; the pairing stays there. Pick one of the chats of the bridge to connect it as your account.",
+      "notConnected": "The WhatsApp Web bridge is not connected. Pair it in the bridge first.",
+      "connectChat": "Connect “{{label}}”",
+      "linked": "WhatsApp Web account connected: Chat id {{chatId}}",
+      "accountLabel": "Chat name: {{label}}",
+      "remove": "Remove the WhatsApp Web account",
+      "removed": "The WhatsApp Web account was removed."
+    },
     "errors": {
       "session_invalid": "The session has expired. Please log in again.",
       "invalid_request": "The code is invalid, expired or already used – please request a new one.",

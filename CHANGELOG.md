@@ -20,7 +20,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and the send prefers the row `whatsapp` of `notification_channels`
   (`config.baseUrl`, `config.chatId`, write-only `secret`) over the
   environment (§11.2) over its own short-lived pool. No compose service, no
-  user account and no pairing — that stays WP-M14-15.
+   user account and no pairing — that stays WP-M14-15.
+- The chats of the bridge and the WhatsApp Web account (WP-M14-15):
+  `apps/api/src/notifications/whatsapp-linking.ts` reads the chats of the bridge
+  over `GET {baseUrl}/status` with `Authorization: Bearer <token>` (the ADR-0020
+  contract of §11.6) — `readBridgeStatus(config)` answers `{ connected, chats:
+  [{ id, label }] }` and a missing base URL, an unreachable bridge, a non-ok answer
+  or an invalid JSON answer all resolve to `{ connected: false, chats: [] }`, never
+  an error of the administration; the bearer never enters an answer, a log or an
+  error message. `GET /api/v1/notifications/accounts/whatsapp/status` (session)
+  answers those chats to the own channels page, `POST /api/v1/notifications/accounts/whatsapp`
+  stores the chat id the user picked as the account of the user via `storeAccount` of
+  WP-M14-08 (`externalId` the chat id, `label` the bridge label, no secret) and refuses
+  a chat the bridge does not know with `422 invalid_request` and stores nothing. The
+  bridge bearer is read from the row `whatsapp` of `notification_channels` (public
+  `config.baseUrl`, write-only `secret`) over the `WHATSAPP_BRIDGE_URL` /
+  `WHATSAPP_BRIDGE_TOKEN` environment fallback (§11.2, ADR-0020). The own channels page
+  gains the WhatsApp Web section — the state of the bridge, the list of its chats, the
+  account of the user and the button to remove it — and the texts in `de` and `en`.
+  No pairing inside StörDesk (ADR-0020), no reply of a chat and no change of the
+  adapter of WP-M14-14.
 
 ### Changed
 - The ntfy onboarding with the subscription QR (WP-M14-13): the ntfy adapter

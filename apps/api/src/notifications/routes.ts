@@ -1,4 +1,5 @@
 import fp from 'fastify-plugin'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
@@ -24,6 +25,13 @@ import { readChannelConfiguration } from './config'
 import { deleteAccount } from './accounts'
 import { storeMatrixAccount, MatrixLinkingError, type MatrixLinkingErrorCode } from './matrix-linking'
 import {
+  readBridgeStatus,
+  storeWhatsAppAccount,
+  WhatsAppLinkingError,
+  type BridgeConfig,
+  type WhatsAppLinkingErrorCode,
+} from './whatsapp-linking'
+import {
   createTelegramCode,
   redeemTelegramCode,
   TelegramLinkingError,
@@ -31,15 +39,19 @@ import {
 } from './telegram-linking'
 
 /**
- * Admin channel configuration routes, the Telegram and the Matrix account
- * linking routes and the removal of an own account
- * (`specs/10-notifications.md` §11.2, §11.11, WP-M14-05, WP-M14-09, WP-M14-11).
- * The list is the effective configuration of `readChannelConfiguration` and
- * never carries a secret; the write reports `secretSet` only. A failing test
- * send is a regular answer with `delivered: false` and the adapter code, never
- * an HTTP error of the administration. The linking routes are session-only: the
- * bot token and the Matrix access token never enter an answer, a log or an
- * error message.
+ * Admin channel configuration routes, the Telegram, the Matrix and the WhatsApp
+ * Web account linking routes and the removal of an own account
+ * (`specs/10-notifications.md` §11.2, §11.3, §11.6, §11.11, WP-M14-05, WP-M14-09,
+ * WP-M14-11, WP-M14-15). The list is the effective configuration of
+ * `readChannelConfiguration` and never carries a secret; the write reports `secretSet`
+ * only. A failing test send is a regular answer with `delivered: false` and the adapter
+ * code, never an HTTP error of the administration. The linking routes are session-only:
+ * the bot token, the Matrix access token and the bridge bearer of WhatsApp Web never
+ * enter an answer, a log or an error message. `GET /api/v1/notifications/accounts/whatsapp/status`
+ * answers the chats of the bridge (`readBridgeStatus` of §11.6) — an unreachable
+ * bridge answers `{ connected: false, chats: [] }`, never an error — and `POST
+ * /api/v1/notifications/accounts/whatsapp` stores the picked chat id as the account
+ * of the user, a chat the bridge does not know is a `422 invalid_request`.
  */
 
 type Db = Database['database']
@@ -53,6 +65,8 @@ export type NotificationChannelRoutesOptions = {
   telegramFetch?: typeof fetch
   /** Test seam: the transport of the homeserver `whoami`; defaults to `fetch`. */
   matrixFetch?: typeof fetch
+  /** Test seam: the transport of the bridge `GET /status`; defaults to `fetch`. */
+  whatsappFetch?: typeof fetch
 }
 
 const TEST_MESSAGE: NotificationMessage = {
@@ -224,8 +238,58 @@ function matrixLinkingRefusal(error: unknown): boolean {
   return error instanceof MatrixLinkingError && MATRIX_LINKING_REFUSALS.includes(error.code)
 }
 
+/** A refused WhatsApp Web chat (a chat the bridge does not know); the bearer never answers. */
+const WHATSAPP_LINKING_REFUSALS: readonly WhatsAppLinkingErrorCode[] = ['unknown_chat']
+
+function whatsappLinkingRefusal(error: unknown): boolean {
+  return error instanceof WhatsAppLinkingError && (WHATSAPP_LINKING_REFUSALS as readonly string[]).includes(error.code)
+}
+
+/** The public `config` jsonb of a channel row as a flat map of string values. */
+function bridgeSettings(value: unknown): Record<string, string> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return {}
+  }
+
+  const settings: Record<string, string> = {}
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === 'string') {
+      settings[key] = entry
+    }
+  }
+
+  return settings
+}
+
+/**
+ * The bridge config of the WhatsApp Web channel: the row `whatsapp` of
+ * `notification_channels` wins over the environment (§11.2, ADR-0020) — its
+ * public `config.baseUrl` and its write-only `secret` fall back to the
+ * `WHATSAPP_BRIDGE_URL` / `WHATSAPP_BRIDGE_TOKEN` keys. The bearer stays inside
+ * the config the caller hands to the bridge, it is never answered (§11.13).
+ */
+async function whatsappBridgeConfig(database: Db, env: Env): Promise<BridgeConfig> {
+  const [row] = await database
+    .select({
+      config: notificationChannels.config,
+      secret: notificationChannels.secret,
+    })
+    .from(notificationChannels)
+    .where(eq(notificationChannels.kind, 'whatsapp'))
+    .limit(1)
+
+  const settings = row === undefined ? {} : bridgeSettings(row.config)
+  const token = row === undefined || row.secret === '' ? env.WHATSAPP_BRIDGE_TOKEN : row.secret
+
+  return {
+    baseUrl: settings.baseUrl ?? env.WHATSAPP_BRIDGE_URL,
+    token,
+  }
+}
+
 export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
-  async (app, { database, env, channels, telegramFetch, matrixFetch }) => {
+  async (app, { database, env, channels, telegramFetch, matrixFetch, whatsappFetch }) => {
     const registry = channels ?? configuredChannels(env)
 
     app.get(
@@ -357,6 +421,44 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         } catch (error) {
           if (matrixLinkingRefusal(error)) {
             return reply.code(422).send({ code: 'invalid_request', params: { fields: ['homeserver'] } })
+          }
+
+          throw error
+        }
+      },
+    )
+
+    const chatIdSchema = z.object({ chatId: z.string().trim().min(1).max(200) })
+
+    app.get(
+      '/api/v1/notifications/accounts/whatsapp/status',
+      { preHandler: requireSession },
+      async () => readBridgeStatus(await whatsappBridgeConfig(database, env), whatsappFetch ?? fetch),
+    )
+
+    app.post(
+      '/api/v1/notifications/accounts/whatsapp',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = chatIdSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply.code(422).send({ code: 'invalid_request', params: { fields: ['chatId'] } })
+        }
+
+        try {
+          const account = await storeWhatsAppAccount(
+            database,
+            request.user?.id ?? '',
+            body.data.chatId,
+            await whatsappBridgeConfig(database, env),
+            whatsappFetch ?? fetch,
+          )
+
+          return notificationAccountSchema.parse(account)
+        } catch (error) {
+          if (whatsappLinkingRefusal(error)) {
+            return reply.code(422).send({ code: 'invalid_request', params: { fields: ['chatId'] } })
           }
 
           throw error

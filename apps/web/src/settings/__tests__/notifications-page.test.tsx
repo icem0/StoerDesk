@@ -300,4 +300,135 @@ describe('NotificationsPage', () => {
       expect.objectContaining({ credentials: 'include' }),
     )
   })
+
+  it('lists the chats of a connected bridge and connects the chat the user picks', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/whatsapp/status')) {
+        return Response.json({
+          connected: true,
+          chats: [{ id: 'chat-1', label: 'Depression Team' }, { id: 'chat-2', label: 'Office Chat' }],
+        })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/whatsapp')) {
+        if (init?.method === 'DELETE') {
+          return new Response(null, { status: 204 })
+        }
+
+        const body = JSON.parse(String(init?.body ?? '{}')) as { chatId?: string }
+        const labels: Record<string, string> = { 'chat-1': 'Depression Team', 'chat-2': 'Office Chat' }
+        const chatId = body.chatId ?? ''
+
+        if (labels[chatId] !== undefined) {
+          return Response.json({
+            channel: 'whatsapp',
+            externalId: chatId,
+            label: labels[chatId],
+            secretSet: false,
+          })
+        }
+
+        return Response.json({ code: 'invalid_request', params: { fields: ['chatId'] } }, { status: 422 })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })
+    expect(await screen.findByText('Office Chat')).toBeTruthy()
+    expect(screen.getByText('Depression Team')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Office Chat/ }))
+
+    expect(
+      await screen.findByText('WhatsApp Web account connected: Chat id chat-2')
+    ).toBeTruthy()
+    expect(screen.getByText('Chat name: Office Chat')).toBeTruthy()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/notifications/accounts/whatsapp',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ chatId: 'chat-2' }),
+      }),
+    )
+  })
+
+  it('shows the not-connected bridge without any chat and refuses a chat the bridge does not know', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/whatsapp/status')) {
+        return Response.json({ connected: false, chats: [] })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })).toBeTruthy()
+    expect(await screen.findByText(/The WhatsApp Web bridge is not connected/i)).toBeTruthy()
+    expect(screen.queryAllByText('Depression Team')).toHaveLength(0)
+  })
+
+  it('removes the connected WhatsApp Web account', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/whatsapp/status')) {
+        return Response.json({
+          connected: true,
+          chats: [{ id: 'chat-1', label: 'Depression Team' }],
+        })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/whatsapp')) {
+        if (init?.method === 'DELETE') {
+          return new Response(null, { status: 204 })
+        }
+
+        return Response.json({
+          channel: 'whatsapp',
+          externalId: 'chat-1',
+          label: 'Depression Team',
+          secretSet: false,
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const connectButton = await screen.findByRole('button', { name: /Depression Team/ })
+    fireEvent.click(connectButton)
+    expect(await screen.findByText('WhatsApp Web account connected: Chat id chat-1')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the WhatsApp Web account' }))
+
+    expect(await screen.findByText('The WhatsApp Web account was removed.')).toBeTruthy()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/notifications/accounts/whatsapp',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+  })
 })

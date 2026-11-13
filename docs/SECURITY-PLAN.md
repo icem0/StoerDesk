@@ -153,6 +153,28 @@ pair is stored via the drizzle-bound `storeAccount` of WP-M14-08 with the token
 as the write-only secret and the answer reports `secretSet` only, and the unit
 test carries mock tokens and mock users without contact data. No new finding.
 
+WhatsApp-linking pass: 2026-11-13, diff `965c0e8..` (WP-M14-15 — the new linking
+module, the WhatsApp `GET .../status` and `POST` in `apps/api/src/notifications/routes.ts`,
+the own-channels section and the unit test) — areas A and B re-checked in full (the package
+adds `GET /api/v1/notifications/accounts/whatsapp/status` and `POST
+/api/v1/notifications/accounts/whatsapp`, both session-guarded only — `401
+session_invalid` without one, no permission key and no bearer scope; the removal stays the
+existing `DELETE /api/v1/notifications/accounts/:channel` whose predicate carries the session
+user id, so the account of another user can never be removed), C–K re-checked for
+`apps/api/src/notifications/whatsapp-linking.ts`, `apps/api/src/notifications/routes.ts` and
+`apps/web/src/settings/notifications-page.tsx`: the bridge config is read from the row
+`whatsapp` of `notification_channels` (public `config.baseUrl`, write-only `secret`) with the
+`WHATSAPP_BRIDGE_URL` / `WHATSAPP_BRIDGE_TOKEN` environment fallback, the bearer travels only
+in the `authorization` header of that one `GET /status` request, an unreachable bridge, a
+non-ok answer and an invalid JSON answer all resolve to `{ connected: false, chats: [] }`
+— never an error — the submitted `chatId` passes through a trimmed, length-bound zod schema
+before anything is read and is stored only when the bridge names it (a chat the bridge does
+not know is a `422 invalid_request`, nothing is written), the account is stored via the
+drizzle-bound `storeAccount` of WP-M14-08 with `externalId` the chat id and no secret, no
+value is interpolated into SQL, and neither the answer, a log nor the error text carries the
+bearer (§11.13) — the PWA section renders bridge chats and the account with no contact data.
+No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

@@ -27,8 +27,12 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
  * user derived from the user id — `stoerdesk-<userId>` — plus the `ntfy://<topic>`
  * deep link) and mounts the `NtfySubscription` card of WP-M7-03 with the API answer
  * as its props, so the browser sees the subscription QR of the user instead of the
- * build-time `VITE_NTFY_*` pair (the fallback stays for an image that carries them);
- * WhatsApp Web follows in WP-M14-15; the code is shown as text — never as an image —
+  * build-time `VITE_NTFY_*` pair (the fallback stays for an image that carries them);
+  * the WhatsApp Web section (WP-M14-15) shows the bridge of §11.6 — its state, its chats
+  * from `GET /api/v1/notifications/accounts/whatsapp/status`, the chat the user connects as
+  * their account via `POST /api/v1/notifications/accounts/whatsapp` and the button to
+  * `DELETE` it again; an unreachable bridge shows the chats-are-empty state, never an
+  * error — and the code is shown as text — never as an image —
  * and the error of the API arrives as text.
  */
 
@@ -49,6 +53,12 @@ interface NtfySubscriptionAnswer {
   topic: string
   subscriptionUrl: string
   deepLink: string
+}
+
+/** The bridge answer of `GET /api/v1/notifications/accounts/whatsapp/status` (WP-M14-15). */
+interface WhatsAppStatusAnswer {
+  connected: boolean
+  chats: Array<{ id: string; label: string }>
 }
 
 function errorCode(error: unknown): string {
@@ -147,6 +157,28 @@ export function NotificationsPage() {
     queryFn: () => apiFetch<NtfySubscriptionAnswer>('/v1/notifications/accounts/ntfy'),
     retry: false,
   })
+
+  const whatsappStatus = useQuery({
+    queryKey: ['whatsapp-status'],
+    queryFn: () => apiFetch<WhatsAppStatusAnswer>('/v1/notifications/accounts/whatsapp/status'),
+    retry: false,
+  })
+
+  const whatsappLink = useMutation({
+    mutationFn: (variables: { chatId: string }) =>
+      apiFetch<NotificationAccount>('/v1/notifications/accounts/whatsapp', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ chatId: variables.chatId }),
+      }),
+  })
+
+  const whatsappRemove = useMutation({
+    mutationFn: () =>
+      apiFetch<void>('/v1/notifications/accounts/whatsapp', { method: 'DELETE' }),
+  })
+
+  const whatsappLinked = whatsappLink.isSuccess && !whatsappRemove.isSuccess
 
   if (telegramCode.isError) {
     return (
@@ -338,6 +370,81 @@ export function NotificationsPage() {
 
         {matrixRemove.isSuccess ? (
           <p className="mt-2 text-sm text-emerald-400">{t('notifications.matrix.removed')}</p>
+        ) : null}
+      </section>
+
+      <section
+        className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+        aria-labelledby="whatsapp-heading"
+      >
+        <h2 id="whatsapp-heading" className="text-lg font-semibold">
+          {t('notifications.kinds.whatsapp')}
+        </h2>
+
+        <p className="text-sm text-slate-300">{t('notifications.whatsapp.guidance')}</p>
+
+        {whatsappStatus.isError ? (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {errorMessage(t, whatsappStatus.error)}
+          </p>
+        ) : null}
+
+        {whatsappStatus.isSuccess && !whatsappStatus.data?.connected ? (
+          <p className="mt-2 text-sm text-amber-400">{t('notifications.whatsapp.notConnected')}</p>
+        ) : null}
+
+        {whatsappStatus.isSuccess && whatsappStatus.data?.connected ? (
+          <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(whatsappStatus.data?.chats ?? []).map((chat) => {
+              const name = chat.label === '' ? chat.id : chat.label
+
+              return (
+                <li key={chat.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span>{name}</span>
+                  <button
+                    className="rounded bg-sky-700 px-4 py-1 font-medium text-white disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                    disabled={whatsappLinked || whatsappLink.isPending || whatsappRemove.isPending}
+                    onClick={() => whatsappLink.mutate({ chatId: chat.id })}
+                    type="button"
+                  >
+                    {t('notifications.whatsapp.connectChat', { label: name })}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+
+        {whatsappLink.isError ? (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {errorMessage(t, whatsappLink.error)}
+          </p>
+        ) : null}
+
+        {whatsappLinked ? (
+          <>
+            <p className="mt-2 text-sm text-emerald-400">
+              {t('notifications.whatsapp.linked', { chatId: whatsappLink.data.externalId })}
+            </p>
+            {whatsappLink.data.label !== '' ? (
+              <p className="mt-1 text-sm text-slate-400">
+                {t('notifications.whatsapp.accountLabel', { label: whatsappLink.data.label })}
+              </p>
+            ) : null}
+          </>
+        ) : null}
+
+        <button
+          className="mt-2 rounded bg-slate-700 px-4 py-2 font-medium text-slate-100 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          disabled={!whatsappLinked || whatsappRemove.isPending}
+          onClick={() => whatsappRemove.mutate()}
+          type="button"
+        >
+          {t('notifications.whatsapp.remove')}
+        </button>
+
+        {whatsappRemove.isSuccess ? (
+          <p className="mt-2 text-sm text-emerald-400">{t('notifications.whatsapp.removed')}</p>
         ) : null}
       </section>
 

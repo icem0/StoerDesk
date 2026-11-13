@@ -1,7 +1,7 @@
 # WP-M14-15: The chats of the bridge and the WhatsApp Web account
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-14
 phase: 14
 milestone: m14
