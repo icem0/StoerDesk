@@ -10,6 +10,7 @@ import {
   type TelegramLinkCodeResponse,
 } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../lib/api'
+import { NtfySubscription } from '../features/settings/NtfySubscription'
 
 /**
  * The own channels page (`specs/10-notifications.md` §11.1, §11.3, §11.12,
@@ -21,8 +22,13 @@ import { ApiError, apiFetch } from '../lib/api'
  * the matrix id and the write-only access token are sent to
  * `POST /api/v1/notifications/accounts/matrix` and the linked account is shown
  * afterwards; the section can also `DELETE` the account again. A refused pair or an
- * unreachable homeserver is shown as inline text. The ntfy and WhatsApp Web sections
- * follow in WP-M14-13 and WP-M14-15; the code is shown as text — never as an image —
+ * unreachable homeserver is shown as inline text. The ntfy section (WP-M14-13)
+ * fetches `GET /api/v1/notifications/accounts/ntfy` (the subscription address of the
+ * user derived from the user id — `stoerdesk-<userId>` — plus the `ntfy://<topic>`
+ * deep link) and mounts the `NtfySubscription` card of WP-M7-03 with the API answer
+ * as its props, so the browser sees the subscription QR of the user instead of the
+ * build-time `VITE_NTFY_*` pair (the fallback stays for an image that carries them);
+ * WhatsApp Web follows in WP-M14-15; the code is shown as text — never as an image —
  * and the error of the API arrives as text.
  */
 
@@ -36,6 +42,14 @@ const matrixErrorCodes = [
   'homeserver_unreachable',
   'unknown',
 ] as const
+
+/** The subscription answer of `GET /api/v1/notifications/accounts/ntfy` (WP-M14-13). */
+interface NtfySubscriptionAnswer {
+  publicUrl: string
+  topic: string
+  subscriptionUrl: string
+  deepLink: string
+}
 
 function errorCode(error: unknown): string {
   return error instanceof ApiError && typeof error.code === 'string' ? error.code : 'unknown'
@@ -127,6 +141,12 @@ export function NotificationsPage() {
   })
 
   const matrixLinked = matrixLink.isSuccess && !matrixRemove.isSuccess
+
+  const ntfySubscription = useQuery({
+    queryKey: ['ntfy-subscription'],
+    queryFn: () => apiFetch<NtfySubscriptionAnswer>('/v1/notifications/accounts/ntfy'),
+    retry: false,
+  })
 
   if (telegramCode.isError) {
     return (
@@ -320,6 +340,13 @@ export function NotificationsPage() {
           <p className="mt-2 text-sm text-emerald-400">{t('notifications.matrix.removed')}</p>
         ) : null}
       </section>
+
+      <div className="mt-6">
+        <NtfySubscription
+          publicUrl={ntfySubscription.data?.publicUrl ?? ''}
+          topic={ntfySubscription.data?.topic ?? ''}
+        />
+      </div>
     </main>
   )
 }

@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The ntfy onboarding with the subscription QR (WP-M14-13): the ntfy adapter
+  gains an optional `userTopic` and prefers the topic of the ntfy account of
+  the user of a message when the caller set one, otherwise the configured
+  topic of the instance (§11.3); `GET /api/v1/notifications/accounts/ntfy` is
+  a session route that answers the public subscription address
+  `${NTFY_PUBLIC_URL}/${topic}` and the `ntfy://<topic>` deep link of the
+  signed-in user, whose topic is derived from the user id — `stoerdesk-<userId>`
+  — and an empty answer (all fields `''`) when the ntfy server is not
+  configured; the `NtfySubscription` card of WP-M7-03 is mounted on
+  `/settings/notifications` with the API answer as its props (the build-time
+  `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC` fallback stays for an image build
+  that carries them). No payload of the ntfy adapter changes beyond the
+  urgency of WP-M14-07 and no browser push registration is added.
 - The Matrix section of the own channels page (WP-M14-12): `/settings/notifications`
   gains a Matrix section with the homeserver, the matrix id and the access token
   (a password field, `autoComplete="new-password"`, never re-filled and never part

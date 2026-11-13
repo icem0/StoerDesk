@@ -292,3 +292,68 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
     expect(response.statusCode).toBe(403)
   })
 })
+
+describe('the ntfy subscription of the user (WP-M14-13)', () => {
+  it('answers the subscription address of the user when the ntfy channel is configured', async () => {
+    const app = await buildApp({
+      held: [],
+      store: [
+        row({
+          kind: 'ntfy',
+          config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+          secret: '',
+        }),
+      ],
+    })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts/ntfy',
+      headers: { 'x-test-user': 'admin-1' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      publicUrl: 'https://ntfy.sh',
+      topic: 'stoerdesk-admin-1',
+      subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin-1',
+      deepLink: 'ntfy://stoerdesk-admin-1',
+    })
+  })
+
+  it('answers an empty subscription when the ntfy channel is not configured', async () => {
+    const app = await buildApp({ held: [], store: [row()] })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts/ntfy',
+      headers: { 'x-test-user': 'admin-1' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      publicUrl: '',
+      topic: '',
+      subscriptionUrl: '',
+      deepLink: '',
+    })
+  })
+
+  it('answers 401 without a session', async () => {
+    const app = await buildApp({
+      held: [],
+      store: [
+        row({
+          kind: 'ntfy',
+          config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+          secret: '',
+        }),
+      ],
+    })
+
+    const response = await app.inject({ method: 'GET', url: '/api/v1/notifications/accounts/ntfy' })
+
+    expect(response.statusCode).toBe(401)
+    expect(response.json<{ code: string }>().code).toBe('session_invalid')
+  })
+})

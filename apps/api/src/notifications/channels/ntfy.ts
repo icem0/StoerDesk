@@ -6,6 +6,13 @@ export interface NtfyConfig {
   /** Topic notifications are published to, e.g. stoerdesk */
   topic: string
   /**
+   * Topic of the ntfy account of the user this message targets
+   * (`specs/10-notifications.md` §11.3). When it is set the adapter sends to it
+   * instead of the configured topic; otherwise the configured topic of the
+   * instance is used (WP-M14-13).
+   */
+  userTopic?: string
+  /**
    * Locale of the `view` action label. `de` is the default and reference locale
    * (`PLAN.md` §3.1) and an unset locale resolves to it, so a caller that knows
    * no locale still gets a translated label (WP-M7-04b).
@@ -52,7 +59,9 @@ const ntfyPriority = (message: NotificationMessage): string =>
  * The message is published as JSON with a single `view` action that links to
  * the PWA. `pwaUrl` may be empty — the notification still arrives, the action
  * is just not clickable. A critical ticket raises the ntfy priority to
- * `urgent` (WP-M14-07).
+ * `urgent` (WP-M14-07). The topic is the topic of the ntfy account of the
+ * user when the caller set `userTopic`, otherwise the configured topic of the
+ * instance (`specs/10-notifications.md` §11.3, WP-M14-13).
  */
 export async function sendNtfyNotification(
   config: NtfyConfig,
@@ -61,7 +70,8 @@ export async function sendNtfyNotification(
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
   const priority = ntfyPriority(message)
-  const response = await fetchImpl(`${config.url.replace(/\/$/, '')}/${config.topic}`, {
+  const topic = config.userTopic && config.userTopic !== '' ? config.userTopic : config.topic
+  const response = await fetchImpl(`${config.url.replace(/\/$/, '')}/${topic}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Priority: priority },
     body: JSON.stringify({

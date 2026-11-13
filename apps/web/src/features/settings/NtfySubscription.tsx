@@ -2,17 +2,18 @@ import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
 
 /**
- * ntfy subscription card (WP-M7-03, `PLAN.md` §11 QR rules and §12 ntfy channel).
+ * ntfy subscription card (WP-M7-03, extended by WP-M14-13).
  *
  * The QR carries the public subscription address `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}`
  * of `docs/DEPLOYMENT.md`: any browser opens the ntfy web reader at that address and
  * the ntfy app recognises the same address in a scanned QR. The `ntfy://` deep link is
  * the alternative payload for a phone that already runs the app, chosen by the caller.
  *
- * The topic is static environment configuration — there is no API route for it
- * (non-goal of WP-M7-03). A settings page passes the two values as props; when no
- * page passes them, the build-time `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC` pair is
- * used, so an image build that carries them shows the card without a round trip.
+ * The address arrives as props from the settings page of WP-M14-13 — `GET /api/v1/notifications/accounts/ntfy`
+ * answers the subscription address of the signed-in user, whose topic is derived from
+ * the user id (`stoerdesk-<userId>`, §11.3). When no page passes the values, the build-time
+ * `VITE_NTFY_PUBLIC_URL` / `VITE_NTFY_TOPIC` pair is used, so an image build that carries
+ * them shows the card without a round trip (the fallback of WP-M7-03).
  *
  * The card renders nothing while the topic or the server address is empty: a
  * deployment without an ntfy channel never shows a QR that subscribes to nothing.

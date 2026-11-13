@@ -1,7 +1,7 @@
 # WP-M14-13: The ntfy onboarding with the QR of the subscription
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-10
 phase: 14
 milestone: m14

@@ -267,4 +267,37 @@ describe('NotificationsPage', () => {
       expect.objectContaining({ method: 'DELETE' }),
     )
   })
+
+  it('mounts the ntfy subscription card with the address of the user', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/ntfy')) {
+        return Response.json({
+          publicUrl: 'https://ntfy.sh',
+          topic: 'stoerdesk-admin',
+          subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin',
+          deepLink: 'ntfy://stoerdesk-admin',
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { container } = renderPage()
+
+    expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
+    expect(screen.getByText('mit dem Handy scannen')).toBeTruthy()
+    expect(container.querySelectorAll('svg')).toHaveLength(1)
+    expect(container.querySelector('svg title')?.textContent).toBe('ntfy-Abo QR-Code')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/notifications/accounts/ntfy',
+      expect.objectContaining({ credentials: 'include' }),
+    )
+  })
 })

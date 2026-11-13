@@ -174,6 +174,37 @@ const requireSession: preHandlerHookHandler = async (request, reply) => {
   await reply.code(401).send({ code: 'session_invalid', params: {} })
 }
 
+/**
+ * The subscription of the user (WP-M14-13): the public address of the ntfy
+ * server with the topic of the user and the `ntfy://` deep link of the app.
+ * The topic is derived from the user id — `stoerdesk-<userId>` (§11.3) — and
+ * the answer is empty when the ntfy server is not configured (no row and no
+ * usable environment fallback).
+ */
+function ntfySubscriptionOf(configuredUrl: string, topic: string): {
+  publicUrl: string
+  topic: string
+  subscriptionUrl: string
+  deepLink: string
+} {
+  const base = configuredUrl.replace(/\/+$/, '')
+
+  return {
+    publicUrl: base,
+    topic,
+    subscriptionUrl: `${base}/${topic}`,
+    deepLink: `ntfy://${topic}`,
+  }
+}
+
+/** Empty answer when the ntfy server is not configured (§11.1, WP-M14-13). */
+const EMPTY_NTFY_SUBSCRIPTION = {
+  publicUrl: '',
+  topic: '',
+  subscriptionUrl: '',
+  deepLink: '',
+}
+
 /** A refused exchange (wrong, expired or unknown code, wrong user) answers 422. */
 const LINKING_REFUSALS: readonly TelegramLinkingErrorCode[] = ['invalid_code', 'code_expired', 'wrong_user']
 
@@ -350,6 +381,23 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         }
 
         return reply.code(204).send()
+      },
+    )
+
+    app.get(
+      '/api/v1/notifications/accounts/ntfy',
+      { preHandler: requireSession },
+      async (request) => {
+        const userId = request.user?.id ?? ''
+        const configurations = await readChannelConfiguration(database, env)
+        const ntfy = configurations.find((configuration) => configuration.kind === 'ntfy')
+        const configuredUrl = ntfy?.config.url ?? ''
+
+        if (ntfy === undefined || !ntfy.enabled || configuredUrl === '') {
+          return EMPTY_NTFY_SUBSCRIPTION
+        }
+
+        return ntfySubscriptionOf(configuredUrl, `stoerdesk-${userId}`)
       },
     )
   },

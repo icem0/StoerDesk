@@ -54,6 +54,20 @@ describe('sendNtfyNotification', () => {
     expect(payload.priority).toBe('urgent')
   })
 
+  it('sends to the topic of the account when the caller provides it (WP-M14-13)', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
+
+    await sendNtfyNotification(
+      { ...config, userTopic: 'stoerdesk-admin' },
+      { title: 'New ticket', body: 'Lift 2 is broken' },
+      'https://stoerdesk.local/pwa',
+      fetchMock as unknown as typeof fetch,
+    )
+
+    const [url] = fetchMock.mock.calls[0] as unknown as [string]
+    expect(url).toBe('https://ntfy.sh/stoerdesk-admin')
+  })
+
   it('labels the view action in the configured locale (WP-M7-04b)', async () => {
     const cases: { locale: 'de' | 'en'; label: string }[] = [
       { locale: 'de', label: 'Öffnen' },
