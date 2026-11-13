@@ -357,6 +357,21 @@ reminder per unconfirmed shift from the escalation scan) and **WP-M14-32**
 (the readiness selection on the settings page). No product code in the spec
 package.
 
+**Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
+link carries the host. The office wants the subscription QR of the own
+channels page to land in the ntfy app and subscribe automatically. The ntfy
+docs state that the app opens and subscribes a topic with the host-carrying
+deep link `ntfy://<host>/<topic>` (a `https://<host>/<topic>/subscribe` is not
+possible on Android) and that an insecure server takes `?secure=false` — the
+payload `ntfy://<topic>` of WP-M7-03 and WP-M14-13 lacked the host. **WP-M14-33**
+is implemented: the deep-link branch of `subscriptionValue` in
+`apps/web/src/features/settings/NtfySubscription.tsx` and the `deepLink` of
+`GET /api/v1/notifications/accounts/ntfy` in `apps/api/src/notifications/routes.ts`
+now build the documented host-carrying form. No credential, token or user id
+enters the QR or the deep link — ntfy offers no URL-login scheme and ADR-0005
+keeps every secret write-only, so a protected topic is unlocked by a login in
+the ntfy app itself.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -764,7 +779,6 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-20  | the notifications of the internal ticket creation                  | planned                | yes     |
 | WP-M14-21  | the exit criterion of the messenger channels                        | planned              | yes     |
 | WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
-| WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
 | WP-M14-23  | the escalation administration fully localized (out of band)                 | done    | yes     |
 | WP-M14-24  | the escalation administration explains itself (out of band)                 | done    | yes     |
 | WP-M14-25  | stage names label the reached-stage condition values (out of band)          | done    | yes     |
@@ -775,6 +789,15 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | planned | yes     |
 | WP-M14-31  | an unconfirmed readiness reminds once                                       | planned | yes     |
 | WP-M14-32  | the readiness selection of the technician in the settings page              | planned | yes     |
+| WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
+| WP-M14-33  | the ntfy deep link of the QR carries the host (out of band)               | done    | yes     |
+| WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | planned | yes     |
+| WP-M14-36  | ticket status management API (CRUD for statuses)                          | planned | yes     |
+| WP-M14-37  | ticket status management UI (admin page for statuses)                     | planned | yes     |
+| WP-M14-38  | configurable ticket transitions in DB + DB-driven workflow engine         | planned | yes     |
+| WP-M14-39  | ticket transition management API and UI                                   | planned | yes     |
+| WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |
+| WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
