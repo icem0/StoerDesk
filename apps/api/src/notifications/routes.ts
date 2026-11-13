@@ -198,11 +198,16 @@ const requireSession: preHandlerHookHandler = async (request, reply) => {
 }
 
 /**
- * The subscription of the user (WP-M14-13): the public address of the ntfy
- * server with the topic of the user and the `ntfy://` deep link of the app.
- * The topic is derived from the user id — `stoerdesk-<userId>` (§11.3) — and
- * the answer is empty when the ntfy server is not configured (no row and no
- * usable environment fallback).
+ * The subscription of the user (WP-M14-13, deep link corrected by WP-M14-33):
+ * the public address of the ntfy server with the topic of the user and the
+ * `ntfy://<host>/<topic>` deep link of the app — the ntfy docs state that a
+ * deep link only opens the app and subscribes when it carries the host
+ * (`https://<host>/<topic>/subscribe` is not possible on Android), and an
+ * `http://` server takes the documented `?secure=false` suffix. The topic is
+ * derived from the user id — `stoerdesk-<userId>` (§11.3) — and the answer is
+ * empty when the ntfy server is not configured (no row and no usable
+ * environment fallback). No credential ever enters the link: ntfy offers no
+ * URL-login scheme and ADR-0005 keeps every secret write-only.
  */
 function ntfySubscriptionOf(configuredUrl: string, topic: string): {
   publicUrl: string
@@ -216,8 +221,16 @@ function ntfySubscriptionOf(configuredUrl: string, topic: string): {
     publicUrl: base,
     topic,
     subscriptionUrl: `${base}/${topic}`,
-    deepLink: `ntfy://${topic}`,
+    deepLink: ntfyDeepLink(base, topic),
   }
+}
+
+/** The ntfy app deep link `ntfy://<host>/<topic>` — host = the base without scheme (WP-M14-33). */
+function ntfyDeepLink(base: string, topic: string): string {
+  const insecure = /^http:\/\//i.test(base)
+  const host = base.replace(/^https?:\/\//i, '')
+
+  return `ntfy://${host}/${topic}${insecure ? '?secure=false' : ''}`
 }
 
 /** Empty answer when the ntfy server is not configured (§11.1, WP-M14-13). */

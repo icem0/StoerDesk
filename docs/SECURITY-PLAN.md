@@ -202,6 +202,20 @@ interpolation), a repeated `(event_type, channel)` pair is written once, the sel
 carries machine keys only — no secret, no name, no contact value — and the unit test
 carries mock users and mock channels. No new finding.
 
+ntfy-deep-link pass: 2026-11-13, diff `9718d1d..` (WP-M14-33 — the deep-link
+derivation in `apps/api/src/notifications/routes.ts`, the web card
+`apps/web/src/features/settings/NtfySubscription.tsx` and the two touched unit
+tests) — areas A and B re-checked in full (no new route, no new capability, no
+bearer scope: the existing `GET /api/v1/notifications/accounts/ntfy` stays
+session-guarded only and takes the user id from the session, so the topic and
+the host of another user can never be answered), C–K re-checked for the touched
+files: the deep link `ntfy://<host>/<topic>` is derived from the configured
+public server address with its scheme stripped — no credential, no token and no
+account secret enters the answer, the QR payload or a log (§11.13, ADR-0005),
+the route keeps an empty `GET` without parameters, no SQL, no path join and no
+upload is touched and the tests carry mock hosts and mock users without contact
+data. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

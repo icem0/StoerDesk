@@ -317,7 +317,7 @@ describe('the ntfy subscription of the user (WP-M14-13)', () => {
       publicUrl: 'https://ntfy.sh',
       topic: 'stoerdesk-admin-1',
       subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin-1',
-      deepLink: 'ntfy://stoerdesk-admin-1',
+      deepLink: 'ntfy://ntfy.sh/stoerdesk-admin-1',
     })
   })
 

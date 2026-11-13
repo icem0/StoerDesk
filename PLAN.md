@@ -1646,6 +1646,24 @@ the escalation scan enqueue one `oncall.unconfirmed_reminder` per unconfirmed
 shift and **WP-M14-32** puts the readiness selection of the technician on
 `/settings/notifications`. No product code in this package.
 
+**The ntfy deep link carries the host (WP-M14-33, out of band in phase 14,
+requested by the office).** The office wants the subscription QR of the own
+channels page to land in the ntfy app and subscribe automatically. The ntfy
+docs state that the app opens and subscribes a topic with the host-carrying
+deep link `ntfy://<host>/<topic>` (a `https://<host>/<topic>/subscribe` is not
+possible on Android) and that an insecure server takes the suffix
+`?secure=false` — the payload `ntfy://<topic>` of WP-M7-03 and WP-M14-13
+lacked the host. WP-M14-33 corrects the deep-link branch of `subscriptionValue`
+in `apps/web/src/features/settings/NtfySubscription.tsx` and the `deepLink` of
+the subscription answer of `GET /api/v1/notifications/accounts/ntfy`
+(`apps/api/src/notifications/routes.ts`) to that documented form, the host
+being the public server address without its scheme. **No credential enters the
+QR or the deep link:** ntfy offers no URL-login scheme and ADR-0005 keeps every
+secret write-only, so a protected topic is unlocked by a login in the ntfy app
+itself — a scanned QR never carries a user name or a token. The card, the route
+answer, the web-address branch, the adapter and the payload stay otherwise
+unchanged.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

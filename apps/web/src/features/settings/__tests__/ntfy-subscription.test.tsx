@@ -31,8 +31,13 @@ describe('subscriptionValue', () => {
     expect(subscriptionValue('ntfy.example.org/', 'stoerdesk', false)).toBe('https://ntfy.example.org/stoerdesk')
   })
 
-  it('switches to the ntfy app deep link on request', () => {
-    expect(subscriptionValue('https://ntfy.sh', 'stoerdesk', true)).toBe('ntfy://stoerdesk')
+  it('switches to the host-carrying ntfy app deep link on request (WP-M14-33)', () => {
+    expect(subscriptionValue('https://ntfy.sh', 'stoerdesk', true)).toBe('ntfy://ntfy.sh/stoerdesk')
+  })
+
+  it('keeps a bare host in the deep link and marks an http server as insecure', () => {
+    expect(subscriptionValue('ntfy.example.org', 'stoerdesk', true)).toBe('ntfy://ntfy.example.org/stoerdesk')
+    expect(subscriptionValue('http://ntfy.example.org/', 'stoerdesk', true)).toBe('ntfy://ntfy.example.org/stoerdesk?secure=false')
   })
 })
 

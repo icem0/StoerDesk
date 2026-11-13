@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ntfy deep link of the subscription QR carries its host (WP-M14-33, out of
+  band in phase 14): the ntfy app opens and subscribes a topic only with the
+  host-carrying form `ntfy://<host>/<topic>` (the docs state that a
+  `https://<host>/<topic>/subscribe` is not possible on Android), so the
+  payload `ntfy://<topic>` of WP-M7-03 and WP-M14-13 never landed on a phone.
+  The deep-link branch of `subscriptionValue` in
+  `apps/web/src/features/settings/NtfySubscription.tsx` and the `deepLink` of
+  `GET /api/v1/notifications/accounts/ntfy` in
+  `apps/api/src/notifications/routes.ts` now build the documented form (host =
+  the public server address without scheme, `?secure=false` for an `http://`
+  server). No credential, token or user id enters the QR or the deep link —
+  ntfy offers no URL-login scheme and ADR-0005 keeps every secret write-only,
+  so a protected topic is unlocked by a login in the ntfy app itself. The
+  adapter, the payload and the web-address branch of the card are unchanged.
 - The WhatsApp Web bridge becomes a channel adapter (WP-M14-14):
   `sendWhatsAppNotification` posts `{ chatId, text }` with
   `Authorization: Bearer <token>` to `POST {baseUrl}/messages` — the ADR-0020

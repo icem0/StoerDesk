@@ -6,8 +6,10 @@ import { QRCodeSVG } from 'qrcode.react'
  *
  * The QR carries the public subscription address `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}`
  * of `docs/DEPLOYMENT.md`: any browser opens the ntfy web reader at that address and
- * the ntfy app recognises the same address in a scanned QR. The `ntfy://` deep link is
- * the alternative payload for a phone that already runs the app, chosen by the caller.
+ * the ntfy app recognises the same address in a scanned QR. The `ntfy://<host>/<topic>`
+ * deep link (host-carrying since WP-M14-33, the format the ntfy docs state for
+ * opening and subscribing in the app) is the alternative payload for a phone that
+ * already runs the app, chosen by the caller.
  *
  * The address arrives as props from the settings page of WP-M14-13 — `GET /api/v1/notifications/accounts/ntfy`
  * answers the subscription address of the signed-in user, whose topic is derived from
@@ -32,9 +34,22 @@ function ntfyBaseUrl(publicUrl: string): string {
   return withScheme.replace(/\/+$/, '')
 }
 
-/** Payload of the QR: the web address or the `ntfy://` deep link of the app. */
+/** Payload of the QR: the web address or the `ntfy://<host>/<topic>` deep link of the app. */
 export function subscriptionValue(publicUrl: string, topic: string, deepLink: boolean): string {
-  return deepLink ? `ntfy://${topic}` : `${ntfyBaseUrl(publicUrl)}/${topic}`
+  return deepLink ? ntfyDeepLink(publicUrl, topic) : `${ntfyBaseUrl(publicUrl)}/${topic}`
+}
+
+/**
+ * The ntfy app deep link (corrected by WP-M14-33): the ntfy docs open and
+ * subscribe a topic only with the host-carrying form `ntfy://<host>/<topic>` —
+ * host = `publicUrl` without its scheme — and an `http://` server takes the
+ * documented `?secure=false` suffix. No credential ever enters the link.
+ */
+function ntfyDeepLink(publicUrl: string, topic: string): string {
+  const insecure = /^http:\/\//i.test(publicUrl)
+  const host = publicUrl.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
+
+  return `ntfy://${host}/${topic}${insecure ? '?secure=false' : ''}`
 }
 
 export interface NtfySubscriptionOptions {
