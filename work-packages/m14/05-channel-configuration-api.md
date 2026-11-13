@@ -1,7 +1,7 @@
 # WP-M14-05: The API of the channel configuration
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-04
 phase: 14
 milestone: m14

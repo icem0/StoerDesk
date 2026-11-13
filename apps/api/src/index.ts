@@ -37,6 +37,7 @@ import { seedEscalation } from './db/seed-escalation'
 import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startTicketEscalation } from './jobs/escalation'
 import { startNotificationOutboxJob } from './notifications/outbox'
+import { notificationChannelRoutes } from './notifications/routes'
 import { startQrTokenCleanup } from './jobs/qr-cleanup'
 import { startPrivacyRetentionJob } from './jobs/privacy-retention'
 import { startWebhookDeliveryJob } from './jobs/webhooks'
@@ -136,6 +137,7 @@ export async function buildServer() {
   await app.register(adminRolesRoutes, { database })
   await app.register(adminGroupsRoutes, { database })
   await app.register(adminApiKeyRoutes, { database })
+  await app.register(notificationChannelRoutes, { database, env })
   await app.register(webhookRoutes, { database })
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsDashboardRoutes, { database })

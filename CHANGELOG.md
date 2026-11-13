@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The channel configuration has its API (WP-M14-05): `GET /api/v1/admin/channels`
+  answers the effective configuration of every channel behind `notification.read`
+  and `PATCH /api/v1/admin/channels/:kind` plus
+  `POST /api/v1/admin/channels/:kind/test` behind `notification.write`; a
+  non-empty secret replaces the stored one, an empty or missing secret leaves it
+  untouched, no answer carries a secret and a failing test send is a `200` with
+  `delivered: false` and the adapter code.
 - The configuration of the messenger channels lives in the database (WP-M14-04):
   migration `0033_notification_channel_config.sql` extends `notification_channels`
   with `kind` (unique), `enabled`, `label`, `config` (jsonb) and the write-only
