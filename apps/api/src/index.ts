@@ -34,6 +34,7 @@ import { seedBaseUser } from './db/seed-base'
 import { seedRbac } from './db/seed-rbac'
 import { seedStandardTexts } from './db/seed-standard-texts'
 import { seedEscalation } from './db/seed-escalation'
+import { seedTicketStatuses } from './db/seed/statuses'
 import { startBmaAnlageSync } from './jobs/bma-sync'
 import { startTicketEscalation } from './jobs/escalation'
 import { startNotificationOutboxJob } from './notifications/outbox'
@@ -204,6 +205,7 @@ if (invokedDirectly) {
   })
   await seedStandardTexts(database)
   await seedEscalation(database)
+  await seedTicketStatuses(database)
   await client.end({ timeout: 5 })
 
   const app = await buildServer()

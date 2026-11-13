@@ -487,3 +487,20 @@ export const ticketDetailResponseSchema = z.object({
 })
 
 export type TicketDetailResponse = z.infer<typeof ticketDetailResponseSchema>
+
+/**
+ * A row of the `ticket_statuses` table (`specs/07-escalation.md` §7.1,
+ * WP-M14-35). The key is the machine-readable identity (e. g. `NEW`, `CLOSED`),
+ * the names carry one label per locale (`de`, `en`), `color` is a Tailwind
+ * color class for the status badge, `position` orders the status in lists,
+ * `active` hides inactive statuses from the UI and `is_terminal` marks a
+ * status after which a ticket leaves the workflow (`CLOSED`, `CANCELLED`).
+ */
+export type DbTicketStatus = {
+  key: string
+  names: Record<string, string>
+  color: string
+  position: number
+  active: boolean
+  isTerminal: boolean
+}

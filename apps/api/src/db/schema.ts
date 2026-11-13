@@ -1270,6 +1270,41 @@ export const escalationFirings = pgTable(
   ],
 )
 
+/**
+ * A configurable ticket status of the installation (`specs/07-escalation.md`
+ * §7.1, WP-M14-35). The status of a ticket is stored as a text key on
+ * `tickets.status`; this table holds the display names, colors and flags that
+ * the administration maintains.
+ */
+export const ticketStatuses = pgTable(
+  'ticket_statuses',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    /** The machine-readable identity of the status (e. g. `NEW`, `CLOSED`). */
+    key: text('key').notNull(),
+    /** One display name per locale (`de`, `en`). */
+    names: jsonb('names').notNull().default({}),
+    /** Tailwind color class for the status badge. */
+    color: text('color').notNull().default('#6b7280'),
+    /** Order of the status in lists. */
+    position: integer('position').notNull().default(0),
+    /** Inactive statuses are hidden from the UI. */
+    active: boolean('active').notNull().default(true),
+    /** Terminal statuses end the workflow (`CLOSED`, `CANCELLED`). */
+    isTerminal: boolean('is_terminal').notNull().default(false),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('ticket_statuses_key_key').on(table.key),
+    index('ticket_statuses_position_idx').on(table.position),
+    check(
+      'ticket_statuses_key_check',
+      sql`${table.key} IN ('NEW','IN_REVIEW','WORK_ORDER_CREATED','OFFERED','ASSIGNED','ACCEPTED','ACKNOWLEDGED','CLOSED','CANCELLED')`,
+    ),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -1340,3 +1375,5 @@ export type NotificationAccount = typeof notificationAccounts.$inferSelect
 export type NewNotificationAccount = typeof notificationAccounts.$inferInsert
 export type NotificationPreference = typeof notificationPreferences.$inferSelect
 export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
+export type TicketStatusRow = typeof ticketStatuses.$inferSelect
+export type NewTicketStatusRow = typeof ticketStatuses.$inferInsert
