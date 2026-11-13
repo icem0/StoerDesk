@@ -1,7 +1,7 @@
 # WP-M14-08: The accounts of the users
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-04
 phase: 14
 milestone: m14
@@ -64,6 +64,6 @@ secret and removes it again.
 
 - Files changed: the new account service, the shared contracts and the tests
 - Interfaces added: `listAccounts`, `storeAccount`, `deleteAccount`
-- Verified: `npm run check`
+- Verified: typecheck, eslint, vitest (unit), `i18n:check`, `wp:check`
 - Follow-up WP: WP-M14-09 — the Telegram linking via a one-time code
 - Open question: none

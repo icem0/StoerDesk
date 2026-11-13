@@ -50,6 +50,32 @@ export const channelTestResponseSchema = z.object({
   code: z.string().optional(),
 })
 
+/**
+ * The account of a user at one channel (`specs/10-notifications.md` §11.3,
+ * WP-M14-08). The secret is write-only: a request may carry it, an answer never
+ * does — it only reports `secretSet` (ADR-0005 rule, §11.13).
+ */
+export const notificationAccountSchema = z.object({
+  channel: notificationChannelKindSchema,
+  /** The address at the channel (chat id, matrix id, topic, bridge chat id). */
+  externalId: z.string(),
+  label: z.string(),
+  /** Whether a secret is stored — the secret itself is never answered. */
+  secretSet: z.boolean(),
+})
+
+export const notificationAccountListResponseSchema = z.object({
+  accounts: z.array(notificationAccountSchema),
+})
+
+export const storeNotificationAccountRequestSchema = z.object({
+  channel: notificationChannelKindSchema,
+  externalId: z.string().trim().min(1).max(500),
+  label: z.string().trim().max(200).optional(),
+  /** A non-empty value replaces the stored secret; empty or missing leaves it untouched. */
+  secret: z.string().max(4096).optional(),
+})
+
 export type ChannelConfiguration = z.infer<typeof channelConfigurationSchema>
 export type ChannelConfigurationListResponse = z.infer<
   typeof channelConfigurationListResponseSchema
@@ -58,3 +84,10 @@ export type UpdateChannelConfigurationRequest = z.infer<
   typeof updateChannelConfigurationRequestSchema
 >
 export type ChannelTestResponse = z.infer<typeof channelTestResponseSchema>
+export type NotificationAccount = z.infer<typeof notificationAccountSchema>
+export type NotificationAccountListResponse = z.infer<
+  typeof notificationAccountListResponseSchema
+>
+export type StoreNotificationAccountRequest = z.infer<
+  typeof storeNotificationAccountRequestSchema
+>

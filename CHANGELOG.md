@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The accounts of the users are a service (WP-M14-08): `listAccounts`,
+  `storeAccount` and `deleteAccount` read, upsert and remove the account of a
+  user at a channel — at most one per channel, an update without a new secret
+  keeps the stored one, and no answer carries the write-only secret (only
+  `secretSet`).
 - The prepared send view replaces the e-mail and the pdf view (WP-M14-22): the
   ticket detail header carries a paper-plane button ("Versenden" / "Send") that
   opens `/tickets/:ticketNo/send` — one branded, prepared view with the two
