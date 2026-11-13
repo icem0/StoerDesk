@@ -17,6 +17,7 @@ const SETTINGS_SECTIONS = [
     key: 'personal',
     items: [
       { key: 'mySettings', path: '/settings/me' },
+      { key: 'notifications', path: '/settings/notifications' },
       { key: 'myShifts', path: '/oncall' },
     ],
   },

@@ -1,7 +1,7 @@
 # WP-M14-10: The own channels — the page and the Telegram section
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-09
 phase: 14
 milestone: m14

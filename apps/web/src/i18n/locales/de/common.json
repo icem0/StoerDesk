@@ -92,7 +92,8 @@
       "channels": "Kanäle",
       "webhooks": "Webhooks",
       "branding": "Darstellung",
-      "escalation": "Eskalation"
+      "escalation": "Eskalation",
+      "notifications": "Benachrichtigungen"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
@@ -106,6 +107,38 @@
     "subscribe": "In der ntfy-App abonnieren",
     "qrLabel": "ntfy-Abo QR-Code",
     "appHint": "mit dem Handy scannen"
+  },
+  "notifications": {
+    "title": "Your channels",
+    "hint": "The channels with the state of the account connected for the signed-in user.",
+    "kinds": {
+      "signal": "Signal",
+      "matrix": "Matrix",
+      "ntfy": "ntfy",
+      "email": "Email",
+      "telegram": "Telegram",
+      "webpush": "Web Push",
+      "whatsapp": "WhatsApp Web"
+    },
+    "state": {
+      "linked": "Connected",
+      "notLinked": "Not connected yet",
+      "none": "No account needed",
+      "later": "Follows in a later package"
+    },
+    "telegram": {
+      "guidance": "Please send the code shown below as a message to the StörDesk Telegram bot.",
+      "expiresHint": "The code is only valid for ten minutes and can only be used once.",
+      "submit": "Connect the Telegram account",
+      "linked": "Telegram account connected: Chat id {{chatId}}",
+      "accountLabel": "Name of the chat: {{label}}",
+      "removeHint": "Removing a connected account follows in the next package."
+    },
+    "errors": {
+      "session_invalid": "The session has expired. Please log in again.",
+      "invalid_request": "The code is invalid, expired or already used – please request a new one.",
+      "unknown": "An unexpected error has occurred."
+    }
   },
   "my": {
     "title": "Meine Einstellungen",

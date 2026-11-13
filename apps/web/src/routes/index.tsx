@@ -8,6 +8,7 @@ import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
 import { MySettingsPage } from '../settings/my-settings-page'
+import { NotificationsPage } from '../settings/notifications-page'
 import { SettingsPage } from '../settings/settings-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
@@ -197,6 +198,17 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <MySettingsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own channels of §11.12 (WP-M14-10): the Telegram section asks the
+        // session-only linking routes of WP-M14-09 for a code and shows the
+        // account after the redemption.
+        path: '/settings/notifications',
+        element: (
+          <RequireSession>
+            <NotificationsPage />
           </RequireSession>
         ),
       },

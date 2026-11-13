@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The own channels page `/settings/notifications` lists the channels of §11.1 with
+  the state of the account of the signed-in user (WP-M14-10): the Telegram section
+  asks the linking API of WP-M14-09 for a one-time code, shows it as text with the
+  bot guidance, submits it and shows the linked chat id and account; API errors
+  arrive as inline text, removing an account is a placeholder section until the
+  `DELETE` route of WP-M14-11 (the route is never called) and the settings menu
+  gets the entry "Benachrichtigungen" / "Notifications" in the Personal group.
 - The Telegram account linking is an API service and two session routes (WP-M14-09):
   `POST /api/v1/notifications/accounts/telegram/code` creates a one-time code
   (six unambiguous characters, ten minutes, used once) in the write-only settings
