@@ -113,7 +113,7 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText('Testnachricht zugestellt.')).toBeTruthy()
+    expect(await screen.findByText('Testnachricht gesendet.')).toBeTruthy()
   })
 
   it('marks a failed test send as failed and shows its code', async () => {

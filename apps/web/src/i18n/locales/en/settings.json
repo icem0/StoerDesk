@@ -456,7 +456,7 @@
       "saved": "Saved.",
       "test": "Send test message",
       "testing": "Sending test message …",
-      "testDelivered": "Test message delivered.",
+      "testDelivered": "Test message sent.",
       "testFailed": "Test message failed ({{code}}).",
       "readOnly": "Read-only: you lack the notification.write permission.",
       "errors": {

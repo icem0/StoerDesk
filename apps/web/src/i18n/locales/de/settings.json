@@ -456,7 +456,7 @@
       "saved": "Gespeichert.",
       "test": "Testnachricht senden",
       "testing": "Testnachricht wird gesendet …",
-      "testDelivered": "Testnachricht zugestellt.",
+      "testDelivered": "Testnachricht gesendet.",
       "testFailed": "Testnachricht fehlgeschlagen ({{code}}).",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
       "errors": {
