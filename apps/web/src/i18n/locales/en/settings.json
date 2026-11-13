@@ -464,6 +464,13 @@
         "forbidden": "No permission.",
         "invalid_request": "Please check the input.",
         "unknown": "The action failed."
+      },
+      "minimum": {
+        "title": "Mandatory minimum channels for critical tickets",
+        "hint": "These channels are notified for every critical ticket in addition to the user's own selection — only configured channels may be selected.",
+        "label": "Minimum channels",
+        "saving": "Saving …",
+        "save": "Save"
       }
     }
   },

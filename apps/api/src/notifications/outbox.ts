@@ -10,9 +10,10 @@ import {
   type NotificationMessage,
 } from './channels/index'
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
+import { readMinimumChannels } from '../settings/notifications'
 
 /** The insert capability — enough for both the live database and a transaction node. */
-type DbLike = Pick<Db, 'insert'>
+type DbLike = Pick<Db, 'insert' | 'select'>
 
 /** One notification queued for one channel — the insert shape of an `outbox` row. */
 export interface OutboxRow {
@@ -397,6 +398,10 @@ export async function startNotificationOutboxJob(
  * same transaction the caller is in. It only inserts — there is deliberately no
  * HTTP call, so a channel failure can never lose the ticket event (`PLAN.md` §12).
  * Returns the number of rows written; an unconfigured environment writes none.
+ *
+ * A critical ticket additionally queues its mandatory minimum channels
+ * (`notifications.minimum_channels`, WP-M14-18) on top of the user's selection;
+ * a channel that is already queued for the ticket is not queued twice.
  */
 export async function enqueueOutbox(
   database: DbLike,
@@ -404,6 +409,14 @@ export async function enqueueOutbox(
   env: Env,
 ): Promise<number> {
   const rows = outboxRows(ticket, env)
+
+  if (ticket.priority === 'critical') {
+    for (const channel of await readMinimumChannels(database)) {
+      if (!rows.some((row) => row.channel === channel)) {
+        rows.push({ ticketId: ticket.id, channel, target: messageParams(ticket) })
+      }
+    }
+  }
 
   if (rows.length === 0) {
     return 0

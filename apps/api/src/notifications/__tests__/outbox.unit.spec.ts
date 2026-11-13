@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 type Db = Database['database']
 
 /** The insert capability the create path uses — `DbLike` in `outbox.ts`. */
-type DbLike = Pick<Db, 'insert'>
+type DbLike = Pick<Db, 'insert' | 'select'>
 
 const ticket = {
   id: 'ticket-id-1',
@@ -18,6 +18,13 @@ const ticket = {
   systemType: 'BMA',
   shortText: 'Melder im Treppenhaus piept',
   workOrderNo: 'AA-4711',
+}
+
+/** The mandatory minimum channels the fake settings row returns. */
+let minimumChannels: string[] = []
+
+function setMinimumChannels(channels: string[]): void {
+  minimumChannels = channels
 }
 
 /**
@@ -37,6 +44,13 @@ async function enqueueInto(env: Env): Promise<{ count: number; rows: OutboxRow[]
       values: (values: OutboxRow[]) => {
         rows.push(...values)
       },
+    }),
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: () => Promise.resolve([{ value: minimumChannels }]),
+        }),
+      }),
     }),
   } as unknown as DbLike
 
@@ -75,6 +89,25 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
 
     expect(count).toBe(0)
     expect(rows).toHaveLength(0)
+  })
+
+  it('adds the mandatory minimum channels to a critical ticket without duplicating', async () => {
+    setMinimumChannels([])
+    const configured = loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' })
+
+    setMinimumChannels(['ntfy'])
+    const first = await enqueueInto(configured)
+
+    expect(first.count).toBe(1)
+    expect(first.rows.map((row) => row.channel)).toEqual(['ntfy'])
+
+    setMinimumChannels(['matrix'])
+    const second = await enqueueInto(configured)
+
+    expect(second.count).toBe(2)
+    expect(second.rows.map((row) => row.channel)).toEqual(['ntfy', 'matrix'])
+
+    setMinimumChannels([])
   })
 })
 

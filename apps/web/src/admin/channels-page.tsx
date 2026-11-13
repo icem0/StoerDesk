@@ -6,6 +6,7 @@ import {
   type ChannelConfiguration,
   type ChannelConfigurationListResponse,
   type ChannelTestResponse,
+  type MinimumChannelsResponse,
   type NotificationChannelKind,
   type UpdateChannelConfigurationRequest,
 } from '@stoerdesk/shared'
@@ -202,11 +203,32 @@ export function ChannelsPage() {
   const { t } = useTranslation('settings')
   const mayRead = usePermission('notification.read')
   const mayWrite = usePermission('notification.write')
+  const mayReadSettings = usePermission('settings.read')
+  const mayWriteSettings = usePermission('settings.write')
   const query = useQuery({
     queryKey: ['channels'],
     queryFn: () => apiFetch<ChannelConfigurationListResponse>('/v1/admin/channels'),
     enabled: mayRead,
     retry: false,
+  })
+  const minimumQuery = useQuery({
+    queryKey: ['minimumChannels'],
+    queryFn: () =>
+      apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels'),
+    enabled: mayReadSettings,
+    retry: false,
+  })
+  const queryClient = useQueryClient()
+  const saveMinimum = useMutation({
+    mutationFn: (body: { channels: string[] }) =>
+      apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels', {
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['minimumChannels'] })
+    },
   })
 
   return (
@@ -241,6 +263,57 @@ export function ChannelsPage() {
           ))}
         </div>
       )}
+
+      {mayReadSettings ? (
+        <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {t('admin.channels.minimum.title')}
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              {t('admin.channels.minimum.hint')}
+            </p>
+          </div>
+
+          {!minimumQuery.isLoading && !minimumQuery.isError ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-4">
+              <label className="flex flex-col gap-1 text-sm">
+                {t('admin.channels.minimum.label')}
+              </label>
+              {(query.data?.channels ?? []).map((channel) => {
+                const selected = (minimumQuery.data?.channels ?? []).includes(channel.kind)
+
+                return (
+                  <label
+                    className="flex items-center gap-2 text-sm whitespace-nowrap"
+                    key={channel.kind}
+                  >
+                    <input
+                      checked={selected}
+                      disabled={!mayWriteSettings}
+                      onChange={(event) => {
+                        const current = minimumQuery.data?.channels ?? []
+                        const next = event.target.checked
+                          ? [...current, channel.kind]
+                          : current.filter((kind) => kind !== channel.kind)
+
+                        saveMinimum.mutate({ channels: next })
+                      }}
+                      type="checkbox"
+                    />
+                    {t(`admin.channels.kinds.${channel.kind}`)}
+                  </label>
+                )
+              })}
+              {saveMinimum.isError ? (
+                <p className="text-sm text-rose-400" role="alert">
+                  {t(`admin.channels.errors.${errorCode(saveMinimum.error)}`)}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
     </section>
   )
 }

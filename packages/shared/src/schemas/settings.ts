@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { notificationChannelKindSchema } from './notification.js'
+
 /**
  * Public branding of the GUI (`PLAN.md` §14, WP-M2-29). One jsonb row under the
  * key `branding` of the existing `settings` table: `{ companyName }`.
@@ -33,3 +35,10 @@ export const updateBrandingRequestSchema = z.object({
 
 export type BrandingResponse = z.infer<typeof brandingResponseSchema>
 export type UpdateBrandingRequest = z.infer<typeof updateBrandingRequestSchema>
+
+/** The mandatory minimum channels of critical tickets (`WP-M14-18`). */
+export const minimumChannelsResponseSchema = z.object({
+  channels: z.array(notificationChannelKindSchema),
+})
+
+export type MinimumChannelsResponse = z.infer<typeof minimumChannelsResponseSchema>

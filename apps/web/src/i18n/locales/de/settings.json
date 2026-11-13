@@ -464,6 +464,13 @@
         "forbidden": "Keine Berechtigung.",
         "invalid_request": "Bitte prüfen Sie die Eingaben.",
         "unknown": "Aktion fehlgeschlagen."
+      },
+      "minimum": {
+        "title": "Pflichtkanäle für kritische Meldungen",
+        "hint": "Diese Kanäle werden bei jeder kritischen Meldung zusätzlich benachrichtigt – unabhängig von der eigenen Auswahl. Nur konfigurierte Kanäle dürfen ausgewählt werden.",
+        "label": "Pflichtkanäle",
+        "saving": "Speichern …",
+        "save": "Speichern"
       }
     }
   },
