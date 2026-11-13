@@ -132,6 +132,27 @@ message (§11.13) — every settings and account write binds its values through
 drizzle (the service of WP-M14-08), and the unit test carries a mock bot token
 and mock users without contact data. No new finding.
 
+Matrix-linking pass: 2026-11-13, diff `c65039c..` (WP-M14-11 — the new linking
+module, the Matrix `POST` and the account `DELETE` in
+`apps/api/src/notifications/routes.ts`, the shared contract and the unit test) —
+areas A and B re-checked in full (the package adds `POST
+/api/v1/notifications/accounts/matrix` and `DELETE
+/api/v1/notifications/accounts/:channel`, both session-guarded only — `401
+session_invalid` without one, no permission key and no bearer scope; the `DELETE`
+predicate carries the session user id, so the account of another user can never
+be removed), C–K re-checked for `apps/api/src/notifications/matrix-linking.ts`,
+`apps/api/src/notifications/routes.ts` and
+`packages/shared/src/schemas/notification.ts`: the body passes through
+`matrixLinkingRequestSchema` (trimmed, length-bound) before anything is read, the
+homeserver must be an https URL before the request and the access token travels
+only in the `authorization` header of that one `whoami` request, a non-ok answer,
+an unreachable homeserver and an invalid JSON answer become typed
+`MatrixLinkingError`s carrying a status code or fixed English text only — the
+token never enters an answer, a log or an error message (§11.13) — the verified
+pair is stored via the drizzle-bound `storeAccount` of WP-M14-08 with the token
+as the write-only secret and the answer reports `secretSet` only, and the unit
+test carries mock tokens and mock users without contact data. No new finding.
+
 
 
 1. `git ls-files` — the full file list; every area is worked along this list.

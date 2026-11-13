@@ -4,6 +4,7 @@ import {
   channelConfigurationListResponseSchema,
   channelConfigurationSchema,
   channelTestResponseSchema,
+  matrixLinkingRequestSchema,
   notificationAccountSchema,
   notificationChannelKindSchema,
   PERMISSIONS,
@@ -20,6 +21,8 @@ import type { Database } from '../db/client'
 import { notificationChannels } from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
 import { readChannelConfiguration } from './config'
+import { deleteAccount } from './accounts'
+import { storeMatrixAccount, MatrixLinkingError, type MatrixLinkingErrorCode } from './matrix-linking'
 import {
   createTelegramCode,
   redeemTelegramCode,
@@ -28,13 +31,15 @@ import {
 } from './telegram-linking'
 
 /**
- * Admin channel configuration routes and the Telegram account linking routes
- * (`specs/10-notifications.md` §11.2, §11.11, WP-M14-05, WP-M14-09). The list is
- * the effective configuration of `readChannelConfiguration` and never carries a
- * secret; the write reports `secretSet` only. A failing test send is a regular
- * answer with `delivered: false` and the adapter code, never an HTTP error of the
- * administration. The linking routes are session-only: the bot token never enters
- * an answer, a log or an error message.
+ * Admin channel configuration routes, the Telegram and the Matrix account
+ * linking routes and the removal of an own account
+ * (`specs/10-notifications.md` §11.2, §11.11, WP-M14-05, WP-M14-09, WP-M14-11).
+ * The list is the effective configuration of `readChannelConfiguration` and
+ * never carries a secret; the write reports `secretSet` only. A failing test
+ * send is a regular answer with `delivered: false` and the adapter code, never
+ * an HTTP error of the administration. The linking routes are session-only: the
+ * bot token and the Matrix access token never enter an answer, a log or an
+ * error message.
  */
 
 type Db = Database['database']
@@ -46,6 +51,8 @@ export type NotificationChannelRoutesOptions = {
   channels?: readonly NotificationChannel[]
   /** Test seam: the transport of the Bot API `getUpdates`; defaults to `fetch`. */
   telegramFetch?: typeof fetch
+  /** Test seam: the transport of the homeserver `whoami`; defaults to `fetch`. */
+  matrixFetch?: typeof fetch
 }
 
 const TEST_MESSAGE: NotificationMessage = {
@@ -174,8 +181,20 @@ function telegramLinkingRefusal(error: unknown): boolean {
   return error instanceof TelegramLinkingError && LINKING_REFUSALS.includes(error.code)
 }
 
+/** A refused Matrix verification (refused pair); a transport failure stays a server error. */
+const MATRIX_LINKING_REFUSALS: readonly MatrixLinkingErrorCode[] = [
+  'invalid_homeserver',
+  'homeserver_error',
+  'invalid_answer',
+  'account_mismatch',
+]
+
+function matrixLinkingRefusal(error: unknown): boolean {
+  return error instanceof MatrixLinkingError && MATRIX_LINKING_REFUSALS.includes(error.code)
+}
+
 export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
-  async (app, { database, env, channels, telegramFetch }) => {
+  async (app, { database, env, channels, telegramFetch, matrixFetch }) => {
     const registry = channels ?? configuredChannels(env)
 
     app.get(
@@ -282,6 +301,55 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
 
           throw error
         }
+      },
+    )
+
+    app.post(
+      '/api/v1/notifications/accounts/matrix',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = matrixLinkingRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply.code(422).send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        try {
+          const account = await storeMatrixAccount(
+            database,
+            request.user?.id ?? '',
+            body.data,
+            matrixFetch ?? fetch,
+          )
+
+          return notificationAccountSchema.parse(account)
+        } catch (error) {
+          if (matrixLinkingRefusal(error)) {
+            return reply.code(422).send({ code: 'invalid_request', params: { fields: ['homeserver'] } })
+          }
+
+          throw error
+        }
+      },
+    )
+
+    app.delete<{ Params: { channel: string } }>(
+      '/api/v1/notifications/accounts/:channel',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const channel = notificationChannelKindSchema.safeParse(request.params.channel)
+
+        if (!channel.success) {
+          return reply.code(404).send({ code: 'account_not_found', params: { fields: ['channel'] } })
+        }
+
+        const removed = await deleteAccount(database, request.user?.id ?? '', channel.data)
+
+        if (!removed) {
+          return reply.code(404).send({ code: 'account_not_found', params: { fields: ['channel'] } })
+        }
+
+        return reply.code(204).send()
       },
     )
   },

@@ -1,7 +1,7 @@
 # WP-M14-11: The Matrix account linking
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-08
 phase: 14
 milestone: m14

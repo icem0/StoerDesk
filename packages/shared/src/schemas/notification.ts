@@ -91,10 +91,24 @@ export const redeemTelegramLinkCodeRequestSchema = z.object({
   code: z.string().trim().min(1).max(64),
 })
 
+/**
+ * The Matrix linking of a user (`specs/10-notifications.md` §11.3, §11.11,
+ * WP-M14-11): the homeserver, the matrix id and the access token are verified
+ * against the homeserver before the account is stored. The token is write-only:
+ * the request may carry it, an answer never does — the answer is a
+ * `notificationAccountSchema` with `secretSet`.
+ */
+export const matrixLinkingRequestSchema = z.object({
+  homeserver: z.string().trim().min(1).max(500),
+  matrixId: z.string().trim().min(1).max(500),
+  accessToken: z.string().trim().min(1).max(4096),
+})
+
 export type TelegramLinkCodeResponse = z.infer<typeof telegramLinkCodeResponseSchema>
 export type RedeemTelegramLinkCodeRequest = z.infer<
   typeof redeemTelegramLinkCodeRequestSchema
 >
+export type MatrixLinkingRequest = z.infer<typeof matrixLinkingRequestSchema>
 
 export type ChannelConfiguration = z.infer<typeof channelConfigurationSchema>
 export type ChannelConfigurationListResponse = z.infer<

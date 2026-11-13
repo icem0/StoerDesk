@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The Matrix account linking is an API service and two session routes (WP-M14-11):
+  `verifyMatrixAccount` asks `GET /_matrix/client/v3/account/whoami` of the
+  homeserver of the user with the submitted access token and compares the
+  answered `user_id` with the submitted matrix id;
+  `POST /api/v1/notifications/accounts/matrix` stores the verified pair as the
+  account of the user with the token as the write-only secret via `storeAccount`
+  and answers `secretSet` only, while a refused pair, a homeserver that rejects
+  the token, an answer that names no user and a malformed request answer
+  `422 invalid_request`; `DELETE /api/v1/notifications/accounts/:channel` removes
+  the own account of a channel with `204` and answers `404` for an unknown
+  account. The token never appears in an answer, a log or an error message.
 - The readiness allocation announces itself (WP-M14-26, spec and ADR-0021 only —
   no product code): `oncall.assigned`, `oncall.swap_requested` and
   `oncall.unconfirmed_reminder` join the notification event types, the
