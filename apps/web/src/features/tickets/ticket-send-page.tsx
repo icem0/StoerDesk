@@ -95,20 +95,27 @@ export function TicketSendPage() {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const ticketUrl = `${origin}/tickets/${ticketNo}`
   const subject = t('email.subject', { ticketNo: ticket.ticketNo })
+  /** Real newlines: `encodeURIComponent` turns them into `%0A` once, so the
+   * e-mail client receives line breaks, never a literal `%0A` in the body. */
   const body = [
     t('email.bodyGreeting'),
     '',
     t('email.bodyTicket', { ticketNo: ticket.ticketNo }),
+    ...(ticket.title !== null ? [`${t('detail.field.title')}: ${ticket.title}`] : []),
     t('email.bodyObject', { object: ticket.objectName, objectNo: ticket.objectNo }),
+    ...(ticket.faultTemplateKeys.length > 0
+      ? [`${t('pdf.fieldFaults')}: ${ticket.faultTemplateKeys.map((key) => faultLabels[key] ?? key).join(', ')}`]
+      : []),
     t('email.bodyStatus', { status: t(`status.values.${ticket.status}`) ?? ticket.status }),
     t('email.bodyPriority', { priority: t(`priority.${ticket.priority}`) ?? ticket.priority }),
     t('email.bodyReported', { reportedAt: formatDate(ticket.reportedAt) }),
-    ticket.description !== null ? t('email.bodyDescription', { description: ticket.description }) : '',
+    ...(ticket.deadlineAt !== null && ticket.deadlineAt !== undefined
+      ? [`${t('pdf.deadlineAt')}: ${formatDate(ticket.deadlineAt)}`]
+      : []),
+    ...(ticket.description !== null ? [t('email.bodyDescription', { description: ticket.description })] : []),
     '',
     ticketUrl,
-  ]
-    .filter((line) => line !== '')
-    .join('%0A')
+  ].join('\n')
 
   return (
     <section className="ticket-pdf flex flex-col gap-4">
