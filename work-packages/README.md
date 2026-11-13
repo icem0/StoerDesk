@@ -795,7 +795,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-36  | ticket status management API (CRUD for statuses)                          | planned | yes     |
 | WP-M14-37  | ticket status management UI (admin page for statuses)                     | planned | yes     |
 | WP-M14-38  | configurable ticket transitions in DB + DB-driven workflow engine         | planned | yes     |
-| WP-M14-39  | ticket transition management API and UI                                   | planned | yes     |
+| WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
+| WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |
 | WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |
 | WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
 

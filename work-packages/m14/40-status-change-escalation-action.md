@@ -2,7 +2,7 @@
 
 format: small-model
 status: planned
-depends-on: WP-M14-39
+depends-on: WP-M14-39b
 phase: 14
 context-budget: 22k tokens
 spec: specs/07-escalation.md §7.5, §7.11
