@@ -84,6 +84,19 @@ const TEST_MESSAGE: NotificationMessage = {
   body: 'This is a test notification.',
 }
 
+/** Builds a copy-pasteable curl command that reproduces the ntfy test request. */
+function buildNtfyCurl(url: string, topic: string, pwaUrl: string): string {
+  const base = url.replace(/\/$/, '')
+  const fullUrl = `${base}/${topic}`
+  const body = JSON.stringify({
+    title: TEST_MESSAGE.title,
+    message: TEST_MESSAGE.body,
+    priority: 'default',
+    actions: [{ action: 'view', label: 'Öffnen', uri: pwaUrl }],
+  })
+  return `curl -X POST "${fullUrl}" \\\n  -H "Content-Type: application/json" \\\n  -H "Priority: default" \\\n  -d '${body}'`
+}
+
 /** The body of a `PATCH`: only a non-empty secret replaces the stored one. */
 export function channelPatch(
   kind: string,
@@ -379,21 +392,42 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
             .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
         }
 
+        let curlCommand: string | undefined
+        if (kind.data === 'ntfy') {
+          const configurations = await readChannelConfiguration(database, env)
+          const ntfyCfg = configurations.find((c) => c.kind === 'ntfy')
+          const ntfyConfig = ntfyCfg?.config as Record<string, string> | undefined
+          const ntfyUrl = ntfyConfig?.url ?? env.NTFY_URL
+          const ntfyTopic = body.data.topic ?? ntfyConfig?.topic ?? env.NTFY_TOPIC
+          curlCommand = buildNtfyCurl(ntfyUrl, ntfyTopic, env.PWA_URL)
+        }
+
         const result = await sendTestMessage(registry, kind.data, body.data.topic)
 
         if (result.delivered) {
           request.log.info(
-            { channel: kind.data, code: 'notification_test_sent' },
+            {
+              channel: kind.data,
+              code: 'notification_test_sent',
+              curl: curlCommand,
+            },
             'notification test sent',
           )
         } else {
           request.log.warn(
-            { channel: kind.data, code: result.code ?? 'send_failed' },
+            {
+              channel: kind.data,
+              code: result.code ?? 'send_failed',
+              curl: curlCommand,
+            },
             'notification test failed',
           )
         }
 
-        return channelTestResponseSchema.parse(result)
+        return channelTestResponseSchema.parse({
+          ...result,
+          ...(curlCommand !== undefined ? { curl: curlCommand } : {}),
+        })
       },
     )
 
