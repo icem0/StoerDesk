@@ -29,9 +29,20 @@ const STATUS_RULE = {
   active: true,
 }
 
+const STAGE_REACHED_RULE = {
+  key: 'stage_rule',
+  stageKey: 'review',
+  reference: null,
+  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+  percent: null,
+  condition: { field: 'stageReached', operator: 'eq', value: 'review' },
+  actions: [],
+  active: true,
+}
+
 const CONFIG = {
   stages: [{ key: 'review', names: { de: 'Prüfung', en: 'Review' }, position: 1, active: true }],
-  rules: [RULE, STATUS_RULE],
+  rules: [RULE, STATUS_RULE, STAGE_REACHED_RULE],
 }
 
 function fetchMock() {
@@ -102,7 +113,7 @@ describe('the escalation administration speaks the language of the interface', (
 
     expect(screen.getByTestId('escalation-stage-list').textContent).toContain('Prüfung')
 
-    for (const expected of ['Auftrag angelegt', 'Priorität', 'Status', 'gleich', 'Benachrichtigung', 'E-Mail', 'Kritisch', 'Neu']) {
+    for (const expected of ['Auftrag angelegt', 'Priorität', 'Status', 'gleich', 'Benachrichtigung', 'E-Mail', 'Kritisch', 'Neu', 'Prüfung']) {
       expect(options).toContain(expected)
     }
 
@@ -130,7 +141,7 @@ describe('the escalation administration speaks the language of the interface', (
 
     expect(screen.getByTestId('escalation-stage-list').textContent).toContain('Review')
 
-    for (const expected of ['Work order created', 'Priority', 'Status', 'equals', 'Notification', 'Email', 'Critical', 'New']) {
+    for (const expected of ['Work order created', 'Priority', 'Status', 'equals', 'Notification', 'Email', 'Critical', 'New', 'Review']) {
       expect(options).toContain(expected)
     }
 

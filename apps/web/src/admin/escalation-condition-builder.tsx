@@ -77,10 +77,12 @@ export function EscalationConditionBuilder({
   initial,
   canWrite,
   onCondition,
+  stageNames,
 }: {
   initial: EscalationCondition
   canWrite: boolean
   onCondition: (next: EscalationCondition) => void
+  stageNames?: Record<string, string>
 }) {
   const { t } = useTranslation('settings')
   const fields = conditionFields()
@@ -125,6 +127,14 @@ export function EscalationConditionBuilder({
           key,
           label: t(`admin.escalation.condition.values.systemType.${key}`),
         }))
+      case 'stageReached':
+        if (stageNames) {
+          return Object.entries(stageNames).map(([key, label]) => ({
+            key,
+            label,
+          }))
+        }
+        return undefined
       default:
         return undefined
     }

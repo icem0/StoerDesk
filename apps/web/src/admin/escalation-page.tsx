@@ -146,6 +146,12 @@ export function EscalationPage() {
     return names === undefined ? key : (names[i18n.language] ?? names.de ?? key)
   }
 
+  const stageLabels: Record<string, string> = {}
+
+  for (const stage of config.stages) {
+    stageLabels[stage.key] = stageName(stage.key)
+  }
+
   const rulesOfStage = (key: string) =>
     config.rules.filter((rule) => rule.stageKey === key)
 
@@ -299,6 +305,7 @@ export function EscalationPage() {
                         canWrite={canWrite}
                         channels={channelsQuery.data?.channels ?? []}
                         endpointIds={(webhooksQuery.data?.webhooks ?? []).map((entry) => entry.id)}
+                        stageNames={stageLabels}
                         onSave={(next) =>
                           void saveRules.mutate({
                             rules: config.rules.map((entry) => (entry.key === rule.key ? next : entry)),
@@ -329,12 +336,14 @@ function RuleForm({
   canWrite,
   channels,
   endpointIds,
+  stageNames,
   onSave,
 }: {
   rule: EscalationRuleConfig
   canWrite: boolean
   channels: string[]
   endpointIds: string[]
+  stageNames: Record<string, string>
   onSave: (next: EscalationRuleConfig) => void
 }) {
   const { t } = useTranslation('settings')
@@ -424,6 +433,7 @@ function RuleForm({
       <EscalationConditionBuilder
         initial={rule.condition}
         canWrite={canWrite}
+        stageNames={stageNames}
         onCondition={(next) => apply({ ...rule, condition: next })}
       />
 
