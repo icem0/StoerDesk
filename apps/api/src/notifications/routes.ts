@@ -367,9 +367,21 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
             .send({ code: 'invalid_request', params: { fields: ['kind'] } })
         }
 
-        return channelTestResponseSchema.parse(
-          await sendTestMessage(registry, kind.data),
-        )
+        const result = await sendTestMessage(registry, kind.data)
+
+        if (result.delivered) {
+          request.log.info(
+            { channel: kind.data, code: 'notification_test_sent' },
+            'notification test sent',
+          )
+        } else {
+          request.log.warn(
+            { channel: kind.data, code: result.code ?? 'send_failed' },
+            'notification test failed',
+          )
+        }
+
+        return channelTestResponseSchema.parse(result)
       },
     )
 

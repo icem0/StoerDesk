@@ -68,10 +68,15 @@ export async function sendNtfyNotification(
   message: NotificationMessage,
   pwaUrl: string,
   fetchImpl: typeof fetch = fetch,
+  log?: { debug?: (msg: string, obj?: Record<string, unknown>) => void; info?: (msg: string, obj?: Record<string, unknown>) => void; warn?: (msg: string, obj?: Record<string, unknown>) => void },
 ): Promise<void> {
   const priority = ntfyPriority(message)
   const topic = config.userTopic && config.userTopic !== '' ? config.userTopic : config.topic
-  const response = await fetchImpl(`${config.url.replace(/\/$/, '')}/${topic}`, {
+  const url = `${config.url.replace(/\/$/, '')}/${topic}`
+
+  log?.debug?.('ntfy: sending notification', { url, topic, priority, title: message.title })
+
+  const response = await fetchImpl(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Priority: priority },
     body: JSON.stringify({
@@ -83,6 +88,9 @@ export async function sendNtfyNotification(
   })
 
   if (!response.ok) {
+    log?.warn?.('ntfy: send failed', { url, topic, status: response.status })
     throw new NtfyError('http_error', `ntfy responded with ${response.status}`)
   }
+
+  log?.info?.('ntfy: notification sent', { url, topic, priority })
 }
