@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ntfy offers no URL-login scheme and ADR-0005 keeps every secret write-only,
   so a protected topic is unlocked by a login in the ntfy app itself. The
   adapter, the payload and the web-address branch of the card are unchanged.
+- The selection of the channels per event type on the own channels page
+  (WP-M14-17): `/settings/notifications` shows one row per event type of
+  `specs/10-notifications.md` §11.4 with the channels as checkboxes — a
+  channel that is not configured is not offered and a configured channel
+  without a linked account of the user is marked as such; the selection is
+  read from and replaced with `PUT /api/v1/notifications/preferences`
+  (WP-M14-16) and its hint names the precedence rule of §11.4. Texts in
+  `de` and `en`.
 - The WhatsApp Web bridge becomes a channel adapter (WP-M14-14):
   `sendWhatsAppNotification` posts `{ chatId, text }` with
   `Authorization: Bearer <token>` to `POST {baseUrl}/messages` — the ADR-0020
