@@ -9,20 +9,62 @@ import { i18n } from '../../i18n'
 import { useFaultCatalog } from './use-fault-catalog'
 
 /**
- * Prepared send view for a ticket (WP-M14-22) — it replaces the former E-Mail
+ * Prepared send view for a ticket (WP-M14-22, WP-M14-23) — it replaces the former E-Mail
  * and PDF views (`WP-M4-11`, `WP-M4-12`).
  *
  * The ticket detail header opens this view from its paper-plane button. The
- * branded ticket is prepared for both outgoing paths and two buttons sit on
+ * branded ticket is prepared for the outgoing paths and two buttons sit on
  * top of the content: "Als PDF speichern" runs `window.print()` with the A4
- * print CSS, "E-Mail versenden" opens a prefilled `mailto:` link whose
- * subject and body carry the ticket number, object, description and a deep
- * link to the ticket detail. Every history event is rendered in full — date,
- * label, actor and the event text — and each block (every history row, every
- * photo, every field section) avoids page-break cuts (`print:break-inside-avoid`),
- * so nothing is truncated in the printout; photos load eagerly and show on
- * screen and in print.
+ * print CSS, "Kopieren (HTML)" copies the prepared ticket to the clipboard
+ * with the browser's HTML flavour so the user pastes it into their e-mail
+ * program — a `mailto:` body is plain text only and never carries HTML, so
+ * an own e-mail send is a server-side decision for a later WP. Every history
+ * event is rendered in full — date, label, actor and the event text — and
+ * each block (every history row, every photo, every field section) avoids
+ * page-break cuts (`print:break-inside-avoid`), so nothing is truncated in
+ * the printout; photos load eagerly and show on screen and in print.
  */
+
+/**
+ * Copies the prepared ticket content to the clipboard with the browser's
+ * HTML flavour: the selection copy over a programmatic range is the path
+ * that keeps the formatted markup (headings, the field table) so an e-mail
+ * program can paste it as HTML; `ClipboardItem` is the fallback for the
+ * browsers that refuse `execCommand('copy')` here. The selection is always
+ * cleared, a `mailto:` body is never used — it could only carry text.
+ */
+function copyPreparedHtml(): boolean {
+  const node = document.querySelector('[data-testid="ticket-send-content"]')
+  if (node === null) {
+    return false
+  }
+  const selection = window.getSelection()
+  if (selection === null) {
+    return false
+  }
+  try {
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    selection.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset)
+    const copied = document.execCommand('copy') === true
+    void selection.removeAllRanges()
+    if (copied) {
+      return true
+    }
+  } catch {
+    // fall through to the Clipboard API below
+  }
+  try {
+    const item = new ClipboardItem({
+      'text/html': new Blob([node.outerHTML], { type: 'text/html' }),
+      'text/plain': new Blob([node.textContent], { type: 'text/plain' }),
+    })
+    void navigator.clipboard.write([item])
+    return true
+  } catch {
+    return false
+  }
+}
 
 function useTicket(ticketNo: string | undefined) {
   return useQuery({
@@ -92,31 +134,6 @@ export function TicketSendPage() {
     return <p className="text-rose-400 text-sm" role="alert">{t('pdf.notFound')}</p>
   }
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const ticketUrl = `${origin}/tickets/${ticketNo}`
-  const subject = t('email.subject', { ticketNo: ticket.ticketNo })
-  /** Real newlines: `encodeURIComponent` turns them into `%0A` once, so the
-   * e-mail client receives line breaks, never a literal `%0A` in the body. */
-  const body = [
-    t('email.bodyGreeting'),
-    '',
-    t('email.bodyTicket', { ticketNo: ticket.ticketNo }),
-    ...(ticket.title !== null ? [`${t('detail.field.title')}: ${ticket.title}`] : []),
-    t('email.bodyObject', { object: ticket.objectName, objectNo: ticket.objectNo }),
-    ...(ticket.faultTemplateKeys.length > 0
-      ? [`${t('pdf.fieldFaults')}: ${ticket.faultTemplateKeys.map((key) => faultLabels[key] ?? key).join(', ')}`]
-      : []),
-    t('email.bodyStatus', { status: t(`status.values.${ticket.status}`) ?? ticket.status }),
-    t('email.bodyPriority', { priority: t(`priority.${ticket.priority}`) ?? ticket.priority }),
-    t('email.bodyReported', { reportedAt: formatDate(ticket.reportedAt) }),
-    ...(ticket.deadlineAt !== null && ticket.deadlineAt !== undefined
-      ? [`${t('pdf.deadlineAt')}: ${formatDate(ticket.deadlineAt)}`]
-      : []),
-    ...(ticket.description !== null ? [t('email.bodyDescription', { description: ticket.description })] : []),
-    '',
-    ticketUrl,
-  ].join('\n')
-
   return (
     <section className="ticket-pdf flex flex-col gap-4">
       <style>{`
@@ -147,7 +164,8 @@ export function TicketSendPage() {
         </div>
       </div>
 
-      {/* Two buttons on top of the prepared view: PDF and e-mail. */}
+      {/* Two buttons on top of the prepared view: PDF and HTML clipboard copy
+          for the e-mail (a `mailto:` body is text-only, WP-M14-23). */}
       <div className="flex flex-wrap items-center gap-2">
         <button
           className="inline-flex items-center gap-1.5 rounded bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 print:hidden"
@@ -170,17 +188,24 @@ export function TicketSendPage() {
           </svg>
           {t('pdf.save')}
         </button>
-        <a
-          href={`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}
+        <button
           className="inline-flex items-center gap-1.5 rounded bg-sky-600 px-3 py-2 text-sm text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 print:hidden"
+          onClick={() => {
+            void copyPreparedHtml()
+          }}
+          type="button"
         >
           <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m22 2-11 16-7-12 22-4z" />
+            <rect strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" height="10.5" rx="2" width="10.5" x="9" y="9" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 6H5A2 2 0 0 0 3 8v10" />
           </svg>
-          {t('email.write')}
-        </a>
+          {t('pdf.copy')}
+        </button>
       </div>
+      <p className="text-xs text-slate-500 print:hidden">{t('pdf.copyHint')}</p>
 
+      {/* Everything the copy button selects: fields, photos and history. */}
+      <div data-testid="ticket-send-content" className="flex flex-col gap-4">
       <table className="w-full border-collapse border border-slate-700">
         <tbody>
           <tr className="border-b border-slate-700">
@@ -345,6 +370,7 @@ export function TicketSendPage() {
             })}
           </div>
         )}
+      </div>
       </div>
     </section>
   )

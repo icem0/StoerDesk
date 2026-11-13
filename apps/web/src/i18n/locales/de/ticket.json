@@ -482,20 +482,11 @@
       "deleteConfirmNumber": "Ticketnumber for confirmation:"
     }
   },
-  "email": {
-    "write": "E-Mail versenden",
-    "subject": "StörDesk – Vorgang {{ticketNo}}",
-    "bodyGreeting": "Hallo,",
-    "bodyTicket": "Vorgangsnummer: {{ticketNo}}",
-    "bodyObject": "Objekt: {{object}} ({{objectNo}})",
-    "bodyStatus": "Status: {{status}}",
-    "bodyPriority": "Priorität: {{priority}}",
-    "bodyReported": "Gemeldet am: {{reportedAt}}",
-    "bodyDescription": "Beschreibung: {{description}}"
-  },
   "pdf": {
     "title": "Vorgang {{ticketNo}}",
     "save": "Als PDF speichern",
+    "copy": "Kopieren (HTML)",
+    "copyHint": "Then paste the ticket into your e-mail program — it keeps the formatting.",
     "notFound": "Meldung nicht gefunden.",
     "object": "Objekt",
     "objectNo": "Objektnummer",

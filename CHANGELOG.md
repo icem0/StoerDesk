@@ -120,6 +120,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   id as the Telegram account of the user via `storeAccount`; a wrong, expired or
   unknown code and a code of another user answer `422 invalid_request`, and the
   bot token never appears in an answer, a log or an error message.
+- The prepared send view offers an HTML copy instead of the e-mail button
+  (WP-M14-34): a `mailto:` body can only carry plain text, so the "E-Mail
+  versenden" button is removed (the send returns later as a server-side WP)
+  and "Kopieren (HTML)" copies the prepared ticket block to the clipboard with
+  the browser's HTML flavour — `execCommand('copy')` over a programmatic
+  selection, `ClipboardItem` as fallback — and the hint names the paste step
+  into the e-mail program; the `email.*` texts of both languages are gone.
 - The e-mail body of the prepared send view keeps real line breaks (WP-M14-22
   follow-up): the `mailto:` body is joined with `\n` and encoded only once —
   the literal `%0A` in the body is gone — and the title, the reported fault

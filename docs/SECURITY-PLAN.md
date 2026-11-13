@@ -112,6 +112,16 @@ already sees and pass through `encodeURIComponent`, the deep link carries the
 ticket number not a token, no SQL, no upload path and no log line is touched
 and the locales hold no contact data. No new finding.
 
+HTML-copy pass: 2026-11-13, diff `5b5c43f..` (WP-M14-34 — web UI only: the
+copy button of the prepared send view, the clipboard helper and the locales)
+— areas A and B re-checked in full (no new API route, no new capability: the
+client route `/tickets/:ticketNo/send` is unchanged), C–K re-checked for the
+touched files: the clipboard write copies only the rendered ticket block the
+user already sees (selection copy first, `ClipboardItem` fallback), no
+secret, token or cookie enters the clipboard, no new sink for foreign input
+and no log line is touched; the removed `mailto:` body and its `email.*`
+locales are gone. No new finding.
+
 Telegram-linking pass: 2026-11-13, diff `7430de2..` (WP-M14-09 — the new linking
 module, two session routes in `apps/api/src/notifications/routes.ts`, the shared
 contracts and the unit test) — areas A and B re-checked in full (the package adds

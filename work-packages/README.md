@@ -329,6 +329,16 @@ cuts (`print:break-inside-avoid`) and the photos are eager so they appear in
 the printout; `ticket-email-page.tsx`, `ticket-pdf-page.tsx` and the routes
 `/tickets/:ticketNo/email` and `/tickets/:ticketNo/pdf` are gone.
 
+**Phase 14, out of band (WP-M14-34, requested by the office):** a `mailto:`
+body is plain text only — no e-mail program ever receives HTML through it. So
+the "E-Mail versenden" button of the prepared send view is removed (the
+server-side e-mail send returns as a later WP) and replaced by "Kopieren
+(HTML)": `copyPreparedHtml` selects `[data-testid="ticket-send-content"]` and
+copies the prepared ticket to the clipboard with the browser's HTML flavour
+(`execCommand('copy')` first, `ClipboardItem` as the fallback) so the user
+pastes the formatted ticket into their e-mail program; the hint line names
+the paste step and the `email.*` texts leave `de` and `en`.
+
 **Phase 14, out of band (WP-M14-26 … WP-M14-32, requested by the office):** the
 readiness allocation announces itself. The office complained that an assigned
 readiness cannot be accepted and that the allocation never reaches the
@@ -754,6 +764,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-20  | the notifications of the internal ticket creation                  | planned                | yes     |
 | WP-M14-21  | the exit criterion of the messenger channels                        | planned              | yes     |
 | WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
+| WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
 | WP-M14-23  | the escalation administration fully localized (out of band)                 | done    | yes     |
 | WP-M14-24  | the escalation administration explains itself (out of band)                 | done    | yes     |
 | WP-M14-25  | stage names label the reached-stage condition values (out of band)          | done    | yes     |

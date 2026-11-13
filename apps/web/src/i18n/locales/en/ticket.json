@@ -483,20 +483,11 @@
         "deleteConfirmNumber": "Ticket number to confirm:"
     }
   },
-  "email": {
-    "write": "Send by e-mail",
-    "subject": "StörDesk – Ticket {{ticketNo}}",
-    "bodyGreeting": "Hello,",
-    "bodyTicket": "Ticket number: {{ticketNo}}",
-    "bodyObject": "Object: {{object}} ({{objectNo}})",
-    "bodyStatus": "Status: {{status}}",
-    "bodyPriority": "Priority: {{priority}}",
-    "bodyReported": "Reported on: {{reportedAt}}",
-    "bodyDescription": "Description: {{description}}"
-  },
   "pdf": {
     "title": "Ticket {{ticketNo}}",
     "save": "Save as PDF",
+    "copy": "Copy (HTML)",
+    "copyHint": "Then paste the ticket into your e-mail program — it keeps the formatting.",
     "notFound": "Ticket not found.",
     "object": "Object",
     "objectNo": "Object no.",

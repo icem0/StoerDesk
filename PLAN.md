@@ -728,6 +728,13 @@ history events in full and keeps every block (event row, photo, field
 section) clear of page-break cuts, so nothing is truncated in the printout
 and the photos appear on screen and in print; the former
 `ticket-email-page.tsx`, `ticket-pdf-page.tsx` and their routes are gone.
+**WP-M14-34** (out of band in phase 14, requested by the office): a `mailto:`
+body is text-only, so the "E-Mail versenden" button is removed (the send
+returns later as a server-side WP) and "Kopieren (HTML)" (`copyPreparedHtml`)
+copies the prepared ticket block to the clipboard with the browser's HTML
+flavour — `execCommand('copy')` over a programmatic selection, `ClipboardItem`
+as fallback — and the hint line names the paste step into the e-mail program;
+the `email.*` texts leave `de` and `en`.
 
 **Phase 13 is implemented** (WP-M13-01 … WP-M13-17, ADR-0017): the
 five workflow milestones become the escalation stages, the deadlines per priority,
