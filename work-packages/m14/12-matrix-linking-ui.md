@@ -1,7 +1,7 @@
 # WP-M14-12: The Matrix section of the settings page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-11
 phase: 14
 milestone: m14

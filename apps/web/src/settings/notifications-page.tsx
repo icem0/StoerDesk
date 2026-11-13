@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -16,15 +17,25 @@ import { ApiError, apiFetch } from '../lib/api'
  * signed-in user. Only Telegram can be linked at the moment — its state is what
  * this page itself knows after the code redemption, because the API has no
  * account list route yet (`GET /api/v1/notifications/accounts` stays unimplemented).
- * The sections of Matrix, ntfy and WhatsApp Web follow in WP-M14-12, WP-M14-13
- * and WP-M14-15; the removal of an account follows with the `DELETE` route of
- * WP-M14-11 and is a placeholder here, the route is never called. The code is
- * shown as text — never as an image — and the error of the API arrives as text.
+ * The Matrix section (WP-M14-12) adds the own channel of §11.3/§11.12: the homeserver,
+ * the matrix id and the write-only access token are sent to
+ * `POST /api/v1/notifications/accounts/matrix` and the linked account is shown
+ * afterwards; the section can also `DELETE` the account again. A refused pair or an
+ * unreachable homeserver is shown as inline text. The ntfy and WhatsApp Web sections
+ * follow in WP-M14-13 and WP-M14-15; the code is shown as text — never as an image —
+ * and the error of the API arrives as text.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
 const handledErrorCodes = ['session_invalid', 'invalid_request', 'unknown'] as const
+
+const matrixErrorCodes = [
+  'session_invalid',
+  'invalid_request',
+  'homeserver_unreachable',
+  'unknown',
+] as const
 
 function errorCode(error: unknown): string {
   return error instanceof ApiError && typeof error.code === 'string' ? error.code : 'unknown'
@@ -36,6 +47,20 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
   return (handledErrorCodes as readonly string[]).includes(code)
     ? t(`notifications.errors.${code}`)
     : t('notifications.errors.unknown')
+}
+
+/**
+ * The inline text of a refused Matrix linking: a pair the homeserver rejected or
+ * a homeserver that is not reachable. The access token never reaches the answer
+ * of the API (`specs/10-notifications.md` §11.13), so the section only ever names
+ * the failure — it never re-displays the token.
+ */
+function matrixErrorMessage(t: TFunction<'common'>, error: unknown): string {
+  const code = errorCode(error)
+
+  return (matrixErrorCodes as readonly string[]).includes(code)
+    ? t(`notifications.matrix.errors.${code}`)
+    : t('notifications.matrix.errors.unknown')
 }
 
 /**
@@ -76,6 +101,32 @@ export function NotificationsPage() {
         body: JSON.stringify({ code: telegramCode.data?.code ?? '' }),
       }),
   })
+
+  const [homeserver, setHomeserver] = useState('')
+  const [matrixId, setMatrixId] = useState('')
+  const [accessToken, setAccessToken] = useState('')
+
+  const matrixLink = useMutation({
+    mutationFn: () =>
+      apiFetch<NotificationAccount>('/v1/notifications/accounts/matrix', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ homeserver, matrixId, accessToken }),
+      }),
+    onSuccess: () => {
+      setAccessToken('')
+    },
+  })
+
+  const matrixRemove = useMutation({
+    mutationFn: () =>
+      apiFetch<void>('/v1/notifications/accounts/matrix', { method: 'DELETE' }),
+    onSuccess: () => {
+      setAccessToken('')
+    },
+  })
+
+  const matrixLinked = matrixLink.isSuccess && !matrixRemove.isSuccess
 
   if (telegramCode.isError) {
     return (
@@ -176,6 +227,98 @@ export function NotificationsPage() {
         ) : null}
 
         <p className="mt-2 text-sm text-slate-400">{t('notifications.telegram.removeHint')}</p>
+      </section>
+
+      <section
+        className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+        aria-labelledby="matrix-heading"
+      >
+        <h2 id="matrix-heading" className="text-lg font-semibold">
+          {t('notifications.kinds.matrix')}
+        </h2>
+
+        <p className="text-sm text-slate-300">{t('notifications.matrix.guidance')}</p>
+
+        <label className="flex flex-col gap-1 text-sm" htmlFor="matrix-homeserver">
+          {t('notifications.matrix.homeserverField')}
+          <input
+            className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-50"
+            disabled={matrixLink.isPending || matrixRemove.isPending}
+            id="matrix-homeserver"
+            onChange={(event) => setHomeserver(event.target.value)}
+            value={homeserver}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm" htmlFor="matrix-matrixid">
+          {t('notifications.matrix.matrixIdField')}
+          <input
+            className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-50"
+            disabled={matrixLink.isPending || matrixRemove.isPending}
+            id="matrix-matrixid"
+            onChange={(event) => setMatrixId(event.target.value)}
+            value={matrixId}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm" htmlFor="matrix-token">
+          {t('notifications.matrix.tokenField')}
+          <input
+            autoComplete="new-password"
+            className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-50"
+            disabled={matrixLink.isPending || matrixRemove.isPending}
+            id="matrix-token"
+            onChange={(event) => setAccessToken(event.target.value)}
+            placeholder={t('notifications.matrix.tokenPlaceholder')}
+            type="password"
+            value={accessToken}
+          />
+        </label>
+
+        <button
+          className="mt-2 rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          disabled={
+            accessToken === '' ||
+            homeserver === '' ||
+            matrixId === '' ||
+            matrixLink.isPending ||
+            matrixRemove.isPending
+          }
+          onClick={() => matrixLink.mutate()}
+          type="button"
+        >
+          {t('notifications.matrix.submit')}
+        </button>
+
+        {matrixLink.isError ? (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {matrixErrorMessage(t, matrixLink.error)}
+          </p>
+        ) : null}
+
+        {matrixLinked ? (
+          <>
+            <p className="mt-2 text-sm text-emerald-400">
+              {t('notifications.matrix.linked', { matrixId: matrixLink.data.externalId })}
+            </p>
+            {matrixLink.data.secretSet ? (
+              <p className="mt-1 text-sm text-slate-400">{t('notifications.matrix.secretSet')}</p>
+            ) : null}
+          </>
+        ) : null}
+
+        <button
+          className="mt-2 rounded bg-slate-700 px-4 py-2 font-medium text-slate-100 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          disabled={!matrixLinked || matrixRemove.isPending}
+          onClick={() => matrixRemove.mutate()}
+          type="button"
+        >
+          {t('notifications.matrix.remove')}
+        </button>
+
+        {matrixRemove.isSuccess ? (
+          <p className="mt-2 text-sm text-emerald-400">{t('notifications.matrix.removed')}</p>
+        ) : null}
       </section>
     </main>
   )

@@ -743,7 +743,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-09  | the Telegram linking via a one-time code                           | done                   | yes     |
 | WP-M14-10  | the own channels — the page and the Telegram section               | done                   | yes     |
 | WP-M14-11  | the Matrix account linking                                         | done                   | yes     |
-| WP-M14-12  | the Matrix section of the settings page                            | planned                | yes     |
+| WP-M14-12  | the Matrix section of the settings page                            | done                   | yes     |
 | WP-M14-13  | the ntfy onboarding with the QR of the subscription                | planned                | yes     |
 | WP-M14-14  | the WhatsApp Web bridge as a channel                               | planned                | yes     |
 | WP-M14-15  | the chats of the bridge and the WhatsApp Web account               | planned                | yes     |

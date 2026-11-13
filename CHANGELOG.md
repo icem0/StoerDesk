@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The Matrix section of the own channels page (WP-M14-12): `/settings/notifications`
+  gains a Matrix section with the homeserver, the matrix id and the access token
+  (a password field, `autoComplete="new-password"`, never re-filled and never part
+  of the page state after a reload); `Connect the Matrix account` sends them to
+  `POST /api/v1/notifications/accounts/matrix` and shows the linked account with its
+  `externalId` and the `secretSet` notice afterwards; a `Remove the Matrix account`
+  action calls `DELETE /api/v1/notifications/accounts/matrix`; a refused pair or an
+  unreachable homeserver is shown as inline text. The texts are added in `de` and `en`.
 - The Matrix account linking is an API service and two session routes (WP-M14-11):
   `verifyMatrixAccount` asks `GET /_matrix/client/v3/account/whoami` of the
   homeserver of the user with the submitted access token and compares the

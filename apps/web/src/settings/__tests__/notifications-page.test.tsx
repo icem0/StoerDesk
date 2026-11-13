@@ -120,4 +120,151 @@ describe('NotificationsPage', () => {
       await screen.findByText(/The code is invalid/i)
     ).toBeTruthy()
   })
+
+  it('stores a valid Matrix account and clears the token field after the save', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/matrix')) {
+        if (init?.method === 'DELETE') {
+          return Response.json({ code: 'account_not_found', params: { fields: ['channel'] } }, { status: 404 })
+        }
+
+        return Response.json({
+          channel: 'matrix',
+          externalId: 'alice@example.org',
+          label: '',
+          secretSet: true,
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const homeserverInput = await screen.findByLabelText('Homeserver', {
+      selector: '#matrix-homeserver',
+    })
+    const matrixIdInput = screen.getByLabelText('Matrix id', { selector: '#matrix-matrixid' })
+    const tokenInput = screen.getByLabelText('Access token', { selector: '#matrix-token' })
+    expect((tokenInput as HTMLInputElement).value).toBe('')
+
+    fireEvent.change(homeserverInput, { target: { value: 'https://matrix.example.org' } })
+    fireEvent.change(matrixIdInput, { target: { value: 'alice@example.org' } })
+    fireEvent.change(tokenInput, { target: { value: 'secret-token' } })
+    expect((tokenInput as HTMLInputElement).value).toBe('secret-token')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Connect the Matrix account' }))
+
+    expect(
+      await screen.findByText('Matrix account connected: alice@example.org')
+    ).toBeTruthy()
+    expect(screen.getByText('The access token is stored.')).toBeTruthy()
+    expect((screen.getByLabelText('Access token', { selector: '#matrix-token' }) as HTMLInputElement).value).toBe('')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/notifications/accounts/matrix',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          homeserver: 'https://matrix.example.org',
+          matrixId: 'alice@example.org',
+          accessToken: 'secret-token',
+        }),
+      }),
+    )
+  })
+
+  it('shows the error of the API as inline text when the homeserver refuses the pair', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/matrix')) {
+        if (init?.method === 'DELETE') {
+          return Response.json({ code: 'account_not_found', params: { fields: ['channel'] } }, { status: 404 })
+        }
+
+        return Response.json({ code: 'invalid_request', params: { fields: ['homeserver'] } }, { status: 422 })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText('Homeserver', { selector: '#matrix-homeserver' }), {
+      target: { value: 'https://matrix.example.org' },
+    })
+    fireEvent.change(screen.getByLabelText('Matrix id', { selector: '#matrix-matrixid' }), {
+      target: { value: 'alice@example.org' },
+    })
+    fireEvent.change(screen.getByLabelText('Access token', { selector: '#matrix-token' }), {
+      target: { value: 'secret-token' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Connect the Matrix account' }))
+
+    expect(
+      await screen.findByText(/The homeserver refused the id and the token/i)
+    ).toBeTruthy()
+  })
+
+  it('removes the connected Matrix account', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/matrix')) {
+        if (init?.method === 'DELETE') {
+          return new Response(null, { status: 204 })
+        }
+
+        return Response.json({
+          channel: 'matrix',
+          externalId: 'alice@example.org',
+          label: '',
+          secretSet: true,
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText('Homeserver', { selector: '#matrix-homeserver' }), {
+      target: { value: 'https://matrix.example.org' },
+    })
+    fireEvent.change(screen.getByLabelText('Matrix id', { selector: '#matrix-matrixid' }), {
+      target: { value: 'alice@example.org' },
+    })
+    fireEvent.change(screen.getByLabelText('Access token', { selector: '#matrix-token' }), {
+      target: { value: 'secret-token' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Connect the Matrix account' }))
+    expect(await screen.findByText('Matrix account connected: alice@example.org')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the Matrix account' }))
+
+    expect(await screen.findByText('The Matrix account was removed.')).toBeTruthy()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/notifications/accounts/matrix',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+  })
 })

@@ -134,6 +134,24 @@
       "accountLabel": "Name of the chat: {{label}}",
       "removeHint": "Removing a connected account follows in the next package."
     },
+    "matrix": {
+      "guidance": "Enter your Matrix homeserver, your Matrix id and your access token. The account is only stored when the homeserver confirms the id.",
+      "homeserverField": "Homeserver",
+      "matrixIdField": "Matrix id",
+      "tokenField": "Access token",
+      "tokenPlaceholder": "The token is only sent once and never shown again.",
+      "submit": "Connect the Matrix account",
+      "linked": "Matrix account connected: {{matrixId}}",
+      "secretSet": "The access token is stored.",
+      "remove": "Remove the Matrix account",
+      "removed": "The Matrix account was removed.",
+      "errors": {
+        "session_invalid": "The session has expired. Please log in again.",
+        "invalid_request": "The homeserver refused the id and the token – please check your input.",
+        "homeserver_unreachable": "The Matrix homeserver could not be reached.",
+        "unknown": "An unexpected error has occurred."
+      }
+    },
     "errors": {
       "session_invalid": "The session has expired. Please log in again.",
       "invalid_request": "The code is invalid, expired or already used – please request a new one.",
