@@ -1,7 +1,7 @@
 import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
-import { enqueueOutbox, type OutboxRow } from '../outbox'
+import { enqueueOutbox, messageOf, type OutboxRow } from '../outbox'
 import { describe, expect, it } from 'vitest'
 
 type Db = Database['database']
@@ -12,8 +12,12 @@ type DbLike = Pick<Db, 'insert'>
 const ticket = {
   id: 'ticket-id-1',
   ticketNo: 'ST-2026-0001',
-  priority: 'normal',
+  priority: 'critical',
   objectName: 'Rathaus',
+  objectLocation: 'Hauptstraße 1 12345 Berlin',
+  systemType: 'BMA',
+  shortText: 'Melder im Treppenhaus piept',
+  workOrderNo: 'AA-4711',
 }
 
 /**
@@ -55,9 +59,15 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
     expect(row?.ticketId).toBe('ticket-id-1')
     expect(row?.target).toEqual({
       ticketNo: 'ST-2026-0001',
-      priority: 'normal',
+      priority: 'critical',
       objectName: 'Rathaus',
+      objectLocation: 'Hauptstraße 1 12345 Berlin',
+      systemType: 'BMA',
+      shortText: 'Melder im Treppenhaus piept',
+      workOrderNo: 'AA-4711',
     })
+    expect(Object.keys(row?.target ?? {})).not.toContain('phone')
+    expect(Object.keys(row?.target ?? {})).not.toContain('email')
   })
 
   it('writes no row for an unconfigured environment', async () => {
@@ -65,5 +75,41 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
 
     expect(count).toBe(0)
     expect(rows).toHaveLength(0)
+  })
+})
+
+describe('messageOf (the content of a notification message, §11.5)', () => {
+  it('carries the ticket content without contact data or a photo', () => {
+    const message = messageOf({
+      ticketNo: 'ST-2026-0001',
+      priority: 'critical',
+      objectName: 'Rathaus',
+      objectLocation: 'Hauptstraße 1 12345 Berlin',
+      systemType: 'BMA',
+      shortText: 'Melder im Treppenhaus piept',
+      workOrderNo: 'AA-4711',
+    })
+
+    expect(message.title).toBe('ST-2026-0001')
+    expect(message.priority).toBe('critical')
+    expect(message.body).toContain('critical')
+    expect(message.body).toContain('Rathaus')
+    expect(message.body).toContain('Hauptstraße 1 12345 Berlin')
+    expect(message.body).toContain('BMA')
+    expect(message.body).toContain('Melder im Treppenhaus piept')
+    expect(message.body).toContain('AA-4711')
+    expect(message.body).not.toMatch(/@|\+49/)
+  })
+
+  it('tolerates a stored row written before the newer params (backwards compatibility)', () => {
+    const message = messageOf({
+      ticketNo: 'ST-2026-0001',
+      priority: 'normal',
+      objectName: 'Rathaus',
+    })
+
+    expect(message.title).toBe('ST-2026-0001')
+    expect(message.priority).toBe('normal')
+    expect(message.body).toBe('normal · Rathaus')
   })
 })

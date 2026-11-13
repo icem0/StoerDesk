@@ -92,6 +92,15 @@ export function reportTimes(
   }
 }
 
+/** The human-readable location of an object for a notification message (§11.5). */
+function objectLocation(object: typeof objects.$inferSelect): string | null {
+  const parts = [object.street, object.houseNumber, object.postalCode, object.city]
+    .filter((part): part is string => typeof part === 'string' && part.trim() !== '')
+    .map((part) => part.trim())
+
+  return parts.length === 0 ? null : parts.join(' ')
+}
+
 async function photoCount(database: Db, ticketId: string): Promise<number> {
   const [row] = await database
     .select({ total: count() })
@@ -290,6 +299,10 @@ export async function createPublicReport(
           ticketNo: row.ticketNo,
           priority: row.priority,
           objectName: object.name,
+          objectLocation: objectLocation(object),
+          systemType: object.externalType,
+          shortText: row.description,
+          workOrderNo: row.workOrderNumber,
         },
         env,
       )

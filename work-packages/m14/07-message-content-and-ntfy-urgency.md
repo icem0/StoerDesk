@@ -1,7 +1,7 @@
 # WP-M14-07: The content of a message and the urgency of ntfy
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-03
 phase: 14
 milestone: m14

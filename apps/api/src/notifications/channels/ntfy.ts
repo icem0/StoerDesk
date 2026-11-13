@@ -16,6 +16,8 @@ export interface NtfyConfig {
 export interface NotificationMessage {
   title: string
   body: string
+  /** Ticket priority; `critical` becomes ntfy's `urgent` (WP-M14-07). */
+  priority?: string
 }
 
 export class NtfyError extends Error {
@@ -37,11 +39,20 @@ const actionLabel = (config: NtfyConfig): string =>
   t(config.locale ?? 'de', 'notification.action_label')
 
 /**
+ * The ntfy priority of §11.5: `urgent` for a critical ticket, the normal
+ * `default` otherwise. The same value travels as the `Priority` header and in
+ * the JSON payload.
+ */
+const ntfyPriority = (message: NotificationMessage): string =>
+  message.priority === 'critical' ? 'urgent' : 'default'
+
+/**
  * Sends a notification to an ntfy topic via HTTP POST.
  *
  * The message is published as JSON with a single `view` action that links to
  * the PWA. `pwaUrl` may be empty — the notification still arrives, the action
- * is just not clickable.
+ * is just not clickable. A critical ticket raises the ntfy priority to
+ * `urgent` (WP-M14-07).
  */
 export async function sendNtfyNotification(
   config: NtfyConfig,
@@ -49,12 +60,14 @@ export async function sendNtfyNotification(
   pwaUrl: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
+  const priority = ntfyPriority(message)
   const response = await fetchImpl(`${config.url.replace(/\/$/, '')}/${config.topic}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', Priority: priority },
     body: JSON.stringify({
       title: message.title,
       message: message.body,
+      priority,
       actions: [{ action: 'view', label: actionLabel(config), uri: pwaUrl }],
     }),
   })

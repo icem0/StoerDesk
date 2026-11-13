@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- A notification message carries the content of `specs/10-notifications.md` §11.5
+  (WP-M14-07): the outbox target and `messageOf` now include the ticket number,
+  priority, object name and location, system type, short text of the report and
+  the AA/SA work order number if present — never a photo or contact data; the
+  ntfy adapter publishes a critical ticket as `Priority: urgent` (the normal
+  `default` otherwise) in the header and the JSON payload.
 - The channels have their administration page (WP-M14-06): `/admin/channels`
   lists the channels of `GET /api/v1/admin/channels` with their state and public
   configuration, saves the editable fields and an optional write-only secret

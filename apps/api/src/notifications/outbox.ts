@@ -23,14 +23,19 @@ export interface OutboxRow {
 
 /**
  * The ticket facts an outbox row is created for. Only machine-readable message
- * parameters travel here: ticket number, priority and object name. No photo, no
- * contact data (`PLAN.md` §12 message content, WP-M7-04).
+ * parameters travel here: ticket number, priority, object name and its location,
+ * system type, short text of the report and the AA/SA work order number. No
+ * photo, no contact data (`PLAN.md` §12 message content, WP-M7-04, WP-M14-07).
  */
 export interface OutboxTicket {
   id: string
   ticketNo: string
   priority: string
   objectName: string
+  objectLocation?: string | null
+  systemType?: string | null
+  shortText?: string | null
+  workOrderNo?: string | null
 }
 
 /**
@@ -42,6 +47,10 @@ const messageParams = (ticket: OutboxTicket): Record<string, unknown> => ({
   ticketNo: ticket.ticketNo,
   priority: ticket.priority,
   objectName: ticket.objectName,
+  objectLocation: ticket.objectLocation ?? null,
+  systemType: ticket.systemType ?? null,
+  shortText: ticket.shortText ?? null,
+  workOrderNo: ticket.workOrderNo ?? null,
 })
 
 /**
@@ -137,14 +146,34 @@ function escalationChain(env: Env): string[] {
   return configuredChannels(env).map((channel) => channel.name)
 }
 
+/** The priority an adapter may need — ntfy maps it to its own levels (WP-M14-07). */
+export type MessagePriority = NotificationMessage & { priority?: string }
+
+/** One param of the message body, or nothing when the stored row predates it. */
+const param = (value: unknown): string =>
+  value === undefined || value === null ? '' : String(value)
+
 /**
  * Builds the channel message from the machine-readable row params — ticket
- * number, priority, object name — no photo, no contact data, no translated
- * UI text (`PLAN.md` §12; the `view` action label itself comes from i18n).
+ * number, priority, object name and location, system type, short text and the
+ * AA/SA work order number — no photo, no contact data, no translated UI text
+ * (`PLAN.md` §12; the `view` action label itself comes from i18n). Rows written
+ * before WP-M14-07 lack the newer params; the missing values are simply skipped.
  */
-const messageOf = (target: Record<string, unknown>): NotificationMessage => ({
-  title: String(target.ticketNo ?? ''),
-  body: `${String(target.priority ?? '')} · ${String(target.objectName ?? '')}`,
+export const messageOf = (target: Record<string, unknown>): MessagePriority => ({
+  title: param(target.ticketNo),
+  body: [
+    target.priority,
+    target.objectName,
+    target.objectLocation,
+    target.systemType,
+    target.shortText,
+    target.workOrderNo,
+  ]
+    .map(param)
+    .filter((value) => value !== '')
+    .join(' · '),
+  priority: param(target.priority),
 })
 
 /**
