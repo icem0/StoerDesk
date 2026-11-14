@@ -516,7 +516,8 @@
         "http_402": "Zahlung erforderlich (402): ntfy verlangt ggf. ein ntfy.plus-Abo.",
         "http_404": "Nicht gefunden (404): Thema oder Serveradresse prüfen.",
         "http_415": "Medientyp nicht unterstützt (415).",
-        "http_429": "Zu viele Anfragen (429): später erneut versuchen."
+        "http_429": "Zu viele Anfragen (429): später erneut versuchen.",
+        "http_timeout": "No answer in time (timeout): the ntfy server did not answer within ten seconds — check the address and the network; the row stays retryable."
       },
       "minimum": {
         "title": "Pflichtkanäle für kritische Meldungen",

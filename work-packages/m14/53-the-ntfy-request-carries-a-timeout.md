@@ -1,7 +1,7 @@
 # WP-M14-53: the ntfy request carries a timeout
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-51
 phase: 14
 milestone: m14
@@ -25,28 +25,30 @@ files-write:
 
 interfaces:
 
+- `NTFY_TIMEOUT_MS = 10_000`, `NtfyConfig.timeoutMs` (test seam, defaults to the
+  constant)
 - `NtfyError('http_timeout')` when the publish request does not answer in time
 - `admin.channels.errors.http_timeout` (de/en)
 
 ## Task
 
 `fetch` has no default timeout, so an ntfy server that accepts the connection
-but never answers holds the drain worker and the admin test send open until the
-process is stopped; the administration shows no reason at all.
+but never answers holds the drain worker and the admin test send open; the
+administration shows no reason and the row is stuck.
 
-1. `sendNtfyNotification` aborts the request with `AbortSignal.timeout` (a
-   constant `NTFY_TIMEOUT_MS` of ten seconds) and maps the abort to
-   `NtfyError('http_timeout')`.
-2. The test asserts that an aborted request yields `http_timeout` and that a
-   late answer never reaches the payload log again.
-3. `admin.channels.errors.http_timeout` (de/en) says: the server did not answer
-   in time — address and network check, the row stays retryable.
-4. The outbox rules of §11.7 stay untouched: the row keeps its three attempts
-   with backoff and the fallback chain.
+1. `sendNtfyNotification` passes `AbortSignal.timeout(timeoutMs)` to the request,
+   `timeoutMs` being `config.timeoutMs ?? NTFY_TIMEOUT_MS` (ten seconds).
+2. An aborted request — the abort error or an answer that arrives after the
+   deadline — ends as `NtfyError('http_timeout')`; every other error stays as it
+   is, so the three attempts with backoff and the fallback chain of §11.7 still
+   apply.
+3. The adapter test asserts that a late answer yields `http_timeout`.
+4. `admin.channels.errors.http_timeout` (de/en) names the deadline, the address
+   and network check and the fact that the row stays retryable.
 
 ## Non-goals
 
-- No new retry logic and no new outbox rule.
+- No new retry logic, no new outbox rule and no new state.
 - No timeout for the other adapters (they belong to their own WPs).
 
 ## Acceptance
@@ -61,8 +63,11 @@ npm run wp:check
 
 ## Handoff
 
-- Files changed: —
-- Interfaces added: —
-- Verified: —
+- Files changed: `apps/api/src/notifications/channels/ntfy.ts`, its test, the
+  de/en `settings.json`.
+- Interfaces added: `NTFY_TIMEOUT_MS`, `NtfyConfig.timeoutMs`, the machine code
+  `http_timeout` and its translated reason.
+- Verified: `npm run check` and `npm run build` green; without the change the
+  late answer would have been accepted and no code existed for a timeout.
 - Follow-up WP: none
 - Open question: none

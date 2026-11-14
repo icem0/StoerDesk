@@ -514,7 +514,8 @@
         "http_402": "Payment required (402): ntfy may require ntfy.plus.",
         "http_404": "Not found (404): check topic or server address.",
         "http_415": "Media type not supported (415).",
-        "http_429": "Too many requests (429): try again later."
+        "http_429": "Too many requests (429): try again later.",
+        "http_timeout": "No answer in time (timeout): the ntfy server never answered within ten seconds — check the address and the network; the row stays retryable."
       },
       "minimum": {
         "title": "Mandatory minimum channels for critical tickets",

@@ -373,7 +373,7 @@ keeps every secret write-only, so a protected topic is unlocked by a login in
 the ntfy app itself.
 
 **The ntfy access token reaches every send (WP-M14-51, out of band in phase 14,
-requested by the office; WP-M14-52 and WP-M14-53 announced).** The office runs
+requested by the office; WP-M14-52 and WP-M14-53).** The office runs
 its own ntfy server that requires an access token. The test send answered
 `403 Veröffentlichung verweigert` and blamed a claimed topic — the key had been
 saved in the write-only `secret` of the `ntfy` row (and in `NTFY_TOKEN`) since
@@ -390,7 +390,7 @@ copy-to-clipboard curl, the clickable subscription link and the `NTFY_TOKEN`
 key) and `eb3f6d7` (the separate ntfy test topic removed from the card) — are
 recorded here as part of this record. **WP-M14-52**
 (`52-ntfy-401-and-403-name-the-access-token.md`) and **WP-M14-53**
-(`53-the-ntfy-request-carries-a-timeout.md`) follow in numeric order: the
+(`53-the-ntfy-request-carries-a-timeout.md`) are implemented in numeric order: the
 administration explains a `401`/`403` as a missing or wrong access token
 instead of a claimed topic, and the publish request gains a timeout so an
 unreachable server answers `http_timeout`.
@@ -845,7 +845,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-50  | every ntfy error code explains itself (out of band)                       | done    | yes     |
 | WP-M14-51  | the ntfy access token reaches every send (out of band)                    | done    | yes     |
 | WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | done    | yes     |
-| WP-M14-53  | the ntfy request carries a timeout (out of band)                          | planned | yes     |
+| WP-M14-53  | the ntfy request carries a timeout (out of band)                          | done    | yes     |
 | WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
 
 

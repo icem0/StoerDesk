@@ -256,6 +256,16 @@ DOM, the clipboard or the page state; the new hint is static text and renders th
 `secretSet` boolean only, F re-checked: the new locale keys hold no key value, and
 K re-checked: no log line is touched. No new finding.
 
+ntfy-timeout pass: 2026-11-14, diff `c65ce2d..` (WP-M14-53 — `apps/api/src/notifications/channels/ntfy.ts`, its test and the de/en `settings.json`) — areas A and B
+re-checked in full (no route, no capability and no bearer scope change), E re-checked
+for the adapter: the publish request now carries `AbortSignal.timeout` (`NTFY_TIMEOUT_MS`,
+overwritten by `NtfyConfig.timeoutMs`), so a server that accepts the connection but
+never answers can no longer hold the drain worker or the admin test send open; an
+aborted request ends as the machine code `http_timeout` and its message names the
+deadline only, F and K re-checked: the added warn line carries the numeric `timeoutMs`,
+the access token still enters no log line, no answer and no error text, and the new
+locale keys hold no secret; C untouched (no query, no interpolation). No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -342,17 +352,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (re-checked in full at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
-| B Autorisation | complete (re-checked in full at the ntfy-access-token pass, no new route) | eb3f6d742ea762b0321420b12555c296b69e7235 |
+| A Authentication | complete (re-checked in full at the ntfy-timeout pass) | c65ce2d |
+| B Autorisation | complete (re-checked in full at the ntfy-timeout pass, no new route) | c65ce2d |
 | C Injection | complete (re-checked for the changed files at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
 | D Frontend | complete (web/src read, tokens cookie-only) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| E HTTP-Hardening | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
+| E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
+| F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
+| K Logging/PII | complete (re-checked for the changed files at the ntfy-timeout pass) | c65ce2d |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

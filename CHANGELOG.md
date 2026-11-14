@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ntfy publish request carries a timeout (WP-M14-53): `fetch` has none by
+  default, so an ntfy server that accepts the connection but never answers held
+  the drain worker and the admin test send open. The request is aborted after
+  ten seconds and ends as the machine code `http_timeout` with a translated
+  reason; the three attempts with backoff and the fallback chain stay as they
+  are.
 - The ntfy administration names the access token (WP-M14-52): `401` and `403`
   now say that the access token of the channel is missing or wrong — a claimed
   topic is only the second cause — the ntfy card warns while an enabled channel

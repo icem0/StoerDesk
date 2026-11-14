@@ -150,4 +150,42 @@ describe('sendNtfyNotification', () => {
     expect(errors[0]).toBeInstanceOf(Error)
     expect((errors[0] as { code?: string }).code).toBe('http_407')
   })
+
+  it('sends the access token in the Authorization header only (WP-M14-51, ADR-0022)', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
+
+    await sendNtfyNotification(
+      { ...config, token: 'tk_secret' },
+      { title: 'New ticket', body: 'Lift 2 is broken' },
+      'https://stoerdesk.local/pwa',
+      fetchMock as unknown as typeof fetch,
+    )
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://ntfy.sh/')
+    expect((init.headers as Record<string, string>).authorization).toBe('Bearer tk_secret')
+    expect(String(init.body).includes('tk_secret')).toBe(false)
+  })
+
+  it('fails as http_timeout when the server does not answer in time (WP-M14-53)', async () => {
+    const lateFetch = vi.fn(
+      async (_: string | URL | Request, init?: RequestInit) => {
+        const signal = init?.signal
+        if (signal) {
+          await new Promise((resolve) => signal.addEventListener('abort', resolve))
+        }
+
+        return new Response('{}', { status: 200 })
+      },
+    )
+
+    await expect(
+      sendNtfyNotification(
+        { ...config, timeoutMs: 5 },
+        { title: 'New ticket', body: 'Lift 2 is broken' },
+        '',
+        lateFetch as unknown as typeof fetch,
+      ),
+    ).rejects.toMatchObject({ code: 'http_timeout' })
+  })
 })

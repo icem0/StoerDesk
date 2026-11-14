@@ -173,7 +173,9 @@ transaction of the ticket event, the worker claims the oldest row, the send is
 tried three times with a backoff, an exhausted row ends as `FAILED` with the
 event `notification_failed`, and the next channel of the chain is queued as a
 fallback in the same transaction. The successful row ends as `SENT` with the
-event `notification_sent`.
+event `notification_sent`. A publish request that never answers within the
+timeout of the adapter ends as the code `http_timeout` (WP-M14-53) and follows
+the same retry and fallback rule — a silent server never holds the drain open.
 
 The row of the outbox carries the event type of §11.4 next to its channel, so
 the status view can tell a new ticket from an escalation. A readiness row
