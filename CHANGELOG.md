@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   saved topic, links to the personal subscription page and offers "Code senden"
   and "Code bestätigen". The state badge reads "ungeprüft" until the code came
   back and "geprüft" afterwards.
+- A failed ntfy test send explains itself (WP-M14-49): the adapter reports the
+  HTTP status as machine code (e. g. `http_407` when the topic is already
+  claimed on ntfy.sh), and the administration shows a translated reason with a
+  concrete hint instead of a bare "http_error". The verification code send
+  carries the same reason in its answer params.
 
 ### Fixed
 - The own channels page no longer hides the ntfy QR when Telegram is not

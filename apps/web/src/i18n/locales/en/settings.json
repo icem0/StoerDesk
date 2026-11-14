@@ -459,7 +459,7 @@
       "test": "Send test message",
       "testing": "Sending test message …",
       "testDelivered": "Test message sent.",
-      "testFailed": "Test message failed ({{code}}).",
+      "testFailed": "Test message failed: {{reason}}",
       "testTopicPlaceholder": "e. g. stoerdesk-test",
       "curlCommand": "cURL command (copy to terminal)",
       "readOnly": "Read-only: you lack the notification.write permission.",
@@ -483,16 +483,33 @@
         "errors": {
           "verification_code_invalid": "The code is wrong or belongs to an older configuration.",
           "verification_code_expired": "The code has expired. Please send a new one.",
-          "verification_send_failed": "The code could not be sent. Check the address, the topic and whether the ntfy server is reachable.",
+          "verification_send_failed": "The code could not be sent: {{reason}}",
           "channel_not_configured": "ntfy is not fully configured. Save the address and the topic first.",
-          "unknown": "The verification failed."
+          "unknown": "Verification failed: {{reason}}"
         }
       },
       "errors": {
         "session_invalid": "The session has expired.",
         "forbidden": "No permission.",
         "invalid_request": "Please check the input.",
-        "unknown": "The action failed."
+        "unknown": "The action failed.",
+        "channel_not_configured": "The channel is not fully configured: save a URL and a topic first.",
+        "no_token": "The channel still misses its secret (bot token, access token …) — store it first.",
+        "send_failed": "The send failed.",
+        "http_error": "The server answered with an error.",
+        "http_401": "The server requires authentication (401): on a public server a topic can only be published to while it is still free or with your own account.",
+        "http_403": "The server refuses the publication (403): the topic belongs to someone else.",
+        "http_406": "The server refused the requested format (406).",
+        "http_407": "The topic is already claimed (407). ntfy.sh only lets you publish to topics that are still free — or to topics of your own account. Pick a unique topic, e. g. stoerdesk-<a few random characters>; the QR and the test then use exactly that.",
+        "http_408": "The server did not answer in time (408).",
+        "http_409": "The server rate limit is reached (409). Try again later or use your own ntfy server.",
+        "http_413": "The message is too large for the server (413).",
+        "http_424": "The ntfy server rejected the message (424): message or rate limits.",
+        "http_500": "The ntfy server had an internal error (500): try again or use another server.",
+        "http_501": "The ntfy server does not support this call (501): try another server.",
+        "http_502": "The ntfy server had an internal error (502): try again or use another server.",
+        "http_503": "The ntfy server is currently unavailable (503): try again or use another server.",
+        "http_504": "The ntfy server did not answer in time (504): try again or use another server."
       },
       "minimum": {
         "title": "Mandatory minimum channels for critical tickets",

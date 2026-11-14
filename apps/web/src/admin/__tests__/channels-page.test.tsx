@@ -142,8 +142,21 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText('Testnachricht fehlgeschlagen (send_failed).')).toBeTruthy()
+    expect(await screen.findByText('Testnachricht fehlgeschlagen: Der Versand ist fehlgeschlagen.')).toBeTruthy()
     expect(screen.getByText(/Zustand: fehlgeschlagen/)).toBeTruthy()
+  })
+
+  it('explains an ntfy test send failure with the server answer', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      test: { delivered: false, code: 'http_407' },
+    })
+    renderPage()
+
+    const buttons = await screen.findAllByText('Testnachricht senden')
+    fireEvent.click(buttons[0] as HTMLElement)
+
+    expect(await screen.findByText(/bereits vergeben \(407\)/)).toBeTruthy()
   })
 
   it('keeps ntfy unverified until the code from the topic was confirmed', async () => {

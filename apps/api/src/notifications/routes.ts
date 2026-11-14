@@ -422,7 +422,12 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           if (error instanceof ChannelVerificationError) {
             const status = error.code === 'verification_send_failed' ? 502 : 422
 
-            return reply.code(status).send({ code: error.code, params: {} })
+            return reply
+              .code(status)
+              .send({
+                code: error.code,
+                params: error.causeCode === '' ? {} : { reason: error.causeCode },
+              })
           }
 
           throw error

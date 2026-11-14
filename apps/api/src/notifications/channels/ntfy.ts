@@ -107,7 +107,9 @@ export async function sendNtfyNotification(
 
   if (!response.ok) {
     log?.warn?.('ntfy: send failed', { url, topic, status: response.status })
-    throw new NtfyError('http_error', `ntfy responded with ${response.status}`)
+    // The status becomes part of the machine code (http_407 …) so the
+    // administration can explain which ntfy problem happened (WP-M14-49).
+    throw new NtfyError(`http_${response.status}`, `ntfy responded with ${response.status}`)
   }
 
   log?.info?.('ntfy: notification sent', { url, topic, priority, title: message.title })

@@ -129,4 +129,25 @@ describe('sendNtfyNotification', () => {
       ),
     ).rejects.toThrow(/500/)
   })
+
+  it('names the HTTP status in the error code (WP-M14-49)', async () => {
+    const fetchMock = vi.fn(async () => new Response('nope', { status: 407 }))
+
+    const errors: unknown[] = []
+
+    try {
+      await sendNtfyNotification(
+        config,
+        { title: 'New ticket', body: 'Lift 2 is broken' },
+        'https://stoerdesk.local/pwa',
+        fetchMock as unknown as typeof fetch,
+      )
+    } catch (error) {
+      errors.push(error)
+    }
+
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toBeInstanceOf(Error)
+    expect((errors[0] as { code?: string }).code).toBe('http_407')
+  })
 })

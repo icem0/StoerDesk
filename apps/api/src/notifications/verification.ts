@@ -12,7 +12,7 @@ import {
   readChannelConfiguration,
   type ChannelConfiguration,
 } from './config'
-import { sendNtfyNotification, type NtfyConfig } from './channels/ntfy'
+import { sendNtfyNotification, NtfyError, type NtfyConfig } from './channels/ntfy'
 
 type Db = Database['database']
 
@@ -29,14 +29,23 @@ export type ChannelVerificationErrorCode =
   | 'verification_code_expired'
   | 'verification_send_failed'
 
-/** A verification step failed in a way the admin UI can explain (§11.2). */
+/**
+ * A verification step failed in a way the admin UI can explain (§11.2);
+ * `causeCode` keeps the machine code of a failing send (e.g. `http_407`).
+ */
 export class ChannelVerificationError extends Error {
   readonly code: ChannelVerificationErrorCode
+  readonly causeCode: string
 
-  constructor(code: ChannelVerificationErrorCode, message: string) {
+  constructor(
+    code: ChannelVerificationErrorCode,
+    message: string,
+    causeCode = '',
+  ) {
     super(message)
     this.name = 'ChannelVerificationError'
     this.code = code
+    this.causeCode = causeCode
   }
 }
 
@@ -148,8 +157,9 @@ export async function requestNtfyVerification(
       })
 
     const message = error instanceof Error ? error.message : 'ntfy is unreachable'
+    const cause = error instanceof NtfyError ? error.code : ''
 
-    throw new ChannelVerificationError('verification_send_failed', message)
+    throw new ChannelVerificationError('verification_send_failed', message, cause)
   }
 
   return { expiresAt: expiresAt.toISOString() }

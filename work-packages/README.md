@@ -806,6 +806,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-46  | the ntfy QR survives a missing Telegram bot (out of band)                 | done    | yes     |
 | WP-M14-47  | ntfy counts as configured only after the code came back (out of band)     | done    | yes     |
 | WP-M14-48  | the administration confirms the ntfy code (out of band)                   | done    | yes     |
+| WP-M14-49  | a failed ntfy test send explains itself (out of band)                     | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

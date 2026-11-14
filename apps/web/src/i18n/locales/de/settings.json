@@ -278,8 +278,8 @@
         "nameDe": "Name (Deutsch)",
         "nameEn": "Name (Englisch)",
         "active": "Aktiv",
-      "on": "aktiv",
-      "off": "inaktiv"
+        "on": "aktiv",
+        "off": "inaktiv"
       },
       "rule": {
         "key": "Schlüssel",
@@ -459,7 +459,7 @@
       "test": "Testnachricht senden",
       "testing": "Testnachricht wird gesendet …",
       "testDelivered": "Testnachricht gesendet.",
-      "testFailed": "Testnachricht fehlgeschlagen ({{code}}).",
+      "testFailed": "Testnachricht fehlgeschlagen: {{reason}}",
       "testTopicPlaceholder": "z. B. stoerdesk-test",
       "curlCommand": "cURL-Befehl (ins Terminal kopieren)",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
@@ -483,16 +483,33 @@
         "errors": {
           "verification_code_invalid": "Der Code stimmt nicht oder gehört zu einer älteren Konfiguration.",
           "verification_code_expired": "Der Code ist abgelaufen. Bitte senden Sie einen neuen.",
-          "verification_send_failed": "Der Code konnte nicht gesendet werden. Prüfen Sie Adresse, Thema und ob der ntfy-Server erreichbar ist.",
+          "verification_send_failed": "Der Code konnte nicht gesendet werden: {{reason}} — Adresse, Thema und ob der ntfy-Server erreichbar ist prüfen.",
           "channel_not_configured": "ntfy ist nicht vollständig konfiguriert. Speichern Sie zuerst Adresse und Thema.",
-          "unknown": "Die Prüfung ist fehlgeschlagen."
+          "unknown": "Die Überprüfung ist fehlgeschlagen: {{reason}}"
         }
       },
       "errors": {
         "session_invalid": "Die Sitzung ist abgelaufen.",
         "forbidden": "Keine Berechtigung.",
         "invalid_request": "Bitte prüfen Sie die Eingaben.",
-        "unknown": "Aktion fehlgeschlagen."
+        "unknown": "Aktion fehlgeschlagen.",
+        "channel_not_configured": "Der Kanal ist nicht vollständig konfiguriert: zuerst URL und Thema speichern.",
+        "no_token": "Der Kanal hat noch kein Geheimnis (Bot-Token, Zugangstoken …) — zuerst speichern.",
+        "send_failed": "Der Versand ist fehlgeschlagen.",
+        "http_error": "Der Server hat einen Fehler geantwortet.",
+        "http_401": "Der Server verlangt Authentifizierung (401): auf öffentlichen Servern wie ntfy.sh kann nur zu Themen veröffentlicht werden, die noch frei sind — oder mit dem eigenen Konto.",
+        "http_403": "Der Server lehnt die Veröffentlichung ab (403): das Thema gehört jemand anderem.",
+        "http_406": "Der Server lehnt das angeforderte Format ab (406).",
+        "http_407": "Das Thema ist bereits vergeben (407): auf ntfy.sh kann man nur Themen veröffentlichen, die noch frei sind — oder Themen des eigenen Kontos. Ein noch nicht benutztes Thema wählen, z. B. stoerdesk-<zufällige Zeichen>, und speichern — der QR-Code und der Test verwenden dann genau dieses.",
+        "http_408": "Der Server hat nicht rechtzeitig geantwortet (408).",
+        "http_409": "Das Limit des Servers ist erreicht (409): später erneut versuchen oder eigenen ntfy-Server verwenden.",
+        "http_413": "Die Nachricht ist zu groß für den Server (413).",
+        "http_424": "Der ntfy-Server hat die Nachricht abgelehnt (424): Nachrichten- oder Ratenlimits.",
+        "http_500": "Der ntfy-Server hatte einen internen Fehler (500): später erneut versuchen oder einen anderen Server verwenden.",
+        "http_501": "Der ntfy-Server unterstützt diesen Aufruf nicht (501): einen anderen Server verwenden.",
+        "http_502": "Der ntfy-Server hatte einen internen Fehler (502): später erneut versuchen oder einen anderen Server verwenden.",
+        "http_503": "Der ntfy-Server ist derzeit nicht verfügbar (503): später erneut versuchen oder einen anderen Server verwenden.",
+        "http_504": "Der ntfy-Server hat nicht rechtzeitig geantwortet (504): später erneut versuchen oder einen anderen Server verwenden."
       },
       "minimum": {
         "title": "Pflichtkanäle für kritische Meldungen",
