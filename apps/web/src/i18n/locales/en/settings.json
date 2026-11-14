@@ -496,6 +496,7 @@
         "channel_not_configured": "The channel is not fully configured: save a URL and a topic first.",
         "no_token": "The channel still misses its secret (bot token, access token …) — store it first.",
         "send_failed": "The send failed.",
+        "request_failed": "The request to StörDesk failed (HTTP {{status}}, code {{code}}). Please pass the code on to support.",
         "http_error": "The ntfy server answered with code {{code}}: check URL and topic and try again.",
         "http_401": "Authentication required (401): the access token of this channel is missing or wrong — store it in the secret field of this card.",
         "http_403": "Publication refused (403): most often the access token is missing or wrong — store it in the secret field of this card; only with a correct key it still has to be checked whether the topic is already claimed.",

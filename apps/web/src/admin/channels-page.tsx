@@ -156,6 +156,22 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
     return translated === key ? t('admin.channels.errors.http_error', { code }) : translated
   }
 
+  // A request that never produced a known machine code (a Fastify rejection such as
+  // FST_ERR_CTP_EMPTY_JSON_BODY, or no network) names its status and code instead of
+  // showing the raw i18n key.
+  const errorText = (error: unknown): string => {
+    if (!(error instanceof ApiError) || error.code === undefined) {
+      return t('admin.channels.errors.request_failed', { status: 'n/a', code: 'network' })
+    }
+
+    const key = `admin.channels.errors.${error.code}`
+    const translated = t(key)
+
+    return translated === key
+      ? t('admin.channels.errors.request_failed', { status: error.status, code: error.code })
+      : translated
+  }
+
   const apiReason = (error: unknown): string => {
     const raw = error instanceof ApiError ? error.params?.reason : undefined
 
@@ -397,7 +413,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       ) : null}
       {test.isError ? (
         <p className="text-sm text-rose-400" role="alert">
-          {t(`admin.channels.errors.${errorCode(test.error)}`)}
+          {errorText(test.error)}
         </p>
       ) : null}
 

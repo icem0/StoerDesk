@@ -41,6 +41,7 @@ function stub(routes: {
   me: unknown
   channels?: unknown
   test?: unknown
+  testError?: { status: number; code: string }
   verification?: unknown
   confirm?: unknown
 }) {
@@ -59,6 +60,12 @@ function stub(routes: {
         )
       }
       if (url.includes('/v1/admin/channels/') && url.includes('/test')) {
+        if (routes.testError !== undefined) {
+          return Response.json(
+            { code: routes.testError.code, params: {} },
+            { status: routes.testError.status },
+          )
+        }
         return Response.json(routes.test ?? { delivered: true })
       }
       if (url.includes('/v1/admin/channels')) {
@@ -142,6 +149,22 @@ describe('ChannelsPage', () => {
         ),
       ).toBe(true)
     })
+  })
+
+  it('names the status and the code of a rejected test request instead of a raw key', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      testError: { status: 400, code: 'FST_ERR_CTP_EMPTY_JSON_BODY' },
+    })
+    renderPage()
+
+    const buttons = await screen.findAllByText('Testnachricht senden')
+    fireEvent.click(buttons[0] as HTMLElement)
+
+    expect(
+      await screen.findByText(/HTTP 400, Code FST_ERR_CTP_EMPTY_JSON_BODY/),
+    ).toBeTruthy()
+    expect(screen.queryByText(/admin\.channels\.errors\./)).toBeNull()
   })
 
   it('marks a failed test send as failed and shows its code', async () => {

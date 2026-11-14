@@ -498,6 +498,7 @@
         "channel_not_configured": "Der Kanal ist nicht vollständig konfiguriert: zuerst URL und Thema speichern.",
         "no_token": "Der Kanal hat noch kein Geheimnis (Bot-Token, Zugangstoken …) — zuerst speichern.",
         "send_failed": "Der Versand ist fehlgeschlagen.",
+        "request_failed": "Die Anfrage an StörDesk ist fehlgeschlagen (HTTP {{status}}, Code {{code}}). Den Code bitte an den Support weitergeben.",
         "http_error": "Der ntfy-Server hat den Code {{code}} geantwortet: Prüfen Sie URL und Thema und versuchen Sie es erneut.",
         "http_401": "A login is required (401): the access token of this channel is missing or wrong — store it in the secret field of this card.",
         "http_403": "Veröffentlichung verweigert (403): most often the access token is missing or wrong — store it in the secret field of this card; only when the key is already correct, it has to be checked whether the topic is already claimed.",
