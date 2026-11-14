@@ -69,7 +69,12 @@ const ntfyOf = (
  * The ntfy target StörDesk actually uses. Without `requireVerified` this is
  * the effective target of §11.2 (row wins over the environment) and is used to
  * send the verification code; the outbox asks for a verified target so an
- * unconfirmed channel never receives ticket notifications.
+ * unconfirmed channel never receives ticket notifications. `token` is the write-only
+ * access token of the server (ADR-0022, WP-M14-51): the `secret` of the `ntfy`
+ * row with the `NTFY_TOKEN` environment fallback. It travels in the returned
+ * config so every send — test, verification code and outbox — can put it into
+ * the `Authorization` header; it is never a URL parameter, never answered and
+ * never logged.
  */
 export async function effectiveNtfyConfig(
   database: Db,
@@ -93,7 +98,7 @@ export async function effectiveNtfyConfig(
     return null
   }
 
-  return { url, topic }
+  return { url, topic, token: ntfy.token ?? '' }
 }
 
 /**

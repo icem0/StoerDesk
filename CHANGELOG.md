@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   carries the same reason in its answer params.
 
 ### Fixed
+- A self-hosted ntfy server that needs an access token now works (WP-M14-51):
+  the key saved in the write-only secret field of the channel (and in
+  `NTFY_TOKEN`) never reached any send, so the test message and the
+  verification code failed with `403`. ADR-0022 makes that secret the access
+  token of the server: the test send, the verification code and the outbox
+  drain put it into the `Authorization` header of the publish request. The key
+  stays out of every answer, log, error text, the subscription address and the
+  deep link.
 - The own channels page no longer hides the ntfy QR when Telegram is not
   configured (WP-M14-46): the page replaced every section with the Telegram
   error because the code route answered an unhandled `500` without a bot token.

@@ -1666,6 +1666,23 @@ itself — a scanned QR never carries a user name or a token. The card, the rout
 answer, the web-address branch, the adapter and the payload stay otherwise
 unchanged.
 
+**The ntfy access token reaches every send (WP-M14-51, out of band in phase 14,
+requested by the office; WP-M14-52 and WP-M14-53 announced).** The office runs
+its own ntfy server: the test send answered `403 Veröffentlichung verweigert`
+because the request carried no access token. ADR-0022 decides that the access
+token of the ntfy server is the write-only `secret` of the `ntfy` row with the
+`NTFY_TOKEN` environment fallback (§11.2 gains no column, no key and no route);
+`readChannelConfiguration` carries it as `ChannelConfiguration.token`, which is
+not in `channelConfigurationSchema` and therefore never answered, and
+`effectiveNtfyConfig`, the admin test registry and the `effectiveEnv` of the
+drain hand it to the adapter so it travels only in the `Authorization` header —
+never in a URL, a `?token=` parameter, a log, an answer or an error text.
+**WP-M14-52** makes the administration name the access token in the `401` and
+`403` texts (the claimed topic only as the second cause) and puts the
+`Authorization: Bearer $NTFY_TOKEN` line into the copied curl; **WP-M14-53**
+gives the publish request a timeout so an unreachable server answers
+`http_timeout` instead of hanging the drain.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

@@ -53,3 +53,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0019](DECISIONS/0019-channel-configuration-and-account-linking.md) | The channel configuration and the account linking live in the database | accepted |
 | [ADR-0020](DECISIONS/0020-whatsapp-web-over-an-external-bridge.md) | WhatsApp Web over an external bridge | accepted |
 | [ADR-0021](DECISIONS/0021-readiness-allocation-over-the-configured-channels.md) | The readiness allocation announces itself over the configured channels | accepted |
+| [ADR-0022](DECISIONS/0022-ntfy-access-token-as-the-channel-secret.md) | The ntfy access token is the write-only secret of the channel | accepted |

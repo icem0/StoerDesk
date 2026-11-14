@@ -168,6 +168,34 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
     expect(events).toEqual([])
   })
 
+  it('sends the access token of the target in the Authorization header (WP-M14-51)', async () => {
+    const rows = [row('ntfy')]
+    const { fakeDatabase, events } = inMemoryDatabase(rows)
+
+    const seen: string[] = []
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch =
+      vi.fn((_: string | URL | Request, init?: RequestInit) => {
+        const headers = init?.headers as Record<string, string> | undefined
+        seen.push(typeof headers?.authorization === 'string' ? headers.authorization : '')
+
+        return new Response('{}', { status: 200 })
+      }) as unknown as typeof fetch
+
+    const result = await drainOutbox(
+      fakeDatabase,
+      loadEnv({}),
+      undefined,
+      { url: 'https://ntfy.mock', topic: 'stoerdesk', token: 'tk_row' },
+    )
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
+    expect(events.filter((event) => event.type === 'notification_sent')).toHaveLength(1)
+    expect(seen).toEqual(['Bearer tk_row'])
+  })
+
   it('ends SENT with three attempts when the channel fails twice then succeeds', async () => {
     const statuses = [500, 500, 200]
     let calls = 0

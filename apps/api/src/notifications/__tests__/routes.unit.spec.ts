@@ -1,5 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { loadEnv } from '../../config/env'
 import type { Database } from '../../db/client'
@@ -180,6 +180,40 @@ describe('channel configuration routes — guards and secret (WP-M14-05)', () =>
     expect(response.body).not.toContain('old-secret')
   })
 
+  it('never answers the ntfy access token (WP-M14-51)', async () => {
+    const app = await buildApp({
+      held: ['notification.read'],
+      store: [
+        row({
+          kind: 'ntfy',
+          config: { url: 'https://ntfy.mock', topic: 'office' },
+          secret: 'tk_row',
+        }),
+      ],
+    })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/admin/channels',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    const [ntfy] = response.json<{ channels: unknown[] }>().channels.filter((channel) => {
+      return (channel as { kind?: string })?.kind === 'ntfy'
+    })
+
+    expect(ntfy).toBeInstanceOf(Object)
+    expect(Object.keys(ntfy ?? {})).toEqual([
+      'kind',
+      'enabled',
+      'label',
+      'config',
+      'secretSet',
+      'verified',
+    ])
+    expect(response.body).not.toContain('tk_row')
+  })
+
   it('writes the row and keeps the stored secret when the secret is empty', async () => {
     const store = [row()]
     const app = await buildApp({ held: ['notification.write'], store })
@@ -316,6 +350,40 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
     })
 
     expect(response.statusCode).toBe(403)
+  })
+
+  it('sends the test message with the access token of the stored row (WP-M14-51)', async () => {
+    const seen: string[] = []
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch =
+      vi.fn((_: string | URL | Request, init?: RequestInit) => {
+        const headers = init?.headers as Record<string, string> | undefined
+        seen.push(typeof headers?.authorization === 'string' ? headers.authorization : '')
+
+        return new Response('{}', { status: 200 })
+      }) as unknown as typeof fetch
+
+    const app = await buildApp({
+      held: ['notification.write'],
+      store: [
+        row({
+          kind: 'ntfy',
+          config: { url: 'https://ntfy.mock', topic: 'office' },
+          secret: 'tk_row',
+        }),
+      ],
+    })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/admin/channels/ntfy/test',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(response.json()).toEqual({ delivered: true })
+    expect(seen).toEqual(['Bearer tk_row'])
   })
 })
 

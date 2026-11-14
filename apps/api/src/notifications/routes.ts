@@ -386,7 +386,10 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         }
 
         // The test must send with the saved configuration, not with the
-        // environment: the admin clicks it right after saving the row.
+        // environment: the admin clicks it right after saving the row. The
+        // access token of the ntfy server travels the same way — the write-only
+        // `secret` of the row wins over `NTFY_TOKEN` and only ever enters the
+        // `Authorization` header (ADR-0022, WP-M14-51).
         const effective =
           channels === undefined && kind.data === 'ntfy'
             ? await effectiveNtfyConfig(database, env, { requireVerified: false })
@@ -398,6 +401,7 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
                 ...env,
                 NTFY_URL: effective?.url ?? '',
                 NTFY_TOPIC: effective?.topic ?? '',
+                NTFY_TOKEN: effective?.token ?? env.NTFY_TOKEN,
               })
 
         const result = await sendTestMessage(testRegistry, kind.data, body.data.topic)

@@ -372,6 +372,29 @@ enters the QR or the deep link — ntfy offers no URL-login scheme and ADR-0005
 keeps every secret write-only, so a protected topic is unlocked by a login in
 the ntfy app itself.
 
+**The ntfy access token reaches every send (WP-M14-51, out of band in phase 14,
+requested by the office; WP-M14-52 and WP-M14-53 announced).** The office runs
+its own ntfy server that requires an access token. The test send answered
+`403 Veröffentlichung verweigert` and blamed a claimed topic — the key had been
+saved in the write-only `secret` of the `ntfy` row (and in `NTFY_TOKEN`) since
+WP-M14-04, but `readChannelConfiguration` never carried it, so it reached
+neither the test send of WP-M14-05, nor the verification code of WP-M14-47,
+nor the outbox drain. **WP-M14-51** is implemented: ADR-0022 decides that the
+access token of the ntfy server **is** the secret of the channel (§11.2 needs
+no new column, no new environment key and no new route); `ChannelConfiguration.token`
+carries it to the send — schema-stripped, never answered, never logged — and
+`effectiveNtfyConfig`, the admin test registry and `effectiveEnv` of the drain
+put it into the `Authorization` header of the adapter of WP-M7-01. The two ntfy
+settings commits that landed before it without a WP id — `6ec9444` (the
+copy-to-clipboard curl, the clickable subscription link and the `NTFY_TOKEN`
+key) and `eb3f6d7` (the separate ntfy test topic removed from the card) — are
+recorded here as part of this record. **WP-M14-52**
+(`52-ntfy-401-and-403-name-the-access-token.md`) and **WP-M14-53**
+(`53-the-ntfy-request-carries-a-timeout.md`) follow in numeric order: the
+administration explains a `401`/`403` as a missing or wrong access token
+instead of a claimed topic, and the publish request gains a timeout so an
+unreachable server answers `http_timeout`.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -807,6 +830,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-47  | ntfy counts as configured only after the code came back (out of band)     | done    | yes     |
 | WP-M14-48  | the administration confirms the ntfy code (out of band)                   | done    | yes     |
 | WP-M14-49  | a failed ntfy test send explains itself (out of band)                     | done    | yes     |
+| WP-M14-50  | every ntfy error code explains itself (out of band)                       | done    | yes     |
+| WP-M14-51  | the ntfy access token reaches every send (out of band)                    | done    | yes     |
+| WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | planned | yes     |
+| WP-M14-53  | the ntfy request carries a timeout (out of band)                          | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

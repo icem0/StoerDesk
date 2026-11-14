@@ -78,7 +78,49 @@ describe('readChannelConfiguration (channel configuration in the database, §11.
       config: { url: 'https://row.mock', topic: 'row-topic' },
       secretSet: false,
       verified: false,
+      token: '',
     })
+  })
+
+  it('carries the access token of the row for the send (WP-M14-51, ADR-0022)', async () => {
+    const env = loadEnv({ NTFY_TOKEN: 'tk_env' })
+
+    const configurations = await readChannelConfiguration(
+      fakeDatabase([
+        {
+          kind: 'ntfy',
+          enabled: true,
+          label: 'Office ntfy',
+          config: { url: 'https://row.mock', topic: 'row-topic' },
+          secret: 'tk_row',
+        },
+      ]),
+      env,
+    )
+
+    const ntfy = configurations.find((configuration) => configuration.kind === 'ntfy')
+
+    expect(ntfy).toEqual({
+      kind: 'ntfy',
+      enabled: true,
+      label: 'Office ntfy',
+      config: { url: 'https://row.mock', topic: 'row-topic' },
+      secretSet: true,
+      verified: false,
+      token: 'tk_row',
+    })
+
+    const withoutRow = await readChannelConfiguration(
+      fakeDatabase([]),
+      loadEnv({ NTFY_URL: 'https://env.mock', NTFY_TOPIC: 'env-topic', NTFY_TOKEN: 'tk_env' }),
+    )
+
+    expect(
+      withoutRow.find((configuration) => configuration.kind === 'ntfy')?.token,
+    ).toBe('tk_env')
+    expect(
+      withoutRow.find((configuration) => configuration.kind === 'ntfy')?.config,
+    ).not.toHaveProperty('token')
   })
 
   it('falls back to the environment for a kind without a row', async () => {

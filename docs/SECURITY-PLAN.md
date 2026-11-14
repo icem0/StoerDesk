@@ -231,6 +231,21 @@ counters, the channel and the ticket number — never contact data or a token �
 and `target.ntfyTopic` is the opaque topic of §11.3, not a contact value. The
 integration probe uses mock topics only. No new finding.
 
+ntfy-access-token pass: 2026-11-14, diff `eb3f6d7..` (WP-M14-51 — `apps/api/src/notifications/config.ts`, `verification.ts`, `routes.ts`, `outbox.ts` and their four unit specs) — areas A and B
+re-checked in full (the package adds no route, no capability and no bearer scope: it
+changes only how the existing admin test send, the verification code and the outbox
+drain resolve their ntfy target), C re-checked for the touched files: no new select,
+insert or interpolation — the access token is read from the already schema-bound `secret`
+column and the `NTFY_TOKEN` env value and travels only as a config field, D and G
+untouched, F re-checked: `NTFY_TOKEN` is an empty placeholder in `.env.example` and `.env`
+stays gitignored, and the token is not in `channelConfigurationSchema`, so both
+`channelConfigurationSchema.parse` and `channelConfigurationListResponseSchema.parse`
+strip it from every answer (asserted by the new list test), H, I and J untouched, and
+K re-checked for the touched files: the adapter log still names url, method, topic,
+priority and the message text — never the header — and the error texts carry the
+status code only, so the key appears in no log line, answer, event payload or error
+message; the unit tests use the mock values `tk_row` and `tk_env`. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -317,17 +332,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (re-checked in full at the ntfy-recipients pass) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
-| B Autorisation | complete (re-checked in full at the ntfy-recipients pass, 91 routes) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
-| C Injection | complete (re-checked for the changed files) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
+| A Authentication | complete (re-checked in full at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
+| B Autorisation | complete (re-checked in full at the ntfy-access-token pass, no new route) | eb3f6d742ea762b0321420b12555c296b69e7235 |
+| C Injection | complete (re-checked for the changed files at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
 | D Frontend | complete (web/src read, tokens cookie-only) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | E HTTP-Hardening | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
+| K Logging/PII | complete (re-checked for the changed files at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

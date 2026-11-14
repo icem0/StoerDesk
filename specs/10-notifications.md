@@ -54,6 +54,15 @@ The rule of ADR-0005 applies to every secret: it is write-only, never answered
 by the API, never written into a log and never shown in the administration. The
 administration answers `secretSet: boolean` instead.
 
+For **ntfy** the secret is the **access token of the server** (ADR-0022): a
+self-hosted server or a server with access control refuses a publish without
+one. The row's `secret` with the `NTFY_TOKEN` environment fallback is handed to
+the send and travels only in the `Authorization: Bearer` header of the publish
+request — never in the URL, never as a `?token=` query parameter, never in a
+log, an answer or an error text. A missing or wrong key is a failing send
+(`http_401`, `http_403`), not a broken channel configuration; the key is not
+part of the target fingerprint.
+
 ### Proof of the target
 
 `notification_channel_verifications` keeps one row per kind: the fingerprint of
@@ -242,7 +251,8 @@ promises a delivery that cannot happen.
 ## 11.13 The security
 
 - The secrets of the channels and of the accounts are write-only: never
-  answered, never logged, never part of an event payload.
+  answered, never logged, never part of an event payload. The access token of
+  the ntfy server (ADR-0022) travels only in the `Authorization` header.
 - The messages carry no contact data of the reporter and no photo.
 - The Telegram code expires after ten minutes and is used once.
 - The bridge bearer of WhatsApp Web and the Matrix token travel only over the
@@ -254,6 +264,9 @@ promises a delivery that cannot happen.
 
 - a unit test per adapter: the payload, the error code and the secret that
   never appears in a message,
+- the access token of the ntfy server (ADR-0022) reaches the test send, the
+  verification code and the drain in the `Authorization` header and never an
+  answer or a log,
 - an integration test of the outbox: the account of a user is used, the
   selection of the user decides the channels, the mandatory minimum channels of
   a critical ticket are notified, a failure falls back to the next channel,

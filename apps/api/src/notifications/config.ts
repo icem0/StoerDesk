@@ -45,8 +45,9 @@ export interface ChannelConfiguration {
   verified: boolean
   /**
    * Optional Bearer token for ntfy servers that require authentication
-   * (WP-M14-51). Sent as the `Authorization: Bearer` header; public topics
-   * (e. g. ntfy.sh) do not need it. Never answered by the API.
+   * (WP-M14-51, ADR-0022): the write-only `secret` of the `ntfy` row with the
+   * `NTFY_TOKEN` environment fallback. Sent as the `Authorization` header only,
+   * never answered by the API and never part of a public `config`.
    */
   token?: string
 }
@@ -73,9 +74,10 @@ interface EnvironmentSettings {
 
 /**
  * The environment fallback of every kind (§11.2): the same keys the phase-7
- * adapters read. WhatsApp Web has no environment keys at all — ADR-0020 keeps
- * the bridge of the operator out of the deployment, so the channel only
- * exists through its row.
+ * adapters read. For ntfy the access token of the server is the environment key
+ * `NTFY_TOKEN` and plays the role of the secret (ADR-0022, WP-M14-51). WhatsApp
+ * Web has no environment keys at all — ADR-0020 keeps the bridge of the operator
+ * out of the deployment, so the channel only exists through its row.
  */
 function environmentSettings(env: Env): Record<ChannelKind, EnvironmentSettings> {
   return {
@@ -93,7 +95,7 @@ function environmentSettings(env: Env): Record<ChannelKind, EnvironmentSettings>
     },
     ntfy: {
       config: { url: env.NTFY_URL, topic: env.NTFY_TOPIC },
-      secret: '',
+      secret: env.NTFY_TOKEN,
     },
     email: {
       config: {
@@ -154,7 +156,11 @@ function publicSettings(value: unknown): Record<string, string> {
  * answer carries `secretSet` instead of the secret (§11.2, ADR-0005). For
  * ntfy, `verified` is only true after the target was reached with a one-time
  * code and that code was entered back (WP-M14-47); the other kinds have no
- * verification flow yet and count as verified.
+ * verification flow yet and count as verified. For `ntfy` the secret is the
+ * access token of the server: it is carried as `token` (ADR-0022, WP-M14-51)
+ * so the test send, the verification code and the outbox can put it into the
+ * `Authorization` header — it never joins the public `config` and never reaches
+ * an answer (`channelConfigurationSchema` has no `token`).
  */
 export async function readChannelConfiguration(
   database: Db,
@@ -243,6 +249,7 @@ export async function readChannelConfiguration(
       config,
       secretSet: secret !== '',
       verified,
+      ...(kind === 'ntfy' ? { token: secret } : {}),
     })
   }
 

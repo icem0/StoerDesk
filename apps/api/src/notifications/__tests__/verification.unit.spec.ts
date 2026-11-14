@@ -25,13 +25,16 @@ interface VerificationRow {
  * verification row. The fake implements exactly those chains; the actual
  * configuration logic lives in the unit-tested `readChannelConfiguration`.
  */
-function fakeDatabase(config: Record<string, string>): {
+function fakeDatabase(
+  config: Record<string, string>,
+  secret = '',
+): {
   database: Db
   verifications: VerificationRow[]
 } {
   const verifications: VerificationRow[] = []
   const channels = [
-    { kind: 'ntfy', enabled: true, label: '', config, secret: '' },
+    { kind: 'ntfy', enabled: true, label: '', config, secret },
   ]
 
   const database = {
@@ -88,12 +91,18 @@ const codeOf = (body: string): string => {
 
 function capturingFetch(): {
   fetchImpl: typeof fetch
-  sent: { url: string; body: string }[]
+  sent: { url: string; body: string; authorization: string }[]
 } {
-  const sent: { url: string; body: string }[] = []
+  const sent: { url: string; body: string; authorization: string }[] = []
 
   const fetchImpl = async (input: string | URL | Request, init?: RequestInit) => {
-    sent.push({ url: String(input), body: String(init?.body ?? '') })
+    const headers = init?.headers as Record<string, string> | undefined
+
+    sent.push({
+      url: String(input),
+      body: String(init?.body ?? ''),
+      authorization: typeof headers?.authorization === 'string' ? headers.authorization : '',
+    })
 
     return { ok: true } as Response
   }
@@ -103,7 +112,7 @@ function capturingFetch(): {
 
 describe('ntfy verification (WP-M14-47)', () => {
   it('clears the outbox target until the code was confirmed', async () => {
-    const { database } = fakeDatabase({ url: 'https://ntfy.mock', topic: 'office' })
+    const { database } = fakeDatabase({ url: 'https://ntfy.mock', topic: 'office' }, 'tk_office')
     const env = loadEnv({})
 
     expect(await effectiveNtfyConfig(database, env, { requireVerified: true })).toBeNull()
@@ -113,6 +122,7 @@ describe('ntfy verification (WP-M14-47)', () => {
 
     expect(sent).toHaveLength(1)
     expect(sent[0]?.url).toBe('https://ntfy.mock/')
+    expect(sent[0]?.authorization).toBe('Bearer tk_office')
 
     const code = codeOf(JSON.parse(sent[0]?.body ?? '{}').message as string)
     await confirmNtfyVerification(database, env, code)
@@ -120,6 +130,7 @@ describe('ntfy verification (WP-M14-47)', () => {
     expect(await effectiveNtfyConfig(database, env, { requireVerified: true })).toEqual({
       url: 'https://ntfy.mock',
       topic: 'office',
+      token: 'tk_office',
     })
   })
 
@@ -170,5 +181,17 @@ describe('ntfy verification (WP-M14-47)', () => {
     await expect(
       requestNtfyVerification(database, loadEnv({}), { fetchImpl: capturingFetch().fetchImpl }),
     ).rejects.toMatchObject({ code: 'channel_not_configured' })
+  })
+
+  it('falls back to the NTFY_TOKEN of the environment when the row has no secret (WP-M14-51)', async () => {
+    const { database } = fakeDatabase({ url: 'https://ntfy.mock', topic: 'office' })
+    const { fetchImpl, sent } = capturingFetch()
+
+    await requestNtfyVerification(database, loadEnv({ NTFY_TOKEN: 'tk_env' }), { fetchImpl })
+
+    expect(sent).toHaveLength(1)
+    expect(sent[0]?.authorization).toBe('Bearer tk_env')
+    expect(sent[0]?.url).toBe('https://ntfy.mock/')
+    expect(sent[0]?.body?.includes('tk_env')).toBe(false)
   })
 })

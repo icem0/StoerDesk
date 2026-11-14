@@ -60,14 +60,22 @@ const messageParams = (ticket: OutboxTicket): Record<string, unknown> => ({
 /**
  * The environment the adapters read: without an override the environment is
  * used as before; with an override the verified ntfy target replaces it and
- * `null` removes ntfy completely.
+ * `null` removes ntfy completely. The access token of the target follows the
+ * same rule (ADR-0022, WP-M14-51): the write-only `secret` of the row already
+ * resolved into `ntfy.token`, so the drain never loses the key of a
+ * self-hosted ntfy server.
  */
 function effectiveEnv(env: Env, ntfy: NtfyConfig | null | undefined): Env {
   if (ntfy === undefined) {
     return env
   }
 
-  return { ...env, NTFY_URL: ntfy?.url ?? '', NTFY_TOPIC: ntfy?.topic ?? '' }
+  return {
+    ...env,
+    NTFY_URL: ntfy?.url ?? '',
+    NTFY_TOPIC: ntfy?.topic ?? '',
+    NTFY_TOKEN: ntfy?.token ?? env.NTFY_TOKEN,
+  }
 }
 
 /**
