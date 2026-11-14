@@ -13,12 +13,15 @@ import {
 } from '@stoerdesk/shared'
 
 import { requirePermission, requireScopeOrPermission } from '../auth/requirePermission'
+import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, ticketEvents, tickets, users } from '../db/schema'
+import { enqueueOutbox } from '../notifications/outbox'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
 import { createExternalTicket, fieldPaths as externalFieldPaths } from './external'
 import { applyInternalAction } from './internal-actions'
+import { objectLocation } from './report'
 
 /**
  * Internal ticket creation (`PLAN.md` §7 rule 1, WP-M2-15).
@@ -55,7 +58,15 @@ export async function createInternalTicket(
 ): Promise<InternalCreateTicketResponse> {
   // Resolve the object (must be active).
   const [object] = await database
-    .select({ id: objects.id })
+    .select({
+      id: objects.id,
+      name: objects.name,
+      street: objects.street,
+      houseNumber: objects.houseNumber,
+      postalCode: objects.postalCode,
+      city: objects.city,
+      externalType: objects.externalType,
+    })
     .from(objects)
     .where(eq(objects.id, input.objectId))
     .limit(1)
@@ -110,6 +121,8 @@ export async function createInternalTicket(
     reporterEmail = reporterEmail ?? reporter.email
   }
 
+  const env = loadEnv()
+
   return await database.transaction(async (tx) => {
     const [ticket] = await tx
       .insert(tickets)
@@ -152,6 +165,24 @@ export async function createInternalTicket(
         reportedByUserId,
       },
     })
+
+    // §12: the office report reaches the channels as well — the outbox rows are
+    // written in the ticket transaction, exactly like the public report path.
+    await enqueueOutbox(
+      tx,
+      {
+        id: ticket.id,
+        ticketNo: ticket.ticketNo,
+        priority: ticket.priority,
+        objectName: object.name,
+        objectLocation: objectLocation(object),
+        systemType: object.externalType,
+        shortText: ticket.description,
+        workOrderNo: ticket.workOrderNumber,
+      },
+      env,
+      'ticket.created',
+    )
 
     return {
       ticketId: ticket.id,

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The office ticket now notifies as well (WP-M14-20): `POST /api/v1/tickets`
+  wrote the ticket and its `created` event but never a notification outbox row,
+  so a ticket created in the administration never reached ntfy, Telegram or any
+  other channel. The internal creation now enqueues the `ticket.created` rows in
+  the same transaction as the ticket — a rollback leaves no outbox row behind.
 - The ntfy channel publishes real JSON, not raw text: the adapter sent the JSON
   body to `/{topic}` with the action field `uri` and the string priority
   `default`/`urgent`, so ntfy showed the raw JSON as the message and dropped the

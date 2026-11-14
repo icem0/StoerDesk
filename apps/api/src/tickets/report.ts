@@ -93,7 +93,9 @@ export function reportTimes(
 }
 
 /** The human-readable location of an object for a notification message (§11.5). */
-function objectLocation(object: typeof objects.$inferSelect): string | null {
+export function objectLocation(
+  object: Pick<typeof objects.$inferSelect, 'street' | 'houseNumber' | 'postalCode' | 'city'>,
+): string | null {
   const parts = [object.street, object.houseNumber, object.postalCode, object.city]
     .filter((part): part is string => typeof part === 'string' && part.trim() !== '')
     .map((part) => part.trim())

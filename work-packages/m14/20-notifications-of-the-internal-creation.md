@@ -1,7 +1,7 @@
 # WP-M14-20: The internal ticket creation notifies as well
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-07
 phase: 14
 milestone: m14
@@ -20,7 +20,7 @@ files-write:
 
 - apps/api/src/tickets/internal.ts
 - apps/api/src/tickets/report.ts
-- apps/api/src/notifications/outbox.ts
+- apps/api/src/tickets/__tests__/internal-notification.integration.spec.ts
 
 interfaces:
 
@@ -62,9 +62,12 @@ transaction and a rollback leaves no row behind.
 
 ## Handoff
 
-- Files changed: the internal creation, the report path, the enqueue and the
-  tests
-- Interfaces added: the event type of the enqueue
-- Verified: `npm run check`
+- Files changed: the internal creation, the exported `objectLocation` of the
+  report path and the integration test. The enqueue itself already carried the
+  event type and the per-user topic from WP-M14-45, so `outbox.ts` needed no
+  change.
+- Interfaces added: `objectLocation` is exported from `tickets/report.ts` so the
+  internal path builds the same notification location as the public path.
+- Verified: `npm run check` and `npm run build`.
 - Follow-up WP: WP-M14-21 — the exit criterion of the phase
 - Open question: none
