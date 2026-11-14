@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   send use the saved configuration. A changed address or topic invalidates the
   proof, and an unverified ntfy channel is skipped in the fallback chain and in
   the mandatory minimum channels.
+- The administration confirms the ntfy code (WP-M14-48): the ntfy card explains
+  the setup in three steps, shows the subscription QR code and address of the
+  saved topic, links to the personal subscription page and offers "Code senden"
+  and "Code bestätigen". The state badge reads "ungeprüft" until the code came
+  back and "geprüft" afterwards.
+
 ### Fixed
 - The own channels page no longer hides the ntfy QR when Telegram is not
   configured (WP-M14-46): the page replaced every section with the Telegram

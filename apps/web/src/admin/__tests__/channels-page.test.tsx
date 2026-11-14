@@ -13,6 +13,7 @@ const matrix = {
   label: 'Matrix',
   config: { homeserver: 'https://matrix.example.org', roomId: '!room:example.org' },
   secretSet: true,
+  verified: true,
 }
 
 const ntfy = {
@@ -21,6 +22,7 @@ const ntfy = {
   label: 'ntfy',
   config: { url: 'https://ntfy.example.org', topic: 'stoerdesk' },
   secretSet: false,
+  verified: false,
 }
 
 function meResponse(permissions: string[]) {
@@ -35,13 +37,27 @@ function meResponse(permissions: string[]) {
   }
 }
 
-function stub(routes: { me: unknown; channels?: unknown; test?: unknown }) {
+function stub(routes: {
+  me: unknown
+  channels?: unknown
+  test?: unknown
+  verification?: unknown
+  confirm?: unknown
+}) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
 
       if (url.includes('/v1/me')) return Response.json(routes.me)
+      if (url.includes('/verification/confirm')) {
+        return Response.json(routes.confirm ?? { verified: true })
+      }
+      if (url.includes('/verification')) {
+        return Response.json(
+          routes.verification ?? { expiresAt: new Date(Date.now() + 600_000).toISOString() },
+        )
+      }
       if (url.includes('/v1/admin/channels/') && url.includes('/test')) {
         return Response.json(routes.test ?? { delivered: true })
       }
@@ -128,6 +144,37 @@ describe('ChannelsPage', () => {
 
     expect(await screen.findByText('Testnachricht fehlgeschlagen (send_failed).')).toBeTruthy()
     expect(screen.getByText(/Zustand: fehlgeschlagen/)).toBeTruthy()
+  })
+
+  it('keeps ntfy unverified until the code from the topic was confirmed', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [matrix, { ...ntfy, enabled: true }] },
+      verification: { expiresAt: new Date(Date.now() + 600_000).toISOString() },
+      confirm: { verified: true },
+    })
+    renderPage()
+
+    expect(await screen.findByText(/Zustand: ungeprüft/)).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Code senden'))
+    expect(await screen.findByText(/Code gesendet/)).toBeTruthy()
+
+    fireEvent.change(screen.getByLabelText('Code aus der ntfy-App'), {
+      target: { value: 'ABC234' },
+    })
+    fireEvent.click(screen.getByText('Code bestätigen'))
+
+    const fetchMock = vi.mocked(fetch)
+    await vi.waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([input, init]) =>
+            String(input).includes('/verification/confirm') &&
+            String(init?.body).includes('ABC234'),
+        ),
+      ).toBe(true)
+    })
   })
 
   it('shows the forbidden notice without notification.read', async () => {

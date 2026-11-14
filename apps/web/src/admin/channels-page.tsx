@@ -13,6 +13,7 @@ import {
 
 import { usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
+import { NtfySubscription } from '../features/settings/NtfySubscription'
 
 /**
  * Admin channel page (`specs/10-notifications.md` §11.1, §11.11, §11.12,
@@ -68,6 +69,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
   const [secret, setSecret] = useState('')
   const [testTopic, setTestTopic] = useState('')
   const [saved, setSaved] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
 
   const save = useMutation({
     mutationFn: (body: UpdateChannelConfigurationRequest) =>
@@ -79,6 +81,29 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
     onSuccess: () => {
       setSecret('')
       setSaved(true)
+      // A saved configuration is a new target: the old code no longer applies.
+      setVerificationCode('')
+      void queryClient.invalidateQueries({ queryKey: ['channels'] })
+    },
+  })
+
+  const requestVerification = useMutation({
+    mutationFn: () =>
+      apiFetch<{ expiresAt: string }>('/v1/admin/channels/ntfy/verification', {
+        method: 'POST',
+        headers: jsonHeaders,
+      }),
+  })
+
+  const confirmVerification = useMutation({
+    mutationFn: (code: string) =>
+      apiFetch<{ verified: true }>('/v1/admin/channels/ntfy/verification/confirm', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ code }),
+      }),
+    onSuccess: () => {
+      setVerificationCode('')
       void queryClient.invalidateQueries({ queryKey: ['channels'] })
     },
   })
@@ -93,7 +118,20 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
   })
 
   const failed = test.data !== undefined && !test.data.delivered
-  const state = !channel.enabled ? 'disabled' : failed ? 'failed' : 'configured'
+  // "Configured" is a promise to the operator: ntfy only earns it after the
+  // one-time code came back from the topic (WP-M14-47). A channel without a
+  // proof stays visibly "unverified" — never green because a key is stored.
+  const state = !channel.enabled
+    ? 'disabled'
+    : failed
+      ? 'failed'
+      : channel.kind === 'ntfy' && channel.verified !== true
+        ? 'unverified'
+        : 'configured'
+  const ntfyTarget =
+    channel.kind === 'ntfy' && channel.config.url && channel.config.topic
+      ? { publicUrl: channel.config.url, topic: channel.config.topic }
+      : undefined
 
   function saveChannel() {
     setSaved(false)
@@ -197,6 +235,104 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
             </div>
           ) : null}
         </>
+      ) : null}
+
+      {channel.kind === 'ntfy' ? (
+        <div className="flex flex-col gap-2 rounded-lg border border-slate-700 bg-slate-950/40 p-3 text-sm">
+          <h3 className="font-semibold">{t('admin.channels.verification.heading')}</h3>
+          <p className="text-xs text-slate-400">{t('admin.channels.verification.hint')}</p>
+          <ol className="list-decimal space-y-1 pl-5 text-xs text-slate-300">
+            <li>{t('admin.channels.verification.stepSave')}</li>
+            <li>{t('admin.channels.verification.stepSubscribe')}</li>
+            <li>{t('admin.channels.verification.stepCode')}</li>
+          </ol>
+          {ntfyTarget !== undefined ? (
+            <NtfySubscription publicUrl={ntfyTarget.publicUrl} topic={ntfyTarget.topic} />
+          ) : (
+            <p className="text-xs text-amber-300">
+              {t('admin.channels.verification.saveFirst')}
+            </p>
+          )}
+          <p className="text-xs text-slate-400">
+            {t('admin.channels.verification.testUsesSaved')}
+          </p>
+          <Link className="text-xs text-sky-300 underline" to="/settings/notifications">
+            {t('admin.channels.verification.personalLink')}
+          </Link>
+
+          {channel.verified === true ? (
+            <p className="text-sm text-emerald-300" role="status">
+              {t('admin.channels.verification.verified')}
+            </p>
+          ) : mayWrite && channel.enabled && ntfyTarget !== undefined ? (
+            <>
+              {requestVerification.isSuccess ? (
+                <p className="text-sm text-emerald-300" role="status">
+                  {t('admin.channels.verification.sent', {
+                    time: new Date(requestVerification.data.expiresAt).toLocaleTimeString(),
+                  })}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap items-end gap-2">
+                <button
+                  className="min-h-11 rounded-lg border border-slate-600 px-4 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-60"
+                  disabled={requestVerification.isPending}
+                  onClick={() => requestVerification.mutate()}
+                  type="button"
+                >
+                  {requestVerification.isPending
+                    ? t('admin.channels.verification.sending')
+                    : t('admin.channels.verification.send')}
+                </button>
+                {requestVerification.isSuccess ? (
+                  <>
+                    <label
+                      className="flex flex-col gap-1 text-xs"
+                      htmlFor={fieldId(channel.kind, 'verificationCode')}
+                    >
+                      {t('admin.channels.verification.code')}
+                      <input
+                        autoComplete="one-time-code"
+                        className="rounded bg-slate-950 p-2 text-slate-100"
+                        id={fieldId(channel.kind, 'verificationCode')}
+                        maxLength={6}
+                        onChange={(event) => setVerificationCode(event.target.value)}
+                        placeholder={t('admin.channels.verification.codePlaceholder')}
+                        value={verificationCode}
+                      />
+                    </label>
+                    <button
+                      className="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                      disabled={
+                        confirmVerification.isPending || verificationCode.trim() === ''
+                      }
+                      onClick={() => confirmVerification.mutate(verificationCode)}
+                      type="button"
+                    >
+                      {confirmVerification.isPending
+                        ? t('admin.channels.verification.confirming')
+                        : t('admin.channels.verification.confirm')}
+                    </button>
+                  </>
+                ) : null}
+              </div>
+              {requestVerification.isError ? (
+                <p className="text-sm text-rose-400" role="alert">
+                  {t(
+                    `admin.channels.verification.errors.${errorCode(requestVerification.error)}`,
+                  )}
+                </p>
+              ) : null}
+              {confirmVerification.isError ? (
+                <p className="text-sm text-rose-400" role="alert">
+                  {t(
+                    `admin.channels.verification.errors.${errorCode(confirmVerification.error)}`,
+                  )}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </div>
       ) : null}
 
       {!mayWrite ? <p className="text-sm text-slate-400">{t('admin.channels.readOnly')}</p> : null}

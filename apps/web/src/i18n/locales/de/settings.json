@@ -410,14 +410,15 @@
     },
     "channels": {
       "title": "Kanäle",
-      "hint": "Die Benachrichtigungskanäle der Installation. Die Umgebung dient nur als Rückfall; ein gespeicherter Wert hat Vorrang. Geheimnisse werden nur geschrieben und niemals angezeigt.",
+      "hint": "Die Benachrichtigungskanäle der Installation. Die Umgebung dient nur als Rückfall; ein gespeicherter Wert hat Vorrang. Ein Kanal gilt erst als konfiguriert, wenn die Verbindung mit einem Code bestätigt wurde. Geheimnisse werden nur geschrieben und niemals angezeigt.",
       "loading": "Kanäle werden geladen …",
       "empty": "Keine Kanäle konfiguriert.",
       "stateLabel": "Zustand",
       "state": {
-        "configured": "konfiguriert",
+        "configured": "geprüft",
         "disabled": "deaktiviert",
-        "failed": "fehlgeschlagen"
+        "failed": "fehlgeschlagen",
+        "unverified": "ungeprüft"
       },
       "kinds": {
         "signal": "Signal",
@@ -462,6 +463,31 @@
       "testTopicPlaceholder": "z. B. stoerdesk-test",
       "curlCommand": "cURL-Befehl (ins Terminal kopieren)",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
+      "verification": {
+        "heading": "ntfy-Verbindung prüfen",
+        "hint": "StörDesk sendet einen sechsstelligen Code an das Thema. Erst wenn der Code hier eingetragen ist, gilt ntfy als konfiguriert und erhält Ticket-Benachrichtigungen.",
+        "stepSave": "Adresse und Thema speichern – die Prüfung nutzt immer die gespeicherten Werte, nicht nur die Umgebung.",
+        "stepSubscribe": "Das Abo unten in der ntfy-App öffnen oder den QR-Code scannen.",
+        "stepCode": "Code senden, in der App ablesen und hier eintragen.",
+        "saveFirst": "Speichern Sie zuerst eine erreichbare ntfy-Adresse und ein Thema.",
+        "testUsesSaved": "Auch die Testnachricht sendet an die gespeicherte Konfiguration. Ohne gültige Adresse und ohne Berechtigung zum Veröffentlichen kommt nichts an.",
+        "personalLink": "Persönliche Abo-QR-Codes der Mitarbeiter (Einstellungen → Benachrichtigungen)",
+        "verified": "Verifiziert: Die Verbindung wurde mit einem Code bestätigt.",
+        "send": "Code senden",
+        "sending": "Code wird gesendet …",
+        "sent": "Code gesendet. Er gilt bis {{time}}.",
+        "code": "Code aus der ntfy-App",
+        "codePlaceholder": "z. B. ABC234",
+        "confirm": "Code bestätigen",
+        "confirming": "Code wird geprüft …",
+        "errors": {
+          "verification_code_invalid": "Der Code stimmt nicht oder gehört zu einer älteren Konfiguration.",
+          "verification_code_expired": "Der Code ist abgelaufen. Bitte senden Sie einen neuen.",
+          "verification_send_failed": "Der Code konnte nicht gesendet werden. Prüfen Sie Adresse, Thema und ob der ntfy-Server erreichbar ist.",
+          "channel_not_configured": "ntfy ist nicht vollständig konfiguriert. Speichern Sie zuerst Adresse und Thema.",
+          "unknown": "Die Prüfung ist fehlgeschlagen."
+        }
+      },
       "errors": {
         "session_invalid": "Die Sitzung ist abgelaufen.",
         "forbidden": "Keine Berechtigung.",

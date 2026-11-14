@@ -410,14 +410,15 @@
     },
     "channels": {
       "title": "Channels",
-      "hint": "The notification channels of the installation. The environment is only a fallback; a stored value wins. Secrets are only written and never shown.",
+      "hint": "The notification channels of the installation. The environment is only a fallback; a stored value wins. A channel only counts as configured after its connection was confirmed with a code. Secrets are only written and never shown.",
       "loading": "Loading channels …",
       "empty": "No channels configured.",
       "stateLabel": "State",
       "state": {
-        "configured": "configured",
+        "configured": "verified",
         "disabled": "disabled",
-        "failed": "failed"
+        "failed": "failed",
+        "unverified": "unverified"
       },
       "kinds": {
         "signal": "Signal",
@@ -462,6 +463,31 @@
       "testTopicPlaceholder": "e. g. stoerdesk-test",
       "curlCommand": "cURL command (copy to terminal)",
       "readOnly": "Read-only: you lack the notification.write permission.",
+      "verification": {
+        "heading": "Verify the ntfy connection",
+        "hint": "StörDesk sends a six-character code to the topic. Only after the code is entered here does ntfy count as configured and receive ticket notifications.",
+        "stepSave": "Save the address and the topic — the check always uses the stored values, not only the environment.",
+        "stepSubscribe": "Open the subscription below in the ntfy app or scan the QR code.",
+        "stepCode": "Send the code, read it in the app and enter it here.",
+        "saveFirst": "Save a reachable ntfy address and a topic first.",
+        "testUsesSaved": "The test message also sends to the stored configuration. Without a valid address and the right to publish, nothing arrives.",
+        "personalLink": "Personal subscription QR codes of the staff (Settings → Notifications)",
+        "verified": "Verified: the connection was confirmed with a code.",
+        "send": "Send code",
+        "sending": "Sending code …",
+        "sent": "Code sent. It is valid until {{time}}.",
+        "code": "Code from the ntfy app",
+        "codePlaceholder": "e. g. ABC234",
+        "confirm": "Confirm code",
+        "confirming": "Checking code …",
+        "errors": {
+          "verification_code_invalid": "The code is wrong or belongs to an older configuration.",
+          "verification_code_expired": "The code has expired. Please send a new one.",
+          "verification_send_failed": "The code could not be sent. Check the address, the topic and whether the ntfy server is reachable.",
+          "channel_not_configured": "ntfy is not fully configured. Save the address and the topic first.",
+          "unknown": "The verification failed."
+        }
+      },
       "errors": {
         "session_invalid": "The session has expired.",
         "forbidden": "No permission.",
