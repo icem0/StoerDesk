@@ -159,6 +159,19 @@ describe('ChannelsPage', () => {
     expect(await screen.findByText(/bereits vergeben \(407\)/)).toBeTruthy()
   })
 
+  it('explains an unknown ntfy error code generically', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      test: { delivered: false, code: 'http_999' },
+    })
+    renderPage()
+
+    const buttons = await screen.findAllByText('Testnachricht senden')
+    fireEvent.click(buttons[0] as HTMLElement)
+
+    expect(await screen.findByText(/http_999/)).toBeTruthy()
+  })
+
   it('keeps ntfy unverified until the code from the topic was confirmed', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),

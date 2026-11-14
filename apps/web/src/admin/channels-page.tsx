@@ -40,23 +40,6 @@ function errorCode(error: unknown): string {
 }
 
 /**
- * Turns a machine-readable failure code into something an operator can act on:
- * the `admin.channels.errors.<code>` texts explain the ntfy answers (407 = the
- * topic is already claimed on ntfy.sh, 409 = rate limit …). An unknown code is
- * shown as the code itself, never as an empty string.
- */
-function translatedReason(code: string, t: (key: string) => string): string {
-  if (code === '') {
-    return 'unknown'
-  }
-
-  const key = `admin.channels.errors.${code}`
-  const translated = t(key)
-
-  return translated === key ? code : translated
-}
-
-/**
  * Builds a copy-pasteable curl command that reproduces the ntfy JSON publish:
  * `POST /` with `topic` in the body and the numeric priority (3 = default).
  * See https://docs.ntfy.sh/publish/#publish-as-json.
@@ -152,7 +135,17 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
 
   // Failure codes (http_407 …, from the adapter or the params of an API error)
   // become a readable reason; unknown codes stay visible as the code itself.
-  const reasonOf = (code: string): string => translatedReason(code, t)
+  const reasonOf = (code: string): string => {
+    if (code === '') {
+      return ''
+    }
+
+    const key = `admin.channels.errors.${code}`
+    const translated = t(key)
+
+    return translated === key ? t('admin.channels.errors.http_error', { code }) : translated
+  }
+
   const apiReason = (error: unknown): string => {
     const raw = error instanceof ApiError ? error.params?.reason : undefined
 
