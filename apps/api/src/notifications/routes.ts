@@ -4,6 +4,9 @@ import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
   channelConfigurationSchema,
+  channelVerificationResponseSchema,
+  confirmChannelVerificationRequestSchema,
+  confirmChannelVerificationResponseSchema,
   channelTestRequestSchema,
   channelTestResponseSchema,
   matrixLinkingRequestSchema,
@@ -25,6 +28,7 @@ import type { Database } from '../db/client'
 import { notificationChannels } from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
 import { readChannelConfiguration } from './config'
+import { ChannelVerificationError, confirmNtfyVerification, effectiveNtfyConfig, requestNtfyVerification } from './verification'
 import { deleteAccount } from './accounts'
 import { readPreferences, writePreferences } from './preferences'
 import { storeMatrixAccount, MatrixLinkingError, type MatrixLinkingErrorCode } from './matrix-linking'
@@ -77,6 +81,8 @@ export type NotificationChannelRoutesOptions = {
   matrixFetch?: typeof fetch
   /** Test seam: the transport of the bridge `GET /status`; defaults to `fetch`. */
   whatsappFetch?: typeof fetch
+  /** Test seam: the transport of the ntfy verification code; defaults to `fetch`. */
+  ntfyFetch?: typeof fetch
 }
 
 const TEST_MESSAGE: NotificationMessage = {
@@ -315,7 +321,7 @@ async function whatsappBridgeConfig(database: Db, env: Env): Promise<BridgeConfi
 }
 
 export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
-  async (app, { database, env, channels, telegramFetch, matrixFetch, whatsappFetch }) => {
+  async (app, { database, env, channels, telegramFetch, matrixFetch, whatsappFetch, ntfyFetch }) => {
     const registry = channels ?? configuredChannels(env)
 
     app.get(
@@ -379,9 +385,74 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
             .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
         }
 
-        const result = await sendTestMessage(registry, kind.data, body.data.topic)
+        // The test must send with the saved configuration, not with the
+        // environment: the admin clicks it right after saving the row.
+        const effective =
+          channels === undefined && kind.data === 'ntfy'
+            ? await effectiveNtfyConfig(database, env, { requireVerified: false })
+            : undefined
+        const testRegistry =
+          effective === undefined
+            ? registry
+            : configuredChannels({
+                ...env,
+                NTFY_URL: effective?.url ?? '',
+                NTFY_TOPIC: effective?.topic ?? '',
+              })
+
+        const result = await sendTestMessage(testRegistry, kind.data, body.data.topic)
 
         return channelTestResponseSchema.parse(result)
+      },
+    )
+
+    app.post(
+      '/api/v1/admin/channels/ntfy/verification',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.write) },
+      async (_request, reply) => {
+        try {
+          const result = await requestNtfyVerification(
+            database,
+            env,
+            ntfyFetch === undefined ? {} : { fetchImpl: ntfyFetch },
+          )
+
+          return channelVerificationResponseSchema.parse(result)
+        } catch (error) {
+          if (error instanceof ChannelVerificationError) {
+            const status = error.code === 'verification_send_failed' ? 502 : 422
+
+            return reply.code(status).send({ code: error.code, params: {} })
+          }
+
+          throw error
+        }
+      },
+    )
+
+    app.post(
+      '/api/v1/admin/channels/ntfy/verification/confirm',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.write) },
+      async (request, reply) => {
+        const body = confirmChannelVerificationRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        try {
+          await confirmNtfyVerification(database, env, body.data.code)
+
+          return confirmChannelVerificationResponseSchema.parse({ verified: true })
+        } catch (error) {
+          if (error instanceof ChannelVerificationError) {
+            return reply.code(422).send({ code: error.code, params: {} })
+          }
+
+          throw error
+        }
       },
     )
 

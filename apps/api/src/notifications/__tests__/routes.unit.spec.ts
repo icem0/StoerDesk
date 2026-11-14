@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { loadEnv } from '../../config/env'
 import type { Database } from '../../db/client'
-import { notificationChannels } from '../../db/schema'
+import { notificationChannels, notificationChannelVerifications } from '../../db/schema'
 import type { NotificationChannel } from '../channels'
 import { notificationChannelRoutes } from '../routes'
 
@@ -23,6 +23,11 @@ interface StoredRow {
  * Drizzle chains, so guard, secret and test-send behaviour run in memory.
  */
 function fakeDatabase(store: StoredRow[], held: string[]): Db {
+  const verifications: Array<Record<string, unknown>> = []
+  Object.assign(verifications, {
+    where: () => verifications,
+    limit: async () => verifications,
+  })
   const grantedQuery = {
     innerJoin: () => grantedQuery,
     where: async () => held.map((key) => ({ key })),
@@ -34,33 +39,54 @@ function fakeDatabase(store: StoredRow[], held: string[]): Db {
   return {
     selectDistinct: () => ({ from: () => grantedQuery }),
     select: () => ({
-      from: (table: unknown) => (table === notificationChannels ? store : overridesQuery),
-    }),
-    insert: (table: unknown) => {
-      expect(table).toBe(notificationChannels)
+      from: (table: unknown) => {
+        if (table === notificationChannels) {
+          return store
+        }
 
-      return {
-        values: (values: Record<string, unknown>) => ({
-          onConflictDoUpdate: async ({ set }: { set: Record<string, unknown> }) => {
-            const kind = String(values.kind)
-            const existing = store.find((row) => row.kind === kind)
+        if (table === notificationChannelVerifications) {
+          return verifications
+        }
+
+        return overridesQuery
+      },
+    }),
+    insert: (table: unknown) => ({
+      values: (values: Record<string, unknown>) => ({
+        onConflictDoUpdate: async ({ set }: { set: Record<string, unknown> }) => {
+          if (table === notificationChannelVerifications) {
+            const existing = verifications.find(
+              (row) => row.kind === values.kind,
+            )
 
             if (existing !== undefined) {
-              Object.assign(existing, set)
+              Object.assign(existing, values, set)
               return
             }
 
-            store.push({
-              kind,
-              enabled: (values.enabled as boolean | undefined) ?? true,
-              label: (values.label as string | undefined) ?? '',
-              config: (values.config as Record<string, string> | undefined) ?? {},
-              secret: (values.secret as string | undefined) ?? '',
-            })
-          },
-        }),
-      }
-    },
+            verifications.push({ ...values, ...set })
+            return
+          }
+
+          expect(table).toBe(notificationChannels)
+          const kind = String(values.kind)
+          const existing = store.find((row) => row.kind === kind)
+
+          if (existing !== undefined) {
+            Object.assign(existing, set)
+            return
+          }
+
+          store.push({
+            kind,
+            enabled: (values.enabled as boolean | undefined) ?? true,
+            label: (values.label as string | undefined) ?? '',
+            config: (values.config as Record<string, string> | undefined) ?? {},
+            secret: (values.secret as string | undefined) ?? '',
+          })
+        },
+      }),
+    }),
   } as unknown as Db
 }
 

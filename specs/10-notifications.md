@@ -23,10 +23,14 @@ configuration, a target and a rule.
 | `webpush` | Web Push (VAPID) | the subscriptions of the users | yes — a subscription per user |
 | `whatsapp` | external WhatsApp bridge (ADR-0020) | the chat of the configuration or the chat of the user | yes — a chat id |
 
-A channel is **configured** when it has a usable configuration. A channel that
-is not configured never appears in the chain and never produces an outbox row.
-The order of the table is the order of the fallback chain: the first channel
-that is configured is the first one that is tried.
+A channel is **configured** when it has a usable configuration **and** its
+target was confirmed. For `ntfy`, the confirmation is a one-time code that the
+API sends to the topic and the admin enters back (§11.2); until then the channel
+is shown as *unverified* and produces no outbox row. The other kinds have no
+verification step yet and count as confirmed when usable. A channel that is not
+configured never appears in the chain and never produces an outbox row. The
+order of the table is the order of the fallback chain: the first channel that is
+configured is the first one that is tried.
 
 ## 11.2 Where the configuration lives
 
@@ -49,6 +53,23 @@ configuration to the other without a restart of the API.
 The rule of ADR-0005 applies to every secret: it is write-only, never answered
 by the API, never written into a log and never shown in the administration. The
 administration answers `secretSet: boolean` instead.
+
+### Proof of the target
+
+`notification_channel_verifications` keeps one row per kind: the fingerprint of
+the confirmed target (its required public settings), the pending one-time code
+with its ten-minute deadline and `verified_at`. `POST
+/api/v1/admin/channels/ntfy/verification` sends a six-character code to the
+effective target and stores it; `POST
+/api/v1/admin/channels/ntfy/verification/confirm` sets `verified_at` only when
+the code and the fingerprint of the current target match. A changed
+configuration therefore never inherits an old proof.
+
+Only a verified `ntfy` target receives outbox rows. The admin test send and the
+verification code itself use the stored configuration and do not require the
+proof — otherwise the first code could never be sent. The administration reports
+`verified: boolean` next to `enabled`; a channel with usable settings but no
+proof is *unverified*, never *configured*.
 
 ## 11.3 The accounts of the users
 

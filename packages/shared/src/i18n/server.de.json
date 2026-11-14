@@ -4,7 +4,8 @@
     "items": "{{count}} Einträge"
   },
   "notification": {
-    "action_label": "Öffnen"
+    "action_label": "Öffnen",
+    "verification_code": "StörDesk-Einrichtungscode: {{code}}"
   },
   "oncall": {
     "ical": {

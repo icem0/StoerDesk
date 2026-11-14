@@ -30,6 +30,12 @@ export const channelConfigurationSchema = z.object({
   config: channelConfigSchema,
   /** Whether a secret is stored — the secret itself is never answered. */
   secretSet: z.boolean(),
+  /**
+   * True once the target was reached with a one-time code and the code was
+   * entered back (§11.2, WP-M14-47). Until then the channel is not
+   * "configured", even if all settings are present.
+   */
+  verified: z.boolean(),
 })
 
 export const channelConfigurationListResponseSchema = z.object({
@@ -53,6 +59,24 @@ export const channelTestResponseSchema = z.object({
   delivered: z.boolean(),
   /** The machine-readable failure code of the adapter; absent on success. */
   code: z.string().optional(),
+})
+
+/**
+ * The verification of a channel target (§11.2, WP-M14-47): request a one-time
+ * code that is sent to the channel, then confirm it. Only a confirmed target
+ * appears as configured and is used for ticket notifications.
+ */
+export const channelVerificationResponseSchema = z.object({
+  /** Deadline of the pending code; the code itself is never in the answer. */
+  expiresAt: z.string(),
+})
+
+export const confirmChannelVerificationRequestSchema = z.object({
+  code: z.string().trim().min(1).max(20),
+})
+
+export const confirmChannelVerificationResponseSchema = z.object({
+  verified: z.literal(true),
 })
 
 /**
@@ -162,6 +186,15 @@ export type UpdateChannelConfigurationRequest = z.infer<
 >
 export type ChannelTestRequest = z.infer<typeof channelTestRequestSchema>
 export type ChannelTestResponse = z.infer<typeof channelTestResponseSchema>
+export type ChannelVerificationResponse = z.infer<
+  typeof channelVerificationResponseSchema
+>
+export type ConfirmChannelVerificationRequest = z.infer<
+  typeof confirmChannelVerificationRequestSchema
+>
+export type ConfirmChannelVerificationResponse = z.infer<
+  typeof confirmChannelVerificationResponseSchema
+>
 export type NotificationAccount = z.infer<typeof notificationAccountSchema>
 export type NotificationAccountListResponse = z.infer<
   typeof notificationAccountListResponseSchema

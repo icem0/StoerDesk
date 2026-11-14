@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- ntfy counts as configured only after the code came back (WP-M14-47): the
+  channel showed "konfiguriert" as soon as a value stood in the row, and the
+  sender used the environment instead of the saved row. StörDesk now sends a
+  six-character code to the effective ntfy topic, stores its fingerprint and
+  accepts it back through `POST /api/v1/admin/channels/ntfy/verification` and
+  `…/verification/confirm`. Only a confirmed target appears as configured and
+  produces outbox rows; the outbox, the drain, the enqueue and the admin test
+  send use the saved configuration. A changed address or topic invalidates the
+  proof, and an unverified ntfy channel is skipped in the fallback chain and in
+  the mandatory minimum channels.
 ### Fixed
 - The own channels page no longer hides the ntfy QR when Telegram is not
   configured (WP-M14-46): the page replaced every section with the Telegram

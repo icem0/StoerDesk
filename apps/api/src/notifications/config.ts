@@ -1,6 +1,10 @@
 import type { Database } from '../db/client'
 import type { Env } from '../config/env'
-import { notificationChannels, NOTIFICATION_CHANNEL_KINDS } from '../db/schema'
+import {
+  notificationChannels,
+  notificationChannelVerifications,
+  NOTIFICATION_CHANNEL_KINDS,
+} from '../db/schema'
 
 type Db = Database['database']
 
@@ -37,6 +41,22 @@ export interface ChannelConfiguration {
   label: string
   config: Record<string, string>
   secretSet: boolean
+  /** True once the channel target was reached and confirmed (§11.2). */
+  verified: boolean
+}
+
+/**
+ * The target a verification belongs to: the required public settings of the
+ * kind, in a stable order. A later configuration change produces a different
+ * fingerprint, so an old proof no longer counts.
+ */
+export function channelFingerprint(
+  kind: ChannelKind,
+  config: Record<string, string>,
+): string {
+  const keys = [...kindRules[kind].requiredConfig].sort()
+
+  return `${kind}:${keys.map((key) => `${key}=${config[key] ?? ''}`).join('\n')}`
 }
 
 /** Public settings and the environment secret of one channel kind. */
@@ -125,7 +145,10 @@ function publicSettings(value: unknown): Record<string, string> {
  * a kind without a row keeps its values of the environment and a kind with a
  * row is only configured while its merged settings are usable and `enabled`
  * is on. WhatsApp Web never falls back to the environment (ADR-0020). The
- * answer carries `secretSet` instead of the secret (§11.2, ADR-0005).
+ * answer carries `secretSet` instead of the secret (§11.2, ADR-0005). For
+ * ntfy, `verified` is only true after the target was reached with a one-time
+ * code and that code was entered back (WP-M14-47); the other kinds have no
+ * verification flow yet and count as verified.
  */
 export async function readChannelConfiguration(
   database: Db,
@@ -140,6 +163,18 @@ export async function readChannelConfiguration(
       secret: notificationChannels.secret,
     })
     .from(notificationChannels)
+
+  const verifications = await database
+    .select({
+      kind: notificationChannelVerifications.kind,
+      fingerprint: notificationChannelVerifications.fingerprint,
+      verifiedAt: notificationChannelVerifications.verifiedAt,
+    })
+    .from(notificationChannelVerifications)
+
+  const verificationsByKind = new Map(
+    verifications.map((verification) => [verification.kind, verification]),
+  )
 
   const rowsByKind = new Map<ChannelKind, {
     enabled: boolean
@@ -189,12 +224,19 @@ export async function readChannelConfiguration(
       continue
     }
 
+    const verification = verificationsByKind.get(kind)
+    const verified =
+      kind !== 'ntfy' ||
+      (verification?.verifiedAt != null &&
+        verification.fingerprint === channelFingerprint(kind, config))
+
     configurations.push({
       kind,
       enabled: (row?.enabled ?? true) && usable,
       label: row === undefined || row.label === '' ? kind : row.label,
       config,
       secretSet: secret !== '',
+      verified,
     })
   }
 

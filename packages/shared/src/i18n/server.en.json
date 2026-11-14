@@ -4,7 +4,8 @@
     "items": "{{count}} items"
   },
   "notification": {
-    "action_label": "Open"
+    "action_label": "Open",
+    "verification_code": "StörDesk setup code: {{code}}"
   },
   "oncall": {
     "ical": {

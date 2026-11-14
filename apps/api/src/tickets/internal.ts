@@ -17,6 +17,7 @@ import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, ticketEvents, tickets, users } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
+import { effectiveNtfyConfig } from '../notifications/verification'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
 import { createExternalTicket, fieldPaths as externalFieldPaths } from './external'
@@ -122,6 +123,9 @@ export async function createInternalTicket(
   }
 
   const env = loadEnv()
+  // Only a verified ntfy target receives the event; an unconfirmed channel
+  // gets no row at all (WP-M14-47).
+  const ntfy = await effectiveNtfyConfig(database, env, { requireVerified: true })
 
   return await database.transaction(async (tx) => {
     const [ticket] = await tx
@@ -182,6 +186,7 @@ export async function createInternalTicket(
       },
       env,
       'ticket.created',
+      ntfy,
     )
 
     return {

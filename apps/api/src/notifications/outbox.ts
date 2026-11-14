@@ -12,6 +12,8 @@ import {
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 import { readMinimumChannels } from '../settings/notifications'
 import { ntfyRecipients } from './receivers'
+import { effectiveNtfyConfig } from './verification'
+import type { NtfyConfig } from './channels/ntfy'
 
 /** The insert capability — enough for both the live database and a transaction node. */
 type DbLike = Pick<Db, 'insert' | 'select'>
@@ -56,14 +58,31 @@ const messageParams = (ticket: OutboxTicket): Record<string, unknown> => ({
 })
 
 /**
+ * The environment the adapters read: without an override the environment is
+ * used as before; with an override the verified ntfy target replaces it and
+ * `null` removes ntfy completely.
+ */
+function effectiveEnv(env: Env, ntfy: NtfyConfig | null | undefined): Env {
+  if (ntfy === undefined) {
+    return env
+  }
+
+  return { ...env, NTFY_URL: ntfy?.url ?? '', NTFY_TOPIC: ntfy?.topic ?? '' }
+}
+
+/**
  * Builds one `PENDING` row per configured channel. `state`, `attempts`,
  * `created_at` and `updated_at` come from the column defaults of migration 0019
  * — the enqueue never sets them, so draining (WP-M7-04b) reads them consistently.
  */
-function outboxRows(ticket: OutboxTicket, env: Env): OutboxRow[] {
+function outboxRows(
+  ticket: OutboxTicket,
+  env: Env,
+  ntfy?: NtfyConfig | null,
+): OutboxRow[] {
   const params = messageParams(ticket)
 
-  return configuredChannels(env).map((channel) => ({
+  return configuredChannels(effectiveEnv(env, ntfy)).map((channel) => ({
     ticketId: ticket.id,
     channel: channel.name,
     target: params,
@@ -254,11 +273,12 @@ export async function drainOutbox(
   database: Db,
   env: Env,
   log?: QrCleanupLogger,
+  ntfy?: NtfyConfig | null,
 ): Promise<OutboxDrainResult> {
   const channelsByName = new Map<string, NotificationChannel>(
-    configuredChannels(env).map((channel) => [channel.name, channel]),
+    configuredChannels(effectiveEnv(env, ntfy)).map((channel) => [channel.name, channel]),
   )
-  const chain = escalationChain(env)
+  const chain = escalationChain(effectiveEnv(env, ntfy))
   const result: OutboxDrainResult = { sent: 0, failed: 0, fallback: 0, attempts: 0 }
 
   while (true) {
@@ -381,7 +401,10 @@ export async function startNotificationOutboxJob(
     const { client, database } = createDatabase(connectionString)
 
     try {
-      const { sent, failed, fallback, attempts } = await drainOutbox(database, env, log)
+      // Only a verified ntfy target receives the rows; a channel that was
+      // never confirmed is absent from the registry and its rows end `FAILED`.
+      const ntfy = await effectiveNtfyConfig(database, env, { requireVerified: true })
+      const { sent, failed, fallback, attempts } = await drainOutbox(database, env, log, ntfy)
 
       log?.info(
         { queue: NOTIFICATION_OUTBOX_QUEUE, sent, failed, fallback, attempts },
@@ -422,13 +445,15 @@ export async function enqueueOutbox(
   ticket: OutboxTicket,
   env: Env,
   eventType: string = 'ticket.created',
+  ntfy?: NtfyConfig | null,
 ): Promise<number> {
-  const recipients =
-    env.NTFY_URL !== '' && env.NTFY_TOPIC !== ''
-      ? await ntfyRecipients(database, eventType)
-      : []
+  const ntfyConfigured =
+    ntfy === undefined
+      ? env.NTFY_URL !== '' && env.NTFY_TOPIC !== ''
+      : ntfy !== null
+  const recipients = ntfyConfigured ? await ntfyRecipients(database, eventType) : []
 
-  const rows = outboxRows(ticket, env).filter(
+  const rows = outboxRows(ticket, env, ntfy).filter(
     (row) => row.channel !== 'ntfy' || recipients.length === 0,
   )
 
@@ -442,6 +467,10 @@ export async function enqueueOutbox(
 
   if (ticket.priority === 'critical') {
     for (const channel of await readMinimumChannels(database)) {
+      if (ntfy === null && channel === 'ntfy') {
+        continue
+      }
+
       if (!rows.some((row) => row.channel === channel)) {
         rows.push({ ticketId: ticket.id, channel, target: messageParams(ticket) })
       }

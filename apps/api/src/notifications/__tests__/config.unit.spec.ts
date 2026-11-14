@@ -1,6 +1,7 @@
 import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
-import { readChannelConfiguration, type ChannelConfiguration } from '../config'
+import { channelFingerprint, readChannelConfiguration, type ChannelConfiguration } from '../config'
+import { notificationChannelVerifications } from '../../db/schema'
 import { describe, expect, it } from 'vitest'
 
 type Db = Database['database']
@@ -19,9 +20,21 @@ interface ChannelRow {
  * unit test hands it the rows a table would answer and asserts the precedence
  * of `specs/10-notifications.md` §11.2.
  */
-function fakeDatabase(rows: ChannelRow[]): Db {
+interface VerificationRow {
+  kind: string
+  fingerprint: string
+  verifiedAt: Date | null
+}
+
+function fakeDatabase(
+  rows: ChannelRow[],
+  verifications: VerificationRow[] = [],
+): Db {
   return {
-    select: (_: unknown) => ({ from: (_: unknown) => rows }),
+    select: (_: unknown) => ({
+      from: (table: unknown) =>
+        table === notificationChannelVerifications ? verifications : rows,
+    }),
   } as unknown as Db
 }
 
@@ -64,6 +77,7 @@ describe('readChannelConfiguration (channel configuration in the database, §11.
       label: 'Office ntfy',
       config: { url: 'https://row.mock', topic: 'row-topic' },
       secretSet: false,
+      verified: false,
     })
   })
 
@@ -89,6 +103,7 @@ describe('readChannelConfiguration (channel configuration in the database, §11.
       label: 'matrix',
       config: { homeserver: 'https://matrix.mock', roomId: '!room:mock' },
       secretSet: true,
+      verified: true,
     })
   })
 
@@ -115,6 +130,7 @@ describe('readChannelConfiguration (channel configuration in the database, §11.
       label: 'telegram',
       config: { chatId: '@mock' },
       secretSet: true,
+      verified: true,
     })
   })
 
@@ -153,6 +169,55 @@ describe('readChannelConfiguration (channel configuration in the database, §11.
       label: 'Office bridge',
       config: { baseUrl: 'https://bridge.mock' },
       secretSet: true,
+      verified: true,
     })
+  })
+
+  it('counts an ntfy target as verified only with a matching proof (WP-M14-47)', async () => {
+    const config = { url: 'https://row.mock', topic: 'row-topic' }
+    const row: ChannelRow = {
+      kind: 'ntfy',
+      enabled: true,
+      label: 'Office ntfy',
+      config,
+      secret: '',
+    }
+    const env = loadEnv({})
+
+    const unverified = await readChannelConfiguration(fakeDatabase([row]), env)
+    expect(unverified.find((configuration) => configuration.kind === 'ntfy')?.verified).toBe(false)
+
+    const verified = await readChannelConfiguration(
+      fakeDatabase(
+        [row],
+        [
+          {
+            kind: 'ntfy',
+            fingerprint: channelFingerprint('ntfy', config),
+            verifiedAt: new Date(),
+          },
+        ],
+      ),
+      env,
+    )
+    expect(verified.find((configuration) => configuration.kind === 'ntfy')?.verified).toBe(true)
+
+    const changed = await readChannelConfiguration(
+      fakeDatabase(
+        [row],
+        [
+          {
+            kind: 'ntfy',
+            fingerprint: channelFingerprint('ntfy', {
+              url: 'https://old.mock',
+              topic: 'row-topic',
+            }),
+            verifiedAt: new Date(),
+          },
+        ],
+      ),
+      env,
+    )
+    expect(changed.find((configuration) => configuration.kind === 'ntfy')?.verified).toBe(false)
   })
 })

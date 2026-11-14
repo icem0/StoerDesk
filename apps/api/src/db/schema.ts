@@ -720,6 +720,33 @@ export const notificationChannels = pgTable(
   ],
 )
 
+/**
+ * Proof that a channel was reached successfully (`specs/10-notifications.md`
+ * §11.2, WP-M14-47). A channel counts as configured only after its admin
+ * received a one-time code on the channel and entered it back; the row keeps
+ * the fingerprint of the verified target so a later config change invalidates
+ * the proof. `code` and `expiresAt` hold the pending verification.
+ */
+export const notificationChannelVerifications = pgTable(
+  'notification_channel_verifications',
+  {
+    kind: text('kind').primaryKey(),
+    /** Fingerprint of the verified target (server + topic). */
+    fingerprint: text('fingerprint').notNull().default(''),
+    /** The pending one-time code; empty once verified. */
+    code: text('code').notNull().default(''),
+    expiresAt: timestamp('expires_at', timestampOptions),
+    verifiedAt: timestamp('verified_at', timestampOptions),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      'notification_channel_verifications_kind_check',
+      sql`${table.kind} IN (${checkList(NOTIFICATION_CHANNEL_KINDS)})`,
+    ),
+  ],
+)
+
 export const pushSubscriptions = pgTable(
   'push_subscriptions',
   {

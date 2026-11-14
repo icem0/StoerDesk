@@ -15,6 +15,7 @@ import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
+import { effectiveNtfyConfig } from '../notifications/verification'
 import { generateQrToken } from '../objects/qr'
 import { readTitleEnabled } from '../settings/branding-state'
 import { readDeadlineHours } from './deadline'
@@ -244,6 +245,9 @@ export async function createPublicReport(
   }
 
   const env = loadEnv()
+  // Only a verified ntfy target receives the event; an unconfirmed channel
+  // gets no row at all (WP-M14-47).
+  const ntfy = await effectiveNtfyConfig(database, env, { requireVerified: true })
 
   let created: typeof tickets.$inferSelect | undefined
 
@@ -308,6 +312,7 @@ export async function createPublicReport(
         },
         env,
         'ticket.created',
+        ntfy,
       )
 
       return row

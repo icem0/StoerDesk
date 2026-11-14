@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
+import { channelFingerprint } from '../../notifications/config'
 import { createInternalTicket } from '../internal'
 
 const testDatabase = await openTestDatabase()
@@ -34,6 +35,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.NTFY_TOPIC = 'stoerdesk-internal-test'
 
       await migrate(db, { migrationsFolder })
+
+      await db.insert(schema.notificationChannelVerifications).values({
+        kind: 'ntfy',
+        fingerprint: channelFingerprint('ntfy', {
+          url: 'https://ntfy.sh',
+          topic: 'stoerdesk-internal-test',
+        }),
+        verifiedAt: new Date(),
+      })
 
       const [actor] = await db
         .insert(schema.users)
