@@ -8,6 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Every notification message links to its ticket (WP-M14-68, out of band in phase 14,
+  requested by the office): a sent message now names the ticket it is about. §11.5
+  already demanded "the deep link into the ticket", but every channel adapter had
+  linked `env.PWA_URL` — the root of the PWA — so a recipient in Telegram or ntfy
+  had to find the ticket again by hand. `drainOutbox` now hands
+  `ticketDeepLink(env.PWA_URL, target.ticketNo)` (`<pwa-url>/tickets/<ticket-number>`)
+  to `NotificationChannel.send` as `deepLink` and the channel registry passes it to
+  every adapter: ntfy's `view` action and the `<label>: <url>` deep link of Telegram,
+  Matrix, Signal, e-mail, web push and WhatsApp point into the ticket, also on a
+  fallback row of the escalation chain. The link carries the ticket number only —
+  no `status_token`, no credential, no contact data; the PWA root stays the fallback
+  of an older row without a ticket number and of a test message, and the readiness
+  link to `/oncall` (ADR-0021) stays with WP-M14-28.
+- The escalation stage chain becomes configurable — specification, ADR-0023 and
+  the phase split (WP-M14-58, out of band in phase 14, requested by the office;
+  documentation only, no product code): the office needs a configurable number of
+  escalation stages. `specs/07-escalation.md` gains §7.11: a stage is a row with
+  a free `key`, a nullable `predecessor` and a `reached_by` event list,
+  `PUT /api/v1/escalation/stages` replaces the whole set (max. 20 stages) in one
+  transaction, the chain is validated (unique keys, predecessor exists, no cycle,
+  order consistent with `position`), the predecessor carries the clock
+  (otherwise from `received_at`) and removing a stage removes its rules through
+  the foreign key `escalation_rules.stage_key` with `ON DELETE cascade`. ADR-0023
+  supersedes decision 1 of ADR-0017 (the fixed stage count), every other decision
+  of ADR-0017 stays. `PLAN.md` §6, §9, §14 and §19 carry the shape. The split is
+  WP-M14-59 … WP-M14-67 (database `0037_escalation_stage_chain` → shared
+  contracts and the chain validator → seed → replace-all stage-set API → engine
+  on the chain → available stages of the ticket view → administration UI and
+  texts → page tests → exit criterion); the files exist in this commit.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

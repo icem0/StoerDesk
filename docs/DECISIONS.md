@@ -48,9 +48,10 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0014](DECISIONS/0014-privacy-retention-and-restore-drill.md) | Privacy retention, export/erasure and the restore drill | accepted |
 | [ADR-0015](DECISIONS/0015-dashboard-evaluation-averages.md) | Dashboard evaluations — average durations only, the worst reaction time stays out | accepted |
 | [ADR-0016](DECISIONS/0016-detected-errors.md) | Detected errors: catalog, close storage, statistics grouping | accepted |
-| [ADR-0017](DECISIONS/0017-workflow-stages-as-escalation-stages.md) | The workflow milestones are the escalation stages | accepted |
+| [ADR-0017](DECISIONS/0017-workflow-stages-as-escalation-stages.md) | The workflow milestones are the escalation stages | accepted — the fixed stage count superseded by ADR-0023 |
 | [ADR-0018](DECISIONS/0018-ci-package-mirror-retries.md) | A package-mirror failure in CI is retried, never silenced | accepted |
 | [ADR-0019](DECISIONS/0019-channel-configuration-and-account-linking.md) | The channel configuration and the account linking live in the database | accepted |
 | [ADR-0020](DECISIONS/0020-whatsapp-web-over-an-external-bridge.md) | WhatsApp Web over an external bridge | accepted |
 | [ADR-0021](DECISIONS/0021-readiness-allocation-over-the-configured-channels.md) | The readiness allocation announces itself over the configured channels | accepted |
 | [ADR-0022](DECISIONS/0022-ntfy-access-token-as-the-channel-secret.md) | The ntfy access token is the write-only secret of the channel | accepted |
+| [ADR-0023](DECISIONS/0023-escalation-stage-chain-configurable.md) | The escalation stage chain is configurable (add, remove, predecessor) | accepted |

@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself | 32  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) | 69  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -417,6 +417,23 @@ test message nor the one-time code reached the API, so the target stayed
 content type before the route runs, so the optional-body contract of §11.11 was
 never reached. **WP-M14-55** sends `body: JSON.stringify({})` on both requests;
 the routes, their schemas and the saved row as test target (WP-M14-51) stay.
+
+**The escalation stage chain becomes configurable (WP-M14-58, out of band in
+phase 14, requested by the office; drafted, not implemented).** The office needs
+a configurable number of escalation stages: an intermediate step is added when a
+dispatch needs one, an inapplicable step is removed, and every stage names its
+predecessor — or none. Today `PUT /api/v1/escalation/stages` only renames,
+reorders and deactivates the five fixed keys and ADR-0017 forbids any other
+stage (`escalation_stages_key_check`, `z.enum(ESCALATION_STAGE_KEYS)`).
+**WP-M14-58** is the spec extension (`specs/07-escalation.md` §7.11), ADR-0023
+(supersedes decision 1 of ADR-0017) and the split of **WP-M14-59 … WP-M14-67**:
+database (`0037_escalation_stage_chain`, the `predecessor` and `reached_by`
+columns, the cascade key) → shared contracts and the chain validator → seed →
+replace-all stage-set API → engine on the chain → available stages of the ticket
+view → administration UI and texts → page tests → exit criterion. WP-M14-35 and
+WP-M14-38 (configurable statuses and transitions) are the prerequisites for
+stages that reach new workflow events; they stay in numeric order before this
+chain.
 
 ## Open follow-ups
 
@@ -859,6 +876,16 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-53  | the ntfy request carries a timeout (out of band)                          | done    | yes     |
 | WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
 | WP-M14-55  | the test send and the verification request carry a JSON body (out of band) | done    | yes     |
+| WP-M14-58  | the escalation stage chain — spec, ADR-0023 and the split (out of band) | done    | yes     |
+| WP-M14-59  | the stage chain in the database (migration 0037) (out of band)         | planned | yes     |
+| WP-M14-60  | the shared contracts and the chain validator (out of band)             | planned | yes     |
+| WP-M14-61  | the seed carries the stage chain (out of band)                         | planned | yes     |
+| WP-M14-62  | the stage set is replaced as one validated chain (out of band)         | planned | yes     |
+| WP-M14-63  | the escalation engine reads the stage chain (out of band)              | planned | yes     |
+| WP-M14-64  | the available stages come from the stage chain (out of band)           | planned | yes     |
+| WP-M14-65  | the administration adds, removes and chains stages (out of band)       | planned | yes     |
+| WP-M14-66  | the stage tab of the administration is tested (out of band)            | planned | yes     |
+| WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

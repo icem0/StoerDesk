@@ -2,7 +2,7 @@
 
 **Chapter:** 8 (escalation) with the rules of `PLAN.md` §9
 **Scope:** ~190 lines
-**Status:** reviewed for phase 13 (WP-M13-01)
+**Status:** reviewed for phase 13 (WP-M13-01), extended for phase 14 (WP-M14-58)
 
 The binding summary is `PLAN.md` §9. This slice defines the escalation stages, the
 waiting deadlines of the stages, the conditions under which a rule fires and the
@@ -11,9 +11,10 @@ stages are the milestones of the ticket workflow.
 
 ## 7.1 The stages are the workflow milestones
 
-A ticket walks through five stages. The stage keys are fixed by the workflow
-(`apps/api/src/tickets/workflow.ts`); the display names are maintained in the
-administration.
+A ticket walks through five stages. The stage keys of the default
+(`review`, `work_order`, `assignment`, `acceptance`, `acknowledgement`) are the
+milestones of the workflow; §7.11 makes the set itself configurable. The
+display names are maintained in the administration.
 
 | Key | Stage | Waiting state | Reference of the clock |
 | --- | --- | --- | --- |
@@ -127,16 +128,16 @@ no deadline. A rule writes the `escalated` event and performs its actions.
 
 | Table | Columns |
 | --- | --- |
-| `escalation_stages` | `id`, `key` (unique, the fixed stage key), `names` (jsonb, one label per locale), `position`, `active` |
+| `escalation_stages` | `id`, `key` (unique), `names` (jsonb, one label per locale), `position`, `active`, `predecessor` (nullable, the key of a stage), `reached_by` (jsonb, the event keys that reach the stage) |
 | `escalation_rules` | `id`, `key` (unique), `stage_key` (the key of a stage, nullable), `reference`, `minutes` (jsonb, per priority), `percent` (nullable), `condition` (jsonb), `position`, `active` |
 | `escalation_actions` | `id`, `key` (unique per rule), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active` |
 | `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)` |
 
 The `key` is the identity of a stage, a rule and an action, not the UUID: the
 administration sends the keys, the server keeps the rows stable. The stages of an
-installation are seeded once (the five keys of §7.1) and the rules are seeded from
-the former settings values, so the deadlines of a running installation stay the
-same after the migration.
+installation are seeded once (the default chain of §7.12) and the rules are seeded
+from the former settings values, so the deadlines of a running installation stay
+the same after the migration.
 
 ## 7.7 Idempotency and the audit trail
 
@@ -162,7 +163,7 @@ user names (`PLAN.md` §15).
 | --- | --- | --- |
 | `GET /api/v1/escalation/config` | `settings.read` | stages, rules and actions of the installation |
 | `PUT /api/v1/escalation/config` | `settings.write` | replaces the rules and their actions in one transaction |
-| `PUT /api/v1/escalation/stages` | `settings.write` | replaces the names and the active flag of the stages |
+| `PUT /api/v1/escalation/stages` | `settings.write` | replaces the whole stage set in one transaction (§7.12) |
 | `GET /api/v1/escalation-stages` | `ticket.read` | the five stages with their names for the ticket view |
 
 The staff read answers the stages of the ticket view; the administration edits the
@@ -181,7 +182,43 @@ e-mail, cancel, delete) stay buttons.
 The server answers the reachable stages with the ticket (`availableStages`), so
 the transition map exists only in `apps/api/src/tickets/workflow.ts`.
 
-## 7.11 Boundaries
+## 7.11 The stage chain is configurable (ADR-0023)
+
+The set of stages is configuration, not code. `PUT /api/v1/escalation/stages`
+replaces the whole set in one transaction: a row that is missing is deleted, a
+key that was not used before is created. At most 20 stages exist at a time.
+
+| Field | Meaning |
+| --- | --- |
+| `key` | free stage key (`^[a-z][a-z0-9_]{0,39}$`), unique, the identity of the stage |
+| `predecessor` | the key of the stage before this one, or `null` — the stage without predecessor waits from `received_at` |
+| `reached_by` | the transition event keys that reach this stage; an empty array means the workflow never reaches it |
+
+The chain is validated by the pure function `validateEscalationStageChain` in
+`packages/shared`: unique keys, a predecessor that exists and is not the stage
+itself, no cycle, the position of a stage greater than the position of its
+predecessor, and every `reached_by` entry being an event key of the transition
+map of `apps/api/src/tickets/workflow.ts`. A violation answers
+`400 invalid_request` with the field paths and writes nothing.
+
+The predecessor carries the clock: a rule of a stage waits from the moment its
+stage's predecessor was reached, which is the latest event of that predecessor's
+`reached_by`, or from `received_at` when the stage has no predecessor. The
+explicit `reference` of such a rule must match that clock; `null` means
+"take the clock of the stage". The deadline rules keep their percentage clock.
+
+A rule of a stage fires while its stage is **not reached** — no event of its
+`reached_by` in the events of the ticket — and its clock passed the deadline.
+`stageReached` conditions and the `escalated` payload use the same derivation.
+
+`escalation_rules.stage_key` is a foreign key to `escalation_stages.key` with
+`ON DELETE cascade`: removing a stage removes its rules and their actions. The
+firing log keeps `stage_key` as plain text, so the audit of a removed stage
+survives. The seed of a new installation is the chain of §7.1: `review` without
+predecessor, `work_order` ← `review`, `assignment` ← `work_order`,
+`acceptance` ← `assignment`, `acknowledgement` ← `acceptance`.
+
+## 7.12 Boundaries
 
 - The manual stage catalogue, the `escalation_set` event and
   `POST /api/v1/tickets/:ticketNo/escalate` are removed: the workflow already
@@ -191,3 +228,7 @@ the transition map exists only in `apps/api/src/tickets/workflow.ts`.
 - An open pause pauses the rule clock exactly as it pauses the timeline.
 - The notifications of the first version are external systems only; there is no
   in-app escalation inbox.
+- No fixed stage key survives: the CHECK `escalation_stages_key_check` of
+  migration `0031` and the `z.enum(ESCALATION_STAGE_KEYS)` contract are gone
+  (WP-M14-59, WP-M14-60); the shared list survives only as the seed default
+  chain and the last use of it leaves the code with WP-M14-64.

@@ -192,8 +192,11 @@ Core tables:
 - `ticket_pauses` — wait reason, start/end, actor
 - `text_templates` and `text_template_translations` — localized standard texts
 - `escalation_stages`, `escalation_rules`, `escalation_actions` — the escalation
-  configuration (ADR-0017): the five workflow stages, the rules with their
-  deadlines per priority and their conditions, the actions of a rule
+  configuration (ADR-0017, ADR-0023): the stages as a configurable chain
+  (`key`, `predecessor` nullable, `reached_by` jsonb), the rules with their
+  deadlines per priority and their conditions, the actions of a rule;
+  `escalation_rules.stage_key` cascades onto the stage, so removing a stage
+  removes its rules (migration `0037_escalation_stage_chain`)
 - `escalation_firings` — the firing log of the escalation: unique over
   `(ticket_id, rule_key, threshold_at)`, so a rule fires once per threshold
 - `users`, `groups`, `user_groups`, `sessions`, `api_keys`
@@ -372,6 +375,17 @@ threshold. The actions of the first version are non-mutating: `notify` (a subset
 of the configured channels), `webhook` (selected endpoints) and `history` (an
 append-only note).
 
+The stage set itself is configuration too (ADR-0023, `specs/07-escalation.md`
+§7.11): the administration adds and removes stages and every stage names its
+predecessor or none. A stage without predecessor waits from `received_at`, a
+stage with predecessor waits from the moment that predecessor was reached — the
+latest event of its `reached_by`. The chain is validated as one graph (unique
+keys, predecessor exists, no cycle, order consistent with `position`), replacing
+the whole set in one transaction; removing a stage removes its rules through the
+foreign key `escalation_rules.stage_key`, the firing log keeps the audit. The
+seed of the five stages of the table above is the default chain of a new
+installation, not a law.
+
 ## 10. Report form and offline
 
 Public route: `/m/<qr_token>`. Status page: `/s/<status_token>`.
@@ -515,7 +529,7 @@ Rules:
 - 3 retries with backoff, then the next channel in the escalation chain,
 - `notification_sent` and `notification_failed` events in the ticket history,
 - message content: ticket number, priority, object name/location, system type,
-  short text, AA/SA number if present, deep link; a readiness message names pool,
+  short text, AA/SA number if present, the deep link into the ticket (WP-M14-68); a readiness message names pool,
   start and end in `Europe/Berlin`, state and the link to `/oncall` (ADR-0021);
   no photos,
 - dashboard tile with channel status and last successful delivery,
@@ -657,12 +671,42 @@ explanation. Offline is a core feature and appears early.
 | **11** | Detected errors: admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | Close stores detected errors; statistics groups by detected error; admin catalog editable |
 | **12** | Acceptance: criteria slice, end-to-end acceptance suite for the items of §20                              | every acceptance item is `PASS` or `UNVERIFIED` by design, never a green skip                 |
 | **13** | Escalation logic: the workflow stages, the waiting deadlines per priority, the conditions and the actions | a stage fires its rule once, the actions run, the old stage system is gone |
-| **14** | Administration consolidation and messenger channels: the administration home disappears into the settings menu, the channels become configurable (ntfy, Telegram, Matrix, WhatsApp Web), the accounts are linked and the users choose their channels | every channel is configured in the administration, a linked account receives a ticket notification and a failure stays visible |
+| **14** | Administration consolidation and messenger channels: the administration home disappears into the settings menu, the channels become configurable (ntfy, Telegram, Matrix, WhatsApp Web), the accounts are linked and the users choose their channels; the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) | every channel is configured in the administration, a linked account receives a ticket notification and a failure stays visible; a stage or a status can be added, removed and chained to a predecessor |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
+the office): the number of escalation stages becomes configurable. Today
+`PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five
+fixed keys and ADR-0017 forbids any other stage. ADR-0023 supersedes that one
+decision: a stage is a row with a free `key`, a nullable `predecessor` and a
+`reached_by` event list, the whole stage set is replaced in one transaction and
+validated as a chain, the clock of a stage comes from its predecessor (or from
+`received_at` when there is none) and removing a stage removes its rules through
+a foreign key with `ON DELETE cascade`. The announced split is **WP-M14-59 …
+WP-M14-67** (database → shared contracts → seed → stage-set API → engine →
+available stages → administration UI → texts → exit criterion); the files of
+that split exist in the same commit. They run after the open phase-14 items in
+numeric order, and WP-M14-35 and WP-M14-38 (configurable statuses and
+transitions) are prerequisites for the stages reaching new workflow events.
+
+**Every notification links to its ticket (WP-M14-68, out of band in phase 14,
+requested by the office; done).** The office asked that every sent message —
+Telegram, ntfy and the other channels — carries the link to the ticket it is
+about. §11.5 already demanded "the deep link into the ticket", but every adapter
+linked `env.PWA_URL`: the root of the PWA. `drainOutbox` now hands
+`ticketDeepLink(env.PWA_URL, target.ticketNo)` — `<pwa-url>/tickets/<ticket-number>` —
+to `NotificationChannel.send` as `deepLink` and `apps/api/src/notifications/channels/index.ts`
+passes it to the adapters, so the ntfy `view` action and the `<label>: <url>` deep
+link of Telegram, Matrix, Signal, e-mail, web push and WhatsApp point into the
+ticket of the row (also on a fallback row of the escalation chain). The link
+carries the ticket number only — no `status_token`, no credential, no contact
+data; the PWA root stays the fallback of an older row without a ticket number and
+of a test message. The readiness link to `/oncall` (ADR-0021) stays with
+WP-M14-28.
 
 **Phase 14 has started** (WP-M14-01): the standalone administration home at
 `/admin` is gone. Every administration module is a link of the settings menu at
@@ -1945,7 +1989,7 @@ These decisions need an ADR or explicit approval before the related WP starts:
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
 - contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03), editable in the administration (WP-M6-16); per-object-type deadlines (Objektart) are undecided — they need an ADR before a work package,
-- the shape of the escalation configuration — **resolved by ADR-0017**: the workflow milestones are the stages, the deadlines per priority, the conditions and the actions live in the database and are maintained in `/admin/escalation`; the former manual stage catalogue is removed,
+- the shape of the escalation configuration — **resolved by ADR-0017**: the workflow milestones are the stages, the deadlines per priority, the conditions and the actions live in the database and are maintained in `/admin/escalation`; the former manual stage catalogue is removed; the number of stages and the predecessor of a stage — **resolved by ADR-0023**: the stage set is a validated chain in the database, a stage names its predecessor or none and the predecessor carries the clock,
 - whether shift swaps require admin approval by default (default: yes) — **resolved by ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the original technician remains responsible until approval,
 - name and logo (working title: StörDesk).
 
