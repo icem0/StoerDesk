@@ -84,9 +84,14 @@ export function NtfySubscription(options: NtfySubscriptionOptions = {}) {
       />
       <p className="text-sm text-slate-400">{t('ntfy.appHint')}</p>
       <p className="text-sm text-slate-400">{t('ntfy.address')}</p>
-      <p className="break-all rounded bg-slate-950 p-2 font-mono text-xs text-sky-300">
+      <a
+        className="break-all rounded bg-slate-950 p-2 font-mono text-xs text-sky-300 underline hover:text-sky-400"
+        href={subscriptionValue(publicUrl, topic, deepLink)}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {subscriptionValue(publicUrl, topic, deepLink)}
-      </p>
+      </a>
       <p className="text-xs text-slate-400">{t('ntfy.selectionHint')}</p>
     </section>
   )

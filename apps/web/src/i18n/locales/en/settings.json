@@ -462,6 +462,8 @@
       "testFailed": "Test message failed: {{reason}}",
       "testTopicPlaceholder": "e. g. stoerdesk-test",
       "curlCommand": "cURL command (copy to terminal)",
+      "copy": "Copy",
+      "copyToClipboard": "Copy to clipboard",
       "readOnly": "Read-only: you lack the notification.write permission.",
       "verification": {
         "heading": "Verify the ntfy connection",

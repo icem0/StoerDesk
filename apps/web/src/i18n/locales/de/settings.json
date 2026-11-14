@@ -462,6 +462,8 @@
       "testFailed": "Testnachricht fehlgeschlagen: {{reason}}",
       "testTopicPlaceholder": "z. B. stoerdesk-test",
       "curlCommand": "cURL-Befehl (ins Terminal kopieren)",
+      "copy": "Kopieren",
+      "copyToClipboard": "In die Zwischenablage kopieren",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
       "verification": {
         "heading": "ntfy-Verbindung prüfen",

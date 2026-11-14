@@ -41,8 +41,14 @@ export interface ChannelConfiguration {
   label: string
   config: Record<string, string>
   secretSet: boolean
-  /** True once the channel target was reached and confirmed (§11.2). */
+  /** True once the target was reached with a one-time code and the code was entered back (§11.2, WP-M14-47). Until then the channel is not "configured", even if all settings are present. */
   verified: boolean
+  /**
+   * Optional Bearer token for ntfy servers that require authentication
+   * (WP-M14-51). Sent as the `Authorization: Bearer` header; public topics
+   * (e. g. ntfy.sh) do not need it. Never answered by the API.
+   */
+  token?: string
 }
 
 /**

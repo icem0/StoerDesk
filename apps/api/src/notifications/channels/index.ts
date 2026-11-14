@@ -55,6 +55,7 @@ const ntfyChannel = async (env: Env, message: NotificationMessage, options?: { t
     {
       url: env.NTFY_URL,
       topic: env.NTFY_TOPIC,
+      token: env.NTFY_TOKEN,
       userTopic: options?.topic,
     },
     message,

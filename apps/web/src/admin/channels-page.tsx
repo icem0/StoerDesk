@@ -255,12 +255,26 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
               <label htmlFor={fieldId(channel.kind, 'curlCommand')}>
                 {t('admin.channels.curlCommand')}
               </label>
-              <textarea
-                className="rounded bg-slate-950 p-2 text-slate-100 text-xs font-mono disabled:opacity-60"
-                id={fieldId(channel.kind, 'curlCommand')}
-                readOnly
-                value={buildNtfyCurl(config.url, config.topic)}
-              />
+              <div className="flex items-end gap-2">
+                <textarea
+                  className="flex-1 rounded bg-slate-950 p-2 text-slate-100 text-xs font-mono disabled:opacity-60"
+                  id={fieldId(channel.kind, 'curlCommand')}
+                  readOnly
+                  value={buildNtfyCurl(config.url!, config.topic!)}
+                />
+                <button
+                  className="min-h-11 rounded-lg border border-slate-600 px-3 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-60"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(
+                      buildNtfyCurl(config.url!, config.topic!),
+                    )
+                  }}
+                  title={t('admin.channels.copyToClipboard')}
+                  type="button"
+                >
+                  {t('admin.channels.copy')}
+                </button>
+              </div>
             </div>
           ) : null}
         </>

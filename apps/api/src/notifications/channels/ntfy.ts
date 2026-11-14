@@ -6,6 +6,12 @@ export interface NtfyConfig {
   /** Topic notifications are published to, e.g. stoerdesk */
   topic: string
   /**
+   * Optional Bearer token for ntfy servers that require authentication
+   * (WP-M14-51). Sent as the `Authorization` header; public topics (e. g.
+   * ntfy.sh) do not need it.
+   */
+  token?: string
+  /**
    * Topic of the ntfy account of the user this message targets
    * (`specs/10-notifications.md` §11.3). When it is set the adapter sends to it
    * instead of the configured topic; otherwise the configured topic of the
@@ -99,9 +105,18 @@ export async function sendNtfyNotification(
     pwaUrl,
   })
 
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    Priority: String(priority),
+  }
+
+  if (config.token) {
+    headers['authorization'] = `Bearer ${config.token}`
+  }
+
   const response = await fetchImpl(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', Priority: String(priority) },
+    headers,
     body: JSON.stringify(payload),
   })
 

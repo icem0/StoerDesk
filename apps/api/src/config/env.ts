@@ -69,6 +69,8 @@ const envSchema = z
     // --- Push channel ntfy ---
     NTFY_URL: z.string().default(''),
     NTFY_TOPIC: z.string().default(''),
+    /** Optional Bearer token for ntfy servers that require authentication (WP-M14-51). */
+    NTFY_TOKEN: z.string().default(''),
     /** Public URL of the StörDesk PWA; used as the `uri` of ntfy action links. */
     PWA_URL: z.string().default(''),
 
