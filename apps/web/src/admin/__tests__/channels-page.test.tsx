@@ -245,6 +245,9 @@ describe('ChannelsPage', () => {
     const command = String(curl.textContent ?? curl.getAttribute('value'))
     expect(command).toContain('-H "Authorization: Bearer $NTFY_TOKEN"')
     expect(command.includes('Bearer tk_')).toBe(false)
+    const lines = command.split('\n')
+    expect(lines.slice(0, -1).every((line) => line.endsWith(' \\'))).toBe(true)
+    expect(lines.at(-1)?.startsWith('  -d ')).toBe(true)
   })
 
   it('keeps ntfy unverified until the code from the topic was confirmed', async () => {

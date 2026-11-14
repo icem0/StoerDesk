@@ -55,9 +55,15 @@ function buildNtfyCurl(url: string, topic: string, secretSet: boolean): string {
     message: 'This is a test notification.',
     priority: 3,
   })
-  const auth = secretSet ? '\n  -H "Authorization: Bearer $NTFY_TOKEN"' : ''
+  const lines = [
+    `curl -X POST "${base}"`,
+    '  -H "Content-Type: application/json"',
+    ...(secretSet ? ['  -H "Authorization: Bearer $NTFY_TOKEN"'] : []),
+    '  -H "Priority: 3"',
+    `  -d '${body}'`,
+  ]
 
-  return `curl -X POST "${base}" \\\n  -H "Content-Type: application/json"${auth} \\\n  -H "Priority: 3" \\\n  -d '${body}'`
+  return lines.join(' \\\n')
 }
 
 function fieldId(kind: string, field: string): string {
