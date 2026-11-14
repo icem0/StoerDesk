@@ -11,6 +11,7 @@ import {
 } from './channels/index'
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 import { readMinimumChannels } from '../settings/notifications'
+import { ntfyRecipients } from './receivers'
 
 /** The insert capability — enough for both the live database and a transaction node. */
 type DbLike = Pick<Db, 'insert' | 'select'>
@@ -291,7 +292,15 @@ export async function drainOutbox(
     }
 
     try {
-      await channel.send(messageOf(row.target))
+      // A per-user ntfy row carries its topic; every other adapter ignores the
+      // option (WP-M14-45, `NotificationChannel.send`).
+      const topic =
+        typeof row.target.ntfyTopic === 'string' ? row.target.ntfyTopic : ''
+
+      await channel.send(
+        messageOf(row.target),
+        topic === '' ? undefined : { topic },
+      )
       await finishRow(database, row, 'SENT', 'notification_sent')
 
       result.sent += 1
@@ -399,6 +408,11 @@ export async function startNotificationOutboxJob(
  * HTTP call, so a channel failure can never lose the ticket event (`PLAN.md` §12).
  * Returns the number of rows written; an unconfigured environment writes none.
  *
+ * The ntfy target of `ticket.created` follows the selection of §11.4: a user
+ * who selected `ntfy` for the event receives the row on the own topic
+ * (`stoerdesk-<userId>` or the stored account topic, WP-M14-45) instead of the
+ * instance topic. Without a selection the configured chain is written as before.
+ *
  * A critical ticket additionally queues its mandatory minimum channels
  * (`notifications.minimum_channels`, WP-M14-18) on top of the user's selection;
  * a channel that is already queued for the ticket is not queued twice.
@@ -407,8 +421,24 @@ export async function enqueueOutbox(
   database: DbLike,
   ticket: OutboxTicket,
   env: Env,
+  eventType: string = 'ticket.created',
 ): Promise<number> {
-  const rows = outboxRows(ticket, env)
+  const recipients =
+    env.NTFY_URL !== '' && env.NTFY_TOPIC !== ''
+      ? await ntfyRecipients(database, eventType)
+      : []
+
+  const rows = outboxRows(ticket, env).filter(
+    (row) => row.channel !== 'ntfy' || recipients.length === 0,
+  )
+
+  for (const topic of recipients) {
+    rows.push({
+      ticketId: ticket.id,
+      channel: 'ntfy',
+      target: { ...messageParams(ticket), ntfyTopic: topic },
+    })
+  }
 
   if (ticket.priority === 'critical') {
     for (const channel of await readMinimumChannels(database)) {

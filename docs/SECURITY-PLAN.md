@@ -216,7 +216,20 @@ the route keeps an empty `GET` without parameters, no SQL, no path join and no
 upload is touched and the tests carry mock hosts and mock users without contact
 data. No new finding.
 
-
+ntfy-recipients pass: 2026-11-14, diff `0ad3d06..` (WP-M14-45 — the new
+`apps/api/src/notifications/receivers.ts`, the enqueue and the drain in
+`apps/api/src/notifications/outbox.ts`, the `ticket.created` argument in
+`apps/api/src/tickets/report.ts` and the two outbox specs) — areas A and B
+re-checked in full (no new route, no new capability and no bearer scope: the
+package changes only the send path of the existing report transaction and adds
+no HTTP surface), C re-checked for the new query: the preference and account
+values are bound through drizzle (no SQL interpolation; the event type is a
+server-side constant), the recipient answer carries only the derived or stored
+ntfy topic and never a secret, D and G are untouched (no path join, no upload),
+and K re-checked for the touched files: the drain log still names aggregate
+counters, the channel and the ticket number — never contact data or a token —
+and `target.ntfyTopic` is the opaque topic of §11.3, not a contact value. The
+integration probe uses mock topics only. No new finding.
 
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
@@ -304,9 +317,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (re-checked in full at the closure pass) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| B Autorisation | complete (re-checked in full at the closure pass, 91 routes) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| C Injection | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| A Authentication | complete (re-checked in full at the ntfy-recipients pass) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
+| B Autorisation | complete (re-checked in full at the ntfy-recipients pass, 91 routes) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
+| C Injection | complete (re-checked for the changed files) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
 | D Frontend | complete (web/src read, tokens cookie-only) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | E HTTP-Hardening | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
@@ -314,7 +327,7 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| K Logging/PII | complete (re-checked for the changed files) | 0ad3d06a6d6621d47d51d47209869964e8f08667 |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

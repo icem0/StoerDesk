@@ -802,6 +802,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | planned | yes     |
 | WP-M14-43  | work order as free text (UI + i18n)                                       | planned | yes     |
 | WP-M14-44  | work order text column in the ticket list API                             | planned | yes     |
+| WP-M14-45  | ntfy delivers the selected events to the topic of the user (out of band)  | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -192,6 +192,51 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       server.close()
     })
 
+    it('publishes to the per-user topic carried by the row target', async () => {
+      const bodies: unknown[] = []
+
+      const server = http.createServer((req, res) => {
+        let data = ''
+
+        req.on('data', (chunk) => {
+          data += chunk
+        })
+
+        req.on('end', () => {
+          bodies.push(JSON.parse(data || '{}'))
+          res.writeHead(200)
+          res.end('ok')
+        })
+      })
+
+      await new Promise<void>((resolve) =>
+        server.listen(48000 + Math.floor(Math.random() * 1000), '127.0.0.1', resolve),
+      )
+
+      const port = (server.address() as { port: number }).port
+      const env = envOf(`http://127.0.0.1:${port}/`)
+
+      await db.insert(outbox).values({
+        ticketId,
+        channel: 'ntfy',
+        target: {
+          ticketNo,
+          priority: 'normal',
+          objectName: 'Rathaus',
+          ntfyTopic: 'stoerdesk-user-1',
+        },
+      })
+
+      const result = await drainOutbox(db, env)
+
+      expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
+
+      expect(bodies).toHaveLength(1)
+      expect((bodies[0] as { topic: string }).topic).toBe('stoerdesk-user-1')
+
+      server.close()
+    })
+
     it('fails a row immediately when its channel is no longer configured', async () => {
       const env = envOf('http://127.0.0.1:1/')
 

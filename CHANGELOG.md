@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   https://docs.ntfy.sh/publish/#publish-as-json. A `view` action with an empty
   PWA URL is invalid and is now omitted instead of being sent. The channel card
   in the administration shows the corrected, copy-pasteable `curl` command.
+- ntfy honours the selection of the user (WP-M14-45): the outbox published
+  every ticket to the configured instance topic, so a phone that subscribed to
+  the topic of the user (`stoerdesk-<userId>`) through the QR of the own
+  channels page never received a ticket notification. The enqueue now reads the
+  `ticket.created` selection of §11.4 and writes one ntfy row per user who
+  selected ntfy, carrying that user's topic (the stored account topic or
+  `stoerdesk-<userId>`); the drain passes the topic to the adapter. A user
+  without a selection keeps the instance topic, and a critical ticket never
+  queues the ntfy channel twice.
 
 ### Added
 - The ntfy deep link of the subscription QR carries its host (WP-M14-33, out of

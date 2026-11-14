@@ -305,6 +305,7 @@ export async function createPublicReport(
           workOrderNo: row.workOrderNumber,
         },
         env,
+        'ticket.created',
       )
 
       return row
