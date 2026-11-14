@@ -1696,6 +1696,17 @@ missing is the way back: WP-M14-48 links to the own page, the own page only
 links to `/settings`. **WP-M14-54** adds one link line to `/admin/channels` on
 `/settings/notifications` — the pages are never merged.
 
+**The channel test send and the verification request carry a JSON body (WP-M14-55,
+out of band in phase 14, requested by the office; done).** The office saw
+`admin.channels.errors.FST_ERR_CTP_EMPTY_JSON_BODY` on the ntfy card: the test
+message and the one-time code never reached the API, so the target stayed
+*unverified* and produced no outbox row. Removing the separate ntfy test topic
+dropped the request body while the page kept sending
+`content-type: application/json`, and Fastify 5 rejects an empty body with that
+content type before the route runs. **WP-M14-55** sends `{}` as the body on both
+requests; the routes, their schemas and the saved row as test target (WP-M14-51)
+stay as they are.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

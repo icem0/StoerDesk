@@ -93,9 +93,13 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
 
   const requestVerification = useMutation({
     mutationFn: () =>
+      // Fastify 5 rejects an empty body when the content type is JSON
+      // (`FST_ERR_CTP_EMPTY_JSON_BODY`) before the route runs, so a POST
+      // without payload still has to send a JSON body (WP-M14-55).
       apiFetch<{ expiresAt: string }>('/v1/admin/channels/ntfy/verification', {
         method: 'POST',
         headers: jsonHeaders,
+        body: JSON.stringify({}),
       }),
   })
 
@@ -117,6 +121,9 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       apiFetch<ChannelTestResponse>(`/v1/admin/channels/${channel.kind}/test`, {
         method: 'POST',
         headers: jsonHeaders,
+        // The saved row is the test target (WP-M14-51); the JSON content type
+        // needs a body (WP-M14-55), so no `topic` override travels from here.
+        body: JSON.stringify({}),
       }),
   })
 

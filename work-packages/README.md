@@ -407,6 +407,17 @@ missing is the cross-link: WP-M14-48 links from the administration to the own
 page, the own page only offers a back link to `/settings`. **WP-M14-54** adds the
 missing link line on `/settings/notifications`; the two pages are not merged.
 
+**The channel test send and the verification request carry a JSON body (WP-M14-55,
+out of band in phase 14, requested by the office; done).** The office reported
+`admin.channels.errors.FST_ERR_CTP_EMPTY_JSON_BODY` on the ntfy card: neither the
+test message nor the one-time code reached the API, so the target stayed
+*unverified* and produced no outbox row. Removing the separate ntfy test topic
+(`eb3f6d7`) also removed the request body, while the page still sent
+`content-type: application/json` — Fastify 5 rejects an empty body with that
+content type before the route runs, so the optional-body contract of §11.11 was
+never reached. **WP-M14-55** sends `body: JSON.stringify({})` on both requests;
+the routes, their schemas and the saved row as test target (WP-M14-51) stay.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -847,6 +858,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | done    | yes     |
 | WP-M14-53  | the ntfy request carries a timeout (out of band)                          | done    | yes     |
 | WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
+| WP-M14-55  | the test send and the verification request carry a JSON body (out of band) | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

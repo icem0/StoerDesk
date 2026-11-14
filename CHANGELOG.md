@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The channel test send and the verification request carry a JSON body (WP-M14-55):
+  the administration showed the untranslated Fastify code
+  `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also
+  removed the request body, while the page kept sending
+  `content-type: application/json`. Fastify 5 rejects an empty body with that
+  content type before the route runs, so neither the test message nor the one-time
+  ntfy code reached the API and the target stayed *unverified* without outbox rows.
+  Both requests now send `{}`; the routes, their schemas and the saved row as the
+  test target (WP-M14-51) stay unchanged.
 - The ntfy publish request carries a timeout (WP-M14-53): `fetch` has none by
   default, so an ntfy server that accepts the connection but never answers held
   the drain worker and the admin test send open. The request is aborted after

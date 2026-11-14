@@ -130,6 +130,18 @@ describe('ChannelsPage', () => {
     fireEvent.click(buttons[0] as HTMLElement)
 
     expect(await screen.findByText('Testnachricht gesendet.')).toBeTruthy()
+
+    const fetchMock = vi.mocked(fetch)
+    await vi.waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([input, init]) =>
+            String(input).includes('/test') &&
+            init?.method === 'POST' &&
+            init?.body === '{}',
+        ),
+      ).toBe(true)
+    })
   })
 
   it('marks a failed test send as failed and shows its code', async () => {
@@ -225,6 +237,16 @@ describe('ChannelsPage', () => {
 
     fireEvent.click(screen.getByText('Code senden'))
     expect(await screen.findByText(/Code gesendet/)).toBeTruthy()
+
+    const requestMock = vi.mocked(fetch)
+    await vi.waitFor(() => {
+      expect(
+        requestMock.mock.calls.some(
+          ([input, init]) =>
+            String(input).endsWith('/verification') && init?.body === '{}',
+        ),
+      ).toBe(true)
+    })
 
     fireEvent.change(screen.getByLabelText('Code aus der ntfy-App'), {
       target: { value: 'ABC234' },
