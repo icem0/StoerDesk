@@ -395,6 +395,18 @@ administration explains a `401`/`403` as a missing or wrong access token
 instead of a claimed topic, and the publish request gains a timeout so an
 unreachable server answers `http_timeout`.
 
+**The own channels page names the channel administration (WP-M14-54 announced,
+out of band in phase 14, requested by the office).** The office read the two
+notification surfaces as one block and asked for the way back: `Settings →
+Benachrichtigungen` and `Administration → Channels` repeat the channel list, the
+ntfy subscription QR and the word "ntfy" — that split is specced and deliberate
+(`specs/10-notifications.md` §11.12 names both pages, PLAN.md §17 keeps the
+secrets, the test send and the minimum channels behind `notification.write` and
+§11.4 needs the configured kinds to offer the selection checkboxes). What was
+missing is the cross-link: WP-M14-48 links from the administration to the own
+page, the own page only offers a back link to `/settings`. **WP-M14-54** adds the
+missing link line on `/settings/notifications`; the two pages are not merged.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -834,6 +846,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-51  | the ntfy access token reaches every send (out of band)                    | done    | yes     |
 | WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | planned | yes     |
 | WP-M14-53  | the ntfy request carries a timeout (out of band)                          | planned | yes     |
+| WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

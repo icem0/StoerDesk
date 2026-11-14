@@ -1683,6 +1683,19 @@ never in a URL, a `?token=` parameter, a log, an answer or an error text.
 gives the publish request a timeout so an unreachable server answers
 `http_timeout` instead of hanging the drain.
 
+**The own channels page names the channel administration (WP-M14-54, out of band
+in phase 14, requested by the office).** The office saw `Settings →
+Benachrichtigungen` and `Administration → Channels` as one block with a lot of
+repetition and asked whether that belongs together. It does not: §11.12 of
+`specs/10-notifications.md` names both pages, the own page is the session layer
+(§11.3 accounts, §11.4 selection) and the channel administration is the instance
+layer (`notification.write`, the write-only secret of ADR-0005, the test send,
+the minimum channels of §11.9); the repetition is intentional because §11.4
+offers a checkbox only for a channel the instance has configured. What was
+missing is the way back: WP-M14-48 links to the own page, the own page only
+links to `/settings`. **WP-M14-54** adds one link line to `/admin/channels` on
+`/settings/notifications` — the pages are never merged.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
