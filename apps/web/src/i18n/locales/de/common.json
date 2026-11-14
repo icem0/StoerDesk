@@ -106,7 +106,10 @@
   "ntfy": {
     "subscribe": "In der ntfy-App abonnieren",
     "qrLabel": "ntfy-Abo QR-Code",
-    "appHint": "mit dem Handy scannen"
+    "appHint": "mit dem Handy scannen",
+    "address": "Abo-Adresse",
+    "notConfigured": "ntfy ist auf diesem Server nicht eingerichtet. Ein Administrator muss den Kanal in der Administration konfigurieren.",
+    "selectionHint": "Aktiviere ntfy oben bei den Ereignissen, die an dieses Abo gehen sollen."
   },
   "notifications": {
     "title": "Your channels",
@@ -185,6 +188,7 @@
     "errors": {
       "session_invalid": "The session has expired. Please log in again.",
       "invalid_request": "The code is invalid, expired or already used – please request a new one.",
+      "channel_not_configured": "Der Kanal ist auf diesem Server nicht konfiguriert.",
       "unknown": "An unexpected error has occurred."
     }
   },

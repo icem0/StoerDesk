@@ -48,7 +48,12 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
-const handledErrorCodes = ['session_invalid', 'invalid_request', 'unknown'] as const
+const handledErrorCodes = [
+  'session_invalid',
+  'invalid_request',
+  'channel_not_configured',
+  'unknown',
+] as const
 
 const matrixErrorCodes = [
   'session_invalid',
@@ -268,24 +273,6 @@ export function NotificationsPage() {
     setSelection(next)
   }
 
-  if (telegramCode.isError) {
-    return (
-      <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
-        <Link
-          className="mt-6 inline-block rounded bg-slate-800 px-3 py-2 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-          to="/settings"
-        >
-          {t('branding.back')}
-        </Link>
-
-        <h1 className="mt-2 text-2xl font-semibold">{t('notifications.title')}</h1>
-        <p role="alert" className="mt-2 text-sm text-red-400">
-          {errorMessage(t, telegramCode.error)}
-        </p>
-      </main>
-    )
-  }
-
   return (
     <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
       <Link
@@ -423,6 +410,40 @@ export function NotificationsPage() {
         ) : null}
       </section>
 
+      {ntfySubscription.isSuccess &&
+      (ntfySubscription.data?.publicUrl ?? '') !== '' &&
+      (ntfySubscription.data?.topic ?? '') !== '' ? (
+        <div className="mt-6">
+          <NtfySubscription
+            publicUrl={ntfySubscription.data?.publicUrl ?? ''}
+            topic={ntfySubscription.data?.topic ?? ''}
+          />
+        </div>
+      ) : (
+        <section
+          className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+          aria-labelledby="ntfy-heading"
+        >
+          <h2 id="ntfy-heading" className="text-lg font-semibold">
+            {t('notifications.kinds.ntfy')}
+          </h2>
+
+          {ntfySubscription.isError ? (
+            <p role="alert" className="text-sm text-red-400">
+              {errorMessage(t, ntfySubscription.error)}
+            </p>
+          ) : null}
+
+          {ntfySubscription.isSuccess ? (
+            <p className="text-sm text-amber-400">{t('ntfy.notConfigured')}</p>
+          ) : null}
+
+          {ntfySubscription.isPending ? (
+            <p className="text-sm text-slate-400">{t('auth.loading')}</p>
+          ) : null}
+        </section>
+      )}
+
       <section
         className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
         aria-labelledby="telegram-heading"
@@ -430,6 +451,12 @@ export function NotificationsPage() {
         <h2 id="telegram-heading" className="text-lg font-semibold">
           {t('notifications.kinds.telegram')}
         </h2>
+
+        {telegramCode.isError ? (
+          <p role="alert" className="text-sm text-red-400">
+            {errorMessage(t, telegramCode.error)}
+          </p>
+        ) : null}
 
         {telegramCode.isPending ? (
           <p className="text-sm text-slate-400">{t('auth.loading')}</p>
@@ -647,13 +674,6 @@ export function NotificationsPage() {
           <p className="mt-2 text-sm text-emerald-400">{t('notifications.whatsapp.removed')}</p>
         ) : null}
       </section>
-
-      <div className="mt-6">
-        <NtfySubscription
-          publicUrl={ntfySubscription.data?.publicUrl ?? ''}
-          topic={ntfySubscription.data?.topic ?? ''}
-        />
-      </div>
     </main>
   )
 }

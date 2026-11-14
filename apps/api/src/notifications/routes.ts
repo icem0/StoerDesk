@@ -394,6 +394,10 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
 
           return telegramLinkCodeResponseSchema.parse(code)
         } catch (error) {
+          if (error instanceof TelegramLinkingError && error.code === 'not_configured') {
+            return reply.code(503).send({ code: 'channel_not_configured', params: {} })
+          }
+
           if (telegramLinkingRefusal(error)) {
             return reply.code(422).send({ code: 'invalid_request', params: { fields: ['code'] } })
           }

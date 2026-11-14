@@ -107,7 +107,11 @@ describe('NotificationsPage', () => {
         return Response.json({ code: 'ZZ9YY8', expiresAt: '2030-01-01T00:00:00.000Z' })
       }
 
-      return Response.json({ code: 'invalid_request', params: { fields: ['code'] } }, { status: 422 })
+      if (url.endsWith('/v1/notifications/accounts/telegram')) {
+        return Response.json({ code: 'invalid_request', params: { fields: ['code'] } }, { status: 422 })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -299,6 +303,37 @@ describe('NotificationsPage', () => {
       '/api/v1/notifications/accounts/ntfy',
       expect.objectContaining({ credentials: 'include' }),
     )
+  })
+
+  it('keeps the ntfy subscription visible when Telegram is not configured', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'channel_not_configured', params: {} }, { status: 503 })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/ntfy')) {
+        return Response.json({
+          publicUrl: 'https://ntfy.sh',
+          topic: 'stoerdesk-admin',
+          subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin',
+          deepLink: 'ntfy://ntfy.sh/stoerdesk-admin',
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { container } = renderPage()
+
+    expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
+    expect(screen.getByText('https://ntfy.sh/stoerdesk-admin')).toBeTruthy()
+    expect(container.querySelectorAll('svg')).toHaveLength(1)
+    expect(
+      await screen.findByText(/nicht konfiguriert|not configured/i),
+    ).toBeTruthy()
   })
 
   it('lists the chats of a connected bridge and connects the chat the user picks', async () => {

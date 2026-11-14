@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The own channels page no longer hides the ntfy QR when Telegram is not
+  configured (WP-M14-46): the page replaced every section with the Telegram
+  error because the code route answered an unhandled `500` without a bot token.
+  The route now answers `503 channel_not_configured`, the error is inline in the
+  Telegram section, and the ntfy card stays visible — with the subscription
+  address as selectable text and the hint that ntfy has to be selected for the
+  events.
 - The office ticket now notifies as well (WP-M14-20): `POST /api/v1/tickets`
   wrote the ticket and its `created` event but never a notification outbox row,
   so a ticket created in the administration never reached ntfy, Telegram or any
