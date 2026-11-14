@@ -246,6 +246,16 @@ priority and the message text — never the header — and the error texts carry
 status code only, so the key appears in no log line, answer, event payload or error
 message; the unit tests use the mock values `tk_row` and `tk_env`. No new finding.
 
+ntfy-token-text pass: 2026-11-14, diff `2763026..` (WP-M14-52 — web only:
+`apps/web/src/admin/channels-page.tsx`, the de/en `settings.json` and the page
+test) — areas A and B re-checked in full (the package changes no route, no
+capability and no guard), D re-checked for the page: the curl textarea and the
+clipboard copy only assemble the public address, the topic and the literal
+`$NTFY_TOKEN` — the stored key is never read by the page, so no secret enters the
+DOM, the clipboard or the page state; the new hint is static text and renders the
+`secretSet` boolean only, F re-checked: the new locale keys hold no key value, and
+K re-checked: no log line is touched. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.

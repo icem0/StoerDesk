@@ -844,7 +844,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-49  | a failed ntfy test send explains itself (out of band)                     | done    | yes     |
 | WP-M14-50  | every ntfy error code explains itself (out of band)                       | done    | yes     |
 | WP-M14-51  | the ntfy access token reaches every send (out of band)                    | done    | yes     |
-| WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | planned | yes     |
+| WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | done    | yes     |
 | WP-M14-53  | the ntfy request carries a timeout (out of band)                          | planned | yes     |
 | WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
 

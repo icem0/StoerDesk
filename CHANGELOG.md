@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ntfy administration names the access token (WP-M14-52): `401` and `403`
+  now say that the access token of the channel is missing or wrong — a claimed
+  topic is only the second cause — the ntfy card warns while an enabled channel
+  has no key, and the copied curl command carries
+  `-H "Authorization: Bearer $NTFY_TOKEN"` while the row has a secret. The stored
+  key itself never enters the command, the clipboard, an answer or a log.
 - ntfy counts as configured only after the code came back (WP-M14-47): the
   channel showed "konfiguriert" as soon as a value stood in the row, and the
   sender used the environment instead of the saved row. StörDesk now sends a

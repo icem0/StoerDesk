@@ -497,8 +497,8 @@
         "no_token": "The channel still misses its secret (bot token, access token …) — store it first.",
         "send_failed": "The send failed.",
         "http_error": "The ntfy server answered with code {{code}}: check URL and topic and try again.",
-        "http_401": "Authentication required (401): on ntfy.sh only own or still free topics.",
-        "http_403": "Publication refused (403): the topic belongs to someone else.",
+        "http_401": "Authentication required (401): the access token of this channel is missing or wrong — store it in the secret field of this card.",
+        "http_403": "Publication refused (403): most often the access token is missing or wrong — store it in the secret field of this card; only with a correct key it still has to be checked whether the topic is already claimed.",
         "http_406": "Requested format not supported (406).",
         "http_407": "Topic already taken (407): ntfy.sh only free or own topics — pick another topic.",
         "http_408": "Request timeout (408): try again later.",
@@ -522,7 +522,9 @@
         "label": "Minimum channels",
         "saving": "Saving …",
         "save": "Save"
-      }
+      },
+      "curlTokenHint": "The command carries $NTFY_TOKEN: the stored key is never shown — export a variable of that name in your shell.",
+      "ntfyTokenHint": "No key stored yet: a self-hosted ntfy server needs its access token in the secret field — without it every publish is refused."
     }
   },
   "apiKeys": {

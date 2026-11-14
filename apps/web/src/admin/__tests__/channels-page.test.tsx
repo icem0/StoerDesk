@@ -142,7 +142,9 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText('Testnachricht fehlgeschlagen: Der Versand ist fehlgeschlagen.')).toBeTruthy()
+    expect(
+      await screen.findByText('Testnachricht fehlgeschlagen: Der Versand ist fehlgeschlagen.'),
+    ).toBeTruthy()
     expect(screen.getByText(/Zustand: fehlgeschlagen/)).toBeTruthy()
   })
 
@@ -170,6 +172,44 @@ describe('ChannelsPage', () => {
     fireEvent.click(buttons[0] as HTMLElement)
 
     expect(await screen.findByText(/http_999/)).toBeTruthy()
+  })
+
+  it('names the access token when the publication is refused (WP-M14-52)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      test: { delivered: false, code: 'http_403' },
+    })
+    renderPage()
+
+    const buttons = await screen.findAllByText('Testnachricht senden')
+    fireEvent.click(buttons[0] as HTMLElement)
+
+    expect(await screen.findByText(/access token is missing or wrong/)).toBeTruthy()
+  })
+
+  it('warns on the ntfy card while the channel has no key (WP-M14-52)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [matrix, { ...ntfy, enabled: true }] },
+    })
+    renderPage()
+
+    expect(await screen.findByText(/needs its access token in the secret field/)).toBeTruthy()
+  })
+
+  it('carries the access token as a shell variable in the copied curl (WP-M14-52)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: {
+        channels: [matrix, { ...ntfy, enabled: true, verified: true, secretSet: true }],
+      },
+    })
+    renderPage()
+
+    const curl = await screen.findByDisplayValue(/^curl -X POST/)
+    const command = String(curl.textContent ?? curl.getAttribute('value'))
+    expect(command).toContain('-H "Authorization: Bearer $NTFY_TOKEN"')
+    expect(command.includes('Bearer tk_')).toBe(false)
   })
 
   it('keeps ntfy unverified until the code from the topic was confirmed', async () => {

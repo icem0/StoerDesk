@@ -1,7 +1,7 @@
 # WP-M14-52: ntfy 401 and 403 name the access token
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-49, WP-M14-50, WP-M14-51
 phase: 14
 milestone: m14
@@ -29,7 +29,8 @@ interfaces:
   first cause
 - the copied curl carries `-H "Authorization: Bearer $NTFY_TOKEN"` while the row
   has a secret
-- `admin.channels.verification.tokenHint` names the write-only secret field
+- `admin.channels.ntfyTokenHint` names the missing key on the card and
+  `admin.channels.curlTokenHint` names the shell variable of the curl command
 
 ## Task
 
@@ -43,7 +44,7 @@ unreachable server is the most common cause of that code.
    claimed by someone else only as the second cause.
 2. `admin.channels.errors.http_429` and `http_402` keep their meaning, the rate
    limit hint stays.
-3. The ntfy card shows one hint line (`admin.channels.verification.tokenHint`)
+3. The ntfy card shows one hint line (`admin.channels.ntfyTokenHint`)
    while `secretSet` is false and the channel is enabled: the server may need an
    access token in the secret field.
 4. `buildNtfyCurl` adds the `-H "Authorization: Bearer $NTFY_TOKEN"` line while
@@ -71,6 +72,7 @@ npm run wp:check
 - Files changed: `apps/web/src/admin/channels-page.tsx`, the de/en `settings.json`,
   the page test.
 - Interfaces added: the three keys above in `de` and `en`.
-- Verified: —
+- Verified: `npm run check` and `npm run build` green; the new tests fail before the change
+  (the curl carried no auth line, `403` blamed the topic alone).
 - Follow-up WP: none
 - Open question: none

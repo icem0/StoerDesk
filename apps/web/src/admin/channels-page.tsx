@@ -42,9 +42,12 @@ function errorCode(error: unknown): string {
 /**
  * Builds a copy-pasteable curl command that reproduces the ntfy JSON publish:
  * `POST /` with `topic` in the body and the numeric priority (3 = default).
+ * A self-hosted server needs the access token of the channel (ADR-0022): the
+ * command carries the shell variable `$NTFY_TOKEN`, never the stored key — the
+ * secret is write-only and stays out of the answer, the clipboard and the repo.
  * See https://docs.ntfy.sh/publish/#publish-as-json.
  */
-function buildNtfyCurl(url: string, topic: string): string {
+function buildNtfyCurl(url: string, topic: string, secretSet: boolean): string {
   const base = `${url.replace(/\/+$/, '')}/`
   const body = JSON.stringify({
     topic,
@@ -52,7 +55,9 @@ function buildNtfyCurl(url: string, topic: string): string {
     message: 'This is a test notification.',
     priority: 3,
   })
-  return `curl -X POST "${base}" \\\n  -H "Content-Type: application/json" \\\n  -H "Priority: 3" \\\n  -d '${body}'`
+  const auth = secretSet ? '\n  -H "Authorization: Bearer $NTFY_TOKEN"' : ''
+
+  return `curl -X POST "${base}" \\\n  -H "Content-Type: application/json"${auth} \\\n  -H "Priority: 3" \\\n  -d '${body}'`
 }
 
 function fieldId(kind: string, field: string): string {
@@ -204,7 +209,11 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
 
       <div className="grid gap-3 sm:grid-cols-2">
         {CHANNEL_FIELDS[channel.kind].map((field) => (
-          <label className="flex flex-col gap-1 text-sm" htmlFor={fieldId(channel.kind, field)} key={field}>
+          <label
+            className="flex flex-col gap-1 text-sm"
+            htmlFor={fieldId(channel.kind, field)}
+            key={field}
+          >
             {t(`admin.channels.fields.${field}`)}
             <input
               className="rounded bg-slate-950 p-2 text-slate-100 disabled:opacity-60"
@@ -248,13 +257,13 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
                   className="flex-1 rounded bg-slate-950 p-2 text-slate-100 text-xs font-mono disabled:opacity-60"
                   id={fieldId(channel.kind, 'curlCommand')}
                   readOnly
-                  value={buildNtfyCurl(config.url!, config.topic!)}
+                  value={buildNtfyCurl(config.url!, config.topic!, channel.secretSet)}
                 />
                 <button
                   className="min-h-11 rounded-lg border border-slate-600 px-3 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-60"
                   onClick={() => {
                     void navigator.clipboard.writeText(
-                      buildNtfyCurl(config.url!, config.topic!),
+                      buildNtfyCurl(config.url!, config.topic!, channel.secretSet),
                     )
                   }}
                   title={t('admin.channels.copyToClipboard')}
@@ -263,6 +272,9 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
                   {t('admin.channels.copy')}
                 </button>
               </div>
+              {channel.secretSet ? (
+                <p className="mt-1 text-xs text-slate-400">{t('admin.channels.curlTokenHint')}</p>
+              ) : null}
             </div>
           ) : null}
         </>
@@ -280,13 +292,12 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
           {ntfyTarget !== undefined ? (
             <NtfySubscription publicUrl={ntfyTarget.publicUrl} topic={ntfyTarget.topic} />
           ) : (
-            <p className="text-xs text-amber-300">
-              {t('admin.channels.verification.saveFirst')}
-            </p>
+            <p className="text-xs text-amber-300">{t('admin.channels.verification.saveFirst')}</p>
           )}
-          <p className="text-xs text-slate-400">
-            {t('admin.channels.verification.testUsesSaved')}
-          </p>
+          <p className="text-xs text-slate-400">{t('admin.channels.verification.testUsesSaved')}</p>
+          {channel.enabled && !channel.secretSet ? (
+            <p className="text-xs text-amber-300">{t('admin.channels.ntfyTokenHint')}</p>
+          ) : null}
           <Link className="text-xs text-sky-300 underline" to="/settings/notifications">
             {t('admin.channels.verification.personalLink')}
           </Link>
@@ -334,9 +345,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
                     </label>
                     <button
                       className="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
-                      disabled={
-                        confirmVerification.isPending || verificationCode.trim() === ''
-                      }
+                      disabled={confirmVerification.isPending || verificationCode.trim() === ''}
                       onClick={() => confirmVerification.mutate(verificationCode)}
                       type="button"
                     >
@@ -423,8 +432,7 @@ export function ChannelsPage() {
   })
   const minimumQuery = useQuery({
     queryKey: ['minimumChannels'],
-    queryFn: () =>
-      apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels'),
+    queryFn: () => apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels'),
     enabled: mayReadSettings,
     retry: false,
   })
@@ -477,12 +485,8 @@ export function ChannelsPage() {
       {mayReadSettings ? (
         <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
           <div>
-            <h2 className="text-lg font-semibold">
-              {t('admin.channels.minimum.title')}
-            </h2>
-            <p className="mt-1 text-sm text-slate-400">
-              {t('admin.channels.minimum.hint')}
-            </p>
+            <h2 className="text-lg font-semibold">{t('admin.channels.minimum.title')}</h2>
+            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.minimum.hint')}</p>
           </div>
 
           {!minimumQuery.isLoading && !minimumQuery.isError ? (
