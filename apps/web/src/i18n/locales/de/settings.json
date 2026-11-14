@@ -447,8 +447,7 @@
         "recipients": "Empfänger",
         "publicKey": "VAPID-Public-Key",
         "subject": "VAPID-Subject",
-        "baseUrl": "Bridge-Adresse",
-        "testTopic": "Thema für Testnachricht"
+        "baseUrl": "Bridge-Adresse"
       },
       "secret": "Geheimnis (nur schreiben)",
       "secretSet": "Ein Geheimnis ist gespeichert.",
@@ -460,7 +459,6 @@
       "testing": "Testnachricht wird gesendet …",
       "testDelivered": "Testnachricht gesendet.",
       "testFailed": "Testnachricht fehlgeschlagen: {{reason}}",
-      "testTopicPlaceholder": "z. B. stoerdesk-test",
       "curlCommand": "cURL-Befehl (ins Terminal kopieren)",
       "copy": "Kopieren",
       "copyToClipboard": "In die Zwischenablage kopieren",

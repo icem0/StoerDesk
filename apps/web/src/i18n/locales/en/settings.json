@@ -447,8 +447,7 @@
         "recipients": "Recipients",
         "publicKey": "VAPID public key",
         "subject": "VAPID subject",
-        "baseUrl": "Bridge address",
-        "testTopic": "Topic for test message"
+        "baseUrl": "Bridge address"
       },
       "secret": "Secret (write only)",
       "secretSet": "A secret is stored.",
@@ -460,7 +459,6 @@
       "testing": "Sending test message …",
       "testDelivered": "Test message sent.",
       "testFailed": "Test message failed: {{reason}}",
-      "testTopicPlaceholder": "e. g. stoerdesk-test",
       "curlCommand": "cURL command (copy to terminal)",
       "copy": "Copy",
       "copyToClipboard": "Copy to clipboard",
