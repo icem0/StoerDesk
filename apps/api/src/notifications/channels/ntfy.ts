@@ -23,7 +23,7 @@ export interface NtfyConfig {
 export interface NotificationMessage {
   title: string
   body: string
-  /** Ticket priority; `critical` becomes ntfy's `urgent` (WP-M14-07). */
+  /** Ticket priority; `critical` becomes ntfy's max priority `5` (WP-M14-07). */
   priority?: string
 }
 
@@ -46,22 +46,26 @@ const actionLabel = (config: NtfyConfig): string =>
   t(config.locale ?? 'de', 'notification.action_label')
 
 /**
- * The ntfy priority of §11.5: `urgent` for a critical ticket, the normal
- * `default` otherwise. The same value travels as the `Priority` header and in
- * the JSON payload.
+ * The ntfy priority of §11.5 as the number the JSON API expects: `5` (`max`,
+ * ntfy's `urgent` equivalent) for a critical ticket, `3` (`default`) otherwise
+ * (https://docs.ntfy.sh/publish/#publish-as-json — the JSON field is an integer
+ * 1–5, not the string name of the header form).
  */
-const ntfyPriority = (message: NotificationMessage): string =>
-  message.priority === 'critical' ? 'urgent' : 'default'
+const ntfyPriority = (message: NotificationMessage): number =>
+  message.priority === 'critical' ? 5 : 3
 
 /**
  * Sends a notification to an ntfy topic via HTTP POST.
  *
- * The message is published as JSON with a single `view` action that links to
- * the PWA. `pwaUrl` may be empty — the notification still arrives, the action
- * is just not clickable. A critical ticket raises the ntfy priority to
- * `urgent` (WP-M14-07). The topic is the topic of the ntfy account of the
- * user when the caller set `userTopic`, otherwise the configured topic of the
- * instance (`specs/10-notifications.md` §11.3, WP-M14-13).
+ * The message is published as JSON to the server root (`POST /`) with the topic
+ * in the body — posting a JSON body to `/{topic}` would make ntfy treat the
+ * whole body as the plain-text message (https://docs.ntfy.sh/publish/#publish-as-json).
+ * The single `view` action uses the JSON field `url`, not `uri`, and is omitted
+ * entirely when `pwaUrl` is empty, because a `view` action without a URL is
+ * invalid. A critical ticket raises the numeric priority to `5` (WP-M14-07).
+ * The topic is the topic of the ntfy account of the user when the caller set
+ * `userTopic`, otherwise the configured topic of the instance
+ * (`specs/10-notifications.md` §11.3, WP-M14-13).
  */
 export async function sendNtfyNotification(
   config: NtfyConfig,
@@ -72,14 +76,18 @@ export async function sendNtfyNotification(
 ): Promise<void> {
   const priority = ntfyPriority(message)
   const topic = config.userTopic && config.userTopic !== '' ? config.userTopic : config.topic
-  const url = `${config.url.replace(/\/$/, '')}/${topic}`
+  const url = `${config.url.replace(/\/+$/, '')}/`
 
-  const requestBody = JSON.stringify({
+  const payload: Record<string, unknown> = {
+    topic,
     title: message.title,
     message: message.body,
     priority,
-    actions: [{ action: 'view', label: actionLabel(config), uri: pwaUrl }],
-  })
+  }
+
+  if (pwaUrl !== '') {
+    payload.actions = [{ action: 'view', label: actionLabel(config), url: pwaUrl }]
+  }
 
   log?.info?.('ntfy: POST request', {
     url,
@@ -93,8 +101,8 @@ export async function sendNtfyNotification(
 
   const response = await fetchImpl(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', Priority: priority },
-    body: requestBody,
+    headers: { 'content-type': 'application/json', Priority: String(priority) },
+    body: JSON.stringify(payload),
   })
 
   if (!response.ok) {

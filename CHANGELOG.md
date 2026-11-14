@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- The ntfy channel publishes real JSON, not raw text: the adapter sent the JSON
+  body to `/{topic}` with the action field `uri` and the string priority
+  `default`/`urgent`, so ntfy showed the raw JSON as the message and dropped the
+  title and the button. It now publishes to the server root (`POST /`) with the
+  topic in the body, the action field `url`, and the numeric priority (`5` for a
+  critical ticket, `3` otherwise) — the contract of
+  https://docs.ntfy.sh/publish/#publish-as-json. A `view` action with an empty
+  PWA URL is invalid and is now omitted instead of being sent. The channel card
+  in the administration shows the corrected, copy-pasteable `curl` command.
+
 ### Added
 - The ntfy deep link of the subscription QR carries its host (WP-M14-33, out of
   band in phase 14): the ntfy app opens and subscribes a topic only with the

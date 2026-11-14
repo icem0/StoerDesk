@@ -5,7 +5,7 @@ import { sendNtfyNotification } from '../ntfy'
 describe('sendNtfyNotification', () => {
   const config = { url: 'https://ntfy.sh', topic: 'stoerdesk' }
 
-  it('posts a JSON notification to the topic', async () => {
+  it('posts a JSON notification to the server root with the topic in the body', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
 
     await sendNtfyNotification(
@@ -18,26 +18,28 @@ describe('sendNtfyNotification', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://ntfy.sh/stoerdesk')
+    expect(url).toBe('https://ntfy.sh/')
     expect(init.method).toBe('POST')
     expect((init.headers as Record<string, string>)['content-type']).toBe('application/json')
-    expect((init.headers as Record<string, string>).Priority).toBe('default')
+    expect((init.headers as Record<string, string>).Priority).toBe('3')
 
     const payload = JSON.parse(String(init.body)) as {
+      topic: string
       title: string
       message: string
-      priority: string
-      actions: { action: string; label: string; uri: string }[]
+      priority: number
+      actions: { action: string; label: string; url: string }[]
     }
+    expect(payload.topic).toBe('stoerdesk')
     expect(payload.title).toBe('New ticket')
     expect(payload.message).toBe('Lift 2 is broken')
-    expect(payload.priority).toBe('default')
+    expect(payload.priority).toBe(3)
     expect(payload.actions).toEqual([
-      { action: 'view', label: 'Öffnen', uri: 'https://stoerdesk.local/pwa' },
+      { action: 'view', label: 'Öffnen', url: 'https://stoerdesk.local/pwa' },
     ])
   })
 
-  it('sends the urgent priority of a critical ticket (WP-M14-07)', async () => {
+  it('sends the max priority of a critical ticket as the number 5 (WP-M14-07)', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
 
     await sendNtfyNotification(
@@ -48,10 +50,10 @@ describe('sendNtfyNotification', () => {
     )
 
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect((init.headers as Record<string, string>).Priority).toBe('urgent')
+    expect((init.headers as Record<string, string>).Priority).toBe('5')
 
-    const payload = JSON.parse(String(init.body)) as { priority: string }
-    expect(payload.priority).toBe('urgent')
+    const payload = JSON.parse(String(init.body)) as { priority: number }
+    expect(payload.priority).toBe(5)
   })
 
   it('sends to the topic of the account when the caller provides it (WP-M14-13)', async () => {
@@ -64,8 +66,11 @@ describe('sendNtfyNotification', () => {
       fetchMock as unknown as typeof fetch,
     )
 
-    const [url] = fetchMock.mock.calls[0] as unknown as [string]
-    expect(url).toBe('https://ntfy.sh/stoerdesk-admin')
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://ntfy.sh/')
+
+    const payload = JSON.parse(String(init.body)) as { topic: string }
+    expect(payload.topic).toBe('stoerdesk-admin')
   })
 
   it('labels the view action in the configured locale (WP-M7-04b)', async () => {
@@ -86,16 +91,16 @@ describe('sendNtfyNotification', () => {
 
       const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
       const payload = JSON.parse(String(init.body)) as {
-        actions: { action: string; label: string; uri: string }[]
+        actions: { action: string; label: string; url: string }[]
       }
 
       expect(payload.actions).toEqual([
-        { action: 'view', label: testCase.label, uri: 'https://stoerdesk.local/pwa' },
+        { action: 'view', label: testCase.label, url: 'https://stoerdesk.local/pwa' },
       ])
     }
   })
 
-  it('still sends when the pwaUrl is empty', async () => {
+  it('still sends when the pwaUrl is empty and omits the invalid empty view action', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
 
     await sendNtfyNotification(
@@ -108,8 +113,8 @@ describe('sendNtfyNotification', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    const payload = JSON.parse(String(init.body)) as { actions: { uri: string }[] }
-    expect(payload.actions).toEqual([{ action: 'view', label: 'Öffnen', uri: '' }])
+    const payload = JSON.parse(String(init.body)) as { actions?: unknown }
+    expect(payload.actions).toBeUndefined()
   })
 
   it('reports HTTP errors', async () => {

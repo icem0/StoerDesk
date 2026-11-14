@@ -114,8 +114,11 @@ pool name, the start and the end in `Europe/Berlin`, the state of the shift and
 the deep link to `/oncall` (ADR-0021). Neither message carries a photo or the
 contact data of a reporter.
 
-ntfy receives the priority of the ticket: `urgent` for a critical ticket, the
-normal priority otherwise. Telegram, Matrix, WhatsApp Web, Signal and e-mail
+ntfy receives the priority of the ticket through the JSON publish API
+(`POST /` with the topic in the body) as the numeric value `5` (max, the
+`urgent` level) for a critical ticket and `3` (default) otherwise; the `view`
+action uses the JSON field `url` and is omitted when there is no deep link.
+Telegram, Matrix, WhatsApp Web, Signal and e-mail
 receive the same text; the deep link is labelled with the text of the interface
 of the recipient.
 

@@ -38,17 +38,20 @@ function errorCode(error: unknown): string {
   return error instanceof ApiError && typeof error.code === 'string' ? error.code : 'unknown'
 }
 
-/** Builds a copy-pasteable curl command that reproduces the ntfy POST request. */
-function buildNtfyCurl(url: string, topic: string, pwaUrl: string): string {
-  const base = url.replace(/\/$/, '')
-  const fullUrl = `${base}/${topic}`
+/**
+ * Builds a copy-pasteable curl command that reproduces the ntfy JSON publish:
+ * `POST /` with `topic` in the body and the numeric priority (3 = default).
+ * See https://docs.ntfy.sh/publish/#publish-as-json.
+ */
+function buildNtfyCurl(url: string, topic: string): string {
+  const base = `${url.replace(/\/+$/, '')}/`
   const body = JSON.stringify({
+    topic,
     title: 'StörDesk test',
     message: 'This is a test notification.',
-    priority: 'default',
-    actions: [{ action: 'view', label: 'Öffnen', uri: pwaUrl }],
+    priority: 3,
   })
-  return `curl -X POST "${fullUrl}" \\\n  -H "Content-Type: application/json" \\\n  -H "Priority: default" \\\n  -d '${body}'`
+  return `curl -X POST "${base}" \\\n  -H "Content-Type: application/json" \\\n  -H "Priority: 3" \\\n  -d '${body}'`
 }
 
 function fieldId(kind: string, field: string): string {
@@ -189,7 +192,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
                 className="rounded bg-slate-950 p-2 text-slate-100 text-xs font-mono disabled:opacity-60"
                 id={fieldId(channel.kind, 'curlCommand')}
                 readOnly
-                value={buildNtfyCurl(config.url, config.topic, '')}
+                value={buildNtfyCurl(config.url, config.topic)}
               />
             </div>
           ) : null}

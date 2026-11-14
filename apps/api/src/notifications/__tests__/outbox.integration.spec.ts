@@ -181,11 +181,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(sentEvent?.actorKind).toBe('system')
       expect(sentEvent?.payload).toEqual({ channel: 'ntfy', ticketNo, attempts: 1 })
 
-      // The `view` action label of WP-M7-04b reaches the channel payload.
+      // The JSON body publishes to the server root with the topic in the body;
+      // an empty PWA URL omits the invalid empty `view` action.
       expect(bodies).toHaveLength(1)
-      const body = bodies[0] as { actions: { label: string }[] }
+      const body = bodies[0] as { topic: string; actions?: unknown }
 
-      expect(body.actions).toEqual([{ action: 'view', label: 'Öffnen', uri: '' }])
+      expect(body.topic).toBe('outbox-test')
+      expect(body.actions).toBeUndefined()
 
       server.close()
     })
