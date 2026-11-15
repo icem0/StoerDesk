@@ -99,8 +99,10 @@ function inMemoryDatabase(rows: MutableRow[]) {
                 {
                   id: next.id,
                   ticketId: next.ticketId,
+                  shiftId: null,
                   channel: next.channel,
                   target: next.target,
+                  eventType: 'ticket.created',
                   attempts: next.attempts,
                 },
               ]
@@ -124,7 +126,7 @@ function inMemoryDatabase(rows: MutableRow[]) {
 
           rows.push({
             id: `fallback-row-${rows.length}`,
-            ticketId: fallback.ticketId,
+            ticketId: fallback.ticketId ?? '',
             channel: fallback.channel,
             target: fallback.target as Record<string, unknown>,
             state: 'PENDING',

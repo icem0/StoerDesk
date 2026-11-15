@@ -1,7 +1,7 @@
 # WP-M14-28: A readiness row is queued and drained like a ticket row
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-27, WP-M14-16
 phase: 14
 milestone: m14
@@ -70,7 +70,14 @@ Expected: all green; the new spec fails before the change and passes after it.
 ## Handoff
 
 - Files changed:
+  - `packages/shared/src/schemas/notification.ts` — added `oncallShiftMessageSchema`/`OncallShiftMessage` and corrected the migration note to `0039`.
+  - `apps/api/src/notifications/outbox.ts` — `OutboxRow`/`ClaimedOutboxRow` carry `shiftId`/`eventType`; `messageOf` branches on `shift_id` into the readiness message (pool name, Berlin start/end, state, `/oncall` deep link) without ticket fields; `finishRow` queues fallbacks and ticket events for shift rows; `enqueueOncallOutbox` writes one `PENDING` row per selected channel of the technician, the instance chain when there is no selection, and is a no-op for channels still `PENDING` for the same shift/event.
+  - `apps/api/src/notifications/__tests__/readiness-outbox.integration.spec.ts` — six readiness outbox tests.
 - Interfaces added:
-- Verified:
+  - `oncallShiftMessageSchema` / `OncallShiftMessage`
+  - `OutboxShift`
+  - `enqueueOncallOutbox(database, { shift, eventType, userId }, env)`
+  - `oncallDeepLink(pwaUrl)`
+- Verified: `npm run check` green — typecheck, ESLint (pre-existing warnings only), 184 test files / 1214 tests, i18n, `wp:check`, 14 E2E tests; the new readiness spec fails before the change and passes after it.
 - Follow-up WP: WP-M14-29 (`29-readiness-allocation-enqueues-its-rows.md`)
 - Open question: none

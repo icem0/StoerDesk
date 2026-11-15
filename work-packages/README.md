@@ -860,7 +860,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-25  | stage names label the reached-stage condition values (out of band)          | done    | yes     |
 | WP-M14-26  | the readiness allocation — spec, ADR-0021 and the split of the chain       | done    | yes     |
 | WP-M14-27  | the outbox and the preferences know the readiness (migration 0039)          | done    | yes     |
-| WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | planned | yes     |
+| WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | done    | yes     |
 | WP-M14-29  | the allocation and a swap request enqueue their rows                       | planned | yes     |
 | WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | planned | yes     |
 | WP-M14-31  | an unconfirmed readiness reminds once                                       | planned | yes     |

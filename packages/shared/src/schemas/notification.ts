@@ -129,8 +129,8 @@ export const storeNotificationAccountRequestSchema = z.object({
 /**
  * The event types a user selects channels for (`specs/10-notifications.md`
  * §11.4, WP-M14-16, ADR-0021): the four ticket events and the three readiness
- * events. The check of `notification_preferences` still names the four ticket
- * types — migration `0034` of WP-M14-27 widens it to these seven.
+ * events. Migration `0039` of WP-M14-27 widens the check of
+ * `notification_preferences` to these seven.
  */
 export const NOTIFICATION_EVENT_TYPES = [
   'ticket.created',
@@ -195,6 +195,22 @@ export const matrixLinkingRequestSchema = z.object({
 export type TelegramLinkCodeResponse = z.infer<typeof telegramLinkCodeResponseSchema>
 export type RedeemTelegramLinkCodeRequest = z.infer<typeof redeemTelegramLinkCodeRequestSchema>
 export type MatrixLinkingRequest = z.infer<typeof matrixLinkingRequestSchema>
+
+/**
+ * The machine-readable parameters of a readiness message (`specs/10-notifications.md`
+ * §11.5, WP-M14-28, ADR-0021): pool name, start and end in `Europe/Berlin`
+ * formatted from the stored UTC values, shift state and shift id. No photo,
+ * no contact data, no translated UI text.
+ */
+export const oncallShiftMessageSchema = z.object({
+  poolName: z.string().trim().min(1).max(100),
+  startsAt: z.iso.datetime(),
+  endsAt: z.iso.datetime(),
+  state: z.string().min(1).max(32),
+  shiftId: z.uuid(),
+})
+
+export type OncallShiftMessage = z.infer<typeof oncallShiftMessageSchema>
 
 export type ChannelConfiguration = z.infer<typeof channelConfigurationSchema>
 export type ChannelConfigurationListResponse = z.infer<

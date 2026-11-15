@@ -1,9 +1,17 @@
 import { PgBoss } from 'pg-boss'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, sql, type SQL } from 'drizzle-orm'
 
 import type { Env } from '../config/env'
 import { createDatabase, type Database } from '../db/client'
-import { outbox, ticketEvents } from '../db/schema'
+import {
+  notificationAccounts,
+  notificationPreferences,
+  oncallPools,
+  outbox,
+  ticketEvents,
+} from '../db/schema'
+import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
+import type { NotificationEventType } from '@stoerdesk/shared'
 import {
   configuredChannels,
   type NotificationChannel,
@@ -11,7 +19,7 @@ import {
 } from './channels/index'
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 import { readMinimumChannels } from '../settings/notifications'
-import { ntfyRecipients } from './receivers'
+import { ntfyRecipients, userTopic } from './receivers'
 import { effectiveNtfyConfig } from './verification'
 import type { NtfyConfig } from './channels/ntfy'
 
@@ -20,7 +28,12 @@ type DbLike = Pick<Db, 'insert' | 'select'>
 
 /** One notification queued for one channel — the insert shape of an `outbox` row. */
 export interface OutboxRow {
-  ticketId: string
+  /** Null for a readiness row of the on-call calendar (ADR-0021, WP-M14-27). */
+  ticketId: string | null
+  /** Set for a readiness row of the on-call calendar (ADR-0021, WP-M14-28). */
+  shiftId?: string | null
+  /** The event the row announces; ticket rows keep `ticket.created` by default. */
+  eventType?: string
   channel: string
   target: Record<string, unknown>
 }
@@ -40,6 +53,15 @@ export interface OutboxTicket {
   systemType?: string | null
   shortText?: string | null
   workOrderNo?: string | null
+}
+
+/** One on-call shift as the readiness enqueue path needs it. */
+export interface OutboxShift {
+  id: string
+  poolId: string
+  state: string
+  startsAt: Date
+  endsAt: Date
 }
 
 /**
@@ -116,8 +138,11 @@ export interface ClaimedOutboxRow {
   id: string
   /** Null for a readiness row of the on-call calendar (ADR-0021, WP-M14-27). */
   ticketId: string | null
+  /** Set for a readiness row of the on-call calendar (ADR-0021, WP-M14-28). */
+  shiftId: string | null
   channel: string
   target: Record<string, unknown>
+  eventType: string
   attempts: number
 }
 
@@ -143,8 +168,10 @@ export async function claimOutboxRow(database: Db): Promise<ClaimedOutboxRow | u
     .returning({
       id: outbox.id,
       ticketId: outbox.ticketId,
+      shiftId: outbox.shiftId,
       channel: outbox.channel,
       target: outbox.target,
+      eventType: outbox.eventType,
       attempts: outbox.attempts,
     })
 
@@ -154,7 +181,9 @@ export async function claimOutboxRow(database: Db): Promise<ClaimedOutboxRow | u
 
   return {
     ...row,
+    shiftId: row.shiftId ?? null,
     target: row.target as Record<string, unknown>,
+    eventType: row.eventType ?? 'ticket.created',
   }
 }
 
@@ -194,6 +223,15 @@ export function ticketDeepLink(pwaUrl: string, ticketNo: string): string {
   return `${pwaUrl.replace(/\/+$/, '')}/tickets/${encodeURIComponent(ticketNo)}`
 }
 
+/** The deep link into the on-call calendar of §11.5: `/oncall` of the PWA. */
+export function oncallDeepLink(pwaUrl: string): string {
+  if (pwaUrl === '') {
+    return ''
+  }
+
+  return `${pwaUrl.replace(/\/+$/, '')}/oncall`
+}
+
 /** One param of the message body, or nothing when the stored row predates it. */
 const param = (value: unknown): string =>
   value === undefined || value === null ? '' : String(value)
@@ -204,8 +242,37 @@ const param = (value: unknown): string =>
  * AA/SA work order number — no photo, no contact data, no translated UI text
  * (`PLAN.md` §12; the `view` action label itself comes from i18n). Rows written
  * before WP-M14-07 lack the newer params; the missing values are simply skipped.
+ * A readiness row (`shift_id`) carries the pool name, the start and end in
+ * `Europe/Berlin` formatted from the stored UTC values and the shift state;
+ * it never touches the ticket fields of §11.5.
  */
-export const messageOf = (target: Record<string, unknown>): MessagePriority => ({
+export const messageOf = (target: Record<string, unknown>): MessagePriority => {
+  if (target.shiftId !== undefined && target.shiftId !== null) {
+    return readinessMessageOf(target)
+  }
+
+  return ticketMessageOf(target)
+}
+
+/**
+ * The `Europe/Berlin` rendering of a stored UTC instant for a readiness
+ * message. `de-DE` keeps the machine-readable short form consistent with the
+ * web UI (`WP-M14-28`, §11.5).
+ */
+const berlinTime = (value: unknown): string => {
+  if (value === undefined || value === null) {
+    return ''
+  }
+
+  return new Intl.DateTimeFormat('de-DE', {
+    timeZone: ONCALL_TIMEZONE,
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(String(value)))
+}
+
+/** The ticket message of §11.5 (machine values only). */
+const ticketMessageOf = (target: Record<string, unknown>): MessagePriority => ({
   title: param(target.ticketNo),
   body: [
     target.priority,
@@ -219,6 +286,18 @@ export const messageOf = (target: Record<string, unknown>): MessagePriority => (
     .filter((value) => value !== '')
     .join(' · '),
   priority: param(target.priority),
+})
+
+/** The readiness message of §11.5 (machine values only). */
+const readinessMessageOf = (target: Record<string, unknown>): MessagePriority => ({
+  title: param(target.poolName),
+  body: [
+    param(target.state),
+    `${berlinTime(target.startsAt)} – ${berlinTime(target.endsAt)}`,
+  ]
+    .filter((value) => value !== '')
+    .join(' · '),
+  priority: '',
 })
 
 /**
@@ -241,17 +320,28 @@ async function finishRow(
   let fallbackQueued = false
 
   await database.transaction(async (tx) => {
-    if (fallbackChannel !== undefined && row.ticketId !== null) {
+    if (fallbackChannel !== undefined) {
+      const fallbackConditions: SQL<unknown>[] = [eq(outbox.state, 'PENDING')]
+
+      if (row.ticketId !== null) {
+        fallbackConditions.push(eq(outbox.ticketId, row.ticketId))
+      } else {
+        fallbackConditions.push(eq(outbox.shiftId, row.shiftId ?? ''))
+        fallbackConditions.push(eq(outbox.eventType, row.eventType))
+      }
+
       const pending = await tx
         .select({ channel: outbox.channel })
         .from(outbox)
-        .where(and(eq(outbox.ticketId, row.ticketId), eq(outbox.state, 'PENDING')))
+        .where(and(...fallbackConditions))
 
       const alreadyPending = pending.some((candidate) => candidate.channel === fallbackChannel)
 
       if (!alreadyPending) {
         await tx.insert(outbox).values({
-          ticketId: row.ticketId,
+          ticketId: row.ticketId ?? null,
+          shiftId: row.shiftId ?? null,
+          eventType: row.eventType,
           channel: fallbackChannel,
           target: row.target,
         })
@@ -317,7 +407,8 @@ export async function drainOutbox(
     result.attempts += 1
 
     const channel = channelsByName.get(row.channel)
-    const ticketNo = String(row.target.ticketNo ?? '')
+    const isShiftRow = row.shiftId !== null && row.shiftId !== undefined
+    const ticketNo = isShiftRow ? '' : String(row.target.ticketNo ?? '')
 
     if (channel === undefined) {
       await finishRow(database, row, 'FAILED', 'notification_failed')
@@ -339,11 +430,14 @@ export async function drainOutbox(
 
     try {
       // A per-user ntfy row carries its topic; the ticket rows carry the deep
-      // link into the ticket of §11.5 (WP-M14-68) — every channel of the chain
+      // link into the ticket of §11.5 (WP-M14-68) and the readiness rows the
+      // link into the on-call calendar (WP-M14-28). Every channel of the chain
       // gets the link of the row it sends, so a fallback row keeps the same
       // ticket link. An older row without `ticketNo` keeps the PWA root.
       const topic = typeof row.target.ntfyTopic === 'string' ? row.target.ntfyTopic : ''
-      const deepLink = ticketDeepLink(env.PWA_URL, ticketNo)
+      const deepLink = isShiftRow
+        ? oncallDeepLink(env.PWA_URL)
+        : ticketDeepLink(env.PWA_URL, ticketNo)
       const options: { topic?: string; deepLink?: string } = {}
 
       if (topic !== '') {
@@ -509,6 +603,114 @@ export async function enqueueOutbox(
         rows.push({ ticketId: ticket.id, channel, target: messageParams(ticket) })
       }
     }
+  }
+
+  if (rows.length === 0) {
+    return 0
+  }
+
+  await database.insert(outbox).values(rows)
+
+  return rows.length
+}
+
+/**
+ * Writes the notification outbox rows for a readiness shift inside the
+ * transaction the caller is in. One `PENDING` row is written per selected
+ * channel of the technician (`notification_preferences` for `eventType`);
+ * without a selection the configured instance chain of §11.1 is used. A
+ * second call while a row for the same shift and event is still `PENDING`
+ * writes no additional row (`ADR-0021`, WP-M14-28). Returns the number of
+ * rows written; an unconfigured environment writes none.
+ */
+export async function enqueueOncallOutbox(
+  database: DbLike,
+  { shift, eventType, userId }: {
+    shift: OutboxShift
+    eventType: NotificationEventType
+    userId: string
+  },
+  env: Env,
+): Promise<number> {
+  const [pool] = await database
+    .select({ poolName: oncallPools.name })
+    .from(oncallPools)
+    .where(eq(oncallPools.id, shift.poolId))
+    .limit(1)
+
+  if (pool === undefined) {
+    throw new Error('oncall_pool_not_found')
+  }
+
+  const target: Record<string, unknown> = {
+    poolName: pool.poolName,
+    startsAt: shift.startsAt.toISOString(),
+    endsAt: shift.endsAt.toISOString(),
+    state: shift.state,
+    shiftId: shift.id,
+  }
+
+  const selected = await database
+    .select({ channel: notificationPreferences.channel })
+    .from(notificationPreferences)
+    .where(
+      and(
+        eq(notificationPreferences.userId, userId),
+        eq(notificationPreferences.eventType, eventType),
+      ),
+    )
+
+  const channels = selected.length > 0
+    ? selected.map((row) => row.channel)
+    : configuredChannels(env).map((channel) => channel.name)
+
+  const pending = await database
+    .select({ channel: outbox.channel })
+    .from(outbox)
+    .where(
+      and(
+        eq(outbox.shiftId, shift.id),
+        eq(outbox.eventType, eventType),
+        eq(outbox.state, 'PENDING'),
+      ),
+    )
+
+  const pendingChannels = new Set(pending.map((row) => row.channel))
+
+  const ntfyAccounts = await database
+    .select({ externalId: notificationAccounts.externalId })
+    .from(notificationAccounts)
+    .where(
+      and(
+        eq(notificationAccounts.userId, userId),
+        eq(notificationAccounts.channel, 'ntfy'),
+      ),
+    )
+
+  const hasSelection = selected.length > 0
+  const firstNtfyAccount = ntfyAccounts[0]
+  const ntfyTopic = firstNtfyAccount?.externalId ?? userTopic(userId)
+
+  const rows: OutboxRow[] = []
+
+  for (const channel of channels) {
+    if (pendingChannels.has(channel)) {
+      continue
+    }
+
+    const rowTarget: Record<string, unknown> = { ...target }
+
+    if (channel === 'ntfy' && hasSelection) {
+      rowTarget.ntfyTopic = ntfyTopic
+    }
+
+    rows.push({
+      ticketId: null,
+      shiftId: shift.id,
+      eventType,
+      channel,
+      target: rowTarget,
+    })
   }
 
   if (rows.length === 0) {

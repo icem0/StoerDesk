@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   nullable `ticket_id`, with the check that exactly one of ticket and shift is
   set; the preferences check widens to the seven types. The drain writes no
   ticket event and queues no ticket fallback for a shift row.
+- A readiness row is queued and drained like a ticket row (WP-M14-28): the shared
+  contract `oncallShiftMessageSchema` carries pool name, the start and end in
+  `Europe/Berlin` formatted from the stored UTC values, the shift state and the
+  shift id; `enqueueOncallOutbox` writes one `PENDING` outbox row per selected
+  channel of the technician, the instance chain when the technician has no
+  selection, and is a no-op while a row for the same shift and event is still
+  `PENDING`; the drain branches on `shift_id`, builds the readiness message and
+  the `/oncall` deep link, never touches the ticket fields, and reuses the retry,
+  backoff and `FAILED` machinery.
 - The messenger-channel line of phase 14 is closed by an exit criterion (WP-M14-21): the integration test `apps/api/src/notifications/__tests__/phase14-exit.integration.spec.ts` runs the real API on a throwaway database and proves the three rules of the precedence of `specs/10-notifications.md` §11.4 — a stored ntfy account of a user is used for the send, the selection of the user decides the channels of `ticket.created` (one row per selected user, the instance topic replaced, a user without a selection gets none) and the mandatory minimum channels of a critical ticket are queued whatever the selection says —, the warning of §11.8 (a failed channel is visible in `GET /api/v1/notifications/status` with a failure and no pending row and the drain continues to the next channel of the chain) and the secrecy rule of §11.13 (the ntfy access token and the Matrix token travel only in the `Authorization` header, never in an answer, a log, an event payload or a published body). `GET /api/v1/notifications/status`
   answers the pending rows, the failed rows, the time of the last success and the time of the
   last failure per channel — the same rows of the outbox the dashboard tile reads
