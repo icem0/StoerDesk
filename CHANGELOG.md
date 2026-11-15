@@ -84,6 +84,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   offers its predecessor (or no predecessor), an add row creates a stage and a
   remove action names the affected rules before it saves the set without the
   stage. The German and English texts explain the chain and its cascade.
+- The stage tab is covered by page tests (WP-M14-66): served stage order,
+  predecessor options, the add row, the remove action with its affected rule
+  keys and the empty-key guard are asserted in both languages.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

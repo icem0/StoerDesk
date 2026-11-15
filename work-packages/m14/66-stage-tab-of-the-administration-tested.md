@@ -1,7 +1,7 @@
 # WP-M14-66: The stage tab of the administration is tested
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-65
 phase: 14
 context-budget: 18k tokens
@@ -53,8 +53,8 @@ Expected: all green; the test fails before WP-M14-65 and passes after it.
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/web/src/admin/__tests__/escalation-stage-tab.test.tsx`
+- Interfaces added: four page tests cover the served stage order, the predecessor options, the add row, the remove cascade hint and the empty-key guard
+- Verified: `npx vitest run apps/web/src/admin/__tests__/escalation-stage-tab.test.tsx` (4 tests), ESLint and `npm run typecheck -w @stoerdesk/web`
 - Follow-up WP: WP-M14-67 (the exit criterion of the chain)
 - Open question: none
