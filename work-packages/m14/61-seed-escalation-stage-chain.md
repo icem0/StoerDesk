@@ -1,7 +1,7 @@
 # WP-M14-61: The seed carries the stage chain
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-59, WP-M14-60
 phase: 14
 context-budget: 16k tokens
@@ -56,8 +56,8 @@ without it the spec is reported unverified (`PLAN.md` §18).
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/api/src/db/seed-escalation.ts`, `apps/api/src/db/__tests__/seed-escalation.integration.spec.ts`
+- Interfaces added: `seedEscalation` writes `predecessor` and `reached_by` with every stage row
+- Verified: `npm run typecheck -w @stoerdesk/api` and ESLint; the integration spec needs `TEST_DATABASE_URL` and is unverified in this container
 - Follow-up WP: WP-M14-62 (the stage-set API)
 - Open question: none

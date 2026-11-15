@@ -118,6 +118,8 @@ export async function seedEscalation(database: Db): Promise<EscalationSeedResult
           names: stage.names,
           position: stage.position,
           active: stage.active,
+          predecessor: stage.predecessor,
+          reachedBy: stage.reachedBy,
         })
         .onConflictDoNothing({ target: escalationStages.key })
         .returning({ key: escalationStages.key })

@@ -49,6 +49,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
     ])
     expect(stages[0]?.names).toMatchObject({ de: 'Prüfung', en: 'Review' })
 
+    const byKey = new Map(stages.map((stage) => [stage.key, stage]))
+
+    expect(byKey.get('review')?.predecessor).toBeNull()
+    expect(byKey.get('work_order')?.predecessor).toBe('review')
+    expect(byKey.get('assignment')?.reachedBy).toEqual(['assigned', 'offered'])
+    expect(byKey.get('acceptance')?.predecessor).toBe('assignment')
+    expect(byKey.get('acknowledgement')?.reachedBy).toEqual(['acknowledged'])
+
     const rules = await db.select().from(escalationRules)
 
     expect(rules.map((rule) => rule.key)).toContain('deadline_exceeded')

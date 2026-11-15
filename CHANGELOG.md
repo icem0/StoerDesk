@@ -59,6 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   predecessors, cycles, contradictory positions and unknown reaching events,
   and `escalationStagesBodySchema` accepts up to 20 stages. The default chain
   keeps its five stages as the seed only.
+- The seed writes the default chain (WP-M14-61): every stage row of a fresh
+  installation carries its predecessor and its reaching events, while an
+  existing row stays untouched and the rule seed keeps its matching clocks.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also
