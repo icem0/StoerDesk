@@ -196,6 +196,63 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
     expect(seen).toEqual(['Bearer tk_row'])
   })
 
+  it('links the ntfy message to the ticket of the row (WP-M14-68, §11.5)', async () => {
+    const rows = [row('ntfy')]
+    const { fakeDatabase, events } = inMemoryDatabase(rows)
+    const bodies: string[] = []
+
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch =
+      vi.fn((_: string | URL | Request, init?: RequestInit) => {
+        bodies.push(typeof init?.body === 'string' ? init.body : '')
+
+        return new Response('{}', { status: 200 })
+      }) as unknown as typeof fetch
+
+    const result = await drainOutbox(
+      fakeDatabase,
+      loadEnv({ NTFY_URL: 'https://ntfy.mock', NTFY_TOPIC: 'stoerdesk', PWA_URL: 'https://pwa.mock/' }),
+    )
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
+    expect(events.filter((event) => event.type === 'notification_sent')).toHaveLength(1)
+    expect(bodies[0]).toContain('"url":"https://pwa.mock/tickets/ST-2026-0001"')
+  })
+
+  it('links the telegram message to the ticket of the row (WP-M14-68, §11.5)', async () => {
+    const rows = [row('telegram')]
+    const { fakeDatabase, events } = inMemoryDatabase(rows)
+    const bodies: string[] = []
+
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch =
+      vi.fn((_: string | URL | Request, init?: RequestInit) => {
+        bodies.push(typeof init?.body === 'string' ? init.body : '')
+
+        return new Response('{}', { status: 200 })
+      }) as unknown as typeof fetch
+
+    const result = await drainOutbox(
+      fakeDatabase,
+      loadEnv({
+        TELEGRAM_BOT_TOKEN: 'mock-bot-token',
+        TELEGRAM_CHAT_ID: '@stoerdesk',
+        PWA_URL: 'https://pwa.mock',
+      }),
+    )
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
+    expect(events.filter((event) => event.type === 'notification_sent')).toHaveLength(1)
+
+    const text = JSON.parse(bodies[0] ?? '') as { text?: string }
+
+    expect(String(text.text)).toContain('https://pwa.mock/tickets/ST-2026-0001')
+  })
+
   it('ends SENT with three attempts when the channel fails twice then succeeds', async () => {
     const statuses = [500, 500, 200]
     let calls = 0

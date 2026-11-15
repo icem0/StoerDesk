@@ -435,6 +435,19 @@ WP-M14-38 (configurable statuses and transitions) are the prerequisites for
 stages that reach new workflow events; they stay in numeric order before this
 chain.
 
+**Every notification message links to its ticket (WP-M14-68, out of band in
+phase 14, requested by the office; done).** §11.5 already demanded "the deep
+link into the ticket", but every adapter linked `env.PWA_URL` — the root of the
+PWA — so a recipient in Telegram or ntfy had to find the ticket again by hand.
+**WP-M14-68** adds the `deepLink` option of `NotificationChannel.send` in
+`apps/api/src/notifications/channels/index.ts` (the registry passes it to every
+adapter, the PWA root stays the fallback) and `ticketDeepLink(pwaUrl, ticketNo)`
+in `apps/api/src/notifications/outbox.ts`, which `drainOutbox` hands to the send
+as `<pwa-url>/tickets/<ticket-number>` — the same link on a fallback row of the
+escalation chain. The link carries the ticket number only, never a `status_token`,
+a credential or contact data; the readiness link to `/oncall` (ADR-0021) stays
+with WP-M14-28.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -888,6 +901,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-65  | the administration adds, removes and chains stages (out of band)       | planned | yes     |
 | WP-M14-66  | the stage tab of the administration is tested (out of band)            | planned | yes     |
 | WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | planned | yes     |
+| WP-M14-68  | every notification message links to its ticket (out of band)      | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

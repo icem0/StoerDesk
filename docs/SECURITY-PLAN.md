@@ -282,6 +282,17 @@ storage, no path join), F re-checked: the new locale keys hold no secret and no 
 value, K re-checked: no log line is touched and the unit tests use the mock names `signal`
 and `matrix` with mock ISO timestamps. No new finding.
 
+Ticket-deep-link pass: 2026-11-15, diff `fe2d397..` (WP-M14-68 — `apps/api/src/notifications/channels/index.ts`,
+`apps/api/src/notifications/outbox.ts` and `apps/api/src/notifications/__tests__/outbox-worker.unit.spec.ts`) —
+A and B untouched (no route, no guard, no session or bearer handling changed), C re-checked for the touched
+files: `ticketDeepLink` builds `<pwa-url>/tickets/<encodeURIComponent(ticket-no)>` from the `env.PWA_URL`
+config value and the `ticketNo` of the stored outbox row — the ticket number is DB-bound, percent-encoded
+into the path and never client-supplied, no `sql` template, no interpolation and no path join of an upload
+changes, the adapters keep their signatures and add no payload field, D re-checked: the link is assembled
+in the API drain, not in the PWA, G untouched (no upload path), F untouched (no new env key), K re-checked:
+the link carries the ticket number only — never a `status_token`, never a credential, never contact data —
+and enters no log line, the two new drain tests use the mock number `ST-2026-0001`. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -369,17 +380,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (re-checked in full at the channel-status pass) | 476adba |
-| B Autorisation | complete (re-checked in full at the channel-status pass, one new route) | 476adba |
-| C Injection | complete (re-checked for the changed files at the channel-status pass) | 476adba |
-| D Frontend | complete (re-checked for the changed pages at the channel-status pass) | 476adba |
+| A Authentication | complete (no route, no session handling in the ticket-deep-link pass) | fe2d397 |
+| B Autorisation | complete (no new route in the ticket-deep-link pass) | fe2d397 |
+| C Injection | complete (re-checked for the changed files at the ticket-deep-link pass) | fe2d397 |
+| D Frontend | complete (re-checked in the ticket-deep-link pass, the link is built in the API) | fe2d397 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the channel-status pass) | 476adba |
+| K Logging/PII | complete (re-checked for the changed files at the ticket-deep-link pass) | fe2d397 |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

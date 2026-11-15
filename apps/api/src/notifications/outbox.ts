@@ -178,6 +178,21 @@ function escalationChain(env: Env): string[] {
 /** The priority an adapter may need — ntfy maps it to its own levels (WP-M14-07). */
 export type MessagePriority = NotificationMessage & { priority?: string }
 
+/**
+ * The deep link into the ticket of §11.5: the ticket detail page of the PWA
+ * (`/tickets/:ticketNo` in `apps/web/src/routes/index.tsx`). The link carries
+ * the ticket number only — never a `status_token`, never contact data, never a
+ * credential (as in WP-M14-22). Without a PWA url or without a ticket number
+ * there is no link and the channel keeps its PWA-root fallback (WP-M14-68).
+ */
+export function ticketDeepLink(pwaUrl: string, ticketNo: string): string {
+  if (pwaUrl === '' || ticketNo === '') {
+    return ''
+  }
+
+  return `${pwaUrl.replace(/\/+$/, '')}/tickets/${encodeURIComponent(ticketNo)}`
+}
+
 /** One param of the message body, or nothing when the stored row predates it. */
 const param = (value: unknown): string =>
   value === undefined || value === null ? '' : String(value)
@@ -320,15 +335,23 @@ export async function drainOutbox(
     }
 
     try {
-      // A per-user ntfy row carries its topic; every other adapter ignores the
-      // option (WP-M14-45, `NotificationChannel.send`).
-      const topic =
-        typeof row.target.ntfyTopic === 'string' ? row.target.ntfyTopic : ''
+      // A per-user ntfy row carries its topic; the ticket rows carry the deep
+      // link into the ticket of §11.5 (WP-M14-68) — every channel of the chain
+      // gets the link of the row it sends, so a fallback row keeps the same
+      // ticket link. An older row without `ticketNo` keeps the PWA root.
+      const topic = typeof row.target.ntfyTopic === 'string' ? row.target.ntfyTopic : ''
+      const deepLink = ticketDeepLink(env.PWA_URL, ticketNo)
+      const options: { topic?: string; deepLink?: string } = {}
 
-      await channel.send(
-        messageOf(row.target),
-        topic === '' ? undefined : { topic },
-      )
+      if (topic !== '') {
+        options.topic = topic
+      }
+
+      if (deepLink !== '') {
+        options.deepLink = deepLink
+      }
+
+      await channel.send(messageOf(row.target), options)
       await finishRow(database, row, 'SENT', 'notification_sent')
 
       result.sent += 1

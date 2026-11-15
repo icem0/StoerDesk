@@ -10,13 +10,32 @@ export interface NotificationMessage {
   body: string
 }
 
+/**
+ * The optional target of a send: `topic` overrides the target topic (the ntfy
+ * test topic of WP-M14-13), `deepLink` is the link of this message — the deep
+ * link into the ticket of §11.5 which the drain of
+ * `apps/api/src/notifications/outbox.ts` hands over (WP-M14-68).
+ */
+type MessageOptions = { topic?: string; deepLink?: string }
+
 export interface NotificationChannel {
   readonly name: string
-  /** `options.topic` is an optional target override, for example an ntfy test topic. */
-  send(message: NotificationMessage, options?: { topic?: string }): Promise<void>
+  send(message: NotificationMessage, options?: MessageOptions): Promise<void>
 }
 
-const signalChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+/**
+ * The link of a message: the deep link the caller handed over (the ticket of
+ * `apps/api/src/notifications/outbox.ts`), otherwise the PWA root — an empty
+ * PWA url means no link and the adapters omit it (WP-M14-68, §11.5).
+ */
+const messageLink = (env: Env, options?: MessageOptions): string =>
+  options?.deepLink ?? env.PWA_URL
+
+const signalChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendSignalNotification } = await import('./signal.js')
 
   const recipients = env.SIGNAL_RECIPIENTS.split(',')
@@ -30,11 +49,15 @@ const signalChannel = async (env: Env, message: NotificationMessage): Promise<vo
       recipients,
     },
     message,
-    env.PWA_URL,
+    messageLink(env, options),
   )
 }
 
-const matrixChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+const matrixChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendMatrixNotification } = await import('./matrix.js')
 
   await sendMatrixNotification(
@@ -44,11 +67,15 @@ const matrixChannel = async (env: Env, message: NotificationMessage): Promise<vo
       accessToken: env.MATRIX_ACCESS_TOKEN,
     },
     message,
-    env.PWA_URL,
+    messageLink(env, options),
   )
 }
 
-const ntfyChannel = async (env: Env, message: NotificationMessage, options?: { topic?: string }): Promise<void> => {
+const ntfyChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendNtfyNotification } = await import('./ntfy.js')
 
   await sendNtfyNotification(
@@ -59,11 +86,15 @@ const ntfyChannel = async (env: Env, message: NotificationMessage, options?: { t
       userTopic: options?.topic,
     },
     message,
-    env.PWA_URL,
+    messageLink(env, options),
   )
 }
 
-const emailChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+const emailChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendEmailNotification } = await import('./email.js')
 
   await sendEmailNotification(
@@ -76,11 +107,15 @@ const emailChannel = async (env: Env, message: NotificationMessage): Promise<voi
       from: env.SMTP_FROM,
     },
     message,
-    env.PWA_URL,
+    messageLink(env, options),
   )
 }
 
-const telegramChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+const telegramChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendTelegramNotification } = await import('./telegram.js')
 
   await sendTelegramNotification(
@@ -89,7 +124,7 @@ const telegramChannel = async (env: Env, message: NotificationMessage): Promise<
       chatId: env.TELEGRAM_CHAT_ID,
     },
     message,
-    env.PWA_URL,
+    messageLink(env, options),
   )
 }
 
@@ -100,7 +135,11 @@ const telegramChannel = async (env: Env, message: NotificationMessage): Promise<
  * that one read, the same shape the pg-boss jobs use (`jobs/bma-sync.ts`,
  * WP-M2-36): the drain never hands its pool to a channel.
  */
-const webPushChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+const webPushChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendWebPushNotification } = await import('./web-push.js')
   const { client, database } = createDatabase(databaseConnectionUrl(env))
 
@@ -120,7 +159,7 @@ const webPushChannel = async (env: Env, message: NotificationMessage): Promise<v
         subject: env.VAPID_SUBJECT,
       },
       message,
-      env.PWA_URL,
+      messageLink(env, options),
       subscriptions,
     )
   } finally {
@@ -157,7 +196,11 @@ const bridgeSettings = (value: unknown): Record<string, string> => {
  * A chain whose presence itself comes from the database belongs to the
  * outbox work, not to this registry.
  */
-const whatsappChannel = async (env: Env, message: NotificationMessage): Promise<void> => {
+const whatsappChannel = async (
+  env: Env,
+  message: NotificationMessage,
+  options?: MessageOptions,
+): Promise<void> => {
   const { sendWhatsAppNotification } = await import('./whatsapp.js')
   const { client, database } = createDatabase(databaseConnectionUrl(env))
 
@@ -180,7 +223,7 @@ const whatsappChannel = async (env: Env, message: NotificationMessage): Promise<
         token,
       },
       message,
-      env.PWA_URL,
+      messageLink(env, options),
     )
   } finally {
     await client.end({ timeout: 5 })
@@ -199,14 +242,14 @@ export function configuredChannels(env: Env): NotificationChannel[] {
   if (env.SIGNAL_CLI_URL !== '' && env.SIGNAL_SOURCE_NUMBER !== '') {
     channels.push({
       name: 'signal',
-      send: (message) => signalChannel(env, message),
+      send: (message, options) => signalChannel(env, message, options),
     })
   }
 
   if (env.MATRIX_HOMESERVER !== '' && env.MATRIX_ROOM_ID !== '' && env.MATRIX_ACCESS_TOKEN !== '') {
     channels.push({
       name: 'matrix',
-      send: (message) => matrixChannel(env, message),
+      send: (message, options) => matrixChannel(env, message, options),
     })
   }
 
@@ -220,14 +263,14 @@ export function configuredChannels(env: Env): NotificationChannel[] {
   if (env.SMTP_HOST !== '' && env.SMTP_FROM !== '') {
     channels.push({
       name: 'email',
-      send: (message) => emailChannel(env, message),
+      send: (message, options) => emailChannel(env, message, options),
     })
   }
 
   if (env.TELEGRAM_BOT_TOKEN !== '' && env.TELEGRAM_CHAT_ID !== '') {
     channels.push({
       name: 'telegram',
-      send: (message) => telegramChannel(env, message),
+      send: (message, options) => telegramChannel(env, message, options),
     })
   }
 
@@ -238,14 +281,14 @@ export function configuredChannels(env: Env): NotificationChannel[] {
   ) {
     channels.push({
       name: 'webpush',
-      send: (message) => webPushChannel(env, message),
+      send: (message, options) => webPushChannel(env, message, options),
     })
   }
 
   if (env.WHATSAPP_BRIDGE_URL !== '' && env.WHATSAPP_BRIDGE_TOKEN !== '') {
     channels.push({
       name: 'whatsapp',
-      send: (message) => whatsappChannel(env, message),
+      send: (message, options) => whatsappChannel(env, message, options),
     })
   }
 
