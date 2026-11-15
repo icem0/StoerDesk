@@ -1168,11 +1168,10 @@ export const detectedErrors = pgTable(
 /**
  * The escalation configuration (`specs/07-escalation.md` §7.6, ADR-0017).
  *
- * The stages are the five milestones of the ticket workflow; their keys are
- * fixed, their names and their active flag are maintained in the
- * administration. The rules carry the waiting deadline per priority, the
- * condition and their actions. The firing log makes a rule fire exactly once
- * per ticket, rule and threshold.
+ * The stages are the milestones of the ticket workflow; a stage is a row with
+ * a free key, a predecessor and the events that reach it (ADR-0023). The rules
+ * carry the waiting deadline per priority, the condition and their actions.
+ * The firing log makes a rule fire exactly once per ticket, rule and threshold.
  */
 export const escalationStages = pgTable(
   'escalation_stages',
@@ -1184,16 +1183,17 @@ export const escalationStages = pgTable(
     names: jsonb('names').notNull().default({}),
     position: integer('position').notNull().default(0),
     active: boolean('active').notNull().default(true),
+    /** The stage whose completion starts this stage's clock; NULL is the report. */
+    predecessor: text('predecessor'),
+    /** The workflow event keys that reach this stage. */
+    reachedBy: jsonb('reached_by').$type<string[]>().notNull().default([]),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex('escalation_stages_key_key').on(table.key),
     index('escalation_stages_position_idx').on(table.position),
-    check(
-      'escalation_stages_key_check',
-      sql`${table.key} IN ('review','work_order','assignment','acceptance','acknowledgement')`,
-    ),
+    index('escalation_stages_predecessor_idx').on(table.predecessor),
   ],
 )
 
@@ -1208,7 +1208,9 @@ export const escalationRules = pgTable(
     id: uuid('id').primaryKey().default(uuidDefault),
     key: text('key').notNull(),
     /** The stage of the rule; NULL for a deadline rule. */
-    stageKey: text('stage_key'),
+    stageKey: text('stage_key').references(() => escalationStages.key, {
+      onDelete: 'cascade',
+    }),
     /** The event that starts the waiting clock. */
     reference: text('reference'),
     /** The deadline per priority: `{ low, normal, high, critical }`. */
@@ -1225,14 +1227,6 @@ export const escalationRules = pgTable(
   (table) => [
     uniqueIndex('escalation_rules_key_key').on(table.key),
     index('escalation_rules_stage_key_idx').on(table.stageKey),
-    check(
-      'escalation_rules_stage_key_check',
-      sql`${table.stageKey} IS NULL OR ${table.stageKey} IN ('review','work_order','assignment','acceptance','acknowledgement')`,
-    ),
-    check(
-      'escalation_rules_reference_check',
-      sql`${table.reference} IS NULL OR ${table.reference} IN ('received_at','review_started','work_order_set','offered','assigned','accepted')`,
-    ),
     check(
       'escalation_rules_clock_check',
       sql`((${table.reference} IS NOT NULL AND ${table.minutes} IS NOT NULL) OR (${table.percent} IS NOT NULL AND ${table.percent} BETWEEN 1 AND 100))`,

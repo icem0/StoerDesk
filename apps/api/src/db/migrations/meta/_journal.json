@@ -260,6 +260,13 @@
       "when": 1794103215000,
       "tag": "0036_notification_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794103216000,
+      "tag": "0037_escalation_stage_chain",
+      "breakpoints": true
     }
   ]
 }

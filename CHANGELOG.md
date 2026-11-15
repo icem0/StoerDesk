@@ -46,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   contracts and the chain validator → seed → replace-all stage-set API → engine
   on the chain → available stages of the ticket view → administration UI and
   texts → page tests → exit criterion); the files exist in this commit.
+- The escalation stage chain lives in the database (WP-M14-59): migration
+  `0037_escalation_stage_chain` adds `predecessor` and `reached_by` to
+  `escalation_stages`, drops the fixed-key CHECKs and turns
+  `escalation_rules.stage_key` into a foreign key with `ON DELETE cascade`. The
+  installed five-stage chain is backfilled, so a running installation keeps its
+  behaviour; the Drizzle schema mirrors the new columns and the cascade.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

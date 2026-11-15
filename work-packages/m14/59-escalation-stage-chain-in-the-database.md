@@ -1,7 +1,7 @@
 # WP-M14-59: The escalation stage chain in the database
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-58
 phase: 14
 context-budget: 16k tokens
@@ -74,6 +74,6 @@ journal up to `0037`.
 
 - Files changed: the migration, the schema, the journal
 - Interfaces added: the columns `predecessor` and `reached_by`, the cascade key
-- Verified: (to be filled by the implementing run)
+- Verified: `npm run typecheck --workspaces --if-present` and ESLint of the schema; the migration is not applied in this container (no database run)
 - Follow-up WP: WP-M14-60 (the shared contracts)
 - Open question: none
