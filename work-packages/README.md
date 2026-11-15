@@ -432,8 +432,15 @@ the last active status is never switched off or deleted (`409 status_last_active
 contracts `ticketStatusCreateRequestSchema`, `ticketStatusUpdateRequestSchema`,
 `ticketStatusResponseSchema` and `ticketStatusListResponseSchema` of `packages/shared/src/schemas/ticket.ts`
 bind request and answer. `apps/api/src/tickets/__tests__/status-management.integration.spec.ts`
-proves the rules on a throwaway database. WP-M14-37 (status UI), WP-M14-38 … WP-M14-41,
-WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+proves the rules on a throwaway database. **WP-M14-37** is implemented as the status
+administration UI: `apps/web/src/admin/status-page.tsx` (`StatusPage`) renders the
+`ticket_statuses` table — key, the names de/en, the colour, the position, the active and
+terminal flags and the `ticketCount` — behind `settings.read` at `/admin/statuses`,
+`settings.write` offers the create form and the per-row edit/delete buttons;
+`apps/web/src/admin/status-form.tsx` (`StatusForm`) validates create and edit bodies
+client-side against the shared schemas and the key of an existing status stays immutable.
+A delete goes through a confirmation dialog and answers `409 status_in_use` / `409 status_last_active`
+by name. WP-M14-38 … WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
 
 **Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
 link carries the host. The office wants the subscription QR of the own
@@ -964,7 +971,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-33  | the ntfy deep link of the QR carries the host (out of band)               | done    | yes     |
 | WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | done    | yes     |
 | WP-M14-36  | ticket status management API (CRUD for statuses)                          | done    | yes     |
-| WP-M14-37  | ticket status management UI (admin page for statuses)                     | planned | yes     |
+| WP-M14-37  | ticket status management UI (admin page for statuses)                     | done    | yes     |
 | WP-M14-38  | configurable ticket transitions in DB + DB-driven workflow engine         | planned | yes     |
 | WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |

@@ -724,9 +724,18 @@ a malformed body `400 invalid_request` with the field paths, a taken key `409 st
 a status a ticket still carries `409 status_in_use` with its number and the last active status
 is never switched off or deleted (`409 status_last_active`); the key of an existing status is
 immutable. `apps/api/src/tickets/__tests__/status-management.integration.spec.ts` proves it.
-WP-M14-37 (status UI), WP-M14-38 … WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open
-in numeric order.
-
+**WP-M14-37 — the status administration UI (done).** `apps/web/src/admin/status-page.tsx`
+(`StatusPage`, route `/admin/statuses` behind `RequireSession`) renders the `ticket_statuses`
+table of WP-M14-35 — key, the names de/en, the colour with a swatch, the position, the active
+and terminal flags and the `ticketCount` — behind `settings.read`; `settings.write` adds the
+create form and the per-row edit and delete buttons. A delete first asks for confirmation and
+a rejected one names its code (`409 status_in_use`, `409 status_last_active`).
+`apps/web/src/admin/status-form.tsx` (`StatusForm`) creates or edits one status and validates
+the body client-side against the shared schemas of WP-M14-36 before the request — the key of
+an existing status never enters an edit body. The settings menu gained the entry `statuses`
+(`auth.links.statuses` in de and en). `apps/web/src/admin/__tests__/status-page.test.tsx`
+proves the table, the guards, the forms and both rejects. WP-M14-38 … WP-M14-41, WP-M14-54 and
+WP-M14-70 … WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

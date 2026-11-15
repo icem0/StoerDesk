@@ -546,6 +546,59 @@
       },
       "curlTokenHint": "The command carries $NTFY_TOKEN: the stored key is never shown — export a variable of that name in your shell.",
       "ntfyTokenHint": "No key stored yet: a self-hosted ntfy server needs its access token in the secret field — without it every publish is refused."
+    },
+    "status": {
+      "title": "Ticket statuses",
+      "hint": "The ticket statuses are configuration: their names, their colour and their position, their active switch and their terminal flag. A status that a ticket still carries can never be deleted.",
+      "loading": "Loading …",
+      "sessionNotice": "The status administration requires a valid sign-in.",
+      "forbiddenNotice": "No permission for the status administration.",
+      "readOnly": "Read only: the permission to write settings is missing.",
+      "saved": "Saved.",
+      "deleted": "Status deleted.",
+      "on": "active",
+      "off": "inactive",
+      "terminalYes": "final",
+      "terminalNo": "not final",
+      "edit": "Edit",
+      "delete": "Delete",
+      "removeHint": "Remove the status {{key}} permanently?",
+      "removeConfirm": "Remove",
+      "removeCancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "createTitle": "Create status",
+      "editTitle": "Edit status {{key}}",
+      "table": {
+        "key": "Key",
+        "nameDe": "Name de",
+        "nameEn": "Name en",
+        "color": "Colour",
+        "position": "Position",
+        "active": "Active",
+        "terminal": "Terminal",
+        "tickets": "Tickets",
+        "actions": "Actions"
+      },
+      "fields": {
+        "key": "Key",
+        "nameDe": "Name de",
+        "nameEn": "Name en",
+        "color": "Colour",
+        "position": "Position",
+        "active": "Active",
+        "isTerminal": "Terminal"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "status_not_found": "Status not found.",
+        "status_key_taken": "This status key is already in use.",
+        "status_in_use": "A ticket still carries this status.",
+        "status_last_active": "The last active status cannot be switched off or deleted.",
+        "unknown": "Saving failed."
+      }
     }
   },
   "apiKeys": {

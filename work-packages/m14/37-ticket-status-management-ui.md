@@ -1,7 +1,7 @@
 # WP-M14-37: Ticket status management UI
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-36
 phase: 14
 context-budget: 18k tokens
@@ -20,8 +20,8 @@ files-write:
 
 - apps/web/src/admin/status-page.tsx
 - apps/web/src/admin/status-form.tsx
-- apps/web/src/i18n/locales/de/settings.json
-- apps/web/src/i18n/locales/en/settings.json
+- apps/web/src/routes/index.tsx, apps/web/src/settings/settings-page.tsx
+- apps/web/src/i18n/locales/{de,en}/{settings,common}.json
 
 interfaces:
 
@@ -32,7 +32,8 @@ interfaces:
 
 1. `apps/web/src/admin/status-page.tsx`: `StatusPage` — Tabelle aller Stati mit key, Namen (de/en), Farbe, Position, aktiv/terminal; Buttons für Neu/Bearbeiten/Löschen; Guard `settings.write`.
 2. `apps/web/src/admin/status-form.tsx`: Dialog/Formular zum Anlegen und Editieren eines Status (key, Namen de/en, Farbe, aktiv, terminal); Validierung clientseitig via Zod.
-3. `apps/web/src/i18n/locales/{de,en}/settings.json`: Keys `admin.status.*` (Titel, Spalten, Formular-Labels, Bestätigungsdialoge, Fehler).
+3. `apps/web/src/i18n/locales/{de,en}/settings.json`: Keys `admin.status.*` (Titel, Spalten, Formular-Labels, Bestätigungsdialoge, Fehler); `apps/web/src/i18n/locales/{de,en}/common.json`: `auth.links.statuses`.
+4. `apps/web/src/routes/index.tsx`: Route `/admin/statuses` behind `RequireSession`. `apps/web/src/settings/settings-page.tsx`: the menu entry `statuses` in the administration group.
 
 ## Non-goals
 
@@ -50,12 +51,12 @@ npm run i18n:check
 npm run wp:check
 ```
 
-Expected: alle grün; `i18n:check` bestätigt de/en Parität für neue Keys; die Seite rendert die neun Seed-Stati; Anlegen/Editieren/Löschen funktioniert gegen die API.
+Expected: alle grün; `i18n:check` bestätigt de/en Parität für neue Keys; `apps/web/src/admin/__tests__/status-page.test.tsx` proves the table, the guards, the create/edit buttons and the `409 status_in_use`/`409 status_last_active` answers of a delete.
 
 ## Handoff
 
-- Files changed: `status-page.tsx`, `status-form.tsx`, `settings.json` (de/en)
-- Interfaces added: `StatusPage`, `StatusForm`
-- Verified: `npm run check` grün
+- Files changed: `status-page.tsx`, `status-form.tsx`, `routes/index.tsx`, `settings-page.tsx`, `settings.json` + `common.json` (de/en), test `status-page.test.tsx`
+- Interfaces added: `StatusPage` (`/admin/statuses`), `StatusForm`
+- Verified: `npm run check` green (typecheck, eslint, vitest 1255 tests, `i18n:check`, `wp:check` and the 14 Playwright e2e tests)
 - Follow-up WP: WP-M14-38 (konfigurierbare Transitionen in DB + DB-gestützte Engine)
-- Open question (if any): wo in der Navigation/status-Menü die Status-Seite eingebunden wird (WP-M14-01 hat das Admin-Menü bereits ins Settings-Menü verschoben).
+- Open question (if any): resolved — the page is a route `/admin/statuses` and an entry of the administration group of the settings menu.

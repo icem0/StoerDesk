@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The status administration page (WP-M14-37): `apps/web/src/admin/status-page.tsx` (`StatusPage`)
+  answers `/admin/statuses` — the `ticket_statuses` table of WP-M14-35 with key, the names de/en,
+  the colour (a swatch next to the hex), the position, the active and terminal flags and the number
+  of tickets that carry each status. `settings.read` reads the table, `settings.write` adds the
+  create form and the per-row edit and delete buttons; a delete first asks for confirmation and a
+  rejected one names its code (`409 status_in_use`, `409 status_last_active`).
+  `apps/web/src/admin/status-form.tsx` (`StatusForm`) creates or edits one status and validates the
+  body client-side against `ticketStatusCreateRequestSchema`/`ticketStatusUpdateRequestSchema` before
+  the request — the key of an existing status never enters an edit body. The administration group of
+  the settings menu (`apps/web/src/settings/settings-page.tsx`) links the page (`auth.links.statuses`
+  in de and en), the route sits behind `RequireSession` in `apps/web/src/routes/index.tsx` and
+  `apps/web/src/admin/__tests__/status-page.test.tsx` proves the table, the guards, the forms and
+  both rejects.
 - The ticket status administration API (WP-M14-36, WP-M14-35): the status of a ticket is a
   machine key of the `ticket_statuses` table, so `apps/api/src/tickets/status-service.ts` and
   `status-routes.ts` answer `GET`/`POST`/`PATCH`/`DELETE /api/v1/admin/statuses` behind

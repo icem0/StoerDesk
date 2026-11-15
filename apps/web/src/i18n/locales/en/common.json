@@ -96,7 +96,8 @@
       "webhooks": "Webhooks",
       "branding": "Appearance",
       "escalation": "Escalation",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "statuses": "Statuses"
     },
     "errors": {
       "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",

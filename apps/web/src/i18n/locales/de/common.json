@@ -96,7 +96,8 @@
       "webhooks": "Webhooks",
       "branding": "Darstellung",
       "escalation": "Eskalation",
-      "notifications": "Benachrichtigungen"
+      "notifications": "Benachrichtigungen",
+      "statuses": "Status"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",

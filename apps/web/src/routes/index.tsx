@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 import { App } from '../App'
 import { ApiKeysPage } from '../admin/api-keys-page'
 import { ChannelsPage } from '../admin/channels-page'
+import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
@@ -106,6 +107,17 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <ChannelsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The status administration of WP-M14-37: the ticket statuses are
+        // configuration (`specs/07-escalation.md` §7.9), the table of
+        // `ticket_statuses` is created and edited here.
+        path: '/admin/statuses',
+        element: (
+          <RequireSession>
+            <AdminStatusPage />
           </RequireSession>
         ),
       },

@@ -546,6 +546,59 @@
         "failed": "{{count}} fehlgeschlagen",
         "lastFailure": "at {{time}}"
       }
+    },
+    "status": {
+      "title": "Statusverwaltung",
+      "hint": "The Ticket-Status are configuration: their names, their colour and position, their active switch and terminal flag. A ticket that still carries a status can never be deleted.",
+      "loading": "Lädt …",
+      "sessionNotice": "The Status administration requires a valid login.",
+      "forbiddenNotice": "No permission for the Status administration.",
+      "readOnly": "Only readable: To change is missing the permission „Settings write“.",
+      "deleted": "Status deleted.",
+      "on": "active",
+      "off": "inactive",
+      "terminalYes": "final",
+      "terminalNo": "not final",
+      "edit": "Bearbeiten",
+      "delete": "Lösch",
+      "removeHint": "Remove the status {{key}} permanently?",
+      "removeConfirm": "Entfernen",
+      "removeCancel": "Abbrechen",
+      "create": "Anlegen",
+      "save": "Speichern",
+      "createTitle": "Status anlegen",
+      "editTitle": "Status {{key}} edit",
+      "table": {
+        "key": "Schl.",
+        "nameDe": "Name (de)",
+        "nameEn": "Name (en)",
+        "color": "Color",
+        "position": "Position",
+        "active": "Aktiv",
+        "terminal": "Final",
+        "tickets": "Tickets",
+        "actions": "Actions"
+      },
+      "fields": {
+        "key": "Schl.",
+        "nameDe": "Name (de)",
+        "nameEn": "Name (en)",
+        "color": "Color",
+        "position": "Position",
+        "active": "Aktiv",
+        "isTerminal": "Final"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please log in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Input invalid – please check the fields.",
+        "status_not_found": "Status not found.",
+        "status_key_taken": "This status key is already taken.",
+        "status_in_use": "Tickets still use this status.",
+        "status_last_active": "The last active status can neither be switched off nor deleted.",
+        "unknown": "Saving failed."
+      },
+      "saved": "Saved."
     }
   },
   "apiKeys": {
