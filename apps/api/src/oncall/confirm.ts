@@ -7,7 +7,7 @@ import { loadEffectivePermissions } from '../auth/requirePermission'
 
 type Db = Database['database']
 
-const CONFIRMABLE_STATES = new Set<OnCallShiftState>(['PLANNED'])
+const CONFIRMABLE_STATES = new Set<OnCallShiftState>(['DRAFT', 'PLANNED'])
 const DECLINEABLE_STATES = new Set<OnCallShiftState>(['PLANNED', 'CONFIRMED'])
 
 export class OncallConfirmError extends Error {
@@ -102,7 +102,8 @@ async function hasReplay(database: Db, shiftId: string, clientUuid: string): Pro
 }
 
 /**
- * Confirms a `PLANNED` shift. Only the assigned technician or an admin may act.
+ * Confirms a `DRAFT` or `PLANNED` shift (ADR-0021: the acceptance of an
+ * assigned readiness publishes it). Only the assigned technician or an admin may act.
  * Sets `state = CONFIRMED` and `confirmed_at` and writes one `confirmed`
  * `oncall_events` row in the same transaction. A repeated `clientUuid` answers
  * with the current shift and writes no second event.

@@ -391,7 +391,7 @@ function ShiftCard({
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        {shift.state === 'PLANNED' && mayConfirm ? (
+        {(shift.state === 'DRAFT' || shift.state === 'PLANNED') && mayConfirm ? (
           <button
             className="rounded bg-emerald-700 px-3 py-1 text-white disabled:opacity-50"
             disabled={shiftActions.isPending}

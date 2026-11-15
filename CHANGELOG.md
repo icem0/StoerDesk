@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- An assigned readiness can be accepted (WP-M14-30, ADR-0021): `CONFIRMABLE_STATES`
+  in `apps/api/src/oncall/confirm.ts` now holds `DRAFT` and `PLANNED`, so the
+  assigned technician — or an admin — confirms a `DRAFT` readiness into `CONFIRMED`
+  with `confirmed_at` and the single append-only `confirmed` `oncall_events` row in
+  the same transaction; the decline rule, the `oncall_shift_started` rule and the
+  `clientUuid` idempotency stay unchanged. `apps/web/src/features/oncall/my-shifts-page.tsx`
+  renders the confirm button for a `DRAFT` shift of the own technician next to `PLANNED`;
+  a `DRAFT` shift of another technician still shows no action and the decline and swap
+  buttons keep their states. `apps/api/src/oncall/__tests__/confirm.integration.spec.ts`
+  proves that a `DRAFT` shift answers `200` with the shift in `CONFIRMED`, that a repeat
+  with the same `clientUuid` writes no second event and that a `DECLINED` or `UNFILLED`
+  shift still refuses with `409 oncall_invalid_shift_state`.
 - ntfy as an optional Compose profile (WP-M14-69, ADR-0024): `docker-compose.yml`
   gains the service `ntfy` with `profiles: [ntfy]`, the image pinned by
   `${NTFY_IMAGE:-binwiederhier/ntfy}`, the command `serve`, `restart:

@@ -1,7 +1,7 @@
 # WP-M14-30: An assigned readiness can be accepted
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-29
 phase: 14
 milestone: m14
@@ -60,8 +60,10 @@ Expected: all green; the extended spec fails before the change and passes after 
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/oncall/confirm.ts, apps/web/src/features/oncall/my-shifts-page.tsx,
+  apps/api/src/oncall/__tests__/confirm.integration.spec.ts
+- Interfaces added: `CONFIRMABLE_STATES` — `DRAFT` and `PLANNED`; the readiness page shows
+  the confirm button for a `DRAFT` shift of the own technician
+- Verified: `npm run check` green, `confirm.integration.spec.ts` 18/18 on a throwaway database
 - Follow-up WP: WP-M14-31 (`31-unconfirmed-readiness-reminder.md`)
 - Open question: none

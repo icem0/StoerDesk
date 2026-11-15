@@ -91,6 +91,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    async function createDraftShift(actorCookie: string, userId: string) {
+      return app.inject({
+        method: 'POST',
+        url: '/api/v1/oncall/shifts',
+        headers: { cookie: actorCookie },
+        payload: { poolId, userId, publish: false },
+      })
+    }
+
     function postConfirm(cookie: string, id: string, body?: Record<string, unknown>) {
       return app.inject({
         method: 'POST',
@@ -218,6 +227,57 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ).toBe(true)
     })
 
+    it('confirms a DRAFT readiness as the assigned technician', async () => {
+      const created = await createDraftShift(cookies['admin'], oncallId)
+      const shiftId = created.json<ShiftRow>().id
+
+      expect(created.json<ShiftRow>().state).toBe('DRAFT')
+
+      const response = await postConfirm(cookies['oncall'], shiftId)
+
+      expect(response.statusCode).toBe(200)
+      const body = response.json<ShiftRow>()
+      expect(body.state).toBe('CONFIRMED')
+      expect(body.confirmedAt).not.toBeNull()
+
+      const stored = await shiftOf(shiftId)
+      expect(onlyRow(stored, 'shift').state).toBe('CONFIRMED')
+      expect(onlyRow(stored, 'shift').confirmedAt).not.toBeNull()
+
+      const events = await eventsFor(shiftId)
+      expect(
+        events.some((event) => (event.payload as { type?: string }).type === 'confirmed'),
+      ).toBe(true)
+    })
+
+    it('confirms a DRAFT readiness as an admin', async () => {
+      const created = await createDraftShift(cookies['admin'], oncallId)
+      const shiftId = created.json<ShiftRow>().id
+
+      const response = await postConfirm(cookies['admin'], shiftId)
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<ShiftRow>().state).toBe('CONFIRMED')
+    })
+
+    it('answers a repeated clientUuid on a DRAFT confirm with 200 and writes no second event', async () => {
+      const clientUuid = '22222222-2222-4222-8222-222222222222'
+      const created = await createDraftShift(cookies['admin'], oncallId)
+      const shiftId = created.json<ShiftRow>().id
+
+      const first = await postConfirm(cookies['oncall'], shiftId, { clientUuid })
+      expect(first.statusCode).toBe(200)
+      expect(first.json<{ replayed?: boolean }>().replayed).toBeUndefined()
+
+      const before = await eventsFor(shiftId)
+
+      const second = await postConfirm(cookies['oncall'], shiftId, { clientUuid })
+      expect(second.statusCode).toBe(200)
+
+      const after = await eventsFor(shiftId)
+      expect(after).toHaveLength(before.length)
+    })
+
     it('declines a PLANNED shift with a reason as the assigned technician', async () => {
       const created = await createPlannedShift(cookies['admin'], oncallId)
       const shiftId = created.json<ShiftRow>().id
@@ -280,7 +340,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<ShiftRow>().state).toBe('CONFIRMED')
     })
 
-    it('rejects confirming a non-PLANNED shift with 409', async () => {
+    it('rejects confirming a non-PLANNED/DRAFT shift with 409', async () => {
       const unfilled = await app.inject({
         method: 'POST',
         url: '/api/v1/oncall/shifts',
@@ -293,6 +353,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(response.statusCode).toBe(409)
       expect(response.json<ErrorResponseBody>().code).toBe('oncall_invalid_shift_state')
+
+      const declined = await createPlannedShift(cookies['admin'], oncallId)
+      const declinedId = declined.json<ShiftRow>().id
+      await postDecline(cookies['oncall'], declinedId, { reason: 'not available' })
+
+      const refused = await postConfirm(cookies['oncall'], declinedId)
+
+      expect(refused.statusCode).toBe(409)
+      expect(refused.json<ErrorResponseBody>().code).toBe('oncall_invalid_shift_state')
     })
 
     it('rejects declining a non-declinable shift with 409', async () => {

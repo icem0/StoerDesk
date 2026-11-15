@@ -370,6 +370,18 @@ second row. `apps/api/src/oncall/__tests__/allocation-notifications.integration.
 drives the real routes on a throwaway database and asserts the selected channel
 of a technician who selected one and the instance chain for one who did not.
 
+**WP-M14-30** is implemented: `CONFIRMABLE_STATES` in `apps/api/src/oncall/confirm.ts`
+holds `DRAFT` and `PLANNED`, so the assigned technician — or an admin — accepts their
+assigned readiness; the acceptance sets `state = CONFIRMED` and `confirmed_at` and
+writes the single append-only `confirmed` `oncall_events` row in the same transaction,
+while the decline rule (`PLANNED`/`CONFIRMED` only), the `oncall_shift_started` rule and
+the `clientUuid` idempotency stay. `apps/web/src/features/oncall/my-shifts-page.tsx`
+renders the confirm button for a `DRAFT` shift of the own technician next to `PLANNED`
+— a `DRAFT` shift of another technician still shows no action and decline and swap keep
+their states. `apps/api/src/oncall/__tests__/confirm.integration.spec.ts` proves the
+`200` of a `DRAFT` confirm, the idempotent repeat and the `409 oncall_invalid_shift_state`
+of a `DECLINED` and an `UNFILLED` shift.
+
 **Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
 link carries the host. The office wants the subscription QR of the own
 channels page to land in the ntfy app and subscribe automatically. The ntfy
@@ -892,7 +904,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-27  | the outbox and the preferences know the readiness (migration 0039)          | done    | yes     |
 | WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | done    | yes     |
 | WP-M14-29  | the allocation and a swap request enqueue their rows                       | done    | yes     |
-| WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | planned | yes     |
+| WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | done    | yes     |
 | WP-M14-31  | an unconfirmed readiness reminds once                                       | planned | yes     |
 | WP-M14-32  | the readiness selection of the technician in the settings page              | planned | yes     |
 | WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |

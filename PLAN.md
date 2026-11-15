@@ -1707,7 +1707,7 @@ the readiness page that a `DRAFT` readiness answers a confirm, **WP-M14-31** let
 the escalation scan enqueue one `oncall.unconfirmed_reminder` per unconfirmed
 shift and **WP-M14-32** puts the readiness selection of the technician on
 `/settings/notifications`. No product code in this package. **WP-M14-27**,
-**WP-M14-28** and **WP-M14-29** are implemented: WP-M14-29 makes `createShift`
+**WP-M14-28**, **WP-M14-29** and **WP-M14-30** are implemented: WP-M14-29 makes `createShift`
 and the assign branch of `updateShift` in `apps/api/src/oncall/service.ts`
 enqueue `oncall.assigned` for the technician in the transaction node the shift
 write already uses, `requestSwap` in `apps/api/src/oncall/swaps.ts` enqueue
@@ -1716,7 +1716,12 @@ the whole pool notifies only the requester) — all through `enqueueOncallOutbox
 of WP-M14-28, never in a channel call — and `assignedAnnouncementQueued` keeps
 the announcement idempotent (a `PENDING` or `SENT` `oncall.assigned` row queues
 nothing again); the new integration spec drives the real routes on a throwaway
-database.
+database. **WP-M14-30** adds `DRAFT` to `CONFIRMABLE_STATES` in
+`apps/api/src/oncall/confirm.ts` (`specs/04-oncall.md` §4a.4, ADR-0021), shows the
+confirm button of a `DRAFT` readiness of the own technician on the readiness page
+and extends the confirm integration spec with the `DRAFT` accept, its idempotent
+repeat and the `409 oncall_invalid_shift_state` of a `DECLINED` and an `UNFILLED`
+shift.
 
 **The ntfy deep link carries the host (WP-M14-33, out of band in phase 14,
 requested by the office).** The office wants the subscription QR of the own

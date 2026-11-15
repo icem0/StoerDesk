@@ -313,6 +313,21 @@ state and the shift id only — no name, no contact value, no secret — and the
 integration test writes throwaway users with `example.org` addresses and mock
 channels only. No new finding.
 
+Confirm-draft pass: 2026-11-15, diff `68cded7..` (WP-M14-30 —
+`apps/api/src/oncall/confirm.ts`, `apps/web/src/features/oncall/my-shifts-page.tsx`
+and the extended `apps/api/src/oncall/__tests__/confirm.integration.spec.ts`) — areas
+A and B re-checked in full (no new route, no new capability and no bearer scope: the
+confirm and decline routes stay the existing `POST /api/v1/oncall/shifts/:id/{confirm,decline}`
+behind their `oncall.confirm` preHandler with the service-level owner/admin check, so the
+route table gains no row), C re-checked for `confirm.ts`: the change widens one in-memory
+state set (`CONFIRMABLE_STATES` now holds `DRAFT` and `PLANNED`), it adds no select, insert
+or interpolation and the shift update plus the `confirmed` event write stay drizzle-bound in
+one transaction, D re-checked for the web page: the `DRAFT` branch only decides whether the
+existing confirm button renders — the request, the offline queue and the rendered state
+labels are unchanged and carry no value beyond what the user already sees, K re-checked for
+the touched test: the new shift fixtures use `example.org` addresses and mock pool names,
+the new `clientUuid` is a mock UUID literal and no log line is touched. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -400,17 +415,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (no route, no session handling in the readiness-allocation pass) | eb4744a |
-| B Autorisation | complete (no new route in the readiness-allocation pass) | eb4744a |
-| C Injection | complete (re-checked for the changed files at the readiness-allocation pass) | eb4744a |
-| D Frontend | complete (re-checked in the ticket-deep-link pass, the link is built in the API) | fe2d397 |
+| A Authentication | complete (no route, no session handling in the confirm-draft pass) | 68cded7 |
+| B Autorisation | complete (no new route in the confirm-draft pass) | 68cded7 |
+| C Injection | complete (re-checked for the changed files at the confirm-draft pass) | 68cded7 |
+| D Frontend | complete (re-checked in the confirm-draft pass, only a button state was added) | 68cded7 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the readiness-allocation pass) | eb4744a |
+| K Logging/PII | complete (re-checked for the changed files at the confirm-draft pass) | 68cded7 |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future
