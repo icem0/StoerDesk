@@ -819,6 +819,21 @@ group of the settings menu gained the entry `transitions` (`auth.links.transitio
 `apps/web/src/admin/__tests__/transition-page.test.tsx` proves the table, the guards, both forms,
 the confirmation dialog, the two rejects and the empty-workflow notice. WP-M14-40, WP-M14-41,
 WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+**WP-M14-40 is implemented** (the database layer of the `status_change` escalation action): the
+planned package mixed database, contract, engine and UI over the four-file limit of `PLAN.md` §17
+and named the taken migration number `0036` (that number belongs to
+`0036_notification_verification.sql`), so it is split in this commit into **WP-M14-40** (database),
+**WP-M14-40b** (the shared contract and the engine) and **WP-M14-40c** (the administration UI) —
+the three documents exist here and run in numeric order. Migration
+`0042_escalation_action_status_change.sql` drops `escalation_actions_type_check` of `0031` and
+recreates it with the fourth type `status_change`, widening the CHECK without touching a row of an
+installed database; `apps/api/src/db/schema.ts` mirrors it and the journal reaches `0042`. The
+target status lives in the `config` jsonb (`{ toStatus }`) — jsonb can carry no foreign key, so the
+service validates it against `ticket_statuses` in WP-M14-40b (the rule of WP-M14-39
+`400 invalid_status_key`); `specs/07-escalation.md` §7.5 gains the `status_change` row and §7.12
+replaces the boundary „the escalation never changes a ticket state" with the rule that only such an
+action moves the status, through a step of the `ticket_transitions` table of WP-M14-38a (ADR-0025).
+WP-M14-40b, WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

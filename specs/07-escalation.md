@@ -120,9 +120,14 @@ the night.
 | `notify` | `channels` (a subset of the configured channels) | one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
 | `history` | `text` (optional, 1–500 characters) | one append-only `escalation_note` event in the ticket history |
+| `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
 
-The actions of the first version never change a ticket: no status, no assignment,
-no deadline. A rule writes the `escalated` event and performs its actions.
+Only a `status_change` action may move the status of a ticket (WP-M14-40 … WP-M14-40c):
+it performs a step of the configurable transition table, so the workflow columns
+stay keyed by the `event_key` of that step and an unknown target status answers
+`400 invalid_status_key` on `PUT /api/v1/escalation/config` (WP-M14-40b). No action
+of a rule ever changes the assignment, the priority, the deadline or the work order
+of a ticket.
 
 ## 7.6 Data model
 
@@ -224,7 +229,10 @@ predecessor, `work_order` ← `review`, `assignment` ← `work_order`,
 - The manual stage catalogue, the `escalation_set` event and
   `POST /api/v1/tickets/:ticketNo/escalate` are removed: the workflow already
   records who reached which milestone.
-- The escalation never changes a ticket state, an assignment or a deadline.
+- Only a `status_change` action of a fired rule moves the status of a ticket
+  (WP-M14-40 … WP-M14-40b): it performs a step of the `ticket_transitions` table
+  (§7.13), so the workflow columns stay keyed by the `event_key` of that step. No
+  action changes an assignment, a priority, a deadline or a work order.
 - Closed, cancelled, acknowledged and suspected-spam tickets never escalate.
 - An open pause pauses the rule clock exactly as it pauses the timeline.
 - The notifications of the first version are external systems only; there is no

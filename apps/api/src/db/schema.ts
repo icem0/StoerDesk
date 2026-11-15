@@ -1252,7 +1252,7 @@ export const escalationRules = pgTable(
   ],
 )
 
-/** The actions of a rule: notify (channels), webhook (endpoints), history. */
+/** The actions of a rule: notify (channels), webhook (endpoints), history, status_change (`config.toStatus`, WP-M14-40). */
 export const escalationActions = pgTable(
   'escalation_actions',
   {
@@ -1277,7 +1277,7 @@ export const escalationActions = pgTable(
     index('escalation_actions_rule_key_idx').on(table.ruleKey),
     check(
       'escalation_actions_type_check',
-      sql`${table.type} IN ('notify','webhook','history')`,
+      sql`${table.type} IN ('notify','webhook','history','status_change')`,
     ),
   ],
 )

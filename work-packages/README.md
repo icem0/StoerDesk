@@ -653,6 +653,22 @@ proves the table, the guards, both forms, the confirmation dialog, the two rejec
 empty-workflow notice. WP-M14-40, WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in
 numeric order.
 
+**WP-M14-40 is implemented (the database layer of the `status_change` escalation action).** The
+planned package mixed the database, the shared contract, the engine and the UI over the four-file
+limit of `PLAN.md` §17 and named the taken migration number `0036` — that number belongs to
+`0036_notification_verification.sql` — so it is split in this commit into **WP-M14-40** (the
+database), **WP-M14-40b** (the contract and the engine) and **WP-M14-40c** (the administration
+UI); the three documents exist here and run in numeric order. Migration
+`0042_escalation_action_status_change.sql` drops `escalation_actions_type_check` of `0031` and
+recreates it with the fourth type `status_change`; `apps/api/src/db/schema.ts` mirrors the CHECK
+and the journal reaches `0042`. The target status lives in the `config` jsonb (`{ toStatus }`) —
+a foreign key is impossible in jsonb, so the service validates it against `ticket_statuses` in
+WP-M14-40b with the `400 invalid_status_key` rule of WP-M14-39 — and no new column and no existing
+action row is touched. `specs/07-escalation.md` §7.5 gains the `status_change` row and §7.12
+replaces the boundary that the escalation never changes a ticket state: only such an action moves
+the status, and only through a step of the `ticket_transitions` table of WP-M14-38a (ADR-0025).
+WP-M14-40b, WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1081,7 +1097,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-38c | the workflow engine reads the transition table                           | done    | yes     |
 | WP-M14-39  | the ticket transition administration API (CRUD)                             | done    | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | done    | yes     |
-| WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |
+| WP-M14-40  | status_change as escalation action — the database layer (migration 0042)  | done    | yes     |
+| WP-M14-40b | the status_change contract and the engine (config jsonb, dispatcher)       | planned | yes     |
+| WP-M14-40c | status_change in the escalation administration UI                          | planned | yes     |
 | WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
 | WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | done    | yes     |
 | WP-M14-43  | work order as free text (UI + i18n)                                       | done    | yes     |

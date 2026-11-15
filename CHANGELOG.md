@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The `status_change` escalation action becomes legal in the database (WP-M14-40, the database
+  layer of the action): the planned package mixed database, contract, engine and UI over the four
+  source-file limit of `PLAN.md` §17 and named the taken migration number `0036`
+  (`0036_notification_verification.sql`), so it is split in this commit into WP-M14-40 (database),
+  WP-M14-40b (the shared contract and the engine) and WP-M14-40c (the administration UI) — the three
+  documents exist and run in numeric order. Migration `0042_escalation_action_status_change.sql`
+  drops `escalation_actions_type_check` of `0031` and recreates it with the fourth type
+  `status_change`, widening the CHECK without touching a row of an installed database;
+  `apps/api/src/db/schema.ts` mirrors the CHECK and the journal reaches `0042`. The target status
+  stays in the `config` jsonb (`{ toStatus }`) — jsonb cannot carry a foreign key, so WP-M14-40b
+  validates it against `ticket_statuses` with the `400 invalid_status_key` rule of WP-M14-39 — and
+  `specs/07-escalation.md` §7.5 gains the `status_change` row while §7.12 replaces the boundary
+  "the escalation never changes a ticket state": only such an action moves the status, and only
+  through a step of the `ticket_transitions` table of WP-M14-38a (ADR-0025).
 - The transition administration gets its page (WP-M14-39b, the UI of the transition administration):
   `apps/web/src/admin/transition-page.tsx` renders the `ticket_transitions` table of WP-M14-38a —
   the row identity, the step from `from_status` to `to_status`, the `event_key` and the `active`
