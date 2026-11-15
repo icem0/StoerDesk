@@ -279,7 +279,19 @@
         "nameEn": "Name (Englisch)",
         "active": "Aktiv",
         "on": "aktiv",
-        "off": "inaktiv"
+        "off": "inaktiv",
+        "position": "Position",
+        "key": "Schlüssel",
+        "predecessor": "Vorgänger",
+        "predecessorNone": "Kein Vorgänger",
+        "add": "Stufe hinzufügen",
+        "addConfirm": "Stufe anlegen",
+        "addInvalid": "Schlüssel, beide Namen und eine Position zwischen 1 und 20 sind erforderlich.",
+        "remove": "Stufe entfernen",
+        "removeHint": "Die Stufe wird aus der Kette entfernt; ihre Regeln werden mit entfernt.",
+        "removeRules": "Betroffene Regeln",
+        "removeConfirm": "Stufe entfernen",
+        "removeCancel": "Abbrechen"
       },
       "rule": {
         "key": "Schlüssel",
@@ -397,6 +409,7 @@
       "help": {
         "deadlines": "Die Frist ist die Wartezeit in Stunden pro Priorität. Verstreicht sie, ohne dass die Bedingung zutrifft, feuert die Regel nicht.",
         "stages": "Eine Stufe ist ein Meilenstein des Workflows (zum Beispiel „Prüfung“). Eine Regel verbindet eine Stufe mit einer Wartezeit, einer Bedingung und den auszuführenden Aktionen.",
+        "chain": "Jede Stufe nennt ihren Vorgänger: dessen Abschluss startet die Wartezeit. Ohne Vorgänger beginnt die Wartezeit mit der Meldung. Stufen lassen sich hinzufügen und entfernen; die Regeln einer entfernten Stufe entfallen mit ihr.",
         "reference": "Das Start-Ereignis startet die Warteuhr der Regel (zum Beispiel „Meldung eingegangen“). „Keine“ bedeutet: die Regel wartet auf nichts und feuert, sobald ihre Bedingung zutrifft.",
         "condition": "Die Bedingung entscheidet, ob eine Regel feuert. „Alle“ verlangt, dass jedes Blatt zutrifft; „eine von“ genügt, wenn mindestens eines zutrifft.",
         "actions": "Die Aktionen laufen, wenn die Regel feuert: eine Benachrichtigung über die gewählten Kanäle, eine Webhook-Zustellung oder eine Notiz im Ticket-Verlauf."
@@ -405,6 +418,7 @@
         "session_invalid": "Die Anmeldung ist abgelaufen.",
         "forbidden": "Keine Berechtigung für diese Aktion.",
         "invalid_request": "Mindestens ein Wert ist ungültig: Fristen 1 bis 8760 Stunden.",
+        "stageChainInvalid": "Die Stufenkette ist ungültig: Schlüssel, Vorgänger und Position prüfen.",
         "unknown": "Speichern fehlgeschlagen."
       }
     },

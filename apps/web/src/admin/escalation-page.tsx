@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import {
-  ESCALATION_STAGE_KEYS,
   ESCALATION_REFERENCE_EVENTS,
   TICKET_PRIORITIES,
   escalationRuleConfigSchema,
@@ -92,6 +91,7 @@ export function EscalationPage() {
   const canWrite = usePermission('settings.write')
 
   const [tab, setTab] = useState('fristen')
+  const [removeCandidate, setRemoveCandidate] = useState<string | null>(null)
   const [savedHours, setSavedHours] = useState<DeadlineHours | null>(null)
   const [savedConfig, setSavedConfig] = useState<EscalationConfig | null>(null)
   const hours = savedHours ?? (settingsQuery.data?.hours ?? { low: 72, normal: 72, high: 72, critical: 72 })
@@ -224,16 +224,14 @@ export function EscalationPage() {
       {tab === 'stages' ? (
         <div className="flex flex-col gap-4">
           <p className="text-xs text-slate-500">{t('admin.escalation.help.stages')}</p>
+          <p className="text-xs text-slate-500">{t('admin.escalation.help.chain')}</p>
           <p className="text-xs text-slate-500">{t('admin.escalation.help.reference')}</p>
           <p className="text-xs text-slate-500">{t('admin.escalation.help.condition')}</p>
           <p className="text-xs text-slate-500">{t('admin.escalation.help.actions')}</p>
           <ol className="flex flex-col gap-4" data-testid="escalation-stage-list">
-            {ESCALATION_STAGE_KEYS.map((key) => {
-              const stage = config.stages.find((entry) => entry.key === key)
-
-              if (stage === undefined) {
-                return null
-              }
+            {config.stages.map((stage) => {
+              const key = stage.key
+              const otherStages = config.stages.filter((entry) => entry.key !== key)
 
               return (
                 <li key={key} className="rounded border p-3 border-slate-700 bg-slate-900">
@@ -280,6 +278,34 @@ export function EscalationPage() {
                       />
                     </label>
                     <label className="text-xs text-slate-400">
+                      {t('admin.escalation.stage.predecessor')}
+                      <select
+                        className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                        disabled={!canWrite}
+                        value={stage.predecessor ?? ''}
+                        onChange={(event) =>
+                          void saveStages.mutate({
+                            stages: config.stages.map((entry) =>
+                              entry.key === key
+                                ? {
+                                    ...entry,
+                                    predecessor:
+                                      event.target.value === '' ? null : event.target.value,
+                                  }
+                                : entry,
+                            ),
+                          })
+                        }
+                      >
+                        <option value="">{t('admin.escalation.stage.predecessorNone')}</option>
+                        {otherStages.map((entry) => (
+                          <option key={entry.key} value={entry.key}>
+                            {stageName(entry.key)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="text-xs text-slate-400">
                       {t('admin.escalation.stage.active')}
                       <input
                         className="w-16 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
@@ -295,7 +321,51 @@ export function EscalationPage() {
                         }
                       />
                     </label>
+                    {canWrite ? (
+                      <button
+                        className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                        onClick={() => setRemoveCandidate(key)}
+                        type="button"
+                      >
+                        {t('admin.escalation.stage.remove')}
+                      </button>
+                    ) : null}
                   </div>
+
+                  {removeCandidate === key ? (
+                    <div
+                      className="mt-3 rounded border border-rose-500/60 bg-rose-950/20 p-3 text-sm text-rose-200"
+                      role="alertdialog"
+                    >
+                      <p>{t('admin.escalation.stage.removeHint')}</p>
+                      <p className="mt-1 text-xs text-rose-300">
+                        {t('admin.escalation.stage.removeRules')}
+                        {': '}
+                        {rulesOfStage(key).map((rule) => rule.key).join(', ') || '—'}
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          className="min-h-11 rounded bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-500"
+                          onClick={() => {
+                            void saveStages.mutate({
+                              stages: config.stages.filter((entry) => entry.key !== key),
+                            })
+                            setRemoveCandidate(null)
+                          }}
+                          type="button"
+                        >
+                          {t('admin.escalation.stage.removeConfirm')}
+                        </button>
+                        <button
+                          className="min-h-11 rounded bg-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600"
+                          onClick={() => setRemoveCandidate(null)}
+                          type="button"
+                        >
+                          {t('admin.escalation.stage.removeCancel')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <ul className="flex flex-col gap-3" data-testid={`escalation-rules-${key}`}>
                     {rulesOfStage(key).map((rule) => (
@@ -319,10 +389,164 @@ export function EscalationPage() {
             })}
           </ol>
 
+          {canWrite ? (
+            <AddStageForm
+              stages={config.stages}
+              onAdd={(stage) => void saveStages.mutate({ stages: [...config.stages, stage] })}
+            />
+          ) : null}
+
+          {saveStages.isError ? (
+            <p role="alert" className="text-sm text-rose-400">
+              {t('admin.escalation.errors.stageChainInvalid')}
+            </p>
+          ) : null}
+
           {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
         </div>
       ) : null}
     </section>
+  )
+}
+
+const stageKeyPattern = /^[a-z][a-z0-9_]{0,39}$/
+
+/** The add row of the stage tab: a new stage joins the chain (WP-M14-65). */
+function AddStageForm({
+  stages,
+  onAdd,
+}: {
+  stages: EscalationStageConfig[]
+  onAdd: (stage: EscalationStageConfig) => void
+}) {
+  const { t } = useTranslation('settings')
+  const nextPosition = Math.min(20, Math.max(0, ...stages.map((stage) => stage.position)) + 1)
+  const [key, setKey] = useState('')
+  const [nameDe, setNameDe] = useState('')
+  const [nameEn, setNameEn] = useState('')
+  const [position, setPosition] = useState(String(nextPosition))
+  const [active, setActive] = useState(true)
+  const [predecessor, setPredecessor] = useState('')
+  const [invalid, setInvalid] = useState(false)
+
+  const positionValue = Number(position)
+  const valid =
+    stageKeyPattern.test(key) &&
+    nameDe.trim() !== '' &&
+    nameEn.trim() !== '' &&
+    Number.isInteger(positionValue) &&
+    positionValue >= 1 &&
+    positionValue <= 20
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+
+    if (!valid) {
+      setInvalid(true)
+      return
+    }
+
+    setInvalid(false)
+    onAdd({
+      key,
+      names: { de: nameDe.trim(), en: nameEn.trim() },
+      position: positionValue,
+      active,
+      predecessor: predecessor === '' ? null : predecessor,
+      reachedBy: [],
+    })
+    setKey('')
+    setNameDe('')
+    setNameEn('')
+    setActive(true)
+    setPredecessor('')
+    setPosition(String(Math.min(20, Math.max(0, ...stages.map((stage) => stage.position), positionValue) + 1)))
+  }
+
+  return (
+    <form
+      className="rounded border border-dashed p-3 border-slate-600 bg-slate-900/60"
+      data-testid="escalation-stage-add"
+      onSubmit={submit}
+    >
+      <p className="mb-2 text-sm font-medium text-slate-200">{t('admin.escalation.stage.add')}</p>
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.stage.key')}
+          <input
+            className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100"
+            required
+            value={key}
+            onChange={(event) => setKey(event.target.value)}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.stage.nameDe')}
+          <input
+            className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100"
+            required
+            value={nameDe}
+            onChange={(event) => setNameDe(event.target.value)}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.stage.nameEn')}
+          <input
+            className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100"
+            required
+            value={nameEn}
+            onChange={(event) => setNameEn(event.target.value)}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.stage.position')}
+          <input
+            className="w-20 rounded bg-slate-950 p-2 text-sm text-slate-100"
+            max={20}
+            min={1}
+            required
+            step={1}
+            type="number"
+            value={position}
+            onChange={(event) => setPosition(event.target.value)}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.stage.predecessor')}
+          <select
+            className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100"
+            value={predecessor}
+            onChange={(event) => setPredecessor(event.target.value)}
+          >
+            <option value="">{t('admin.escalation.stage.predecessorNone')}</option>
+            {stages.map((stage) => (
+              <option key={stage.key} value={stage.key}>
+                {stage.names.de ?? stage.key}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.stage.active')}
+          <input
+            checked={active}
+            type="checkbox"
+            onChange={(event) => setActive(event.target.checked)}
+          />
+        </label>
+        <button
+          className="min-h-11 rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          type="submit"
+        >
+          {t('admin.escalation.stage.addConfirm')}
+        </button>
+      </div>
+      {invalid ? (
+        <p className="mt-2 text-sm text-rose-400" role="alert">
+          {t('admin.escalation.stage.addInvalid')}
+        </p>
+      ) : null}
+    </form>
   )
 }
 

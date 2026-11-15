@@ -1,7 +1,7 @@
 # WP-M14-65: The administration adds, removes and chains stages
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-62, WP-M14-64
 phase: 14
 context-budget: 22k tokens
@@ -66,8 +66,8 @@ parity of the new keys passes.
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/web/src/admin/escalation-page.tsx`, `apps/web/src/i18n/locales/de/settings.json`, `apps/web/src/i18n/locales/en/settings.json`
+- Interfaces added: the stage tab lists `config.stages`, edits the predecessor, adds a stage and removes one with its rule keys named; the texts `stage.predecessor`, `.add`, `.remove` and `errors.stageChainInvalid` exist in both locales
+- Verified: `npm run typecheck -w @stoerdesk/web`, ESLint, `npm run i18n:check` (1447 keys in both locales) and the existing escalation page tests
 - Follow-up WP: WP-M14-66 (the stage tab tests)
 - Open question: none

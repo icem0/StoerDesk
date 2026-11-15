@@ -79,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the current status allows, so a newly added stage appears and a removed or
   inactive one does not. The fixed `ESCALATION_REACHABLE_STAGES` and
   `ESCALATION_STAGE_EVENTS` maps are gone.
+- The escalation administration edits the chain itself (WP-M14-65): the stage
+  tab renders the served stages instead of the five fixed keys, every stage
+  offers its predecessor (or no predecessor), an add row creates a stage and a
+  remove action names the affected rules before it saves the set without the
+  stage. The German and English texts explain the chain and its cascade.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

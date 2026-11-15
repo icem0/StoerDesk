@@ -279,7 +279,19 @@
         "nameEn": "Name (English)",
         "active": "Active",
         "on": "Active",
-        "off": "Inactive"
+        "off": "Inactive",
+        "position": "Position",
+        "key": "Key",
+        "predecessor": "Predecessor",
+        "predecessorNone": "No predecessor",
+        "add": "Add stage",
+        "addConfirm": "Create stage",
+        "addInvalid": "A key, both names and a position between 1 and 20 are required.",
+        "remove": "Remove stage",
+        "removeHint": "The stage leaves the chain; its rules are removed with it.",
+        "removeRules": "Affected rules",
+        "removeConfirm": "Remove stage",
+        "removeCancel": "Cancel"
       },
       "rule": {
         "key": "Key",
@@ -397,6 +409,7 @@
       "help": {
         "deadlines": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",
         "stages": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a waiting time, a condition and the actions to perform.",
+        "chain": "Every stage names its predecessor: its completion starts the waiting time. Without a predecessor the wait starts at the report. Stages can be added and removed; the rules of a removed stage leave with it.",
         "reference": "The start event starts the rule's waiting clock (for example 'Report received'). 'None' means: the rule waits for nothing and fires as soon as its condition matches.",
         "condition": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'any' is satisfied as soon as at least one matches.",
         "actions": "The actions run when the rule fires: a notification via the selected channels, a webhook delivery or a note in the ticket history."
@@ -405,6 +418,7 @@
         "session_invalid": "The sign-in has expired.",
         "forbidden": "No permission for this action.",
         "invalid_request": "At least one value is invalid: a deadline must be between 1 and 8760 hours.",
+        "stageChainInvalid": "The stage chain is invalid: check the keys, the predecessor and the position.",
         "unknown": "Saving failed."
       }
     },
