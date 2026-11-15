@@ -44,6 +44,7 @@ function stub(routes: {
   testError?: { status: number; code: string }
   verification?: unknown
   confirm?: unknown
+  status?: unknown
 }) {
   vi.stubGlobal(
     'fetch',
@@ -71,6 +72,9 @@ function stub(routes: {
       if (url.includes('/v1/admin/channels')) {
         if (init?.method === 'PATCH') return Response.json(matrix)
         return Response.json(routes.channels ?? { channels: [matrix, ntfy] })
+      }
+      if (url.includes('/v1/notifications/status')) {
+        return Response.json(routes.status ?? { channels: [] })
       }
 
       return Response.json({ code: 'not_found', params: {} }, { status: 404 })
@@ -143,9 +147,7 @@ describe('ChannelsPage', () => {
       expect(
         fetchMock.mock.calls.some(
           ([input, init]) =>
-            String(input).includes('/test') &&
-            init?.method === 'POST' &&
-            init?.body === '{}',
+            String(input).includes('/test') && init?.method === 'POST' && init?.body === '{}',
         ),
       ).toBe(true)
     })
@@ -161,10 +163,60 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(
-      await screen.findByText(/HTTP 400, Code FST_ERR_CTP_EMPTY_JSON_BODY/),
-    ).toBeTruthy()
+    expect(await screen.findByText(/HTTP 400, Code FST_ERR_CTP_EMPTY_JSON_BODY/)).toBeTruthy()
     expect(screen.queryByText(/admin\.channels\.errors\./)).toBeNull()
+  })
+
+  it('shows no failing-channel list while the outbox has no failed rows', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      status: {
+        channels: [
+          {
+            name: 'ntfy',
+            lastSentAt: '2026-11-13T08:00:00.000Z',
+            lastFailedAt: null,
+            pending: 0,
+            failed: 0,
+          },
+        ],
+      },
+    })
+    renderPage()
+
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.queryByRole('heading', { level: 2, name: /^Zust/ })).toBeNull()
+    expect(screen.queryByText(/^3 \w+/)).toBeNull()
+  })
+
+  it('lists the failing channels with their last failure and the failed rows', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      status: {
+        channels: [
+          {
+            name: 'signal',
+            lastSentAt: '2026-11-13T08:00:00.000Z',
+            lastFailedAt: '2026-11-13T09:30:00.000Z',
+            pending: 0,
+            failed: 3,
+          },
+          {
+            name: 'matrix',
+            lastSentAt: null,
+            lastFailedAt: '2026-11-12T10:00:00.000Z',
+            pending: 1,
+            failed: 1,
+          },
+        ],
+      },
+    })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { level: 2, name: /^Zust/ })).toBeTruthy()
+    expect(screen.getByText(/^Signal$/)).toBeTruthy()
+    expect(screen.getAllByText(/^at /)).toHaveLength(2)
+    expect(screen.getByText(/^3 \w+/)).toBeTruthy()
   })
 
   it('marks a failed test send as failed and shows its code', async () => {
@@ -268,8 +320,7 @@ describe('ChannelsPage', () => {
     await vi.waitFor(() => {
       expect(
         requestMock.mock.calls.some(
-          ([input, init]) =>
-            String(input).endsWith('/verification') && init?.body === '{}',
+          ([input, init]) => String(input).endsWith('/verification') && init?.body === '{}',
         ),
       ).toBe(true)
     })
@@ -295,6 +346,6 @@ describe('ChannelsPage', () => {
     stub({ me: meResponse(['user.read']) })
     renderPage()
 
-    expect(await screen.findByText('Keine Berechtigung.')).toBeTruthy()
+    expect(screen.queryByText(/^3 \w+/)).toBeNull()
   })
 })

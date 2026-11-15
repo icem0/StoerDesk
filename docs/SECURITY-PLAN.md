@@ -266,6 +266,22 @@ deadline only, F and K re-checked: the added warn line carries the numeric `time
 the access token still enters no log line, no answer and no error text, and the new
 locale keys hold no secret; C untouched (no query, no interpolation). No new finding.
 
+Channel-status pass: 2026-11-14, diff `476adba..` (WP-M14-19 — `apps/api/src/notifications/routes.ts`,
+`packages/shared/src/schemas/notification.ts`, `apps/web/src/admin/channels-page.tsx`,
+`apps/web/src/settings/settings-page.tsx`, the de/en `settings.json` and `common.json` plus the
+three touched tests) — areas A and B re-checked in full (the package adds exactly one route,
+`GET /api/v1/notifications/status`, behind the `notification.read` `requirePermission`
+preHandler: without a session the guard answers `401 session_invalid` before `403 forbidden`,
+no public capability and no bearer scope; the route table gained that one row), C re-checked
+for the touched query: the status route reuses `resolveChannelStatus` of WP-M9-05 — one
+read-only aggregate `sql` template over the `outbox` table without any client input and
+without value interpolation, the user id is never read from the request and the answer
+carries channel names, counts and timestamps only, the new shared zod contract
+`channelStatusListResponseSchema` binds that answer shape, D and G untouched (no token
+storage, no path join), F re-checked: the new locale keys hold no secret and no contact
+value, K re-checked: no log line is touched and the unit tests use the mock names `signal`
+and `matrix` with mock ISO timestamps. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -343,6 +359,7 @@ Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
 | GET | /api/v1/public/tickets/:token/status | public status (status_token capability) |
 | POST | /api/v1/public/altcha/challenge | public altcha (verification runs inline in the report handler) |
 | GET | /api/v1/_test/require-permission/:keys | test-only (NODE_ENV=test, index.ts:148) |
+| GET | /api/v1/notifications/status | notification.read (notifications/routes.ts) |
 | GET | /api/v1/health | public health |
 
 IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
@@ -352,17 +369,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (re-checked in full at the ntfy-timeout pass) | c65ce2d |
-| B Autorisation | complete (re-checked in full at the ntfy-timeout pass, no new route) | c65ce2d |
-| C Injection | complete (re-checked for the changed files at the ntfy-access-token pass) | eb3f6d742ea762b0321420b12555c296b69e7235 |
-| D Frontend | complete (web/src read, tokens cookie-only) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| A Authentication | complete (re-checked in full at the channel-status pass) | 476adba |
+| B Autorisation | complete (re-checked in full at the channel-status pass, one new route) | 476adba |
+| C Injection | complete (re-checked for the changed files at the channel-status pass) | 476adba |
+| D Frontend | complete (re-checked for the changed pages at the channel-status pass) | 476adba |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the ntfy-timeout pass) | c65ce2d |
+| K Logging/PII | complete (re-checked for the changed files at the channel-status pass) | 476adba |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

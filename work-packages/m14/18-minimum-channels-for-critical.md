@@ -1,7 +1,7 @@
 # WP-M14-18: The mandatory minimum channels of critical tickets
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-05, WP-M14-16
 phase: 14
 milestone: m14

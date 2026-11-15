@@ -4,6 +4,7 @@ import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
   channelConfigurationSchema,
+  channelStatusListResponseSchema,
   channelVerificationResponseSchema,
   confirmChannelVerificationRequestSchema,
   confirmChannelVerificationResponseSchema,
@@ -27,11 +28,21 @@ import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { notificationChannels } from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
+import { resolveChannelStatus } from '../dashboard/service'
 import { readChannelConfiguration } from './config'
-import { ChannelVerificationError, confirmNtfyVerification, effectiveNtfyConfig, requestNtfyVerification } from './verification'
+import {
+  ChannelVerificationError,
+  confirmNtfyVerification,
+  effectiveNtfyConfig,
+  requestNtfyVerification,
+} from './verification'
 import { deleteAccount } from './accounts'
 import { readPreferences, writePreferences } from './preferences'
-import { storeMatrixAccount, MatrixLinkingError, type MatrixLinkingErrorCode } from './matrix-linking'
+import {
+  storeMatrixAccount,
+  MatrixLinkingError,
+  type MatrixLinkingErrorCode,
+} from './matrix-linking'
 import {
   readBridgeStatus,
   storeWhatsAppAccount,
@@ -66,6 +77,10 @@ import {
  * answer and replace the selection of the session user; the seven event types
  * of §11.4 and the channel kinds of §11.1 are the only accepted values — an
  * unknown event type or channel is a `422 invalid_request` and writes nothing.
+ * `GET /api/v1/notifications/status` (§11.8, §11.11, WP-M14-19) answers the pending
+ * rows, the failed rows, the last success and the last failure per channel over
+ * the same outbox rows the dashboard tile reads — a failing channel is a warning
+ * for the administration, never an error of the API.
  */
 
 type Db = Database['database']
@@ -219,7 +234,10 @@ const requireSession: preHandlerHookHandler = async (request, reply) => {
  * environment fallback). No credential ever enters the link: ntfy offers no
  * URL-login scheme and ADR-0005 keeps every secret write-only.
  */
-function ntfySubscriptionOf(configuredUrl: string, topic: string): {
+function ntfySubscriptionOf(
+  configuredUrl: string,
+  topic: string,
+): {
   publicUrl: string
   topic: string
   subscriptionUrl: string
@@ -252,7 +270,11 @@ const EMPTY_NTFY_SUBSCRIPTION = {
 }
 
 /** A refused exchange (wrong, expired or unknown code, wrong user) answers 422. */
-const LINKING_REFUSALS: readonly TelegramLinkingErrorCode[] = ['invalid_code', 'code_expired', 'wrong_user']
+const LINKING_REFUSALS: readonly TelegramLinkingErrorCode[] = [
+  'invalid_code',
+  'code_expired',
+  'wrong_user',
+]
 
 function telegramLinkingRefusal(error: unknown): boolean {
   return error instanceof TelegramLinkingError && LINKING_REFUSALS.includes(error.code)
@@ -274,7 +296,10 @@ function matrixLinkingRefusal(error: unknown): boolean {
 const WHATSAPP_LINKING_REFUSALS: readonly WhatsAppLinkingErrorCode[] = ['unknown_chat']
 
 function whatsappLinkingRefusal(error: unknown): boolean {
-  return error instanceof WhatsAppLinkingError && (WHATSAPP_LINKING_REFUSALS as readonly string[]).includes(error.code)
+  return (
+    error instanceof WhatsAppLinkingError &&
+    (WHATSAPP_LINKING_REFUSALS as readonly string[]).includes(error.code)
+  )
 }
 
 /** The public `config` jsonb of a channel row as a flat map of string values. */
@@ -321,7 +346,10 @@ async function whatsappBridgeConfig(database: Db, env: Env): Promise<BridgeConfi
 }
 
 export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
-  async (app, { database, env, channels, telegramFetch, matrixFetch, whatsappFetch, ntfyFetch }) => {
+  async (
+    app,
+    { database, env, channels, telegramFetch, matrixFetch, whatsappFetch, ntfyFetch },
+  ) => {
     const registry = channels ?? configuredChannels(env)
 
     app.get(
@@ -340,9 +368,7 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         const kind = notificationChannelKindSchema.safeParse(request.params.kind)
 
         if (!kind.success) {
-          return reply
-            .code(400)
-            .send({ code: 'invalid_request', params: { fields: ['kind'] } })
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['kind'] } })
         }
 
         const body = updateChannelConfigurationRequestSchema.safeParse(request.body)
@@ -372,9 +398,7 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         const kind = notificationChannelKindSchema.safeParse(request.params.kind)
 
         if (!kind.success) {
-          return reply
-            .code(400)
-            .send({ code: 'invalid_request', params: { fields: ['kind'] } })
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['kind'] } })
         }
 
         const body = channelTestRequestSchema.safeParse(request.body ?? {})
@@ -426,12 +450,10 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           if (error instanceof ChannelVerificationError) {
             const status = error.code === 'verification_send_failed' ? 502 : 422
 
-            return reply
-              .code(status)
-              .send({
-                code: error.code,
-                params: error.causeCode === '' ? {} : { reason: error.causeCode },
-              })
+            return reply.code(status).send({
+              code: error.code,
+              params: error.causeCode === '' ? {} : { reason: error.causeCode },
+            })
           }
 
           throw error
@@ -463,6 +485,23 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           throw error
         }
       },
+    )
+
+    /**
+     * `GET /api/v1/notifications/status` (`specs/10-notifications.md` §11.8, §11.11,
+     * WP-M14-19): the pending rows, the failed rows, the time of the last success
+     * and the time of the last failure per channel — the same numbers the
+     * dashboard tile reads, over the same rows of the outbox
+     * (`resolveChannelStatus` of WP-M9-05). A failing channel is a warning for the
+     * administration, never an error of the API.
+     */
+    app.get(
+      '/api/v1/notifications/status',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.read) },
+      async () =>
+        channelStatusListResponseSchema.parse({
+          channels: (await resolveChannelStatus(database)) ?? [],
+        }),
     )
 
     app.post(
@@ -524,7 +563,9 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         const body = matrixLinkingRequestSchema.safeParse(request.body)
 
         if (!body.success) {
-          return reply.code(422).send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+          return reply
+            .code(422)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
         }
 
         try {
@@ -538,7 +579,9 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           return notificationAccountSchema.parse(account)
         } catch (error) {
           if (matrixLinkingRefusal(error)) {
-            return reply.code(422).send({ code: 'invalid_request', params: { fields: ['homeserver'] } })
+            return reply
+              .code(422)
+              .send({ code: 'invalid_request', params: { fields: ['homeserver'] } })
           }
 
           throw error
@@ -551,7 +594,8 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
     app.get(
       '/api/v1/notifications/accounts/whatsapp/status',
       { preHandler: requireSession },
-      async () => readBridgeStatus(await whatsappBridgeConfig(database, env), whatsappFetch ?? fetch),
+      async () =>
+        readBridgeStatus(await whatsappBridgeConfig(database, env), whatsappFetch ?? fetch),
     )
 
     app.post(
@@ -591,13 +635,17 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         const channel = notificationChannelKindSchema.safeParse(request.params.channel)
 
         if (!channel.success) {
-          return reply.code(404).send({ code: 'account_not_found', params: { fields: ['channel'] } })
+          return reply
+            .code(404)
+            .send({ code: 'account_not_found', params: { fields: ['channel'] } })
         }
 
         const removed = await deleteAccount(database, request.user?.id ?? '', channel.data)
 
         if (!removed) {
-          return reply.code(404).send({ code: 'account_not_found', params: { fields: ['channel'] } })
+          return reply
+            .code(404)
+            .send({ code: 'account_not_found', params: { fields: ['channel'] } })
         }
 
         return reply.code(204).send()
@@ -621,13 +669,10 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
       },
     )
 
-    app.get(
-      '/api/v1/notifications/preferences',
-      { preHandler: requireSession },
-      async (request) =>
-        notificationPreferencesListResponseSchema.parse({
-          preferences: await readPreferences(database, request.user?.id ?? ''),
-        }),
+    app.get('/api/v1/notifications/preferences', { preHandler: requireSession }, async (request) =>
+      notificationPreferencesListResponseSchema.parse({
+        preferences: await readPreferences(database, request.user?.id ?? ''),
+      }),
     )
 
     app.put(

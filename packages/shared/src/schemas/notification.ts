@@ -80,6 +80,27 @@ export const confirmChannelVerificationResponseSchema = z.object({
 })
 
 /**
+ * The status of the channels (`specs/10-notifications.md` §11.8, WP-M14-19):
+ * per channel the pending rows, the failed rows, the time of the last success
+ * and the time of the last failure — the same numbers the dashboard tile reads
+ * from the outbox. A failed channel is a warning, never an error of the API.
+ */
+export const channelStatusItemSchema = z.object({
+  name: z.string(),
+  lastSentAt: z.iso.datetime().nullable(),
+  lastFailedAt: z.iso.datetime().nullable(),
+  pending: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+})
+
+export const channelStatusListResponseSchema = z.object({
+  channels: z.array(channelStatusItemSchema),
+})
+
+export type ChannelStatusItem = z.infer<typeof channelStatusItemSchema>
+export type ChannelStatusListResponse = z.infer<typeof channelStatusListResponseSchema>
+
+/**
  * The account of a user at one channel (`specs/10-notifications.md` §11.3,
  * WP-M14-08). The secret is write-only: a request may carry it, an answer never
  * does — it only reports `secretSet` (ADR-0005 rule, §11.13).
@@ -172,9 +193,7 @@ export const matrixLinkingRequestSchema = z.object({
 })
 
 export type TelegramLinkCodeResponse = z.infer<typeof telegramLinkCodeResponseSchema>
-export type RedeemTelegramLinkCodeRequest = z.infer<
-  typeof redeemTelegramLinkCodeRequestSchema
->
+export type RedeemTelegramLinkCodeRequest = z.infer<typeof redeemTelegramLinkCodeRequestSchema>
 export type MatrixLinkingRequest = z.infer<typeof matrixLinkingRequestSchema>
 
 export type ChannelConfiguration = z.infer<typeof channelConfigurationSchema>
@@ -186,9 +205,7 @@ export type UpdateChannelConfigurationRequest = z.infer<
 >
 export type ChannelTestRequest = z.infer<typeof channelTestRequestSchema>
 export type ChannelTestResponse = z.infer<typeof channelTestResponseSchema>
-export type ChannelVerificationResponse = z.infer<
-  typeof channelVerificationResponseSchema
->
+export type ChannelVerificationResponse = z.infer<typeof channelVerificationResponseSchema>
 export type ConfirmChannelVerificationRequest = z.infer<
   typeof confirmChannelVerificationRequestSchema
 >
@@ -196,12 +213,8 @@ export type ConfirmChannelVerificationResponse = z.infer<
   typeof confirmChannelVerificationResponseSchema
 >
 export type NotificationAccount = z.infer<typeof notificationAccountSchema>
-export type NotificationAccountListResponse = z.infer<
-  typeof notificationAccountListResponseSchema
->
-export type StoreNotificationAccountRequest = z.infer<
-  typeof storeNotificationAccountRequestSchema
->
+export type NotificationAccountListResponse = z.infer<typeof notificationAccountListResponseSchema>
+export type StoreNotificationAccountRequest = z.infer<typeof storeNotificationAccountRequestSchema>
 export type NotificationPreferenceEntry = z.infer<typeof notificationPreferenceSchema>
 export type NotificationPreferencesListResponse = z.infer<
   typeof notificationPreferencesListResponseSchema

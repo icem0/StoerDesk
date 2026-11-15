@@ -47,7 +47,14 @@ describe('SettingsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Einstellungen' })).toBeTruthy()
     expect(await screen.findByText('Angemeldet als admin@example.com')).toBeTruthy()
 
-    for (const heading of ['Persönlich', 'Darstellung', 'Meldungen', 'Objekte', 'Verwaltung', 'Konto']) {
+    for (const heading of [
+      'Persönlich',
+      'Darstellung',
+      'Meldungen',
+      'Objekte',
+      'Verwaltung',
+      'Konto',
+    ]) {
       expect(screen.getByRole('heading', { level: 2, name: heading })).toBeTruthy()
     }
 
@@ -75,5 +82,55 @@ describe('SettingsPage', () => {
     expect(administrationLinks).not.toContain('/admin')
 
     expect(screen.getByRole('button', { name: 'Abmelden' })).toBeTruthy()
+
+    // No channel may fail for an account without `notification.read`: the badge
+    // is not rendered and the status route is never called (WP-M14-19).
+    expect(screen.queryByText(/\(\d+\)$/)).toBeNull()
+  })
+
+  it('shows the badge of the failing channels for an administrator', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('/v1/me')) {
+          return Response.json({
+            user: {
+              email: 'admin@example.com',
+              roles: ['admin'],
+              permissions: ['notification.read'],
+            },
+          })
+        }
+
+        if (url.includes('/v1/notifications/status')) {
+          return Response.json({
+            channels: [
+              {
+                name: 'signal',
+                lastSentAt: '2026-11-13T08:00:00.000Z',
+                lastFailedAt: '2026-11-13T09:30:00.000Z',
+                pending: 0,
+                failed: 2,
+              },
+              {
+                name: 'matrix',
+                lastSentAt: null,
+                lastFailedAt: null,
+                pending: 1,
+                failed: 0,
+              },
+            ],
+          })
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderPage()
+
+    expect(await screen.findByText(/\(1\)$/)).toBeTruthy()
   })
 })

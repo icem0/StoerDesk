@@ -6,6 +6,9 @@
     "version": "Version",
     "settings": "Einstellungen",
     "settingsHint": "Alle Einstellungen und Bereiche an einem Ort, nach Themen gruppiert.",
+    "channelWarning": {
+      "badge": "Zustellung gestört ({{count}})"
+    },
     "logoAlt": "Logo von StörDesk",
     "navigation": "Hauptnavigation",
     "nav": {

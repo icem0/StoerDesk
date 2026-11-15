@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import {
   type ChannelConfiguration,
   type ChannelConfigurationListResponse,
+  type ChannelStatusListResponse,
   type ChannelTestResponse,
   type MinimumChannelsResponse,
   type NotificationChannelKind,
@@ -20,7 +21,8 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
  * WP-M14-06). The list is the effective configuration of the API; the secret is
  * write-only (ADR-0005), so the field always starts empty and a save only sends
  * a typed value. A test send reports the answer of the adapter; the page adds
- * no status route of its own (that stays WP-M14-19).
+ * the failing channels of the outbox (WP-M14-19, §11.8) — a channel with failed
+ * rows is a warning, never an error of the administration.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -447,6 +449,14 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
   )
 }
 
+/**
+ * The failing channels of `GET /api/v1/notifications/status` (§11.8, WP-M14-19):
+ * every channel that has failed rows in the outbox.
+ */
+function failingChannelsOf(status: ChannelStatusListResponse | undefined) {
+  return (status?.channels ?? []).filter((channel) => channel.failed > 0)
+}
+
 export function ChannelsPage() {
   const { t } = useTranslation('settings')
   const mayRead = usePermission('notification.read')
@@ -463,6 +473,12 @@ export function ChannelsPage() {
     queryKey: ['minimumChannels'],
     queryFn: () => apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels'),
     enabled: mayReadSettings,
+    retry: false,
+  })
+  const statusQuery = useQuery({
+    queryKey: ['channelStatus'],
+    queryFn: () => apiFetch<ChannelStatusListResponse>('/v1/notifications/status'),
+    enabled: mayRead,
     retry: false,
   })
   const queryClient = useQueryClient()
@@ -510,6 +526,34 @@ export function ChannelsPage() {
           ))}
         </div>
       )}
+
+      {mayRead && failingChannelsOf(statusQuery.data).length > 0 ? (
+        <section
+          aria-live="polite"
+          className="flex flex-col gap-2 rounded-xl border border-rose-700 bg-slate-900/60 p-4"
+        >
+          <h2 className="text-lg font-semibold">{t('admin.channels.failing.title')}</h2>
+          <ul className="flex flex-col gap-1">
+            {failingChannelsOf(statusQuery.data).map((channel) => (
+              <li className="flex flex-wrap items-baseline gap-2 text-sm" key={channel.name}>
+                <span className="font-medium text-slate-200">
+                  {t(`admin.channels.kinds.${channel.name}`)}
+                </span>
+                <span className="text-rose-300">
+                  {t('admin.channels.failing.failed', { count: channel.failed })}
+                </span>
+                {channel.lastFailedAt !== null ? (
+                  <span className="text-slate-400">
+                    {t('admin.channels.failing.lastFailure', {
+                      time: new Date(channel.lastFailedAt).toLocaleString(),
+                    })}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {mayReadSettings ? (
         <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">

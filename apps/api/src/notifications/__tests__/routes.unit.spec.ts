@@ -19,10 +19,15 @@ interface StoredRow {
 
 /**
  * No PostgreSQL: the route module only resolves permissions, reads the channel
- * rows and upserts one row keyed by kind. The fake implements exactly those
- * Drizzle chains, so guard, secret and test-send behaviour run in memory.
+ * rows and upserts one row keyed by kind — plus the one aggregated `execute` of
+ * the channel status route (WP-M14-19). The fake implements exactly those
+ * Drizzle chains, so guard, secret, test-send and status behaviour run in memory.
  */
-function fakeDatabase(store: StoredRow[], held: string[]): Db {
+function fakeDatabase(
+  store: StoredRow[],
+  held: string[],
+  statusRows: Array<Record<string, unknown>> = [],
+): Db {
   const verifications: Array<Record<string, unknown>> = []
   Object.assign(verifications, {
     where: () => verifications,
@@ -51,13 +56,13 @@ function fakeDatabase(store: StoredRow[], held: string[]): Db {
         return overridesQuery
       },
     }),
+    /** The aggregated channel-status query of the outbox (WP-M14-19). */
+    execute: async (_: unknown) => statusRows,
     insert: (table: unknown) => ({
       values: (values: Record<string, unknown>) => ({
         onConflictDoUpdate: async ({ set }: { set: Record<string, unknown> }) => {
           if (table === notificationChannelVerifications) {
-            const existing = verifications.find(
-              (row) => row.kind === values.kind,
-            )
+            const existing = verifications.find((row) => row.kind === values.kind)
 
             if (existing !== undefined) {
               Object.assign(existing, values, set)
@@ -105,6 +110,7 @@ async function buildApp(options: {
   held: string[]
   store: StoredRow[]
   channels?: readonly NotificationChannel[]
+  statusRows?: Array<Record<string, unknown>>
 }): Promise<FastifyInstance> {
   const app = Fastify({ logger: false })
 
@@ -125,7 +131,7 @@ async function buildApp(options: {
   })
 
   await app.register(notificationChannelRoutes, {
-    database: fakeDatabase(options.store, options.held),
+    database: fakeDatabase(options.store, options.held, options.statusRows ?? []),
     env: loadEnv({}),
     ...(options.channels === undefined ? {} : { channels: options.channels }),
   })
@@ -355,13 +361,14 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
   it('sends the test message with the access token of the stored row (WP-M14-51)', async () => {
     const seen: string[] = []
     const originalFetch = global.fetch
-    ;(globalThis as unknown as Record<string, unknown>).fetch =
-      vi.fn((_: string | URL | Request, init?: RequestInit) => {
+    ;(globalThis as unknown as Record<string, unknown>).fetch = vi.fn(
+      (_: string | URL | Request, init?: RequestInit) => {
         const headers = init?.headers as Record<string, string> | undefined
         seen.push(typeof headers?.authorization === 'string' ? headers.authorization : '')
 
         return new Response('{}', { status: 200 })
-      }) as unknown as typeof fetch
+      },
+    ) as unknown as typeof fetch
 
     const app = await buildApp({
       held: ['notification.write'],
@@ -449,5 +456,78 @@ describe('the ntfy subscription of the user (WP-M14-13)', () => {
 
     expect(response.statusCode).toBe(401)
     expect(response.json<{ code: string }>().code).toBe('session_invalid')
+  })
+})
+
+describe('the channel status of the outbox (WP-M14-19, §11.8)', () => {
+  it('answers 401 without a session and 403 without notification.read', async () => {
+    const anonymous = await (
+      await buildApp({ held: ['notification.read'], store: [row()] })
+    ).inject({ method: 'GET', url: '/api/v1/notifications/status' })
+
+    expect(anonymous.statusCode).toBe(401)
+    expect(anonymous.json<{ code: string }>().code).toBe('session_invalid')
+
+    const forbidden = await (
+      await buildApp({ held: [], store: [row()] })
+    ).inject({
+      method: 'GET',
+      url: '/api/v1/notifications/status',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    expect(forbidden.statusCode).toBe(403)
+    expect(forbidden.json<{ code: string }>().code).toBe('forbidden')
+  })
+
+  it('answers the pending and failed rows plus the last send and failure per channel', async () => {
+    const lastFailure = new Date(2026, 10, 14, 9, 30)
+    const lastSuccess = new Date(2026, 10, 14, 8, 0)
+
+    const app = await buildApp({
+      held: ['notification.read'],
+      store: [row()],
+      statusRows: [
+        {
+          channel: 'signal',
+          last_sent_at: lastSuccess,
+          last_failed_at: lastFailure,
+          pending: '2',
+          failed: '3',
+        },
+      ],
+    })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/status',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      channels: [
+        {
+          name: 'signal',
+          lastSentAt: lastSuccess.toISOString(),
+          lastFailedAt: lastFailure.toISOString(),
+          pending: 2,
+          failed: 3,
+        },
+      ],
+    })
+  })
+
+  it('answers an empty list when the outbox has no rows', async () => {
+    const app = await buildApp({ held: ['notification.read'], store: [row()] })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/status',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ channels: [] })
   })
 })

@@ -1,7 +1,7 @@
 # WP-M14-19: The warning on a failed channel
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-05
 phase: 14
 milestone: m14
@@ -14,20 +14,22 @@ files-read:
 - specs/10-notifications.md §11.8, §11.12
 - apps/api/src/dashboard/service.ts (the channel status of today)
 - apps/api/src/notifications/routes.ts (the routes of the phase)
+- packages/shared/src/schemas/notification.ts (the shared contracts of the phase)
 - apps/web/src/admin/channels-page.tsx (the administration page)
 - apps/web/src/settings/settings-page.tsx (the menu)
 
 files-write:
 
 - apps/api/src/notifications/routes.ts
-- apps/web/src/admin/channels-page.tsx
-- apps/web/src/settings/settings-page.tsx
-- apps/web/src/i18n/locales/de/common.json, apps/web/src/i18n/locales/en/common.json
+- packages/shared/src/schemas/notification.ts
+- apps/web/src/admin/channels-page.tsx, apps/web/src/settings/settings-page.tsx
+- apps/web/src/i18n/locales/de/common.json, apps/web/src/i18n/locales/en/common.json, apps/web/src/i18n/locales/de/settings.json, apps/web/src/i18n/locales/en/settings.json
 
 interfaces:
 
 - `GET /api/v1/notifications/status` — the status of every channel
-- the badge of the settings menu of an administrator
+- `channelStatusListResponseSchema` / `ChannelStatusListResponse` in the shared contracts
+- the failing-channel list of the administration page and the badge of the settings menu
 
 ## Task
 

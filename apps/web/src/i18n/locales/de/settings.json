@@ -526,6 +526,11 @@
         "label": "Pflichtkanäle",
         "saving": "Speichern …",
         "save": "Speichern"
+      },
+      "failing": {
+        "title": "Zustellung gestört",
+        "failed": "{{count}} fehlgeschlagen",
+        "lastFailure": "at {{time}}"
       }
     }
   },

@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The failing channels warn the administration (WP-M14-19, phase 14): `GET /api/v1/notifications/status`
+  answers the pending rows, the failed rows, the time of the last success and the time of the
+  last failure per channel — the same rows of the outbox the dashboard tile reads
+  (`resolveChannelStatus` of WP-M9-05, the shared contract `channelStatusListResponseSchema`).
+  `/admin/channels` lists the failing channels with their last failure and the number of the
+  failed rows, and the settings menu of an administrator shows a badge with the number of the
+  failing channels as long as a channel fails (`specs/10-notifications.md` §11.8: a warning that
+  only lives in a list of a page is not a warning — the tile of the dashboard and the
+  `notification_failed` event of the ticket history keep carrying it as before).
 - Every notification message links to its ticket (WP-M14-68, out of band in phase 14,
   requested by the office): a sent message now names the ticket it is about. §11.5
   already demanded "the deep link into the ticket", but every channel adapter had

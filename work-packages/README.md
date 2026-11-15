@@ -837,8 +837,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-15  | the chats of the bridge and the WhatsApp Web account               | done                   | yes     |
 | WP-M14-16  | the selection of the channels per event type — the API             | done                   | yes     |
 | WP-M14-17  | the selection of the channels per event type in the settings page  | done                   | yes     |
-| WP-M14-18  | the mandatory minimum channels of critical tickets                 | planned                | yes     |
-| WP-M14-19  | the warning on a failed channel                                    | planned                | yes     |
+| WP-M14-18  | the mandatory minimum channels of critical tickets                 | done                   | yes     |
+| WP-M14-19  | the warning on a failed channel                                    | done                   | yes     |
 | WP-M14-20  | the notifications of the internal ticket creation                  | done                   | yes     |
 | WP-M14-21  | the exit criterion of the messenger channels                        | planned              | yes     |
 | WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
@@ -876,6 +876,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-53  | the ntfy request carries a timeout (out of band)                          | done    | yes     |
 | WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
 | WP-M14-55  | the test send and the verification request carry a JSON body (out of band) | done    | yes     |
+| WP-M14-56  | a rejected test request names its status and code (out of band)          | done    | yes     |
+| WP-M14-57  | the copied ntfy curl is one shell command (out of band)                  | done    | yes     |
 | WP-M14-58  | the escalation stage chain — spec, ADR-0023 and the split (out of band) | done    | yes     |
 | WP-M14-59  | the stage chain in the database (migration 0037) (out of band)         | planned | yes     |
 | WP-M14-60  | the shared contracts and the chain validator (out of band)             | planned | yes     |
