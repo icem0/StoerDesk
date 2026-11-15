@@ -693,5 +693,17 @@
       "unknown": "Speichern fehlgeschlagen.",
       "threshold": "Die Schwelle muss eine ganze Zahl zwischen 1 und 100 sein."
     }
+  },
+  "notifications": {
+    "heading": "Readiness events",
+    "hint": "The channels of an unselected readiness event go to the instance chain.",
+    "instanceHint": "The channels of the instance",
+    "save": "Save the readiness selection",
+    "saved": "The readiness selection was saved.",
+    "events": {
+      "oncall.assigned": "Bereitschaft allocation",
+      "oncall.swap_requested": "Swap request",
+      "oncall.unconfirmed_reminder": "Unconfirmed reminder"
+    }
   }
 }

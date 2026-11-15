@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The readiness selection of the technician (WP-M14-32, ADR-0021): the readiness block
+  of `/settings/notifications` (`apps/web/src/settings/notifications-page.tsx`) renders
+  the three readiness event types of §11.4 as their own rows below the ticket-event
+  selection section of WP-M14-17 — one row per readiness event type with one checkbox
+  per configured channel of §11.1, a channel that is not configured is not offered
+  and a user without a saved readiness row sees "the channels of the instance" (the
+  fallback of §11.4). Toggling a readiness checkbox feeds the same shared selection
+  state that `PUT /api/v1/notifications/preferences` of WP-M14-16 writes, so saving
+  the readiness selection never clears the ticket selection of the user and the
+  API, the schema and the migration of WP-M14-16 stay unchanged; the ticket event
+  rows of WP-M14-17 stay unchanged as well. The settings namespace keys
+  `settings.notifications.events.oncall.assigned` = "Bereitschaft allocation" /
+  "Readiness allocation", `oncall.swap_requested` = "Swap request" / "Swap
+  requested" and `oncall.unconfirmed_reminder` = "Unconfirmed reminder" /
+  "Unconfirmed shift reminder" (de and en) carry the labels of the block;
+  `apps/web/src/settings/__tests__/readiness-selection.test.tsx` proves the three
+  rows, the checkbox state for a saved readiness row, the instance-channel fallback,
+  the missing checkboxes for an unconfigured channel and the PUT body shape.
 - The reminder of an unconfirmed readiness (WP-M14-31, ADR-0021): `enqueueOncallReminders(database, env, now)`
   in `apps/api/src/oncall/coupling.ts` queues one `oncall.unconfirmed_reminder`
   outbox row per `DRAFT` or `PLANNED` shift that has a technician, has not started

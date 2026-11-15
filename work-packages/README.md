@@ -396,6 +396,23 @@ proves the window, the idempotent second scan, the `CONFIRMED` shift, the
 out-of-window shift and the slot without a technician writing nothing and the
 counter of the scan result.
 
+**WP-M14-32** is implemented: the readiness block of `/settings/notifications`
+(`apps/web/src/settings/notifications-page.tsx`) renders the three readiness event
+types of §11.4 as their own rows below the ticket-event selection section of
+WP-M14-17 — one row per readiness event type with one checkbox per configured
+channel (a channel that is not configured is not offered), a user without a saved
+row for a readiness event type sees the row with "the channels of the instance"
+(the fallback of §11.4); toggling a readiness checkbox feeds the same shared
+selection state, saved through `PUT /api/v1/notifications/preferences` of WP-M14-16
+(no API, schema or migration change). The block carries the settings namespace
+keys `settings.notifications.events.oncall.assigned` = "Bereitschaft allocation"
+/ "Readiness allocation", `oncall.swap_requested` = "Swap request" / "Swap
+requested" and `oncall.unconfirmed_reminder` = "Unconfirmed reminder" / "Unconfirmed
+shift reminder" in de and en; `apps/web/src/settings/__tests__/readiness-selection.test.tsx`
+proves the three rows with the German labels, the checkbox state for a saved
+readiness row, the "channels of the instance" fallback, the missing checkboxes
+of an unconfigured channel and the shared PUT body shape.
+
 **Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
 link carries the host. The office wants the subscription QR of the own
 channels page to land in the ntfy app and subscribe automatically. The ntfy
@@ -920,7 +937,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-29  | the allocation and a swap request enqueue their rows                       | done    | yes     |
 | WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | done    | yes     |
 | WP-M14-31  | an unconfirmed readiness reminds once                                       | done    | yes     |
-| WP-M14-32  | the readiness selection of the technician in the settings page              | planned | yes     |
+| WP-M14-32  | the readiness selection of the technician in the settings page          | done      | yes     |
 | WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
 | WP-M14-33  | the ntfy deep link of the QR carries the host (out of band)               | done    | yes     |
 | WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | planned | yes     |

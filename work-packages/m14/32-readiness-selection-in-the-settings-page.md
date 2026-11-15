@@ -1,7 +1,7 @@
 # WP-M14-32: The technician selects the channels of the readiness
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-17, WP-M14-29
 phase: 14
 milestone: m14
@@ -11,14 +11,14 @@ spec-lines: 40
 
 files-read:
 
-- apps/web/src/settings/my-settings-page.tsx (the own channels page of WP-M14-10)
+- apps/web/src/settings/notifications-page.tsx (the own channels page at /settings/notifications)
 - apps/api/src/notifications/preferences.ts (the selection routes of WP-M14-16)
 - apps/web/src/i18n/locales/de/settings.json and en/settings.json (the notification keys)
-- apps/web/src/settings/__tests__/my-settings-page.test.tsx (the page test pattern)
+- apps/web/src/settings/__tests__/notifications-page.test.tsx (the page test pattern)
 
 files-write:
 
-- apps/web/src/settings/my-settings-page.tsx
+- apps/web/src/settings/notifications-page.tsx
 - apps/web/src/i18n/locales/de/settings.json
 - apps/web/src/i18n/locales/en/settings.json
 - apps/web/src/settings/__tests__/readiness-selection.test.tsx
@@ -64,8 +64,8 @@ Expected: all green; the new test fails before the change and passes after it; `
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: notifications-page.tsx (the readiness block, the ticket-event filter), the two settings.json locales, the new readiness-selection test; the WP's files-write names `notifications-page.tsx` (the own channels page), not `my-settings-page.tsx`
+- Interfaces added: the readiness block of `/settings/notifications` and the i18n keys `settings.notifications.events.oncall.assigned`, `settings.notifications.events.oncall.swap_requested` and `settings.notifications.events.oncall.unconfirmed_reminder` (de and en)
+- Verified: `npm run check` (typecheck, lint, vitest, i18n:check, wp:check, e2e) green; the new readiness test passes
 - Follow-up WP: none
 - Open question: none

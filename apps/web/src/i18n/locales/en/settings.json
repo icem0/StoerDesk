@@ -693,5 +693,17 @@
       "unknown": "Saving failed.",
       "threshold": "The threshold must be a whole number between 1 and 100."
     }
+  },
+  "notifications": {
+    "heading": "Readiness events",
+    "hint": "The channels of an unselected readiness event go to the instance chain.",
+    "instanceHint": "The channels of the instance",
+    "save": "Save the readiness selection",
+    "saved": "The readiness selection was saved.",
+    "events": {
+      "oncall.assigned": "Readiness allocation",
+      "oncall.swap_requested": "Swap requested",
+      "oncall.unconfirmed_reminder": "Unconfirmed shift reminder"
+    }
   }
 }

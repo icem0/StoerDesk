@@ -692,6 +692,24 @@ integration test `apps/api/src/oncall/__tests__/reminder-notification.integratio
 proves the window, the idempotent second scan and the three shifts that stay
 silent.
 
+**WP-M14-32 — the readiness selection of the technician (done).** The readiness block
+of `/settings/notifications` (`apps/web/src/settings/notifications-page.tsx`) shows the
+three readiness event types of §11.4 (ADR-0021) as their own rows below the ticket-event
+selection section of WP-M14-17, one checkbox per configured channel of §11.1; a
+channel that is not configured is not offered and a user without a saved row for
+a readiness event sees "the channels of the instance" (the fallback of §11.4).
+Toggling a readiness checkbox feeds the same shared selection state that
+`PUT /api/v1/notifications/preferences` of WP-M14-16 writes — no API, schema or
+migration change, no readiness entry in the administration of the channels
+and no change of the ticket event rows. The settings namespace keys
+`settings.notifications.events.oncall.assigned` = "Bereitschaft allocation" / "Readiness
+allocation", `oncall.swap_requested` = "Swap request" / "Swap requested" and
+`oncall.unconfirmed_reminder` = "Unconfirmed reminder" / "Unconfirmed shift
+reminder" (de and en) carry the labels of the block. `apps/web/src/settings/__tests__/readiness-selection.test.tsx`
+proves the three rows, the checkbox state for a saved row, the instance-channel
+fallback, the missing checkboxes for an unconfigured channel and the shape of
+the PUT body.
+
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

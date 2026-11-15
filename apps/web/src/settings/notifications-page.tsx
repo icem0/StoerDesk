@@ -43,7 +43,11 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
  * is not configured is not offered and a configured channel without a linked account of the
  * user is marked as such; the saved selection is read from and written to
  * `GET`/`PUT /api/v1/notifications/preferences` (WP-M14-16) and the hint names the rule of
- * the precedence of §11.4.
+ * the precedence of §11.4. The readiness block (WP-M14-32) renders the three readiness event
+ * types of §11.4 as their own rows with one checkbox per configured channel; a user without
+ * a saved row for a readiness event sees "the channels of the instance" (the fallback of
+ * §11.4) and a channel that is not configured is not offered; the settings namespace keys
+ * `settings.notifications.events.oncall.*` (de and en) carry the labels of the block.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -135,6 +139,7 @@ function channelState(kind: NotificationChannelKind, telegramLinked: boolean): s
 
 export function NotificationsPage() {
   const { t } = useTranslation('common')
+  const { t: st } = useTranslation('settings')
 
   const telegramCode = useQuery({
     queryKey: ['telegram-code'],
@@ -261,6 +266,21 @@ export function NotificationsPage() {
     return true
   }
 
+  /** The seven event types of §11.4 split: the four ticket events in the selection
+   * section (WP-M14-17) and the three readiness events in the readiness block
+   * (WP-M14-32). */
+  const ticketEventTypes = NOTIFICATION_EVENT_TYPES.filter((eventType) =>
+    eventType.startsWith('ticket.'),
+  )
+  const readinessEventTypes = NOTIFICATION_EVENT_TYPES.filter((eventType) =>
+    eventType.startsWith('oncall.'),
+  )
+
+  /** The event types the user has a saved row for (§11.4 fallback of the readiness). */
+  const savedEventTypes = new Set(
+    (preferenceLoad.data?.preferences ?? []).map((entry) => entry.eventType),
+  )
+
   function toggleSelection(key: string, on: boolean): void {
     const next = new Set(effectiveSelection)
 
@@ -324,7 +344,7 @@ export function NotificationsPage() {
           </p>
         ) : null}
 
-        {NOTIFICATION_EVENT_TYPES.map((eventType) => (
+        {ticketEventTypes.map((eventType) => (
           <div
             key={eventType}
             className="mt-3 flex flex-wrap items-center gap-2 text-sm"
@@ -407,6 +427,104 @@ export function NotificationsPage() {
 
         {preferenceSave.isSuccess ? (
           <p className="mt-2 text-sm text-emerald-400">{t('notifications.selection.saved')}</p>
+        ) : null}
+      </section>
+
+      <section
+        className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+        aria-labelledby="readiness-heading"
+      >
+        <h2 id="readiness-heading" className="text-lg font-semibold">
+          {st('notifications.heading')}
+        </h2>
+
+        <p className="text-sm text-slate-300">{st('notifications.hint')}</p>
+
+        {channelConfigs.isPending || preferenceLoad.isPending ? (
+          <p className="text-sm text-slate-400">{t('auth.loading')}</p>
+        ) : null}
+
+        {readinessEventTypes.map((eventType) => (
+          <div
+            key={eventType}
+            className="mt-3 flex flex-wrap items-center gap-2 text-sm"
+          >
+            <span className="text-slate-200">
+              {st(`notifications.events.${eventType}`)}
+            </span>
+
+            {!savedEventTypes.has(eventType) ? (
+              <span className="text-slate-400">{st('notifications.instanceHint')}</span>
+            ) : null}
+
+            {NOTIFICATION_CHANNEL_KINDS.filter((kind) => configuredKinds.has(kind)).map(
+              (kind) => {
+                const key = `${eventType}:${kind}`
+
+                return (
+                  <span
+                    key={kind}
+                    className="flex items-center gap-2 rounded bg-slate-800 px-2 py-1"
+                  >
+                    <input
+                      aria-label={st(`notifications.events.${eventType}`)}
+                      checked={effectiveSelection.has(key)}
+                      className="rounded bg-slate-950 disabled:opacity-40"
+                      disabled={
+                        !channelLinked(kind) ||
+                        preferenceSave.isPending ||
+                        channelConfigs.isPending ||
+                        preferenceLoad.isPending
+                      }
+                      id={`readiness-${key}`}
+                      onChange={(event) =>
+                        toggleSelection(key, (event.target as HTMLInputElement).checked)
+                      }
+                      type="checkbox"
+                    />
+                    <span>{t(`notifications.kinds.${kind}`)}</span>
+                    {!channelLinked(kind) ? (
+                      <span className="text-amber-400">{t('notifications.selection.noAccount')}</span>
+                    ) : null}
+                  </span>
+                )
+              },
+            )}
+          </div>
+        ))}
+
+        <button
+          className="mt-2 rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          disabled={
+            preferenceSave.isPending ||
+            channelConfigs.isPending ||
+            preferenceLoad.isPending ||
+            channelConfigs.isError ||
+            preferenceLoad.isError
+          }
+          onClick={() =>
+            preferenceSave.mutate(
+              [...effectiveSelection].map((key) => {
+                const separator = key.indexOf(':')
+
+                return {
+                  eventType: key.slice(0, separator) as NotificationEventType,
+                  channel: key.slice(separator + 1) as NotificationChannelKind,
+                }
+              }).sort(
+                (a, b) =>
+                  a.eventType.localeCompare(b.eventType) ||
+                  a.channel.localeCompare(b.channel),
+              ),
+            )
+          }
+          type="button"
+        >
+          {st('notifications.save')}
+        </button>
+
+        {preferenceSave.isSuccess ? (
+          <p className="mt-2 text-sm text-emerald-400">{st('notifications.saved')}</p>
         ) : null}
       </section>
 
