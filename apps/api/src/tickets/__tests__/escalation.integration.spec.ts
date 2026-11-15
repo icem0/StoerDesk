@@ -17,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped escalation integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, ticketEvents, ticketPauses, tickets, escalationRules } = schema
+const { objects, ticketEvents, ticketPauses, tickets, escalationRules, escalationStages } = schema
 const MINUTE = 60 * 1000
 
 describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integration)', () => {
@@ -165,5 +165,95 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
 
     expect(await escalated(normal.id)).not.toContain('review_critical_only')
     expect(await escalated(critical.id)).toContain('review_critical_only')
+  })
+
+  it('runs the clock of an intermediate stage from its predecessor and keeps an empty reached_by unreached', async () => {
+    await db.insert(escalationStages).values([
+      {
+        key: 'night_shift',
+        names: { de: 'Nachtdienst', en: 'Night shift' },
+        position: 25,
+        active: true,
+        predecessor: 'work_order',
+        reachedBy: ['claimed'],
+      },
+      {
+        key: 'orphan',
+        names: { de: 'Ohne Ereignis', en: 'No event' },
+        position: 26,
+        active: true,
+        predecessor: 'work_order',
+        reachedBy: [],
+      },
+    ])
+
+    await db.insert(escalationRules).values([
+      {
+        key: 'night_shift',
+        stageKey: 'night_shift',
+        reference: null,
+        minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+        percent: null,
+        condition: { all: [] },
+        position: 91,
+        active: true,
+      },
+      {
+        key: 'orphan',
+        stageKey: 'orphan',
+        reference: null,
+        minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+        percent: null,
+        condition: { all: [] },
+        position: 92,
+        active: true,
+      },
+    ])
+
+    async function ticketWithWorkOrder() {
+      const ticket = await createTicket({
+        status: 'WORK_ORDER_CREATED',
+        priority: 'normal',
+        reportedAt: new Date(now.getTime() - 60 * MINUTE),
+        deadlineAt: new Date(now.getTime() + 2 * 60 * MINUTE),
+      })
+
+      await db.insert(ticketEvents).values([
+        {
+          ticketId: ticket.id,
+          type: 'review_started',
+          actorKind: 'system',
+          payload: {},
+          createdAt: new Date(now.getTime() - 40 * MINUTE),
+        },
+        {
+          ticketId: ticket.id,
+          type: 'work_order_set',
+          actorKind: 'system',
+          payload: {},
+          createdAt: new Date(now.getTime() - 20 * MINUTE),
+        },
+      ])
+
+      return ticket
+    }
+
+    const unreached = await ticketWithWorkOrder()
+
+    expect((await evaluateTicketEscalations(db, unreached.id, now)).map((entry) => entry.rule))
+      .toEqual(expect.arrayContaining(['night_shift', 'orphan']))
+
+    const reached = await ticketWithWorkOrder()
+
+    await db.insert(ticketEvents).values({
+      ticketId: reached.id,
+      type: 'claimed',
+      actorKind: 'system',
+      payload: {},
+      createdAt: new Date(now.getTime() - 19 * MINUTE),
+    })
+
+    expect((await evaluateTicketEscalations(db, reached.id, now)).map((entry) => entry.rule))
+      .not.toContain('night_shift')
   })
 })

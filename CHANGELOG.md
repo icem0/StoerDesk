@@ -68,6 +68,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   away while the firing log stays. A rule must name an existing stage and its
   explicit reference must match the clock of that stage; `null` takes the
   stage clock.
+- The escalation engine reads the stage chain (WP-M14-63): it loads the active
+  stages once per scan, derives the reached stages and the `stageReached`
+  facts from `reached_by`, starts the clock of a stage at the latest event of
+  its predecessor (or `received_at` without one) and fires a stage rule only
+  while its stage is not reached. The hard-coded `STAGE_EVENTS` and
+  `WAITING_STATUS_BY_REFERENCE` maps are gone.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

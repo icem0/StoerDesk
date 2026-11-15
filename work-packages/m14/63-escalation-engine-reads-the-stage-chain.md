@@ -1,7 +1,7 @@
 # WP-M14-63: The escalation engine reads the stage chain
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-59, WP-M14-60, WP-M14-62
 phase: 14
 context-budget: 24k tokens
@@ -66,8 +66,8 @@ for the default chain, the intermediate stage fires exactly once.
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/api/src/tickets/escalation.ts`, `apps/api/src/tickets/__tests__/escalation.integration.spec.ts`
+- Interfaces added: `readEscalationStageChain(database)`; reached stages and the stage clock follow the rows, the status gate and the fixed event map are gone
+- Verified: `npm run typecheck -w @stoerdesk/api` and ESLint; the integration spec needs `TEST_DATABASE_URL` and is unverified in this container
 - Follow-up WP: WP-M14-64 (the available stages of the ticket view)
 - Open question: none

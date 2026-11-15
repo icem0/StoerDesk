@@ -2,14 +2,11 @@ import { and, eq, inArray, notInArray } from 'drizzle-orm'
 
 import {
   computeTicketTimeline,
-  ESCALATION_STAGE_KEYS,
   escalationRuleConfigSchema,
   evaluateEscalationCondition,
   externalTypeCategory,
   type EscalationFacts,
-  type EscalationReferenceEvent,
   type EscalationRuleConfig,
-  type EscalationStageKey,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -18,6 +15,7 @@ import { escalateOnCallOffers } from '../oncall/coupling'
 import {
   escalationFirings,
   escalationRules,
+  escalationStages,
   objects,
   ticketEvents,
   ticketPauses,
@@ -43,28 +41,21 @@ type Db = Database['database']
 type TicketRow = typeof tickets.$inferSelect
 type EventRow = typeof ticketEvents.$inferSelect
 type PauseRow = typeof ticketPauses.$inferSelect
+type StageRow = Pick<
+  typeof escalationStages.$inferSelect,
+  'key' | 'predecessor' | 'reachedBy'
+>
 
-/**
- * The state a ticket waits in while it waits for the milestone of a rule. The
- * rule fires only in that state: a ticket that reached the milestone waits for
- * the next one.
- */
-const WAITING_STATUS_BY_REFERENCE: Record<EscalationReferenceEvent, string> = {
-  received_at: 'NEW',
-  review_started: 'IN_REVIEW',
-  work_order_set: 'WORK_ORDER_CREATED',
-  offered: 'OFFERED',
-  assigned: 'ASSIGNED',
-  accepted: 'ACCEPTED',
-}
-
-/** The events that reach a stage of the workflow. */
-const STAGE_EVENTS: Record<EscalationStageKey, readonly string[]> = {
-  review: ['review_started'],
-  work_order: ['work_order_set'],
-  assignment: ['assigned', 'offered', 'claimed'],
-  acceptance: ['accepted'],
-  acknowledgement: ['acknowledged'],
+/** Reads the active stage chain of the installation (ADR-0023). */
+export async function readEscalationStageChain(database: Db): Promise<StageRow[]> {
+  return await database
+    .select({
+      key: escalationStages.key,
+      predecessor: escalationStages.predecessor,
+      reachedBy: escalationStages.reachedBy,
+    })
+    .from(escalationStages)
+    .where(eq(escalationStages.active, true))
 }
 
 export class EscalationError extends Error {
@@ -156,19 +147,59 @@ function referenceTime(
   return toMs(matching[0]?.createdAt)
 }
 
-/** The stages the ticket has reached, read from its events. */
-function reachedStages(events: readonly EventRow[]): string[] {
-  const reached = new Set<string>()
+function latestEventTime(
+  events: readonly EventRow[],
+  types: readonly string[],
+): number | undefined {
+  let latest: number | undefined
 
   for (const event of events) {
-    for (const stage of ESCALATION_STAGE_KEYS) {
-      if (STAGE_EVENTS[stage]?.includes(event.type)) {
-        reached.add(stage)
-      }
+    if (!types.includes(event.type)) {
+      continue
+    }
+
+    const at = toMs(event.createdAt)
+
+    if (at !== undefined && (latest === undefined || at > latest)) {
+      latest = at
     }
   }
 
-  return [...reached]
+  return latest
+}
+
+/** The stages the ticket has reached, read from its events and the chain. */
+function reachedStages(events: readonly EventRow[], stages: readonly StageRow[]): string[] {
+  return stages
+    .filter((stage) => stage.reachedBy.some((type) => events.some((event) => event.type === type)))
+    .map((stage) => stage.key)
+}
+
+/**
+ * The clock start of a stage (§7.11): `received_at` without a predecessor,
+ * otherwise the latest event that reached the predecessor.
+ */
+function stageReferenceTime(
+  ticket: TicketRow,
+  events: readonly EventRow[],
+  stages: readonly StageRow[],
+  stageKey: string,
+): number | undefined {
+  const stage = stages.find((entry) => entry.key === stageKey)
+
+  if (stage === undefined) {
+    return undefined
+  }
+
+  if (stage.predecessor === null) {
+    return toMs(ticket.receivedAt)
+  }
+
+  const predecessor = stages.find((entry) => entry.key === stage.predecessor)
+
+  return predecessor === undefined
+    ? undefined
+    : latestEventTime(events, predecessor.reachedBy)
 }
 
 /**
@@ -180,6 +211,7 @@ function decisionFor(
   rule: EscalationRuleConfig,
   events: readonly EventRow[],
   pauses: readonly PauseRow[],
+  stages: readonly StageRow[],
   now: number,
 ): { thresholdAt: Date } | null {
   if (rule.percent !== null) {
@@ -201,17 +233,24 @@ function decisionFor(
     return { thresholdAt: new Date(point + pauseMillis(pauses, reported, point)) }
   }
 
-  if (rule.reference === null || rule.minutes === null) {
+  if (rule.stageKey === null || rule.minutes === null) {
     return null
   }
 
-  const waitingStatus = WAITING_STATUS_BY_REFERENCE[rule.reference]
+  const stage = stages.find((entry) => entry.key === rule.stageKey)
 
-  if (ticket.status !== waitingStatus) {
+  if (stage === undefined) {
     return null
   }
 
-  const reference = referenceTime(ticket, rule, events)
+  if (stage.reachedBy.some((type) => events.some((event) => event.type === type))) {
+    return null
+  }
+
+  const reference =
+    rule.reference === null
+      ? stageReferenceTime(ticket, events, stages, stage.key)
+      : referenceTime(ticket, rule, events)
 
   if (reference === undefined) {
     return null
@@ -235,6 +274,7 @@ function factsFor(
   ticket: TicketRow,
   events: readonly EventRow[],
   pauses: readonly PauseRow[],
+  stages: readonly StageRow[],
   externalType: string | null,
   now: number,
 ): EscalationFacts {
@@ -257,7 +297,7 @@ function factsFor(
     deadlinePercent: timeline.percent,
     elapsedMinutes: Math.max(0, Math.round((now - reported) / 60000)),
     paused: pauses.some((pause) => pause.endedAt === null),
-    stageReached: reachedStages(events),
+    stageReached: reachedStages(events, stages),
   }
 }
 
@@ -272,14 +312,15 @@ async function evaluateOne(
   events: readonly EventRow[],
   pauses: readonly PauseRow[],
   rules: readonly EscalationRuleConfig[],
+  stages: readonly StageRow[],
   externalType: string | null,
   now: number,
 ): Promise<EscalationFired[]> {
   const fired: EscalationFired[] = []
-  const facts = factsFor(ticket, events, pauses, externalType, now)
+  const facts = factsFor(ticket, events, pauses, stages, externalType, now)
 
   for (const rule of rules) {
-    const decision = decisionFor(ticket, rule, events, pauses, now)
+    const decision = decisionFor(ticket, rule, events, pauses, stages, now)
 
     if (decision === null) {
       continue
@@ -353,7 +394,10 @@ export async function evaluateEscalations(
   // The on-call offer timeout (`specs/04-oncall.md` §4a.6) is a part of the
   // scan: it hands a ticket that nobody took back to the group.
   const offers = await escalateOnCallOffers(database, now)
-  const rules = await readEscalationRules(database)
+  const [rules, stages] = await Promise.all([
+    readEscalationRules(database),
+    readEscalationStageChain(database),
+  ])
 
   if (rules.length === 0) {
     return {
@@ -407,6 +451,7 @@ export async function evaluateEscalations(
       events.filter((event) => event.ticketId === ticket.id),
       pauses.filter((pause) => pause.ticketId === ticket.id),
       rules,
+      stages,
       externalTypeByObject.get(ticket.objectId) ?? null,
       nowMs,
     )
@@ -445,7 +490,10 @@ export async function evaluateTicketEscalations(
       .limit(1),
   ])
 
-  const rules = await readEscalationRules(database)
+  const [rules, stages] = await Promise.all([
+    readEscalationRules(database),
+    readEscalationStageChain(database),
+  ])
 
   return await evaluateOne(
     database,
@@ -453,6 +501,7 @@ export async function evaluateTicketEscalations(
     events,
     pauses,
     rules,
+    stages,
     objectRows[0]?.externalType ?? null,
     now.getTime(),
   )
