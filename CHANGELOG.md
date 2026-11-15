@@ -74,6 +74,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   its predecessor (or `received_at` without one) and fires a stage rule only
   while its stage is not reached. The hard-coded `STAGE_EVENTS` and
   `WAITING_STATUS_BY_REFERENCE` maps are gone.
+- The available stages of the ticket view come from the chain (WP-M14-64): the
+  detail answer offers the active stages whose `reached_by` names a transition
+  the current status allows, so a newly added stage appears and a removed or
+  inactive one does not. The fixed `ESCALATION_REACHABLE_STAGES` and
+  `ESCALATION_STAGE_EVENTS` maps are gone.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

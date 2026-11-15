@@ -7,12 +7,11 @@ import {
   validateEscalationStageChain,
   type EscalationActionConfig,
   type EscalationConfig,
-  type EscalationStageKey,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
 import { escalationActions, escalationRules, escalationStages } from '../db/schema'
-import { TRANSITION_EVENT_KEYS } from '../tickets/workflow'
+import { TRANSITION_EVENT_KEYS, TRANSITIONS } from '../tickets/workflow'
 
 /**
  * The configuration of the escalation (`specs/07-escalation.md` §7.9,
@@ -63,32 +62,6 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
   }
 }
 
-/**
- * The stages a ticket can still reach, by its status. The stage is a
- * milestone of the workflow; the variants are the events that reach it (the
- * stage "assignment" is reached by an assignment and by an offer).
- */
-export const ESCALATION_REACHABLE_STAGES: Record<string, readonly EscalationStageKey[]> = {
-  NEW: ['review'],
-  IN_REVIEW: ['work_order'],
-  WORK_ORDER_CREATED: ['assignment'],
-  OFFERED: ['acceptance'],
-  ASSIGNED: ['acceptance'],
-  ACCEPTED: ['acknowledgement'],
-  ACKNOWLEDGED: [],
-  CLOSED: [],
-  CANCELLED: [],
-}
-
-/** The events that reach a stage of the workflow. */
-export const ESCALATION_STAGE_EVENTS: Record<EscalationStageKey, readonly string[]> = {
-  review: ['review_started'],
-  work_order: ['work_order_set'],
-  assignment: ['assigned', 'offered'],
-  acceptance: ['accepted'],
-  acknowledgement: ['acknowledged'],
-}
-
 /** Reads the stage chain with its names, ordered by the positions. */
 export async function readEscalationStages(database: Db): Promise<
   {
@@ -118,24 +91,29 @@ export async function readEscalationStages(database: Db): Promise<
 /**
  * The stages the ticket can still reach, with the events that reach them. The
  * ticket view offers them instead of one button per workflow step
- * (`specs/07-escalation.md` §7.10).
+ * (`specs/07-escalation.md` §7.10). A stage qualifies when one of its
+ * `reached_by` events is a transition the current status allows (ADR-0023).
  */
 export async function readReachableStages(
   database: Db,
   status: string,
 ): Promise<{ key: string; names: Record<string, string>; events: string[] }[]> {
-  const reachable = ESCALATION_REACHABLE_STAGES[status] ?? []
+  const allowedEvents = new Set([
+    ...Object.keys(TRANSITIONS[status] ?? {}),
+    ...Object.keys(TRANSITIONS['*'] ?? {}),
+  ])
   const stages = await readEscalationStages(database)
-  const byKey = new Map(stages.map((stage) => [stage.key, stage]))
 
-  return reachable.flatMap((key) => {
-    const stage = byKey.get(key)
-
-    if (stage === undefined) {
+  return stages.flatMap((stage) => {
+    if (!stage.active) {
       return []
     }
 
-    return [{ key, names: stage.names, events: [...(ESCALATION_STAGE_EVENTS[key] ?? [])] }]
+    const events = stage.reachedBy.filter((event) => allowedEvents.has(event))
+
+    return events.length === 0
+      ? []
+      : [{ key: stage.key, names: stage.names, events }]
   })
 }
 

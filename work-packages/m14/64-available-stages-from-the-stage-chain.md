@@ -1,7 +1,7 @@
 # WP-M14-64: The available stages of the ticket view come from the chain
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-59, WP-M14-60, WP-M14-62, WP-M14-63
 phase: 14
 context-budget: 18k tokens
@@ -60,8 +60,8 @@ Expected: all green; the phase-13 stage-selection tests keep passing unchanged.
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/api/src/escalation/config.ts`, `apps/api/src/tickets/__tests__/detail-stages.integration.spec.ts`
+- Interfaces added: `readReachableStages` derives the offered stages from `reachedBy` and `TRANSITIONS`; `ESCALATION_REACHABLE_STAGES` and `ESCALATION_STAGE_EVENTS` are gone
+- Verified: `npm run typecheck -w @stoerdesk/api` and ESLint; the integration spec needs `TEST_DATABASE_URL` and is unverified in this container
 - Follow-up WP: WP-M14-65 (the administration adds and removes stages)
 - Open question: none

@@ -85,5 +85,32 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(stages[0]?.names.de).toBe('Prüfung durch das Büro')
     })
+
+    it('offers a stage that names a transition of the current status', async () => {
+      await db
+        .update(schema.escalationStages)
+        .set({ reachedBy: ['assigned', 'offered', 'claimed'] })
+        .where(eq(schema.escalationStages.key, 'assignment'))
+
+      const stages = await readReachableStages(db, 'OFFERED')
+
+      expect(stages.map((stage) => stage.key)).toEqual(['assignment', 'acceptance'])
+      expect(stages[0]?.events).toEqual(['claimed'])
+    })
+
+    it('never offers a stage with an empty reached_by', async () => {
+      await db.insert(schema.escalationStages).values({
+        key: 'no_event',
+        names: { de: 'Ohne Ereignis', en: 'No event' },
+        position: 30,
+        active: true,
+        predecessor: null,
+        reachedBy: [],
+      })
+
+      const stages = await readReachableStages(db, 'NEW')
+
+      expect(stages.map((stage) => stage.key)).not.toContain('no_event')
+    })
   },
 )
