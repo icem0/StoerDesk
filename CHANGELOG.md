@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The `status_change` escalation action gets its contract and its engine (WP-M14-40b, the second
+  layer of the action): `ESCALATION_ACTION_TYPES` gains `status_change` and the discriminated union
+  of `packages/shared/src/schemas/escalation-config.ts` gains the variant
+  `{ key, type: 'status_change', toStatus, condition }` with `toStatus` bound to `ticketStatusKeySchema`.
+  `apps/api/src/escalation/config.ts` maps the action onto the `config` jsonb (`{ toStatus }`) in
+  `actionConfig` and `writeEscalationConfig` rejects a target status that names no row of
+  `ticket_statuses` with `400 invalid_status_key` and the field path
+  `rules.<i>.actions.<j>.toStatus` — the service rule of WP-M14-39, now on the escalation side,
+  because the jsonb of WP-M14-40 can carry no foreign key. `apps/api/src/escalation/actions.ts`
+  performs the step: a `status_change` action whose condition matches finds the **active** row of
+  `ticket_transitions` that leads from the current status of the ticket to the target
+  (`readTicketTransitions`), runs it through `transitionTicket()` (`actorKind: 'system'`, the payload
+  carries the rule and the stage, never a contact), appends one `escalation_note` event
+  `{ rule, stage, from, to }` documenting the change and counts the move in the `statusChanged`
+  counter of `EscalationActionResult`; without such a step the action changes nothing (ADR-0025,
+  §7.13). The shared unit test of the new variant, the fired-rule case of
+  `apps/api/src/escalation/__tests__/actions.integration.spec.ts` (status moved once, the step event
+  and the note written, a second scan a no-op) and the `400 invalid_status_key` of
+  `config-routes.integration.spec.ts` prove it. WP-M14-40c (the administration UI) was already split
+  in the WP-M14-40 commit and stays open; the stale `status: planned` of that WP file is corrected to
+  `done` in this commit.
 - The `status_change` escalation action becomes legal in the database (WP-M14-40, the database
   layer of the action): the planned package mixed database, contract, engine and UI over the four
   source-file limit of `PLAN.md` §17 and named the taken migration number `0036`

@@ -669,6 +669,25 @@ replaces the boundary that the escalation never changes a ticket state: only suc
 the status, and only through a step of the `ticket_transitions` table of WP-M14-38a (ADR-0025).
 WP-M14-40b, WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
 
+**WP-M14-40b is implemented (the shared contract of the `status_change` action and the engine
+that performs it).** `ESCALATION_ACTION_TYPES` gains `status_change` and the discriminated union
+in `packages/shared/src/schemas/escalation-config.ts` gains the variant `{ key, type: 'status_change',
+toStatus, condition }` with `toStatus` bound to `ticketStatusKeySchema`. `apps/api/src/escalation/config.ts`
+maps the action onto the `config` jsonb (`{ toStatus }`) in `actionConfig` and `writeEscalationConfig`
+rejects a target that names no row of `ticket_statuses` with `400 invalid_status_key` and the field
+path `rules.<i>.actions.<j>.toStatus` — the service rule of WP-M14-39, now on the escalation side,
+because the jsonb of WP-M14-40 can carry no foreign key. `apps/api/src/escalation/actions.ts` performs
+the step: a `status_change` action whose condition matches finds the **active** row of `ticket_transitions`
+that leads from the current status of the ticket to the target (`readTicketTransitions`), runs it
+through `transitionTicket()` (`actorKind: 'system'`, the payload carries the rule and the stage,
+never a contact), appends one `escalation_note` event `{ rule, stage, from, to }` and counts the move
+in the `statusChanged` counter of `EscalationActionResult`; without such a step the action changes
+nothing. The shared unit test of the new variant, the fired-rule case of
+`apps/api/src/escalation/__tests__/actions.integration.spec.ts` (status moved once, the step event
+and the note written, a second scan a no-op) and the `400 invalid_status_key` of
+`config-routes.integration.spec.ts` prove it. WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 …
+WP-M14-72 stay open in numeric order.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1098,7 +1117,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-39  | the ticket transition administration API (CRUD)                             | done    | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | done    | yes     |
 | WP-M14-40  | status_change as escalation action — the database layer (migration 0042)  | done    | yes     |
-| WP-M14-40b | the status_change contract and the engine (config jsonb, dispatcher)       | planned | yes     |
+| WP-M14-40b | the status_change contract and the engine (config jsonb, dispatcher)       | done    | yes     |
 | WP-M14-40c | status_change in the escalation administration UI                          | planned | yes     |
 | WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
 | WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | done    | yes     |

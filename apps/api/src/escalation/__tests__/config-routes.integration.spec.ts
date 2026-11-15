@@ -271,6 +271,37 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(malformed.json<ErrorResponseBody>().code).toBe('invalid_request')
     })
 
+    it('refuses a status_change to an unknown status with 400 invalid_status_key', async () => {
+      const response = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'review',
+            stageKey: 'review',
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                key: 'to_ghost',
+                type: 'status_change',
+                toStatus: 'GHOST_STATUS',
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      })
+
+      expect(response.statusCode).toBe(400)
+
+      const body = response.json<ErrorResponseBody>()
+
+      expect(body.code).toBe('invalid_status_key')
+      expect(body.params?.fields).toEqual(['rules.0.actions.0.toStatus'])
+    })
+
     it('replaces the names of the stages and keeps their chain', async () => {
       const response = await putStages(cookies['admin'], {
         stages: DEFAULT_CHAIN.map((stage) =>

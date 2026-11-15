@@ -159,5 +159,68 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(outboxRows).toHaveLength(0)
     })
+
+    it('moves the status of a ticket with a status_change action', async () => {
+      await db.insert(schema.escalationActions).values({
+        key: 'status_to_review',
+        ruleKey: 'review',
+        type: 'status_change',
+        config: { toStatus: 'IN_REVIEW' },
+        condition: { all: [] },
+        position: 3,
+        active: true,
+      })
+
+      const ticket = await createTicket('critical')
+
+      const fired = await evaluateTicketEscalations(db, ticket.id, now)
+
+      expect(fired.map((entry) => entry.rule)).toContain('review')
+
+      const [moved] = await db
+        .select({ status: tickets.status })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(moved?.status).toBe('IN_REVIEW')
+
+      const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
+
+      const step = events.find(
+        (event) => event.type === 'review_started' && event.actorKind === 'system',
+      )
+
+      expect(step?.payload).toMatchObject({ rule: 'review', stage: 'review' })
+
+      const note = events.find((event) => {
+        if (event.type !== 'escalation_note') {
+          return false
+        }
+
+        const payload = event.payload as Record<string, unknown>
+
+        return payload.to === 'IN_REVIEW'
+      })
+
+      expect(note?.payload).toMatchObject({
+        rule: 'review',
+        stage: 'review',
+        from: 'NEW',
+        to: 'IN_REVIEW',
+      })
+
+      const again = await evaluateTicketEscalations(db, ticket.id, now)
+
+      expect(again).toHaveLength(0)
+
+      const [stillInReview] = await db
+        .select({ status: tickets.status })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(stillInReview?.status).toBe('IN_REVIEW')
+    })
   },
 )

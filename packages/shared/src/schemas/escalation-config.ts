@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { TICKET_PRIORITIES } from '../timeline.js'
-import { TICKET_STATUS_VALUES } from './ticket.js'
+import { TICKET_STATUS_VALUES, ticketStatusKeySchema } from './ticket.js'
 
 /**
  * Contracts of the escalation configuration (`specs/07-escalation.md`
@@ -45,8 +45,11 @@ export const ESCALATION_REFERENCE_EVENTS = [
 
 export type EscalationReferenceEvent = (typeof ESCALATION_REFERENCE_EVENTS)[number]
 
-/** The actions of a rule (§7.5); none of them changes a ticket. */
-export const ESCALATION_ACTION_TYPES = ['notify', 'webhook', 'history'] as const
+/**
+ * The actions of a rule (§7.5); only a `status_change` action moves the status
+ * and only through a step of the transition table (WP-M14-40, §7.13, ADR-0025).
+ */
+export const ESCALATION_ACTION_TYPES = ['notify', 'webhook', 'history', 'status_change'] as const
 
 export type EscalationActionType = (typeof ESCALATION_ACTION_TYPES)[number]
 
@@ -301,6 +304,19 @@ export const escalationActionConfigSchema = z.discriminatedUnion('type', [
     type: z.literal('history'),
     /** The note of the ticket history; the event carries it unchanged. */
     text: z.string().trim().min(1).max(500).optional(),
+    condition: escalationConditionSchema,
+  }),
+  z.object({
+    key: z.string().regex(keyPattern),
+    type: z.literal('status_change'),
+    /**
+     * The target status of the action (§7.5, WP-M14-40) — the key of a row of
+     * `ticket_statuses`; the dispatcher performs the step of
+     * `ticket_transitions` (§7.13) that leads from the current status of the
+     * ticket to it, so the key format is the one of `ticketStatusKeySchema`
+     * and the service checks the row itself (WP-M14-40b).
+     */
+    toStatus: ticketStatusKeySchema,
     condition: escalationConditionSchema,
   }),
 ])

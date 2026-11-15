@@ -1,7 +1,7 @@
 # WP-M14-40: status_change as an escalation action — the database layer
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-39b
 phase: 14
 context-budget: 14k tokens

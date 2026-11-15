@@ -10,7 +10,7 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { escalationActions, escalationRules, escalationStages } from '../db/schema'
+import { escalationActions, escalationRules, escalationStages, ticketStatuses } from '../db/schema'
 import { TRANSITION_EVENT_KEYS, TRANSITIONS } from '../tickets/workflow'
 
 /**
@@ -57,6 +57,8 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
       return { endpointIds: action.endpointIds }
     case 'history':
       return action.text === undefined ? {} : { text: action.text }
+    case 'status_change':
+      return { toStatus: action.toStatus }
     default:
       return {}
   }
@@ -213,6 +215,28 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 
   if (invalidFields.length > 0) {
     throw new EscalationConfigError(400, 'invalid_request', { fields: invalidFields })
+  }
+
+  // The target of a `status_change` action names a row of `ticket_statuses`
+  // (WP-M14-40b, the service rule of WP-M14-39 on the escalation side): the jsonb
+  // `config` of the action cannot carry a foreign key (WP-M14-40), so the service
+  // checks it and answers `400 invalid_status_key` with the field path.
+  const statusKeyRows = await database
+    .select({ key: ticketStatuses.key })
+    .from(ticketStatuses)
+  const statusKeys = new Set(statusKeyRows.map((row) => row.key))
+  const unknownStatusFields: string[] = []
+
+  for (const [ruleIndex, rule] of parsed.data.rules.entries()) {
+    for (const [actionIndex, action] of rule.actions.entries()) {
+      if (action.type === 'status_change' && !statusKeys.has(action.toStatus)) {
+        unknownStatusFields.push(`rules.${ruleIndex}.actions.${actionIndex}.toStatus`)
+      }
+    }
+  }
+
+  if (unknownStatusFields.length > 0) {
+    throw new EscalationConfigError(400, 'invalid_status_key', { fields: unknownStatusFields })
   }
 
   await database.transaction(async (tx) => {

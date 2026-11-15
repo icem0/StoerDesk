@@ -16,15 +16,21 @@ import {
   webhookDeliveries,
   webhookEndpoints,
 } from '../db/schema'
+import { transitionTicket } from '../tickets/workflow'
+import { readTicketTransitions } from '../tickets/transition-service'
 
 /**
  * The actions of a fired rule (`specs/07-escalation.md` §7.5, ADR-0017,
  * WP-M13-07b).
  *
  * `notify` writes one outbox row per selected channel, `webhook` one delivery
- * row per selected endpoint and `history` one append-only note in the ticket
- * history. Every action carries its own condition: an action whose condition
- * does not match does not run. None of the actions changes a ticket.
+ * row per selected endpoint, `history` one append-only note in the ticket
+ * history and `status_change` performs the step of the `ticket_transitions`
+ * table that leads from the current status of the ticket to the configured
+ * target (§7.5, §7.13, ADR-0025, WP-M14-40b) and appends one `escalation_note`
+ * event documenting the change. Every action carries its own condition: an
+ * action whose condition does not match does not run. No action changes an
+ * assignment, a priority, a deadline or a work order.
  */
 
 type Db = Database['database']
@@ -41,6 +47,8 @@ export type EscalationActionResult = {
   notified: number
   webhooks: number
   notes: number
+  /** The ticket status the `status_change` actions moved (WP-M14-40b). */
+  statusChanged: number
 }
 
 type ActionRow = {
@@ -73,7 +81,12 @@ export async function dispatchEscalationActions(
   firing: EscalationFiring,
   facts: EscalationFacts,
 ): Promise<EscalationActionResult> {
-  const result: EscalationActionResult = { notified: 0, webhooks: 0, notes: 0 }
+  const result: EscalationActionResult = {
+    notified: 0,
+    webhooks: 0,
+    notes: 0,
+    statusChanged: 0,
+  }
 
   const rows = await database
     .select()
@@ -93,6 +106,7 @@ export async function dispatchEscalationActions(
   const ticketRows = await database
     .select({
       ticketNo: tickets.ticketNo,
+      status: tickets.status,
       priority: tickets.priority,
       objectName: objects.name,
     })
@@ -191,6 +205,49 @@ export async function dispatchEscalationActions(
       })
 
       result.notes += 1
+      continue
+    }
+
+    if (row.type === 'status_change') {
+      const toStatus = typeof config.toStatus === 'string' ? config.toStatus : undefined
+
+      if (toStatus === undefined || ticket === undefined) {
+        continue
+      }
+
+      const from = ticket.status
+      const transitions = await readTicketTransitions(database)
+      const step = transitions.find(
+        (transition) =>
+          transition.active && transition.fromStatus === from && transition.toStatus === toStatus,
+      )
+
+      // Without an active step to the target the action changes nothing (§7.13).
+      if (step === undefined) {
+        continue
+      }
+
+      await transitionTicket({
+        database,
+        ticketId: firing.ticketId,
+        event: step.eventKey,
+        actorKind: 'system',
+        payload: { rule: firing.ruleKey, stage: firing.stageKey },
+      })
+
+      await database.insert(ticketEvents).values({
+        ticketId: firing.ticketId,
+        type: 'escalation_note',
+        actorKind: 'system',
+        payload: {
+          rule: firing.ruleKey,
+          stage: firing.stageKey,
+          from,
+          to: toStatus,
+        },
+      })
+
+      result.statusChanged += 1
     }
   }
 

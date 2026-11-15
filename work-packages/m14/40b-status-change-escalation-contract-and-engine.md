@@ -1,7 +1,7 @@
 # WP-M14-40b: the shared contract of `status_change` and the engine that performs it
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-40
 phase: 14
 context-budget: 18k tokens

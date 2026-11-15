@@ -834,6 +834,23 @@ service validates it against `ticket_statuses` in WP-M14-40b (the rule of WP-M14
 replaces the boundary „the escalation never changes a ticket state" with the rule that only such an
 action moves the status, through a step of the `ticket_transitions` table of WP-M14-38a (ADR-0025).
 WP-M14-40b, WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+**WP-M14-40b is implemented** (the shared contract of the `status_change` action and the engine that
+performs it): `ESCALATION_ACTION_TYPES` gains `status_change` and the discriminated union of
+`packages/shared/src/schemas/escalation-config.ts` gains the variant `{ key, type: 'status_change',
+toStatus, condition }` with `toStatus` bound to `ticketStatusKeySchema`. `apps/api/src/escalation/config.ts`
+maps the action onto the `config` jsonb (`{ toStatus }`) in `actionConfig` and `writeEscalationConfig`
+rejects a target that names no row of `ticket_statuses` with `400 invalid_status_key` and the field path
+`rules.<i>.actions.<j>.toStatus` — the service rule of WP-M14-39, now on the escalation side, because
+the jsonb of WP-M14-40 can carry no foreign key. `apps/api/src/escalation/actions.ts` performs the step:
+a `status_change` action whose condition matches finds the **active** row of `ticket_transitions` that
+leads from the current status of the ticket to the target (`readTicketTransitions`), runs it through
+`transitionTicket()` (`actorKind: 'system'`, the payload carries the rule and the stage, never a contact),
+appends one `escalation_note` event `{ rule, stage, from, to }` and counts the move in the `statusChanged`
+counter of `EscalationActionResult`; without such a step the action changes nothing. The shared unit test
+of the new variant, the fired-rule case of `apps/api/src/escalation/__tests__/actions.integration.spec.ts`
+(status moved once, the step event and the note written, a second scan a no-op) and the `400 invalid_status_key`
+of `config-routes.integration.spec.ts` prove it. WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 …
+WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

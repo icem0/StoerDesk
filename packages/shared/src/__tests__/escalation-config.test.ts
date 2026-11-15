@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_WORKFLOW_ESCALATION_RULES,
   DEFAULT_WORKFLOW_ESCALATION_STAGES,
+  ESCALATION_ACTION_TYPES,
   ESCALATION_STAGE_KEYS,
   escalationConfigSchema,
   escalationConditionDepth,
@@ -175,9 +176,68 @@ describe('the default rules', () => {
   })
 })
 
+describe('the action contract', () => {
+  it('carries the fourth action type status_change', () => {
+    expect(ESCALATION_ACTION_TYPES).toContain('status_change')
+  })
+
+  it('accepts a status_change action with a status key', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [
+        {
+          key: 'review',
+          stageKey: 'review',
+          reference: 'received_at',
+          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          percent: null,
+          condition: { all: [] },
+          actions: [
+            {
+              key: 'to_work_order',
+              type: 'status_change',
+              toStatus: 'WORK_ORDER_CREATED',
+              condition: { all: [] },
+            },
+          ],
+          active: true,
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a status_change action whose target is no status key', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [
+        {
+          key: 'review',
+          stageKey: 'review',
+          reference: 'received_at',
+          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          percent: null,
+          condition: { all: [] },
+          actions: [
+            {
+              key: 'to_lower',
+              type: 'status_change',
+              toStatus: 'work_order',
+              condition: { all: [] },
+            },
+          ],
+          active: true,
+        },
+      ],
+    })
+
+    expect(result.success).toBe(false)
+  })
+})
+
 describe('the condition contract', () => {
-  it('rejects a leaf with a value of the wrong type', () => {
-    const result = escalationConditionSchema.safeParse({
+  it('rejects a leaf with a value of the wrong type', () => {    const result = escalationConditionSchema.safeParse({
       field: 'priority',
       operator: 'eq',
       value: 42,
