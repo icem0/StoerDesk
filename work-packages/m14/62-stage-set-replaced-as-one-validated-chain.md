@@ -72,4 +72,5 @@ database, the `404` of the removed manual escalation routes stays unchanged.
 - Interfaces added: `TRANSITION_EVENT_KEYS`, replace-all `writeEscalationStages` over the validated chain, rule-clock guard against the stage predecessor
 - Verified: `npm run typecheck --workspaces --if-present`, the shared escalation test suite and ESLint; the route integration spec needs `TEST_DATABASE_URL` and is unverified in this container
 - Follow-up WP: WP-M14-63 (the engine reads the chain)
+- Correction: `writeEscalationStages` resets an explicit rule `reference` that no longer matches the moved stage clock to `null`; a predecessor change must leave a readable configuration (found by WP-M14-67)
 - Open question: none

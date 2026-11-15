@@ -267,6 +267,13 @@
       "when": 1794103216000,
       "tag": "0037_escalation_stage_chain",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794103217000,
+      "tag": "0038_escalation_rule_stage_clock",
+      "breakpoints": true
     }
   ]
 }

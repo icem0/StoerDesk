@@ -1,4 +1,4 @@
-import { asc, notInArray } from 'drizzle-orm'
+import { asc, eq, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   escalationConfigSchema,
@@ -304,6 +304,49 @@ export async function writeEscalationStages(
       await tx.delete(escalationStages)
     } else {
       await tx.delete(escalationStages).where(notInArray(escalationStages.key, keys))
+    }
+
+    // A predecessor change moves the clock of its stage. An explicit reference
+    // that no longer matches the new clock falls back to the stage clock
+    // (`reference = null`), so the written chain and the existing rules stay a
+    // readable configuration (ADR-0023, §7.11).
+    const [chainRows, ruleRows] = await Promise.all([
+      tx
+        .select({
+          key: escalationStages.key,
+          predecessor: escalationStages.predecessor,
+          reachedBy: escalationStages.reachedBy,
+        })
+        .from(escalationStages),
+      tx
+        .select({
+          key: escalationRules.key,
+          stageKey: escalationRules.stageKey,
+          reference: escalationRules.reference,
+        })
+        .from(escalationRules),
+    ])
+    const chainByKey = new Map(chainRows.map((stage) => [stage.key, stage]))
+
+    for (const rule of ruleRows) {
+      if (rule.stageKey === null || rule.reference === null) {
+        continue
+      }
+
+      const stage = chainByKey.get(rule.stageKey)
+      const clockEvents =
+        stage === undefined
+          ? []
+          : stage.predecessor === null
+            ? ['received_at']
+            : (chainByKey.get(stage.predecessor)?.reachedBy ?? [])
+
+      if (!clockEvents.includes(rule.reference)) {
+        await tx
+          .update(escalationRules)
+          .set({ reference: null, updatedAt })
+          .where(eq(escalationRules.key, rule.key))
+      }
     }
   })
 

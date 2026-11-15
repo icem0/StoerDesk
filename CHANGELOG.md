@@ -84,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   offers its predecessor (or no predecessor), an add row creates a stage and a
   remove action names the affected rules before it saves the set without the
   stage. The German and English texts explain the chain and its cascade.
+- A stage rule may take the clock of its stage (`reference = null`) on the
+  database too (WP-M14-59/WP-M14-62 correction): migration `0038` replaces the
+  clock check, and a stage write resets an explicit reference that no longer
+  matches the moved predecessor clock instead of leaving the configuration
+  unreadable.
 - The stage tab is covered by page tests (WP-M14-66): served stage order,
   predecessor options, the add row, the remove action with its affected rule
   keys and the empty-key guard are asserted in both languages.

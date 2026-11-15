@@ -1229,7 +1229,7 @@ export const escalationRules = pgTable(
     index('escalation_rules_stage_key_idx').on(table.stageKey),
     check(
       'escalation_rules_clock_check',
-      sql`((${table.reference} IS NOT NULL AND ${table.minutes} IS NOT NULL) OR (${table.percent} IS NOT NULL AND ${table.percent} BETWEEN 1 AND 100))`,
+      sql`((${table.minutes} IS NOT NULL) OR (${table.percent} IS NOT NULL AND ${table.percent} BETWEEN 1 AND 100))`,
     ),
   ],
 )

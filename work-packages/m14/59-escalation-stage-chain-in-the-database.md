@@ -76,4 +76,5 @@ journal up to `0037`.
 - Interfaces added: the columns `predecessor` and `reached_by`, the cascade key
 - Verified: `npm run typecheck --workspaces --if-present` and ESLint of the schema; the migration is not applied in this container (no database run)
 - Follow-up WP: WP-M14-60 (the shared contracts)
+- Correction: migration `0038_escalation_rule_stage_clock.sql` replaces `escalation_rules_clock_check`, because a stage rule takes its stage clock with `reference = null` (found by WP-M14-67)
 - Open question: none
