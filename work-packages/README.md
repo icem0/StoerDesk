@@ -893,7 +893,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-57  | the copied ntfy curl is one shell command (out of band)                  | done    | yes     |
 | WP-M14-58  | the escalation stage chain — spec, ADR-0023 and the split (out of band) | done    | yes     |
 | WP-M14-59  | the stage chain in the database (migration 0037) (out of band)         | done    | yes     |
-| WP-M14-60  | the shared contracts and the chain validator (out of band)             | planned | yes     |
+| WP-M14-60  | the shared contracts and the chain validator (out of band)             | done    | yes     |
 | WP-M14-61  | the seed carries the stage chain (out of band)                         | planned | yes     |
 | WP-M14-62  | the stage set is replaced as one validated chain (out of band)         | planned | yes     |
 | WP-M14-63  | the escalation engine reads the stage chain (out of band)              | planned | yes     |

@@ -9,8 +9,10 @@ import {
   escalationConditionLeafCount,
   escalationConditionSchema,
   evaluateEscalationCondition,
+  validateEscalationStageChain,
   type EscalationCondition,
   type EscalationFacts,
+  type EscalationStageConfig,
 } from '../schemas/escalation-config.js'
 
 const facts: EscalationFacts = {
@@ -44,13 +46,96 @@ describe('the escalation stages', () => {
     }
   })
 
-  it('reject a stage key outside the workflow', () => {
+  it('accept a stage outside the default chain', () => {
     const result = escalationConfigSchema.safeParse({
-      stages: [{ key: 'office', names: { de: 'Büro', en: 'Office' }, position: 1, active: true }],
+      stages: [
+        {
+          key: 'office',
+          names: { de: 'Büro', en: 'Office' },
+          position: 1,
+          active: true,
+          predecessor: null,
+          reachedBy: ['review_started'],
+        },
+      ],
       rules: [],
     })
 
-    expect(result.success).toBe(false)
+    expect(result.success).toBe(true)
+  })
+
+  it('carry their predecessor and their reaching events', () => {
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[0]?.predecessor).toBeNull()
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[1]?.predecessor).toBe('review')
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[2]?.reachedBy).toEqual(['assigned', 'offered'])
+  })
+})
+
+describe('the stage chain validator', () => {
+  const events = ['review_started', 'work_order_set', 'assigned', 'offered', 'accepted', 'acknowledged']
+
+  function stage(
+    key: string,
+    position: number,
+    predecessor: string | null,
+    reachedBy: string[] = [],
+  ): EscalationStageConfig {
+    return {
+      key,
+      names: { de: key, en: key },
+      position,
+      active: true,
+      predecessor,
+      reachedBy,
+    }
+  }
+
+  it('accepts the default chain and an intermediate stage', () => {
+    expect(validateEscalationStageChain(DEFAULT_WORKFLOW_ESCALATION_STAGES, events)).toEqual([])
+    expect(
+      validateEscalationStageChain(
+        [
+          stage('review', 1, null, ['review_started']),
+          stage('work_order', 2, 'review', ['work_order_set']),
+          stage('night_shift', 3, 'work_order', ['assigned']),
+          stage('acceptance', 4, 'night_shift', ['accepted']),
+        ],
+        events,
+      ),
+    ).toEqual([])
+  })
+
+  it('names an unknown predecessor, a cycle and a contradictory position', () => {
+    expect(
+      validateEscalationStageChain(
+        [stage('review', 1, null), stage('office', 2, 'missing')],
+        events,
+      ),
+    ).toContain('stages.1.predecessor')
+
+    expect(
+      validateEscalationStageChain(
+        [stage('review', 1, 'office'), stage('office', 2, 'review')],
+        events,
+      ),
+    ).toContain('stages.0.predecessor')
+
+    expect(
+      validateEscalationStageChain(
+        [stage('review', 2, null), stage('office', 1, 'review')],
+        events,
+      ),
+    ).toContain('stages.1.position')
+  })
+
+  it('names a duplicate key and an unknown reaching event', () => {
+    expect(
+      validateEscalationStageChain([stage('review', 1, null), stage('review', 2, null)], events),
+    ).toContain('stages.1.key')
+
+    expect(
+      validateEscalationStageChain([stage('review', 1, null, ['not_an_event'])], events),
+    ).toContain('stages.0.reachedBy.0')
   })
 })
 

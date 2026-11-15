@@ -1,7 +1,7 @@
 # WP-M14-60: The shared contracts of the escalation stage chain
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-58
 phase: 14
 context-budget: 20k tokens
@@ -70,8 +70,8 @@ and passes after it.
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `packages/shared/src/schemas/escalation-config.ts`, `packages/shared/src/__tests__/escalation-config.test.ts`
+- Interfaces added: `predecessor`/`reachedBy` on `EscalationStageConfig`, `escalationStagesBodySchema`, `validateEscalationStageChain(stages, eventKeys)`; free stage keys in rules and `stageReached`
+- Verified: `npm run typecheck -w @stoerdesk/shared`, the shared escalation test suite (20 tests) and ESLint
 - Follow-up WP: WP-M14-61 (the seed of the chain)
 - Open question: none

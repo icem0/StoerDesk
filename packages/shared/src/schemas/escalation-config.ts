@@ -8,18 +8,21 @@ import { TICKET_STATUS_VALUES } from './ticket.js'
  * §7.1–§7.5, ADR-0017).
  *
  * The escalation stages are the milestones of the ticket workflow: their keys
- * are fixed, their names and their deadlines are maintained in the
- * administration. A rule is a waiting deadline with a condition and a list of
- * actions; a condition is a typed tree over a closed list of fields, never an
- * expression. The evaluation is a pure function, so the API and the
- * administration form share it.
+ * are free, their names, their predecessor and their reaching events are
+ * maintained in the administration. A rule is a waiting deadline with a
+ * condition and a list of actions; a condition is a typed tree over a closed
+ * list of fields, never an expression. The evaluation is a pure function, so
+ * the API and the administration form share it.
  *
  * The names carry the suffix `Config`, because the contracts of the former
  * manual stage catalogue (`EscalationStage`, `EscalationRule`) still exist
  * until WP-M13-11 removes them.
  */
 
-/** The five stage keys of §7.1; a stage is a milestone of the workflow. */
+/**
+ * The keys of the default chain of §7.1; they are the seed only, never a
+ * validation. An installation adds and removes stages of its own (ADR-0023).
+ */
 export const ESCALATION_STAGE_KEYS = [
   'review',
   'work_order',
@@ -28,7 +31,7 @@ export const ESCALATION_STAGE_KEYS = [
   'acknowledgement',
 ] as const
 
-export type EscalationStageKey = (typeof ESCALATION_STAGE_KEYS)[number]
+export type EscalationStageKey = string
 
 /** The events that start the waiting clock of a rule (§7.2). */
 export const ESCALATION_REFERENCE_EVENTS = [
@@ -75,14 +78,82 @@ export const escalationMinutesSchema = z.object({
 export type EscalationMinutes = z.infer<typeof escalationMinutesSchema>
 
 export const escalationStageConfigSchema = z.object({
-  key: z.enum(ESCALATION_STAGE_KEYS),
+  key: z.string().regex(keyPattern),
   /** One display name per locale; `de` and `en` are required. */
   names: z.record(z.string().regex(localePattern), z.string().trim().min(1).max(80)),
   position: z.number().int().min(1).max(20),
   active: z.boolean(),
+  /** The stage whose completion starts this stage's clock; `null` is the report. */
+  predecessor: z.string().regex(keyPattern).nullable().default(null),
+  /** The workflow event keys that reach this stage; empty means never reached. */
+  reachedBy: z.array(z.string().regex(keyPattern)).max(6).default([]),
 })
 
 export type EscalationStageConfig = z.infer<typeof escalationStageConfigSchema>
+
+/**
+ * The body of `PUT /api/v1/escalation/stages`: the whole stage set, replaced
+ * in one transaction (§7.11).
+ */
+export const escalationStagesBodySchema = z.object({
+  stages: z.array(escalationStageConfigSchema).max(20),
+})
+
+/**
+ * Checks the chain of §7.11 and returns the field paths of every violation:
+ * duplicate keys, a missing or self-referencing predecessor, a cycle, a
+ * position that is not greater than the predecessor's and an unknown
+ * `reachedBy` event. `eventKeys` are the event keys of the transition map.
+ */
+export function validateEscalationStageChain(
+  stages: readonly EscalationStageConfig[],
+  eventKeys: readonly string[],
+): string[] {
+  const issues: string[] = []
+  const allowedEvents = new Set(eventKeys)
+  const byKey = new Map<string, EscalationStageConfig>()
+
+  stages.forEach((stage, index) => {
+    if (byKey.has(stage.key)) {
+      issues.push(`stages.${index}.key`)
+    } else {
+      byKey.set(stage.key, stage)
+    }
+  })
+
+  stages.forEach((stage, index) => {
+    if (stage.predecessor !== null) {
+      const predecessor = byKey.get(stage.predecessor)
+
+      if (predecessor === undefined || stage.predecessor === stage.key) {
+        issues.push(`stages.${index}.predecessor`)
+      } else if (stage.position <= predecessor.position) {
+        issues.push(`stages.${index}.position`)
+      }
+    }
+
+    stage.reachedBy.forEach((event, eventIndex) => {
+      if (!allowedEvents.has(event)) {
+        issues.push(`stages.${index}.reachedBy.${eventIndex}`)
+      }
+    })
+
+    const seen = new Set<string>()
+    let current: string | null = stage.key
+
+    while (current !== null) {
+      if (seen.has(current)) {
+        issues.push(`stages.${index}.predecessor`)
+        break
+      }
+
+      seen.add(current)
+      current = byKey.get(current)?.predecessor ?? null
+    }
+  })
+
+  return [...new Set(issues)]
+}
 
 const enumOperators = ['eq', 'ne', 'in', 'notIn'] as const
 const numberOperators = ['gt', 'gte', 'lt', 'lte', 'eq'] as const
@@ -140,7 +211,10 @@ export const escalationConditionLeafSchema = z.union([
   leaf(
     'stageReached',
     enumOperators,
-    z.union([z.enum(ESCALATION_STAGE_KEYS), z.array(z.enum(ESCALATION_STAGE_KEYS)).min(1)]),
+    z.union([
+      z.string().regex(keyPattern),
+      z.array(z.string().regex(keyPattern)).min(1),
+    ]),
   ),
 ])
 
@@ -237,7 +311,7 @@ export const escalationRuleConfigSchema = z
   .object({
     key: z.string().regex(keyPattern),
     /** The stage of the rule; the deadline rules carry no stage. */
-    stageKey: z.enum(ESCALATION_STAGE_KEYS).nullable(),
+    stageKey: z.string().regex(keyPattern).nullable(),
     /** The event that starts the waiting clock. */
     reference: z.enum(ESCALATION_REFERENCE_EVENTS).nullable(),
     /** The waiting deadline per priority. */
@@ -273,11 +347,12 @@ export type EscalationRuleConfig = z.infer<typeof escalationRuleConfigSchema>
 
 export const escalationConfigSchema = z
   .object({
-    stages: z.array(escalationStageConfigSchema).max(ESCALATION_STAGE_KEYS.length),
+    stages: z.array(escalationStageConfigSchema).max(20),
     rules: z.array(escalationRuleConfigSchema).max(50),
   })
   .superRefine((config, context) => {
     const stageKeys = new Set<string>()
+    const stageByKey = new Map(config.stages.map((stage) => [stage.key, stage]))
 
     config.stages.forEach((stage, index) => {
       if (stageKeys.has(stage.key)) {
@@ -320,6 +395,23 @@ export const escalationConfigSchema = z
           path: ['rules', index, 'stageKey'],
           message: 'unknown_stage_key',
         })
+      }
+
+      const stage = rule.stageKey === null ? undefined : stageByKey.get(rule.stageKey)
+
+      if (stage !== undefined && rule.reference !== null) {
+        const clockEvents =
+          stage.predecessor === null
+            ? ['received_at']
+            : (stageByKey.get(stage.predecessor)?.reachedBy ?? [])
+
+        if (!clockEvents.includes(rule.reference)) {
+          context.addIssue({
+            code: 'custom',
+            path: ['rules', index, 'reference'],
+            message: 'reference_does_not_match_stage_clock',
+          })
+        }
       }
     })
 
@@ -478,27 +570,47 @@ export function evaluateEscalationCondition(
   return evaluateLeaf(condition, facts)
 }
 
-/** The stages of an installation with their default names (§7.1). */
+/** The default chain of an installation with its names (§7.1, §7.11). */
 export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[] = [
-  { key: 'review', names: { de: 'Prüfung', en: 'Review' }, position: 1, active: true },
+  {
+    key: 'review',
+    names: { de: 'Prüfung', en: 'Review' },
+    position: 1,
+    active: true,
+    predecessor: null,
+    reachedBy: ['review_started'],
+  },
   {
     key: 'work_order',
     names: { de: 'Auftrag angelegt', en: 'Work order created' },
     position: 2,
     active: true,
+    predecessor: 'review',
+    reachedBy: ['work_order_set'],
   },
   {
     key: 'assignment',
     names: { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' },
     position: 3,
     active: true,
+    predecessor: 'work_order',
+    reachedBy: ['assigned', 'offered'],
   },
-  { key: 'acceptance', names: { de: 'Angenommen', en: 'Accepted' }, position: 4, active: true },
+  {
+    key: 'acceptance',
+    names: { de: 'Angenommen', en: 'Accepted' },
+    position: 4,
+    active: true,
+    predecessor: 'assignment',
+    reachedBy: ['accepted'],
+  },
   {
     key: 'acknowledgement',
     names: { de: 'Quittiert', en: 'Acknowledged' },
     position: 5,
     active: true,
+    predecessor: 'acceptance',
+    reachedBy: ['acknowledged'],
   },
 ]
 

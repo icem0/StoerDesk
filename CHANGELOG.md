@@ -52,6 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `escalation_rules.stage_key` into a foreign key with `ON DELETE cascade`. The
   installed five-stage chain is backfilled, so a running installation keeps its
   behaviour; the Drizzle schema mirrors the new columns and the cascade.
+- The shared contracts of the stage chain are free of the five fixed keys
+  (WP-M14-60): `EscalationStageConfig` carries `predecessor` and `reachedBy`,
+  the rule and condition keys use the stage key pattern, the new
+  `validateEscalationStageChain` names duplicate keys, missing or self
+  predecessors, cycles, contradictory positions and unknown reaching events,
+  and `escalationStagesBodySchema` accepts up to 20 stages. The default chain
+  keeps its five stages as the seed only.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

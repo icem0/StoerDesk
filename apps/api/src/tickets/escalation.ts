@@ -162,7 +162,7 @@ function reachedStages(events: readonly EventRow[]): string[] {
 
   for (const event of events) {
     for (const stage of ESCALATION_STAGE_KEYS) {
-      if (STAGE_EVENTS[stage].includes(event.type)) {
+      if (STAGE_EVENTS[stage]?.includes(event.type)) {
         reached.add(stage)
       }
     }

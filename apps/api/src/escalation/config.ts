@@ -130,7 +130,7 @@ export async function readReachableStages(
       return []
     }
 
-    return [{ key, names: stage.names, events: [...ESCALATION_STAGE_EVENTS[key]] }]
+    return [{ key, names: stage.names, events: [...(ESCALATION_STAGE_EVENTS[key] ?? [])] }]
   })
 }
 
