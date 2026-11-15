@@ -288,6 +288,13 @@
       "when": 1794189600000,
       "tag": "0040_ticket_status_key_format",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794276000000,
+      "tag": "0041_ticket_transitions",
+      "breakpoints": true
     }
   ]
 }

@@ -566,6 +566,20 @@ read the table (`409 invalid_transition` for an unknown or inactive step, the wo
 columns still keyed by `event_key`). ADR-0025 decides the shape; `specs/07-escalation.md`
 gains §7.13. No product code in this commit.
 
+**WP-M14-38a is implemented (out of band in phase 14, the first child of WP-M14-38).**
+Migration `0041_ticket_transitions.sql` creates `ticket_transitions` — `id` (UUID v7),
+`from_status` and `to_status` as foreign keys to `ticket_statuses.key` with `ON DELETE
+cascade`, `event_key` with the unique index
+`ticket_transitions_from_status_event_key_key` over `(from_status, event_key)`, an index
+over `to_status`, the nullable `condition_json` (stored, evaluated only from WP-M14-41)
+and `active` — and seeds it idempotently: the nine default statuses (the values of
+`apps/api/src/db/seed/statuses.ts`) and the 22 steps of `PLAN.md` §7 (`ON CONFLICT …
+DO NOTHING`). `tickets_status_check` of migration `0004` is dropped (ADR-0025 decision
+5), the schema mirror `ticketTransitions` follows and the journal reaches `0041`.
+`apps/api/src/db/__tests__/ticketTables.integration.spec.ts` no longer expects the
+status CHECK — a `DONE`-style key stays on the ticket as history, the priority and
+source checks stay enforced. WP-M14-38b and WP-M14-38c stay open in numeric order.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -989,7 +1003,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-36  | ticket status management API (CRUD for statuses)                          | done    | yes     |
 | WP-M14-37  | ticket status management UI (admin page for statuses)                     | done    | yes     |
 | WP-M14-38  | the ticket transitions — spec, ADR-0025 and the split of the chain         | done    | yes     |
-| WP-M14-38a | the transition table in the database (migration 0041)                    | planned | yes     |
+| WP-M14-38a | the transition table in the database (migration 0041)                    | done    | yes     |
 | WP-M14-38b | the transition contracts and the transition service                      | planned | yes     |
 | WP-M14-38c | the workflow engine reads the transition table                           | planned | yes     |
 | WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |

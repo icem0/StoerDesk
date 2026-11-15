@@ -127,14 +127,15 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
     }
   })
 
-  it('rejects a duplicate client_uuid and unknown enum values', async () => {
+  it('rejects a duplicate client_uuid and unknown enum values, the status key stays history', async () => {
     const objectId = await newObject()
     const clientUuid = randomUUID()
 
     await newTicket(objectId, { clientUuid })
 
     await expectPgError('23505', () => newTicket(objectId, { clientUuid }))
-    await expectPgError('23514', () => newTicket(objectId, { status: 'DONE' }))
+    const parked = await newTicket(objectId, { status: 'DONE' })
+    expect(parked.status).toBe('DONE')
     await expectPgError('23514', () => newTicket(objectId, { priority: 'urgent' }))
     await expectPgError('23514', () => newTicket(objectId, { source: 'PHONE' }))
   })

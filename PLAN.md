@@ -758,6 +758,14 @@ old `tickets_status_check` dropped. The split is **WP-M14-38a** (the table),
 **WP-M14-38b** (the shared contracts and `readTicketTransitions`/`resolveTransition`)
 and **WP-M14-38c** (`transitionTicket()` reads the table); the three documents exist in
 this commit and run in numeric order before WP-M14-39.
+**WP-M14-38a is implemented** (the first child of WP-M14-38): migration
+`0041_ticket_transitions.sql` creates `ticket_transitions` (`id` UUID v7, `from_status`
+and `to_status` as foreign keys to `ticket_statuses.key` with `ON DELETE cascade`,
+`event_key` unique over `(from_status, event_key)`, the nullable `condition_json`,
+`active`) and seeds the 22 steps of §7 plus the nine default statuses idempotently;
+`tickets_status_check` of migration `0004` is dropped (ADR-0025 decision 5), `apps/api/src/db/schema.ts`
+mirrors the table as `ticketTransitions` and the journal reaches `0041`. WP-M14-38b and
+WP-M14-38c stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

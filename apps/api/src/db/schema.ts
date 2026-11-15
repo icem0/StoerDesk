@@ -530,7 +530,9 @@ export const tickets = pgTable(
     index('tickets_is_test_reported_at_idx')
       .on(table.reportedAt)
       .where(sql`${table.isTest} = false`),
-    check('tickets_status_check', sql`${table.status} IN (${checkList(TICKET_STATUSES)})`),
+    // `tickets_status_check` is dropped by migration 0041 (WP-M14-38a, ADR-0025
+    // decision 5): the rows of `ticket_statuses` are the status configuration and
+    // a ticket keeps its status key as history.
     check('tickets_priority_check', sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`),
     check('tickets_source_check', sql`${table.source} IN (${checkList(TICKET_SOURCES)})`),
     check(
@@ -1343,6 +1345,39 @@ export const ticketStatuses = pgTable(
   ],
 )
 
+/**
+ * A step of the configurable workflow (`specs/07-escalation.md` §7.13, ADR-0025,
+ * WP-M14-38a). `from_status` and `to_status` are foreign keys to
+ * `ticket_statuses.key` with `ON DELETE cascade`, so a removed status removes its
+ * steps; `event_key` is unique over `(from_status, event_key)` — one event performs
+ * at most one step. `conditionJson` is stored from migration `0041` and evaluated
+ * only from WP-M14-41; `active` switches a step off without deleting it.
+ */
+export const ticketTransitions = pgTable(
+  'ticket_transitions',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    fromStatus: text('from_status')
+      .notNull()
+      .references(() => ticketStatuses.key, { onDelete: 'cascade' }),
+    toStatus: text('to_status')
+      .notNull()
+      .references(() => ticketStatuses.key, { onDelete: 'cascade' }),
+    eventKey: text('event_key').notNull(),
+    conditionJson: jsonb('condition_json'),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('ticket_transitions_from_status_event_key_key').on(
+      table.fromStatus,
+      table.eventKey,
+    ),
+    index('ticket_transitions_to_status_idx').on(table.toStatus),
+  ],
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Session = typeof sessions.$inferSelect
@@ -1415,3 +1450,5 @@ export type NotificationPreference = typeof notificationPreferences.$inferSelect
 export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
 export type TicketStatusRow = typeof ticketStatuses.$inferSelect
 export type NewTicketStatusRow = typeof ticketStatuses.$inferInsert
+export type TicketTransitionRow = typeof ticketTransitions.$inferSelect
+export type NewTicketTransitionRow = typeof ticketTransitions.$inferInsert

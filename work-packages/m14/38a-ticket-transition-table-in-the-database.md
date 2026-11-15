@@ -1,7 +1,7 @@
 # WP-M14-38a: The ticket transition table in the database
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-38
 phase: 14
 context-budget: 18k tokens
@@ -77,8 +77,15 @@ existing workflow specs stay green; `npm run db:migrate` reports the journal up 
 
 ## Handoff
 
-- Files changed: the migration, the schema, the journal
-- Interfaces added: the `ticket_transitions` table and its columns
-- Verified:
+- Files changed: the migration, the schema, the journal, the `tickets_status_check`
+  expectation in `apps/api/src/db/__tests__/ticketTables.integration.spec.ts` (test,
+  outside the file count) and the repository bookkeeping
+- Interfaces added: the `ticket_transitions` table and its columns, `ticketTransitions`
+  in the schema mirror
+- Verified: `npm run db:migrate` applied `0030 … 0041` (the tracker row of migration
+  0029 was realigned with the journal's `when` first — the dev database had the row but
+  no record for it); `ticket_transitions` carries exactly the 22 seeded active rows,
+  `ticket_statuses` the nine defaults, `tickets_status_check` is gone; the full
+  `npm run test:run` is green with the updated `ticketTables` spec
 - Follow-up WP: WP-M14-38b (the shared contracts and the transition service)
 - Open question: none

@@ -356,6 +356,23 @@ the status — no name of a person, no contact value, no secret — and the new 
 throwaway users with `example.org` addresses, a mock object number and mock tickets
 only. No new finding.
 
+Transition-table pass: 2026-11-15, diff `2b2b7fa..` (WP-M14-38a —
+`apps/api/src/db/migrations/0041_ticket_transitions.sql` plus its journal entry,
+`apps/api/src/db/schema.ts` and `apps/api/src/db/__tests__/ticketTables.integration.spec.ts`)
+— areas A and B re-checked in full (the package adds no route, no capability and no
+bearer scope: the route table is unchanged, guards and session handling untouched), C
+re-checked for the changed files: the migration is literal SQL only — no request value
+enters it — both foreign keys cascade onto the unique `ticket_statuses.key`, the dropped
+`tickets_status_check` is the accepted ADR-0025 decision 5 (the rows of `ticket_statuses`
+are the status configuration and a ticket keeps its status key as history), the schema
+mirror binds every column through drizzle and the updated test asserts the new contract
+(an unknown status key is stored, the priority and source CHECKs and the duplicate
+`client_uuid` still rejected), D–J untouched (no frontend, no outbound request, no new
+environment key, no upload, no dependency, no compose or workflow change), K re-checked
+for the touched files: no log line added, no answer changed, the test writes mock object
+numbers and the `DONE` machine key only — no name, no contact value, no secret. No new
+finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -444,9 +461,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed) | aeab3ba |
-| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope) | aeab3ba |
-| C Injection | complete (re-checked for the changed files at the status-admin pass: schema-bound bodies, drizzle-bound lookups, updates and deletes, the two `sql` count templates carry column references only, migration 0040 carries the key-format CHECK) | aeab3ba |
+| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-table pass: untouched) | 2b2b7fa |
+| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-table pass: the route table is unchanged) | 2b2b7fa |
+| C Injection | complete (re-checked for the changed files at the transition-table pass: migration 0041 is literal SQL, the FKs cascade onto the unique `ticket_statuses.key`, `tickets_status_check` dropped per ADR-0025 decision 5) | 2b2b7fa |
 | D Frontend | complete (re-checked in the confirm-draft pass, only a button state was added) | 68cded7 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |

@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The transition table exists in the database (WP-M14-38a): migration
+  `0041_ticket_transitions.sql` creates `ticket_transitions` — `from_status` and
+  `to_status` as foreign keys to `ticket_statuses.key` with `ON DELETE cascade`,
+  `event_key` unique over `(from_status, event_key)`, the nullable `condition_json`
+  (stored, evaluated only from WP-M14-41) and `active` — and seeds it idempotently with
+  the 22 steps of `PLAN.md` §7 plus the nine default statuses; `tickets_status_check` of
+  migration `0004` is dropped (ADR-0025 decision 5: the status key on a ticket stays
+  history), `apps/api/src/db/schema.ts` mirrors the table as `ticketTransitions` and the
+  journal reaches `0041`.
 - The ticket transitions become configuration (WP-M14-38, documentation only, no product
   code): WP-M14-35 … WP-M14-37 made the statuses rows, but the steps stayed the code map
   `TRANSITIONS` in `apps/api/src/tickets/workflow.ts`, so a status an administrator adds has
