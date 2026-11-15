@@ -1,7 +1,7 @@
 # WP-M14-40c: the administration offers the `status_change` action
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-40b
 phase: 14
 context-budget: 16k tokens

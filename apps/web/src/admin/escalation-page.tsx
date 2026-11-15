@@ -13,6 +13,7 @@ import {
   type EscalationReferenceEvent,
   type EscalationRuleConfig,
   type EscalationStageConfig,
+  type TicketStatusResponse,
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
@@ -82,12 +83,21 @@ function useWebhookIds() {
   })
 }
 
+function useStatuses() {
+  return useQuery({
+    queryKey: ['escalation-statuses'],
+    queryFn: () => apiFetch<{ statuses: TicketStatusResponse[] }>('/v1/admin/statuses'),
+    retry: false,
+  })
+}
+
 export function EscalationPage() {
   const { t, i18n } = useTranslation('settings')
   const settingsQuery = useDeadlineSettings()
   const configQuery = useEscalationConfig()
   const channelsQuery = useChannelNames()
   const webhooksQuery = useWebhookIds()
+  const statusesQuery = useStatuses()
   const canWrite = usePermission('settings.write')
 
   const [tab, setTab] = useState('fristen')
@@ -151,6 +161,8 @@ export function EscalationPage() {
   for (const stage of config.stages) {
     stageLabels[stage.key] = stageName(stage.key)
   }
+
+  const statusKeys = (statusesQuery.data?.statuses ?? []).filter((status) => status.active).map((status) => status.key)
 
   const rulesOfStage = (key: string) =>
     config.rules.filter((rule) => rule.stageKey === key)
@@ -375,6 +387,7 @@ export function EscalationPage() {
                         canWrite={canWrite}
                         channels={channelsQuery.data?.channels ?? []}
                         endpointIds={(webhooksQuery.data?.webhooks ?? []).map((entry) => entry.id)}
+                        statuses={statusKeys}
                         stageNames={stageLabels}
                         onSave={(next) =>
                           void saveRules.mutate({
@@ -560,6 +573,7 @@ function RuleForm({
   canWrite,
   channels,
   endpointIds,
+  statuses,
   stageNames,
   onSave,
 }: {
@@ -567,6 +581,7 @@ function RuleForm({
   canWrite: boolean
   channels: string[]
   endpointIds: string[]
+  statuses: string[]
   stageNames: Record<string, string>
   onSave: (next: EscalationRuleConfig) => void
 }) {
@@ -665,6 +680,7 @@ function RuleForm({
         initial={rule.actions}
         channels={channels}
         endpointIds={endpointIds}
+        statuses={statuses}
         canWrite={canWrite}
         onActions={(next) => apply({ ...rule, actions: next })}
       />

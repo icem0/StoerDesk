@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The escalation administration offers the `status_change` action (WP-M14-40c, the third layer of
+  the action): `apps/web/src/admin/escalation-page.tsx` reads the statuses with the existing
+  administration route `GET /api/v1/admin/statuses` (WP-M14-36, `settings.read`) as a TanStack query
+  and passes the **active** status keys into `RuleForm` and on into `EscalationActionEditor`.
+  `apps/web/src/admin/escalation-action-editor.tsx` renders the new type with its label and a
+  single-select target-status field (`admin.escalation.action.statusTarget`) over those keys; `shapeOf`
+  and `actionOf` carry `toStatus` and the client validates the key with `ticketStatusKeySchema` before
+  the request, so an existing status key never enters an invalid body and a `status_change` action
+  without a target stays unsaved. The labels `admin.escalation.action.types.status_change` ("Status
+  change") and `admin.escalation.action.statusTarget` ("Ziel-Status"/"Target status") are added to the
+  `settings` namespace in `de` and `en`; `apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx`
+  proves the option, the target select over the configured statuses (the inactive status is not offered),
+  that the saved body carries `toStatus` and that an action without a target stays unsaved. No API,
+  schema or migration change (WP-M14-40, WP-M14-40b).
 - The `status_change` escalation action gets its contract and its engine (WP-M14-40b, the second
   layer of the action): `ESCALATION_ACTION_TYPES` gains `status_change` and the discriminated union
   of `packages/shared/src/schemas/escalation-config.ts` gains the variant

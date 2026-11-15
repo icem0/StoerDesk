@@ -61,6 +61,16 @@ function renderPage(permissions: string[]) {
       return Response.json({ webhooks: [{ id: ENDPOINT_ID }] })
     }
 
+    if (path.includes('/v1/admin/statuses')) {
+      return Response.json({
+        statuses: [
+          { key: 'NEW', nameDe: 'Neu', nameEn: 'New', color: '#6b7280', position: 0, active: true, isTerminal: false, ticketCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+          { key: 'IN_REVIEW', nameDe: 'In Prüfung', nameEn: 'In Review', color: '#6b7280', position: 1, active: true, isTerminal: false, ticketCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+          { key: 'DORMANT', nameDe: 'Inaktive', nameEn: 'Dormant', color: '#6b7280', position: 2, active: false, isTerminal: false, ticketCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+        ],
+      })
+    }
+
     return Response.json({ hours: { low: 168, normal: 72, high: 24, critical: 8 } })
   })
 
@@ -112,6 +122,50 @@ describe('the action editor of the escalation page', () => {
         condition: { all: [] },
       },
     ])
+  })
+
+  it('changes an action to a status_change action and saves it with its target', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'status_change' } })
+
+    const targetSelect = screen.getByTestId('escalation-action-status-target') as unknown as HTMLSelectElement
+    const offered = Array.from(targetSelect.options).map((option) => (option as { value: string }).value)
+    expect(offered).toEqual(['NEW', 'IN_REVIEW'])
+    fireEvent.change(targetSelect, { target: { value: 'IN_REVIEW' } })
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'status_change',
+        toStatus: 'IN_REVIEW',
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('refuses a status_change action without a target status', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'status_change' } })
+
+    await waitFor(() => expect(saved).toHaveLength(0))
+    expect(
+      escalationActionConfigSchema.safeParse({ key: NOTIFY_ACTION.key, type: 'status_change', toStatus: '', condition: { all: [] } }).success,
+    ).toBe(false)
   })
 
   it('refuses a notify action without a channel', async () => {

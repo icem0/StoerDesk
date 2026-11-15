@@ -389,7 +389,8 @@
         "types": {
           "notify": "Benachrichtigung",
           "webhook": "Webhook",
-          "history": "Notiz"
+          "history": "Notiz",
+          "status_change": "Status change"
         },
         "key": "Schlüssel",
         "channels": "Kanäle",
@@ -403,6 +404,7 @@
         },
         "endpoints": "Webhook-Endpunkte",
         "text": "Text",
+        "statusTarget": "Ziel-Status",
         "add": "Aktion hinzufügen",
         "remove": "Aktion entfernen"
       },

@@ -851,6 +851,18 @@ of the new variant, the fired-rule case of `apps/api/src/escalation/__tests__/ac
 (status moved once, the step event and the note written, a second scan a no-op) and the `400 invalid_status_key`
 of `config-routes.integration.spec.ts` prove it. WP-M14-40c, WP-M14-41, WP-M14-54 and WP-M14-70 …
 WP-M14-72 stay open in numeric order.
+**WP-M14-40c is implemented** (the administration offers the `status_change` action): `apps/web/src/admin/escalation-page.tsx`
+reads the statuses with the existing administration route `GET /api/v1/admin/statuses` (WP-M14-36,
+`settings.read`) as a TanStack query and passes the **active** status keys into `RuleForm` and on into
+`EscalationActionEditor`. `apps/web/src/admin/escalation-action-editor.tsx` renders the new type with its
+label and a single-select target-status field (`admin.escalation.action.statusTarget`) over those keys;
+`shapeOf` and `actionOf` carry `toStatus` and the client validates the key with `ticketStatusKeySchema`
+before the request, so an existing status key never enters an invalid body. The labels `admin.escalation.action.types.status_change`
+("Status change") and `admin.escalation.action.statusTarget` ("Ziel-Status"/"Target status") are added to the
+`settings` namespace in `de` and `en`. `apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx`
+proves the option, the target select over the configured statuses (the inactive one is not offered), that the saved
+body carries `toStatus` and that a `status_change` action without a target stays unsaved. WP-M14-41, WP-M14-54 and WP-M14-70 …
+WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

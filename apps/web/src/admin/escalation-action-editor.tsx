@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ESCALATION_ACTION_TYPES, type EscalationActionConfig, type EscalationCondition } from '@stoerdesk/shared'
+import {
+  ESCALATION_ACTION_TYPES,
+  ticketStatusKeySchema,
+  type EscalationActionConfig,
+  type EscalationCondition,
+} from '@stoerdesk/shared'
 
 import { EscalationConditionBuilder } from './escalation-condition-builder'
 
@@ -22,6 +27,7 @@ type ActionShape = {
   channels?: string[]
   endpointIds?: string[]
   text?: string
+  toStatus?: string
   condition: unknown
 }
 
@@ -48,6 +54,7 @@ function shapeOf(action: EscalationActionConfig): ActionShape {
     channels: 'channels' in action ? action.channels : [],
     endpointIds: 'endpointIds' in action ? action.endpointIds : [],
     text: 'text' in action ? action.text : '',
+    toStatus: 'toStatus' in action ? action.toStatus : '',
     condition: action.condition,
   }
 }
@@ -73,6 +80,15 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
     } as unknown as EscalationActionConfig
   }
 
+  if (shape.type === 'status_change') {
+    return {
+      key: shape.key,
+      type: 'status_change',
+      toStatus: shape.toStatus ?? '',
+      condition,
+    } as unknown as EscalationActionConfig
+  }
+
   return {
     key: shape.key,
     type: 'notify',
@@ -85,12 +101,14 @@ export function EscalationActionEditor({
   initial,
   channels,
   endpointIds,
+  statuses,
   canWrite,
   onActions,
 }: {
   initial: EscalationActionConfig[]
   channels: string[]
   endpointIds: string[]
+  statuses: string[]
   canWrite: boolean
   onActions: (next: EscalationActionConfig[]) => void
 }) {
@@ -255,6 +273,35 @@ export function EscalationActionEditor({
                       )
                     }
                   />
+                </label>
+              ) : null}
+
+              {action.type === 'status_change' ? (
+                <label className="text-xs text-slate-400">
+                  {t('admin.escalation.action.statusTarget')}
+                  <select
+                    data-testid="escalation-action-status-target"
+                    className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                    disabled={!canWrite}
+                    value={action.toStatus ?? ''}
+                    onChange={(event) => {
+                      const toStatus = event.target.value
+
+                      if (ticketStatusKeySchema.safeParse(toStatus).success) {
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index ? { ...entry, toStatus } : entry,
+                          ),
+                        )
+                      }
+                    }}
+                  >
+                    {statuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               ) : null}
             </div>

@@ -389,7 +389,8 @@
         "types": {
           "notify": "Notification",
           "webhook": "Webhook",
-          "history": "History note"
+          "history": "History note",
+          "status_change": "Status change"
         },
         "key": "Key",
         "channels": "Channels",
@@ -403,6 +404,7 @@
         },
         "endpoints": "Webhooks",
         "text": "Note",
+        "statusTarget": "Target status",
         "add": "Add action",
         "remove": "Remove"
       },
