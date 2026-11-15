@@ -1,10 +1,10 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
-  ESCALATION_STAGE_KEYS,
   escalationConfigSchema,
   escalationRuleConfigSchema,
-  escalationStageConfigSchema,
+  escalationStagesBodySchema,
+  validateEscalationStageChain,
   type EscalationActionConfig,
   type EscalationConfig,
   type EscalationStageKey,
@@ -12,6 +12,7 @@ import {
 
 import type { Database } from '../db/client'
 import { escalationActions, escalationRules, escalationStages } from '../db/schema'
+import { TRANSITION_EVENT_KEYS } from '../tickets/workflow'
 
 /**
  * The configuration of the escalation (`specs/07-escalation.md` §7.9,
@@ -20,8 +21,8 @@ import { escalationActions, escalationRules, escalationStages } from '../db/sche
  * The stages, the rules and their actions live in the database; the `key` is
  * the identity of a row, not its UUID, so the administration sends the keys and
  * the server keeps the rows stable. The rules and their actions are replaced in
- * one transaction; the stages keep their fixed keys and change their names,
- * their position and their active flag.
+ * one transaction. The whole stage chain is replaced in one transaction as well
+ * (ADR-0023): a submitted key is created or updated, a missing key is deleted.
  */
 
 type Db = Database['database']
@@ -47,11 +48,6 @@ function fieldPaths(error: z.ZodError): string[] {
 /** The body of `PUT /api/v1/escalation/config`: the rules with their actions. */
 export const escalationRulesBodySchema = z.object({
   rules: z.array(escalationRuleConfigSchema).max(50),
-})
-
-/** The body of `PUT /api/v1/escalation/stages`: the five stages. */
-export const escalationStagesBodySchema = z.object({
-  stages: z.array(escalationStageConfigSchema).max(ESCALATION_STAGE_KEYS.length),
 })
 
 function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
@@ -93,9 +89,16 @@ export const ESCALATION_STAGE_EVENTS: Record<EscalationStageKey, readonly string
   acknowledgement: ['acknowledged'],
 }
 
-/** Reads the five stages with their names, ordered by their position. */
+/** Reads the stage chain with its names, ordered by the positions. */
 export async function readEscalationStages(database: Db): Promise<
-  { key: string; names: Record<string, string>; position: number; active: boolean }[]
+  {
+    key: string
+    names: Record<string, string>
+    position: number
+    active: boolean
+    predecessor: string | null
+    reachedBy: string[]
+  }[]
 > {
   const rows = await database
     .select()
@@ -107,6 +110,8 @@ export async function readEscalationStages(database: Db): Promise<
     names: row.names as Record<string, string>,
     position: row.position,
     active: row.active,
+    predecessor: row.predecessor,
+    reachedBy: row.reachedBy,
   }))
 }
 
@@ -163,6 +168,8 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
     names: row.names,
     position: row.position,
     active: row.active,
+    predecessor: row.predecessor,
+    reachedBy: row.reachedBy,
   }))
 
   const rules = ruleRows.map((row) => ({
@@ -191,15 +198,43 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
     throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
   }
 
-  const stageRows = await database.select({ key: escalationStages.key }).from(escalationStages)
-  const stageKeys = new Set(stageRows.map((row) => row.key))
+  const stageRows = await database
+    .select({
+      key: escalationStages.key,
+      predecessor: escalationStages.predecessor,
+      reachedBy: escalationStages.reachedBy,
+    })
+    .from(escalationStages)
+  const stageByKey = new Map(stageRows.map((row) => [row.key, row]))
+
+  const invalidFields: string[] = []
 
   for (const [index, rule] of parsed.data.rules.entries()) {
-    if (rule.stageKey !== null && !stageKeys.has(rule.stageKey)) {
-      throw new EscalationConfigError(400, 'invalid_request', {
-        fields: [`rules.${index}.stageKey`],
-      })
+    if (rule.stageKey === null) {
+      continue
     }
+
+    const stage = stageByKey.get(rule.stageKey)
+
+    if (stage === undefined) {
+      invalidFields.push(`rules.${index}.stageKey`)
+      continue
+    }
+
+    if (rule.reference !== null) {
+      const clockEvents =
+        stage.predecessor === null
+          ? ['received_at']
+          : (stageByKey.get(stage.predecessor)?.reachedBy ?? [])
+
+      if (!clockEvents.includes(rule.reference)) {
+        invalidFields.push(`rules.${index}.reference`)
+      }
+    }
+  }
+
+  if (invalidFields.length > 0) {
+    throw new EscalationConfigError(400, 'invalid_request', { fields: invalidFields })
   }
 
   await database.transaction(async (tx) => {
@@ -235,9 +270,10 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 }
 
 /**
- * Replaces the names, the position and the active flag of the stages. Their
- * keys are fixed by the workflow: a body with an unknown key or with a missing
- * stage is rejected.
+ * Replaces the whole stage chain in one transaction. A submitted key is
+ * created or updated; a stage that is missing from the body is deleted and
+ * its rules follow through the `ON DELETE cascade` of §7.11. The chain is
+ * validated against the transition map before anything is written.
  */
 export async function writeEscalationStages(
   database: Db,
@@ -249,26 +285,47 @@ export async function writeEscalationStages(
     throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
   }
 
-  const keys = parsed.data.stages.map((stage) => stage.key)
+  const chainIssues = validateEscalationStageChain(
+    parsed.data.stages,
+    TRANSITION_EVENT_KEYS,
+  )
 
-  if (
-    keys.length !== ESCALATION_STAGE_KEYS.length ||
-    ESCALATION_STAGE_KEYS.some((key) => !keys.includes(key))
-  ) {
-    throw new EscalationConfigError(400, 'invalid_request', { fields: ['stages'] })
+  if (chainIssues.length > 0) {
+    throw new EscalationConfigError(400, 'invalid_request', { fields: chainIssues })
   }
+
+  const keys = parsed.data.stages.map((stage) => stage.key)
+  const updatedAt = new Date()
 
   await database.transaction(async (tx) => {
     for (const stage of parsed.data.stages) {
       await tx
-        .update(escalationStages)
-        .set({
+        .insert(escalationStages)
+        .values({
+          key: stage.key,
           names: stage.names,
           position: stage.position,
           active: stage.active,
-          updatedAt: new Date(),
+          predecessor: stage.predecessor,
+          reachedBy: stage.reachedBy,
         })
-        .where(eq(escalationStages.key, stage.key))
+        .onConflictDoUpdate({
+          target: escalationStages.key,
+          set: {
+            names: stage.names,
+            position: stage.position,
+            active: stage.active,
+            predecessor: stage.predecessor,
+            reachedBy: stage.reachedBy,
+            updatedAt,
+          },
+        })
+    }
+
+    if (keys.length === 0) {
+      await tx.delete(escalationStages)
+    } else {
+      await tx.delete(escalationStages).where(notInArray(escalationStages.key, keys))
     }
   })
 

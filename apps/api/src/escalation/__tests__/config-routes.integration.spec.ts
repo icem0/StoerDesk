@@ -22,8 +22,17 @@ const { users, roles, userRoles } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
+type StageBody = {
+  key: string
+  names: Record<string, string>
+  position: number
+  active: boolean
+  predecessor: string | null
+  reachedBy: string[]
+}
+
 type ConfigBody = {
-  stages: { key: string; names: Record<string, string>; position: number; active: boolean }[]
+  stages: StageBody[]
   rules: {
     key: string
     stageKey: string | null
@@ -45,6 +54,49 @@ function onlyRow<T>(rows: T[], what: string): T {
 
   return row
 }
+
+const DEFAULT_CHAIN: StageBody[] = [
+  {
+    key: 'review',
+    names: { de: 'Prüfung', en: 'Review' },
+    position: 1,
+    active: true,
+    predecessor: null,
+    reachedBy: ['review_started'],
+  },
+  {
+    key: 'work_order',
+    names: { de: 'Auftrag angelegt', en: 'Work order created' },
+    position: 2,
+    active: true,
+    predecessor: 'review',
+    reachedBy: ['work_order_set'],
+  },
+  {
+    key: 'assignment',
+    names: { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' },
+    position: 3,
+    active: true,
+    predecessor: 'work_order',
+    reachedBy: ['assigned', 'offered'],
+  },
+  {
+    key: 'acceptance',
+    names: { de: 'Angenommen', en: 'Accepted' },
+    position: 4,
+    active: true,
+    predecessor: 'assignment',
+    reachedBy: ['accepted'],
+  },
+  {
+    key: 'acknowledgement',
+    names: { de: 'Quittiert', en: 'Acknowledged' },
+    position: 5,
+    active: true,
+    predecessor: 'acceptance',
+    reachedBy: ['acknowledged'],
+  },
+]
 
 describe.skipIf(testDatabase.status === 'unavailable')(
   'the escalation configuration API — GET and PUT (integration)',
@@ -219,15 +271,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(malformed.json<ErrorResponseBody>().code).toBe('invalid_request')
     })
 
-    it('replaces the names of the stages and keeps their keys', async () => {
+    it('replaces the names of the stages and keeps their chain', async () => {
       const response = await putStages(cookies['admin'], {
-        stages: [
-          { key: 'review', names: { de: 'Prüfung des Büros', en: 'Office review' }, position: 1, active: true },
-          { key: 'work_order', names: { de: 'Auftrag angelegt', en: 'Work order created' }, position: 2, active: true },
-          { key: 'assignment', names: { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' }, position: 3, active: true },
-          { key: 'acceptance', names: { de: 'Angenommen', en: 'Accepted' }, position: 4, active: true },
-          { key: 'acknowledgement', names: { de: 'Quittiert', en: 'Acknowledged' }, position: 5, active: true },
-        ],
+        stages: DEFAULT_CHAIN.map((stage) =>
+          stage.key === 'review'
+            ? { ...stage, names: { de: 'Prüfung des Büros', en: 'Office review' } }
+            : stage,
+        ),
       })
 
       expect(response.statusCode).toBe(200)
@@ -235,15 +285,102 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const body = response.json<ConfigBody>()
 
       expect(body.stages[0]?.names.de).toBe('Prüfung des Büros')
+      expect(body.stages[1]?.predecessor).toBe('review')
     })
 
-    it('rejects a stage body with an unknown key', async () => {
+    it('adds an intermediate stage between assignment and acceptance', async () => {
       const response = await putStages(cookies['admin'], {
-        stages: [{ key: 'office', names: { de: 'Büro', en: 'Office' }, position: 1, active: true }],
+        stages: [
+          DEFAULT_CHAIN[0]!,
+          DEFAULT_CHAIN[1]!,
+          DEFAULT_CHAIN[2]!,
+          {
+            key: 'night_shift',
+            names: { de: 'Nachtdienst', en: 'Night shift' },
+            position: 4,
+            active: true,
+            predecessor: 'assignment',
+            reachedBy: ['claimed'],
+          },
+          { ...DEFAULT_CHAIN[3]!, position: 5, predecessor: 'night_shift' },
+          { ...DEFAULT_CHAIN[4]!, position: 6 },
+        ],
+      })
+
+      expect(response.statusCode).toBe(200)
+
+      const body = response.json<ConfigBody>()
+      const byKey = new Map(body.stages.map((stage) => [stage.key, stage]))
+
+      expect(byKey.get('night_shift')?.predecessor).toBe('assignment')
+      expect(byKey.get('acceptance')?.predecessor).toBe('night_shift')
+      expect(body.stages.map((stage) => stage.key)).toEqual([
+        'review',
+        'work_order',
+        'assignment',
+        'night_shift',
+        'acceptance',
+        'acknowledgement',
+      ])
+    })
+
+    it('removes a stage and cascades to its rules', async () => {
+      const writeRules = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'night_shift',
+            stageKey: 'night_shift',
+            reference: null,
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: { all: [] },
+            actions: [],
+            active: true,
+          },
+        ],
+      })
+
+      expect(writeRules.statusCode).toBe(200)
+      expect(await db.select().from(schema.escalationRules)).toHaveLength(1)
+
+      const response = await putStages(cookies['admin'], {
+        stages: DEFAULT_CHAIN,
+      })
+
+      expect(response.statusCode).toBe(200)
+
+      const body = response.json<ConfigBody>()
+
+      expect(body.stages.map((stage) => stage.key)).toEqual([
+        'review',
+        'work_order',
+        'assignment',
+        'acceptance',
+        'acknowledgement',
+      ])
+      expect(await db.select().from(schema.escalationRules)).toHaveLength(0)
+    })
+
+    it('rejects a stage body with an unknown predecessor', async () => {
+      const response = await putStages(cookies['admin'], {
+        stages: [
+          {
+            key: 'office',
+            names: { de: 'Büro', en: 'Office' },
+            position: 1,
+            active: true,
+            predecessor: 'missing',
+            reachedBy: [],
+          },
+        ],
       })
 
       expect(response.statusCode).toBe(400)
-      expect(response.json<ErrorResponseBody>().code).toBe('invalid_request')
+
+      const body = response.json<ErrorResponseBody>()
+
+      expect(body.code).toBe('invalid_request')
+      expect(body.params?.fields).toEqual(['stages.0.predecessor'])
     })
   },
 )

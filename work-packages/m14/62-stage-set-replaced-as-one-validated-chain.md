@@ -1,7 +1,7 @@
 # WP-M14-62: The stage set is replaced as one validated chain
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-60, WP-M14-61
 phase: 14
 context-budget: 20k tokens
@@ -68,8 +68,8 @@ database, the `404` of the removed manual escalation routes stays unchanged.
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/api/src/escalation/config.ts`, `apps/api/src/tickets/workflow.ts`, `apps/api/src/escalation/__tests__/config-routes.integration.spec.ts`, `packages/shared/src/schemas/escalation-config.ts`
+- Interfaces added: `TRANSITION_EVENT_KEYS`, replace-all `writeEscalationStages` over the validated chain, rule-clock guard against the stage predecessor
+- Verified: `npm run typecheck --workspaces --if-present`, the shared escalation test suite and ESLint; the route integration spec needs `TEST_DATABASE_URL` and is unverified in this container
 - Follow-up WP: WP-M14-63 (the engine reads the chain)
 - Open question: none

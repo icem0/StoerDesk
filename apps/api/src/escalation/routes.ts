@@ -22,8 +22,8 @@ import { loadEnv } from '../config/env'
  * their actions.
  * `PUT /api/v1/escalation/config` — `settings.write`, replaces the rules and
  * their actions in one transaction.
- * `PUT /api/v1/escalation/stages` — `settings.write`, replaces the names, the
- * position and the active flag of the five stages.
+ * `PUT /api/v1/escalation/stages` — `settings.write`, replaces the whole stage
+ * chain in one validated transaction (§7.11).
  *
  * A malformed body answers `400 invalid_request` with the field paths.
  */

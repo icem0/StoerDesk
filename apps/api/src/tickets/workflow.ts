@@ -43,7 +43,7 @@ const INVALID_TRANSITION = (ticketNo: string, from: string, event: string) =>
 const TICKET_NOT_FOUND = (ticketId: string) =>
   new TicketTransitionError(404, 'ticket_not_found', { ticketId })
 
-const TRANSITIONS: Record<string, Record<string, { to: string }>> = {
+export const TRANSITIONS: Record<string, Record<string, { to: string }>> = {
   NEW: {
     review_started: { to: 'IN_REVIEW' },
   },
@@ -79,6 +79,16 @@ const TRANSITIONS: Record<string, Record<string, { to: string }>> = {
     cancelled: { to: 'CANCELLED' },
   },
 }
+
+/**
+ * The distinct event keys of the transition map. An escalation stage may name
+ * one of them in `reached_by`; the list is derived, never written twice.
+ */
+export const TRANSITION_EVENT_KEYS: readonly string[] = [
+  ...new Set(
+    Object.values(TRANSITIONS).flatMap((events) => Object.keys(events)),
+  ),
+]
 
 type TransitionContext = {
   database: Db

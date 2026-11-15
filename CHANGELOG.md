@@ -62,6 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The seed writes the default chain (WP-M14-61): every stage row of a fresh
   installation carries its predecessor and its reaching events, while an
   existing row stays untouched and the rule seed keeps its matching clocks.
+- `PUT /api/v1/escalation/stages` replaces the whole chain (WP-M14-62): the
+  service validates it against the transition event keys, upserts the submitted
+  stages and deletes the missing ones in one transaction, so their rules cascade
+  away while the firing log stays. A rule must name an existing stage and its
+  explicit reference must match the clock of that stage; `null` takes the
+  stage clock.
 - The channel test send and the verification request carry a JSON body (WP-M14-55):
   the administration showed the untranslated Fastify code
   `FST_ERR_CTP_EMPTY_JSON_BODY` — removing the separate ntfy test topic had also

@@ -323,22 +323,30 @@ export const escalationRuleConfigSchema = z
     active: z.boolean(),
   })
   .superRefine((rule, context) => {
-    const hasClock = rule.reference !== null && rule.minutes !== null
+    const hasMinutes = rule.minutes !== null
     const hasPercent = rule.percent !== null
 
-    if (hasClock === hasPercent) {
+    if (hasMinutes === hasPercent) {
       context.addIssue({
         code: 'custom',
-        path: ['reference'],
-        message: 'a rule has either a clock or a percentage',
+        path: ['minutes'],
+        message: 'a rule has either minutes or a percentage',
       })
     }
 
-    if (hasClock && rule.stageKey === null) {
+    if (hasMinutes && rule.stageKey === null) {
       context.addIssue({
         code: 'custom',
         path: ['stageKey'],
-        message: 'a rule with a clock belongs to a stage',
+        message: 'a rule with minutes belongs to a stage',
+      })
+    }
+
+    if (hasPercent && rule.reference !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['reference'],
+        message: 'a deadline rule has no reference',
       })
     }
   })
