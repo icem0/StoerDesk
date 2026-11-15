@@ -791,6 +791,19 @@ database that `NEW` reaches `IN_REVIEW` through `review_started`, that an event 
 answers 409, that a row set to `active = false` blocks its step and that an edited `to_status`
 moves the ticket to the status the row names. WP-M14-39 (the transition administration API) and
 WP-M14-39b (its UI) stay open in numeric order.
+**WP-M14-39 is implemented** (the follow-up of WP-M14-38c): `apps/api/src/tickets/transition-service.ts`
+gains `createTicketTransition`, `updateTicketTransition` and `deleteTicketTransition` next to the
+read of WP-M14-38b, `apps/api/src/tickets/transition-routes.ts` answers `GET`/`POST`/`PATCH`/`DELETE`
+`/api/v1/admin/transitions` behind `settings.read`/`settings.write` and `apps/api/src/index.ts`
+registers them: a malformed body answers `400 invalid_request` with the field paths (both status
+keys bound to `ticketStatusKeySchema`, the event key to `^[a-z][a-z0-9_]{0,39}$`), a status key
+that names no row of `ticket_statuses` answers `400 invalid_status_key` with its field (the foreign
+keys of migration `0041` are the database backstop of that rule), a `POST` or `PATCH` that would
+duplicate the unique index `(from_status, event_key)` of that migration answers `409 transition_duplicate`
+with the pair and an unknown `id` answers `404 transition_not_found`; the `id` of an existing row is
+never edited and no step count blocks a delete (ADR-0025 keeps the trade-off of an empty workflow
+visible in the UI). `apps/api/src/tickets/__tests__/transition-management.integration.spec.ts`
+proves it. WP-M14-39b (its UI) stays open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

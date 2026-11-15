@@ -621,6 +621,23 @@ answers 409 `invalid_transition` and leaves the ticket untouched, that a row the
 `active = false` blocks its step and that a row whose `to_status` was edited moves the ticket to
 the status the row names. The existing workflow, pause, internal-action and E2E workflow specs stay
 green on the seeded rows. WP-M14-39 and WP-M14-39b stay open in numeric order.
+**WP-M14-39 is implemented (out of band in phase 14, the follow-up of WP-M14-38c):**
+`apps/api/src/tickets/transition-service.ts` gains `createTicketTransition`,
+`updateTicketTransition` and `deleteTicketTransition` next to the read of WP-M14-38b,
+`apps/api/src/tickets/transition-routes.ts` answers `GET`/`POST`/`PATCH`/`DELETE`
+`/api/v1/admin/transitions` behind `settings.read`/`settings.write` and `apps/api/src/index.ts`
+registers them: a malformed body is `400 invalid_request` with the field paths (both status
+keys bound to the key format of `ticketStatusKeySchema`, the event key to
+`^[a-z][a-z0-9_]{0,39}$`), a status key that names no row of `ticket_statuses` is `400
+invalid_status_key` (the foreign keys of migration `0041` are the database backstop), a
+`POST`/`PATCH` that would duplicate the unique index `(from_status, event_key)` of that
+migration answers `409 transition_duplicate` with the pair and an unknown `id` is `404
+transition_not_found`; the `id` of an existing row is never edited, no row is guarded by
+a step count (ADR-0025 keeps the trade-off visible). The new
+`apps/api/src/tickets/__tests__/transition-management.integration.spec.ts` proves the four
+routes, both format rejections, the create of a new step, the `invalid_status_key` of an
+unknown key, the `transition_duplicate` on `POST` and `PATCH`, the edit of the `active`
+switch and the delete of the added row. WP-M14-39b stays open in numeric order.
 
 ## Open follow-ups
 
@@ -1048,7 +1065,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-38a | the transition table in the database (migration 0041)                    | done    | yes     |
 | WP-M14-38b | the transition contracts and the transition service                      | done    | yes     |
 | WP-M14-38c | the workflow engine reads the transition table                           | done    | yes     |
-| WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
+| WP-M14-39  | the ticket transition administration API (CRUD)                             | done    | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |
 | WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |
 | WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |

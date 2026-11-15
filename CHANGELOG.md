@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The transition administration reads, writes, edits and deletes the workflow steps (WP-M14-39,
+  the follow-up of WP-M14-38c): `apps/api/src/tickets/transition-service.ts` gains
+  `createTicketTransition`, `updateTicketTransition` and `deleteTicketTransition` next to the
+  read of WP-M14-38b and the new `apps/api/src/tickets/transition-routes.ts` answers
+  `GET`/`POST`/`PATCH`/`DELETE /api/v1/admin/transitions` behind `settings.read`/`settings.write`,
+  registered in `apps/api/src/index.ts`. A malformed body answers `400 invalid_request` with the
+  field paths (both status keys bound to the format of `ticketStatusKeySchema`, the event key
+  to `^[a-z][a-z0-9_]{0,39}$`), a status key that names no row of `ticket_statuses` answers
+  `400 invalid_status_key` with its field (the foreign keys of migration `0041` are the
+  database backstop of that rule), a `POST` or `PATCH` that would duplicate the unique index
+  `(from_status, event_key)` of that migration answers `409 transition_duplicate` with the pair
+  and an unknown `id` answers `404 transition_not_found`. The `id` of an existing row stays its
+  identity and never enters the body; the administration does not block a delete on a step
+  count — ADR-0025 keeps the trade-off of an empty workflow visible in the UI of WP-M14-39b.
+  `apps/api/src/tickets/__tests__/transition-management.integration.spec.ts` proves the four
+  routes, both format rejections, the create of a new step, the `invalid_status_key` of an
+  unknown key, the `transition_duplicate` on `POST` and `PATCH`, the edit of the `active`
+  switch and the delete of the added row.
 - The workflow engine reads the transition rows (WP-M14-38c, the third child of WP-M14-38):
   `transitionTicket()` in `apps/api/src/tickets/workflow.ts` loads the rows of `ticket_transitions`
   once per call with `readTicketTransitions(database)` and resolves the step of `(current status,

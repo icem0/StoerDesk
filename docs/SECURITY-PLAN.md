@@ -392,6 +392,34 @@ workflow change), K re-checked for the touched files: no log line is added and n
 is answered, the test writes no ticket and carries the machine keys of the seeded
 workflow only — no name, no contact value, no secret. No new finding.
 
+Transition-administration pass: 2026-11-15, diff `43cb913..` (WP-M14-39 — `apps/api/src/tickets/transition-service.ts`,
+`apps/api/src/tickets/transition-routes.ts`, the registration in `apps/api/src/index.ts` and the new
+`apps/api/src/tickets/__tests__/transition-management.integration.spec.ts`) — areas A and B re-checked
+in full (the route table gains four rows: `GET /api/v1/admin/transitions` behind the `settings.read`
+`requirePermission` preHandler and `POST /api/v1/admin/transitions`, `PATCH` and `DELETE`
+`/api/v1/admin/transitions/:id` behind `settings.write`; all four are session-only, no
+public capability and no bearer scope, so the guard answers `401 session_invalid` before
+`403 forbidden`; the `:id` path parameter is a UUID, not an IDOR key of the public layer and
+never resolves a resource of another user), C re-checked for the changed files: the request bodies
+of `POST` and `PATCH` pass through the local `transitionCreateRequestSchema` /
+`transitionUpdateRequestSchema` before anything is read — both status keys bound to
+`ticketStatusKeySchema` (`^[A-Z][A-Z0-9_]{0,39}$`), the event key bound to
+`^[a-z][a-z0-9_]{0,39}$`, `condition` to a nullable record — the `:id` path parameter is
+format-checked with `z.uuid()` before the select/update/delete and otherwise enters only
+a drizzle-bound `eq`, every insert, update, delete, existence probe and duplicate probe
+binds its values through drizzle with no `sql` template that interpolates a request value
+(the two `sql` uses of the module are column-reference aggregates only), a status key that
+names no row of `ticket_statuses` answers `400 invalid_status_key` with the field path
+before any write (the FK of migration `0041` is the database backstop) and a duplicate
+`(from_status, event_key)` is caught as the SQLSTATE 23505 of the unique index of that
+migration → `409 transition_duplicate` with the pair, D, E, F, G, H, I and J untouched (no
+frontend, no outbound request, no new environment key, no upload, no dependency, no compose
+or workflow change), K re-checked for the touched files: no log line is added, an answer
+carries the row identity, the two machine keys, the event key, the stored `condition` record,
+the `active` flag and the `updatedAt` timestamp only — no name of a person, no contact value,
+no secret — and the new test writes throwaway users with `example.org` addresses, machine
+keys and mock UUIDs only. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -438,6 +466,7 @@ Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
 | GET/PUT | /api/v1/settings/oncall | settings.read / settings.write |
 | GET/POST/PATCH/DELETE | /api/v1/text-templates[/:id] | settings.read / settings.write |
 | GET/POST/PATCH/DELETE | /api/v1/admin/statuses[/:key] | settings.read / settings.write (apps/api/src/tickets/status-routes.ts) |
+| GET/POST/PATCH/DELETE | /api/v1/admin/transitions[/:id] | settings.read / settings.write (apps/api/src/tickets/transition-routes.ts) |
 | GET | /api/v1/public/text-templates | public catalog (active only) |
 | GET/POST/PATCH/DELETE | /api/v1/objects[/:objectNo] | object.read / object.write / object.delete |
 | POST | /api/v1/objects/import and /api/v1/objects/import/preview | object.import (objects/import-routes.ts:42) |
@@ -480,9 +509,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-service pass: untouched) | c3afab4 |
-| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-service pass: the route table is unchanged) | c3afab4 |
-| C Injection | complete (re-checked for the changed files at the transition-service pass: one schema-bound select over `ticket_transitions` without client input and without interpolation, the pure `resolveTransition` compares in memory only and `ticketTransitionSchema` binds the row shape) | c3afab4 |
+| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-administration pass: the four new admin routes stay session-guarded as well) | 43cb913 |
+| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-administration pass: the route table gains the four `/api/v1/admin/transitions[/:id]` rows with the same guards) | 43cb913 |
+| C Injection | complete (re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`) | 43cb913 |
 | D Frontend | complete (re-checked in the confirm-draft pass, only a button state was added) | 68cded7 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
@@ -490,7 +519,7 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the transition-service pass: no log line, no answer, the test writes the machine keys of the seeded workflow only) | c3afab4 |
+| K Logging/PII | complete (re-checked for the changed files at the transition-administration pass: no log line, no contact value, the answer carries the row identity, the two machine keys, the event key, the stored `condition` record, the `active` flag and the `updatedAt` timestamp only) | 43cb913 |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

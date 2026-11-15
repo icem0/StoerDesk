@@ -1,7 +1,7 @@
 # WP-M14-39: Ticket transition management API and UI
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-38c
 phase: 14
 context-budget: 22k tokens
@@ -51,8 +51,14 @@ Expected: alle grün; die Transition-CRUD-Routen antworten; doppelte `(from_stat
 
 ## Handoff
 
-- Files changed: `transition-routes.ts`, `transition-service.ts`
-- Interfaces added: 4 Admin-Routes für Transitionen
-- Verified: `npm run check` grün
-- Follow-up WP: WP-M14-39b (die UI der Transition-Verwaltung)
-- Open question (if any): ob Transitionen auch Bedingungen (condition_json) tragen sollen, die vor dem Wechsel geprüft werden.
+- Files changed: `apps/api/src/tickets/transition-service.ts`, `apps/api/src/tickets/transition-routes.ts`
+  (registration in `apps/api/src/index.ts`, the integration spec, the audit pass, the backlog,
+  the status lines and the changelog are part of the same commit)
+- Interfaces added: the four admin routes for transitions, `createTicketTransition`,
+  `updateTicketTransition`, `deleteTicketTransition` and the service errors `400 invalid_status_key`,
+  `409 transition_duplicate` and `404 transition_not_found`
+- Verified: `npm run check` green (typecheck, eslint, `vitest run` incl. the new
+  `transition-management.integration.spec.ts`, i18n:check, wp:check, test:e2e)
+- Follow-up WP: WP-M14-39b (the UI of the transition administration)
+- Open question: none — `condition` is stored and returned but never evaluated;
+  WP-M14-41 decides the evaluation
