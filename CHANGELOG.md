@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The allocation and a swap request enqueue their rows (WP-M14-29): `createShift`
+  and the assign branch of `updateShift` in `apps/api/src/oncall/service.ts`
+  enqueue `oncall.assigned` for the technician through `enqueueOncallOutbox` in
+  the transaction node the shift write already uses, and `requestSwap` in
+  `apps/api/src/oncall/swaps.ts` enqueues `oncall.swap_requested` for the
+  requesting technician and for a named target colleague — a request to the whole
+  pool notifies only the requester. The rows are written in the transaction of the
+  on-call write, never in a channel call (§11.7); `assignedAnnouncementQueued`
+  keeps the allocation announcement idempotent: a shift whose `oncall.assigned`
+  row is still `PENDING` or already `SENT` queues no second row.
+  `apps/api/src/oncall/__tests__/allocation-notifications.integration.spec.ts`
+  drives the real routes on a throwaway database and asserts the selected channel
+  of a technician who selected one and the instance chain for one who did not.
 - ADR-0024 decides that ntfy becomes an optional Compose profile behind a
   Cloudflare Tunnel, with a deny-all access control list, a setup script for the
   API user and token, and random per-user topics. Work packages WP-M14-69 to

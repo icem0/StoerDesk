@@ -293,6 +293,26 @@ in the API drain, not in the PWA, G untouched (no upload path), F untouched (no 
 the link carries the ticket number only — never a `status_token`, never a credential, never contact data —
 and enters no log line, the two new drain tests use the mock number `ST-2026-0001`. No new finding.
 
+Readiness-allocation pass: 2026-11-15, diff `eb4744a..` (WP-M14-29 —
+`apps/api/src/oncall/service.ts`, `apps/api/src/oncall/swaps.ts` and the new
+`allocation-notifications.integration.spec.ts`) — areas A and B re-checked in full
+(no route, no capability and no bearer scope added: the package only widens two
+existing services and the outbox writes already owned by WP-M14-28, the routes of
+`POST /api/v1/oncall/shifts`, the assign patch and the swap request stay the ones
+of WP-M8-06/09 with their `oncall.plan`/`oncall.admin`/`oncall.swap` guards),
+C re-checked for the two changed files: the new `assignedAnnouncementQueued` guard
+and the enqueue calls bind their values through drizzle — the shift id comes from
+the row the shift write returned, the event type is a server-side constant and no
+request value reaches a `sql` template or an interpolation, the user ids of the
+announcement are the session-bound actor and target ids the service already
+validated against the pool members, D, E, F, G, H, I and J untouched (no frontend,
+no outbound request, no new env key, no upload, no dependency, no compose or
+workflow change), K re-checked for the touched files: no log line is added, the
+`target` jsonb of a readiness row carries pool name, the two UTC timestamps, the
+state and the shift id only — no name, no contact value, no secret — and the new
+integration test writes throwaway users with `example.org` addresses and mock
+channels only. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -380,9 +400,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (no route, no session handling in the ticket-deep-link pass) | fe2d397 |
-| B Autorisation | complete (no new route in the ticket-deep-link pass) | fe2d397 |
-| C Injection | complete (re-checked for the changed files at the ticket-deep-link pass) | fe2d397 |
+| A Authentication | complete (no route, no session handling in the readiness-allocation pass) | eb4744a |
+| B Autorisation | complete (no new route in the readiness-allocation pass) | eb4744a |
+| C Injection | complete (re-checked for the changed files at the readiness-allocation pass) | eb4744a |
 | D Frontend | complete (re-checked in the ticket-deep-link pass, the link is built in the API) | fe2d397 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
@@ -390,7 +410,7 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the ticket-deep-link pass) | fe2d397 |
+| K Logging/PII | complete (re-checked for the changed files at the readiness-allocation pass) | eb4744a |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

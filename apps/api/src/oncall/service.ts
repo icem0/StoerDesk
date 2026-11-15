@@ -1,11 +1,14 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
+import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import {
   oncallPools,
   oncallShifts,
+  outbox,
   type OnCallShiftState,
 } from '../db/schema'
+import { enqueueOncallOutbox } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
 import { generateOncallSlots } from '@stoerdesk/shared'
 import { readOncallSettings } from './settings'
@@ -109,6 +112,26 @@ async function findShift(database: Db, shiftId: string) {
 }
 
 /**
+ * One `oncall.assigned` announcement per shift and technician: the allocation
+ * is already queued while a row of that shift is still `PENDING` or already
+ * `SENT` (`ADR-0021`, WP-M14-29).
+ */
+async function assignedAnnouncementQueued(executor: Pick<Db, 'select'>, shiftId: string) {
+  const rows = await executor
+    .select({ state: outbox.state })
+    .from(outbox)
+    .where(
+      and(
+        eq(outbox.shiftId, shiftId),
+        eq(outbox.eventType, 'oncall.assigned'),
+        inArray(outbox.state, ['PENDING', 'SENT']),
+      ),
+    )
+
+  return rows.length > 0
+}
+
+/**
  * Creates one shift. Without a technician the slot is `UNFILLED`, with a
  * technician it is `DRAFT`, and with `publish` it is `PLANNED`.
  * Writes one `shift_created` event in the same transaction.
@@ -165,6 +188,28 @@ export async function createShift(
       actorUserId: createdByUserId ?? null,
       payload: { poolId, userId: userId ?? null, state },
     })
+
+    if (
+      userId !== undefined &&
+      userId !== null &&
+      !(await assignedAnnouncementQueued(tx, created.id))
+    ) {
+      await enqueueOncallOutbox(
+        tx,
+        {
+          shift: {
+            id: created.id,
+            poolId: created.poolId,
+            state: created.state,
+            startsAt: created.startsAt,
+            endsAt: created.endsAt,
+          },
+          eventType: 'oncall.assigned',
+          userId,
+        },
+        loadEnv(),
+      )
+    }
 
     return toShiftResult(created)
   })
@@ -300,6 +345,28 @@ export async function updateShift(
         publish: patch.publish,
       },
     })
+
+    if (
+      patch.userId !== undefined &&
+      patch.userId !== null &&
+      !(await assignedAnnouncementQueued(tx, updated.id))
+    ) {
+      await enqueueOncallOutbox(
+        tx,
+        {
+          shift: {
+            id: updated.id,
+            poolId: updated.poolId,
+            state: updated.state,
+            startsAt: updated.startsAt,
+            endsAt: updated.endsAt,
+          },
+          eventType: 'oncall.assigned',
+          userId: patch.userId,
+        },
+        loadEnv(),
+      )
+    }
 
     return toShiftResult(updated)
   })

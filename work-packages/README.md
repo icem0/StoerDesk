@@ -357,6 +357,19 @@ reminder per unconfirmed shift from the escalation scan) and **WP-M14-32**
 (the readiness selection on the settings page). No product code in the spec
 package.
 
+**WP-M14-29** is implemented: `createShift` and the assign branch of `updateShift`
+in `apps/api/src/oncall/service.ts` enqueue `oncall.assigned` for the technician
+in the transaction node the shift write already uses, and `requestSwap` in
+`apps/api/src/oncall/swaps.ts` enqueues `oncall.swap_requested` for the
+requesting technician and for a named target colleague — a request to the whole
+pool notifies only the requester. The rows are written through
+`enqueueOncallOutbox` of WP-M14-28, never in a channel call (§11.7);
+`assignedAnnouncementQueued` keeps the allocation announcement idempotent: a
+shift whose `oncall.assigned` row is still `PENDING` or already `SENT` queues no
+second row. `apps/api/src/oncall/__tests__/allocation-notifications.integration.spec.ts`
+drives the real routes on a throwaway database and asserts the selected channel
+of a technician who selected one and the instance chain for one who did not.
+
 **Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
 link carries the host. The office wants the subscription QR of the own
 channels page to land in the ntfy app and subscribe automatically. The ntfy
@@ -861,7 +874,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-26  | the readiness allocation — spec, ADR-0021 and the split of the chain       | done    | yes     |
 | WP-M14-27  | the outbox and the preferences know the readiness (migration 0039)          | done    | yes     |
 | WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | done    | yes     |
-| WP-M14-29  | the allocation and a swap request enqueue their rows                       | planned | yes     |
+| WP-M14-29  | the allocation and a swap request enqueue their rows                       | done    | yes     |
 | WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | planned | yes     |
 | WP-M14-31  | an unconfirmed readiness reminds once                                       | planned | yes     |
 | WP-M14-32  | the readiness selection of the technician in the settings page              | planned | yes     |

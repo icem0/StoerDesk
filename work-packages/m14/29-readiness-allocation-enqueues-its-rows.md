@@ -1,7 +1,7 @@
 # WP-M14-29: The allocation and a swap request enqueue their rows
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-28
 phase: 14
 milestone: m14
@@ -65,8 +65,12 @@ Expected: all green; the new spec fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/oncall/service.ts, apps/api/src/oncall/swaps.ts
+- Interfaces added: `assignedAnnouncementQueued(executor, shiftId)` (service-level
+  guard over `PENDING`/`SENT` `oncall.assigned` rows), `createShift` and the assign
+  branch of `updateShift` enqueue `oncall.assigned`, `requestSwap` enqueues
+  `oncall.swap_requested` for requester and named target
+- Verified: `npm run check` green, `allocation-notifications.integration.spec.ts`
+  7/7 on a throwaway database
 - Follow-up WP: WP-M14-30 (`30-draft-readiness-is-confirmable.md`)
 - Open question: none

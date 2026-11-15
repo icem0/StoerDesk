@@ -1706,7 +1706,17 @@ readiness contracts, the shift enqueue and the shift branch of the drain,
 the readiness page that a `DRAFT` readiness answers a confirm, **WP-M14-31** lets
 the escalation scan enqueue one `oncall.unconfirmed_reminder` per unconfirmed
 shift and **WP-M14-32** puts the readiness selection of the technician on
-`/settings/notifications`. No product code in this package.
+`/settings/notifications`. No product code in this package. **WP-M14-27**,
+**WP-M14-28** and **WP-M14-29** are implemented: WP-M14-29 makes `createShift`
+and the assign branch of `updateShift` in `apps/api/src/oncall/service.ts`
+enqueue `oncall.assigned` for the technician in the transaction node the shift
+write already uses, `requestSwap` in `apps/api/src/oncall/swaps.ts` enqueue
+`oncall.swap_requested` for the requester and for a named target (a request to
+the whole pool notifies only the requester) — all through `enqueueOncallOutbox`
+of WP-M14-28, never in a channel call — and `assignedAnnouncementQueued` keeps
+the announcement idempotent (a `PENDING` or `SENT` `oncall.assigned` row queues
+nothing again); the new integration spec drives the real routes on a throwaway
+database.
 
 **The ntfy deep link carries the host (WP-M14-33, out of band in phase 14,
 requested by the office).** The office wants the subscription QR of the own

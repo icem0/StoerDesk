@@ -1,5 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 
+import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import {
   oncallPools,
@@ -11,6 +12,7 @@ import {
   userRoles,
   users,
 } from '../db/schema'
+import { enqueueOncallOutbox, type OutboxShift } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
 import { readOncallSettings } from './settings'
 import { loadEffectivePermissions } from '../auth/requirePermission'
@@ -68,6 +70,7 @@ async function findShift(database: Db, shiftId: string) {
       userId: oncallShifts.userId,
       state: oncallShifts.state,
       startsAt: oncallShifts.startsAt,
+      endsAt: oncallShifts.endsAt,
     })
     .from(oncallShifts)
     .where(eq(oncallShifts.id, shiftId))
@@ -270,6 +273,33 @@ export async function requestSwap(
       actorUserId,
       payload: { targetUserId: targetUserId ?? null },
     })
+
+    const announcedShift: OutboxShift = {
+      id: shiftId,
+      poolId: shift.poolId,
+      state: 'SWAP_REQUESTED',
+      startsAt: shift.startsAt,
+      endsAt: shift.endsAt,
+    }
+    const env = loadEnv()
+
+    await enqueueOncallOutbox(
+      tx,
+      { shift: announcedShift, eventType: 'oncall.swap_requested', userId: actorUserId },
+      env,
+    )
+
+    if (targetUserId !== undefined && targetUserId !== null) {
+      await enqueueOncallOutbox(
+        tx,
+        {
+          shift: announcedShift,
+          eventType: 'oncall.swap_requested',
+          userId: targetUserId,
+        },
+        env,
+      )
+    }
 
     return { swap: toSwapResult(created) }
   })
