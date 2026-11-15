@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- ADR-0024 decides that ntfy becomes an optional Compose profile behind a
+  Cloudflare Tunnel, with a deny-all access control list, a setup script for the
+  API user and token, and random per-user topics. Work packages WP-M14-69 to
+  WP-M14-72 are planned; no code has changed yet.
 - The outbox and the notification preferences know the readiness (WP-M14-27):
   migration `0039` gives the outbox an `event_type` over the seven ADR-0021
   types, a nullable `shift_id` with the cascade to `oncall_shifts` and a

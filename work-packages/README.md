@@ -902,6 +902,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-66  | the stage tab of the administration is tested (out of band)            | done    | yes     |
 | WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | done    | yes     |
 | WP-M14-68  | every notification message links to its ticket (out of band)      | done    | yes     |
+| WP-M14-69  | ntfy as an optional Compose profile (ADR-0024)                         | planned | no      |
+| WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | planned | no      |
+| WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | planned | no      |
+| WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | planned | no      |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
