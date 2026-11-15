@@ -179,8 +179,9 @@ marks the stage as reached. The separate buttons of the workflow steps are gone 
 the selection replaces them. The actions that are no milestone (decline, claim,
 e-mail, cancel, delete) stay buttons.
 
-The server answers the reachable stages with the ticket (`availableStages`), so
-the transition map exists only in `apps/api/src/tickets/workflow.ts`.
+The server answers the reachable stages with the ticket (`availableStages`); the
+workflow transitions themselves are the rows of the `ticket_transitions` table
+(`§7.13`, ADR-0025, WP-M14-38).
 
 ## 7.11 The stage chain is configurable (ADR-0023)
 
@@ -232,3 +233,35 @@ predecessor, `work_order` ← `review`, `assignment` ← `work_order`,
   migration `0031` and the `z.enum(ESCALATION_STAGE_KEYS)` contract are gone
   (WP-M14-59, WP-M14-60); the shared list survives only as the seed default
   chain and the last use of it leaves the code with WP-M14-64.
+
+## 7.13 The ticket transitions are configuration (ADR-0025)
+
+WP-M14-35 made the **statuses** rows of `ticket_statuses`; the steps between them
+were still the code map `TRANSITIONS` in `apps/api/src/tickets/workflow.ts`
+(`PLAN.md` §7). A status the administrator adds could never be entered or left.
+`ticket_transitions` (migration `0041`) carries the steps as rows:
+
+| Field | Meaning |
+| --- | --- |
+| `from_status` | foreign key to `ticket_statuses.key`, `ON DELETE cascade` — a removed status removes its steps |
+| `to_status` | foreign key to `ticket_statuses.key`, `ON DELETE cascade` |
+| `event_key` | the event that performs the step (`review_started`, `closed`, …); unique over `(from_status, event_key)` |
+| `condition_json` | nullable jsonb, the condition of the step — stored from `0041`, evaluated only from WP-M14-41 |
+| `active` | an inactive row never changes a ticket |
+
+`transitionTicket()` resolves the row of `(current status, event)`; an unknown or
+inactive combination answers `409 invalid_transition`. The workflow columns
+(`review_started_at`, `accepted_at`, `acknowledged_at`, `closed_at`, …) stay keyed
+by `event_key`: the row decides the new status, the event decides the timestamp.
+The wildcard row `'*'` of the old map becomes one `cancelled` row per status — the
+foreign key forbids a `*` key and a Postgres unique index would let duplicate
+NULL rows through.
+
+The migration seeds the `PLAN.md` §7 workflow (22 rows), so the workflow of an
+installed instance never changes; `PUT`/`POST` of the transition administration
+(WP-M14-39) edits rows. The nine statuses the foreign keys need are seeded
+idempotently in the same migration and `apps/api/src/db/seed/statuses.ts` stays
+the bootstrap of the API start. The old `tickets_status_check` of migration `0004`
+is dropped in `0041`: the rows of `ticket_statuses` and their key-format CHECK
+(`0040`) are the status configuration, and a status a ticket still carries must
+survive a deactivation.

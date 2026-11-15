@@ -8,7 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- The status administration page (WP-M14-37): `apps/web/src/admin/status-page.tsx` (`StatusPage`)
+- The ticket transitions become configuration (WP-M14-38, documentation only, no product
+  code): WP-M14-35 … WP-M14-37 made the statuses rows, but the steps stayed the code map
+  `TRANSITIONS` in `apps/api/src/tickets/workflow.ts`, so a status an administrator adds has
+  no step into it and none out of it — and the CHECK `tickets_status_check` of migration
+  `0004` still limits `tickets.status` to the nine keys. `specs/07-escalation.md` gains
+  §7.13: `ticket_transitions` (migration `0041`) carries the steps, `from_status` and
+  `to_status` are foreign keys to `ticket_statuses.key` with `ON DELETE cascade`, `event_key`
+  is unique per `from_status`, `condition_json` is stored now and evaluated only from
+  WP-M14-41, the wildcard `cancelled` becomes one row per status and the 22 steps of
+  `PLAN.md` §7 — plus the nine status rows the keys need — are seeded idempotently by the
+  migration. ADR-0025 decides the shape and rejects a foreign key from `tickets.status`;
+  `PLAN.md` §6, §16 and §19 carry it. The announced package exceeded the four-file limit of
+  §17, so it is split into WP-M14-38a (the table, the Drizzle mirror, the journal),
+  WP-M14-38b (the shared contract `TicketTransition`, `readTicketTransitions`,
+  `resolveTransition`) and WP-M14-38c (`transitionTicket()` reads the table, unknown or
+  inactive step answers `409 invalid_transition`); the three documents exist in this commit
+  and WP-M14-39 now depends on WP-M14-38c.
   answers `/admin/statuses` — the `ticket_statuses` table of WP-M14-35 with key, the names de/en,
   the colour (a swatch next to the hex), the position, the active and terminal flags and the number
   of tickets that carry each status. `settings.read` reads the table, `settings.write` adds the

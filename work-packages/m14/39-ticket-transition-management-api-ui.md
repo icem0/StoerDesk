@@ -2,7 +2,7 @@
 
 format: small-model
 status: planned
-depends-on: WP-M14-38
+depends-on: WP-M14-38c
 phase: 14
 context-budget: 22k tokens
 spec: specs/07-escalation.md §7.1, PLAN.md §7
@@ -28,7 +28,8 @@ interfaces:
 ## Task
 
 1. `apps/api/src/tickets/transition-routes.ts`: Fastify-Routes unter `/api/v1/admin/transitions` mit `settings.read` / `settings.write` Guards; Validierung, dass `from_status` und `to_status` gültige Status-Schlüssel sind und keine doppelte `(from_status, event_key)` entsteht.
-2. `apps/api/src/tickets/transition-service.ts`: `createTicketTransition`, `updateTicketTransition`, `deleteTicketTransition` ergänzt (WP-M14-38 hatte nur Read).
+2. `apps/api/src/tickets/transition-service.ts`: `createTicketTransition`, `updateTicketTransition`,
+   `deleteTicketTransition` ergänzt (WP-M14-38b hatte nur die Read).
 
 ## Non-goals
 

@@ -56,3 +56,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0022](DECISIONS/0022-ntfy-access-token-as-the-channel-secret.md) | The ntfy access token is the write-only secret of the channel | accepted |
 | [ADR-0023](DECISIONS/0023-escalation-stage-chain-configurable.md) | The escalation stage chain is configurable (add, remove, predecessor) | accepted |
 | [ADR-0024](DECISIONS/0024-ntfy-compose-profile-behind-cloudflare-tunnel.md) | ntfy as an optional Compose profile behind a Cloudflare Tunnel | accepted |
+| [ADR-0025](DECISIONS/0025-ticket-transitions-as-database-configuration.md) | The ticket transitions are database configuration (`ticket_transitions`, `0041`) | accepted |

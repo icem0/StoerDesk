@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) | 73  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) | 75  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -33,7 +33,7 @@ recognisable by its children: `WP-M1-07` → `WP-M1-07b`, `WP-M1-09` → `WP-M1-
 `WP-M1-09e`, `WP-M1-10` → `WP-M1-10b` … `WP-M1-10e`, `WP-M2-02` → `WP-M2-02b`,
 `WP-M2-04` → `WP-M2-04b`/`WP-M2-04c`, `WP-M2-05` → `WP-M2-05b`/`WP-M2-05c`, `WP-M2-06` →
 `WP-M2-06b`, `WP-M2-07` → `WP-M2-07b` … `WP-M2-07d`, `WP-M2-19` → `WP-M2-19a` …
-`WP-M2-19d`. `WP-M1-23` … `WP-M1-27` are **retroactive records**: they do not announce
+`WP-M2-19d`, `WP-M14-38` → `WP-M14-38a` … `WP-M14-38c`. `WP-M1-23` … `WP-M1-27` are **retroactive records**: they do not announce
 work, they document phase 1 commits that landed without a work package, so that the
 record is complete (`AGENTS.md`, _Open follow-ups (mandatory closure)_).
 **WP-M1-28** hardens the CI chain itself: the pre-push tag guard, the publish-gated
@@ -550,6 +550,22 @@ gains `NTFY_IMAGE`, `NTFY_BASE_URL` and `NTFY_HOSTNAME` next to the empty
 of the repository; `docker compose config` with and without `--profile ntfy` is
 unverified in this container (no Docker daemon) and CI runs the smoke test.
 
+**WP-M14-38 is split before any code (WP-M14-38, the follow-up of WP-M14-37).** The
+statuses became rows in WP-M14-35 … WP-M14-37, but the steps between them stayed the
+code map `TRANSITIONS` in `apps/api/src/tickets/workflow.ts` — a status an
+administrator adds has no step into it and none out of it, and the CHECK
+`tickets_status_check` of migration `0004` still limits `tickets.status` to the nine
+keys. The announced package needed five source files, over the four of `PLAN.md` §17,
+so it is split: **WP-M14-38a** writes the table (`0041_ticket_transitions.sql`: both
+statuses as foreign keys to `ticket_statuses.key` with `ON DELETE cascade`, `event_key`
+unique per `from_status`, the nullable `condition_json`, the 22 seeded steps of `PLAN.md`
+§7 plus the nine status rows the keys need, `tickets_status_check` dropped, the Drizzle
+mirror, the journal), **WP-M14-38b** adds the shared contract and
+`readTicketTransitions`/`resolveTransition`, **WP-M14-38c** makes `transitionTicket()`
+read the table (`409 invalid_transition` for an unknown or inactive step, the workflow
+columns still keyed by `event_key`). ADR-0025 decides the shape; `specs/07-escalation.md`
+gains §7.13. No product code in this commit.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -972,7 +988,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | done    | yes     |
 | WP-M14-36  | ticket status management API (CRUD for statuses)                          | done    | yes     |
 | WP-M14-37  | ticket status management UI (admin page for statuses)                     | done    | yes     |
-| WP-M14-38  | configurable ticket transitions in DB + DB-driven workflow engine         | planned | yes     |
+| WP-M14-38  | the ticket transitions — spec, ADR-0025 and the split of the chain         | done    | yes     |
+| WP-M14-38a | the transition table in the database (migration 0041)                    | planned | yes     |
+| WP-M14-38b | the transition contracts and the transition service                      | planned | yes     |
+| WP-M14-38c | the workflow engine reads the transition table                           | planned | yes     |
 | WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |
 | WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |

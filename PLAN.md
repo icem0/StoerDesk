@@ -199,6 +199,13 @@ Core tables:
   removes its rules (migration `0037_escalation_stage_chain`)
 - `escalation_firings` — the firing log of the escalation: unique over
   `(ticket_id, rule_key, threshold_at)`, so a rule fires once per threshold
+- `ticket_statuses` and `ticket_transitions` — the workflow as configuration (ADR-0025,
+  WP-M14-35, WP-M14-38a … WP-M14-38c): the status rows (`key`, `names` de/en, `color`,
+  `position`, `active`, `is_terminal`) and the steps (`from_status`, `to_status` as foreign
+  keys to `ticket_statuses.key` with `ON DELETE cascade`, `event_key` unique per step, the
+  nullable `condition_json` stored now and evaluated only from WP-M14-41, `active`);
+  migration `0041_ticket_transitions.sql` seeds the 22 steps of §7 and drops
+  `tickets_status_check`
 - `users`, `groups`, `user_groups`, `sessions`, `api_keys`
   - `users.theme` — `auto` (follows `prefers-color-scheme`), `light` or `dark`
     (WP-M2-92)
@@ -736,6 +743,21 @@ an existing status never enters an edit body. The settings menu gained the entry
 (`auth.links.statuses` in de and en). `apps/web/src/admin/__tests__/status-page.test.tsx`
 proves the table, the guards, the forms and both rejects. WP-M14-38 … WP-M14-41, WP-M14-54 and
 WP-M14-70 … WP-M14-72 stay open in numeric order.
+**WP-M14-38 is drafted, not implemented yet** (out of band in phase 14, the follow-up of
+WP-M14-37): the steps of the workflow become configuration. WP-M14-35 made the
+statuses rows, but the steps stayed the code map `TRANSITIONS` in
+`apps/api/src/tickets/workflow.ts`, so a status the administrator adds has no step
+into it and none out of it — and the CHECK `tickets_status_check` of migration `0004`
+still limits `tickets.status` to the nine keys. ADR-0025 decides the shape:
+`ticket_transitions` (migration `0041`) with `from_status` and `to_status` as foreign
+keys to `ticket_statuses.key` (`ON DELETE cascade`), `event_key` unique per
+`from_status`, the nullable `condition_json` stored now and evaluated only by WP-M14-41,
+the wildcard `cancelled` expanded into one row per status, the 22 rows of `PLAN.md` §7
+seeded idempotently by the migration (plus the nine status rows the keys need) and the
+old `tickets_status_check` dropped. The split is **WP-M14-38a** (the table),
+**WP-M14-38b** (the shared contracts and `readTicketTransitions`/`resolveTransition`)
+and **WP-M14-38c** (`transitionTicket()` reads the table); the three documents exist in
+this commit and run in numeric order before WP-M14-39.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five
@@ -2100,7 +2122,14 @@ These decisions need an ADR or explicit approval before the related WP starts:
 - multi-tenancy (default: no),
 - contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03), editable in the administration (WP-M6-16); per-object-type deadlines (Objektart) are undecided — they need an ADR before a work package,
 - the shape of the escalation configuration — **resolved by ADR-0017**: the workflow milestones are the stages, the deadlines per priority, the conditions and the actions live in the database and are maintained in `/admin/escalation`; the former manual stage catalogue is removed; the number of stages and the predecessor of a stage — **resolved by ADR-0023**: the stage set is a validated chain in the database, a stage names its predecessor or none and the predecessor carries the clock,
-- whether shift swaps require admin approval by default (default: yes) — **resolved by ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the original technician remains responsible until approval,
+- whether shift swaps require admin approval by default (default: yes) — **resolved by
+  ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the
+  original technician remains responsible until approval,
+- the shape of the ticket workflow transitions — **resolved by ADR-0025**: the steps are
+  rows of `ticket_transitions` (migration `0041`) whose `from_status` and `to_status` are
+  foreign keys onto `ticket_statuses.key` with `ON DELETE cascade`, the 22 steps of
+  `PLAN.md` §7 are seeded by that migration and `transitionTicket()` reads the table
+  (WP-M14-38a … WP-M14-38c),
 - name and logo (working title: StörDesk).
 
 Technical defaults already chosen in this plan:
