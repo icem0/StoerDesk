@@ -766,6 +766,18 @@ and `to_status` as foreign keys to `ticket_statuses.key` with `ON DELETE cascade
 `tickets_status_check` of migration `0004` is dropped (ADR-0025 decision 5), `apps/api/src/db/schema.ts`
 mirrors the table as `ticketTransitions` and the journal reaches `0041`. WP-M14-38b and
 WP-M14-38c stay open in numeric order.
+**WP-M14-38b is implemented** (the second child of WP-M14-38): `packages/shared/src/schemas/ticket.ts`
+carries the row contract of §7.13 — `TicketTransition { id, fromStatus, toStatus, eventKey, condition, active }`
+behind `ticketTransitionSchema`, both statuses bound to the key format of `ticketStatusKeySchema`,
+the event key bound to `ticketTransitionEventKeySchema` (`^[a-z][a-z0-9_]{0,39}$`, the form of
+the events of §7) and the code `transition_not_found` — and `apps/api/src/tickets/transition-service.ts`
+reads the rows of `ticket_transitions` (active and inactive, ordered by `from_status` and `event_key`)
+through `readTicketTransitions(database)` and resolves one step purely through
+`resolveTransition(transitions, fromStatus, eventKey)`, answering `undefined` for an unknown or
+inactive combination — `transitionTicket()` of WP-M14-38c loads the rows once per call and decides
+the error there. No create, update or delete function (WP-M14-39) and no evaluation of `condition`
+(WP-M14-41); the engine still reads the code map `TRANSITIONS` until WP-M14-38c. WP-M14-38c stays
+open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

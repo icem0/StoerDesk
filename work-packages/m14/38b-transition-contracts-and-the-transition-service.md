@@ -1,7 +1,7 @@
 # WP-M14-38b: The transition contracts and the transition service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-38a
 phase: 14
 context-budget: 16k tokens
@@ -64,6 +64,12 @@ Expected: all green; `readTicketTransitions` answers the 22 rows of a migrated d
 
 - Files changed: the shared ticket contracts, the new transition service
 - Interfaces added: `TicketTransition`, `readTicketTransitions`, `resolveTransition`
-- Verified:
+- Verified: `npm run typecheck`, `eslint .` (0 errors) and the full `npm run test:run`
+  (190 files, 1254 tests) are green; the new `transition-service.integration.spec.ts`
+  (a test, outside the file count) proves on a migrated throwaway database that
+  `readTicketTransitions` answers the 22 seeded rows ordered by `from_status` and
+  `event_key`, that `resolveTransition` finds `NEW`/`review_started` → `IN_REVIEW`,
+  resolves nothing for `NEW`/`closed`, and resolves nothing after that row was set
+  to `active = false` — while the rows still count 22.
 - Follow-up WP: WP-M14-38c (the workflow engine reads the transition table)
 - Open question: none

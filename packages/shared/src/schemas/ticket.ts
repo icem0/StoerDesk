@@ -571,3 +571,33 @@ export const ticketStatusInUseCode = 'status_in_use'
 export const ticketStatusKeyTakenCode = 'status_key_taken'
 export const ticketStatusLastActiveCode = 'status_last_active'
 export const ticketStatusNotFoundCode = 'status_not_found'
+
+/**
+ * A row of the `ticket_transitions` table (`specs/07-escalation.md` §7.13,
+ * ADR-0025, WP-M14-38b).
+ *
+ * The steps of the ticket workflow are configuration next to the statuses of WP-M14-35:
+ * a row names the step from `fromStatus` to `toStatus` that the event `eventKey`
+ * performs, unique over `(fromStatus, eventKey)` — one event performs at most one
+ * step. Both statuses are machine keys in the format of `ticketStatusKeySchema`,
+ * because they are foreign keys to `ticket_statuses.key`. `condition` is the
+ * condition of the step as a jsonb record — stored from migration `0041` and
+ * evaluated only from WP-M14-41 — and `active` switches a step off without
+ * deleting it. An event key is a lower-case machine key (`review_started`,
+ * `closed`, …), the form of the events of `PLAN.md` §7.
+ */
+
+export const ticketTransitionEventKeySchema = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/)
+
+export const ticketTransitionSchema = z.object({
+  id: z.uuid(),
+  fromStatus: ticketStatusKeySchema,
+  toStatus: ticketStatusKeySchema,
+  eventKey: ticketTransitionEventKeySchema,
+  condition: z.record(z.string(), z.unknown()).nullable(),
+  active: z.boolean(),
+})
+
+export type TicketTransition = z.infer<typeof ticketTransitionSchema>
+
+export const ticketTransitionNotFoundCode = 'transition_not_found'

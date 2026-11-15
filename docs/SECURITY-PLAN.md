@@ -373,6 +373,25 @@ for the touched files: no log line added, no answer changed, the test writes moc
 numbers and the `DONE` machine key only — no name, no contact value, no secret. No new
 finding.
 
+Transition-service pass: 2026-11-15, diff `c3afab4..` (WP-M14-38b — the shared
+contracts in `packages/shared/src/schemas/ticket.ts`, the new
+`apps/api/src/tickets/transition-service.ts` and the new
+`apps/api/src/tickets/__tests__/transition-service.integration.spec.ts`) — areas A
+and B re-checked in full (the package adds no route, no capability and no bearer
+scope: the route table, the guards and the session handling stay the ones of
+WP-M14-36 and WP-M14-38a), C re-checked for the changed files: the service runs one
+select over `ticket_transitions` bound to the schema columns without any client input,
+without a `sql` template and without value interpolation, `resolveTransition` is pure
+and compares its arguments in memory only, and the zod contract `ticketTransitionSchema`
+binds the row shape — both status keys to the key format of `ticketStatusKeySchema`
+(the database backstop is the key-format CHECK of migration `0040`), the event key to
+`^[a-z][a-z0-9_]{0,39}$`, `condition` to a nullable record — so no foreign value
+reaches a query and no answer exists at all in this layer, D–J untouched (no frontend,
+no outbound request, no new environment key, no upload, no dependency, no compose or
+workflow change), K re-checked for the touched files: no log line is added and nothing
+is answered, the test writes no ticket and carries the machine keys of the seeded
+workflow only — no name, no contact value, no secret. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -461,9 +480,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-table pass: untouched) | 2b2b7fa |
-| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-table pass: the route table is unchanged) | 2b2b7fa |
-| C Injection | complete (re-checked for the changed files at the transition-table pass: migration 0041 is literal SQL, the FKs cascade onto the unique `ticket_statuses.key`, `tickets_status_check` dropped per ADR-0025 decision 5) | 2b2b7fa |
+| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-service pass: untouched) | c3afab4 |
+| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-service pass: the route table is unchanged) | c3afab4 |
+| C Injection | complete (re-checked for the changed files at the transition-service pass: one schema-bound select over `ticket_transitions` without client input and without interpolation, the pure `resolveTransition` compares in memory only and `ticketTransitionSchema` binds the row shape) | c3afab4 |
 | D Frontend | complete (re-checked in the confirm-draft pass, only a button state was added) | 68cded7 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
@@ -471,7 +490,7 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the status-admin pass: no log line added, an answer carries machine keys, names, color, position, flags, timestamps and a count only) | aeab3ba |
+| K Logging/PII | complete (re-checked for the changed files at the transition-service pass: no log line, no answer, the test writes the machine keys of the seeded workflow only) | c3afab4 |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

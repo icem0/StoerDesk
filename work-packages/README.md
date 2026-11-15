@@ -580,6 +580,29 @@ DO NOTHING`). `tickets_status_check` of migration `0004` is dropped (ADR-0025 de
 status CHECK — a `DONE`-style key stays on the ticket as history, the priority and
 source checks stay enforced. WP-M14-38b and WP-M14-38c stay open in numeric order.
 
+**WP-M14-38b is implemented (out of band in phase 14, the second child of WP-M14-38).**
+`packages/shared/src/schemas/ticket.ts` gains the row contract of §7.13 —
+`TicketTransition { id, fromStatus, toStatus, eventKey, condition, active }` behind
+`ticketTransitionSchema`, both statuses bound to the key format of
+`ticketStatusKeySchema` (they are foreign keys to `ticket_statuses.key`), the event
+key bound to `ticketTransitionEventKeySchema` (`^[a-z][a-z0-9_]{0,39}$`, the form of
+the events of `PLAN.md` §7) and `ticketTransitionNotFoundCode = 'transition_not_found'`.
+`apps/api/src/tickets/transition-service.ts` reads the rows of `ticket_transitions` —
+active and inactive — ordered by `from_status` and `event_key` through that schema
+(`readTicketTransitions(database)`) and resolves a step purely
+(`resolveTransition(transitions, fromStatus, eventKey)`): the row that performs the
+step, or `undefined` when no **active** row does — an inactive row resolves like a
+missing one and the caller decides the error. The rows are loaded once per call, so
+`transitionTicket()` of WP-M14-38c resolves them there. No create, update or delete
+function (WP-M14-39), no evaluation of `condition` (WP-M14-41), and `transitionTicket()`
+still reads the code map `TRANSITIONS` until that child. The new
+`apps/api/src/tickets/__tests__/transition-service.integration.spec.ts` (a test, outside
+the file count) proves on a migrated throwaway database that the 22 seeded rows come back
+in that order, that one `cancelled` row exists per status, that `NEW`/`review_started`
+resolves to `IN_REVIEW`, that `NEW`/`closed` resolves nothing and that a row set to
+`active = false` resolves nothing while the rows still count 22. WP-M14-38c stays open in
+numeric order.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1004,7 +1027,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-37  | ticket status management UI (admin page for statuses)                     | done    | yes     |
 | WP-M14-38  | the ticket transitions — spec, ADR-0025 and the split of the chain         | done    | yes     |
 | WP-M14-38a | the transition table in the database (migration 0041)                    | done    | yes     |
-| WP-M14-38b | the transition contracts and the transition service                      | planned | yes     |
+| WP-M14-38b | the transition contracts and the transition service                      | done    | yes     |
 | WP-M14-38c | the workflow engine reads the transition table                           | planned | yes     |
 | WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |

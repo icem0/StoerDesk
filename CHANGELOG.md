@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The transition rows are read and resolved as configuration (WP-M14-38b, the second
+  child of WP-M14-38): `packages/shared/src/schemas/ticket.ts` gains the row contract of
+  `specs/07-escalation.md` §7.13 — `TicketTransition { id, fromStatus, toStatus, eventKey,
+  condition, active }` behind `ticketTransitionSchema` with both statuses bound to the key
+  format of `ticketStatusKeySchema`, the event key bound to
+  `ticketTransitionEventKeySchema` (`^[a-z][a-z0-9_]{0,39}$`, the form of the events of
+  `PLAN.md` §7) and the error code `transition_not_found` — and the new service
+  `apps/api/src/tickets/transition-service.ts` exposes `readTicketTransitions(database)`,
+  which answers every row of `ticket_transitions` (active and inactive) ordered by
+  `from_status` and `event_key`, and the pure `resolveTransition(transitions, fromStatus,
+  eventKey)`, which returns the row that performs the step or `undefined` when no **active**
+  row does. The rows are loaded once per call, so `transitionTicket()` (WP-M14-38c) resolves
+  them there; there is still no create, update or delete function (WP-M14-39), no evaluation
+  of `condition` (WP-M14-41) and the engine still reads the code map `TRANSITIONS`.
+  `apps/api/src/tickets/__tests__/transition-service.integration.spec.ts` proves on a
+  migrated throwaway database the 22 seeded rows in that order, the one `cancelled` row per
+  status, `NEW`/`review_started` → `IN_REVIEW`, nothing for `NEW`/`closed` and nothing for a
+  row that was set to `active = false`.
 - The transition table exists in the database (WP-M14-38a): migration
   `0041_ticket_transitions.sql` creates `ticket_transitions` — `from_status` and
   `to_status` as foreign keys to `ticket_statuses.key` with `ON DELETE cascade`,
