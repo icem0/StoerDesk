@@ -863,6 +863,23 @@ before the request, so an existing status key never enters an invalid body. The 
 proves the option, the target select over the configured statuses (the inactive one is not offered), that the saved
 body carries `toStatus` and that a `status_change` action without a target stays unsaved. WP-M14-41, WP-M14-54 and WP-M14-70 …
 WP-M14-72 stay open in numeric order.
+**WP-M14-41 is implemented** (the time of the day becomes a condition of an escalation rule):
+`escalationConditionLeafSchema` in `packages/shared/src/schemas/escalation-config.ts` gains the leaf
+`time_of_day` with the operators `in`/`notIn` and the interval value `HH:MM-HH:MM`
+(`TIME_OF_DAY_INTERVAL_PATTERN`, a single interval or an array of them), and `evaluateEscalationCondition()`
+evaluates it against the wall clock of `Europe/Berlin` — the display timezone of `PLAN.md` §Time, which
+resolves the WP's open question: neither the server timezone nor UTC — through the helpers
+`wallClockMinutes()`, the DST-safe `minutesOfDay()` (`date-fns-tz`) and `timeOfDayIntervalMatches()` in
+`packages/shared/src/escalation.ts`: the start of an interval is included, its end excluded, so
+`06:00-22:00` and `22:00-06:00` split day and night and an interval may cross midnight
+(`22:00-00:00` reaches midnight); an interval that names no clock time never matches. `EscalationFacts`
+gained the optional `timeOfDay` fact — the unit tests pass it explicitly and the escalation engine
+without that fact falls back to the current wall clock. `specs/07-escalation.md` §7.4 carries the new
+row and its semantics, the label `admin.escalation.condition.fields.time_of_day` (`de`/`en`) keeps the
+field of the condition builder localized and `packages/shared/src/__tests__/escalation.test.ts` proves
+the match inside and outside an interval, the midnight transition, the array of intervals, an
+impossible interval and a malformed leaf. No route, database or migration change — a rule already
+stores its condition as `condition_json`. WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

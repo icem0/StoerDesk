@@ -104,10 +104,17 @@ testable.
 | `elapsedMinutes` | number | `gt`, `gte`, `lt`, `lte`, `eq` |
 | `paused` | boolean | `eq` |
 | `stageReached` | stage key | `eq`, `ne`, `in`, `notIn` |
+| `time_of_day` | interval `HH:MM`–`HH:MM`, one or more | `in`, `notIn` |
 
 A condition group holds at most two levels and at most 20 leaves. The evaluation
 is a pure function in `packages/shared`, used by the API and by the administration
 form alike.
+
+`time_of_day` (WP-M14-41) matches the wall clock of `Europe/Berlin` — the
+instance's display timezone — against one or more intervals of the day: the start
+is included, the end excluded, so `06:00–22:00` and `22:00–06:00` partition the
+day and an interval may cross midnight. Without a wall-clock fact the evaluator
+reads the current time; an interval that names no clock time never matches.
 
 ## 7.5 Actions
 

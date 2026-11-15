@@ -701,6 +701,23 @@ proves the option, the target select over the configured statuses (the inactive 
 body carries `toStatus` and that a `status_change` action without a target stays unsaved. No API, schema or migration
 change. WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
 
+**WP-M14-41 is implemented** (the time of the day becomes a condition of an escalation rule): `escalationConditionLeafSchema`
+in `packages/shared/src/schemas/escalation-config.ts` gains the leaf `time_of_day` with the operators `in`/`notIn`
+and the interval value `HH:MM-HH:MM` (`TIME_OF_DAY_INTERVAL_PATTERN`, one interval or an array of them);
+`evaluateEscalationCondition()` evaluates it against the wall clock of `Europe/Berlin` — the display timezone of
+`PLAN.md` §Time, which resolves the WP's open question, never the server timezone or UTC — through
+`wallClockMinutes()`, the DST-safe `minutesOfDay()` (`date-fns-tz`) and `timeOfDayIntervalMatches()` in
+`packages/shared/src/escalation.ts`: the start is included, the end excluded (`06:00-22:00` and `22:00-06:00`
+split day and night) and an interval may cross midnight (`22:00-00:00`); an interval that names no clock time
+never matches. `EscalationFacts` gained the optional `timeOfDay` fact so the evaluation stays deterministic in
+the unit tests and falls back to the current wall clock when the engine does not carry one. `specs/07-escalation.md`
+§7.4 carries the new row and its semantics, the settings namespace gained the label
+`admin.escalation.condition.fields.time_of_day` in `de` and `en` (the condition builder reads its field list
+from the shared contract, so the new field stays localized) and `packages/shared/src/__tests__/escalation.test.ts`
+proves the match inside and outside an interval, the midnight transition, the array of intervals, an impossible
+interval and a malformed leaf. No route, database or migration change — a rule already stores its condition as
+`condition_json`. WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1132,7 +1149,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-40  | status_change as escalation action — the database layer (migration 0042)  | done    | yes     |
 | WP-M14-40b | the status_change contract and the engine (config jsonb, dispatcher)       | done    | yes     |
 | WP-M14-40c | status_change in the escalation administration UI                          | done    | yes     |
-| WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
+| WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | done      | yes     |
 | WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | done    | yes     |
 | WP-M14-43  | work order as free text (UI + i18n)                                       | done    | yes     |
 | WP-M14-44  | work order text column in the ticket list API                             | done    | yes     |

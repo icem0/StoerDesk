@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
 import { TICKET_PRIORITIES } from '../timeline.js'
+import {
+  TIME_OF_DAY_INTERVAL_PATTERN,
+  minutesOfDay,
+  timeOfDayIntervalMatches,
+  wallClockMinutes,
+} from '../escalation.js'
 import { TICKET_STATUS_VALUES, ticketStatusKeySchema } from './ticket.js'
 
 /**
@@ -217,6 +223,14 @@ export const escalationConditionLeafSchema = z.union([
     z.union([
       z.string().regex(keyPattern),
       z.array(z.string().regex(keyPattern)).min(1),
+    ]),
+  ),
+  leaf(
+    'time_of_day',
+    ['in', 'notIn'],
+    z.union([
+      z.string().regex(TIME_OF_DAY_INTERVAL_PATTERN),
+      z.array(z.string().regex(TIME_OF_DAY_INTERVAL_PATTERN)).min(1),
     ]),
   ),
 ])
@@ -487,6 +501,11 @@ export type EscalationFacts = {
   elapsedMinutes: number
   paused: boolean
   stageReached: readonly string[]
+  /**
+   * The wall clock `HH:MM` a `time_of_day` leaf is matched against (§7.4, WP-M14-41);
+   * when it is absent, the current `Europe/Berlin` time is used.
+   */
+  timeOfDay?: string | null
 }
 
 const listValue = (value: unknown): string[] =>
@@ -564,6 +583,20 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
       const contains = reached.includes(String(leaf.value))
 
       return leaf.operator === 'ne' ? !contains : contains
+    }
+
+    case 'time_of_day': {
+      const minutes = facts.timeOfDay === undefined || facts.timeOfDay === null
+        ? minutesOfDay(new Date())
+        : wallClockMinutes(facts.timeOfDay)
+
+      if (minutes === null) {
+        return false
+      }
+
+      const within = listValue(leaf.value).some((interval) => timeOfDayIntervalMatches(interval, minutes))
+
+      return leaf.operator === 'notIn' ? !within : within
     }
 
     default:

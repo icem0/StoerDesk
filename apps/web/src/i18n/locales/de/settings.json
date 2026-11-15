@@ -329,7 +329,8 @@
           "paused": "Pausiert",
           "deadlinePercent": "Frist in %",
           "elapsedMinutes": "Verstrichene Minuten",
-          "stageReached": "Erreichte Stufe"
+          "stageReached": "Erreichte Stufe",
+          "time_of_day": "Zeitfenster (Tageszeit)"
         },
         "field": "Feld",
         "operator": "Operator",

@@ -329,7 +329,8 @@
           "paused": "Paused",
           "deadlinePercent": "Deadline in %",
           "elapsedMinutes": "Elapsed minutes",
-          "stageReached": "Stage reached"
+          "stageReached": "Stage reached",
+          "time_of_day": "Time of day"
         },
         "field": "Field",
         "operator": "Operator",

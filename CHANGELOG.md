@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Escalation rules can speak the time of the day (WP-M14-41, the last layer of the
+  configurable-workflow chain): the condition leaf `time_of_day` is added to
+  `escalationConditionLeafSchema` in `packages/shared/src/schemas/escalation-config.ts`
+  with the operators `in`/`notIn` and the interval value `HH:MM-HH:MM` (a single interval
+  or an array of them, `TIME_OF_DAY_INTERVAL_PATTERN`). `evaluateEscalationCondition()`
+  evaluates the leaf against the wall clock of `Europe/Berlin` — the instance's display
+  timezone of `PLAN.md` §Time, resolved as the open question of the WP — with the helpers
+  `wallClockMinutes()`, `minutesOfDay()` (DST-safe via `date-fns-tz`) and
+  `timeOfDayIntervalMatches()` in `packages/shared/src/escalation.ts`: the start of an
+  interval is included, its end excluded, so `06:00-22:00` and `22:00-06:00` partition the
+  day and an interval may cross midnight (`22:00-00:00` covers the night until
+  midnight); an interval that names no clock time never matches. `EscalationFacts` gained
+  the optional `timeOfDay` fact — the evaluation stays deterministic in tests and falls
+  back to the current wall clock when it is absent. `specs/07-escalation.md` §7.4 carries
+  the new row and its semantics, the settings namespace gained the label
+  `admin.escalation.condition.fields.time_of_day` in `de` and `en` so the field of the
+  condition builder stays localized, and `packages/shared/src/__tests__/escalation.test.ts`
+  proves the match inside/outside an interval, the midnight transition, the array values,
+  an impossible interval and the malformed leaf. No route, database or migration change —
+  a condition is stored as `condition_json` and the rule already accepts the new leaf.
 - The escalation administration offers the `status_change` action (WP-M14-40c, the third layer of
   the action): `apps/web/src/admin/escalation-page.tsx` reads the statuses with the existing
   administration route `GET /api/v1/admin/statuses` (WP-M14-36, `settings.read`) as a TanStack query
