@@ -413,6 +413,28 @@ proves the three rows with the German labels, the checkbox state for a saved
 readiness row, the "channels of the instance" fallback, the missing checkboxes
 of an unconfigured channel and the shared PUT body shape.
 
+**Phase 14 (WP-M14-35, WP-M14-36): the ticket statuses become configuration.**
+**WP-M14-35** is implemented: migration `0034_ticket_statuses.sql` gives `ticket_statuses`
+the columns `key`, `names` (jsonb `de`/`en`), `color`, `position`, `active` and `is_terminal`
+and `apps/api/src/db/seed/statuses.ts` seeds the nine statuses of `PLAN.md` §7 idempotently
+on the direct API start. Its fixed-key CHECK contradicted its own goal — no new status could
+ever be created — so a `fix(api)` commit added migration `0040_ticket_status_key_format.sql`:
+the CHECK becomes a key-format CHECK (`^[A-Z][A-Z0-9_]{0,39}$`, the form ADR-0023 uses for
+stage keys) and `apps/api/src/db/schema.ts` follows. **WP-M14-36** is implemented as the
+status administration API: `apps/api/src/tickets/status-service.ts` reads, creates, edits and
+deletes rows — the answer carries `ticketCount`, the key of an existing status is immutable
+(the open question of WP-M14-36 resolved: a renamed key would break the workflow, the stages
+and the tickets that reference it) — and `status-routes.ts` answers `GET`/`POST`/`PATCH`/`DELETE`
+`/api/v1/admin/statuses` behind `settings.read`/`settings.write`: a malformed body is
+`400 invalid_request` with the field paths, a taken key `409 status_key_taken`, an unknown key
+`404 status_not_found`, a status a ticket still carries `409 status_in_use` with its number and
+the last active status is never switched off or deleted (`409 status_last_active`). The shared
+contracts `ticketStatusCreateRequestSchema`, `ticketStatusUpdateRequestSchema`,
+`ticketStatusResponseSchema` and `ticketStatusListResponseSchema` of `packages/shared/src/schemas/ticket.ts`
+bind request and answer. `apps/api/src/tickets/__tests__/status-management.integration.spec.ts`
+proves the rules on a throwaway database. WP-M14-37 (status UI), WP-M14-38 … WP-M14-41,
+WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+
 **Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
 link carries the host. The office wants the subscription QR of the own
 channels page to land in the ntfy app and subscribe automatically. The ntfy
@@ -940,17 +962,17 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-32  | the readiness selection of the technician in the settings page          | done      | yes     |
 | WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
 | WP-M14-33  | the ntfy deep link of the QR carries the host (out of band)               | done    | yes     |
-| WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | planned | yes     |
-| WP-M14-36  | ticket status management API (CRUD for statuses)                          | planned | yes     |
+| WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | done    | yes     |
+| WP-M14-36  | ticket status management API (CRUD for statuses)                          | done    | yes     |
 | WP-M14-37  | ticket status management UI (admin page for statuses)                     | planned | yes     |
 | WP-M14-38  | configurable ticket transitions in DB + DB-driven workflow engine         | planned | yes     |
 | WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |
 | WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |
 | WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | planned | yes     |
-| WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | planned | yes     |
-| WP-M14-43  | work order as free text (UI + i18n)                                       | planned | yes     |
-| WP-M14-44  | work order text column in the ticket list API                             | planned | yes     |
+| WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | done    | yes     |
+| WP-M14-43  | work order as free text (UI + i18n)                                       | done    | yes     |
+| WP-M14-44  | work order text column in the ticket list API                             | done    | yes     |
 | WP-M14-45  | ntfy delivers the selected events to the topic of the user (out of band)  | done    | yes     |
 | WP-M14-46  | the ntfy QR survives a missing Telegram bot (out of band)                 | done    | yes     |
 | WP-M14-47  | ntfy counts as configured only after the code came back (out of band)     | done    | yes     |

@@ -328,6 +328,34 @@ labels are unchanged and carry no value beyond what the user already sees, K re-
 the touched test: the new shift fixtures use `example.org` addresses and mock pool names,
 the new `clientUuid` is a mock UUID literal and no log line is touched. No new finding.
 
+Status-admin pass: 2026-11-15, diff `aeab3ba..` (the key-format repair of WP-M14-35 and
+WP-M14-36 — `apps/api/src/db/migrations/0040_ticket_status_key_format.sql` plus its
+journal entry, `apps/api/src/db/schema.ts`, `apps/api/src/tickets/status-service.ts`,
+`apps/api/src/tickets/status-routes.ts`, the registration in `apps/api/src/index.ts`,
+the shared status contracts in `packages/shared/src/schemas/ticket.ts` and the new
+`apps/api/src/tickets/__tests__/status-management.integration.spec.ts`) — areas A and B
+re-checked in full (the route table gains four rows: `GET /api/v1/admin/statuses` behind
+the `settings.read` preHandler and `POST /api/v1/admin/statuses`, `PATCH` and `DELETE`
+`/api/v1/admin/statuses/:key` behind `settings.write`; all four are session-only, no
+public capability and no bearer scope, so the guard answers `401 session_invalid` before
+`403 forbidden`; a status key never resolves a resource of another user and is no IDOR
+key of the public layer), C re-checked for the changed files: both bodies pass through
+`ticketStatusCreateRequestSchema` / `ticketStatusUpdateRequestSchema` before anything is
+read — the key is bound to `^[A-Z][A-Z0-9_]{0,39}$`, the two names to 1–80 trimmed
+characters, the color to a six-digit hex value and the position to 0–999 — the `:key`
+path parameter is format-checked again before the delete lookup and otherwise enters
+only a drizzle-bound `eq`, the insert, the update, the delete and both usage counters
+bind their values through drizzle and their `sql` templates carry column references
+only (no request value is interpolated into SQL anywhere), and the key-format CHECK
+of migration 0040 is the database backstop of the schema rule, D, E, F, G, H, I and
+J untouched (no frontend, no outbound request, no new environment key, no upload, no
+dependency, no compose or workflow change), K re-checked for the touched files: no log
+line is added, an answer carries the machine key, the two localized names, the color,
+the position, the flags, the two timestamps and the number of the tickets that carry
+the status — no name of a person, no contact value, no secret — and the new test writes
+throwaway users with `example.org` addresses, a mock object number and mock tickets
+only. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -373,6 +401,7 @@ Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
 | GET/PUT | /api/v1/settings/deadlines | settings.read / settings.write |
 | GET/PUT | /api/v1/settings/oncall | settings.read / settings.write |
 | GET/POST/PATCH/DELETE | /api/v1/text-templates[/:id] | settings.read / settings.write |
+| GET/POST/PATCH/DELETE | /api/v1/admin/statuses[/:key] | settings.read / settings.write (apps/api/src/tickets/status-routes.ts) |
 | GET | /api/v1/public/text-templates | public catalog (active only) |
 | GET/POST/PATCH/DELETE | /api/v1/objects[/:objectNo] | object.read / object.write / object.delete |
 | POST | /api/v1/objects/import and /api/v1/objects/import/preview | object.import (objects/import-routes.ts:42) |
@@ -415,9 +444,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (no route, no session handling in the confirm-draft pass) | 68cded7 |
-| B Autorisation | complete (no new route in the confirm-draft pass) | 68cded7 |
-| C Injection | complete (re-checked for the changed files at the confirm-draft pass) | 68cded7 |
+| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed) | aeab3ba |
+| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope) | aeab3ba |
+| C Injection | complete (re-checked for the changed files at the status-admin pass: schema-bound bodies, drizzle-bound lookups, updates and deletes, the two `sql` count templates carry column references only, migration 0040 carries the key-format CHECK) | aeab3ba |
 | D Frontend | complete (re-checked in the confirm-draft pass, only a button state was added) | 68cded7 |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
@@ -425,7 +454,7 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the confirm-draft pass) | 68cded7 |
+| K Logging/PII | complete (re-checked for the changed files at the status-admin pass: no log line added, an answer carries machine keys, names, color, position, flags, timestamps and a count only) | aeab3ba |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

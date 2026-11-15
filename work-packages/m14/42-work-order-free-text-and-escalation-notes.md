@@ -1,7 +1,7 @@
 # WP-M14-42: Arbeitsauftrag als freies Textfeld (API Core)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-41
 phase: 14
 context-budget: 16k tokens

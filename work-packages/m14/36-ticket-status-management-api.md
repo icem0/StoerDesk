@@ -1,7 +1,7 @@
 # WP-M14-36: Ticket status management API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-35
 phase: 14
 context-budget: 18k tokens

@@ -710,6 +710,23 @@ proves the three rows, the checkbox state for a saved row, the instance-channel
 fallback, the missing checkboxes for an unconfigured channel and the shape of
 the PUT body.
 
+**WP-M14-35 and WP-M14-36 — the ticket statuses become configuration (done).** The
+status of a ticket is a machine key of the `ticket_statuses` table (migration `0034`,
+`PLAN.md` §7): `names` (jsonb `de`/`en`), `color`, `position`, `active` and `is_terminal`
+are rows the administration maintains and `apps/api/src/db/seed/statuses.ts` seeds the
+nine statuses idempotently on the direct API start. The fixed-key CHECK of WP-M14-35
+contradicted its own goal, so migration `0040_ticket_status_key_format.sql` replaced it
+with a key-format CHECK (`^[A-Z][A-Z0-9_]{0,39}$`, the rule ADR-0023 states for stage keys).
+**WP-M14-36** answers `GET`/`POST`/`PATCH`/`DELETE /api/v1/admin/statuses` behind
+`settings.read`/`settings.write` over `apps/api/src/tickets/status-service.ts` and
+`status-routes.ts`: the answer carries `ticketCount`, an unknown key is `404 status_not_found`,
+a malformed body `400 invalid_request` with the field paths, a taken key `409 status_key_taken`,
+a status a ticket still carries `409 status_in_use` with its number and the last active status
+is never switched off or deleted (`409 status_last_active`); the key of an existing status is
+immutable. `apps/api/src/tickets/__tests__/status-management.integration.spec.ts` proves it.
+WP-M14-37 (status UI), WP-M14-38 … WP-M14-41, WP-M14-54 and WP-M14-70 … WP-M14-72 stay open
+in numeric order.
+
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

@@ -1,7 +1,7 @@
 # WP-M14-44: Arbeitsauftrag-Text in der Ticket-Liste
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-42
 phase: 14
 context-budget: 12k tokens

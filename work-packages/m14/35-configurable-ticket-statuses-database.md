@@ -1,7 +1,7 @@
 # WP-M14-35: Configurable ticket statuses in database
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-34
 phase: 14
 context-budget: 18k tokens

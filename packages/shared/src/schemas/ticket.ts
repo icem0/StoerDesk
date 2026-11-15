@@ -507,3 +507,67 @@ export type DbTicketStatus = {
   active: boolean
   isTerminal: boolean
 }
+
+/**
+ * The ticket status administration (`specs/07-escalation.md` §7.1, WP-M14-36).
+ *
+ * The status of a ticket is a machine key of the `ticket_statuses` table, so the
+ * administration creates, edits and deletes rows. The key format is an upper-case
+ * identifier of up to 40 characters (the key-format CHECK of migration `0040`,
+ * the form of the nine statuses of `PLAN.md` §7). `nameDe`/`nameEn` are the
+ * user-facing labels stored as `names`, `color` the badge color, `position` the
+ * order in lists, `active` the visibility switch and `isTerminal` the flag that
+ * ends the workflow. The key of an existing status is immutable: the workflow,
+ * the escalation stages and the tickets reference it.
+ */
+
+export const ticketStatusKeySchema = z.string().regex(/^[A-Z][A-Z0-9_]{0,39}$/)
+
+export const ticketStatusCreateRequestSchema = z.object({
+  key: ticketStatusKeySchema,
+  nameDe: z.string().trim().min(1).max(80),
+  nameEn: z.string().trim().min(1).max(80),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6b7280'),
+  position: z.number().int().min(0).max(999).default(0),
+  active: z.boolean().default(true),
+  isTerminal: z.boolean().default(false),
+})
+
+export type TicketStatusCreateRequest = z.infer<typeof ticketStatusCreateRequestSchema>
+
+export const ticketStatusUpdateRequestSchema = z.object({
+  nameDe: z.string().trim().min(1).max(80).optional(),
+  nameEn: z.string().trim().min(1).max(80).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  position: z.number().int().min(0).max(999).optional(),
+  active: z.boolean().optional(),
+  isTerminal: z.boolean().optional(),
+})
+
+export type TicketStatusUpdateRequest = z.infer<typeof ticketStatusUpdateRequestSchema>
+
+export const ticketStatusResponseSchema = z.object({
+  key: z.string(),
+  nameDe: z.string(),
+  nameEn: z.string(),
+  color: z.string(),
+  position: z.number().int(),
+  active: z.boolean(),
+  isTerminal: z.boolean(),
+  ticketCount: z.number().int().min(0),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+})
+
+export type TicketStatusResponse = z.infer<typeof ticketStatusResponseSchema>
+
+export const ticketStatusListResponseSchema = z.object({
+  statuses: z.array(ticketStatusResponseSchema),
+})
+
+export type TicketStatusListResponse = z.infer<typeof ticketStatusListResponseSchema>
+
+export const ticketStatusInUseCode = 'status_in_use'
+export const ticketStatusKeyTakenCode = 'status_key_taken'
+export const ticketStatusLastActiveCode = 'status_last_active'
+export const ticketStatusNotFoundCode = 'status_not_found'

@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ticket status administration API (WP-M14-36, WP-M14-35): the status of a ticket is a
+  machine key of the `ticket_statuses` table, so `apps/api/src/tickets/status-service.ts` and
+  `status-routes.ts` answer `GET`/`POST`/`PATCH`/`DELETE /api/v1/admin/statuses` behind
+  `settings.read`/`settings.write` — the list carries the `de`/`en` names, the color, the
+  position, the active switch, the terminal flag and the number of the tickets that carry each
+  status (`ticketCount`). A malformed body answers `400 invalid_request` with the field paths,
+  a taken key `409 status_key_taken`, an unknown key `404 status_not_found`, a status a ticket
+  still carries `409 status_in_use` with its count and the last active status is never switched
+  off or deleted (`409 status_last_active`); the key of an existing status is immutable, because
+  the workflow, the escalation stages and the tickets reference it. The shared contracts
+  `ticketStatusCreateRequestSchema`, `ticketStatusUpdateRequestSchema`,
+  `ticketStatusResponseSchema` and `ticketStatusListResponseSchema` arrive in
+  `packages/shared/src/schemas/ticket.ts` and `apps/api/src/tickets/__tests__/status-management.integration.spec.ts`
+  proves the rules on a throwaway database.
+- The ticket status key format (WP-M14-35 repair): the fixed-key CHECK of migration `0034`
+  allowed only the nine statuses and thus blocked the configurable statuses it was meant to
+  open up. Migration `0040_ticket_status_key_format.sql` drops it and checks the key as an
+  upper-case machine key of up to 40 characters (`^[A-Z][A-Z0-9_]{0,39}$`), the rule ADR-0023
+  states for stage keys; `apps/api/src/db/schema.ts` carries the same constraint.
 - The readiness selection of the technician (WP-M14-32, ADR-0021): the readiness block
   of `/settings/notifications` (`apps/web/src/settings/notifications-page.tsx`) renders
   the three readiness event types of §11.4 as their own rows below the ticket-event
