@@ -804,6 +804,21 @@ with the pair and an unknown `id` answers `404 transition_not_found`; the `id` o
 never edited and no step count blocks a delete (ADR-0025 keeps the trade-off of an empty workflow
 visible in the UI). `apps/api/src/tickets/__tests__/transition-management.integration.spec.ts`
 proves it. WP-M14-39b (its UI) stays open in numeric order.
+**WP-M14-39b is implemented** (the UI of the transition administration): `apps/web/src/admin/transition-page.tsx`
+(`TransitionPage`, route `/admin/transitions` behind `RequireSession`) renders the `ticket_transitions`
+table of WP-M14-38a — the row identity, `from_status` → `to_status`, the `event_key` and the `active`
+switch — behind `settings.read`; `settings.write` adds the per-row edit and delete buttons and the
+create form (`TransitionForm` in the same module), which validates both status keys against
+`ticketStatusKeySchema` and the event key against `ticketTransitionEventKeySchema` client-side before
+the request of WP-M14-39 sees the body. A delete first asks for confirmation in a dialog and a
+rejected one names its code (`404 transition_not_found`), a step that would duplicate the unique
+`(from_status, event_key)` index answers `409 transition_duplicate` and a status key that names no
+row of `ticket_statuses` answers `400 invalid_status_key`. ADR-0025 keeps the trade-off of an empty
+workflow visible: without rows the page shows `admin.transition.emptyNotice`. The administration
+group of the settings menu gained the entry `transitions` (`auth.links.transitions` in de and en).
+`apps/web/src/admin/__tests__/transition-page.test.tsx` proves the table, the guards, both forms,
+the confirmation dialog, the two rejects and the empty-workflow notice. WP-M14-40, WP-M14-41,
+WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

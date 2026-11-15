@@ -599,6 +599,52 @@
         "status_last_active": "The last active status cannot be switched off or deleted.",
         "unknown": "Saving failed."
       }
+    },
+    "transition": {
+      "title": "Transition administration",
+      "hint": "The steps of the workflow are configuration: every row names the step from one status to another one that an event performs. A status without rows can never be entered or left.",
+      "loading": "Loading …",
+      "sessionNotice": "The transition administration requires a valid sign-in.",
+      "forbiddenNotice": "No permission for the transition administration.",
+      "readOnly": "Read only: the permission to write settings is missing.",
+      "emptyNotice": "The workflow has no steps: a ticket cannot change its status any more. A step is added here again.",
+      "on": "active",
+      "off": "inactive",
+      "edit": "Edit",
+      "delete": "Delete",
+      "removeHint": "Remove the step {{from}} with the event key {{event}} permanently?",
+      "removeUnknown": "The step is no longer in the table – it was already removed.",
+      "removeConfirm": "Remove",
+      "removeCancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "createTitle": "Create step",
+      "editTitle": "Edit step {{id}}",
+      "deleted": "Step deleted.",
+      "saved": "Step saved.",
+      "table": {
+        "id": "ID",
+        "from": "From (status)",
+        "to": "To (status)",
+        "event": "Event key",
+        "active": "Active",
+        "actions": "Actions"
+      },
+      "fields": {
+        "fromStatus": "From (status)",
+        "toStatus": "To (status)",
+        "eventKey": "Event key",
+        "active": "Active"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please sign in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Invalid input – please check the fields.",
+        "invalid_status_key": "The status key names no status.",
+        "transition_not_found": "Step not found.",
+        "transition_duplicate": "Another step already pairs that status with that event key.",
+        "unknown": "Saving failed."
+      }
     }
   },
   "apiKeys": {

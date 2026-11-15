@@ -420,6 +420,23 @@ the `active` flag and the `updatedAt` timestamp only — no name of a person, no
 no secret — and the new test writes throwaway users with `example.org` addresses, machine
 keys and mock UUIDs only. No new finding.
 
+Transition-UI pass: 2026-11-15, diff `587f7ad..` (WP-M14-39b — the new web page
+`apps/web/src/admin/transition-page.tsx`, the client route table `apps/web/src/routes/index.tsx`,
+the settings menu `apps/web/src/settings/settings-page.tsx`, the de/en `settings.json` and `common.json`
+and the page test) — areas A and B re-checked in full (no new API route, no new capability, no
+bearer scope: the client route `/admin/transitions` stays behind `RequireSession` inside the `App`
+shell, so an unauthenticated visit renders the login form and the server guard of WP-M14-39 stays the
+only enforcement point; the route table is unchanged), C re-checked for the touched files: the page
+reads the rows through `apiFetch` and sends only the field values the user typed — both status keys
+bound to `ticketStatusKeySchema` and the event key to `ticketTransitionEventKeySchema` before the
+request is sent — no SQL template, no path join and no upload is touched, D re-checked for the page:
+the form renders what the user typed, the confirmation dialog shows the machine keys of the row only
+and no secret, token, cookie or account value enters the DOM, the row identity is the `id` of the row
+and never resolves a resource of another user, F re-checked: the new locale keys hold machine keys,
+static text and the `{{from}}`/`{{event}}`/`{{id}}` interpolations of those machine keys only, K
+re-checked: no log line is touched and the page test carries mock machine keys, mock UUIDs and an
+`example.com` e-mail only. No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -509,17 +526,17 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-administration pass: the four new admin routes stay session-guarded as well) | 43cb913 |
-| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-administration pass: the route table gains the four `/api/v1/admin/transitions[/:id]` rows with the same guards) | 43cb913 |
-| C Injection | complete (re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`) | 43cb913 |
-| D Frontend | complete (re-checked in the confirm-draft pass, only a button state was added) | 68cded7 |
+| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-administration pass: the four new admin routes stay session-guarded as well; transition-ui pass: no session handling changed, the client route `/admin/transitions` only wraps the page in the existing `RequireSession`) | 587f7ad |
+| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-administration pass: the route table gains the four `/api/v1/admin/transitions[/:id]` rows with the same guards; transition-ui pass: the API route table is unchanged, the client route table gains `/admin/transitions` behind `RequireSession`) | 587f7ad |
+| C Injection | complete (re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`; transition-ui pass: the page binds both status keys to `ticketStatusKeySchema` and the event key to `ticketTransitionEventKeySchema` before it sends the body and never assembles SQL, a path or a URL from client input) | 587f7ad |
+| D Frontend | complete (transition-ui pass: the page renders the row identity and the machine keys only, no token, secret, cookie or account value enters the DOM and the PWA stores nothing new) | 587f7ad |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the transition-administration pass: no log line, no contact value, the answer carries the row identity, the two machine keys, the event key, the stored `condition` record, the `active` flag and the `updatedAt` timestamp only) | 43cb913 |
+| K Logging/PII | complete (re-checked for the changed files at the transition-administration pass: no log line, no contact value, the answer carries the row identity, the two machine keys, the event key, the stored `condition` record, the `active` flag and the `updatedAt` timestamp only; transition-ui pass: no log line, the page test carries mock machine keys, mock UUIDs and an `example.com` e-mail only) | 587f7ad |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

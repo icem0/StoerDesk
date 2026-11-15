@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The transition administration gets its page (WP-M14-39b, the UI of the transition administration):
+  `apps/web/src/admin/transition-page.tsx` renders the `ticket_transitions` table of WP-M14-38a —
+  the row identity, the step from `from_status` to `to_status`, the `event_key` and the `active`
+  switch — behind `settings.read` at the new client route `/admin/transitions` (behind
+  `RequireSession`, listed in the administration group of the settings menu as
+  `auth.links.transitions` in de and en). `settings.write` adds the per-row edit and delete buttons
+  and the create form: both status keys are bound to `ticketStatusKeySchema` and the event key to
+  `ticketTransitionEventKeySchema` client-side before the request of WP-M14-39 is sent, an edit is
+  PATCHed onto the `id` of the row and a delete confirms in a dialog. A rejected delete names its
+  code (`404 transition_not_found`), a step that duplicates the unique `(from_status, event_key)`
+  index of migration `0041` answers `409 transition_duplicate` and a status key that names no row
+  of `ticket_statuses` answers `400 invalid_status_key`. ADR-0025 keeps the trade-off of an empty
+  workflow visible: without rows the page says that no ticket can change its status any more
+  (`admin.transition.emptyNotice`). `apps/web/src/admin/__tests__/transition-page.test.tsx` proves
+  the table, both guards, both forms, the confirmation dialog, the two rejects and the notice.
 - The transition administration reads, writes, edits and deletes the workflow steps (WP-M14-39,
   the follow-up of WP-M14-38c): `apps/api/src/tickets/transition-service.ts` gains
   `createTicketTransition`, `updateTicketTransition` and `deleteTicketTransition` next to the

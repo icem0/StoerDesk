@@ -97,7 +97,8 @@
       "branding": "Appearance",
       "escalation": "Escalation",
       "notifications": "Notifications",
-      "statuses": "Statuses"
+      "statuses": "Statuses",
+      "transitions": "Transitions"
     },
     "errors": {
       "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",

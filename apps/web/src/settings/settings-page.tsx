@@ -63,6 +63,7 @@ const SETTINGS_SECTIONS = [
       { key: 'apiKeys', path: '/admin/api-keys' },
       { key: 'channels', path: '/admin/channels' },
       { key: 'statuses', path: '/admin/statuses' },
+      { key: 'transitions', path: '/admin/transitions' },
       { key: 'webhooks', path: '/admin/webhooks' },
     ],
   },

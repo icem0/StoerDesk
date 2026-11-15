@@ -4,6 +4,7 @@ import { App } from '../App'
 import { ApiKeysPage } from '../admin/api-keys-page'
 import { ChannelsPage } from '../admin/channels-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
+import { TransitionPage } from '../admin/transition-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
@@ -118,6 +119,17 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <AdminStatusPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The transition administration of WP-M14-39b: the workflow steps are
+        // configuration (`specs/07-escalation.md` §7.13, ADR-0025), the rows of
+        // `ticket_transitions` are read, created, edited and deleted here.
+        path: '/admin/transitions',
+        element: (
+          <RequireSession>
+            <TransitionPage />
           </RequireSession>
         ),
       },

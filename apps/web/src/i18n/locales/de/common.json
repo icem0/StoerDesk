@@ -97,7 +97,8 @@
       "branding": "Darstellung",
       "escalation": "Eskalation",
       "notifications": "Benachrichtigungen",
-      "statuses": "Status"
+      "statuses": "Status",
+      "transitions": "Übergang"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",

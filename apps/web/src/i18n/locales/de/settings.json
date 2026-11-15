@@ -599,6 +599,52 @@
         "unknown": "Saving failed."
       },
       "saved": "Saved."
+    },
+    "transition": {
+      "title": "Übergangverwaltung",
+      "hint": "The steps of the workflow are configuration: Every row names the step from one status to another one that an event performs. A status without rows can nowhere be entered or left.",
+      "loading": "Lädt …",
+      "sessionNotice": "The transition administration requires a valid login.",
+      "forbiddenNotice": "No permission for the transition administration.",
+      "readOnly": "Only readable: The permission „Settings write“ is missing.",
+      "emptyNotice": "The workflow has no steps: A ticket can no longer change its status. A step is added here again.",
+      "on": "active",
+      "off": "inactive",
+      "edit": "Bearbeiten",
+      "delete": "Lösch",
+      "removeHint": "Permanently remove the step {{from}} with the event key {{event}}?",
+      "removeUnknown": "The step is no longer in the table – it was already removed.",
+      "removeConfirm": "Entfernen",
+      "removeCancel": "Abbrechen",
+      "create": "Anlegen",
+      "save": "Speichern",
+      "createTitle": "Übergang anlegen",
+      "editTitle": "Übergang edit {{id}}",
+      "deleted": "Step deleted.",
+      "saved": "Step saved.",
+      "table": {
+        "id": "ID",
+        "from": "From (status)",
+        "to": "To (status)",
+        "event": "Event key",
+        "active": "Active",
+        "actions": "Actions"
+      },
+      "fields": {
+        "fromStatus": "From (status)",
+        "toStatus": "To (status)",
+        "eventKey": "Event key",
+        "active": "Active"
+      },
+      "errors": {
+        "session_invalid": "Session expired – please log in again.",
+        "forbidden": "Access denied – missing permission.",
+        "invalid_request": "Input invalid – please check the fields.",
+        "invalid_status_key": "The status key names no status.",
+        "transition_not_found": "Step not found.",
+        "transition_duplicate": "A second step does already exist for that status and event key.",
+        "unknown": "Saving failed."
+      }
     }
   },
   "apiKeys": {
