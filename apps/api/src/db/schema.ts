@@ -1337,8 +1337,8 @@ export const ticketStatuses = pgTable(
     uniqueIndex('ticket_statuses_key_key').on(table.key),
     index('ticket_statuses_position_idx').on(table.position),
     check(
-      'ticket_statuses_key_check',
-      sql`${table.key} IN ('NEW','IN_REVIEW','WORK_ORDER_CREATED','OFFERED','ASSIGNED','ACCEPTED','ACKNOWLEDGED','CLOSED','CANCELLED')`,
+      'ticket_statuses_key_format_check',
+      sql`${table.key} ~ '^[A-Z][A-Z0-9_]{0,39}$'`,
     ),
   ],
 )
