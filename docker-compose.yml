@@ -5,6 +5,7 @@
 #
 #   docker compose up -d --build                 # core stack (db, api, web)
 #   docker compose --profile backup up -d       # + periodic database dumps and uploads archives
+#   docker compose --profile ntfy up -d         # + self-hosted ntfy server (no host port, ADR-0024)
 #
 # Profiles are independent and can be combined.
 
@@ -232,6 +233,34 @@ services:
     networks:
       - backend
 
+  # Self-hosted ntfy server (profile "ntfy", ADR-0024). It publishes no host port:
+  # its public address comes from the Cloudflare Tunnel profile `tunnel`
+  # (WP-M14-71), so nothing is reachable without the tunnel. The access control
+  # list is created by the setup script of WP-M14-70 inside the `ntfydata`
+  # volume; the token reaches StörDesk through `NTFY_TOKEN` in `.env`.
+  ntfy:
+    image: ${NTFY_IMAGE:-binwiederhier/ntfy}
+    profiles:
+      - ntfy
+    restart: unless-stopped
+    command:
+      - serve
+    environment:
+      # ntfy substitutes `${NTFY_BASE_URL}` in `ntfy/server.yml` from this
+      # environment; the value is the public https address of the tunnel.
+      NTFY_BASE_URL: ${NTFY_BASE_URL:-}
+      TZ: ${TZ:-Europe/Berlin}
+    volumes:
+      - ./ntfy/server.yml:/etc/ntfy/server.yml:ro
+      - ntfydata:/var/lib/ntfy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    networks:
+      - backend
+
 volumes:
   # Postgres data (survives `docker compose down`).
   pgdata:
@@ -242,7 +271,9 @@ volumes:
   # Compressed database dumps and uploads archives.
   backups:
     name: ${BACKUP_VOLUME:-stoerdesk_backups}
+  # ntfy user database and cache (profile "ntfy"); WP-M14-72 adds it to the backup.
+  ntfydata:
 
 networks:
-  # Database, API and web frontend.
+  # Database, API and web frontend; the ntfy profile joins it without a host port.
   backend: {}

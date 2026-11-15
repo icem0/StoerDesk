@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) | 69  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) | 73  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -460,6 +460,23 @@ as `<pwa-url>/tickets/<ticket-number>` — the same link on a fallback row of th
 escalation chain. The link carries the ticket number only, never a `status_token`,
 a credential or contact data; the readiness link to `/oncall` (ADR-0021) stays
 with WP-M14-28.
+
+**ntfy as an optional Compose profile (WP-M14-69, out of band in phase 14,
+requested by the office; done).** ADR-0024 decision 1 makes the self-hosted
+ntfy server a Compose profile next to `backup`. **WP-M14-69** adds the service
+`ntfy` to `docker-compose.yml` with `profiles: [ntfy]`, the image pinned by
+`${NTFY_IMAGE:-binwiederhier/ntfy}`, the command `serve`, `restart:
+unless-stopped`, the json-file logging of the other services, the `backend`
+network and **no `ports:` entry** — without the profile nothing starts and the
+external ntfy path keeps working. `ntfy/server.yml` (mounted read-only at
+`/etc/ntfy/server.yml`) carries `auth-file` and `auth-default-access: deny-all`,
+`behind-proxy: true` with `proxy-forwarded-header: CF-Connecting-IP`, the cache
+file and `base-url: ${NTFY_BASE_URL}` substituted by ntfy from the container
+environment; the named volume `ntfydata` holds `/var/lib/ntfy`. `.env.example`
+gains `NTFY_IMAGE`, `NTFY_BASE_URL` and `NTFY_HOSTNAME` next to the empty
+`NTFY_TOKEN`, which the setup script of WP-M14-70 fills. No secret is in a file
+of the repository; `docker compose config` with and without `--profile ntfy` is
+unverified in this container (no Docker daemon) and CI runs the smoke test.
 
 ## Open follow-ups
 
@@ -915,10 +932,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-66  | the stage tab of the administration is tested (out of band)            | done    | yes     |
 | WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | done    | yes     |
 | WP-M14-68  | every notification message links to its ticket (out of band)      | done    | yes     |
-| WP-M14-69  | ntfy as an optional Compose profile (ADR-0024)                         | planned | no      |
-| WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | planned | no      |
-| WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | planned | no      |
-| WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | planned | no      |
+| WP-M14-69  | ntfy as an optional Compose profile (ADR-0024)                         | done    | yes     |
+| WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | planned | yes     |
+| WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | planned | yes     |
+| WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

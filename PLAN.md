@@ -1777,6 +1777,27 @@ content type before the route runs. **WP-M14-55** sends `{}` as the body on both
 requests; the routes, their schemas and the saved row as test target (WP-M14-51)
 stay as they are.
 
+**ntfy becomes an optional Compose profile (WP-M14-69, out of band in phase 14,
+requested by the office; done).** ADR-0024 decision 1 puts the self-hosted ntfy
+server next to the `backup` profile instead of shipping it always. **WP-M14-69**
+adds the service `ntfy` to `docker-compose.yml` with `profiles: [ntfy]`, the
+image pinned by `${NTFY_IMAGE:-binwiederhier/ntfy}`, the command `serve`,
+`restart: unless-stopped`, the json-file logging of the other services and the
+`backend` network **without a `ports:` entry** — a deployment that does not
+select the profile starts nothing and keeps the external ntfy path of `NTFY_URL`
+and `NTFY_PUBLIC_URL` (decision 7). `ntfy/server.yml` is mounted read-only at
+`/etc/ntfy/server.yml` and carries `auth-file: /var/lib/ntfy/user.db`,
+`auth-default-access: deny-all`, `behind-proxy: true` with
+`proxy-forwarded-header: CF-Connecting-IP` (decision 5) and `base-url:
+${NTFY_BASE_URL}` substituted by ntfy from the environment of the container; the
+named volume `ntfydata` holds `/var/lib/ntfy`. `.env.example` gains
+`NTFY_IMAGE`, `NTFY_BASE_URL` and `NTFY_HOSTNAME` next to the empty
+`NTFY_TOKEN`. No secret is in a file of the repository; the access token is
+created in the volume by the setup script of WP-M14-70. The core services `db`,
+`api`, `web` are unchanged. `docker compose config` with and without
+`--profile ntfy` stays **unverified** in the development container (no Docker
+daemon); CI runs the Docker smoke test instead.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

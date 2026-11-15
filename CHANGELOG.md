@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- ntfy as an optional Compose profile (WP-M14-69, ADR-0024): `docker-compose.yml`
+  gains the service `ntfy` with `profiles: [ntfy]`, the image pinned by
+  `${NTFY_IMAGE:-binwiederhier/ntfy}`, the command `serve`, `restart:
+  unless-stopped`, the json-file logging of the other services and the `backend`
+  network without any `ports:` entry, so a deployment that does not select the
+  profile starts nothing and the external ntfy path of `NTFY_URL` /
+  `NTFY_PUBLIC_URL` keeps working. `ntfy/server.yml` is mounted read-only at
+  `/etc/ntfy/server.yml` with the access control list of ADR-0024
+  (`auth-file: /var/lib/ntfy/user.db`, `auth-default-access: deny-all`), the
+  behind-proxy settings for the Cloudflare Tunnel (`behind-proxy: true`,
+  `proxy-forwarded-header: CF-Connecting-IP`) and `base-url: ${NTFY_BASE_URL}`
+  substituted by ntfy from the container environment; the named volume `ntfydata`
+  holds `/var/lib/ntfy`. `.env.example` gains `NTFY_IMAGE`, `NTFY_BASE_URL` and
+  `NTFY_HOSTNAME` next to the empty `NTFY_TOKEN`, which the setup script of
+  WP-M14-70 fills; no secret is in a file of the repository. `docker compose
+  config` with and without `--profile ntfy` is unverified in the development
+  container (no Docker daemon) and proven by the CI Docker smoke test.
 - The allocation and a swap request enqueue their rows (WP-M14-29): `createShift`
   and the assign branch of `updateShift` in `apps/api/src/oncall/service.ts`
   enqueue `oncall.assigned` for the technician through `enqueueOncallOutbox` in

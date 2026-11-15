@@ -1,7 +1,7 @@
 # WP-M14-69: ntfy as an optional Compose profile
 
 format: small-model
-status: planned
+status: done
 depends-on: —
 phase: 14
 milestone: m14
@@ -69,8 +69,19 @@ service. Report the Docker commands as unverified if no daemon is available.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `docker-compose.yml` (the `ntfy` service after `backup`, the
+  `ntfydata` volume, the profile line in the header comment, the network comment),
+  `ntfy/server.yml` (new), `.env.example` (`NTFY_IMAGE`, `NTFY_BASE_URL`,
+  `NTFY_HOSTNAME` and the extended `NTFY_TOKEN` comment).
+- Interfaces added: Compose profile `ntfy` with the service `ntfy` on the
+  `backend` network and no `ports:` entry, the read-only bind mount of
+  `ntfy/server.yml` at `/etc/ntfy/server.yml`, the named volume `ntfydata` at
+  `/var/lib/ntfy`, the environment keys `NTFY_IMAGE`, `NTFY_BASE_URL`,
+  `NTFY_HOSTNAME` and `NTFY_TOKEN` in `.env`.
+- Verified: `npm run wp:check` and the full `npm run check` green; both YAML files
+  parse (Prettier and the `yaml` package: the `ntfy` service carries
+  `profiles: [ntfy]`, no `ports`, the two mounts and the json-file logging).
+  `docker compose config` with and without `--profile ntfy` is **unverified**: the
+  development container has no Docker daemon, CI runs the smoke test instead.
 - Follow-up WP: WP-M14-70 (setup script for the access control list and token)
-- Open question (if any):
+- Open question: none

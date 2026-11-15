@@ -1,0 +1,28 @@
+# ntfy server configuration of the optional Compose profile "ntfy" (ADR-0024).
+#
+# Mounted read-only at /etc/ntfy/server.yml by docker-compose.yml. This file
+# carries no secret: the access token of the API user `stoerdesk-api` is created
+# by the setup script of WP-M14-70 inside /var/lib/ntfy/user.db and is handed to
+# StörDesk as `NTFY_TOKEN` in `.env`.
+#
+# `${NTFY_BASE_URL}` is substituted by ntfy from the environment of the
+# container (the public https address of the Cloudflare Tunnel, `NTFY_BASE_URL`
+# in `.env`).
+
+# Public address the subscription and click-to-open links are built for.
+base-url: ${NTFY_BASE_URL}
+
+# Access control list (created by the setup script of WP-M14-70): without a
+# credential nothing is read or written; only the anonymous read entry of the
+# topic prefix `stoerdesk-*` and the API user are added there.
+auth-file: /var/lib/ntfy/user.db
+auth-default-access: deny-all
+
+# The server sits behind the Cloudflare Tunnel: the tunnel terminates TLS at
+# Cloudflare and the visitor address is the Cloudflare header, otherwise every
+# phone shares one rate-limit bucket.
+behind-proxy: true
+proxy-forwarded-header: CF-Connecting-IP
+
+# Message cache and the subscription statistics of the server.
+cache-file: /var/lib/ntfy/cache.db
