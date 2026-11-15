@@ -778,6 +778,19 @@ inactive combination — `transitionTicket()` of WP-M14-38c loads the rows once 
 the error there. No create, update or delete function (WP-M14-39) and no evaluation of `condition`
 (WP-M14-41); the engine still reads the code map `TRANSITIONS` until WP-M14-38c. WP-M14-38c stays
 open in numeric order.
+**WP-M14-38c is implemented** (the third child of WP-M14-38): `transitionTicket()` in
+`apps/api/src/tickets/workflow.ts` loads the rows once per call with
+`readTicketTransitions(database)` and resolves the step with `resolveTransition(transitions,
+fromStatus, event)`; `undefined` throws the existing `INVALID_TRANSITION` (409 `invalid_transition`
+with `from` and `event` in `params`), the UPDATE inside the transaction still re-checks
+`status = <from>` (`PLAN.md` §12) and the workflow columns stay keyed by `event_key` — the new
+status comes from the `to_status` of the row. `TRANSITIONS` and `TRANSITION_EVENT_KEYS` stay
+exported only as the escalation layer's view (WP-M14-40 and WP-M14-41 move it onto the table).
+The new `apps/api/src/tickets/__tests__/transition-table.integration.spec.ts` proves on a migrated
+database that `NEW` reaches `IN_REVIEW` through `review_started`, that an event without a row
+answers 409, that a row set to `active = false` blocks its step and that an edited `to_status`
+moves the ticket to the status the row names. WP-M14-39 (the transition administration API) and
+WP-M14-39b (its UI) stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

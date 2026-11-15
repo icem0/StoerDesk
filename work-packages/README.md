@@ -603,6 +603,25 @@ resolves to `IN_REVIEW`, that `NEW`/`closed` resolves nothing and that a row set
 `active = false` resolves nothing while the rows still count 22. WP-M14-38c stays open in
 numeric order.
 
+**WP-M14-38c is implemented (out of band in phase 14, the third child of WP-M14-38).**
+`transitionTicket()` in `apps/api/src/tickets/workflow.ts` loads the rows once per call with
+`readTicketTransitions(database)` and resolves the step of `(current status, event)` with
+`resolveTransition(transitions, fromStatus, event)`; `undefined` throws the existing
+`INVALID_TRANSITION` (409 `invalid_transition` with `from` and `event` in `params`), the UPDATE
+inside the transaction still re-checks `status = <from>` (the atomic acceptance rule of `PLAN.md`
+§12), the workflow columns (`reviewStartedAt`, `workOrderText`, `acceptedAt`,
+`acknowledgedAt`, `closedAt`) stay keyed by `event_key` and the new status comes from the
+`toStatus` of the row — the map lookup and its wildcard `TRANSITIONS['*']` are gone, because the
+migration seeds one `cancelled` row per status. `TRANSITIONS` and `TRANSITION_EVENT_KEYS` stay
+exported only as the view of the escalation layer, which WP-M14-40 and WP-M14-41 move onto the
+table. The new `apps/api/src/tickets/__tests__/transition-table.integration.spec.ts` (a test,
+outside the file count) proves on a migrated throwaway database that a `NEW` ticket reaches the
+status the seeded row names (`IN_REVIEW` through `review_started`), that an event without a row
+answers 409 `invalid_transition` and leaves the ticket untouched, that a row the test sets to
+`active = false` blocks its step and that a row whose `to_status` was edited moves the ticket to
+the status the row names. The existing workflow, pause, internal-action and E2E workflow specs stay
+green on the seeded rows. WP-M14-39 and WP-M14-39b stay open in numeric order.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1028,7 +1047,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-38  | the ticket transitions — spec, ADR-0025 and the split of the chain         | done    | yes     |
 | WP-M14-38a | the transition table in the database (migration 0041)                    | done    | yes     |
 | WP-M14-38b | the transition contracts and the transition service                      | done    | yes     |
-| WP-M14-38c | the workflow engine reads the transition table                           | planned | yes     |
+| WP-M14-38c | the workflow engine reads the transition table                           | done    | yes     |
 | WP-M14-39  | ticket transition management API (CRUD for transitions)                   | planned | yes     |
 | WP-M14-39b | ticket transition management UI (admin page for transitions)              | planned | yes     |
 | WP-M14-40  | status_change as escalation action (escalation may change the ticket)     | planned | yes     |

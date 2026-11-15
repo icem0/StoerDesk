@@ -3,13 +3,16 @@ import { and, eq } from 'drizzle-orm'
 import type { Database } from '../db/client'
 import { ticketEvents, tickets } from '../db/schema'
 import { closeOpenPause } from './pauses'
+import { readTicketTransitions, resolveTransition } from './transition-service'
 
 /**
  * Ticket state machine (`PLAN.md` §7, WP-M2-19b).
  *
- * `transitionTicket()` validates the current status against the transition map,
- * updates the ticket row and writes one append-only `ticket_events` row in the
- * same transaction. Invalid transitions throw `TicketTransitionError` (HTTP 409).
+ * `transitionTicket()` validates the current status against the rows of
+ * `ticket_transitions` — the steps are configuration (`specs/07-escalation.md`
+ * §7.13, ADR-0025, WP-M14-38c) — updates the ticket row and writes one append-only
+ * `ticket_events` row in the same transaction. Unknown or inactive combinations
+ * throw `TicketTransitionError` (HTTP 409 `invalid_transition`).
  * Permission enforcement happens at the route guard (`requirePermission`);
  * this function only validates the state-machine transition.
  *
@@ -43,6 +46,12 @@ const INVALID_TRANSITION = (ticketNo: string, from: string, event: string) =>
 const TICKET_NOT_FOUND = (ticketId: string) =>
   new TicketTransitionError(404, 'ticket_not_found', { ticketId })
 
+/**
+ * The escalation layer still reads this map (`apps/api/src/escalation/config.ts`
+ * of ADR-0023, the stage-chain validation and `readReachableStages` of §7.10);
+ * WP-M14-40 and WP-M14-41 move that view onto the rows. The engine itself
+ * resolves the steps in `ticket_transitions`, so the map is no longer the engine.
+ */
 export const TRANSITIONS: Record<string, Record<string, { to: string }>> = {
   NEW: {
     review_started: { to: 'IN_REVIEW' },
@@ -123,8 +132,8 @@ export async function transitionTicket(ctx: TransitionContext) {
   }
 
   const fromStatus = ticket.status
-  const byStatus = TRANSITIONS[fromStatus]
-  const transition = byStatus?.[event] ?? TRANSITIONS['*']?.[event]
+  const transitions = await readTicketTransitions(database)
+  const transition = resolveTransition(transitions, fromStatus, event)
 
   if (transition === undefined) {
     throw INVALID_TRANSITION(ticket.ticketNo, fromStatus, event)
@@ -161,7 +170,7 @@ export async function transitionTicket(ctx: TransitionContext) {
 
     const [updated] = await tx
       .update(tickets)
-      .set({ ...workflowColumns, status: transition.to, updatedAt: at })
+      .set({ ...workflowColumns, status: transition.toStatus, updatedAt: at })
       .where(and(eq(tickets.id, ticketId), eq(tickets.status, fromStatus)))
       .returning()
 

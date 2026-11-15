@@ -1,7 +1,7 @@
 # WP-M14-38c: The workflow engine reads the transition table
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-38b
 phase: 14
 context-budget: 18k tokens
@@ -67,7 +67,8 @@ pause, internal-action and E2E workflow specs stay green on the seeded rows.
 
 - Files changed: the workflow engine, the new integration spec
 - Interfaces added: `transitionTicket()` on the table
-- Verified:
+- Verified: `npm run check` green (typecheck, eslint, vitest run incl. the new spec and
+  the existing workflow, pause, internal-action and E2E workflow specs, i18n, wp:check, e2e)
 - Follow-up WP: WP-M14-39 (the transition administration API), then WP-M14-39b (its UI)
 - Open question: none — the caching question of the parent is resolved by loading the
   rows once per call

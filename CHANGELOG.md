@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The workflow engine reads the transition rows (WP-M14-38c, the third child of WP-M14-38):
+  `transitionTicket()` in `apps/api/src/tickets/workflow.ts` loads the rows of `ticket_transitions`
+  once per call with `readTicketTransitions(database)` and resolves the step of `(current status,
+  event)` with `resolveTransition(transitions, fromStatus, event)`; `undefined` throws the existing
+  `INVALID_TRANSITION` (409 `invalid_transition` with `from` and `event` in `params`), the UPDATE
+  inside the transaction still re-checks `status = <from>` (the atomic acceptance rule of `PLAN.md`
+  §12), the workflow columns stay keyed by `event_key` and the new status comes from the `toStatus`
+  of the row — the map lookup and its wildcard `TRANSITIONS['*']` are gone, because the migration
+  seeds one `cancelled` row per status. `TRANSITIONS` and `TRANSITION_EVENT_KEYS` stay exported only
+  as the view of the escalation layer (WP-M14-40 and WP-M14-41 move it onto the table). The new
+  `apps/api/src/tickets/__tests__/transition-table.integration.spec.ts` proves on a migrated
+  throwaway database that a `NEW` ticket reaches the status the seeded row names, that an event
+  without a row answers 409 and leaves the ticket untouched, that a row set to `active = false`
+  blocks its step and that an edited `to_status` moves the ticket to the status the row names.
 - The transition rows are read and resolved as configuration (WP-M14-38b, the second
   child of WP-M14-38): `packages/shared/src/schemas/ticket.ts` gains the row contract of
   `specs/07-escalation.md` §7.13 — `TicketTransition { id, fromStatus, toStatus, eventKey,
