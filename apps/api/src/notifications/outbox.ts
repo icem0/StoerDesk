@@ -114,7 +114,8 @@ export const NOTIFICATION_OUTBOX_RETRY_BACKOFF_MS = 300
 /** One claimed outbox row, fresh from the atomic `UPDATE ... RETURNING` claim. */
 export interface ClaimedOutboxRow {
   id: string
-  ticketId: string
+  /** Null for a readiness row of the on-call calendar (ADR-0021, WP-M14-27). */
+  ticketId: string | null
   channel: string
   target: Record<string, unknown>
   attempts: number
@@ -240,7 +241,7 @@ async function finishRow(
   let fallbackQueued = false
 
   await database.transaction(async (tx) => {
-    if (fallbackChannel !== undefined) {
+    if (fallbackChannel !== undefined && row.ticketId !== null) {
       const pending = await tx
         .select({ channel: outbox.channel })
         .from(outbox)
@@ -261,16 +262,18 @@ async function finishRow(
 
     await tx.update(outbox).set({ state, updatedAt: new Date() }).where(eq(outbox.id, row.id))
 
-    await tx.insert(ticketEvents).values({
-      ticketId: row.ticketId,
-      type: eventType,
-      actorKind: 'system',
-      payload: {
-        channel: row.channel,
-        ticketNo: String(row.target.ticketNo ?? ''),
-        attempts: row.attempts,
-      },
-    })
+    if (row.ticketId !== null) {
+      await tx.insert(ticketEvents).values({
+        ticketId: row.ticketId,
+        type: eventType,
+        actorKind: 'system',
+        payload: {
+          channel: row.channel,
+          ticketNo: String(row.target.ticketNo ?? ''),
+          attempts: row.attempts,
+        },
+      })
+    }
   })
 
   return fallbackQueued

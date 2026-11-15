@@ -349,7 +349,7 @@ technician. **WP-M14-26** is the spec and decision package: `specs/04-oncall.md`
 that the technician selects their channels for them in
 `/settings/notifications`, that the outbox gains `event_type` and a nullable
 `shift_id` and that a `DRAFT` readiness is confirmable. The children are
-implemented in numeric order: **WP-M14-27** (migration `0034`), **WP-M14-28**
+implemented in numeric order: **WP-M14-27** (migration `0039`), **WP-M14-28**
 (the readiness message, the shift enqueue, the shift branch of the drain),
 **WP-M14-29** (the allocation and a swap request enqueue their rows),
 **WP-M14-30** (a `DRAFT` readiness answers a confirm), **WP-M14-31** (one
@@ -859,7 +859,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-24  | the escalation administration explains itself (out of band)                 | done    | yes     |
 | WP-M14-25  | stage names label the reached-stage condition values (out of band)          | done    | yes     |
 | WP-M14-26  | the readiness allocation — spec, ADR-0021 and the split of the chain       | done    | yes     |
-| WP-M14-27  | the outbox and the preferences know the readiness (migration 0034)          | planned | yes     |
+| WP-M14-27  | the outbox and the preferences know the readiness (migration 0039)          | done    | yes     |
 | WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | planned | yes     |
 | WP-M14-29  | the allocation and a swap request enqueue their rows                       | planned | yes     |
 | WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | planned | yes     |

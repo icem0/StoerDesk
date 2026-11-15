@@ -1,7 +1,7 @@
 # WP-M14-27: The outbox and the preferences know the readiness
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-26
 phase: 14
 milestone: m14
@@ -18,7 +18,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/db/migrations/0034_readiness_notifications.sql
+- apps/api/src/db/migrations/0039_readiness_notifications.sql
 - apps/api/src/db/schema.ts
 - apps/api/src/db/__tests__/readinessNotificationTables.integration.spec.ts
 
@@ -31,7 +31,7 @@ interfaces:
 
 ## Task
 
-1. Add the hand-written migration `0034_readiness_notifications.sql`: on `outbox` it drops the
+1. Add the hand-written migration `0039_readiness_notifications.sql` (0034–0038 were taken): on `outbox` it drops the
    `NOT NULL` on `ticket_id` (the FK and its cascade stay), adds
    `event_type text NOT NULL DEFAULT 'ticket.created'` with the check over the seven types of
    `NOTIFICATION_EVENT_TYPES`, adds `shift_id uuid` with the cascade FK to `oncall_shifts` and
@@ -66,8 +66,8 @@ Expected: all green; the new spec fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/db/migrations/0039_readiness_notifications.sql`, `apps/api/src/db/migrations/meta/_journal.json`, `apps/api/src/db/schema.ts`, `apps/api/src/notifications/outbox.ts`, `apps/api/src/db/__tests__/readinessNotificationTables.integration.spec.ts`
+- Interfaces added: `outbox.event_type`, nullable `outbox.ticket_id`, `outbox.shift_id`; `NOTIFICATION_EVENT_TYPES` carries the seven ADR-0021 types; the drain skips the ticket event and the ticket fallback for a shift row
+- Verified: `npm run typecheck -w @stoerdesk/api`, ESLint, `npx vitest run apps/api/src/db/__tests__/readinessNotificationTables.integration.spec.ts apps/api/src/db/__tests__/migrations.spec.ts` (61 tests)
 - Follow-up WP: WP-M14-28 (`28-readiness-message-and-outbox-shift-rows.md`)
 - Open question: none

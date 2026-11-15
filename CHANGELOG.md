@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The outbox and the notification preferences know the readiness (WP-M14-27):
+  migration `0039` gives the outbox an `event_type` over the seven ADR-0021
+  types, a nullable `shift_id` with the cascade to `oncall_shifts` and a
+  nullable `ticket_id`, with the check that exactly one of ticket and shift is
+  set; the preferences check widens to the seven types. The drain writes no
+  ticket event and queues no ticket fallback for a shift row.
 - The messenger-channel line of phase 14 is closed by an exit criterion (WP-M14-21): the integration test `apps/api/src/notifications/__tests__/phase14-exit.integration.spec.ts` runs the real API on a throwaway database and proves the three rules of the precedence of `specs/10-notifications.md` §11.4 — a stored ntfy account of a user is used for the send, the selection of the user decides the channels of `ticket.created` (one row per selected user, the instance topic replaced, a user without a selection gets none) and the mandatory minimum channels of a critical ticket are queued whatever the selection says —, the warning of §11.8 (a failed channel is visible in `GET /api/v1/notifications/status` with a failure and no pending row and the drain continues to the next channel of the chain) and the secrecy rule of §11.13 (the ntfy access token and the Matrix token travel only in the `Authorization` header, never in an answer, a log, an event payload or a published body). `GET /api/v1/notifications/status`
   answers the pending rows, the failed rows, the time of the last success and the time of the
   last failure per channel — the same rows of the outbox the dashboard tile reads
@@ -248,7 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   name the event types and the selection. A user without a row for an event
   type keeps the channel chain of §11.1; the enqueue is unchanged (WP-M14-18),
   the settings page is WP-M14-17 and the database check of the three readiness
-  types is widened by migration `0034` of WP-M14-27.
+  types is widened by migration `0039` of WP-M14-27.
 
 ### Changed
 - The ntfy onboarding with the subscription QR (WP-M14-13): the ntfy adapter
@@ -292,7 +298,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `oncall.unconfirmed_reminder` per unconfirmed shift within
   `oncall.reminder_unconfirmed_h`, the outbox gains `event_type` and a nullable
   `shift_id` with the rule that exactly one of `ticket_id` and `shift_id` is set
-  (migration `0034`) and an assigned `DRAFT` readiness becomes confirmable — the
+  (migration `0039`) and an assigned `DRAFT` readiness becomes confirmable — the
   acceptance publishes it. `specs/04-oncall.md` §4a.3, §4a.4, §4a.9 and
   `specs/10-notifications.md` §11.4, §11.5, §11.7, §11.10, §11.12, §11.14 carry
   the contract, ADR-0021 the decision.

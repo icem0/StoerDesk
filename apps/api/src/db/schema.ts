@@ -685,12 +685,15 @@ export const NOTIFICATION_CHANNEL_KINDS = [
   'whatsapp',
 ] as const
 
-/** The event types a user selects channels for (`specs/10-notifications.md` §11.4). */
+/** The event types a user selects channels for (`specs/10-notifications.md` §11.4, ADR-0021). */
 export const NOTIFICATION_EVENT_TYPES = [
   'ticket.created',
   'ticket.assigned',
   'ticket.escalated',
   'ticket.resolved',
+  'oncall.assigned',
+  'oncall.swap_requested',
+  'oncall.unconfirmed_reminder',
 ] as const
 
 export const notificationChannels = pgTable(
@@ -840,25 +843,38 @@ export const OUTBOX_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
  * can never lose the event. `target` carries only the machine-readable message
  * parameters (ticket number, priority, object name) — never a photo, never
  * contact data. The `state` check and the `(state, created_at)` index serve the
- * drain worker of WP-M7-04b.
+ * drain worker of WP-M7-04b. ADR-0021 widens the row to the readiness of the
+ * on-call calendar (WP-M14-27, migration 0039): `event_type` names the event the
+ * row announces and a row carries exactly one of `ticket_id` and `shift_id`.
  */
 export const outbox = pgTable(
   'outbox',
   {
     id: uuid('id').primaryKey().default(uuidDefault),
-    ticketId: uuid('ticket_id')
-      .notNull()
-      .references(() => tickets.id, { onDelete: 'cascade' }),
+    ticketId: uuid('ticket_id').references(() => tickets.id, { onDelete: 'cascade' }),
+    /** The event the row announces; a row written before ADR-0021 keeps `ticket.created`. */
+    eventType: text('event_type').notNull().default('ticket.created'),
     channel: text('channel').notNull(),
     target: jsonb('target').notNull().default({}),
     state: text('state').notNull().default('PENDING'),
     attempts: integer('attempts').notNull().default(0),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+    /** The on-call shift a readiness row announces (`ADR-0021`, §11.10). */
+    shiftId: uuid('shift_id').references(() => oncallShifts.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('outbox_state_created_at_idx').on(table.state, table.createdAt),
+    index('outbox_shift_id_idx').on(table.shiftId),
     check('outbox_state_check', sql`${table.state} IN (${checkList(OUTBOX_STATUSES)})`),
+    check(
+      'outbox_event_type_check',
+      sql`${table.eventType} IN (${checkList(NOTIFICATION_EVENT_TYPES)})`,
+    ),
+    check(
+      'outbox_ticket_or_shift_check',
+      sql`(${table.ticketId} IS NOT NULL) <> (${table.shiftId} IS NOT NULL)`,
+    ),
   ],
 )
 
