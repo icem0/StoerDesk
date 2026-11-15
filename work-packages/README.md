@@ -853,7 +853,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-18  | the mandatory minimum channels of critical tickets                 | done                   | yes     |
 | WP-M14-19  | the warning on a failed channel                                    | done                   | yes     |
 | WP-M14-20  | the notifications of the internal ticket creation                  | done                   | yes     |
-| WP-M14-21  | the exit criterion of the messenger channels                        | planned              | yes     |
+| WP-M14-21  | the exit criterion of the messenger channels                        | done                    | yes     |
 | WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
 | WP-M14-23  | the escalation administration fully localized (out of band)                 | done    | yes     |
 | WP-M14-24  | the escalation administration explains itself (out of band)                 | done    | yes     |

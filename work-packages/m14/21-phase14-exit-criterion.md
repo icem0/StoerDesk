@@ -1,7 +1,7 @@
 # WP-M14-21: The exit criterion of the messenger channels
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-20
 phase: 14
 milestone: m14
@@ -60,9 +60,8 @@ the warning on a failed channel and the secrecy of the secrets.
 
 ## Handoff
 
-- Files changed: the exit test, the plan, the backlog, the map and the
-  changelog
+- Files changed: the new exit test `apps/api/src/notifications/__tests__/phase14-exit.integration.spec.ts`, the backlog of `work-packages/README.md`, the status line of `PLAN.md` §16, the map `docs/REPO-MAP.md` and `CHANGELOG.md`
 - Interfaces added: the exit test of the phase
-- Verified: `npm run check`, `npm run build`
+- Verified: `npm run check` (the exit test runs against a throwaway database — the three rules of §11.4, the warning of §11.8 and the secrecy of the secrets), `npm run wp:check`
 - Follow-up WP: none
 - Open question: none

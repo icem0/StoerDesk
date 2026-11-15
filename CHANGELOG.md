@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- The failing channels warn the administration (WP-M14-19, phase 14): `GET /api/v1/notifications/status`
+- The messenger-channel line of phase 14 is closed by an exit criterion (WP-M14-21): the integration test `apps/api/src/notifications/__tests__/phase14-exit.integration.spec.ts` runs the real API on a throwaway database and proves the three rules of the precedence of `specs/10-notifications.md` §11.4 — a stored ntfy account of a user is used for the send, the selection of the user decides the channels of `ticket.created` (one row per selected user, the instance topic replaced, a user without a selection gets none) and the mandatory minimum channels of a critical ticket are queued whatever the selection says —, the warning of §11.8 (a failed channel is visible in `GET /api/v1/notifications/status` with a failure and no pending row and the drain continues to the next channel of the chain) and the secrecy rule of §11.13 (the ntfy access token and the Matrix token travel only in the `Authorization` header, never in an answer, a log, an event payload or a published body). `GET /api/v1/notifications/status`
   answers the pending rows, the failed rows, the time of the last success and the time of the
   last failure per channel — the same rows of the outbox the dashboard tile reads
   (`resolveChannelStatus` of WP-M9-05, the shared contract `channelStatusListResponseSchema`).

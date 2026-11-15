@@ -708,6 +708,22 @@ data; the PWA root stays the fallback of an older row without a ticket number an
 of a test message. The readiness link to `/oncall` (ADR-0021) stays with
 WP-M14-28.
 
+**WP-M14-21 — the exit criterion of the messenger channels (done).** The integration
+test `apps/api/src/notifications/__tests__/phase14-exit.integration.spec.ts` runs the
+real API on a throwaway database and proves the three rules of the precedence of
+§11.4 — the account of a user is used (a stored ntfy account topic wins over the
+derived `stoerdesk-<userId>` topic), the selection of the user decides the channels
+of `ticket.created` (the users who selected ntfy get one per-user row each, a user
+without a selection gets none, the instance topic is replaced), and the mandatory
+minimum channels of a critical ticket are queued whatever the selection says (a
+normal ticket keeps only the selection, a critical ticket adds the configured
+minimum channel exactly once) — the warning of §11.8 (a failed channel shows up in
+`GET /api/v1/notifications/status` as `failed ≥ 1` with a `lastFailedAt` and no
+pending row, and the drain continues to the next channel of the chain with a
+`notification_sent` fallback row), and the secrecy rule of §11.13 (the access token
+of the ntfy channel and the Matrix token travel only in the `Authorization` header —
+never in an answer, a log, an event payload or the published body).
+
 **Phase 14 has started** (WP-M14-01): the standalone administration home at
 `/admin` is gone. Every administration module is a link of the settings menu at
 `/settings`, the retired address `/admin` redirects there and the texts of the
