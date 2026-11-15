@@ -678,6 +678,20 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M14-31 — the reminder of an unconfirmed readiness (done).** `enqueueOncallReminders(database, env, now)`
+in `apps/api/src/oncall/coupling.ts` queues one `oncall.unconfirmed_reminder`
+outbox row per `DRAFT` or `PLANNED` shift that has a technician, has not started
+and starts within `oncall.reminder_unconfirmed_h` — through `enqueueOncallOutbox`
+of WP-M14-28, one transaction per shift, skipped while such a row for that shift
+is already `PENDING` or `SENT` (one reminder per shift). `apps/api/src/jobs/escalation.ts`
+runs the sweep after `evaluateEscalations` (which carries `escalateOnCallOffers`)
+inside the existing per-minute `ticket-escalation` job and logs the aggregate
+`remindersQueued` counter next to `offerScanned`, never a shift id; no second
+queue and no new cron entry (ADR-0021, `specs/10-notifications.md` §11.7). The
+integration test `apps/api/src/oncall/__tests__/reminder-notification.integration.spec.ts`
+proves the window, the idempotent second scan and the three shifts that stay
+silent.
+
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

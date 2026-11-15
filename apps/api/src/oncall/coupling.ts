@@ -1,9 +1,18 @@
 import { and, asc, eq, gt, inArray, isNotNull, lte, sql } from 'drizzle-orm'
 
+import type { Env } from '../config/env'
 import type { Database } from '../db/client'
-import { oncallPools, oncallShifts, ticketEvents, tickets } from '../db/schema'
+import {
+  oncallPools,
+  oncallShifts,
+  outbox,
+  ticketEvents,
+  tickets,
+} from '../db/schema'
 import { TicketTransitionError } from '../tickets/workflow'
+import { enqueueOncallOutbox } from '../notifications/outbox'
 import { readOncallSettings } from './settings'
+import type { NotificationEventType } from '@stoerdesk/shared'
 
 /**
  * On-call ticket coupling (`specs/04-oncall.md` §4a.6, WP-M8-10).
@@ -276,4 +285,97 @@ export async function escalateOnCallOffers(
   }
 
   return { scanned: candidates.length, escalated }
+}
+
+/** The shift states whose technician still has to decide (`specs/04-oncall.md` §4a.4). */
+const REMINDER_STATES = ['DRAFT', 'PLANNED'] as const
+
+/** The readiness event the per-minute escalation scan queues (ADR-0021, §11.7). */
+const REMINDER_EVENT_TYPE: NotificationEventType = 'oncall.unconfirmed_reminder'
+
+export type EnqueueOncallRemindersResult = {
+  remindersQueued: number
+}
+
+/**
+ * Queues the reminder of an unconfirmed readiness (`specs/04-oncall.md` §4a.4,
+ * `specs/10-notifications.md` §11.7, ADR-0021, WP-M14-31): a `DRAFT` or `PLANNED`
+ * shift that has a technician, has not started and starts within
+ * `oncall.reminder_unconfirmed_h`. A shift that already has an
+ * `oncall.unconfirmed_reminder` row for itself (`PENDING` or `SENT`) is skipped,
+ * so the per-minute scan writes at most one reminder per shift. Every row goes
+ * through `enqueueOncallOutbox` of WP-M14-28 — one transaction per shift, never
+ * a channel call (§11.7).
+ */
+export async function enqueueOncallReminders(
+  database: Db,
+  env: Env,
+  now: Date = new Date(),
+): Promise<EnqueueOncallRemindersResult> {
+  const settings = await readOncallSettings(database)
+  const windowEndsAt = new Date(now.getTime() + settings.reminderUnconfirmedH * 60 * 60 * 1000)
+
+  const candidates = await database
+    .select({
+      id: oncallShifts.id,
+      poolId: oncallShifts.poolId,
+      userId: oncallShifts.userId,
+      state: oncallShifts.state,
+      startsAt: oncallShifts.startsAt,
+      endsAt: oncallShifts.endsAt,
+    })
+    .from(oncallShifts)
+    .where(
+      and(
+        inArray(oncallShifts.state, REMINDER_STATES),
+        isNotNull(oncallShifts.userId),
+        gt(oncallShifts.startsAt, now),
+        lte(oncallShifts.startsAt, windowEndsAt),
+      ),
+    )
+
+  let remindersQueued = 0
+
+  for (const candidate of candidates) {
+    if (candidate.userId === null) {
+      continue
+    }
+
+    const announced = await database
+      .select({ state: outbox.state })
+      .from(outbox)
+      .where(
+        and(
+          eq(outbox.shiftId, candidate.id),
+          eq(outbox.eventType, REMINDER_EVENT_TYPE),
+          inArray(outbox.state, ['PENDING', 'SENT']),
+        ),
+      )
+
+    if (announced.length > 0) {
+      continue
+    }
+
+    const userId = candidate.userId ?? ''
+
+    await database.transaction(async (tx) => {
+      remindersQueued += await enqueueOncallOutbox(
+        tx,
+        {
+          shift: {
+            id: candidate.id,
+            poolId: candidate.poolId,
+            state: candidate.state,
+            startsAt: candidate.startsAt,
+            endsAt: candidate.endsAt,
+          },
+          eventType: REMINDER_EVENT_TYPE,
+          userId,
+        },
+        env,
+      )
+    })
+  }
+
+  return { remindersQueued }
 }

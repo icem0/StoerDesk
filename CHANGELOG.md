@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The reminder of an unconfirmed readiness (WP-M14-31, ADR-0021): `enqueueOncallReminders(database, env, now)`
+  in `apps/api/src/oncall/coupling.ts` queues one `oncall.unconfirmed_reminder`
+  outbox row per `DRAFT` or `PLANNED` shift that has a technician, has not started
+  and starts within `oncall.reminder_unconfirmed_h` — through `enqueueOncallOutbox`
+  of WP-M14-28 in its own transaction, skipped while such a row for that shift is
+  already `PENDING` or `SENT`, so the scan sends at most one reminder per shift.
+  `apps/api/src/jobs/escalation.ts` runs the sweep after the offer timeout in the
+  existing per-minute `ticket-escalation` job and logs only the `remindersQueued`
+  counter, never a shift id. `apps/api/src/oncall/__tests__/reminder-notification.integration.spec.ts`
+  proves the window, the idempotent second scan, the silent `CONFIRMED` shift, the
+  out-of-window shift and the slot without a technician plus the counters of the
+  scan result.
 - An assigned readiness can be accepted (WP-M14-30, ADR-0021): `CONFIRMABLE_STATES`
   in `apps/api/src/oncall/confirm.ts` now holds `DRAFT` and `PLANNED`, so the
   assigned technician — or an admin — confirms a `DRAFT` readiness into `CONFIRMED`

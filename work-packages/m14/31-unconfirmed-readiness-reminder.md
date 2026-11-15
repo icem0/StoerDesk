@@ -1,7 +1,7 @@
 # WP-M14-31: An unconfirmed readiness reminds once
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-28
 phase: 14
 milestone: m14
@@ -62,8 +62,13 @@ Expected: all green; the new spec fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/oncall/coupling.ts`, `apps/api/src/jobs/escalation.ts`,
+  `apps/api/src/oncall/__tests__/reminder-notification.integration.spec.ts`
+- Interfaces added: `enqueueOncallReminders(database, env, now?)` and
+  `EnqueueOncallRemindersResult { remindersQueued }` in `coupling.ts`; the job log
+  carries `remindersQueued` next to `offerScanned`
+- Verified: `npm run check` green — the new integration spec passes against a
+  throwaway PostgreSQL (six cases: in-window row, idempotent second scan, outside
+  the window, `CONFIRMED`, without a technician, aggregate counter)
 - Follow-up WP: none
 - Open question: none

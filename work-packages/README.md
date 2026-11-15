@@ -382,6 +382,20 @@ their states. `apps/api/src/oncall/__tests__/confirm.integration.spec.ts` proves
 `200` of a `DRAFT` confirm, the idempotent repeat and the `409 oncall_invalid_shift_state`
 of a `DECLINED` and an `UNFILLED` shift.
 
+**WP-M14-31** is implemented: `enqueueOncallReminders(database, env, now)` in
+`apps/api/src/oncall/coupling.ts` selects every `DRAFT` or `PLANNED` shift with a
+technician that has not started and starts within `oncall.reminder_unconfirmed_h`
+and queues one `oncall.unconfirmed_reminder` row per shift through
+`enqueueOncallOutbox` of WP-M14-28 in its own transaction — a shift that already
+has such a row (`PENDING` or `SENT`) is skipped, so one reminder per shift.
+`apps/api/src/jobs/escalation.ts` runs that sweep after the offer timeout inside
+the existing per-minute `ticket-escalation` job and logs only the
+`remindersQueued` counter, never a shift id (ADR-0021, `specs/10-notifications.md`
+§11.7). `apps/api/src/oncall/__tests__/reminder-notification.integration.spec.ts`
+proves the window, the idempotent second scan, the `CONFIRMED` shift, the
+out-of-window shift and the slot without a technician writing nothing and the
+counter of the scan result.
+
 **Phase 14, out of band (WP-M14-33, requested by the office):** the ntfy deep
 link carries the host. The office wants the subscription QR of the own
 channels page to land in the ntfy app and subscribe automatically. The ntfy
@@ -905,7 +919,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | done    | yes     |
 | WP-M14-29  | the allocation and a swap request enqueue their rows                       | done    | yes     |
 | WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | done    | yes     |
-| WP-M14-31  | an unconfirmed readiness reminds once                                       | planned | yes     |
+| WP-M14-31  | an unconfirmed readiness reminds once                                       | done    | yes     |
 | WP-M14-32  | the readiness selection of the technician in the settings page              | planned | yes     |
 | WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
 | WP-M14-33  | the ntfy deep link of the QR carries the host (out of band)               | done    | yes     |

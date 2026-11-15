@@ -1,7 +1,9 @@
 import { PgBoss } from 'pg-boss'
 
+import { loadEnv } from '../config/env'
 import { createDatabase } from '../db/client'
 import { evaluateEscalations } from '../tickets/escalation'
+import { enqueueOncallReminders } from '../oncall/coupling'
 import type { QrCleanupLogger } from './qr-cleanup'
 
 /**
@@ -38,9 +40,19 @@ export async function startTicketEscalation(
 
     try {
       const { scanned, fired, offerScanned, offerEscalated } = await evaluateEscalations(database)
+      // The readiness reminder follows the offer timeout of the same minute
+      // (ADR-0021, WP-M14-31); only aggregate counters reach the log.
+      const { remindersQueued } = await enqueueOncallReminders(database, loadEnv())
 
       log?.info(
-        { queue: TICKET_ESCALATION_QUEUE, scanned, fired, offerScanned, offerEscalated },
+        {
+          queue: TICKET_ESCALATION_QUEUE,
+          scanned,
+          fired,
+          offerScanned,
+          offerEscalated,
+          remindersQueued,
+        },
         'escalation scan finished',
       )
     } finally {
