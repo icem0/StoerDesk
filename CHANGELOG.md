@@ -89,6 +89,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   clock check, and a stage write resets an explicit reference that no longer
   matches the moved predecessor clock instead of leaving the configuration
   unreadable.
+- The configurable stage chain has its exit-criterion test (WP-M14-67): an
+  intermediate stage is inserted, its rule fires once, the ticket view offers
+  only allowed stages, and removing the stage keeps its firing and event rows.
 - The stage tab is covered by page tests (WP-M14-66): served stage order,
   predecessor options, the add row, the remove action with its affected rule
   keys and the empty-key guard are asserted in both languages.

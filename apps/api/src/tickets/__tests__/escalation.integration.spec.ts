@@ -123,6 +123,39 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       deadlineAt: new Date(now.getTime() - 4 * 60 * MINUTE),
     })
 
+    await db.insert(ticketEvents).values([
+      {
+        ticketId: ticket.id,
+        type: 'review_started',
+        actorKind: 'system',
+        createdAt: new Date(now.getTime() - 90 * MINUTE),
+      },
+      {
+        ticketId: ticket.id,
+        type: 'work_order_set',
+        actorKind: 'system',
+        createdAt: new Date(now.getTime() - 80 * MINUTE),
+      },
+      {
+        ticketId: ticket.id,
+        type: 'assigned',
+        actorKind: 'system',
+        createdAt: new Date(now.getTime() - 70 * MINUTE),
+      },
+      {
+        ticketId: ticket.id,
+        type: 'accepted',
+        actorKind: 'system',
+        createdAt: new Date(now.getTime() - 60 * MINUTE),
+      },
+      {
+        ticketId: ticket.id,
+        type: 'acknowledged',
+        actorKind: 'system',
+        createdAt: new Date(now.getTime() - 50 * MINUTE),
+      },
+    ])
+
     const fired = await evaluateTicketEscalations(db, ticket.id, now)
 
     expect(fired.map((entry) => entry.rule)).toEqual([

@@ -900,7 +900,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-64  | the available stages come from the stage chain (out of band)           | done    | yes     |
 | WP-M14-65  | the administration adds, removes and chains stages (out of band)       | done    | yes     |
 | WP-M14-66  | the stage tab of the administration is tested (out of band)            | done    | yes     |
-| WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | planned | yes     |
+| WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | done    | yes     |
 | WP-M14-68  | every notification message links to its ticket (out of band)      | done    | yes     |
 
 

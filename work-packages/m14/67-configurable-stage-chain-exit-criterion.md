@@ -1,7 +1,7 @@
 # WP-M14-67: The configurable stage chain satisfies its criterion
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-59, WP-M14-60, WP-M14-61, WP-M14-62, WP-M14-63, WP-M14-64, WP-M14-65, WP-M14-66
 phase: 14
 context-budget: 24k tokens
@@ -66,9 +66,9 @@ green (`PLAN.md` §18).
 
 ## Handoff
 
-- Files changed: (filled by the implementing run)
-- Interfaces added: (filled by the implementing run)
-- Verified: (filled by the implementing run)
+- Files changed: `apps/api/src/escalation/__tests__/stage-chain-exit.integration.spec.ts`, `apps/api/src/tickets/__tests__/escalation.integration.spec.ts` (fixture reaches every stage so the deadline test stays isolated)
+- Interfaces added: four integration tests prove the added intermediate stage, its rule clock, the unique firing row, the ticket view, the cascade on removal and the surviving audit rows
+- Verified: `npx vitest run apps/api/src/escalation/__tests__/stage-chain-exit.integration.spec.ts apps/api/src/escalation/__tests__/phase13-exit.integration.spec.ts apps/api/src/escalation/__tests__/config-routes.integration.spec.ts` (17 tests), typecheck and ESLint
 - Follow-up WP: none — the chain is closed; the phase-14 exit criterion WP-M14-21
   stays the closing package of the messenger-channel line
 - Open question: none
