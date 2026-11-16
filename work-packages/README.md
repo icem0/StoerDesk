@@ -1371,7 +1371,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-83  | the configuration service knows the target of an action (out of band)      | done    | yes     |
 | WP-M14-84  | the administration offers and assigns (out of band)                        | done    | yes     |
 | WP-M14-85  | the ticket view names the assignees (out of band)                          | done    | yes     |
-| WP-M14-85b | the ticket view test proves the assignees (split child of 85)              | planned | yes     |
+| WP-M14-85b | the ticket view test proves the assignees (split child of 85)              | done    | yes     |
 | WP-M14-86  | the acknowledge result is a selection (follow-up of 78)                    | done    | yes     |
 | WP-M14-87  | the readiness calendar names state, technician and pool (out of band)   | done    | yes     |
 

@@ -2277,8 +2277,12 @@ and `apps/api/src/tickets/detail.ts`), name only, no contact value. The ticket
 view in `apps/web/src/features/tickets/ticket-detail-page.tsx` shows the
 technicians below the status under the label `detail.assignees.title`
 (`Zuweisen` in `de`, `assigned technicians` in `en`) — a ticket without
-assignees shows nothing. The split child **WP-M14-85b** (the page test proves
-the assignees and the empty case) stays open.
+assignees shows nothing. **WP-M14-85b is implemented** as well:
+`apps/web/src/features/tickets/__tests__/ticket-detail-assignees.test.tsx`
+renders the ticket detail page with a mocked answer that carries two assignees
+and proves that the view names both technicians, that a ticket without
+assignees shows no row and that no contact value appears — the feature of the
+office is closed.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

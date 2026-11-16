@@ -1,7 +1,7 @@
 # WP-M14-85b: the ticket view test proves the assignees
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-85
 phase: 14
 milestone: m14
@@ -51,7 +51,8 @@ Expected: all green; the new test passes.
 
 - Files changed: the new detail page test
 - Interfaces added: none
-- Verified:
+- Verified: vitest (the new detail page test 3/3 — two technicians named, the
+  empty case, no contact value), typecheck, ESLint, `npm run wp:check`
 - Follow-up WP: none — the feature of the office is closed
 - Open question: the per-user routing of the channels other than ntfy stays a
   named limitation of ADR-0026

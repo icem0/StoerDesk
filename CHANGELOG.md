@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ticket view test proves the assignees (WP-M14-85b, the split child of
+  WP-M14-85, out of band in phase 14, ADR-0026): the new detail page test
+  `apps/web/src/features/tickets/__tests__/ticket-detail-assignees.test.tsx`
+  renders the ticket detail page with a mocked answer that carries two assignees
+  — the view names both technicians — and with an empty `assignees` list — no
+  assignee row appears; the row never carries a contact value.
 - The ticket view names the assignees (WP-M14-85, out of band in phase 14,
   ADR-0026): the answer of `GET /api/v1/tickets/:ticketNo` carries `assignees` —
   the rows of `ticket_assignees` with the name of their user (`id` and `name`
