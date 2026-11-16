@@ -589,6 +589,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decision of the phase.
 
 ### Fixed
+- A failed action names its reason (WP-M14-77): the ticket view answered the
+  generic "Die Aktion konnte nicht ausgeführt werden." for every failed
+  escalation, because `actionErrorMessage()` looks the error code of the API up
+  in `detail.errors` and that namespace only knew the codes of the delete —
+  `invalid_request`, `invalid_transition`, `ticket_not_found`, `session_invalid`
+  and `forbidden` all fell back to the generic text. The five codes have a text
+  in `de` and `en` now, and the message of `invalid_transition` names the status
+  of the ticket (the label of `status.values.<key>`, the raw key for a status the
+  administration added). An unknown code keeps the generic notice.
 - The work order of the office is accepted again (WP-M14-76): the stage selection
   of the ticket view sends the free text field of WP-M14-43 (`{ text }`), but the
   office route `POST /api/v1/tickets/:ticketNo/work-order` still validated the

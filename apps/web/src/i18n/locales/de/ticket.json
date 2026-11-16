@@ -331,6 +331,11 @@
     "errors": {
       "notFound": "Meldung nicht gefunden.",
       "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
+      "invalid_request": "Die Angaben wurden abgelehnt. Bitte die Eingaben prüfen.",
+      "invalid_transition": "Dieser Schritt ist im Status „{{status}}“ nicht möglich.",
+      "ticket_not_found": "Die Meldung existiert nicht (mehr).",
+      "session_invalid": "Die Anmeldung ist abgelaufen. Bitte erneut anmelden.",
+      "forbidden": "Für diese Aktion fehlt die Berechtigung.",
       "dismiss": "Hinweis schließen",
       "deleteFailed": "Die Meldung konnte nicht gelöscht werden.",
       "fieldRequired": "Please enter the required fields first.",

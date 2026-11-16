@@ -216,12 +216,27 @@ export function TicketDetailPage() {
     }
   }
 
-  // Workflow action errors never fall back to the delete text (WP-M5-10).
+  // Workflow action errors never fall back to the delete text (WP-M5-10), and
+  // they name their reason (WP-M14-77): the error code of the API becomes a
+  // sentence, so the office sees why the action failed instead of the generic
+  // notice. A code without a text keeps the generic notice.
   function actionErrorMessage(
     code: string | undefined,
     params: Record<string, string | number> | undefined,
   ): string {
     if (!code) return t('detail.errors.actionFailed')
+
+    if (code === 'invalid_transition') {
+      const from = params?.from
+
+      return t('detail.errors.invalid_transition', {
+        status:
+          typeof from === 'string'
+            ? t(`status.values.${from}`, { defaultValue: from })
+            : t('detail.field.unknown'),
+      })
+    }
+
     return t(`detail.errors.${code}`, {
       ...(params ?? {}),
       defaultValue: t('detail.errors.actionFailed'),

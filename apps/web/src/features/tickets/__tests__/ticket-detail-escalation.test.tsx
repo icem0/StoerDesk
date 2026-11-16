@@ -82,7 +82,11 @@ function fixture(status: string, reachable: unknown[]) {
   }
 }
 
-function renderPage(status: string, reachable: unknown[]): {
+function renderPage(
+  status: string,
+  reachable: unknown[],
+  writeError?: { status: number; body: unknown },
+): {
   writes: string[]
   bodies: Record<string, unknown>[]
 } {
@@ -107,6 +111,10 @@ function renderPage(status: string, reachable: unknown[]): {
 
       writes.push(tail ?? '')
       bodies.push(init?.body === undefined ? {} : JSON.parse(String(init.body)))
+
+      if (writeError !== undefined) {
+        return Response.json(writeError.body, { status: writeError.status })
+      }
 
       return Response.json({ ok: true })
     }
@@ -209,5 +217,76 @@ describe('TicketDetailPage stage selection', () => {
     const history = screen.getByTestId('ticket-history').textContent ?? ''
     expect(history).toContain('Manuell eskaliert')
     expect(history).toContain('Eskalationsstufe: Gruppe')
+  })
+})
+
+describe('TicketDetailPage names the reason of a failed action', () => {
+  it('names the status of the ticket when the step is not possible', async () => {
+    renderPage(
+      'NEW',
+      stages('review', { de: 'Prüfung', en: 'Review' }, ['review_started']),
+      {
+        status: 409,
+        body: {
+          code: 'invalid_transition',
+          params: { ticketNo: TICKET_NO, from: 'IN_REVIEW', event: 'assigned' },
+        },
+      },
+    )
+
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
+    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'review_started' } })
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toBe(
+        'Dieser Schritt ist im Status „In Prüfung“ nicht möglich.',
+      ),
+    )
+  })
+
+  it('names the rejected input when the server refuses the body', async () => {
+    renderPage(
+      'NEW',
+      stages('review', { de: 'Prüfung', en: 'Review' }, ['review_started']),
+      { status: 400, body: { code: 'invalid_request', params: {} } },
+    )
+
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
+    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'review_started' } })
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toBe(
+        'Die Angaben wurden abgelehnt. Bitte die Eingaben prüfen.',
+      ),
+    )
+  })
+
+  it('keeps the generic notice for a code without a text', async () => {
+    renderPage(
+      'NEW',
+      stages('review', { de: 'Prüfung', en: 'Review' }, ['review_started']),
+      { status: 500, body: { code: 'internal_error', params: {} } },
+    )
+
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
+    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'review_started' } })
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toBe(
+        'Die Aktion konnte nicht ausgeführt werden.',
+      ),
+    )
   })
 })

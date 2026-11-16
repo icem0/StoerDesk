@@ -825,6 +825,19 @@ which writes `payload.text` into `tickets.work_order_text`. The row of
 `specs/08-objects-api.md` §9.3 names the new body. The generic text itself is
 repaired by WP-M14-77, the offered stages by WP-M14-78.
 
+**The failed action names its reason (WP-M14-77, out of band in phase 14,
+requested by the office).** The generic "Die Aktion konnte nicht ausgeführt
+werden." hid every reason: `actionErrorMessage()` of the ticket view looks the
+error code of the API up in `detail.errors`, and that namespace only knew the
+codes of the delete — `invalid_request`, `invalid_transition`,
+`ticket_not_found`, `session_invalid` and `forbidden` fell back to the generic
+text. **WP-M14-77** gives the five codes a text in `de` and `en`; the message of
+`invalid_transition` names the status of the ticket (the label of
+`status.values.<key>`, the raw key for a status the administration added), and
+an unknown code keeps the generic notice. The office sees why the action
+failed — a rejected input, a step that the current status does not allow, an
+expired session or a missing permission.
+
 **The escalation offers and assigns tickets (WP-M14-79 … WP-M14-85, out of band
 in phase 14, requested by the office).** The office asked for two more actions
 of an escalation rule: a ticket that waits too long for a technician shall be
@@ -1317,6 +1330,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-74  | the tunnel token does not stop the core stack (the Docker smoke test)    | done    | yes     |
 | WP-M14-75  | the tunnel dependency is a valid compose schema (the Docker smoke test)  | done    | yes     |
 | WP-M14-76  | the office work-order route accepts the free text (out of band)          | done    | yes     |
+| WP-M14-77  | the ticket view names the reason of a failed action (out of band)       | done    | yes     |
 | WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | planned | yes     |
 | WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | done    | yes     |
 | WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | done    | yes     |
