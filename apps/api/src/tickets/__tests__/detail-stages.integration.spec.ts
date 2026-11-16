@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -111,6 +111,52 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const stages = await readReachableStages(db, 'NEW')
 
       expect(stages.map((stage) => stage.key)).not.toContain('no_event')
+    })
+
+    it('offers a stage only while its step is active', async () => {
+      const step = and(
+        eq(schema.ticketTransitions.fromStatus, 'NEW'),
+        eq(schema.ticketTransitions.eventKey, 'review_started'),
+      )
+
+      await db.update(schema.ticketTransitions).set({ active: false }).where(step)
+
+      expect(await readReachableStages(db, 'NEW')).toEqual([])
+
+      await db.update(schema.ticketTransitions).set({ active: true }).where(step)
+
+      expect((await readReachableStages(db, 'NEW'))[0]?.key).toBe('review')
+    })
+
+    it('offers a stage that names a step the administration added', async () => {
+      const step = {
+        fromStatus: 'NEW',
+        toStatus: 'IN_REVIEW',
+        eventKey: 'inspection_started',
+      }
+
+      await db.insert(schema.ticketTransitions).values(step)
+      await db
+        .update(schema.escalationStages)
+        .set({ reachedBy: ['review_started', 'inspection_started'] })
+        .where(eq(schema.escalationStages.key, 'review'))
+
+      const stages = await readReachableStages(db, 'NEW')
+
+      expect(stages[0]?.events).toEqual(['review_started', 'inspection_started'])
+
+      await db
+        .delete(schema.ticketTransitions)
+        .where(
+          and(
+            eq(schema.ticketTransitions.fromStatus, step.fromStatus),
+            eq(schema.ticketTransitions.eventKey, step.eventKey),
+          ),
+        )
+      await db
+        .update(schema.escalationStages)
+        .set({ reachedBy: ['review_started'] })
+        .where(eq(schema.escalationStages.key, 'review'))
     })
   },
 )

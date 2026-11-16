@@ -69,12 +69,14 @@ have to be rows like the stages and the statuses.
 
 - An installation whose transition rows are all deleted has no workflow any more;
   the transition administration (WP-M14-39) keeps that trade-off visible.
-- The escalation layer still reads the code map: `TRANSITIONS` and
-  `TRANSITION_EVENT_KEYS` in `apps/api/src/tickets/workflow.ts` feed
+- The escalation layer read the code map: `TRANSITIONS` and
+  `TRANSITION_EVENT_KEYS` in `apps/api/src/tickets/workflow.ts` fed
   `apps/api/src/escalation/config.ts` (the stage chain validation of ADR-0023,
-  `readReachableStages` of §7.10). Those views switch to the table in WP-M14-40
-  and WP-M14-41, so after an administrator edited the rows the ticket view can
-  offer a stage whose event the engine rejects.
+  `readReachableStages` of §7.10), so after an administrator edited the rows the
+  ticket view could offer a stage whose event the engine rejected. WP-M14-78
+  moved both views onto the rows and removed the map: the offered stages are the
+  active rows whose `from_status` is the status of the ticket, and the stage
+  chain names the event keys of the table.
 - `tickets.status` loses its CHECK, so an unknown key on a ticket is only caught
   by the rows of `ticket_statuses` and the services — the status administration
   already refuses an unused key (`404 status_not_found`).

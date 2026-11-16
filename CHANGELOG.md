@@ -589,6 +589,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decision of the phase.
 
 ### Fixed
+- The offered stages come from the transition table (WP-M14-78): the ticket view
+  offered a stage whose step the engine rejected (`409 invalid_transition`)
+  whenever the administration had edited the rows of `ticket_transitions`,
+  because `readReachableStages()` of `apps/api/src/escalation/config.ts` derived
+  the allowed events from the code map `TRANSITIONS` while `transitionTicket()`
+  read the table — the consequence ADR-0025 announced for WP-M14-40 and
+  WP-M14-41. Both views of the escalation layer read the table now: a stage is
+  offered while one of its `reached_by` events is an **active** row whose
+  `from_status` is the current status, and the stage chain of
+  `PUT /api/v1/escalation/stages` names the event keys of the table.
+  `TRANSITIONS` and `TRANSITION_EVENT_KEYS` had no reader left and are removed.
 - A failed action names its reason (WP-M14-77): the ticket view answered the
   generic "Die Aktion konnte nicht ausgeführt werden." for every failed
   escalation, because `actionErrorMessage()` looks the error code of the API up

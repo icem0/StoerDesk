@@ -838,6 +838,18 @@ an unknown code keeps the generic notice. The office sees why the action
 failed — a rejected input, a step that the current status does not allow, an
 expired session or a missing permission.
 
+**The offered stages come from the transition table (WP-M14-78, out of band in
+phase 14, requested by the office).** The ticket view offered a stage whose step
+the engine then rejected (`409 invalid_transition`), whenever the administration
+had edited the rows of `ticket_transitions`: `readReachableStages()` derived the
+allowed events from the code map `TRANSITIONS`, while `transitionTicket()` read
+the table — the consequence ADR-0025 announced for WP-M14-40 and WP-M14-41.
+**WP-M14-78** reads the table in both views of the escalation layer: a stage is
+offered while one of its `reached_by` events is an **active** row whose
+`from_status` is the current status, and the stage chain names the event keys of
+the table. The code map has no reader left and is removed, so a single source of
+truth remains.
+
 **The escalation offers and assigns tickets (WP-M14-79 … WP-M14-85, out of band
 in phase 14, requested by the office).** The office asked for two more actions
 of an escalation rule: a ticket that waits too long for a technician shall be
@@ -1331,6 +1343,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-75  | the tunnel dependency is a valid compose schema (the Docker smoke test)  | done    | yes     |
 | WP-M14-76  | the office work-order route accepts the free text (out of band)          | done    | yes     |
 | WP-M14-77  | the ticket view names the reason of a failed action (out of band)       | done    | yes     |
+| WP-M14-78  | the offered stages come from the transition table (out of band)         | done    | yes     |
 | WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | planned | yes     |
 | WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | done    | yes     |
 | WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | done    | yes     |

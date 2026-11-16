@@ -46,59 +46,6 @@ const INVALID_TRANSITION = (ticketNo: string, from: string, event: string) =>
 const TICKET_NOT_FOUND = (ticketId: string) =>
   new TicketTransitionError(404, 'ticket_not_found', { ticketId })
 
-/**
- * The escalation layer still reads this map (`apps/api/src/escalation/config.ts`
- * of ADR-0023, the stage-chain validation and `readReachableStages` of §7.10);
- * WP-M14-40 and WP-M14-41 move that view onto the rows. The engine itself
- * resolves the steps in `ticket_transitions`, so the map is no longer the engine.
- */
-export const TRANSITIONS: Record<string, Record<string, { to: string }>> = {
-  NEW: {
-    review_started: { to: 'IN_REVIEW' },
-  },
-  IN_REVIEW: {
-    work_order_set: { to: 'WORK_ORDER_CREATED' },
-  },
-  WORK_ORDER_CREATED: {
-    assigned: { to: 'ASSIGNED' },
-    offered: { to: 'OFFERED' },
-  },
-  OFFERED: {
-    claimed: { to: 'ASSIGNED' },
-    accepted: { to: 'ACCEPTED' },
-    declined: { to: 'WORK_ORDER_CREATED' },
-  },
-  ASSIGNED: {
-    accepted: { to: 'ACCEPTED' },
-    declined: { to: 'WORK_ORDER_CREATED' },
-  },
-  ACCEPTED: {
-    acknowledged: { to: 'ACKNOWLEDGED' },
-  },
-  ACKNOWLEDGED: {
-    closed: { to: 'CLOSED' },
-  },
-  CLOSED: {
-    reopened: { to: 'NEW' },
-  },
-  CANCELLED: {
-    uncancelled: { to: 'NEW' },
-  },
-  '*': {
-    cancelled: { to: 'CANCELLED' },
-  },
-}
-
-/**
- * The distinct event keys of the transition map. An escalation stage may name
- * one of them in `reached_by`; the list is derived, never written twice.
- */
-export const TRANSITION_EVENT_KEYS: readonly string[] = [
-  ...new Set(
-    Object.values(TRANSITIONS).flatMap((events) => Object.keys(events)),
-  ),
-]
-
 type TransitionContext = {
   database: Db
   ticketId: string

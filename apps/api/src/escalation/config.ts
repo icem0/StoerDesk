@@ -11,7 +11,7 @@ import {
 
 import type { Database } from '../db/client'
 import { escalationActions, escalationRules, escalationStages, ticketStatuses } from '../db/schema'
-import { TRANSITION_EVENT_KEYS, TRANSITIONS } from '../tickets/workflow'
+import { readTicketTransitions } from '../tickets/transition-service'
 
 /**
  * The configuration of the escalation (`specs/07-escalation.md` §7.9,
@@ -91,19 +91,34 @@ export async function readEscalationStages(database: Db): Promise<
 }
 
 /**
+ * The event keys of the transition table — the workflow events an installation
+ * knows (ADR-0025). The stages may name them and nothing else.
+ */
+async function readTransitionEventKeys(database: Db): Promise<string[]> {
+  const transitions = await readTicketTransitions(database)
+
+  return [...new Set(transitions.map((transition) => transition.eventKey))]
+}
+
+/**
  * The stages the ticket can still reach, with the events that reach them. The
  * ticket view offers them instead of one button per workflow step
  * (`specs/07-escalation.md` §7.10). A stage qualifies when one of its
- * `reached_by` events is a transition the current status allows (ADR-0023).
+ * `reached_by` events is a step the current status allows: the **active** rows
+ * of `ticket_transitions` whose `from_status` is that status (ADR-0025). The
+ * table is the only source of truth, so an administrator who deactivates a step
+ * or changes its source status never sees a stage the engine would reject.
  */
 export async function readReachableStages(
   database: Db,
   status: string,
 ): Promise<{ key: string; names: Record<string, string>; events: string[] }[]> {
-  const allowedEvents = new Set([
-    ...Object.keys(TRANSITIONS[status] ?? {}),
-    ...Object.keys(TRANSITIONS['*'] ?? {}),
-  ])
+  const transitions = await readTicketTransitions(database)
+  const allowedEvents = new Set(
+    transitions
+      .filter((transition) => transition.active && transition.fromStatus === status)
+      .map((transition) => transition.eventKey),
+  )
   const stages = await readEscalationStages(database)
 
   return stages.flatMap((stage) => {
@@ -289,7 +304,7 @@ export async function writeEscalationStages(
 
   const chainIssues = validateEscalationStageChain(
     parsed.data.stages,
-    TRANSITION_EVENT_KEYS,
+    await readTransitionEventKeys(database),
   )
 
   if (chainIssues.length > 0) {
