@@ -1363,7 +1363,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-76  | the office work-order route accepts the free text (out of band)          | done    | yes     |
 | WP-M14-77  | the ticket view names the reason of a failed action (out of band)       | done    | yes     |
 | WP-M14-78  | the offered stages come from the transition table (out of band)         | done    | yes     |
-| WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | planned | yes     |
+| WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | done    | yes     |
 | WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | done    | yes     |
 | WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | done    | yes     |
 | WP-M14-82  | the engine offers and assigns a ticket (out of band)                      | done    | yes     |

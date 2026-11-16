@@ -342,7 +342,7 @@ report form and the checkbox on `/admin/branding`.
 >
 > **Phase 11 complete (WP-M11-01 … WP-M11-10)**: `specs/13-detected-errors.md` carries the contract for detected errors; ADR-0016 settles the decisions (catalog table, `tickets.detected_error_keys text[]`, optional close fields, archive-instead-of-delete, `byDetectedError` statistics grouping). Implemented in numeric order: spec+ADR+split (01), `detected_errors`-table + migration 0029 + `tickets.detected_error_keys` (02), shared Zod schemas + API CRUD `/api/v1/detected-errors` (03), Close-Route accepts `comment` + `detectedErrorKeys` (04), `stats_tickets`-view extension + `stats_ticket_detected_errors` view + `byDetectedError` in frequency + CSV export (05), admin page `/admin/detected-errors` with CRUD and archive (06), ticket-detail close dialog with detected-error multiselect (07), statistics `byDetectedError` chart (08), integration tests for CRUD/close/frequency (09), exit criterion + record (10).
 >
-> **Phase 14 complete (WP-M14-01 … WP-M14-74)**: the standalone administration
+> **Phase 14 complete (WP-M14-01 … WP-M14-87)**: the standalone administration
 > home at `/admin` is gone — the settings menu at `/settings` lists every
 > administration module itself, the retired address `/admin` and the retired
 > update page `/admin/update` redirect there, and the texts of the removed page
@@ -356,4 +356,10 @@ report form and the checkbox on `/admin/branding`.
 > Cloudflare Tunnel (WP-M14-69 … WP-M14-72); the record of the phase is closed
 > by **WP-M14-73** and the tunnel token of WP-M14-71 no longer stops the core
 > stack (**WP-M14-74**) and its dependency is a valid compose schema
-> (**WP-M14-75**).
+> (**WP-M14-75**). Out of band for the office the phase continues: the work
+> order accepts free text (WP-M14-76, WP-M14-42 … WP-M14-44), a failed action
+> names its reason (WP-M14-77), the offered stages come from the transition
+> table and the acknowledge result is a selection (WP-M14-78, WP-M14-86), the
+> escalation offers and assigns tickets on a pool or group target (ADR-0026,
+> WP-M14-79 … WP-M14-85b) and the readiness calendar names state, technician
+> and pool (WP-M14-87).

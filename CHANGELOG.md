@@ -653,6 +653,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   carries the same reason in its answer params.
 
 ### Changed
+- The record of WP-M14-79 is closed (record correction in phase 14): commit
+  `6820920` implemented the spec and decision package of the offer and assign
+  actions — `specs/07-escalation.md` §7.5 and §7.14, `specs/02-data-model.md`
+  §4.13, ADR-0026 with its index row in `docs/DECISIONS.md` and the children
+  WP-M14-80 … WP-M14-85 created in the same commit — and the whole chain
+  WP-M14-80 … WP-M14-85b is shipped, but the document still carried `status:
+  planned` and the backlog table of `work-packages/README.md` still listed the
+  row as `planned`. Both now read `done`, `PLAN.md` §16 names the correction
+  and the phase-14 entry of `docs/REPO-MAP.md` carries the out-of-band office
+  items WP-M14-76 … WP-M14-87. No product code, schema, route, UI,
+  specification or ADR changes.
 - The phase-14 record is closed (WP-M14-73): all 80 packages of phase 14 are
   implemented, the two exit criteria of the phase are proven by their
   integration tests (`phase14-exit.integration.spec.ts` of WP-M14-21 and

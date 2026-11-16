@@ -2284,6 +2284,16 @@ and proves that the view names both technicians, that a ticket without
 assignees shows no row and that no contact value appears — the feature of the
 office is closed.
 
+**Record correction (WP-M14-79).** Commit `6820920` implemented the spec and
+decision package of the offer and assign actions — `specs/07-escalation.md`
+§7.5 and the new §7.14, `specs/02-data-model.md` §4.13, ADR-0026 with its index
+row and the children WP-M14-80 … WP-M14-85 in the same commit — but the
+document still carried `status: planned` and the backlog table still listed
+that row as `planned`. Both now read `done`, so the record matches the shipped
+chain WP-M14-80 … WP-M14-85b; the office items WP-M14-76 … WP-M14-87 of the
+phase are out-of-band entries whose feature is closed with WP-M14-85b, WP-M14-86
+and WP-M14-87. No product code, schema, route, UI, specification or ADR changes.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

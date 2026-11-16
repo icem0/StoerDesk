@@ -1,7 +1,7 @@
 # WP-M14-79: the spec and the decision of the offer and assign actions
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-41
 phase: 14
 milestone: m14
