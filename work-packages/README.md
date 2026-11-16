@@ -1354,7 +1354,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | done    | yes     |
 | WP-M14-82  | the engine offers and assigns a ticket (out of band)                      | done    | yes     |
 | WP-M14-82b | the offer names the responsible person and the technicians are notified     | done    | yes     |
-| WP-M14-83  | the configuration service knows the target of an action (out of band)      | planned | yes     |
+| WP-M14-83  | the configuration service knows the target of an action (out of band)      | done    | yes     |
 | WP-M14-84  | the administration offers and assigns (out of band)                        | planned | yes     |
 | WP-M14-85  | the ticket view names the assignees (out of band)                          | planned | yes     |
 | WP-M14-86  | the acknowledge result is a selection (follow-up of 78)                    | done    | yes     |

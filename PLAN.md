@@ -2236,7 +2236,16 @@ user of a list who selected ntfy for the event type — and the distribution
 queues one outbox row per technician with an account (`ticket.escalated` for
 an offer, `ticket.assigned` for an assignment) with the technician topic in the
 target; the integration spec proves the staffed offer, the unstaffed offer and
-the broadcast rows. WP-M14-83 … WP-M14-85 stay open in numeric order.
+the broadcast rows. **WP-M14-83 is implemented** (the configuration service of
+the two actions): `actionConfig()` in `apps/api/src/escalation/config.ts` writes
+the target of an `offer` or an `assign` action into the `config` jsonb, so the
+round trip through `GET /api/v1/escalation/config` keeps it; because that jsonb
+carries no foreign key, the service checks the id against `oncall_pools`
+(kind `pool`) and `groups` (kind `group`) and answers `400 invalid_target` with
+the field paths — the rule of the `status_change` target — while a target that
+was removed after the installation stays accepted (the action then changes
+nothing). The config spec proves the round trip of a pool and a group target and
+the two unknown targets. WP-M14-84 … WP-M14-85 stay open in numeric order.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The configuration service knows the target of an action (WP-M14-83, out of
+  band in phase 14, ADR-0026): `actionConfig()` of
+  `apps/api/src/escalation/config.ts` writes the target of an `offer` or an
+  `assign` action into the `config` jsonb, so `GET /api/v1/escalation/config`
+  answers it again; the service checks the id against `oncall_pools`
+  (kind `pool`) and `groups` (kind `group`) and answers `400 invalid_target`
+  with the field paths, because the jsonb carries no foreign key. The config
+  spec proves the round trip of a pool and a group target and the two unknown
+  targets.
 - The offer names the responsible person and the distribution notifies the
   technicians (WP-M14-82b, the split child of WP-M14-82, out of band in phase
   14, ADR-0026): the `offered` step of `apps/api/src/tickets/workflow.ts` takes

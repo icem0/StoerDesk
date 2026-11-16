@@ -18,7 +18,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped escalation config integration: ${testDatabase.reason}\n`)
 }
 
-const { users, roles, userRoles } = schema
+const { groups, oncallPools, users, roles, userRoles } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
@@ -40,7 +40,7 @@ type ConfigBody = {
     minutes: Record<string, number> | null
     percent: number | null
     condition: unknown
-    actions: { key: string; type: string }[]
+    actions: { key: string; type: string; target?: { kind: string; id: string } }[]
     active: boolean
   }[]
 }
@@ -300,6 +300,97 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(body.code).toBe('invalid_status_key')
       expect(body.params?.fields).toEqual(['rules.0.actions.0.toStatus'])
+    })
+
+    it('keeps the target of an offer and an assign action', async () => {
+      const suffix = Date.now().toString(36)
+
+      const [group] = await db
+        .insert(groups)
+        .values({ name: `Verteilergruppe ${suffix}` })
+        .returning({ id: groups.id })
+      const groupId = group?.id ?? ''
+
+      const [pool] = await db
+        .insert(oncallPools)
+        .values({ name: `Verteilerpool ${suffix}`, groupId })
+        .returning({ id: oncallPools.id })
+      const poolId = pool?.id ?? ''
+
+      const response = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'assignment',
+            stageKey: 'assignment',
+            reference: 'work_order_set',
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                key: 'offer_the_pool',
+                type: 'offer',
+                target: { kind: 'pool', id: poolId },
+                condition: { all: [] },
+              },
+              {
+                key: 'assign_the_group',
+                type: 'assign',
+                target: { kind: 'group', id: groupId },
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      })
+
+      expect(response.statusCode).toBe(200)
+
+      const body = response.json<ConfigBody>()
+
+      expect(body.rules[0]?.actions[0]?.target).toEqual({ kind: 'pool', id: poolId })
+      expect(body.rules[0]?.actions[1]?.target).toEqual({ kind: 'group', id: groupId })
+    })
+
+    it('refuses a target of an unknown pool and of an unknown group with 400 invalid_target', async () => {
+      const response = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'assignment',
+            stageKey: 'assignment',
+            reference: 'work_order_set',
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                key: 'offer_the_ghost',
+                type: 'offer',
+                target: { kind: 'pool', id: '11111111-1111-4111-8111-111111111111' },
+                condition: { all: [] },
+              },
+              {
+                key: 'assign_the_ghost',
+                type: 'assign',
+                target: { kind: 'group', id: '22222222-2222-4222-8222-222222222222' },
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      })
+
+      expect(response.statusCode).toBe(400)
+
+      const body = response.json<ErrorResponseBody>()
+
+      expect(body.code).toBe('invalid_target')
+      expect(body.params?.fields).toEqual([
+        'rules.0.actions.0.target.id',
+        'rules.0.actions.1.target.id',
+      ])
     })
 
     it('replaces the names of the stages and keeps their chain', async () => {

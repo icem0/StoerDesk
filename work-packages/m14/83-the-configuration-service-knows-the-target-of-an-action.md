@@ -1,7 +1,7 @@
 # WP-M14-83: the configuration service knows the target of an action
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-82
 phase: 14
 milestone: m14
@@ -61,8 +61,12 @@ passes after it.
 
 ## Handoff
 
-- Files changed: the configuration service, its integration spec
-- Interfaces added: the error code `invalid_target`
-- Verified:
+- Files changed: `apps/api/src/escalation/config.ts` (`actionConfig` writes the
+  target, the service rule checks it), the integration spec and the repository
+  bookkeeping
+- Interfaces added: the error code `invalid_target` with the field paths
+- Verified: typecheck, ESLint, vitest (the config spec 12/12 on a throwaway
+  database — the round trip of a pool and a group target, the two unknown
+  targets with `400 invalid_target`), `i18n:check`, `wp:check`
 - Follow-up WP: WP-M14-84 (the administration UI)
 - Open question: none

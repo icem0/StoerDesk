@@ -10,7 +10,7 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { escalationActions, escalationRules, escalationStages, ticketStatuses } from '../db/schema'
+import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses } from '../db/schema'
 import { readTicketTransitions } from '../tickets/transition-service'
 
 /**
@@ -59,6 +59,9 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
       return action.text === undefined ? {} : { text: action.text }
     case 'status_change':
       return { toStatus: action.toStatus }
+    case 'offer':
+    case 'assign':
+      return { target: { kind: action.target.kind, id: action.target.id } }
     default:
       return {}
   }
@@ -252,6 +255,35 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 
   if (unknownStatusFields.length > 0) {
     throw new EscalationConfigError(400, 'invalid_status_key', { fields: unknownStatusFields })
+  }
+
+  // The target of an `offer` or an `assign` action names a row of `oncall_pools`
+  // (kind `pool`) or of `groups` (kind `group`) (§7.14, ADR-0026): the jsonb of
+  // the action carries no foreign key, so the service checks it and answers
+  // `400 invalid_target` with the field path — the rule of the `status_change`
+  // target above.
+  const poolRows = await database.select({ id: oncallPools.id }).from(oncallPools)
+  const groupRows = await database.select({ id: groups.id }).from(groups)
+  const poolIds = new Set(poolRows.map((row) => row.id))
+  const groupIds = new Set(groupRows.map((row) => row.id))
+  const unknownTargetFields: string[] = []
+
+  for (const [ruleIndex, rule] of parsed.data.rules.entries()) {
+    for (const [actionIndex, action] of rule.actions.entries()) {
+      if (action.type !== 'offer' && action.type !== 'assign') {
+        continue
+      }
+
+      const known = action.target.kind === 'pool' ? poolIds : groupIds
+
+      if (!known.has(action.target.id)) {
+        unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)
+      }
+    }
+  }
+
+  if (unknownTargetFields.length > 0) {
+    throw new EscalationConfigError(400, 'invalid_target', { fields: unknownTargetFields })
   }
 
   await database.transaction(async (tx) => {
