@@ -25,8 +25,21 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped escalation distribution integration: ${testDatabase.reason}\n`)
 }
 
-const { escalationActions, groups, objects, oncallPools, ticketAssignees, ticketEvents, tickets, userGroups, users } =
-  schema
+const {
+  escalationActions,
+  groups,
+  notificationAccounts,
+  notificationPreferences,
+  objects,
+  oncallPools,
+  oncallShifts,
+  outbox,
+  ticketAssignees,
+  ticketEvents,
+  tickets,
+  userGroups,
+  users,
+} = schema
 
 const MINUTE = 60 * 1000
 
@@ -160,6 +173,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('assigns the ticket to every technician of a group', async () => {
       await action('assign', { kind: 'group', id: groupId }, 'assign_group', 'assignment')
 
+      for (const [index, userId] of technicianIds.entries()) {
+        await db.insert(notificationAccounts).values({
+          userId,
+          channel: 'ntfy',
+          externalId: `topic-${index}`,
+        })
+        await db.insert(notificationPreferences).values({
+          userId,
+          eventType: 'ticket.assigned',
+          channel: 'ntfy',
+        })
+      }
+
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
       const result = await fire(ticket.id, 'assignment', 'assignment', 'e1')
@@ -190,10 +216,28 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         stage: 'assignment',
         target: { kind: 'group', id: groupId },
       })
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+
+      expect(rows).toHaveLength(2)
+      expect(rows.every((row) => row.channel === 'ntfy')).toBe(true)
+      expect(rows.every((row) => row.eventType === 'ticket.assigned')).toBe(true)
+      expect((rows.map((row) => row.target as { ntfyTopic: string }).map((t) => t.ntfyTopic)).sort())
+        .toStrictEqual(['topic-0', 'topic-1'])
     })
 
     it('offers the ticket to the technicians of a readiness pool', async () => {
       await action('offer', { kind: 'pool', id: poolId }, 'offer_pool', 'acceptance_offer')
+
+      const onCallUserId = technicianIds[0] ?? ''
+
+      await db.insert(oncallShifts).values({
+        poolId,
+        userId: onCallUserId,
+        state: 'CONFIRMED',
+        startsAt: new Date(Date.now() - 10 * MINUTE),
+        endsAt: new Date(Date.now() + 120 * MINUTE),
+      })
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
@@ -202,12 +246,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(result.offered).toBe(1)
 
       const [moved] = await db
-        .select({ status: tickets.status })
+        .select({
+          status: tickets.status,
+          offeredToUserId: tickets.offeredToUserId,
+          offerEscalatedAt: tickets.offerEscalatedAt,
+        })
         .from(tickets)
         .where(eq(tickets.id, ticket.id))
         .limit(1)
 
       expect(moved?.status).toBe('OFFERED')
+      expect(moved?.offeredToUserId).toBe(onCallUserId)
+      expect(moved?.offerEscalatedAt).toBeInstanceOf(Date)
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
 
@@ -216,6 +266,49 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(note?.payload).toMatchObject({
         target: { kind: 'pool', id: poolId },
       })
+    })
+
+    it('offers a pool without a covering shift without a person and notifies the technicians', async () => {
+      const [nightPool] = await db
+        .insert(oncallPools)
+        .values({ name: `Nacht ${randomUUID().slice(0, 6)}`, groupId })
+        .returning({ id: oncallPools.id })
+
+      await action('offer', { kind: 'pool', id: nightPool?.id ?? '' }, 'offer_night', 'acceptance_assignment')
+
+      const onCallUserId = technicianIds[0] ?? ''
+
+      await db.insert(notificationPreferences).values({
+        userId: onCallUserId,
+        eventType: 'ticket.escalated',
+        channel: 'ntfy',
+      })
+
+      const ticket = await createTicket('WORK_ORDER_CREATED')
+
+      const result = await fire(ticket.id, 'acceptance_assignment', null, 'e5')
+
+      expect(result.offered).toBe(1)
+
+      const [moved] = await db
+        .select({
+          status: tickets.status,
+          offeredToUserId: tickets.offeredToUserId,
+          offerEscalatedAt: tickets.offerEscalatedAt,
+        })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(moved?.status).toBe('OFFERED')
+      expect(moved?.offeredToUserId).toBeNull()
+      expect(moved?.offerEscalatedAt).toBeNull()
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+
+      expect(rows).toHaveLength(1)
+      expect(rows[0]?.eventType).toBe('ticket.escalated')
+      expect((rows[0]?.target as { ntfyTopic: string }).ntfyTopic).toBe('topic-0')
     })
 
     it('changes nothing when the ticket has no step for the distribution', async () => {

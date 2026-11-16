@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The offer names the responsible person and the distribution notifies the
+  technicians (WP-M14-82b, the split child of WP-M14-82, out of band in phase
+  14, ADR-0026): the `offered` step of `apps/api/src/tickets/workflow.ts` takes
+  `offered_to_user_id` and `offer_escalated_at` from the payload, so an
+  escalated offer names the on-call person of the pool and sets the offer
+  timeout (`oncall.escalate_to_group_after_min`) in the transaction of the
+  transition — an unstaffed pool and a group target offer without a person and
+  without a timeout. `apps/api/src/notifications/receivers.ts` gains
+  `ntfyTopicsOfUsers(database, eventType, userIds)`, and
+  `apps/api/src/escalation/distribution.ts` queues one outbox row per
+  technician with an ntfy account and a selection (`ticket.escalated` for an
+  offer, `ticket.assigned` for an assignment) on the own topic of the
+  technician. The integration spec proves the staffed offer, the unstaffed
+  offer and the broadcast rows.
 - The engine offers and assigns a ticket (WP-M14-82, out of band in phase 14,
   ADR-0026): `apps/api/src/oncall/members.ts` (new) extracts the pool members
   rule of `GET /api/v1/oncall/pools/:id/members` (§4a.5) — the members of the

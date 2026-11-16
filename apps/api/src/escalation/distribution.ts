@@ -1,8 +1,12 @@
 import type { EscalationTarget } from '@stoerdesk/shared'
+import { eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
-import { ticketAssignees, ticketEvents } from '../db/schema'
+import { objects, outbox, ticketAssignees, ticketEvents, tickets } from '../db/schema'
+import { ntfyTopicsOfUsers } from '../notifications/receivers'
+import { resolveOnCallPerson } from '../oncall/coupling'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
+import { readOncallSettings } from '../oncall/settings'
 import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
 
 /**
@@ -18,8 +22,9 @@ import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
  *
  * The assignment records the technicians in `ticket_assignees`
  * (`specs/02-data-model.md` §4.13); the offer names the on-call person of a
- * pool in `offered_to_user_id` and sets the offer timeout (WP-M14-83). Every
- * distribution writes one append-only `escalation_note` event.
+ * pool in `offered_to_user_id` and sets the offer timeout (WP-M14-82b). Every
+ * distribution writes one append-only `escalation_note` event and queues one
+ * ntfy outbox row per technician on their own topic (WP-M14-82b).
  */
 
 type Db = Database['database']
@@ -32,6 +37,8 @@ export type DistributionResult = {
   changed: boolean
   /** The number of the technicians of the target. */
   technicians: number
+  /** The number of the queued ntfy rows (the technicians with an account). */
+  notified: number
 }
 
 /**
@@ -48,9 +55,37 @@ export async function resolveTargetTechnicians(
 }
 
 /**
+ * The offer names the on-call person of a pool and sets the offer timeout
+ * (§7.14, WP-M14-82b): the payload for the `offered` step of the transition
+ * table. A group target and a pool without a covering shift offer without a
+ * person and without a timeout — the whole group receives the offer.
+ */
+async function offerPayload(
+  database: Db,
+  target: EscalationTarget,
+  now: Date,
+): Promise<Record<string, unknown>> {
+  if (target.kind !== 'pool') {
+    return {}
+  }
+
+  const resolution = await resolveOnCallPerson(database, { at: now, poolId: target.id })
+
+  if (resolution.kind === 'unstaffed' || resolution.userId === undefined) {
+    return {}
+  }
+
+  const settings = await readOncallSettings(database)
+  const offerEscalatedAt = new Date(now.getTime() + settings.escalateToGroupAfterMin * 60_000)
+
+  return { offeredToUserId: resolution.userId, offerEscalatedAt }
+}
+
+/**
  * Hands the ticket to the technicians of the target: the step of the
- * transition table, the assignees of the assignment and one `escalation_note`
- * event with `{ rule, stage, target }`.
+ * transition table, the assignees of the assignment, one `escalation_note`
+ * event with `{ rule, stage, target }` and one ntfy outbox row per technician
+ * with an account.
  */
 export async function distributeTicket(
   database: Db,
@@ -67,10 +102,12 @@ export async function distributeTicket(
   const technicians = await resolveTargetTechnicians(database, input.target)
 
   if (technicians.length === 0) {
-    return { changed: false, technicians: 0 }
+    return { changed: false, technicians: 0, notified: 0 }
   }
 
   const event = input.kind === 'offer' ? 'offered' : 'assigned'
+  const now = new Date()
+  const offer = input.kind === 'offer' ? await offerPayload(database, input.target, now) : {}
 
   try {
     await transitionTicket({
@@ -78,13 +115,13 @@ export async function distributeTicket(
       ticketId: input.ticketId,
       event,
       actorKind: 'system',
-      payload: { rule: input.ruleKey, stage: input.stageKey, ...(input.payload ?? {}) },
+      payload: { rule: input.ruleKey, stage: input.stageKey, ...offer, ...(input.payload ?? {}) },
     })
   } catch (error) {
     // Without an active step of the transition table the action changes
     // nothing (§7.13) — a ticket outside `WORK_ORDER_CREATED` stays as it is.
     if (error instanceof TicketTransitionError) {
-      return { changed: false, technicians: 0 }
+      return { changed: false, technicians: 0, notified: 0 }
     }
 
     throw error
@@ -108,5 +145,41 @@ export async function distributeTicket(
     },
   })
 
-  return { changed: true, technicians: technicians.length }
+  const eventType = input.kind === 'offer' ? 'ticket.escalated' : 'ticket.assigned'
+  const topics = await ntfyTopicsOfUsers(database, eventType, technicians)
+
+  if (topics.length > 0) {
+    const ticketRows = await database
+      .select({
+        ticketNo: tickets.ticketNo,
+        priority: tickets.priority,
+        objectName: objects.name,
+      })
+      .from(tickets)
+      .innerJoin(objects, eq(objects.id, tickets.objectId))
+      .where(eq(tickets.id, input.ticketId))
+      .limit(1)
+
+    const ticket = ticketRows[0]
+
+    if (ticket !== undefined) {
+      await database.insert(outbox).values(
+        topics.map((topic) => ({
+          ticketId: input.ticketId,
+          eventType,
+          channel: 'ntfy',
+          target: {
+            ticketNo: ticket.ticketNo,
+            priority: ticket.priority,
+            objectName: ticket.objectName,
+            escalationRule: input.ruleKey,
+            escalationStage: input.stageKey,
+            ntfyTopic: topic,
+          },
+        })),
+      )
+    }
+  }
+
+  return { changed: true, technicians: technicians.length, notified: topics.length }
 }

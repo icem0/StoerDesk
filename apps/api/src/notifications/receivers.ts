@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
 import { notificationAccounts, notificationPreferences } from '../db/schema'
@@ -53,6 +53,48 @@ export async function ntfyRecipients(
       and(
         eq(notificationPreferences.eventType, eventType),
         eq(notificationPreferences.channel, 'ntfy'),
+      ),
+    )
+
+  const topics = rows.map((row) => row.externalId ?? '').filter((topic) => topic !== '')
+
+  return [...new Set(topics)]
+}
+
+/**
+ * The own topics of a list of users (`specs/10-notifications.md` §11.3, §11.4,
+ * `specs/07-escalation.md` §7.14, ADR-0026, WP-M14-82b): the stored topic
+ * (`external_id`) of every user of the list who selected the ntfy channel for
+ * the event type — the broadcast of a distribution reaches the technicians of
+ * the target on their own topics, never the instance topic. A user without an
+ * ntfy account contributes nothing; the topics are deduplicated.
+ */
+export async function ntfyTopicsOfUsers(
+  database: DbSelect,
+  eventType: string,
+  userIds: readonly string[],
+): Promise<string[]> {
+  if (userIds.length === 0) {
+    return []
+  }
+
+  const rows = await database
+    .select({
+      externalId: notificationAccounts.externalId,
+    })
+    .from(notificationPreferences)
+    .innerJoin(
+      notificationAccounts,
+      and(
+        eq(notificationAccounts.userId, notificationPreferences.userId),
+        eq(notificationAccounts.channel, 'ntfy'),
+      ),
+    )
+    .where(
+      and(
+        eq(notificationPreferences.eventType, eventType),
+        eq(notificationPreferences.channel, 'ntfy'),
+        inArray(notificationPreferences.userId, userIds),
       ),
     )
 

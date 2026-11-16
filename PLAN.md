@@ -2223,8 +2223,20 @@ is caught and reported as `changed: false`. The dispatcher in
 the action `config` and counts `offered` and `assigned` in the scan result. The
 new `apps/api/src/escalation/__tests__/distribution.integration.spec.ts` proves
 the assignment (status, assignees, note), the offer to a pool, the ticket
-without a step and the empty target. WP-M14-82b … WP-M14-85 stay open in
-numeric order.
+without a step and the empty target. **WP-M14-82b is implemented** (the split
+child of the engine): the `offered` step of `apps/api/src/tickets/workflow.ts`
+takes `offered_to_user_id` and `offer_escalated_at` from the payload, so an
+escalated offer names the on-call person of the pool (`resolveOnCallPerson`,
+`specs/04-oncall.md` §4a.6) and sets the offer timeout
+(`oncall.escalate_to_group_after_min`) in the transaction of the transition —
+an unstaffed pool and a group target offer to the whole group without a person
+and without a timeout. `apps/api/src/notifications/receivers.ts` gains
+`ntfyTopicsOfUsers(database, eventType, userIds)` — the stored topic of every
+user of a list who selected ntfy for the event type — and the distribution
+queues one outbox row per technician with an account (`ticket.escalated` for
+an offer, `ticket.assigned` for an assignment) with the technician topic in the
+target; the integration spec proves the staffed offer, the unstaffed offer and
+the broadcast rows. WP-M14-83 … WP-M14-85 stay open in numeric order.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

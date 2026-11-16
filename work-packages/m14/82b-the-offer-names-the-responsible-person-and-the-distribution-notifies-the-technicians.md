@@ -1,7 +1,7 @@
 # WP-M14-82b: the offer names the responsible person and the distribution notifies the technicians
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-82
 phase: 14
 milestone: m14
@@ -80,7 +80,10 @@ the broadcast rows.
   `apps/api/src/escalation/distribution.ts`, the integration spec and the
   repository bookkeeping
 - Interfaces added: `ntfyTopicsOfUsers`, the offer columns of the `offered` step,
-  the broadcast rows of `distributeTicket`
-- Verified:
+  the broadcast rows of `distributeTicket` (`notified` in the result)
+- Verified: typecheck, ESLint, vitest (the distribution spec 5/5 on a throwaway
+  database — staffed pool offer with the on-call person and the offer timeout,
+  unstaffed pool without either, one ntfy row per technician with account),
+  `i18n:check`, `wp:check`
 - Follow-up WP: WP-M14-83 (the configuration service validates the target)
 - Open question: none

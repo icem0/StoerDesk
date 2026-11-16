@@ -107,6 +107,17 @@ export async function transitionTicket(ctx: TransitionContext) {
       if (typeof payload.text === 'string') {
         workflowColumns.workOrderText = payload.text
       }
+    } else if (event === 'offered') {
+      // The offer of the escalation hands the ticket to the on-call person of
+      // a pool (§7.14, ADR-0026, WP-M14-82b): the person and the offer timeout
+      // leave in the payload beside the status, so one statement writes them.
+      if (typeof payload.offeredToUserId === 'string') {
+        workflowColumns.offeredToUserId = payload.offeredToUserId
+      }
+
+      if (payload.offerEscalatedAt instanceof Date) {
+        workflowColumns.offerEscalatedAt = payload.offerEscalatedAt
+      }
     } else if (event === 'accepted') {
       workflowColumns.acceptedAt = at
     } else if (event === 'acknowledged') {
