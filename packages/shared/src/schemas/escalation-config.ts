@@ -54,10 +54,32 @@ export type EscalationReferenceEvent = (typeof ESCALATION_REFERENCE_EVENTS)[numb
 /**
  * The actions of a rule (§7.5); only a `status_change` action moves the status
  * and only through a step of the transition table (WP-M14-40, §7.13, ADR-0025).
+ * The `offer` and the `assign` action distribute a ticket — they carry the
+ * target of the distribution (ADR-0026, §7.14).
  */
-export const ESCALATION_ACTION_TYPES = ['notify', 'webhook', 'history', 'status_change'] as const
+export const ESCALATION_ACTION_TYPES = [
+  'notify',
+  'webhook',
+  'history',
+  'status_change',
+  'offer',
+  'assign',
+] as const
 
 export type EscalationActionType = (typeof ESCALATION_ACTION_TYPES)[number]
+
+/**
+ * The target of an `offer` or an `assign` action (§7.14, ADR-0026): a readiness
+ * pool of the on-call calendar (`pool`) or a user group of the administration
+ * (`group`). The jsonb of the action carries no foreign key, so the
+ * configuration service checks the id against those rows.
+ */
+export const escalationTargetSchema = z.object({
+  kind: z.enum(['pool', 'group']),
+  id: z.uuid(),
+})
+
+export type EscalationTarget = z.infer<typeof escalationTargetSchema>
 
 /** The sources of a ticket (`PLAN.md` §6). */
 export const ESCALATION_SOURCES = ['QR', 'INTERNAL', 'API'] as const
@@ -331,6 +353,28 @@ export const escalationActionConfigSchema = z.discriminatedUnion('type', [
      * and the service checks the row itself (WP-M14-40b).
      */
     toStatus: ticketStatusKeySchema,
+    condition: escalationConditionSchema,
+  }),
+  z.object({
+    key: z.string().regex(keyPattern),
+    type: z.literal('offer'),
+    /**
+     * The pool of technicians the ticket is offered to (§7.14, ADR-0026) — a
+     * readiness pool or a user group. The offer performs the `offered` step of
+     * the transition table.
+     */
+    target: escalationTargetSchema,
+    condition: escalationConditionSchema,
+  }),
+  z.object({
+    key: z.string().regex(keyPattern),
+    type: z.literal('assign'),
+    /**
+     * The pool of technicians the ticket is assigned to (§7.14, ADR-0026) — a
+     * readiness pool or a user group. The assignment performs the `assigned`
+     * step of the transition table and records the technicians.
+     */
+    target: escalationTargetSchema,
     condition: escalationConditionSchema,
   }),
 ])

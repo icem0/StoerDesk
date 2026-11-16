@@ -1,7 +1,7 @@
 # WP-M14-81: the shared contracts of the offer and assign actions
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-80
 phase: 14
 milestone: m14
@@ -13,13 +13,13 @@ files-read:
 
 - packages/shared/src/schemas/escalation-config.ts (`ESCALATION_ACTION_TYPES`, `escalationActionConfigSchema`)
 - packages/shared/src/schemas/ticket.ts (`ticketStatusKeySchema` — the shape of a key)
-- packages/shared/src/index.ts (the exports of the package)
-- packages/shared/src/__tests__/escalation.test.ts
+- packages/shared/src/__tests__/escalation-config.test.ts
+- packages/shared/src/schemas/index.ts (the exports of the package)
 
 files-write:
 
 - packages/shared/src/schemas/escalation-config.ts
-- packages/shared/src/__tests__/escalation.test.ts
+- packages/shared/src/__tests__/escalation-config.test.ts
 
 interfaces:
 
@@ -38,9 +38,11 @@ interfaces:
 2. The contract rejects a target without a kind and without a uuid — the
    configuration service of WP-M14-83 checks that the target names an existing
    pool or group.
-3. `packages/shared/src/__tests__/escalation.test.ts`: the unit test proves that
-   a valid offer action parses, that a target without a kind or with a malformed
-   id is rejected and that the two new types are in the type list.
+3. `packages/shared/src/__tests__/escalation-config.test.ts`: the unit test proves
+   that a valid offer action with a pool target and an assign action with a
+   group target parse, that a target without a kind, with an unknown kind, with
+   no id and with a malformed id is rejected, and that the two new types are in
+   the type list.
 
 ## Non-goals
 
@@ -62,8 +64,10 @@ after it.
 
 ## Handoff
 
-- Files changed: the shared schema, the unit test
-- Interfaces added: `escalationTargetSchema`, the two action variants
-- Verified:
+- Files changed: the shared schema, the unit test, the repository bookkeeping
+- Interfaces added: `escalationTargetSchema`, `EscalationTarget`, the two action
+  variants of `escalationActionConfigSchema`
+- Verified: typecheck, ESLint, vitest (the shared suite), `i18n:check`,
+  `wp:check`
 - Follow-up WP: WP-M14-82 (the engine)
 - Open question: none

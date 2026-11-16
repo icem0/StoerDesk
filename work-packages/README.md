@@ -1319,7 +1319,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-76  | the office work-order route accepts the free text (out of band)          | done    | yes     |
 | WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | planned | yes     |
 | WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | done    | yes     |
-| WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | planned | yes     |
+| WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | done    | yes     |
 | WP-M14-82  | the engine offers and assigns a ticket (out of band)                      | planned | yes     |
 | WP-M14-83  | the configuration service knows the target of an action (out of band)      | planned | yes     |
 | WP-M14-84  | the administration offers and assigns (out of band)                        | planned | yes     |

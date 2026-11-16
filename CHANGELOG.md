@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The shared contracts of the offer and assign actions (WP-M14-81, out of band in
+  phase 14, ADR-0026): `ESCALATION_ACTION_TYPES` in
+  `packages/shared/src/schemas/escalation-config.ts` carries the two new types
+  `offer` and `assign` beside `notify`, `webhook`, `history` and
+  `status_change`, and the new union `escalationTargetSchema` describes the
+  target of a distribution — `{ kind: 'pool' | 'group', id }`, a readiness pool
+  of the on-call calendar or a user group of the administration. Both action
+  variants of `escalationActionConfigSchema` carry the target next to their
+  condition; a target without a kind, with an unknown kind, without an id or
+  with a malformed id is rejected. The unit test of
+  `packages/shared/src/__tests__/escalation-config.test.ts` proves the two
+  variants and the four rejections.
 - The offer and assign actions in the database (WP-M14-80, out of band in phase 14,
   ADR-0026): migration `0043_escalation_action_offer_assign.sql` drops the CHECK
   `escalation_actions_type_check` and recreates it with the two new action types

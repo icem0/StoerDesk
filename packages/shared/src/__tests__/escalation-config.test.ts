@@ -9,6 +9,7 @@ import {
   escalationConditionDepth,
   escalationConditionLeafCount,
   escalationConditionSchema,
+  escalationTargetSchema,
   evaluateEscalationCondition,
   validateEscalationStageChain,
   type EscalationCondition,
@@ -233,6 +234,62 @@ describe('the action contract', () => {
     })
 
     expect(result.success).toBe(false)
+  })
+})
+
+describe('the offer and assign actions', () => {
+  const poolTarget = { kind: 'pool', id: '0f5b9a4c-6c1e-4a51-9c1b-2f9d3f7a4b21' }
+  const groupTarget = { kind: 'group', id: '7c2b1d84-9a44-4e93-8b2a-1f6c5d0e9b33' }
+
+  it('carries the two new action types', () => {
+    expect(ESCALATION_ACTION_TYPES).toContain('offer')
+    expect(ESCALATION_ACTION_TYPES).toContain('assign')
+  })
+
+  it('accepts an offer action with a pool and an assign action with a group', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [
+        {
+          key: 'review',
+          stageKey: 'review',
+          reference: 'received_at',
+          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          percent: null,
+          condition: { all: [] },
+          actions: [
+            {
+              key: 'offer_the_pool',
+              type: 'offer',
+              target: poolTarget,
+              condition: { all: [] },
+            },
+            {
+              key: 'assign_the_group',
+              type: 'assign',
+              target: groupTarget,
+              condition: { all: [] },
+            },
+          ],
+          active: true,
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a target without a kind and one without an id', () => {
+    expect(
+      escalationTargetSchema.safeParse({ id: poolTarget.id }).success,
+    ).toBe(false)
+    expect(escalationTargetSchema.safeParse({ kind: 'pool' }).success).toBe(false)
+    expect(escalationTargetSchema.safeParse({ kind: 'team', id: poolTarget.id }).success).toBe(
+      false,
+    )
+    expect(escalationTargetSchema.safeParse({ kind: 'pool', id: 'not-a-uuid' }).success).toBe(
+      false,
+    )
   })
 })
 

@@ -2193,6 +2193,18 @@ technicians a ticket is assigned to (`specs/02-data-model.md` §4.13): the
 pool assignment of the `assign` action has no single owner.
 `apps/api/src/db/schema.ts` mirrors the CHECK and the new table, the journal
 reaches `0044`. WP-M14-81 … WP-M14-85 stay open in numeric order.
+**WP-M14-81 is implemented** (the shared contracts of the two new actions):
+`ESCALATION_ACTION_TYPES` of `packages/shared/src/schemas/escalation-config.ts`
+carries `offer` and `assign` beside the four existing types, and the new union
+`escalationTargetSchema` describes the target of a distribution —
+`{ kind: 'pool' | 'group', id }`, a readiness pool of the on-call calendar or a
+user group of the administration. Both action variants of
+`escalationActionConfigSchema` carry the target next to their condition; the
+jsonb of the action carries no foreign key, so the configuration service of
+WP-M14-83 validates the id against `oncall_pools` and `groups`. The unit test
+of `packages/shared/src/__tests__/escalation-config.test.ts` proves the two
+variants and the four rejections (no kind, an unknown kind, no id, a malformed
+id). WP-M14-82 … WP-M14-85 stay open in numeric order.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
