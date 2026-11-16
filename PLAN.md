@@ -2246,6 +2246,17 @@ the field paths — the rule of the `status_change` target — while a target th
 was removed after the installation stays accepted (the action then changes
 nothing). The config spec proves the round trip of a pool and a group target and
 the two unknown targets. WP-M14-84 … WP-M14-85 stay open in numeric order.
+**WP-M14-87 is implemented** (out of band in phase 14, requested by the office):
+the office reported that the readiness calendar knows only one label — the row of
+a shift in a day cell of `apps/web/src/features/oncall/readiness-calendar.tsx`
+named its technician or answered `oncall.readiness.unassigned` ("nicht besetzt")
+and the state and the pool of that shift stayed invisible in the `title` and in a
+screen-reader span (WP-M10-41). The row now names its state label
+(`oncall.admin.state.*`), its technician or `oncall.readiness.unassigned` and its
+pool name in visible text beside the coloured dot; the day cell may grow
+(`min-h-20`), the legend, the colour of the day and the label
+`oncall.readiness.unassigned` stay, no i18n key is added and the on-call API is
+untouched. The calendar test gains the case of an unstaffed `PLANNED` shift.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

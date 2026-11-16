@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   with the field paths, because the jsonb carries no foreign key. The config
   spec proves the round trip of a pool and a group target and the two unknown
   targets.
+- The readiness calendar names the state and the pool of every shift (WP-M14-87,
+  out of band in phase 14, requested by the office): the row of a shift in a day
+  cell of `apps/web/src/features/oncall/readiness-calendar.tsx` showed only its
+  technician or `oncall.readiness.unassigned` ("nicht besetzt") — WP-M10-41 had
+  moved the state and the pool of that shift into the cell's `title` and into a
+  screen-reader span, against WP-M10-33 and against the promise of
+  `docs/REPO-MAP.md`. The row now names its state label (`oncall.admin.state.*`),
+  its technician or `oncall.readiness.unassigned` and its pool name in visible
+  text beside the coloured dot; the day cell may grow (`min-h-20`) and the `title`
+  carries the same three labels. The legend, the colour of the day and the on-call
+  API stay unchanged, no i18n key is added. The calendar test gains the case of an
+  unstaffed `PLANNED` shift.
 - The offer names the responsible person and the distribution notifies the
   technicians (WP-M14-82b, the split child of WP-M14-82, out of band in phase
   14, ADR-0026): the `offered` step of `apps/api/src/tickets/workflow.ts` takes

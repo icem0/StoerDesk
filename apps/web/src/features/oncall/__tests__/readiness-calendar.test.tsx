@@ -99,8 +99,43 @@ describe('ReadinessCalendar', () => {
     const technician = await screen.findByText('Max Mustermann')
 
     expect(technician.closest('td')?.className).toContain('bg-emerald-500/15')
-    expect(screen.getByText('Bestätigt')).toBeDefined()
+    // the legend names the state and the row of the shift repeats it (WP-M14-87)
+    expect(screen.getAllByText('Bestätigt')).toHaveLength(2)
     expect(screen.getByText('Geplant')).toBeDefined()
     expect(screen.getByText('Unbesetzt')).toBeDefined()
+  })
+
+  it('names the state and the pool on the row of an unstaffed shift', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({
+        members: [
+          { id: memberId, givenName: 'Max', familyName: 'Mustermann', email: 'max@example.com' },
+        ],
+      })),
+    )
+
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        poolId,
+        userId: null,
+        state: 'PLANNED',
+        startsAt,
+        endsAt,
+        createdAt: startsAt,
+        updatedAt: startsAt,
+      },
+    ])
+
+    const row = screen.getByText('nicht besetzt')
+
+    expect(screen.getAllByText('Geplant')).toHaveLength(2)
+    expect(screen.getByText('Bereitschaft, Nord')).toBeDefined()
+    expect(row.closest('td')?.className).toContain('bg-amber-500/15')
   })
 })

@@ -355,7 +355,7 @@ export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] 
 
                         return (
                           <td
-                            className={`h-20 rounded border align-top ${cellStyle}`}
+                            className={`min-h-20 rounded border align-top ${cellStyle}`}
                             key={cell.iso}
                           >
                             <div className="flex h-full flex-col gap-1 p-1">
@@ -374,18 +374,19 @@ export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] 
 
                                     return (
                                       <li
-                                        className="flex items-center gap-1 text-[10px] leading-tight text-slate-300"
+                                        className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[10px] leading-tight text-slate-300"
                                         key={shift.id}
-                                        title={`${stateLabel} – ${poolName}`}
+                                        title={`${stateLabel} – ${poolName} – ${technician ?? t('readiness.unassigned')}`}
                                       >
                                         <span
                                           aria-hidden="true"
                                           className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${STATE_STYLE[shift.state].dot}`}
                                         />
+                                        <span className="font-medium text-slate-200">{stateLabel}</span>
                                         <span className="truncate">
                                           {technician ?? t('readiness.unassigned')}
                                         </span>
-                                        <span className="sr-only">{poolName}</span>
+                                        <span className="truncate text-slate-400">{poolName}</span>
                                       </li>
                                     )
                                   })}
