@@ -74,6 +74,27 @@ describe('NotificationsPage', () => {
     expect(screen.getByText(/Removing a connected account/i)).toBeTruthy()
   })
 
+  it('names the channel administration under the header and in the ntfy fallback', async () => {
+    vi.stubGlobal('fetch', stubTelegramFlow())
+
+    renderPage()
+
+    const administrationLinks = screen.queryAllByRole('link', {
+      name: 'Kanal-Administration (Administration → Channels)',
+    })
+    expect(administrationLinks).toHaveLength(2)
+
+    for (const link of administrationLinks) {
+      expect(link.getAttribute('href')).toBe('/admin/channels')
+    }
+
+    expect(
+      await screen.findByText(
+        'The configuration of the channels itself, the write-only secrets and the test message live in the Kanal-Administration.'
+      )
+    ).toBeTruthy()
+  })
+
   it('shows the linked account after the code is submitted', async () => {
     const fetchMock = stubTelegramFlow()
     vi.stubGlobal('fetch', fetchMock)

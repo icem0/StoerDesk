@@ -248,7 +248,11 @@ promises a delivery that cannot happen.
 - `/settings/notifications` — the own channels: the linked accounts (Telegram,
   Matrix, ntfy, WhatsApp Web), the subscription QR of ntfy and the selection of
   the channels per event type, the seven event types of §11.4 (ADR-0021).
-- Both pages are entries of the settings menu (§14 of `PLAN.md`).
+- Both pages are entries of the settings menu (§14 of `PLAN.md`). Each page links
+  to the other exactly once: the administration names the own page
+  (`admin.channels.verification.personalLink`, WP-M14-48) and the own page names
+  the administration (`notifications.administration.link`, WP-M14-54) — the link
+  carries no permission check and the two layers stay apart.
 
 ## 11.13 The security
 

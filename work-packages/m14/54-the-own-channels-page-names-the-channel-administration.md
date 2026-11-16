@@ -1,7 +1,7 @@
 # WP-M14-54: The own channels page names the administration of the channels
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-10, WP-M14-17, WP-M14-48
 phase: 14
 milestone: m14
@@ -78,6 +78,7 @@ own page carried no link to the administration.
 - Files changed: `notifications-page.tsx`, `de`/`en` `common.json`, the page test,
   `specs/10-notifications.md` §11.12 and this WP document.
 - Interfaces added: the two i18n keys and the `Link` to `/admin/channels`.
-- Verified: —
+- Verified: `npm run check` green (typecheck, ESLint, vitest, i18n:check, wp:check,
+  e2e-check); the new page test asserts both links and the translated label.
 - Follow-up WP: none.
 - Open question: none.

@@ -47,8 +47,11 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
  * types of §11.4 as their own rows with one checkbox per configured channel; a user without
  * a saved row for a readiness event sees "the channels of the instance" (the fallback of
  * §11.4) and a channel that is not configured is not offered; the settings namespace keys
- * `settings.notifications.events.oncall.*` (de and en) carry the labels of the block.
- */
+  * `settings.notifications.events.oncall.*` (de and en) carry the labels of the block.
+  * The administration link (WP-M14-54) names `/admin/channels` under the header hint and
+  * in the ntfy fallback line: the configuration of the channels itself, the write-only
+  * secrets and the test message live there — the link is text only, it never fetches.
+  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
@@ -305,6 +308,12 @@ export function NotificationsPage() {
       <div className="mt-2 flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">{t('notifications.title')}</h1>
         <p className="text-sm text-slate-400">{t('notifications.hint')}</p>
+        <Link
+          className="mt-1 inline-block text-xs text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/channels"
+        >
+          {t('notifications.administration.link')}
+        </Link>
       </div>
 
       <ul className="mt-6 grid gap-2 sm:grid-cols-2">
@@ -559,6 +568,16 @@ export function NotificationsPage() {
           {ntfySubscription.isPending ? (
             <p className="text-sm text-slate-400">{t('auth.loading')}</p>
           ) : null}
+
+          <p className="mt-2 text-sm text-slate-400">
+            {t('notifications.administration.hint')}
+            <Link
+              className="ml-2 text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              to="/admin/channels"
+            >
+              {t('notifications.administration.link')}
+            </Link>
+          </p>
         </section>
       )}
 

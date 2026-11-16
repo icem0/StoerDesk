@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The own channels page names the channel administration (WP-M14-54, out of band
+  in phase 14, requested by the office): the office asked where the channels behind
+  `Settings → Benachrichtigungen` are set — the page reads `GET /v1/admin/channels`
+  but only offered a back link to `/settings`, while the administration already
+  links to the own page (`admin.channels.verification.personalLink`, WP-M14-48).
+  `apps/web/src/settings/notifications-page.tsx` renders one `Link` to
+  `/admin/channels` under the header hint with the label `notifications.administration.link`
+  (text only, no permission check, no extra fetch) and the ntfy fallback branch
+  (no QR because the instance has no target) names the destination as a second
+  line with the same link and the hint `notifications.administration.hint`. The two
+  i18n keys are added to `de` and `en` of `apps/web/src/i18n/locales/*/common.json`
+  (`Kanal-Administration (Administration → Channels)` / `Channel administration
+  (Administration → Channels)`); the pages are not merged — the administration keeps
+  the secrets, the test send and the minimum channels behind `notification.write`
+  (`PLAN.md` §17 layer rule) — and `specs/10-notifications.md` §11.12 records the
+  one-page-per-direction cross-link. `apps/web/src/settings/__tests__/notifications-page.test.tsx`
+  asserts both links with `href="/admin/channels"` and the translated label. No API,
+  route, schema or permission change.
 - Escalation rules can speak the time of the day (WP-M14-41, the last layer of the
   configurable-workflow chain): the condition leaf `time_of_day` is added to
   `escalationConditionLeafSchema` in `packages/shared/src/schemas/escalation-config.ts`

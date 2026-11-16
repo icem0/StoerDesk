@@ -879,7 +879,20 @@ row and its semantics, the label `admin.escalation.condition.fields.time_of_day`
 field of the condition builder localized and `packages/shared/src/__tests__/escalation.test.ts` proves
 the match inside and outside an interval, the midnight transition, the array of intervals, an
 impossible interval and a malformed leaf. No route, database or migration change — a rule already
-stores its condition as `condition_json`. WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+stores its condition as `condition_json`. **WP-M14-54 is implemented** (the own
+channels page names the channel administration, out of band in phase 14):
+`apps/web/src/settings/notifications-page.tsx` renders one `Link` to
+`/admin/channels` under the header hint with the label
+`notifications.administration.link` — text only, no permission check, no extra
+fetch — and the ntfy fallback branch (no QR because the instance has no target)
+names the destination as a second line with the same link and the hint
+`notifications.administration.hint`; `de` and `en` of `apps/web/src/i18n/locales/*/common.json`
+gain the two keys (`Kanal-Administration (Administration → Channels)` /
+`Channel administration (Administration → Channels)`), `specs/10-notifications.md`
+§11.12 records the one-page-per-direction cross-link next to the `personalLink`
+of WP-M14-48, and `apps/web/src/settings/__tests__/notifications-page.test.tsx`
+asserts both links and the translated label. `apps/web/src/admin/channels-page.tsx`
+is untouched — its link exists already. WP-M14-70 … WP-M14-72 stay open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

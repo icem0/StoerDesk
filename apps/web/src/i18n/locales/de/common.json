@@ -119,6 +119,10 @@
   "notifications": {
     "title": "Your channels",
     "hint": "The channels with the state of the account connected for the signed-in user.",
+    "administration": {
+      "hint": "The configuration of the channels itself, the write-only secrets and the test message live in the Kanal-Administration.",
+      "link": "Kanal-Administration (Administration → Channels)"
+    },
     "kinds": {
       "signal": "Signal",
       "matrix": "Matrix",

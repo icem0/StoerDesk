@@ -716,7 +716,21 @@ the unit tests and falls back to the current wall clock when the engine does not
 from the shared contract, so the new field stays localized) and `packages/shared/src/__tests__/escalation.test.ts`
 proves the match inside and outside an interval, the midnight transition, the array of intervals, an impossible
 interval and a malformed leaf. No route, database or migration change — a rule already stores its condition as
-`condition_json`. WP-M14-54 and WP-M14-70 … WP-M14-72 stay open in numeric order.
+`condition_json`. **WP-M14-54 is implemented** (out of band in phase 14, requested
+by the office): the own channels page `apps/web/src/settings/notifications-page.tsx`
+renders one `Link` to `/admin/channels` under the header hint with the label
+`notifications.administration.link` — text only, no permission check, no extra
+fetch — and the ntfy fallback branch (no QR because the instance has no target)
+names the destination as a second line with the hint
+`notifications.administration.hint` and the same link. `de` and `en` `common.json`
+gain the two keys (`Kanal-Administration (Administration → Channels)` /
+`Channel administration (Administration → Channels)`), `specs/10-notifications.md`
+§11.12 records that each page links to the other exactly once (the symmetric
+counterpart of the `personalLink` of WP-M14-48) and `apps/web/src/settings/__tests__/notifications-page.test.tsx`
+asserts both links with `href="/admin/channels"` and the translated label. The two
+pages stay apart (the administration keeps the secrets, the test send and the
+minimum channels behind `notification.write`) and `apps/web/src/admin/channels-page.tsx`
+is untouched. WP-M14-70 … WP-M14-72 stay open in numeric order.
 
 ## Open follow-ups
 
@@ -1162,7 +1176,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-51  | the ntfy access token reaches every send (out of band)                    | done    | yes     |
 | WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | done    | yes     |
 | WP-M14-53  | the ntfy request carries a timeout (out of band)                          | done    | yes     |
-| WP-M14-54  | the own channels page links to the channel administration (out of band)   | planned | yes     |
+| WP-M14-54  | the own channels page links to the channel administration (out of band)   | done    | yes     |
 | WP-M14-55  | the test send and the verification request carry a JSON body (out of band) | done    | yes     |
 | WP-M14-56  | a rejected test request names its status and code (out of band)          | done    | yes     |
 | WP-M14-57  | the copied ntfy curl is one shell command (out of band)                  | done    | yes     |
