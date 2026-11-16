@@ -479,12 +479,18 @@
       "cancelReason": "Stornierungsgrund (mind. 5 Zeichen):",
       "uncancelReason": "Grund für Aufhebung (mind. 5 Zeichen):",
       "deleteConfirm": "Diesen Vorgang endgültig löschen? Alle Fotos und der Verlauf werden unwiderruflich entfernt.",
-      "acknowledgeResult": "Ergebnis (fixed, partially_fixed, follow_up_required, no_fault_found):",
+      "acknowledgeResult": "Ergebnis wählen…",
       "acknowledgeNote": "Notiz (optional):",
       "commentText": "Kommentartext:",
       "closeComment": "Kommentar beim Abschluss (optional):",
       "detectedErrors": "Festgestellte Fehler (optional, mehrere möglich):",
       "deleteConfirmNumber": "Ticketnumber for confirmation:"
+    },
+    "acknowledgeResult": {
+      "fixed": "Behoben",
+      "partially_fixed": "Teilweise behoben",
+      "follow_up_required": "Nacharbeit erforderlich",
+      "no_fault_found": "Kein Fehler gefunden"
     }
   },
   "pdf": {

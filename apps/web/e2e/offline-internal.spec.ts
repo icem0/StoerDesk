@@ -204,7 +204,7 @@ for (const language of ['de', 'en'] as const) {
     // acknowledge cannot reach the server and is queued instead.
     await page.getByTestId('ticket-escalation-stage').selectOption('acknowledged')
     await page.context().setOffline(true)
-    await page.locator('input[name="acknowledgeResult"]').fill('fixed')
+    await page.locator('select[name="acknowledgeResult"]').selectOption('fixed')
     await page.getByRole('button', { name: texts.confirm }).click()
 
     // The queued notice proves the write was persisted locally instead of being sent.
@@ -259,7 +259,7 @@ for (const language of ['de', 'en'] as const) {
     // button and the result field are addressed right below it.
     await page.getByTestId('ticket-escalation-stage').selectOption('acknowledged')
     await page.context().setOffline(true)
-    await page.locator('input[name="acknowledgeResult"]').fill('fixed')
+    await page.locator('select[name="acknowledgeResult"]').selectOption('fixed')
     await page.getByRole('button', { name: texts.confirm }).click()
 
     // Cancel through the API while the page is offline: API requests leave the

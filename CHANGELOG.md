@@ -589,6 +589,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decision of the phase.
 
 ### Fixed
+- The acknowledge result is a selection (WP-M14-86, the follow-up of WP-M14-78):
+  the acknowledge panel of the ticket view asked the result as a free text input
+  whose placeholder listed the four values of the API (`fixed`,
+  `partially_fixed`, `follow_up_required`, `no_fault_found`). A typo, a
+  translation or a capital letter answered `400 invalid_request`, so the
+  acknowledgement failed. The panel offers the four values as a `<select>` now,
+  with a label per value (`detail.acknowledgeResult.*`) and the confirm button
+  disabled until one is chosen.
 - The offered stages come from the transition table (WP-M14-78): the ticket view
   offered a stage whose step the engine rejected (`409 invalid_transition`)
   whenever the administration had edited the rows of `ticket_transitions`,

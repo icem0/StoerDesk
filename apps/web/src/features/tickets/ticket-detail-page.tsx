@@ -100,6 +100,18 @@ const ACTION_LABELS: Record<string, string> = {
   acknowledged: 'detail.action.acknowledge',
 }
 
+/**
+ * The four results of the acknowledge step, in the order of the API contract
+ * (`ACK_RESULT` of `apps/api/src/tickets/workflow-routes.ts`, PLAN.md §7). The
+ * panel offers them as a selection, so the office cannot mistype the value.
+ */
+const ACKNOWLEDGE_RESULTS = [
+  'fixed',
+  'partially_fixed',
+  'follow_up_required',
+  'no_fault_found',
+] as const
+
 export function TicketDetailPage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
@@ -486,13 +498,20 @@ export function TicketDetailPage() {
         const missing = result === ''
         return (
           <div className="flex flex-wrap gap-2 items-end">
-            <input
+            <select
               className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
               name="acknowledgeResult"
-              placeholder={t('detail.prompt.acknowledgeResult')}
+              aria-label={t('detail.prompt.acknowledgeResult')}
               value={fields.acknowledgeResult ?? ''}
               onChange={(event) => setFields({ ...fields, acknowledgeResult: event.target.value })}
-            />
+            >
+              <option value="">{t('detail.prompt.acknowledgeResult')}</option>
+              {ACKNOWLEDGE_RESULTS.map((value) => (
+                <option key={value} value={value}>
+                  {t(`detail.acknowledgeResult.${value}`)}
+                </option>
+              ))}
+            </select>
             <input
               className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
               name="acknowledgeNote"

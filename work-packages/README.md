@@ -848,7 +848,12 @@ the table — the consequence ADR-0025 announced for WP-M14-40 and WP-M14-41.
 offered while one of its `reached_by` events is an **active** row whose
 `from_status` is the current status, and the stage chain names the event keys of
 the table. The code map has no reader left and is removed, so a single source of
-truth remains.
+truth remains. **WP-M14-86** closes the second half of the same report: the
+acknowledge panel asked its result as free text whose placeholder listed the raw
+values of the API (`fixed`, `partially_fixed`, …), so a typo answered
+`400 invalid_request`. The panel offers the four values as a selection now, with
+a label per value (`detail.acknowledgeResult.*`) and the confirm button disabled
+until one is chosen.
 
 **The escalation offers and assigns tickets (WP-M14-79 … WP-M14-85, out of band
 in phase 14, requested by the office).** The office asked for two more actions
@@ -1351,6 +1356,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-83  | the configuration service knows the target of an action (out of band)      | planned | yes     |
 | WP-M14-84  | the administration offers and assigns (out of band)                        | planned | yes     |
 | WP-M14-85  | the ticket view names the assignees (out of band)                          | planned | yes     |
+| WP-M14-86  | the acknowledge result is a selection (follow-up of 78)                    | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
