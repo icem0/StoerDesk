@@ -2179,6 +2179,20 @@ configuration service — a target that names no pool and no group answers
 their kind and target select) and **WP-M14-85** (the ticket view names the
 assignees). The numbers WP-M14-77 and WP-M14-78 belong to the announced
 follow-ups of WP-M14-76 and stay untouched by this series.
+**WP-M14-80 is implemented** (the database layer of the two new actions):
+migration `0043_escalation_action_offer_assign.sql` drops the CHECK
+`escalation_actions_type_check` and recreates it with the two new types
+`offer` and `assign` — the same widening as WP-M14-40, without touching a row of
+an installed database; the target of such an action lives in the `config` jsonb
+(`{ target: { kind, id } }`), so no column is added. Migration
+`0044_ticket_assignees.sql` adds the table `ticket_assignees` — `ticket_id` and
+`user_id` as foreign keys with `ON DELETE cascade`, the primary key over
+`(ticket_id, user_id)` and the index over `user_id` — the many-to-many of the
+technicians a ticket is assigned to (`specs/02-data-model.md` §4.13): the
+`tickets.assigned_user_id` of a single assignment keeps its meaning, and the
+pool assignment of the `assign` action has no single owner.
+`apps/api/src/db/schema.ts` mirrors the CHECK and the new table, the journal
+reaches `0044`. WP-M14-81 … WP-M14-85 stay open in numeric order.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

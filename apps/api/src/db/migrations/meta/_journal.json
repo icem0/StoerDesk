@@ -302,6 +302,20 @@
       "when": 1794362400000,
       "tag": "0042_escalation_action_status_change",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794448800000,
+      "tag": "0043_escalation_action_offer_assign",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794535200000,
+      "tag": "0044_ticket_assignees",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The offer and assign actions in the database (WP-M14-80, out of band in phase 14,
+  ADR-0026): migration `0043_escalation_action_offer_assign.sql` drops the CHECK
+  `escalation_actions_type_check` and recreates it with the two new action types
+  `offer` and `assign` — the same widening as WP-M14-40, without touching a row
+  of an installed database. The target of such an action lives in the `config`
+  jsonb (`{ target: { kind, id } }`): a readiness pool of the on-call calendar or
+  a user group of the administration, so no column is added. Migration
+  `0044_ticket_assignees.sql` adds the table `ticket_assignees` — the
+  many-to-many of the technicians a ticket is assigned to, with `ticket_id` and
+  `user_id` as foreign keys (`ON DELETE cascade`), the primary key over
+  `(ticket_id, user_id)` and the index over `user_id`
+  (`specs/02-data-model.md` §4.13). `apps/api/src/db/schema.ts` mirrors the CHECK
+  and the new table, the journal reaches `0044`.
 - The escalation may offer and assign a ticket (WP-M14-79, out of band in phase 14,
   requested by the office; spec and decision, no product code): ADR-0026 decides
   that a rule of the escalation configuration carries two more action types

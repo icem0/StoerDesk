@@ -1,7 +1,7 @@
 # WP-M14-80: the offer and assign actions in the database
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-79
 phase: 14
 milestone: m14
@@ -63,9 +63,12 @@ existing database specs stay green.
 
 ## Handoff
 
-- Files changed: the two migrations, the journal, the schema mirror
+- Files changed: the two migrations, the journal, the schema mirror, the
+  repository bookkeeping
 - Interfaces added: the action types `offer` and `assign`, the table
   `ticket_assignees`
-- Verified:
+- Verified: typecheck, ESLint, vitest (1305 passed, 2 skipped — the database
+  specs migrate a throwaway database and prove the two migrations),
+  `i18n:check`, `wp:check` (488 packages)
 - Follow-up WP: WP-M14-81 (the shared contracts)
 - Open question: none
