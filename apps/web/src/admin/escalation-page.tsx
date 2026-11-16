@@ -91,6 +91,24 @@ function useStatuses() {
   })
 }
 
+/** The readiness pools a distribution target can name (§7.14, WP-M14-84). */
+function usePoolTargets() {
+  return useQuery({
+    queryKey: ['escalation-pools'],
+    queryFn: () => apiFetch<{ pools: { id: string; name: string }[] }>('/v1/oncall/pools'),
+    retry: false,
+  })
+}
+
+/** The user groups a distribution target can name (§7.14, WP-M14-84). */
+function useGroupTargets() {
+  return useQuery({
+    queryKey: ['escalation-groups'],
+    queryFn: () => apiFetch<{ groups: { id: string; name: string }[] }>('/v1/groups'),
+    retry: false,
+  })
+}
+
 export function EscalationPage() {
   const { t, i18n } = useTranslation('settings')
   const settingsQuery = useDeadlineSettings()
@@ -98,6 +116,8 @@ export function EscalationPage() {
   const channelsQuery = useChannelNames()
   const webhooksQuery = useWebhookIds()
   const statusesQuery = useStatuses()
+  const poolsQuery = usePoolTargets()
+  const groupsQuery = useGroupTargets()
   const canWrite = usePermission('settings.write')
 
   const [tab, setTab] = useState('fristen')
@@ -163,6 +183,13 @@ export function EscalationPage() {
   }
 
   const statusKeys = (statusesQuery.data?.statuses ?? []).filter((status) => status.active).map((status) => status.key)
+
+  const poolTargets = (poolsQuery.data?.pools ?? [])
+    .filter((pool) => pool.name.trim() !== '')
+    .map((pool) => ({ id: pool.id, name: pool.name }))
+  const groupTargets = (groupsQuery.data?.groups ?? [])
+    .filter((group) => group.name.trim() !== '')
+    .map((group) => ({ id: group.id, name: group.name }))
 
   const rulesOfStage = (key: string) =>
     config.rules.filter((rule) => rule.stageKey === key)
@@ -388,6 +415,8 @@ export function EscalationPage() {
                         channels={channelsQuery.data?.channels ?? []}
                         endpointIds={(webhooksQuery.data?.webhooks ?? []).map((entry) => entry.id)}
                         statuses={statusKeys}
+                        pools={poolTargets}
+                        groups={groupTargets}
                         stageNames={stageLabels}
                         onSave={(next) =>
                           void saveRules.mutate({
@@ -574,6 +603,8 @@ function RuleForm({
   channels,
   endpointIds,
   statuses,
+  pools,
+  groups,
   stageNames,
   onSave,
 }: {
@@ -582,6 +613,8 @@ function RuleForm({
   channels: string[]
   endpointIds: string[]
   statuses: string[]
+  pools: { id: string; name: string }[]
+  groups: { id: string; name: string }[]
   stageNames: Record<string, string>
   onSave: (next: EscalationRuleConfig) => void
 }) {
@@ -681,6 +714,8 @@ function RuleForm({
         channels={channels}
         endpointIds={endpointIds}
         statuses={statuses}
+        pools={pools}
+        groups={groups}
         canWrite={canWrite}
         onActions={(next) => apply({ ...rule, actions: next })}
       />

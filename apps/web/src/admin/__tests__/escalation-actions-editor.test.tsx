@@ -9,6 +9,8 @@ import { i18n } from '../../i18n'
 import { EscalationPage } from '../escalation-page'
 
 const ENDPOINT_ID = '6f1d2c3b-4444-4a44-9444-444444444444'
+const POOL_ID = '7a1b2c3d-5555-4a55-9555-555555555555'
+const GROUP_ID = '8b2c3d4e-6666-4b66-9666-666666666666'
 
 const NOTIFY_ACTION = {
   key: 'notify_office',
@@ -59,6 +61,24 @@ function renderPage(permissions: string[]) {
 
     if (path.includes('/v1/webhooks')) {
       return Response.json({ webhooks: [{ id: ENDPOINT_ID }] })
+    }
+
+    if (path.includes('/v1/oncall/pools')) {
+      return Response.json({
+        pools: [
+          { id: POOL_ID, name: 'Bereitschaft Alpha', groupId: null, active: true, shiftCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+          { id: '00000000-0000-4000-8000-000000000000', name: '  ', groupId: null, active: true, shiftCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+        ],
+      })
+    }
+
+    if (path.includes('/v1/groups')) {
+      return Response.json({
+        groups: [
+          { id: GROUP_ID, name: 'Verteilergruppe', userCount: 0 },
+          { id: '00000000-0000-4000-8000-000000000001', name: '', userCount: 0 },
+        ],
+      })
     }
 
     if (path.includes('/v1/admin/statuses')) {
@@ -165,6 +185,82 @@ describe('the action editor of the escalation page', () => {
     await waitFor(() => expect(saved).toHaveLength(0))
     expect(
       escalationActionConfigSchema.safeParse({ key: NOTIFY_ACTION.key, type: 'status_change', toStatus: '', condition: { all: [] } }).success,
+    ).toBe(false)
+  })
+
+  it('offers the ticket to a readiness pool and saves its target', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'offer' } })
+
+    const kindSelect = screen.getByTestId('escalation-action-target-kind') as unknown as HTMLSelectElement
+    expect(Array.from(kindSelect.options).map((option) => (option as { value: string }).value)).toEqual(['pool', 'group'])
+
+    const targetSelect = screen.getByTestId('escalation-action-target') as unknown as HTMLSelectElement
+    const offered = Array.from(targetSelect.options).map((option) => (option as { value: string }).value)
+    expect(offered).toEqual(['', POOL_ID])
+    fireEvent.change(targetSelect, { target: { value: POOL_ID } })
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'offer',
+        target: { kind: 'pool', id: POOL_ID },
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('assigns the ticket to a user group and saves its target', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'assign' } })
+
+    const kindSelect = screen.getByTestId('escalation-action-target-kind') as unknown as HTMLSelectElement
+    fireEvent.change(kindSelect, { target: { value: 'group' } })
+
+    const targetSelect = screen.getByTestId('escalation-action-target') as unknown as HTMLSelectElement
+    fireEvent.change(targetSelect, { target: { value: GROUP_ID } })
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'assign',
+        target: { kind: 'group', id: GROUP_ID },
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('refuses an offer action without a target', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'offer' } })
+
+    await waitFor(() => expect(saved).toHaveLength(0))
+    expect(
+      escalationActionConfigSchema.safeParse({ key: NOTIFY_ACTION.key, type: 'offer', target: { kind: 'pool', id: '' }, condition: { all: [] } }).success,
     ).toBe(false)
   })
 

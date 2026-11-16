@@ -390,8 +390,10 @@
         "types": {
           "notify": "Notification",
           "webhook": "Webhook",
-          "history": "History note",
-          "status_change": "Status change"
+          "history": "Note",
+          "status_change": "Status change",
+          "offer": "Offer ticket",
+          "assign": "Assign ticket"
         },
         "key": "Key",
         "channels": "Channels",
@@ -406,6 +408,13 @@
         "endpoints": "Webhooks",
         "text": "Note",
         "statusTarget": "Target status",
+        "targetKind": "Target kind",
+        "targetKinds": {
+          "pool": "Readiness pool",
+          "group": "User group"
+        },
+        "target": "Target",
+        "targetEmpty": "no target chosen",
         "add": "Add action",
         "remove": "Remove"
       },

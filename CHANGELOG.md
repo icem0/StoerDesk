@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The administration offers and assigns (WP-M14-84, out of band in phase 14,
+  ADR-0026): the escalation page reads the readiness pools over
+  `GET /api/v1/oncall/pools` and the user groups over `GET /api/v1/groups` and
+  passes them into the action editor; the type select of the editor offers
+  `offer` and `assign` and both render a kind select (`pool` or `group`) and a
+  target select over the pools or the groups of that kind — a pool or a group
+  without a name is not offered. `shapeOf` and `actionOf` carry the target and
+  an action without a target is rejected by the shared schema, so it is never
+  saved. The labels `admin.escalation.action.types.offer`,
+  `admin.escalation.action.types.assign`, `admin.escalation.action.target`,
+  `admin.escalation.action.targetKind`, `admin.escalation.action.targetKinds.*`
+  and `admin.escalation.action.targetEmpty` exist in `de` and `en`. The page
+  test proves the pool offer, the group assignment with its kind select and the
+  offer without a target.
 - The configuration service knows the target of an action (WP-M14-83, out of
   band in phase 14, ADR-0026): `actionConfig()` of
   `apps/api/src/escalation/config.ts` writes the target of an `offer` or an

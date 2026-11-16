@@ -391,7 +391,9 @@
           "notify": "Benachrichtigung",
           "webhook": "Webhook",
           "history": "Notiz",
-          "status_change": "Status change"
+          "status_change": "Status change",
+          "offer": "Ticket anbieten",
+          "assign": "Ticket zuweisen"
         },
         "key": "Schlüssel",
         "channels": "Kanäle",
@@ -406,6 +408,13 @@
         "endpoints": "Webhook-Endpunkte",
         "text": "Text",
         "statusTarget": "Ziel-Status",
+        "targetKind": "Ziel-Form",
+        "targetKinds": {
+          "pool": "Bereitschaftspool",
+          "group": "Benutzergruppe"
+        },
+        "target": "Ziel",
+        "targetEmpty": "kein Ziel gewählt",
         "add": "Aktion hinzufügen",
         "remove": "Aktion entfernen"
       },

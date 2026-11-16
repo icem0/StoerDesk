@@ -1,7 +1,7 @@
 # WP-M14-84: the administration offers and assigns
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-83
 phase: 14
 milestone: m14
@@ -66,9 +66,16 @@ action whose target comes from the pools or the groups of the installation.
 
 ## Handoff
 
-- Files changed: the action editor, the escalation page, the page test, the two
-  locale files
-- Interfaces added: the two action types in the editor with their target select
-- Verified:
+- Files changed: `apps/web/src/admin/escalation-action-editor.tsx` (target select
+  over pools and groups, kind select, `shapeOf`/`actionOf` carry the target),
+  `apps/web/src/admin/escalation-page.tsx` (the pool and group queries),
+  `apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx`,
+  `apps/web/src/i18n/locales/de/settings.json` and
+  `apps/web/src/i18n/locales/en/settings.json`
+- Interfaces added: the two action types in the editor with their kind and
+  target select
+- Verified: typecheck, ESLint, vitest (the page test 8/8 — the pool offer, the
+  group assignment with the kind select, the offer without a target refused),
+  `i18n:check`, `wp:check`
 - Follow-up WP: WP-M14-85 (the assignees in the ticket view)
 - Open question: none

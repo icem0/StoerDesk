@@ -28,6 +28,8 @@ type ActionShape = {
   endpointIds?: string[]
   text?: string
   toStatus?: string
+  targetKind?: 'pool' | 'group'
+  targetId?: string
   condition: unknown
 }
 
@@ -55,6 +57,8 @@ function shapeOf(action: EscalationActionConfig): ActionShape {
     endpointIds: 'endpointIds' in action ? action.endpointIds : [],
     text: 'text' in action ? action.text : '',
     toStatus: 'toStatus' in action ? action.toStatus : '',
+    targetKind: 'target' in action ? action.target.kind : 'pool',
+    targetId: 'target' in action ? action.target.id : '',
     condition: action.condition,
   }
 }
@@ -89,6 +93,15 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
     } as unknown as EscalationActionConfig
   }
 
+  if (shape.type === 'offer' || shape.type === 'assign') {
+    return {
+      key: shape.key,
+      type: shape.type,
+      target: { kind: shape.targetKind ?? 'pool', id: shape.targetId ?? '' },
+      condition,
+    } as unknown as EscalationActionConfig
+  }
+
   return {
     key: shape.key,
     type: 'notify',
@@ -102,6 +115,8 @@ export function EscalationActionEditor({
   channels,
   endpointIds,
   statuses,
+  pools,
+  groups,
   canWrite,
   onActions,
 }: {
@@ -109,6 +124,8 @@ export function EscalationActionEditor({
   channels: string[]
   endpointIds: string[]
   statuses: string[]
+  pools: { id: string; name: string }[]
+  groups: { id: string; name: string }[]
   canWrite: boolean
   onActions: (next: EscalationActionConfig[]) => void
 }) {
@@ -119,6 +136,10 @@ export function EscalationActionEditor({
   function publish(next: ActionShape[]) {
     setActions(next)
     onActions(next.map(actionOf))
+  }
+
+  function targetsOf(action: ActionShape): { id: string; name: string }[] {
+    return action.targetKind === 'group' ? groups : pools
   }
 
   return (
@@ -303,6 +324,60 @@ export function EscalationActionEditor({
                     ))}
                   </select>
                 </label>
+              ) : null}
+
+              {action.type === 'offer' || action.type === 'assign' ? (
+                <>
+                  <label className="text-xs text-slate-400">
+                    {t('admin.escalation.action.targetKind')}
+                    <select
+                      data-testid="escalation-action-target-kind"
+                      className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      disabled={!canWrite}
+                      value={action.targetKind ?? 'pool'}
+                      onChange={(event) => {
+                        const kind = event.target.value === 'group' ? 'group' : 'pool'
+
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index
+                              ? { ...entry, targetKind: kind, targetId: '' }
+                              : entry,
+                          ),
+                        )
+                      }}
+                    >
+                      <option value="pool">{t('admin.escalation.action.targetKinds.pool')}</option>
+                      <option value="group">{t('admin.escalation.action.targetKinds.group')}</option>
+                    </select>
+                  </label>
+
+                  <label className="text-xs text-slate-400">
+                    {t('admin.escalation.action.target')}
+                    <select
+                      data-testid="escalation-action-target"
+                      className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      disabled={!canWrite}
+                      value={action.targetId ?? ''}
+                      onChange={(event) => {
+                        const targetId = event.target.value
+
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index ? { ...entry, targetId } : entry,
+                          ),
+                        )
+                      }}
+                    >
+                      <option value="">{t('admin.escalation.action.targetEmpty')}</option>
+                      {targetsOf(action).map((target) => (
+                        <option key={target.id} value={target.id}>
+                          {target.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
               ) : null}
             </div>
 

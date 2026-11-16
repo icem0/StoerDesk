@@ -2245,7 +2245,20 @@ carries no foreign key, the service checks the id against `oncall_pools`
 the field paths — the rule of the `status_change` target — while a target that
 was removed after the installation stays accepted (the action then changes
 nothing). The config spec proves the round trip of a pool and a group target and
-the two unknown targets. WP-M14-84 … WP-M14-85 stay open in numeric order.
+the two unknown targets. **WP-M14-84 is implemented** (the administration of the
+two actions): the escalation page reads the readiness pools over
+`GET /api/v1/oncall/pools` and the user groups over `GET /api/v1/groups` as TanStack
+queries and passes them into the action editor; the editor's type select now
+offers `offer` and `assign` and both render a kind select (`pool` or `group`)
+and a target select over the pools or the groups of that kind — a pool or a
+group without a name is not offered. `shapeOf` and `actionOf` carry the target,
+and an action without a target is rejected by the shared schema, so it is never
+saved. The labels `admin.escalation.action.types.offer`,
+`admin.escalation.action.types.assign`, `admin.escalation.action.target`,
+`admin.escalation.action.targetKind`, `admin.escalation.action.targetKinds.*`
+and `admin.escalation.action.targetEmpty` exist in `de` and `en`. The page test
+proves the pool offer, the group assignment with its kind select and the offer
+without a target. WP-M14-85 stays open in numeric order.
 **WP-M14-87 is implemented** (out of band in phase 14, requested by the office):
 the office reported that the readiness calendar knows only one label — the row of
 a shift in a day cell of `apps/web/src/features/oncall/readiness-calendar.tsx`
