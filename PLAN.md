@@ -2270,6 +2270,15 @@ pool name in visible text beside the coloured dot; the day cell may grow
 (`min-h-20`), the legend, the colour of the day and the label
 `oncall.readiness.unassigned` stay, no i18n key is added and the on-call API is
 untouched. The calendar test gains the case of an unstaffed `PLANNED` shift.
+**WP-M14-85 is implemented** (the ticket view names the assignees): the answer
+of `GET /api/v1/tickets/:ticketNo` carries `assignees` — a list of `{ id, name }`
+of the rows of `ticket_assignees` (§4.13, ADR-0026; `packages/shared/src/schemas/ticket.ts`
+and `apps/api/src/tickets/detail.ts`), name only, no contact value. The ticket
+view in `apps/web/src/features/tickets/ticket-detail-page.tsx` shows the
+technicians below the status under the label `detail.assignees.title`
+(`Zuweisen` in `de`, `assigned technicians` in `en`) — a ticket without
+assignees shows nothing. The split child **WP-M14-85b** (the page test proves
+the assignees and the empty case) stays open.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

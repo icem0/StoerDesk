@@ -1,7 +1,7 @@
 # WP-M14-85: the ticket view names the assignees
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-84
 phase: 14
 milestone: m14
@@ -40,13 +40,15 @@ interfaces:
 3. `apps/web/src/features/tickets/ticket-detail-page.tsx`: the view shows the
    assignees of the ticket (name only, no mail address and no telephone
    number) below the status — a ticket without assignees shows nothing.
-4. The labels in `de` and `en`; the page test proves the names of the
-   assignees and the empty case.
+4. The labels `detail.assignees.title` in `de` and `en` — the German locale
+   names the row `Zuweisen`, the English locale `assigned technicians`.
 
 ## Non-goals
 
 - No change of the workflow, of the escalation or of the administration.
 - No mail address and no telephone number of a technician in the answer.
+- The page test moves to the split child WP-M14-85b (the test file does not fit
+  into the four-file limit of `PLAN.md` §17 with the four files above).
 
 ## Acceptance
 
@@ -66,7 +68,9 @@ is assigned to.
 - Files changed: the detail service, the shared contract, the ticket view, the
   two locale files
 - Interfaces added: `assignees` in the answer of the ticket detail
-- Verified:
-- Follow-up WP: none — the feature of the office is closed
+- Verified: typecheck, ESLint, vitest (the whole suite green incl. the existing
+  ticket detail specs and the e2e run), `i18n:check`, `wp:check`
+- Follow-up WP: WP-M14-85b (the page test proves the assignees) — its file
+  exists in this commit; afterwards the feature of the office is closed
 - Open question: the per-user routing of the channels other than ntfy stays a
   named limitation of ADR-0026

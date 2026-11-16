@@ -14,6 +14,7 @@ import { readReachableStages } from '../escalation/config'
 import { readTitleEnabled } from '../settings/branding-state'
 import {
   objects,
+  ticketAssignees,
   ticketEvents,
   ticketPauses,
   ticketPhotos,
@@ -114,6 +115,26 @@ export async function getTicketDetail(
     .from(ticketPhotos)
     .where(eq(ticketPhotos.ticketId, ticketRow.id))
     .orderBy(asc(ticketPhotos.createdAt))
+
+  // The technicians the escalation assigned to this ticket (§7.14, ADR-0026,
+  // WP-M14-85) — id and name only, never a contact value.
+  const assigneeRows = await database
+    .select({
+      userId: ticketAssignees.userId,
+      givenName: users.givenName,
+      familyName: users.familyName,
+    })
+    .from(ticketAssignees)
+    .innerJoin(users, eq(users.id, ticketAssignees.userId))
+    .where(eq(ticketAssignees.ticketId, ticketRow.id))
+    .orderBy(asc(users.givenName), asc(users.familyName))
+
+  const assignees = assigneeRows
+    .map((row) => ({
+      id: row.userId,
+      name: `${row.givenName ?? ''} ${row.familyName ?? ''}`.trim(),
+    }))
+    .filter((assignee) => assignee.name !== '')
 
   const actorUserIds = new Set<string>()
   for (const e of events) {
@@ -219,6 +240,7 @@ export async function getTicketDetail(
       recordedBy,
       statusToken: ticketRow.statusToken,
       workOrderText: ticketRow.workOrderText,
+      assignees,
     },
     events: events.map((e) => ({
       id: e.id,

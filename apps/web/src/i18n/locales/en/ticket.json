@@ -329,6 +329,9 @@
     "subtitle": "Object {{object}}",
     "loading": "Loading ticket …",
     "actions": "Actions",
+    "assignees": {
+      "title": "assigned technicians"
+    },
       "errors": {
         "notFound": "Ticket not found.",
         "actionFailed": "The action could not be performed.",

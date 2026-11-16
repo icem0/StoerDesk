@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ticket view names the assignees (WP-M14-85, out of band in phase 14,
+  ADR-0026): the answer of `GET /api/v1/tickets/:ticketNo` carries `assignees` —
+  the rows of `ticket_assignees` with the name of their user (`id` and `name`
+  only, never a contact value), an empty list for a ticket that was never
+  distributed (`packages/shared/src/schemas/ticket.ts`, `apps/api/src/tickets/detail.ts`).
+  The ticket view `apps/web/src/features/tickets/ticket-detail-page.tsx` shows
+  the technicians below the status under the label `detail.assignees.title`
+  (`Zuweisen` in `de`, `assigned technicians` in `en`); a ticket without
+  assignees shows nothing. The split child WP-M14-85b carries the page test.
 - The administration offers and assigns (WP-M14-84, out of band in phase 14,
   ADR-0026): the escalation page reads the readiness pools over
   `GET /api/v1/oncall/pools` and the user groups over `GET /api/v1/groups` and

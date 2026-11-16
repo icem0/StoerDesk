@@ -328,6 +328,9 @@
     "subtitle": "Objekt {{object}}",
     "loading": "Meldung wird geladen …",
     "actions": "Aktionen",
+    "assignees": {
+      "title": "Zuweisen"
+    },
     "errors": {
       "notFound": "Meldung nicht gefunden.",
       "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
