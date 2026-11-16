@@ -209,6 +209,7 @@ services:
             --host=db --username="$${POSTGRES_USER}" --dbname="$${POSTGRES_DB}" \
             | gzip > "/backups/stoerdesk-$$stamp.sql.gz"
           tar -czf "/backups/stoerdesk-$$stamp-uploads.tar.gz" -C /data/uploads .
+          tar -czf "/backups/stoerdesk-$$stamp-ntfy.tar.gz" -C /data/ntfy .
           find /backups -name 'stoerdesk-*.sql.gz' -mtime "+$${BACKUP_RETENTION_DAYS}" -delete
           find /backups -name 'stoerdesk-*.tar.gz' -mtime "+$${BACKUP_RETENTION_DAYS}" -delete
           sleep "$${BACKUP_INTERVAL_SECONDS}"
@@ -224,6 +225,10 @@ services:
       - backups:/backups
       # Read-only: the backup only tars the photos, it never writes into them.
       - uploads:/data/uploads:ro
+      # The ntfy user database and cache of the profile "ntfy" (ADR-0024, WP-M14-72):
+      # the access control list travels with the instance; the archive carries no
+      # plaintext token (ntfy stores the token hashed).
+      - ntfydata:/data/ntfy:ro
     depends_on:
       db:
         condition: service_healthy

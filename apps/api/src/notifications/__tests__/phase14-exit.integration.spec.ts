@@ -109,6 +109,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let userBId = ''
     let userCId = ''
     let objectId = ''
+    let bStoredTopic = ''
 
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
@@ -153,13 +154,28 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         throw new Error('expected one exit object')
       }
 
-      // The account of the user (§11.3): a stored ntfy account wins over the
-      // derived topic, so the target of the send is the account topic.
+      // The account of the user (§11.3): the ntfy topic of a user is the stored
+      // `external_id` of the account (WP-M14-72 — A keeps the account topic, B
+      // gets a random topic the server creates).
       await storeAccount(db, userAId, {
         channel: 'ntfy',
         externalId: accountTopic,
         label: 'A topic',
       })
+      await storeAccount(db, userBId, {
+        channel: 'ntfy',
+        externalId: '',
+        label: 'B topic',
+      })
+
+      bStoredTopic = onlyRow(
+        await db
+          .select({ externalId: notificationAccounts.externalId })
+          .from(notificationAccounts)
+          .where(eq(notificationAccounts.userId, userBId))
+          .limit(1),
+        'stored b topic',
+      ).externalId
 
       // The selection of the user (§11.4): A and B select ntfy for `ticket.created`,
       // C selects nothing.
@@ -296,15 +312,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         )
 
         // The selection of A and B replaced the instance topic with one row each;
-        // the account topic of A wins over the derived topic of A, and C — without
+        // both send to the stored topic of the account of the user (WP-M14-72:
+        // a user without an account receives no ntfy row), and C — without
         // a selection — never receives a row.
-        expect(new Set(topics)).toEqual(new Set([accountTopic, `stoerdesk-${userBId}`]))
+        expect(new Set(topics)).toEqual(new Set([accountTopic, bStoredTopic]))
         expect(topics).not.toContain(instanceTopic)
         expect(topics).not.toContain(`stoerdesk-${userAId}`)
+        expect(bStoredTopic).toMatch(/^stoerdesk-[0-9a-f]{32}$/)
 
         // The send really published to the two per-user topics of the account.
         const published = mock.requests.flatMap((request) => request.bodies.map((body) => (body as { topic?: string }).topic))
-        expect(new Set(published)).toEqual(new Set([accountTopic, `stoerdesk-${userBId}`]))
+        expect(new Set(published)).toEqual(new Set([accountTopic, bStoredTopic]))
         expect(mock.requests).toHaveLength(2)
       } finally {
         mock.close()

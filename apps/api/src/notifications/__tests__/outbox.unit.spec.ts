@@ -111,7 +111,7 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
 
   it('writes one ntfy row per user who selected ntfy for ticket.created', async () => {
     setRecipients([
-      { userId: 'user-1', externalId: null },
+      { userId: 'user-1', externalId: 'stoerdesk-user-1' },
       { userId: 'user-2', externalId: 'custom-topic' },
     ])
 
@@ -131,7 +131,7 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
 
   it('does not duplicate a per-user ntfy row with the minimum channels of a critical ticket', async () => {
     setMinimumChannels(['ntfy'])
-    setRecipients([{ userId: 'user-1', externalId: null }])
+    setRecipients([{ userId: 'user-1', externalId: 'stoerdesk-user-1' }])
 
     const { count, rows } = await enqueueInto(
       loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' }),

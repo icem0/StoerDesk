@@ -1,4 +1,5 @@
 import { and, asc, eq } from 'drizzle-orm'
+import { randomBytes } from 'node:crypto'
 import type {
   NotificationAccount,
   NotificationChannelKind,
@@ -17,6 +18,19 @@ import { notificationAccounts } from '../db/schema'
  */
 
 type Db = Database['database']
+
+/** 128 random bits of the topic (ADR-0024 point 6). */
+const NTFY_TOPIC_RANDOM_BYTES = 16
+
+/**
+ * A new ntfy topic (ADR-0024 point 6, WP-M14-72): `stoerdesk-` plus 128 random
+ * bits as hex. The topic is the secret of the subscription — never a user id —
+ * and it matches the `stoerdesk-*` read entry of the access control list that
+ * the setup script of WP-M14-70 creates.
+ */
+export function newNtfyTopic(): string {
+  return `stoerdesk-${randomBytes(NTFY_TOPIC_RANDOM_BYTES).toString('hex')}`
+}
 
 /** One stored account as the service reads it — the secret stays inside. */
 interface AccountRow {
@@ -81,8 +95,10 @@ export async function listAccounts(
 /**
  * Stores the account of a user — an upsert over the unique `(user_id, channel)`
  * key replaces the stored account. A missing or empty secret keeps the stored
- * one; only a non-empty secret replaces it. The answer carries `secretSet` and
- * never the secret.
+ * one; only a non-empty secret replaces it. An ntfy account with an empty
+ * `externalId` gets its topic from `newNtfyTopic()` (WP-M14-72): the server
+ * creates the secret subscription topic, the client never picks it. The answer
+ * carries `secretSet` and never the secret.
  */
 export async function storeAccount(
   database: Db,
@@ -90,15 +106,19 @@ export async function storeAccount(
   account: StoreNotificationAccountRequest,
 ): Promise<NotificationAccount> {
   const updatedAt = new Date()
+  const externalId =
+    account.channel === 'ntfy' && account.externalId === ''
+      ? newNtfyTopic()
+      : account.externalId
   const values: typeof notificationAccounts.$inferInsert = {
     userId,
     channel: account.channel,
-    externalId: account.externalId,
+    externalId,
     label: account.label ?? '',
     updatedAt,
   }
   const set: Partial<typeof notificationAccounts.$inferInsert> = {
-    externalId: account.externalId,
+    externalId,
     label: account.label ?? '',
     updatedAt,
   }

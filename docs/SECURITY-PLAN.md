@@ -437,6 +437,27 @@ static text and the `{{from}}`/`{{event}}`/`{{id}}` interpolations of those mach
 re-checked: no log line is touched and the page test carries mock machine keys, mock UUIDs and an
 `example.com` e-mail only. No new finding.
 
+Ntfy-topic pass: 2026-11-16, diff `4abe93f..` (WP-M14-72 — `apps/api/src/notifications/accounts.ts`,
+`apps/api/src/notifications/receivers.ts`, `docker-compose.yml` and the receivers spec plus the
+fixture updates in `outbox.unit.spec.ts` and `phase14-exit.integration.spec.ts`) — areas A and B
+re-checked in full (no new route, no capability and no bearer scope: the package changes the
+stored ntfy topic and the recipient read of the existing outbox path only, the route table and
+the guard answers stay the ones of WP-M14-16 and WP-M14-19), C re-checked for the touched files:
+`newNtfyTopic()` is `node:crypto` `randomBytes(16)` rendered as hex — a 128-bit value with the
+`stoerdesk-` prefix, never derived from a user id; `storeAccount` keeps its drizzle-bound upsert
+and only replaces an empty `externalId` in memory before the write, `ntfyRecipients` narrows its
+answer to the stored topics (the `stoerdesk-<userId>` fallback removed, no new select, no
+interpolation, the event type stays a server-side constant), D, E to H and J untouched (no
+frontend, no outbound request change, no new environment key, no upload, no dependency, no CI
+change), I re-checked for `docker-compose.yml`: the `backup` service mounts the named volume
+`ntfydata` read-only (`:ro`) at `/data/ntfy` and tars it — no host port added, no secret on a
+command line and ntfy stores the API token hashed, so the archive carries no plaintext token,
+K re-checked for the touched tests: the fixtures carry mock topics (`stoerdesk-stored`,
+`shared-topic`), the entropy assertion is a format match only and no log line is touched —
+one accepted deviation: the ntfy adapter still logs the topic of a send, and a topic is now the
+only access secret of a subscription (the finding and its class are recorded in
+`.security/findings.md`, not here).
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -528,15 +549,18 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 | --- | --- | --- |
 | A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-administration pass: the four new admin routes stay session-guarded as well; transition-ui pass: no session handling changed, the client route `/admin/transitions` only wraps the page in the existing `RequireSession`) | 587f7ad |
 | B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-administration pass: the route table gains the four `/api/v1/admin/transitions[/:id]` rows with the same guards; transition-ui pass: the API route table is unchanged, the client route table gains `/admin/transitions` behind `RequireSession`) | 587f7ad |
-| C Injection | complete (re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`; transition-ui pass: the page binds both status keys to `ticketStatusKeySchema` and the event key to `ticketTransitionEventKeySchema` before it sends the body and never assembles SQL, a path or a URL from client input) | 587f7ad |
+| C Injection | complete (re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`; transition-ui pass: the page binds both status keys to `ticketStatusKeySchema` and the event key to `ticketTransitionEventKeySchema` before it sends the body and never assembles SQL, a path or a URL from client input; ntfy-topic pass: `newNtfyTopic()` is 128 random hex bits from `node:crypto`, `storeAccount` and `ntfyRecipients` keep every value drizzle-bound, no interpolation and no new select) | 4abe93f |
 | D Frontend | complete (transition-ui pass: the page renders the row identity and the machine keys only, no token, secret, cookie or account value enters the DOM and the PWA stores nothing new) | 587f7ad |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
 | G Files/Uploads | complete (re-checked for the changed files) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
 | H Dependencies | complete (npm audit: the runtime tree is clean — `npm audit --omit=dev` reports 0; the advisories are dev-only build tools and are not installed in the runtime image) | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| I Docker/Compose | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
+| I Docker/Compose | complete (ntfy-topic pass: the `backup` service mounts `ntfydata` read-only, no host port added, no secret on a command line) | 4abe93f |
 | J CI/CD | complete | 249c8a006e472e77fd58bfc855fa8caf578fecdf |
-| K Logging/PII | complete (re-checked for the changed files at the transition-administration pass: no log line, no contact value, the answer carries the row identity, the two machine keys, the event key, the stored `condition` record, the `active` flag and the `updatedAt` timestamp only; transition-ui pass: no log line, the page test carries mock machine keys, mock UUIDs and an `example.com` e-mail only) | 587f7ad |
+| K Logging/PII | complete (re-checked for the changed files at the transition-administration pass: no log line, no contact value, the answer carries the row identity, the two machine keys, the event key, the stored `condition` record, the `active` flag and the `updatedAt` timestamp only; transition-ui pass: no log line, the page test carries mock machine keys, mock UUIDs and an
+`example.com` e-mail only; ntfy-topic pass: no log line touched, the specs carry mock topics
+only and the adapter keeps logging the topic of a send (deviation recorded in
+`.security/findings.md`) | 4abe93f |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

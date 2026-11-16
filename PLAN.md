@@ -933,6 +933,39 @@ Cloudflare dashboard and copies its token (non-goal of the WP); no Cloudflare Ac
 policy. `docker compose --profile ntfy --profile tunnel config` is **unverified** —
 this development container has no Docker daemon; locally both files were checked to
 parse (the `yaml` package and Prettier). WP-M14-72 stays open in numeric order.
+**WP-M14-72 is implemented** (the random ntfy topic per user and the backup of the
+ntfy volume, ADR-0024 point 6 and consequences): `apps/api/src/notifications/accounts.ts`
+exports `newNtfyTopic()` — `stoerdesk-` plus 16 random bytes as hex (128 bits,
+`node:crypto`, matching the `stoerdesk-*` ACL entry of WP-M14-70) — and `storeAccount`
+replaces an empty `externalId` of an ntfy account with that topic: the server creates
+the subscription topic, the client never picks it. `ntfyRecipients` in
+`apps/api/src/notifications/receivers.ts` answers the **stored** topics of the users
+who selected ntfy only — the `stoerdesk-<userId>` fallback is gone, a user without an
+ntfy account receives no ntfy message (`userTopic` stays exported for the internal
+paths of `outbox.ts`, where the creator's own row still falls back to the derived
+topic). An existing account with a derived topic keeps working until the user
+reconnects over the QR and gets a random topic; the number of such accounts is a
+SQL count over the instance database (`SELECT COUNT(*) FROM notification_accounts
+WHERE channel = 'ntfy' AND external_id = ('stoerdesk-' || user_id::text)`) —
+unverified here, this development container has no instance database. The `backup`
+service of `docker-compose.yml` mounts the volume `ntfydata` read-only at
+`/data/ntfy` and archives it into `stoerdesk-<stamp>-ntfy.tar.gz` (the ntfy user
+database with the access control list travels with the instance; ntfy stores the
+API token hashed, so the archive carries no plaintext token).
+`apps/api/src/notifications/__tests__/receivers.unit.spec.ts` proves the prefix and
+the 128 random bits, that a user without an account contributes no topic and that
+the topics stay deduplicated; the fixtures of `outbox.unit.spec.ts` and of
+`phase14-exit.integration.spec.ts` reconnect user B with a stored random topic
+instead of a derived one. `docker compose config` is **unverified** (no Docker CLI/daemon
+here, the compose file parses as YAML and the mount of `ntfydata` stays declared).
+**WP-M14-72b is drafted** (out of band, the announced follow-up of WP-M14-72): the
+subscription route `GET /api/v1/notifications/accounts/ntfy` in
+`apps/api/src/notifications/routes.ts` still answers the QR of the derived
+`stoerdesk-<userId>` topic — outside the files WP-M14-72 may write — so a phone that
+scans it subscribes to a topic nothing publishes to any more. WP-M14-72b makes that
+route answer the stored topic of the ntfy account of the session user and lets the
+first visit provision a random topic through `storeAccount`. Phase 14 stays open with
+that one item: WP-M14-72b stays open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) | 75  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) | 76  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -752,6 +752,24 @@ idiom warning `scripts/update.sh` carries too); the manual check on a running
 profile (403 anonymous publish to `stoerdesk-pruef`, 200 with the token, 403
 anonymous read of `anderes`) is **unverified**: this development container has no
 Docker daemon. WP-M14-71 … WP-M14-72 stay open in numeric order.
+**WP-M14-72 is implemented** (the random ntfy topic per user and the backup of the
+ntfy volume, ADR-0024 point 6 and consequences, phase 14 closed): `accounts.ts`
+exports `newNtfyTopic()` (`stoerdesk-` plus 16 random hex bytes — 128 bits) and
+`storeAccount` provisions an empty ntfy `externalId` with it, so the server owns
+the subscription topic; `ntfyRecipients` in `receivers.ts` answers the stored
+topics only — the `stoerdesk-<userId>` fallback is removed and a user without an
+ntfy account gets no ntfy message (`userTopic` stays for the internal paths of
+`outbox.ts`). The `backup` service mounts `ntfydata` read-only at `/data/ntfy` and
+tars it into `stoerdesk-<stamp>-ntfy.tar.gz`; the archive carries no plaintext
+token (ntfy hashes it). `receivers.unit.spec.ts` proves prefix, entropy,
+deduplication and the missing topic; the outbox unit spec and the phase-14 exit
+spec reconnect their user B over a stored random topic. The SQL count of existing
+derived-topic accounts and `docker compose config` are unverified here (no
+instance database, no Docker daemon). One defect stays visible: the subscription
+route of `routes.ts` still answers the derived `stoerdesk-<userId>` topic, outside
+the files of the WP — so **WP-M14-72b** (the subscription QR shows the stored topic)
+is drafted as the follow-up of WP-M14-72 in this commit and stays open.
+WP-M14-72b stays open in numeric order.
 
 ## Open follow-ups
 
@@ -1215,7 +1233,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-69  | ntfy as an optional Compose profile (ADR-0024)                         | done    | yes     |
 | WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | done    | yes     |
 | WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | done    | yes     |
-| WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | planned | yes     |
+| WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | done    | yes     |
+| WP-M14-72b | the subscription QR shows the stored ntfy topic (follow-up of 72)       | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

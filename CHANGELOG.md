@@ -8,6 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The subscription topic of an ntfy user is a random secret of the server and the
+  `ntfy` volume joins the backup profile (WP-M14-72, phase 14 closed, ADR-0024 point
+  6 and consequences): `apps/api/src/notifications/accounts.ts` exports
+  `newNtfyTopic()` — `stoerdesk-` plus 16 random bytes as hex (128 bits, `node:crypto`,
+  matching the `stoerdesk-*` ACL entry the setup script of WP-M14-70 creates) — and
+  `storeAccount` replaces an empty `externalId` of an ntfy account with that topic,
+  so the server creates the topic of a connecting user and the client never picks
+  it. `ntfyRecipients` in `apps/api/src/notifications/receivers.ts` answers the
+  **stored** topics of the users who selected ntfy only: the `stoerdesk-<userId>`
+  fallback is removed and a user without an ntfy account receives no ntfy message
+  (`userTopic` stays exported for the internal paths of `outbox.ts`, where the
+  creator's own row still falls back to the derived topic). An account whose topic
+  was derived from the user id keeps working until the user re-scans the QR and
+  reconnects with a random topic — the server never rewrites topics; the number of
+  such accounts is a SQL count over the instance database
+  (`SELECT COUNT(*) FROM notification_accounts WHERE channel = 'ntfy' AND external_id
+  = ('stoerdesk-' || user_id::text)`), unverified here because the development
+  container has no instance database. `docker-compose.yml`, the `backup` service: the
+  named volume `ntfydata` is mounted read-only at `/data/ntfy` and archived into
+  `stoerdesk-<stamp>-ntfy.tar.gz`, so the ntfy user database and its access control
+  list travel with the instance; ntfy stores the API token hashed, so the archive
+  carries no plaintext token. New `apps/api/src/notifications/__tests__/receivers.unit.spec.ts`
+  proves the prefix, the 128 random bits, the missing topic of a user without an
+  account and the deduplication; the fixtures of `outbox.unit.spec.ts` and the
+  phase-14 exit criterion `phase14-exit.integration.spec.ts` reconnect their user B
+  with a stored random topic instead of a derived one. No migration of topics, no
+  change of the ntfy adapter (ADR-0022 token handling stays) and no change of the
+  subscription route. `docker compose config` is **unverified** — this development
+  container has no Docker CLI or daemon; the compose file was checked to parse as
+  YAML with the new mount and the still-declared `ntfydata` volume.
 - The ntfy server of the `ntfy` Compose profile becomes publicly reachable through
   a Cloudflare Tunnel profile `tunnel` (WP-M14-71, out of band in phase 14, ADR-0024
   points 4 and 5): `docker-compose.yml` gained the service `cloudflared` with
