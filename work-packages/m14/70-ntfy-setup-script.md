@@ -1,7 +1,7 @@
 # WP-M14-70: Setup script for the ntfy access control list and token
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-69
 phase: 14
 milestone: m14
@@ -59,8 +59,12 @@ anonymous publish to `stoerdesk-pruef` answers 403; publish with the token answe
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `scripts/ntfy-setup.sh` (new), `package.json` (`ntfy:setup`)
+- Interfaces added: `npm run ntfy:setup`
+- Verified: `npm run wp:check` and `npm run check` green; `sh -n` and shellcheck
+  clean (only the `CDPATH= cd` idiom warning `scripts/update.sh` carries too);
+  the manual check on a running profile (403 anonymous publish to
+  `stoerdesk-pruef`, 200 with the token, 403 anonymous read of `anderes`) is
+  unverified: this development container has no Docker daemon
 - Follow-up WP: WP-M14-71 (Cloudflare Tunnel profile)
-- Open question (if any):
+- Open question (if any): none

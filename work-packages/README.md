@@ -731,6 +731,27 @@ asserts both links with `href="/admin/channels"` and the translated label. The t
 pages stay apart (the administration keeps the secrets, the test send and the
 minimum channels behind `notification.write`) and `apps/web/src/admin/channels-page.tsx`
 is untouched. WP-M14-70 … WP-M14-72 stay open in numeric order.
+**WP-M14-70 is implemented** (the setup script of the ntfy access control list and
+token): `scripts/ntfy-setup.sh` runs every ntfy command inside the container of the
+profile over `docker compose --profile ntfy exec --no-tty ntfy ntfy …`, so it needs
+no CLI on the host. It refuses without a Docker daemon, without `.env`, while the
+ntfy container is not running (`ntfy config check`) and while
+`ntfy config read auth-default-access` is not `deny-all` — the script never widens
+a looser server. It creates the user `stoerdesk-api` with role `user` only when
+`ntfy user list` does not know it, then sets `ntfy access stoerdesk-api
+"stoerdesk-*" read-write` and `ntfy access everyone "stoerdesk-*" read-only`
+(idempotent: a second run changes nothing) — the anonymous read entry is what lets
+a phone subscribe through the QR code with no login (ADR-0024 point 6). Only while
+the `NTFY_TOKEN` line of `.env` is empty it runs `ntfy token add stoerdesk-api`,
+keeps the printed `tk_…` value in a variable, writes it into `.env` with a `sed` on
+that single key and never prints it; a non-empty `NTFY_TOKEN` is kept and never
+shown (the token is a secret of the same class as `POSTGRES_PASSWORD`).
+`package.json` gained `npm run ntfy:setup` as `sh scripts/ntfy-setup.sh` (the
+pattern of `update:host`). `sh -n` and shellcheck are clean (only the `CDPATH= cd`
+idiom warning `scripts/update.sh` carries too); the manual check on a running
+profile (403 anonymous publish to `stoerdesk-pruef`, 200 with the token, 403
+anonymous read of `anderes`) is **unverified**: this development container has no
+Docker daemon. WP-M14-71 … WP-M14-72 stay open in numeric order.
 
 ## Open follow-ups
 
@@ -1192,7 +1213,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | done    | yes     |
 | WP-M14-68  | every notification message links to its ticket (out of band)      | done    | yes     |
 | WP-M14-69  | ntfy as an optional Compose profile (ADR-0024)                         | done    | yes     |
-| WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | planned | yes     |
+| WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | done    | yes     |
 | WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | planned | yes     |
 | WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | planned | yes     |
 

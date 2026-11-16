@@ -893,6 +893,27 @@ gain the two keys (`Kanal-Administration (Administration → Channels)` /
 of WP-M14-48, and `apps/web/src/settings/__tests__/notifications-page.test.tsx`
 asserts both links and the translated label. `apps/web/src/admin/channels-page.tsx`
 is untouched — its link exists already. WP-M14-70 … WP-M14-72 stay open in numeric order.
+**WP-M14-70 is implemented** (the setup script of the ntfy access control list and the
+token): `scripts/ntfy-setup.sh` runs every ntfy command inside the container of the
+profile over `docker compose --profile ntfy exec --no-tty ntfy ntfy …` (ADR-0024 point 3),
+so the host needs no ntfy CLI. It refuses without a Docker daemon, without `.env`, while
+the container is not running (`ntfy config check`) and while
+`ntfy config read auth-default-access` is not `deny-all` — it never widens a looser
+server. It creates the user `stoerdesk-api` with role `user` only when `ntfy user list`
+does not know it, then sets `ntfy access stoerdesk-api "stoerdesk-*" read-write` and
+`ntfy access everyone "stoerdesk-*" read-only` — idempotent, a second run changes
+nothing, and the anonymous read entry is what lets a phone subscribe through the QR
+code without a login (ADR-0024 point 6). Only while the `NTFY_TOKEN` line of `.env`
+is empty it runs `ntfy token add stoerdesk-api`, keeps the printed `tk_…` value in a
+variable and writes it into `.env` with a `sed` on that single key; the token is never
+printed, never logged and a non-empty `NTFY_TOKEN` is kept and never shown (ADR-0024
+consequence: the token is a secret of the class of `POSTGRES_PASSWORD`). `package.json`
+gained `npm run ntfy:setup` as `sh scripts/ntfy-setup.sh` (the pattern of `update:host`).
+`sh -n` and shellcheck are clean (only the `CDPATH= cd` idiom warning `scripts/update.sh`
+carries too); the manual check on a running profile (403 anonymous publish to
+`stoerdesk-pruef`, 200 with the token, 403 anonymous read of `anderes`) is **unverified**
+— this development container has no Docker daemon. WP-M14-71 … WP-M14-72 stay open in
+numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

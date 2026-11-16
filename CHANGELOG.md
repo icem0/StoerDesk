@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ntfy access control list and the API token are created by a setup script
+  (WP-M14-70, out of band in phase 14, ADR-0024 point 3): `scripts/ntfy-setup.sh`
+  (`npm run ntfy:setup`) runs every ntfy command inside the container of the `ntfy`
+  Compose profile over `docker compose --profile ntfy exec --no-tty ntfy ntfy …`, so
+  the host needs no ntfy CLI. It refuses without a Docker daemon, without `.env`,
+  while the ntfy container is not running and while `auth-default-access` is not
+  `deny-all` (the script never widens a looser server); it creates the user
+  `stoerdesk-api` with role `user` only when `ntfy user list` does not know it, then
+  sets `ntfy access stoerdesk-api "stoerdesk-*" read-write` and `ntfy access
+  everyone "stoerdesk-*" read-only` — idempotent, a second run changes nothing, and
+  the anonymous read entry is what lets a phone subscribe through the QR code without
+  a login (ADR-0024 point 6). Only while the `NTFY_TOKEN` line of `.env` is empty it
+  runs `ntfy token add stoerdesk-api` and writes the printed `tk_…` value into `.env`
+  with a `sed` on that single key: the token is never printed, never logged and a
+  non-empty `NTFY_TOKEN` is kept and never shown (the token is a secret of the class
+  of `POSTGRES_PASSWORD`). `package.json` gained `npm run ntfy:setup`. The manual
+  check on a running profile (403 anonymous publish, 200 with the token, 403
+  anonymous read of a foreign topic) is unverified: this development container has
+  no Docker daemon. No change of `ntfy/server.yml` (WP-M14-69), of the API or of a
+  route.
 - The own channels page names the channel administration (WP-M14-54, out of band
   in phase 14, requested by the office): the office asked where the channels behind
   `Settings → Benachrichtigungen` are set — the page reads `GET /v1/admin/channels`
