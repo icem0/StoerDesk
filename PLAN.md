@@ -2121,6 +2121,23 @@ transitions as database rows) — `PLAN.md` §19 carries no open decision of the
 phase. The next phase starts with its own split; a new package of phase 14
 needs a new phase.
 
+**WP-M14-74 — the tunnel token does not stop the core stack (done).** The check
+run of the closing commit (v1.1.119 … v1.1.122) was red in the job
+`Docker smoke test`: `docker compose` interpolates **every** service of the
+file, also the ones of a profile that is not selected, so the strict
+`${CLOUDFLARE_TUNNEL_TOKEN:?…}` of WP-M14-71 stopped the config of the core
+stack of every deployment without a tunnel — and the smoke test of the CI —
+with a message about a tunnel that was never wanted. **WP-M14-74** reads the
+token as `${CLOUDFLARE_TUNNEL_TOKEN:-}`: the core stack starts unchanged while
+the token is empty, and the tunnel container of the profile `tunnel` stays
+stopped with the error of `cloudflared` in its log.
+`scripts/ntfy-setup.sh` names the state of the key in `.env` (missing, empty or
+set — never its value) before the operator starts the tunnel, `.env.example`
+and `docs/DEPLOYMENT.md` describe the behaviour. The tunnel itself stays as
+WP-M14-71 built it (image, command, network, `depends_on`, no host port) and the
+operator command `docker compose --profile ntfy --profile tunnel up -d` stays.
+The phase is closed with it.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

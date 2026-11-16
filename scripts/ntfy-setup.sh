@@ -19,6 +19,9 @@
 #     its value is never printed to the terminal or written to a log
 #     (ADR-0024 consequence: the token is a secret of the same class as
 #     `POSTGRES_PASSWORD`)
+#   - names the state of `CLOUDFLARE_TUNNEL_TOKEN` (the token of the Cloudflare
+#     Tunnel, WP-M14-71): the script never creates it — the operator copies it
+#     from the Cloudflare dashboard into `.env` — and it never prints its value
 #
 # Every command is idempotent: running the script again changes nothing.
 # No change of the ntfy server configuration itself (that is WP-M14-69) and
@@ -73,6 +76,19 @@ say "access control list set: $api_user read-write and everyone read-only on $to
 
 if ! grep -q '^NTFY_TOKEN=' "$env_file"; then
   die 'no NTFY_TOKEN key in .env — add the key of .env.example and run this script again'
+fi
+
+# The tunnel token is not created here: the operator copies it from the
+# Cloudflare dashboard into .env. While it is missing, the tunnel container of
+# the profile "tunnel" stays stopped with the error of cloudflared in its log
+# (WP-M14-74) — this script names the key before the tunnel is started, and it
+# never prints the value.
+if ! grep -q '^CLOUDFLARE_TUNNEL_TOKEN=' "$env_file"; then
+  say 'no CLOUDFLARE_TUNNEL_TOKEN key in .env — the tunnel profile cannot start without it'
+elif [ -z "$(sed -n '/^CLOUDFLARE_TUNNEL_TOKEN=/s/^CLOUDFLARE_TUNNEL_TOKEN=//p' "$env_file" | head -n 1)" ]; then
+  say 'CLOUDFLARE_TUNNEL_TOKEN is empty in .env — the tunnel profile cannot start without it'
+else
+  say 'CLOUDFLARE_TUNNEL_TOKEN is set in .env — the tunnel profile can start (value never printed)'
 fi
 
 current_token=$(sed -n '/^NTFY_TOKEN=/s/^NTFY_TOKEN=//p' "$env_file" | head -n 1)

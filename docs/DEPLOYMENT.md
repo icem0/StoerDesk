@@ -337,8 +337,11 @@ The Cloudflare Tunnel (profile `tunnel`) is the only public path to the server:
 to `http://ntfy:80` on the `backend` network, with a certificate Cloudflare
 manages and no inbound port on the host. The operator creates the tunnel in the
 Cloudflare dashboard, points its destination at `http://ntfy:80`, and copies its
-token into `CLOUDFLARE_TUNNEL_TOKEN` of `.env`; while that token is empty,
-starting the profile stops the stack config with a clear message. The tunnel is
+token into `CLOUDFLARE_TUNNEL_TOKEN` of `.env`. The token belongs to the
+`tunnel` profile alone: while it is empty, the core stack starts unchanged and
+the tunnel container stays stopped with the error of `cloudflared` in its log —
+`npm run ntfy:setup` names the missing key before the tunnel is started
+(WP-M14-74). The tunnel is
 never created through an API and carries no Cloudflare Access policy: the topic
 names of `stoerdesk-*` are the secret (ADR-0024 point 6).
 

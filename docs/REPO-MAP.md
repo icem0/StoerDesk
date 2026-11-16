@@ -338,7 +338,7 @@ report form and the checkbox on `/admin/branding`.
 >
 > **Phase 11 complete (WP-M11-01 … WP-M11-10)**: `specs/13-detected-errors.md` carries the contract for detected errors; ADR-0016 settles the decisions (catalog table, `tickets.detected_error_keys text[]`, optional close fields, archive-instead-of-delete, `byDetectedError` statistics grouping). Implemented in numeric order: spec+ADR+split (01), `detected_errors`-table + migration 0029 + `tickets.detected_error_keys` (02), shared Zod schemas + API CRUD `/api/v1/detected-errors` (03), Close-Route accepts `comment` + `detectedErrorKeys` (04), `stats_tickets`-view extension + `stats_ticket_detected_errors` view + `byDetectedError` in frequency + CSV export (05), admin page `/admin/detected-errors` with CRUD and archive (06), ticket-detail close dialog with detected-error multiselect (07), statistics `byDetectedError` chart (08), integration tests for CRUD/close/frequency (09), exit criterion + record (10).
 >
-> **Phase 14 complete (WP-M14-01 … WP-M14-73)**: the standalone administration
+> **Phase 14 complete (WP-M14-01 … WP-M14-74)**: the standalone administration
 > home at `/admin` is gone — the settings menu at `/settings` lists every
 > administration module itself, the retired address `/admin` and the retired
 > update page `/admin/update` redirect there, and the texts of the removed page
@@ -350,4 +350,5 @@ report form and the checkbox on `/admin/branding`.
 > time of the day — WP-M14-35 … WP-M14-41), the configurable stage chain
 > (WP-M14-58 … WP-M14-67) and ntfy as an optional Compose profile behind a
 > Cloudflare Tunnel (WP-M14-69 … WP-M14-72); the record of the phase is closed
-> by **WP-M14-73**.
+> by **WP-M14-73** and the tunnel token of WP-M14-71 no longer stops the core
+> stack (**WP-M14-74**).

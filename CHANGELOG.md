@@ -544,6 +544,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decision of the phase.
 
 ### Fixed
+- A deployment without a Cloudflare Tunnel starts again (WP-M14-74): the tunnel
+  token of the service `cloudflared` was read with the strict
+  `${CLOUDFLARE_TUNNEL_TOKEN:?…}`, and `docker compose` interpolates every
+  service of the file — also the ones of a profile that is not selected. The
+  missing token therefore stopped the config of the **core** stack of every
+  deployment without a tunnel (and the Docker smoke test of the CI) with a
+  message about a tunnel that was never wanted. `docker-compose.yml` reads the
+  token as `${CLOUDFLARE_TUNNEL_TOKEN:-}`: the core stack starts unchanged while
+  the token is empty, and the tunnel container of the profile `tunnel` stays
+  stopped with the error of `cloudflared` in its log. `npm run ntfy:setup` names
+  the state of the key in `.env` (missing, empty or set — never its value)
+  before the operator starts the tunnel. The tunnel itself is unchanged
+  (image, command, network, `depends_on`, no host port) and the operator
+  command `docker compose --profile ntfy --profile tunnel up -d` stays.
 - A self-hosted ntfy server that needs an access token now works (WP-M14-51):
   the key saved in the write-only secret field of the channel (and in
   `NTFY_TOKEN`) never reached any send, so the test message and the
