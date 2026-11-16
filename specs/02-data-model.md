@@ -257,3 +257,19 @@ default keeps the rule inside the database, so no service has to remember it.
 its own phase before its first WP. The `tickets` link to objects and systems is a
 UUID foreign key into the tables above; the object is chosen from the object
 list.
+
+### 4.13 `ticket_assignees` — the technicians of a ticket (WP-M14-80, ADR-0026)
+
+The many-to-many of the technicians a ticket is assigned to — one row per ticket
+and technician:
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| `ticket_id` | UUID, not null | foreign key to `tickets`, `ON DELETE CASCADE` |
+| `user_id` | UUID, not null | foreign key to `users`, `ON DELETE CASCADE` |
+| `assigned_at` | timestamp, not null | the moment of the assignment |
+
+The primary key is `(ticket_id, user_id)`: a technician is assigned once. The
+`assign` action of the escalation writes one row per technician of its target
+(`specs/07-escalation.md` §7.14); the assignment of a single technician keeps
+`tickets.assigned_user_id` of §4.8.

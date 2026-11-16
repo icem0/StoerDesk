@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) | 82  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85) | 90  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -810,6 +810,30 @@ needs the `condition` beside the `required`, and WP-M14-71 wrote only
 file passes the schema of the Compose specification. The next phase starts with
 its own split.
 
+**The escalation offers and assigns tickets (WP-M14-79 … WP-M14-85, out of band
+in phase 14, requested by the office).** The office asked for two more actions
+of an escalation rule: a ticket that waits too long for a technician shall be
+**offered** to a pool of technicians, and a ticket shall be **assigned** to
+technicians. Until now a rule could only notify, write a webhook, write a note
+or change the status (`specs/07-escalation.md` §7.5) — the actions were side
+effects, and `PLAN.md` §9 and §7.12 said so in one sentence. The office answered
+the two questions of the design: the target is **a readiness pool or a user
+group** (both are selectable), and the assignment reaches **all** technicians of
+that target. **WP-M14-79** is the spec and the decision (ADR-0026): the two new
+action types `offer` and `assign` carry a `target` (`{ kind, id }`), the
+assignment is recorded in the new table `ticket_assignees`, the offer of a pool
+target names the on-call person in `offered_to_user_id` and sets the offer
+timeout, and the broadcast reaches the technicians on their own ntfy topic. The
+children follow in numeric order: **WP-M14-80** (the database — migration `0043`
+widens the CHECK of the action types, `0044` adds `ticket_assignees`),
+**WP-M14-81** (the shared contracts), **WP-M14-82** (the engine — the dispatcher
+performs the `offered` and the `assigned` step of the transition table),
+**WP-M14-83** (the configuration service — a target that names no pool and no
+group answers `400 invalid_target`), **WP-M14-84** (the administration — the two
+types with their kind and target select) and **WP-M14-85** (the ticket view
+names the assignees). The numbers WP-M14-77 and WP-M14-78 belong to the
+announced follow-ups of WP-M14-76 and are not touched by this series.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1277,6 +1301,13 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-73  | the phase-14 record is closed (the stale status fields, the roadmap)     | done    | yes     |
 | WP-M14-74  | the tunnel token does not stop the core stack (the Docker smoke test)    | done    | yes     |
 | WP-M14-75  | the tunnel dependency is a valid compose schema (the Docker smoke test)  | done    | yes     |
+| WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | planned | yes     |
+| WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | planned | yes     |
+| WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | planned | yes     |
+| WP-M14-82  | the engine offers and assigns a ticket (out of band)                      | planned | yes     |
+| WP-M14-83  | the configuration service knows the target of an action (out of band)      | planned | yes     |
+| WP-M14-84  | the administration offers and assigns (out of band)                        | planned | yes     |
+| WP-M14-85  | the ticket view names the assignees (out of band)                          | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

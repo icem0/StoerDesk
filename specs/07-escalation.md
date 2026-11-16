@@ -2,7 +2,8 @@
 
 **Chapter:** 8 (escalation) with the rules of `PLAN.md` §9
 **Scope:** ~190 lines
-**Status:** reviewed for phase 13 (WP-M13-01), extended for phase 14 (WP-M14-58)
+**Status:** reviewed for phase 13 (WP-M13-01), extended for phase 14 (WP-M14-58,
+WP-M14-76)
 
 The binding summary is `PLAN.md` §9. This slice defines the escalation stages, the
 waiting deadlines of the stages, the conditions under which a rule fires and the
@@ -128,13 +129,16 @@ the night.
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
 | `history` | `text` (optional, 1–500 characters) | one append-only `escalation_note` event in the ticket history |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
+| `offer` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once; every technician of the target is notified (§7.14) |
+| `assign` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
 
 Only a `status_change` action may move the status of a ticket (WP-M14-40 … WP-M14-40c):
 it performs a step of the configurable transition table, so the workflow columns
 stay keyed by the `event_key` of that step and an unknown target status answers
-`400 invalid_status_key` on `PUT /api/v1/escalation/config` (WP-M14-40b). No action
-of a rule ever changes the assignment, the priority, the deadline or the work order
-of a ticket.
+`400 invalid_status_key` on `PUT /api/v1/escalation/config` (WP-M14-40b). The
+`offer` and the `assign` action distribute a ticket (§7.14, ADR-0026): they
+perform a step of the same table and record the assignees. No action of a rule
+ever changes the priority, the deadline or the work order of a ticket.
 
 ## 7.6 Data model
 
@@ -238,8 +242,10 @@ predecessor, `work_order` ← `review`, `assignment` ← `work_order`,
   records who reached which milestone.
 - Only a `status_change` action of a fired rule moves the status of a ticket
   (WP-M14-40 … WP-M14-40b): it performs a step of the `ticket_transitions` table
-  (§7.13), so the workflow columns stay keyed by the `event_key` of that step. No
-  action changes an assignment, a priority, a deadline or a work order.
+  (§7.13), so the workflow columns stay keyed by the `event_key` of that step. The
+  `offer` and the `assign` action distribute a ticket (§7.14, ADR-0026) and
+  therefore also perform a step of that table. No action changes the priority, the
+  deadline or the work order of a ticket.
 - Closed, cancelled, acknowledged and suspected-spam tickets never escalate.
 - An open pause pauses the rule clock exactly as it pauses the timeline.
 - The notifications of the first version are external systems only; there is no
@@ -280,3 +286,52 @@ the bootstrap of the API start. The old `tickets_status_check` of migration `000
 is dropped in `0041`: the rows of `ticket_statuses` and their key-format CHECK
 (`0040`) are the status configuration, and a status a ticket still carries must
 survive a deactivation.
+
+## 7.14 The offer and the assign action (ADR-0026)
+
+The office asked for two more actions of a rule: a ticket that waits too long for
+a technician shall be **offered** to a pool of technicians, and a ticket shall be
+**assigned** to technicians. Both actions distribute the ticket; they are the
+first actions of a rule that change more than a notification.
+
+### The target
+
+Both actions carry a `target`: the pool of technicians the ticket goes to.
+
+| Field | Meaning |
+| --- | --- |
+| `kind` | `pool` — a row of `oncall_pools` (a readiness pool); `group` — a row of `groups` (a user group of the administration) |
+| `id` | the UUID of that pool or group |
+
+The **technicians of the target** are the active members of the group of the
+target: for a pool the members of its `group_id`, otherwise every active user
+holding the `oncall` role — the same rule as
+`GET /api/v1/oncall/pools/:id/members` (`specs/04-oncall.md` §4a.5); for a group
+the members of `user_groups`. A target without a technician changes nothing.
+
+### The effect
+
+| Action | Step | Effect |
+| --- | --- | --- |
+| `offer` | `offered` | the ticket leaves `WORK_ORDER_CREATED` for `OFFERED`. A pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout (`oncall.escalate_to_group_after_min`), so the existing offer timeout hands the ticket to the group; a group target has no on-call person and no timeout — the whole group is notified at once. |
+| `assign` | `assigned` | the ticket leaves `WORK_ORDER_CREATED` for `ASSIGNED`. Every technician of the target becomes an assignee of the ticket — a row of `ticket_assignees` (`specs/02-data-model.md` §4.12). |
+
+Both actions perform a step of the `ticket_transitions` table (§7.13), so a
+ticket whose status has no such step keeps its status and the action writes
+nothing — the same rule as the `status_change` action. One append-only
+`escalation_note` event records the distribution with
+`{ rule, stage, target }`.
+
+### The notification
+
+Every technician of the target is notified on the channels they selected for the
+event type of `specs/10-notifications.md` §11.4: `ticket.escalated` for the
+offer, `ticket.assigned` for the assignment. Only ntfy has an address per user
+today (§11.3), so the broadcast writes one outbox row per technician with an
+ntfy account on their own topic; the other channels of the instance reach the
+office and are the business of the `notify` action. A technician without a
+selection receives nothing.
+
+The office is therefore informed twice over: the `escalated` event of the firing
+and the `notify` action, if the rule carries one.
+

@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The escalation may offer and assign a ticket (WP-M14-79, out of band in phase 14,
+  requested by the office; spec and decision, no product code): ADR-0026 decides
+  that a rule of the escalation configuration carries two more action types
+  besides `notify`, `webhook`, `history` and `status_change` — `offer` and
+  `assign`. Both carry a `target` (`{ kind: 'pool' | 'group', id }`): a readiness
+  pool of the on-call calendar or a user group of the administration. The
+  technicians of the target are its active members; the offer performs the
+  `offered` step of the transition table and names the on-call person of the pool
+  in `offered_to_user_id`, the assignment performs the `assigned` step and
+  records the technicians in the new table `ticket_assignees`
+  (`specs/02-data-model.md` §4.13). Every technician of the target is notified on
+  their own ntfy topic for the event type of `ticket.escalated` (the offer) and
+  `ticket.assigned` (the assignment); the other channels of the instance reach
+  the office and stay the business of the `notify` action. `specs/07-escalation.md`
+  §7.5 gains the two rows, the new §7.14 describes the target, the effect and
+  the notification, and §7.12 replaces the boundary „no action changes an
+  assignment". The children follow in numeric order: WP-M14-80 (the database),
+  WP-M14-81 (the shared contracts), WP-M14-82 (the engine), WP-M14-83 (the
+  configuration service), WP-M14-84 (the administration) and WP-M14-85 (the
+  assignees in the ticket view).
 - The subscription QR of the own channels page shows the stored ntfy topic (WP-M14-72b,
   the announced follow-up of WP-M14-72, phase 14 closed, ADR-0024 point 6):
   `GET /api/v1/notifications/accounts/ntfy` in

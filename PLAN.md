@@ -380,7 +380,11 @@ are configuration in the administration (`/admin/escalation`); the rules run
 24/7, pause with the ticket and fire exactly once per ticket, rule and
 threshold. The actions of the first version are non-mutating: `notify` (a subset
 of the configured channels), `webhook` (selected endpoints) and `history` (an
-append-only note).
+append-only note). Since ADR-0026 two more actions distribute a ticket: `offer`
+(the ticket is offered to a readiness pool or to a user group) and `assign` (the
+technicians of that target are assigned). Both carry the target as
+`{ kind, id }`, perform a step of the transition table and are configured like
+every other action; the assignment is recorded in `ticket_assignees`.
 
 The stage set itself is configuration too (ADR-0023, `specs/07-escalation.md`
 §7.11): the administration adds and removes stages and every stage names its
@@ -2148,6 +2152,33 @@ property 'condition'` — the long syntax of `depends_on` requires the
 the file passes the schema of the Compose specification. The three other
 compose files of the repository were valid before and stay valid. The phase is
 closed with it.
+
+**WP-M14-79 — the escalation offers and assigns tickets (out of band in phase
+14, requested by the office; drafted).** The office asked for two more actions
+of an escalation rule: a ticket that waits too long for a technician shall be
+**offered** to a pool of technicians, and a ticket shall be **assigned** to
+technicians. Until now a rule could only notify, write a webhook, write a note
+or change the status (§9) — the actions were side effects. The office answered
+the two questions of the design: the target is **a readiness pool or a user
+group** (both are selectable), and the assignment reaches **all** technicians of
+that target. **WP-M14-79** is the spec and the decision: ADR-0026 decides that
+the two new action types `offer` and `assign` carry a `target`
+(`{ kind, id }`), that the assignment is recorded in the new table
+`ticket_assignees`, that the offer of a pool target names the on-call person in
+`offered_to_user_id` and sets the offer timeout, and that the broadcast reaches
+the technicians on their own ntfy topic. `specs/07-escalation.md` §7.5 gains the
+two rows, the new §7.14 describes the target, the effect and the notification,
+§7.12 replaces the boundary „no action changes an assignment" and
+`specs/02-data-model.md` gains §4.13 for `ticket_assignees`. The children follow
+in numeric order: **WP-M14-80** (the database — migration `0043` widens the
+CHECK of the action types, `0044` adds `ticket_assignees`), **WP-M14-81** (the
+shared contracts), **WP-M14-82** (the engine — the dispatcher performs the
+`offered` and the `assigned` step of the transition table), **WP-M14-83** (the
+configuration service — a target that names no pool and no group answers
+`400 invalid_target`), **WP-M14-84** (the administration — the two types with
+their kind and target select) and **WP-M14-85** (the ticket view names the
+assignees). The numbers WP-M14-77 and WP-M14-78 belong to the announced
+follow-ups of WP-M14-76 and stay untouched by this series.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
