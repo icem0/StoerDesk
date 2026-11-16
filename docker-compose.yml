@@ -6,6 +6,8 @@
 #   docker compose up -d --build                 # core stack (db, api, web)
 #   docker compose --profile backup up -d       # + periodic database dumps and uploads archives
 #   docker compose --profile ntfy up -d         # + self-hosted ntfy server (no host port, ADR-0024)
+#   docker compose --profile ntfy --profile tunnel up -d
+#                                               # + Cloudflare Tunnel: the only public ntfy address (WP-M14-71)
 #
 # Profiles are independent and can be combined.
 
@@ -253,6 +255,41 @@ services:
     volumes:
       - ./ntfy/server.yml:/etc/ntfy/server.yml:ro
       - ntfydata:/var/lib/ntfy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    networks:
+      - backend
+
+  # Cloudflare Tunnel of the ntfy server (profile "tunnel", ADR-0024 point 4,
+  # WP-M14-71). It is the only public path: the ntfy container publishes no host
+  # port and cloudflared maps the public hostname of the tunnel (`NTFY_HOSTNAME`
+  # in `.env`) to `http://ntfy:80` on the `backend` network, with the certificate
+  # Cloudflare manages and no inbound port on the host. The operator creates the
+  # tunnel in the Cloudflare dashboard and copies its token into
+  # `CLOUDFLARE_TUNNEL_TOKEN`; the `:?` stops the config with a clear message
+  # while that token is missing.
+  cloudflared:
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared}
+    profiles:
+      - tunnel
+    restart: unless-stopped
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+    environment:
+      # cloudflared reads the token of the tunnel from this variable. The token
+      # is a secret of the deployment, the same class as POSTGRES_PASSWORD: it
+      # lives only in `.env` and is never printed by the stack.
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is missing - create the tunnel in the Cloudflare dashboard and copy its token into .env}
+    # `ntfy` stays optional: the tunnel can start on its own, e.g. while only
+    # this profile is enabled.
+    depends_on:
+      ntfy:
+        required: false
     logging:
       driver: json-file
       options:

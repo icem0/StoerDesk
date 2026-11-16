@@ -63,7 +63,7 @@ docs/                            ARCHITECTURE, COMPLIANCE, DECISIONS + DECISIONS
 scripts/                         create-env, docker-smoke, e2e-acceptance, i18n-check, ntfy-setup, orchestrate, push-release, restore-drill, split-spec, update, version-file, wp-check
 Dockerfile                       multi-stage image build (targets api, web)
 ntfy/server.yml                  ntfy server config of the optional "ntfy" Compose profile (ADR-0024, WP-M14-69; deny-all ACL, behind-proxy)
-docker-compose.yml               full stack: db, db-backup-pre-migrate, api, web, optional backup profile (dumps + uploads archive), optional ntfy profile (self-hosted ntfy server, no host port)
+docker-compose.yml               full stack: db, db-backup-pre-migrate, api, web, optional backup profile (dumps + uploads archive), optional ntfy profile (self-hosted ntfy server, no host port), optional tunnel profile (cloudflared, the only public ntfy path, WP-M14-71)
 docker-compose.{dev,local,debug}.yml  local database, local build, host port override
 AGENTS.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, README.md, CHANGELOG.md, LICENSE
 ```

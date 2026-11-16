@@ -914,6 +914,25 @@ carries too); the manual check on a running profile (403 anonymous publish to
 `stoerdesk-pruef`, 200 with the token, 403 anonymous read of `anderes`) is **unverified**
 — this development container has no Docker daemon. WP-M14-71 … WP-M14-72 stay open in
 numeric order.
+**WP-M14-71 is implemented** (the Cloudflare Tunnel profile of the ntfy server, ADR-0024
+points 4 and 5): `docker-compose.yml` gained the service `cloudflared` with
+`profiles: [tunnel]`, image `${CLOUDFLARED_IMAGE:-cloudflare/cloudflared}` (pinned),
+command `tunnel --no-autoupdate run`, network `backend`, `depends_on: ntfy` with
+`required: false`, the json-file logging of the stack and **no** `ports:` entry — the
+tunnel is the only public path, the ntfy container stays without a host port.
+`TUNNEL_TOKEN` comes from `CLOUDFLARE_TUNNEL_TOKEN`, required with `:?` as the
+`POSTGRES_PASSWORD` line does, so a missing token stops `docker compose config` with
+a clear message instead of starting a silent tunnel. `.env.example` gained `CLOUDFLARED_IMAGE`
+and an empty `CLOUDFLARE_TUNNEL_TOKEN` with a comment that the public hostname of the
+tunnel must point to `http://ntfy:80` (the hostname itself is `NTFY_HOSTNAME`, announced
+by WP-M14-69). `docs/DEPLOYMENT.md` (Notifications) names the ntfy profile as the
+exception of "StörDesk ships no notification servers" (ADR-0024 consequence), documents
+start, setup script and tunnel and says that the tunnel is the only public path. No
+DNS and no tunnel creation through an API: the operator creates the tunnel in the
+Cloudflare dashboard and copies its token (non-goal of the WP); no Cloudflare Access
+policy. `docker compose --profile ntfy --profile tunnel config` is **unverified** —
+this development container has no Docker daemon; locally both files were checked to
+parse (the `yaml` package and Prettier). WP-M14-72 stays open in numeric order.
 **WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five

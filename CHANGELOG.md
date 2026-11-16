@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ntfy server of the `ntfy` Compose profile becomes publicly reachable through
+  a Cloudflare Tunnel profile `tunnel` (WP-M14-71, out of band in phase 14, ADR-0024
+  points 4 and 5): `docker-compose.yml` gained the service `cloudflared` with
+  `profiles: [tunnel]`, the pinned image `${CLOUDFLARED_IMAGE:-cloudflare/cloudflared}`,
+  the command `tunnel --no-autoupdate run`, the `backend` network, `depends_on: ntfy`
+  with `required: false`, the json-file logging of the stack and **no** `ports:` entry
+  — the tunnel is the only public path and the ntfy container keeps no host port.
+  `TUNNEL_TOKEN` comes from `CLOUDFLARE_TUNNEL_TOKEN`, required with `:?` as the
+  `POSTGRES_PASSWORD` line does, so a missing token stops `docker compose config`
+  with a clear message rather than starting a silent tunnel. `.env.example` gained
+  `CLOUDFLARED_IMAGE` and an empty `CLOUDFLARE_TUNNEL_TOKEN` with the comment that
+  the public hostname of the tunnel must point to `http://ntfy:80` (the hostname
+  itself, `NTFY_HOSTNAME`, was announced by WP-M14-69). `docs/DEPLOYMENT.md`
+  (Notifications) names the ntfy profile as the exception of "StörDesk ships no
+  notification servers" (ADR-0024 consequence), documents start, setup script of
+  WP-M14-70 and tunnel and states that the tunnel is the only public path. No DNS
+  and no tunnel creation through an API: the operator creates the tunnel in the
+  Cloudflare dashboard and copies its token; no Cloudflare Access policy. The
+  token is a secret of the class of `POSTGRES_PASSWORD`, written only to `.env`
+  and never printed. `docker compose --profile ntfy --profile tunnel config` is
+  **unverified**: this development container has no Docker daemon, CI runs the
+  smoke test instead; locally the compose file and `.env.example` were checked to
+  parse (the `yaml` package and Prettier). No change of `ntfy/server.yml`, of a
+  service of the core stack or of any code.
 - The ntfy access control list and the API token are created by a setup script
   (WP-M14-70, out of band in phase 14, ADR-0024 point 3): `scripts/ntfy-setup.sh`
   (`npm run ntfy:setup`) runs every ntfy command inside the container of the `ntfy`

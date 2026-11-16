@@ -1,7 +1,7 @@
 # WP-M14-71: Cloudflare Tunnel profile for ntfy
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-69
 phase: 14
 milestone: m14
@@ -59,8 +59,21 @@ config with a clear message. Docker is unverified if no daemon runs.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `docker-compose.yml` (the `cloudflared` service after `ntfy` with
+  profile `tunnel`, the profile line in the header comment), `.env.example`
+  (`CLOUDFLARED_IMAGE`, `CLOUDFLARE_TUNNEL_TOKEN` and their comments),
+  `docs/DEPLOYMENT.md` (Notifications: the exception of "ships no notification
+  servers", the own-ntfy-server subsection with start, setup script and tunnel).
+- Interfaces added: Compose profile `tunnel` with the service `cloudflared`
+  (image `CLOUDFLARED_IMAGE`, command `tunnel --no-autoupdate run`, network
+  `backend`, `depends_on: ntfy` with `required: false`, no `ports:`), the `.env`
+  keys `CLOUDFLARED_IMAGE` and `CLOUDFLARE_TUNNEL_TOKEN` (`NTFY_HOSTNAME` was
+  announced by WP-M14-69).
+- Verified: `npm run wp:check` and `npm run check` green; both files parse
+  (Prettier and the `yaml` package: the `cloudflared` service carries
+  `profiles: [tunnel]`, no `ports`, the `:?` token line and `required: false`).
+  `docker compose --profile ntfy --profile tunnel config` is **unverified**: this
+  development container has no Docker daemon (no `docker` binary), CI runs the
+  smoke test instead.
 - Follow-up WP: WP-M14-72 (random topic names and the backup of the ntfy volume)
-- Open question (if any):
+- Open question (if any): none

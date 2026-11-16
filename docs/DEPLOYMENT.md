@@ -302,8 +302,10 @@ itself as unverified, never green.
 
 ## Notifications
 
-StörDesk ships no notification servers. Every channel talks to an instance that
-already exists; a channel stays disabled while its address is empty.
+StörDesk ships no notification servers — the self-hosted ntfy server of the
+optional Compose profile `ntfy` is the exception (ADR-0024); every other channel
+talks to an instance that already exists and stays disabled while its address is
+empty.
 
 | Channel  | Variables                                                                      |
 | -------- | ------------------------------------------------------------------------------ |
@@ -318,6 +320,27 @@ already exists; a channel stays disabled while its address is empty.
 Set `NTFY_URL` to the server the API publishes to and `NTFY_PUBLIC_URL` to the
 address the browser subscribes to. The browser listens on
 `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}`.
+
+### Own ntfy server (optional Compose profile `ntfy`)
+
+The profile `ntfy` starts a self-hosted ntfy server (ADR-0024, WP-M14-69); the
+external ntfy path above stays untouched. It publishes no host port:
+
+```bash
+docker compose --profile ntfy up -d                       # the server itself
+npm run ntfy:setup                                        # access control list + NTFY_TOKEN in .env (WP-M14-70)
+docker compose --profile ntfy --profile tunnel up -d      # the public address through a Cloudflare Tunnel (WP-M14-71)
+```
+
+The Cloudflare Tunnel (profile `tunnel`) is the only public path to the server:
+`cloudflared` maps the public hostname of the tunnel (`NTFY_HOSTNAME` in `.env`)
+to `http://ntfy:80` on the `backend` network, with a certificate Cloudflare
+manages and no inbound port on the host. The operator creates the tunnel in the
+Cloudflare dashboard, points its destination at `http://ntfy:80`, and copies its
+token into `CLOUDFLARE_TUNNEL_TOKEN` of `.env`; while that token is empty,
+starting the profile stops the stack config with a clear message. The tunnel is
+never created through an API and carries no Cloudflare Access policy: the topic
+names of `stoerdesk-*` are the secret (ADR-0024 point 6).
 
 ### Signal
 
