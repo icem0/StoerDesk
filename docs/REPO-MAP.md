@@ -351,4 +351,5 @@ report form and the checkbox on `/admin/branding`.
 > (WP-M14-58 … WP-M14-67) and ntfy as an optional Compose profile behind a
 > Cloudflare Tunnel (WP-M14-69 … WP-M14-72); the record of the phase is closed
 > by **WP-M14-73** and the tunnel token of WP-M14-71 no longer stops the core
-> stack (**WP-M14-74**).
+> stack (**WP-M14-74**) and its dependency is a valid compose schema
+> (**WP-M14-75**).

@@ -544,6 +544,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decision of the phase.
 
 ### Fixed
+- The compose file of the tunnel profile is valid again (WP-M14-75): the long
+  syntax of `depends_on` requires the `condition` beside the `required`, and the
+  service `cloudflared` carried only `required: false` — `docker compose` rejected
+  the file with `services.cloudflared.depends_on.ntfy missing property
+  'condition'`. The service now names `condition: service_started`: the ntfy
+  server stays optional (the tunnel can start on its own while only the profile
+  `tunnel` is enabled) and the file passes the schema of the Compose
+  specification. The three other compose files of the repository were valid
+  before and stay valid.
 - A deployment without a Cloudflare Tunnel starts again (WP-M14-74): the tunnel
   token of the service `cloudflared` was read with the strict
   `${CLOUDFLARE_TUNNEL_TOKEN:?…}`, and `docker compose` interpolates every

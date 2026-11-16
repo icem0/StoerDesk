@@ -298,9 +298,12 @@ services:
       # script names the missing key before the tunnel is started.
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     # `ntfy` stays optional: the tunnel can start on its own, e.g. while only
-    # this profile is enabled.
+    # this profile is enabled. The long syntax of `depends_on` needs the
+    # `condition` beside the `required` — without it the compose file is
+    # rejected by the schema of the runner (WP-M14-75).
     depends_on:
       ntfy:
+        condition: service_started
         required: false
     logging:
       driver: json-file

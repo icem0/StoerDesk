@@ -2138,6 +2138,17 @@ WP-M14-71 built it (image, command, network, `depends_on`, no host port) and the
 operator command `docker compose --profile ntfy --profile tunnel up -d` stays.
 The phase is closed with it.
 
+**WP-M14-75 — the tunnel dependency is a valid compose schema (done).** The
+check run of WP-M14-74 was still red in the job `Docker smoke test`:
+`validating docker-compose.yml: services.cloudflared.depends_on.ntfy missing
+property 'condition'` — the long syntax of `depends_on` requires the
+`condition` beside the `required`, and WP-M14-71 wrote only `required: false`.
+**WP-M14-75** adds `condition: service_started`: the ntfy server stays optional
+(the tunnel can start on its own while only the profile `tunnel` is enabled) and
+the file passes the schema of the Compose specification. The three other
+compose files of the repository were valid before and stay valid. The phase is
+closed with it.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
