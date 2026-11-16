@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The subscription QR of the own channels page shows the stored ntfy topic (WP-M14-72b,
+  the announced follow-up of WP-M14-72, phase 14 closed, ADR-0024 point 6):
+  `GET /api/v1/notifications/accounts/ntfy` in
+  `apps/api/src/notifications/routes.ts` builds the subscription address and the
+  `ntfy://<host>/<topic>` deep link from the stored `external_id` of the ntfy
+  account of the session user — a drizzle-bound select over `notificationAccounts`
+  keyed by the session user id and the `ntfy` channel — so the QR points at the
+  topic `ntfyRecipients` publishes to. A user without an ntfy account is
+  provisioned through `storeAccount` with a fresh random topic from `newNtfyTopic()`
+  (visiting the QR connects the user, the server creates the topic); a repeat visit
+  keeps the stored topic and writes nothing. An unconfigured ntfy server still
+  answers the empty subscription, the session guard and the deep-link derivation
+  (WP-M14-33) are unchanged. No migration or rotation of existing topics, no change
+  of the adapters, the outbox or `receivers.ts`, no new route, permission key or
+  schema. The extended `apps/api/src/notifications/__tests__/routes.unit.spec.ts`
+  proves the stored topic, the provisioning of a `stoerdesk-`-prefixed 128-bit
+  random topic and the stable topic over two visits.
 - The subscription topic of an ntfy user is a random secret of the server and the
   `ntfy` volume joins the backup profile (WP-M14-72, phase 14 closed, ADR-0024 point
   6 and consequences): `apps/api/src/notifications/accounts.ts` exports

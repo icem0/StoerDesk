@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { loadEnv } from '../../config/env'
 import type { Database } from '../../db/client'
-import { notificationChannels, notificationChannelVerifications } from '../../db/schema'
+import { notificationChannels, notificationChannelVerifications, notificationAccounts } from '../../db/schema'
 import type { NotificationChannel } from '../channels'
 import { notificationChannelRoutes } from '../routes'
 
@@ -27,6 +27,7 @@ function fakeDatabase(
   store: StoredRow[],
   held: string[],
   statusRows: Array<Record<string, unknown>> = [],
+  accounts: Array<Record<string, unknown>> = [],
 ): Db {
   const verifications: Array<Record<string, unknown>> = []
   Object.assign(verifications, {
@@ -40,6 +41,11 @@ function fakeDatabase(
   const overridesQuery = {
     innerJoin: () => ({ where: async () => [] as Array<{ key: string; effect: string }> }),
   }
+  const accountsQuery = {
+    where: (_: unknown) => ({
+      limit: async (count: number) => accounts.filter((row) => row.channel === 'ntfy').slice(0, count),
+    }),
+  }
 
   return {
     selectDistinct: () => ({ from: () => grantedQuery }),
@@ -51,6 +57,10 @@ function fakeDatabase(
 
         if (table === notificationChannelVerifications) {
           return verifications
+        }
+
+        if (table === notificationAccounts) {
+          return accountsQuery
         }
 
         return overridesQuery
@@ -70,6 +80,28 @@ function fakeDatabase(
             }
 
             verifications.push({ ...values, ...set })
+            return
+          }
+
+          if (table === notificationAccounts) {
+            const existing = accounts.find(
+              (account) =>
+                account.userId === values.userId && account.channel === values.channel,
+            )
+
+            if (existing !== undefined) {
+              Object.assign(existing, values, set)
+              return
+            }
+
+            accounts.push({
+              userId: values.userId,
+              channel: values.channel,
+              externalId: values.externalId,
+              label: values.label ?? '',
+              secret: (values.secret as string | undefined) ?? '',
+              updatedAt: values.updatedAt,
+            })
             return
           }
 
@@ -111,6 +143,7 @@ async function buildApp(options: {
   store: StoredRow[]
   channels?: readonly NotificationChannel[]
   statusRows?: Array<Record<string, unknown>>
+  accounts?: Array<Record<string, unknown>>
 }): Promise<FastifyInstance> {
   const app = Fastify({ logger: false })
 
@@ -131,7 +164,7 @@ async function buildApp(options: {
   })
 
   await app.register(notificationChannelRoutes, {
-    database: fakeDatabase(options.store, options.held, options.statusRows ?? []),
+    database: fakeDatabase(options.store, options.held, options.statusRows ?? [], options.accounts ?? []),
     env: loadEnv({}),
     ...(options.channels === undefined ? {} : { channels: options.channels }),
   })
@@ -394,8 +427,8 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
   })
 })
 
-describe('the ntfy subscription of the user (WP-M14-13)', () => {
-  it('answers the subscription address of the user when the ntfy channel is configured', async () => {
+describe('the ntfy subscription of the user (WP-M14-13, stored topic of WP-M14-72b)', () => {
+  it('answers the stored topic of the ntfy account of the user', async () => {
     const app = await buildApp({
       held: [],
       store: [
@@ -404,6 +437,16 @@ describe('the ntfy subscription of the user (WP-M14-13)', () => {
           config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
           secret: '',
         }),
+      ],
+      accounts: [
+        {
+          userId: 'admin-1',
+          channel: 'ntfy',
+          externalId: 'stoerdesk-stored',
+          label: '',
+          secret: '',
+          updatedAt: new Date(),
+        },
       ],
     })
 
@@ -416,10 +459,78 @@ describe('the ntfy subscription of the user (WP-M14-13)', () => {
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({
       publicUrl: 'https://ntfy.sh',
-      topic: 'stoerdesk-admin-1',
-      subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin-1',
-      deepLink: 'ntfy://ntfy.sh/stoerdesk-admin-1',
+      topic: 'stoerdesk-stored',
+      subscriptionUrl: 'https://ntfy.sh/stoerdesk-stored',
+      deepLink: 'ntfy://ntfy.sh/stoerdesk-stored',
     })
+  })
+
+  it('provisions a user without an ntfy account with a fresh random topic', async () => {
+    const accounts: Array<Record<string, unknown>> = []
+    const app = await buildApp({
+      held: [],
+      store: [
+        row({
+          kind: 'ntfy',
+          config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+          secret: '',
+        }),
+      ],
+      accounts,
+    })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts/ntfy',
+      headers: { 'x-test-user': 'admin-1' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    const topic = response.json<{ topic: string }>().topic
+
+    expect(topic).toMatch(/^stoerdesk-[0-9a-f]{32}$/)
+    expect(response.json()).toEqual({
+      publicUrl: 'https://ntfy.sh',
+      topic,
+      subscriptionUrl: `https://ntfy.sh/${topic}`,
+      deepLink: `ntfy://ntfy.sh/${topic}`,
+    })
+    expect(accounts).toEqual([
+      expect.objectContaining({
+        userId: 'admin-1',
+        channel: 'ntfy',
+        externalId: expect.stringMatching(/^stoerdesk-[0-9a-f]{32}$/),
+      }),
+    ])
+  })
+
+  it('keeps the stored topic of a provisioned account on a repeat visit', async () => {
+    const accounts: Array<Record<string, unknown>> = []
+    const app = await buildApp({
+      held: [],
+      store: [
+        row({
+          kind: 'ntfy',
+          config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+          secret: '',
+        }),
+      ],
+      accounts,
+    })
+
+    const first = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts/ntfy',
+      headers: { 'x-test-user': 'admin-1' },
+    })
+    const second = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts/ntfy',
+      headers: { 'x-test-user': 'admin-1' },
+    })
+
+    expect(first.json<{ topic: string }>().topic).toBe(second.json<{ topic: string }>().topic)
+    expect(accounts).toHaveLength(1)
   })
 
   it('answers an empty subscription when the ntfy channel is not configured', async () => {

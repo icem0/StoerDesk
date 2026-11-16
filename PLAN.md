@@ -958,15 +958,22 @@ the topics stay deduplicated; the fixtures of `outbox.unit.spec.ts` and of
 `phase14-exit.integration.spec.ts` reconnect user B with a stored random topic
 instead of a derived one. `docker compose config` is **unverified** (no Docker CLI/daemon
 here, the compose file parses as YAML and the mount of `ntfydata` stays declared).
-**WP-M14-72b is drafted** (out of band, the announced follow-up of WP-M14-72): the
+**WP-M14-72b — the subscription QR shows the stored topic (done).** The
 subscription route `GET /api/v1/notifications/accounts/ntfy` in
-`apps/api/src/notifications/routes.ts` still answers the QR of the derived
-`stoerdesk-<userId>` topic — outside the files WP-M14-72 may write — so a phone that
-scans it subscribes to a topic nothing publishes to any more. WP-M14-72b makes that
-route answer the stored topic of the ntfy account of the session user and lets the
-first visit provision a random topic through `storeAccount`. Phase 14 stays open with
-that one item: WP-M14-72b stays open in numeric order.
-**WP-M14-58 is drafted, not implemented yet** (out of band in phase 14, asked by
+`apps/api/src/notifications/routes.ts` answers the **stored** `external_id` of the
+ntfy account of the session user (a `select` over `notificationAccounts` bounded
+by the session user id and the `ntfy` channel, drizzle-bound like the read of
+`storeAccount`); the derived `stoerdesk-<userId>` topic is no longer a valid
+subscription (WP-M14-72 removed the fallback in `ntfyRecipients`, so a phone at a
+derived topic receives nothing). A user without an ntfy account is provisioned
+through `storeAccount` with a fresh random topic from `newNtfyTopic()` — visiting
+the QR connects the user (ADR-0024 point 6: the server owns the subscription topic,
+the client never picks it); a repeat visit keeps the stored topic and writes
+nothing. An unconfigured ntfy server still answers the empty subscription. The
+extended `apps/api/src/notifications/__tests__/routes.unit.spec.ts` proves the
+stored topic, the provisioning of a `stoerdesk-`-prefixed 128-bit random topic and
+the stable topic over two visits. Phase 14 has no open follow-up left.
+**WP-M14-58 is drafted and implemented** (out of band in phase 14, asked by
 the office): the number of escalation stages becomes configurable. Today
 `PUT /api/v1/escalation/stages` only renames, reorders and deactivates the five
 fixed keys and ADR-0017 forbids any other stage. ADR-0023 supersedes that one

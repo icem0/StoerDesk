@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
@@ -26,7 +26,7 @@ import { requirePermission } from '../auth/requirePermission'
 import type { preHandlerHookHandler } from 'fastify'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
-import { notificationChannels } from '../db/schema'
+import { notificationChannels, notificationAccounts } from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
 import { resolveChannelStatus } from '../dashboard/service'
 import { readChannelConfiguration } from './config'
@@ -36,7 +36,7 @@ import {
   effectiveNtfyConfig,
   requestNtfyVerification,
 } from './verification'
-import { deleteAccount } from './accounts'
+import { deleteAccount, storeAccount } from './accounts'
 import { readPreferences, writePreferences } from './preferences'
 import {
   storeMatrixAccount,
@@ -229,10 +229,13 @@ const requireSession: preHandlerHookHandler = async (request, reply) => {
  * deep link only opens the app and subscribes when it carries the host
  * (`https://<host>/<topic>/subscribe` is not possible on Android), and an
  * `http://` server takes the documented `?secure=false` suffix. The topic is
- * derived from the user id — `stoerdesk-<userId>` (§11.3) — and the answer is
- * empty when the ntfy server is not configured (no row and no usable
- * environment fallback). No credential ever enters the link: ntfy offers no
- * URL-login scheme and ADR-0005 keeps every secret write-only.
+ * the stored `external_id` of the ntfy account of the session user — a user
+ * without an account is provisioned with a fresh random topic from
+ * `storeAccount` (WP-M14-72b, ADR-0024 point 6: the server creates the topic,
+ * the derived `stoerdesk-<userId>` name is no longer a valid subscription) —
+ * and the answer is empty when the ntfy server is not configured (no row and
+ * no usable environment fallback). No credential ever enters the link: ntfy
+ * offers no URL-login scheme and ADR-0005 keeps every secret write-only.
  */
 function ntfySubscriptionOf(
   configuredUrl: string,
@@ -665,7 +668,31 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           return EMPTY_NTFY_SUBSCRIPTION
         }
 
-        return ntfySubscriptionOf(configuredUrl, `stoerdesk-${userId}`)
+        // The stored topic of the user (WP-M14-72b): the subscription QR shows
+        // what `ntfyRecipients` publishes to. A user without an ntfy account is
+        // provisioned with a fresh random topic through `storeAccount` (WP-M14-72,
+        // which replaces an empty `externalId` with `newNtfyTopic()`) — visiting
+        // the QR connects the user (ADR-0024 point 6). A repeat visit keeps the
+        // stored topic and writes nothing.
+        const [stored] = await database
+          .select({ externalId: notificationAccounts.externalId })
+          .from(notificationAccounts)
+          .where(
+            and(
+              eq(notificationAccounts.userId, userId),
+              eq(notificationAccounts.channel, 'ntfy'),
+            ),
+          )
+          .limit(1)
+
+        const topic =
+          stored === undefined || stored.externalId === ''
+            ? (
+              await storeAccount(database, userId, { channel: 'ntfy', externalId: '', label: '' })
+            ).externalId
+            : stored.externalId
+
+        return ntfySubscriptionOf(configuredUrl, topic)
       },
     )
 

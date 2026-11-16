@@ -770,6 +770,21 @@ route of `routes.ts` still answers the derived `stoerdesk-<userId>` topic, outsi
 the files of the WP — so **WP-M14-72b** (the subscription QR shows the stored topic)
 is drafted as the follow-up of WP-M14-72 in this commit and stays open.
 WP-M14-72b stays open in numeric order.
+**WP-M14-72b is implemented** (the subscription QR shows the stored topic):
+`GET /api/v1/notifications/accounts/ntfy` in `apps/api/src/notifications/routes.ts`
+answers the stored `external_id` of the ntfy account of the session user — the
+subscription address and the `ntfy://<host>/<topic>` deep link now point at the
+topic `ntfyRecipients` publishes to, so a phone that scans the QR receives the
+messages of that user. A user without an ntfy account is provisioned through
+`storeAccount` with a fresh random topic from `newNtfyTopic()` (ADR-0024 point 6:
+visiting the QR connects the user, the server creates the topic); a repeat visit
+keeps the stored topic and writes nothing. An unconfigured ntfy server still
+answers the empty subscription. No migration or rotation of existing topics,
+the adapters, the outbox and `receivers.ts` are untouched, no new route,
+permission key or session-guard change. The extended
+`apps/api/src/notifications/__tests__/routes.unit.spec.ts` proves the stored
+topic, the provisioning of a `stoerdesk-`-prefixed 128-bit random topic and the
+stable topic over two visits. Phase 14 has no open follow-up left.
 
 ## Open follow-ups
 
@@ -1234,7 +1249,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | done    | yes     |
 | WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | done    | yes     |
 | WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | done    | yes     |
-| WP-M14-72b | the subscription QR shows the stored ntfy topic (follow-up of 72)       | planned | yes     |
+| WP-M14-72b | the subscription QR shows the stored ntfy topic (follow-up of 72)       | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

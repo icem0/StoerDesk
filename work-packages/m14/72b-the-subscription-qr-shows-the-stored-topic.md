@@ -1,7 +1,7 @@
 # WP-M14-72b: The subscription QR shows the stored topic
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-72
 phase: 14
 milestone: m14
@@ -67,9 +67,15 @@ the QR of a user with an account is the stored one.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/notifications/routes.ts` and
+  `apps/api/src/notifications/__tests__/routes.unit.spec.ts`
+- Interfaces added: `GET /api/v1/notifications/accounts/ntfy` answers the stored
+  `external_id` of the ntfy account of the session user; a user without one is
+  provisioned through `storeAccount` with a fresh random topic from `newNtfyTopic()`
+- Verified: `npm run wp:check`, typecheck, lint (0 errors), `npm run test:run`
+  green — 194 files, 1302 tests; the ntfy subscription block proves the stored
+  topic, the provisioning of a `stoerdesk-`-prefixed 128-bit random topic and the
+  repeat visit that keeps it
 - Follow-up WP: none
 - Open question: whether provisioning on the first QR visit is the right moment
   or the user should click a `Connect this device` action
