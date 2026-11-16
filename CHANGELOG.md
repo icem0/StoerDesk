@@ -528,6 +528,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   concrete hint instead of a bare "http_error". The verification code send
   carries the same reason in its answer params.
 
+### Changed
+- The phase-14 record is closed (WP-M14-73): all 80 packages of phase 14 are
+  implemented, the two exit criteria of the phase are proven by their
+  integration tests (`phase14-exit.integration.spec.ts` of WP-M14-21 and
+  `stage-chain-exit.integration.spec.ts` of WP-M14-67) and no follow-up is open.
+  The documents WP-M14-23 … WP-M14-26 still carried `status: planned` although
+  their packages landed long ago (`604e9d8`, `8e7c9cf`, `4316b58`, `6f8a93b`);
+  the field now reads `done`, so the work packages and the backlog table of
+  `work-packages/README.md` agree. `PLAN.md` §16 names the phase as closed, the
+  phase row of the table of `work-packages/README.md` marks it as closed and the
+  implementation status of `docs/REPO-MAP.md` ends with "Phase 14 complete". No
+  code, schema, route, UI, specification or ADR changes — the decisions of the
+  phase are settled (ADR-0019 … ADR-0025) and `PLAN.md` §19 carries no open
+  decision of the phase.
+
 ### Fixed
 - A self-hosted ntfy server that needs an access token now works (WP-M14-51):
   the key saved in the write-only secret field of the channel (and in

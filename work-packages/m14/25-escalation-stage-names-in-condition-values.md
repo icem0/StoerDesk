@@ -1,7 +1,7 @@
 # WP-M14-25: stage names label the reached-stage condition values
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-24
 phase: 14
 context-budget: 14k tokens

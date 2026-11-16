@@ -1,7 +1,7 @@
 # WP-M14-24: the escalation administration explains itself
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-23
 phase: 14
 context-budget: 16k tokens

@@ -2098,6 +2098,29 @@ created in the volume by the setup script of WP-M14-70. The core services `db`,
 `--profile ntfy` stays **unverified** in the development container (no Docker
 daemon); CI runs the Docker smoke test instead.
 
+**WP-M14-73 — the phase-14 record is closed (done).** Phase 14 is complete: all
+80 packages of `work-packages/m14/` are implemented, the two exit criteria of
+the phase are proven by their integration tests — WP-M14-21
+(`apps/api/src/notifications/__tests__/phase14-exit.integration.spec.ts`: the
+selection of the user decides the channels of a ticket, the mandatory minimum
+channels of a critical ticket are queued whatever the selection says, a failed
+channel warns and the chain continues, and no secret of a channel or of an
+account leaves the server) and WP-M14-67
+(`apps/api/src/escalation/__tests__/stage-chain-exit.integration.spec.ts`: the
+configurable stage chain replaces the fixed stages of ADR-0017) — and no
+follow-up is open. The four phase-14 documents WP-M14-23 … WP-M14-26 still
+carried `status: planned` although their packages landed long ago (the commits
+`604e9d8`, `8e7c9cf`, `4316b58` and `6f8a93b`); the field now reads `done`, so
+the document and the backlog table of `work-packages/README.md` agree. The
+decisions of the phase are settled: ADR-0019 (configuration and accounts in the
+database), ADR-0020 (WhatsApp Web as an external bridge), ADR-0021 (the
+readiness over the configured channels), ADR-0022 (the ntfy access token as the
+secret of the channel), ADR-0023 (the configurable stage chain), ADR-0024 (ntfy
+as an optional Compose profile behind a Cloudflare Tunnel) and ADR-0025 (the
+transitions as database rows) — `PLAN.md` §19 carries no open decision of the
+phase. The next phase starts with its own split; a new package of phase 14
+needs a new phase.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

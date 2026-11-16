@@ -1,7 +1,7 @@
 # WP-M14-23: the escalation condition values speak the interface language
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M13-18
 phase: 14
 context-budget: 16k tokens

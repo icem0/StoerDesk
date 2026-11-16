@@ -1,7 +1,7 @@
 # WP-M14-26: The readiness allocation announces itself — spec, ADR-0021 and the split
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-25
 phase: 14
 milestone: m14
@@ -81,6 +81,9 @@ no source file changes; the grep shows ADR-0021, the spec rules and the backlog 
 - Files changed: the two spec slices, ADR-0021 and its index, PLAN.md, the backlog, the changelog,
   the seven new WP documents, the amended WP-M14-16/17 documents
 - Interfaces added: the readiness event types, the outbox shape of ADR-0021, the confirmable `DRAFT`
-- Verified:
+- Verified: `npm run wp:check` green (the seven new documents valid), `npm run check`
+  green (the package changes documents only), the grep for `ADR-0021` and
+  `WP-M14-26 … WP-M14-32` shows the ADR, its index entry, the spec rules of
+  `specs/04-oncall.md` and `specs/10-notifications.md` and the seven documents
 - Follow-up WP: WP-M14-27 … WP-M14-32 (each file exists in this commit)
 - Open question: none
