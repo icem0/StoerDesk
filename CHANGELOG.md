@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The engine offers and assigns a ticket (WP-M14-82, out of band in phase 14,
+  ADR-0026): `apps/api/src/oncall/members.ts` (new) extracts the pool members
+  rule of `GET /api/v1/oncall/pools/:id/members` (§4a.5) — the members of the
+  group of a pool, otherwise every active user holding the `oncall` role — and
+  the on-call members route now shares it. `apps/api/src/escalation/distribution.ts`
+  (new) performs the `offered` or `assigned` step of `ticket_transitions`
+  through `transitionTicket()` (actor `system`), writes one row of
+  `ticket_assignees` per technician of the target for an assignment and appends
+  one `escalation_note` event `{ rule, stage, target }`; without a step of the
+  transition table or without a technician the action changes nothing. The
+  dispatcher `apps/api/src/escalation/actions.ts` runs the two new action types
+  with the target from the action `config` and counts `offered` and `assigned`.
+  The split child WP-M14-82b carries the responsible person of the offer and
+  the notification of the technicians. The new integration spec proves the four
+  cases on a throwaway database.
 - The shared contracts of the offer and assign actions (WP-M14-81, out of band in
   phase 14, ADR-0026): `ESCALATION_ACTION_TYPES` in
   `packages/shared/src/schemas/escalation-config.ts` carries the two new types

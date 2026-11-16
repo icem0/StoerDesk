@@ -20,10 +20,11 @@ import {
 import { loadEffectivePermissions, requirePermission } from '../auth/requirePermission'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { oncallPools, oncallShifts, roles, userGroups, userRoles, users } from '../db/schema'
+import { oncallPools, oncallShifts, users } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
 import { resolveDefaultPool } from './coupling'
+import { resolvePoolMemberIds } from './members'
 import { serializeIcal, verifyIcalToken, icalTokenFor } from './ical'
 import { readOncallSettings, writeOncallSettings } from './settings'
 import { swapRoutes } from './swap-routes'
@@ -585,37 +586,9 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           return reply.code(404).send({ code: 'oncall_pool_not_found', params: { fields: ['id'] } })
         }
 
-        let memberUserIds: string[] = []
+        const memberUserIds = await resolvePoolMemberIds(database, parsedId.data)
 
-        if (pool.groupId !== null && pool.groupId !== undefined) {
-          const rows = await database
-            .select({ userId: userGroups.userId })
-            .from(userGroups)
-            .innerJoin(users, eq(users.id, userGroups.userId))
-            .where(
-              and(
-                eq(userGroups.groupId, pool.groupId),
-                eq(users.active, true),
-              ),
-            )
-          memberUserIds = rows.map((row) => row.userId)
-        } else {
-          const rows = await database
-            .select({ userId: userRoles.userId })
-            .from(userRoles)
-            .innerJoin(roles, eq(roles.id, userRoles.roleId))
-            .innerJoin(users, eq(users.id, userRoles.userId))
-            .where(
-              and(
-                eq(roles.key, 'oncall'),
-                eq(users.active, true),
-              ),
-            )
-          memberUserIds = rows.map((row) => row.userId)
-        }
-
-        const members =
-          memberUserIds.length === 0
+        const members =          memberUserIds.length === 0
             ? []
             : await database
                 .select({

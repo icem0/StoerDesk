@@ -2,6 +2,7 @@ import { and, asc, eq, inArray } from 'drizzle-orm'
 
 import {
   evaluateEscalationCondition,
+  escalationTargetSchema,
   type EscalationCondition,
   type EscalationFacts,
 } from '@stoerdesk/shared'
@@ -18,6 +19,7 @@ import {
 } from '../db/schema'
 import { transitionTicket } from '../tickets/workflow'
 import { readTicketTransitions } from '../tickets/transition-service'
+import { distributeTicket } from './distribution'
 
 /**
  * The actions of a fired rule (`specs/07-escalation.md` §7.5, ADR-0017,
@@ -28,9 +30,12 @@ import { readTicketTransitions } from '../tickets/transition-service'
  * history and `status_change` performs the step of the `ticket_transitions`
  * table that leads from the current status of the ticket to the configured
  * target (§7.5, §7.13, ADR-0025, WP-M14-40b) and appends one `escalation_note`
- * event documenting the change. Every action carries its own condition: an
- * action whose condition does not match does not run. No action changes an
- * assignment, a priority, a deadline or a work order.
+ * event documenting the change. The `offer` and the `assign` action
+ * distribute the ticket (§7.14, ADR-0026, WP-M14-82): they hand it to the
+ * technicians of their target. Every action carries its own condition: an
+ * action whose condition does not match does not run. Apart from the two
+ * distribution actions no action changes an assignment, a priority, a deadline
+ * or a work order.
  */
 
 type Db = Database['database']
@@ -49,6 +54,10 @@ export type EscalationActionResult = {
   notes: number
   /** The ticket status the `status_change` actions moved (WP-M14-40b). */
   statusChanged: number
+  /** The tickets the `offer` actions distributed (WP-M14-82). */
+  offered: number
+  /** The tickets the `assign` actions distributed (WP-M14-82). */
+  assigned: number
 }
 
 type ActionRow = {
@@ -86,6 +95,8 @@ export async function dispatchEscalationActions(
     webhooks: 0,
     notes: 0,
     statusChanged: 0,
+    offered: 0,
+    assigned: 0,
   }
 
   const rows = await database
@@ -248,6 +259,33 @@ export async function dispatchEscalationActions(
       })
 
       result.statusChanged += 1
+      continue
+    }
+
+    if (row.type === 'offer' || row.type === 'assign') {
+      const parsed = escalationTargetSchema.safeParse(config.target)
+
+      if (!parsed.success || ticket === undefined) {
+        continue
+      }
+
+      const outcome = await distributeTicket(database, {
+        ticketId: firing.ticketId,
+        target: parsed.data,
+        kind: row.type,
+        ruleKey: firing.ruleKey,
+        stageKey: firing.stageKey,
+      })
+
+      if (outcome.changed) {
+        if (row.type === 'offer') {
+          result.offered += 1
+        } else {
+          result.assigned += 1
+        }
+      }
+
+      continue
     }
   }
 

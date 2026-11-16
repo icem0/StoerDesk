@@ -2205,6 +2205,26 @@ WP-M14-83 validates the id against `oncall_pools` and `groups`. The unit test
 of `packages/shared/src/__tests__/escalation-config.test.ts` proves the two
 variants and the four rejections (no kind, an unknown kind, no id, a malformed
 id). WP-M14-82 … WP-M14-85 stay open in numeric order.
+**WP-M14-82 is implemented** (the engine of the distribution — over the four
+source-file limit of §17 it is split, the child **WP-M14-82b** carries the
+responsible person and the notification): `apps/api/src/oncall/members.ts` (new)
+extracts the pool members rule of `GET /api/v1/oncall/pools/:id/members`
+(`specs/04-oncall.md` §4a.5) — the members of the group of a pool, otherwise
+every active user holding the `oncall` role — and `apps/api/src/oncall/routes.ts`
+now calls `resolvePoolMemberIds`, so the on-call route and the escalation share
+one resolution. `apps/api/src/escalation/distribution.ts` (new) hands the ticket
+to the technicians of a target: the `offered` or `assigned` step of
+`ticket_transitions` through `transitionTicket()` (actor `system`), for an
+assignment one row of `ticket_assignees` per technician, and one
+`escalation_note` event `{ rule, stage, target }`. A ticket whose status has no
+such step or a target without a technician changes nothing — `TicketTransitionError`
+is caught and reported as `changed: false`. The dispatcher in
+`apps/api/src/escalation/actions.ts` runs the two new types with the target from
+the action `config` and counts `offered` and `assigned` in the scan result. The
+new `apps/api/src/escalation/__tests__/distribution.integration.spec.ts` proves
+the assignment (status, assignees, note), the offer to a pool, the ticket
+without a step and the empty target. WP-M14-82b … WP-M14-85 stay open in
+numeric order.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

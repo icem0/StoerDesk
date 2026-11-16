@@ -1,7 +1,7 @@
 # WP-M14-82: the engine offers and assigns a ticket
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-81
 phase: 14
 milestone: m14
@@ -11,54 +11,58 @@ spec-lines: 60
 
 files-read:
 
+- apps/api/src/oncall/routes.ts (the pool members rule of §4a.5)
 - apps/api/src/escalation/actions.ts (the dispatcher of the actions)
-- apps/api/src/oncall/coupling.ts (`offerTicket`, `resolveOnCallPerson`, `readOncallSettings`)
-- apps/api/src/tickets/workflow.ts (`transitionTicket`, the workflow columns)
-- apps/api/src/notifications/receivers.ts (the ntfy topics of the users)
-- apps/api/src/notifications/outbox.ts (the outbox rows)
+- apps/api/src/tickets/workflow.ts (`transitionTicket`, `TicketTransitionError`)
+- apps/api/src/db/schema.ts (`ticketAssignees`, `oncallPools`, `groups`, `userGroups`, `userRoles`)
+- packages/shared/src/schemas/escalation-config.ts (`escalationTargetSchema`)
 
 files-write:
 
+- apps/api/src/oncall/members.ts
+- apps/api/src/oncall/routes.ts (the members route uses the shared resolution)
 - apps/api/src/escalation/distribution.ts
 - apps/api/src/escalation/actions.ts
-- apps/api/src/tickets/workflow.ts
-- apps/api/src/notifications/receivers.ts
 
 interfaces:
 
-- `distributeTicket(database, { ticketId, target, kind: 'offer' | 'assign', ... }): Promise<boolean>`
-- `resolveTargetTechnicians(database, target): Promise<{ id, name }[]>`
-- `transitionTicket()` writes `offered_to_user_id` and `offer_escalated_at` from the payload of an `offered` step
-- `ntfyTopicsOfUsers(database, eventType, userIds): Promise<string[]>`
+- `resolveGroupMemberIds(database, groupId): Promise<string[]>`
+- `resolvePoolMemberIds(database, poolId): Promise<string[]>`
+- `resolveTargetTechnicians(database, target): Promise<string[]>`
+- `distributeTicket(database, { ticketId, target, kind, ruleKey, stageKey, payload? }): Promise<DistributionResult>`
+- `EscalationActionResult` gains `offered` and `assigned`
 
 ## Task
 
-1. `apps/api/src/escalation/distribution.ts` (new): the resolution of the
-   technicians of a target — the members of the `group_id` of a pool, otherwise
-   every active user with the `oncall` role, the members of `user_groups` for a
-   group; only active users count. The offer performs the `offered` step, names
-   the on-call person of the pool in `offered_to_user_id` and sets the offer
-   timeout, the assignment performs the `assigned` step and writes one row of
-   `ticket_assignees` per technician. Both write one `escalation_note` event
-   with `{ rule, stage, target }` and notify the technicians.
-2. `apps/api/src/tickets/workflow.ts`: the `offered` step writes
-   `offered_to_user_id` and `offer_escalated_at` from the payload, so the
-   distribution stays in the transaction of the transition.
-3. `apps/api/src/notifications/receivers.ts`: `ntfyTopicsOfUsers()` returns the
-   own topic of every user of a list who selected ntfy for the event type — the
-   broadcast reaches the technicians and not the office.
-4. `apps/api/src/escalation/actions.ts`: the dispatcher gains the two branches;
-   a ticket whose status has no such step keeps its status and the action
-   writes nothing.
-5. The integration spec proves: the offer moves the ticket to `OFFERED` with
-   the on-call person of the pool, the assignment moves it to `ASSIGNED` and
-   writes the assignees, a ticket without the step changes nothing.
+1. `apps/api/src/oncall/members.ts` (new): the technicians of a target — the
+   members of the group of the target (`user_groups`, active users only) and,
+   for a pool without a group, every active user holding the `oncall` role.
+   The pool members rule of `GET /api/v1/oncall/pools/:id/members` (§4a.5) is
+   extracted here so the on-call route and the escalation share one resolution.
+2. `apps/api/src/oncall/routes.ts`: the members route calls
+   `resolvePoolMemberIds` — the inline query is replaced by the shared
+   resolution.
+3. `apps/api/src/escalation/distribution.ts` (new): `distributeTicket` performs
+   the `offered` or `assigned` step of the transition table through
+   `transitionTicket()` (actor `system`), writes one row of `ticket_assignees`
+   per technician of the target for an assignment, and appends one
+   `escalation_note` event `{ rule, stage, target }`. A ticket whose status has
+   no such step or a target without a technician changes nothing —
+   `TicketTransitionError` is caught and reported as `changed: false`.
+4. `apps/api/src/escalation/actions.ts`: the dispatcher runs the two new action
+   types with the target from the action `config`; `EscalationActionResult`
+   counts `offered` and `assigned`.
+5. The integration spec `apps/api/src/escalation/__tests__/distribution.integration.spec.ts`
+   proves the assignment (status, assignees, note), the offer to a pool, the
+   ticket without a step and the target without a technician.
 
 ## Non-goals
 
+- The `offered_to_user_id`, the offer timeout and the notification of the
+  technicians move to the split child WP-M14-82b (the package was over the
+  four-file limit of `PLAN.md` §17).
 - No configuration service, no UI (WP-M14-83 … WP-M14-85).
 - No change of the manual offer route of the office.
-- No per-user routing for the channels other than ntfy.
 
 ## Acceptance
 
@@ -74,10 +78,16 @@ passes after it.
 
 ## Handoff
 
-- Files changed: the new distribution service, the dispatcher, the workflow, the
-  receivers
-- Interfaces added: `distributeTicket`, `resolveTargetTechnicians`,
-  `ntfyTopicsOfUsers`
-- Verified:
-- Follow-up WP: WP-M14-83 (the configuration service)
+- Files changed: `apps/api/src/oncall/members.ts`, `apps/api/src/oncall/routes.ts`,
+  `apps/api/src/escalation/distribution.ts`, `apps/api/src/escalation/actions.ts`,
+  the integration spec and the repository bookkeeping
+- Interfaces added: `resolveGroupMemberIds`, `resolvePoolMemberIds`,
+  `resolveTargetTechnicians`, `distributeTicket`, `DistributionResult`,
+  `offered` and `assigned` in the scan result
+- Verified: typecheck, ESLint, vitest (the distribution spec 4/4 on a
+  throwaway database; the on-call coupling specs stay green on the shared
+  resolution), `i18n:check`, `wp:check`
+- Follow-up WP: WP-M14-82b (the offer names the responsible person and the
+  distribution notifies the technicians) — its file exists in this commit;
+  WP-M14-83 … WP-M14-85 stay open in numeric order
 - Open question: none
