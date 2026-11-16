@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85) | 90  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85) | 90  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -810,6 +810,21 @@ needs the `condition` beside the `required`, and WP-M14-71 wrote only
 file passes the schema of the Compose specification. The next phase starts with
 its own split.
 
+**The work order of the office (WP-M14-76, out of band in phase 14, requested by
+the office).** The office reported the generic "Die Aktion konnte nicht
+ausgeführt werden." when it reached the stage "Auftrag angelegt" of the ticket
+view. The view sends the free text field of WP-M14-43 (`{ text }`), but the
+office route still validated the body against the schema `{ type, number }` of
+WP-M2-19c — the contract WP-M14-42 replaced with the free text. Every work order
+of the office therefore answered `400 invalid_request`, and the ticket view
+answered the generic text, because that error code has no translation in
+`detail.errors`. **WP-M14-76** deletes the local schema and uses the shared
+`workOrderRequestSchema` — the same contract as the external route
+(`PATCH /api/v1/tickets/:ticketNo/work-order`) and as `transitionTicket()`,
+which writes `payload.text` into `tickets.work_order_text`. The row of
+`specs/08-objects-api.md` §9.3 names the new body. The generic text itself is
+repaired by WP-M14-77, the offered stages by WP-M14-78.
+
 **The escalation offers and assigns tickets (WP-M14-79 … WP-M14-85, out of band
 in phase 14, requested by the office).** The office asked for two more actions
 of an escalation rule: a ticket that waits too long for a technician shall be
@@ -1301,6 +1316,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-73  | the phase-14 record is closed (the stale status fields, the roadmap)     | done    | yes     |
 | WP-M14-74  | the tunnel token does not stop the core stack (the Docker smoke test)    | done    | yes     |
 | WP-M14-75  | the tunnel dependency is a valid compose schema (the Docker smoke test)  | done    | yes     |
+| WP-M14-76  | the office work-order route accepts the free text (out of band)          | done    | yes     |
 | WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | planned | yes     |
 | WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | planned | yes     |
 | WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | planned | yes     |

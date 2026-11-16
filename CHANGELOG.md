@@ -564,6 +564,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decision of the phase.
 
 ### Fixed
+- The work order of the office is accepted again (WP-M14-76): the stage selection
+  of the ticket view sends the free text field of WP-M14-43 (`{ text }`), but the
+  office route `POST /api/v1/tickets/:ticketNo/work-order` still validated the
+  body against the schema `{ type, number }` of WP-M2-19c — the contract WP-M14-42
+  replaced with the free text. Every work order of the office answered
+  `400 invalid_request`, and the ticket view answered the generic "Die Aktion
+  konnte nicht ausgeführt werden.", because that error code has no translation in
+  `detail.errors`. `apps/api/src/tickets/workflow-routes.ts` uses the shared
+  `workOrderRequestSchema` now — the same contract as the external route
+  (`PATCH /api/v1/tickets/:ticketNo/work-order`) and as `transitionTicket()`, which
+  writes `payload.text` into `tickets.work_order_text`. The row of
+  `specs/08-objects-api.md` §9.3 names the new body.
 - The compose file of the tunnel profile is valid again (WP-M14-75): the long
   syntax of `depends_on` requires the `condition` beside the `required`, and the
   service `cloudflared` carried only `required: false` — `docker compose` rejected

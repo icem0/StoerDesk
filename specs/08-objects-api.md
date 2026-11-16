@@ -241,7 +241,7 @@ invalid_request`/field errors exactly like §9.1.
 | --- | --- | --- | --- |
 | GET | `/api/v1/tickets?updated_since=&status=&objectNo=&limit=` | `tickets:read` | `200 { tickets }` with the list item shape |
 | POST | `/api/v1/tickets` | `tickets:write` | `201` created ticket; external creation is recorded with `source = 'api'` |
-| PATCH | `/api/v1/tickets/:ticketNo/work-order` | `tickets:write` | `200` after `work_order_set`, body `{ type, number }` |
+| PATCH | `/api/v1/tickets/:ticketNo/work-order` | `tickets:write` | `200` after `work_order_set`, body `{ text }` (the free text of the work order, WP-M14-42) |
 
 External ticket creation uses the internal creation contract (`internalCreateTicketRequestSchema`)
 and resolves the object by `objectNo`. The external work-order update uses the

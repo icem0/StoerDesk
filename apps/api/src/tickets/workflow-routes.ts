@@ -3,7 +3,12 @@ import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import type { PermissionKey } from '@stoerdesk/shared'
 
-import { closeRequestSchema, PERMISSIONS, ticketNoSchema } from '@stoerdesk/shared'
+import {
+  closeRequestSchema,
+  PERMISSIONS,
+  ticketNoSchema,
+  workOrderRequestSchema,
+} from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
@@ -30,10 +35,6 @@ function fieldPaths(error: z.ZodError): string[] {
 }
 const OFFER_BODY = z.object({ poolId: z.string().uuid().optional() })
 const ACK_RESULT = z.enum(['fixed', 'partially_fixed', 'follow_up_required', 'no_fault_found'])
-const WORK_ORDER = z.object({
-  type: z.string().trim().min(1).max(40),
-  number: z.string().trim().min(1).max(60),
-})
 
 type RouteDef = {
   path: string
@@ -134,7 +135,7 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
 
     const routes: RouteDef[] = [
       { path: '/api/v1/tickets/:ticketNo/review', event: 'review_started', permission: PERM(PERMISSIONS.ticket.review) },
-      { path: '/api/v1/tickets/:ticketNo/work-order', event: 'work_order_set', permission: PERM(PERMISSIONS.ticket.review), body: WORK_ORDER },
+      { path: '/api/v1/tickets/:ticketNo/work-order', event: 'work_order_set', permission: PERM(PERMISSIONS.ticket.review), body: workOrderRequestSchema },
       { path: '/api/v1/tickets/:ticketNo/assign', event: 'assigned', permission: PERM(PERMISSIONS.ticket.assign) },
       { path: '/api/v1/tickets/:ticketNo/claim', event: 'claimed', permission: PERM(PERMISSIONS.ticket.claim) },
       { path: '/api/v1/tickets/:ticketNo/accept', event: 'accepted', permission: PERM(PERMISSIONS.ticket.accept) },

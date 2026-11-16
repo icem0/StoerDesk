@@ -14,9 +14,10 @@ import type { Page } from '@playwright/test'
  * throwaway database.
  *
  * The test drives every workflow transition through the ticket detail UI where no
-   request body is needed (review, assign, accept, close) and calls the API directly
-   for the two transitions that require a payload (work order set: type + number;
-   acknowledge: result). After each transition it asserts the status badge and the
+   request body is needed (review, assign, accept, close) and through the UI with
+   its own form where a payload is needed (work order set: the free text of the
+   work order — WP-M14-42, WP-M14-76); only the acknowledge calls the API directly
+   (result). After each transition it asserts the status badge and the
    append-only `ticket_events` history, ending at `CLOSED` with the full event chain.
  *
  * The expectations are spelled out per locale, like `report-flow.spec.ts`: reading
@@ -169,14 +170,6 @@ async function createInternalTicket(page: Page, objectId: string): Promise<strin
   return body.ticketNo as string
 }
 
-async function setWorkOrder(page: Page, ticketNo: string): Promise<void> {
-  const response = await page.context().request.post(`/api/v1/tickets/${ticketNo}/work-order`, {
-    data: { type: 'AA', number: '12345' },
-  })
-
-  expect(response.status()).toBe(200)
-}
-
 async function acknowledgeTicket(page: Page, ticketNo: string): Promise<void> {
   const response = await page.context().request.post(`/api/v1/tickets/${ticketNo}/acknowledge`, {
     data: { result: 'fixed' },
@@ -264,9 +257,14 @@ for (const language of ['de', 'en'] as const) {
     await expect(statusBadge(page)).toHaveText(statusText(language, 'IN_REVIEW'))
     await expect(history(page).getByText(texts.event.review_started)).toBeVisible()
 
-    // 2. Work order: IN_REVIEW → WORK_ORDER_CREATED (API, needs { type, number }).
-    await setWorkOrder(page, ticketNo)
-    await page.reload()
+    // 2. Work order: IN_REVIEW → WORK_ORDER_CREATED. The stage of the
+    // milestone carries its own form: the free text of the work order (the
+    // contract of WP-M14-42, WP-M14-76). The step runs through the UI, because
+    // the office enters the work order there — an API call would prove nothing
+    // about the path the office takes.
+    await page.getByTestId('ticket-escalation-stage').selectOption('work_order_set')
+    await page.locator('input[name="workOrderText"]').fill('AA 4711')
+    await page.getByRole('button', { name: texts.confirm }).click()
     await expect(statusBadge(page)).toHaveText(statusText(language, 'WORK_ORDER_CREATED'))
     await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
@@ -306,8 +304,10 @@ for (const language of ['de', 'en'] as const) {
     // acknowledge, close) is written by the same signed-in administrator, so all
     // seven actor cells carry that user's full name. The seven cells share the
     // same classes, so a single text would resolve to seven elements (strict
-    // mode violation): the expectation is an array, one text per element.
-    const actorRows = history(page).locator('.text-xs.text-slate-400')
+    // mode violation): the expectation is an array, one text per element. The
+    // actor cell is a `div`; the free text of the work order is a `p` with the
+    // same classes (WP-M14-42), so the locator names the element type.
+    const actorRows = history(page).locator('div.text-xs.text-slate-400')
     await expect(actorRows).toHaveCount(7)
     await expect(actorRows).toContainText([
       texts.actorName,

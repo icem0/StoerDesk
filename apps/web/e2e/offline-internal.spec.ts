@@ -138,7 +138,7 @@ async function transition(page: Page, ticketNo: string, segment: string): Promis
 async function setWorkOrder(page: Page, ticketNo: string): Promise<void> {
   const response = await page.context().request.post(
     `/api/v1/tickets/${ticketNo}/work-order`,
-    { data: { type: 'AA', number: '12345' } },
+    { data: { text: 'AA 4711' } },
   )
 
   expect(response.status()).toBe(200)
