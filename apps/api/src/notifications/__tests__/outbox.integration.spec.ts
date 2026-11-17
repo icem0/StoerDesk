@@ -6,11 +6,16 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
-import { tickets, ticketEvents, outbox } from '../../db/schema'
+import { notificationMessages, tickets, ticketEvents, outbox, users } from '../../db/schema'
 import * as schema from '../../db/schema'
 import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
-import { drainOutbox, NOTIFICATION_OUTBOX_CRON, NOTIFICATION_OUTBOX_QUEUE } from '../outbox'
+import {
+  drainOutbox,
+  enqueuePersonalDeliveries,
+  NOTIFICATION_OUTBOX_CRON,
+  NOTIFICATION_OUTBOX_QUEUE,
+} from '../outbox'
 
 const onlyRow = <T>(rows: T[], what: string): T => {
   const [row] = rows
@@ -351,6 +356,68 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.msgtype).toBe('m.text')
 
       server.close()
+    })
+
+    it('records the personal message of a delivery and follows its state (WP-M14-120b)', async () => {
+      const env = envOf('http://127.0.0.1:1/')
+
+      const [user] = await db
+        .insert(users)
+        .values({ email: 'inbox-user@example.org', passwordHash: 'no-login-for-inbox-user' })
+        .returning({ id: users.id })
+
+      const written = await enqueuePersonalDeliveries(db, [
+        {
+          userId: user!.id,
+          channel: 'ntfy',
+          eventType: 'ticket.created',
+          title: ticketNo,
+          body: 'normal · Rathaus',
+          ticketId,
+          target: { ticketNo, priority: 'normal', objectName: 'Rathaus', ntfyTopic: 'inbox-topic' },
+        },
+      ])
+
+      expect(written).toBe(1)
+
+      const message = onlyRow(
+        await db
+          .select({
+            id: notificationMessages.id,
+            state: notificationMessages.state,
+            userId: notificationMessages.userId,
+            channel: notificationMessages.channel,
+            title: notificationMessages.title,
+          })
+          .from(notificationMessages),
+        'notification message',
+      )
+
+      expect(message.state).toBe('PENDING')
+      expect(message.userId).toBe(user!.id)
+      expect(message.channel).toBe('ntfy')
+      expect(message.title).toBe(ticketNo)
+
+      const row = onlyRow(
+        await db
+          .select({ id: outbox.id, notificationMessageId: outbox.notificationMessageId })
+          .from(outbox)
+          .where(eq(outbox.notificationMessageId, message.id)),
+        'outbox row',
+      )
+
+      expect(row.notificationMessageId).toBe(message.id)
+
+      await drainOutbox(db, env)
+
+      const after = onlyRow(
+        await db
+          .select({ state: notificationMessages.state })
+          .from(notificationMessages),
+        'notification message',
+      )
+
+      expect(after.state).toBe('FAILED')
     })
   },
 )

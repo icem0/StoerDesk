@@ -1,6 +1,7 @@
 import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
+import { notificationMessages } from '../../db/schema'
 import { enqueueOutbox, messageOf, type OutboxRow } from '../outbox'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -59,13 +60,37 @@ function awaitable<T>(value: T): Promise<T> & { limit: (count?: number) => Promi
  * defaults of migration 0019 and are verified on the create-path integration
  * test, which needs the database.
  */
-async function enqueueInto(env: Env): Promise<{ count: number; rows: OutboxRow[] }> {
+async function enqueueInto(env: Env): Promise<{
+  count: number
+  rows: OutboxRow[]
+  messages: Array<{ userId: string; channel: string; title: string; body: string }>
+}> {
   const rows: OutboxRow[] = []
+  const messages: Array<{ userId: string; channel: string; title: string; body: string }> = []
 
   const fakeDatabase = {
-    insert: (_table: unknown) => ({
-      values: (values: OutboxRow[]) => {
-        rows.push(...values)
+    insert: (table: unknown) => ({
+      values: (values: unknown) => {
+        // The personal message of a delivery (WP-M14-120b) is written before
+        // its outbox row and hands the id of the message to the row.
+        if (table === notificationMessages) {
+          const inserted = (Array.isArray(values) ? values : [values]).map((entry) => {
+            const message = entry as { userId: string; channel: string; title: string; body: string }
+
+            messages.push(message)
+
+            return message
+          })
+
+          return {
+            returning: async () =>
+              inserted.map((_message, index) => ({ id: `message-${index}` })),
+          }
+        }
+
+        rows.push(...(values as OutboxRow[]))
+
+        return undefined
       },
     }),
     select: (columns: Record<string, unknown>) => ({
@@ -81,7 +106,7 @@ async function enqueueInto(env: Env): Promise<{ count: number; rows: OutboxRow[]
 
   const count = await enqueueOutbox(fakeDatabase, ticket, env)
 
-  return { count, rows }
+  return { count, rows, messages }
 }
 
 describe('enqueueOutbox (notification outbox rows in the create transaction)', () => {

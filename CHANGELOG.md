@@ -123,6 +123,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Added
+- The delivery layer records every personal message (WP-M14-120b, out of band
+  in phase 14): every notification that is enqueued for a user writes a
+  `notification_messages` row next to its outbox row, and the drain flips the
+  state of that message to `SENT` or `FAILED`. The personal ntfy recipients of
+  a new ticket, the readiness messages of a technician, the notify action of an
+  escalation and the offer and assign action of the distribution all use the
+  new helper `enqueuePersonalDeliveries`; an instance-chain row (a delivery
+  without a single addressee) stays without a message. The recipient read
+  answers the user id next to the topic, so the caller knows the addressee of
+  the message.
 - The internal notification inbox (WP-M14-120, out of band in phase 14): every
   notification that is enqueued for a user is recorded before it leaves to the
   external channels, so the user sees what went to which channel and whether it

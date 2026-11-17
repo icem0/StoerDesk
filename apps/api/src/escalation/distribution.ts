@@ -2,7 +2,8 @@ import type { EscalationTarget } from '@stoerdesk/shared'
 import { eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
-import { objects, outbox, ticketAssignees, ticketEvents, tickets } from '../db/schema'
+import { objects, ticketAssignees, ticketEvents, tickets } from '../db/schema'
+import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { ntfyTopicsOfUsers } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
@@ -146,9 +147,9 @@ export async function distributeTicket(
   })
 
   const eventType = input.kind === 'offer' ? 'ticket.escalated' : 'ticket.assigned'
-  const topics = await ntfyTopicsOfUsers(database, eventType, technicians)
+  const recipients = await ntfyTopicsOfUsers(database, eventType, technicians)
 
-  if (topics.length > 0) {
+  if (recipients.length > 0) {
     const ticketRows = await database
       .select({
         ticketNo: tickets.ticketNo,
@@ -163,23 +164,37 @@ export async function distributeTicket(
     const ticket = ticketRows[0]
 
     if (ticket !== undefined) {
-      await database.insert(outbox).values(
-        topics.map((topic) => ({
-          ticketId: input.ticketId,
-          eventType,
+      // The personal deliveries of the distribution (WP-M14-120b): each
+      // technician gets a message row next to the outbox row, so the inbox
+      // shows the assignment and whether it arrived.
+      await enqueuePersonalDeliveries(
+        database,
+        recipients.map((recipient) => ({
+          userId: recipient.userId,
           channel: 'ntfy',
+          eventType,
+          title: ticket.ticketNo,
+          body: [
+            ticket.priority,
+            ticket.objectName,
+            input.ruleKey,
+            input.stageKey,
+          ]
+            .filter((value) => value !== '' && value !== undefined)
+            .join(' · '),
+          ticketId: input.ticketId,
           target: {
             ticketNo: ticket.ticketNo,
             priority: ticket.priority,
             objectName: ticket.objectName,
             escalationRule: input.ruleKey,
             escalationStage: input.stageKey,
-            ntfyTopic: topic,
+            ntfyTopic: recipient.topic,
           },
         })),
       )
     }
   }
 
-  return { changed: true, technicians: technicians.length, notified: topics.length }
+  return { changed: true, technicians: technicians.length, notified: recipients.length }
 }

@@ -1,7 +1,7 @@
 # WP-M14-120b: the delivery layer records every personal message
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-120a
 phase: 14
 milestone: m14
@@ -18,8 +18,8 @@ files-read:
 
 files-write:
 
-- apps/api/src/notifications/outbox.ts
-- apps/api/src/notifications/receivers.ts
+- apps/api/src/notifications/outbox.ts, apps/api/src/notifications/__tests__/{outbox-worker.unit.spec.ts,outbox.unit.spec.ts,outbox.integration.spec.ts}
+- apps/api/src/notifications/receivers.ts, apps/api/src/notifications/__tests__/receivers.unit.spec.ts
 - apps/api/src/escalation/actions.ts
 - apps/api/src/escalation/distribution.ts
 
@@ -77,8 +77,8 @@ ends the message as `SENT` or `FAILED`.
 ## Handoff
 
 - Files changed: the outbox, the receivers, the escalation actions and the
-  distribution
-- Interfaces added: `enqueuePersonalDelivery`, the recipient with the user id
+  distribution with their tests
+- Interfaces added: `enqueuePersonalDeliveries`, the recipient with the user id
 - Verified: `npm run check`, `npm run build`
 - Follow-up WP: WP-M14-120c — the API of the inbox
 - Open question: none

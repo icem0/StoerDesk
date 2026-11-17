@@ -22,6 +22,7 @@ import {
   webhookEndpoints,
 } from '../db/schema'
 import { ntfyTopicsOfUsers } from '../notifications/receivers'
+import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { resolvePoolMemberIds } from '../oncall/members'
 import { transitionTicket } from '../tickets/workflow'
 import { readTicketTransitions } from '../tickets/transition-service'
@@ -170,22 +171,36 @@ export async function dispatchEscalationActions(
           notifyTarget.data.kind === 'user'
             ? [notifyTarget.data.id]
             : await resolvePoolMemberIds(database, notifyTarget.data.id)
-        const topics = await ntfyTopicsOfUsers(database, 'ticket.escalated', userIds)
+        const recipients = await ntfyTopicsOfUsers(database, 'ticket.escalated', userIds)
 
-        if (topics.length === 0) {
+        if (recipients.length === 0) {
           continue
         }
 
-        await database.insert(outbox).values(
-          topics.map((topic) => ({
-            ticketId: firing.ticketId,
-            eventType: 'ticket.escalated',
+        // The personal deliveries of the escalation (WP-M14-120b): each
+        // notified user gets a message row next to the outbox row, so the
+        // inbox shows the escalation and whether it arrived.
+        await enqueuePersonalDeliveries(
+          database,
+          recipients.map((recipient) => ({
+            userId: recipient.userId,
             channel: 'ntfy',
-            target: { ...target, ntfyTopic: topic },
+            eventType: 'ticket.escalated',
+            title: ticket.ticketNo,
+            body: [
+              target.priority,
+              target.objectName,
+              target.escalationRule,
+              target.escalationStage,
+            ]
+              .filter((value) => value !== '' && value !== undefined)
+              .join(' · '),
+            ticketId: firing.ticketId,
+            target: { ...target, ntfyTopic: recipient.topic },
           })),
         )
 
-        result.notified += topics.length
+        result.notified += recipients.length
         continue
       }
 

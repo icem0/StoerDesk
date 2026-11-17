@@ -2,7 +2,7 @@ import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
 import { drainOutbox, type ClaimedOutboxRow, type OutboxRow } from '../outbox'
-import { outbox } from '../../db/schema'
+import { notificationMessages, outbox } from '../../db/schema'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 type Db = Database['database']
@@ -14,6 +14,8 @@ type MutableRow = {
   target: Record<string, unknown>
   state: string
   attempts: number
+  /** The personal message of the delivery (WP-M14-120b). */
+  notificationMessageId?: string
 }
 
 const ticketNo = 'ST-2026-0001'
@@ -71,12 +73,28 @@ function inMemoryDatabase(rows: MutableRow[]) {
     actorKind: string
     payload: Record<string, unknown>
   }> = []
+  /** The personal messages of the deliveries (WP-M14-120b). */
+  const messages: Array<{ id: string; userId: string; state: string }> = []
   let claimed: MutableRow | undefined
 
   const fakeDatabase = {
-    update: (_table: unknown) => ({
+    update: (table: unknown) => ({
       set: (setArg: unknown) => {
         const set = setArg as { state?: string }
+
+        // The message of the claimed delivery follows the delivery (WP-M14-120b);
+        // the outbox row keeps its own state.
+        if (table === notificationMessages) {
+          if (typeof set.state === 'string' && claimed !== undefined) {
+            const message = messages.find((entry) => entry.id === claimed?.notificationMessageId)
+
+            if (message !== undefined) {
+              message.state = set.state
+            }
+          }
+
+          return { where: (_where: unknown) => ({}) }
+        }
 
         if (typeof set.state === 'string' && claimed !== undefined) {
           claimed.state = set.state
@@ -104,6 +122,7 @@ function inMemoryDatabase(rows: MutableRow[]) {
                   target: next.target,
                   eventType: 'ticket.created',
                   attempts: next.attempts,
+                  notificationMessageId: next.notificationMessageId ?? null,
                 },
               ]
             },
@@ -131,9 +150,31 @@ function inMemoryDatabase(rows: MutableRow[]) {
             target: fallback.target as Record<string, unknown>,
             state: 'PENDING',
             attempts: 0,
+            notificationMessageId: fallback.notificationMessageId,
           })
 
           return
+        }
+
+        if (table === notificationMessages) {
+          const inserted = (Array.isArray(value) ? value : [value]).map(
+            (entry, index) => {
+              const message = entry as { userId?: string; title?: string; body?: string }
+              const row = {
+                id: `msg-row-${messages.length + index}`,
+                userId: message.userId ?? '',
+                state: 'PENDING',
+              }
+
+              messages.push(row)
+
+              return row
+            },
+          )
+
+          return {
+            returning: async () => inserted.map((message) => ({ id: message.id })),
+          }
         }
 
         events.push(
@@ -149,7 +190,7 @@ function inMemoryDatabase(rows: MutableRow[]) {
     transaction: async (fn: (tx: unknown) => unknown) => fn(fakeDatabase),
   } as unknown as Db
 
-  return { fakeDatabase, events, rows }
+  return { fakeDatabase, events, rows, messages }
 }
 
 describe('drainOutbox (notification outbox drain worker, unit)', () => {
@@ -283,6 +324,46 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
     expect(sentEvent?.actorKind).toBe('system')
     expect(sentEvent?.payload).toEqual({ channel: 'ntfy', ticketNo, attempts: 3 })
     expect(events.filter((event) => event.type === 'notification_failed')).toEqual([])
+  })
+
+  it('flips the state of the personal message of a delivery (WP-M14-120b)', async () => {
+    const rows = [row('ntfy')]
+    rows[0]!.notificationMessageId = 'message-1'
+    const { fakeDatabase, messages } = inMemoryDatabase(rows)
+
+    messages.push({ id: 'message-1', userId: 'user-1', state: 'PENDING' })
+
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch = vi.fn(async () => {
+      return new Response('{}', { status: 200 })
+    }) as unknown as typeof fetch
+
+    const result = await drainOutbox(fakeDatabase, envNtfy())
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(result.sent).toBe(1)
+    expect(messages[0]?.state).toBe('SENT')
+  })
+
+  it('marks the personal message of a failed delivery as FAILED (WP-M14-120b)', async () => {
+    const rows = [row('ntfy')]
+    rows[0]!.notificationMessageId = 'message-1'
+    const { fakeDatabase, messages } = inMemoryDatabase(rows)
+
+    messages.push({ id: 'message-1', userId: 'user-1', state: 'PENDING' })
+
+    const originalFetch = global.fetch
+    ;(globalThis as unknown as Record<string, unknown>).fetch = vi.fn(async () => {
+      return new Response('nope', { status: 500 })
+    }) as unknown as typeof fetch
+
+    const result = await drainOutbox(fakeDatabase, envNtfy())
+
+    ;(globalThis as unknown as Record<string, unknown>).fetch = originalFetch
+
+    expect(result.failed).toBe(1)
+    expect(messages[0]?.state).toBe('FAILED')
   })
 
   it('ends FAILED when the channel always fails', async () => {

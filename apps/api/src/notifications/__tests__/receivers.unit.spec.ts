@@ -43,7 +43,7 @@ describe('the ntfy topic of a user (ADR-0024 point 6, WP-M14-72)', () => {
       'ticket.created',
     )
 
-    expect(recipients).toEqual(['stoerdesk-stored'])
+    expect(recipients).toEqual([{ userId: 'user-a', topic: 'stoerdesk-stored' }])
   })
 
   it('deduplicates the stored topics of the selection', async () => {
@@ -55,6 +55,6 @@ describe('the ntfy topic of a user (ADR-0024 point 6, WP-M14-72)', () => {
       'ticket.created',
     )
 
-    expect(recipients).toEqual(['shared-topic'])
+    expect(recipients).toEqual([{ userId: 'user-a', topic: 'shared-topic' }])
   })
 })

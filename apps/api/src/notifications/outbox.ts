@@ -6,6 +6,7 @@ import { createDatabase, type Database } from '../db/client'
 import {
   notificationAccounts,
   notificationPreferences,
+  notificationMessages,
   oncallPools,
   outbox,
   ticketEvents,
@@ -36,6 +37,8 @@ export interface OutboxRow {
   eventType?: string
   channel: string
   target: Record<string, unknown>
+  /** The personal message of this delivery (WP-M14-120b). */
+  notificationMessageId?: string
 }
 
 /**
@@ -144,6 +147,8 @@ export interface ClaimedOutboxRow {
   target: Record<string, unknown>
   eventType: string
   attempts: number
+  /** The personal message of this delivery (WP-M14-120b); null for an instance row. */
+  notificationMessageId: string | null
 }
 
 /**
@@ -173,6 +178,7 @@ export async function claimOutboxRow(database: Db): Promise<ClaimedOutboxRow | u
       target: outbox.target,
       eventType: outbox.eventType,
       attempts: outbox.attempts,
+      notificationMessageId: outbox.notificationMessageId,
     })
 
   if (row === undefined) {
@@ -184,6 +190,7 @@ export async function claimOutboxRow(database: Db): Promise<ClaimedOutboxRow | u
     shiftId: row.shiftId ?? null,
     target: row.target as Record<string, unknown>,
     eventType: row.eventType ?? 'ticket.created',
+    notificationMessageId: row.notificationMessageId ?? null,
   }
 }
 
@@ -387,6 +394,27 @@ async function finishRow(
   return fallbackQueued
 }
 
+/**
+ * Flips the state of the personal message of a row (WP-M14-120b): the message
+ * follows its delivery — `SENT` when the channel took it, `FAILED` when the
+ * delivery failed. An instance-chain row carries no message and changes
+ * nothing.
+ */
+async function finishMessage(
+  database: Db,
+  row: ClaimedOutboxRow,
+  state: 'SENT' | 'FAILED',
+): Promise<void> {
+  if (row.notificationMessageId === null) {
+    return
+  }
+
+  await database
+    .update(notificationMessages)
+    .set({ state })
+    .where(eq(notificationMessages.id, row.notificationMessageId))
+}
+
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms)
@@ -431,6 +459,8 @@ export async function drainOutbox(
     if (channel === undefined) {
       await finishRow(database, row, 'FAILED', 'notification_failed', undefined, 'channel_unconfigured')
 
+      await finishMessage(database, row, 'FAILED')
+
       log?.warn(
         {
           queue: NOTIFICATION_OUTBOX_QUEUE,
@@ -469,6 +499,8 @@ export async function drainOutbox(
       await channel.send(messageOf(row.target), options)
       await finishRow(database, row, 'SENT', 'notification_sent')
 
+      await finishMessage(database, row, 'SENT')
+
       result.sent += 1
     } catch (error) {
       const errorCode =
@@ -501,6 +533,8 @@ export async function drainOutbox(
           nextChannel,
           errorCode,
         )
+
+        await finishMessage(database, row, 'FAILED')
 
         if (fallbackQueued) {
           log?.info(
@@ -579,6 +613,73 @@ export async function startNotificationOutboxJob(
 }
 
 /**
+ * One personal delivery of the internal notification layer (WP-M14-120b): the
+ * message for a user and the outbox row that carries it to its channel. The
+ * message is recorded before it leaves, so the inbox can show what went to
+ * which channel and whether it arrived.
+ */
+export interface PersonalDelivery {
+  /** The addressee of the message. */
+  userId: string
+  channel: string
+  eventType: string
+  /** The title of the message — the ticket number or the pool name. */
+  title: string
+  /** The body of the message — the machine-readable params of §11.5. */
+  body: string
+  /** Exactly one of the two: the ticket of the row or the readiness shift. */
+  ticketId?: string | null
+  shiftId?: string | null
+  /** The machine-readable params of the row (§11.5). */
+  target: Record<string, unknown>
+}
+
+/**
+ * Writes the message row of every personal delivery and the outbox row next to
+ * it: the outbox row points at its message, so the drain flips the state of
+ * the message to `SENT` or `FAILED` and the inbox shows the outcome. An
+ * instance-chain row (a delivery without a single addressee) is written by the
+ * caller and carries no message.
+ *
+ * Returns the number of the written outbox rows.
+ */
+export async function enqueuePersonalDeliveries(
+  database: DbLike,
+  deliveries: readonly PersonalDelivery[],
+): Promise<number> {
+  if (deliveries.length === 0) {
+    return 0
+  }
+
+  const messages = await database
+    .insert(notificationMessages)
+    .values(
+      deliveries.map((delivery) => ({
+        userId: delivery.userId,
+        channel: delivery.channel,
+        eventType: delivery.eventType,
+        state: 'PENDING',
+        title: delivery.title,
+        body: delivery.body,
+      })),
+    )
+    .returning({ id: notificationMessages.id })
+
+  await database.insert(outbox).values(
+    deliveries.map((delivery, index) => ({
+      ticketId: delivery.ticketId ?? null,
+      shiftId: delivery.shiftId ?? null,
+      eventType: delivery.eventType,
+      channel: delivery.channel,
+      target: delivery.target,
+      notificationMessageId: messages[index]?.id,
+    })),
+  )
+
+  return deliveries.length
+}
+
+/**
  * Writes the notification outbox rows for a freshly created ticket, inside the
  * same transaction the caller is in. It only inserts — there is deliberately no
  * HTTP call, so a channel failure can never lose the ticket event (`PLAN.md` §12).
@@ -610,13 +711,25 @@ export async function enqueueOutbox(
     (row) => row.channel !== 'ntfy' || recipients.length === 0,
   )
 
-  for (const topic of recipients) {
-    rows.push({
-      ticketId: ticket.id,
-      channel: 'ntfy',
-      target: { ...messageParams(ticket), ntfyTopic: topic },
+  // Personal deliveries for the users that selected ntfy for the event
+  // (§11.4): each of them gets a message row next to the outbox row, so the
+  // inbox of the user shows the message and its state (WP-M14-120b).
+  const deliveries: PersonalDelivery[] = recipients.map((recipient) => {
+    const message = ticketMessageOf({
+      ...messageParams(ticket),
+      ntfyTopic: recipient.topic,
     })
-  }
+
+    return {
+      userId: recipient.userId,
+      channel: 'ntfy',
+      eventType,
+      title: message.title,
+      body: message.body,
+      ticketId: ticket.id,
+      target: { ...messageParams(ticket), ntfyTopic: recipient.topic },
+    }
+  })
 
   if (ticket.priority === 'critical') {
     for (const channel of await readMinimumChannels(database)) {
@@ -624,19 +737,31 @@ export async function enqueueOutbox(
         continue
       }
 
-      if (!rows.some((row) => row.channel === channel)) {
-        rows.push({ ticketId: ticket.id, channel, target: messageParams(ticket) })
+      // A personal delivery of the channel already satisfies the mandatory
+      // minimum — the user is notified through it (§11.9).
+      if (rows.some((row) => row.channel === channel)) {
+        continue
       }
+
+      if (deliveries.some((delivery) => delivery.channel === channel)) {
+        continue
+      }
+
+      rows.push({ ticketId: ticket.id, channel, target: messageParams(ticket) })
     }
   }
 
-  if (rows.length === 0) {
+  if (rows.length === 0 && deliveries.length === 0) {
     return 0
   }
 
-  await database.insert(outbox).values(rows)
+  if (rows.length > 0) {
+    await database.insert(outbox).values(rows)
+  }
 
-  return rows.length
+  await enqueuePersonalDeliveries(database, deliveries)
+
+  return rows.length + deliveries.length
 }
 
 /**
@@ -716,7 +841,10 @@ export async function enqueueOncallOutbox(
   const firstNtfyAccount = ntfyAccounts[0]
   const ntfyTopic = firstNtfyAccount?.externalId ?? userTopic(userId)
 
-  const rows: OutboxRow[] = []
+  // Personal deliveries for the readiness of the technician (WP-M14-120b): each
+  // channel gets a message row next to the outbox row, so the inbox of the
+  // technician shows the message and its state.
+  const deliveries: PersonalDelivery[] = []
 
   for (const channel of channels) {
     if (pendingChannels.has(channel)) {
@@ -729,20 +857,28 @@ export async function enqueueOncallOutbox(
       rowTarget.ntfyTopic = ntfyTopic
     }
 
-    rows.push({
-      ticketId: null,
-      shiftId: shift.id,
-      eventType,
+    deliveries.push({
+      userId,
       channel,
+      eventType,
+      title: String(target.poolName ?? ''),
+      body: [
+        String(target.state ?? ''),
+        String(target.startsAt ?? ''),
+        String(target.endsAt ?? ''),
+      ]
+        .filter((value) => value !== '')
+        .join(' · '),
+      shiftId: shift.id,
       target: rowTarget,
     })
   }
 
-  if (rows.length === 0) {
+  if (deliveries.length === 0) {
     return 0
   }
 
-  await database.insert(outbox).values(rows)
+  await enqueuePersonalDeliveries(database, deliveries)
 
-  return rows.length
+  return deliveries.length
 }

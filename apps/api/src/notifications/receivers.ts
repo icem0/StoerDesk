@@ -25,17 +25,21 @@ export function userTopic(userId: string): string {
 }
 
 /**
- * The ntfy topics of the users who selected `channel = 'ntfy'` for the event
- * type of §11.4: the stored topic (`external_id`) of each of those users. A
- * user without a stored ntfy account contributes nothing (WP-M14-72) — the
- * fallback `stoerdesk-<userId>` is gone, the topic is the secret of the
- * subscription. The topics are deduplicated so a repeated selection never
- * delivers twice; an empty answer keeps the instance chain of §11.1.
+ * The ntfy recipients of an event per user (`specs/10-notifications.md` §11.3,
+ * §11.4, §11.5, WP-M14-45): a user who selected a channel for an event type
+ * receives the event at the address of the own account. Returns one entry per
+ * user with a stored ntfy topic, deduplicated by topic — a repeated selection
+ * never delivers twice; an empty answer keeps the instance chain of §11.1.
  */
+export interface NtfyRecipient {
+  userId: string
+  topic: string
+}
+
 export async function ntfyRecipients(
   database: DbSelect,
   eventType: string,
-): Promise<string[]> {
+): Promise<NtfyRecipient[]> {
   const rows = await database
     .select({
       userId: notificationPreferences.userId,
@@ -56,9 +60,19 @@ export async function ntfyRecipients(
       ),
     )
 
-  const topics = rows.map((row) => row.externalId ?? '').filter((topic) => topic !== '')
+  const recipients: NtfyRecipient[] = []
+  const seen = new Set<string>()
 
-  return [...new Set(topics)]
+  for (const row of rows) {
+    if (row.externalId === '' || row.externalId === null || seen.has(row.externalId)) {
+      continue
+    }
+
+    seen.add(row.externalId)
+    recipients.push({ userId: row.userId, topic: row.externalId })
+  }
+
+  return recipients
 }
 
 /**
@@ -66,20 +80,23 @@ export async function ntfyRecipients(
  * `specs/07-escalation.md` §7.14, ADR-0026, WP-M14-82b): the stored topic
  * (`external_id`) of every user of the list who selected the ntfy channel for
  * the event type — the broadcast of a distribution reaches the technicians of
- * the target on their own topics, never the instance topic. A user without an
- * ntfy account contributes nothing; the topics are deduplicated.
+ * the target on their own topics, never the instance topic. The user id comes
+ * with the topic, so the caller can record the message for the addressee
+ * (WP-M14-120b). A user without an ntfy account contributes nothing; the
+ * topics are deduplicated.
  */
 export async function ntfyTopicsOfUsers(
   database: DbSelect,
   eventType: string,
   userIds: readonly string[],
-): Promise<string[]> {
+): Promise<NtfyRecipient[]> {
   if (userIds.length === 0) {
     return []
   }
 
   const rows = await database
     .select({
+      userId: notificationPreferences.userId,
       externalId: notificationAccounts.externalId,
     })
     .from(notificationPreferences)
@@ -98,7 +115,17 @@ export async function ntfyTopicsOfUsers(
       ),
     )
 
-  const topics = rows.map((row) => row.externalId ?? '').filter((topic) => topic !== '')
+  const recipients: NtfyRecipient[] = []
+  const seen = new Set<string>()
 
-  return [...new Set(topics)]
+  for (const row of rows) {
+    if (row.externalId === '' || row.externalId === null || seen.has(row.externalId)) {
+      continue
+    }
+
+    seen.add(row.externalId)
+    recipients.push({ userId: row.userId, topic: row.externalId })
+  }
+
+  return recipients
 }
