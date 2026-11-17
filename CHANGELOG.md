@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The time sequence of a rule gets its own frame (WP-M14-94, out of band in
+  phase 14): the stage tab shows the key of a stage before its names and its
+  predecessor, and the rule form groups the start event, the percent and the
+  minutes per priority into the frame "Zeitliche Abfolge" above the condition
+  and the actions.
 - The note action carries no key and writes a ticket comment (WP-M14-93a …
   WP-M14-93c, out of band in phase 14): the key of a `history` action is
   optional in the contract, the server names it (`note_…`), the administration

@@ -297,6 +297,14 @@ export function EscalationPage() {
                   </p>
                   <div className="flex flex-wrap items-end gap-2">
                     <label className="text-xs text-slate-400">
+                      {t('admin.escalation.stage.key')}
+                      <input
+                        className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 read-only:opacity-60"
+                        readOnly
+                        value={key}
+                      />
+                    </label>
+                    <label className="text-xs text-slate-400">
                       {t('admin.escalation.stage.nameDe')}
                       <input
                         className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
@@ -663,82 +671,98 @@ function RuleForm({
             }
           />
         </label>
-        <label className="text-xs text-slate-400">
-          {t('admin.escalation.rule.reference')}
-          <select
-            className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-            disabled={!canWrite}
-            value={rule.reference ?? ''}
-            onChange={(event) => {
-              const reference = event.target.value
-
-              if (ESCALATION_REFERENCE_EVENTS.includes(reference as EscalationReferenceEvent)) {
-                apply({ ...rule, reference: reference as EscalationReferenceEvent })
-              }
-            }}
-          >
-            <option value="">{t('admin.escalation.rule.none')}</option>
-            {ESCALATION_REFERENCE_EVENTS.map((event) => (
-              <option key={event} value={event}>
-                {t(`admin.escalation.rule.referenceEvents.${event}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-slate-400">
-          {t('admin.escalation.rule.percent')}
-          <input
-            className="w-24 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-            disabled={!canWrite}
-            max={100}
-            min={1}
-            step={1}
-            type="number"
-            value={rule.percent ?? 0}
-            onChange={(event) => apply({ ...rule, percent: Number(event.target.value) })}
-          />
-        </label>
-        {TICKET_PRIORITIES.map((priority) => (
-          <label key={priority} className="text-xs text-slate-400">
-            {t(`admin.escalation.rule.minutes.${priority}`)}
-            <input
-              className="w-20 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-              disabled={!canWrite}
-              max={10080}
-              min={1}
-              required
-              step={1}
-              type="number"
-              value={minutes[priority]}
-              onChange={(event) => {
-                const changed = { ...minutes, [priority]: Number(event.target.value) }
-
-                setMinutes(changed)
-                apply({ ...rule, minutes: changed })
-              }}
-            />
-          </label>
-        ))}
       </div>
 
-      <EscalationConditionBuilder
-        initial={rule.condition}
-        canWrite={canWrite}
-        stageNames={stageNames}
-        onCondition={(next) => apply({ ...rule, condition: next })}
-      />
+      <fieldset
+        className="mt-3 rounded border border-slate-700 p-3"
+        data-testid="escalation-rule-timeline"
+      >
+        <legend className="px-1 text-xs font-medium text-slate-300">
+          {t('admin.escalation.rule.timeline')}
+        </legend>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="text-xs text-slate-400">
+            {t('admin.escalation.rule.reference')}
+            <select
+              className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+              disabled={!canWrite}
+              value={rule.reference ?? ''}
+              onChange={(event) => {
+                const reference = event.target.value
 
-      <EscalationActionEditor
-        initial={rule.actions}
-        channels={channels}
-        endpointIds={endpointIds}
-        statuses={statuses}
-        pools={pools}
-        groups={groups}
-        users={users}
-        canWrite={canWrite}
-        onActions={(next) => apply({ ...rule, actions: next })}
-      />
+                if (ESCALATION_REFERENCE_EVENTS.includes(reference as EscalationReferenceEvent)) {
+                  apply({ ...rule, reference: reference as EscalationReferenceEvent })
+                }
+              }}
+            >
+              <option value="">{t('admin.escalation.rule.none')}</option>
+              {ESCALATION_REFERENCE_EVENTS.map((event) => (
+                <option key={event} value={event}>
+                  {t(`admin.escalation.rule.referenceEvents.${event}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs text-slate-400">
+            {t('admin.escalation.rule.percent')}
+            <input
+              className="w-24 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+              disabled={!canWrite}
+              max={100}
+              min={1}
+              step={1}
+              type="number"
+              value={rule.percent ?? 0}
+              onChange={(event) => apply({ ...rule, percent: Number(event.target.value) })}
+            />
+          </label>
+          {TICKET_PRIORITIES.map((priority) => (
+            <label key={priority} className="text-xs text-slate-400">
+              {t(`admin.escalation.rule.minutes.${priority}`)}
+              <input
+                className="w-20 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                disabled={!canWrite}
+                max={10080}
+                min={1}
+                required
+                step={1}
+                type="number"
+                value={minutes[priority]}
+                onChange={(event) => {
+                  const changed = { ...minutes, [priority]: Number(event.target.value) }
+
+                  setMinutes(changed)
+                  apply({ ...rule, minutes: changed })
+                }}
+              />
+            </label>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-slate-500">{t('admin.escalation.help.timeline')}</p>
+      </fieldset>
+
+      <div className="mt-3">
+        <EscalationConditionBuilder
+          initial={rule.condition}
+          canWrite={canWrite}
+          stageNames={stageNames}
+          onCondition={(next) => apply({ ...rule, condition: next })}
+        />
+      </div>
+
+      <div className="mt-3">
+        <EscalationActionEditor
+          initial={rule.actions}
+          channels={channels}
+          endpointIds={endpointIds}
+          statuses={statuses}
+          pools={pools}
+          groups={groups}
+          users={users}
+          canWrite={canWrite}
+          onActions={(next) => apply({ ...rule, actions: next })}
+        />
+      </div>
     </div>
   )
 }

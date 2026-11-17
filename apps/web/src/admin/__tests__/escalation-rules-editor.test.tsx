@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
@@ -130,6 +130,47 @@ describe('the rule editor of the escalation page', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1))
     expect(escalationRuleConfigSchema.safeParse({ ...RULE, minutes: { ...RULE.minutes, low: 0 } }).success).toBe(false)
+  })
+
+  it('groups the time fields of a rule into its own frame', async () => {
+    renderPage(['settings.read'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-rule-timeline')).toBeTruthy())
+
+    const frame = screen.getByTestId('escalation-rule-timeline')
+
+    expect(frame.textContent).toContain('Zeitliche Abfolge')
+    expect(within(frame).getByLabelText('Start-Ereignis')).toBeTruthy()
+    expect(within(frame).getByLabelText('Prozent')).toBeTruthy()
+    expect(within(frame).getByLabelText('Niedrig')).toBeTruthy()
+    expect(within(frame).getByLabelText('Kritisch')).toBeTruthy()
+    expect(screen.getByLabelText('Niedrig', { exact: false })).toBeTruthy()
+  })
+
+  it('shows the key of a stage before its names and its predecessor', async () => {
+    renderPage(['settings.read'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
+
+    const stage = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')[0] as HTMLElement
+    const labels = [...stage.querySelectorAll('label')].map((label) => label.textContent)
+
+    expect(labels.slice(0, 3)).toEqual([
+      'Schlüssel',
+      'Name (Deutsch)',
+      'Name (Englisch)',
+    ])
+    expect(labels[3]).toContain('Vorgänger')
+    expect(labels[4]).toBe('Aktiv')
+
+    const key = within(stage).getAllByLabelText('Schlüssel')[0] as HTMLInputElement
+
+    expect(key.value).toBe('review')
+    expect(key.readOnly).toBe(true)
   })
 
   it('stays read-only without settings.write', async () => {
