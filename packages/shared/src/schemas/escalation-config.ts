@@ -820,7 +820,7 @@ const evenMinutes = (value: number) => ({
  */
 export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] = [
   {
-    key: 'review',
+    key: 'review#1',
     stageKey: 'review',
     reference: 'received_at',
     minutes: { low: 15, normal: 15, high: 15, critical: 5 },
@@ -830,7 +830,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'work_order',
+    key: 'work_order#1',
     stageKey: 'work_order',
     reference: 'review_started',
     minutes: evenMinutes(30),
@@ -840,7 +840,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'assignment',
+    key: 'assignment#1',
     stageKey: 'assignment',
     reference: 'work_order_set',
     minutes: evenMinutes(30),
@@ -850,7 +850,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'acceptance_offer',
+    key: 'acceptance#1',
     stageKey: 'acceptance',
     reference: 'offered',
     minutes: { low: 20, normal: 20, high: 20, critical: 10 },
@@ -860,7 +860,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'acceptance_assignment',
+    key: 'acceptance#2',
     stageKey: 'acceptance',
     reference: 'assigned',
     minutes: evenMinutes(15),
@@ -870,7 +870,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'acknowledgement',
+    key: 'acknowledgement#1',
     stageKey: 'acknowledgement',
     reference: 'accepted',
     minutes: evenMinutes(60),
@@ -880,7 +880,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'deadline_80_percent',
+    key: 'deadline#1',
     stageKey: null,
     reference: null,
     minutes: null,
@@ -890,7 +890,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] 
     active: true,
   },
   {
-    key: 'deadline_exceeded',
+    key: 'deadline#2',
     stageKey: null,
     reference: null,
     minutes: null,

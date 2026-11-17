@@ -39,13 +39,14 @@ type LegacyMinutes = {
 
 /**
  * The new rule keys and the rules of the former hard-coded list they replace.
- * The rules `work_order` and `acknowledgement` are new and have no predecessor.
+ * The rules `work_order#1` and `acknowledgement#1` are new and have no
+ * predecessor. The keys carry the number of the rule inside its stage (§7.5).
  */
 const LEGACY_RULE_BY_RULE_KEY: Record<string, string> = {
-  review: 'new_without_review',
-  assignment: 'work_order_without_distribution',
-  acceptance_offer: 'offered_without_claim',
-  acceptance_assignment: 'assigned_without_accept',
+  'review#1': 'new_without_review',
+  'assignment#1': 'work_order_without_distribution',
+  'acceptance#1': 'offered_without_claim',
+  'acceptance#2': 'assigned_without_accept',
 }
 
 function positiveNumber(value: unknown): number | undefined {

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The migration numbers the rules and their actions (WP-M14-99, out of band in phase
+  14): the migration `0045_escalation_rule_numbering.sql` gives every rule the key
+  of its stage and its number (`review#1`) and every action the key of its rule
+  and its number (`review#1#1`); the rules without a stage belong to the root
+  `deadline`. The actions and the firing log follow the rename of their rule, and
+  the defaults of a fresh installation carry the numbered keys.
 - The contract knows the numbered keys (WP-M14-98, out of band in phase 14): the
   shared contract names the taxonomy of the escalation — the key of a rule is
   the key of its stage and its number (`review#1`), the key of an action the
