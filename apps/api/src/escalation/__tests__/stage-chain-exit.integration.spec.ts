@@ -21,7 +21,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped stage chain exit integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, tickets, ticketEvents, escalationFirings } = schema
+const { objects, tickets, ticketEvents, escalationFirings, escalationStages } = schema
 
 type StageBody = {
   key: string
@@ -325,6 +325,38 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(
         body.events.filter((event) => event.type === 'escalated' && event.payload.stage === 'night_review'),
       ).toHaveLength(1)
+    })
+
+    it('refuses a second stage without a predecessor and removes it', async () => {
+      const extra: StageBody = {
+        key: 'extra_root',
+        names: { de: 'Zweite Wurzel', en: 'Second root' },
+        position: 7,
+        active: true,
+        predecessor: null,
+        reachedBy: [],
+      }
+
+      const rejected = await putStages({ stages: [...defaultStages, extra] })
+
+      expect(rejected.statusCode).toBe(400)
+      expect(rejected.json()).toMatchObject({ code: 'invalid_request' })
+
+      // A stage without a predecessor that an earlier version of the service
+      // wrote is removed; the first stage stays.
+      await db.insert(escalationStages).values({
+        key: extra.key,
+        names: extra.names,
+        position: extra.position,
+        active: extra.active,
+        predecessor: extra.predecessor,
+        reachedBy: extra.reachedBy,
+      })
+
+      const removed = await putStages({ stages: defaultStages })
+
+      expect(removed.statusCode).toBe(200)
+      expect(removed.json<ConfigBody>().stages.map((stage) => stage.key)).not.toContain('extra_root')
     })
 
     it('refuses to delete or demote the first stage', async () => {

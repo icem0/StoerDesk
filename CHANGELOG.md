@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The service protects only the first stage (WP-M14-106, out of band in phase 14):
+  the stage writer protects the first stage of the installed chain — the stage
+  without a predecessor with the smallest position — so a second stage without
+  a predecessor may be removed again.
 - A chain has one first stage (WP-M14-105, out of band in phase 14): the shared
   contract names the first stage — the stage without a predecessor with the
   smallest position — and the chain validator rejects a second stage without a
