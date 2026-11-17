@@ -435,11 +435,10 @@ export function EscalationPage() {
                   ) : null}
 
                   <ul className="flex flex-col gap-3" data-testid={`escalation-rules-${key}`}>
-                    {rulesOfStage(key).map((rule, index) => (
+                    {rulesOfStage(key).map((rule) => (
                       <RuleForm
                         key={rule.key}
                         rule={rule}
-                        number={index + 1}
                         canWrite={canWrite}
                         channels={channelsQuery.data?.channels ?? []}
                         endpointIds={(webhooksQuery.data?.webhooks ?? []).map((entry) => entry.id)}
@@ -635,7 +634,6 @@ function AddStageForm({
  */
 function RuleForm({
   rule,
-  number,
   canWrite,
   channels,
   endpointIds,
@@ -647,7 +645,6 @@ function RuleForm({
   onSave,
 }: {
   rule: EscalationRuleConfig
-  number: number
   canWrite: boolean
   channels: string[]
   endpointIds: string[]
@@ -671,19 +668,8 @@ function RuleForm({
 
   return (
     <div className="rounded border p-3 border-slate-700 bg-slate-950/40">
-      <div className="flex flex-wrap items-end gap-2">
-        <label className="text-xs text-slate-400">
-          {t('admin.escalation.rule.number')}
-          <input
-            className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 read-only:opacity-60"
-            readOnly
-            value={`#${number}`}
-          />
-        </label>
-      </div>
-
       <fieldset
-        className="mt-3 rounded border border-slate-700 p-3"
+        className="rounded border border-slate-700 p-3"
         data-testid="escalation-rule-timeline"
       >
         <legend className="px-1 text-xs font-medium text-slate-300">

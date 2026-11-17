@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The rule form shows no number (WP-M14-110, out of band in phase 14): a stage
+  carries one rule, so the rule shows no number any more; the key of the rule
+  stays the identity of the server.
 - The action editor deletes a chosen action (WP-M14-109, out of band in phase 14):
   every action of a rule carries its own remove button, so the first action of a
   rule can be deleted too; the single button that deleted the last action only
