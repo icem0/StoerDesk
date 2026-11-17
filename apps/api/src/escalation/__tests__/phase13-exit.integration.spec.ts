@@ -7,6 +7,8 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+
 import { createSession } from '../../auth/session'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
@@ -35,6 +37,28 @@ function onlyRow<T>(rows: T[], what: string): T {
 
 const MINUTE = 60 * 1000
 const NOW = new Date('2026-11-05T12:00:00.000Z')
+
+/** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
+function seededRuleKey(stageKey: string): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.stageKey === stageKey)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of the stage ${stageKey}`)
+  }
+
+  return rule.key
+}
+
+/** The key of the seeded deadline rule of a percentage. */
+function seededPercentRuleKey(percent: number): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.percent === percent)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of ${percent} percent`)
+  }
+
+  return rule.key
+}
 
 describe.skipIf(testDatabase.status === 'unavailable')(
   'the exit criterion of the escalation phase (integration)',
@@ -143,7 +167,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       await db.insert(schema.escalationActions).values([
         {
           key: 'exit_notify',
-          ruleKey: 'review',
+          ruleKey: seededRuleKey('review'),
           type: 'notify',
           config: { channels: ['ntfy'] },
           condition: { all: [] },
@@ -152,7 +176,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         },
         {
           key: 'exit_webhook',
-          ruleKey: 'review',
+          ruleKey: seededRuleKey('review'),
           type: 'webhook',
           config: { endpointIds: [endpointId] },
           condition: { all: [] },
@@ -161,7 +185,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         },
         {
           key: 'exit_note',
-          ruleKey: 'review',
+          ruleKey: seededRuleKey('review'),
           type: 'history',
           config: { text: 'Die Stufen check ran.' },
           condition: { all: [] },
@@ -174,7 +198,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const fired = await evaluateTicketEscalations(db, ticketId, NOW)
 
-      expect(fired.filter((entry) => entry.rule === 'review')).toHaveLength(1)
+      expect(fired.filter((entry) => entry.rule === seededRuleKey('review'))).toHaveLength(1)
 
       const outboxRows = await db.select().from(outbox).where(eq(outbox.ticketId, ticketId))
 
@@ -213,7 +237,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .set({
           condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
         })
-        .where(eq(schema.escalationRules.key, 'review'))
+        .where(eq(schema.escalationRules.key, seededRuleKey('review')))
 
       const ticketId = await createTicket('normal')
 
@@ -237,7 +261,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const fired = await evaluateTicketEscalations(db, ticketId, late)
 
       expect(fired.map((entry) => entry.rule)).toEqual(
-        expect.arrayContaining(['deadline_80_percent', 'deadline_exceeded']),
+        expect.arrayContaining([seededPercentRuleKey(80), seededPercentRuleKey(100)]),
       )
     })
 

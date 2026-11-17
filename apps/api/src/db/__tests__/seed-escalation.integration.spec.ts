@@ -4,6 +4,8 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+
 import { seedEscalation } from '../seed-escalation'
 import { escalationRules, escalationStages, settings } from '../schema'
 import { migrationsFolder, openTestDatabase } from './helpers/testDatabase'
@@ -12,6 +14,17 @@ const testDatabase = await openTestDatabase()
 
 if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped db integration: ${testDatabase.reason}\n`)
+}
+
+/** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
+function seededRuleKey(stageKey: string): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.stageKey === stageKey)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of the stage ${stageKey}`)
+  }
+
+  return rule.key
 }
 
 describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (integration)', () => {
@@ -59,7 +72,9 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
 
     const rules = await db.select().from(escalationRules)
 
-    expect(rules.map((rule) => rule.key)).toContain('deadline_exceeded')
+    expect(rules.map((rule) => rule.key)).toContain(
+      DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
+    )
   })
 
   it('changes nothing on a second run', async () => {
@@ -80,13 +95,18 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
       .values({ key: 'ticket.escalation.new_without_review.critical_minutes', value: 7 })
       .onConflictDoNothing({ target: settings.key })
 
-    await db.delete(escalationRules).where(eq(escalationRules.key, 'review'))
+    await db
+      .delete(escalationRules)
+      .where(eq(escalationRules.key, seededRuleKey('review')))
 
     const result = await seedEscalation(db as never)
 
     expect(result.rules).toBe(1)
 
-    const [review] = await db.select().from(escalationRules).where(eq(escalationRules.key, 'review'))
+    const [review] = await db
+      .select()
+      .from(escalationRules)
+      .where(eq(escalationRules.key, seededRuleKey('review')))
 
     expect(review?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 7 })
   })

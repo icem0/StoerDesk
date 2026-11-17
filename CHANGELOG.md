@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The remaining API tests follow the numbered rules (WP-M14-97, out of band in phase
+  14): the phase 13 criterion, the deadline exit criterion and the seed test
+  read the key of a seeded rule from the shared defaults.
 - The API tests follow the numbered rules (WP-M14-96, out of band in phase 14):
   the escalation suites read the key of a seeded rule from the shared defaults
   instead of naming it in the expectation.

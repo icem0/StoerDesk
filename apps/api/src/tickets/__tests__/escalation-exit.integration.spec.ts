@@ -8,6 +8,8 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
@@ -23,6 +25,17 @@ if (testDatabase.status === 'unavailable') {
 }
 
 const { objects, tickets, users, userRoles, roles } = schema
+
+/** The key of the seeded deadline rule of a percentage; the numbering is the identity (§7.5). */
+function seededPercentRuleKey(percent: number): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.percent === percent)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of ${percent} percent`)
+  }
+
+  return rule.key
+}
 
 type WithCookieHeaders = { headers: IncomingHttpHeaders | OutgoingHttpHeaders }
 
@@ -89,7 +102,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       events: Array<{ type: string; payload: { rule: string } }>
     }): typeof body.events {
       return body.events.filter(
-        (event) => event.type === 'escalated' && event.payload.rule === 'deadline_exceeded',
+        (event) => event.type === 'escalated' && event.payload.rule === seededPercentRuleKey(100),
       )
     }
 
@@ -198,7 +211,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(secondBody.timeline.state).toBe('red')
     })
 
-    it('records the deadline_exceeded event with rule and threshold in the history', async () => {
+    it('records the deadline rule event with rule and threshold in the history', async () => {
       await evaluateEscalations(db, now)
 
       const response = await getTicket(ticketNo)
@@ -210,7 +223,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }>()
 
       const event = body.events.find(
-        (event) => event.type === 'escalated' && event.payload.rule === 'deadline_exceeded',
+        (event) => event.type === 'escalated' && event.payload.rule === seededPercentRuleKey(100),
       )
 
       expect(event).toBeDefined()
