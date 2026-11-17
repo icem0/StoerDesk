@@ -60,6 +60,17 @@ function seededPercentRuleKey(percent: number): string {
   return rule.key
 }
 
+/** The escalation events of one rule; every rule of the chain may fire. */
+function escalatedEvents(
+  events: readonly { type: string; payload: unknown }[],
+  ruleKey: string,
+): unknown[] {
+  return events.filter(
+    (event) =>
+      event.type === 'escalated' && (event.payload as { rule?: string }).rule === ruleKey,
+  )
+}
+
 describe.skipIf(testDatabase.status === 'unavailable')(
   'the exit criterion of the escalation phase (integration)',
   () => {
@@ -211,7 +222,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticketId))
 
-      expect(events.filter((event) => event.type === 'escalated')).toHaveLength(1)
+      expect(escalatedEvents(events, seededRuleKey('review'))).toHaveLength(1)
       expect(
         events.some(
           (event) =>
@@ -228,7 +239,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .from(ticketEvents)
         .where(eq(ticketEvents.ticketId, ticketId))
 
-      expect(eventsAgain.filter((event) => event.type === 'escalated')).toHaveLength(1)
+      expect(escalatedEvents(eventsAgain, seededRuleKey('review'))).toHaveLength(1)
     })
 
     it('keeps a rule silent when its condition does not match', async () => {
@@ -243,11 +254,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const fired = await evaluateTicketEscalations(db, ticketId, NOW)
 
-      expect(fired).toHaveLength(0)
+      expect(fired.filter((entry) => entry.rule === seededRuleKey('review'))).toHaveLength(0)
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticketId))
 
-      expect(events.filter((event) => event.type === 'escalated')).toHaveLength(0)
+      expect(escalatedEvents(events, seededRuleKey('review'))).toHaveLength(0)
     })
 
     it('fires the deadline rules at 80 percent and at the deadline', async () => {

@@ -8,6 +8,8 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+
 import { migrationsFolder, openTestDatabase } from '../__tests__/helpers/testDatabase'
 import * as schema from '../schema'
 import { seedEscalation } from '../seed-escalation'
@@ -115,16 +117,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const rules = await db.select().from(escalationRules)
 
-      expect(rules.map((rule) => rule.key).sort()).toEqual([
-        'acceptance#1',
-        'acceptance#2',
-        'acknowledgement#1',
-        'assignment#1',
-        'deadline#1',
-        'deadline#2',
-        'review#1',
-        'work_order#1',
-      ])
+      expect(rules.map((rule) => rule.key).sort()).toEqual(
+        DEFAULT_WORKFLOW_ESCALATION_RULES.map((rule) => rule.key).sort(),
+      )
 
       const stages = await db.select().from(escalationStages)
 

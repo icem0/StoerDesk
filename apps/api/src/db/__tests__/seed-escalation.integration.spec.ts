@@ -4,7 +4,10 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+import {
+  DEFAULT_WORKFLOW_ESCALATION_RULES,
+  DEFAULT_WORKFLOW_ESCALATION_STAGES,
+} from '@stoerdesk/shared'
 
 import { seedEscalation } from '../seed-escalation'
 import { escalationRules, escalationStages, settings } from '../schema'
@@ -44,31 +47,26 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
     }
   })
 
-  it('inserts the five stages and the rules of the specification', async () => {
+  it('inserts the stages and the rules of the specification', async () => {
     const result = await seedEscalation(db as never)
 
     expect(result.status).toBe('created')
-    expect(result.stages).toBe(5)
-    expect(result.rules).toBe(8)
+    expect(result.stages).toBe(DEFAULT_WORKFLOW_ESCALATION_STAGES.length)
+    expect(result.rules).toBe(DEFAULT_WORKFLOW_ESCALATION_RULES.length)
 
     const stages = await db.select().from(escalationStages)
 
-    expect(stages.map((stage) => stage.key)).toEqual([
-      'review',
-      'work_order',
-      'assignment',
-      'acceptance',
-      'acknowledgement',
-    ])
-    expect(stages[0]?.names).toMatchObject({ de: 'Prüfung', en: 'Review' })
+    expect(stages.map((stage) => stage.key)).toEqual(
+      DEFAULT_WORKFLOW_ESCALATION_STAGES.map((stage) => stage.key),
+    )
+    expect(stages[0]?.names).toMatchObject(DEFAULT_WORKFLOW_ESCALATION_STAGES[0]?.names ?? {})
 
     const byKey = new Map(stages.map((stage) => [stage.key, stage]))
 
-    expect(byKey.get('review')?.predecessor).toBeNull()
-    expect(byKey.get('work_order')?.predecessor).toBe('review')
-    expect(byKey.get('assignment')?.reachedBy).toEqual(['assigned', 'offered'])
-    expect(byKey.get('acceptance')?.predecessor).toBe('assignment')
-    expect(byKey.get('acknowledgement')?.reachedBy).toEqual(['acknowledged'])
+    for (const stage of DEFAULT_WORKFLOW_ESCALATION_STAGES) {
+      expect(byKey.get(stage.key)?.predecessor).toBe(stage.predecessor)
+      expect(byKey.get(stage.key)?.reachedBy).toEqual(stage.reachedBy)
+    }
 
     const rules = await db.select().from(escalationRules)
 

@@ -4,7 +4,10 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+import {
+  DEFAULT_WORKFLOW_ESCALATION_RULES,
+  DEFAULT_WORKFLOW_ESCALATION_STAGES,
+} from '@stoerdesk/shared'
 
 import { createSession } from '../../auth/session'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
@@ -61,48 +64,14 @@ function onlyRow<T>(rows: T[], what: string): T {
   return row
 }
 
-const DEFAULT_CHAIN: StageBody[] = [
-  {
-    key: 'review',
-    names: { de: 'Prüfung', en: 'Review' },
-    position: 1,
-    active: true,
-    predecessor: null,
-    reachedBy: ['review_started'],
-  },
-  {
-    key: 'work_order',
-    names: { de: 'Auftrag angelegt', en: 'Work order created' },
-    position: 2,
-    active: true,
-    predecessor: 'review',
-    reachedBy: ['work_order_set'],
-  },
-  {
-    key: 'assignment',
-    names: { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' },
-    position: 3,
-    active: true,
-    predecessor: 'work_order',
-    reachedBy: ['assigned', 'offered'],
-  },
-  {
-    key: 'acceptance',
-    names: { de: 'Angenommen', en: 'Accepted' },
-    position: 4,
-    active: true,
-    predecessor: 'assignment',
-    reachedBy: ['accepted'],
-  },
-  {
-    key: 'acknowledgement',
-    names: { de: 'Quittiert', en: 'Acknowledged' },
-    position: 5,
-    active: true,
-    predecessor: 'acceptance',
-    reachedBy: ['acknowledged'],
-  },
-]
+const DEFAULT_CHAIN: StageBody[] = DEFAULT_WORKFLOW_ESCALATION_STAGES.map((stage) => ({
+  key: stage.key,
+  names: stage.names,
+  position: stage.position,
+  active: stage.active,
+  predecessor: stage.predecessor,
+  reachedBy: stage.reachedBy,
+}))
 
 describe.skipIf(testDatabase.status === 'unavailable')(
   'the escalation configuration API — GET and PUT (integration)',
@@ -203,20 +172,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect((await putConfig(cookies['office'], { rules: [] })).statusCode).toBe(403)
     })
 
-    it('answers the five stages and the rules of the seed', async () => {
+    it('answers the stages and the rules of the seed', async () => {
       const response = await getConfig(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
 
       const body = response.json<ConfigBody>()
 
-      expect(body.stages.map((stage) => stage.key)).toEqual([
-        'review',
-        'work_order',
-        'assignment',
-        'acceptance',
-        'acknowledgement',
-      ])
+      expect(body.stages.map((stage) => stage.key)).toEqual(
+        DEFAULT_WORKFLOW_ESCALATION_STAGES.map((stage) => stage.key),
+      )
       expect(body.rules.map((rule) => rule.key)).toContain(
         DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
       )
@@ -478,27 +443,30 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(200)
 
       const body = response.json<ConfigBody>()
+      const byKey = new Map(body.stages.map((stage) => [stage.key, stage]))
 
-      expect(body.stages[0]?.names.de).toBe('Prüfung des Büros')
-      expect(body.stages[1]?.predecessor).toBe('review')
+      expect(byKey.get('review')?.names.de).toBe('Prüfung des Büros')
+      expect(byKey.get('work_order')?.predecessor).toBe('review')
     })
 
     it('adds an intermediate stage between assignment and acceptance', async () => {
+      const acceptanceIndex = DEFAULT_CHAIN.findIndex((stage) => stage.key === 'acceptance')
       const response = await putStages(cookies['admin'], {
         stages: [
-          DEFAULT_CHAIN[0]!,
-          DEFAULT_CHAIN[1]!,
-          DEFAULT_CHAIN[2]!,
+          ...DEFAULT_CHAIN.slice(0, acceptanceIndex),
           {
             key: 'night_shift',
             names: { de: 'Nachtdienst', en: 'Night shift' },
-            position: 4,
+            position: DEFAULT_CHAIN[acceptanceIndex]!.position,
             active: true,
             predecessor: 'assignment',
             reachedBy: ['claimed'],
           },
-          { ...DEFAULT_CHAIN[3]!, position: 5, predecessor: 'night_shift' },
-          { ...DEFAULT_CHAIN[4]!, position: 6 },
+          ...DEFAULT_CHAIN.slice(acceptanceIndex).map((stage, offset) => ({
+            ...stage,
+            position: stage.position + 1,
+            predecessor: offset === 0 ? 'night_shift' : stage.predecessor,
+          })),
         ],
       })
 
@@ -510,12 +478,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(byKey.get('night_shift')?.predecessor).toBe('assignment')
       expect(byKey.get('acceptance')?.predecessor).toBe('night_shift')
       expect(body.stages.map((stage) => stage.key)).toEqual([
-        'review',
-        'work_order',
-        'assignment',
+        ...DEFAULT_CHAIN.slice(0, acceptanceIndex).map((stage) => stage.key),
         'night_shift',
-        'acceptance',
-        'acknowledgement',
+        ...DEFAULT_CHAIN.slice(acceptanceIndex).map((stage) => stage.key),
       ])
     })
 
@@ -546,13 +511,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const body = response.json<ConfigBody>()
 
-      expect(body.stages.map((stage) => stage.key)).toEqual([
-        'review',
-        'work_order',
-        'assignment',
-        'acceptance',
-        'acknowledgement',
-      ])
+      expect(body.stages.map((stage) => stage.key)).toEqual(
+        DEFAULT_CHAIN.map((stage) => stage.key),
+      )
       expect(await db.select().from(schema.escalationRules)).toHaveLength(0)
     })
 

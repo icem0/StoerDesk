@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The API tests follow the chain of the defaults (WP-M14-115, out of band in
+  phase 14): the seed test, the numbering test, the configuration test and the
+  exit criterion of the escalation read the chain from the shared defaults
+  instead of naming it in the test.
 - The engine and the service use the clock of a stage (WP-M14-114, out of band
   in phase 14): the scan of the escalation and the configuration service take
   the clock of a stage from the shared helper — a predecessor that the workflow
