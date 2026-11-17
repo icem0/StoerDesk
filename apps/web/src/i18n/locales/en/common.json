@@ -40,7 +40,8 @@
         "hint": "The page could not be loaded. Please reload it or go back to the dashboard."
       },
       "back": "Back to the dashboard"
-    }
+    },
+    "inbox": "Notifications"
   },
   "branding": {
     "title": "Customize the GUI",

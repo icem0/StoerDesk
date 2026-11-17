@@ -165,6 +165,57 @@ describe('Shell settings access', () => {
     expect(screen.getByTestId('app-version')).toBeTruthy()
   })
 
+  it('shows the bell with the number of the unread messages (WP-M14-120e)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('/v1/notifications/messages/unread-count')) {
+          return Response.json({ count: 3 })
+        }
+
+        if (url.includes('/v1/me')) {
+          return Response.json(signedInMe())
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderShell()
+
+    const bell = await screen.findByRole('link', { name: 'Benachrichtigungen' })
+
+    expect(bell.getAttribute('href')).toBe('/notifications')
+    expect(await screen.findByTestId('unread-count')).toBeTruthy()
+    expect(screen.getByTestId('unread-count').textContent).toBe('3')
+  })
+
+  it('shows the bell without a badge when every message is read (WP-M14-120e)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('/v1/notifications/messages/unread-count')) {
+          return Response.json({ count: 0 })
+        }
+
+        if (url.includes('/v1/me')) {
+          return Response.json(signedInMe())
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderShell()
+
+    expect(await screen.findByRole('link', { name: 'Benachrichtigungen' })).toBeTruthy()
+    expect(screen.queryByTestId('unread-count')).toBeNull()
+  })
+
   it('applies the theme of the signed-in user on the shell root', async () => {
     stubMe({
       user: { ...signedInMe().user, theme: 'light' },

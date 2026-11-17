@@ -1,7 +1,7 @@
 # WP-M14-120e: the bell in the shell with the number of the unread messages
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-120d
 phase: 14
 milestone: m14
@@ -11,7 +11,7 @@ spec-lines: 20
 
 files-read:
 
-- apps/web/src/components/Shell.tsx (the header of the application)
+- apps/web/src/components/Shell.tsx, apps/web/src/components/__tests__/shell.test.tsx (the header of the application)
 - apps/web/src/i18n/locales/{de,en}/common.json (the texts of the shell)
 
 files-write:

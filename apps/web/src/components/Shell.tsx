@@ -70,6 +70,63 @@ function SettingsIcon() {
 }
 
 /**
+ * The bell of the header (WP-M14-120e): it opens the inbox of the user and
+ * shows the number of the unread messages. The count comes from
+ * `GET /api/v1/notifications/messages/unread-count` and is refetched when the
+ * window regains the focus, so a message that arrives while the application is
+ * open shows up without a reload.
+ */
+function NotificationBell() {
+  const { t } = useTranslation('common')
+
+  const unread = useQuery({
+    queryKey: ['notification-unread-count'],
+    queryFn: () => apiFetch<{ count: number }>('/v1/notifications/messages/unread-count'),
+    refetchOnWindowFocus: true,
+    retry: false,
+  })
+
+  const count = unread.data?.count ?? 0
+
+  return (
+    <NavLink
+      aria-label={t('app.inbox')}
+      className={({ isActive }) =>
+        `relative flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+          isActive
+            ? 'border-sky-500/40 bg-sky-600/10 text-sky-300'
+            : 'border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100'
+        }`
+      }
+      title={t('app.inbox')}
+      to="/notifications"
+    >
+      <svg
+        aria-hidden="true"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+        viewBox="0 0 24 24"
+      >
+        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+      </svg>
+      {count > 0 ? (
+        <span
+          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold text-white"
+          data-testid="unread-count"
+        >
+          {count > 99 ? '99+' : count}
+        </span>
+      ) : null}
+    </NavLink>
+  )
+}
+
+/**
  * Settings access of the shell (WP-M1-17, WP-M12-08): the gear sits next to the
  * version and opens the settings overview page directly. There is no dropdown:
  * every destination lives on the settings page, grouped by topic.
@@ -137,9 +194,10 @@ export function Shell() {
             </span>
           </span>
 
-          {/* Right: version and settings. On phones this stays in the first row. */}
+          {/* Right: version, bell and settings. On phones this stays in the first row. */}
           <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
+            {me.data ? <NotificationBell /> : null}
             {me.data ? <SettingsLink /> : null}
           </div>
 

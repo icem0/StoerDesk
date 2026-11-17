@@ -40,7 +40,8 @@
         "hint": "Die Seite konnte nicht geladen werden. Bitte lade sie neu oder gehe zur Startseite."
       },
       "back": "Zur Startseite"
-    }
+    },
+    "inbox": "Benachrichtigungen"
   },
   "branding": {
     "title": "GUI anpassen",

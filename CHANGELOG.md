@@ -123,6 +123,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Added
+- The bell in the shell with the number of the unread messages (WP-M14-120e,
+  out of band in phase 14): the header carries a bell next to the settings gear
+  that opens the inbox and shows the number of the messages without a read
+  receipt. The count is refetched when the window regains the focus, so a
+  message that arrives while the application is open shows up without a reload.
 - The inbox page (WP-M14-120d, out of band in phase 14): `/notifications` lists
   the messages that the internal layer recorded for the signed-in user, the
   newest first, with the channel, the state (`PENDING`, `SENT`, `FAILED`), the
