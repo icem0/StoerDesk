@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The module map names the escalation changes of phase 14 (WP-M14-95, out of
+  band in phase 14): the rows of the configuration service, the dispatcher, the
+  action editor and the escalation page name the recipient and the priority of
+  a `notify` action, the comment and the internal key of a `history` action and
+  the immediate, protected first stage.
 - The time sequence of a rule gets its own frame (WP-M14-94, out of band in
   phase 14): the stage tab shows the key of a stage before its names and its
   predecessor, and the rule form groups the start event, the percent and the
