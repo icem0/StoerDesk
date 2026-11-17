@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The migration adds the stage NEW (WP-M14-117, out of band in phase 14):
+  `0046_escalation_stage_new.sql` anchors an installed chain at the stage `new`
+  (`Neu` / `New`) — the old first stage gets it as predecessor, every stage
+  moves one position behind and the rule `new#1` waits `received_at` with the
+  minutes of ADR-0008. The milestones, the clocks and the rules of the other
+  stages keep their rows; a chain at the position limit stays untouched.
 - The shared contract knows the stage NEW (WP-M14-116, out of band in phase 14):
   the default chain starts with the stage `new` (`Neu` / `New`) — the arrival of
   the ticket, without a reaching event, handing its clock down — and the stage
