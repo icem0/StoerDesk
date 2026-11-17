@@ -285,6 +285,7 @@ export function EscalationPage() {
           <ol className="flex flex-col gap-4" data-testid="escalation-stage-list">
             {config.stages.map((stage) => {
               const key = stage.key
+              const isFirst = stage.predecessor === null
               const otherStages = config.stages.filter((entry) => entry.key !== key)
 
               return (
@@ -335,7 +336,7 @@ export function EscalationPage() {
                       {t('admin.escalation.stage.predecessor')}
                       <select
                         className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                        disabled={!canWrite}
+                        disabled={!canWrite || isFirst}
                         value={stage.predecessor ?? ''}
                         onChange={(event) =>
                           void saveStages.mutate({
@@ -375,7 +376,7 @@ export function EscalationPage() {
                         }
                       />
                     </label>
-                    {canWrite ? (
+                    {canWrite && !isFirst ? (
                       <button
                         className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
                         onClick={() => setRemoveCandidate(key)}

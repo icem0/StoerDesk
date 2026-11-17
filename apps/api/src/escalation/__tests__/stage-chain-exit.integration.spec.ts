@@ -327,6 +327,21 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ).toHaveLength(1)
     })
 
+    it('refuses to delete or demote the first stage', async () => {
+      const replacement = defaultStages.map((stage) =>
+        stage.key === 'review'
+          ? { ...stage, key: 'new_root' }
+          : stage.predecessor === 'review'
+            ? { ...stage, predecessor: 'new_root' }
+            : stage,
+      )
+
+      const response = await putStages({ stages: replacement })
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json()).toMatchObject({ code: 'invalid_request' })
+    })
+
     it('removes the stage and its rule but keeps the firing and the event', async () => {
       const response = await putStages({ stages: defaultStages })
 

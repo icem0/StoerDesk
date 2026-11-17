@@ -240,6 +240,9 @@ ticket itself, independent of their `reference` and `minutes`, and the creation
 paths of the report form, the internal form and the external API evaluate them
 right after the ticket transaction. The `condition` of such a rule still decides
 whether it fires, and an open pause suppresses the firing until the pause ends.
+The first stage is the anchor of the chain: `PUT /api/v1/escalation/stages`
+rejects a body that omits it or gives it a predecessor (`400 invalid_request`),
+and the administration hides its remove action and locks its predecessor select.
 
 `escalation_rules.stage_key` is a foreign key to `escalation_stages.key` with
 `ON DELETE cascade`: removing a stage removes its rules and their actions. The

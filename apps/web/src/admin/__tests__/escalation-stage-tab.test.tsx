@@ -125,6 +125,11 @@ describe('the stage tab of the escalation administration', () => {
     expect(options).toContain('Prüfung')
     expect(options).toContain('Auftrag angelegt')
     expect(options).not.toContain('Nachtdienst')
+
+    const first = items[0] as HTMLElement
+
+    expect((within(first).getByLabelText('Vorgänger') as HTMLSelectElement).disabled).toBe(true)
+    expect(within(first).queryByRole('button', { name: 'Stufe entfernen' })).toBeNull()
   })
 
   it('renders the add row and the remove action with the cascade hint', async () => {

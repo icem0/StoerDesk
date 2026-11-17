@@ -1,4 +1,4 @@
-import { asc, eq, notInArray } from 'drizzle-orm'
+import { asc, eq, isNull, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   escalationConfigSchema,
@@ -362,6 +362,24 @@ export async function writeEscalationStages(
   }
 
   const keys = parsed.data.stages.map((stage) => stage.key)
+
+  // The first stage is the anchor of the chain: it carries the clock of the
+  // ticket and its rules fire at creation (WP-M14-91). It cannot be removed or
+  // demoted to a later stage (WP-M14-92).
+  const [first] = await database
+    .select({ key: escalationStages.key })
+    .from(escalationStages)
+    .where(isNull(escalationStages.predecessor))
+    .limit(1)
+
+  if (first !== undefined) {
+    const submitted = parsed.data.stages.find((stage) => stage.key === first.key)
+
+    if (submitted === undefined || submitted.predecessor !== null) {
+      throw new EscalationConfigError(400, 'invalid_request', { fields: ['stages'] })
+    }
+  }
+
   const updatedAt = new Date()
 
   await database.transaction(async (tx) => {

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The first escalation stage is never deleted (WP-M14-92, out of band in phase
+  14): the stage writer rejects a body that omits the stage without predecessor
+  or gives it one, and the stage tab hides its remove action and locks its
+  predecessor select.
 - The first escalation stage fires when a ticket is created (WP-M14-91, out of
   band in phase 14): the rules of the stage without predecessor are due at
   `received_at`, independent of their reference and minutes, and the report form,
