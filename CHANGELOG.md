@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The administration numbers the rules (WP-M14-101, out of band in phase 14): a rule
+  of a stage shows its number `#1` in a read-only field instead of an editable
+  key; the key of the stage stays editable when the stage is created.
 - The service derives the keys (WP-M14-100, out of band in phase 14): the
   configuration service writes the key of every rule and of every action itself —
   the key of the stage and the number of the rule, the key of the rule and the

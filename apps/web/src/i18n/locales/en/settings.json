@@ -295,6 +295,7 @@
       },
       "rule": {
         "key": "Key",
+        "number": "Rule",
         "reference": "Start event",
         "percent": "Percent",
         "timeline": "Time sequence",

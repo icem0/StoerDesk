@@ -173,6 +173,20 @@ describe('the rule editor of the escalation page', () => {
     expect(key.readOnly).toBe(true)
   })
 
+  it('numbers the rule of a stage instead of naming its key', async () => {
+    renderPage(['settings.read'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-rule-timeline')).toBeTruthy())
+
+    const number = screen.getByLabelText('Regel') as HTMLInputElement
+
+    expect(number.value).toBe('#1')
+    expect(number.readOnly).toBe(true)
+    expect(screen.getAllByLabelText('Schlüssel')).toHaveLength(1)
+  })
+
   it('stays read-only without settings.write', async () => {
     const saved = renderPage(['settings.read'])
 

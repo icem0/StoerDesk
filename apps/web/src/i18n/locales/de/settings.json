@@ -295,6 +295,7 @@
       },
       "rule": {
         "key": "Schlüssel",
+        "number": "Regel",
         "reference": "Start-Ereignis",
         "percent": "Prozent",
         "timeline": "Zeitliche Abfolge",
