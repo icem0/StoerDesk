@@ -185,9 +185,9 @@ describe('Shell settings access', () => {
 
     renderShell()
 
-    const bell = await screen.findByRole('link', { name: 'Benachrichtigungen' })
+    const bell = await screen.findByRole('button', { name: 'Benachrichtigungen' })
 
-    expect(bell.getAttribute('href')).toBe('/notifications')
+    expect(bell.getAttribute('aria-expanded')).toBe('false')
     expect(await screen.findByTestId('unread-count')).toBeTruthy()
     expect(screen.getByTestId('unread-count').textContent).toBe('3')
   })
@@ -212,7 +212,7 @@ describe('Shell settings access', () => {
 
     renderShell()
 
-    expect(await screen.findByRole('link', { name: 'Benachrichtigungen' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Benachrichtigungen' })).toBeTruthy()
     expect(screen.queryByTestId('unread-count')).toBeNull()
   })
 

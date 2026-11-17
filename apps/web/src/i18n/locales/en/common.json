@@ -248,6 +248,8 @@
       "email": "E-mail",
       "webpush": "Push",
       "whatsapp": "WhatsApp Web"
-    }
+    },
+    "unreadCount": "{{count}} unread",
+    "showAll": "Show all messages"
   }
 }

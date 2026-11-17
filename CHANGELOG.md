@@ -123,6 +123,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Added
+- The bell opens the messages of the inbox (WP-M14-122, out of band in phase
+  14): a click on the bell opens a panel with the latest messages of the
+  inbox — title, channel, state and moment — the unread ones marked and a
+  failed one standing out. A click on a message marks it as read without
+  leaving the panel, and the link at the bottom opens the full inbox. The panel
+  closes when the click lands outside of it or when the escape key is pressed.
 - The bell in the shell with the number of the unread messages (WP-M14-120e,
   out of band in phase 14): the header carries a bell next to the settings gear
   that opens the inbox and shows the number of the messages without a read
