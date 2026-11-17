@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The action editor deletes a chosen action (WP-M14-109, out of band in phase 14):
+  every action of a rule carries its own remove button, so the first action of a
+  rule can be deleted too; the single button that deleted the last action only
+  is gone.
 - The spec names the single first stage (WP-M14-108, out of band in phase 14): a
   chain has exactly one stage without predecessor — the first stage — and only
   that one is protected.

@@ -430,7 +430,7 @@
         },
         "notifyHint": "The target receives the notification via ntfy; the channel selection is not used.",
         "add": "Add action",
-        "remove": "Remove"
+        "remove": "Remove action #{{number}}"
       },
       "help": {
         "deadlines": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",

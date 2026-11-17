@@ -31,12 +31,24 @@ const RULE = {
   active: true,
 }
 
+const SECOND_ACTION = {
+  key: 'notify_management',
+  type: 'notify',
+  channels: ['ntfy'],
+  condition: { all: [] },
+}
+
 const CONFIG = {
   stages: [{ key: 'review', names: { de: 'Prüfung', en: 'Review' }, position: 1, active: true }],
   rules: [RULE],
 }
 
-function renderPage(permissions: string[]) {
+const TWO_ACTIONS_CONFIG = {
+  stages: CONFIG.stages,
+  rules: [{ ...RULE, actions: [NOTIFY_ACTION, SECOND_ACTION] }],
+}
+
+function renderPage(permissions: string[], config: unknown = CONFIG) {
   const saved: unknown[] = []
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -53,7 +65,7 @@ function renderPage(permissions: string[]) {
         saved.push(JSON.parse(String(init.body)))
       }
 
-      return Response.json(CONFIG)
+      return Response.json(config)
     }
 
     if (path.includes('/v1/escalation/channels')) {
@@ -203,6 +215,28 @@ describe('the action editor of the escalation page', () => {
     expect(number.value).toBe('#1')
     expect(number.readOnly).toBe(true)
     expect(within(list).queryByLabelText('Schlüssel')).toBeNull()
+  })
+
+  it('deletes a chosen action and keeps the other one', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'], TWO_ACTIONS_CONFIG)
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aktion #1 entfernen' }))
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: { actions?: unknown[] }[] }
+
+    expect(body.rules?.[0]?.actions).toEqual([
+      {
+        key: SECOND_ACTION.key,
+        type: 'notify',
+        channels: ['ntfy'],
+        condition: { all: [] },
+      },
+    ])
   })
 
   it('hides the key of a note action and saves no key', async () => {

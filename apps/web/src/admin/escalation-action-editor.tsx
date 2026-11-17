@@ -497,6 +497,18 @@ export function EscalationActionEditor({
                   </label>
                 </>
               ) : null}
+
+              {canWrite ? (
+                <button
+                  className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                  onClick={() =>
+                    publish(actions.filter((_, position) => position !== index))
+                  }
+                  type="button"
+                >
+                  {t('admin.escalation.action.remove', { number: index + 1 })}
+                </button>
+              ) : null}
             </div>
 
             <EscalationConditionBuilder
@@ -524,14 +536,6 @@ export function EscalationActionEditor({
             type="button"
           >
             {t('admin.escalation.action.add')}
-          </button>
-          <button
-            className="rounded bg-rose-800 px-3 py-2 text-sm text-rose-100 hover:bg-rose-700 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-            disabled={actions.length === 0}
-            onClick={() => publish(actions.slice(0, -1))}
-            type="button"
-          >
-            {t('admin.escalation.action.remove')}
           </button>
         </div>
       ) : null}

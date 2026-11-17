@@ -430,7 +430,7 @@
         },
         "notifyHint": "Das Ziel erhält die Nachricht per ntfy; die Kanalauswahl entfällt.",
         "add": "Aktion hinzufügen",
-        "remove": "Aktion entfernen"
+        "remove": "Aktion #{{number}} entfernen"
       },
       "help": {
         "deadlines": "Die Frist ist die Wartezeit in Stunden pro Priorität. Verstreicht sie, ohne dass die Bedingung zutrifft, feuert die Regel nicht.",
