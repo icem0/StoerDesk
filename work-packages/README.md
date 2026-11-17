@@ -1383,6 +1383,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-93b | the note action writes a ticket comment (split child of 93, out of band)  | done    | yes     |
 | WP-M14-93c | the tests and the spec prove the note action (split child of 93, out of band) | done    | yes     |
 | WP-M14-94  | the time sequence of a rule gets its own frame (out of band)            | done    | yes     |
+| WP-M14-94b | the module map names the frame of the time sequence (split child of 94)  | done    | yes     |
 | WP-M14-95  | the module map names the escalation changes of phase 14 (out of band)    | done    | yes     |
 
 

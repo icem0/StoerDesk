@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The module map names the frame of the time sequence of a rule and the key of
+  a stage (WP-M14-94b, out of band in phase 14).
 - The module map names the escalation changes of phase 14 (WP-M14-95, out of
   band in phase 14): the rows of the configuration service, the dispatcher, the
   action editor and the escalation page name the recipient and the priority of
