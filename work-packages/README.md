@@ -1410,12 +1410,13 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-117 | the migration adds the stage NEW (out of band)                         | done    | yes     |
 | WP-M14-118 | the spec and the module map name the stage NEW (out of band)         | done    | yes     |
 | WP-M14-119 | channel repair UI — the translated `lastError` and the own-topic test (out of band) | done | yes |
-| WP-M14-120 | the internal notification inbox — spec and split (out of band)         | planned | yes     |
+| WP-M14-120 | the internal notification inbox — spec and split (out of band)         | done    | yes     |
 | WP-M14-120a | the database and the contracts of the notification messages (out of band) | done | yes |
 | WP-M14-120b | the delivery layer records every personal message (out of band)      | done    | yes     |
 | WP-M14-120c | the API of the notification inbox (out of band)                       | done    | yes     |
 | WP-M14-120d | the inbox page (out of band)                                          | done    | yes     |
 | WP-M14-120e | the bell in the shell with the unread count (out of band)             | done    | yes     |
+| WP-M14-121 | the test of the own topic needs a route of the own user (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

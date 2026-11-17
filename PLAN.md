@@ -2310,8 +2310,16 @@ path of a personal delivery writes the message row next to the outbox row and
 the drain flips its state), **WP-M14-120c** (the API — the own messages and the
 read receipt behind the session), **WP-M14-120d** (the inbox page
 `/notifications`) and **WP-M14-120e** (the bell in the shell with the number of
-the unread messages). The event type `ticket.resolved` of §11.4 still has no
-delivery path — a gap that the later work on the event types closes.
+the unread messages). All five are implemented. The migration is registered in
+the journal of the migrations folder — the Drizzle migrator reads the journal
+and applies only the migrations it names, so a migration file without a journal
+entry never reaches a database; that was the reason why the table was missing
+in the test databases of the suites that write a personal delivery. The event
+type `ticket.resolved` of §11.4 still has no delivery path — a gap that the
+later work on the event types closes, together with **WP-M14-121** (the test of
+the own topic calls the administration route today and therefore needs the
+permission `notification.write`).
+
 
 
 ## 17. Work package rules for small models

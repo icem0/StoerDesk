@@ -1,7 +1,7 @@
 # WP-M14-120: the internal notification inbox (spec and split)
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -82,8 +82,12 @@ the bell shows the number of the unread messages.
 
 ## Handoff
 
-- Files changed: the five work-package documents
-- Interfaces added: the announcement of the inbox and of its four children
+- Files changed: the five work-package documents and the chain
+  WP-M14-120a … WP-M14-120e, every child in its own commit
+- Interfaces added: the table `notification_messages`, the column
+  `outbox.notification_message_id`, the helper `enqueuePersonalDeliveries`,
+  the routes of the inbox and the bell in the shell
 - Verified: `npm run check`, `npm run build`
-- Follow-up WP: WP-M14-120a (the database and the contracts) — the first child
+- Follow-up WP: WP-M14-121 — the test of the own topic needs a route of the own
+  user instead of the administration route
 - Open question: none
