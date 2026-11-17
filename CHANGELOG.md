@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The shared test follows the numbered defaults (WP-M14-104, out of band in phase 14):
+  the test of the defaults names the numbered keys and finds a rule by its stage
+  and its reference.
 - The spec and the module map name the taxonomy (WP-M14-103, out of band in phase 14):
   the keys of the escalation form one taxonomy — a stage has a free key, a rule
   the key of its stage and its number, an action the key of its rule and its

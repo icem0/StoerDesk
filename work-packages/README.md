@@ -1394,6 +1394,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-101 | the administration numbers the rules (out of band)                       | done    | yes     |
 | WP-M14-102 | the action editor numbers the actions (out of band)                      | done    | yes     |
 | WP-M14-103 | the spec and the module map name the taxonomy (out of band)              | done    | yes     |
+| WP-M14-104 | the shared test follows the numbered defaults (out of band)              | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

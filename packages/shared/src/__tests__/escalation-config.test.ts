@@ -148,21 +148,25 @@ describe('the default rules', () => {
     const keys = DEFAULT_WORKFLOW_ESCALATION_RULES.map((rule) => rule.key)
 
     expect(keys).toEqual([
-      'review',
-      'work_order',
-      'assignment',
-      'acceptance_offer',
-      'acceptance_assignment',
-      'acknowledgement',
-      'deadline_80_percent',
-      'deadline_exceeded',
+      'review#1',
+      'work_order#1',
+      'assignment#1',
+      'acceptance#1',
+      'acceptance#2',
+      'acknowledgement#1',
+      'deadline#1',
+      'deadline#2',
     ])
   })
 
   it('keep the deadlines of ADR-0008', () => {
-    const review = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.key === 'review')
-    const offer = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.key === 'acceptance_offer')
-    const assignment = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.key === 'acceptance_assignment')
+    const review = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.stageKey === 'review')
+    const offer = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
+      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'offered',
+    )
+    const assignment = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
+      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'assigned',
+    )
 
     expect(review?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
     expect(offer?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 10 })
