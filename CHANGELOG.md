@@ -123,6 +123,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Added
+- The internal notification inbox (WP-M14-120, out of band in phase 14): every
+  notification that is enqueued for a user is recorded before it leaves to the
+  external channels, so the user sees what went to which channel and whether it
+  arrived. The work is split into WP-M14-120a (the database and the contracts),
+  WP-M14-120b (the delivery layer), WP-M14-120c (the API), WP-M14-120d (the
+  inbox page) and WP-M14-120e (the bell in the shell).
+- The database and the contracts of the notification messages (WP-M14-120a, out
+  of band in phase 14): the migration `0047_notification_messages.sql` creates
+  the table `notification_messages` (one row per personal delivery with its
+  channel, its event, its state `PENDING`/`SENT`/`FAILED`, its title, its body
+  and its read receipt) and the column `outbox.notification_message_id`, which
+  points the outbox row of a personal delivery at its message. The migration is
+  registered in the journal of the migrations folder — the Drizzle migrator
+  applies only the migrations the journal names.
 - The first escalation stage is never deleted (WP-M14-92, out of band in phase
   14): the stage writer rejects a body that omits the stage without predecessor
   or gives it one, and the stage tab hides its remove action and locks its

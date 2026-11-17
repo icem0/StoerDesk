@@ -2294,6 +2294,26 @@ chain WP-M14-80 … WP-M14-85b; the office items WP-M14-76 … WP-M14-87 of the
 phase are out-of-band entries whose feature is closed with WP-M14-85b, WP-M14-86
 and WP-M14-87. No product code, schema, route, UI, specification or ADR changes.
 
+**The internal notification inbox (WP-M14-120, out of band in phase 14).** The
+office asked for an overview of the own notifications: until now a user saw
+only whether a channel failed as a whole, never which message went to which
+channel and whether it arrived. The inbox is the internal layer between the
+application and the external channels — ntfy, Telegram, Matrix, Signal, e-mail,
+WhatsApp Web and Web Push stay the transports, but every notification that is
+enqueued for a **user** is recorded first and the record carries the state of
+that delivery. The work is split into five children that run in numeric order:
+**WP-M14-120a** (the database and the contracts — the migration
+`0047_notification_messages.sql` with the table `notification_messages` and the
+column `outbox.notification_message_id`, its journal entry, the Drizzle mirror
+and the shared contracts), **WP-M14-120b** (the delivery layer — every enqueue
+path of a personal delivery writes the message row next to the outbox row and
+the drain flips its state), **WP-M14-120c** (the API — the own messages and the
+read receipt behind the session), **WP-M14-120d** (the inbox page
+`/notifications`) and **WP-M14-120e** (the bell in the shell with the number of
+the unread messages). The event type `ticket.resolved` of §11.4 still has no
+delivery path — a gap that the later work on the event types closes.
+
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
