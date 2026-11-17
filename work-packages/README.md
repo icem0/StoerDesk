@@ -1381,7 +1381,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-92  | the first escalation stage is never deleted (out of band)                | done    | yes     |
 | WP-M14-93a | the note action carries no key (split child of 93, out of band)          | done    | yes     |
 | WP-M14-93b | the note action writes a ticket comment (split child of 93, out of band)  | done    | yes     |
-| WP-M14-93c | the tests and the spec prove the note action (split child of 93, out of band) | planned | yes     |
+| WP-M14-93c | the tests and the spec prove the note action (split child of 93, out of band) | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

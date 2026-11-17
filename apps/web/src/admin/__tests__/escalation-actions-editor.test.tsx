@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
@@ -185,6 +185,41 @@ describe('the action editor of the escalation page', () => {
         key: NOTIFY_ACTION.key,
         type: 'status_change',
         toStatus: 'IN_REVIEW',
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('hides the key of a note action and saves no key', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const list = screen.getByTestId('escalation-action-list')
+    const typeSelect = list.querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'history' } })
+
+    expect(within(list).queryByLabelText('Schlüssel')).toBeNull()
+
+    fireEvent.change(within(list).getByLabelText('Text'), {
+      target: { value: 'Das Büro wurde informiert.' },
+    })
+
+    await waitFor(() => {
+      const latest = (saved.at(-1) ?? {}) as {
+        rules?: { actions?: { type?: string; text?: string }[] }[]
+      }
+      expect(latest.rules?.[0]?.actions?.[0]?.text).toBe('Das Büro wurde informiert.')
+    })
+    const body = (saved.at(-1) ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+
+    expect(rule.actions).toEqual([
+      {
+        type: 'history',
+        text: 'Das Büro wurde informiert.',
         condition: { all: [] },
       },
     ])

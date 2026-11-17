@@ -40,7 +40,12 @@ type ConfigBody = {
     minutes: Record<string, number> | null
     percent: number | null
     condition: unknown
-    actions: { key: string; type: string; target?: { kind: string; id: string } }[]
+    actions: {
+      key: string
+      type: string
+      text?: string
+      target?: { kind: string; id: string }
+    }[]
     active: boolean
   }[]
 }
@@ -244,6 +249,37 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.rules).toHaveLength(1)
       expect(body.rules[0]?.actions[0]?.type).toBe('webhook')
       expect(body.rules[0]?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 8 })
+    })
+
+    it('assigns the key of a history action without one', async () => {
+      const response = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'review',
+            stageKey: 'review',
+            reference: 'received_at',
+            minutes: { low: 20, normal: 20, high: 20, critical: 8 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                type: 'history',
+                text: 'Das Büro wurde informiert.',
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      })
+
+      expect(response.statusCode).toBe(200)
+
+      const action = response.json<ConfigBody>().rules[0]?.actions[0]
+
+      expect(action?.type).toBe('history')
+      expect(action?.key).toMatch(/^note_[0-9a-f]{12}$/)
+      expect(action?.text).toBe('Das Büro wurde informiert.')
     })
 
     it('rejects a rule of an unknown stage and a malformed body', async () => {

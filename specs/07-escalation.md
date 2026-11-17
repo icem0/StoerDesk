@@ -127,7 +127,7 @@ the night.
 | --- | --- | --- |
 | `notify` | `target` (one user or a readiness pool) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per technician of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
-| `history` | `text` (optional, 1–500 characters) | one append-only `escalation_note` event in the ticket history |
+| `history` | `text` (optional, 1–500 characters), no key in the administration | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
 | `offer` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once; every technician of the target is notified (§7.14) |
 | `assign` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
@@ -138,6 +138,10 @@ the notification on the own ntfy topic. A user without an ntfy account contribut
 nothing. Without a target the action keeps the channel broadcast of the
 installation. The optional `priority` is the ntfy level of the notification and
 overrides the ticket-based default (`critical` = `urgent`, otherwise `default`).
+
+A `history` action writes a normal ticket comment, not an `escalation_note`; the
+ticket history renders it like every other comment. Its action key is an internal
+name: the administration sends none and the server assigns one (`note_…`).
 
 Only a `status_change` action may move the status of a ticket (WP-M14-40 … WP-M14-40c):
 it performs a step of the configurable transition table, so the workflow columns
@@ -157,7 +161,8 @@ ever changes the priority, the deadline or the work order of a ticket.
 | `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)` |
 
 The `key` is the identity of a stage, a rule and an action, not the UUID: the
-administration sends the keys, the server keeps the rows stable. The stages of an
+administration sends the keys, the server keeps the rows stable — except the key
+of a `history` action, which the server assigns. The stages of an
 installation are seeded once (the default chain of §7.12) and the rules are seeded
 from the former settings values, so the deadlines of a running installation stay
 the same after the migration.
@@ -170,7 +175,8 @@ the same minute cannot write a second event and cannot send a second webhook.
 
 Every firing writes exactly one append-only `escalated` event with the payload
 `{ rule, stage, thresholdAt, deadlineAt }` and performs the actions of the rule.
-The `escalation_note` event of a `history` action carries the configured text.
+The `comment` event of a `history` action carries the configured text; the
+`escalation_note` events of `status_change`, `offer` and `assign` stay separate.
 
 ## 7.8 The job
 

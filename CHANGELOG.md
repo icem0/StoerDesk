@@ -8,14 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- The note action writes a ticket comment (WP-M14-93b, out of band in phase 14):
-  a fired `history` action writes a normal `comment` event with its configured
-  text and the actor `system` instead of an `escalation_note` event.
-- The note action carries no key (WP-M14-93a, out of band in phase 14): the key
-  of a `history` action is optional in the contract, the server names it
-  (`note_…`) and the administration hides the key field of a note action and
-  sends no key. The audit trail of the workflow E2E counts the escalation event
-  of the first stage (WP-M14-91).
+- The note action carries no key and writes a ticket comment (WP-M14-93a …
+  WP-M14-93c, out of band in phase 14): the key of a `history` action is
+  optional in the contract, the server names it (`note_…`), the administration
+  hides the key field of a note action and sends no key, and a fired note
+  writes a normal `comment` event with its configured text and the actor
+  `system`. The audit trail of the workflow E2E counts the escalation event of
+  the first stage (WP-M14-91).
 
 ### Added
 - The first escalation stage is never deleted (WP-M14-92, out of band in phase
