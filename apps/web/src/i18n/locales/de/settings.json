@@ -410,11 +410,23 @@
         "statusTarget": "Ziel-Status",
         "targetKind": "Ziel-Form",
         "targetKinds": {
+          "user": "Benutzer",
           "pool": "Bereitschaftspool",
           "group": "Benutzergruppe"
         },
         "target": "Ziel",
         "targetEmpty": "kein Ziel gewählt",
+        "targetChannels": "Kanäle der Installation",
+        "priority": "Wichtigkeit",
+        "ticketPriority": "Ticket-Priorität",
+        "priorities": {
+          "min": "Minimal",
+          "low": "Niedrig",
+          "default": "Standard",
+          "high": "Hoch",
+          "urgent": "Dringend"
+        },
+        "notifyHint": "Das Ziel erhält die Nachricht per ntfy; die Kanalauswahl entfällt.",
         "add": "Aktion hinzufügen",
         "remove": "Aktion entfernen"
       },

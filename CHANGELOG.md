@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The administration selects the notify recipient and priority (WP-M14-90, out
+  of band in phase 14): the action editor of the escalation page loads the users
+  over `GET /api/v1/users` and offers a recipient kind (`user`, `pool`), the
+  matching target list and the five ntfy levels. A selected target hides the
+  channel multi-select and saves `channels: ['ntfy']`; the empty target keeps the
+  channel broadcast. The labels live under `admin.escalation.action.*` in `de`
+  and `en`.
 - The notify engine delivers to the selected recipient (WP-M14-89, out of band
   in phase 14): a targeted `notify` action resolves the one user or the
   technicians of the readiness pool and queues one `ticket.escalated` outbox row

@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ESCALATION_ACTION_TYPES,
+  ESCALATION_NOTIFY_PRIORITIES,
   ticketStatusKeySchema,
   type EscalationActionConfig,
   type EscalationCondition,
+  type EscalationNotifyPriority,
 } from '@stoerdesk/shared'
 
 import { EscalationConditionBuilder } from './escalation-condition-builder'
@@ -28,8 +30,9 @@ type ActionShape = {
   endpointIds?: string[]
   text?: string
   toStatus?: string
-  targetKind?: 'pool' | 'group'
+  targetKind?: 'user' | 'pool' | 'group'
   targetId?: string
+  priority?: string
   condition: unknown
 }
 
@@ -57,8 +60,14 @@ function shapeOf(action: EscalationActionConfig): ActionShape {
     endpointIds: 'endpointIds' in action ? action.endpointIds : [],
     text: 'text' in action ? action.text : '',
     toStatus: 'toStatus' in action ? action.toStatus : '',
-    targetKind: 'target' in action ? action.target.kind : 'pool',
-    targetId: 'target' in action ? action.target.id : '',
+    targetKind:
+      'target' in action && action.target !== undefined
+        ? action.target.kind
+        : action.type === 'notify'
+          ? 'user'
+          : 'pool',
+    targetId: 'target' in action ? (action.target?.id ?? '') : '',
+    priority: 'priority' in action ? action.priority : '',
     condition: action.condition,
   }
 }
@@ -102,10 +111,18 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
     } as unknown as EscalationActionConfig
   }
 
+  const targeted = (shape.targetId ?? '') !== ''
+
   return {
     key: shape.key,
     type: 'notify',
-    channels: shape.channels ?? [],
+    channels: targeted ? ['ntfy'] : (shape.channels ?? []),
+    ...(targeted
+      ? { target: { kind: shape.targetKind ?? 'user', id: shape.targetId } }
+      : {}),
+    ...(shape.priority === undefined || shape.priority === ''
+      ? {}
+      : { priority: shape.priority as EscalationNotifyPriority }),
     condition,
   } as unknown as EscalationActionConfig
 }
@@ -117,6 +134,7 @@ export function EscalationActionEditor({
   statuses,
   pools,
   groups,
+  users,
   canWrite,
   onActions,
 }: {
@@ -126,6 +144,7 @@ export function EscalationActionEditor({
   statuses: string[]
   pools: { id: string; name: string }[]
   groups: { id: string; name: string }[]
+  users: { id: string; name: string }[]
   canWrite: boolean
   onActions: (next: EscalationActionConfig[]) => void
 }) {
@@ -139,6 +158,10 @@ export function EscalationActionEditor({
   }
 
   function targetsOf(action: ActionShape): { id: string; name: string }[] {
+    if (action.type === 'notify') {
+      return action.targetKind === 'pool' ? pools : users
+    }
+
     return action.targetKind === 'group' ? groups : pools
   }
 
@@ -186,7 +209,14 @@ export function EscalationActionEditor({
                     if ((ESCALATION_ACTION_TYPES as readonly string[]).includes(type)) {
                       publish(
                         actions.map((entry, position) =>
-                          position === index ? { ...entry, type } : entry,
+                          position === index
+                            ? {
+                                ...entry,
+                                type,
+                                targetKind: type === 'notify' ? 'user' : 'pool',
+                                targetId: '',
+                              }
+                            : entry,
                         ),
                       )
                     }
@@ -218,34 +248,124 @@ export function EscalationActionEditor({
               </label>
 
               {action.type === 'notify' ? (
-                <label className="text-xs text-slate-400">
-                  {t('admin.escalation.action.channels')}
-                  <select
-                    multiple
-                    size={Math.max(2, channels.length)}
-                    className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                    disabled={!canWrite}
-                    value={action.channels ?? []}
-                    onChange={(event) =>
-                      publish(
-                        actions.map((entry, position) =>
-                          position === index
-                            ? {
-                                ...entry,
-                                channels: selectionOf(event),
-                              }
-                            : entry,
-                        ),
-                      )
-                    }
-                  >
-                    {channels.map((channel) => (
-                      <option key={channel} value={channel}>
-                        {t(`admin.escalation.action.channelLabels.${channel}`, { defaultValue: channel })}
+                <>
+                  <label className="text-xs text-slate-400">
+                    {t('admin.escalation.action.targetKind')}
+                    <select
+                      data-testid="escalation-notify-target-kind"
+                      className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      disabled={!canWrite}
+                      value={action.targetKind ?? 'user'}
+                      onChange={(event) => {
+                        const kind = event.target.value === 'pool' ? 'pool' : 'user'
+
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index
+                              ? { ...entry, targetKind: kind, targetId: '' }
+                              : entry,
+                          ),
+                        )
+                      }}
+                    >
+                      <option value="user">
+                        {t('admin.escalation.action.targetKinds.user')}
                       </option>
-                    ))}
-                  </select>
-                </label>
+                      <option value="pool">
+                        {t('admin.escalation.action.targetKinds.pool')}
+                      </option>
+                    </select>
+                  </label>
+
+                  <label className="text-xs text-slate-400">
+                    {t('admin.escalation.action.target')}
+                    <select
+                      data-testid="escalation-notify-target"
+                      className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      disabled={!canWrite}
+                      value={action.targetId ?? ''}
+                      onChange={(event) =>
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index
+                              ? { ...entry, targetId: event.target.value }
+                              : entry,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="">
+                        {t('admin.escalation.action.targetChannels')}
+                      </option>
+                      {targetsOf(action).map((target) => (
+                        <option key={target.id} value={target.id}>
+                          {target.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="text-xs text-slate-400">
+                    {t('admin.escalation.action.priority')}
+                    <select
+                      data-testid="escalation-notify-priority"
+                      className="w-32 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      disabled={!canWrite}
+                      value={action.priority ?? ''}
+                      onChange={(event) =>
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index
+                              ? { ...entry, priority: event.target.value }
+                              : entry,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="">{t('admin.escalation.action.ticketPriority')}</option>
+                      {ESCALATION_NOTIFY_PRIORITIES.map((priority) => (
+                        <option key={priority} value={priority}>
+                          {t(`admin.escalation.action.priorities.${priority}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {(action.targetId ?? '') === '' ? (
+                    <label className="text-xs text-slate-400">
+                      {t('admin.escalation.action.channels')}
+                      <select
+                        multiple
+                        size={Math.max(2, channels.length)}
+                        className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                        disabled={!canWrite}
+                        value={action.channels ?? []}
+                        onChange={(event) =>
+                          publish(
+                            actions.map((entry, position) =>
+                              position === index
+                                ? {
+                                    ...entry,
+                                    channels: selectionOf(event),
+                                  }
+                                : entry,
+                            ),
+                          )
+                        }
+                      >
+                        {channels.map((channel) => (
+                          <option key={channel} value={channel}>
+                            {t(`admin.escalation.action.channelLabels.${channel}`, { defaultValue: channel })}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <p className="text-xs text-slate-500">
+                      {t('admin.escalation.action.notifyHint')}
+                    </p>
+                  )}
+                </>
               ) : null}
 
               {action.type === 'webhook' ? (
@@ -401,7 +521,7 @@ export function EscalationActionEditor({
           <button
             className="rounded bg-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
             onClick={() =>
-              publish([...actions, { key: `action_${actions.length + 1}`, type: 'notify', channels: [], condition: { all: [] } }])
+              publish([...actions, { key: `action_${actions.length + 1}`, type: 'notify', channels: [], targetKind: 'user', targetId: '', priority: '', condition: { all: [] } }])
             }
             type="button"
           >

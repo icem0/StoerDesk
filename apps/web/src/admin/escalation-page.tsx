@@ -14,6 +14,7 @@ import {
   type EscalationRuleConfig,
   type EscalationStageConfig,
   type TicketStatusResponse,
+  type UserListResponse,
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
@@ -109,6 +110,15 @@ function useGroupTargets() {
   })
 }
 
+/** The users a notify target can name (§7.5, WP-M14-90). */
+function useUserTargets() {
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiFetch<UserListResponse>('/v1/users'),
+    retry: false,
+  })
+}
+
 export function EscalationPage() {
   const { t, i18n } = useTranslation('settings')
   const settingsQuery = useDeadlineSettings()
@@ -118,6 +128,7 @@ export function EscalationPage() {
   const statusesQuery = useStatuses()
   const poolsQuery = usePoolTargets()
   const groupsQuery = useGroupTargets()
+  const usersQuery = useUserTargets()
   const canWrite = usePermission('settings.write')
 
   const [tab, setTab] = useState('fristen')
@@ -190,6 +201,10 @@ export function EscalationPage() {
   const groupTargets = (groupsQuery.data?.groups ?? [])
     .filter((group) => group.name.trim() !== '')
     .map((group) => ({ id: group.id, name: group.name }))
+  const userTargets = (usersQuery.data?.users ?? []).map((user) => ({
+    id: user.id,
+    name: `${user.givenName} ${user.familyName}`.trim() || user.email,
+  }))
 
   const rulesOfStage = (key: string) =>
     config.rules.filter((rule) => rule.stageKey === key)
@@ -417,6 +432,7 @@ export function EscalationPage() {
                         statuses={statusKeys}
                         pools={poolTargets}
                         groups={groupTargets}
+                        users={userTargets}
                         stageNames={stageLabels}
                         onSave={(next) =>
                           void saveRules.mutate({
@@ -605,6 +621,7 @@ function RuleForm({
   statuses,
   pools,
   groups,
+  users,
   stageNames,
   onSave,
 }: {
@@ -615,6 +632,7 @@ function RuleForm({
   statuses: string[]
   pools: { id: string; name: string }[]
   groups: { id: string; name: string }[]
+  users: { id: string; name: string }[]
   stageNames: Record<string, string>
   onSave: (next: EscalationRuleConfig) => void
 }) {
@@ -716,6 +734,7 @@ function RuleForm({
         statuses={statuses}
         pools={pools}
         groups={groups}
+        users={users}
         canWrite={canWrite}
         onActions={(next) => apply({ ...rule, actions: next })}
       />

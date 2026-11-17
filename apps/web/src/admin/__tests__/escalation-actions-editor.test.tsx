@@ -11,6 +11,7 @@ import { EscalationPage } from '../escalation-page'
 const ENDPOINT_ID = '6f1d2c3b-4444-4a44-9444-444444444444'
 const POOL_ID = '7a1b2c3d-5555-4a55-9555-555555555555'
 const GROUP_ID = '8b2c3d4e-6666-4b66-9666-666666666666'
+const USER_ID = '9c3d4e5f-7777-4c77-8777-777777777777'
 
 const NOTIFY_ACTION = {
   key: 'notify_office',
@@ -68,6 +69,23 @@ function renderPage(permissions: string[]) {
         pools: [
           { id: POOL_ID, name: 'Bereitschaft Alpha', groupId: null, active: true, shiftCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
           { id: '00000000-0000-4000-8000-000000000000', name: '  ', groupId: null, active: true, shiftCount: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+        ],
+      })
+    }
+
+    if (path.includes('/v1/users')) {
+      return Response.json({
+        users: [
+          {
+            id: USER_ID,
+            email: 'nora.notify@example.invalid',
+            givenName: 'Nora',
+            familyName: 'Notify',
+            locale: 'de',
+            theme: 'auto',
+            active: true,
+            roleKeys: [],
+          },
         ],
       })
     }
@@ -278,6 +296,41 @@ describe('the action editor of the escalation page', () => {
     expect(
       escalationActionConfigSchema.safeParse({ ...NOTIFY_ACTION, channels: [] }).success,
     ).toBe(false)
+  })
+
+  it('notifies a user with the selected ntfy priority', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const target = screen.getByTestId('escalation-notify-target') as unknown as HTMLSelectElement
+    const offered = Array.from(target.options).map((option) => (option as { value: string }).value)
+    expect(offered).toContain(USER_ID)
+    fireEvent.change(target, { target: { value: USER_ID } })
+
+    const priority = screen.getByTestId('escalation-notify-priority') as unknown as HTMLSelectElement
+    const levels = Array.from(priority.options).map((option) => (option as { value: string }).value)
+    expect(levels).toEqual(['', 'min', 'low', 'default', 'high', 'urgent'])
+    fireEvent.change(priority, { target: { value: 'urgent' } })
+
+    await waitFor(() => {
+      const latest = (saved.at(-1) ?? {}) as { rules?: { actions?: { priority?: string }[] }[] }
+      expect(latest.rules?.[0]?.actions?.[0]?.priority).toBe('urgent')
+    })
+    const body = (saved.at(-1) ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'notify',
+        channels: ['ntfy'],
+        target: { kind: 'user', id: USER_ID },
+        priority: 'urgent',
+        condition: { all: [] },
+      },
+    ])
   })
 
   it('stays read-only without settings.write', async () => {

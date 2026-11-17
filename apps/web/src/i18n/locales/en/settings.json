@@ -410,11 +410,23 @@
         "statusTarget": "Target status",
         "targetKind": "Target kind",
         "targetKinds": {
+          "user": "User",
           "pool": "Readiness pool",
           "group": "User group"
         },
         "target": "Target",
         "targetEmpty": "no target chosen",
+        "targetChannels": "Channels of the installation",
+        "priority": "Priority",
+        "ticketPriority": "Ticket priority",
+        "priorities": {
+          "min": "Minimal",
+          "low": "Low",
+          "default": "Default",
+          "high": "High",
+          "urgent": "Urgent"
+        },
+        "notifyHint": "The target receives the notification via ntfy; the channel selection is not used.",
         "add": "Add action",
         "remove": "Remove"
       },
