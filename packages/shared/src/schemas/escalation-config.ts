@@ -217,6 +217,39 @@ export function escalationFirstStageKey(
 }
 
 /**
+ * The events that start the clock of a stage (§7.11): the events that reach
+ * its predecessor. A predecessor that the workflow never reaches — an empty
+ * `reachedBy` — hands its own clock down, so the clock of a chain starts at
+ * the report. The stage without a predecessor waits from the report.
+ */
+export function escalationStageClockEvents(
+  stageKey: string,
+  stages: readonly { key: string; predecessor: string | null; reachedBy: readonly string[] }[],
+): string[] {
+  const byKey = new Map(stages.map((stage) => [stage.key, stage]))
+  const seen = new Set<string>()
+  let current = byKey.get(stageKey)
+
+  while (current !== undefined && current.predecessor !== null && !seen.has(current.key)) {
+    seen.add(current.key)
+
+    const predecessor = byKey.get(current.predecessor)
+
+    if (predecessor === undefined) {
+      return ['received_at']
+    }
+
+    if (predecessor.reachedBy.length > 0) {
+      return [...predecessor.reachedBy]
+    }
+
+    current = predecessor
+  }
+
+  return ['received_at']
+}
+
+/**
  * Checks the chain of §7.11 and returns the field paths of every violation:
  * duplicate keys, a missing or self-referencing predecessor, a second stage
  * without a predecessor, a cycle, a position that is not greater than the
@@ -555,7 +588,6 @@ export const escalationConfigSchema = z
   })
   .superRefine((config, context) => {
     const stageKeys = new Set<string>()
-    const stageByKey = new Map(config.stages.map((stage) => [stage.key, stage]))
 
     config.stages.forEach((stage, index) => {
       if (stageKeys.has(stage.key)) {
@@ -600,13 +632,8 @@ export const escalationConfigSchema = z
         })
       }
 
-      const stage = rule.stageKey === null ? undefined : stageByKey.get(rule.stageKey)
-
-      if (stage !== undefined && rule.reference !== null) {
-        const clockEvents =
-          stage.predecessor === null
-            ? ['received_at']
-            : (stageByKey.get(stage.predecessor)?.reachedBy ?? [])
+      if (rule.stageKey !== null && rule.reference !== null) {
+        const clockEvents = escalationStageClockEvents(rule.stageKey, config.stages)
 
         if (!clockEvents.includes(rule.reference)) {
           context.addIssue({
@@ -792,7 +819,9 @@ export function evaluateEscalationCondition(
   return evaluateLeaf(condition, facts)
 }
 
-/** The default chain of an installation with its names (§7.1, §7.11). */
+/**
+ * The default chain of an installation with its names (§7.1, §7.11).
+ */
 export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[] = [
   {
     key: 'review',

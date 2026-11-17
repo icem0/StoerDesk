@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The shared contract knows the clock of a stage (WP-M14-113, out of band in
+  phase 14): `escalationStageClockEvents` answers the events that start the
+  clock of a stage — the events that reach its predecessor; a predecessor that
+  the workflow never reaches hands its own clock down.
 - The condition builder shows the mode below the conditions (WP-M14-112, out of
   band in phase 14): the mode (`all` or `any`) stands below the conditions and
   appears only when at least one condition is set; every condition carries its

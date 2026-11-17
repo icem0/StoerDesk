@@ -12,6 +12,7 @@ import {
   escalationConditionLeafCount,
   escalationConditionSchema,
   escalationRuleKey,
+  escalationStageClockEvents,
   escalationTargetSchema,
   evaluateEscalationCondition,
   validateEscalationStageChain,
@@ -73,6 +74,26 @@ describe('the escalation stages', () => {
     expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[0]?.predecessor).toBeNull()
     expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[1]?.predecessor).toBe('review')
     expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[2]?.reachedBy).toEqual(['assigned', 'offered'])
+  })
+})
+
+describe('the clock of a stage', () => {
+  const chain = [
+    { key: 'new', predecessor: null, reachedBy: [] },
+    { key: 'review', predecessor: 'new', reachedBy: ['review_started'] },
+    { key: 'work_order', predecessor: 'review', reachedBy: ['work_order_set'] },
+  ]
+
+  it('starts with the events that reach its predecessor', () => {
+    expect(escalationStageClockEvents('work_order', chain)).toEqual(['review_started'])
+  })
+
+  it('is the report for the stage without a predecessor', () => {
+    expect(escalationStageClockEvents('new', chain)).toEqual(['received_at'])
+  })
+
+  it('is inherited from a predecessor that is never reached', () => {
+    expect(escalationStageClockEvents('review', chain)).toEqual(['received_at'])
   })
 })
 
