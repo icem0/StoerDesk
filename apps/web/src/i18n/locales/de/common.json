@@ -227,5 +227,26 @@
       "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
       "unknown": "Speichern fehlgeschlagen."
     }
+  },
+  "inbox": {
+    "title": "Benachrichtigungen",
+    "hint": "Jede Nachricht, die StörDesk für dich verschickt hat, mit Kanal und Zustellstatus.",
+    "empty": "Noch keine Nachricht.",
+    "error": "Die Nachrichten konnten nicht geladen werden.",
+    "unread": "Neu",
+    "state": {
+      "pending": "Wird gesendet",
+      "sent": "Zugestellt",
+      "failed": "Fehlgeschlagen"
+    },
+    "channel": {
+      "ntfy": "ntfy",
+      "telegram": "Telegram",
+      "matrix": "Matrix",
+      "signal": "Signal",
+      "email": "E-Mail",
+      "webpush": "Push",
+      "whatsapp": "WhatsApp Web"
+    }
   }
 }

@@ -123,6 +123,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Added
+- The inbox page (WP-M14-120d, out of band in phase 14): `/notifications` lists
+  the messages that the internal layer recorded for the signed-in user, the
+  newest first, with the channel, the state (`PENDING`, `SENT`, `FAILED`), the
+  title, the body and the moment of every message. A click on an unread message
+  marks it as read; a failed message stands out.
 - The API of the notification inbox (WP-M14-120c, out of band in phase 14):
   `GET /api/v1/notifications/messages` answers the own messages of the session
   user, the newest first, with the channel, the event, the state, the title,

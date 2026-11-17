@@ -227,5 +227,26 @@
       "invalid_request": "Invalid input – please check the fields.",
       "unknown": "Saving failed."
     }
+  },
+  "inbox": {
+    "title": "Notifications",
+    "hint": "Every message StörDesk sent to you, with its channel and its delivery state.",
+    "empty": "No message yet.",
+    "error": "The messages could not be loaded.",
+    "unread": "New",
+    "state": {
+      "pending": "Sending",
+      "sent": "Delivered",
+      "failed": "Failed"
+    },
+    "channel": {
+      "ntfy": "ntfy",
+      "telegram": "Telegram",
+      "matrix": "Matrix",
+      "signal": "Signal",
+      "email": "E-mail",
+      "webpush": "Push",
+      "whatsapp": "WhatsApp Web"
+    }
   }
 }

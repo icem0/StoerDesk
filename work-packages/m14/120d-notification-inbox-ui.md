@@ -1,7 +1,7 @@
 # WP-M14-120d: the inbox page
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-120c
 phase: 14
 milestone: m14
@@ -18,7 +18,7 @@ files-read:
 
 files-write:
 
-- apps/web/src/features/notifications/inbox-page.tsx
+- apps/web/src/features/notifications/inbox-page.tsx, apps/web/src/features/notifications/__tests__/inbox-page.test.tsx
 - apps/web/src/routes/index.tsx
 - apps/web/src/i18n/locales/de/common.json
 - apps/web/src/i18n/locales/en/common.json
