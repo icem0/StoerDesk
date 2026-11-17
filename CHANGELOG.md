@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- A chain has one first stage (WP-M14-105, out of band in phase 14): the shared
+  contract names the first stage — the stage without a predecessor with the
+  smallest position — and the chain validator rejects a second stage without a
+  predecessor.
 - The shared test follows the numbered defaults (WP-M14-104, out of band in phase 14):
   the test of the defaults names the numbered keys and finds a rule by its stage
   and its reference.

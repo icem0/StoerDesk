@@ -7,6 +7,7 @@ import {
   ESCALATION_STAGE_KEYS,
   escalationActionKey,
   escalationConfigSchema,
+  escalationFirstStageKey,
   escalationConditionDepth,
   escalationConditionLeafCount,
   escalationConditionSchema,
@@ -75,6 +76,30 @@ describe('the escalation stages', () => {
   })
 })
 
+describe('the first stage of a chain', () => {
+  it('is the stage without a predecessor with the smallest position', () => {
+    expect(
+      escalationFirstStageKey([
+        { key: 'review', position: 1, predecessor: null },
+        { key: 'work_order', position: 2, predecessor: 'review' },
+      ]),
+    ).toBe('review')
+  })
+
+  it('names the first stage of a chain with two stages without a predecessor', () => {
+    expect(
+      escalationFirstStageKey([
+        { key: 'review', position: 1, predecessor: null },
+        { key: 'extra', position: 3, predecessor: null },
+      ]),
+    ).toBe('review')
+  })
+
+  it('is nothing without a stage without a predecessor', () => {
+    expect(escalationFirstStageKey([{ key: 'work_order', position: 2, predecessor: 'review' }])).toBeNull()
+  })
+})
+
 describe('the stage chain validator', () => {
   const events = ['review_started', 'work_order_set', 'assigned', 'offered', 'accepted', 'acknowledged']
 
@@ -130,6 +155,25 @@ describe('the stage chain validator', () => {
         events,
       ),
     ).toContain('stages.1.position')
+  })
+
+  it('names a second stage without a predecessor', () => {
+    const issues = validateEscalationStageChain(
+      [
+        { ...DEFAULT_WORKFLOW_ESCALATION_STAGES[0]! },
+        {
+          key: 'extra',
+          names: { de: 'Zusatz', en: 'Extra' },
+          position: 6,
+          active: true,
+          predecessor: null,
+          reachedBy: [],
+        },
+      ],
+      ['review_started', 'work_order_set', 'assigned', 'offered', 'accepted', 'acknowledged'],
+    )
+
+    expect(issues).toContain('stages.1.predecessor')
   })
 
   it('names a duplicate key and an unknown reaching event', () => {

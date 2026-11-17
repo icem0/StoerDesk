@@ -194,10 +194,34 @@ export const escalationStagesBodySchema = z.object({
 })
 
 /**
+ * The key of the first stage of a chain (§7.11): the stage without a
+ * predecessor with the smallest position. A chain has exactly one such stage —
+ * it opens the chain, its rules fire with the ticket and it cannot be deleted.
+ */
+export function escalationFirstStageKey(
+  stages: readonly { key: string; position: number; predecessor: string | null }[],
+): string | null {
+  const roots = stages.filter((stage) => stage.predecessor === null)
+
+  if (roots.length === 0) {
+    return null
+  }
+
+  const first = roots.reduce((best, stage) =>
+    stage.position < best.position || (stage.position === best.position && stage.key < best.key)
+      ? stage
+      : best,
+  )
+
+  return first.key
+}
+
+/**
  * Checks the chain of §7.11 and returns the field paths of every violation:
- * duplicate keys, a missing or self-referencing predecessor, a cycle, a
- * position that is not greater than the predecessor's and an unknown
- * `reachedBy` event. `eventKeys` are the event keys of the transition map.
+ * duplicate keys, a missing or self-referencing predecessor, a second stage
+ * without a predecessor, a cycle, a position that is not greater than the
+ * predecessor's and an unknown `reachedBy` event. `eventKeys` are the event
+ * keys of the transition map.
  */
 export function validateEscalationStageChain(
   stages: readonly EscalationStageConfig[],
@@ -215,6 +239,8 @@ export function validateEscalationStageChain(
     }
   })
 
+  const firstStageKey = escalationFirstStageKey(stages)
+
   stages.forEach((stage, index) => {
     if (stage.predecessor !== null) {
       const predecessor = byKey.get(stage.predecessor)
@@ -224,6 +250,9 @@ export function validateEscalationStageChain(
       } else if (stage.position <= predecessor.position) {
         issues.push(`stages.${index}.position`)
       }
+    } else if (stage.key !== firstStageKey) {
+      // A chain has one stage without a predecessor — the first stage (§7.11).
+      issues.push(`stages.${index}.predecessor`)
     }
 
     stage.reachedBy.forEach((event, eventIndex) => {
