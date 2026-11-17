@@ -1404,6 +1404,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-111 | the action editor shows the number as a label (out of band)            | done    | yes     |
 | WP-M14-112 | the condition builder shows the mode below the conditions (out of band) | done   | yes     |
 | WP-M14-113 | the shared contract knows the clock of a stage (out of band)            | done    | yes     |
+| WP-M14-114 | the engine and the service use the clock of a stage (out of band)      | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The engine and the service use the clock of a stage (WP-M14-114, out of band
+  in phase 14): the scan of the escalation and the configuration service take
+  the clock of a stage from the shared helper — a predecessor that the workflow
+  never reached hands its own clock down.
 - The shared contract knows the clock of a stage (WP-M14-113, out of band in
   phase 14): `escalationStageClockEvents` answers the events that start the
   clock of a stage — the events that reach its predecessor; a predecessor that

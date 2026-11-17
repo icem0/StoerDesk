@@ -177,7 +177,8 @@ function reachedStages(events: readonly EventRow[], stages: readonly StageRow[])
 
 /**
  * The clock start of a stage (§7.11): `received_at` without a predecessor,
- * otherwise the latest event that reached the predecessor.
+ * otherwise the latest event that reached the predecessor. A predecessor that
+ * the workflow never reached hands its own clock down.
  */
 function stageReferenceTime(
   ticket: TicketRow,
@@ -197,9 +198,15 @@ function stageReferenceTime(
 
   const predecessor = stages.find((entry) => entry.key === stage.predecessor)
 
-  return predecessor === undefined
-    ? undefined
-    : latestEventTime(events, predecessor.reachedBy)
+  if (predecessor === undefined) {
+    return undefined
+  }
+
+  if (predecessor.reachedBy.length === 0) {
+    return stageReferenceTime(ticket, events, stages, predecessor.key)
+  }
+
+  return latestEventTime(events, predecessor.reachedBy)
 }
 
 /**

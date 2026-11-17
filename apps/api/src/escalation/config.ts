@@ -7,6 +7,7 @@ import {
   escalationFirstStageKey,
   escalationRuleConfigSchema,
   escalationRuleKey,
+  escalationStageClockEvents,
   escalationStagesBodySchema,
   validateEscalationStageChain,
   type EscalationActionConfig,
@@ -230,10 +231,7 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
     }
 
     if (rule.reference !== null) {
-      const clockEvents =
-        stage.predecessor === null
-          ? ['received_at']
-          : (stageByKey.get(stage.predecessor)?.reachedBy ?? [])
+      const clockEvents = escalationStageClockEvents(rule.stageKey, stageRows)
 
       if (!clockEvents.includes(rule.reference)) {
         invalidFields.push(`rules.${index}.reference`)
@@ -462,20 +460,12 @@ export async function writeEscalationStages(
         })
         .from(escalationRules),
     ])
-    const chainByKey = new Map(chainRows.map((stage) => [stage.key, stage]))
-
     for (const rule of ruleRows) {
       if (rule.stageKey === null || rule.reference === null) {
         continue
       }
 
-      const stage = chainByKey.get(rule.stageKey)
-      const clockEvents =
-        stage === undefined
-          ? []
-          : stage.predecessor === null
-            ? ['received_at']
-            : (chainByKey.get(stage.predecessor)?.reachedBy ?? [])
+      const clockEvents = escalationStageClockEvents(rule.stageKey, chainRows)
 
       if (!clockEvents.includes(rule.reference)) {
         await tx
