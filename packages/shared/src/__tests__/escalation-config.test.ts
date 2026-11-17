@@ -293,6 +293,68 @@ describe('the offer and assign actions', () => {
   })
 })
 
+describe('the notify action', () => {
+  const userTarget = { kind: 'user', id: '2d7c5e18-3b4a-4f62-8c9d-1e0a7b6c5d44' }
+  const poolTarget = { kind: 'pool', id: '0f5b9a4c-6c1e-4a51-9c1b-2f9d3f7a4b21' }
+
+  function ruleWith(action: Record<string, unknown>) {
+    return {
+      key: 'review',
+      stageKey: 'review',
+      reference: 'received_at',
+      minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+      percent: null,
+      condition: { all: [] },
+      actions: [{ key: 'notify_target', type: 'notify', condition: { all: [] }, ...action }],
+      active: true,
+    }
+  }
+
+  it('accepts a target and an ntfy priority without channels', () => {
+    for (const target of [userTarget, poolTarget]) {
+      const result = escalationConfigSchema.safeParse({
+        stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+        rules: [ruleWith({ target, priority: 'urgent' })],
+      })
+
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it('keeps the channel-only action and its priority valid', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [ruleWith({ channels: ['ntfy'], priority: 'high' })],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects an action without target and without channel', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [ruleWith({ channels: [] })],
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects an unknown target kind and an unknown priority', () => {
+    expect(
+      escalationConfigSchema.safeParse({
+        stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+        rules: [ruleWith({ target: { kind: 'group', id: userTarget.id } })],
+      }).success,
+    ).toBe(false)
+    expect(
+      escalationConfigSchema.safeParse({
+        stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+        rules: [ruleWith({ target: userTarget, priority: 'max' })],
+      }).success,
+    ).toBe(false)
+  })
+})
+
 describe('the condition contract', () => {
   it('rejects a leaf with a value of the wrong type', () => {    const result = escalationConditionSchema.safeParse({
       field: 'priority',

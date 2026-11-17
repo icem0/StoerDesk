@@ -10,7 +10,7 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses } from '../db/schema'
+import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses, users } from '../db/schema'
 import { readTicketTransitions } from '../tickets/transition-service'
 
 /**
@@ -52,7 +52,13 @@ export const escalationRulesBodySchema = z.object({
 function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
   switch (action.type) {
     case 'notify':
-      return { channels: action.channels }
+      return {
+        ...(action.channels === undefined ? {} : { channels: action.channels }),
+        ...(action.target === undefined
+          ? {}
+          : { target: { kind: action.target.kind, id: action.target.id } }),
+        ...(action.priority === undefined ? {} : { priority: action.priority }),
+      }
     case 'webhook':
       return { endpointIds: action.endpointIds }
     case 'history':
@@ -264,12 +270,24 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
   // target above.
   const poolRows = await database.select({ id: oncallPools.id }).from(oncallPools)
   const groupRows = await database.select({ id: groups.id }).from(groups)
+  const userRows = await database.select({ id: users.id }).from(users)
   const poolIds = new Set(poolRows.map((row) => row.id))
   const groupIds = new Set(groupRows.map((row) => row.id))
+  const userIds = new Set(userRows.map((row) => row.id))
   const unknownTargetFields: string[] = []
 
   for (const [ruleIndex, rule] of parsed.data.rules.entries()) {
     for (const [actionIndex, action] of rule.actions.entries()) {
+      if (action.type === 'notify' && action.target !== undefined) {
+        const known = action.target.kind === 'pool' ? poolIds : userIds
+
+        if (!known.has(action.target.id)) {
+          unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)
+        }
+
+        continue
+      }
+
       if (action.type !== 'offer' && action.type !== 'assign') {
         continue
       }

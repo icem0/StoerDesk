@@ -125,12 +125,19 @@ the night.
 
 | Type | Configuration | Effect |
 | --- | --- | --- |
-| `notify` | `channels` (a subset of the configured channels) | one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
+| `notify` | `target` (one user or a readiness pool) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per technician of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
 | `history` | `text` (optional, 1–500 characters) | one append-only `escalation_note` event in the ticket history |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
 | `offer` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once; every technician of the target is notified (§7.14) |
 | `assign` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
+
+A `notify` action with a `target` replaces the channel broadcast of the action:
+the selected user, or every technician of the selected readiness pool, receives
+the notification on the own ntfy topic. A user without an ntfy account contributes
+nothing. Without a target the action keeps the channel broadcast of the
+installation. The optional `priority` is the ntfy level of the notification and
+overrides the ticket-based default (`critical` = `urgent`, otherwise `default`).
 
 Only a `status_change` action may move the status of a ticket (WP-M14-40 … WP-M14-40c):
 it performs a step of the configurable transition table, so the workflow columns

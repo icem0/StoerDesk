@@ -81,6 +81,38 @@ export const escalationTargetSchema = z.object({
 
 export type EscalationTarget = z.infer<typeof escalationTargetSchema>
 
+/**
+ * The target of a `notify` action: one user or a readiness pool whose
+ * technicians receive the notification on their own ntfy topic. The target
+ * replaces the channel broadcast of the action.
+ */
+export const escalationNotifyTargetSchema = z.object({
+  kind: z.enum(['user', 'pool']),
+  id: z.uuid(),
+})
+
+export type EscalationNotifyTarget = z.infer<typeof escalationNotifyTargetSchema>
+
+/** The ntfy priority levels selectable for a `notify` action. */
+export const ESCALATION_NOTIFY_PRIORITIES = [
+  'min',
+  'low',
+  'default',
+  'high',
+  'urgent',
+] as const
+
+export type EscalationNotifyPriority = (typeof ESCALATION_NOTIFY_PRIORITIES)[number]
+
+/** The numeric ntfy priority of a level (https://docs.ntfy.sh/publish/#message-priority). */
+export const NTFY_PRIORITY_NUMBERS: Record<EscalationNotifyPriority, number> = {
+  min: 1,
+  low: 2,
+  default: 3,
+  high: 4,
+  urgent: 5,
+}
+
 /** The sources of a ticket (`PLAN.md` §6). */
 export const ESCALATION_SOURCES = ['QR', 'INTERNAL', 'API'] as const
 
@@ -320,12 +352,19 @@ export function escalationConditionLeaves(condition: EscalationCondition): Escal
   return [condition]
 }
 
-export const escalationActionConfigSchema = z.discriminatedUnion('type', [
+const escalationActionUnion = z.discriminatedUnion('type', [
   z.object({
     key: z.string().regex(keyPattern),
     type: z.literal('notify'),
-    /** The channels of the installation that receive the notification. */
-    channels: z.array(z.string().min(1).max(40)).min(1).max(10),
+    /**
+     * The channels of the installation that receive the notification; ignored
+     * when `target` is set, because the target replaces the broadcast.
+     */
+    channels: z.array(z.string().min(1).max(40)).min(1).max(10).optional(),
+    /** The user or readiness pool that receives the notification. */
+    target: escalationNotifyTargetSchema.optional(),
+    /** The ntfy priority of the notification. */
+    priority: z.enum(ESCALATION_NOTIFY_PRIORITIES).optional(),
     condition: escalationConditionSchema,
   }),
   z.object({
@@ -378,6 +417,27 @@ export const escalationActionConfigSchema = z.discriminatedUnion('type', [
     condition: escalationConditionSchema,
   }),
 ])
+
+/**
+ * A `notify` action needs a recipient: either a target or at least one channel.
+ * The union carries the common shape; this rule keeps the old channel-only
+ * actions valid while a new action may name a user or a readiness pool instead.
+ */
+export const escalationActionConfigSchema = escalationActionUnion.superRefine(
+  (action, context) => {
+    if (
+      action.type === 'notify' &&
+      action.target === undefined &&
+      (action.channels?.length ?? 0) === 0
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['channels'],
+        message: 'notify_needs_target_or_channel',
+      })
+    }
+  },
+)
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
 

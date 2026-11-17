@@ -1374,6 +1374,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-85b | the ticket view test proves the assignees (split child of 85)              | done    | yes     |
 | WP-M14-86  | the acknowledge result is a selection (follow-up of 78)                    | done    | yes     |
 | WP-M14-87  | the readiness calendar names state, technician and pool (out of band)   | done    | yes     |
+| WP-M14-88  | the notify action selects a recipient and an ntfy priority (out of band) | done    | yes     |
+| WP-M14-89  | the notify engine delivers to the selected recipient (out of band)       | planned | yes     |
+| WP-M14-90  | the administration selects the notify recipient and priority (out of band) | planned | yes     |
+| WP-M14-91  | the first escalation stage fires when a ticket is created (out of band)  | planned | yes     |
+| WP-M14-92  | the first escalation stage is never deleted (out of band)                | planned | yes     |
+| WP-M14-93  | the note action writes a ticket comment without an action key (out of band) | planned | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

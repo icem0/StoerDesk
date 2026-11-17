@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The notify action selects a recipient and an ntfy priority (WP-M14-88, out of
+  band in phase 14, `specs/07-escalation.md` §7.5): `escalationNotifyTargetSchema`
+  names one user or one readiness pool as the recipient, and the five ntfy levels
+  `min`, `low`, `default`, `high` and `urgent` are selectable (`NTFY_PRIORITY_NUMBERS`).
+  A notify action stays valid with `channels` alone, so old configurations keep
+  working; a target alone is valid as well and replaces the channel broadcast. The
+  configuration service writes `target` and `priority` into the action jsonb and
+  answers `400 invalid_target` when the user or pool does not exist.
 - The ticket view test proves the assignees (WP-M14-85b, the split child of
   WP-M14-85, out of band in phase 14, ADR-0026): the new detail page test
   `apps/web/src/features/tickets/__tests__/ticket-detail-assignees.test.tsx`
