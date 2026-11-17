@@ -1412,8 +1412,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-119 | channel repair UI — the translated `lastError` and the own-topic test (out of band) | done | yes |
 | WP-M14-120 | the internal notification inbox — spec and split (out of band)         | planned | yes     |
 | WP-M14-120a | the database and the contracts of the notification messages (out of band) | done | yes |
-| WP-M14-120b | the delivery layer records every personal message (out of band)      | planned | yes     |
-| WP-M14-120c | the API of the notification inbox (out of band)                       | planned | yes     |
+| WP-M14-120b | the delivery layer records every personal message (out of band)      | done    | yes     |
+| WP-M14-120c | the API of the notification inbox (out of band)                       | done    | yes     |
 | WP-M14-120d | the inbox page (out of band)                                          | planned | yes     |
 | WP-M14-120e | the bell in the shell with the unread count (out of band)             | planned | yes     |
 

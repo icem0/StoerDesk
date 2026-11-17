@@ -1,7 +1,7 @@
 # WP-M14-120c: the API of the notification inbox
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-120b
 phase: 14
 milestone: m14
@@ -16,8 +16,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/notifications/routes.ts
-- apps/api/src/notifications/__tests__/messages-routes.integration.spec.ts
+- apps/api/src/notifications/routes.ts, apps/api/src/notifications/__tests__/messages-routes.integration.spec.ts
 
 interfaces:
 

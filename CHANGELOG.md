@@ -123,6 +123,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Added
+- The API of the notification inbox (WP-M14-120c, out of band in phase 14):
+  `GET /api/v1/notifications/messages` answers the own messages of the session
+  user, the newest first, with the channel, the event, the state, the title,
+  the body and the moment of every message;
+  `PATCH /api/v1/notifications/messages/:id/read` marks one own message as read
+  and answers `404 message_not_found` for a message of another user; and
+  `GET /api/v1/notifications/messages/unread-count` answers the number of the
+  messages without a read receipt — the badge of the bell.
 - The delivery layer records every personal message (WP-M14-120b, out of band
   in phase 14): every notification that is enqueued for a user writes a
   `notification_messages` row next to its outbox row, and the drain flips the

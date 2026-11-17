@@ -270,10 +270,21 @@ export const notificationMessageReadResponseSchema = z.object({
   readAt: z.iso.datetime().nullable(),
 })
 
+/**
+ * The number of the unread messages of the user (WP-M14-120c) — the badge of
+ * the bell in the shell.
+ */
+export const notificationUnreadCountResponseSchema = z.object({
+  count: z.number().int().nonnegative(),
+})
+
 export type NotificationMessageItem = z.infer<typeof notificationMessageItemSchema>
 export type NotificationMessageListResponse = z.infer<
   typeof notificationMessageListResponseSchema
 >
 export type NotificationMessageReadResponse = z.infer<
   typeof notificationMessageReadResponseSchema
+>
+export type NotificationUnreadCountResponse = z.infer<
+  typeof notificationUnreadCountResponseSchema
 >

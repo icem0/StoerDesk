@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin'
-import { and, eq } from 'drizzle-orm'
+import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
@@ -14,6 +14,9 @@ import {
   notificationAccountSchema,
   notificationChannelKindSchema,
   notificationPreferencesListResponseSchema,
+  notificationMessageListResponseSchema,
+  notificationMessageReadResponseSchema,
+  notificationUnreadCountResponseSchema,
   PERMISSIONS,
   redeemTelegramLinkCodeRequestSchema,
   telegramLinkCodeResponseSchema,
@@ -26,7 +29,11 @@ import { requirePermission } from '../auth/requirePermission'
 import type { preHandlerHookHandler } from 'fastify'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
-import { notificationChannels, notificationAccounts } from '../db/schema'
+import {
+  notificationChannels,
+  notificationAccounts,
+  notificationMessages,
+} from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
 import { resolveChannelStatus } from '../dashboard/service'
 import { readChannelConfiguration } from './config'
@@ -198,6 +205,25 @@ export async function sendTestMessage(
 
 function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
+}
+
+/**
+ * A number of the query of the inbox (WP-M14-120c): a value that is missing or
+ * that is not a number falls back to the default, a value below the minimum
+ * rises to it and a value above the maximum falls to it.
+ */
+function boundedNumber(value: string | undefined, fallback: number, min: number, max: number) {
+  if (value === undefined || value.trim() === '') {
+    return fallback
+  }
+
+  const parsed = Number(value)
+
+  if (!Number.isFinite(parsed)) {
+    return fallback
+  }
+
+  return Math.min(Math.max(Math.trunc(parsed), min), max)
 }
 
 async function channelAfterWrite(
@@ -718,6 +744,113 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
 
         return notificationPreferencesListResponseSchema.parse({
           preferences: await readPreferences(database, request.user?.id ?? ''),
+        })
+      },
+    )
+
+    /**
+     * `GET /api/v1/notifications/messages` (WP-M14-120c): the own messages of
+     * the session user — which channel a message went to, whether it arrived
+     * and when. The newest message comes first. Paginated with `limit` (default
+     * 50, max 200) and `offset`; a value that is not a number falls back to the
+     * default.
+     */
+    app.get(
+      '/api/v1/notifications/messages',
+      { preHandler: requireSession },
+      async (request) => {
+        const userId = request.user?.id ?? ''
+        const query = request.query as { limit?: string; offset?: string }
+        const limit = boundedNumber(query.limit, 50, 1, 200)
+        const offset = boundedNumber(query.offset, 0, 0, 100_000)
+
+        const rows = await database
+          .select({
+            id: notificationMessages.id,
+            channel: notificationMessages.channel,
+            eventType: notificationMessages.eventType,
+            state: notificationMessages.state,
+            title: notificationMessages.title,
+            body: notificationMessages.body,
+            createdAt: notificationMessages.createdAt,
+            readAt: notificationMessages.readAt,
+          })
+          .from(notificationMessages)
+          .where(eq(notificationMessages.userId, userId))
+          .orderBy(desc(notificationMessages.createdAt))
+          .limit(limit)
+          .offset(offset)
+
+        return notificationMessageListResponseSchema.parse({
+          messages: rows.map((row) => ({
+            id: row.id,
+            channel: row.channel,
+            eventType: row.eventType,
+            state: row.state,
+            title: row.title,
+            body: row.body,
+            createdAt: row.createdAt.toISOString(),
+            readAt: row.readAt?.toISOString() ?? null,
+          })),
+        })
+      },
+    )
+
+    /**
+     * `GET /api/v1/notifications/messages/unread-count` (WP-M14-120c): the
+     * number of the messages of the session user without a read receipt — the
+     * badge of the bell of the shell.
+     */
+    app.get(
+      '/api/v1/notifications/messages/unread-count',
+      { preHandler: requireSession },
+      async (request) => {
+        const userId = request.user?.id ?? ''
+
+        const [row] = await database
+          .select({ count: count() })
+          .from(notificationMessages)
+          .where(
+            and(
+              eq(notificationMessages.userId, userId),
+              isNull(notificationMessages.readAt),
+            ),
+          )
+
+        return notificationUnreadCountResponseSchema.parse({ count: Number(row?.count ?? 0) })
+      },
+    )
+
+    /**
+     * `PATCH /api/v1/notifications/messages/:id/read` (WP-M14-120c): marks one
+     * of the own messages as read. A message of another user or an unknown id
+     * answers `404 message_not_found` — the code is bound to the session.
+     */
+    app.patch<{ Params: { id: string } }>(
+      '/api/v1/notifications/messages/:id/read',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const userId = request.user?.id ?? ''
+        const { id } = request.params
+
+        const [row] = await database
+          .update(notificationMessages)
+          .set({ readAt: new Date() })
+          .where(
+            and(
+              eq(notificationMessages.id, id),
+              eq(notificationMessages.userId, userId),
+            ),
+          )
+          .returning({ id: notificationMessages.id, readAt: notificationMessages.readAt })
+
+        if (row === undefined) {
+          return reply.code(404).send({ code: 'message_not_found', params: {} })
+        }
+
+        return notificationMessageReadResponseSchema.parse({
+          id: row.id,
+          readAt: row.readAt?.toISOString() ?? null,
         })
       },
     )
