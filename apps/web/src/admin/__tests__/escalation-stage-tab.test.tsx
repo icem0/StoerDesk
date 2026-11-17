@@ -155,6 +155,18 @@ describe('the stage tab of the escalation administration', () => {
     expect(dialog.textContent).toContain('night_shift')
   })
 
+  it('joins a new stage to the chain instead of opening a second one', async () => {
+    void i18n.changeLanguage('de')
+    renderPage()
+    await openStagesTab('Stufen & Regeln')
+
+    const add = screen.getByTestId('escalation-stage-add')
+    const predecessor = within(add).getByLabelText('Vorgänger') as HTMLSelectElement
+
+    expect([...predecessor.options].map((option) => option.value)).not.toContain('')
+    expect(predecessor.value).toBe('work_order')
+  })
+
   it('does not send a stage set while the key is empty', async () => {
     void i18n.changeLanguage('de')
     const writes = renderPage()

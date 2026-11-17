@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The administration protects the first stage only (WP-M14-107, out of band in phase
+  14): a new stage joins the chain — the predecessor is mandatory — and a second
+  stage without a predecessor can be deleted again.
 - The service protects only the first stage (WP-M14-106, out of band in phase 14):
   the stage writer protects the first stage of the installed chain — the stage
   without a predecessor with the smallest position — so a second stage without

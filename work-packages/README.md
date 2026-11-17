@@ -1397,6 +1397,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-104 | the shared test follows the numbered defaults (out of band)              | done    | yes     |
 | WP-M14-105 | a chain has one first stage (out of band)                               | done    | yes     |
 | WP-M14-106 | the service protects only the first stage (out of band)                  | done    | yes     |
+| WP-M14-107 | the administration protects the first stage only (out of band)          | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

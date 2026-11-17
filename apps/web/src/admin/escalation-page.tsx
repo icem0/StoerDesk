@@ -5,6 +5,7 @@ import type { TFunction } from 'i18next'
 import {
   ESCALATION_REFERENCE_EVENTS,
   TICKET_PRIORITIES,
+  escalationFirstStageKey,
   escalationRuleConfigSchema,
   type DeadlineHours,
   type DeadlineSettings,
@@ -187,6 +188,7 @@ export function EscalationPage() {
     return names === undefined ? key : (names[i18n.language] ?? names.de ?? key)
   }
 
+  const firstStageKey = escalationFirstStageKey(config.stages)
   const stageLabels: Record<string, string> = {}
 
   for (const stage of config.stages) {
@@ -285,7 +287,7 @@ export function EscalationPage() {
           <ol className="flex flex-col gap-4" data-testid="escalation-stage-list">
             {config.stages.map((stage) => {
               const key = stage.key
-              const isFirst = stage.predecessor === null
+              const isFirst = stage.key === firstStageKey
               const otherStages = config.stages.filter((entry) => entry.key !== key)
 
               return (
@@ -360,7 +362,9 @@ export function EscalationPage() {
                           })
                         }
                       >
-                        <option value="">{t('admin.escalation.stage.predecessorNone')}</option>
+                        <option disabled value="">
+                          {t('admin.escalation.stage.predecessorNone')}
+                        </option>
                         {otherStages.map((entry) => (
                           <option key={entry.key} value={entry.key}>
                             {stageName(entry.key)}
@@ -494,7 +498,14 @@ function AddStageForm({
   const [nameEn, setNameEn] = useState('')
   const [position, setPosition] = useState(String(nextPosition))
   const [active, setActive] = useState(true)
-  const [predecessor, setPredecessor] = useState('')
+  const [predecessor, setPredecessor] = useState(() => {
+    const last = stages.reduce<EscalationStageConfig | undefined>(
+      (best, stage) => (best === undefined || stage.position > best.position ? stage : best),
+      undefined,
+    )
+
+    return last?.key ?? ''
+  })
   const [invalid, setInvalid] = useState(false)
 
   const positionValue = Number(position)
@@ -502,6 +513,7 @@ function AddStageForm({
     stageKeyPattern.test(key) &&
     nameDe.trim() !== '' &&
     nameEn.trim() !== '' &&
+    predecessor !== '' &&
     Number.isInteger(positionValue) &&
     positionValue >= 1 &&
     positionValue <= 20
@@ -520,14 +532,13 @@ function AddStageForm({
       names: { de: nameDe.trim(), en: nameEn.trim() },
       position: positionValue,
       active,
-      predecessor: predecessor === '' ? null : predecessor,
+      predecessor,
       reachedBy: [],
     })
     setKey('')
     setNameDe('')
     setNameEn('')
     setActive(true)
-    setPredecessor('')
     setPosition(String(Math.min(20, Math.max(0, ...stages.map((stage) => stage.position), positionValue) + 1)))
   }
 
@@ -586,7 +597,6 @@ function AddStageForm({
             value={predecessor}
             onChange={(event) => setPredecessor(event.target.value)}
           >
-            <option value="">{t('admin.escalation.stage.predecessorNone')}</option>
             {stages.map((stage) => (
               <option key={stage.key} value={stage.key}>
                 {stage.names.de ?? stage.key}
