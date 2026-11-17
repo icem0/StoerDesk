@@ -257,9 +257,16 @@ ticket itself, independent of their `reference` and `minutes`, and the creation
 paths of the report form, the internal form and the external API evaluate them
 right after the ticket transaction. The `condition` of such a rule still decides
 whether it fires, and an open pause suppresses the firing until the pause ends.
+A chain has **exactly one** stage without predecessor — the first stage.
+A second one is rejected by the chain validation (`400 invalid_request` with the
+path `stages.<i>.predecessor`), a new stage therefore always joins the chain and
+the administration offers no predecessor for it.
+
 The first stage is the anchor of the chain: `PUT /api/v1/escalation/stages`
 rejects a body that omits it or gives it a predecessor (`400 invalid_request`),
 and the administration hides its remove action and locks its predecessor select.
+Only the first stage is protected: a stage without predecessor that an earlier
+version wrote may be removed again.
 
 `escalation_rules.stage_key` is a foreign key to `escalation_stages.key` with
 `ON DELETE cascade`: removing a stage removes its rules and their actions. The

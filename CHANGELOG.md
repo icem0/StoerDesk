@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The spec names the single first stage (WP-M14-108, out of band in phase 14): a
+  chain has exactly one stage without predecessor — the first stage — and only
+  that one is protected.
 - The administration protects the first stage only (WP-M14-107, out of band in phase
   14): a new stage joins the chain — the predecessor is mandatory — and a second
   stage without a predecessor can be deleted again.
