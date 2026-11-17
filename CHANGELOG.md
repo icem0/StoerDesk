@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The API tests follow the numbered rules (WP-M14-96, out of band in phase 14):
+  the escalation suites read the key of a seeded rule from the shared defaults
+  instead of naming it in the expectation.
 - The module map names the frame of the time sequence of a rule and the key of
   a stage (WP-M14-94b, out of band in phase 14).
 - The module map names the escalation changes of phase 14 (WP-M14-95, out of

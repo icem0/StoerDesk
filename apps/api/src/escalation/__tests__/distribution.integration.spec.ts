@@ -6,7 +6,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { EscalationFacts } from '@stoerdesk/shared'
+import { DEFAULT_WORKFLOW_ESCALATION_RULES, type EscalationFacts } from '@stoerdesk/shared'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
@@ -42,6 +42,30 @@ const {
 } = schema
 
 const MINUTE = 60 * 1000
+
+/** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
+function seededRuleKey(stageKey: string, reference?: string): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
+    (entry) => entry.stageKey === stageKey && (reference === undefined || entry.reference === reference),
+  )
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of the stage ${stageKey}`)
+  }
+
+  return rule.key
+}
+
+/** The key of the seeded deadline rule of a percentage. */
+function seededPercentRuleKey(percent: number): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.percent === percent)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of ${percent} percent`)
+  }
+
+  return rule.key
+}
 
 const facts: EscalationFacts = {
   priority: 'normal',
@@ -227,7 +251,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('offers the ticket to the technicians of a readiness pool', async () => {
-      await action('offer', { kind: 'pool', id: poolId }, 'offer_pool', 'acceptance_offer')
+      await action('offer', { kind: 'pool', id: poolId }, 'offer_pool', seededRuleKey('acceptance', 'offered'))
 
       const onCallUserId = technicianIds[0] ?? ''
 
@@ -241,7 +265,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
-      const result = await fire(ticket.id, 'acceptance_offer', 'acceptance', 'e2')
+      const result = await fire(ticket.id, seededRuleKey('acceptance', 'offered'), 'acceptance', 'e2')
 
       expect(result.offered).toBe(1)
 
@@ -274,7 +298,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .values({ name: `Nacht ${randomUUID().slice(0, 6)}`, groupId })
         .returning({ id: oncallPools.id })
 
-      await action('offer', { kind: 'pool', id: nightPool?.id ?? '' }, 'offer_night', 'acceptance_assignment')
+      await action('offer', { kind: 'pool', id: nightPool?.id ?? '' }, 'offer_night', seededRuleKey('acceptance', 'assigned'))
 
       const onCallUserId = technicianIds[0] ?? ''
 
@@ -286,7 +310,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
-      const result = await fire(ticket.id, 'acceptance_assignment', null, 'e5')
+      const result = await fire(ticket.id, seededRuleKey('acceptance', 'assigned'), null, 'e5')
 
       expect(result.offered).toBe(1)
 
@@ -347,11 +371,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .values({ name: `Leer ${randomUUID().slice(0, 6)}` })
         .returning({ id: groups.id })
 
-      await action('assign', { kind: 'group', id: emptyGroup?.id ?? '' }, 'assign_empty', 'deadline_exceeded')
+      await action('assign', { kind: 'group', id: emptyGroup?.id ?? '' }, 'assign_empty', seededPercentRuleKey(100))
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
-      const result = await fire(ticket.id, 'deadline_exceeded', null, 'e4')
+      const result = await fire(ticket.id, seededPercentRuleKey(100), null, 'e4')
 
       expect(result.assigned).toBe(0)
 

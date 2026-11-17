@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
 
 import { createSession } from '../../auth/session'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
@@ -216,7 +217,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         'acceptance',
         'acknowledgement',
       ])
-      expect(body.rules.map((rule) => rule.key)).toContain('deadline_exceeded')
+      expect(body.rules.map((rule) => rule.key)).toContain(
+        DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
+      )
     })
 
     it('replaces the rules and their actions', async () => {

@@ -6,6 +6,8 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { DEFAULT_WORKFLOW_ESCALATION_RULES } from '@stoerdesk/shared'
+
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedEscalation } from '../../db/seed-escalation'
@@ -21,6 +23,17 @@ if (testDatabase.status === 'unavailable') {
 const { objects, tickets, ticketEvents, outbox, webhookEndpoints, webhookDeliveries } = schema
 const { notificationAccounts, notificationPreferences, users } = schema
 const MINUTE = 60 * 1000
+
+/** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
+function seededRuleKey(stageKey: string): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.stageKey === stageKey)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of the stage ${stageKey}`)
+  }
+
+  return rule.key
+}
 
 describe.skipIf(testDatabase.status === 'unavailable')(
   'the actions of a fired rule (integration)',
@@ -89,7 +102,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       await db.insert(schema.escalationActions).values([
         {
           key: 'office_ntfy',
-          ruleKey: 'review',
+          ruleKey: seededRuleKey('review'),
           type: 'notify',
           config: { channels: ['ntfy'] },
           condition: { all: [] },
@@ -98,7 +111,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         },
         {
           key: 'office_webhook',
-          ruleKey: 'review',
+          ruleKey: seededRuleKey('review'),
           type: 'webhook',
           config: { endpointIds: [endpointId] },
           condition: { all: [] },
@@ -107,7 +120,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         },
         {
           key: 'office_note',
-          ruleKey: 'review',
+          ruleKey: seededRuleKey('review'),
           type: 'history',
           config: { text: 'Das Büro wurde informiert.' },
           condition: { all: [] },
@@ -120,7 +133,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const fired = await evaluateTicketEscalations(db, ticket.id, now)
 
-      expect(fired.map((entry) => entry.rule)).toContain('review')
+      expect(fired.map((entry) => entry.rule)).toContain(seededRuleKey('review'))
 
       const outboxRows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
 
@@ -163,7 +176,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('moves the status of a ticket with a status_change action', async () => {
       await db.insert(schema.escalationActions).values({
         key: 'status_to_review',
-        ruleKey: 'review',
+        ruleKey: seededRuleKey('review'),
         type: 'status_change',
         config: { toStatus: 'IN_REVIEW' },
         condition: { all: [] },
@@ -175,7 +188,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const fired = await evaluateTicketEscalations(db, ticket.id, now)
 
-      expect(fired.map((entry) => entry.rule)).toContain('review')
+      expect(fired.map((entry) => entry.rule)).toContain(seededRuleKey('review'))
 
       const [moved] = await db
         .select({ status: tickets.status })
@@ -191,7 +204,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         (event) => event.type === 'review_started' && event.actorKind === 'system',
       )
 
-      expect(step?.payload).toMatchObject({ rule: 'review', stage: 'review' })
+      expect(step?.payload).toMatchObject({
+        rule: seededRuleKey('review'),
+        stage: 'review',
+      })
 
       const note = events.find((event) => {
         if (event.type !== 'escalation_note') {
@@ -204,7 +220,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
 
       expect(note?.payload).toMatchObject({
-        rule: 'review',
+        rule: seededRuleKey('review'),
         stage: 'review',
         from: 'NEW',
         to: 'IN_REVIEW',
@@ -247,7 +263,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
       await db.insert(schema.escalationActions).values({
         key: 'user_notify',
-        ruleKey: 'review',
+        ruleKey: seededRuleKey('review'),
         type: 'notify',
         config: { target: { kind: 'user', id: user.id }, priority: 'urgent' },
         condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },

@@ -5,7 +5,10 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { externalTicketCreateRequestSchema } from '@stoerdesk/shared'
+import {
+  DEFAULT_WORKFLOW_ESCALATION_RULES,
+  externalTicketCreateRequestSchema,
+} from '@stoerdesk/shared'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
@@ -21,6 +24,28 @@ if (testDatabase.status === 'unavailable') {
 
 const { objects, ticketEvents, ticketPauses, tickets, escalationRules, escalationStages } = schema
 const MINUTE = 60 * 1000
+
+/** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
+function seededRuleKey(stageKey: string): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.stageKey === stageKey)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of the stage ${stageKey}`)
+  }
+
+  return rule.key
+}
+
+/** The key of the seeded deadline rule of a percentage. */
+function seededPercentRuleKey(percent: number): string {
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.percent === percent)
+
+  if (rule === undefined) {
+    throw new Error(`expected the seeded rule of ${percent} percent`)
+  }
+
+  return rule.key
+}
 
 describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integration)', () => {
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
@@ -93,10 +118,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     const result = await evaluateEscalations(db, now)
 
     expect(result.scanned).toBeGreaterThan(0)
-    expect(await escalated(ticket.id)).toContain('review')
+    expect(await escalated(ticket.id)).toContain(seededRuleKey('review'))
 
     await evaluateEscalations(db, now)
-    expect(await escalated(ticket.id)).toEqual(['review'])
+    expect(await escalated(ticket.id)).toEqual([seededRuleKey('review')])
   })
 
   it('fires the first stage rule immediately when the ticket is created', async () => {
@@ -110,7 +135,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       randomUUID(),
     )
 
-    expect(await escalated(created.ticketId)).toEqual(['review'])
+    expect(await escalated(created.ticketId)).toEqual([seededRuleKey('review')])
   })
 
   it('does not escalate a ticket that is paused', async () => {
@@ -177,12 +202,12 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     const fired = await evaluateTicketEscalations(db, ticket.id, now)
 
     expect(fired.map((entry) => entry.rule)).toEqual([
-      'deadline_80_percent',
-      'deadline_exceeded',
+      seededPercentRuleKey(80),
+      seededPercentRuleKey(100),
     ])
     expect(await escalated(ticket.id)).toEqual([
-      'deadline_80_percent',
-      'deadline_exceeded',
+      seededPercentRuleKey(80),
+      seededPercentRuleKey(100),
     ])
   })
 
