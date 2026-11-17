@@ -71,7 +71,7 @@ happens when it fires).
 
 | Field | Meaning |
 | --- | --- |
-| `key` | stable machine key, unique, the identity of the rule |
+| `key` | the identity of the rule: the key of its stage and its number — `review#1` (§7.5) |
 | `stageKey` | the stage the rule belongs to; `null` for the deadline rules |
 | `reference` | the event that starts the clock (`received_at`, `review_started`, `work_order_set`, `offered`, `assigned`, `accepted`) |
 | `minutes` | the deadline per priority (`low`, `normal`, `high`, `critical`) |
@@ -140,8 +140,18 @@ installation. The optional `priority` is the ntfy level of the notification and
 overrides the ticket-based default (`critical` = `urgent`, otherwise `default`).
 
 A `history` action writes a normal ticket comment, not an `escalation_note`; the
-ticket history renders it like every other comment. Its action key is an internal
-name: the administration sends none and the server assigns one (`note_…`).
+ticket history renders it like every other comment. The key of every action is
+internal: the administration sends none and the server assigns one (§7.5).
+
+The keys of the escalation form one taxonomy: a stage has a free key
+(`review`), a rule the key of its stage and its number (`review#1`,
+`acceptance#2`), an action the key of its rule and its number (`review#1#1`). A
+rule without a stage belongs to the root `deadline` (`deadline#1`). The number of
+a rule is its position inside its stage, the number of an action its position
+inside its rule; the server writes both keys, and the administration only numbers
+the rule and the action (`#1`, `#2`) — it never names them. The migration
+`0045_escalation_rule_numbering.sql` gives an installed configuration the
+numbered keys; the actions and the firing log follow the rename of their rule.
 
 Only a `status_change` action may move the status of a ticket (WP-M14-40 … WP-M14-40c):
 it performs a step of the configurable transition table, so the workflow columns
@@ -160,12 +170,13 @@ ever changes the priority, the deadline or the work order of a ticket.
 | `escalation_actions` | `id`, `key` (unique per rule), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active` |
 | `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)` |
 
-The `key` is the identity of a stage, a rule and an action, not the UUID: the
-administration sends the keys, the server keeps the rows stable — except the key
-of a `history` action, which the server assigns. The stages of an
-installation are seeded once (the default chain of §7.12) and the rules are seeded
-from the former settings values, so the deadlines of a running installation stay
-the same after the migration.
+The `key` is the identity of a stage, a rule and an action, not the UUID. The key
+of a stage is free and stays editable while the stage is created. The key of a
+rule and of an action is derived (§7.5): the server writes it, the administration
+only numbers the rule and the action. The stages of an installation are seeded
+once (the default chain of §7.12) and the rules are seeded from the former
+settings values, so the deadlines of a running installation stay the same after
+the migration.
 
 ## 7.7 Idempotency and the audit trail
 

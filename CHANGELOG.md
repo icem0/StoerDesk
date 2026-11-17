@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The spec and the module map name the taxonomy (WP-M14-103, out of band in phase 14):
+  the keys of the escalation form one taxonomy — a stage has a free key, a rule
+  the key of its stage and its number, an action the key of its rule and its
+  number.
 - The action editor numbers the actions (WP-M14-102, out of band in phase 14): an
   action of a rule shows its number `#1` in a read-only field instead of an
   editable key.
