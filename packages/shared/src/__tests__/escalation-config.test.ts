@@ -35,8 +35,9 @@ const facts: EscalationFacts = {
 }
 
 describe('the escalation stages', () => {
-  it('are the five milestones of the workflow', () => {
+  it('are the milestones of the workflow', () => {
     expect([...ESCALATION_STAGE_KEYS]).toEqual([
+      'new',
       'review',
       'work_order',
       'assignment',
@@ -71,9 +72,12 @@ describe('the escalation stages', () => {
   })
 
   it('carry their predecessor and their reaching events', () => {
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[0]?.key).toBe('new')
     expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[0]?.predecessor).toBeNull()
-    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[1]?.predecessor).toBe('review')
-    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[2]?.reachedBy).toEqual(['assigned', 'offered'])
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[0]?.reachedBy).toEqual([])
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[1]?.predecessor).toBe('new')
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[2]?.predecessor).toBe('review')
+    expect(DEFAULT_WORKFLOW_ESCALATION_STAGES[3]?.reachedBy).toEqual(['assigned', 'offered'])
   })
 })
 
@@ -209,10 +213,11 @@ describe('the stage chain validator', () => {
 })
 
 describe('the default rules', () => {
-  it('cover the four former status rules and the two deadline rules', () => {
+  it('cover the rule of the stage NEW, the former status rules and the deadline rules', () => {
     const keys = DEFAULT_WORKFLOW_ESCALATION_RULES.map((rule) => rule.key)
 
     expect(keys).toEqual([
+      'new#1',
       'review#1',
       'work_order#1',
       'assignment#1',

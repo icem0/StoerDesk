@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The shared contract knows the stage NEW (WP-M14-116, out of band in phase 14):
+  the default chain starts with the stage `new` (`Neu` / `New`) — the arrival of
+  the ticket, without a reaching event, handing its clock down — and the stage
+  `review` becomes its successor. The rule `new#1` belongs to the new stage.
+  The rules of the other stages keep their milestone, their clock and their
+  minutes; the rule of the stage `review` now waits its minutes after the report
+  instead of firing with the ticket.
 - The API tests follow the chain of the defaults (WP-M14-115, out of band in
   phase 14): the seed test, the numbering test, the configuration test and the
   exit criterion of the escalation read the chain from the shared defaults

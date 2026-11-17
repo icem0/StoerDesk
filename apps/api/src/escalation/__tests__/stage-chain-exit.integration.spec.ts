@@ -126,31 +126,24 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
-    function stageByKey(key: string): StageBody {
-      const found = defaultStages.find((stage) => stage.key === key)
-
-      if (found === undefined) {
-        throw new Error(`expected the default stage ${key}`)
-      }
-
-      return found
-    }
-
     function chainWithNightReview(): StageBody[] {
+      const workOrderIndex = defaultStages.findIndex((stage) => stage.key === 'work_order')
+
       return [
-        stageByKey('review'),
+        ...defaultStages.slice(0, workOrderIndex),
         {
           key: 'night_review',
           names: { de: 'Nachtsichtung', en: 'Night review' },
-          position: 2,
+          position: defaultStages[workOrderIndex]!.position,
           active: true,
           predecessor: 'review',
           reachedBy: ['work_order_set'],
         },
-        { ...stageByKey('work_order'), position: 3, predecessor: 'night_review' },
-        { ...stageByKey('assignment'), position: 4, predecessor: 'work_order' },
-        { ...stageByKey('acceptance'), position: 5, predecessor: 'assignment' },
-        { ...stageByKey('acknowledgement'), position: 6, predecessor: 'acceptance' },
+        ...defaultStages.slice(workOrderIndex).map((stage) => ({
+          ...stage,
+          position: stage.position + 1,
+          predecessor: stage.key === 'work_order' ? 'night_review' : stage.predecessor,
+        })),
       ]
     }
 
@@ -239,15 +232,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const body = response.json<ConfigBody>()
       const byKey = new Map(body.stages.map((stage) => [stage.key, stage]))
 
-      expect(body.stages.map((stage) => stage.key)).toEqual([
-        'review',
-        'night_review',
-        'work_order',
-        'assignment',
-        'acceptance',
-        'acknowledgement',
-      ])
-      expect(body.stages.map((stage) => stage.position)).toEqual([1, 2, 3, 4, 5, 6])
+      expect(body.stages.map((stage) => stage.key)).toEqual(
+        chainWithNightReview().map((stage) => stage.key),
+      )
+      expect(body.stages.map((stage) => stage.position)).toEqual(
+        chainWithNightReview().map((stage) => stage.position),
+      )
       expect(byKey.get('night_review')?.predecessor).toBe('review')
       expect(byKey.get('work_order')?.predecessor).toBe('night_review')
       expect(body.rules.find((rule) => rule.key === 'work_order#1')?.reference).toBeNull()
@@ -360,10 +350,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('refuses to delete or demote the first stage', async () => {
+      const firstStage = defaultStages.find((stage) => stage.predecessor === null)
+
+      if (firstStage === undefined) {
+        throw new Error('expected a first stage without a predecessor')
+      }
+
       const replacement = defaultStages.map((stage) =>
-        stage.key === 'review'
+        stage.key === firstStage.key
           ? { ...stage, key: 'new_root' }
-          : stage.predecessor === 'review'
+          : stage.predecessor === firstStage.key
             ? { ...stage, predecessor: 'new_root' }
             : stage,
       )

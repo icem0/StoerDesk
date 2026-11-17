@@ -30,6 +30,7 @@ import { TICKET_STATUS_VALUES, ticketStatusKeySchema } from './ticket.js'
  * validation. An installation adds and removes stages of its own (ADR-0023).
  */
 export const ESCALATION_STAGE_KEYS = [
+  'new',
   'review',
   'work_order',
   'assignment',
@@ -820,21 +821,31 @@ export function evaluateEscalationCondition(
 }
 
 /**
- * The default chain of an installation with its names (§7.1, §7.11).
+ * The default chain of an installation with its names (§7.1, §7.11). The
+ * first stage `new` is the arrival of the ticket: the workflow never reaches
+ * it, so it hands its clock down to the stage `review` — the report.
  */
 export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[] = [
   {
-    key: 'review',
-    names: { de: 'Prüfung', en: 'Review' },
+    key: 'new',
+    names: { de: 'Neu', en: 'New' },
     position: 1,
     active: true,
     predecessor: null,
+    reachedBy: [],
+  },
+  {
+    key: 'review',
+    names: { de: 'Prüfung', en: 'Review' },
+    position: 2,
+    active: true,
+    predecessor: 'new',
     reachedBy: ['review_started'],
   },
   {
     key: 'work_order',
     names: { de: 'Auftrag angelegt', en: 'Work order created' },
-    position: 2,
+    position: 3,
     active: true,
     predecessor: 'review',
     reachedBy: ['work_order_set'],
@@ -842,7 +853,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[
   {
     key: 'assignment',
     names: { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' },
-    position: 3,
+    position: 4,
     active: true,
     predecessor: 'work_order',
     reachedBy: ['assigned', 'offered'],
@@ -850,7 +861,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[
   {
     key: 'acceptance',
     names: { de: 'Angenommen', en: 'Accepted' },
-    position: 4,
+    position: 5,
     active: true,
     predecessor: 'assignment',
     reachedBy: ['accepted'],
@@ -858,7 +869,7 @@ export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[
   {
     key: 'acknowledgement',
     names: { de: 'Quittiert', en: 'Acknowledged' },
-    position: 5,
+    position: 6,
     active: true,
     predecessor: 'acceptance',
     reachedBy: ['acknowledged'],
@@ -877,6 +888,16 @@ const evenMinutes = (value: number) => ({
  * seed; the installation changes them in the administration.
  */
 export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] = [
+  {
+    key: 'new#1',
+    stageKey: 'new',
+    reference: 'received_at',
+    minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+    percent: null,
+    condition: { all: [] },
+    actions: [],
+    active: true,
+  },
   {
     key: 'review#1',
     stageKey: 'review',

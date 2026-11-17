@@ -7,6 +7,7 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   DEFAULT_WORKFLOW_ESCALATION_RULES,
+  DEFAULT_WORKFLOW_ESCALATION_STAGES,
   externalTicketCreateRequestSchema,
 } from '@stoerdesk/shared'
 
@@ -45,6 +46,17 @@ function seededPercentRuleKey(percent: number): string {
   }
 
   return rule.key
+}
+
+/** The key of the first stage of the default chain — the stage without a predecessor. */
+function firstStageKey(): string {
+  const stage = DEFAULT_WORKFLOW_ESCALATION_STAGES.find((entry) => entry.predecessor === null)
+
+  if (stage === undefined) {
+    throw new Error('expected a first stage without a predecessor')
+  }
+
+  return stage.key
 }
 
 describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integration)', () => {
@@ -120,8 +132,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     expect(result.scanned).toBeGreaterThan(0)
     expect(await escalated(ticket.id)).toContain(seededRuleKey('review'))
 
+    const fired = await escalated(ticket.id)
+
     await evaluateEscalations(db, now)
-    expect(await escalated(ticket.id)).toEqual([seededRuleKey('review')])
+    expect(await escalated(ticket.id)).toEqual(fired)
   })
 
   it('fires the first stage rule immediately when the ticket is created', async () => {
@@ -135,7 +149,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       randomUUID(),
     )
 
-    expect(await escalated(created.ticketId)).toEqual([seededRuleKey('review')])
+    expect(await escalated(created.ticketId)).toEqual([seededRuleKey(firstStageKey())])
   })
 
   it('does not escalate a ticket that is paused', async () => {
@@ -200,15 +214,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     ])
 
     const fired = await evaluateTicketEscalations(db, ticket.id, now)
+    const percentRules = [seededPercentRuleKey(80), seededPercentRuleKey(100)]
 
-    expect(fired.map((entry) => entry.rule)).toEqual([
-      seededPercentRuleKey(80),
-      seededPercentRuleKey(100),
-    ])
-    expect(await escalated(ticket.id)).toEqual([
-      seededPercentRuleKey(80),
-      seededPercentRuleKey(100),
-    ])
+    expect(
+      fired.map((entry) => entry.rule).filter((rule) => percentRules.includes(rule)),
+    ).toEqual(percentRules)
+    expect(
+      (await escalated(ticket.id)).filter((rule) => percentRules.includes(rule)),
+    ).toEqual(percentRules)
   })
 
   it('keeps a rule silent when its condition does not match', async () => {
