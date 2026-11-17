@@ -32,7 +32,7 @@ import { distributeTicket } from './distribution'
  * WP-M13-07b).
  *
  * `notify` writes one outbox row per selected channel, `webhook` one delivery
- * row per selected endpoint, `history` one append-only note in the ticket
+ * row per selected endpoint, `history` one normal comment in the ticket
  * history and `status_change` performs the step of the `ticket_transitions`
  * table that leads from the current status of the ticket to the configured
  * target (§7.5, §7.13, ADR-0025, WP-M14-40b) and appends one `escalation_note`
@@ -246,17 +246,20 @@ export async function dispatchEscalationActions(
     }
 
     if (row.type === 'history') {
-      const text = typeof config.text === 'string' ? config.text : undefined
+      const text = typeof config.text === 'string' ? config.text.trim() : ''
 
+      if (text === '') {
+        continue
+      }
+
+      // The configured text is a normal ticket comment, not an escalation
+      // note: the ticket history renders it like every other comment
+      // (WP-M14-93).
       await database.insert(ticketEvents).values({
         ticketId: firing.ticketId,
-        type: 'escalation_note',
+        type: 'comment',
         actorKind: 'system',
-        payload: {
-          rule: firing.ruleKey,
-          stage: firing.stageKey,
-          ...(text === undefined ? {} : { text }),
-        },
+        payload: { text },
       })
 
       result.notes += 1

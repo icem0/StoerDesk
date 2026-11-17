@@ -138,13 +138,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .from(ticketEvents)
         .where(eq(ticketEvents.ticketId, ticket.id))
 
-      const note = notes.find((event) => event.type === 'escalation_note')
+      const comment = notes.find((event) => event.type === 'comment')
 
-      expect(note?.payload).toMatchObject({
-        rule: 'review',
-        stage: 'review',
-        text: 'Das Büro wurde informiert.',
-      })
+      expect(comment?.actorKind).toBe('system')
+      expect(comment?.payload).toEqual({ text: 'Das Büro wurde informiert.' })
+      expect(notes.some((event) => event.type === 'escalation_note')).toBe(false)
     })
 
     it('skips an action whose condition does not match', async () => {

@@ -188,7 +188,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticketId))
 
       expect(events.filter((event) => event.type === 'escalated')).toHaveLength(1)
-      expect(events.some((event) => event.type === 'escalation_note')).toBe(true)
+      expect(
+        events.some(
+          (event) =>
+            event.type === 'comment' &&
+            (event.payload as { text?: string }).text === 'Die Stufen check ran.',
+        ),
+      ).toBe(true)
 
       const again = await evaluateTicketEscalations(db, ticketId, NOW)
 
