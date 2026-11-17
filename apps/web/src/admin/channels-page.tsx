@@ -72,8 +72,25 @@ function fieldId(kind: string, field: string): string {
   return `${kind}-${field}`
 }
 
+/** Builds a translate-based error-code → readable-reason function for one component. */
+function makeReasonOf(t: unknown) {
+  const translate = t as (key: string, opts?: unknown) => string
+
+  return (code: string): string => {
+    if (code === '') {
+      return ''
+    }
+
+    const key = `admin.channels.errors.${code}`
+    const translated = translate(key)
+
+    return translated === key ? translate('admin.channels.errors.http_error', { code }) : translated
+  }
+}
+
 function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }) {
   const { t } = useTranslation('settings')
+  const reasonOf = makeReasonOf(t)
   const queryClient = useQueryClient()
   const { channel, mayWrite } = props
   const [label, setLabel] = useState(channel.label)
@@ -150,19 +167,6 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
     channel.kind === 'ntfy' && channel.config.url && channel.config.topic
       ? { publicUrl: channel.config.url, topic: channel.config.topic }
       : undefined
-
-  // Failure codes (http_407 …, from the adapter or the params of an API error)
-  // become a readable reason; unknown codes stay visible as the code itself.
-  const reasonOf = (code: string): string => {
-    if (code === '') {
-      return ''
-    }
-
-    const key = `admin.channels.errors.${code}`
-    const translated = t(key)
-
-    return translated === key ? t('admin.channels.errors.http_error', { code }) : translated
-  }
 
   // A request that never produced a known machine code (a Fastify rejection such as
   // FST_ERR_CTP_EMPTY_JSON_BODY, or no network) names its status and code instead of
@@ -459,6 +463,7 @@ function failingChannelsOf(status: ChannelStatusListResponse | undefined) {
 
 export function ChannelsPage() {
   const { t } = useTranslation('settings')
+  const reasonOf = makeReasonOf(t)
   const mayRead = usePermission('notification.read')
   const mayWrite = usePermission('notification.write')
   const mayReadSettings = usePermission('settings.read')
@@ -547,6 +552,11 @@ export function ChannelsPage() {
                     {t('admin.channels.failing.lastFailure', {
                       time: new Date(channel.lastFailedAt).toLocaleString(),
                     })}
+                  </span>
+                ) : null}
+                {channel.lastError !== null && channel.lastError !== '' ? (
+                  <span className="text-rose-300 text-xs ml-2">
+                    {reasonOf(channel.lastError)}
                   </span>
                 ) : null}
               </li>

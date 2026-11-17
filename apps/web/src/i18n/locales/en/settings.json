@@ -830,6 +830,14 @@
       "oncall.assigned": "Readiness allocation",
       "oncall.swap_requested": "Swap requested",
       "oncall.unconfirmed_reminder": "Unconfirmed shift reminder"
+    },
+    "ntfy": {
+      "test": {
+        "button": "Test your own topic",
+        "sending": "Sending test …",
+        "delivered": "Test message sent to your own topic.",
+        "failed": "Test failed: {{reason}}"
+      }
     }
   }
 }

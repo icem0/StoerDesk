@@ -7,6 +7,7 @@ import {
   NOTIFICATION_CHANNEL_KINDS,
   NOTIFICATION_EVENT_TYPES,
   type ChannelConfigurationListResponse,
+  type ChannelTestResponse,
   type NotificationAccount,
   type NotificationChannelKind,
   type NotificationEventType,
@@ -188,6 +189,18 @@ export function NotificationsPage() {
 
   const matrixLinked = matrixLink.isSuccess && !matrixRemove.isSuccess
 
+/** Translates an adapter error code into a readable reason for the own-topic test. */
+const testReason = (code: string): string => {
+  if (code === '') {
+    return ''
+  }
+
+  const key = `admin.channels.errors.${code}`
+  const translated = st(key)
+
+  return translated === key ? code : translated
+}
+
   const ntfySubscription = useQuery({
     queryKey: ['ntfy-subscription'],
     queryFn: () => apiFetch<NtfySubscriptionAnswer>('/v1/notifications/accounts/ntfy'),
@@ -215,6 +228,15 @@ export function NotificationsPage() {
   })
 
   const whatsappLinked = whatsappLink.isSuccess && !whatsappRemove.isSuccess
+
+  const ntfyTest = useMutation({
+    mutationFn: () =>
+      apiFetch<ChannelTestResponse>('/v1/admin/channels/ntfy/test', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ topic: ntfySubscription.data?.topic ?? '' }),
+      }),
+  })
 
   /** The configured channels of the instance (`specs/10-notifications.md` §11.1). */
   const channelConfigs = useQuery({
@@ -546,40 +568,72 @@ export function NotificationsPage() {
             topic={ntfySubscription.data?.topic ?? ''}
           />
         </div>
-      ) : (
-        <section
-          className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
-          aria-labelledby="ntfy-heading"
-        >
-          <h2 id="ntfy-heading" className="text-lg font-semibold">
-            {t('notifications.kinds.ntfy')}
-          </h2>
+      ) : null}
 
-          {ntfySubscription.isError ? (
-            <p role="alert" className="text-sm text-red-400">
-              {errorMessage(t, ntfySubscription.error)}
-            </p>
-          ) : null}
+      <section
+        className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+        aria-labelledby="ntfy-heading"
+      >
+        <h2 id="ntfy-heading" className="text-lg font-semibold">
+          {t('notifications.kinds.ntfy')}
+        </h2>
 
-          {ntfySubscription.isSuccess ? (
-            <p className="text-sm text-amber-400">{t('ntfy.notConfigured')}</p>
-          ) : null}
-
-          {ntfySubscription.isPending ? (
-            <p className="text-sm text-slate-400">{t('auth.loading')}</p>
-          ) : null}
-
-          <p className="mt-2 text-sm text-slate-400">
-            {t('notifications.administration.hint')}
-            <Link
-              className="ml-2 text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-              to="/admin/channels"
-            >
-              {t('notifications.administration.link')}
-            </Link>
+        {ntfySubscription.isError ? (
+          <p role="alert" className="text-sm text-red-400">
+            {errorMessage(t, ntfySubscription.error)}
           </p>
-        </section>
-      )}
+        ) : null}
+
+        {ntfySubscription.isSuccess ? (
+          <p className="text-sm text-amber-400">{t('ntfy.notConfigured')}</p>
+        ) : null}
+
+        {ntfySubscription.isPending ? (
+          <p className="text-sm text-slate-400">{t('auth.loading')}</p>
+        ) : null}
+
+        <p className="mt-2 text-sm text-slate-400">
+          {t('notifications.administration.hint')}
+          <Link
+            className="ml-2 text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            to="/admin/channels"
+          >
+            {t('notifications.administration.link')}
+          </Link>
+        </p>
+
+        {ntfySubscription.isSuccess && ntfySubscription.data?.topic !== '' ? (
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <button
+              className="min-h-11 rounded-lg border border-slate-600 px-4 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-60"
+              disabled={ntfyTest.isPending}
+              onClick={() => ntfyTest.mutate()}
+              type="button"
+            >
+              {ntfyTest.isPending
+                ? st('notifications.ntfy.test.sending')
+                : st('notifications.ntfy.test.button')}
+            </button>
+            {ntfyTest.isSuccess ? (
+              <p
+                className={`text-sm ${ntfyTest.data?.delivered ? 'text-emerald-300' : 'text-rose-400'}`}
+                role="status"
+              >
+              {ntfyTest.data?.delivered
+                ? st('notifications.ntfy.test.delivered')
+                : st('notifications.ntfy.test.failed', {
+                    reason: testReason(ntfyTest.data?.code ?? 'unknown'),
+                  })}
+              </p>
+            ) : null}
+            {ntfyTest.isError ? (
+              <p className="text-sm text-rose-400" role="alert">
+                {errorMessage(t, ntfyTest.error)}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
 
       <section
         className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"

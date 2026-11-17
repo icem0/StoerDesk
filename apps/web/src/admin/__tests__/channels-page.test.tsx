@@ -219,6 +219,28 @@ describe('ChannelsPage', () => {
     expect(screen.getByText(/^3 \w+/)).toBeTruthy()
   })
 
+  it('shows the translated lastError next to a failing channel', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      status: {
+        channels: [
+          {
+            name: 'ntfy',
+            lastSentAt: null,
+            lastFailedAt: '2026-11-13T10:00:00.000Z',
+            pending: 0,
+            failed: 1,
+            lastError: 'http_407',
+          },
+        ],
+      },
+    })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { level: 2, name: /^Zust/ })).toBeTruthy()
+    expect(await screen.findByText(/bereits vergeben \(407\)/)).toBeTruthy()
+  })
+
   it('marks a failed test send as failed and shows its code', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),
@@ -264,14 +286,14 @@ describe('ChannelsPage', () => {
   it('names the access token when the publication is refused (WP-M14-52)', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),
-      test: { delivered: false, code: 'http_403' },
+      test: { delivered: false, code: 'http_401' },
     })
     renderPage()
 
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText(/access token is missing or wrong/)).toBeTruthy()
+    expect(await screen.findByText(/Zugriffstoken dieses Kanals fehlt/)).toBeTruthy()
   })
 
   it('warns on the ntfy card while the channel has no key (WP-M14-52)', async () => {

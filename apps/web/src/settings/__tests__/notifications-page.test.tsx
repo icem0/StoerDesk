@@ -326,6 +326,82 @@ describe('NotificationsPage', () => {
     )
   })
 
+  it('tests the own ntfy topic and shows the result', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/ntfy')) {
+        return Response.json({
+          publicUrl: 'https://ntfy.sh',
+          topic: 'stoerdesk-admin',
+          subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin',
+          deepLink: 'ntfy://stoerdesk-admin',
+        })
+      }
+
+      if (url.endsWith('/v1/admin/channels/ntfy/test')) {
+        const body = JSON.parse(String(init?.body ?? '{}')) as { topic?: string }
+        expect(body.topic).toBe('stoerdesk-admin')
+        return Response.json({ delivered: true })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    await screen.findByText('In der ntfy-App abonnieren')
+    fireEvent.click(screen.getByRole('button', { name: 'Eigenes Thema testen' }))
+
+    expect(await screen.findByText('Testnachricht an eigenes Thema gesendet.'))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/admin/channels/ntfy/test',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ topic: 'stoerdesk-admin' }),
+      }),
+    )
+  })
+
+  it('shows the failure reason when the own ntfy test fails', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
+        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/ntfy')) {
+        return Response.json({
+          publicUrl: 'https://ntfy.sh',
+          topic: 'stoerdesk-admin',
+          subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin',
+          deepLink: 'ntfy://stoerdesk-admin',
+        })
+      }
+
+      if (url.endsWith('/v1/admin/channels/ntfy/test')) {
+        return Response.json({ delivered: false, code: 'http_401' })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    await screen.findByText('In der ntfy-App abonnieren')
+    fireEvent.click(screen.getByRole('button', { name: 'Eigenes Thema testen' }))
+
+    expect(await screen.findByText(/Anmeldung erforderlich \(401\)/))
+  })
+
   it('keeps the ntfy subscription visible when Telegram is not configured', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
