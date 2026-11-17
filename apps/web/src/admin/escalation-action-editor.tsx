@@ -54,7 +54,7 @@ function selectionOf(event: { target: unknown }): string[] {
 
 function shapeOf(action: EscalationActionConfig): ActionShape {
   return {
-    key: action.key,
+    key: 'key' in action && typeof action.key === 'string' ? action.key : '',
     type: action.type,
     channels: 'channels' in action ? action.channels : [],
     endpointIds: 'endpointIds' in action ? action.endpointIds : [],
@@ -86,7 +86,7 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
 
   if (shape.type === 'history') {
     return {
-      key: shape.key,
+      ...(shape.key === '' ? {} : { key: shape.key }),
       type: 'history',
       text: shape.text ?? '',
       condition,
@@ -213,6 +213,12 @@ export function EscalationActionEditor({
                             ? {
                                 ...entry,
                                 type,
+                                key:
+                                  type === 'history'
+                                    ? ''
+                                    : entry.key === ''
+                                      ? `action_${index + 1}`
+                                      : entry.key,
                                 targetKind: type === 'notify' ? 'user' : 'pool',
                                 targetId: '',
                               }
@@ -230,22 +236,24 @@ export function EscalationActionEditor({
                 </select>
               </label>
 
-              <label className="text-xs text-slate-400">
-                {t('admin.escalation.action.key')}
-                <input
-                  className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                  disabled={!canWrite}
-                  required
-                  value={action.key}
-                  onChange={(event) =>
-                    publish(
-                      actions.map((entry, position) =>
-                        position === index ? { ...entry, key: event.target.value } : entry,
-                      ),
-                    )
-                  }
-                />
-              </label>
+              {action.type === 'history' ? null : (
+                <label className="text-xs text-slate-400">
+                  {t('admin.escalation.action.key')}
+                  <input
+                    className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                    disabled={!canWrite}
+                    required
+                    value={action.key}
+                    onChange={(event) =>
+                      publish(
+                        actions.map((entry, position) =>
+                          position === index ? { ...entry, key: event.target.value } : entry,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+              )}
 
               {action.type === 'notify' ? (
                 <>

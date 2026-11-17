@@ -82,8 +82,10 @@ const ui = {
       accepted: 'Auftrag angenommen',
       acknowledged: 'Störung bearbeitet',
       closed: 'Vorgang abgeschlossen',
+      escalated: 'Eskaliert',
     },
     actorName: adminActorName,
+    systemActor: 'System',
   },
   en: {
     loginTitle: 'Sign in',
@@ -120,8 +122,10 @@ const ui = {
       accepted: 'Work order accepted',
       acknowledged: 'Malfunction handled',
       closed: 'Ticket closed',
+      escalated: 'Escalated',
     },
     actorName: adminActorName,
+    systemActor: 'System',
   },
 } as const
 
@@ -251,6 +255,9 @@ for (const language of ['de', 'en'] as const) {
     await expect(page.getByRole('heading', { level: 1 })).toContainText(ticketNo)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'NEW'))
     await expect(history(page).getByText(texts.event.created)).toBeVisible()
+    // The first stage of the escalation chain fires with the ticket
+    // (WP-M14-91): the system escalates the new ticket right away.
+    await expect(history(page).getByText(texts.event.escalated)).toBeVisible()
 
     // 1. Review: NEW → IN_REVIEW (stage selection, no body).
     await performStage(page, 'review_started', texts.confirm)
@@ -301,16 +308,19 @@ for (const language of ['de', 'en'] as const) {
       texts.event.closed,
     ])
     // Every internal transition (create, review, work order, assign, accept,
-    // acknowledge, close) is written by the same signed-in administrator, so all
-    // seven actor cells carry that user's full name. The seven cells share the
-    // same classes, so a single text would resolve to seven elements (strict
-    // mode violation): the expectation is an array, one text per element. The
-    // actor cell is a `div`; the free text of the work order is a `p` with the
-    // same classes (WP-M14-42), so the locator names the element type.
+    // acknowledge, close) is written by the same signed-in administrator, so
+    // all seven actor cells carry that user's full name; the escalation of the
+    // first stage follows the created event and is written by the system
+    // (WP-M14-91). The eight cells share the same classes, so a single text
+    // would resolve to eight elements (strict mode violation): the expectation
+    // is an array, one text per element. The actor cell is a `div`; the free
+    // text of the work order is a `p` with the same classes (WP-M14-42), so the
+    // locator names the element type.
     const actorRows = history(page).locator('div.text-xs.text-slate-400')
-    await expect(actorRows).toHaveCount(7)
+    await expect(actorRows).toHaveCount(8)
     await expect(actorRows).toContainText([
       texts.actorName,
+      texts.systemActor,
       texts.actorName,
       texts.actorName,
       texts.actorName,

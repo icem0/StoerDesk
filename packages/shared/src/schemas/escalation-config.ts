@@ -375,9 +375,10 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     condition: escalationConditionSchema,
   }),
   z.object({
-    key: z.string().regex(keyPattern),
+    /** The key is assigned by the server when the client omits it (§7.5). */
+    key: z.string().regex(keyPattern).optional(),
     type: z.literal('history'),
-    /** The note of the ticket history; the event carries it unchanged. */
+    /** The text of the ticket comment; the dispatcher writes it unchanged. */
     text: z.string().trim().min(1).max(500).optional(),
     condition: escalationConditionSchema,
   }),

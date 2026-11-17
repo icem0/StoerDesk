@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { asc, eq, isNull, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
@@ -320,8 +322,13 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
       })
 
       for (const [actionPosition, action] of rule.actions.entries()) {
+        // A history action carries no key in the administration; the server
+        // names it (WP-M14-93).
+        const actionKey =
+          action.key ?? `note_${randomUUID().replace(/-/g, '').slice(0, 12)}`
+
         await tx.insert(escalationActions).values({
-          key: action.key,
+          key: actionKey,
           ruleKey: rule.key,
           type: action.type,
           config: actionConfig(action),

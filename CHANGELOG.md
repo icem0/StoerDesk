@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The note action carries no key (WP-M14-93a, out of band in phase 14): the key
+  of a `history` action is optional in the contract, the server names it
+  (`note_…`) and the administration hides the key field of a note action and
+  sends no key. The audit trail of the workflow E2E counts the escalation event
+  of the first stage (WP-M14-91).
+
 ### Added
 - The first escalation stage is never deleted (WP-M14-92, out of band in phase
   14): the stage writer rejects a body that omits the stage without predecessor
