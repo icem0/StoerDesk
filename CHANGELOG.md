@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The contract knows the numbered keys (WP-M14-98, out of band in phase 14): the
+  shared contract names the taxonomy of the escalation — the key of a rule is
+  the key of its stage and its number (`review#1`), the key of an action the
+  key of its rule and its number (`review#1#1`) and a rule without a stage
+  belongs to the root `deadline`.
 - The remaining API tests follow the numbered rules (WP-M14-97, out of band in phase
   14): the phase 13 criterion, the deadline exit criterion and the seed test
   read the key of a seeded rule from the shared defaults.

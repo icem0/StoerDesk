@@ -5,10 +5,12 @@ import {
   DEFAULT_WORKFLOW_ESCALATION_STAGES,
   ESCALATION_ACTION_TYPES,
   ESCALATION_STAGE_KEYS,
+  escalationActionKey,
   escalationConfigSchema,
   escalationConditionDepth,
   escalationConditionLeafCount,
   escalationConditionSchema,
+  escalationRuleKey,
   escalationTargetSchema,
   evaluateEscalationCondition,
   validateEscalationStageChain,
@@ -174,6 +176,69 @@ describe('the default rules', () => {
     })
 
     expect(result.success).toBe(true)
+  })
+})
+
+describe('the numbered keys of the taxonomy (§7.5)', () => {
+  it('names a rule by the key of its stage and its number', () => {
+    expect(escalationRuleKey('review', 1)).toBe('review#1')
+    expect(escalationRuleKey('acceptance', 2)).toBe('acceptance#2')
+  })
+
+  it('names a rule without a stage under the root of the deadline rules', () => {
+    expect(escalationRuleKey(null, 1)).toBe('deadline#1')
+  })
+
+  it('names an action by the key of its rule and its number', () => {
+    expect(escalationActionKey('review#1', 1)).toBe('review#1#1')
+    expect(escalationActionKey('review#1', 3)).toBe('review#1#3')
+  })
+
+  it('accepts the composed keys in the contract', () => {
+    expect(
+      escalationConfigSchema.safeParse({
+        stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+        rules: [
+          {
+            key: 'review#1',
+            stageKey: 'review',
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                key: 'review#1#1',
+                type: 'history',
+                text: 'Das Büro wurde informiert.',
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects a key with a number that does not start at one', () => {
+    expect(
+      escalationConfigSchema.safeParse({
+        stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+        rules: [
+          {
+            key: 'review#0',
+            stageKey: 'review',
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+            percent: null,
+            condition: { all: [] },
+            actions: [],
+            active: true,
+          },
+        ],
+      }).success,
+    ).toBe(false)
   })
 })
 

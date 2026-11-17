@@ -130,6 +130,37 @@ const keyPattern = /^[a-z][a-z0-9_]{0,39}$/
 const localePattern = /^[a-z]{2}(-[A-Z]{2})?$/
 const minutes = z.number().int().min(1).max(10080)
 
+/**
+ * The key of a rule (§7.5): the key of its stage and its number — `review#1`.
+ * A rule without a stage belongs to the root `deadline` — `deadline#1`. The
+ * pattern also accepts the former free key of a rule, so an installation that
+ * was written before the numbering keeps a readable configuration.
+ */
+export const escalationRuleKeyPattern = /^[a-z][a-z0-9_]{0,39}(#[1-9][0-9]{0,2})?$/
+
+/**
+ * The key of an action (§7.5): the key of its rule and its number —
+ * `review#1#1`. The pattern also accepts the former free key of an action.
+ */
+export const escalationActionKeyPattern = /^[a-z][a-z0-9_]{0,39}(#[1-9][0-9]{0,2}){0,2}$/
+
+/** The root of the rules without a stage: the deadline rules (§7.2). */
+export const ESCALATION_DEADLINE_ROOT = 'deadline'
+
+/**
+ * The key of the rule with the number `number` of a stage (§7.5): the key of
+ * the stage and the number, `review#1`. A rule without a stage belongs to the
+ * root `deadline`, `deadline#1`.
+ */
+export function escalationRuleKey(stageKey: string | null, number: number): string {
+  return `${stageKey ?? ESCALATION_DEADLINE_ROOT}#${number}`
+}
+
+/** The key of the action with the number `number` of a rule (§7.5). */
+export function escalationActionKey(ruleKey: string, number: number): string {
+  return `${ruleKey}#${number}`
+}
+
 /** The deadline of a stage per priority (§7.2). */
 export const escalationMinutesSchema = z.object({
   low: minutes,
@@ -354,7 +385,7 @@ export function escalationConditionLeaves(condition: EscalationCondition): Escal
 
 const escalationActionUnion = z.discriminatedUnion('type', [
   z.object({
-    key: z.string().regex(keyPattern),
+    key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('notify'),
     /**
      * The channels of the installation that receive the notification; ignored
@@ -368,7 +399,7 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     condition: escalationConditionSchema,
   }),
   z.object({
-    key: z.string().regex(keyPattern),
+    key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('webhook'),
     /** The webhook endpoints of the administration that receive the event. */
     endpointIds: z.array(z.uuid()).min(1).max(20),
@@ -376,14 +407,14 @@ const escalationActionUnion = z.discriminatedUnion('type', [
   }),
   z.object({
     /** The key is assigned by the server when the client omits it (§7.5). */
-    key: z.string().regex(keyPattern).optional(),
+    key: z.string().regex(escalationActionKeyPattern).optional(),
     type: z.literal('history'),
     /** The text of the ticket comment; the dispatcher writes it unchanged. */
     text: z.string().trim().min(1).max(500).optional(),
     condition: escalationConditionSchema,
   }),
   z.object({
-    key: z.string().regex(keyPattern),
+    key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('status_change'),
     /**
      * The target status of the action (§7.5, WP-M14-40) — the key of a row of
@@ -396,7 +427,7 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     condition: escalationConditionSchema,
   }),
   z.object({
-    key: z.string().regex(keyPattern),
+    key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('offer'),
     /**
      * The pool of technicians the ticket is offered to (§7.14, ADR-0026) — a
@@ -407,7 +438,7 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     condition: escalationConditionSchema,
   }),
   z.object({
-    key: z.string().regex(keyPattern),
+    key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('assign'),
     /**
      * The pool of technicians the ticket is assigned to (§7.14, ADR-0026) — a
@@ -444,7 +475,7 @@ export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema
 
 export const escalationRuleConfigSchema = z
   .object({
-    key: z.string().regex(keyPattern),
+    key: z.string().regex(escalationRuleKeyPattern),
     /** The stage of the rule; the deadline rules carry no stage. */
     stageKey: z.string().regex(keyPattern).nullable(),
     /** The event that starts the waiting clock. */

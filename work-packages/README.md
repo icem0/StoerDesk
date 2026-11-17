@@ -1387,6 +1387,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-95  | the module map names the escalation changes of phase 14 (out of band)    | done    | yes     |
 | WP-M14-96  | the API tests follow the numbered rules (out of band)                    | done    | yes     |
 | WP-M14-97  | the remaining API tests follow the numbered rules (out of band)          | done    | yes     |
+| WP-M14-98  | the contract knows the numbered keys (out of band)                      | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
