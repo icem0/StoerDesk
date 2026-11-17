@@ -1401,6 +1401,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-108 | the spec names the single first stage (out of band)                     | done    | yes     |
 | WP-M14-109 | the action editor deletes a chosen action (out of band)                   | done    | yes     |
 | WP-M14-110 | the rule form shows no number (out of band)                          | done    | yes     |
+| WP-M14-111 | the action editor shows the number as a label (out of band)            | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -197,6 +197,10 @@ export function EscalationActionEditor({
             className="rounded border p-3 border-slate-700 bg-slate-900"
           >
             <div className="flex flex-wrap items-end gap-2">
+              <span className="self-center text-sm font-medium text-slate-200">
+                {t('admin.escalation.action.number', { number: index + 1 })}
+              </span>
+
               <label className="text-xs text-slate-400">
                 {t('admin.escalation.action.type')}
                 <select
@@ -234,15 +238,6 @@ export function EscalationActionEditor({
                     </option>
                   ))}
                 </select>
-              </label>
-
-              <label className="text-xs text-slate-400">
-                {t('admin.escalation.action.number')}
-                <input
-                  className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 read-only:opacity-60"
-                  readOnly
-                  value={`#${index + 1}`}
-                />
               </label>
 
               {action.type === 'notify' ? (

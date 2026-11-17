@@ -396,7 +396,7 @@
           "offer": "Offer ticket",
           "assign": "Assign ticket"
         },
-        "number": "Action",
+        "number": "Action #{{number}}",
         "channels": "Channels",
         "channelLabels": {
           "signal": "Signal",

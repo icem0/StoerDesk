@@ -202,7 +202,7 @@ describe('the action editor of the escalation page', () => {
     ])
   })
 
-  it('numbers the actions of a rule instead of naming their key', async () => {
+  it('shows the number of an action at the left of its row', async () => {
     renderPage(['settings.read'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
@@ -210,11 +210,10 @@ describe('the action editor of the escalation page', () => {
     await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
 
     const list = screen.getByTestId('escalation-action-list')
-    const number = within(list).getByLabelText('Aktion') as HTMLInputElement
 
-    expect(number.value).toBe('#1')
-    expect(number.readOnly).toBe(true)
+    expect(within(list).getByText('Aktion #1')).toBeTruthy()
     expect(within(list).queryByLabelText('Schlüssel')).toBeNull()
+    expect(within(list).queryByLabelText('Aktion')).toBeNull()
   })
 
   it('deletes a chosen action and keeps the other one', async () => {
