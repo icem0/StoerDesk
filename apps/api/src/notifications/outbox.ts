@@ -206,7 +206,11 @@ function escalationChain(env: Env): string[] {
 }
 
 /** The priority an adapter may need — ntfy maps it to its own levels (WP-M14-07). */
-export type MessagePriority = NotificationMessage & { priority?: string }
+export type MessagePriority = NotificationMessage & {
+  priority?: string
+  /** The ntfy level selected on an escalation action (WP-M14-89). */
+  ntfyPriority?: number
+}
 
 /**
  * The deep link into the ticket of §11.5: the ticket detail page of the PWA
@@ -286,6 +290,7 @@ const ticketMessageOf = (target: Record<string, unknown>): MessagePriority => ({
     .filter((value) => value !== '')
     .join(' · '),
   priority: param(target.priority),
+  ...(typeof target.ntfyPriority === 'number' ? { ntfyPriority: target.ntfyPriority } : {}),
 })
 
 /** The readiness message of §11.5 (machine values only). */

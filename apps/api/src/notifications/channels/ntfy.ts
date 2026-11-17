@@ -37,6 +37,8 @@ export interface NotificationMessage {
   body: string
   /** Ticket priority; `critical` becomes ntfy's max priority `5` (WP-M14-07). */
   priority?: string
+  /** Explicit ntfy level of an escalation action (WP-M14-89), 1–5. */
+  ntfyPriority?: number
 }
 
 export class NtfyError extends Error {
@@ -97,7 +99,9 @@ export const NTFY_TIMEOUT_MS = 10_000
  * whole body as the plain-text message (https://docs.ntfy.sh/publish/#publish-as-json).
  * The single `view` action uses the JSON field `url`, not `uri`, and is omitted
  * entirely when `pwaUrl` is empty, because a `view` action without a URL is
- * invalid. A critical ticket raises the numeric priority to `5` (WP-M14-07).
+ * invalid. A critical ticket raises the numeric priority to `5` (WP-M14-07); a
+ * notification of an escalation action carries its own level in
+ * `ntfyPriority` and wins over the ticket default (WP-M14-89).
  * The topic is the topic of the ntfy account of the user when the caller set
  * `userTopic`, otherwise the configured topic of the instance
  * (`specs/10-notifications.md` §11.3, WP-M14-13). A missing or wrong key of an
@@ -112,7 +116,7 @@ export async function sendNtfyNotification(
   fetchImpl: typeof fetch = fetch,
   log?: { debug?: (msg: string, obj?: Record<string, unknown>) => void; info?: (msg: string, obj?: Record<string, unknown>) => void; warn?: (msg: string, obj?: Record<string, unknown>) => void },
 ): Promise<void> {
-  const priority = ntfyPriority(message)
+  const priority = message.ntfyPriority ?? ntfyPriority(message)
   const topic = config.userTopic && config.userTopic !== '' ? config.userTopic : config.topic
   const url = `${config.url.replace(/\/+$/, '')}/`
   const timeoutMs = config.timeoutMs ?? NTFY_TIMEOUT_MS

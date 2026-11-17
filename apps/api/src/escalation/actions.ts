@@ -1,10 +1,14 @@
 import { and, asc, eq, inArray } from 'drizzle-orm'
 
 import {
+  ESCALATION_NOTIFY_PRIORITIES,
   evaluateEscalationCondition,
+  escalationNotifyTargetSchema,
   escalationTargetSchema,
+  NTFY_PRIORITY_NUMBERS,
   type EscalationCondition,
   type EscalationFacts,
+  type EscalationNotifyPriority,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -17,6 +21,8 @@ import {
   webhookDeliveries,
   webhookEndpoints,
 } from '../db/schema'
+import { ntfyTopicsOfUsers } from '../notifications/receivers'
+import { resolvePoolMemberIds } from '../oncall/members'
 import { transitionTicket } from '../tickets/workflow'
 import { readTicketTransitions } from '../tickets/transition-service'
 import { distributeTicket } from './distribution'
@@ -138,23 +144,61 @@ export async function dispatchEscalationActions(
     const config = configOf(row)
 
     if (row.type === 'notify') {
-      const channels = stringList(config.channels)
-
-      if (channels.length === 0 || ticket === undefined) {
+      if (ticket === undefined) {
         continue
       }
 
+      const priorityLevel =
+        typeof config.priority === 'string' &&
+        (ESCALATION_NOTIFY_PRIORITIES as readonly string[]).includes(config.priority)
+          ? (config.priority as EscalationNotifyPriority)
+          : undefined
+      const ntfyPriority =
+        priorityLevel === undefined ? undefined : NTFY_PRIORITY_NUMBERS[priorityLevel]
       const target = {
         ticketNo: ticket.ticketNo,
         priority: ticket.priority,
         objectName: ticket.objectName,
         escalationRule: firing.ruleKey,
         escalationStage: firing.stageKey,
+        ...(ntfyPriority === undefined ? {} : { ntfyPriority }),
+      }
+      const notifyTarget = escalationNotifyTargetSchema.safeParse(config.target)
+
+      if (notifyTarget.success) {
+        const userIds =
+          notifyTarget.data.kind === 'user'
+            ? [notifyTarget.data.id]
+            : await resolvePoolMemberIds(database, notifyTarget.data.id)
+        const topics = await ntfyTopicsOfUsers(database, 'ticket.escalated', userIds)
+
+        if (topics.length === 0) {
+          continue
+        }
+
+        await database.insert(outbox).values(
+          topics.map((topic) => ({
+            ticketId: firing.ticketId,
+            eventType: 'ticket.escalated',
+            channel: 'ntfy',
+            target: { ...target, ntfyTopic: topic },
+          })),
+        )
+
+        result.notified += topics.length
+        continue
+      }
+
+      const channels = stringList(config.channels)
+
+      if (channels.length === 0) {
+        continue
       }
 
       await database.insert(outbox).values(
         channels.map((channel) => ({
           ticketId: firing.ticketId,
+          eventType: 'ticket.escalated',
           channel,
           target,
         })),

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The notify engine delivers to the selected recipient (WP-M14-89, out of band
+  in phase 14): a targeted `notify` action resolves the one user or the
+  technicians of the readiness pool and queues one `ticket.escalated` outbox row
+  per own ntfy topic; without a target the channel broadcast stays. The selected
+  level travels as `ntfyPriority` through `messageOf()` and wins in
+  `sendNtfyNotification()` over the ticket default.
 - The notify action selects a recipient and an ntfy priority (WP-M14-88, out of
   band in phase 14, `specs/07-escalation.md` §7.5): `escalationNotifyTargetSchema`
   names one user or one readiness pool as the recipient, and the five ntfy levels

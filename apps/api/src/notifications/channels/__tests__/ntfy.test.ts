@@ -56,6 +56,23 @@ describe('sendNtfyNotification', () => {
     expect(payload.priority).toBe(5)
   })
 
+  it('sends the explicit level of an escalation action (WP-M14-89)', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
+
+    await sendNtfyNotification(
+      config,
+      { title: 'ST-2026-0001', body: 'critical · Rathaus', priority: 'critical', ntfyPriority: 2 },
+      'https://stoerdesk.local/pwa',
+      fetchMock as unknown as typeof fetch,
+    )
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect((init.headers as Record<string, string>).Priority).toBe('2')
+
+    const payload = JSON.parse(String(init.body)) as { priority: number }
+    expect(payload.priority).toBe(2)
+  })
+
   it('sends to the topic of the account when the caller provides it (WP-M14-13)', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
 

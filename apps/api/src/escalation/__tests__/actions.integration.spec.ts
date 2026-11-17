@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedEscalation } from '../../db/seed-escalation'
+import { messageOf } from '../../notifications/outbox'
 import { evaluateTicketEscalations } from '../../tickets/escalation'
 
 const testDatabase = await openTestDatabase()
@@ -18,6 +19,7 @@ if (testDatabase.status === 'unavailable') {
 }
 
 const { objects, tickets, ticketEvents, outbox, webhookEndpoints, webhookDeliveries } = schema
+const { notificationAccounts, notificationPreferences, users } = schema
 const MINUTE = 60 * 1000
 
 describe.skipIf(testDatabase.status === 'unavailable')(
@@ -221,6 +223,54 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .limit(1)
 
       expect(stillInReview?.status).toBe('IN_REVIEW')
+    })
+
+    it('notifies the selected user on the own ntfy topic with the selected priority', async () => {
+      const email = `notify-${randomUUID().slice(0, 8)}@example.invalid`
+      const topic = `stoerdesk-${randomUUID().slice(0, 8)}`
+      const [user] = await db
+        .insert(users)
+        .values({ email, passwordHash: 'not-a-real-hash', givenName: 'Nora', familyName: 'Notify' })
+        .returning({ id: users.id })
+
+      if (user === undefined) {
+        throw new Error('user insert failed')
+      }
+
+      await db.insert(notificationAccounts).values({
+        userId: user.id,
+        channel: 'ntfy',
+        externalId: topic,
+      })
+      await db.insert(notificationPreferences).values({
+        userId: user.id,
+        eventType: 'ticket.escalated',
+        channel: 'ntfy',
+      })
+      await db.insert(schema.escalationActions).values({
+        key: 'user_notify',
+        ruleKey: 'review',
+        type: 'notify',
+        config: { target: { kind: 'user', id: user.id }, priority: 'urgent' },
+        condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+        position: 4,
+        active: true,
+      })
+
+      const ticket = await createTicket('critical')
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+      const targeted = rows.filter(
+        (row) => (row.target as Record<string, unknown>).ntfyTopic === topic,
+      )
+
+      expect(targeted).toHaveLength(1)
+      expect(targeted[0]?.channel).toBe('ntfy')
+      expect(targeted[0]?.eventType).toBe('ticket.escalated')
+      expect(targeted[0]?.target).toMatchObject({ ntfyPriority: 5 })
+      expect(messageOf((targeted[0]?.target ?? {}) as Record<string, unknown>).ntfyPriority).toBe(5)
     })
   },
 )
