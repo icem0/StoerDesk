@@ -556,6 +556,7 @@
         "http_404": "Not found (404): check topic or server address.",
         "http_415": "Media type not supported (415).",
         "http_429": "Too many requests (429): try again later.",
+        "channel_unconfigured": "Channel not configured: the ntfy channel is not enabled or not verified yet — configure and verify it first.",
         "http_timeout": "No answer in time (timeout): the ntfy server never answered within ten seconds — check the address and the network; the row stays retryable."
       },
       "minimum": {

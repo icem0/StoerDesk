@@ -287,7 +287,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(failed).toHaveLength(1)
       expect(failed[0]?.actorKind).toBe('system')
-      expect(failed[0]?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+      expect(failed[0]?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3, errorCode: 'send_failed' })
 
       const sent = events.filter(
         (event) => event.type === 'notification_sent' && event.payload.channel === 'matrix',

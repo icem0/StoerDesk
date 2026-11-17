@@ -321,6 +321,7 @@ async function finishRow(
   state: 'SENT' | 'FAILED',
   eventType: 'notification_sent' | 'notification_failed',
   fallbackChannel?: string,
+  errorCode?: string,
 ): Promise<boolean> {
   let fallbackQueued = false
 
@@ -355,7 +356,18 @@ async function finishRow(
       }
     }
 
-    await tx.update(outbox).set({ state, updatedAt: new Date() }).where(eq(outbox.id, row.id))
+    if (errorCode !== undefined) {
+      await tx
+        .update(outbox)
+        .set({
+          state,
+          updatedAt: new Date(),
+          target: { ...row.target, lastError: errorCode } as Record<string, unknown>,
+        })
+        .where(eq(outbox.id, row.id))
+    } else {
+      await tx.update(outbox).set({ state, updatedAt: new Date() }).where(eq(outbox.id, row.id))
+    }
 
     if (row.ticketId !== null) {
       await tx.insert(ticketEvents).values({
@@ -366,6 +378,7 @@ async function finishRow(
           channel: row.channel,
           ticketNo: String(row.target.ticketNo ?? ''),
           attempts: row.attempts,
+          ...(errorCode !== undefined ? { errorCode } : {}),
         },
       })
     }
@@ -416,7 +429,7 @@ export async function drainOutbox(
     const ticketNo = isShiftRow ? '' : String(row.target.ticketNo ?? '')
 
     if (channel === undefined) {
-      await finishRow(database, row, 'FAILED', 'notification_failed')
+      await finishRow(database, row, 'FAILED', 'notification_failed', undefined, 'channel_unconfigured')
 
       log?.warn(
         {
@@ -458,13 +471,19 @@ export async function drainOutbox(
 
       result.sent += 1
     } catch (error) {
+      const errorCode =
+        error instanceof Error &&
+        typeof (error as unknown as { code?: unknown }).code === 'string'
+          ? (error as unknown as { code: string }).code
+          : 'send_failed'
+
       log?.warn(
         {
           queue: NOTIFICATION_OUTBOX_QUEUE,
           channel: row.channel,
           ticketNo,
           attempts: row.attempts,
-          code: 'channel_send_failed',
+          code: errorCode,
           err: {
             message: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
@@ -480,6 +499,7 @@ export async function drainOutbox(
           'FAILED',
           'notification_failed',
           nextChannel,
+          errorCode,
         )
 
         if (fallbackQueued) {

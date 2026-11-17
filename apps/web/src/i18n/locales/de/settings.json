@@ -558,7 +558,8 @@
         "http_404": "Nicht gefunden (404): Thema oder Serveradresse prüfen.",
         "http_415": "Medientyp nicht unterstützt (415).",
         "http_429": "Zu viele Anfragen (429): später erneut versuchen.",
-        "http_timeout": "No answer in time (timeout): the ntfy server did not answer within ten seconds — check the address and the network; the row stays retryable."
+        "channel_unconfigured": "Kanal nicht konfiguriert: der ntfy-Kanal ist nicht aktiviert oder noch nicht verifiziert — zuerst konfigurieren und den Verifizierungscode eingeben.",
+        "http_timeout": "Keine Antwort rechtzeitig (Timeout): der ntfy-Server hat innerhalb von zehn Sekunden nicht geantwortet — Adresse und Netzwerk prüfen; der Versand bleibt wiederholbar."
       },
       "minimum": {
         "title": "Pflichtkanäle für kritische Meldungen",

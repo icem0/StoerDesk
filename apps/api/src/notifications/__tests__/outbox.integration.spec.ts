@@ -135,7 +135,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(failedEvent).toBeDefined()
       expect(failedEvent?.actorKind).toBe('system')
-      expect(failedEvent?.payload).toEqual({ channel: 'ntfy', ticketNo, attempts: 3 })
+      expect(failedEvent?.payload).toEqual({ channel: 'ntfy', ticketNo, attempts: 3, errorCode: 'send_failed' })
     })
 
     it('sends through a local server and appends one `notification_sent` event', async () => {
@@ -264,7 +264,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
 
       expect(failedEvent).toBeDefined()
-      expect(failedEvent?.payload).toEqual({ channel: 'telegram', ticketNo, attempts: 1 })
+      expect(failedEvent?.payload).toEqual({ channel: 'telegram', ticketNo, attempts: 1, errorCode: 'channel_unconfigured' })
     })
 
     it('escalates an exhausted row to the next channel of the chain', async () => {
@@ -334,7 +334,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           (event.payload as { channel?: string })?.channel === 'signal',
       )
 
-      expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+      expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3, errorCode: 'send_failed' })
 
       const sentEvent = events.find(
         (event) =>

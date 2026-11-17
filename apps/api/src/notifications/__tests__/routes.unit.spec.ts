@@ -622,6 +622,7 @@ describe('the channel status of the outbox (WP-M14-19, §11.8)', () => {
           name: 'signal',
           lastSentAt: lastSuccess.toISOString(),
           lastFailedAt: lastFailure.toISOString(),
+          lastError: null,
           pending: 2,
           failed: 3,
         },

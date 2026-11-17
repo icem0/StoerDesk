@@ -91,6 +91,7 @@ export const channelStatusItemSchema = z.object({
   lastFailedAt: z.iso.datetime().nullable(),
   pending: z.number().int().nonnegative(),
   failed: z.number().int().nonnegative(),
+  lastError: z.string().nullable(),
 })
 
 export const channelStatusListResponseSchema = z.object({

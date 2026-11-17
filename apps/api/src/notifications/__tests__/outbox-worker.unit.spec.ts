@@ -306,7 +306,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     expect(failedEvent).toBeDefined()
     expect(failedEvent?.actorKind).toBe('system')
-    expect(failedEvent?.payload).toEqual({ channel: 'ntfy', ticketNo, attempts: 3 })
+    expect(failedEvent?.payload).toEqual({ channel: 'ntfy', ticketNo, attempts: 3, errorCode: 'http_500' })
     expect(events.filter((event) => event.type === 'notification_sent')).toEqual([])
   })
 
@@ -330,7 +330,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
     const failedEvent = events.find((event) => event.type === 'notification_failed')
 
     expect(failedEvent).toBeDefined()
-    expect(failedEvent?.payload).toEqual({ channel: 'telegram', ticketNo, attempts: 1 })
+    expect(failedEvent?.payload).toEqual({ channel: 'telegram', ticketNo, attempts: 1, errorCode: 'channel_unconfigured' })
   })
 
   it('keeps the oldest-first order across multiple pending rows', async () => {
@@ -405,7 +405,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
     const failedEvent = events.find((event) => event.type === 'notification_failed')
 
     expect(failedEvent).toBeDefined()
-    expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+    expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3, errorCode: 'http_error' })
 
     const sentEvent = events.find((event) => event.type === 'notification_sent')
 
@@ -437,7 +437,7 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     const failedEvent = events.find((event) => event.type === 'notification_failed')
 
-    expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3 })
+    expect(failedEvent?.payload).toEqual({ channel: 'signal', ticketNo, attempts: 3, errorCode: 'http_error' })
 
     const sentEvent = events.find((event) => event.type === 'notification_sent')
 
@@ -464,6 +464,6 @@ describe('drainOutbox (notification outbox drain worker, unit)', () => {
 
     const failedEvent = events.find((event) => event.type === 'notification_failed')
 
-    expect(failedEvent?.payload).toEqual({ channel: 'matrix', ticketNo, attempts: 3 })
+    expect(failedEvent?.payload).toEqual({ channel: 'matrix', ticketNo, attempts: 3, errorCode: 'http_error' })
   })
 })

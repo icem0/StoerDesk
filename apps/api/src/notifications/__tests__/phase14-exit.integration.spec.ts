@@ -477,7 +477,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         )
 
         expect(failed).toHaveLength(1)
-        expect(failed[0]?.payload).toEqual({ channel: 'signal', ticketNo: ticket.ticketNo, attempts: 3 })
+        expect(failed[0]?.payload).toEqual({ channel: 'signal', ticketNo: ticket.ticketNo, attempts: 3, errorCode: 'send_failed' })
         expect(sent).toHaveLength(1)
         expect(sent[0]?.payload).toEqual({ channel: 'matrix', ticketNo: ticket.ticketNo, attempts: 1 })
       } finally {

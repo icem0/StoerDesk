@@ -301,6 +301,7 @@ export async function resolveChannelStatus(database: Db): Promise<ChannelTile[] 
       channel,
       MAX(CASE WHEN state = 'SENT' THEN created_at END) AS last_sent_at,
       MAX(CASE WHEN state = 'FAILED' THEN created_at END) AS last_failed_at,
+      MAX(CASE WHEN state = 'FAILED' THEN target->>'lastError' END) AS last_error,
       COUNT(*) FILTER (WHERE state = 'PENDING') AS pending,
       COUNT(*) FILTER (WHERE state = 'FAILED') AS failed
     FROM outbox
@@ -310,6 +311,7 @@ export async function resolveChannelStatus(database: Db): Promise<ChannelTile[] 
     channel: string
     last_sent_at: Date | null
     last_failed_at: Date | null
+    last_error: string | null
     pending: string
     failed: string
   }[]
@@ -322,6 +324,7 @@ export async function resolveChannelStatus(database: Db): Promise<ChannelTile[] 
     name: row.channel,
     lastSentAt: row.last_sent_at ? new Date(row.last_sent_at).toISOString() : null,
     lastFailedAt: row.last_failed_at ? new Date(row.last_failed_at).toISOString() : null,
+    lastError: row.last_error ?? null,
     pending: Number(row.pending ?? 0),
     failed: Number(row.failed ?? 0),
   }))
