@@ -184,6 +184,48 @@ describe('the rule editor of the escalation page', () => {
     expect(screen.getAllByLabelText('Schlüssel')).toHaveLength(1)
   })
 
+  it('shows the mode of the conditions below them and only with a condition', async () => {
+    renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-condition-leaves')).toBeTruthy())
+
+    expect(screen.queryByLabelText('Bedingung')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
+
+    const leaves = screen.getByTestId('escalation-condition-leaves')
+    const mode = screen.getByLabelText('Bedingung') as HTMLSelectElement
+
+    expect(mode).toBeTruthy()
+    expect(leaves.compareDocumentPosition(mode) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('deletes a chosen condition and keeps the other one', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-condition-leaves')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
+
+    const operators = screen.getAllByLabelText('Operator') as HTMLSelectElement[]
+
+    fireEvent.change(operators[1] as HTMLSelectElement, { target: { value: 'ne' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung #1 entfernen' }))
+
+    await waitFor(() => expect(saved.length).toBeGreaterThan(2))
+    const body = ((saved.at(-1) ?? {}) as { body?: { rules?: { condition?: unknown }[] } }).body
+
+    expect(body?.rules?.[0]?.condition).toEqual({
+      all: [{ field: 'priority', operator: 'ne', value: 'normal' }],
+    })
+  })
+
   it('stays read-only without settings.write', async () => {
     const saved = renderPage(['settings.read'])
 

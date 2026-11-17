@@ -348,7 +348,7 @@
         },
         "value": "Value",
         "add": "Add condition",
-        "remove": "Remove",
+        "remove": "Remove condition #{{number}}",
         "values": {
           "priority": {
             "low": "Low",

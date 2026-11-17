@@ -97,6 +97,14 @@ export function EscalationConditionBuilder({
     onCondition(next)
   }
 
+  /** Removes one condition and keeps the other ones. */
+  function removeLeaf(position: number) {
+    const removed = leaves.filter((_, index) => index !== position)
+
+    setLeaves(removed)
+    publish(buildCondition(mode, removed))
+  }
+
   /** The selectable values of a closed field, translated for the interface language. */
   function valueOptions(field: string): { key: string; label: string }[] | undefined {
     if (field === 'assigned' || field === 'paused') {
@@ -207,24 +215,6 @@ export function EscalationConditionBuilder({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs text-slate-400">
-        {t('admin.escalation.condition.modeLabel')}
-        <select
-          className="w-32 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-          disabled={!canWrite}
-          value={mode}
-          onChange={(event) => {
-            const next = event.target.value === 'any' ? 'any' : 'all'
-
-            setMode(next)
-            publish(buildCondition(next, leaves))
-          }}
-        >
-          <option value="all">{t('admin.escalation.condition.mode.all')}</option>
-          <option value="any">{t('admin.escalation.condition.mode.any')}</option>
-        </select>
-      </label>
-
       <ul className="flex flex-col gap-2" data-testid="escalation-condition-leaves">
         {leaves.map((leaf, index) => (
           <li key={`${leaf.field}-${index}`} className="flex flex-wrap items-end gap-2">
@@ -286,6 +276,15 @@ export function EscalationConditionBuilder({
               {t('admin.escalation.condition.value')}
               {renderValue(leaf, index)}
             </label>
+            {canWrite ? (
+              <button
+                className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                onClick={() => removeLeaf(index)}
+                type="button"
+              >
+                {t('admin.escalation.condition.remove', { number: index + 1 })}
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -304,20 +303,27 @@ export function EscalationConditionBuilder({
           >
             {t('admin.escalation.condition.add')}
           </button>
-          <button
-            className="rounded bg-rose-800 px-3 py-2 text-sm text-rose-100 hover:bg-rose-700 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-            disabled={leaves.length === 0}
-            onClick={() => {
-              const removed = leaves.slice(0, -1)
-
-              setLeaves(removed)
-              publish(buildCondition(mode, removed))
-            }}
-            type="button"
-          >
-            {t('admin.escalation.condition.remove')}
-          </button>
         </div>
+      ) : null}
+
+      {leaves.length > 0 ? (
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.condition.modeLabel')}
+          <select
+            className="w-32 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+            disabled={!canWrite}
+            value={mode}
+            onChange={(event) => {
+              const next = event.target.value === 'any' ? 'any' : 'all'
+
+              setMode(next)
+              publish(buildCondition(next, leaves))
+            }}
+          >
+            <option value="all">{t('admin.escalation.condition.mode.all')}</option>
+            <option value="any">{t('admin.escalation.condition.mode.any')}</option>
+          </select>
+        </label>
       ) : null}
     </div>
   )

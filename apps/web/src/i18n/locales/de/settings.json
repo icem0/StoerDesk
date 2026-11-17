@@ -348,7 +348,7 @@
         },
         "value": "Wert",
         "add": "Bedingung hinzufügen",
-        "remove": "Bedingung entfernen",
+        "remove": "Bedingung #{{number}} entfernen",
         "values": {
           "priority": {
             "low": "Niedrig",
