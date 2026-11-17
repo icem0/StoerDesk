@@ -1408,6 +1408,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-115 | the API tests follow the chain of the defaults (out of band)         | done    | yes     |
 | WP-M14-116 | the shared contract knows the stage NEW (out of band)                  | done    | yes     |
 | WP-M14-117 | the migration adds the stage NEW (out of band)                         | done    | yes     |
+| WP-M14-118 | the spec and the module map name the stage NEW (out of band)         | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

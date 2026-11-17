@@ -13,9 +13,10 @@ import { escalationRules, escalationStages, settings } from './schema'
  * Bootstrap of the escalation configuration (`specs/07-escalation.md` §7.2,
  * ADR-0017, WP-M13-04).
  *
- * The five stages of the workflow and the rules of §7.2 are inserted the first
- * time the API starts. The deadlines of an installation that changed them in
- * the former administration are taken over: the settings rows
+ * The chain of §7.1 — it opens with the stage of the arrival `new` — and the
+ * rules of §7.2 are inserted the first time the API starts. The deadlines of an
+ * installation that changed them in the former administration are taken over:
+ * the settings rows
  * `ticket.escalation.<rule>.minutes` and `.critical_minutes` hold the standard
  * and the critical value of the old rules, the standard value applies to
  * `low`, `normal` and `high`.

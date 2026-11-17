@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The spec and the module map name the stage NEW (WP-M14-118, out of band in
+  phase 14): the default chain opens with the stage `new` (Neu / New), a
+  predecessor that is never reached hands its clock down and the migration
+  `0046_escalation_stage_new.sql` anchors an installed chain.
 - The migration adds the stage NEW (WP-M14-117, out of band in phase 14):
   `0046_escalation_stage_new.sql` anchors an installed chain at the stage `new`
   (`Neu` / `New`) — the old first stage gets it as predecessor, every stage

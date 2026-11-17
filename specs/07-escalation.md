@@ -12,23 +12,28 @@ stages are the milestones of the ticket workflow.
 
 ## 7.1 The stages are the workflow milestones
 
-A ticket walks through five stages. The stage keys of the default
-(`review`, `work_order`, `assignment`, `acceptance`, `acknowledgement`) are the
-milestones of the workflow; §7.11 makes the set itself configurable. The
-display names are maintained in the administration.
+A ticket walks through the stages of the chain. The default opens with the
+stage of the arrival (`new`, `Neu` / `New`) followed by the milestones of the
+workflow (`review`, `work_order`, `assignment`, `acceptance`,
+`acknowledgement`); §7.11 makes the set itself configurable. The display names
+are maintained in the administration.
 
 | Key | Stage | Waiting state | Reference of the clock |
 | --- | --- | --- | --- |
+| `new` | Neu / New | `NEW` | `received_at` |
 | `review` | Prüfung / Review | `NEW` | `received_at` |
 | `work_order` | Auftrag angelegt / Work order created | `IN_REVIEW` | `review_started` |
 | `assignment` | Zuweisen oder Anbieten / Assign or offer | `WORK_ORDER_CREATED` | `work_order_set` |
 | `acceptance` | Angenommen / Accepted | `OFFERED`, `ASSIGNED` | `offered`, `assigned` |
 | `acknowledgement` | Quittiert / Acknowledged | `ACCEPTED` | `accepted` |
 
-A stage is **reached** when the ticket enters the workflow state that follows the
-milestone: `review_started`, `work_order_set`, `assigned`/`offered`, `accepted` and
-`acknowledged`. The waiting state of a stage is the state the ticket is in while it
-waits for that milestone.
+A stage is **reached** when the ticket enters the workflow state that follows
+the milestone: `review_started`, `work_order_set`, `assigned`/`offered`,
+`accepted` and `acknowledged`. The waiting state of a stage is the state the
+ticket is in while it waits for that milestone. The first stage `new` is the
+arrival of the ticket: the workflow never reaches it (an empty
+`reached_by`), and it hands its clock down to `review`, so the stage behind
+it still waits from the report.
 
 Two rules belong to the same stage (`acceptance` waits for the acceptance of an
 offer and of an assignment), because the two cases have different clocks and
@@ -51,6 +56,7 @@ one. The defaults of ADR-0008 are the seed of the configuration:
 
 | Rule (stage) | Reference | `low` | `normal` | `high` | `critical` |
 | --- | --- | --- | --- | --- | --- |
+| `new` | `received_at` | 15 | 15 | 15 | 5 |
 | `review` | `received_at` | 15 | 15 | 15 | 5 |
 | `work_order` | `review_started` | 30 | 30 | 30 | 30 |
 | `assignment` | `work_order_set` | 30 | 30 | 30 | 30 |
@@ -58,10 +64,12 @@ one. The defaults of ADR-0008 are the seed of the configuration:
 | `acceptance` (assignment) | `assigned` | 15 | 15 | 15 | 15 |
 | `acknowledgement` | `accepted` | 60 | 60 | 60 | 60 |
 
-Two rules are not bound to a stage and use the ticket deadline instead of a
-waiting clock: `deadline_80_percent` (80 % of the timeline) and `deadline_exceeded`
-(100 % of the timeline). Their actions are configured like the actions of every
-other rule.
+The rule of the first stage `new` is due with the ticket itself (§7.11),
+independent of its minutes; the minutes of its row are the ADR-0008 default of
+the arrival. Two rules are not bound to a stage and use the ticket deadline
+instead of a waiting clock: `deadline_80_percent` (80 % of the timeline) and
+`deadline_exceeded` (100 % of the timeline). Their actions are configured like
+the actions of every other rule.
 
 ## 7.3 Rules
 
@@ -244,8 +252,12 @@ map of `apps/api/src/tickets/workflow.ts`. A violation answers
 
 The predecessor carries the clock: a rule of a stage waits from the moment its
 stage's predecessor was reached, which is the latest event of that predecessor's
-`reached_by`, or from `received_at` when the stage has no predecessor. The
-explicit `reference` of such a rule must match that clock; `null` means
+`reached_by`, or from `received_at` when the stage has no predecessor. A
+predecessor that the workflow never reaches — an empty `reached_by` — hands its
+own clock down, so the stage behind it waits from the same clock. The helper
+`escalationStageClockEvents` in `packages/shared` answers these events, and the
+engine, the configuration service and the contract of §7.11 take the clock from
+it. The explicit `reference` of such a rule must match that clock; `null` means
 "take the clock of the stage". The deadline rules keep their percentage clock.
 
 A rule of a stage fires while its stage is **not reached** — no event of its
@@ -271,9 +283,15 @@ version wrote may be removed again.
 `escalation_rules.stage_key` is a foreign key to `escalation_stages.key` with
 `ON DELETE cascade`: removing a stage removes its rules and their actions. The
 firing log keeps `stage_key` as plain text, so the audit of a removed stage
-survives. The seed of a new installation is the chain of §7.1: `review` without
-predecessor, `work_order` ← `review`, `assignment` ← `work_order`,
-`acceptance` ← `assignment`, `acknowledgement` ← `acceptance`.
+survives. The seed of a new installation is the chain of §7.1: `new` without
+predecessor, `review` ← `new`, `work_order` ← `review`, `assignment` ←
+`work_order`, `acceptance` ← `assignment`, `acknowledgement` ← `acceptance`.
+The migration `0046_escalation_stage_new.sql` anchors an already installed
+chain at the stage `new` the same way: the old first stage gets it as
+predecessor, every stage moves one position behind and the rule `new#1` waits
+`received_at` with the minutes of ADR-0008 — an empty chain (the fresh
+installation takes the chain from the seed), a chain that already knows the
+stage and a chain at the position limit stay untouched.
 
 ## 7.12 Boundaries
 
