@@ -236,24 +236,14 @@ export function EscalationActionEditor({
                 </select>
               </label>
 
-              {action.type === 'history' ? null : (
-                <label className="text-xs text-slate-400">
-                  {t('admin.escalation.action.key')}
-                  <input
-                    className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                    disabled={!canWrite}
-                    required
-                    value={action.key}
-                    onChange={(event) =>
-                      publish(
-                        actions.map((entry, position) =>
-                          position === index ? { ...entry, key: event.target.value } : entry,
-                        ),
-                      )
-                    }
-                  />
-                </label>
-              )}
+              <label className="text-xs text-slate-400">
+                {t('admin.escalation.action.number')}
+                <input
+                  className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 read-only:opacity-60"
+                  readOnly
+                  value={`#${index + 1}`}
+                />
+              </label>
 
               {action.type === 'notify' ? (
                 <>

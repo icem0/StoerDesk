@@ -397,7 +397,7 @@
           "offer": "Offer ticket",
           "assign": "Assign ticket"
         },
-        "key": "Key",
+        "number": "Action",
         "channels": "Channels",
         "channelLabels": {
           "signal": "Signal",

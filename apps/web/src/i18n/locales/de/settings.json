@@ -397,7 +397,7 @@
           "offer": "Ticket anbieten",
           "assign": "Ticket zuweisen"
         },
-        "key": "Schlüssel",
+        "number": "Aktion",
         "channels": "Kanäle",
         "channelLabels": {
           "signal": "Signal",

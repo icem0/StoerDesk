@@ -190,6 +190,21 @@ describe('the action editor of the escalation page', () => {
     ])
   })
 
+  it('numbers the actions of a rule instead of naming their key', async () => {
+    renderPage(['settings.read'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const list = screen.getByTestId('escalation-action-list')
+    const number = within(list).getByLabelText('Aktion') as HTMLInputElement
+
+    expect(number.value).toBe('#1')
+    expect(number.readOnly).toBe(true)
+    expect(within(list).queryByLabelText('Schlüssel')).toBeNull()
+  })
+
   it('hides the key of a note action and saves no key', async () => {
     const saved = renderPage(['settings.read', 'settings.write'])
 

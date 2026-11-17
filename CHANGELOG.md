@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The action editor numbers the actions (WP-M14-102, out of band in phase 14): an
+  action of a rule shows its number `#1` in a read-only field instead of an
+  editable key.
 - The administration numbers the rules (WP-M14-101, out of band in phase 14): a rule
   of a stage shows its number `#1` in a read-only field instead of an editable
   key; the key of the stage stays editable when the stage is created.
