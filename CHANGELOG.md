@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The test of the numbering migration (WP-M14-99b, out of band in phase 14): the
+  integration test builds the state before the migration, runs its statements and
+  proves the numbered rules, the numbered action and the firing log.
 - The migration numbers the rules and their actions (WP-M14-99, out of band in phase
   14): the migration `0045_escalation_rule_numbering.sql` gives every rule the key
   of its stage and its number (`review#1`) and every action the key of its rule
