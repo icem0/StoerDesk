@@ -250,7 +250,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.stages.map((stage) => stage.position)).toEqual([1, 2, 3, 4, 5, 6])
       expect(byKey.get('night_review')?.predecessor).toBe('review')
       expect(byKey.get('work_order')?.predecessor).toBe('night_review')
-      expect(body.rules.find((rule) => rule.key === 'work_order')?.reference).toBeNull()
+      expect(body.rules.find((rule) => rule.key === 'work_order#1')?.reference).toBeNull()
     })
 
     it('writes the rule of the new stage', async () => {
@@ -273,7 +273,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const body = response.json<ConfigBody>()
 
-      expect(body.rules.map((rule) => rule.key)).toEqual(['night_review'])
+      expect(body.rules.map((rule) => rule.key)).toEqual(['night_review#1'])
     })
 
     it('fires the stage rule once after its clock and offers only allowed stages', async () => {
@@ -281,7 +281,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const fired = await evaluateTicketEscalations(db, ticketId, NOW)
 
-      expect(fired.filter((entry) => entry.rule === 'night_review')).toHaveLength(1)
+      expect(fired.filter((entry) => entry.rule === 'night_review#1')).toHaveLength(1)
 
       const rows = await db
         .select()
@@ -289,7 +289,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .where(
           and(
             eq(escalationFirings.ticketId, ticketId),
-            eq(escalationFirings.ruleKey, 'night_review'),
+            eq(escalationFirings.ruleKey, 'night_review#1'),
           ),
         )
 
@@ -306,7 +306,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           .where(
             and(
               eq(escalationFirings.ticketId, ticketId),
-              eq(escalationFirings.ruleKey, 'night_review'),
+              eq(escalationFirings.ruleKey, 'night_review#1'),
             ),
           ),
       ).toHaveLength(1)
@@ -350,7 +350,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const body = response.json<ConfigBody>()
 
       expect(body.stages.map((stage) => stage.key)).not.toContain('night_review')
-      expect(body.rules.map((rule) => rule.key)).not.toContain('night_review')
+      expect(body.rules.map((rule) => rule.key)).not.toContain('night_review#1')
 
       const rows = await db
         .select()
@@ -358,7 +358,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .where(
           and(
             eq(escalationFirings.ticketId, ticketId),
-            eq(escalationFirings.ruleKey, 'night_review'),
+            eq(escalationFirings.ruleKey, 'night_review#1'),
           ),
         )
 

@@ -254,7 +254,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.rules[0]?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 8 })
     })
 
-    it('assigns the key of a history action without one', async () => {
+    it('numbers the rule and its actions', async () => {
       const response = await putConfig(cookies['admin'], {
         rules: [
           {
@@ -281,8 +281,42 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const action = response.json<ConfigBody>().rules[0]?.actions[0]
 
       expect(action?.type).toBe('history')
-      expect(action?.key).toMatch(/^note_[0-9a-f]{12}$/)
+      expect(action?.key).toBe('review#1#1')
       expect(action?.text).toBe('Das Büro wurde informiert.')
+      expect(response.json<ConfigBody>().rules[0]?.key).toBe('review#1')
+    })
+
+    it('numbers the second rule of a stage with two', async () => {
+      const response = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'review',
+            stageKey: 'review',
+            reference: 'received_at',
+            minutes: { low: 20, normal: 20, high: 20, critical: 8 },
+            percent: null,
+            condition: { all: [] },
+            actions: [],
+            active: true,
+          },
+          {
+            key: 'review',
+            stageKey: 'review',
+            reference: 'received_at',
+            minutes: { low: 30, normal: 30, high: 30, critical: 12 },
+            percent: null,
+            condition: { all: [] },
+            actions: [],
+            active: true,
+          },
+        ],
+      })
+
+      expect(response.statusCode).toBe(200)
+
+      const rules = response.json<ConfigBody>().rules
+
+      expect(rules.map((rule) => rule.key)).toEqual(['review#1', 'review#2'])
     })
 
     it('rejects a rule of an unknown stage and a malformed body', async () => {

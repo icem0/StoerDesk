@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The service derives the keys (WP-M14-100, out of band in phase 14): the
+  configuration service writes the key of every rule and of every action itself —
+  the key of the stage and the number of the rule, the key of the rule and the
+  number of the action — so the administration only numbers them.
 - The test of the numbering migration (WP-M14-99b, out of band in phase 14): the
   integration test builds the state before the migration, runs its statements and
   proves the numbered rules, the numbered action and the firing log.

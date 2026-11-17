@@ -1390,6 +1390,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-98  | the contract knows the numbered keys (out of band)                      | done    | yes     |
 | WP-M14-99  | the migration numbers the rules and their actions (out of band)         | done    | yes     |
 | WP-M14-99b | the test of the numbering migration (split child of 99, out of band)   | done    | yes     |
+| WP-M14-100 | the service derives the keys (out of band)                             | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

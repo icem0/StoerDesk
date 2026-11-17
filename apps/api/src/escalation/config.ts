@@ -1,10 +1,11 @@
-import { randomUUID } from 'node:crypto'
-
 import { asc, eq, isNull, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
+  ESCALATION_DEADLINE_ROOT,
+  escalationActionKey,
   escalationConfigSchema,
   escalationRuleConfigSchema,
+  escalationRuleKey,
   escalationStagesBodySchema,
   validateEscalationStageChain,
   type EscalationActionConfig,
@@ -309,9 +310,30 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
   await database.transaction(async (tx) => {
     await tx.delete(escalationRules)
 
+    // The taxonomy of §7.5: the key of a rule is the key of its stage and its
+    // number, the key of an action the key of its rule and its number. The
+    // server writes both keys — the administration only numbers them.
+    const ruleNumbers = new Map<string, number>()
+    const derivedKeys = new Set<string>()
+
     for (const [position, rule] of parsed.data.rules.entries()) {
+      const group = rule.stageKey ?? ESCALATION_DEADLINE_ROOT
+      const number = (ruleNumbers.get(group) ?? 0) + 1
+
+      ruleNumbers.set(group, number)
+
+      const ruleKey = escalationRuleKey(rule.stageKey, number)
+
+      if (derivedKeys.has(ruleKey)) {
+        throw new EscalationConfigError(400, 'invalid_request', {
+          fields: [`rules.${position}.key`],
+        })
+      }
+
+      derivedKeys.add(ruleKey)
+
       await tx.insert(escalationRules).values({
-        key: rule.key,
+        key: ruleKey,
         stageKey: rule.stageKey,
         reference: rule.reference,
         minutes: rule.minutes,
@@ -322,14 +344,9 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
       })
 
       for (const [actionPosition, action] of rule.actions.entries()) {
-        // A history action carries no key in the administration; the server
-        // names it (WP-M14-93).
-        const actionKey =
-          action.key ?? `note_${randomUUID().replace(/-/g, '').slice(0, 12)}`
-
         await tx.insert(escalationActions).values({
-          key: actionKey,
-          ruleKey: rule.key,
+          key: escalationActionKey(ruleKey, actionPosition + 1),
+          ruleKey,
           type: action.type,
           config: actionConfig(action),
           condition: action.condition,

@@ -195,7 +195,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('assigns the ticket to every technician of a group', async () => {
-      await action('assign', { kind: 'group', id: groupId }, 'assign_group', 'assignment')
+      await action(
+        'assign',
+        { kind: 'group', id: groupId },
+        'assign_group',
+        seededRuleKey('assignment'),
+      )
 
       for (const [index, userId] of technicianIds.entries()) {
         await db.insert(notificationAccounts).values({
@@ -212,7 +217,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
-      const result = await fire(ticket.id, 'assignment', 'assignment', 'e1')
+      const result = await fire(ticket.id, seededRuleKey('assignment'), 'assignment', 'e1')
 
       expect(result.assigned).toBe(1)
 
@@ -236,7 +241,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const note = events.find((event) => event.type === 'escalation_note')
 
       expect(note?.payload).toMatchObject({
-        rule: 'assignment',
+        rule: seededRuleKey('assignment'),
         stage: 'assignment',
         target: { kind: 'group', id: groupId },
       })
@@ -336,11 +341,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('changes nothing when the ticket has no step for the distribution', async () => {
-      await action('assign', { kind: 'group', id: groupId }, 'assign_review_step', 'work_order')
+      await action(
+        'assign',
+        { kind: 'group', id: groupId },
+        'assign_review_step',
+        seededRuleKey('work_order'),
+      )
 
       const ticket = await createTicket('NEW')
 
-      const result = await fire(ticket.id, 'work_order', 'work_order', 'e3')
+      const result = await fire(ticket.id, seededRuleKey('work_order'), 'work_order', 'e3')
 
       expect(result.assigned).toBe(0)
       expect(result.offered).toBe(0)
