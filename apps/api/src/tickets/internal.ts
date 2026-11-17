@@ -20,6 +20,7 @@ import { enqueueOutbox } from '../notifications/outbox'
 import { effectiveNtfyConfig } from '../notifications/verification'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
+import { evaluateTicketEscalations } from './escalation'
 import { createExternalTicket, fieldPaths as externalFieldPaths } from './external'
 import { applyInternalAction } from './internal-actions'
 import { objectLocation } from './report'
@@ -127,7 +128,7 @@ export async function createInternalTicket(
   // gets no row at all (WP-M14-47).
   const ntfy = await effectiveNtfyConfig(database, env, { requireVerified: true })
 
-  return await database.transaction(async (tx) => {
+  const created = await database.transaction(async (tx) => {
     const [ticket] = await tx
       .insert(tickets)
       .values({
@@ -199,6 +200,10 @@ export async function createInternalTicket(
       deadlineAt: ticket.deadlineAt.toISOString(),
     }
   })
+
+  await evaluateTicketEscalations(database, created.ticketId)
+
+  return created
 }
 
 export type InternalTicketRouteOptions = {

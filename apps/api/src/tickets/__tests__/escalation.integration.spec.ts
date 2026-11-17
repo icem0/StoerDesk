@@ -5,11 +5,13 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { externalTicketCreateRequestSchema } from '@stoerdesk/shared'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedEscalation } from '../../db/seed-escalation'
 import { evaluateEscalations, evaluateTicketEscalations } from '../escalation'
+import { createExternalTicket } from '../external'
 
 const testDatabase = await openTestDatabase()
 
@@ -26,6 +28,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
   const db = drizzle(client, { schema })
 
   let objectId = ''
+  let objectNo = ''
   const now = new Date('2026-11-05T12:00:00.000Z')
 
   async function createTicket(input: {
@@ -65,9 +68,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     const [object] = await db
       .insert(objects)
       .values({ objectNo: `ESC-${randomUUID().slice(0, 6)}`, name: 'Escalation probe' })
-      .returning({ id: objects.id })
+      .returning({ id: objects.id, objectNo: objects.objectNo })
 
     objectId = object?.id ?? ''
+    objectNo = object?.objectNo ?? ''
   })
 
   afterAll(async () => {
@@ -93,6 +97,20 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
 
     await evaluateEscalations(db, now)
     expect(await escalated(ticket.id)).toEqual(['review'])
+  })
+
+  it('fires the first stage rule immediately when the ticket is created', async () => {
+    const created = await createExternalTicket(
+      db,
+      externalTicketCreateRequestSchema.parse({
+        objectNo,
+        priority: 'critical',
+        description: 'First stage at creation',
+      }),
+      randomUUID(),
+    )
+
+    expect(await escalated(created.ticketId)).toEqual(['review'])
   })
 
   it('does not escalate a ticket that is paused', async () => {

@@ -235,6 +235,12 @@ A rule of a stage fires while its stage is **not reached** — no event of its
 `reached_by` in the events of the ticket — and its clock passed the deadline.
 `stageReached` conditions and the `escalated` payload use the same derivation.
 
+The stage without predecessor is the **first stage**: its rules are due with the
+ticket itself, independent of their `reference` and `minutes`, and the creation
+paths of the report form, the internal form and the external API evaluate them
+right after the ticket transaction. The `condition` of such a rule still decides
+whether it fires, and an open pause suppresses the firing until the pause ends.
+
 `escalation_rules.stage_key` is a foreign key to `escalation_stages.key` with
 `ON DELETE cascade`: removing a stage removes its rules and their actions. The
 firing log keeps `stage_key` as plain text, so the audit of a removed stage

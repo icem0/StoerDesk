@@ -247,6 +247,19 @@ function decisionFor(
     return null
   }
 
+  // The first stage of the chain opens with the ticket itself: its rules are
+  // due at creation, independent of their reference event and minutes. The
+  // condition still decides whether such a rule fires (WP-M14-91).
+  if (stage.predecessor === null) {
+    if (pauses.some((pause) => pause.endedAt === null)) {
+      return null
+    }
+
+    const received = toMs(ticket.receivedAt)
+
+    return received === undefined ? null : { thresholdAt: new Date(received) }
+  }
+
   const reference =
     rule.reference === null
       ? stageReferenceTime(ticket, events, stages, stage.key)

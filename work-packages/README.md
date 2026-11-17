@@ -1377,7 +1377,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-88  | the notify action selects a recipient and an ntfy priority (out of band) | done    | yes     |
 | WP-M14-89  | the notify engine delivers to the selected recipient (out of band)       | done    | yes     |
 | WP-M14-90  | the administration selects the notify recipient and priority (out of band) | done    | yes     |
-| WP-M14-91  | the first escalation stage fires when a ticket is created (out of band)  | planned | yes     |
+| WP-M14-91  | the first escalation stage fires when a ticket is created (out of band)  | done    | yes     |
 | WP-M14-92  | the first escalation stage is never deleted (out of band)                | planned | yes     |
 | WP-M14-93  | the note action writes a ticket comment without an action key (out of band) | planned | yes     |
 

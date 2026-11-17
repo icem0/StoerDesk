@@ -15,6 +15,7 @@ import type { Database } from '../db/client'
 import { objects, ticketEvents, tickets } from '../db/schema'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
+import { evaluateTicketEscalations } from './escalation'
 import { transitionTicket } from './workflow'
 
 /**
@@ -63,7 +64,7 @@ export async function createExternalTicket(
   const now = new Date()
   const deadlineAt = await deadlineAtForPriority(database, now, input.priority)
 
-  return database.transaction(async (tx) => {
+  const created = await database.transaction(async (tx) => {
     const [ticket] = await tx
       .insert(tickets)
       .values({
@@ -110,6 +111,10 @@ export async function createExternalTicket(
       deadlineAt: ticket.deadlineAt.toISOString(),
     }
   })
+
+  await evaluateTicketEscalations(database, created.ticketId)
+
+  return created
 }
 
 export async function updateExternalWorkOrder(

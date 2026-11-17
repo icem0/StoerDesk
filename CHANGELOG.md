@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The first escalation stage fires when a ticket is created (WP-M14-91, out of
+  band in phase 14): the rules of the stage without predecessor are due at
+  `received_at`, independent of their reference and minutes, and the report form,
+  the internal form and the external API evaluate the ticket right after the
+  transaction. Conditions still apply; an open pause suppresses the firing.
 - The administration selects the notify recipient and priority (WP-M14-90, out
   of band in phase 14): the action editor of the escalation page loads the users
   over `GET /api/v1/users` and offers a recipient kind (`user`, `pool`), the

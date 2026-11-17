@@ -19,6 +19,7 @@ import { effectiveNtfyConfig } from '../notifications/verification'
 import { generateQrToken } from '../objects/qr'
 import { readTitleEnabled } from '../settings/branding-state'
 import { readDeadlineHours } from './deadline'
+import { evaluateTicketEscalations } from './escalation'
 import { verifyAltchaPayload, type AltchaPayload } from './altcha'
 import { MAX_REPORT_PHOTOS, saveReportPhotos, validateReportPhotos } from './photos'
 import { isReportSuspicious, recordReportAttempt } from './spam'
@@ -334,6 +335,9 @@ export async function createPublicReport(
 
     return { report: await reportOf(database, existing), replayed: true }
   }
+
+  // The first stage of the escalation chain is due at creation (WP-M14-91).
+  await evaluateTicketEscalations(database, created.id)
 
   // §7.4: photos belong to the new ticket only; a repeat keeps the gallery it has.
   if (input.photos.length > 0) {
