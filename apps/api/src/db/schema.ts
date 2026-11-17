@@ -873,6 +873,41 @@ export const OUTBOX_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
  * on-call calendar (WP-M14-27, migration 0039): `event_type` names the event the
  * row announces and a row carries exactly one of `ticket_id` and `shift_id`.
  */
+/**
+ * Personal notification messages for users (WP-M14-120a, PLAN.md §12, §6).
+ * The internal layer between the application and the external channels: one
+ * row per notification that is enqueued for a specific user, so every user
+ * sees which message went to which channel and whether it arrived. The outbox
+ * row of that delivery points at the message (`notification_message_id`).
+ */
+export const notificationMessages = pgTable(
+  'notification_messages',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    channel: text('channel').notNull(),
+    eventType: text('event_type').notNull(),
+    state: text('state').notNull().default('PENDING'),
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    readAt: timestamp('read_at', timestampOptions),
+  },
+  (table) => [
+    index('notification_messages_user_id_state_idx').on(table.userId, table.state),
+    index('notification_messages_user_id_created_at_idx').on(
+      table.userId,
+      table.createdAt,
+    ),
+    check(
+      'notification_messages_state_check',
+      sql`${table.state} IN ('PENDING', 'SENT', 'FAILED')`,
+    ),
+  ],
+)
+
 export const outbox = pgTable(
   'outbox',
   {
@@ -888,10 +923,16 @@ export const outbox = pgTable(
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
     /** The on-call shift a readiness row announces (`ADR-0021`, §11.10). */
     shiftId: uuid('shift_id').references(() => oncallShifts.id, { onDelete: 'cascade' }),
+    /** The personal message of this delivery (WP-M14-120a) — null for an instance-chain row. */
+    notificationMessageId: uuid('notification_message_id').references(
+      () => notificationMessages.id,
+      { onDelete: 'set null' },
+    ),
   },
   (table) => [
     index('outbox_state_created_at_idx').on(table.state, table.createdAt),
     index('outbox_shift_id_idx').on(table.shiftId),
+    index('outbox_notification_message_id_idx').on(table.notificationMessageId),
     check('outbox_state_check', sql`${table.state} IN (${checkList(OUTBOX_STATUSES)})`),
     check(
       'outbox_event_type_check',

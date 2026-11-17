@@ -239,3 +239,41 @@ export type NotificationPreferencesListResponse = z.infer<
 export type UpdateNotificationPreferencesRequest = z.infer<
   typeof updateNotificationPreferencesRequestSchema
 >
+
+/**
+ * One message of a user's notification inbox (`specs/10-notifications.md` §11.8,
+ * WP-M14-120a): which channel a message was sent to, whether it arrived, and
+ * when. No contact data, no photo, no translated UI text — the UI translates
+ * the channel and event-type keys itself.
+ */
+export const notificationMessageItemSchema = z.object({
+  id: z.uuid(),
+  channel: z.string(),
+  eventType: z.string(),
+  state: z.enum(['PENDING', 'SENT', 'FAILED']),
+  title: z.string(),
+  body: z.string(),
+  createdAt: z.iso.datetime(),
+  readAt: z.iso.datetime().nullable(),
+})
+
+export const notificationMessageListResponseSchema = z.object({
+  messages: z.array(notificationMessageItemSchema),
+})
+
+/**
+ * The answer of the read receipt of one message (WP-M14-120c): the id of the
+ * message and the moment it was marked as read.
+ */
+export const notificationMessageReadResponseSchema = z.object({
+  id: z.uuid(),
+  readAt: z.iso.datetime().nullable(),
+})
+
+export type NotificationMessageItem = z.infer<typeof notificationMessageItemSchema>
+export type NotificationMessageListResponse = z.infer<
+  typeof notificationMessageListResponseSchema
+>
+export type NotificationMessageReadResponse = z.infer<
+  typeof notificationMessageReadResponseSchema
+>
