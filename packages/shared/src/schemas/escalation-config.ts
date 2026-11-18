@@ -70,27 +70,33 @@ export const ESCALATION_ACTION_TYPES = [
 export type EscalationActionType = (typeof ESCALATION_ACTION_TYPES)[number]
 
 /**
- * The target of an `offer` or an `assign` action (§7.14, ADR-0026): a readiness
- * pool of the on-call calendar (`pool`) or a user group of the administration
- * (`group`). The jsonb of the action carries no foreign key, so the
- * configuration service checks the id against those rows.
+ * The target of an `offer` or an `assign` action (§7.14, ADR-0026, ADR-0033): a
+ * readiness pool of the on-call calendar (`pool`), a user group of the
+ * administration (`group`) or one technician of the installation (`user`). The
+ * jsonb of the action carries no foreign key, so the configuration service
+ * checks the id against those rows.
  */
 export const escalationTargetSchema = z.object({
-  kind: z.enum(['pool', 'group']),
+  kind: z.enum(['pool', 'group', 'user']),
   id: z.uuid(),
 })
 
 export type EscalationTarget = z.infer<typeof escalationTargetSchema>
 
 /**
- * The target of a `notify` action: one user or a readiness pool whose
- * technicians receive the notification on their own ntfy topic. The target
- * replaces the channel broadcast of the action.
+ * The target of a `notify` action: one user, a readiness pool whose
+ * technicians receive the notification on their own ntfy topic, or the
+ * assignees of the ticket (`assigned`) — the technician the escalation
+ * assigned and the technician who took the ticket himself (§7.14, ADR-0033).
+ * The target replaces the channel broadcast of the action. The target
+ * `assigned` carries no id: the dispatcher reads the assignees of the ticket
+ * when the rule fires.
  */
-export const escalationNotifyTargetSchema = z.object({
-  kind: z.enum(['user', 'pool']),
-  id: z.uuid(),
-})
+export const escalationNotifyTargetSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('user'), id: z.uuid() }),
+  z.object({ kind: z.literal('pool'), id: z.uuid() }),
+  z.object({ kind: z.literal('assigned') }),
+])
 
 export type EscalationNotifyTarget = z.infer<typeof escalationNotifyTargetSchema>
 

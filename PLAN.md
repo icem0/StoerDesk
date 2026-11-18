@@ -397,7 +397,11 @@ append-only note). Since ADR-0026 two more actions distribute a ticket: `offer`
 (the ticket is offered to a readiness pool or to a user group) and `assign` (the
 technicians of that target are assigned). Both carry the target as
 `{ kind, id }`, perform a step of the transition table and are configured like
-every other action; the assignment is recorded in `ticket_assignees`.
+every other action; the assignment is recorded in `ticket_assignees`. Since
+ADR-0033 the target of both actions may also be a single technician of the
+installation (`kind: 'user'`), and the target of a `notify` action may be
+`assigned` — the assignees of the ticket, that is the technician the escalation
+assigned and the technician who took the ticket himself after an offer.
 
 The stage set itself is configuration too (ADR-0023, `specs/07-escalation.md`
 §7.11): the administration adds and removes stages and every stage names its
@@ -2923,6 +2927,33 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 queue) and **WP-M14-149g** (the ticket view).
 
 
+
+**The assignment names a technician and the notification reaches him (WP-M14-150,
+out of band in phase 14).** The office asked for two changes in the escalation
+of the administration: the action „Ticket zuweisen“ shall name one technician
+of the installation and not only a whole pool or a whole group, and the action
+„Benachrichtigung“ shall be able to address the technician of the ticket. The
+decision of **ADR-0033** carries the two answers: the target of the `offer` and
+the `assign` action gains the kind `user`, and the target of a `notify` action
+gains the kind `assigned` — the assignees of the ticket, read from
+`ticket_assignees` when the rule fires. The assignees of a ticket are the
+technicians who work on it: the technicians of an assignment of the escalation
+and the technician who took the ticket himself — the `claimed` and the
+`accepted` step of the workflow write their row. The chain is split into
+**WP-M14-150a** (the contracts), **WP-M14-150b** (the distribution),
+**WP-M14-150c** (the workflow) and **WP-M14-150d** (the administration).
+
+**The contracts of the new targets and their consumers (WP-M14-150a).** The
+target of an `offer` and an `assign` action gains the kind `user` — one row of
+`users` of the installation — and the target of a `notify` action becomes a
+union: a target with an id (`user`, `pool`) and the target `assigned` without
+an id. The configuration service writes the kind `assigned` as it is and checks
+a user target against `users`; the kind `assigned` names no row and is never
+checked. The dispatcher resolves the target `assigned` from the rows of
+`ticket_assignees`: the assignees of the ticket receive the notification on
+their own ntfy topic, a ticket without an assignee reaches nobody. The action
+editor of the administration carries the new kinds, so a configuration with
+them survives a save (ADR-0033).
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

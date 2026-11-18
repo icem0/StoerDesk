@@ -16,6 +16,7 @@ import {
   escalationActions,
   objects,
   outbox,
+  ticketAssignees,
   ticketEvents,
   tickets,
   webhookDeliveries,
@@ -41,7 +42,8 @@ import { distributeTicket } from './distribution'
  * distribute the ticket (§7.14, ADR-0026): they hand it to the
  * technicians of their target. A `notify` action with a readiness pool as its
  * target reaches the technicians who have a shift in that pool at this moment
- * (ADR-0030). Every action carries its own condition: an
+ * (ADR-0030); the target `assigned` reaches the technicians of the ticket
+ * (ADR-0033). Every action carries its own condition: an
  * action whose condition does not match does not run. Apart from the two
  * distribution actions no action changes an assignment, a priority, a deadline
  * or a work order.
@@ -88,6 +90,20 @@ function stringList(value: unknown): string[] {
   }
 
   return value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+}
+
+/**
+ * The assignees of the ticket (§7.14, ADR-0033): the technicians the
+ * escalation assigned and the technicians who took the ticket themselves. The
+ * target `assigned` of a `notify` action reaches them.
+ */
+async function resolveAssigneeIds(database: Db, ticketId: string): Promise<string[]> {
+  const rows = await database
+    .select({ userId: ticketAssignees.userId })
+    .from(ticketAssignees)
+    .where(eq(ticketAssignees.ticketId, ticketId))
+
+  return rows.map((row) => row.userId)
 }
 
 /**
@@ -172,11 +188,14 @@ export async function dispatchEscalationActions(
       if (notifyTarget.success) {
         // A readiness pool as the target reaches the technicians who have a
         // shift in that pool at this moment (ADR-0030) — the members of the
-        // pool without a shift receive nothing.
+        // pool without a shift receive nothing. The target `assigned` reaches
+        // the technicians of the ticket (ADR-0033).
         const userIds =
           notifyTarget.data.kind === 'user'
             ? [notifyTarget.data.id]
-            : await resolveOnDutyUserIds(database, notifyTarget.data.id, at)
+            : notifyTarget.data.kind === 'pool'
+              ? await resolveOnDutyUserIds(database, notifyTarget.data.id, at)
+              : await resolveAssigneeIds(database, firing.ticketId)
         const recipients = await ntfyTopicsOfUsers(database, 'ticket.escalated', userIds)
 
         if (recipients.length === 0) {

@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The assignment names a technician and the notification reaches him
+  (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
+  two more targets. The action „Ticket zuweisen“ may name one technician of the
+  installation beside a readiness pool and a user group, and the action
+  „Benachrichtigung“ may address the technician of the ticket — the target
+  `assigned` reaches the assignees of the ticket, that is the technician the
+  escalation assigned and the technician who took the ticket himself after an
+  offer. The spec, the ADR and the split of the chain (WP-M14-150a …
+  WP-M14-150d) are written; the implementation follows in the children.
+- The assignment names one technician and the notification reaches the
+  technician of the ticket (**WP-M14-150a**, out of band in phase 14): the
+  target of the action „Ticket zuweisen“ may name one technician of the
+  installation (`user`) beside a readiness pool and a user group, and the
+  target of the action „Benachrichtigung“ may be `assigned` — the assignees of
+  the ticket, that is the technician the escalation assigned and the
+  technician who took the ticket himself after an offer. The dispatcher reads
+  the assignees when the rule fires; a ticket without an assignee reaches
+  nobody (ADR-0033).
 - The internal comment never leaves the office (**WP-M14-149**, out of
   band in phase 14): the comment function of the ticket view gains a second
   kind of comment — the internal comment. It is never printed and never sent

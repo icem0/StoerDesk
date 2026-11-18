@@ -30,7 +30,7 @@ type ActionShape = {
   endpointIds?: string[]
   text?: string
   toStatus?: string
-  targetKind?: 'user' | 'pool' | 'group'
+  targetKind?: 'user' | 'pool' | 'group' | 'assigned'
   targetId?: string
   priority?: string
   condition: unknown
@@ -66,7 +66,10 @@ function shapeOf(action: EscalationActionConfig): ActionShape {
         : action.type === 'notify'
           ? 'user'
           : 'pool',
-    targetId: 'target' in action ? (action.target?.id ?? '') : '',
+    targetId:
+      'target' in action && action.target !== undefined && 'id' in action.target
+        ? action.target.id
+        : '',
     priority: 'priority' in action ? action.priority : '',
     condition: action.condition,
   }
@@ -117,9 +120,13 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
     key: shape.key,
     type: 'notify',
     channels: targeted ? ['ntfy'] : (shape.channels ?? []),
-    ...(targeted
-      ? { target: { kind: shape.targetKind ?? 'user', id: shape.targetId } }
-      : {}),
+    // The target `assigned` names the technicians of the ticket and carries
+    // no id (`specs/07-escalation.md` §7.14, ADR-0033).
+    ...(shape.targetKind === 'assigned'
+      ? { target: { kind: 'assigned' } }
+      : targeted
+        ? { target: { kind: shape.targetKind ?? 'user', id: shape.targetId } }
+        : {}),
     ...(shape.priority === undefined || shape.priority === ''
       ? {}
       : { priority: shape.priority as EscalationNotifyPriority }),

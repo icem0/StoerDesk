@@ -65,6 +65,7 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `ticket.cancel`        |     | x   |     |     | x   |
 | `ticket.delete`        |     |     |     |     | x   |
 | `ticket.comment`       | x   | x   | x   | x   | x   |
+| `ticket.comment.internal` |  |     |     |     | x   |
 | `ticket.photo.read`    | x   | x   | x   | x   | x   |
 | `ticket.photo.write`   | x   | x   | x   |     | x   |
 | `object.read`          | x   | x   | x   | x   | x   |
@@ -93,7 +94,7 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `notification.read_all` |    |     |     |     | x   |
 | `system.update`        |     |     |     |     | x   |
 
-Totals: 41 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 41.
+Totals: 42 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 42.
 
 Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)**:
 
@@ -122,6 +123,14 @@ Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)
   through the catalogue. The gate is in the API: without the key the answer
   holds the own messages and a request for the messages of another user
   answers `403 forbidden`.
+- `ticket.comment.internal` is the right to the **internal comment** — the note
+  that never reaches the customer (ADR-0034): it is neither printed nor sent
+  with the prepared send view. The key belongs to no default role — the
+  administration assigns it to a role or to a colleague; `admin` holds it
+  through the catalogue. The gate is in the API: the route
+  `POST /api/v1/tickets/:ticketNo/comments/internal` answers `403 forbidden`
+  without the key. The key guards the **write**; a colleague who may not write
+  a note still reads the notes of the others.
 
 ### 3.4 Permission catalog
 
@@ -132,7 +141,7 @@ the key (multi-word keys use `snake_case`, for example `object.regenerate_qr`):
 ticket.read, ticket.create, ticket.review, ticket.assign, ticket.offer,
 ticket.claim, ticket.accept, ticket.decline, ticket.acknowledge, ticket.close,
 ticket.reopen, ticket.cancel, ticket.delete, ticket.comment, ticket.photo.read,
-ticket.photo.write
+ticket.photo.write, ticket.comment.internal
 object.read, object.write, object.delete, object.regenerate_qr, object.import
 oncall.read, oncall.plan, oncall.confirm, oncall.swap, oncall.admin,
 oncall.read_names

@@ -108,6 +108,11 @@ check) are enforced by the API exactly as in the online path.
   outbox row never creates a second event.
 - Confirming or declining an on-call shift stays out of scope (phase 8).
 - Claiming from the pool and accepting a swap remain online only.
+- The **internal comment** joins the offline writes (ADR-0034): the queue
+  carries the kind `internal_comment` and the replay posts it to
+  `POST /api/v1/tickets/:ticketNo/comments/internal`, so a note that never
+  reaches the customer survives the offline mode. It is never queued as a
+  normal comment — a normal comment is printed with the prepared send view.
 
 ## §9.7 Acceptance references
 

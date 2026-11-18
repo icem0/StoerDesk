@@ -226,7 +226,7 @@ from the timestamp the server actually trusts.
 | --- | --- | --- |
 | `id` | UUID v7 | primary key |
 | `ticket_id` | UUID, not null | foreign key to `tickets`, `ON DELETE CASCADE` |
-| `type` | text, not null | `created`, `work_order_set`, `declined`, `reopened`, `cancelled`, `comment`, … — **no check constraint**: later phases add event types without a migration |
+| `type` | text, not null | `created`, `work_order_set`, `declined`, `reopened`, `cancelled`, `comment`, `internal_comment`, … — **no check constraint**: later phases add event types without a migration |
 | `actor_kind` | text, not null | check over `user`, `public`, `system` — who triggered the event |
 | `actor_user_id` | UUID, nullable | foreign key to `users`, `ON DELETE SET NULL`; `NULL` for `public` and `system` actors |
 | `payload` | jsonb, not null, default `{}` | event data (decline reason, acknowledge result, submission details) |

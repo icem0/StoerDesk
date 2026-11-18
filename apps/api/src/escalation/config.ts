@@ -60,9 +60,13 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
     case 'notify':
       return {
         ...(action.channels === undefined ? {} : { channels: action.channels }),
+        // The target `assigned` carries no id: the dispatcher reads the
+        // assignees of the ticket when the rule fires (ADR-0033).
         ...(action.target === undefined
           ? {}
-          : { target: { kind: action.target.kind, id: action.target.id } }),
+          : action.target.kind === 'assigned'
+            ? { target: { kind: 'assigned' } }
+            : { target: { kind: action.target.kind, id: action.target.id } }),
         ...(action.priority === undefined ? {} : { priority: action.priority }),
       }
     case 'webhook':
@@ -267,10 +271,10 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
   }
 
   // The target of an `offer` or an `assign` action names a row of `oncall_pools`
-  // (kind `pool`) or of `groups` (kind `group`) (§7.14, ADR-0026): the jsonb of
-  // the action carries no foreign key, so the service checks it and answers
-  // `400 invalid_target` with the field path — the rule of the `status_change`
-  // target above.
+  // (kind `pool`), of `groups` (kind `group`) or of `users` (kind `user`,
+  // ADR-0033): the jsonb of the action carries no foreign key, so the service
+  // checks it and answers `400 invalid_target` with the field path — the rule
+  // of the `status_change` target above.
   const poolRows = await database.select({ id: oncallPools.id }).from(oncallPools)
   const groupRows = await database.select({ id: groups.id }).from(groups)
   const userRows = await database.select({ id: users.id }).from(users)
@@ -282,6 +286,12 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
   for (const [ruleIndex, rule] of parsed.data.rules.entries()) {
     for (const [actionIndex, action] of rule.actions.entries()) {
       if (action.type === 'notify' && action.target !== undefined) {
+        // The target `assigned` names no row: the dispatcher reads the
+        // assignees of the ticket (ADR-0033).
+        if (action.target.kind === 'assigned') {
+          continue
+        }
+
         const known = action.target.kind === 'pool' ? poolIds : userIds
 
         if (!known.has(action.target.id)) {
@@ -295,7 +305,12 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
         continue
       }
 
-      const known = action.target.kind === 'pool' ? poolIds : groupIds
+      const known =
+        action.target.kind === 'pool'
+          ? poolIds
+          : action.target.kind === 'user'
+            ? userIds
+            : groupIds
 
       if (!known.has(action.target.id)) {
         unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)
