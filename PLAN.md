@@ -2576,6 +2576,15 @@ is split into **WP-M14-134a** (the table), **WP-M14-134b** (the contracts),
 administration page), **WP-M14-134h** (the route and the menu entry) and
 **WP-M14-134i** (the create form).
 
+**The table of the priority deviations (WP-M14-134a, out of band in phase 14).**
+Migration `0050_object_priority_overrides.sql` adds the table
+`object_priority_overrides` (`specs/02-data-model.md` §4.3.2, ADR-0029): the
+`object_id` is the primary key and points at the uuid of the object with
+`ON DELETE CASCADE`, `priority` carries the check over the four priorities, and
+the timestamps are the ones of §4.2. The table holds only the deviations from
+the standard — a row that equals the standard is not stored. The object number
+stays the key of the object list outside the database.
+
 
 
 

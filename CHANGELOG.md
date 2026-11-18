@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The table of the priority deviations (**WP-M14-134a**, out of band in phase 14
+  — **ADR-0029**): migration `0050_object_priority_overrides.sql` adds the table
+  `object_priority_overrides` — the `object_id` is the primary key and points at
+  the uuid of the object with `ON DELETE CASCADE`, `priority` carries the check
+  over the four priorities. The table holds only the objects whose priority
+  differs from the standard; a row that equals the standard is not stored.
 - The priority of the object deviates from the standard (**WP-M14-134**, out of
   band in phase 14 — **ADR-0029**): the office asked for the priority per
   object and for the standard values in the administration. The standard

@@ -351,6 +351,13 @@
       "when": 1794967200000,
       "tag": "0049_channel_health_warning",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1795053600000,
+      "tag": "0050_object_priority_overrides",
+      "breakpoints": true
     }
   ]
 }

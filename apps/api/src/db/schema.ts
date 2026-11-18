@@ -436,6 +436,30 @@ export const ticketNoCounter = pgTable('ticket_no_counter', {
 })
 
 /**
+ * The priority of an object deviates from the standard (`specs/02-data-model.md`
+ * §4.3.2, ADR-0029, WP-M14-134a). The standard itself is the setting
+ * `ticket.default_priority`; this table holds only the objects whose priority
+ * differs from it — a row that equals the standard is not stored.
+ */
+export const objectPriorityOverrides = pgTable(
+  'object_priority_overrides',
+  {
+    objectId: uuid('object_id')
+      .primaryKey()
+      .references(() => objects.id, { onDelete: 'cascade' }),
+    priority: text('priority').notNull(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      'object_priority_overrides_priority_check',
+      sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`,
+    ),
+  ],
+)
+
+/**
  * One malfunction report (`specs/02-data-model.md` §4.8`). The public report
  * endpoint of WP-M2-04b writes the first row; every later state change is a new
  * `ticket_events` row, never a rewrite of the history. Status and priority values

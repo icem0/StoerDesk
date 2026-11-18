@@ -1,7 +1,7 @@
 # WP-M14-134a: the table of the priority deviations
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -71,8 +71,10 @@ object that deviates.
 
 ## Handoff
 
-- Files changed: the migration, the journal, the schema of the API
+- Files changed: the migration `0050`, the journal of the migrations, the schema
+  of the API, the integration spec of the table
 - Interfaces added: `objectPriorityOverrides`
-- Verified: `npm run check` (exit 0), the integration spec of the table
+- Verified: `npm run check` (exit 0, 1441 tests), the integration spec of the
+  table proves the check, the foreign key and the cascade
 - Follow-up WP: WP-M14-134b (the contracts of the priority and of the standard)
 - Open question: none
