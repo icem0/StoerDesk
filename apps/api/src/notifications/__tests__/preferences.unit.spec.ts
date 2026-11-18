@@ -158,6 +158,7 @@ async function buildApp(store: StoredRow[]): Promise<FastifyInstance> {
         locale: 'de',
         theme: 'auto',
         roles: [],
+        mustChangePassword: false,
       }
     }
   })

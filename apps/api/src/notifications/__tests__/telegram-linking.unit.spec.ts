@@ -105,6 +105,7 @@ async function buildApp(options: {
         locale: 'de',
         theme: 'auto',
         roles: [],
+        mustChangePassword: false,
       }
     }
   })

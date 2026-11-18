@@ -106,6 +106,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('session core (integratio
       familyName: '',
       locale: 'de',
       theme: 'auto',
+      mustChangePassword: false,
     })
   })
 

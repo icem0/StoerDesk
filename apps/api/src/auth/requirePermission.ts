@@ -5,6 +5,7 @@ import { isPermissionKey, type ApiKeyScope, type PermissionKey } from '@stoerdes
 
 import type { Database } from '../db/client'
 import { permissions, rolePermissions, roles, userPermissions, userRoles } from '../db/schema'
+import { rejectPendingPasswordChange } from './sessionPlugin'
 
 /**
  * Effective permissions and the only enforcement point of the API
@@ -93,6 +94,14 @@ async function checkPermission(
   if (request.user === undefined) {
     await reply.code(401).send({ code: 'session_invalid', params: {} })
 
+    return
+  }
+
+  // The account whose password is a one-time password may not work before the
+  // user sets a password of their own (`specs/01-rbac.md` §3.9).
+  await rejectPendingPasswordChange(request, reply)
+
+  if (reply.sent) {
     return
   }
 

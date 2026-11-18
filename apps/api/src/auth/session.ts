@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 
-import { and, eq, lte } from 'drizzle-orm'
+import { and, eq, lte, ne } from 'drizzle-orm'
 
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
@@ -28,6 +28,11 @@ export type SessionUser = {
   familyName: string
   locale: string
   theme: string
+  /**
+   * The flag of an open password change (`specs/01-rbac.md` §3.9, ADR-0031):
+   * `true` while the password of the account is a one-time password.
+   */
+  mustChangePassword: boolean
 }
 
 /** Options for `reply.setCookie` / `reply.clearCookie` of the session cookie. */
@@ -95,6 +100,7 @@ export async function loadSession(
       locale: users.locale,
       theme: users.theme,
       active: users.active,
+      mustChangePassword: users.mustChangePassword,
       expiresAt: sessions.expiresAt,
     })
     .from(sessions)
@@ -120,6 +126,7 @@ export async function loadSession(
     familyName: current.familyName,
     locale: current.locale,
     theme: current.theme,
+    mustChangePassword: current.mustChangePassword,
   }
 }
 
@@ -130,6 +137,25 @@ export async function destroySession(database: SessionDatabase, token: string): 
   }
 
   await database.delete(sessions).where(eq(sessions.tokenHash, hashSessionToken(token)))
+}
+
+/**
+ * Deletes the sessions of a user — the sessions die with the secret
+ * (`specs/01-rbac.md` §3.9, ADR-0031): the reset of a password ends every
+ * open session of the account, and the change of the own password ends every
+ * session except the one of the browser that changed it.
+ */
+export async function destroyUserSessions(
+  database: SessionDatabase,
+  userId: string,
+  keepTokenHash?: string,
+): Promise<void> {
+  const scope =
+    keepTokenHash === undefined
+      ? eq(sessions.userId, userId)
+      : and(eq(sessions.userId, userId), ne(sessions.tokenHash, keepTokenHash))
+
+  await database.delete(sessions).where(scope)
 }
 
 /**

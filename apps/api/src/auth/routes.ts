@@ -14,6 +14,8 @@ import { effectivePermissions, loadEffectivePermissions } from './requirePermiss
 import {
   createSession,
   destroySession,
+  destroyUserSessions,
+  hashSessionToken,
   loadUserRoleKeys,
   SESSION_COOKIE_NAME,
   sessionCookieOptions,
@@ -73,6 +75,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           theme: users.theme,
           passwordHash: users.passwordHash,
           active: users.active,
+          mustChangePassword: users.mustChangePassword,
         })
         .from(users)
         .where(eq(users.email, email))
@@ -110,6 +113,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
             theme: account.theme,
             roles,
             permissions,
+            mustChangePassword: account.mustChangePassword,
           },
         }),
       )
@@ -138,18 +142,31 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
   // `requireUser` already answered 401 for an anonymous request, so `request.user`
   // is set here; the permissions come from the same request-scoped resolution the
   // guards use (`specs/01-rbac.md` §3.7).
-  app.get('/api/v1/me', { preHandler: [requireUser] }, async (request) => {
-    const permissions = await effectivePermissions(request, database)
+  //
+  // The route stays readable while the account carries an open password change
+  // (§3.9): the client needs the flag to show the form of the own password.
+  app.get(
+    '/api/v1/me',
+    { preHandler: [requireUser], config: { allowPendingPasswordChange: true } },
+    async (request) => {
+      const permissions = await effectivePermissions(request, database)
 
-    return meResponseSchema.parse({ user: { ...request.user, permissions } })
-  })
+      return meResponseSchema.parse({
+        user: { ...request.user, permissions, mustChangePassword: request.user?.mustChangePassword },
+      })
+    },
+  )
 
   // Self-service: every authenticated user may edit their own profile. Roles,
   // active state and e-mail stay admin-only (`PATCH /api/v1/users/:id`,
   // WP-M1-09). Password is optional — left unset means "keep the current one".
+  //
+  // The route stays reachable while the account carries an open password change
+  // (§3.9): it is the way to set the own password. A written password clears
+  // the flag and ends the sessions of the other devices.
   app.patch(
     '/api/v1/users/me',
-    { preHandler: [requireUser] },
+    { preHandler: [requireUser], config: { allowPendingPasswordChange: true } },
     async (request, reply) => {
       const user = request.user
 
@@ -182,6 +199,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           locale: users.locale,
           theme: users.theme,
           active: users.active,
+          mustChangePassword: users.mustChangePassword,
         })
         .from(users)
         .where(eq(users.id, userId))
@@ -208,9 +226,23 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           locale: locale ?? target.locale,
           theme: theme ?? target.theme,
           updatedAt: new Date(),
-          ...(passwordHash === undefined ? {} : { passwordHash }),
+          ...(passwordHash === undefined
+            ? {}
+            : { passwordHash, mustChangePassword: false }),
         })
         .where(eq(users.id, userId))
+
+      if (passwordHash !== undefined) {
+        // The sessions die with the secret (§3.9): the session of this browser
+        // stays alive, the sessions of the other devices do not.
+        const token = request.cookies[SESSION_COOKIE_NAME]
+
+        await destroyUserSessions(
+          database,
+          userId,
+          token === undefined || token === '' ? undefined : hashSessionToken(token),
+        )
+      }
 
       return reply.code(200).send(
         userSummarySchema.parse({
@@ -222,6 +254,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           theme: theme ?? target.theme,
           active: target.active,
           roleKeys: currentRoleKeys,
+          mustChangePassword: passwordHash === undefined ? target.mustChangePassword : false,
         }),
       )
     },
