@@ -254,6 +254,14 @@ promises a delivery that cannot happen.
   the administration (`notifications.administration.link`, WP-M14-54) — the link
   carries no permission check and the two layers stay apart.
 
+**The state of the push in the browser.** The card of `/settings/notifications`
+and the inbox of `/notifications` ask **this browser** for its own push
+subscription — never the account of the user on the server. A browser without a
+push manager, a browser with a blocked permission, a browser without a
+subscription and a browser that does not answer are four different states, and
+the UI names the state it found instead of a general claim: a statement about
+the browser that was never checked is a lie (WP-M14-142).
+
 ## 11.13 The security
 
 - The secrets of the channels and of the accounts are write-only: never

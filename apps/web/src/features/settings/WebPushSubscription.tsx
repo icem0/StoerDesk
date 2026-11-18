@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
 
 import type { WebPushConfigResponse, WebPushSubscriptionResponse } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../../lib/api'
+import { pushSupported, useBrowserPush } from '../../lib/web-push'
 
 /**
  * The web-push card of the settings page (`specs/10-notifications.md` §11.1,
@@ -15,6 +15,11 @@ import { ApiError, apiFetch } from '../../lib/api'
  * without keys hides the action and names the missing configuration, and a
  * browser without PushManager (or an iPhone outside the installed app) gets the
  * install hint instead of a button that cannot work.
+ *
+ * The state of the device comes from the probe of `apps/web/src/lib/web-push.ts`
+ * (WP-M14-142): the browser itself says whether it holds a subscription, so the
+ * card claims nothing that was not checked — and the inbox names the same
+ * cause.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -30,17 +35,6 @@ class WebPushActionError extends Error {
     this.name = 'WebPushActionError'
     this.code = code
   }
-}
-
-/** Whether this browser can subscribe at all; iOS needs the installed app. */
-export function pushSupported(): boolean {
-  return (
-    typeof navigator !== 'undefined' &&
-    'serviceWorker' in navigator &&
-    typeof window !== 'undefined' &&
-    'PushManager' in window &&
-    'Notification' in window
-  )
 }
 
 /**
@@ -88,35 +82,16 @@ function errorCode(error: unknown): string {
 
 export function WebPushSubscription() {
   const { t } = useTranslation('common')
-  const [endpoint, setEndpoint] = useState<string | null>(null)
-  const supported = pushSupported()
+  const { push, refresh } = useBrowserPush()
+  const state = push?.state ?? null
+  const endpoint = push?.endpoint ?? null
+  const supported = state !== null && state !== 'unsupported'
 
   const config = useQuery({
     queryKey: ['webpush-config'],
     queryFn: () => apiFetch<WebPushConfigResponse>('/v1/notifications/accounts/webpush'),
     retry: false,
   })
-
-  useEffect(() => {
-    if (!supported) {
-      return
-    }
-
-    let active = true
-
-    void navigator.serviceWorker.ready
-      .then((registration) => registration.pushManager.getSubscription())
-      .then((subscription) => {
-        if (active) {
-          setEndpoint(subscription?.endpoint ?? null)
-        }
-      })
-      .catch(() => undefined)
-
-    return () => {
-      active = false
-    }
-  }, [supported])
 
   const subscribe = useMutation({
     mutationFn: async (): Promise<WebPushSubscriptionResponse> => {
@@ -148,7 +123,7 @@ export function WebPushSubscription() {
         },
       )
 
-      setEndpoint(subscription.endpoint)
+      refresh()
       return stored
     },
     onSuccess: () => {
@@ -158,8 +133,8 @@ export function WebPushSubscription() {
 
   const unsubscribe = useMutation({
     mutationFn: async (): Promise<void> => {
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.getSubscription()
+      const registration = await navigator.serviceWorker.getRegistration()
+      const subscription = (await registration?.pushManager.getSubscription()) ?? null
       const target = subscription?.endpoint ?? endpoint
 
       await subscription?.unsubscribe()
@@ -172,7 +147,7 @@ export function WebPushSubscription() {
         })
       }
 
-      setEndpoint(null)
+      refresh()
     },
     onSuccess: () => {
       void config.refetch()
@@ -207,8 +182,12 @@ export function WebPushSubscription() {
 
       {config.isSuccess && publicKey !== '' ? (
         <>
-          {!supported ? (
+          {!supported && state !== null ? (
             <p className="text-sm text-amber-400">{t('notifications.webpush.unsupported')}</p>
+          ) : null}
+
+          {state === 'denied' ? (
+            <p className="text-sm text-amber-400">{t('notifications.webpush.errors.denied')}</p>
           ) : null}
 
           {supported && endpoint === null ? (

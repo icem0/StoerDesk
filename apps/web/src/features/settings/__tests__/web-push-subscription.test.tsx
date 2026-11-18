@@ -94,13 +94,21 @@ describe('WebPushSubscription', () => {
       }),
       unsubscribe: vi.fn().mockResolvedValue(true),
     }
+    let current: unknown = null
     const pushManager = {
-      getSubscription: vi.fn().mockResolvedValue(null),
-      subscribe: vi.fn().mockResolvedValue(subscription),
+      getSubscription: vi.fn(async () => current),
+      subscribe: vi.fn(async () => {
+        current = subscription
+
+        return subscription
+      }),
     }
     Object.defineProperty(navigator, 'serviceWorker', {
       configurable: true,
-      value: { ready: Promise.resolve({ pushManager }) },
+      value: {
+        ready: Promise.resolve({ pushManager }),
+        getRegistration: vi.fn().mockResolvedValue({ pushManager }),
+      },
     })
     vi.stubGlobal('PushManager', class {})
     vi.stubGlobal('Notification', { requestPermission: vi.fn().mockResolvedValue('granted') })
@@ -134,5 +142,57 @@ describe('WebPushSubscription', () => {
       keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
     })
     expect(await screen.findByText('Dieses Gerät ist angemeldet.')).toBeTruthy()
+  })
+
+  it('names the device that this browser holds', async () => {
+    const subscription = {
+      endpoint: 'https://push.example.org/secret/42',
+      toJSON: () => ({
+        endpoint: 'https://push.example.org/secret/42',
+        keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
+      }),
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    const pushManager = {
+      getSubscription: vi.fn().mockResolvedValue(subscription),
+      subscribe: vi.fn().mockResolvedValue(subscription),
+    }
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ pushManager }),
+        getRegistration: vi.fn().mockResolvedValue({ pushManager }),
+      },
+    })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', { permission: 'granted', requestPermission: vi.fn() })
+    vi.stubGlobal('fetch', stubConfig(PUBLIC_KEY, 1))
+
+    renderCard()
+
+    expect(await screen.findByText('Dieses Gerät ist angemeldet.')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Dieses Gerät anmelden' })).toBeNull()
+  })
+
+  it('names the blocked permission of this browser', async () => {
+    const pushManager = {
+      getSubscription: vi.fn().mockResolvedValue(null),
+      subscribe: vi.fn(),
+    }
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ pushManager }),
+        getRegistration: vi.fn().mockResolvedValue({ pushManager }),
+      },
+    })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', { permission: 'denied', requestPermission: vi.fn() })
+    vi.stubGlobal('fetch', stubConfig(PUBLIC_KEY))
+
+    renderCard()
+
+    expect(await screen.findByText(/Benachrichtigungs-Erlaubnis wurde nicht erteilt/)).toBeTruthy()
+    expect(screen.queryByText('Dieses Gerät ist angemeldet.')).toBeNull()
   })
 })
