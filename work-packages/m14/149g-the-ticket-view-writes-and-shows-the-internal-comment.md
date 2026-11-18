@@ -1,7 +1,7 @@
 # WP-M14-149g: the ticket view writes and shows the internal comment
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -74,7 +74,8 @@ Expected: all green; the new test fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed: the ticket view, the two locale files, the test, this document
+- Files changed: the ticket view, the two locale files, the test, the security plan,
+  this document, the backlog, the changelog, `PLAN.md` §16
 - Interfaces added: the checkbox of the composer and the texts
   `detail.comment.internal.*`
 - Verified: `npm run check`

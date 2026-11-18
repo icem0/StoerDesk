@@ -2935,6 +2935,17 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The ticket view writes and shows the internal comment (WP-M14-149g, out of
+band in phase 14).** The composer of the ticket view gains the checkbox of the
+internal comment — only with the key `ticket.comment.internal`. The checkbox
+changes the write: the note goes to the route of the internal comment, the
+normal comment keeps its route, and a note that fails without a connection is
+queued as a note, never as a normal comment. The field and the entry of the note
+in the history carry the colour of the instance, and the text colour follows
+the brightness of the background, so the note is recognisable at a glance and
+stays readable for every colour the administration picks. The confirmation
+dialog names the rule: the note is neither printed nor sent to the customer.
+
 **The offline queue carries the internal comment (WP-M14-149f, out of band
 in phase 14).** The internal comment joins the three internal writes of the
 outbox: the queue carries the kind `internal_comment`, the replay posts it to

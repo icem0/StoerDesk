@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import type { TicketDetailResponse } from '@stoerdesk/shared'
+import type { DisplaySettingsResponse, TicketDetailResponse } from '@stoerdesk/shared'
 import type { StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiBaseUrl, apiFetch, ApiError } from '../../lib/api'
@@ -80,6 +80,7 @@ const ACTION_SEGMENTS: Record<string, string> = {
   declined: 'decline',
   acknowledged: 'acknowledge',
   commented: 'comments',
+  internal_commented: 'comments/internal',
   closed: 'close',
   reopened: 'reopen',
   cancelled: 'cancel',
@@ -112,6 +113,33 @@ const ACKNOWLEDGE_RESULTS = [
   'no_fault_found',
 ] as const
 
+/**
+ * The default colour of the internal comment: a dark red (ADR-0034). The
+ * administration sets the real value under „Darstellung".
+ */
+const DEFAULT_INTERNAL_COMMENT_COLOR = '#7f1d1d'
+
+/**
+ * The text colour that stays readable on the configured background — the
+ * contrast rule of `PLAN.md` §14. A dark colour takes a light text, a light
+ * colour a dark one.
+ */
+function textOnColor(color: string): string {
+  const hex = /^#([0-9a-fA-F]{6})$/.exec(color)
+
+  if (hex === null) {
+    return 'text-slate-100'
+  }
+
+  const value = hex[1] ?? ''
+  const red = Number.parseInt(value.slice(0, 2), 16)
+  const green = Number.parseInt(value.slice(2, 4), 16)
+  const blue = Number.parseInt(value.slice(4, 6), 16)
+  const brightness = (red * 299 + green * 587 + blue * 114) / 1000
+
+  return brightness > 140 ? 'text-slate-900' : 'text-slate-100'
+}
+
 export function TicketDetailPage() {
   const { t, i18n } = useTranslation('ticket')
   const navigate = useNavigate()
@@ -125,6 +153,7 @@ export function TicketDetailPage() {
   const [stornoReason, setStornoReason] = useState('')
   const [stornoMode, setStornoMode] = useState<'cancel' | 'uncancel'>('cancel')
   const [commentConfirmOpen, setCommentConfirmOpen] = useState(false)
+  const [internalComment, setInternalComment] = useState(false)
   const [detectedErrorKeysSelected, setDetectedErrorKeysSelected] = useState<string[]>([])
   const [detectedErrorsOptions, setDetectedErrorsOptions] = useState<{
     key: string
@@ -161,7 +190,18 @@ export function TicketDetailPage() {
 
   const ticketQuery = useTicket(ticketNo)
   const mayDelete = usePermission('ticket.delete')
+  const mayWriteInternal = usePermission('ticket.comment.internal')
   const { queueAction, deliverNow, discard, pendingCount, rows } = useInternalActions(ticketNo ?? '')
+
+  // The colour of the internal comment (ADR-0034): a presentation value of the
+  // instance, every colleague who may read a ticket may read it.
+  const display = useQuery({
+    queryKey: ['settings', 'display'],
+    queryFn: () => apiFetch<DisplaySettingsResponse>('/v1/settings/display'),
+    retry: false,
+  })
+
+  const internalCommentColor = display.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
@@ -177,7 +217,7 @@ export function TicketDetailPage() {
     // The comment route requires an idempotency key; the outbox replay sends the
     // same shape (`outbox.ts`), so both paths share one receipt per write.
     const payload =
-      segment === 'comments'
+      segment === 'comments' || segment === 'comments/internal'
         ? { ...(body ?? {}), clientUuid: crypto.randomUUID() }
         : body
 
@@ -202,10 +242,16 @@ export function TicketDetailPage() {
         return false
       }
       // Network error (no ApiError): queue the write offline and show the
-      // queued notice instead of an error (WP-M5-05).
-      const actionKind = (segment === 'comments'
-        ? 'comment'
-        : segment) as 'acknowledge' | 'comment' | 'decline'
+      // queued notice instead of an error (WP-M5-05). The internal comment
+      // keeps its own kind — a queued normal comment would be printed with the
+      // prepared send view (ADR-0034).
+      const actionKind = (
+        segment === 'comments'
+          ? 'comment'
+          : segment === 'comments/internal'
+            ? 'internal_comment'
+            : segment
+      ) as 'acknowledge' | 'comment' | 'internal_comment' | 'decline'
       await queueAction(actionKind, body ?? {})
       return false
     }
@@ -394,8 +440,13 @@ export function TicketDetailPage() {
   async function saveComment() {
     const text = req('commentText')
     setCommentConfirmOpen(false)
-    if (await handleAction('commented', { text })) {
-      setNotice(t('detail.comment.saved'))
+    // The internal comment goes to its own route (ADR-0034): the note of the
+    // colleagues never reaches the customer.
+    const event = internalComment ? 'internal_commented' : 'commented'
+
+    if (await handleAction(event, { text })) {
+      setNotice(t(internalComment ? 'detail.comment.internalSaved' : 'detail.comment.saved'))
+      setInternalComment(false)
     }
   }
 
@@ -929,13 +980,25 @@ export function TicketDetailPage() {
       >
         <div className="w-full max-w-md p-6 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
           <h2 id={titleId} className="text-lg font-semibold text-slate-100 mb-3">
-            {t('detail.comment.confirmTitle')}
+            {t(internalComment ? 'detail.comment.internalConfirmTitle' : 'detail.comment.confirmTitle')}
           </h2>
           <p id={hintId} className="text-sm text-slate-300 mb-3">
-            {t('detail.comment.confirmText')}
+            {t(internalComment ? 'detail.comment.internalConfirmText' : 'detail.comment.confirmText')}
           </p>
-          <p className="mb-4 max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg border-l-2 border-amber-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200">
-            {fields.commentText ?? ''}
+          <p
+            className="mb-4 max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg border-l-2 px-3 py-2 text-sm"
+            style={
+              internalComment
+                ? {
+                    backgroundColor: internalCommentColor,
+                    borderLeftColor: internalCommentColor,
+                  }
+                : undefined
+            }
+          >
+            <span className={internalComment ? textOnColor(internalCommentColor) : 'text-slate-200'}>
+              {fields.commentText ?? ''}
+            </span>
           </p>
           <div className="flex gap-2">
             <button
@@ -1348,6 +1411,21 @@ export function TicketDetailPage() {
               )}
             </select>
 
+            {mayWriteInternal ? (
+              <>
+                <label className="mt-3 flex items-start gap-2 text-xs text-slate-400">
+                  <input
+                    type="checkbox"
+                    name="internalComment"
+                    checked={internalComment}
+                    onChange={(event) => setInternalComment(event.target.checked)}
+                    className="mt-0.5 h-4 w-4"
+                  />
+                  <span>{t('detail.comment.internalLabel')}</span>
+                </label>
+                <p className="mt-1 text-xs text-slate-500">{t('detail.comment.internalHint')}</p>
+              </>
+            ) : null}
             <label
               htmlFor="ticket-comment"
               className="mt-3 mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500"
@@ -1357,6 +1435,11 @@ export function TicketDetailPage() {
             <textarea
               id="ticket-comment"
               className="min-h-24 w-full resize-y rounded-lg border border-slate-600 bg-slate-950/40 px-3.5 py-3 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+              style={
+                internalComment
+                  ? { backgroundColor: internalCommentColor, borderColor: internalCommentColor }
+                  : undefined
+              }
               rows={3}
               maxLength={2000}
               name="commentText"
@@ -1392,7 +1475,7 @@ export function TicketDetailPage() {
                 <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19V5m0 0-6 6m6-6 6 6" />
                 </svg>
-                {t('detail.comment.submit')}
+                {t(internalComment ? 'detail.comment.internalSubmit' : 'detail.comment.submit')}
               </button>
             </div>
           </div>
@@ -1477,9 +1560,19 @@ export function TicketDetailPage() {
                         )}
                         <p
                           className={
-                            event.type === 'comment' || event.type === 'escalation_set'
-                              ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
-                              : 'mt-1 text-xs text-slate-400'
+                            event.type === 'internal_comment'
+                              ? `mt-2 whitespace-pre-wrap rounded-lg border-l-2 px-3 py-2 text-sm ${textOnColor(internalCommentColor)}`
+                              : event.type === 'comment' || event.type === 'escalation_set'
+                                ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
+                                : 'mt-1 text-xs text-slate-400'
+                          }
+                          style={
+                            event.type === 'internal_comment'
+                              ? {
+                                  backgroundColor: internalCommentColor,
+                                  borderLeftColor: internalCommentColor,
+                                }
+                              : undefined
                           }
                         >
                           {text}

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -61,18 +61,34 @@ function fixture() {
   }
 }
 
-function renderPage() {
+function renderPage(options: { permissions?: string[]; events?: unknown[] } = {}) {
   const comments: unknown[] = []
+  const internalComments: unknown[] = []
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = String(input)
 
     if (path.includes('/v1/me')) {
-      return Response.json({ user: { id: 'u1', email: 'max@example.invalid', permissions: [] } })
+      return Response.json({
+        user: {
+          id: 'u1',
+          email: 'max@example.invalid',
+          permissions: options.permissions ?? [],
+        },
+      })
+    }
+
+    if (path.includes('/v1/settings/display')) {
+      return Response.json({ internalCommentColor: '#450a0a' })
     }
 
     if (path.includes('/v1/text-templates')) {
       return Response.json({ templates: [] })
+    }
+
+    if (path.includes(`/v1/tickets/${TICKET_NO}/comments/internal`)) {
+      internalComments.push(JSON.parse(String(init?.body ?? '{}')))
+      return Response.json({ ticketNo: TICKET_NO, at: '2026-11-10T09:00:00.000Z', replayed: false })
     }
 
     if (path.includes(`/v1/tickets/${TICKET_NO}/comments`)) {
@@ -80,7 +96,13 @@ function renderPage() {
       return Response.json({ ticketNo: TICKET_NO, at: '2026-11-10T09:00:00.000Z', replayed: false })
     }
 
-    return Response.json(fixture())
+    const data = fixture()
+
+    if (options.events !== undefined) {
+      data.events = options.events as typeof data.events
+    }
+
+    return Response.json(data)
   })
 
   vi.stubGlobal('fetch', fetchMock)
@@ -99,7 +121,7 @@ function renderPage() {
     </QueryClientProvider>,
   )
 
-  return { comments }
+  return { comments, internalComments }
 }
 
 function composer(): HTMLTextAreaElement {
@@ -152,5 +174,73 @@ describe('TicketDetailPage comment composer', () => {
     expect(field.getAttribute('spellcheck')).not.toBeNull()
     expect(field.lang).toBe('de')
     expect(screen.getByText(/Rechtschreibprüfung des Browsers/i)).toBeTruthy()
+  })
+})
+
+describe('TicketDetailPage — the internal comment', () => {
+  it('offers the internal comment only with the key', async () => {
+    renderPage({ permissions: [] })
+
+    await waitFor(() => composer())
+    expect(screen.queryByLabelText(/Interner Kommentar|Internal comment/i)).toBeNull()
+
+    renderPage({ permissions: ['ticket.comment.internal'] })
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Interner Kommentar|Internal comment/i)).toBeTruthy(),
+    )
+  })
+
+  it('writes the internal comment to its own route', async () => {
+    const { comments, internalComments } = renderPage({
+      permissions: ['ticket.comment.internal'],
+    })
+
+    const field = await waitFor(() => composer())
+    fireEvent.click(screen.getByLabelText(/Interner Kommentar|Internal comment/i))
+    fireEvent.change(field, { target: { value: 'Nur für die Kollegen' } })
+    fireEvent.click(screen.getByRole('button', { name: /Internen Kommentar speichern|Save the internal comment/i }))
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeTruthy())
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Speichern|Save/i }),
+    )
+
+    await waitFor(() => expect(internalComments).toHaveLength(1))
+    expect(internalComments[0]).toMatchObject({ text: 'Nur für die Kollegen' })
+    expect(comments).toHaveLength(0)
+  })
+
+  it('paints the field in the colour of the instance', async () => {
+    renderPage({ permissions: ['ticket.comment.internal'] })
+
+    const field = await waitFor(() => composer())
+    expect((field as HTMLElement).style.backgroundColor).toBe('')
+
+    fireEvent.click(screen.getByLabelText(/Interner Kommentar|Internal comment/i))
+
+    await waitFor(() =>
+      expect((field as HTMLElement).style.backgroundColor).toBe('rgb(69, 10, 10)'),
+    )
+  })
+
+  it('shows the internal comment of the history in the colour', async () => {
+    renderPage({
+      permissions: ['ticket.comment.internal'],
+      events: [
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          type: 'internal_comment',
+          actorKind: 'user',
+          actorName: 'Max Muster',
+          payload: { text: 'Nur für die Kollegen' },
+          createdAt: '2026-11-10T09:30:00.000Z',
+        },
+      ],
+    })
+
+    const entry = await waitFor(() => screen.getByText('Nur für die Kollegen'))
+
+    expect((entry as HTMLElement).style.backgroundColor).toBe('rgb(69, 10, 10)')
   })
 })

@@ -73,6 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   prepared send view. The predicate of the service worker matches the route of
   the internal comment as well, so the note shows up in the history at once
   (ADR-0034).
+- The ticket view writes and shows the internal comment (**WP-M14-149g**, out of
+  band in phase 14): the composer gains the checkbox of the internal comment —
+  only with the key `ticket.comment.internal`. The checkbox changes the write,
+  the field and the entry of the note in the history carry the colour of the
+  instance, and the text colour follows the brightness of the background, so
+  the note is recognisable at a glance and stays readable (ADR-0034).
 - The assignment names a technician and the notification reaches him
   (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
   two more targets. The action „Ticket zuweisen“ may name one technician of the
