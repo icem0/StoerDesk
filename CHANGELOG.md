@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   it for the ticket view. The route sits behind `ticket.read` and not behind
   `settings.read` — a colour is no secret. A row without the field answers the
   default of the server, a dark red (ADR-0034).
+- The colour of the internal comment under „Darstellung“ (**WP-M14-149e**, out of
+  band in phase 14): the page of the Darstellung gains the field of the colour
+  — a text field with the hex value and a swatch that shows it. The save sends
+  it with the company name, the title switch and the logo, so one save writes
+  the whole row. A colour that is no hex value never leaves the browser
+  (ADR-0034).
 - The assignment names a technician and the notification reaches him
   (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
   two more targets. The action „Ticket zuweisen“ may name one technician of the

@@ -23,7 +23,10 @@ function renderPage() {
   )
 }
 
-function stubSessionAndBranding(permissions: string[], branding: { companyName: string; titleEnabled: boolean }) {
+function stubSessionAndBranding(
+  permissions: string[],
+  branding: { companyName: string; titleEnabled: boolean; internalCommentColor?: string },
+) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
 
@@ -37,10 +40,15 @@ function stubSessionAndBranding(permissions: string[], branding: { companyName: 
       const request = input as Request
 
       if (request.method === 'PUT') {
-        const body = (await request.json()) as { companyName?: string; titleEnabled?: boolean }
+        const body = (await request.json()) as {
+          companyName?: string
+          titleEnabled?: boolean
+          internalCommentColor?: string
+        }
         return Response.json({
           companyName: body.companyName ?? '',
           titleEnabled: body.titleEnabled ?? false,
+          internalCommentColor: body.internalCommentColor ?? '#7f1d1d',
         })
       }
 
@@ -84,7 +92,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '' }),
+        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' }),
       }),
     )
   })
@@ -113,7 +121,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '' }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' }),
       }),
     )
   })
@@ -145,7 +153,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '' }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' }),
       }),
     )
   })
@@ -180,5 +188,86 @@ describe('BrandingPage', () => {
     renderPage()
 
     expect(await screen.findByText(/Die Sitzung ist abgelaufen|Your session has expired/i)).toBeTruthy()
+  })
+
+  it('shows the stored colour of the internal comment in the swatch', async () => {
+    vi.stubGlobal(
+      'fetch',
+      stubSessionAndBranding(['settings.read', 'settings.write'], {
+        companyName: 'Beispiel GmbH',
+        titleEnabled: false,
+        internalCommentColor: '#450a0a',
+      }),
+    )
+
+    renderPage()
+
+    const field = (await screen.findByLabelText(
+      /Farbe des internen Kommentars|Colour of the internal comment/i,
+    )) as HTMLInputElement
+    expect(field.value).toBe('#450a0a')
+
+    const swatch = await screen.findByTestId('branding-color-swatch')
+    expect((swatch as HTMLElement).style.backgroundColor).toBe('rgb(69, 10, 10)')
+  })
+
+  it('saves a changed colour of the internal comment', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const field = (await screen.findByLabelText(
+      /Farbe des internen Kommentars|Colour of the internal comment/i,
+    )) as HTMLInputElement
+
+    fireEvent.change(field, { target: { value: '#450a0a' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(
+      screen.findByText(/Gespeichert\.|Saved\./i),
+    ).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          companyName: 'Beispiel GmbH',
+          titleEnabled: false,
+          logo: '',
+          internalCommentColor: '#450a0a',
+        }),
+      }),
+    )
+  })
+
+  it('keeps a colour that is no hex value in the browser', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const field = (await screen.findByLabelText(
+      /Farbe des internen Kommentars|Colour of the internal comment/i,
+    )) as HTMLInputElement
+
+    fireEvent.change(field, { target: { value: 'darkred' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    expect(
+      await screen.findByText(/Die Farbe muss ein Hex-Wert sein|colour must be a hex value/i),
+    ).toBeTruthy()
+
+    const puts = fetchMock.mock.calls.filter(
+      (call) => (call as unknown as [RequestInfo | URL, RequestInit?])[1]?.method === 'PUT',
+    )
+    expect(puts).toHaveLength(0)
   })
 })

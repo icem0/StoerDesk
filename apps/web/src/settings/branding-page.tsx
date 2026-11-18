@@ -24,6 +24,12 @@ const jsonHeaders = { 'content-type': 'application/json' }
 /** At most 500 kB of logo payload (mirrors the server cap). */
 const MAX_LOGO_BYTES = 500 * 1024
 
+/** A colour of the form `#rrggbb` — the value of the internal comment. */
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+
+/** The default colour of the internal comment: a dark red (ADR-0034). */
+const DEFAULT_INTERNAL_COMMENT_COLOR = '#7f1d1d'
+
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -62,6 +68,8 @@ export function BrandingPage() {
   const [titleEnabled, setTitleEnabled] = useState<boolean | null>(null)
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
   const [logoError, setLogoError] = useState<string | null>(null)
+  const [color, setColor] = useState<string | null>(null)
+  const [colorError, setColorError] = useState<string | null>(null)
 
   const branding = useQuery({
     queryKey: ['branding'],
@@ -70,6 +78,7 @@ export function BrandingPage() {
   })
 
   const currentLogo = branding.data?.logo ?? ''
+  const currentColor = color ?? branding.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR
 
   const mutation = useMutation({
     mutationFn: (body: UpdateBrandingRequest) =>
@@ -126,13 +135,23 @@ export function BrandingPage() {
         onSubmit={(event) => {
           event.preventDefault()
           setLogoError(null)
+          setColorError(null)
           const form = new FormData(event.currentTarget)
           const logoToSend =
             logoDataUrl === null ? currentLogo : logoDataUrl
+          const colorToSend = String(form.get('internalCommentColor') ?? '').trim()
+
+          // A colour that is no hex value never leaves the browser.
+          if (!HEX_COLOR.test(colorToSend)) {
+            setColorError(t('branding.errors.colorInvalid'))
+            return
+          }
+
           mutation.mutate({
             companyName: String(form.get('companyName') ?? ''),
             titleEnabled: form.get('titleEnabled') === 'on',
             logo: logoToSend,
+            internalCommentColor: colorToSend,
           })
         }}
       >
@@ -192,6 +211,28 @@ export function BrandingPage() {
           />
         </label>
         <p className="text-xs text-slate-400">{t('branding.hintLogo')}</p>
+
+        {/* The colour of the internal comment (ADR-0034): the background of the
+            field and of the entry in the history of the ticket view. */}
+        <label className="flex flex-col gap-1 text-sm">
+          {t('branding.field.internalCommentColor')}
+          <input
+            name="internalCommentColor"
+            className="rounded bg-slate-950 p-2 text-slate-100"
+            defaultValue={branding.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR}
+            disabled={!mayWrite}
+            onChange={(event) => setColor(event.target.value)}
+          />
+        </label>
+        <p className="text-xs text-slate-400">{t('branding.hintInternalCommentColor')}</p>
+        <div
+          className="h-8 w-32 rounded border border-slate-700"
+          style={{ backgroundColor: currentColor }}
+          data-testid="branding-color-swatch"
+        />
+        {colorError !== null ? (
+          <p role="alert" className="text-xs text-rose-400">{colorError}</p>
+        ) : null}
 
         {currentLogo && !logoDataUrl && (
           <div className="flex items-center gap-2">

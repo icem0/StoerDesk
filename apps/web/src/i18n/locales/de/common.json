@@ -51,9 +51,11 @@
     "field": {
       "companyName": "Firmenname",
       "titleEnabled": "Titel bei Ticket erfassen",
-      "logo": "Firmenlogo"
+      "logo": "Firmenlogo",
+      "internalCommentColor": "Farbe des internen Kommentars"
     },
     "hintLogo": "PNG oder JPEG, höchstens 500 kB. Wird im Header, in PDFs und E-Mails verwendet.",
+    "hintInternalCommentColor": "Der Hintergrund des Feldes und des Eintrags im Verlauf der Ticketansicht. Ein Hex-Wert wie #7f1d1d; Standard ist ein dunkles Rot.",
     "logoRemove": "Logo entfernen",
     "save": "Speichern",
     "saved": "Gespeichert.",
@@ -62,6 +64,7 @@
       "forbidden": "Sie sind nicht autorisiert, die Beschriftung zu ändern.",
       "invalid_request": "Der Firmenname ist ungültig.",
       "logoInvalid": "Das Logo ist ungültig (PNG/JPEG, maximal 500 kB).",
+      "colorInvalid": "Die Farbe muss ein Hex-Wert sein, zum Beispiel #7f1d1d.",
       "unknown": "Ein unerwarteter Fehler ist aufgetreten."
     }
   },

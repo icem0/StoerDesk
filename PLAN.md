@@ -2935,6 +2935,13 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The colour of the internal comment under „Darstellung“ (WP-M14-149e, out
+of band in phase 14).** The page of the Darstellung gains the field of the
+colour — a text field with the hex value and a swatch that shows it. The save
+sends it with the company name, the title switch and the logo, so one save
+writes the whole row. A colour that is no hex value never leaves the browser:
+the page names the mistake and sends nothing.
+
 **The settings know the colour of the internal comment (WP-M14-149d, out of
 band in phase 14).** The colour of the internal comment is a value of the
 instance: the row of the branding carries it, and the administration sets it

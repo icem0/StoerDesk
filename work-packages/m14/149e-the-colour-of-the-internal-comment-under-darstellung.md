@@ -1,7 +1,7 @@
 # WP-M14-149e: the colour of the internal comment under „Darstellung“
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 12k tokens
@@ -65,7 +65,7 @@ Expected: all green; the new test fails before the change and passes after it.
 ## Handoff
 
 - Files changed: the page of the Darstellung, the two locale files, the test,
-  this document
+  the security plan, this document, the backlog, the changelog, `PLAN.md` §16
 - Interfaces added: the field of the colour and the texts
   `branding.field.internalCommentColor`, `branding.hintInternalCommentColor`
 - Verified: `npm run check`

@@ -51,9 +51,11 @@
     "field": {
       "companyName": "Company name",
       "titleEnabled": "Ticket title",
-      "logo": "Company logo"
+      "logo": "Company logo",
+      "internalCommentColor": "Colour of the internal comment"
     },
     "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",
+    "hintInternalCommentColor": "The background of the field and of the entry in the history of the ticket view. A hex value like #7f1d1d; the default is a dark red.",
     "logoRemove": "Remove logo",
     "save": "Save",
     "saved": "Saved.",
@@ -62,6 +64,7 @@
       "forbidden": "You are not authorized to change the branding.",
       "invalid_request": "The company name is invalid.",
       "logoInvalid": "The logo is invalid (PNG/JPEG, at most 500 kB).",
+      "colorInvalid": "The colour must be a hex value like #7f1d1d.",
       "unknown": "An unexpected error occurred."
     }
   },

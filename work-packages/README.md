@@ -1563,7 +1563,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-149b | the API writes the internal comment (out of band) | done | yes |
 | WP-M14-149c | the prepared send view leaves the internal comments out (out of band) | done | yes |
 | WP-M14-149d | the settings know the colour of the internal comment (out of band) | done | yes |
-| WP-M14-149e | the colour of the internal comment under „Darstellung“ (out of band) | planned | yes |
+| WP-M14-149e | the colour of the internal comment under „Darstellung“ (out of band) | done | yes |
 | WP-M14-149f | the offline queue carries the internal comment (out of band) | planned | yes |
 | WP-M14-149g | the ticket view writes and shows the internal comment (out of band) | planned | yes |
 | WP-M14-150 | the assignment names a technician and the notification reaches him — ADR-0033, the spec and the split (out of band) | done | yes |
