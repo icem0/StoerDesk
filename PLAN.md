@@ -2636,6 +2636,11 @@ it. The standard is written with one request; the write also deletes the
 deviations that no longer deviate. Without the permission to write the settings
 the select stays read-only.
 
+**The route and the menu entry of the defaults (WP-M14-134h, out of band in
+phase 14).** The route `/admin/defaults` opens the page of the standard values,
+and the menu of the administration carries the entry "Standardwerte" next to
+the escalation.
+
 
 
 

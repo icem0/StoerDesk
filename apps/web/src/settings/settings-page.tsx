@@ -58,6 +58,7 @@ const SETTINGS_SECTIONS = [
       { key: 'standardTexts', path: '/admin/text-templates' },
       { key: 'detectedErrors', path: '/admin/detected-errors' },
       { key: 'escalation', path: '/admin/escalation' },
+      { key: 'defaults', path: '/admin/defaults' },
       { key: 'oncall', path: '/admin/oncall' },
       { key: 'bmaSync', path: '/admin/bma-sync' },
       { key: 'apiKeys', path: '/admin/api-keys' },

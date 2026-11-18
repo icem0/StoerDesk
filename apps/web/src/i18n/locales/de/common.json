@@ -99,7 +99,8 @@
       "escalation": "Eskalation",
       "notifications": "Benachrichtigungen",
       "statuses": "Status",
-      "transitions": "Übergang"
+      "transitions": "Übergang",
+      "defaults": "Standardwerte"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",

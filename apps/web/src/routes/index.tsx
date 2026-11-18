@@ -17,6 +17,7 @@ import { RolesPage } from '../admin/roles-page'
 import { GroupsPage } from '../admin/groups-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { EscalationPage } from '../admin/escalation-page'
+import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
 import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { OncallPage } from '../admin/oncall-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
@@ -159,6 +160,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <EscalationPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/defaults',
+        element: (
+          <RequireSession>
+            <TicketDefaultsPage />
           </RequireSession>
         ),
       },

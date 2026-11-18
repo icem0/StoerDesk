@@ -99,7 +99,8 @@
       "escalation": "Escalation",
       "notifications": "Notifications",
       "statuses": "Statuses",
-      "transitions": "Transitions"
+      "transitions": "Transitions",
+      "defaults": "Default values"
     },
     "errors": {
       "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",

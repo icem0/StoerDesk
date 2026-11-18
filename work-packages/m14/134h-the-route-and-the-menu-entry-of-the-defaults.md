@@ -1,7 +1,7 @@
 # WP-M14-134h: the route and the menu entry of the defaults
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -60,6 +60,6 @@ Expected: all green; the page is reachable over the menu of the administration.
 
 - Files changed: the routes of the web app, the menu of the administration
 - Interfaces added: the route `/admin/defaults`, the menu entry
-- Verified: `npm run check` (exit 0), the test of the menu
+- Verified: `npm run check` (exit 0), the test of the menu proves the entry of the defaults
 - Follow-up WP: WP-M14-134i (the create form starts from the priority of the object)
 - Open question: none

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The standard values have their own entry in the menu of the administration
+  (**WP-M14-134h**, out of band in phase 14 — **ADR-0029**): the route
+  `/admin/defaults` opens the page of the standard priority and of the
+  deviations.
 - The administration shows the standard and the deviations
   (**WP-M14-134g**, out of band in phase 14 — **ADR-0029**): the new page of the
   administration shows the standard priority of the instance and the list of

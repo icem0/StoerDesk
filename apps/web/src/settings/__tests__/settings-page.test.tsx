@@ -67,6 +67,9 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('link', { name: 'Eskalation' }).getAttribute('href')).toBe(
       '/admin/escalation',
     )
+    expect(screen.getByRole('link', { name: 'Standardwerte' }).getAttribute('href')).toBe(
+      '/admin/defaults',
+    )
     expect(screen.getByRole('link', { name: 'QR-Aufkleber' }).getAttribute('href')).toBe(
       '/objects/stickers',
     )
