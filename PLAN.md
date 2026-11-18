@@ -166,7 +166,9 @@ Permission categories:
 - `object.*`: read, write, delete, regenerate_qr, import
 - `oncall.*`: read, plan, confirm, swap, admin
 - `user.*`, `role.*`, `settings.*`, `apikey.*`
-- `stats.read`, `stats.export`, `notification.read`, `notification.write`
+- `stats.read`, `stats.export`, `notification.read`, `notification.write`,
+  `notification.read_all` (the messages of other users; the key belongs to no
+  default role, `specs/01-rbac.md` §3.3)
 
 The full role-permission matrix is maintained in `specs/01-rbac.md`.
 
@@ -2645,6 +2647,25 @@ the escalation.
 band in phase 14).** Picking an object in the internal report takes the
 effective priority of that object into the select of the priority: the deviation
 applies unless the user chooses another one.
+
+**The admin sees which message arrived at which user (WP-M14-141, out of band
+in phase 14).** The office asked for two things: the notification shall react
+to the own messages only, and under `/notifications` a filter shall show an
+admin which messages arrived at which users — with a permission of its own
+that a role can be given. The inbox of a user stays personal: the page and the
+bell show and count only the own messages. The second view is a right of its
+own: the permission key `notification.read_all` in the catalog of
+`packages/shared/src/permissions.ts` — it belongs to no default role, the
+administration assigns it to a role over the role API
+(`specs/01-rbac.md` §3.8), `admin` holds it through the catalog. The gate is in
+the API (`specs/10-notifications.md` §11.16): without the key the answer of
+`GET /api/v1/notifications/messages` holds the own messages, the addressee of a
+row is `null` and a request for the messages of another user answers
+`403 forbidden`. With the key the route reads the filters of the addressee, the
+channel, the event, the state of the delivery and the unread messages, and the
+answer names the addressee of every row. The package writes no product code:
+the chain is split into **WP-M14-141a** (the key and the contracts),
+**WP-M14-141b** (the API) and **WP-M14-141c** (the page).
 
 
 

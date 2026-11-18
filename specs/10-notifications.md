@@ -310,3 +310,50 @@ per day; a channel that works again is silent.
 **The instance row.** A warning row belongs to no ticket and to no shift: it
 carries the event type `channel.health_warning`, no ticket, no shift and no
 personal message. The checks of the `outbox` table know that shape.
+
+## 11.16 The admin view of the inbox
+
+The inbox of a user is **personal**: the page `/notifications` and the bell of
+the shell show and count only the messages of the signed-in user. That is the
+promise of the inbox — a user reads what StörDesk sent to them.
+
+The office asks for a second view on the same page: a filter that shows **which
+message arrived at which user**. The right to it is a permission of its own:
+
+| Permission | Meaning |
+| --- | --- |
+| `notification.read_all` | read the messages of **other** users |
+
+The key belongs to no default role — the administration assigns it to a role
+over the role API (`specs/01-rbac.md` §3.8), `admin` holds it through the
+catalogue. Without the key the answer of the API stays the own messages, the
+addressee of a row is `null` and the list of the addressees is empty; a request
+for the messages of another user answers `403 forbidden`.
+
+### The filters
+
+`GET /api/v1/notifications/messages` reads the filters of the query:
+
+| Filter | Meaning |
+| --- | --- |
+| `userId` | the addressee of the message; a foreign id without the permission answers `403 forbidden` |
+| `channel` | the channel of the message |
+| `eventType` | the event type of the message (§11.4) |
+| `state` | the state of the delivery (`PENDING`, `SENT`, `FAILED`) |
+| `unread` | `true` answers the messages without a read receipt |
+
+The filters `channel`, `eventType`, `state` and `unread` narrow the own inbox
+and are allowed for every session; only the filter of the addressee needs the
+permission. An unknown value answers `400 invalid_request` with the field path.
+
+### The answer
+
+Every row carries its addressee (`{ userId, name }` — the name of the user,
+else the e-mail) and the answer carries the list of the addressees with the
+number of their messages. The list applies every filter **except** the filter of
+the addressee, so it stays complete while a filter is active.
+
+The read receipt stays a right of the own messages: a message of another user
+cannot be marked as read (the route answers `404 message_not_found`). The bell
+and the unread count stay personal — the admin view never changes what a user
+sees in the bell.

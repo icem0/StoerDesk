@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The admin sees which message arrived at which user (**WP-M14-141**, out of
+  band in phase 14): the inbox of a user stays personal — the page
+  `/notifications` and the bell show and count only the own messages. A second
+  view on the same page answers the question of the office: with the new
+  permission `notification.read_all` the route `GET /api/v1/notifications/messages`
+  reads the filters of the addressee, the channel, the event, the state of the
+  delivery and the unread messages, and every row names its addressee. The key
+  belongs to no default role: the administration assigns it to a role over the
+  role API, `admin` holds it through the catalog. Without the key the answer
+  stays the own messages and a request for the messages of another user answers
+  `403 forbidden`.
 - The internal report form starts from the priority of the object
   (**WP-M14-134i**, out of band in phase 14 — **ADR-0029**): picking an object
   takes the effective priority of that object into the select of the priority —

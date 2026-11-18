@@ -90,9 +90,10 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `stats.export`         |     |     |     | x   | x   |
 | `notification.read`    | x   | x   | x   | x   | x   |
 | `notification.write`   | x   | x   | x   | x   | x   |
+| `notification.read_all` |    |     |     |     | x   |
 | `system.update`        |     |     |     |     | x   |
 
-Totals: 40 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 40.
+Totals: 41 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 41.
 
 Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)**:
 
@@ -114,6 +115,13 @@ Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)
   the API keeps answering the names to `oncall.read` (the members of a pool are
   the candidates of a swap), the UI hides what the role may not see
   (`specs/01-rbac.md` §3.7).
+- `notification.read_all` is the right to the **messages of other users**
+  (`specs/10-notifications.md` §11.16): the inbox of a user stays personal and
+  shows only the own messages. The key belongs to no default role — the
+  administration assigns it to a role over the role API (§3.8); `admin` holds it
+  through the catalogue. The gate is in the API: without the key the answer
+  holds the own messages and a request for the messages of another user
+  answers `403 forbidden`.
 
 ### 3.4 Permission catalog
 
@@ -133,7 +141,7 @@ role.read, role.write
 settings.read, settings.write
 apikey.read, apikey.write
 stats.read, stats.export
-notification.read, notification.write
+notification.read, notification.write, notification.read_all
 system.update
 ```
 

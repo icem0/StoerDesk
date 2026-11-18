@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i) | 116  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i) and the admin view of the inbox (WP-M14-141 … WP-M14-141c) | 120  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -941,6 +941,28 @@ the internal form preselects it, the QR report has no other choice, and the
 explicit choice of the internal user still wins. The decision splits into
 WP-M14-134a … WP-M14-134i.
 
+**The admin sees which message arrived at which user (WP-M14-141, out of band
+in phase 14, requested by the office).** The office asked for two things: „die
+notifikation soll nur auf meine eigenen nachrichten reagieren" and „unter
+/notifications können wir aber einen filter einbauen mit dem ein Admin sehen
+kann welche nachrichten bei welchen benutzern angekommen sind — mit einer
+eigenen berechtigungs ebene die einer rolle zugewiesen werden kann".
+
+The inbox of a user stays personal: the page `/notifications` and the bell of
+the shell show and count only the own messages. The second view is a right of
+its own: the permission key `notification.read_all` in the catalog of
+`packages/shared/src/permissions.ts` — it belongs to no default role, the
+administration assigns it to a role over the role API
+(`specs/01-rbac.md` §3.8), `admin` holds it through the catalog. The gate is in
+the API (`specs/10-notifications.md` §11.16): without the key the answer of
+`GET /api/v1/notifications/messages` holds the own messages, the addressee of a
+row is `null` and a request for the messages of another user answers
+`403 forbidden`. With the key the route reads the filters of the addressee, the
+channel, the event, the state of the delivery and the unread messages, and the
+answer names the addressee of every row. The decision splits into
+WP-M14-141a (the key and the contracts), WP-M14-141b (the API) and
+WP-M14-141c (the page).
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1495,6 +1517,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-134h | the route and the menu entry of the defaults (out of band) | done | yes |
 | WP-M14-134i | the create form starts from the priority of the object (out of band) | done | yes |
 | WP-M14-135 | the fallbacks of the escalation page carry the values of ADR-0008 (out of band) | planned | yes |
+| WP-M14-141 | the admin sees which message arrived at which user — the spec and the split (out of band) | planned | yes |
+| WP-M14-141a | the permission key and the contracts of the filter (out of band) | planned | yes |
+| WP-M14-141b | the API of the filtered inbox (out of band) | planned | yes |
+| WP-M14-141c | the filter under `/notifications` (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
