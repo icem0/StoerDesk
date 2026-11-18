@@ -1,7 +1,7 @@
 # WP-M14-143: the inbox asks this browser
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -74,6 +74,7 @@ silent when the browser answers with a subscription.
 
 - Files changed: the inbox page, its test and the two locale files
 - Interfaces added: the texts of the causes of the hint
-- Verified: —
-- Follow-up WP: none
+- Verified: `npm run check` (exit 0), the vitest file of the inbox
+- Follow-up WP: WP-M14-144 (the server answers whether it holds the device of
+  this browser) — the document exists in this commit
 - Open question: none

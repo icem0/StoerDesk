@@ -11,6 +11,7 @@ import type {
 
 import { useMe, usePermission } from '../../auth/usePermission'
 import { apiFetch } from '../../lib/api'
+import { type BrowserPush, useBrowserPush } from '../../lib/web-push'
 
 const NOTIFICATION_CHANNELS = [
   'ntfy',
@@ -34,6 +35,31 @@ const NOTIFICATION_EVENTS = [
 
 const NOTIFICATION_STATES = ['PENDING', 'SENT', 'FAILED'] as const
 
+/** The cause of the hint of the web push; `none` means: no hint. */
+type WebPushHint = 'none' | 'not_subscribed' | 'unsupported' | 'denied' | 'not_configured'
+
+/**
+ * The cause of the hint. The state of the browser comes from the probe of
+ * WP-M14-142, the state of the server from the configuration of the channel —
+ * the hint names the cause it found and stays silent while a question is open:
+ * a statement about the browser that was never checked is a lie.
+ */
+function webPushHint(push: BrowserPush | null, serverConfigured: boolean | null): WebPushHint {
+  if (push === null || push.state === 'subscribed' || push.state === 'unknown') {
+    return 'none'
+  }
+
+  if (push.state === 'unsupported') {
+    return 'unsupported'
+  }
+
+  if (push.state === 'denied') {
+    return 'denied'
+  }
+
+  return serverConfigured === false ? 'not_configured' : 'not_subscribed'
+}
+
 /**
  * The inbox of the signed-in user (`specs/10-notifications.md` §11.8, §11.12,
  * WP-M14-120d): the messages that the internal layer recorded for the user
@@ -43,9 +69,10 @@ const NOTIFICATION_STATES = ['PENDING', 'SENT', 'FAILED'] as const
  *
  * The page never shows a contact of a reporter and never a photo (§11.5): the
  * title is the ticket number or the name of the pool, the body carries the
- * machine-readable params of the message. While web push is not set up the page
- * names the setup page of the settings menu (WP-M14-128) — it only links there,
- * registering this browser stays the card of WP-M14-126a.
+ * machine-readable params of the message. While this browser receives no push
+ * message the page names the cause and the setup page of the settings menu
+ * (WP-M14-128, WP-M14-143) — it only links there, registering this browser
+ * stays the card of WP-M14-126a.
  *
  * The inbox of a user stays personal: the list shows the own messages only.
  * A role with the permission `notification.read_all` (WP-M14-141c) gets the
@@ -122,20 +149,29 @@ export function InboxPage() {
     },
   })
 
-  // The office asked: an inbox whose browser is not registered for web push
-  // names the way there (WP-M14-128). The card of WP-M14-126a on
-  // `/settings/notifications` owns the subscribe action; the inbox only links
-  // to it. A pending or failed config query shows no hint — the inbox never
-  // blocks on the channel state.
+  // The office asked: an inbox whose browser receives no push message names the
+  // way there (WP-M14-128). The card of WP-M14-126a on `/settings/notifications`
+  // owns the subscribe action; the inbox only links to it. The question goes to
+  // the browser itself (WP-M14-142) and to the configuration of the channel —
+  // a pending or failed question shows no hint, the inbox never blocks on the
+  // state of the channel.
+  const { push } = useBrowserPush()
+
   const webPush = useQuery({
     queryKey: ['webpush-config'],
     queryFn: () => apiFetch<WebPushConfigResponse>('/v1/notifications/accounts/webpush'),
     retry: false,
   })
 
-  const webPushNotSetUp =
-    webPush.isSuccess &&
-    ((webPush.data?.publicKey ?? '') === '' || (webPush.data?.subscriptions ?? 0) === 0)
+  const serverConfigured = webPush.isSuccess ? (webPush.data?.publicKey ?? '') !== '' : null
+  const hint = webPushHint(push, serverConfigured)
+
+  const hintTexts = {
+    not_subscribed: t('inbox.webpush.hint'),
+    unsupported: t('inbox.webpush.unsupported'),
+    denied: t('inbox.webpush.denied'),
+    not_configured: t('inbox.webpush.notConfigured'),
+  }
 
   const stateOf = (message: NotificationMessageItem) =>
     t(`inbox.state.${message.state.toLowerCase()}`)
@@ -342,15 +378,17 @@ export function InboxPage() {
         </ul>
       ) : null}
 
-      {webPushNotSetUp ? (
+      {hint !== 'none' ? (
         <p className="mt-6 flex flex-col gap-1">
-          <span className="text-sm text-slate-400">{t('inbox.webpush.hint')}</span>
-          <Link
-            className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-            to="/settings/notifications"
-          >
-            {t('inbox.webpush.setup')}
-          </Link>
+          <span className="text-sm text-slate-400">{hintTexts[hint]}</span>
+          {hint === 'not_configured' ? null : (
+            <Link
+              className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              to="/settings/notifications"
+            >
+              {t('inbox.webpush.setup')}
+            </Link>
+          )}
         </p>
       ) : null}
     </main>

@@ -286,8 +286,11 @@
       "reset": "Reset the filter"
     },
     "webpush": {
-      "hint": "Push notifications are not set up on this browser yet.",
-      "setup": "Open the setup page"
+      "hint": "Push notifications are not set up for this browser yet.",
+      "setup": "Open the setup page",
+      "unsupported": "This browser cannot receive push notifications.",
+      "denied": "Push notifications are blocked in this browser.",
+      "notConfigured": "Web push is not configured on this server (the VAPID keys are missing)."
     }
   }
 }

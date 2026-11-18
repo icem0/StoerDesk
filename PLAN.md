@@ -2667,9 +2667,6 @@ answer names the addressee of every row. The package writes no product code:
 the chain is split into **WP-M14-141a** (the key and the contracts),
 **WP-M14-141b** (the API) and **WP-M14-141c** (the page).
 
-
-
-
 **The permission key and the contracts of the filter (WP-M14-141a, out of band
 in phase 14).** The catalogue of `packages/shared/src/permissions.ts` gains the
 key `notification.read_all` — it belongs to no default role, `admin` holds it
@@ -2704,6 +2701,41 @@ delivery and the checkbox for the unread messages. The values live in the query
 of the URL, so a filtered view can be shared. Every row names its addressee,
 and the read receipt stays a right of the own messages: a row of another user
 is not clickable.
+
+**The browser answers for its own push subscription (WP-M14-142, out of band in
+phase 14).** The office complained about the push: „unter notifikation wird
+einfach per text was behauptet! … das wird ja nichtmal geprüft!“ The web-push
+UI claimed a state of the browser that nobody had asked: the card of
+`/settings/notifications` named a device as registered after one local
+subscription, and the inbox of `/notifications` named the browser as not
+enabled from the device count of the account — both are wrong whenever the
+browser and the server disagree, and the browser was never asked at all. The new
+module `apps/web/src/lib/web-push.ts` holds one probe that asks **this**
+browser for its own push subscription and names the state it found:
+`unsupported` (no `PushManager`, no service worker), `denied` (the
+notifications of the site are blocked), `subscribed`, `not_subscribed` and
+`unknown` (the browser did not answer — nothing is claimed then). The card and
+the inbox read this one probe, so both name the same cause
+(`specs/10-notifications.md` §11.12). The chain continues with **WP-M14-143**
+(the inbox asks this browser), **WP-M14-144** (the server answers whether it
+holds the device of this browser), **WP-M14-145** (the card asks the server
+about this device) and **WP-M14-146** (the inbox asks the server about this
+device).
+
+**The inbox asks this browser (WP-M14-143, out of band in phase 14).** The hint
+of the web push under `/notifications` claimed „Push notifications are not
+enabled in this browser yet.“ from the device count of the account — a
+statement about the browser that was never asked, and a wrong one while
+another device of the account is registered. The page reads the state of the
+browser from the probe of WP-M14-142 and the state of the server from the
+configuration of the channel, and names the cause it found: a browser without a
+push manager, a blocked permission, a browser without a subscription and a
+server without a VAPID key get four different texts; the missing server
+configuration is named without a link, because the user cannot fix that. The
+page stays silent while a question is open — nothing is claimed without a
+check. The German texts replace the English sentence of WP-M14-128.
+
+
 
 
 ## 17. Work package rules for small models

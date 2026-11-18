@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The inbox asks this browser (**WP-M14-143**, out of band in phase 14): the
+  hint of the web push no longer claims that the browser is not enabled while
+  nobody asked it. The page reads the state of the browser from the probe and
+  names the cause it found — a browser without a push manager, a blocked
+  permission, a browser without a subscription or a server without a VAPID key
+  get their own text; a server without a key is named without a link, because
+  the user cannot fix that. The German texts replace the English sentence of
+  WP-M14-128.
 - The inbox of the notifications carries the filter of the administration
   (**WP-M14-141c**, out of band in phase 14): a role with the permission
   `notification.read_all` sees above the list the addressee, the channel, the

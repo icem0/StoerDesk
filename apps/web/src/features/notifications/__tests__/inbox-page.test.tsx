@@ -92,7 +92,45 @@ function renderPage() {
   )
 }
 
+/**
+ * The browser of the user: the probe of WP-M14-142 asks this browser for its
+ * own push subscription. The stubs below are the four states of the probe.
+ */
+function stubBrowser(state: 'subscribed' | 'not_subscribed' | 'unsupported' | 'denied' | 'unknown') {
+  Reflect.deleteProperty(navigator, 'serviceWorker')
+  Reflect.deleteProperty(window, 'PushManager')
+  Reflect.deleteProperty(window, 'Notification')
+
+  if (state === 'unsupported') {
+    return
+  }
+
+  const subscription =
+    state === 'subscribed' ? { endpoint: 'https://push.example.org/secret/42' } : null
+
+  Object.defineProperty(navigator, 'serviceWorker', {
+    configurable: true,
+    value: {
+      getRegistration: vi.fn(async () => {
+        if (state === 'unknown') {
+          throw new Error('no service worker in this context')
+        }
+
+        return { pushManager: { getSubscription: vi.fn(async () => subscription) } }
+      }),
+    },
+  })
+  Object.defineProperty(window, 'PushManager', { configurable: true, value: class {} })
+  Object.defineProperty(window, 'Notification', {
+    configurable: true,
+    value: { permission: state === 'denied' ? 'denied' : 'default' },
+  })
+}
+
 afterEach(() => {
+  Reflect.deleteProperty(navigator, 'serviceWorker')
+  Reflect.deleteProperty(window, 'PushManager')
+  Reflect.deleteProperty(window, 'Notification')
   vi.unstubAllGlobals()
 })
 
@@ -160,8 +198,23 @@ describe('InboxPage', () => {
     expect(await screen.findByText('Noch keine Nachricht.')).toBeTruthy()
   })
 
-  it('names the setup page while web push is not set up (WP-M14-128)', async () => {
+  it('names the missing server configuration instead of the browser (WP-M14-143)', async () => {
     stub([message])
+    stubBrowser('not_subscribed')
+
+    renderPage()
+
+    expect(
+      await screen.findByText(
+        'Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
+  })
+
+  it('names this browser when it has no subscription (WP-M14-143)', async () => {
+    stub([message], { publicKey: 'vapid-public-key', subscribed: false, subscriptions: 0 })
+    stubBrowser('not_subscribed')
 
     renderPage()
 
@@ -173,11 +226,50 @@ describe('InboxPage', () => {
     ).toBeTruthy()
   })
 
-  it('shows no setup hint when this browser is registered for web push (WP-M14-128)', async () => {
-    stub([message], { publicKey: 'vapid-public-key', subscribed: true, subscriptions: 1 })
+  it('names a browser without a push manager (WP-M14-143)', async () => {
+    stub([message], { publicKey: 'vapid-public-key', subscribed: false, subscriptions: 0 })
+    stubBrowser('unsupported')
 
     renderPage()
 
+    expect(
+      await screen.findByText('Dieser Browser kann keine Push-Benachrichtigungen empfangen.'),
+    ).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeTruthy()
+  })
+
+  it('names a blocked permission of this browser (WP-M14-143)', async () => {
+    stub([message], { publicKey: 'vapid-public-key', subscribed: false, subscriptions: 0 })
+    stubBrowser('denied')
+
+    renderPage()
+
+    expect(
+      await screen.findByText('Die Push-Benachrichtigungen sind in diesem Browser gesperrt.'),
+    ).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeTruthy()
+  })
+
+  it('shows no setup hint when this browser is registered for web push (WP-M14-143)', async () => {
+    stub([message], { publicKey: 'vapid-public-key', subscribed: true, subscriptions: 1 })
+    stubBrowser('subscribed')
+
+    renderPage()
+
+    expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
+    expect(
+      screen.queryByText('Für diesen Browser sind noch keine Push-Benachrichtigungen eingerichtet.'),
+    ).toBeNull()
+  })
+
+  it('shows no setup hint while the browser has not answered (WP-M14-143)', async () => {
+    stub([message], { publicKey: 'vapid-public-key', subscribed: false, subscriptions: 0 })
+    stubBrowser('unknown')
+
+    renderPage()
+
+    expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
     expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
   })
 

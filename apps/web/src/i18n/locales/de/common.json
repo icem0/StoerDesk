@@ -286,8 +286,11 @@
       "reset": "Filter zurücksetzen"
     },
     "webpush": {
-      "hint": "Push notifications are not enabled in this browser yet.",
-      "setup": "Open setup page"
+      "hint": "Für diesen Browser sind noch keine Push-Benachrichtigungen eingerichtet.",
+      "setup": "Einrichtungsseite öffnen",
+      "unsupported": "Dieser Browser kann keine Push-Benachrichtigungen empfangen.",
+      "denied": "Die Push-Benachrichtigungen sind in diesem Browser gesperrt.",
+      "notConfigured": "Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen)."
     }
   }
 }
