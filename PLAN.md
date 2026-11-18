@@ -2351,6 +2351,17 @@ window or opens the link. The label is the translated
 `notification.action_label` of the server, so the parser never hard-codes a
 locale. The subscribe card follows in **WP-M14-126a** and **WP-M14-126b**.
 
+**The settings page registers this browser for web push (WP-M14-126a/126b, out
+of band in phase 14).** The card on `/settings/notifications` reads the VAPID
+public key, asks for the notification permission on click, subscribes with
+`pushManager` and stores the device through the route of WP-M14-124; the remove
+button drops the local subscription and the server row. A missing key, a browser
+without PushManager (an iPhone outside the installed app) and a refused
+permission each name their own hint instead of offering a button that cannot
+work. The overview and the selection read the same `['webpush-config']` query,
+and a QR opens the page on the phone. With WP-M14-124 and WP-M14-125 the web-push
+channel is usable end to end.
+
 
 
 ## 17. Work package rules for small models

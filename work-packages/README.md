@@ -1422,7 +1422,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-124 | the web-push subscription endpoint (out of band)                    | done    | yes     |
 | WP-M14-125 | the service worker shows the push message (out of band)             | done    | yes     |
 | WP-M14-126a | the web-push card (out of band)                                     | done    | yes     |
-| WP-M14-126b | the web-push card on the settings page (out of band)                | planned | yes     |
+| WP-M14-126b | the web-push card on the settings page (out of band)                | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

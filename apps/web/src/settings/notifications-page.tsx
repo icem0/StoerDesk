@@ -14,9 +14,11 @@ import {
   type NotificationPreferenceEntry,
   type NotificationPreferencesListResponse,
   type TelegramLinkCodeResponse,
+  type WebPushConfigResponse,
 } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../lib/api'
 import { NtfySubscription } from '../features/settings/NtfySubscription'
+import { WebPushSubscription } from '../features/settings/WebPushSubscription'
 
 /**
  * The own channels page (`specs/10-notifications.md` §11.1, §11.3, §11.12,
@@ -129,9 +131,17 @@ function matrixErrorMessage(t: TFunction<'common'>, error: unknown): string {
  * email carry the recipients of the instance and never an own account; the
  * other kinds have their linking in the later packages.
  */
-function channelState(kind: NotificationChannelKind, telegramLinked: boolean): string {
+function channelState(
+  kind: NotificationChannelKind,
+  telegramLinked: boolean,
+  webpushState: 'linked' | 'notLinked' | 'later',
+): string {
   if (kind === 'telegram') {
     return telegramLinked ? 'linked' : 'notLinked'
+  }
+
+  if (kind === 'webpush') {
+    return webpushState
   }
 
   if (kind === 'signal' || kind === 'email') {
@@ -229,6 +239,20 @@ const testReason = (code: string): string => {
 
   const whatsappLinked = whatsappLink.isSuccess && !whatsappRemove.isSuccess
 
+  /** The own devices (`GET /api/v1/notifications/accounts/webpush`, WP-M14-124). */
+  const webPushConfig = useQuery({
+    queryKey: ['webpush-config'],
+    queryFn: () => apiFetch<WebPushConfigResponse>('/v1/notifications/accounts/webpush'),
+    retry: false,
+  })
+
+  const webPushState: 'linked' | 'notLinked' | 'later' =
+    webPushConfig.isSuccess && (webPushConfig.data?.publicKey ?? '') !== ''
+      ? (webPushConfig.data?.subscriptions ?? 0) > 0
+        ? 'linked'
+        : 'notLinked'
+      : 'later'
+
   const ntfyTest = useMutation({
     mutationFn: () =>
       apiFetch<ChannelTestResponse>('/v1/admin/channels/ntfy/test', {
@@ -286,6 +310,7 @@ const testReason = (code: string): string => {
     if (kind === 'telegram') return link.isSuccess
     if (kind === 'matrix') return matrixLinked
     if (kind === 'whatsapp') return whatsappLinked
+    if (kind === 'webpush') return webPushState === 'linked'
     if (kind === 'ntfy')
       return ntfySubscription.isSuccess && (ntfySubscription.data?.publicUrl ?? '') !== ''
     return true
@@ -343,7 +368,7 @@ const testReason = (code: string): string => {
           <li key={kind} className="flex items-center justify-between gap-2 text-sm">
             <span>{t(`notifications.kinds.${kind}`)}</span>
             <span className="text-slate-400">
-              {t(`notifications.state.${channelState(kind, link.isSuccess)}`)}
+              {t(`notifications.state.${channelState(kind, link.isSuccess, webPushState)}`)}
             </span>
           </li>
         ))}
@@ -698,6 +723,8 @@ const testReason = (code: string): string => {
 
         <p className="mt-2 text-sm text-slate-400">{t('notifications.telegram.removeHint')}</p>
       </section>
+
+      <WebPushSubscription />
 
       <section
         className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"

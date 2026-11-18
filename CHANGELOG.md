@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The settings page registers this browser for web push (WP-M14-126a/126b, out
+  of band in phase 14): the card reads the VAPID public key, asks for the
+  notification permission on click, subscribes with `pushManager` and stores the
+  device; the remove button drops the local subscription and the server row. A
+  missing key, a browser without PushManager and a refused permission each name
+  their own hint, and a QR opens the page on the phone. The page mounts the card
+  and derives the overview and selection state from the same query.
 - The service worker shows web-push messages (WP-M14-125, out of band in phase
   14): a `push` event turns the adapter payload into a notification (title, body,
   `/logo.png` icon) and a click opens the deep link or focuses the open app. The
