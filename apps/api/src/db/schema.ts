@@ -35,6 +35,7 @@ export const users = pgTable(
     locale: text('locale').notNull().default('de'),
     theme: text('theme').notNull().default('auto'),
     active: boolean('active').notNull().default(true),
+    mustChangePassword: boolean('must_change_password').notNull().default(false),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },

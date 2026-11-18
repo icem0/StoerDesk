@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The column of the open password change (**WP-M14-148a**, out of band in phase
+  14): the table `users` gains the flag `must_change_password` — boolean, not
+  null, default `false`. The flag marks an account whose password is a
+  one-time password; the migration touches no row, because an installed
+  account holds a password of its own (migration `0051`).
 - The condition of the readiness shift in the shared contract (**WP-M14-147a**,
   out of band in phase 14): the conditions of a rule gain the field `shift` with
   the uuid of a readiness pool, and the facts of a ticket gain the pools that

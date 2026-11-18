@@ -1,0 +1,11 @@
+-- The one-time password of the administration (WP-M14-148a, `specs/01-rbac.md`
+-- §3.9, ADR-0031): the flag of an account whose password is a one-time password.
+--
+-- The administration sets the password of a colleague; the server generates it
+-- and the colleague replaces it at the first login with a secret of his own.
+-- While the flag is set, every guarded route answers
+-- `403 { code: 'password_change_required' }`.
+--
+-- The default is `false`: an installed account holds a password of its own,
+-- never a one-time password, so the migration touches no row.
+ALTER TABLE "users" ADD COLUMN "must_change_password" boolean DEFAULT false NOT NULL;

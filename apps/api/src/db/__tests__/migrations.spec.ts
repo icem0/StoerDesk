@@ -95,7 +95,7 @@ describe('base schema', () => {
     )
 
     expect(columnsByTable).toEqual([
-      ['id', 'email', 'givenName', 'familyName', 'passwordHash', 'locale', 'theme', 'active', 'createdAt', 'updatedAt'],
+      ['id', 'email', 'givenName', 'familyName', 'passwordHash', 'locale', 'theme', 'active', 'mustChangePassword', 'createdAt', 'updatedAt'],
       ['id', 'userId', 'tokenHash', 'expiresAt', 'createdAt'],
       ['id', 'name', 'createdAt', 'updatedAt'],
       ['userId', 'groupId', 'createdAt'],
@@ -461,5 +461,21 @@ describe('migration 0028 ticket reporter metadata', () => {
     expect(sql).toContain(
       'FOREIGN KEY ("reported_by_user_id") REFERENCES "public"."users"("id") ON DELETE set null',
     )
+  })
+})
+
+describe('migration 0051 the open password change', () => {
+  const sql = readMigration('0051_users_must_change_password')
+
+  it('adds the flag of the one-time password with the default false', () => {
+    expect(sql).toContain(
+      `ALTER TABLE "users" ADD COLUMN "must_change_password" boolean DEFAULT false NOT NULL;`,
+    )
+  })
+
+  it('touches the users table only and fills no row', () => {
+    expect(sql).not.toContain('tickets')
+    expect(sql).not.toContain('sessions')
+    expect(sql).not.toContain('UPDATE')
   })
 })

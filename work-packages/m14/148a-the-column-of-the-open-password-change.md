@@ -1,7 +1,7 @@
 # WP-M14-148a: the column of the open password change
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 12k tokens

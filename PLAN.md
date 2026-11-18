@@ -2821,6 +2821,13 @@ sessions of the account die with the secret. The chain is split into
 **WP-M14-148e** (the form of the colleague) and **WP-M14-148f** (the panel of the
 administration).
 
+**The column of the open password change (WP-M14-148a, out of band in phase
+14).** The table `users` gains the flag `must_change_password` — boolean, not
+null, default `false` (migration `0051_users_must_change_password.sql`). The
+flag marks an account whose password is a one-time password; the migration
+touches no row, because an installed account holds a password of its own. The
+contracts of the flag follow in WP-M14-148b.
+
 
 
 ## 17. Work package rules for small models
