@@ -1,7 +1,7 @@
 # WP-M14-149f: the offline queue carries the internal comment
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -66,7 +66,8 @@ Expected: all green; the new tests fail before the change and pass after it.
 ## Handoff
 
 - Files changed: the queue, the hook of the queue, the routes of the service
-  worker, the tests, this document
+  worker, the tests, the security plan, this document, the backlog, the
+  changelog, `PLAN.md` §16
 - Interfaces added: the kind `internal_comment`, the route `comments/internal`
 - Verified: `npm run check`
 - Follow-up WP: WP-M14-149g (the ticket view writes and shows the internal

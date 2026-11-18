@@ -66,6 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   it with the company name, the title switch and the logo, so one save writes
   the whole row. A colour that is no hex value never leaves the browser
   (ADR-0034).
+- The offline queue carries the internal comment (**WP-M14-149f**, out of band
+  in phase 14): the queue carries the kind `internal_comment`, the replay posts
+  it to its own route, and the hook of the queue knows the kind. The note is
+  never queued as a normal comment — a normal comment is printed with the
+  prepared send view. The predicate of the service worker matches the route of
+  the internal comment as well, so the note shows up in the history at once
+  (ADR-0034).
 - The assignment names a technician and the notification reaches him
   (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
   two more targets. The action „Ticket zuweisen“ may name one technician of the

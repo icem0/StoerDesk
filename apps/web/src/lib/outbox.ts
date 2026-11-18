@@ -17,9 +17,12 @@ export interface QueuedReport {
 /**
  * The three internal writes phase 5 allows offline (`PLAN.md` §10):
  * acknowledge, comment and decline. Claiming and shift confirmations stay
- * online-only (`specs/09-offline.md` §9.6).
+ * online-only (`specs/09-offline.md` §9.6). The internal comment
+ * (ADR-0034) joins them — the note of the colleagues survives the offline
+ * mode as well, and it is never queued as a normal comment, because a normal
+ * comment is printed with the prepared send view.
  */
-export type InternalActionKind = 'acknowledge' | 'comment' | 'decline'
+export type InternalActionKind = 'acknowledge' | 'comment' | 'internal_comment' | 'decline'
 
 /**
  * One queued internal write. `client_uuid` is the idempotency key the API
@@ -237,6 +240,7 @@ const CONFLICT_CODES = new Set(['invalid_transition', 'ticket_not_found', 'actio
 const ACTION_SEGMENTS: Record<InternalActionKind, string> = {
   acknowledge: 'acknowledge',
   comment: 'comments',
+  internal_comment: 'comments/internal',
   decline: 'decline',
 }
 

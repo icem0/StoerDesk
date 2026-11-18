@@ -123,6 +123,26 @@ describe('deliverAction', () => {
     expect(after?.retries).toBe(1)
     expect(id).toBeGreaterThan(0)
   })
+
+  it('delivers the internal comment to its own route', async () => {
+    await enqueueInternalAction({
+      ticketNo: 'ST-8',
+      action: 'internal_comment',
+      payload: { text: 'Nur für die Kollegen' },
+    })
+    const [row] = await queuedActions()
+    fetched.mockImplementation(async () => undefined)
+
+    expect(await deliverAction(row!)).toBe(true)
+    expect(fetched).toHaveBeenCalledWith('/v1/tickets/ST-8/comments/internal', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        clientUuid: row!.client_uuid,
+        text: 'Nur für die Kollegen',
+      }),
+    })
+  })
 })
 
 describe('replayInternalActions', () => {

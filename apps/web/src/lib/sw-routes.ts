@@ -30,13 +30,15 @@ export function isInternalTicketRead(pathname: string): boolean {
 
 /**
  * Matches a write to a ticket: `POST <api-base>/v1/tickets/<ticketNo>/<action>`
- * — the internal comment, acknowledge, decline and workflow routes. The public
- * comment route `<api-base>/v1/public/tickets/<ticketNo>/comments`, the ticket
- * reads and the ticket list do not match.
+ * — the internal comment, acknowledge, decline and workflow routes. The route of
+ * the internal comment (`…/<ticketNo>/comments/internal`, ADR-0034) has a second
+ * segment and matches as well, so the write of a note drops the cached copy of
+ * the ticket. The public comment route `<api-base>/v1/public/tickets/<ticketNo>/comments`,
+ * the ticket reads and the ticket list do not match.
  */
 export function isInternalTicketWrite(pathname: string): boolean {
   const prefix = `${apiBaseUrl}/v1/tickets`
-  const write = new RegExp(`^${escapeRegExp(prefix)}/[^/]+/[^/]+$`)
+  const write = new RegExp(`^${escapeRegExp(prefix)}/[^/]+/[^/]+(/[^/]+)?$`)
   return write.test(pathname)
 }
 

@@ -54,6 +54,10 @@ describe('isInternalTicketWrite', () => {
     expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001/acknowledge')).toBe(true)
   })
 
+  it('matches the route of the internal comment', () => {
+    expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001/comments/internal')).toBe(true)
+  })
+
   it('rejects the ticket reads', () => {
     expect(isInternalTicketWrite('/api/v1/tickets')).toBe(false)
     expect(isInternalTicketWrite('/api/v1/tickets/ST-2026-0001')).toBe(false)

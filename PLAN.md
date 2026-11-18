@@ -2935,6 +2935,14 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The offline queue carries the internal comment (WP-M14-149f, out of band
+in phase 14).** The internal comment joins the three internal writes of the
+outbox: the queue carries the kind `internal_comment`, the replay posts it to
+its own route, and the hook of the queue knows the kind. The note is never
+queued as a normal comment — a normal comment is printed with the prepared send
+view. The predicate of the service worker matches the route of the internal
+comment as well, so the note shows up in the history at once.
+
 **The colour of the internal comment under „Darstellung“ (WP-M14-149e, out
 of band in phase 14).** The page of the Darstellung gains the field of the
 colour — a text field with the hex value and a swatch that shows it. The save

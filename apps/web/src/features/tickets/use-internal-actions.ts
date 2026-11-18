@@ -6,12 +6,14 @@ import {
   onActionChange,
   queuedActions,
   removeAction,
+  type InternalActionKind,
   type QueuedAction,
 } from '../../lib/outbox'
 
 /**
- * Offline queue for the three internal writes of phase 5: acknowledge, comment,
- * decline (`PLAN.md` §10, WP-M5-01/WP-M5-04).
+ * Offline queue for the internal writes of phase 5: acknowledge, comment,
+ * decline (`PLAN.md` §10, WP-M5-01/WP-M5-04) and the internal comment
+ * (ADR-0034, WP-M14-149f).
  *
  * `queueAction` persists a write to IndexedDB and bumps the pending count.
  * `deliverNow(row)` replays one row through `deliverAction` (which removes it
@@ -76,7 +78,7 @@ export function useInternalActions(ticketNo: string) {
   }, [ticketNo])
 
   const queueAction = useCallback(
-    async (action: 'acknowledge' | 'comment' | 'decline', payload: Record<string, unknown>) => {
+    async (action: InternalActionKind, payload: Record<string, unknown>) => {
       await enqueueInternalAction({ ticketNo, action, payload })
       setPendingCount((c) => c + 1)
     },
