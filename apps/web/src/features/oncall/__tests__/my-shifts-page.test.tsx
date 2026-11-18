@@ -223,11 +223,19 @@ describe('MyShiftsPage', () => {
   })
 
   it('shows the readiness calendar of everybody who has the readiness', async () => {
-    renderPage(['oncall.read', 'oncall.confirm', 'oncall.swap'])
+    renderPage(['oncall.read', 'oncall.confirm', 'oncall.swap', 'oncall.read_names'])
 
     await waitForText('Bereitschaftskalender')
     await waitForCount('Max Mustermann', 1)
     await waitForCount('Bestätigt', 2)
+  })
+
+  it('hides the names of the technicians without oncall.read_names (WP-M14-132)', async () => {
+    renderPage(['oncall.read', 'oncall.confirm', 'oncall.swap'])
+
+    await waitForText('Bereitschaftskalender')
+    await waitForCount('besetzt', 1)
+    expect(screen.queryByText('Max Mustermann')).toBeNull()
   })
 
   it('shows the button to the readiness settings only for admins', async () => {

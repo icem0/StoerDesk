@@ -33,13 +33,20 @@ function monthName(offset: number): string {
   }).format(date)
 }
 
-function renderCalendar(shifts: Parameters<typeof ReadinessCalendar>[0]['shifts'] = []) {
+function renderCalendar(
+  shifts: Parameters<typeof ReadinessCalendar>[0]['shifts'] = [],
+  showNames?: boolean,
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
-        <ReadinessCalendar pools={[{ id: poolId, name: 'Bereitschaft, Nord' }]} shifts={shifts} />
+        <ReadinessCalendar
+          pools={[{ id: poolId, name: 'Bereitschaft, Nord' }]}
+          shifts={shifts}
+          showNames={showNames}
+        />
       </I18nextProvider>
     </QueryClientProvider>,
   )
@@ -137,5 +144,63 @@ describe('ReadinessCalendar', () => {
     expect(screen.getAllByText('Geplant')).toHaveLength(2)
     expect(screen.getByText('Bereitschaft, Nord')).toBeDefined()
     expect(row.closest('td')?.className).toContain('bg-amber-500/15')
+  })
+
+  it('hides the name of the technician without the permission (WP-M14-132)', async () => {
+    const fetchMock = vi.fn(async () => Response.json({ members: [] }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar(
+      [
+        {
+          id: '22222222-2222-4222-8222-222222222222',
+          poolId,
+          userId: memberId,
+          state: 'CONFIRMED',
+          startsAt,
+          endsAt,
+          createdAt: startsAt,
+          updatedAt: startsAt,
+        },
+      ],
+      false,
+    )
+
+    // the row names the state and the pool, but nobody
+    expect(screen.getByText('besetzt')).toBeDefined()
+    expect(screen.getByText('Bereitschaft, Nord')).toBeDefined()
+    expect(screen.queryByText('Max Mustermann')).toBeNull()
+    // the browser asks for no member of the pool at all
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('names the slot without a technician "nicht besetzt" without the permission', () => {
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar(
+      [
+        {
+          id: '22222222-2222-4222-8222-222222222222',
+          poolId,
+          userId: null,
+          state: 'UNFILLED',
+          startsAt,
+          endsAt,
+          createdAt: startsAt,
+          updatedAt: startsAt,
+        },
+      ],
+      false,
+    )
+
+    expect(screen.getByText('nicht besetzt')).toBeDefined()
+    expect(screen.queryByText('besetzt')).toBeNull()
   })
 })

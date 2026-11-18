@@ -7,8 +7,10 @@
     "weekColumn": "KW",
     "empty": "Für diesen Zeitraum ist keine Bereitschaft eingetragen.",
     "unassigned": "nicht besetzt",
+    "assigned": "besetzt",
     "pageTitle": "Bereitschaft",
     "pageHint": "Der Kalender zeigt, wer die Bereitschaft hat. Darunter stehen deine eigenen Schichten.",
+    "pageHintWithoutNames": "Der Kalender zeigt die Schichten der Bereitschaft. Darunter stehen deine eigenen Schichten.",
     "adminSettings": "Einstellungen der Bereitschaft"
   },
   "admin": {

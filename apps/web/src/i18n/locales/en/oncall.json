@@ -7,8 +7,10 @@
     "weekColumn": "Wk",
     "empty": "No readiness is planned for this period.",
     "unassigned": "not staffed",
+    "assigned": "staffed",
     "pageTitle": "Readiness",
     "pageHint": "The calendar shows who has the readiness. Below it you find your own shifts.",
+    "pageHintWithoutNames": "The calendar shows the readiness shifts. Below it you find your own shifts.",
     "adminSettings": "Readiness settings"
   },
   "admin": {

@@ -2473,7 +2473,8 @@ reads the same calendar — the state, the colour and the pool of every shift �
 but the row of a shift answers "besetzt" instead of the name, and the browser
 does not ask for the members of the pool at all. The API keeps answering the
 names to `oncall.read` (the members of a pool are the candidates of a swap);
-the gate is in the web app, as the rule of `specs/01-rbac.md` §3.7 says.
+the gate is in the web app, as the rule of `specs/01-rbac.md` §3.7 says. Both
+packages are implemented.
 
 
 

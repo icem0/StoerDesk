@@ -29,7 +29,10 @@ import { ReadinessCalendar } from './readiness-calendar'
  * copies the feed URL it received.
  *
  * Server guards (`oncall.read`/`oncall.confirm`/`oncall.swap`) are the only
- * enforcement point — the page only hides what the role may not do.
+ * enforcement point — the page only hides what the role may not do. The names
+ * of the technicians in the readiness calendar follow the permission
+ * `oncall.read_names` (WP-M14-131): a role without it reads the same calendar
+ * without the names (WP-M14-132).
  */
 
 const RANGE_DAYS = 180
@@ -76,12 +79,14 @@ function MyShiftsPageContent({
   mayConfirm,
   maySwap,
   mayAdmin,
+  mayShowNames,
 }: {
   meUserId: string
   pools: { id: string; name: string }[]
   mayConfirm: boolean
   maySwap: boolean
   mayAdmin: boolean
+  mayShowNames: boolean
 }) {
   const { t } = useTranslation('oncall')
   const queryClient = useQueryClient()
@@ -185,7 +190,9 @@ function MyShiftsPageContent({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{t('readiness.pageTitle')}</h1>
-          <p className="mt-1 text-sm text-slate-400">{t('readiness.pageHint')}</p>
+          <p className="mt-1 text-sm text-slate-400">
+            {mayShowNames ? t('readiness.pageHint') : t('readiness.pageHintWithoutNames')}
+          </p>
         </div>
         {mayAdmin ? (
           <Link
@@ -197,7 +204,11 @@ function MyShiftsPageContent({
         ) : null}
       </div>
 
-      <ReadinessCalendar pools={pools} shifts={shiftsQuery.data?.shifts ?? []} />
+      <ReadinessCalendar
+        pools={pools}
+        shifts={shiftsQuery.data?.shifts ?? []}
+        showNames={mayShowNames}
+      />
 
       <h2 className="mt-8 text-xl font-semibold">{t('admin.myShifts.title')}</h2>
       <p className="mt-1 text-sm text-slate-400">{t('admin.myShifts.hint')}</p>
@@ -717,6 +728,10 @@ function MyShiftsPage() {
   const mayConfirm = usePermission('oncall.confirm')
   const maySwap = usePermission('oncall.swap')
   const mayAdmin = usePermission('oncall.admin')
+  // The names of the technicians of the readiness are a right of their own
+  // (`oncall.read_names`, WP-M14-131): a role without it reads the calendar
+  // without the names (WP-M14-132).
+  const mayShowNames = usePermission('oncall.read_names')
   const pools = useQuery({
     queryKey: ['oncall', 'pools'],
     queryFn: () => apiFetch<{ pools: { id: string; name: string }[] }>('/v1/oncall/pools'),
@@ -752,6 +767,7 @@ function MyShiftsPage() {
       mayConfirm={mayConfirm}
       maySwap={maySwap}
       mayAdmin={mayAdmin}
+      mayShowNames={mayShowNames}
     />
   )
 }

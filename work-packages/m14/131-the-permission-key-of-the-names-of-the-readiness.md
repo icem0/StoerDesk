@@ -1,7 +1,7 @@
 # WP-M14-131: the permission key of the names of the readiness
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-87, WP-M14-130
 phase: 14
 milestone: m14
@@ -80,7 +80,9 @@ seed test proves that `admin` holds every catalog key.
   document, `work-packages/README.md`, `CHANGELOG.md`, `docs/REPO-MAP.md`,
   `PLAN.md` §8 and §16
 - Interfaces added: `PERMISSIONS.oncall.readNames` (`oncall.read_names`)
-- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
-  `npm run test:run`, `npm run i18n:check`, `npm run wp:check`
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint` (0
+  errors, 13 pre-existing warnings), `npm run test:run` (1418 tests, 205 files),
+  `npm run i18n:check` (1617 keys in `de` and `en`), `npm run wp:check` (555
+  small-model WP, 0 failed)
 - Follow-up WP: WP-M14-132 (the readiness calendar honours the key)
 - Open question: none

@@ -18,6 +18,12 @@ import { apiFetch } from '../../lib/api'
  * the pool (`GET /api/v1/oncall/pools/:id/members`). The week starts on Monday
  * — the week of the calendar, not the configurable week start of the plan
  * administration.
+ *
+ * The names are a right of their own (`oncall.read_names`, WP-M14-131): a role
+ * without the key reads the same calendar, but the row of a shift answers
+ * "besetzt" instead of the name and the browser asks for no member at all
+ * (WP-M14-132). The API keeps answering the names to `oncall.read` — the
+ * members of a pool are the candidates of a swap.
  */
 
 type Pool = { id: string; name: string }
@@ -153,9 +159,15 @@ function memberName(member: Member | undefined): string | null {
   return name === '' ? member.email : name
 }
 
-export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] }) {
+export function ReadinessCalendar(props: {
+  shifts: OnCallShift[]
+  pools: Pool[]
+  /** False for a role without `oncall.read_names` (WP-M14-132). */
+  showNames?: boolean
+}) {
   const { t, i18n } = useTranslation('oncall')
   const [windowStart, setWindowStart] = useState(() => monthStartIso(new Date()))
+  const showNames = props.showNames ?? true
 
   const fromIso = useMemo(
     () => fromZonedTime(`${windowStart}T00:00:00`, ONCALL_TIMEZONE).toISOString(),
@@ -190,7 +202,7 @@ export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] 
   const memberQueries = useQueries({
     queries: useMemo(
       () =>
-        poolKey === ''
+        !showNames || poolKey === ''
           ? []
           : poolKey.split(',').map((poolId) => ({
               queryKey: ['oncall', 'pool-members', poolId],
@@ -199,7 +211,7 @@ export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] 
               retry: false,
               staleTime: 60_000,
             })),
-      [poolKey],
+      [poolKey, showNames],
     ),
   })
 
@@ -371,21 +383,28 @@ export function ReadinessCalendar(props: { shifts: OnCallShift[]; pools: Pool[] 
                                         : (namesByUser.get(shift.userId) ?? null)
                                     const stateLabel = t(`admin.state.${shift.state}`)
                                     const poolName = poolNames.get(shift.poolId) ?? ''
+                                    // Without the permission `oncall.read_names`
+                                    // the row names nobody: a shift with a
+                                    // technician reads "besetzt", a slot without
+                                    // one "nicht besetzt" (WP-M14-132).
+                                    const holder = showNames
+                                      ? (technician ?? t('readiness.unassigned'))
+                                      : shift.userId === null
+                                        ? t('readiness.unassigned')
+                                        : t('readiness.assigned')
 
                                     return (
                                       <li
                                         className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[10px] leading-tight text-slate-300"
                                         key={shift.id}
-                                        title={`${stateLabel} – ${poolName} – ${technician ?? t('readiness.unassigned')}`}
+                                        title={`${stateLabel} – ${poolName} – ${holder}`}
                                       >
                                         <span
                                           aria-hidden="true"
                                           className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${STATE_STYLE[shift.state].dot}`}
                                         />
                                         <span className="font-medium text-slate-200">{stateLabel}</span>
-                                        <span className="truncate">
-                                          {technician ?? t('readiness.unassigned')}
-                                        </span>
+                                        <span className="truncate">{holder}</span>
                                         <span className="truncate text-slate-400">{poolName}</span>
                                       </li>
                                     )
