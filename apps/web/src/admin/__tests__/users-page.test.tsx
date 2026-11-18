@@ -159,3 +159,116 @@ describe('UsersPage', () => {
     })
   })
 })
+
+describe('the one-time password of the administration', () => {
+  const colleague = {
+    id: '22222222-2222-4222-8222-222222222222',
+    email: 'kollege@example.com',
+    locale: 'de',
+    theme: 'auto',
+    active: true,
+    roleKeys: ['oncall'],
+    mustChangePassword: false,
+  }
+
+  function stubUserManagement(reset: unknown) {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.includes('/v1/me')) {
+        return Response.json(meResponse(['user.read', 'user.write']))
+      }
+
+      if (url.includes('/v1/users') && init?.method === 'POST' && url.includes('/password')) {
+        return Response.json(reset)
+      }
+
+      if (url.includes('/v1/users')) {
+        return Response.json({ users: [adminUser, colleague] })
+      }
+
+      if (url.includes('/v1/roles')) {
+        return Response.json({ roles: [] })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    return fetchMock
+  }
+
+  it('shows the one-time password after the reset and copies it into the clipboard', async () => {
+    const fetchMock = stubUserManagement({ temporaryPassword: 'cPhiW8kWNtdnXzvHHxGS' })
+    const writeText = vi.fn(async () => undefined)
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    renderPage()
+
+    const row = (await screen.findByText('kollege@example.com')).closest('tr') as HTMLElement
+    fireEvent.click(within(row).getByText('Neues Passwort'))
+
+    expect(await screen.findByText('cPhiW8kWNtdnXzvHHxGS')).toBeTruthy()
+
+    const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')
+
+    expect(String(post?.[0])).toContain(`/v1/users/${colleague.id}/password`)
+
+    fireEvent.click(screen.getByText('In die Zwischenablage kopieren'))
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith('cPhiW8kWNtdnXzvHHxGS')
+    })
+
+    expect(await screen.findByText('Kopiert')).toBeTruthy()
+  })
+
+  it('asks before it replaces the password of a colleague', async () => {
+    const fetchMock = stubUserManagement({ temporaryPassword: 'cPhiW8kWNtdnXzvHHxGS' })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+    renderPage()
+
+    const row = (await screen.findByText('kollege@example.com')).closest('tr') as HTMLElement
+    fireEvent.click(within(row).getByText('Neues Passwort'))
+
+    expect(confirm).toHaveBeenCalled()
+    expect(
+      fetchMock.mock.calls.find(([, init]) => init?.method === 'POST'),
+    ).toBeUndefined()
+    expect(screen.queryByText('cPhiW8kWNtdnXzvHHxGS')).toBeNull()
+  })
+
+  it('names the colleagues who still hold a one-time password', async () => {
+    stubUserManagement({ temporaryPassword: 'cPhiW8kWNtdnXzvHHxGS' })
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('/v1/me')) {
+          return Response.json(meResponse(['user.read', 'user.write']))
+        }
+
+        if (url.includes('/v1/users')) {
+          return Response.json({
+            users: [{ ...colleague, mustChangePassword: true }],
+          })
+        }
+
+        if (url.includes('/v1/roles')) {
+          return Response.json({ roles: [] })
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderPage()
+
+    expect(await screen.findByText('Einmalpasswort aktiv')).toBeTruthy()
+  })
+})

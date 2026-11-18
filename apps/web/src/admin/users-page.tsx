@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import type {
   CreateUserRequest,
+  ResetPasswordResponse,
   RoleListResponse,
   UserListResponse,
   UserSummary,
@@ -34,6 +35,7 @@ const handledErrorCodes = [
   'email_taken',
   'last_admin',
   'unknown_role_key',
+  'user_not_found',
 ] as const
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -64,6 +66,53 @@ function useRoles(enabled: boolean) {
     retry: false,
     enabled,
   })
+}
+
+/**
+ * The panel of the one-time password (`specs/01-rbac.md` §3.9, ADR-0031): the
+ * server answers the plaintext once, so the administration copies it into the
+ * clipboard and hands it over. The colleague replaces it with a password of
+ * their own at the first login.
+ */
+function TemporaryPasswordPanel(props: {
+  email: string
+  password: string
+  onClose: () => void
+}) {
+  const { t } = useTranslation('settings')
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <section className="mt-4 rounded border border-emerald-700 bg-emerald-950/40 p-4">
+      <h2 className="text-lg font-semibold text-emerald-200">
+        {t('admin.users.resetPassword.title')}
+      </h2>
+      <p className="mt-1 text-sm text-emerald-100/80">
+        {t('admin.users.resetPassword.hint', { email: props.email })}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <code className="min-w-0 flex-1 break-all rounded bg-slate-950 p-2 text-sm text-slate-100">
+          {props.password}
+        </code>
+        <button
+          className="min-h-11 rounded border border-emerald-600 px-3 text-sm text-emerald-100 hover:bg-emerald-900/40"
+          onClick={() => {
+            void navigator.clipboard.writeText(props.password).then(() => setCopied(true))
+          }}
+          type="button"
+        >
+          {copied ? t('admin.users.resetPassword.copied') : t('admin.users.resetPassword.copy')}
+        </button>
+        <button
+          className="min-h-11 rounded border border-emerald-800 px-3 text-sm text-emerald-200 hover:bg-emerald-900/40"
+          onClick={props.onClose}
+          type="button"
+        >
+          {t('admin.users.resetPassword.close')}
+        </button>
+      </div>
+    </section>
+  )
 }
 
 function RoleCheckboxes({
@@ -382,10 +431,28 @@ export function UsersPage() {
   const me = useMe()
   const canRead = usePermission('user.read')
   const canWrite = usePermission('user.write')
+  const queryClient = useQueryClient()
   const [editingUser, setEditingUser] = useState<UserSummary | null>(null)
+  const [temporaryPassword, setTemporaryPassword] = useState<{
+    email: string
+    password: string
+  } | null>(null)
 
   const users = useUsers()
   const roles = useRoles(canWrite)
+
+  const resetPassword = useMutation({
+    mutationFn: (user: UserSummary) =>
+      apiFetch<ResetPasswordResponse>(`/v1/users/${user.id}/password`, {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({}),
+      }),
+    onSuccess: (answer, user) => {
+      setTemporaryPassword({ email: user.email, password: answer.temporaryPassword })
+      void queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+  })
 
   if (me.isPending) {
     return <p>{t('admin.users.loading')}</p>
@@ -423,6 +490,18 @@ export function UsersPage() {
           {errorMessage(t, users.error)}
         </p>
       ) : null}
+      {resetPassword.isError ? (
+        <p role="alert" className="mt-2 text-sm text-red-400">
+          {errorMessage(t, resetPassword.error)}
+        </p>
+      ) : null}
+      {temporaryPassword ? (
+        <TemporaryPasswordPanel
+          email={temporaryPassword.email}
+          password={temporaryPassword.password}
+          onClose={() => setTemporaryPassword(null)}
+        />
+      ) : null}
       <table className="mt-4 w-full text-left text-sm">
         <thead>
           <tr className="border-b border-slate-700 text-slate-400">
@@ -437,7 +516,14 @@ export function UsersPage() {
         <tbody>
           {(users.data?.users ?? []).map((user) => (
             <tr key={user.id} className="border-b border-slate-800">
-              <td>{user.email}</td>
+              <td>
+                {user.email}
+                {user.mustChangePassword ? (
+                  <span className="ml-2 rounded bg-amber-900/60 px-2 py-0.5 text-xs text-amber-200">
+                    {t('admin.users.resetPassword.badge')}
+                  </span>
+                ) : null}
+              </td>
               <td>
                 {user.givenName} {user.familyName}
               </td>
@@ -446,13 +532,33 @@ export function UsersPage() {
               <td>{user.roleKeys.join(', ')}</td>
               {canWrite ? (
                 <td>
-                  <button
-                    className="rounded border border-slate-600 px-2 py-1 text-xs"
-                    type="button"
-                    onClick={() => setEditingUser(editingUser?.id === user.id ? null : user)}
-                  >
-                    {t('admin.users.edit')}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="rounded border border-slate-600 px-2 py-1 text-xs"
+                      type="button"
+                      onClick={() => setEditingUser(editingUser?.id === user.id ? null : user)}
+                    >
+                      {t('admin.users.edit')}
+                    </button>
+                    <button
+                      className="rounded border border-slate-600 px-2 py-1 text-xs"
+                      type="button"
+                      disabled={resetPassword.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            t('admin.users.resetPassword.confirm', { email: user.email }),
+                          )
+                        ) {
+                          return
+                        }
+
+                        resetPassword.mutate(user)
+                      }}
+                    >
+                      {t('admin.users.resetPassword.action')}
+                    </button>
+                  </div>
                 </td>
               ) : null}
             </tr>

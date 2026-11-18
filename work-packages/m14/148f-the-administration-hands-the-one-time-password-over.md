@@ -1,7 +1,7 @@
 # WP-M14-148f: the administration hands the one-time password over
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens

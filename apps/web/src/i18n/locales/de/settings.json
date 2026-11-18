@@ -82,7 +82,18 @@
         "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
         "last_admin": "Der letzte aktive Administrator darf nicht deaktiviert oder ohne Rolle gespeichert werden.",
         "unknown_role_key": "Unbekannte Rolle in der Auswahl.",
-        "unknown": "Speichern fehlgeschlagen."
+        "unknown": "Speichern fehlgeschlagen.",
+        "user_not_found": "Dieser Benutzer existiert nicht (mehr)."
+      },
+      "resetPassword": {
+        "action": "Neues Passwort",
+        "confirm": "Das Passwort von {{email}} wird ersetzt. Die Sitzungen des Kontos enden mit dem Passwort.",
+        "title": "Einmalpasswort",
+        "hint": "Dieses Passwort von {{email}} wird nur einmal angezeigt. Gib es dem Kollegen — bei der ersten Anmeldung muss er ein eigenes Passwort festlegen.",
+        "copy": "In die Zwischenablage kopieren",
+        "copied": "Kopiert",
+        "close": "Schließen",
+        "badge": "Einmalpasswort aktiv"
       }
     },
     "roles": {
@@ -331,6 +342,7 @@
           "deadlinePercent": "Frist in %",
           "elapsedMinutes": "Verstrichene Minuten",
           "stageReached": "Erreichte Stufe",
+          "shift": "Bereitschafts-Schicht",
           "time_of_day": "Zeitfenster (Tageszeit)"
         },
         "field": "Feld",

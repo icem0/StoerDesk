@@ -2881,6 +2881,14 @@ the login and of `GET /api/v1/me` and renders the form while the flag is set.
 The repetition must match the first field in the browser; the server knows only
 the one password. The panel of the administration follows in WP-M14-148f.
 
+**The administration hands the one-time password over (WP-M14-148f, out of band
+in phase 14).** The user management gains the action „Neues Passwort“: it asks
+before it replaces the password of a colleague, and the answer opens the panel
+with the one-time password and a button that copies it into the clipboard. The
+password is shown once, because the server answers it once. The list names the
+colleagues who still hold a one-time password. The chain of the one-time
+password is closed.
+
 
 
 ## 17. Work package rules for small models

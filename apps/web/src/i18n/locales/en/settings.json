@@ -82,7 +82,18 @@
         "email_taken": "This e-mail address is already in use.",
         "last_admin": "The last active administrator cannot be deactivated or saved without a role.",
         "unknown_role_key": "Unknown role in the selection.",
-        "unknown": "Saving failed."
+        "unknown": "Saving failed.",
+        "user_not_found": "This user does not exist (any more)."
+      },
+      "resetPassword": {
+        "action": "New password",
+        "confirm": "The password of {{email}} is replaced. The sessions of the account end with the password.",
+        "title": "One-time password",
+        "hint": "This password of {{email}} is shown once. Hand it over to the colleague — at the first login they must set a password of their own.",
+        "copy": "Copy to the clipboard",
+        "copied": "Copied",
+        "close": "Close",
+        "badge": "One-time password active"
       }
     },
     "roles": {
@@ -331,6 +342,7 @@
           "deadlinePercent": "Deadline in %",
           "elapsedMinutes": "Elapsed minutes",
           "stageReached": "Stage reached",
+          "shift": "Readiness shift",
           "time_of_day": "Time of day"
         },
         "field": "Field",

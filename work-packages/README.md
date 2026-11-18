@@ -1537,7 +1537,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-148c | the session knows the open password change (out of band) | done | yes |
 | WP-M14-148d | the administration sets the one-time password (out of band) | done | yes |
 | WP-M14-148e | the colleague sets his own password (out of band) | done | yes |
-| WP-M14-148f | the administration hands the one-time password over (out of band) | planned | yes |
+| WP-M14-148f | the administration hands the one-time password over (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

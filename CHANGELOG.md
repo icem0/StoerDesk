@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The administration hands the one-time password over (**WP-M14-148f**, out
+  of band in phase 14): the user management gains the action „Neues Passwort“.
+  The action asks before it replaces a password, the answer opens the panel
+  with the one-time password and a button that copies it into the clipboard. The
+  password is shown once, because the server answers it once. The list names the
+  colleagues who still hold a one-time password.
 - The colleague sets his own password (**WP-M14-148e**, out of band in
   phase 14): an account whose password is a one-time password sees the form of
   the own password instead of the app — the one-time password is replaced by a
