@@ -2612,6 +2612,15 @@ priority differs from it. The `PUT` stores the standard and deletes the
 deviations that no longer deviate from it — the table holds only what differs
 from the standard.
 
+**The ticket takes the priority of the object (WP-M14-134e, out of band in phase
+14).** The priority of a new ticket is the deviation of its object, else the
+standard. The internal report keeps the explicit choice of the user — the form
+preselects the priority of the object, so the deviation applies unless the user
+chooses another one; a request without a priority takes the deviation. The QR
+report has no choice at all: the deviation of the object wins, else the
+standard. The external API keeps the priority of the request. The deadline of
+the ticket follows the priority.
+
 
 
 

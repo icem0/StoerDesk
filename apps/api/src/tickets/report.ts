@@ -9,6 +9,7 @@ import {
   publicReportResponseSchema,
   type PublicReport,
   type PublicReportRequest,
+  type TicketPriority,
 } from '@stoerdesk/shared'
 
 import { loadEnv } from '../config/env'
@@ -16,6 +17,7 @@ import type { Database } from '../db/client'
 import { objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
 import { effectiveNtfyConfig } from '../notifications/verification'
+import { readObjectPriority } from '../objects/priority'
 import { generateQrToken } from '../objects/qr'
 import { readTitleEnabled } from '../settings/branding-state'
 import { readDeadlineHours } from './deadline'
@@ -79,6 +81,7 @@ export function reportTimes(
   input: PublicReportRequest,
   receivedAt = new Date(),
   hours: number = DEADLINE_HOURS.normal,
+  priority: TicketPriority = 'normal',
 ) {
   const deviceTime = input.reportedAt === undefined ? undefined : new Date(input.reportedAt)
   const clockSkewed =
@@ -90,7 +93,7 @@ export function reportTimes(
     reportedAt,
     receivedAt,
     clockSkewed,
-    deadlineAt: deadlineAtFor(reportedAt, 'normal', { normal: hours }),
+    deadlineAt: deadlineAtFor(reportedAt, priority, { [priority]: hours }),
   }
 }
 
@@ -222,15 +225,18 @@ export async function createPublicReport(
     }
   }
 
+  // The priority of a QR report: the deviation of the object, else the standard
+  // of the instance (ADR-0029). The reporter chooses no priority.
+  const priority = await readObjectPriority(database, object.id)
   const deadlineHours = await readDeadlineHours(database)
-  const times = reportTimes(input, new Date(), deadlineHours.normal)
+  const times = reportTimes(input, new Date(), deadlineHours[priority], priority)
 
   const titleEnabled = await readTitleEnabled(database)
 
   const insertValues = {
     objectId: object.id,
     status: 'NEW',
-    priority: 'normal',
+    priority,
     source: 'QR',
     description: input.text ?? null,
     faultTemplateKeys: input.faultTemplateKeys,

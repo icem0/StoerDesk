@@ -257,7 +257,12 @@ export const internalCreateTicketRequestSchema = z.object({
     .max(9)
     .default([])
     .refine((keys) => new Set(keys).size === keys.length),
-  priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
+  /**
+   * The priority of the ticket. Without it the server resolves it: the
+   * deviation of the object, else the standard of the instance (ADR-0029,
+   * `specs/06-report-form.md` §7.2).
+   */
+  priority: z.enum(['low', 'normal', 'high', 'critical']).optional(),
   contact: publicReportContactSchema.optional(),
   /** Meldungskanal der Erfassung (WP-M2-98). */
   reporterChannel: z.enum(TICKET_REPORTER_CHANNELS).optional(),
@@ -297,9 +302,16 @@ export type InternalCreateTicketRequest = z.infer<typeof internalCreateTicketReq
 export type InternalCreateTicketResponse = z.infer<typeof internalCreateTicketResponseSchema>
 
 /** External ticket API (`specs/08-objects-api.md` §9.5, WP-M10-08). */
+/**
+ * The external API decides the priority of the ticket (ADR-0029): the request
+ * carries it, the default is `normal` — the object does not decide here.
+ */
 export const externalTicketCreateRequestSchema = internalCreateTicketRequestSchema
-  .omit({ objectId: true })
-  .extend({ objectNo: objectNoSchema })
+  .omit({ objectId: true, priority: true })
+  .extend({
+    objectNo: objectNoSchema,
+    priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
+  })
 
 export const externalTicketListQuerySchema = z.object({
   updated_since: z.iso.datetime().optional(),

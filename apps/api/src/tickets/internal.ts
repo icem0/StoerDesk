@@ -18,6 +18,7 @@ import type { Database } from '../db/client'
 import { objects, ticketEvents, tickets, users } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
 import { effectiveNtfyConfig } from '../notifications/verification'
+import { readObjectPriority } from '../objects/priority'
 import { readTitleEnabled } from '../settings/branding-state'
 import { deadlineAtForPriority } from './deadline'
 import { evaluateTicketEscalations } from './escalation'
@@ -87,7 +88,10 @@ export async function createInternalTicket(
     throw new InternalTicketRouteError(400, 'invalid_request', { fields: ['reportedAt'] })
   }
 
-  const deadlineAt = await deadlineAtForPriority(database, reportedAt, input.priority)
+  // The priority of the ticket: the explicit choice of the user wins, else the
+  // deviation of the object, else the standard of the instance (ADR-0029).
+  const priority = input.priority ?? (await readObjectPriority(database, object.id))
+  const deadlineAt = await deadlineAtForPriority(database, reportedAt, priority)
 
   let reporterName = input.contact?.name ?? null
   let reporterEmail = input.contact?.email ?? null
@@ -136,7 +140,7 @@ export async function createInternalTicket(
         title: titleEnabled ? (input.title ?? null) : null,
         description: input.description ?? null,
         faultTemplateKeys: input.faultTemplateKeys,
-        priority: input.priority,
+        priority,
         source: 'INTERNAL',
         reportedAt,
         receivedAt,
@@ -161,7 +165,7 @@ export async function createInternalTicket(
       actorUserId,
       payload: {
         source: 'INTERNAL',
-        priority: input.priority,
+        priority,
         faultTemplateKeys: input.faultTemplateKeys,
         hasContact: Boolean(input.contact?.name || input.contact?.phone || input.contact?.email),
         reportedAt: reportedAt.toISOString(),

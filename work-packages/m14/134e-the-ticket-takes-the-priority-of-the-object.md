@@ -1,7 +1,7 @@
 # WP-M14-134e: the ticket takes the priority of the object
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens
@@ -70,6 +70,6 @@ Expected: all green; a QR report of a deviating object carries its priority.
 - Files changed: the internal request schema, the internal create, the public
   report
 - Interfaces added: the optional priority of the internal create request
-- Verified: `npm run check` (exit 0), the integration specs of the two creates
+- Verified: `npm run check` (exit 0), the integration spec of the priority proves the deviation of the object, the explicit choice of the user and the standard
 - Follow-up WP: WP-M14-134f (the object form carries the priority)
 - Open question: none

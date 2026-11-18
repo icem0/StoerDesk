@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A new ticket takes the priority of its object (**WP-M14-134e**, out of band in
+  phase 14 — **ADR-0029**): the internal report keeps the explicit choice of the
+  user, a request without a priority takes the deviation of the object, and the
+  QR report always takes the deviation of its object — else the standard of the
+  instance. The deadline of the ticket follows that priority.
 - The routes answer the standard and the list of the deviations
   (**WP-M14-134d**, out of band in phase 14 — **ADR-0029**):
   `GET/PUT /api/v1/settings/ticket-defaults` reads and replaces the standard
