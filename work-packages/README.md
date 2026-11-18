@@ -1516,7 +1516,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-134g | the administration shows the standard and the deviations (out of band) | done | yes |
 | WP-M14-134h | the route and the menu entry of the defaults (out of band) | done | yes |
 | WP-M14-134i | the create form starts from the priority of the object (out of band) | done | yes |
-| WP-M14-140 | the fallbacks of the escalation page carry the values of ADR-0008 (out of band) | planned | yes |
+| WP-M14-135 | the fallbacks of the escalation page carry the values of ADR-0008 (out of band) | planned | yes |
 | WP-M14-141 | the admin sees which message arrived at which user — the spec and the split (out of band) | planned | yes |
 | WP-M14-141a | the permission key and the contracts of the filter (out of band) | done | yes |
 | WP-M14-141b | the API of the filtered inbox (out of band) | done | yes |
@@ -1538,6 +1538,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-148d | the administration sets the one-time password (out of band) | done | yes |
 | WP-M14-148e | the colleague sets his own password (out of band) | done | yes |
 | WP-M14-148f | the administration hands the one-time password over (out of band) | done | yes |
+| WP-M14-150 | the assignment names a technician and the notification reaches him — ADR-0033, the spec and the split (out of band) | done | yes |
+| WP-M14-150a | the contracts of the new targets and their consumers (out of band) | planned | yes |
+| WP-M14-150b | the distribution names the technician (out of band) | planned | yes |
+| WP-M14-150c | the claim and the acceptance name the technician (out of band) | planned | yes |
+| WP-M14-150d | the administration names the technician and the assigned recipient (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

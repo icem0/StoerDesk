@@ -142,19 +142,22 @@ the night.
 
 | Type | Configuration | Effect |
 | --- | --- | --- |
-| `notify` | `target` (one user or a readiness pool) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
+| `notify` | `target` (one user, a readiness pool **or** the assignees of the ticket) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
 | `history` | `text` (optional, 1–500 characters), no key in the administration | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
-| `offer` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once; every technician of the target is notified (§7.14) |
-| `assign` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
+| `offer` | `target` (a readiness pool, a user group or one technician, §7.14) | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once, a user target names that technician in `offered_to_user_id`; every technician of the target is notified (§7.14) |
+| `assign` | `target` (a readiness pool, a user group or one technician, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
 
 A `notify` action with a `target` replaces the channel broadcast of the action:
-the selected user, or the technicians who have a shift in the selected readiness
-pool at this moment, receive the notification on the own ntfy topic (ADR-0030).
+the selected user, the technicians who have a shift in the selected readiness
+pool at this moment, or the assignees of the ticket receive the notification on
+the own ntfy topic (ADR-0030, ADR-0033).
 The members of the pool without a shift receive nothing — the readiness service
 is the team that is on duty. A user without an ntfy account contributes
-nothing. Without a target the action keeps the channel broadcast of the
+nothing. A ticket without an assignee has nobody to notify — the target
+`assigned` reaches nobody. Without a target the action keeps the channel
+broadcast of the
 installation. The optional `priority` is the ntfy level of the notification and
 overrides the ticket-based default (`critical` = `urgent`, otherwise `default`).
 
@@ -356,7 +359,7 @@ is dropped in `0041`: the rows of `ticket_statuses` and their key-format CHECK
 (`0040`) are the status configuration, and a status a ticket still carries must
 survive a deactivation.
 
-## 7.14 The offer and the assign action (ADR-0026)
+## 7.14 The offer and the assign action (ADR-0026, ADR-0033)
 
 The office asked for two more actions of a rule: a ticket that waits too long for
 a technician shall be **offered** to a pool of technicians, and a ticket shall be
@@ -365,24 +368,25 @@ first actions of a rule that change more than a notification.
 
 ### The target
 
-Both actions carry a `target`: the pool of technicians the ticket goes to.
+Both actions carry a `target`: the technicians the ticket goes to.
 
 | Field | Meaning |
 | --- | --- |
-| `kind` | `pool` — a row of `oncall_pools` (a readiness pool); `group` — a row of `groups` (a user group of the administration) |
-| `id` | the UUID of that pool or group |
+| `kind` | `pool` — a row of `oncall_pools` (a readiness pool); `group` — a row of `groups` (a user group of the administration); `user` — one row of `users` (one technician of the installation, ADR-0033) |
+| `id` | the UUID of that pool, group or user |
 
 The **technicians of the target** are the active members of the group of the
 target: for a pool the members of its `group_id`, otherwise every active user
 holding the `oncall` role — the same rule as
 `GET /api/v1/oncall/pools/:id/members` (`specs/04-oncall.md` §4a.5); for a group
-the members of `user_groups`. A target without a technician changes nothing.
+the members of `user_groups`; for a user that one user, if the account is
+active. A target without a technician changes nothing.
 
 ### The effect
 
 | Action | Step | Effect |
 | --- | --- | --- |
-| `offer` | `offered` | the ticket leaves `WORK_ORDER_CREATED` for `OFFERED`. A pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout (`oncall.escalate_to_group_after_min`), so the existing offer timeout hands the ticket to the group; a group target has no on-call person and no timeout — the whole group is notified at once. |
+| `offer` | `offered` | the ticket leaves `WORK_ORDER_CREATED` for `OFFERED`. A pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout (`oncall.escalate_to_group_after_min`), so the existing offer timeout hands the ticket to the group; a group target has no on-call person and no timeout — the whole group is notified at once; a user target names that technician in `offered_to_user_id`. |
 | `assign` | `assigned` | the ticket leaves `WORK_ORDER_CREATED` for `ASSIGNED`. Every technician of the target becomes an assignee of the ticket — a row of `ticket_assignees` (`specs/02-data-model.md` §4.12). |
 
 Both actions perform a step of the `ticket_transitions` table (§7.13), so a
@@ -390,6 +394,15 @@ ticket whose status has no such step keeps its status and the action writes
 nothing — the same rule as the `status_change` action. One append-only
 `escalation_note` event records the distribution with
 `{ rule, stage, target }`.
+
+### The assignees of the ticket
+
+The **assignees of a ticket** are the technicians who work on it: the
+technicians of an assignment of the escalation and the technician who takes the
+ticket himself — the `claimed` and the `accepted` step of the workflow,
+performed by a user, write a row of `ticket_assignees`
+(`specs/02-data-model.md` §4.13, ADR-0033). The rows are the current state of
+the distribution, the events of the workflow stay its history.
 
 ### The notification
 
@@ -403,4 +416,10 @@ selection receives nothing.
 
 The office is therefore informed twice over: the `escalated` event of the firing
 and the `notify` action, if the rule carries one.
+
+A `notify` action with the target `assigned` reaches the assignees of the
+ticket instead of a fixed addressee (ADR-0033): the technician the escalation
+assigned and the technician who took the ticket after an offer. The target
+carries no id — the dispatcher reads the assignees of the ticket when the rule
+fires; a ticket without an assignee reaches nobody.
 

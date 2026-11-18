@@ -63,3 +63,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0029](DECISIONS/0029-the-object-priority-deviates-from-the-standard.md) | The priority of an object deviates from the standard (`object_priority_overrides`, `ticket.default_priority`) | accepted |
 | [ADR-0030](DECISIONS/0030-the-readiness-shift-is-a-condition-of-the-escalation.md) | The readiness shift is a condition of the escalation (`shift` field, a pool target reaches the technicians on duty) | accepted |
 | [ADR-0031](DECISIONS/0031-the-administration-hands-over-a-one-time-password.md) | The administration hands over a one-time password (`users.must_change_password`, the colleague sets his own password at the first login) | accepted |
+| [ADR-0033](DECISIONS/0033-the-assignment-names-a-technician.md) | The assignment names a technician, the notification reaches the assigned technician (`user` target, `assigned` target) | accepted |

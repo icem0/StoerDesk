@@ -2900,6 +2900,28 @@ password is shown once, because the server answers it once. The list names the
 colleagues who still hold a one-time password. The chain of the one-time
 password is closed.
 
+**The internal comment never leaves the office (WP-M14-149, out of band in
+phase 14).** The comment function of the ticket view gains a second kind of
+comment: the internal comment. It never reaches the customer — neither in the
+printout nor in the e-mail of the prepared send view. It has its own
+permission key, which the administration grants to the colleagues who may write
+it, and it is recognisable at a glance by a dark red background whose colour
+the administration configures under „Darstellung“.
+
+ADR-0034 decides the shape: the internal comment is its own event type of the
+trail (`internal_comment` — the type column of `ticket_events` carries no check
+constraint, so no migration is needed), the key `ticket.comment.internal`
+belongs to no default role and the administration grants it to a role or to a
+colleague (the rule of `notification.read_all`), the guarantee „never printed,
+never sent“ is a rule of the prepared send view and of the event type, the
+colour is a hex value of the instance under „Darstellung“ (the default is a
+dark red) and the write stays offline-capable — an internal comment is never
+queued as a normal comment, because a normal comment is printed. The chain is
+split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
+**WP-M14-149c** (the prepared send view), **WP-M14-149d** (the settings),
+**WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
+queue) and **WP-M14-149g** (the ticket view).
+
 
 
 ## 17. Work package rules for small models

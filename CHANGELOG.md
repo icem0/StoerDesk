@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The internal comment never leaves the office (**WP-M14-149**, out of
+  band in phase 14): the comment function of the ticket view gains a second
+  kind of comment — the internal comment. It is never printed and never sent
+  to the customer with the prepared send view, it has its own permission key
+  `ticket.comment.internal`, which the administration grants to the colleagues
+  who may write it, and it is recognisable at a glance by a dark red
+  background whose colour the administration configures under „Darstellung“
+  (ADR-0034). The decision splits into seven work packages.
 - The administration offers the pool in the condition (**WP-M14-147d**, out of
   band in phase 14): the field „Bereitschafts-Schicht" of a condition offers
   the readiness pools of the installation with their names, and the value of a
