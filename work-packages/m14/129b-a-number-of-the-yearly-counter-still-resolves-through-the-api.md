@@ -1,7 +1,7 @@
 # WP-M14-129b: a number of the yearly counter still resolves through the API
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -65,8 +65,13 @@ and reports **unverified** (`PLAN.md` §18).
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/tickets/__tests__/legacy-ticket-no.integration.spec.ts`
+  and this file (plus the bookkeeping: the changelog, `PLAN.md` §16, the backlog
+  table)
+- Interfaces added: none — the proof only
+- Verified: the new integration spec ran against the test database (4/4, no
+  skip): the detail route, the comment route of the internal user, the review
+  step of the workflow and the public status page answer a ticket of the yearly
+  counter (`ST-2026-0001`) unchanged; `npm run check` green
 - Follow-up WP: WP-M14-129c (a malformed number is still rejected)
 - Open question: none

@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
+- A ticket number of the yearly counter still resolves through the API
+  (**WP-M14-129b**, out of band in phase 14 — **ADR-0027**): the number of an
+  existing ticket is never rewritten, so the detail route, the comment route of
+  the internal user, the workflow and the public status page answer a ticket of
+  the old shape `ST-2026-0001` unchanged. The new integration spec proves it.
 - The daily check warns over another channel (**WP-M14-130c**, out of band in
   phase 14 — **ADR-0028**): once a day the instance reads the rows of the outbox
   and names the channels that are broken — their last delivery failed and no

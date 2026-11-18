@@ -2495,6 +2495,16 @@ the ticket tables integration spec expects `ST-NNNN` and proves that a number of
 the yearly counter is still readable. The proof through the API and the guard
 against a malformed number follow in **WP-M14-129b** and **WP-M14-129c**.
 
+**A number of the yearly counter still resolves through the API (WP-M14-129b,
+out of band in phase 14).** ADR-0027 decision 4 and 5 keep the old numbers
+alive: a number of the yearly counter (`ST-2026-0001`) is never rewritten, so a
+bookmark, a printed link and the outbox of a client carry it. The new
+integration spec writes such a ticket and proves that the detail route, the
+comment route of the internal user, the review step of the workflow and the
+public status page answer it unchanged — the guard of WP-M9-29 knows both
+shapes since WP-M14-129a. The guard against a malformed number follows in
+**WP-M14-129c**.
+
 **The names of the readiness belong to a role (WP-M14-131/132, out of band in
 phase 14).** The office asked that the names of the technicians in the
 readiness calendar are visible to the admins and to nobody else — or to a role
