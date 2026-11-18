@@ -2553,6 +2553,29 @@ into another one. The seed stays the authority for the five system roles
 (`specs/01-rbac.md` §3.5) — their grants are rewritten on the next seed run, a
 custom role keeps them.
 
+**The priority of the object deviates from the standard (WP-M14-134, out of band
+in phase 14).** The office asked for the priority per object and for the
+standard values in the administration: „wir machen einen parallelen tabelle in
+der nur die abweichungen vom standard mit der objektnummer verknüpft wird".
+Today the priority is only a field of the request — an internal report chooses
+it, a QR report always starts as `normal` — and the standard priority is
+hard-coded. **ADR-0029** decides: the standard is the setting
+`ticket.default_priority` (default `normal`), the deviations live in the
+parallel table `object_priority_overrides` (migration `0050`) and hold only
+what differs from the standard — a value that equals the standard removes the
+row, and changing the standard deletes the rows that no longer deviate. The
+effective priority of an object is its deviation, else the standard; the object
+summary carries the effective priority and the stored deviation
+(`specs/02-data-model.md` §4.3.2, `specs/08-objects-api.md` §9.1). A new ticket
+takes the deviation: the internal form preselects it, the QR report has no
+other choice, the explicit choice of the internal user still wins
+(`specs/06-report-form.md` §7.2). The package writes no product code: the chain
+is split into **WP-M14-134a** (the table), **WP-M14-134b** (the contracts),
+**WP-M14-134c** (the service), **WP-M14-134d** (the routes), **WP-M14-134e**
+(the ticket), **WP-M14-134f** (the object form), **WP-M14-134g** (the
+administration page), **WP-M14-134h** (the route and the menu entry) and
+**WP-M14-134i** (the create form).
+
 
 
 
