@@ -2585,6 +2585,16 @@ the timestamps are the ones of §4.2. The table holds only the deviations from
 the standard — a row that equals the standard is not stored. The object number
 stays the key of the object list outside the database.
 
+**The contracts of the priority and of the standard (WP-M14-134b, out of band in
+phase 14).** The shared package learns the schema of the priority
+(`ticketPrioritySchema` over the four values), the standard of the instance
+(`ticketDefaultsSchema` — the same shape is the body of the `PUT` and the
+answer of the `GET`) and one deviation of an object
+(`objectPriorityOverrideSchema`, `objectPriorityOverrideListSchema` — the uuid
+of the object, its number, its name and its priority). The contracts carry no
+consumer yet: the object summary and the object write learn the priority in
+WP-M14-134c, the routes answer them in WP-M14-134d.
+
 
 
 

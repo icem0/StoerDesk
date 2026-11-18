@@ -1,7 +1,7 @@
 # WP-M14-134b: the contracts of the priority and of the standard
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -70,6 +70,6 @@ Expected: all green; the new schemas are exported by the shared package.
 - Files changed: the new schema file, the index of the schemas
 - Interfaces added: `ticketPrioritySchema`, `ticketDefaultsSchema`,
   `objectPriorityOverrideSchema`, `objectPriorityOverrideListSchema`
-- Verified: `npm run check` (exit 0), the unit spec of the shared package
+- Verified: `npm run check` (exit 0), the unit spec of the shared package proves the four priorities and the list of the deviations
 - Follow-up WP: WP-M14-134c (the service reads and writes the deviation)
 - Open question: none

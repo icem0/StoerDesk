@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The contracts of the standard priority and of the deviations
+  (**WP-M14-134b**, out of band in phase 14 — **ADR-0029**): the shared package
+  knows the schema of the priority (`ticketPrioritySchema`), the standard of
+  the instance (`ticketDefaultsSchema`) and one deviation of an object
+  (`objectPriorityOverrideSchema`, `objectPriorityOverrideListSchema`).
 - The table of the priority deviations (**WP-M14-134a**, out of band in phase 14
   — **ADR-0029**): migration `0050_object_priority_overrides.sql` adds the table
   `object_priority_overrides` — the `object_id` is the primary key and points at
