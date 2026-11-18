@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
+- The daily check warns over another channel (**WP-M14-130c**, out of band in
+  phase 14 — **ADR-0028**): once a day the instance reads the rows of the outbox
+  and names the channels that are broken — their last delivery failed and no
+  delivery of them succeeded since. A broken channel writes one warning row of
+  the event type `channel.health_warning` for the first configured channel that
+  is not the broken one; the warning never goes to the broken channel and never
+  falls back, and there is at most one warning per broken channel and per day.
+  The text names the channel and the machine code of its last failure and is
+  translated (de/en).
 - The outbox learns the instance row of the channel health warning
   (**WP-M14-130b**, out of band in phase 14 — **ADR-0028**): migration
   `0049_channel_health_warning.sql` adds the event type

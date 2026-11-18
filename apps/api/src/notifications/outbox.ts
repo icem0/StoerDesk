@@ -11,7 +11,7 @@ import {
   outbox,
   ticketEvents,
 } from '../db/schema'
-import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
+import { ONCALL_TIMEZONE, t } from '@stoerdesk/shared'
 import type { NotificationEventType } from '@stoerdesk/shared'
 import {
   configuredChannels,
@@ -22,6 +22,7 @@ import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 import { readMinimumChannels } from '../settings/notifications'
 import { ntfyRecipients, userTopic } from './receivers'
 import { effectiveNtfyConfig } from './verification'
+import { CHANNEL_HEALTH_WARNING_EVENT, enqueueChannelHealthWarnings } from './health'
 import type { NtfyConfig } from './channels/ntfy'
 
 /** The insert capability — enough for both the live database and a transaction node. */
@@ -129,6 +130,12 @@ export const NOTIFICATION_OUTBOX_QUEUE = 'notification-outbox'
 
 /** One drain run per minute. */
 export const NOTIFICATION_OUTBOX_CRON = '* * * * *'
+
+/** pg-boss queue name of the daily health check of the channels (§11.15). */
+export const NOTIFICATION_HEALTH_QUEUE = 'notification-health'
+
+/** One health check per day, 04:00 server time. */
+export const NOTIFICATION_HEALTH_CRON = '0 4 * * *'
 
 /** A row may be sent at most this many times before it becomes `FAILED`. */
 export const NOTIFICATION_OUTBOX_MAX_ATTEMPTS = 3
@@ -248,6 +255,24 @@ const param = (value: unknown): string =>
   value === undefined || value === null ? '' : String(value)
 
 /**
+ * The message of a warning of a broken channel (§11.15, ADR-0028): the title
+ * names the broken channel, the body the translated sentence with the channel
+ * and the machine code of its last failure. It is the only message of the
+ * outbox that carries translated text — it announces the state of a channel and
+ * not the state of a ticket. The locale is the reference locale of the server
+ * (`PLAN.md` §3.1); the text carries no emergency number (`PLAN.md` §2).
+ */
+const healthWarningMessageOf = (target: Record<string, unknown>): MessagePriority => {
+  const channel = param(target.channel)
+  const code = param(target.code)
+
+  return {
+    title: t('de', `notification.channels.${channel}`),
+    body: t('de', 'notification.channel_health_warning', { channel: t('de', `notification.channels.${channel}`), code }),
+  }
+}
+
+/**
  * Builds the channel message from the machine-readable row params — ticket
  * number, priority, object name and location, system type, short text and the
  * AA/SA work order number — no photo, no contact data, no translated UI text
@@ -255,11 +280,16 @@ const param = (value: unknown): string =>
  * before WP-M14-07 lack the newer params; the missing values are simply skipped.
  * A readiness row (`shift_id`) carries the pool name, the start and end in
  * `Europe/Berlin` formatted from the stored UTC values and the shift state;
- * it never touches the ticket fields of §11.5.
+ * it never touches the ticket fields of §11.5. A warning of a broken channel
+ * (`channel_health_warning`) carries the translated sentence of §11.15.
  */
-export const messageOf = (target: Record<string, unknown>): MessagePriority => {
+export const messageOf = (target: Record<string, unknown>, eventType = ''): MessagePriority => {
   if (target.shiftId !== undefined && target.shiftId !== null) {
     return readinessMessageOf(target)
+  }
+
+  if (eventType === CHANNEL_HEALTH_WARNING_EVENT) {
+    return healthWarningMessageOf(target)
   }
 
   return ticketMessageOf(target)
@@ -496,7 +526,7 @@ export async function drainOutbox(
         options.deepLink = deepLink
       }
 
-      await channel.send(messageOf(row.target), options)
+      await channel.send(messageOf(row.target, row.eventType), options)
       await finishRow(database, row, 'SENT', 'notification_sent')
 
       await finishMessage(database, row, 'SENT')
@@ -524,7 +554,13 @@ export async function drainOutbox(
         'notification send failed',
       )
       if (row.attempts >= NOTIFICATION_OUTBOX_MAX_ATTEMPTS) {
-        const nextChannel = chain.at(chain.indexOf(row.channel) + 1)
+        // A warning of a broken channel never falls back (§11.15): the warning
+        // is the last word about the channel, a fallback of the warning would
+        // only hide the failure behind a second failure.
+        const nextChannel =
+          row.eventType === CHANNEL_HEALTH_WARNING_EVENT
+            ? undefined
+            : chain.at(chain.indexOf(row.channel) + 1)
         const fallbackQueued = await finishRow(
           database,
           row,
@@ -607,6 +643,31 @@ export async function startNotificationOutboxJob(
   log?.info(
     { queue: NOTIFICATION_OUTBOX_QUEUE, cron: NOTIFICATION_OUTBOX_CRON },
     'notification outbox job scheduled',
+  )
+
+  // The daily health check (§11.15, ADR-0028): it names the broken channels and
+  // writes one warning row per broken channel over another channel — at most
+  // one per channel and per day. The check reads the rows of the outbox, it
+  // never pushes a message into a browser.
+  await boss.createQueue(NOTIFICATION_HEALTH_QUEUE)
+
+  await boss.work(NOTIFICATION_HEALTH_QUEUE, async () => {
+    const { client, database } = createDatabase(connectionString)
+
+    try {
+      const warnings = await enqueueChannelHealthWarnings(database, env)
+
+      log?.info({ queue: NOTIFICATION_HEALTH_QUEUE, warnings }, 'notification health check finished')
+    } finally {
+      await client.end({ timeout: 5 })
+    }
+  })
+
+  await boss.schedule(NOTIFICATION_HEALTH_QUEUE, NOTIFICATION_HEALTH_CRON)
+
+  log?.info(
+    { queue: NOTIFICATION_HEALTH_QUEUE, cron: NOTIFICATION_HEALTH_CRON },
+    'notification health job scheduled',
   )
 
   return boss

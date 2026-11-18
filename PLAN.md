@@ -2406,6 +2406,19 @@ error: the inbox never blocks on the state of the channel. The texts are
 `inbox.webpush.hint` and `inbox.webpush.setup` (de/en); the subscribe action
 stays the settings page of WP-M14-126a.
 
+**The daily check warns over another channel (WP-M14-130c, out of band in phase
+14).** A broken channel warns the administration once a day over another
+channel: the daily check (the pg-boss queue `notification-health`, 04:00 server
+time) reads the rows of the outbox and names the channels that are broken —
+their last delivery failed and no delivery of them succeeded since. For every
+broken channel it writes one row of the event type `channel.health_warning` for
+the first configured channel of the chain that is not the broken one. The warning
+never goes to the broken channel and never falls back further: the warning is
+the last word about the channel. At most one warning per broken channel and per
+day; a channel that works again is silent. The text names the broken channel and
+the machine code of its last failure, is translated (de/en) and carries no
+emergency number (`PLAN.md` §2).
+
 **The outbox learns the instance row of the warning (WP-M14-130b, out of band in
 phase 14).** A warning of a broken channel belongs to no ticket and to no
 shift: it announces the state of a channel. Migration

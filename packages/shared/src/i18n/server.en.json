@@ -5,7 +5,17 @@
   },
   "notification": {
     "action_label": "Open",
-    "verification_code": "StörDesk setup code: {{code}}"
+    "verification_code": "StörDesk setup code: {{code}}",
+    "channel_health_warning": "The notification over {{channel}} is broken (error code {{code}}).",
+    "channels": {
+      "signal": "Signal",
+      "matrix": "Matrix",
+      "ntfy": "ntfy",
+      "email": "E-Mail",
+      "telegram": "Telegram",
+      "webpush": "Web Push",
+      "whatsapp": "WhatsApp Web"
+    }
   },
   "oncall": {
     "ical": {

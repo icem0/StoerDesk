@@ -1,7 +1,7 @@
 # WP-M14-130c: the daily check warns over another channel
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 22k tokens
@@ -79,6 +79,6 @@ the warning text is translated.
 - Files changed: the health module, the outbox and the two server locales
 - Interfaces added: `evaluateChannelHealth`, `enqueueChannelHealthWarnings`, the
   text `notification.channel_health_warning`
-- Verified: `npm run check`, `npm run build`
+- Verified: `npm run check` (exit 0), the integration spec of the health check
 - Follow-up WP: none
 - Open question: none

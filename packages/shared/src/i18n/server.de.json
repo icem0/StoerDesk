@@ -5,7 +5,17 @@
   },
   "notification": {
     "action_label": "Öffnen",
-    "verification_code": "StörDesk-Einrichtungscode: {{code}}"
+    "verification_code": "StörDesk-Einrichtungscode: {{code}}",
+    "channel_health_warning": "Die Benachrichtigung über {{channel}} ist gestört (Fehlercode {{code}}).",
+    "channels": {
+      "signal": "Signal",
+      "matrix": "Matrix",
+      "ntfy": "ntfy",
+      "email": "E-Mail",
+      "telegram": "Telegram",
+      "webpush": "Web Push",
+      "whatsapp": "WhatsApp Web"
+    }
   },
   "oncall": {
     "ical": {
