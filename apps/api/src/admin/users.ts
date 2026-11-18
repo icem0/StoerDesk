@@ -4,13 +4,15 @@ import { z } from 'zod'
 import {
   createUserRequestSchema,
   PERMISSIONS,
+  resetPasswordResponseSchema,
   updateUserRequestSchema,
   userListResponseSchema,
   userSummarySchema,
 } from '@stoerdesk/shared'
 
-import { hashPassword } from '../auth/password'
+import { generateTemporaryPassword, hashPassword } from '../auth/password'
 import { requirePermission } from '../auth/requirePermission'
+import { destroyUserSessions } from '../auth/session'
 import type { Database } from '../db/client'
 import { roles, userRoles, users } from '../db/schema'
 
@@ -24,6 +26,7 @@ type UserRow = {
   locale: string
   theme: string
   active: boolean
+  mustChangePassword: boolean
 }
 
 class UserRouteError extends Error {
@@ -114,6 +117,7 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
             locale: users.locale,
             theme: users.theme,
             active: users.active,
+            mustChangePassword: users.mustChangePassword,
           })
           .from(users)
           .orderBy(users.email)
@@ -187,6 +191,7 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
               locale: users.locale,
               theme: users.theme,
               active: users.active,
+              mustChangePassword: users.mustChangePassword,
             })
 
           const [user] = inserted
@@ -245,6 +250,7 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
               locale: users.locale,
               theme: users.theme,
               active: users.active,
+              mustChangePassword: users.mustChangePassword,
             })
             .from(users)
             .where(eq(users.id, targetId))
@@ -306,12 +312,66 @@ export const adminUsersRoutes = fp<AdminUsersRouteOptions>(
               locale: nextLocale,
               theme: nextTheme,
               active: nextActive,
+              mustChangePassword: target.mustChangePassword,
             },
             nextRoleKeys,
           )
         })
 
         return reply.code(200).send(updated)
+      },
+    )
+
+    /**
+     * The administration sets the password of a colleague (`specs/01-rbac.md`
+     * §3.9, ADR-0031): the server generates the one-time password and answers
+     * it exactly once. The account carries the flag `must_change_password`
+     * until the colleague sets a password of their own, and the sessions of
+     * the account die with the secret.
+     *
+     * The answer carries the plaintext of the one-time password — it is never
+     * stored, never logged and never answered a second time.
+     */
+    app.post<{ Params: { id: string } }>(
+      '/api/v1/users/:id/password',
+      { preHandler: requirePermission(database, PERMISSIONS.user.write) },
+      async (request, reply) => {
+        const parsedId = z.uuid().safeParse(request.params.id)
+
+        if (!parsedId.success) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        const targetId = parsedId.data
+        const targetRows = await database
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.id, targetId))
+          .limit(1)
+
+        if (targetRows.length === 0) {
+          return reply.code(404).send({ code: 'user_not_found', params: { fields: ['id'] } })
+        }
+
+        const temporaryPassword = generateTemporaryPassword()
+        const passwordHash = await hashPassword(temporaryPassword)
+
+        await database.transaction(async (tx) => {
+          await tx
+            .update(users)
+            .set({ passwordHash, mustChangePassword: true, updatedAt: new Date() })
+            .where(eq(users.id, targetId))
+
+          // The sessions die with the secret: the old password and every open
+          // session of the account are gone with the reset.
+          await destroyUserSessions(tx, targetId)
+        })
+
+        // The log line carries the code only — never the plaintext, never the
+        // e-mail of the account.
+        request.log.info({ code: 'password_reset' })
+
+        return reply.code(200).send(resetPasswordResponseSchema.parse({ temporaryPassword }))
       },
     )
   },

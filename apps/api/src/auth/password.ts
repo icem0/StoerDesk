@@ -1,4 +1,5 @@
 import { argon2id, hash, verify } from 'argon2'
+import { randomInt } from 'node:crypto'
 
 /**
  * Argon2id is the hashing algorithm fixed in `PLAN.md` §4. The parameters are the
@@ -36,4 +37,33 @@ export async function verifyPassword(storedHash: string, plain: string): Promise
   } catch {
     return false
   }
+}
+
+/**
+ * The alphabet of the one-time password (`specs/01-rbac.md` §3.9, ADR-0031).
+ *
+ * The password is read aloud, copied and typed by hand, so it carries no
+ * character that looks like another one: no `O` beside `0`, no `I` beside `l`
+ * beside `1`. The alphabet has 55 characters, 20 of them make more than 108 bits
+ * of entropy.
+ */
+const TEMPORARY_PASSWORD_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+
+/** The length of the one-time password (20 characters). */
+export const TEMPORARY_PASSWORD_LENGTH = 20
+
+/**
+ * The one-time password of the administration (`specs/01-rbac.md` §3.9,
+ * ADR-0031): the server generates it, so the office knows no secret of the
+ * colleague. `randomInt` draws every character of the alphabet with the same
+ * probability — no modulo bias.
+ */
+export function generateTemporaryPassword(): string {
+  let password = ''
+
+  for (let index = 0; index < TEMPORARY_PASSWORD_LENGTH; index += 1) {
+    password += TEMPORARY_PASSWORD_ALPHABET[randomInt(TEMPORARY_PASSWORD_ALPHABET.length)]
+  }
+
+  return password
 }

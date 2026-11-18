@@ -99,6 +99,23 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function postUserPassword(cookie: string, id: string) {
+      return app.inject({
+        method: 'POST',
+        url: `/api/v1/users/${id}/password`,
+        headers: { cookie },
+        payload: {},
+      })
+    }
+
+    async function login(email: string, password: string) {
+      return app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/login',
+        payload: { email, password },
+      })
+    }
+
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
       await seedRbac(db)
@@ -118,6 +135,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.NODE_ENV = 'test'
       process.env.API_LOG_LEVEL = 'silent'
       process.env.RATE_LIMIT_MAX = '10000'
+      process.env.LOGIN_RATE_LIMIT_MAX = '100'
 
       app = await buildServer()
     })
@@ -313,6 +331,68 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .where(eq(users.id, adminId))
 
       expect(adminAfter).toEqual([{ active: true, roleKey: 'admin' }])
+    })
+
+    it('sets a one-time password for a user and answers the plaintext once', async () => {
+      const session = await createSession(db, createdId, 1)
+      const reset = await postUserPassword(cookies['admin'], createdId)
+      const body = reset.json<{ temporaryPassword?: string }>()
+
+      expect(reset.statusCode).toBe(200)
+      expect(body.temporaryPassword).toHaveLength(20)
+      expect(
+        [...(body.temporaryPassword ?? '')].every((character) =>
+          'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'.includes(character),
+        ),
+      ).toBe(true)
+      expect(JSON.stringify(body)).not.toContain('passwordHash')
+
+      const listed = await getUsers(cookies['admin'])
+
+      expect(listed.json<UsersResponseBody>().users).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: createdId, mustChangePassword: true }),
+        ]),
+      )
+
+      const sessionRows = await db
+        .select({ id: schema.sessions.id })
+        .from(schema.sessions)
+        .where(eq(schema.sessions.userId, createdId))
+
+      expect(sessionRows).toEqual([])
+
+      const withOld = await login('newuser@example.org', 'a-test-password')
+      const withTemporary = await login('newuser@example.org', body.temporaryPassword ?? '')
+
+      expect(withOld.statusCode).toBe(401)
+      expect(withTemporary.statusCode).toBe(200)
+      expect(
+        withTemporary.json<{ user?: { mustChangePassword?: boolean } }>().user
+          ?.mustChangePassword,
+      ).toBe(true)
+
+      expect(session.token).not.toBe(body.temporaryPassword)
+    })
+
+    it('answers 404 for an unknown user and 400 for a malformed id', async () => {
+      const unknown = await postUserPassword(
+        cookies['admin'],
+        '3f6b1a54-1f2e-4a2f-9f5c-2b8f4d1e7a10',
+      )
+      const malformed = await postUserPassword(cookies['admin'], 'not-a-uuid')
+
+      expect(unknown.statusCode).toBe(404)
+      expect(unknown.json<ErrorResponseBody>().code).toBe('user_not_found')
+      expect(malformed.statusCode).toBe(400)
+      expect(malformed.json<ErrorResponseBody>().code).toBe('invalid_request')
+    })
+
+    it('refuses the reset without the permission to write users', async () => {
+      const response = await postUserPassword(cookies['office'], createdId)
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
     })
   },
 )

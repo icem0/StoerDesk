@@ -20,6 +20,10 @@ export const SESSION_COOKIE_NAME = 'session'
 const SESSION_TOKEN_BYTES = 32
 
 type SessionDatabase = Database['database']
+type SessionTransaction = Parameters<Parameters<Database['database']['transaction']>[0]>[0]
+
+/** The database or a transaction of it — the sessions die with the secret. */
+type SessionExecutor = SessionDatabase | SessionTransaction
 
 export type SessionUser = {
   id: string
@@ -146,7 +150,7 @@ export async function destroySession(database: SessionDatabase, token: string): 
  * session except the one of the browser that changed it.
  */
 export async function destroyUserSessions(
-  database: SessionDatabase,
+  database: SessionExecutor,
   userId: string,
   keepTokenHash?: string,
 ): Promise<void> {

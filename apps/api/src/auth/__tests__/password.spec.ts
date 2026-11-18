@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { hashPassword, verifyPassword } from '../password'
+import {
+  generateTemporaryPassword,
+  hashPassword,
+  TEMPORARY_PASSWORD_LENGTH,
+  verifyPassword,
+} from '../password'
 
 describe('password hashing (Argon2id)', () => {
   it('writes an Argon2id hash in PHC format with the configured parameters', async () => {
@@ -42,5 +47,25 @@ describe('password hashing (Argon2id)', () => {
     await expect(verifyPassword('', 'anything')).resolves.toBe(false)
     await expect(verifyPassword('$argon2id$not-a-hash', 'anything')).resolves.toBe(false)
     await expect(verifyPassword('garbage', 'anything')).resolves.toBe(false)
+  })
+})
+
+describe('the one-time password of the administration', () => {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+
+  it('draws 20 characters out of an alphabet without ambiguous ones', () => {
+    const password = generateTemporaryPassword()
+
+    expect(password).toHaveLength(TEMPORARY_PASSWORD_LENGTH)
+    expect([...password].every((character) => alphabet.includes(character))).toBe(true)
+    expect(password).not.toMatch(/[O0Il1]/)
+  })
+
+  it('draws a new password every time', () => {
+    const passwords = new Set(
+      Array.from({ length: 20 }, () => generateTemporaryPassword()),
+    )
+
+    expect(passwords.size).toBe(20)
   })
 })

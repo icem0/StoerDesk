@@ -1,7 +1,7 @@
 # WP-M14-148d: the administration sets the one-time password
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
