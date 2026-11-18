@@ -256,8 +256,10 @@ for (const language of ['de', 'en'] as const) {
     await expect(statusBadge(page)).toHaveText(statusText(language, 'NEW'))
     await expect(history(page).getByText(texts.event.created)).toBeVisible()
     // The first stage of the escalation chain fires with the ticket
-    // (WP-M14-91): the system escalates the new ticket right away.
-    await expect(history(page).getByText(texts.event.escalated)).toBeVisible()
+    // (WP-M14-91): the system escalates the new ticket right away. That firing
+    // is the arrival of the ticket, so the history spares its row — the report
+    // entry already says that the ticket arrived (§7.11, WP-M14-152c).
+    await expect(page.getByText(texts.event.escalated, { exact: false })).toHaveCount(0)
 
     // 1. Review: NEW → IN_REVIEW (stage selection, no body).
     await performStage(page, 'review_started', texts.confirm)
@@ -309,18 +311,18 @@ for (const language of ['de', 'en'] as const) {
     ])
     // Every internal transition (create, review, work order, assign, accept,
     // acknowledge, close) is written by the same signed-in administrator, so
-    // all seven actor cells carry that user's full name; the escalation of the
+    // all seven actor cells carry that user's full name. The escalation of the
     // first stage follows the created event and is written by the system
-    // (WP-M14-91). The eight cells share the same classes, so a single text
-    // would resolve to eight elements (strict mode violation): the expectation
-    // is an array, one text per element. The actor cell is a `div`; the free
-    // text of the work order is a `p` with the same classes (WP-M14-42), so the
-    // locator names the element type.
+    // (WP-M14-91), but the history spares that row (WP-M14-152c), so no system
+    // actor cell stays in the list. The seven cells share the same classes, so a
+    // single text would resolve to seven elements (strict mode violation): the
+    // expectation is an array, one text per element. The actor cell is a `div`;
+    // the free text of the work order is a `p` with the same classes (WP-M14-42),
+    // so the locator names the element type.
     const actorRows = history(page).locator('div.text-xs.text-slate-400')
-    await expect(actorRows).toHaveCount(8)
+    await expect(actorRows).toHaveCount(7)
     await expect(actorRows).toContainText([
       texts.actorName,
-      texts.systemActor,
       texts.actorName,
       texts.actorName,
       texts.actorName,

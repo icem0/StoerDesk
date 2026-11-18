@@ -10,6 +10,26 @@ spec-lines: 50
 
 depends-on: WP-M14-151
 
+files-read:
+
+- PLAN.md §9 and §12
+- specs/07-escalation.md §7.7, §7.9, §7.11
+- specs/10-notifications.md §11.8
+- work-packages/m14/151-the-readiness-calendar-names-the-technician-of-every-shift.md
+
+files-write:
+
+- specs/07-escalation.md
+- specs/10-notifications.md
+- PLAN.md §16
+- work-packages/README.md
+
+interfaces:
+
+- the payload keys `rule`, `stage`, `recipient`, `target` of
+  `notification_sent`/`notification_failed` (§11.8)
+- the display names of the stage chain in the ticket history (§7.9)
+
 ## Task
 
 The office read the history of a ticket and could not tell what happened:
