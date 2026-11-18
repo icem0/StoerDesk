@@ -213,7 +213,7 @@ describe('InboxPage', () => {
         'Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).',
       ),
     ).toBeTruthy()
-    expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
+    expect(screen.queryByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeNull()
   })
 
   it('names this browser when it has no subscription (WP-M14-143)', async () => {
@@ -222,12 +222,10 @@ describe('InboxPage', () => {
 
     renderPage()
 
-    const link = await screen.findByRole('link', { name: 'Einrichtungsseite öffnen' })
+    const link = await screen.findByRole('link', { name: i18n.t('inbox.webpush.setup') })
 
     expect(link.getAttribute('href')).toBe('/settings/notifications')
-    expect(
-      screen.getByText('Für diesen Browser sind noch keine Push-Benachrichtigungen eingerichtet.'),
-    ).toBeTruthy()
+    expect(screen.getByText(i18n.t('inbox.webpush.hint'))).toBeTruthy()
   })
 
   it('names a browser without a push manager (WP-M14-143)', async () => {
@@ -239,7 +237,7 @@ describe('InboxPage', () => {
     expect(
       await screen.findByText('Dieser Browser kann keine Push-Benachrichtigungen empfangen.'),
     ).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeTruthy()
   })
 
   it('names a blocked permission of this browser (WP-M14-143)', async () => {
@@ -251,7 +249,7 @@ describe('InboxPage', () => {
     expect(
       await screen.findByText('Die Push-Benachrichtigungen sind in diesem Browser gesperrt.'),
     ).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeTruthy()
   })
 
   it('shows no setup hint when this browser is registered for web push (WP-M14-143)', async () => {
@@ -261,9 +259,9 @@ describe('InboxPage', () => {
     renderPage()
 
     expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
-    expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
+    expect(screen.queryByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeNull()
     expect(
-      screen.queryByText('Für diesen Browser sind noch keine Push-Benachrichtigungen eingerichtet.'),
+      screen.queryByText(i18n.t('inbox.webpush.hint')),
     ).toBeNull()
   })
 
@@ -282,7 +280,7 @@ describe('InboxPage', () => {
         'Der Server kennt dieses Gerät nicht — hier erreichen Sie keine Push-Benachrichtigungen.',
       ),
     ).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeTruthy()
   })
 
   it('shows no setup hint while the browser has not answered (WP-M14-143)', async () => {
@@ -292,7 +290,7 @@ describe('InboxPage', () => {
     renderPage()
 
     expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
-    expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
+    expect(screen.queryByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeNull()
   })
 
   it('shows no filter without the permission (WP-M14-141c)', async () => {
