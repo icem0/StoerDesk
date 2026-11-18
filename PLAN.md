@@ -2505,6 +2505,17 @@ public status page answer it unchanged — the guard of WP-M9-29 knows both
 shapes since WP-M14-129a. The guard against a malformed number follows in
 **WP-M14-129c**.
 
+**A malformed number is still rejected at every entry point (WP-M14-129c, out of
+band in phase 14).** The widening of `ticketNoSchema` in WP-M14-129a must not
+weaken the format guard of SEC-015: the new integration spec sends a malformed
+number (`st-0001`, `ST-1`, `ST-2026-26-1`, a percent-encoded path traversal and
+an injection attempt) to the detail route, the comment route of the internal
+user, the review step of the workflow, the external work-order route and the
+delete route — each answers `400 invalid_request` with `fields: ['ticketNo']`
+and never reaches the database, while the year-free `ST-0001` passes the guard
+and reaches the lookup. With WP-M14-129a … WP-M14-129c the year-free ticket
+number is closed.
+
 **The names of the readiness belong to a role (WP-M14-131/132, out of band in
 phase 14).** The office asked that the names of the technicians in the
 readiness calendar are visible to the admins and to nobody else — or to a role

@@ -1,7 +1,7 @@
 # WP-M14-129c: a malformed number is still rejected at every entry point
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -63,9 +63,17 @@ and reports **unverified** (`PLAN.md` §18).
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/tickets/__tests__/ticket-no-guard.integration.spec.ts`
+  and this file (plus the bookkeeping: the changelog, `PLAN.md` §16, the backlog
+  table)
+- Interfaces added: none — the proof only
+- Verified: the new integration spec ran against the test database (6/6, no
+  skip): the detail route, the comment route of the internal user, the review
+  step of the workflow, the external work-order route and the delete route
+  answer `400 invalid_request` with `fields: ['ticketNo']` for every malformed
+  number (`st-0001`, `ST-1`, `ST-2026-26-1`, a percent-encoded path traversal
+  and an injection attempt), while the year-free `ST-0001` reaches the lookup;
+  `npm run check` green
 - Follow-up WP: none — the year-free ticket number is closed with
   WP-M14-129a … WP-M14-129c
 - Open question: none

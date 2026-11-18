@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
+- A malformed ticket number is still rejected at every entry point
+  (**WP-M14-129c**, out of band in phase 14 — **ADR-0027**): the widening of the
+  format guard of the `:ticketNo` path parameter (WP-M9-29, SEC-015) knows both
+  shapes now — the year-free `ST-0001` and the legacy `ST-2026-0001` — and still
+  filters every malformed number before the lookup. The new integration spec
+  proves it for the detail, comment, workflow, work-order and delete routes.
 - A ticket number of the yearly counter still resolves through the API
   (**WP-M14-129b**, out of band in phase 14 — **ADR-0027**): the number of an
   existing ticket is never rewritten, so the detail route, the comment route of
