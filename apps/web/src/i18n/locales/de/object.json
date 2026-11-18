@@ -59,7 +59,8 @@
       "contactPhone": "Telefon",
       "contactEmail": "E-Mail",
       "externalId": "Externe ID",
-      "notes": "Notizen"
+      "notes": "Notizen",
+      "priority": "Priorität"
     },
     "hints": {
       "objectNo": "Ziffern, Buchstaben, _ und -, max. 32 Zeichen (z. B. 12345_01)"
@@ -88,7 +89,8 @@
       "contactPhone": "Telefon",
       "contactEmail": "E-Mail",
       "externalId": "Externe ID",
-      "notes": "Notizen"
+      "notes": "Notizen",
+      "priority": "Priorität"
     },
     "hints": {
       "objectNo": "Die Objektnummer ist nach der Erstellung fest."
@@ -158,5 +160,12 @@
       "sessionInvalid": "The session has expired, please log in again.",
       "unknown": "The import failed."
     }
+  },
+  "priority": {
+    "standard": "Standard",
+    "low": "Niedrig",
+    "normal": "Normal",
+    "high": "Hoch",
+    "critical": "Kritisch"
   }
 }

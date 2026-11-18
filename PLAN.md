@@ -2621,6 +2621,14 @@ report has no choice at all: the deviation of the object wins, else the
 standard. The external API keeps the priority of the request. The deadline of
 the ticket follows the priority.
 
+**The object form carries the priority (WP-M14-134f, out of band in phase 14).**
+The create and the edit form of the object carry the field "Priorität" with the
+option "Standard" and the four priorities; the edit form shows the stored
+deviation, so an object that follows the standard shows "Standard". The package
+also repairs the form: the state started empty, because the query answers after
+the first render — the office saw an empty form and the save wrote the empty
+fields over the object. The fields are filled when the answer arrives.
+
 
 
 

@@ -59,7 +59,8 @@
       "contactPhone": "Phone",
       "contactEmail": "E-mail",
       "externalId": "External ID",
-      "notes": "Notes"
+      "notes": "Notes",
+      "priority": "Priority"
     },
     "hints": {
       "objectNo": "Digits, letters, _ and -, max. 32 characters (e. g. 12345_01)"
@@ -88,7 +89,8 @@
       "contactPhone": "Phone",
       "contactEmail": "E-mail",
       "externalId": "External ID",
-      "notes": "Notes"
+      "notes": "Notes",
+      "priority": "Priority"
     },
     "hints": {
       "objectNo": "The object number is fixed after creation."
@@ -158,5 +160,12 @@
       "sessionInvalid": "The session has expired, please sign in again.",
       "unknown": "The import failed."
     }
+  },
+  "priority": {
+    "standard": "Standard",
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "critical": "Critical"
   }
 }

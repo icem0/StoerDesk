@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The object form carries the priority of the object (**WP-M14-134f**, out of
+  band in phase 14 — **ADR-0029**): the create and the edit form carry the
+  field "Priorität" with the option "Standard" and the four priorities. The
+  edit form shows the stored deviation — an object that follows the standard of
+  the instance shows "Standard".
 - A new ticket takes the priority of its object (**WP-M14-134e**, out of band in
   phase 14 — **ADR-0029**): the internal report keeps the explicit choice of the
   user, a request without a priority takes the deviation of the object, and the
@@ -291,6 +296,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Fixed
+- The object form is filled with the object (**WP-M14-134f**, out of band in
+  phase 14): the state of the edit form started empty, because the query
+  answers after the first render — the office saw an empty form and the save
+  wrote the empty fields over the object. The fields are filled once the answer
+  of the query arrives.
 - The role management edits one role at a time (**WP-M14-133**, out of band in
   phase 14): the office reported that the permission checkboxes of the role
   management do not belong to the selected role — the checkboxes of the role

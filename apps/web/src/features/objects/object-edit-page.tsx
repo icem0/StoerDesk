@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import type { ObjectSummary } from '@stoerdesk/shared'
+import type { ObjectSummary, TicketPriority } from '@stoerdesk/shared'
 import { apiFetch } from '../../lib/api'
 
 /**
@@ -10,8 +10,13 @@ import { apiFetch } from '../../lib/api'
  *
  * Controlled edit form for an existing object: loads `GET /api/v1/objects/:objectNo`,
    prefilled fields for object number, name, address, contact, external id, notes
-   and systems, submits `PATCH /api/v1/objects/:objectNo` and redirects to the
-   object list on success.
+   and the priority of the object, submits `PATCH /api/v1/objects/:objectNo` and
+   redirects to the object list on success.
+ *
+ * The fields are filled when the answer of the query arrives: the state of the
+ * form starts empty, because the query answers after the first render — without
+ * that the office would see an empty form and would save empty fields over the
+ * object (WP-M14-134f).
  */
 
 export function ObjectEditPage() {
@@ -26,16 +31,18 @@ export function ObjectEditPage() {
     retry: false,
   })
 
-  const [name, setName] = useState(objectQuery.data?.name ?? '')
-  const [street, setStreet] = useState(objectQuery.data?.street ?? '')
-  const [houseNumber, setHouseNumber] = useState(objectQuery.data?.houseNumber ?? '')
-  const [postalCode, setPostalCode] = useState(objectQuery.data?.postalCode ?? '')
-  const [city, setCity] = useState(objectQuery.data?.city ?? '')
-  const [contactName, setContactName] = useState(objectQuery.data?.contactName ?? '')
-  const [contactPhone, setContactPhone] = useState(objectQuery.data?.contactPhone ?? '')
-  const [contactEmail, setContactEmail] = useState(objectQuery.data?.contactEmail ?? '')
-  const [externalId, setExternalId] = useState(objectQuery.data?.externalId ?? '')
-  const [notes, setNotes] = useState(objectQuery.data?.notes ?? '')
+  const [name, setName] = useState('')
+  const [street, setStreet] = useState('')
+  const [houseNumber, setHouseNumber] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [city, setCity] = useState('')
+  const [contactName, setContactName] = useState('')
+  const [contactPhone, setContactPhone] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
+  const [externalId, setExternalId] = useState('')
+  const [notes, setNotes] = useState('')
+  const [priority, setPriority] = useState<TicketPriority | 'standard'>('standard')
+  const [filledObjectId, setFilledObjectId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,6 +64,9 @@ export function ObjectEditPage() {
       if (contactEmail !== objectQuery.data?.contactEmail) payload.contactEmail = contactEmail || null
       if (externalId !== objectQuery.data?.externalId) payload.externalId = externalId || null
       if (notes !== objectQuery.data?.notes) payload.notes = notes || null
+      if (priority !== (objectQuery.data?.priorityOverride ?? 'standard')) {
+        payload.priority = priority === 'standard' ? null : priority
+      }
 
       await apiFetch<unknown>(`/v1/objects/${objectNo ?? ''}`, {
         method: 'PATCH',
@@ -93,6 +103,24 @@ export function ObjectEditPage() {
   }
 
   const object = objectQuery.data
+
+  // The answer of the query arrives after the first render: the fields of the
+  // form are filled once per object, a later answer of the same object keeps
+  // what the user typed.
+  if (object.id !== filledObjectId) {
+    setFilledObjectId(object.id)
+    setName(object.name)
+    setStreet(object.street ?? '')
+    setHouseNumber(object.houseNumber ?? '')
+    setPostalCode(object.postalCode ?? '')
+    setCity(object.city ?? '')
+    setContactName(object.contactName ?? '')
+    setContactPhone(object.contactPhone ?? '')
+    setContactEmail(object.contactEmail ?? '')
+    setExternalId(object.externalId ?? '')
+    setNotes(object.notes ?? '')
+    setPriority(object.priorityOverride ?? 'standard')
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -231,6 +259,21 @@ export function ObjectEditPage() {
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
           />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-slate-200">{t('edit.fields.priority')}</label>
+          <select
+            className="rounded bg-slate-900 p-2 text-slate-100"
+            value={priority}
+            onChange={(event) => setPriority(event.target.value as TicketPriority | 'standard')}
+          >
+            <option value="standard">{t('priority.standard')}</option>
+            <option value="low">{t('priority.low')}</option>
+            <option value="normal">{t('priority.normal')}</option>
+            <option value="high">{t('priority.high')}</option>
+            <option value="critical">{t('priority.critical')}</option>
+          </select>
         </div>
 
         <div className="col-span-full flex gap-3">

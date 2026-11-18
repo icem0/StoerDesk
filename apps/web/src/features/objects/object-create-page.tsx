@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   type CreateObjectRequest,
+  type TicketPriority,
 } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
@@ -31,6 +32,7 @@ export function ObjectCreatePage() {
   const [contactEmail, setContactEmail] = useState('')
   const [externalId, setExternalId] = useState('')
   const [notes, setNotes] = useState('')
+  const [priority, setPriority] = useState<TicketPriority | 'standard'>('standard')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,6 +54,7 @@ export function ObjectCreatePage() {
         contactEmail: contactEmail || null,
         externalId: externalId || null,
         notes: notes || null,
+        priority: priority === 'standard' ? null : priority,
       }
 
       await apiFetch<CreateObjectRequest>('/v1/objects', {
@@ -220,6 +223,21 @@ export function ObjectCreatePage() {
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
           />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-slate-200">{t('create.fields.priority')}</label>
+          <select
+            className="rounded bg-slate-900 p-2 text-slate-100"
+            value={priority}
+            onChange={(event) => setPriority(event.target.value as TicketPriority | 'standard')}
+          >
+            <option value="standard">{t('priority.standard')}</option>
+            <option value="low">{t('priority.low')}</option>
+            <option value="normal">{t('priority.normal')}</option>
+            <option value="high">{t('priority.high')}</option>
+            <option value="critical">{t('priority.critical')}</option>
+          </select>
         </div>
 
         <div className="col-span-full flex gap-3">

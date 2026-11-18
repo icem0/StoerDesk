@@ -1,7 +1,7 @@
 # WP-M14-134f: the object form carries the priority
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -27,7 +27,8 @@ interfaces:
 
 - The object write of the web app carries `priority` — `null` means the object
   follows the standard
-- The label `object.create.fields.priority` and `object.edit.fields.priority`
+- The labels `object.create.fields.priority`, `object.edit.fields.priority` and
+  `object.priority.standard|low|normal|high|critical`
 
 ## Task
 
@@ -39,12 +40,16 @@ interfaces:
 2. The edit form reads the deviation from the `priorityOverride` of the answer,
    not from the effective `priority` — an object that follows the standard
    shows "Standard".
-3. Add the labels of the field and of the options in `de` and `en`
+3. The fields of the edit form are filled when the answer of the query arrives:
+   before, the state of the form started empty, so the office saw an empty
+   form and the save wrote the empty fields over the object.
+4. Add the labels of the field and of the options in `de` and `en`
    (`object.create.fields.priority`, `object.edit.fields.priority`,
    `object.priority.standard`, `object.priority.low`, `object.priority.normal`,
    `object.priority.high`, `object.priority.critical`).
-4. Add a page test: the edit form shows "Standard" for an object without a
-   deviation and the priority of the deviation for an object with one.
+5. Add a page test: the edit form shows "Standard" for an object without a
+   deviation and the priority of the deviation for an object with one; the
+   create form writes the priority and `null` for the standard.
 
 ## Non-goals
 
@@ -68,6 +73,6 @@ Expected: all green; the object form writes the deviation of the object.
 
 - Files changed: the create form, the edit form, the labels in `de` and `en`
 - Interfaces added: the priority field of the object forms
-- Verified: `npm run check` (exit 0), the page test of the object form
+- Verified: `npm run check` (exit 0), the page test of the object form proves the deviation, the standard and the filled fields
 - Follow-up WP: WP-M14-134g (the administration shows the standard and the deviations)
 - Open question: none
