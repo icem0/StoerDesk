@@ -341,6 +341,55 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
         }
       },
     )
+
+    /**
+     * The internal comment (ADR-0034): the note of the colleagues that never
+     * reaches the customer. It has a route of its own, because the key
+     * `ticket.comment.internal` guards the write — a route with a flag in the
+     * body would let every colleague with `ticket.comment` write the note.
+     */
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/comments/internal',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.internalComment) },
+      async (request, reply) => {
+        const parsed = COMMENT_BODY.safeParse(request.body)
+
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        const user = request.user
+
+        if (user === undefined) {
+          return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(request.params.ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+        }
+
+        try {
+          const applied = await applyInternalAction({
+            database,
+            ticketNo: request.params.ticketNo,
+            clientUuid: parsed.data.clientUuid,
+            action: 'internal_comment',
+            actorUserId: user.id,
+            payload: { text: parsed.data.text },
+          })
+
+          const body = { ticketNo: applied.ticket.ticketNo, at: applied.event.createdAt.toISOString(), replayed: applied.replayed }
+
+          return reply.code(applied.replayed ? 200 : 201).send(body)
+        } catch (error) {
+          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+          throw error
+        }
+      },
+    )
   },
   { name: 'stoerdesk-internal-tickets' },
 )

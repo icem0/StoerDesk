@@ -63,19 +63,21 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     let app: FastifyInstance
     let sessionCookie = ''
+    let officeCookie = ''
     let objectId: string
     let ackTicketNo: string
     let commentTicketNo: string
     let newTicketNo: string
+    let internalTicketNo: string
 
     const now = new Date('2026-10-31T09:00:00.000Z')
     const deadline = new Date(now.getTime() + 72 * 60 * 60 * 1000)
 
-    async function login(): Promise<string> {
+    async function login(email = 'actor@example.de'): Promise<string> {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/login',
-        payload: { email: 'actor@example.de', password: 'a-login-password-1234' },
+        payload: { email, password: 'a-login-password-1234' },
       })
 
       const pair = cookiePair(response, 'session')
@@ -91,11 +93,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       method: 'POST',
       path: string,
       payload: Record<string, unknown>,
+      cookie = sessionCookie,
     ) {
       return app.inject({
         method,
         url: path,
-        headers: { cookie: sessionCookie },
+        headers: { cookie },
         payload,
       })
     }
@@ -117,6 +120,25 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .where(eq(ticketEvents.ticketId, ticket.id))
 
       return rows.length
+    }
+
+    async function eventsOf(ticketNo: string): Promise<{ type: string; payload: unknown }[]> {
+      const [ticket] = await db
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(eq(tickets.ticketNo, ticketNo))
+        .limit(1)
+
+      if (ticket === undefined) {
+        throw new Error(`ticket ${ticketNo} not found`)
+      }
+
+      const rows = await db
+        .select({ type: ticketEvents.type, payload: ticketEvents.payload })
+        .from(ticketEvents)
+        .where(eq(ticketEvents.ticketId, ticket.id))
+
+      return rows
     }
 
     beforeAll(async () => {
@@ -143,6 +165,29 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
 
       await db.insert(userRoles).values({ userId, roleId: adminRole.id })
+
+      // A colleague without the key of the internal comment: the role `office`
+      // holds `ticket.comment`, but not `ticket.comment.internal` (ADR-0034).
+      const officeInserted = await db
+        .insert(users)
+        .values({
+          email: 'office@example.de',
+          passwordHash: await hashPassword('a-login-password-1234'),
+        })
+        .returning({ id: users.id })
+
+      const officeUserId = onlyRow(officeInserted, 'office user').id
+
+      const [officeRole] = await db
+        .select({ id: roles.id })
+        .from(roles)
+        .where(eq(roles.key, 'office'))
+
+      if (officeRole === undefined) {
+        throw new Error('expected the seeded office role')
+      }
+
+      await db.insert(userRoles).values({ userId: officeUserId, roleId: officeRole.id })
 
       const [objectRow] = await db
         .insert(objects)
@@ -175,6 +220,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ackTicketNo = await insertTicket('ACCEPTED')
       commentTicketNo = await insertTicket('ACCEPTED')
       newTicketNo = await insertTicket('NEW')
+      internalTicketNo = await insertTicket('ACCEPTED')
 
       // The server reads its database from the environment.
       process.env.DATABASE_URL = url
@@ -183,6 +229,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       app = await buildServer()
 
       sessionCookie = await login()
+      officeCookie = await login('office@example.de')
     })
 
     afterAll(async () => {
@@ -285,6 +332,67 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
 
       expect(response.statusCode).toBe(401)
+    })
+
+    it('the internal comment writes an event of its own type and replays on the second call', async () => {
+      const clientUuid = '66666666-6666-4666-8666-666666666666'
+      const eventsBefore = await countEvents(internalTicketNo)
+
+      const first = await post('POST', `/api/v1/tickets/${internalTicketNo}/comments/internal`, {
+        clientUuid,
+        text: 'Nur für die Kollegen',
+      })
+
+      expect(first.statusCode).toBe(201)
+      expect(first.json<{ replayed?: boolean }>().replayed).toBe(false)
+
+      const eventsAfterFirst = await countEvents(internalTicketNo)
+      expect(eventsAfterFirst).toBe(eventsBefore + 1)
+
+      const written = await eventsOf(internalTicketNo)
+      const note = written.find((event) => event.type === 'internal_comment')
+
+      expect(note).toBeDefined()
+      expect(note?.payload).toMatchObject({ text: 'Nur für die Kollegen' })
+
+      const second = await post('POST', `/api/v1/tickets/${internalTicketNo}/comments/internal`, {
+        clientUuid,
+        text: 'Nur für die Kollegen',
+      })
+
+      expect(second.statusCode).toBe(200)
+      expect(second.json<{ replayed?: boolean }>().replayed).toBe(true)
+
+      const eventsAfterSecond = await countEvents(internalTicketNo)
+      expect(eventsAfterSecond).toBe(eventsAfterFirst)
+    })
+
+    it('a colleague without the key cannot write the internal comment', async () => {
+      const response = await post(
+        'POST',
+        `/api/v1/tickets/${internalTicketNo}/comments/internal`,
+        { clientUuid: '77777777-7777-4777-8777-777777777777', text: 'Ohne Recht' },
+        officeCookie,
+      )
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json<{ code?: string }>().code).toBe('forbidden')
+    })
+
+    it('a colleague without the key still writes the normal comment', async () => {
+      const response = await post(
+        'POST',
+        `/api/v1/tickets/${internalTicketNo}/comments`,
+        { clientUuid: '88888888-8888-4888-8888-888888888888', text: 'Kommentar für den Kunden' },
+        officeCookie,
+      )
+
+      expect(response.statusCode).toBe(201)
+
+      const written = await eventsOf(internalTicketNo)
+      const comment = written.find((event) => event.type === 'comment')
+
+      expect(comment?.payload).toMatchObject({ text: 'Kommentar für den Kunden' })
     })
   },
 )

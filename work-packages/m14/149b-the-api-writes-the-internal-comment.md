@@ -1,7 +1,7 @@
 # WP-M14-149b: the API writes the internal comment
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -73,9 +73,10 @@ Expected: all green; the new tests fail before the change and pass after it.
 ## Handoff
 
 - Files changed: the shared contract, the service of the internal writes, the
-  routes, the integration test, this document
-- Interfaces added: `INTERNAL_TICKET_EVENT_TYPES`, `isInternalTicketEvent`,
-  the route `POST /api/v1/tickets/:ticketNo/comments/internal`, the action
+  routes, the integration test, the security plan, this document, the backlog,
+  the changelog, `PLAN.md` §16
+- Interfaces added: `INTERNAL_TICKET_EVENT_TYPES`, `isInternalTicketEvent`, the
+  route `POST /api/v1/tickets/:ticketNo/comments/internal`, the action
   `internal_comment`
 - Verified: `npm run check`
 - Follow-up WP: WP-M14-149c (the prepared send view leaves the internal

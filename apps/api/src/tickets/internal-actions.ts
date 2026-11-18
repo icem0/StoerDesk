@@ -17,7 +17,9 @@ type Db = Database['database']
  * WP-M5-03).
  *
  * `applyInternalAction` is the single service function the acknowledge,
- * comment and decline routes of WP-M5-04 share. Replay validation of an
+ * comment and decline routes of WP-M5-04 share. The route of the internal
+ * comment (WP-M14-149b) shares it as well — the internal comment is a
+ * comment of its own kind, and only the event type differs. Replay validation of an
  * offline outbox write lives here in exactly one place:
  *
  * - a receipt for `client_uuid` short-circuits a replay (`replayed: true`,
@@ -49,11 +51,21 @@ const ACTION_EVENT: Record<'acknowledge' | 'decline', string> = {
   decline: 'declined',
 }
 
+/**
+ * The event type of the two comment kinds (ADR-0034): the normal comment
+ * travels to the customer with the prepared send view, the internal comment
+ * never leaves the house.
+ */
+const COMMENT_EVENT: Record<'comment' | 'internal_comment', string> = {
+  comment: 'comment',
+  internal_comment: 'internal_comment',
+}
+
 type ApplyInternalActionCtx = {
   database: Db
   ticketNo: string
   clientUuid: string
-  action: 'acknowledge' | 'comment' | 'decline'
+  action: 'acknowledge' | 'comment' | 'internal_comment' | 'decline'
   actorUserId: string
   payload?: Record<string, unknown>
 }
@@ -132,12 +144,12 @@ export async function applyInternalAction(
     // Execute the action inside the same transaction as the receipt insert.
     let event: TicketEvent
 
-    if (action === 'comment') {
+    if (action === 'comment' || action === 'internal_comment') {
       const [inserted] = await tx
         .insert(ticketEvents)
         .values({
           ticketId: ticket.id,
-          type: 'comment',
+          type: COMMENT_EVENT[action],
           actorKind: 'user',
           actorUserId,
           payload,

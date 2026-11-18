@@ -33,6 +33,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   who may write it, and it is recognisable at a glance by a dark red
   background whose colour the administration configures under „Darstellung“
   (ADR-0034). The decision splits into seven work packages.
+- The catalogue knows the key of the internal comment (**WP-M14-149a**, out
+  of band in phase 14): the permission catalog of
+  `packages/shared/src/permissions.ts` gains the key `ticket.comment.internal` —
+  the right to write the internal comment. The key belongs to no default role:
+  the administration grants it to a role or to a colleague, `admin` holds it
+  through the catalogue (ADR-0034).
+- The API writes the internal comment (**WP-M14-149b**, out of band in
+  phase 14): the route `POST /api/v1/tickets/:ticketNo/comments/internal` sits
+  behind the key `ticket.comment.internal` — a route of its own, because
+  `requirePermission` has OR semantics and a flag in the body would let every
+  colleague with `ticket.comment` write the note. The event of the trail
+  carries the type `internal_comment`; the write runs through
+  `applyInternalAction`, so the receipt of the idempotency key works as it does
+  for the other internal writes (ADR-0034).
 - The assignment names a technician and the notification reaches him
   (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
   two more targets. The action „Ticket zuweisen“ may name one technician of the

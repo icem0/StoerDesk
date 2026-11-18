@@ -2935,6 +2935,18 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The API writes the internal comment (WP-M14-149b, out of band in phase
+14).** The route `POST /api/v1/tickets/:ticketNo/comments/internal` sits behind
+the key `ticket.comment.internal` — a route of its own, because
+`requirePermission` has OR semantics and a flag in the body would let every
+colleague with `ticket.comment` write the note. The body is the body of the
+comment route, the answer is the answer of the comment route, and the write runs
+through `applyInternalAction`, so the receipt of the idempotency key works as it
+does for the other internal writes. The event of the trail carries the type
+`internal_comment`, the payload of the comment and the actor of the session.
+The shared contract names the event types that never reach the customer, so the
+prepared send view has one list to filter with.
+
 **The catalogue knows the key of the internal comment (WP-M14-149a, out of
 band in phase 14).** The catalogue of `packages/shared/src/permissions.ts`
 gains the key `ticket.comment.internal` — the right to write the internal

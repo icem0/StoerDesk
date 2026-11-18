@@ -145,6 +145,17 @@ export const PUBLIC_TICKET_EVENT_TYPES = [
   'closed',
 ] as const
 
+/**
+ * The event types that never reach the customer (ADR-0034): the internal
+ * comment is a note of the colleagues — it is neither printed nor sent with
+ * the prepared send view. The list is the single place that names them.
+ */
+export const INTERNAL_TICKET_EVENT_TYPES = ['internal_comment'] as const
+
+export function isInternalTicketEvent(type: string): boolean {
+  return (INTERNAL_TICKET_EVENT_TYPES as readonly string[]).includes(type)
+}
+
 export const publicTicketEventSchema = z.object({
   type: z.enum(PUBLIC_TICKET_EVENT_TYPES),
   at: z.iso.datetime(),
