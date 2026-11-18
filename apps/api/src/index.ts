@@ -21,6 +21,7 @@ import { settingsDeadlineRoutes } from './settings/deadlines'
 import { settingsNotificationsRoutes } from './settings/notifications'
 import { escalationRoutes } from './escalation/routes'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
+import { settingsTicketDefaultsRoutes } from './settings/ticket-defaults'
 import { detectedErrorsRoutes } from './settings/detected-errors'
 import { corsOrigins, databaseConnectionUrl, loadDotEnvFile, loadEnv } from './config/env'
 import { createDatabase } from './db/client'
@@ -146,6 +147,7 @@ export async function buildServer() {
   await app.register(settingsBrandingRoutes, { database })
   await app.register(settingsDashboardRoutes, { database })
   await app.register(settingsDeadlineRoutes, { database })
+  await app.register(settingsTicketDefaultsRoutes, { database })
   await app.register(settingsNotificationsRoutes, { database, env })
   await app.register(escalationRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })

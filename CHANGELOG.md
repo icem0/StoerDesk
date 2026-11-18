@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The routes answer the standard and the list of the deviations
+  (**WP-M14-134d**, out of band in phase 14 — **ADR-0029**):
+  `GET/PUT /api/v1/settings/ticket-defaults` reads and replaces the standard
+  priority, `GET /api/v1/settings/ticket-defaults/overrides` lists the objects
+  whose priority differs from it. The `PUT` deletes the deviations that no
+  longer deviate — the table holds only what differs from the standard.
 - The service reads and writes the deviation of an object
   (**WP-M14-134c**, out of band in phase 14 — **ADR-0029**): the new module
   `apps/api/src/objects/priority.ts` knows the standard

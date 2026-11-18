@@ -2604,6 +2604,14 @@ object write accepts the field `priority` — `null` removes the deviation, a
 value that equals the standard removes it as well. The external API sets no
 deviation: the priority is a decision of the office.
 
+**The routes answer the standard and the deviations (WP-M14-134d, out of band in
+phase 14).** `GET/PUT /api/v1/settings/ticket-defaults` reads and replaces the
+standard priority (`settings.read`/`settings.write`),
+`GET /api/v1/settings/ticket-defaults/overrides` lists the objects whose
+priority differs from it. The `PUT` stores the standard and deletes the
+deviations that no longer deviate from it — the table holds only what differs
+from the standard.
+
 
 
 

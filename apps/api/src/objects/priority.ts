@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { ticketPrioritySchema, type TicketPriority } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { objectPriorityOverrides, settings } from '../db/schema'
+import { objectPriorityOverrides, objects, settings } from '../db/schema'
 
 /**
  * The priority of an object (ADR-0029, `specs/02-data-model.md` §4.3.2,
@@ -68,6 +68,45 @@ export async function readObjectPriority(
   const overrides = await readPriorityOverrides(database)
 
   return overrides.get(objectId) ?? standard
+}
+
+/**
+ * The deviations of the instance with the number and the name of the object,
+ * as the administration shows them.
+ */
+export async function readPriorityOverrideList(
+  database: Executor,
+): Promise<
+  { objectId: string; objectNo: string; objectName: string; priority: TicketPriority }[]
+> {
+  const rows = await database
+    .select({
+      objectId: objectPriorityOverrides.objectId,
+      priority: objectPriorityOverrides.priority,
+      objectNo: objects.objectNo,
+      objectName: objects.name,
+    })
+    .from(objectPriorityOverrides)
+    .innerJoin(objects, eq(objects.id, objectPriorityOverrides.objectId))
+    .orderBy(objects.objectNo)
+
+  const list: { objectId: string; objectNo: string; objectName: string; priority: TicketPriority }[] =
+    []
+
+  for (const row of rows) {
+    const parsed = ticketPrioritySchema.safeParse(row.priority)
+
+    if (parsed.success) {
+      list.push({
+        objectId: row.objectId,
+        objectNo: row.objectNo,
+        objectName: row.objectName,
+        priority: parsed.data,
+      })
+    }
+  }
+
+  return list
 }
 
 /**

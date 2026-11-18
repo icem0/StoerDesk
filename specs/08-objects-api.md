@@ -50,6 +50,19 @@ WP-M2-02. Timestamps stay internal.
 - `priorityOverride` — the stored deviation, `null` when the object follows the
   standard. The two are equal only when the object deviates.
 
+**The standard and the deviations (ADR-0029).**
+
+| Method | Path | Permission | Result |
+| ------ | ---- | ---------- | ------ |
+| GET    | `/api/v1/settings/ticket-defaults` | `settings.read` | `200 { priority }` |
+| PUT    | `/api/v1/settings/ticket-defaults` | `settings.write` | `200 { priority }` |
+| GET    | `/api/v1/settings/ticket-defaults/overrides` | `settings.read` | `200 { overrides }` |
+
+The `PUT` stores the standard and deletes the deviations that no longer deviate
+from it — the table holds only what differs from the standard. The list of the
+deviations names the uuid of the object, its number, its name and its priority.
+A malformed body answers `400 invalid_request` with the field path.
+
 **List query.**
 
 - `search` — case-insensitive contains over `object_no`, `name`, `street`,

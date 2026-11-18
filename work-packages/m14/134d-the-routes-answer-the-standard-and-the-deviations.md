@@ -1,7 +1,7 @@
 # WP-M14-134d: the routes answer the standard and the deviations
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -66,6 +66,6 @@ listed.
 
 - Files changed: the new settings module, the registration of the routes
 - Interfaces added: the three routes of the standard and of the deviations
-- Verified: `npm run check` (exit 0), the integration spec of the routes
+- Verified: `npm run check` (exit 0), the integration spec of the routes proves the standard, the pruning and the list of the deviations
 - Follow-up WP: WP-M14-134e (the ticket takes the priority of the object)
 - Open question: none
