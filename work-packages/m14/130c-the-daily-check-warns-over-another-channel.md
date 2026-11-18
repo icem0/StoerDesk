@@ -25,11 +25,14 @@ files-write:
 
 interfaces:
 
-- `evaluateChannelHealth(database, now): Promise<ChannelHealth[]>` — the broken
+- `evaluateChannelHealth(database): Promise<ChannelHealth[]>` — the broken
   channels: their last delivery failed and no delivery of them succeeded since
-- `enqueueChannelHealthWarnings(database, env, now): Promise<number>` — one row
+- `enqueueChannelHealthWarnings(database, env, now?): Promise<number>` — one row
   of the event type `channel.health_warning` per broken channel, at most one
   per channel and per day
+- `warningChannelOf(database, env, brokenChannel): Promise<string>` — the first
+  configured channel of the chain that is not the broken one; a confirmed ntfy
+  target only, the chain of the drain
 - The text `notification.channel_health_warning` (de/en) with the parameters
   `channel` and `code`
 
@@ -79,6 +82,7 @@ the warning text is translated.
 - Files changed: the health module, the outbox and the two server locales
 - Interfaces added: `evaluateChannelHealth`, `enqueueChannelHealthWarnings`, the
   text `notification.channel_health_warning`
-- Verified: `npm run check` (exit 0), the integration spec of the health check
+- Verified: `npm run check` (exit 0), the integration spec of the health check,
+  the fix of the chain of the warning (`fix(api)`, the chain of the drain)
 - Follow-up WP: none
 - Open question: none
