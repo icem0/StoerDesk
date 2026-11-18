@@ -1,7 +1,7 @@
 # WP-M14-149a: the catalogue knows the key of the internal comment
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 12k tokens
@@ -59,8 +59,11 @@ Expected: all green; the new test fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed: the catalogue of the permissions, its test, this document
-- Interfaces added: the key `ticket.comment.internal`
+- Files changed: the catalogue of the permissions, its test, this document, the
+  backlog, the changelog, `PLAN.md` §16
+- Interfaces added: the key `ticket.comment.internal` — the right to write the
+  internal comment; it belongs to no default role, `admin` holds it through the
+  catalogue
 - Verified: `npm run check`
 - Follow-up WP: WP-M14-149b (the route of the internal comment)
 - Open question: none

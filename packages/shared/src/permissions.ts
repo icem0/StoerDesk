@@ -19,6 +19,12 @@ export const PERMISSIONS = {
     cancel: 'ticket.cancel',
     delete: 'ticket.delete',
     comment: 'ticket.comment',
+    /**
+     * The internal comment — the note of the colleagues that never reaches the
+     * customer (ADR-0034). The key belongs to no default role: the
+     * administration grants it to a role or to a colleague.
+     */
+    internalComment: 'ticket.comment.internal',
     photoRead: 'ticket.photo.read',
     photoWrite: 'ticket.photo.write',
   },
@@ -89,6 +95,7 @@ export const PERMISSION_KEYS: PermissionKey[] = [
   PERMISSIONS.ticket.cancel,
   PERMISSIONS.ticket.delete,
   PERMISSIONS.ticket.comment,
+  PERMISSIONS.ticket.internalComment,
   PERMISSIONS.ticket.photoRead,
   PERMISSIONS.ticket.photoWrite,
   PERMISSIONS.object.read,

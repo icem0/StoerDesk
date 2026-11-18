@@ -2935,6 +2935,15 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The catalogue knows the key of the internal comment (WP-M14-149a, out of
+band in phase 14).** The catalogue of `packages/shared/src/permissions.ts`
+gains the key `ticket.comment.internal` — the right to write the internal
+comment, the note of the colleagues that never reaches the customer. The key
+belongs to no default role: the administration grants it to a role or to a
+colleague, `admin` holds it through the catalogue (the rule of
+`notification.read_all`). The seed writes the key into the table `permissions`
+with the next start, so no migration is needed.
+
 
 **The assignment names a technician and the notification reaches him (WP-M14-150,
 out of band in phase 14).** The office asked for two changes in the escalation

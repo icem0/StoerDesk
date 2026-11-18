@@ -36,6 +36,11 @@ describe('permission catalog', () => {
     expect(isPermissionKey('ticket.nonsense')).toBe(false)
     expect(isPermissionKey('admin.everything')).toBe(false)
   })
+
+  it('knows the key of the internal comment', () => {
+    expect(PERMISSIONS.ticket.internalComment).toBe('ticket.comment.internal')
+    expect(isPermissionKey('ticket.comment.internal')).toBe(true)
+  })
 })
 
 describe('default roles', () => {
@@ -94,6 +99,18 @@ describe('default roles', () => {
       }
 
       expect(DEFAULT_ROLES[roleKey]).not.toContain(PERMISSIONS.notification.readAll)
+    }
+  })
+
+  it('grants the internal comment to the admin only', () => {
+    expect(DEFAULT_ROLES.admin).toContain(PERMISSIONS.ticket.internalComment)
+
+    for (const roleKey of SYSTEM_ROLE_KEYS) {
+      if (roleKey === 'admin') {
+        continue
+      }
+
+      expect(DEFAULT_ROLES[roleKey]).not.toContain(PERMISSIONS.ticket.internalComment)
     }
   })
 })
