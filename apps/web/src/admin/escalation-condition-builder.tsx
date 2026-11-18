@@ -78,11 +78,13 @@ export function EscalationConditionBuilder({
   canWrite,
   onCondition,
   stageNames,
+  pools,
 }: {
   initial: EscalationCondition
   canWrite: boolean
   onCondition: (next: EscalationCondition) => void
   stageNames?: Record<string, string>
+  pools?: { id: string; name: string }[]
 }) {
   const { t } = useTranslation('settings')
   const fields = conditionFields()
@@ -143,6 +145,10 @@ export function EscalationConditionBuilder({
           }))
         }
         return undefined
+      case 'shift':
+        // The readiness shift of a pool (§7.4, ADR-0030): the name of the pool
+        // is what the office reads.
+        return (pools ?? []).map((pool) => ({ key: pool.id, label: pool.name }))
       default:
         return undefined
     }
@@ -154,8 +160,11 @@ export function EscalationConditionBuilder({
     const current = Array.isArray(leaf.value) ? (leaf.value as string[]) : leaf.value == null ? [] : [String(leaf.value)]
 
     function save(next: string[]) {
+      // The value of a leaf is the typed value of the field: a single value for
+      // `eq` and `ne`, a list for `in` and `notIn` (`conditionValue`).
+      const value = conditionValue(leaf.field, leaf.operator, multi ? next : (next[0] ?? ''))
       const updated = leaves.map((entry, position) =>
-        position === index ? { ...entry, value: next } : entry,
+        position === index ? { ...entry, value } : entry,
       )
 
       setLeaves(updated)

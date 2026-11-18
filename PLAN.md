@@ -2822,6 +2822,17 @@ the field path of the condition, the rule of the target of an action (§7.5).
 The check reuses the pool rows the service already reads for the targets, so a
 configuration costs no second query.
 
+**The administration offers the pool in the condition (WP-M14-147d).** The
+builder of a condition offers the readiness pools for the field `shift` — the
+name of the pool is what the office reads, and the value is its uuid. The page
+reads the pools already for the targets of an `offer` and an `assign` action
+and hands them to the builder of the rule and to the builder of the action, so
+no second request leaves the browser. The builder writes the typed value of a
+leaf through `conditionValue`: a single value for `eq` and `ne`, a list for
+`in` and `notIn`. The select of a single field kept its value as a list
+before, and the contract of a leaf like `shift` (a uuid) or `assigned` (a
+boolean) refuses a list — such a condition could not be saved at all.
+
 
 
 

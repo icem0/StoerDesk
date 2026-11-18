@@ -28,7 +28,7 @@ function writes(): { url: string; body: unknown }[] {
   return []
 }
 
-function renderPage(permissions: string[]) {
+function renderPage(permissions: string[], pools: { id: string; name: string }[] = []) {
   const saved = writes()
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -54,6 +54,10 @@ function renderPage(permissions: string[]) {
 
     if (path.includes('/v1/escalation/channels')) {
       return Response.json({ channels: ['ntfy'] })
+    }
+
+    if (path.includes('/v1/oncall/pools')) {
+      return Response.json({ pools })
     }
 
     return Response.json({ webhooks: [] })
@@ -130,6 +134,37 @@ describe('the rule editor of the escalation page', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1))
     expect(escalationRuleConfigSchema.safeParse({ ...RULE, minutes: { ...RULE.minutes, low: 0 } }).success).toBe(false)
+  })
+
+  it('offers the readiness pool in the condition of a rule', async () => {
+    const pool = { id: '11111111-1111-4111-8111-111111111111', name: 'Bereitschaft Haustechnik' }
+    const saved = renderPage(['settings.read', 'settings.write'], [pool])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-condition-leaves')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
+
+    const field = screen.getByLabelText('Feld') as HTMLSelectElement
+
+    fireEvent.change(field, { target: { value: 'shift' } })
+
+    const value = await screen.findByLabelText('Wert') as HTMLSelectElement
+
+    expect(within(value).getByText('Bereitschaft Haustechnik')).toBeTruthy()
+
+    fireEvent.change(value, { target: { value: pool.id } })
+
+    await waitFor(() => expect(saved.length).toBeGreaterThan(1))
+
+    const body = (saved.at(-1) ?? { body: {} as unknown }).body as Record<string, unknown>
+    const rules = body.rules as unknown[]
+    const edited = rules[0] as Record<string, unknown>
+
+    expect(edited.condition).toEqual({
+      all: [{ field: 'shift', operator: 'eq', value: pool.id }],
+    })
   })
 
   it('groups the time fields of a rule into its own frame', async () => {

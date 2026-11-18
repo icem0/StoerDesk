@@ -509,6 +509,7 @@ export function EscalationActionEditor({
             <EscalationConditionBuilder
               initial={action.condition as unknown as EscalationCondition}
               canWrite={canWrite}
+              pools={pools}
               onCondition={(next) =>
                 publish(
                   actions.map((entry, position) =>

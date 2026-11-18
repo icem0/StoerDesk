@@ -1,7 +1,7 @@
 # WP-M14-147d: the administration offers the pool in the condition
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -38,16 +38,22 @@ interfaces:
    `shift` is a select over that list, not a text field — the name of the pool
    is what the office reads. The builder reads the pools of the page, so no
    second request leaves the browser.
-2. `apps/web/src/admin/escalation-page.tsx` and
+2. The same file: the value of a leaf is the typed value of its field through
+   `conditionValue` — a single value for `eq` and `ne`, a list for `in` and
+   `notIn`. The select of a single field kept its value as a list before, and
+   the contract of a leaf like `shift` (a uuid) or `assigned` (a boolean)
+   refuses a list: the condition of such a field could not be saved at all.
+3. `apps/web/src/admin/escalation-page.tsx` and
    `apps/web/src/admin/escalation-action-editor.tsx`: both hand the pools to
    the builder — the rule form and the condition of an action.
-3. `apps/web/src/i18n/locales/{de,en}/settings.json`: the field `shift` gets its
+4. `apps/web/src/i18n/locales/{de,en}/settings.json`: the field `shift` gets its
    label in both languages.
 
 ## Non-goals
 
 - No new page and no new hook: the pools are already in the page.
-- No change of the other fields of the condition builder.
+- No change of the fields of the condition builder and of the operator list:
+  both are read from the shared contract.
 - No translation of the name of a pool: the name is the name of the
   installation (§3.1).
 
@@ -69,7 +75,8 @@ i18n check finds both languages.
 - Files changed: the builder of a condition, the page, the editor of the
   actions, the two locale files, the test, this document,
   `work-packages/README.md`, `CHANGELOG.md`, `PLAN.md` §16
-- Interfaces added: the select of the pool in the condition builder
+- Interfaces added: the select of the pool in the condition builder, the typed
+  value of a leaf
 - Verified: `npm run check`
 - Follow-up WP: none
 - Open question: none

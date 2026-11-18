@@ -741,6 +741,7 @@ function RuleForm({
           initial={rule.condition}
           canWrite={canWrite}
           stageNames={stageNames}
+          pools={pools}
           onCondition={(next) => apply({ ...rule, condition: next })}
         />
       </div>
