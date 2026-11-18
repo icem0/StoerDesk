@@ -45,6 +45,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     const now = new Date('2026-11-05T12:00:00.000Z')
     let objectId = ''
     let poolId = ''
+    let poolName = ''
     let shiftId = ''
     let onDutyTopic = ''
     let offDutyTopic = ''
@@ -144,13 +145,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const [pool] = await db
         .insert(oncallPools)
         .values({ name: `Pool ${randomUUID().slice(0, 6)}`, groupId: group.id })
-        .returning({ id: oncallPools.id })
+        .returning({ id: oncallPools.id, name: oncallPools.name })
 
       if (pool === undefined) {
         throw new Error('pool insert failed')
       }
 
       poolId = pool.id
+      poolName = pool.name
 
       const [shift] = await db
         .insert(oncallShifts)
@@ -211,6 +213,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(topics).toContain(onDutyTopic)
       expect(topics).not.toContain(offDutyTopic)
+
+      const named = rows.filter(
+        (row) => (row.target as Record<string, unknown>).targetName === poolName,
+      )
+
+      expect(named).toHaveLength(1)
     })
 
     it('keeps the rule silent when the pool has no staffed shift', async () => {

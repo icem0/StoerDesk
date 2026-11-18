@@ -9,16 +9,19 @@ import {
   type EscalationCondition,
   type EscalationFacts,
   type EscalationNotifyPriority,
+  type EscalationNotifyTarget,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
 import {
   escalationActions,
   objects,
+  oncallPools,
   outbox,
   ticketAssignees,
   ticketEvents,
   tickets,
+  users,
   webhookDeliveries,
   webhookEndpoints,
 } from '../db/schema'
@@ -90,6 +93,46 @@ function stringList(value: unknown): string[] {
   }
 
   return value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+}
+
+/**
+ * The name of the target a `notify` action was configured for (§7.5, §11.8,
+ * WP-M14-152b): the name of the readiness pool or the name of the user — given
+ * and family name, the e-mail only as the fallback like the inbox of §11.16.
+ * The target `assigned` names the technicians of the ticket, who are already
+ * visible on the ticket, so it has no single name.
+ */
+async function targetNameOf(
+  database: Db,
+  target: EscalationNotifyTarget,
+): Promise<string | null> {
+  if (target.kind === 'pool') {
+    const [pool] = await database
+      .select({ name: oncallPools.name })
+      .from(oncallPools)
+      .where(eq(oncallPools.id, target.id))
+      .limit(1)
+
+    return pool?.name ?? null
+  }
+
+  if (target.kind === 'user') {
+    const [user] = await database
+      .select({ givenName: users.givenName, familyName: users.familyName, email: users.email })
+      .from(users)
+      .where(eq(users.id, target.id))
+      .limit(1)
+
+    if (user === undefined) {
+      return null
+    }
+
+    const name = `${user.givenName} ${user.familyName}`.trim()
+
+    return name === '' ? user.email : name
+  }
+
+  return null
 }
 
 /**
@@ -186,6 +229,12 @@ export async function dispatchEscalationActions(
       const notifyTarget = escalationNotifyTargetSchema.safeParse(config.target)
 
       if (notifyTarget.success) {
+        // The name of the configured target goes into the row target, so the
+        // notification event of the drain can name the pool or the user the
+        // rule was configured for (§11.8, WP-M14-152b).
+        const targetName = await targetNameOf(database, notifyTarget.data)
+        const rowTarget = targetName === null ? target : { ...target, targetName }
+
         // A readiness pool as the target reaches the technicians who have a
         // shift in that pool at this moment (ADR-0030) — the members of the
         // pool without a shift receive nothing. The target `assigned` reaches
@@ -221,7 +270,7 @@ export async function dispatchEscalationActions(
               .filter((value) => value !== '' && value !== undefined)
               .join(' · '),
             ticketId: firing.ticketId,
-            target: { ...target, ntfyTopic: recipient.topic },
+            target: { ...rowTarget, ntfyTopic: recipient.topic },
           })),
         )
 

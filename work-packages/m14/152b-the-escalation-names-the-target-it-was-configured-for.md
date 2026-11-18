@@ -1,7 +1,7 @@
 # WP-M14-152b: the escalation names the target it was configured for
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -59,8 +59,12 @@ configuration.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/escalation/actions.ts` (`targetNameOf` and the
+  row target of a targeted `notify` action), the action test and the readiness-
+  shift test of the escalation, `work-packages/README.md`, this document
+- Interfaces added: `targetName` in the outbox row target of a `notify` action
+  with a target
+- Verified: `npm run typecheck -w @stoerdesk/api`, the escalation action and
+  readiness-shift specs and the notification outbox spec green
 - Follow-up WP: none
 - Open question: none

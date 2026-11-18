@@ -283,7 +283,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(targeted).toHaveLength(1)
       expect(targeted[0]?.channel).toBe('ntfy')
       expect(targeted[0]?.eventType).toBe('ticket.escalated')
-      expect(targeted[0]?.target).toMatchObject({ ntfyPriority: 5 })
+      expect(targeted[0]?.target).toMatchObject({ ntfyPriority: 5, targetName: 'Nora Notify' })
       expect(messageOf((targeted[0]?.target ?? {}) as Record<string, unknown>).ntfyPriority).toBe(5)
     })
 
