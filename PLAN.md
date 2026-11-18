@@ -2349,7 +2349,7 @@ notification from the first line (title), the rest (body) and the optional last
 block `<label>: <url>` (deep link); a click closes it and focuses an open app
 window or opens the link. The label is the translated
 `notification.action_label` of the server, so the parser never hard-codes a
-locale. The subscribe card follows in **WP-M14-126**.
+locale. The subscribe card follows in **WP-M14-126a** and **WP-M14-126b**.
 
 
 

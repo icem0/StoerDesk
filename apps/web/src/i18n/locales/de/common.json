@@ -195,6 +195,25 @@
       "remove": "Remove the WhatsApp Web account",
       "removed": "The WhatsApp Web account was removed."
     },
+    "webpush": {
+      "guidance": "Web Push braucht keinen Anbieter-Account: dieser Browser meldet sich direkt beim Push-Dienst an. Das funktioniert am Desktop und in der installierten App auf Android; auf dem iPhone erst ab iOS 16.4 als installierte App.",
+      "subscribe": "Dieses Gerät anmelden",
+      "remove": "Dieses Gerät abmelden",
+      "linked": "Dieses Gerät ist angemeldet.",
+      "deviceCount": "{{count}} Geräte sind für dieses Konto angemeldet.",
+      "notConfigured": "Web Push ist auf diesem Server nicht konfiguriert (VAPID-Schlüssel fehlen).",
+      "unsupported": "Dieser Browser unterstützt keine Push-Nachrichten. Auf dem iPhone die App zuerst zum Home-Bildschirm hinzufügen.",
+      "qrHint": "Auf dem Handy öffnen und dort anmelden:",
+      "qrLabel": "QR-Code zu den Benachrichtigungs-Einstellungen",
+      "errors": {
+        "denied": "Die Benachrichtigungs-Erlaubnis wurde nicht erteilt. Bitte im Browser erlauben und erneut versuchen.",
+        "not_configured": "Web Push ist auf diesem Server nicht konfiguriert.",
+        "unsupported": "Dieser Browser unterstützt keine Push-Nachrichten.",
+        "session_invalid": "Die Sitzung ist abgelaufen. Bitte neu anmelden.",
+        "invalid_request": "Die Anmeldung konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "unknown": "Die Anmeldung ist fehlgeschlagen."
+      }
+    },
     "errors": {
       "session_invalid": "The session has expired. Please log in again.",
       "invalid_request": "The code is invalid, expired or already used – please request a new one.",
