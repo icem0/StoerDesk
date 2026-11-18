@@ -419,5 +419,67 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(after.state).toBe('FAILED')
     })
+
+    it('names the rule, the stage, the target and the recipient of a fired escalation (WP-M14-152a)', async () => {
+      const env = envOf('http://127.0.0.1:1/')
+
+      const [user] = await db
+        .insert(users)
+        .values({
+          email: 'escalation-user@example.invalid',
+          givenName: 'Erik',
+          familyName: 'Escalation',
+          passwordHash: 'no-login-for-escalation-user',
+        })
+        .returning({ id: users.id })
+
+      await enqueuePersonalDeliveries(db, [
+        {
+          userId: user!.id,
+          channel: 'ntfy',
+          eventType: 'ticket.escalated',
+          title: ticketNo,
+          body: 'normal · Rathaus · review#1 · review',
+          ticketId,
+          target: {
+            ticketNo,
+            priority: 'normal',
+            objectName: 'Rathaus',
+            escalationRule: 'review#1',
+            escalationStage: 'review',
+            targetName: 'SiTec',
+            ntfyTopic: 'escalation-topic',
+          },
+        },
+      ])
+
+      await drainOutbox(db, env)
+
+      const events = await db
+        .select({ type: ticketEvents.type, payload: ticketEvents.payload })
+        .from(ticketEvents)
+        .where(eq(ticketEvents.ticketId, ticketId))
+
+      const named = events.filter(
+        (event) => (event.payload as Record<string, unknown>).rule === 'review#1',
+      )
+
+      expect(named).toHaveLength(1)
+      expect(named[0]!.type).toBe('notification_failed')
+      expect((named[0]!.payload as Record<string, unknown>).stage).toBe('review')
+      expect((named[0]!.payload as Record<string, unknown>).target).toBe('SiTec')
+      expect((named[0]!.payload as Record<string, unknown>).recipient).toBe('Erik Escalation')
+
+      const untargeted = events.filter(
+        (event) =>
+          event.type === 'notification_sent' || event.type === 'notification_failed',
+      )
+
+      expect(
+        untargeted.filter(
+          (event) => (event.payload as Record<string, unknown>).rule === undefined,
+        ).length,
+      ).toBeGreaterThan(0)
+    })
   },
 )

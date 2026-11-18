@@ -1,7 +1,7 @@
 # WP-M14-152a: the outbox event names its rule, its stage and its addressee
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -63,8 +63,13 @@ target and recipient and a report row stays unchanged.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/notifications/outbox.ts` (the helper
+  `recipientNameOf` and the payload of `finishRow`),
+  `apps/api/src/notifications/__tests__/outbox.integration.spec.ts`,
+  `work-packages/README.md`, this document
+- Interfaces added: the payload keys `rule`, `stage`, `recipient` and `target` of
+  `notification_sent`/`notification_failed`
+- Verified: `npm run typecheck -w @stoerdesk/api` and the notification outbox,
+  drain-worker, phase-14-exit and escalation-action specs green
 - Follow-up WP: none
 - Open question: none

@@ -10,6 +10,7 @@ import {
   oncallPools,
   outbox,
   ticketEvents,
+  users,
 } from '../db/schema'
 import { ONCALL_TIMEZONE, t } from '@stoerdesk/shared'
 import type { NotificationEventType } from '@stoerdesk/shared'
@@ -343,6 +344,43 @@ const readinessMessageOf = (target: Record<string, unknown>): MessagePriority =>
 })
 
 /**
+ * The name of the addressee of a personal message (`specs/10-notifications.md`
+ * §11.16, WP-M14-152a): given and family name, the e-mail only as the fallback
+ * — the same rule the inbox of the administrator answers. An instance row
+ * without a personal message has no addressee.
+ */
+async function recipientNameOf(
+  database: DbLike,
+  messageId: string | null,
+): Promise<string | null> {
+  if (messageId === null) {
+    return null
+  }
+
+  const [message] = await database
+    .select({ userId: notificationMessages.userId })
+    .from(notificationMessages)
+    .where(eq(notificationMessages.id, messageId))
+
+  if (message === undefined || !message.userId) {
+    return null
+  }
+
+  const [user] = await database
+    .select({ givenName: users.givenName, familyName: users.familyName, email: users.email })
+    .from(users)
+    .where(eq(users.id, message.userId))
+
+  if (user === undefined) {
+    return null
+  }
+
+  const name = `${user.givenName} ${user.familyName}`.trim()
+
+  return name === '' ? user.email : name
+}
+
+/**
  * Marks one row `SENT` or `FAILED` and appends exactly one
  * `notification_sent`/`notification_failed` event to the ticket history, both
  * in the same transaction. With a `fallbackChannel` the exhausted row
@@ -351,6 +389,11 @@ const readinessMessageOf = (target: Record<string, unknown>): MessagePriority =>
  * photo, no contact data. The pending guard of the same transaction makes
  * sure a channel that is still waiting for its own WP-M7-04 row is never
  * notified twice. Returns `true` only when a fallback row was really queued.
+ *
+ * Next to the channel the event names the configuration that queued the row
+ * (§11.8, WP-M14-152a): the rule and the stage of the escalation, the target
+ * the action was configured for and the addressee of a personal delivery —
+ * display names only, never a topic, a token, an address or a contact value.
  */
 async function finishRow(
   database: Db,
@@ -407,6 +450,11 @@ async function finishRow(
     }
 
     if (row.ticketId !== null) {
+      const rule = row.target.escalationRule
+      const stage = row.target.escalationStage
+      const targetName = row.target.targetName
+      const recipient = await recipientNameOf(tx, row.notificationMessageId)
+
       await tx.insert(ticketEvents).values({
         ticketId: row.ticketId,
         type: eventType,
@@ -415,6 +463,10 @@ async function finishRow(
           channel: row.channel,
           ticketNo: String(row.target.ticketNo ?? ''),
           attempts: row.attempts,
+          ...(typeof rule === 'string' ? { rule } : {}),
+          ...(typeof stage === 'string' ? { stage } : {}),
+          ...(typeof targetName === 'string' ? { target: targetName } : {}),
+          ...(recipient !== null ? { recipient } : {}),
           ...(errorCode !== undefined ? { errorCode } : {}),
         },
       })
