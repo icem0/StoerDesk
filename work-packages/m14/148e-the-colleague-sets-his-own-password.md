@@ -1,7 +1,7 @@
 # WP-M14-148e: the colleague sets his own password
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens

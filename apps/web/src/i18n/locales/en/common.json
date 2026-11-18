@@ -108,6 +108,24 @@
       "invalid_request": "The sign-in data is incomplete or malformed.",
       "session_invalid": "The session has expired. Please sign in again.",
       "unknown": "Sign-in is not possible right now. Please try again later."
+    },
+    "passwordChange": {
+      "title": "Set a new password",
+      "hint": "The one-time password is replaced by a password only you know. After that you sign in as usual.",
+      "fields": {
+        "password": "New password",
+        "repetition": "Repeat the password"
+      },
+      "lengthHint": "At least 12 characters.",
+      "tooShort": "The password needs at least 12 characters.",
+      "mismatch": "The two passwords do not match.",
+      "submit": "Save the password",
+      "errors": {
+        "invalid_request": "The password is incomplete or too short.",
+        "session_invalid": "The session expired. Please sign in again.",
+        "password_change_required": "Please set a password of your own first.",
+        "unknown": "The password could not be saved. Please try again later."
+      }
     }
   },
   "ntfy": {

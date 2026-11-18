@@ -108,6 +108,24 @@
       "invalid_request": "Die Anmeldedaten sind unvollständig oder fehlerhaft.",
       "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
       "unknown": "Anmeldung ist derzeit nicht möglich. Bitte später erneut versuchen."
+    },
+    "passwordChange": {
+      "title": "Neues Passwort festlegen",
+      "hint": "Das Einmalpasswort wird durch ein Passwort ersetzt, das nur dir bekannt ist. Danach kannst du dich wie gewohnt anmelden.",
+      "fields": {
+        "password": "Neues Passwort",
+        "repetition": "Passwort wiederholen"
+      },
+      "lengthHint": "Mindestens 12 Zeichen.",
+      "tooShort": "Das Passwort braucht mindestens 12 Zeichen.",
+      "mismatch": "Die beiden Passwörter stimmen nicht überein.",
+      "submit": "Passwort speichern",
+      "errors": {
+        "invalid_request": "Das Passwort ist unvollständig oder zu kurz.",
+        "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+        "password_change_required": "Bitte zuerst ein eigenes Passwort festlegen.",
+        "unknown": "Das Passwort konnte nicht gespeichert werden. Bitte später erneut versuchen."
+      }
     }
   },
   "ntfy": {
