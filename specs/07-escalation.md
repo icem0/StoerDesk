@@ -114,6 +114,7 @@ testable.
 | `paused` | boolean | `eq` |
 | `stageReached` | stage key | `eq`, `ne`, `in`, `notIn` |
 | `time_of_day` | interval `HH:MM`–`HH:MM`, one or more | `in`, `notIn` |
+| `shift` | readiness pool (uuid) | `eq`, `ne` |
 
 A condition group holds at most two levels and at most 20 leaves. The evaluation
 is a pure function in `packages/shared`, used by the API and by the administration
@@ -125,6 +126,14 @@ is included, the end excluded, so `06:00–22:00` and `22:00–06:00` partition 
 day and an interval may cross midnight. Without a wall-clock fact the evaluator
 reads the current time; an interval that names no clock time never matches.
 
+`shift` (WP-M14-147, ADR-0030) names a readiness pool of the on-call calendar:
+it matches when the pool has a staffed shift at the moment of the evaluation —
+a `CONFIRMED`, a `SWAP_REQUESTED` or a `PLANNED` shift that covers now, the rule
+of `specs/04-oncall.md` §4a.6. `eq` matches a staffed pool, `ne` an unstaffed
+one, so a rule may also ask for the pool without a shift. The evaluation stays a
+pure function: the facts of the ticket carry the pools that are staffed at that
+moment.
+
 ## 7.5 Actions
 
 An action is what happens when a rule fires. Every action carries its own
@@ -133,7 +142,7 @@ the night.
 
 | Type | Configuration | Effect |
 | --- | --- | --- |
-| `notify` | `target` (one user or a readiness pool) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per technician of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
+| `notify` | `target` (one user or a readiness pool) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
 | `history` | `text` (optional, 1–500 characters), no key in the administration | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
@@ -141,8 +150,10 @@ the night.
 | `assign` | `target` (a readiness pool or a user group, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
 
 A `notify` action with a `target` replaces the channel broadcast of the action:
-the selected user, or every technician of the selected readiness pool, receives
-the notification on the own ntfy topic. A user without an ntfy account contributes
+the selected user, or the technicians who have a shift in the selected readiness
+pool at this moment, receive the notification on the own ntfy topic (ADR-0030).
+The members of the pool without a shift receive nothing — the readiness service
+is the team that is on duty. A user without an ntfy account contributes
 nothing. Without a target the action keeps the channel broadcast of the
 installation. The optional `priority` is the ntfy level of the notification and
 overrides the ticket-based default (`critical` = `urgent`, otherwise `default`).

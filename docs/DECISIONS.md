@@ -61,3 +61,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0027](DECISIONS/0027-ticket-number-without-year.md) | The ticket number carries no calendar year (`ST-0001`, one global counter, legacy numbers stay readable) | accepted |
 | [ADR-0028](DECISIONS/0028-the-channel-health-warning-goes-over-another-channel.md) | A broken channel warns over another channel, once a day (`push_subscription_dead`, `channel.health_warning`) | accepted |
 | [ADR-0029](DECISIONS/0029-the-object-priority-deviates-from-the-standard.md) | The priority of an object deviates from the standard (`object_priority_overrides`, `ticket.default_priority`) | accepted |
+| [ADR-0030](DECISIONS/0030-the-readiness-shift-is-a-condition-of-the-escalation.md) | The readiness shift is a condition of the escalation (`shift` field, a pool target reaches the technicians on duty) | accepted |

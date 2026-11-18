@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The readiness shift becomes a condition of the escalation (**WP-M14-147**, out
+  of band in phase 14): the conditions of the escalation stages gain the field
+  „Bereitschafts-Schicht" with the readiness pool as its value, and a
+  notification with a readiness pool as its target reaches the technicians who
+  have a shift and not the whole standby team (ADR-0030). The spec and the
+  decision are written; the implementation follows in WP-M14-147a … WP-M14-147d.
 - The inbox asks the server about this device (**WP-M14-146**, out of band in
   phase 14): a browser whose device the server does not know receives no push
   message, and the inbox of WP-M14-143 stayed silent because the browser itself

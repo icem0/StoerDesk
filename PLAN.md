@@ -410,6 +410,13 @@ foreign key `escalation_rules.stage_key`, the firing log keeps the audit. The
 seed of the five stages of the table above is the default chain of a new
 installation, not a law.
 
+Since ADR-0030 the conditions of a rule may also ask for the readiness service:
+the field `shift` names a readiness pool and matches when the pool has a staffed
+shift at that moment — a confirmed, a swapped or a planned shift that covers
+now. A `notify` action with a readiness pool as its target reaches the
+technicians who have a shift in that pool; the members of the pool without a
+shift receive nothing.
+
 ## 10. Report form and offline
 
 Public route: `/m/<qr_token>`. Status page: `/s/<status_token>`.
@@ -2766,6 +2773,24 @@ page, where the card of WP-M14-145 registers the device again. With that the
 chain of the push is closed: the browser says what it has, the server says what
 it knows, and both pages name the same cause.
 
+
+
+
+**The readiness shift is a condition of the escalation (WP-M14-147, out of band
+in phase 14).** „zu den bedingungen bei den escalationsstufen muss die Schicht
+wählbar sein also Bereitschafts-Schicht und dann den schicht-pool auswählen …
+es geht darum dass die techniker der schicht nur dann eine nachricht bekommen
+sollen, wenn sie auch schicht haben". ADR-0030 decides: the conditions gain the
+field `shift` — its value is the uuid of a readiness pool, and it matches when
+the pool has a staffed shift at the moment of the evaluation (a `CONFIRMED`, a
+`SWAP_REQUESTED` or a `PLANNED` shift that covers now, the rule of
+`specs/04-oncall.md` §4a.6). A `notify` action with a readiness pool as its
+target reaches the technicians who have a shift in that pool and not the
+members of the pool without a shift. The evaluation stays a pure function: the
+facts of a ticket carry the staffed pools, and the scan reads them once per
+minute, not once per ticket. The chain is split into **WP-M14-147a** (the shared
+contract), **WP-M14-147b** (the engine), **WP-M14-147c** (the configuration
+service) and **WP-M14-147d** (the administration).
 
 
 

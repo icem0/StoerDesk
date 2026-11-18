@@ -1526,6 +1526,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-144 | the server answers whether it holds the device of this browser (out of band) | done | yes |
 | WP-M14-145 | the card asks the server about this device (out of band) | done | yes |
 | WP-M14-146 | the inbox asks the server about this device (out of band) | done | yes |
+| WP-M14-147 | the readiness shift in the conditions of the escalation — the spec and the split (out of band) | done | yes |
+| WP-M14-147a | the condition of the readiness shift in the shared contract (out of band) | planned | yes |
+| WP-M14-147b | the engine reads the readiness (out of band) | planned | yes |
+| WP-M14-147c | the configuration service checks the pool of the condition (out of band) | planned | yes |
+| WP-M14-147d | the administration offers the pool in the condition (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
