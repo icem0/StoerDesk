@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { BrandingResponse, TicketDetailResponse } from '@stoerdesk/shared'
-import { type StandardTextLocale } from '@stoerdesk/shared'
+import { isInternalTicketEvent, type StandardTextLocale } from '@stoerdesk/shared'
 
 import { apiBaseUrl, apiFetch } from '../../lib/api'
 import { i18n } from '../../i18n'
@@ -23,6 +23,11 @@ import { useFaultCatalog } from './use-fault-catalog'
  * each block (every history row, every photo, every field section) avoids
  * page-break cuts (`print:break-inside-avoid`), so nothing is truncated in
  * the printout; photos load eagerly and show on screen and in print.
+ *
+ * The internal comment (ADR-0034) is the one exception: the note of the
+ * colleagues never reaches the customer, so the history of this view leaves
+ * the internal comments out — they are neither printed nor copied into the
+ * e-mail.
  */
 
 /**
@@ -126,7 +131,11 @@ export function TicketSendPage() {
 
   const ticket = ticketQuery.data?.ticket
   const photos = ticketQuery.data?.photos ?? []
-  const events = ticketQuery.data?.events ?? []
+  // The internal comment stays in the house: the prepared view is the printout
+  // and the source of the e-mail to the customer (ADR-0034).
+  const events = (ticketQuery.data?.events ?? []).filter(
+    (event) => !isInternalTicketEvent(event.type),
+  )
   const companyName = branding.data?.companyName ?? ''
   const logo = branding.data?.logo ?? ''
 

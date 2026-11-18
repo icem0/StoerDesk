@@ -2935,6 +2935,14 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The prepared send view leaves the internal comments out (WP-M14-149c, out
+of band in phase 14).** The prepared send view is the printout of the ticket
+and the source of the HTML that goes into the e-mail program of the customer —
+its history leaves the internal comments out, so the note of the colleagues is
+neither printed nor copied into the e-mail. The filter uses the predicate of the
+shared contract, so one list names the event types that never reach the
+customer.
+
 **The API writes the internal comment (WP-M14-149b, out of band in phase
 14).** The route `POST /api/v1/tickets/:ticketNo/comments/internal` sits behind
 the key `ticket.comment.internal` — a route of its own, because

@@ -1,7 +1,7 @@
 # WP-M14-149c: the prepared send view leaves the internal comments out
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 12k tokens
@@ -59,7 +59,8 @@ Expected: all green; the new test fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed: the prepared send view, its test, this document
+- Files changed: the prepared send view, its test, this document, the backlog,
+  the changelog, `PLAN.md` §16
 - Interfaces added: none — the view uses the predicate of WP-M14-149b
 - Verified: `npm run check`
 - Follow-up WP: WP-M14-149d (the colour of the internal comment in the

@@ -47,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   carries the type `internal_comment`; the write runs through
   `applyInternalAction`, so the receipt of the idempotency key works as it does
   for the other internal writes (ADR-0034).
+- The prepared send view leaves the internal comments out (**WP-M14-149c**, out
+  of band in phase 14): the view is the printout of the ticket and the source
+  of the HTML that goes into the e-mail program of the customer, so its history
+  leaves the internal comments out — the note of the colleagues is neither
+  printed nor copied into the e-mail. The filter uses the predicate of the
+  shared contract, so one list names the event types that never reach the
+  customer (ADR-0034).
 - The assignment names a technician and the notification reaches him
   (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
   two more targets. The action „Ticket zuweisen“ may name one technician of the
