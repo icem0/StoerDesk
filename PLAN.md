@@ -2945,6 +2945,7 @@ in the history carry the colour of the instance, and the text colour follows
 the brightness of the background, so the note is recognisable at a glance and
 stays readable for every colour the administration picks. The confirmation
 dialog names the rule: the note is neither printed nor sent to the customer.
+The chain of the internal comment is closed.
 
 **The offline queue carries the internal comment (WP-M14-149f, out of band
 in phase 14).** The internal comment joins the three internal writes of the

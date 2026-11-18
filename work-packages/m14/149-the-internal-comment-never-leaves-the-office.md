@@ -104,7 +104,8 @@ exist.
   `GET /api/v1/settings/display` and the colour in the branding row
 - Verified: `npm run wp:check`, `npm run i18n:check`
 - Follow-up WP: WP-M14-149a, WP-M14-149b, WP-M14-149c, WP-M14-149d, WP-M14-149e,
-  WP-M14-149f, WP-M14-149g (every document exists in this commit)
+  WP-M14-149f, WP-M14-149g (every document exists in this commit; every child is
+  implemented and the chain of the internal comment is closed)
 - Open question: none — the office named the three rules: the note never leaves
   the house, it has its own key, and its colour is configurable under
   „Darstellung“

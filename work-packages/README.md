@@ -981,7 +981,8 @@ office has to remember, and the colour is a hex value of the instance under
 „Darstellung“ (the default is a dark red). The decision splits into
 WP-M14-149a (the key), WP-M14-149b (the API), WP-M14-149c (the send view),
 WP-M14-149d (the settings), WP-M14-149e (the page of the Darstellung),
-WP-M14-149f (the offline queue) and WP-M14-149g (the ticket view).
+WP-M14-149f (the offline queue) and WP-M14-149g (the ticket view). Every child
+is implemented, the chain of the internal comment is closed.
 
 ## Open follow-ups
 
