@@ -343,10 +343,16 @@ Ticket coupling:
   pool, the start and end in `Europe/Berlin`, the state and the link to
   `/oncall`.
 - The readiness has its own page `/oncall` (WP-M10-33, WP-M10-34): the
-  readiness calendar shows every shift of the week with the person who has it,
-  the own readiness (own shifts, iCal feed, confirm, decline, swap) is below it
-  and an admin reaches the administration of the readiness from there. The
-  dashboard shows no readiness any more (WP-M10-32).
+  readiness calendar shows every shift of the week, the own readiness (own
+  shifts, iCal feed, confirm, decline, swap) is below it and an admin reaches
+  the administration of the readiness from there. The dashboard shows no
+  readiness any more (WP-M10-32).
+- The **names** of the technicians in the readiness calendar are a right of
+  their own: the permission `oncall.read_names` (WP-M14-131). A role without it
+  reads the same calendar — the state and the pool of every shift — but the row
+  answers "besetzt" instead of the name (WP-M14-132). The API keeps answering
+  the names to `oncall.read` (the members of a pool are the candidates of a
+  swap); the gate is in the web app.
 
 ## 9. Timeline and escalation
 
@@ -2435,6 +2441,23 @@ database: migration `0048_ticket_no_counter_global.sql` and the Drizzle mirror),
 migration test, the contract test and the two report E2E assertions); the three
 documents exist and run in numeric order. The open items of the phase are
 **WP-M14-129a** … **WP-M14-129c**.
+
+**The names of the readiness belong to a role (WP-M14-131/132, out of band in
+phase 14).** The office asked that the names of the technicians in the
+readiness calendar are visible to the admins and to nobody else — or to a role
+the administration switches on. The calendar itself is read with `oncall.read`
+(`specs/04-oncall.md` §4a.2), so every role that reads the plan of the
+readiness also saw who has it. The names are now a right of their own: the
+permission key `oncall.read_names` in the catalog of
+`packages/shared/src/permissions.ts`, held by the `admin` role and by every
+custom role the administration grants it to over the role API
+(`specs/01-rbac.md` §3.3, §3.8). **WP-M14-131** writes the key and the
+specification, **WP-M14-132** the gate in the web app: a role without the key
+reads the same calendar — the state, the colour and the pool of every shift —
+but the row of a shift answers "besetzt" instead of the name, and the browser
+does not ask for the members of the pool at all. The API keeps answering the
+names to `oncall.read` (the members of a pool are the candidates of a swap);
+the gate is in the web app, as the rule of `specs/01-rbac.md` §3.7 says.
 
 
 

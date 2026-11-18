@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The names of the readiness calendar belong to a role (**WP-M14-131**, out of
+  band in phase 14): the office asked that the names of the technicians in the
+  readiness calendar are visible to the admins and to nobody else — or to a role
+  that the administration switches on. The new permission key
+  `oncall.read_names` joins the catalog of
+  `packages/shared/src/permissions.ts`; the `admin` role holds it and every
+  custom role can take it over the role API. The gate in the web app follows in
+  **WP-M14-132**.
+
 ### Changed
 - The health of the notification channels (**WP-M14-130**, out of band in phase 14
   — **ADR-0028**): the office asked whether the web push can be checked every day

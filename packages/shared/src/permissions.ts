@@ -35,6 +35,7 @@ export const PERMISSIONS = {
     confirm: 'oncall.confirm',
     swap: 'oncall.swap',
     admin: 'oncall.admin',
+    readNames: 'oncall.read_names',
   },
   user: {
     read: 'user.read',
@@ -99,6 +100,7 @@ export const PERMISSION_KEYS: PermissionKey[] = [
   PERMISSIONS.oncall.confirm,
   PERMISSIONS.oncall.swap,
   PERMISSIONS.oncall.admin,
+  PERMISSIONS.oncall.readNames,
   PERMISSIONS.user.read,
   PERMISSIONS.user.write,
   PERMISSIONS.role.read,

@@ -893,6 +893,19 @@ lets the day cell grow (`min-h-20`) so the labels of a row stay readable; the
 `title` names the same three things. No
 i18n key is added and the API stays untouched.
 
+**The names of the readiness belong to a role (WP-M14-131, out of band in phase
+14, requested by the office).** The office asked that the names of the
+technicians in the readiness calendar are visible to the admins and to nobody
+else — or to a role that the administration switches on. The calendar itself is
+read with `oncall.read`, so every role that reads the plan of the readiness
+also saw who has it. The names are now a right of their own: the permission key
+`oncall.read_names` in the catalog of `packages/shared/src/permissions.ts`, held
+by the `admin` role and by every custom role the administration grants it to
+over the role API. **WP-M14-131** writes the key and the rule in
+`specs/01-rbac.md` §3.3 and §3.4; **WP-M14-132** puts the gate into the web
+app — a role without the key reads the same calendar, but the row of a shift
+answers "besetzt" instead of the name.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1433,6 +1446,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-130a | the dead subscription is named and removed (out of band)         | planned | yes     |
 | WP-M14-130b | the outbox learns the instance row of the warning (out of band)   | planned | yes     |
 | WP-M14-130c | the daily check warns over another channel (out of band)          | planned | yes     |
+| WP-M14-131 | the permission key of the names of the readiness (out of band)    | planned | yes     |
+| WP-M14-132 | the readiness calendar names the technicians only with the permission (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

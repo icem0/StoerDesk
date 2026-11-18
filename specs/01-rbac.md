@@ -77,6 +77,7 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `oncall.swap`          |     |     | x   |     | x   |
 | `oncall.plan`          |     |     |     |     | x   |
 | `oncall.admin`         |     |     |     |     | x   |
+| `oncall.read_names`    |     |     |     |     | x   |
 | `user.read`            |     | x   |     | x   | x   |
 | `user.write`           |     |     |     |     | x   |
 | `role.read`            |     |     |     |     | x   |
@@ -91,7 +92,7 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `notification.write`   | x   | x   | x   | x   | x   |
 | `system.update`        |     |     |     |     | x   |
 
-Totals: 38 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 38.
+Totals: 40 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 40.
 
 Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)**:
 
@@ -105,6 +106,14 @@ Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)
   (§5: "maintains objects").
 - `ticket.photo.write` belongs to reporting and to acknowledging; `manager` is
   read-only apart from `ticket.reopen` (§7 rule 9).
+- `oncall.read_names` is the right to the **names** of the technicians of the
+  readiness calendar (`PLAN.md` §8): the calendar itself needs `oncall.read`,
+  the names are a right of their own, so a role can read the plan of the
+  readiness without learning who has it. The `admin` role holds the key; a
+  custom role takes it over the role API (§3.8). The gate is in the web app —
+  the API keeps answering the names to `oncall.read` (the members of a pool are
+  the candidates of a swap), the UI hides what the role may not see
+  (`specs/01-rbac.md` §3.7).
 
 ### 3.4 Permission catalog
 
@@ -117,7 +126,8 @@ ticket.claim, ticket.accept, ticket.decline, ticket.acknowledge, ticket.close,
 ticket.reopen, ticket.cancel, ticket.delete, ticket.comment, ticket.photo.read,
 ticket.photo.write
 object.read, object.write, object.delete, object.regenerate_qr, object.import
-oncall.read, oncall.plan, oncall.confirm, oncall.swap, oncall.admin
+oncall.read, oncall.plan, oncall.confirm, oncall.swap, oncall.admin,
+oncall.read_names
 user.read, user.write
 role.read, role.write
 settings.read, settings.write
@@ -206,7 +216,7 @@ composite keys.
 | Table              | Columns                                                       | Notes                                     |
 | ------------------ | ------------------------------------------------------------- | ----------------------------------------- |
 | `roles`            | `id`, `key` (unique), `is_system`, `created_at`, `updated_at` | five system roles from the seed           |
-| `permissions`      | `id`, `key` (unique), `created_at`                            | catalog, 37 rows                          |
+| `permissions`      | `id`, `key` (unique), `created_at`                            | catalog, 40 rows                          |
 | `role_permissions` | `role_id`, `permission_id`, `created_at`                      | composite PK, FK `cascade`                |
 | `user_roles`       | `user_id`, `role_id`, `created_at`                            | composite PK, index on `role_id`          |
 | `user_permissions` | `user_id`, `permission_id`, `effect`, `created_at`            | `effect IN ('allow','deny')`, denial wins |
