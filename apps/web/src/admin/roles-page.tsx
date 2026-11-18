@@ -207,9 +207,10 @@ export function RolesPage() {
   const me = useMe()
   const canRead = usePermission('role.read')
   const canWrite = usePermission('role.write')
-  const [editingRole, setEditingRole] = useState<RoleSummary | null>(null)
+  const [editingRoleKey, setEditingRoleKey] = useState<string | null>(null)
 
   const roles = useRoles()
+  const editingRole = roles.data?.roles.find((role) => role.key === editingRoleKey) ?? null
 
   if (me.isPending) {
     return <p>{t('admin.roles.loading')}</p>
@@ -271,7 +272,9 @@ export function RolesPage() {
                     <button
                       className="rounded border border-slate-600 px-2 py-1 text-xs"
                       type="button"
-                      onClick={() => setEditingRole(editingRole?.key === role.key ? null : role)}
+                      onClick={() =>
+                        setEditingRoleKey(editingRoleKey === role.key ? null : role.key)
+                      }
                     >
                       {t('admin.roles.edit')}
                     </button>
@@ -283,7 +286,7 @@ export function RolesPage() {
         </tbody>
       </table>
       {canWrite && editingRole && editingRole.key !== 'admin' ? (
-        <EditRoleForm role={editingRole} />
+        <EditRoleForm key={editingRole.key} role={editingRole} />
       ) : null}
       {canWrite ? <CreateRoleForm /> : null}
     </main>

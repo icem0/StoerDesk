@@ -907,6 +907,21 @@ app: a role without the key reads the same calendar, but the row of a shift
 answers "besetzt" instead of the name and the browser asks for no member of the
 pool at all.
 
+**The roles page edits one role at a time (WP-M14-133, out of band in phase 14,
+requested by the office).** The office reported that the permission checkboxes of
+the role management do not belong to the selected role: a role can be selected,
+the checkboxes can be changed and the page saves — but the grants of the role
+before stay and are written to the role that is open now. The API was never wrong
+— `PATCH /api/v1/roles/:key` replaces the `role_permissions` of that one role
+(`specs/01-rbac.md` §3.8) — the editor of the web app kept the state of the role
+before, because React reuses the same component instance when the prop `role`
+changes. **WP-M14-133** keeps the key of the selected role in the page, derives the
+role from the answer of the query and mounts the editor with the key of the role:
+a new role mounts a new editor with its own state, so the checkboxes of a role
+never leak into another one. Two cases of the page test prove it — the checkboxes
+of the second role show its own grants, and the saved body carries the grants of
+the role that is open now.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1449,6 +1464,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-130c | the daily check warns over another channel (out of band)          | done    | yes     |
 | WP-M14-131 | the permission key of the names of the readiness (out of band)    | planned | yes     |
 | WP-M14-132 | the readiness calendar names the technicians only with the permission (out of band) | done | yes |
+| WP-M14-133 | the roles page edits one role at a time (out of band)                | done    | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

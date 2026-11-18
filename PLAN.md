@@ -2534,6 +2534,21 @@ names to `oncall.read` (the members of a pool are the candidates of a swap);
 the gate is in the web app, as the rule of `specs/01-rbac.md` §3.7 says. Both
 packages are implemented.
 
+**The roles page edits one role at a time (WP-M14-133, out of band in phase 14).**
+The office reported that the permission checkboxes of the role management do not
+belong to the selected role: a role can be selected, the checkboxes can be changed
+and the page saves — but the grants of the role before stay and are written to the
+role that is open now, so the permissions look like they belong to every role. The
+API was never wrong — `PATCH /api/v1/roles/:key` replaces the `role_permissions`
+of that one role (`specs/01-rbac.md` §3.8) — the editor of the web app kept the
+state of the role before, because React reuses the same component instance when the
+prop `role` changes. The page keeps the key of the selected role, derives the role
+from the answer of the query and mounts the editor with the key of the role: a new
+role mounts a new editor with its own state, so the grants of a role never leak
+into another one. The seed stays the authority for the five system roles
+(`specs/01-rbac.md` §3.5) — their grants are rewritten on the next seed run, a
+custom role keeps them.
+
 
 
 

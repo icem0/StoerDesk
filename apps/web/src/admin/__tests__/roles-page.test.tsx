@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -80,6 +80,37 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+function rowOf(key: string) {
+  const row = screen
+    .getAllByRole('row')
+    .find((candidate) => within(candidate).queryAllByRole('cell')[0]?.textContent === key)
+
+  if (row === undefined) {
+    throw new Error(`no row for the role ${key}`)
+  }
+
+  return row
+}
+
+function openEditor(key: string) {
+  fireEvent.click(within(rowOf(key)).getByRole('button', { name: 'Bearbeiten' }))
+}
+
+function editorOf(key: string) {
+  const heading = screen.getByText(`Rolle ${key} bearbeiten`)
+  const form = heading.closest('form')
+
+  if (form === null) {
+    throw new Error(`no editor form for the role ${key}`)
+  }
+
+  return form
+}
+
+function checkboxOf(roleKey: string, permissionKey: string) {
+  return within(editorOf(roleKey)).getByRole('checkbox', { name: permissionKey }) as HTMLInputElement
+}
+
 describe('RolesPage', () => {
   it('renders the role table for a session with role.read', async () => {
     stubRoutes({ '/v1/me': meResponse(['role.read']), '/v1/roles': roleList })
@@ -116,5 +147,70 @@ describe('RolesPage', () => {
     renderPage()
 
     expect(await screen.findByText('Keine Berechtigung für die Rollenverwaltung.')).toBeTruthy()
+  })
+
+  it('shows the permissions of the selected role, not of the role before it', async () => {
+    stubRoutes({ '/v1/me': meResponse(['role.read', 'role.write']), '/v1/roles': roleList })
+    renderPage()
+
+    expect(await screen.findByText('dispatcher')).toBeTruthy()
+
+    openEditor('office')
+    expect(checkboxOf('office', 'ticket.read').checked).toBe(false)
+    expect(checkboxOf('office', 'ticket.review').checked).toBe(false)
+
+    openEditor('dispatcher')
+    expect(checkboxOf('dispatcher', 'ticket.read').checked).toBe(true)
+    expect(checkboxOf('dispatcher', 'ticket.review').checked).toBe(false)
+  })
+
+  it('saves the permissions of the selected role only', async () => {
+    const patches: { url: string; body: unknown }[] = []
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input)
+
+        if (init?.method === 'PATCH') {
+          patches.push({ url, body: JSON.parse(String(init.body)) })
+
+          return Response.json({
+            id: '33333333-3333-4333-8333-333333333333',
+            key: 'dispatcher',
+            isSystem: false,
+            permissionKeys: [],
+            userCount: 0,
+          })
+        }
+
+        if (url.includes('/v1/me')) {
+          return Response.json(meResponse(['role.read', 'role.write']))
+        }
+
+        if (url.includes('/v1/roles')) {
+          return Response.json(roleList)
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderPage()
+
+    expect(await screen.findByText('dispatcher')).toBeTruthy()
+
+    openEditor('office')
+    fireEvent.click(checkboxOf('office', 'ticket.review'))
+
+    openEditor('dispatcher')
+    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }))
+
+    await waitFor(() => {
+      expect(patches).toHaveLength(1)
+    })
+
+    expect(patches[0]?.url).toContain('/v1/roles/dispatcher')
+    expect(patches[0]?.body).toEqual({ permissionKeys: ['ticket.read'] })
   })
 })

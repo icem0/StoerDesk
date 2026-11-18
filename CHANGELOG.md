@@ -248,6 +248,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `system`. The audit trail of the workflow E2E counts the escalation event of
   the first stage (WP-M14-91).
 
+### Fixed
+- The role management edits one role at a time (**WP-M14-133**, out of band in
+  phase 14): the office reported that the permission checkboxes of the role
+  management do not belong to the selected role — the checkboxes of the role
+  before stay, and "Speichern" writes them to the role that is open now. The API
+  was never wrong (`PATCH /api/v1/roles/:key` replaces the grants of that one
+  role), the editor of the web app kept the state of the role before, because
+  React reuses the same component instance when the prop `role` changes. The page
+  keeps the key of the selected role, derives the role from the answer of the
+  query and mounts the editor with the key of the role: a new role mounts a new
+  editor with its own state, so the grants of a role never leak into another one.
+
 ### Added
 - The bell opens the messages of the inbox (WP-M14-122, out of band in phase
   14): a click on the bell opens a panel with the latest messages of the
