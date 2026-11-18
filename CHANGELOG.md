@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The administration sets a new password for a colleague (**WP-M14-148**, out
+  of band in phase 14): the user management was missing a way to hand a new
+  colleague an account without inventing a password for them. The server
+  generates a one-time password, the administration copies it into the
+  clipboard and hands it over; the colleague replaces it at the first login
+  with a secret of his own, and every guarded route stays closed until he
+  does (ADR-0031). The spec and the decision are written; the implementation
+  follows in WP-M14-148a … WP-M14-148f.
 - The readiness shift becomes a condition of the escalation (**WP-M14-147**, out
   of band in phase 14): the conditions of the escalation stages gain the field
   „Bereitschafts-Schicht" with the readiness pool as its value, and a

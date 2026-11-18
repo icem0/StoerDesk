@@ -216,6 +216,28 @@ for the five system roles (§3.1, §3.5).
 Out of scope: per-user `user_permissions` overrides over HTTP (the table stays
 seed-only), role renames, role copying and any audit trail (§3.5).
 
+### 3.9 The one-time password of the administration
+
+The office hands a new colleague an account without inventing a password for
+them: the administration sets a **one-time password**, the colleague replaces it
+with a secret of their own at the first login (ADR-0031).
+
+| Concern                | Decision                                                                                                                                                                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The flag               | `users.must_change_password` (boolean, not null, default `false`, migration `0051_users_must_change_password.sql`) — `true` means: the password of the account is a one-time password                                                                                                                |
+| The one-time password  | the server generates it: 20 characters out of an alphabet without the ambiguous characters `O`, `0`, `I`, `l`, `1` — it is read aloud, copied and typed by hand, so it stays unambiguous (`generateTemporaryPassword`, WP-M14-148d)                              |
+| The reset              | `POST /api/v1/users/:id/password` behind `user.write`: the hash of the new password is written, the flag is set and the sessions of that user are deleted — the old password and every open session of the account die with the reset (WP-M14-148d)                     |
+| The answer of the reset | `{ temporaryPassword }` — the plaintext of the one-time password. It exists once, in this answer; it is never stored, never logged and never answered a second time (the rule of the write-only secrets of ADR-0005)                                             |
+| The session            | the login answer and `GET /api/v1/me` carry `mustChangePassword`; the session reads the flag per request, so a reset takes effect without a new login (WP-M14-148c)                                                                                                                       |
+| The block              | while the flag is set, every guarded route answers `403 { code: 'password_change_required' }` — the account exists and may log in, but it may not work before the password belongs to the user (WP-M14-148c)                                                                                              |
+| The own password       | `PATCH /api/v1/users/me` with a `password` writes the own password and clears the flag; the route stays reachable while the flag is set, and `GET /api/v1/me` stays readable — both are the two exemptions of the block (WP-M14-148c)                                                                                                  |
+| The sessions           | the reset deletes every session of the target user, the own change deletes every session except the current one — a password change ends the sessions of the other devices                                                                                                                                    |
+| The user list          | `GET /api/v1/users` carries `mustChangePassword` per row, so the administration sees which colleagues still hold a one-time password (WP-M14-148d)                                                                                                                                                                          |
+
+Out of scope: a password reset by e-mail, a link with a token, a password
+policy beyond the minimum length of 12 characters and an audit trail of the
+password changes (§3.5).
+
 ## 4.1 — Tables (RBAC)
 
 All tables use UUID v7 primary keys (ADR-0002) and UTC timestamps; join tables use

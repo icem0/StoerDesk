@@ -2794,6 +2794,26 @@ service) and **WP-M14-147d** (the administration).
 
 
 
+
+**The administration sets a new password for a colleague (WP-M14-148, out of band
+in phase 14).** „bei der benutzerverwaltung fehlt eine funktion .. neues
+passwort festlegen .. dabei soll ein zufallspasswort erzeugt werden welches ein
+einmalpasswort ist das in die zwischenablage kopiert wird sodass man es dem
+kollegen geben kann .. bei der anmeldung mit dem neuen passwort muss der kollege
+aber ein neues, eigenes, geheimes eingeben". ADR-0031 decides: the server
+generates the password (`POST /api/v1/users/:id/password`, `user.write`), the
+plaintext is answered exactly once (`{ temporaryPassword }`) and the account
+carries the flag `users.must_change_password` — while the flag is set, every
+guarded route answers `403 { code: 'password_change_required' }` and the
+colleague sets a password of his own through `PATCH /api/v1/users/me`. The
+sessions of the account die with the secret. The chain is split into
+**WP-M14-148a** (the column), **WP-M14-148b** (the contracts), **WP-M14-148c**
+(the session and the guard), **WP-M14-148d** (the route of the administration),
+**WP-M14-148e** (the form of the colleague) and **WP-M14-148f** (the panel of the
+administration).
+
+
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
