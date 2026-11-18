@@ -5,7 +5,6 @@ import {
   createObjectRequestSchema,
   objectBulkResponseSchema,
   objectNoSchema,
-  objectSummarySchema,
   objectUpsertRequestSchema,
   PERMISSIONS,
   type ObjectBulkResult,
@@ -16,15 +15,23 @@ import {
 import { requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects } from '../db/schema'
+import { readPriorityOverrides, readStandardPriority } from './priority'
 import { generateQrToken } from './qr'
+import { summarizeObject } from './service'
 
 /**
  * External object API (`specs/08-objects-api.md` §9.5, ADR-0013, WP-M10-07):
  * `PUT` upsert by object number and the bulk upsert. The list, read and soft
  * delete live in `service.ts` and accept the bearer key through the dual guard.
+ *
+ * The external system sets no deviation of the priority (ADR-0029): the
+ * priority is a decision of the office. The summary still carries the effective
+ * priority of the object.
  */
 
 type Db = Database['database']
+type Tx = Parameters<Parameters<Db['transaction']>[0]>[0]
+type Executor = Db | Tx
 
 class ExternalObjectError extends Error {
   readonly statusCode: number
@@ -60,7 +67,22 @@ const bulkEnvelopeSchema = z.object({
   items: z.array(z.unknown()).min(1).max(500),
 })
 
+/** The external upsert sets no deviation of the priority (ADR-0029). */
+const externalBulkItemSchema = createObjectRequestSchema.omit({ priority: true })
+
 export type ObjectUpsertResult = { object: ObjectSummary; created: boolean }
+
+/** The summary of the object with the effective priority of the instance. */
+async function summarize(
+  database: Executor,
+  row: typeof objects.$inferSelect,
+): Promise<ObjectSummary> {
+  const standard = await readStandardPriority(database)
+  const overrides = await readPriorityOverrides(database)
+  const override = overrides.get(row.id) ?? null
+
+  return summarizeObject(row, override ?? standard, override)
+}
 
 /** Replace or create one object by its external object number. */
 export async function upsertObject(
@@ -99,7 +121,7 @@ export async function upsertObject(
           throw new ExternalObjectError(500, 'object_create_failed')
         }
 
-        return { object: objectSummarySchema.parse(row), created: true }
+        return { object: await summarize(tx, row), created: true }
       }
 
       const [row] = await tx
@@ -112,7 +134,7 @@ export async function upsertObject(
         throw new ExternalObjectError(500, 'object_update_failed')
       }
 
-      return { object: objectSummarySchema.parse(row), created: false }
+      return { object: await summarize(tx, row), created: false }
     })
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -184,7 +206,7 @@ export const externalObjectRoutes = fp<ExternalObjectRouteOptions>(
         const results: ObjectBulkResult[] = []
 
         for (const [index, raw] of envelope.data.items.entries()) {
-          const parsed = createObjectRequestSchema.safeParse(raw)
+          const parsed = externalBulkItemSchema.safeParse(raw)
 
           if (!parsed.success) {
             results.push({

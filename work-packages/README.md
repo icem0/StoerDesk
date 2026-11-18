@@ -1487,7 +1487,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-134 | the priority of the object deviates from the standard — ADR-0029, the spec and the split (out of band) | planned | yes |
 | WP-M14-134a | the table of the priority deviations (out of band)     | done    | yes     |
 | WP-M14-134b | the contracts of the priority and of the standard (out of band) | done | yes |
-| WP-M14-134c | the service reads and writes the deviation (out of band) | planned | yes |
+| WP-M14-134c | the service reads and writes the deviation (out of band) | done | yes |
 | WP-M14-134d | the routes answer the standard and the deviations (out of band) | planned | yes |
 | WP-M14-134e | the ticket takes the priority of the object (out of band) | planned | yes |
 | WP-M14-134f | the object form carries the priority (out of band)  | planned | yes     |

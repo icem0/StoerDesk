@@ -13,12 +13,18 @@ import {
   type CreateObjectRequest,
   type ObjectListQuery,
   type ObjectSummary,
+  type TicketPriority,
   type UpdateObjectRequest,
 } from '@stoerdesk/shared'
 
 import { requirePermission, requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objects } from '../db/schema'
+import {
+  readPriorityOverrides,
+  readStandardPriority,
+  writeObjectPriority,
+} from './priority'
 import { generateQrToken, qrRoutes } from './qr'
 
 /**
@@ -27,6 +33,11 @@ import { generateQrToken, qrRoutes } from './qr'
  * The routes and their service functions share this module, so the slice stays
  * inside the source-file budget of `PLAN.md` §17. The object number is the
  * external key; internal links keep using the UUID.
+ *
+ * The priority of an object is the deviation from the standard
+ * (`specs/02-data-model.md` §4.3.2, ADR-0029): the standard is the setting
+ * `ticket.default_priority`, the deviations live in the table
+ * `object_priority_overrides`.
  */
 
 type Db = Database['database']
@@ -69,8 +80,16 @@ function isUniqueViolation(error: unknown): boolean {
 
 type ObjectRow = typeof objects.$inferSelect
 
-function summarize(row: ObjectRow): ObjectSummary {
-  return objectSummarySchema.parse(row)
+/**
+ * The summary of an object: the row of the table and the two fields of the
+ * priority — the effective priority and the stored deviation.
+ */
+export function summarizeObject(
+  row: ObjectRow,
+  priority: TicketPriority,
+  priorityOverride: TicketPriority | null,
+): ObjectSummary {
+  return objectSummarySchema.parse({ ...row, priority, priorityOverride })
 }
 
 async function findByObjectNo(database: Executor, objectNo: string): Promise<ObjectRow> {
@@ -118,6 +137,24 @@ function whereFromQuery(query: ObjectListQuery) {
   return conditions.length === 0 ? undefined : and(...conditions)
 }
 
+/**
+ * The summary of the rows of the object list: the standard and the deviations
+ * are read once, every row takes its own deviation.
+ */
+async function summarizeRows(
+  database: Executor,
+  rows: ObjectRow[],
+): Promise<ObjectSummary[]> {
+  const standard = await readStandardPriority(database)
+  const overrides = await readPriorityOverrides(database)
+
+  return rows.map((row) => {
+    const override = overrides.get(row.id) ?? null
+
+    return summarizeObject(row, override ?? standard, override)
+  })
+}
+
 export async function listObjects(database: Db, query: ObjectListQuery): Promise<ObjectSummary[]> {
   const ordered = database
     .select()
@@ -127,13 +164,18 @@ export async function listObjects(database: Db, query: ObjectListQuery): Promise
 
   const rows = query.limit === undefined ? await ordered : await ordered.limit(query.limit)
 
-  return rows.map((row) => summarize(row))
+  return summarizeRows(database, rows)
 }
 
 export async function getObject(database: Db, objectNo: string): Promise<ObjectSummary> {
   const row = await findByObjectNo(database, objectNo)
+  const [summary] = await summarizeRows(database, [row])
 
-  return summarize(row)
+  if (summary === undefined) {
+    throw new ObjectRouteError(404, 'object_not_found', { fields: ['objectNo'] })
+  }
+
+  return summary
 }
 
 export async function createObject(
@@ -166,7 +208,17 @@ export async function createObject(
         throw new ObjectRouteError(500, 'object_create_failed', {})
       }
 
-      return summarize(row)
+      if (input.priority !== undefined) {
+        await writeObjectPriority(tx, row.id, input.priority)
+      }
+
+      const [summary] = await summarizeRows(tx, [row])
+
+      if (summary === undefined) {
+        throw new ObjectRouteError(500, 'object_create_failed', {})
+      }
+
+      return summary
     })
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -211,7 +263,17 @@ export async function updateObject(
         throw new ObjectRouteError(500, 'object_update_failed', {})
       }
 
-      return summarize(row)
+      if (input.priority !== undefined) {
+        await writeObjectPriority(tx, existing.id, input.priority)
+      }
+
+      const [summary] = await summarizeRows(tx, [row])
+
+      if (summary === undefined) {
+        throw new ObjectRouteError(500, 'object_update_failed', {})
+      }
+
+      return summary
     })
   } catch (error) {
     if (isUniqueViolation(error)) {

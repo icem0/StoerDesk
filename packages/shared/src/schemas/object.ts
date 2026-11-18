@@ -1,11 +1,18 @@
 import { z } from 'zod'
 
+import { ticketPrioritySchema } from './ticket-defaults.js'
+
 /**
  * Object list API schemas (WP-M2-01).
  *
  * `object_no` is the human- and system-readable key of the list
  * (`specs/02-data-model.md` §4.3.1): trimmed, upper-cased and restricted to
  * digits, upper-case letters, `_` and `-`. Internal links still use the UUID.
+ *
+ * The priority of an object is no column of the object: the standard is the
+ * setting `ticket.default_priority` and the deviations live in the table
+ * `object_priority_overrides` (ADR-0029, `specs/02-data-model.md` §4.3.2). The
+ * summary carries the effective priority and the stored deviation.
  */
 
 export const qrTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{22}$/)
@@ -50,6 +57,10 @@ export const objectSummarySchema = z.object({
   active: z.boolean(),
   notes: z.string().nullable(),
   qrToken: qrTokenSchema.nullable(),
+  /** The effective priority of the object: its deviation, else the standard. */
+  priority: ticketPrioritySchema,
+  /** The stored deviation, `null` when the object follows the standard. */
+  priorityOverride: ticketPrioritySchema.nullable(),
 })
 
 export const objectListResponseSchema = z.object({
@@ -102,6 +113,8 @@ const objectFields = {
   contactEmail: optionalEmail,
   externalId: optionalText(120),
   notes: optionalText(2000),
+  /** The deviation of the object: `null` means the object follows the standard. */
+  priority: ticketPrioritySchema.nullable().optional(),
 }
 
 export const createObjectRequestSchema = z.object({
@@ -121,6 +134,7 @@ export const updateObjectRequestSchema = z.object({
   contactEmail: objectFields.contactEmail,
   externalId: objectFields.externalId,
   notes: objectFields.notes,
+  priority: objectFields.priority,
 })
 
 export type ObjectSummary = z.infer<typeof objectSummarySchema>
@@ -131,8 +145,15 @@ export type UpdateObjectRequest = z.infer<typeof updateObjectRequestSchema>
 export type RegenerateQrRequest = z.infer<typeof regenerateQrRequestSchema>
 export type RegenerateQrResponse = z.infer<typeof regenerateQrResponseSchema>
 
-/** External object API (`specs/08-objects-api.md` §9.5, WP-M10-07). */
-export const objectUpsertRequestSchema = createObjectRequestSchema.omit({ objectNo: true })
+/**
+ * External object API (`specs/08-objects-api.md` §9.5, WP-M10-07). The external
+ * system sets no deviation: the priority is a decision of the office
+ * (ADR-0029).
+ */
+export const objectUpsertRequestSchema = createObjectRequestSchema.omit({
+  objectNo: true,
+  priority: true,
+})
 
 export const objectBulkRequestSchema = z.object({
   items: z.array(createObjectRequestSchema).min(1).max(500),

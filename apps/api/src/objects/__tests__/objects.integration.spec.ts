@@ -17,10 +17,12 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped objects integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, roles, userRoles, users } = schema
+const { objectPriorityOverrides, objects, roles, userRoles, users } = schema
 
 type ObjectBody = {
   id: string
+  priority: string
+  priorityOverride: string | null
   objectNo: string
   name: string
   city: string | null
@@ -331,6 +333,71 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(deletedAgain.statusCode).toBe(204)
       expect(unknown.statusCode).toBe(404)
       expect(unknown.json<ErrorBody>().code).toBe('object_not_found')
+    })
+
+    it('lets an object follow the standard and stores only the deviations', async () => {
+      const created = await createAsAdmin('8001_01')
+
+      expect(created.priority).toBe('normal')
+      expect(created.priorityOverride).toBeNull()
+
+      const deviation = await patchObject(cookies['admin'], '8001_01', { priority: 'critical' })
+
+      expect(deviation.statusCode).toBe(200)
+      expect(deviation.json<ObjectBody>().priority).toBe('critical')
+      expect(deviation.json<ObjectBody>().priorityOverride).toBe('critical')
+
+      const detail = await getObject(cookies['admin'], '8001_01')
+
+      expect(detail.json<ObjectBody>().priority).toBe('critical')
+
+      const list = await getObjects(cookies['admin'], '?search=8001')
+
+      expect(list.json<ListBody>().objects?.[0]?.priority).toBe('critical')
+      expect(list.json<ListBody>().objects?.[0]?.priorityOverride).toBe('critical')
+    })
+
+    it('removes the deviation of an object with null', async () => {
+      const created = await createAsAdmin('8002_01')
+      await patchObject(cookies['admin'], '8002_01', { priority: 'high' })
+
+      const cleared = await patchObject(cookies['admin'], '8002_01', { priority: null })
+
+      expect(cleared.statusCode).toBe(200)
+      expect(cleared.json<ObjectBody>().priority).toBe('normal')
+      expect(cleared.json<ObjectBody>().priorityOverride).toBeNull()
+
+      const rows = await db
+        .select({ objectId: objectPriorityOverrides.objectId })
+        .from(objectPriorityOverrides)
+        .where(eq(objectPriorityOverrides.objectId, created.id))
+
+      expect(rows).toHaveLength(0)
+    })
+
+    it('stores no row for a value that equals the standard', async () => {
+      const created = await createAsAdmin('8003_01')
+
+      const same = await patchObject(cookies['admin'], '8003_01', { priority: 'normal' })
+
+      expect(same.statusCode).toBe(200)
+      expect(same.json<ObjectBody>().priorityOverride).toBeNull()
+
+      const rows = await db
+        .select({ objectId: objectPriorityOverrides.objectId })
+        .from(objectPriorityOverrides)
+        .where(eq(objectPriorityOverrides.objectId, created.id))
+
+      expect(rows).toHaveLength(0)
+    })
+
+    it('rejects a priority outside the four values', async () => {
+      await createAsAdmin('8004_01')
+
+      const malformed = await patchObject(cookies['admin'], '8004_01', { priority: 'urgent' })
+
+      expect(malformed.statusCode).toBe(400)
+      expect(malformed.json<ErrorBody>().code).toBe('invalid_request')
     })
   },
 )

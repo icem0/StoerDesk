@@ -26,6 +26,8 @@ function object(objectNo: string, name: string, qrToken: string | null): ObjectS
     active: true,
     notes: null,
     qrToken,
+    priority: 'normal',
+    priorityOverride: null,
   }
 }
 

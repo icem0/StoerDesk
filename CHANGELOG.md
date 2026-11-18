@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The service reads and writes the deviation of an object
+  (**WP-M14-134c**, out of band in phase 14 — **ADR-0029**): the new module
+  `apps/api/src/objects/priority.ts` knows the standard
+  (`ticket.default_priority`), the stored deviations and the pruning of the
+  rows that no longer deviate. The object summary carries the effective
+  priority and the stored deviation, the object write accepts `priority`
+  (`null` removes the deviation) and the external API sets no deviation — the
+  priority is a decision of the office.
 - The contracts of the standard priority and of the deviations
   (**WP-M14-134b**, out of band in phase 14 — **ADR-0029**): the shared package
   knows the schema of the priority (`ticketPrioritySchema`), the standard of

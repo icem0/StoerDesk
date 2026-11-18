@@ -2595,6 +2595,15 @@ of the object, its number, its name and its priority). The contracts carry no
 consumer yet: the object summary and the object write learn the priority in
 WP-M14-134c, the routes answer them in WP-M14-134d.
 
+**The service reads and writes the deviation (WP-M14-134c, out of band in phase
+14).** The new module `apps/api/src/objects/priority.ts` knows the standard (the
+setting `ticket.default_priority`, `normal` without a row), the stored
+deviations of the table and the pruning of the rows that no longer deviate. The
+object summary carries the effective priority and the stored deviation, the
+object write accepts the field `priority` — `null` removes the deviation, a
+value that equals the standard removes it as well. The external API sets no
+deviation: the priority is a decision of the office.
+
 
 
 

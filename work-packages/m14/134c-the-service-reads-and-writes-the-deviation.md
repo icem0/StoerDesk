@@ -1,7 +1,7 @@
 # WP-M14-134c: the service reads and writes the deviation
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens
@@ -86,6 +86,6 @@ stored deviation.
   service, the external upsert
 - Interfaces added: `readStandardPriority`, `readObjectPriority`,
   `writeObjectPriority`, `prunePriorityOverrides`
-- Verified: `npm run check` (exit 0), the integration specs of the object service
+- Verified: `npm run check` (exit 0), the integration specs of the object service prove the standard, the deviation, the removal with `null` and the rejected value
 - Follow-up WP: WP-M14-134d (the routes answer the standard and the deviations)
 - Open question: none

@@ -248,6 +248,11 @@ same body plus `objectNo`; an item error is returned in its result and does not
 roll back the other items. Invalid payloads answer `422
 invalid_request`/field errors exactly like §9.1.
 
+The external API sets **no** deviation of the priority: the priority is a
+decision of the office (ADR-0029). A `priority` in the body of the upsert or of
+a bulk item is ignored; the summary of the answer still carries the effective
+priority of the object.
+
 **Tickets.**
 
 | Method | Path | Scope | Result |
