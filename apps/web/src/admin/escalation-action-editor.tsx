@@ -114,7 +114,7 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
     } as unknown as EscalationActionConfig
   }
 
-  const targeted = (shape.targetId ?? '') !== ''
+  const targeted = shape.targetKind === 'assigned' || (shape.targetId ?? '') !== ''
 
   return {
     key: shape.key,
@@ -169,7 +169,11 @@ export function EscalationActionEditor({
       return action.targetKind === 'pool' ? pools : users
     }
 
-    return action.targetKind === 'group' ? groups : pools
+    if (action.targetKind === 'group') {
+      return groups
+    }
+
+    return action.targetKind === 'user' ? users : pools
   }
 
   return (
@@ -257,7 +261,12 @@ export function EscalationActionEditor({
                       disabled={!canWrite}
                       value={action.targetKind ?? 'user'}
                       onChange={(event) => {
-                        const kind = event.target.value === 'pool' ? 'pool' : 'user'
+                        const kind =
+                          event.target.value === 'pool'
+                            ? 'pool'
+                            : event.target.value === 'assigned'
+                              ? 'assigned'
+                              : 'user'
 
                         publish(
                           actions.map((entry, position) =>
@@ -274,36 +283,45 @@ export function EscalationActionEditor({
                       <option value="pool">
                         {t('admin.escalation.action.targetKinds.pool')}
                       </option>
+                      <option value="assigned">
+                        {t('admin.escalation.action.targetKinds.assigned')}
+                      </option>
                     </select>
                   </label>
 
-                  <label className="text-xs text-slate-400">
-                    {t('admin.escalation.action.target')}
-                    <select
-                      data-testid="escalation-notify-target"
-                      className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                      disabled={!canWrite}
-                      value={action.targetId ?? ''}
-                      onChange={(event) =>
-                        publish(
-                          actions.map((entry, position) =>
-                            position === index
-                              ? { ...entry, targetId: event.target.value }
-                              : entry,
-                          ),
-                        )
-                      }
-                    >
-                      <option value="">
-                        {t('admin.escalation.action.targetChannels')}
-                      </option>
-                      {targetsOf(action).map((target) => (
-                        <option key={target.id} value={target.id}>
-                          {target.name}
+                  {action.targetKind === 'assigned' ? (
+                    <p className="text-xs text-slate-500">
+                      {t('admin.escalation.action.targetAssigned')}
+                    </p>
+                  ) : (
+                    <label className="text-xs text-slate-400">
+                      {t('admin.escalation.action.target')}
+                      <select
+                        data-testid="escalation-notify-target"
+                        className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                        disabled={!canWrite}
+                        value={action.targetId ?? ''}
+                        onChange={(event) =>
+                          publish(
+                            actions.map((entry, position) =>
+                              position === index
+                                ? { ...entry, targetId: event.target.value }
+                                : entry,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="">
+                          {t('admin.escalation.action.targetChannels')}
                         </option>
-                      ))}
-                    </select>
-                  </label>
+                        {targetsOf(action).map((target) => (
+                          <option key={target.id} value={target.id}>
+                            {target.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
 
                   <label className="text-xs text-slate-400">
                     {t('admin.escalation.action.priority')}
@@ -331,7 +349,12 @@ export function EscalationActionEditor({
                     </select>
                   </label>
 
-                  {(action.targetId ?? '') === '' ? (
+                  {(action.targetKind ?? 'user') === 'assigned' ||
+                  (action.targetId ?? '') !== '' ? (
+                    <p className="text-xs text-slate-500">
+                      {t('admin.escalation.action.notifyHint')}
+                    </p>
+                  ) : (
                     <label className="text-xs text-slate-400">
                       {t('admin.escalation.action.channels')}
                       <select
@@ -360,10 +383,6 @@ export function EscalationActionEditor({
                         ))}
                       </select>
                     </label>
-                  ) : (
-                    <p className="text-xs text-slate-500">
-                      {t('admin.escalation.action.notifyHint')}
-                    </p>
                   )}
                 </>
               ) : null}
@@ -456,7 +475,12 @@ export function EscalationActionEditor({
                       disabled={!canWrite}
                       value={action.targetKind ?? 'pool'}
                       onChange={(event) => {
-                        const kind = event.target.value === 'group' ? 'group' : 'pool'
+                        const kind =
+                          event.target.value === 'group'
+                            ? 'group'
+                            : event.target.value === 'user'
+                              ? 'user'
+                              : 'pool'
 
                         publish(
                           actions.map((entry, position) =>
@@ -469,6 +493,7 @@ export function EscalationActionEditor({
                     >
                       <option value="pool">{t('admin.escalation.action.targetKinds.pool')}</option>
                       <option value="group">{t('admin.escalation.action.targetKinds.group')}</option>
+                      <option value="user">{t('admin.escalation.action.targetKinds.user')}</option>
                     </select>
                   </label>
 

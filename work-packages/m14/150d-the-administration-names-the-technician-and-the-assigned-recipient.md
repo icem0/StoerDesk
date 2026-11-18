@@ -1,7 +1,7 @@
 # WP-M14-150d: the administration names the technician and the assigned recipient
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-150a, WP-M14-150b, WP-M14-150c
 phase: 14
 milestone: m14
@@ -64,6 +64,7 @@ assigned recipient.
 - Files changed: the action editor, both settings locales, the page test
 - Interfaces added: the kind `user` of a distribution, the kind `assigned` of a
   notification
-- Verified: —
+- Verified: web typecheck, ESLint, vitest (the action editor 14/14),
+  `i18n:check` (1698 keys in de and en), `wp:check`
 - Follow-up WP: none — the feature of the office is closed
 - Open question: none

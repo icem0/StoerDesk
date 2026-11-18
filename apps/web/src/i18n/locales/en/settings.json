@@ -425,9 +425,11 @@
         "targetKinds": {
           "user": "User",
           "pool": "Readiness pool",
-          "group": "User group"
+          "group": "User group",
+          "assigned": "Assigned technician"
         },
         "target": "Target",
+        "targetAssigned": "The assigned technician of the ticket — the technician the escalation assigned it to, and the technician who accepted it himself after an offer.",
         "targetEmpty": "no target chosen",
         "targetChannels": "Channels of the installation",
         "priority": "Priority",

@@ -2989,6 +2989,15 @@ the technician who takes the ticket himself is an assignee of the ticket, and
 the target `assigned` of a notification reaches him. A system action writes no
 row — the escalation writes its own rows (ADR-0026, ADR-0033).
 
+**The administration names the technician and the assigned recipient
+(WP-M14-150d).** The kind select of the `offer` and the `assign` action offers
+the kind `user` beside the readiness pool and the user group: the target
+select then offers the technicians of the installation with their names — the
+list the page already reads for the target of a notification. The kind select
+of the `notify` action offers the kind `assigned`: the recipient is the
+technician of the ticket, so the target select is replaced by a hint and the
+saved action carries the kind without an id (ADR-0033).
+
 **The readiness calendar names the technician of every shift (WP-M14-151, out of
 band in phase 14).** The office reported that the readiness calendar answered
 „nicht besetzt" behind shifts that clearly had a technician and that an admin

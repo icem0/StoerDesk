@@ -300,7 +300,7 @@ describe('the action editor of the escalation page', () => {
     fireEvent.change(typeSelect, { target: { value: 'offer' } })
 
     const kindSelect = screen.getByTestId('escalation-action-target-kind') as unknown as HTMLSelectElement
-    expect(Array.from(kindSelect.options).map((option) => (option as { value: string }).value)).toEqual(['pool', 'group'])
+    expect(Array.from(kindSelect.options).map((option) => (option as { value: string }).value)).toEqual(['pool', 'group', 'user'])
 
     const targetSelect = screen.getByTestId('escalation-action-target') as unknown as HTMLSelectElement
     const offered = Array.from(targetSelect.options).map((option) => (option as { value: string }).value)
@@ -344,6 +344,65 @@ describe('the action editor of the escalation page', () => {
         key: NOTIFY_ACTION.key,
         type: 'assign',
         target: { kind: 'group', id: GROUP_ID },
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('assigns the ticket to one technician and saves its target', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
+    fireEvent.change(typeSelect, { target: { value: 'assign' } })
+
+    const kindSelect = screen.getByTestId('escalation-action-target-kind') as unknown as HTMLSelectElement
+    const kinds = Array.from(kindSelect.options).map((option) => (option as { value: string }).value)
+    expect(kinds).toEqual(['pool', 'group', 'user'])
+    fireEvent.change(kindSelect, { target: { value: 'user' } })
+
+    const targetSelect = screen.getByTestId('escalation-action-target') as unknown as HTMLSelectElement
+    const offered = Array.from(targetSelect.options).map((option) => (option as { value: string }).value)
+    expect(offered).toEqual(['', USER_ID])
+    fireEvent.change(targetSelect, { target: { value: USER_ID } })
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'assign',
+        target: { kind: 'user', id: USER_ID },
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('notifies the technician of the ticket with the target assigned', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const kindSelect = screen.getByTestId('escalation-notify-target-kind') as unknown as HTMLSelectElement
+    const kinds = Array.from(kindSelect.options).map((option) => (option as { value: string }).value)
+    expect(kinds).toEqual(['user', 'pool', 'assigned'])
+    fireEvent.change(kindSelect, { target: { value: 'assigned' } })
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'notify',
+        channels: ['ntfy'],
+        target: { kind: 'assigned' },
         condition: { all: [] },
       },
     ])

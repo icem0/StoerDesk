@@ -425,9 +425,11 @@
         "targetKinds": {
           "user": "Benutzer",
           "pool": "Bereitschaftspool",
-          "group": "Benutzergruppe"
+          "group": "Benutzergruppe",
+          "assigned": "Zugewiesener Techniker"
         },
         "target": "Ziel",
+        "targetAssigned": "Der zugewiesene Techniker des Tickets — der Techniker, dem die Eskalation das Ticket zugewiesen hat, und der Techniker, der es nach einem Angebot selbst angenommen hat.",
         "targetEmpty": "kein Ziel gewählt",
         "targetChannels": "Kanäle der Installation",
         "priority": "Wichtigkeit",
