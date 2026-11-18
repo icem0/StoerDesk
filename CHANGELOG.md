@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The ntfy setup guide names the topic-prefix ACL (WP-M14-123, out of band in
+  phase 14): the personal topics are `stoerdesk-<random>`, so the user of
+  `NTFY_TOKEN` needs read-write on `stoerdesk-*` **and** the recipient
+  (`everyone` or a dedicated user) read-only on the same prefix. With only
+  `NTFY_TOPIC` allowed the test message arrives while real notifications end
+  `http_403`; without the read entry the publish succeeds ("gesendet") but the
+  recipient's personal link answers `403`. `README.md`, `docs/DEPLOYMENT.md`
+  and `.env.example` now state both permissions and both symptoms.
 - The spec and the module map name the stage NEW (WP-M14-118, out of band in
   phase 14): the default chain opens with the stage `new` (Neu / New), a
   predecessor that is never reached hands its clock down and the migration

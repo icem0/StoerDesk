@@ -321,6 +321,46 @@ Set `NTFY_URL` to the server the API publishes to and `NTFY_PUBLIC_URL` to the
 address the browser subscribes to. The browser listens on
 `${NTFY_PUBLIC_URL}/${NTFY_TOPIC}`.
 
+**Topic-prefix ACL for access-controlled servers — two separate permissions.**
+`NTFY_TOPIC` is only the instance topic of the test message and the verification
+code. Ticket notifications go to the personal topic of every recipient, which
+StörDesk generates as `stoerdesk-<random>` (`notification_accounts.external_id`,
+`apps/api/src/notifications/receivers.ts`). Both the sender and the recipient
+need access to the **prefix** `stoerdesk-*`, not only to `NTFY_TOPIC`:
+
+```bash
+docker exec <ntfy-container> ntfy access <token-user> 'stoerdesk-*' read-write
+docker exec <ntfy-container> ntfy access everyone 'stoerdesk-*' read-only
+docker exec <ntfy-container> ntfy access        # verify
+```
+
+1. **Write** (`<token-user>`, the user of `NTFY_TOKEN`): without the prefix
+   entry the test message still arrives (its topic is allowed) while every real
+   notification ends `http_403` — the channel card shows "Zustellung gestört"
+   with `failed` rows, although the token itself is correct.
+2. **Read** (`everyone` or a dedicated recipient user): without the read entry
+   the publish succeeds and StörDesk reports "gesendet", but the recipient's
+   link `https://<server>/stoerdesk-<random>` answers `403` and the phone shows
+   nothing. "Gesendet" only means the server accepted the message, not that the
+   recipient may read it.
+
+After the grant the recipient opens the personal link without a login, or
+subscribes in the ntfy app with the server address and the topic of the link.
+If the topics must not be readable by anyone who knows the URL, skip the
+`everyone` entry and grant a dedicated user instead; that user then logs in in
+the ntfy app:
+
+```bash
+docker exec -it <ntfy-container> ntfy user add --role=user <recipient-user>
+docker exec <ntfy-container> ntfy access <recipient-user> 'stoerdesk-*' read-only
+```
+
+`npm run ntfy:setup` of the Compose profile creates exactly the two entries for
+`stoerdesk-api` and `everyone`; an ntfy server that already exists and is
+configured by hand must be granted them explicitly. The topic name is the
+secret of the personal subscription (ADR-0024 point 6) — never hand the write
+token of the API user to a recipient.
+
 ### Own ntfy server (optional Compose profile `ntfy`)
 
 The profile `ntfy` starts a self-hosted ntfy server (ADR-0024, WP-M14-69); the

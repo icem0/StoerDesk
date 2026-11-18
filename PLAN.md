@@ -2320,6 +2320,17 @@ later work on the event types closes, together with **WP-M14-121** (the test of
 the own topic calls the administration route today and therefore needs the
 permission `notification.write`).
 
+**The ntfy guide names the topic-prefix ACL (WP-M14-123, out of band in phase
+14).** An access-controlled ntfy server that was configured by hand granted the
+token user only the single topic `stoerdesk`: the test message of the channel
+card arrived, but every ticket notification ended `http_403`, because the
+personal topics are generated as `stoerdesk-<random>`. `docs/DEPLOYMENT.md`,
+`README.md` and `.env.example` now name the required ACL — the token user
+read-write and the recipient (`everyone` or a dedicated user) read-only on
+`stoerdesk-*` — and both symptoms: a missing write entry fails the delivery, a
+missing read entry lets the delivery succeed while the recipient's personal
+link answers `403`. No product code, route, schema or UI changes.
+
 
 
 ## 17. Work package rules for small models

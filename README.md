@@ -201,6 +201,19 @@ prerequisite.
 | `GITHUB_REPO`, `GITHUB_BRANCH`                                      | empty, `main`             | the update check                                           |
 | `UPDATE_WEBHOOK_URL`, `UPDATE_WEBHOOK_TOKEN`                        | empty                     | the deploy hook the update starts                          |
 
+An access-controlled ntfy server needs more than `NTFY_TOPIC` — both for the
+sender and for the recipient, because the personal topics are
+`stoerdesk-<random>`:
+
+- **Write:** the user of `NTFY_TOKEN` needs read-write on the prefix
+  `stoerdesk-*`. With only `NTFY_TOPIC` allowed the test message still arrives,
+  while every real notification fails with `403`.
+- **Read:** `everyone` (or a dedicated recipient user) needs read-only on the
+  same prefix, otherwise the publish succeeds and StörDesk says "gesendet", but
+  the recipient's link answers `403` and the phone shows nothing.
+
+See [Notifications](docs/DEPLOYMENT.md#ntfy) for the `ntfy access` commands.
+
 Every variable the stack understands is documented in
 [`.env.example`](.env.example). The version of the application is **not** a
 variable: the commit hooks write it into [`VERSION`](VERSION) and tag exactly that
