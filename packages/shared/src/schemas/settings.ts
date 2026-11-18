@@ -18,6 +18,25 @@ export const brandingResponseSchema = z.object({
   companyName: z.string().max(80),
   titleEnabled: z.boolean(),
   logo: z.string(),
+  /**
+   * The colour of the internal comment (ADR-0034): the background of the field
+   * and of the entry in the history. A hex value of the form `#rrggbb`.
+   */
+  internalCommentColor: z.string(),
+})
+
+/** The default colour of the internal comment: a dark red (ADR-0034). */
+export const DEFAULT_INTERNAL_COMMENT_COLOR = '#7f1d1d'
+
+/** A colour of the form `#rrggbb`. */
+export const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/)
+
+/**
+ * The display values of the ticket view: every colleague who may read a ticket
+ * may read a colour of the presentation, so the route needs no `settings.read`.
+ */
+export const displaySettingsResponseSchema = z.object({
+  internalCommentColor: z.string(),
 })
 
 /** Whether the installation captures a ticket title at all (`PLAN.md` §14, WP-M9-24). */
@@ -31,10 +50,13 @@ export const updateBrandingRequestSchema = z.object({
   companyName: z.string().trim().max(80),
   titleEnabled: z.boolean().default(false),
   logo: z.string().optional(),
+  /** The colour of the internal comment; a body without it keeps the stored one. */
+  internalCommentColor: hexColorSchema.optional(),
 })
 
 export type BrandingResponse = z.infer<typeof brandingResponseSchema>
 export type UpdateBrandingRequest = z.infer<typeof updateBrandingRequestSchema>
+export type DisplaySettingsResponse = z.infer<typeof displaySettingsResponseSchema>
 
 /** The mandatory minimum channels of critical tickets (`WP-M14-18`). */
 export const minimumChannelsResponseSchema = z.object({

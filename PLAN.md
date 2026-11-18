@@ -2935,6 +2935,16 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
 
+**The settings know the colour of the internal comment (WP-M14-149d, out of
+band in phase 14).** The colour of the internal comment is a value of the
+instance: the row of the branding carries it, and the administration sets it
+under „Darstellung“ (WP-M14-149e). The new route `GET /api/v1/settings/display`
+answers the colour for the ticket view. It sits behind `ticket.read` and not
+behind `settings.read`: a colour is no secret, and every colleague who may
+read a ticket may read the colour of the presentation. A row without the field
+answers the default of the server — a dark red — and a value that is no hex
+colour answers the default as well.
+
 **The prepared send view leaves the internal comments out (WP-M14-149c, out
 of band in phase 14).** The prepared send view is the printout of the ticket
 and the source of the HTML that goes into the e-mail program of the customer —

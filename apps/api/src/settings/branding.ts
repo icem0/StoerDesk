@@ -3,6 +3,7 @@ import fp from 'fastify-plugin'
 
 import {
   brandingResponseSchema,
+  displaySettingsResponseSchema,
   PERMISSIONS,
   titleSwitchResponseSchema,
   updateBrandingRequestSchema,
@@ -26,6 +27,10 @@ import { detectImageType } from '../tickets/photos'
  * `logo` is an optional `data:image/jpeg` / `data:image/png` base64 URL (at most
  * `MAX_LOGO_BYTES`); `''` or `null` removes the logo. WP-M2-04c and WP-M9-32 both
  * verify the bytes with `detectImageType` — the claim never wins.
+ *
+ * The row carries the colour of the internal comment as well (ADR-0034): the
+ * administration sets it under „Darstellung", and `GET /api/v1/settings/display`
+ * (`ticket.read`) answers it for the ticket view — a colour is no secret.
  */
 
 /** At most 500 kB of logo payload stored in the settings row. */
@@ -33,6 +38,12 @@ const MAX_LOGO_BYTES = 500 * 1024
 
 /** `data:image/jpeg` / `data:image/png` base64 data URL. */
 const LOGO_DATA_URL = /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/
+
+/** A colour of the form `#rrggbb`. */
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+
+/** The default colour of the internal comment: a dark red (ADR-0034). */
+const DEFAULT_INTERNAL_COMMENT_COLOR = '#7f1d1d'
 
 function storedCompanyName(value: unknown): string {
   return (
@@ -58,6 +69,23 @@ function storedLogo(value: unknown): string {
       ? (value as { logo: string }).logo
       : ''
   )
+}
+
+/**
+ * The colour of the internal comment (ADR-0034): the stored value of the row,
+ * else the default of the server — a dark red. A row with a value that is no
+ * hex colour answers the default as well.
+ */
+function storedInternalCommentColor(value: unknown): string {
+  const color =
+    value !== null &&
+    value !== undefined &&
+    typeof value === 'object' &&
+    typeof (value as { internalCommentColor?: unknown }).internalCommentColor === 'string'
+      ? (value as { internalCommentColor: string }).internalCommentColor
+      : ''
+
+  return HEX_COLOR.test(color) ? color : DEFAULT_INTERNAL_COMMENT_COLOR
 }
 
 /** Validates an optional logo data URL; `''`/`null`/`undefined` means "remove". */
@@ -98,6 +126,29 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           companyName: storedCompanyName(rows[0]?.value),
           titleEnabled: storedTitleEnabled(rows[0]?.value),
           logo: storedLogo(rows[0]?.value),
+          internalCommentColor: storedInternalCommentColor(rows[0]?.value),
+        })
+      },
+    )
+
+    /**
+     * The display values of the ticket view (ADR-0034): the colour of the
+     * internal comment. Every colleague who may read a ticket may read a colour
+     * of the presentation, so the route needs no `settings.read` — a colour is
+     * no secret.
+     */
+    app.get(
+      '/api/v1/settings/display',
+      { preHandler: requirePermission(database, PERMISSIONS.ticket.read) },
+      async () => {
+        const rows = await database
+          .select({ value: settings.value })
+          .from(settings)
+          .where(eq(settings.key, BRANDING_KEY))
+          .limit(1)
+
+        return displaySettingsResponseSchema.parse({
+          internalCommentColor: storedInternalCommentColor(rows[0]?.value),
         })
       },
     )
@@ -136,11 +187,27 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           return reply.code(400).send(logo)
         }
 
+        // A body without the colour keeps the stored one — the page of the
+        // Darstellung sends the colour, an older client does not.
+        const current = await database
+          .select({ value: settings.value })
+          .from(settings)
+          .where(eq(settings.key, BRANDING_KEY))
+          .limit(1)
+
+        const internalCommentColor =
+          parsed.data.internalCommentColor ?? storedInternalCommentColor(current[0]?.value)
+
         await database
           .insert(settings)
           .values({
             key: BRANDING_KEY,
-            value: { companyName: parsed.data.companyName, titleEnabled: parsed.data.titleEnabled, logo },
+            value: {
+              companyName: parsed.data.companyName,
+              titleEnabled: parsed.data.titleEnabled,
+              logo,
+              internalCommentColor,
+            },
           })
           .onConflictDoUpdate({
             target: settings.key,
@@ -149,6 +216,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
                 companyName: parsed.data.companyName,
                 titleEnabled: parsed.data.titleEnabled,
                 logo,
+                internalCommentColor,
               },
               updatedAt: new Date(),
             },
@@ -158,6 +226,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           companyName: parsed.data.companyName,
           titleEnabled: parsed.data.titleEnabled,
           logo,
+          internalCommentColor,
         })
       },
     )

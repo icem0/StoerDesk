@@ -19,7 +19,12 @@ if (testDatabase.status === 'unavailable') {
 
 const { users, roles, userRoles } = schema
 
-type BrandingResponseBody = { companyName?: string; titleEnabled?: boolean; logo: string }
+type BrandingResponseBody = {
+  companyName?: string
+  titleEnabled?: boolean
+  logo: string
+  internalCommentColor?: string
+}
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -42,6 +47,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let app: FastifyInstance
     let adminId = ''
     let officeId = ''
+    let strangerId = ''
     const cookies: Record<'admin' | 'office', string> = { admin: '', office: '' }
 
     async function userIdFor(email: string): Promise<string> {
@@ -83,12 +89,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function getDisplay(cookie?: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/settings/display',
+        headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
       await seedRbac(db)
 
       adminId = await userIdFor('admin-branding@example.org')
       officeId = await userIdFor('office-branding@example.org')
+      // A colleague without a role: the display route needs `ticket.read`.
+      strangerId = await userIdFor('stranger-branding@example.org')
 
       await db.insert(userRoles).values([
         { userId: adminId, roleId: await roleIdFor('admin') },
@@ -141,19 +157,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
     })
 
     it('stores and returns the company name', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
     })
 
     it('resets to the empty name', async () => {
@@ -162,7 +178,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
     })
 
     it('rejects a too long name with 400 invalid_request', async () => {
@@ -191,19 +207,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
     })
 
     it('stores and returns titleEnabled true', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH', titleEnabled: true })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' })
     })
 
     it('resets titleEnabled to false', async () => {
@@ -212,7 +228,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
     })
 
     it('rejects a logo whose bytes do not match the claim', async () => {
@@ -224,6 +240,52 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(response.statusCode).toBe(400)
       expect(response.json<ErrorResponseBody>()).toEqual({ code: 'invalid_request', params: { fields: ['logo'] } })
+    })
+
+    it('answers the default colour of the internal comment', async () => {
+      const response = await getDisplay(cookies['admin'])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<{ internalCommentColor?: string }>().internalCommentColor).toBe('#7f1d1d')
+    })
+
+    it('stores the colour of the internal comment and answers it for the ticket view', async () => {
+      const put = await putBranding(cookies['admin'], {
+        companyName: 'Beispiel GmbH',
+        internalCommentColor: '#450a0a',
+      })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<BrandingResponseBody>().internalCommentColor).toBe('#450a0a')
+
+      const display = await getDisplay(cookies['office'])
+
+      expect(display.statusCode).toBe(200)
+      expect(display.json<{ internalCommentColor?: string }>().internalCommentColor).toBe('#450a0a')
+    })
+
+    it('keeps the stored colour when the body carries none', async () => {
+      const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<BrandingResponseBody>().internalCommentColor).toBe('#450a0a')
+    })
+
+    it('rejects a colour that is no hex value', async () => {
+      const response = await putBranding(cookies['admin'], {
+        companyName: 'Beispiel GmbH',
+        internalCommentColor: 'darkred',
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json<ErrorResponseBody>().code).toBe('invalid_request')
+    })
+
+    it('answers 403 to the display route for a colleague without ticket.read', async () => {
+      const response = await getDisplay(await sessionCookieFor(strangerId))
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json<ErrorResponseBody>().code).toBe('forbidden')
     })
   },
 )

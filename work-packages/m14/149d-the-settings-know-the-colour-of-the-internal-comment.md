@@ -1,7 +1,7 @@
 # WP-M14-149d: the settings know the colour of the internal comment
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -68,7 +68,8 @@ Expected: all green; the new tests fail before the change and pass after it.
 ## Handoff
 
 - Files changed: the shared contract, the settings module of the branding, its
-  integration test, this document
+  integration test, the security plan, this document, the backlog, the changelog,
+  `PLAN.md` §16
 - Interfaces added: `displaySettingsResponseSchema`, the route
   `GET /api/v1/settings/display`, the field `internalCommentColor`
 - Verified: `npm run check`

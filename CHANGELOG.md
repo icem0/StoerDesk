@@ -54,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   printed nor copied into the e-mail. The filter uses the predicate of the
   shared contract, so one list names the event types that never reach the
   customer (ADR-0034).
+- The settings know the colour of the internal comment (**WP-M14-149d**, out
+  of band in phase 14): the row of the branding carries the colour of the
+  internal comment, and the new route `GET /api/v1/settings/display` answers
+  it for the ticket view. The route sits behind `ticket.read` and not behind
+  `settings.read` — a colour is no secret. A row without the field answers the
+  default of the server, a dark red (ADR-0034).
 - The assignment names a technician and the notification reaches him
   (**WP-M14-150**, out of band in phase 14): the escalation of ADR-0033 knows
   two more targets. The action „Ticket zuweisen“ may name one technician of the
