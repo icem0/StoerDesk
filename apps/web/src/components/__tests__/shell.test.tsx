@@ -107,9 +107,7 @@ describe('Shell settings access', () => {
 
     renderShell()
 
-    expect(
-      await screen.findByText(/Beispiel GmbH/),
-    ).toBeTruthy()
+    expect(await screen.findByText(/Beispiel GmbH/)).toBeTruthy()
   })
 
   it('shows only the product name without a company name', async () => {
@@ -155,7 +153,6 @@ describe('Shell settings access', () => {
     expect(screen.getByRole('link', { name: 'Tickets' }).getAttribute('aria-current')).toBe('page')
   })
 
-
   it('shows no settings link while the session is anonymous', async () => {
     stubMe(Response.json({ code: 'session_invalid', params: {} }, { status: 401 }))
     renderShell()
@@ -185,14 +182,14 @@ describe('Shell settings access', () => {
 
     renderShell()
 
-    const bell = await screen.findByRole('button', { name: 'Benachrichtigungen' })
+    const bell = await screen.findByRole('link', { name: 'Benachrichtigungen' })
 
-    expect(bell.getAttribute('aria-expanded')).toBe('false')
+    expect(bell.getAttribute('href')).toBe('/notifications')
     expect(await screen.findByTestId('unread-count')).toBeTruthy()
     expect(screen.getByTestId('unread-count').textContent).toBe('3')
   })
 
-  it('shows the bell without a badge when every message is read (WP-M14-120e)', async () => {
+  it('shows the bell as one link without a badge when every message is read (WP-M14-120e, WP-M14-127)', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -212,7 +209,9 @@ describe('Shell settings access', () => {
 
     renderShell()
 
-    expect(await screen.findByRole('button', { name: 'Benachrichtigungen' })).toBeTruthy()
+    const bell = await screen.findByRole('link', { name: 'Benachrichtigungen' })
+
+    expect(bell.getAttribute('href')).toBe('/notifications')
     expect(screen.queryByTestId('unread-count')).toBeNull()
   })
 

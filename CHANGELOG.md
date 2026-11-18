@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- One click on the bell opens the inbox page (WP-M14-127, out of band in phase
+  14): the bell is one link to `/notifications`, the dropdown panel of
+  WP-M14-122 with its own message query, its mark-read mutation and its
+  close-on-escape rule is gone. The unread badge of WP-M14-120e and its
+  refetch on window focus stay, marking a message as read belongs to the inbox
+  page of WP-M14-120d. The setup link for web push follows in **WP-M14-128**.
 - The settings page registers this browser for web push (WP-M14-126a/126b, out
   of band in phase 14): the card reads the VAPID public key, asks for the
   notification permission on click, subscribes with `pushManager` and stores the

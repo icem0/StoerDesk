@@ -2362,6 +2362,14 @@ work. The overview and the selection read the same `['webpush-config']` query,
 and a QR opens the page on the phone. With WP-M14-124 and WP-M14-125 the web-push
 channel is usable end to end.
 
+**One click on the bell opens the inbox page (WP-M14-127, out of band in phase
+14).** The office asked for the page itself: the bell of the header is one link
+to `/notifications`, the dropdown panel of WP-M14-122 with its message query,
+its mark-read mutation and its close-on-escape rule is gone. The unread badge of
+WP-M14-120e and its refetch on window focus stay, and marking a message as read
+belongs to the inbox page of WP-M14-120d. The setup link of the inbox page
+follows in **WP-M14-128**; WP-M14-121 stays open in numeric order.
+
 
 
 ## 17. Work package rules for small models

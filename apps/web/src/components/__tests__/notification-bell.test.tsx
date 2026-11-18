@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -7,46 +7,24 @@ import { MemoryRouter } from 'react-router-dom'
 import { i18n } from '../../i18n'
 import { NotificationBell } from '../notification-bell'
 
-const message = {
-  id: '11111111-1111-4111-8111-111111111111',
-  channel: 'ntfy',
-  eventType: 'ticket.created',
-  state: 'SENT' as const,
-  title: 'ST-2026-0001',
-  body: 'normal · Rathaus',
-  createdAt: '2026-11-17T09:30:00.000Z',
-  readAt: null,
-}
-
 /**
- * No backend: the bell reads the unread count and, while the panel is open, the
- * latest messages of the inbox. The fake answers both routes of WP-M14-120c
- * and records the read receipt, so the badge, the panel and the receipt run in
- * memory.
+ * No backend: the bell reads only the unread count of WP-M14-120c. The fake
+ * answers that route, so the badge runs in memory and the inbox page is reached
+ * through the link of the bell, never through a request of the bell itself.
  */
-function stub(unread = 2, messages: unknown[] = [message]) {
-  const readReceipts: string[] = []
-
+function stub(unread = 2) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
-
-      if (url.includes('/read') && init?.method === 'PATCH') {
-        readReceipts.push(url)
-
-        return Response.json({ id: message.id, readAt: new Date().toISOString() })
-      }
 
       if (url.includes('/unread-count')) {
         return Response.json({ count: unread })
       }
 
-      return Response.json({ messages })
+      return Response.json({ messages: [] })
     }),
   )
-
-  return readReceipts
 }
 
 function renderBell() {
@@ -82,55 +60,25 @@ describe('NotificationBell', () => {
 
     renderBell()
 
-    expect(await screen.findByRole('button', { name: 'Benachrichtigungen' })).toBeTruthy()
+    expect(await screen.findByRole('link', { name: 'Benachrichtigungen' })).toBeTruthy()
     expect(screen.queryByTestId('unread-count')).toBeNull()
   })
 
-  it('opens the panel with the latest messages and links to the inbox', async () => {
-    stub(1, [message, { ...message, id: '22222222-2222-4222-8222-222222222222', state: 'FAILED', title: 'ST-2026-0002' }])
-
-    renderBell()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Benachrichtigungen' }))
-
-    expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
-    expect(screen.getByText('ST-2026-0002')).toBeTruthy()
-    expect(screen.getByText('Zugestellt')).toBeTruthy()
-    expect(screen.getByText('Fehlgeschlagen')).toBeTruthy()
-    expect(screen.getAllByText('Neu')).toHaveLength(2)
-
-    const link = screen.getByRole('link', { name: 'Alle Nachrichten anzeigen' })
-    expect(link.getAttribute('href')).toBe('/notifications')
-  })
-
-  it('marks a message as read when it is clicked in the panel', async () => {
-    const readReceipts = stub(1)
-
-    renderBell()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Benachrichtigungen' }))
-
-    fireEvent.click(await screen.findByText('ST-2026-0001'))
-
-    await vi.waitFor(() => {
-      expect(readReceipts).toHaveLength(1)
-    })
-    expect(readReceipts[0]).toContain(message.id)
-  })
-
-  it('closes the panel when the escape key is pressed', async () => {
+  it('is one link that opens the inbox page', async () => {
     stub(1)
 
     renderBell()
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Benachrichtigungen' }))
+    const link = screen.getByRole('link', { name: 'Benachrichtigungen' })
+    expect(link.getAttribute('href')).toBe('/notifications')
+    expect(screen.queryByText('ST-2026-0001')).toBeNull()
+  })
 
-    expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
+  it('shows no messages and fetches none by itself', async () => {
+    stub(1)
 
-    fireEvent.keyDown(document, { key: 'Escape' })
+    renderBell()
 
-    await vi.waitFor(() => {
-      expect(screen.queryByText('ST-2026-0001')).toBeNull()
-    })
+    expect(screen.queryByText('Zugestellt')).toBeNull()
   })
 })
