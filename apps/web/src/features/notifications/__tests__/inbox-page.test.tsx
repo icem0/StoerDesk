@@ -96,6 +96,25 @@ describe('InboxPage', () => {
     expect(readReceipts[0]).toContain(message.id)
   })
 
+  it('requests the chosen number of messages', async () => {
+    let lastUrl = ''
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      lastUrl = String(input)
+
+      return Response.json({ messages: [] })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    await screen.findByText('Noch keine Nachricht.')
+
+    expect(lastUrl).toContain('/v1/notifications/messages')
+    expect(lastUrl).toContain('limit=50')
+  })
+
   it('shows the empty state without a message', async () => {
     stub([])
 

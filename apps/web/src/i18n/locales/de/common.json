@@ -251,6 +251,7 @@
   "inbox": {
     "title": "Benachrichtigungen",
     "hint": "Jede Nachricht, die StörDesk für dich verschickt hat, mit Kanal und Zustellstatus.",
+    "limitLabel": "Nachrichten pro Seite",
     "empty": "Noch keine Nachricht.",
     "error": "Die Nachrichten konnten nicht geladen werden.",
     "unread": "Neu",

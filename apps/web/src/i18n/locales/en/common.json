@@ -251,6 +251,7 @@
   "inbox": {
     "title": "Notifications",
     "hint": "Every message StörDesk sent to you, with its channel and its delivery state.",
+    "limitLabel": "Messages per page",
     "empty": "No message yet.",
     "error": "The messages could not be loaded.",
     "unread": "New",

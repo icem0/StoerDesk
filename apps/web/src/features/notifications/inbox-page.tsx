@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -24,9 +25,12 @@ export function InboxPage() {
   const { t } = useTranslation('common')
   const queryClient = useQueryClient()
 
+  const [limit, setLimit] = useState(50)
+
   const messages = useQuery({
-    queryKey: ['notification-messages'],
-    queryFn: () => apiFetch<NotificationMessageListResponse>('/v1/notifications/messages'),
+    queryKey: ['notification-messages', limit],
+    queryFn: () =>
+      apiFetch<NotificationMessageListResponse>(`/v1/notifications/messages?limit=${limit}`),
     retry: false,
   })
 
@@ -58,6 +62,21 @@ export function InboxPage() {
         >
           {t('back')}
         </Link>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <span className="text-sm text-slate-400">{t('inbox.limitLabel')}</span>
+        <select
+          value={limit}
+          onChange={(event) => setLimit(Number(event.target.value))}
+          className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        >
+          {[10, 50, 100].map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </div>
 
       {messages.isPending ? (
