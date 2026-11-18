@@ -2342,6 +2342,15 @@ row and a second user on a shared device takes it over, so the drain never sends
 the same notification twice to one browser. No migration was needed. The service
 worker and the settings UI follow in **WP-M14-125**.
 
+**The service worker shows the web-push message (WP-M14-125, out of band in
+phase 14).** The adapter sends a text payload, but the injectManifest service
+worker had no `push` or `notificationclick` listener. A `push` event now shows a
+notification from the first line (title), the rest (body) and the optional last
+block `<label>: <url>` (deep link); a click closes it and focuses an open app
+window or opens the link. The label is the translated
+`notification.action_label` of the server, so the parser never hard-codes a
+locale. The subscribe card follows in **WP-M14-126**.
+
 
 
 ## 17. Work package rules for small models

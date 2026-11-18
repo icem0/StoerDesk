@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The service worker shows web-push messages (WP-M14-125, out of band in phase
+  14): a `push` event turns the adapter payload into a notification (title, body,
+  `/logo.png` icon) and a click opens the deep link or focuses the open app. The
+  locale of the deep-link label comes from the payload, so the parser is
+  language-neutral.
 - The web-push subscription endpoint stores the browser of a user (WP-M14-124,
   out of band in phase 14): `GET /api/v1/notifications/accounts/webpush` answers
   the VAPID public key and the device count of the signed-in user,

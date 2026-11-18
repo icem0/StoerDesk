@@ -143,3 +143,100 @@ self.addEventListener('message', (event: MessageEvent) => {
     void clearUserCache(caches, ports[0]).catch(() => undefined)
   }
 })
+
+/**
+ * A push message of the adapter (`channels/web-push.ts`, WP-M14-125): the first
+ * line is the title, the rest the body and an optional last block
+ * `<label>: <url>` the deep link. The label is the translated
+ * `notification.action_label` of the server, so the parser never hard-codes a
+ * locale.
+ */
+export interface PushNotification {
+  title: string
+  body: string
+  url: string
+}
+
+const DEEP_LINK = /^[^:\n]+: (https?:\/\/\S+)$/
+
+export function notificationFromPayload(payload: string): PushNotification {
+  const [first = '', ...rest] = payload.split('\n')
+  let body = rest.join('\n').trim()
+  let url = ''
+
+  const lastBreak = body.lastIndexOf('\n\n')
+  const candidate = lastBreak === -1 ? body : body.slice(lastBreak + 2)
+  const match = DEEP_LINK.exec(candidate)
+
+  if (match !== null) {
+    url = match[1] ?? ''
+    body = lastBreak === -1 ? '' : body.slice(0, lastBreak)
+  }
+
+  return { title: first.trim() === '' ? 'StörDesk' : first.trim(), body, url }
+}
+
+interface PushClient {
+  url: string
+  focus(): Promise<unknown>
+}
+
+/** The one part of `ServiceWorkerGlobalScope` the push handlers use. */
+interface PushScope {
+  registration: {
+    showNotification(
+      title: string,
+      options: { body: string; icon: string; data: { url: string } },
+    ): Promise<void>
+  }
+  clients: {
+    matchAll(options: { type: string; includeUncontrolled: boolean }): Promise<PushClient[]>
+    openWindow(url: string): Promise<unknown>
+  }
+}
+
+/**
+ * Opens the deep link of a clicked notification: an already open window of the
+ * app is focused, otherwise a new one is opened. A payload without a url opens
+ * the app root.
+ */
+export async function focusOrOpen(clients: PushScope['clients'], url: string): Promise<void> {
+  const target = url === '' ? '/' : url
+  const open = await clients.matchAll({ type: 'window', includeUncontrolled: true })
+  const existing = open.find((client) => client.url === target)
+
+  if (existing !== undefined) {
+    await existing.focus()
+    return
+  }
+
+  await clients.openWindow(target)
+}
+
+self.addEventListener('push', (event: Event) => {
+  const push = event as Event & {
+    data?: { text(): string }
+    waitUntil(promise: Promise<unknown>): void
+  }
+  const { title, body, url } = notificationFromPayload(push.data?.text() ?? '')
+  const scope = self as unknown as PushScope
+
+  push.waitUntil(
+    scope.registration.showNotification(title, {
+      body,
+      icon: '/logo.png',
+      data: { url },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event: Event) => {
+  const click = event as Event & {
+    notification?: { close(): void; data?: { url?: string } }
+    waitUntil(promise: Promise<unknown>): void
+  }
+  const scope = self as unknown as PushScope
+
+  click.notification?.close()
+  click.waitUntil(focusOrOpen(scope.clients, click.notification?.data?.url ?? '/'))
+})
