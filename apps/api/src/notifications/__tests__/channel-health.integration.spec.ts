@@ -39,9 +39,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     const client = postgres(url, { max: 2 })
     const db = drizzle(client, { schema })
 
+    // The ntfy target of this instance was never confirmed, so it is no
+    // channel of the chain (\u00a711.1) — the warning goes over the telegram
+    // channel instead.
     const env = loadEnv({
       NTFY_URL: 'https://ntfy.mock',
       NTFY_TOPIC: 'office',
+      TELEGRAM_BOT_TOKEN: 'bot-token-for-the-health-test',
+      TELEGRAM_CHAT_ID: '@office',
     })
 
     beforeAll(async () => {
@@ -117,7 +122,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const warning = warnings.find((entry) => (entry.target as { channel?: string }).channel === broken)
 
-      expect(warning?.channel).toBe('ntfy')
+      expect(warning?.channel).toBe('telegram')
       expect((warning?.target as { code?: string }).code).toBe('push_subscription_dead')
 
       const again = await enqueueChannelHealthWarnings(db, env)

@@ -4,6 +4,7 @@ import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { outbox } from '../db/schema'
 import { configuredChannels } from './channels'
+import { effectiveNtfyConfig } from './verification'
 
 type Db = Database['database']
 
@@ -67,12 +68,25 @@ export async function evaluateChannelHealth(database: Db): Promise<ChannelHealth
 
 /**
  * The channel the warning of a broken channel goes out over: the first
- * configured channel of the chain that is not the broken one. A broken channel
- * without another configured channel writes nothing — the badge of the
- * administration (§11.8) stays the only warning.
+ * configured channel of the chain that is not the broken one. The chain is the
+ * one of the drain: an ntfy target that was never confirmed is no channel of
+ * the chain (§11.1), so the warning never goes to a target that would refuse
+ * the message. A broken channel without another configured channel writes
+ * nothing — the badge of the administration (§11.8) stays the only warning.
  */
-export function warningChannelOf(env: Env, brokenChannel: string): string {
-  const chain = configuredChannels(env).map((channel) => channel.name)
+export async function warningChannelOf(
+  database: Db,
+  env: Env,
+  brokenChannel: string,
+): Promise<string> {
+  const ntfy = await effectiveNtfyConfig(database, env, { requireVerified: true })
+  const effective: Env = {
+    ...env,
+    NTFY_URL: ntfy?.url ?? '',
+    NTFY_TOPIC: ntfy?.topic ?? '',
+    NTFY_TOKEN: ntfy?.token ?? env.NTFY_TOKEN,
+  }
+  const chain = configuredChannels(effective).map((channel) => channel.name)
 
   return chain.find((channel) => channel !== brokenChannel) ?? ''
 }
@@ -98,7 +112,7 @@ export async function enqueueChannelHealthWarnings(
   let written = 0
 
   for (const health of broken) {
-    const warningChannel = warningChannelOf(env, health.channel)
+    const warningChannel = await warningChannelOf(database, env, health.channel)
 
     if (warningChannel === '') {
       continue
