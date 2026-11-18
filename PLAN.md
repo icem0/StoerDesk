@@ -2933,7 +2933,8 @@ queued as a normal comment, because a normal comment is printed. The chain is
 split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149c** (the prepared send view), **WP-M14-149d** (the settings),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
-queue) and **WP-M14-149g** (the ticket view).
+queue) and **WP-M14-149g** (the ticket view). Every child is implemented
+(v1.1.251, v1.1.254 … v1.1.262), the chain of the internal comment is closed.
 
 **The ticket view writes and shows the internal comment (WP-M14-149g, out of
 band in phase 14).** The composer of the ticket view gains the checkbox of the

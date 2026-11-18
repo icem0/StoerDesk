@@ -32,7 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `ticket.comment.internal`, which the administration grants to the colleagues
   who may write it, and it is recognisable at a glance by a dark red
   background whose colour the administration configures under „Darstellung“
-  (ADR-0034). The decision splits into seven work packages.
+  (ADR-0034). The decision splits into seven work packages; the chain is closed:
+  the key, the API, the prepared send view, the settings, the page of the
+  Darstellung, the offline queue and the ticket view are implemented
+  (v1.1.251, v1.1.254 … v1.1.262).
 - The catalogue knows the key of the internal comment (**WP-M14-149a**, out
   of band in phase 14): the permission catalog of
   `packages/shared/src/permissions.ts` gains the key `ticket.comment.internal` —
