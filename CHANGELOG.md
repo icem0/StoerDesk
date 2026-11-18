@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The colleague sets his own password (**WP-M14-148e**, out of band in
+  phase 14): an account whose password is a one-time password sees the form of
+  the own password instead of the app — the one-time password is replaced by a
+  secret that only the colleague knows. The repetition must match before the
+  request leaves the browser; the server knows only the one password.
+- The administration sets the one-time password (**WP-M14-148d**, out of band
+  in phase 14): the route `POST /api/v1/users/:id/password` lets the
+  administration set the password of a colleague. The server generates it — 20
+  characters without the ambiguous `O`, `0`, `I`, `l` and `1` — and answers the
+  plaintext exactly once. The account carries the flag of the open password
+  change, and the sessions of the account die with the secret.
+- The configuration service checks the pool of the condition (**WP-M14-147c**,
+  out of band in phase 14): a condition that names a readiness pool which does
+  not exist answers `400 invalid_target` with the field path of the condition —
+  a readiness pool of a deleted calendar cannot silence a rule by accident.
 - The session knows the open password change (**WP-M14-148c**, out of band in
   phase 14): the session reads the flag of the one-time password per request,
   so a reset takes effect without a new login. While the flag is set, every

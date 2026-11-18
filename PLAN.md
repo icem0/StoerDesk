@@ -2813,6 +2813,15 @@ in that pool — the members of the pool without a shift receive nothing
 (ADR-0030). The `offer` and the `assign` action keep their meaning: they
 distribute the ticket to the whole team of the target (§7.14).
 
+**The configuration service checks the pool of the condition (WP-M14-147c).**
+The jsonb of a condition carries no foreign key, so `PUT
+/api/v1/escalation/config` walks the conditions of the rules and of their
+actions and checks every leaf of the field `shift` against the rows of
+`oncall_pools` — a pool that does not exist answers `400 invalid_target` with
+the field path of the condition, the rule of the target of an action (§7.5).
+The check reuses the pool rows the service already reads for the targets, so a
+configuration costs no second query.
+
 
 
 
@@ -2855,6 +2864,22 @@ in, but it may not work before the user sets a password of their own. `GET
 /api/v1/me` and `PATCH /api/v1/users/me` stay reachable; the own password clears
 the flag and ends the sessions of the other devices. The route of the
 administration follows in WP-M14-148d.
+
+**The administration sets the one-time password (WP-M14-148d, out of band in
+phase 14).** The route `POST /api/v1/users/:id/password` (`user.write`) lets the
+administration set the password of a colleague: the server generates it — 20
+characters out of an alphabet without the ambiguous `O`, `0`, `I`, `l` and `1` —
+and answers the plaintext exactly once (`{ temporaryPassword }`). The account
+carries the flag of the open password change, and the sessions of the account die
+with the secret. The log line of the reset carries the code only. The form of the
+colleague follows in WP-M14-148e.
+
+**The colleague sets his own password (WP-M14-148e, out of band in phase 14).**
+An account whose password is a one-time password sees the form of the own
+password instead of the app: the gate of the app reads the flag of the answer of
+the login and of `GET /api/v1/me` and renders the form while the flag is set.
+The repetition must match the first field in the browser; the server knows only
+the one password. The panel of the administration follows in WP-M14-148f.
 
 
 

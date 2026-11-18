@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   ESCALATION_DEADLINE_ROOT,
   escalationActionKey,
+  escalationConditionLeaves,
   escalationConfigSchema,
   escalationFirstStageKey,
   escalationRuleConfigSchema,
@@ -304,6 +305,31 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 
   if (unknownTargetFields.length > 0) {
     throw new EscalationConfigError(400, 'invalid_target', { fields: unknownTargetFields })
+  }
+
+  // The condition of a rule may ask for a readiness pool (§7.4, ADR-0030): the
+  // jsonb of the condition carries no foreign key, so the service checks the
+  // pool — the rule of the target of an action above.
+  const unknownPoolFields: string[] = []
+
+  for (const [ruleIndex, rule] of parsed.data.rules.entries()) {
+    for (const leaf of escalationConditionLeaves(rule.condition)) {
+      if (leaf.field === 'shift' && !poolIds.has(String(leaf.value))) {
+        unknownPoolFields.push(`rules.${ruleIndex}.condition`)
+      }
+    }
+
+    for (const [actionIndex, action] of rule.actions.entries()) {
+      for (const leaf of escalationConditionLeaves(action.condition)) {
+        if (leaf.field === 'shift' && !poolIds.has(String(leaf.value))) {
+          unknownPoolFields.push(`rules.${ruleIndex}.actions.${actionIndex}.condition`)
+        }
+      }
+    }
+  }
+
+  if (unknownPoolFields.length > 0) {
+    throw new EscalationConfigError(400, 'invalid_target', { fields: unknownPoolFields })
   }
 
   await database.transaction(async (tx) => {

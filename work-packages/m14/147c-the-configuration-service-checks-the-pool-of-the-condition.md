@@ -1,7 +1,7 @@
 # WP-M14-147c: the configuration service checks the pool of the condition
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -56,8 +56,10 @@ pool and stores a known one.
 
 ## Handoff
 
-- Files changed: `apps/api/src/escalation/config.ts`, the integration test,
-  this document, `work-packages/README.md`, `CHANGELOG.md`, `PLAN.md` §16
+- Files changed: `apps/api/src/escalation/config.ts`,
+  `apps/api/src/escalation/__tests__/config-routes.integration.spec.ts`,
+  `docs/REPO-MAP.md`, this document, `work-packages/README.md`, `CHANGELOG.md`,
+  `PLAN.md` §16
 - Interfaces added: the check of the pool of the condition
 - Verified: `npm run check`
 - Follow-up WP: WP-M14-147d

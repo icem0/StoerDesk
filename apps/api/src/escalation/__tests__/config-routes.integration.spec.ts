@@ -431,6 +431,57 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ])
     })
 
+    it('keeps a condition that names a readiness pool and refuses an unknown one', async () => {
+      const suffix = Date.now().toString(36)
+
+      const [pool] = await db
+        .insert(oncallPools)
+        .values({ name: `Schichtpool ${suffix}` })
+        .returning({ id: oncallPools.id })
+      const poolId = pool?.id ?? ''
+
+      const known = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'assignment',
+            stageKey: 'assignment',
+            reference: 'work_order_set',
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: { all: [{ field: 'shift', operator: 'eq', value: poolId }] },
+            actions: [],
+            active: true,
+          },
+        ],
+      })
+
+      expect(known.statusCode).toBe(200)
+
+      const unknown = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'assignment',
+            stageKey: 'assignment',
+            reference: 'work_order_set',
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: {
+              all: [{ field: 'shift', operator: 'eq', value: '33333333-3333-4333-8333-333333333333' }],
+            },
+            actions: [],
+            active: true,
+          },
+        ],
+      })
+
+      expect(unknown.statusCode).toBe(400)
+
+      const body = unknown.json<ErrorResponseBody>()
+
+      expect(body.code).toBe('invalid_target')
+      expect(body.params?.fields).toEqual(['rules.0.condition'])
+    })
+
     it('replaces the names of the stages and keeps their chain', async () => {
       const response = await putStages(cookies['admin'], {
         stages: DEFAULT_CHAIN.map((stage) =>
