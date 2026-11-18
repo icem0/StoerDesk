@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The contracts of the open password change (**WP-M14-148b**, out of band in
+  phase 14): the answer of the login and of `GET /api/v1/me` and the row of the
+  user list carry the flag `mustChangePassword`, and the answer of the reset
+  carries the plaintext of the one-time password as `temporaryPassword`. The
+  flag defaults to `false`, so a caller that does not know it yet stays valid.
 - The column of the open password change (**WP-M14-148a**, out of band in phase
   14): the table `users` gains the flag `must_change_password` — boolean, not
   null, default `false`. The flag marks an account whose password is a

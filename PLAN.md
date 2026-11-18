@@ -2828,6 +2828,13 @@ flag marks an account whose password is a one-time password; the migration
 touches no row, because an installed account holds a password of its own. The
 contracts of the flag follow in WP-M14-148b.
 
+**The contracts of the open password change (WP-M14-148b, out of band in phase
+14).** The answer of the login and of `GET /api/v1/me` and the row of the user
+list carry the flag `mustChangePassword` (default `false`, so a caller that does
+not know the flag stays valid), and the answer of the reset carries the
+plaintext of the one-time password as `temporaryPassword`. The session that
+reads the flag and the guard that blocks the account follow in WP-M14-148c.
+
 
 
 ## 17. Work package rules for small models

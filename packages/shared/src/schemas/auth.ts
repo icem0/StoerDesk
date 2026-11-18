@@ -19,6 +19,11 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>
  * keys, `permissions` the effective permission keys of `specs/01-rbac.md` §3.2
  * (role union, plus explicit allows, minus explicit denials) — keys only, never
  * translated text.
+ *
+ * `mustChangePassword` marks an account whose password is a one-time password
+ * (`specs/01-rbac.md` §3.9, ADR-0031): the account may log in, but it may not
+ * work before the user sets a password of their own. The default keeps the
+ * contract valid for a caller that does not know the flag yet.
  */
 export const meResponseSchema = z.object({
   user: z.object({
@@ -30,8 +35,20 @@ export const meResponseSchema = z.object({
     theme: z.enum(['auto', 'light', 'dark']),
     roles: z.array(z.string().min(1)),
     permissions: z.array(z.string().min(1)),
+    mustChangePassword: z.boolean().default(false),
   }),
 })
 
 export type MeResponse = z.infer<typeof meResponseSchema>
 export type AuthUser = MeResponse['user']
+
+/**
+ * Answer of `POST /api/v1/users/:id/password` (`specs/01-rbac.md` §3.9,
+ * ADR-0031): the plaintext of the one-time password the server generated. It
+ * exists exactly once, in this answer — it is never stored and never logged.
+ */
+export const resetPasswordResponseSchema = z.object({
+  temporaryPassword: z.string().min(1),
+})
+
+export type ResetPasswordResponse = z.infer<typeof resetPasswordResponseSchema>

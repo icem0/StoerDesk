@@ -28,6 +28,7 @@ type UserSummary = {
   theme: string
   active: boolean
   roleKeys: string[]
+  mustChangePassword: boolean
 }
 
 type UserResponseBody = Partial<UserSummary>
@@ -192,6 +193,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         theme: 'auto',
         active: true,
         roleKeys: ['office', 'oncall'],
+        mustChangePassword: false,
       })
 
       createdId = response.json<UserResponseBody>().id ?? ''

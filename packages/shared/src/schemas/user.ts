@@ -32,6 +32,12 @@ export const userSummarySchema = z.object({
   theme: userThemeSchema,
   active: z.boolean(),
   roleKeys: z.array(z.string()),
+  /**
+   * The flag of an open password change (`specs/01-rbac.md` §3.9, ADR-0031):
+   * `true` while the password of the account is a one-time password. The
+   * administration sees it per row of the user list.
+   */
+  mustChangePassword: z.boolean().default(false),
 })
 
 export const userListResponseSchema = z.object({
