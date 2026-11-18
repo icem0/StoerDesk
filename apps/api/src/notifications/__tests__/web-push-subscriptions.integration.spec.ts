@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
@@ -8,6 +9,7 @@ import { createSession } from '../../auth/session'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { buildServer } from '../../index'
+import { pruneDeadWebPushSubscriptions } from '../web-push-subscriptions'
 
 const testDatabase = await openTestDatabase()
 
@@ -15,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped web-push subscription routes: ${testDatabase.reason}\n`)
 }
 
-const { users } = schema
+const { users, pushSubscriptions } = schema
 
 const publicKey = 'BPm1NEFHt4bH8m8mV0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ'
 const endpoint = 'https://push.example.org/secret/42'
@@ -183,6 +185,30 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(own.statusCode).toBe(204)
       expect(again.statusCode).toBe(204)
       expect((await config(otherCookie)).json<ConfigBody>().subscriptions).toBe(0)
+    })
+
+    it('removes the dead devices and keeps the live ones (WP-M14-130a)', async () => {
+      const dead = 'https://push.example.org/secret/dead'
+      const live = 'https://push.example.org/secret/live'
+      const userId = await userIdFor('web-push-dead@example.org')
+
+      await db.insert(pushSubscriptions).values([
+        { userId, endpoint: dead, p256dh: 'BPm1p256dh', auth: 'authSecret42' },
+        { userId, endpoint: live, p256dh: 'BPm1p256dh', auth: 'authSecret42' },
+      ])
+
+      const removed = await pruneDeadWebPushSubscriptions(db, [dead])
+
+      expect(removed).toBe(1)
+      expect(await pruneDeadWebPushSubscriptions(db, [dead])).toBe(0)
+      expect(await pruneDeadWebPushSubscriptions(db, [])).toBe(0)
+
+      const rows = await db
+        .select({ endpoint: pushSubscriptions.endpoint })
+        .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.userId, userId))
+
+      expect(rows.map((row) => row.endpoint)).toEqual([live])
     })
   },
 )

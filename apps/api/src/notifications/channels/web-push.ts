@@ -55,6 +55,20 @@ const actionLabel = (config: WebPushConfig): string =>
   t(config.locale ?? 'de', 'notification.action_label')
 
 /**
+ * The answer of a send: the endpoints the push service rejected as dead.
+ * An endpoint is a capability url and never enters a log line
+ * (`specs/10-notifications.md` §11.15).
+ */
+export interface WebPushSendResult {
+  /**
+   * The endpoints the push service answered with `404` or `410` — the browser
+   * revoked the permission, the browser was reinstalled or the subscription
+   * expired. The channel removes those rows of `push_subscriptions`.
+   */
+  deadEndpoints: string[]
+}
+
+/**
  * Sends a notification to every stored web-push subscription.
  *
  * The payload text is the content `outbox.ts` (WP-M7-04) carries — ticket number,
@@ -69,6 +83,13 @@ const actionLabel = (config: WebPushConfig): string =>
  * subscribed yet. A rejected send stops the loop: the outbox row stays `PENDING`
  * and the drain (WP-M7-04c) retries it, which can deliver twice to a
  * subscriber that was already notified.
+ *
+ * A **dead** subscription (§11.15, ADR-0028) is the exception: the push service
+ * answers `404` or `410` for it. The send continues with the next device, the
+ * dead endpoint is answered in `deadEndpoints` and the channel removes its row.
+ * Only when **every** device of the send is dead the send fails with the code
+ * `push_subscription_dead` — the row of the outbox carries that code as its
+ * `lastError` and the chain of §11.1 falls back to the next channel.
  */
 export async function sendWebPushNotification(
   config: WebPushConfig,
@@ -76,17 +97,19 @@ export async function sendWebPushNotification(
   pwaUrl: string,
   subscriptions: WebPushSubscription[],
   sendImpl: typeof webPush.sendNotification = webPush.sendNotification,
-): Promise<void> {
+): Promise<WebPushSendResult> {
   if (config.publicKey === '' || config.privateKey === '' || config.subject === '') {
     throw new WebPushError('no_keys', 'No VAPID keys configured')
   }
 
   if (subscriptions.length === 0) {
-    return
+    return { deadEndpoints: [] }
   }
 
   const body = `${message.title}\n${message.body}`
   const payload = pwaUrl === '' ? body : `${body}\n\n${actionLabel(config)}: ${pwaUrl}`
+  const deadEndpoints: string[] = []
+  let delivered = 0
 
   for (const subscription of subscriptions) {
     try {
@@ -104,8 +127,15 @@ export async function sendWebPushNotification(
           },
         },
       )
+
+      delivered += 1
     } catch (error) {
-      const statusCode = error instanceof webPush.WebPushError ? error.statusCode : undefined
+      const statusCode = statusCodeOf(error)
+
+      if (statusCode === 404 || statusCode === 410) {
+        deadEndpoints.push(subscription.endpoint)
+        continue
+      }
 
       throw new WebPushError(
         'send_failed',
@@ -115,4 +145,23 @@ export async function sendWebPushNotification(
       )
     }
   }
+
+  if (delivered === 0 && deadEndpoints.length > 0) {
+    throw new WebPushError(
+      'push_subscription_dead',
+      'Every web-push subscription of this send is dead',
+    )
+  }
+
+  return { deadEndpoints }
+}
+
+/**
+ * The status the push service answered with — the library error carries it, a
+ * test double carries it as a plain property. Never the message of the error.
+ */
+function statusCodeOf(error: unknown): number | undefined {
+  const statusCode = (error as { statusCode?: unknown } | null)?.statusCode
+
+  return typeof statusCode === 'number' ? statusCode : undefined
 }

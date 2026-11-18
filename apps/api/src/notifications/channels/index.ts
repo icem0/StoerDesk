@@ -134,6 +134,12 @@ const telegramChannel = async (
  * carries the environment alone, so the closure opens its own short-lived pool for
  * that one read, the same shape the pg-boss jobs use (`jobs/bma-sync.ts`,
  * WP-M2-36): the drain never hands its pool to a channel.
+ *
+ * A device the push service rejects as dead (`404`/`410`) is removed from
+ * `push_subscriptions` after a send that reached at least one live device
+ * (§11.15, ADR-0028). A send where **every** device is dead keeps its rows: the
+ * retry of the drain probes them again and the row ends `FAILED` with the code
+ * `push_subscription_dead`, so the chain of §11.1 falls back to the next channel.
  */
 const webPushChannel = async (
   env: Env,
@@ -141,6 +147,7 @@ const webPushChannel = async (
   options?: MessageOptions,
 ): Promise<void> => {
   const { sendWebPushNotification } = await import('./web-push.js')
+  const { pruneDeadWebPushSubscriptions } = await import('../web-push-subscriptions.js')
   const { client, database } = createDatabase(databaseConnectionUrl(env))
 
   try {
@@ -152,7 +159,7 @@ const webPushChannel = async (
       })
       .from(pushSubscriptions)
 
-    await sendWebPushNotification(
+    const result = await sendWebPushNotification(
       {
         publicKey: env.VAPID_PUBLIC_KEY,
         privateKey: env.VAPID_PRIVATE_KEY,
@@ -162,6 +169,8 @@ const webPushChannel = async (
       messageLink(env, options),
       subscriptions,
     )
+
+    await pruneDeadWebPushSubscriptions(database, result.deadEndpoints)
   } finally {
     await client.end({ timeout: 5 })
   }

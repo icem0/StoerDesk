@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   every device of a send is dead the send fails with the code
   `push_subscription_dead`, so the row of the outbox carries it as its
   `lastError` and the chain falls back to the next channel.
+- The dead subscription of the web push is named and removed (**WP-M14-130a**, out
+  of band in phase 14 — **ADR-0028**): a `404` or a `410` of the push service
+  means that the endpoint no longer exists. The adapter names such an endpoint as
+  dead, the send continues with the next device and the channel removes the row
+  of `push_subscriptions` after a send that reached a live device. Only when
+  every device of a send is dead the send fails with the code
+  `push_subscription_dead`, so the row of the outbox carries it as its
+  `lastError` and the chain falls back to the next channel.
 - The counter of the ticket number becomes one global row (**WP-M14-129a**, out
   of band in phase 14 — **ADR-0027**): migration
   `0048_ticket_no_counter_global.sql` replaces `ticket_no_counters` (one row per

@@ -1,7 +1,7 @@
 # WP-M14-130a: the adapter names a dead subscription and the channel removes it
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -80,6 +80,6 @@ removed after the next successful send.
 - Files changed: the adapter, the webpush closure, the subscription store and
   their tests
 - Interfaces added: `{ deadEndpoints }` next to the send, `pruneDeadWebPushSubscriptions`
-- Verified: `npm run check`, `npm run build`
+- Verified: `npm run check` (exit 0), the unit spec of the adapter and the integration spec of the pruning
 - Follow-up WP: WP-M14-130b (the instance row of the warning)
 - Open question: none

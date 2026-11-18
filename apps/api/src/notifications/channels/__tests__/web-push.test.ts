@@ -137,9 +137,55 @@ describe('sendWebPushNotification', () => {
     expect(sendMock.mock.calls).toEqual([])
   })
 
+  it('names a dead subscription and reaches the next device (WP-M14-130a)', async () => {
+    const dead = { ...subscription, endpoint: 'https://push.example.org/secret/99' }
+    const sendMock = vi.fn(async (target: { endpoint: string }) => {
+      if (target.endpoint === dead.endpoint) {
+        throw new webPush.WebPushError('Received unexpected response code', 404, {}, '', 'x')
+      }
+
+      return { statusCode: 201, body: '', headers: {} }
+    })
+
+    const result = await sendWebPushNotification(
+      vapidKeys,
+      message,
+      '',
+      [dead, subscription],
+      sendMock as unknown as typeof webPush.sendNotification,
+    )
+
+    expect(sendMock).toHaveBeenCalledTimes(2)
+    expect(result.deadEndpoints).toEqual(['https://push.example.org/secret/99'])
+  })
+
+  it('fails with push_subscription_dead when every device is dead', async () => {
+    const sendMock = vi.fn(() => {
+      throw new webPush.WebPushError('Received unexpected response code', 410, {}, '', 'x')
+    })
+
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { name: string; code: string; message: string }
+      expect(webPushError.name).toBe('WebPushError')
+      expect(webPushError.code).toBe('push_subscription_dead')
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a dead subscription is required')
+  })
+
   it('reports a rejected push endpoint as a WebPushError of the channel', async () => {
     const sendMock = vi.fn(() => {
-      throw new webPush.WebPushError('Received unexpected response code', 404, {}, '', 'x')
+      throw new webPush.WebPushError('Received unexpected response code', 503, {}, '', 'x')
     })
 
     try {
@@ -154,7 +200,7 @@ describe('sendWebPushNotification', () => {
       const webPushError = error as unknown as { name: string; code: string; message: string }
       expect(webPushError.name).toBe('WebPushError')
       expect(webPushError.code).toBe('send_failed')
-      expect(webPushError.message).toContain('404')
+      expect(webPushError.message).toContain('503')
 
       return
     }

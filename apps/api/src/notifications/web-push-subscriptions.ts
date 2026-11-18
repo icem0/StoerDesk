@@ -1,4 +1,4 @@
-import { and, count, eq } from 'drizzle-orm'
+import { and, count, eq, inArray } from 'drizzle-orm'
 
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
@@ -78,4 +78,28 @@ export async function deleteWebPushSubscription(
     .returning({ id: pushSubscriptions.id })
 
   return removed.length > 0
+}
+
+/**
+ * Removes the devices the push service rejected as dead (`specs/10-notifications.md`
+ * §11.15, ADR-0028): the browser revoked the notification permission, the browser
+ * was reinstalled or the subscription expired. The rows are the defect, a retry
+ * would never reach them. The endpoints are capability urls and never enter a log
+ * line; the user of a removed row registers this browser again with the card of
+ * WP-M14-126a. The answer is the number of the removed rows.
+ */
+export async function pruneDeadWebPushSubscriptions(
+  database: Db,
+  endpoints: readonly string[],
+): Promise<number> {
+  if (endpoints.length === 0) {
+    return 0
+  }
+
+  const removed = await database
+    .delete(pushSubscriptions)
+    .where(inArray(pushSubscriptions.endpoint, [...endpoints]))
+    .returning({ id: pushSubscriptions.id })
+
+  return removed.length
 }

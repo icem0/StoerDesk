@@ -2406,6 +2406,20 @@ error: the inbox never blocks on the state of the channel. The texts are
 `inbox.webpush.hint` and `inbox.webpush.setup` (de/en); the subscribe action
 stays the settings page of WP-M14-126a.
 
+**The dead subscription of the web push is named and removed (WP-M14-130a, out of
+band in phase 14).** The web push has no status query: the only signal is the
+answer of the push service to a real send. A `404` or a `410` means that the
+endpoint no longer exists — the browser revoked the permission, the browser was
+reinstalled or the subscription expired. The adapter names such an endpoint as
+**dead**, the send continues with the next device, and the channel removes the
+row of `push_subscriptions` after a send that reached a live device. Only when
+**every** device of a send is dead the send fails with the code
+`push_subscription_dead`: the row of the outbox carries that code as its
+`lastError` (§11.8), the administration names the failure and the chain of
+§11.1 falls back to the next channel. A send where every device is dead keeps the
+rows — the retry of the drain probes them again. The endpoints are capability
+urls and never enter a log line (§11.13).
+
 **The health of the notification channels (WP-M14-130, out of band in phase 14).**
 The office asked two questions about the web push: can the channel be checked
 every day, and can a message over another channel announce that the
