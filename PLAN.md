@@ -2386,6 +2386,30 @@ belongs to the inbox page of WP-M14-120d. The setup link of the inbox page
 follows in **WP-M14-128**; WP-M14-121 is closed by the package above, so the open
 item of the phase is **WP-M14-128**.
 
+**The inbox names the setup page of the web push (WP-M14-128, out of band in phase
+14).** The office asked for the way to the registration: web push exists end to
+end (WP-M14-124 … WP-M14-126b), but a user who never registered this browser saw
+no way to it. The inbox page reads `GET /api/v1/notifications/accounts/webpush`
+under the shared `['webpush-config']` query key — react-query dedupes it with the
+card of WP-M14-126a, so no second request leaves the browser — and shows one hint
+line with the link to `/settings/notifications` while the channel carries no VAPID
+key or no device of the user. A pending or failed query shows no hint and no
+error: the inbox never blocks on the state of the channel. The texts are
+`inbox.webpush.hint` and `inbox.webpush.setup` (de/en); the subscribe action
+stays on the settings page.
+
+**The inbox names the setup page when web push is not set up (WP-M14-128, out
+of band in phase 14).** The office asked for a way from the inbox to the
+web-push configuration: the inbox page reads `GET /v1/notifications/accounts
+/webpush` under the shared `['webpush-config']` key — react-query dedupes it
+with the card of WP-M14-126a, so one request answers both pages — and while
+the answer carries no VAPID key or no device of this user it shows the hint
+`inbox.webpush.hint` and the link `inbox.webpush.setup` to
+`/settings/notifications`, the entry of the settings menu that owns the card.
+A registered browser shows nothing extra, a pending or failed config query
+shows neither hint nor error and the inbox never blocks on the state of the
+channel. Registering this browser stays the card of WP-M14-126a.
+
 
 
 ## 17. Work package rules for small models

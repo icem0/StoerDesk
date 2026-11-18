@@ -9,7 +9,9 @@ WP-M2-02. The `object_no` rule of §4.3.1 was decided with the product owner on
 2026-10-30. §4.8–§4.11 (`tickets`, `ticket_events`, `ticket_photos`,
 `ticket_no_counters`) are filled from `PLAN.md` §6/§7/§10 and reviewed on
 2026-10-31 for WP-M2-04: the `ticket_no` format `ST-<year>-<counter>` and the
-`status_token` generation **with the ticket** were decided then.
+`status_token` generation **with the ticket** were decided then. §4.11 was
+re-decided on 2026-11-18 with ADR-0027: the number carries no calendar year any
+more and the counter is one global row (WP-M14-129 … WP-M14-129c).
 
 > The source of this slice is `PLAN.md` §6. Details that `PLAN.md` settled are
 > marked **(plan)**. Tables of later phases are named here but detailed in the
@@ -234,20 +236,35 @@ Index `ticket_photos_ticket_id_idx`; at most 6 photos per report
 (`PLAN.md` §10). The 24-month photo retention of `PLAN.md` §15 is a phase 10
 privacy job.
 
-### 4.11 `ticket_no_counters` and `next_ticket_no()` (decided 2026-10-31)
+### 4.11 `ticket_no_counter` and `next_ticket_no()` (decided 2026-11-18, ADR-0027)
 
 | Column | Type | Rule |
 | --- | --- | --- |
-| `year` | integer | primary key — one row per calendar year (server time) |
-| `next_value` | integer, not null | last allocated counter of that year |
+| `key` | text | primary key — one row, the constant `global` |
+| `next_value` | integer, not null | last allocated counter |
 
 `next_ticket_no()` is a `plpgsql` function that allocates through
-`INSERT … ON CONFLICT (year) DO UPDATE SET next_value = next_value + 1 RETURNING
-next_value` — one row lock per year, so concurrent reports never collide — and
-returns `ST-<year>-` plus `next_value` left-padded to four digits
-(`ST-2026-0001`). The number is a **readable key, not an invoice number**: a
-rolled back transaction may leave a gap and a number is never re-used. The column
-default keeps the rule inside the database, so no service has to remember it.
+`INSERT … ON CONFLICT (key) DO UPDATE SET next_value = next_value + 1 RETURNING
+next_value` — one row lock, so concurrent reports never collide — and returns
+`ST-` plus `next_value` left-padded to four digits (`ST-0001`). **The number
+carries no calendar year**: the customer sees it on the confirmation page and on
+the public status page, and a year prefix with a per-year counter would let a
+customer count the malfunctions of a year and count the reports between two of
+their own reports. One global counter row answers neither question. The number is
+still a **readable key, not an invoice number**: a rolled back transaction may
+leave a gap and a number is never re-used. The column default keeps the rule
+inside the database, so no service has to remember it.
+
+`tickets.ticket_no` stays unique and the old numbers stay readable: migration
+`0004_ticket_tables.sql` created `ticket_no_counters` with one row per calendar
+year and returned `ST-<year>-<counter>` (`ST-2026-0001`); migration
+`0048_ticket_no_counter_global.sql` replaced that table with the single-row
+`ticket_no_counter`, seeded it with the highest counter the instance had already
+allocated, redefined `next_ticket_no()` without the year and left every
+existing `ticket_no` untouched (ADR-0027). The shared contract `ticketNoSchema`
+accepts both shapes — `ST-\d{4,}` and the legacy `ST-\d{4}-\d{4,}` — so a
+bookmark, an old status page, an entry of the offline outbox and a `:ticketNo`
+path parameter of the API resolve unchanged.
 
 ### 4.12 Tables of later phases (named only)
 

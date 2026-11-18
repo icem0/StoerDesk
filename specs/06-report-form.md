@@ -10,7 +10,9 @@ because `PLAN.md` left them open: the `ticket_no` format is
 in the JSON body (§7.4), and `status_token` is generated **when the ticket is
 created**, not in WP-M2-06 (§7.3.4). §7.8 (the duplicate hint of WP-M2-08) was
 added on 2026-11-02: the **QR token of the object** is the capability of the
-public comment, not the `status_token` of a foreign ticket.
+public comment, not the `status_token` of a foreign ticket. §7.3.2 was
+re-decided on 2026-11-18 with ADR-0027: the number of the confirmation page
+carries no calendar year any more.
 
 > Tables and columns of this chapter are specified in
 > [`02-data-model.md`](02-data-model.md) §4.8–§4.11; this slice specifies the
@@ -81,10 +83,13 @@ envelope as the rest of the API, `PLAN.md` §3).
 - `422 contact_required` — neither `contact.phone` nor `contact.email`
 - `422 system_not_found` — `systemId` is not a system of the resolved object
 
-`ticketNo` is generated in the database (§4.11): `ST-<year>-<counter>`, counter
-padded to four digits, one counter row per year, allocated by an
+`ticketNo` is generated in the database (§4.11, ADR-0027): `ST-<counter>`, the
+counter padded to at least four digits, one global counter row allocated by an
 `INSERT … ON CONFLICT DO UPDATE` — concurrency-safe, gaps allowed after a rolled
-back transaction because the number is not a legal invoice number.
+back transaction because the number is not a legal invoice number. The number
+carries **no calendar year**, because the customer sees it here and must not be
+able to count the malfunctions of a year (numbers allocated before ADR-0027 keep
+their `ST-<year>-<counter>` shape and stay valid).
 
 ### 7.3.3 Idempotency
 

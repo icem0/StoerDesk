@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The inbox names the setup page while web push is not set up (**WP-M14-128**,
+  out of band in phase 14): the inbox page reads the VAPID key and the device
+  count through `GET /v1/notifications/accounts/webpush` under the shared
+  `['webpush-config']` query (react-query dedupes it with the card of
+  WP-M14-126a — no second request). Without a key or without a device one hint
+  line appears below the messages with a link to `/settings/notifications`, the
+  entry of the settings menu that owns the card; a registered browser shows
+  nothing extra and a pending or failed config query never blocks the inbox.
+- The inbox names the setup page of the web push (**WP-M14-128**, out of band in
+  phase 14): while this browser is not registered for web push, the inbox shows
+  one hint line with the link to `/settings/notifications`, the entry of the
+  settings menu that owns the web-push card. The state comes from the shared
+  `['webpush-config']` query, so no second request leaves the browser, and a
+  pending or failed query shows nothing.
 - The own ntfy topic test gets a route of the own user (**WP-M14-121**, out of band
   in phase 14): `POST /api/v1/notifications/accounts/ntfy/test` sits behind the
   session alone, so a user without `notification.write` can test the own
