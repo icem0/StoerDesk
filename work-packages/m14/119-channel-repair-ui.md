@@ -1,7 +1,7 @@
 # WP-M14-119: channel repair UI — test with direct feedback and lastError visible
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 25k tokens

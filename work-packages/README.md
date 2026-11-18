@@ -1416,7 +1416,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-120c | the API of the notification inbox (out of band)                       | done    | yes     |
 | WP-M14-120d | the inbox page (out of band)                                          | done    | yes     |
 | WP-M14-120e | the bell in the shell with the unread count (out of band)             | done    | yes     |
-| WP-M14-121 | the test of the own topic needs a route of the own user (out of band) | planned | yes |
+| WP-M14-121 | the test of the own topic needs a route of the own user (out of band) | done | yes     |
 | WP-M14-122 | the bell opens the messages of the inbox (out of band)              | done    | yes     |
 | WP-M14-123 | the ntfy setup guide names the topic-prefix ACL (out of band)       | done    | yes     |
 | WP-M14-124 | the web-push subscription endpoint (out of band)                    | done    | yes     |
@@ -1424,7 +1424,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-126a | the web-push card (out of band)                                     | done    | yes     |
 | WP-M14-126b | the web-push card on the settings page (out of band)                | done    | yes     |
 | WP-M14-127 | the bell opens the inbox page in one click (out of band)              | done    | yes     |
-| WP-M14-128 | the inbox names the setup page when web push is not set up (out of band) | planned | yes     |
+| WP-M14-128 | the inbox names the setup page when web push is not set up (out of band) | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

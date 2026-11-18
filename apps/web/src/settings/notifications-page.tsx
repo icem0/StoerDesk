@@ -255,10 +255,10 @@ const testReason = (code: string): string => {
 
   const ntfyTest = useMutation({
     mutationFn: () =>
-      apiFetch<ChannelTestResponse>('/v1/admin/channels/ntfy/test', {
+      apiFetch<ChannelTestResponse>('/v1/notifications/accounts/ntfy/test', {
         method: 'POST',
         headers: jsonHeaders,
-        body: JSON.stringify({ topic: ntfySubscription.data?.topic ?? '' }),
+        body: JSON.stringify({}),
       }),
   })
 

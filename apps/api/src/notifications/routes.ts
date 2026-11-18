@@ -811,6 +811,63 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
       },
     )
 
+    /**
+     * `POST /api/v1/notifications/accounts/ntfy/test` (§11.11, §11.12, WP-M14-121):
+     * the test of the **own** topic of the session user. The administration route
+     * `POST /api/v1/admin/channels/ntfy/test` needs `notification.write`, so the
+     * button on the settings page of a user without that permission answered `403`.
+     * This route stays behind the session alone. The target is the stored topic of
+     * the user — never a topic of the request body: a client-supplied target would
+     * let anyone publish to the topic of another user. A user without an ntfy
+     * account answers `delivered: false` with `account_not_linked` and sends
+     * nothing; a failing adapter stays the regular answer `delivered: false` with
+     * the machine code of the adapter (the ntfy access token of the row reaches the
+     * send in the `Authorization` header only, ADR-0022, WP-M14-51).
+     */
+    app.post(
+      '/api/v1/notifications/accounts/ntfy/test',
+      { preHandler: requireSession },
+      async (request) => {
+        const userId = request.user?.id ?? ''
+        const [stored] = await database
+          .select({ externalId: notificationAccounts.externalId })
+          .from(notificationAccounts)
+          .where(
+            and(
+              eq(notificationAccounts.userId, userId),
+              eq(notificationAccounts.channel, 'ntfy'),
+            ),
+          )
+          .limit(1)
+
+        const topic = stored === undefined || stored.externalId === '' ? '' : stored.externalId
+
+        if (topic === '') {
+          return channelTestResponseSchema.parse({
+            delivered: false,
+            code: 'account_not_linked',
+          })
+        }
+
+        const effective =
+          channels === undefined
+            ? await effectiveNtfyConfig(database, env, { requireVerified: false })
+            : undefined
+
+        const testRegistry =
+          effective === undefined
+            ? registry
+            : configuredChannels({
+                ...env,
+                NTFY_URL: effective?.url ?? '',
+                NTFY_TOPIC: effective?.topic ?? '',
+                NTFY_TOKEN: effective?.token ?? env.NTFY_TOKEN,
+              })
+
+        return channelTestResponseSchema.parse(await sendTestMessage(testRegistry, 'ntfy', topic))
+      },
+    )
+
     app.get('/api/v1/notifications/preferences', { preHandler: requireSession }, async (request) =>
       notificationPreferencesListResponseSchema.parse({
         preferences: await readPreferences(database, request.user?.id ?? ''),

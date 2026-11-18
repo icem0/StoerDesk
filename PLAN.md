@@ -2362,13 +2362,29 @@ work. The overview and the selection read the same `['webpush-config']` query,
 and a QR opens the page on the phone. With WP-M14-124 and WP-M14-125 the web-push
 channel is usable end to end.
 
+**The own ntfy topic test gets a route of the own user (WP-M14-121, out of band in
+phase 14).** The test button of the own topic on `/settings/notifications` called
+the administration route `POST /v1/admin/channels/ntfy/test`, which needs
+`notification.write` — a user without that permission got `403` and could never
+test the own subscription. `POST /api/v1/notifications/accounts/ntfy/test` now
+sits behind the session alone: the target is the **stored** topic of the session
+user, never a topic of the request body (a client-supplied target would publish to
+the topic of another user), a user without an ntfy account answers
+`delivered: false` with `account_not_linked` and sends nothing, and a failing
+adapter stays the regular answer with its machine code. The settings page calls
+the new route. `WP-M14-118` and `WP-M14-119` were already implemented, their
+`status:` lines still read `planned` — both are set to `done`. The inbox still
+does not name the web-push setup page — that is **WP-M14-128**, the next open
+item of the phase.
+
 **One click on the bell opens the inbox page (WP-M14-127, out of band in phase
 14).** The office asked for the page itself: the bell of the header is one link
 to `/notifications`, the dropdown panel of WP-M14-122 with its message query,
 its mark-read mutation and its close-on-escape rule is gone. The unread badge of
 WP-M14-120e and its refetch on window focus stay, and marking a message as read
 belongs to the inbox page of WP-M14-120d. The setup link of the inbox page
-follows in **WP-M14-128**; WP-M14-121 stays open in numeric order.
+follows in **WP-M14-128**; WP-M14-121 is closed by the package above, so the open
+item of the phase is **WP-M14-128**.
 
 
 

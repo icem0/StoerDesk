@@ -570,6 +570,189 @@ describe('the ntfy subscription of the user (WP-M14-13, stored topic of WP-M14-7
   })
 })
 
+describe(
+  'the own ntfy topic test behind the session alone (WP-M14-121, §11.11, §11.12)',
+  () => {
+    it('sends the test of the own topic without any permission key', async () => {
+      const seenTopics: string[] = []
+      const ntfyMock: NotificationChannel = {
+        name: 'ntfy',
+        send: async (_message, options) => {
+          seenTopics.push(options?.topic ?? '')
+        },
+      }
+      const app = await buildApp({
+        held: [],
+        store: [
+          row({
+            kind: 'ntfy',
+            config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+            secret: '',
+          }),
+        ],
+        channels: [ntfyMock],
+        accounts: [
+          {
+            userId: 'admin-1',
+            channel: 'ntfy',
+            externalId: 'stoerdesk-stored',
+            label: '',
+            secret: '',
+            updatedAt: new Date(),
+          },
+        ],
+      })
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/accounts/ntfy/test',
+        headers: { 'x-test-user': 'admin-1' },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ delivered: true })
+      expect(seenTopics).toEqual(['stoerdesk-stored'])
+    })
+
+    it('ignores a topic of the request body and keeps the stored one', async () => {
+      const seenTopics: string[] = []
+      const ntfyMock: NotificationChannel = {
+        name: 'ntfy',
+        send: async (_message, options) => {
+          seenTopics.push(options?.topic ?? '')
+        },
+      }
+      const app = await buildApp({
+        held: [],
+        store: [
+          row({
+            kind: 'ntfy',
+            config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+            secret: '',
+          }),
+        ],
+        channels: [ntfyMock],
+        accounts: [
+          {
+            userId: 'admin-1',
+            channel: 'ntfy',
+            externalId: 'stoerdesk-stored',
+            label: '',
+            secret: '',
+            updatedAt: new Date(),
+          },
+        ],
+      })
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/accounts/ntfy/test',
+        headers: { 'x-test-user': 'admin-1', 'content-type': 'application/json' },
+        body: JSON.stringify({ topic: 'stoerdesk-other' }),
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ delivered: true })
+      expect(seenTopics).toEqual(['stoerdesk-stored'])
+    })
+
+    it('answers a failing adapter with delivered false and its code', async () => {
+      const ntfyMock: NotificationChannel = {
+        name: 'ntfy',
+        send: async () => {
+          const error = new Error('adapter down') as Error & { code: string }
+          error.code = 'http_401'
+          throw error
+        },
+      }
+      const app = await buildApp({
+        held: [],
+        store: [
+          row({
+            kind: 'ntfy',
+            config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+            secret: '',
+          }),
+        ],
+        channels: [ntfyMock],
+        accounts: [
+          {
+            userId: 'admin-1',
+            channel: 'ntfy',
+            externalId: 'stoerdesk-stored',
+            label: '',
+            secret: '',
+            updatedAt: new Date(),
+          },
+        ],
+      })
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/accounts/ntfy/test',
+        headers: { 'x-test-user': 'admin-1' },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ delivered: false, code: 'http_401' })
+      expect(response.body).not.toContain('adapter down')
+    })
+
+    it('writes nothing for a user without an ntfy account', async () => {
+      const seenTopics: string[] = []
+      const ntfyMock: NotificationChannel = {
+        name: 'ntfy',
+        send: async (_message, options) => {
+          seenTopics.push(options?.topic ?? '')
+        },
+      }
+      const app = await buildApp({
+        held: [],
+        store: [
+          row({
+            kind: 'ntfy',
+            config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+            secret: '',
+          }),
+        ],
+        channels: [ntfyMock],
+        accounts: [],
+      })
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/accounts/ntfy/test',
+        headers: { 'x-test-user': 'admin-1' },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ delivered: false, code: 'account_not_linked' })
+      expect(seenTopics).toEqual([])
+    })
+
+    it('answers 401 without a session', async () => {
+      const app = await buildApp({
+        held: [],
+        store: [
+          row({
+            kind: 'ntfy',
+            config: { url: 'https://ntfy.sh', topic: 'stoerdesk' },
+            secret: '',
+          }),
+        ],
+      })
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/accounts/ntfy/test',
+      })
+
+      expect(response.statusCode).toBe(401)
+      expect(response.json<{ code: string }>().code).toBe('session_invalid')
+    })
+  },
+)
+
 describe('the channel status of the outbox (WP-M14-19, §11.8)', () => {
   it('answers 401 without a session and 403 without notification.read', async () => {
     const anonymous = await (

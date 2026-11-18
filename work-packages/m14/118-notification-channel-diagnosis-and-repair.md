@@ -1,7 +1,7 @@
 # WP-M14-118: notification channel diagnosis and repair
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 25k tokens

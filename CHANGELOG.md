@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The own ntfy topic test gets a route of the own user (**WP-M14-121**, out of band
+  in phase 14): `POST /api/v1/notifications/accounts/ntfy/test` sits behind the
+  session alone, so a user without `notification.write` can test the own
+  subscription. The stored topic of the session user is the only target — a topic
+  of the request body is never read — a user without an ntfy account answers
+  `account_not_linked` and sends nothing, and the settings button calls the new
+  route. The stale `status:` lines of `WP-M14-118` and `WP-M14-119` are set to
+  `done`.
 - One click on the bell opens the inbox page (WP-M14-127, out of band in phase
   14): the bell is one link to `/notifications`, the dropdown panel of
   WP-M14-122 with its own message query, its mark-read mutation and its

@@ -327,7 +327,7 @@ describe('NotificationsPage', () => {
   })
 
   it('tests the own ntfy topic and shows the result', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
 
       if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
@@ -343,9 +343,7 @@ describe('NotificationsPage', () => {
         })
       }
 
-      if (url.endsWith('/v1/admin/channels/ntfy/test')) {
-        const body = JSON.parse(String(init?.body ?? '{}')) as { topic?: string }
-        expect(body.topic).toBe('stoerdesk-admin')
+      if (url.endsWith('/v1/notifications/accounts/ntfy/test')) {
         return Response.json({ delivered: true })
       }
 
@@ -361,10 +359,10 @@ describe('NotificationsPage', () => {
     expect(await screen.findByText('Testnachricht an eigenes Thema gesendet.'))
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/admin/channels/ntfy/test',
+      '/api/v1/notifications/accounts/ntfy/test',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ topic: 'stoerdesk-admin' }),
+        body: '{}',
       }),
     )
   })
@@ -386,7 +384,7 @@ describe('NotificationsPage', () => {
         })
       }
 
-      if (url.endsWith('/v1/admin/channels/ntfy/test')) {
+      if (url.endsWith('/v1/notifications/accounts/ntfy/test')) {
         return Response.json({ delivered: false, code: 'http_401' })
       }
 

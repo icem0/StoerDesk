@@ -477,6 +477,23 @@ dependency, no compose or workflow change), K re-checked: no log line is touched
 the new tests carry the mock topic `stoerdesk-stored` and `example.org`-style mock
 users only and the entropy assertion is a format match. No new finding.
 
+own-topic-test pass: 2026-11-18, diff `ce79f4a..` (WP-M14-121 — `apps/api/src/notifications/routes.ts`,
+`apps/web/src/settings/notifications-page.tsx` and the two touched tests) — areas A
+and B re-checked in full (the route table gains `POST
+/api/v1/notifications/accounts/ntfy/test`, guarded by the session only — no
+permission key, no bearer scope, no public capability, so the guard answers
+`401 session_invalid` before anything is read; the user id comes from the session
+and enters the select only as a drizzle-bound `eq` pair; the settings page keeps
+`RequireSession`), C re-checked for the touched route: the new select reads only
+the `externalId` column of `notificationAccounts` under the session-bound
+predicate, the request body is never parsed at all — a client-supplied topic can
+never enter the send — and the topic reaches the adapter only through the
+existing `sendTestMessage` options on the stored topic, D re-checked for the
+settings page (the button sends an empty JSON body, the topic of the card never
+travels in a request again), K re-checked: no log line touched, the new tests
+carry the mock topics `stoerdesk-stored`/`stoerdesk-other` and mock users only.
+No new finding.
+
 1. `git ls-files` — the full file list; every area is worked along this list.
 2. Area A Authentication: login/logout, cookie & session token handling, token
    entropy + storage, expiry, logout destroy, test/probe routes.
@@ -566,9 +583,9 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 
 | Area | Status | checked-at |
 | --- | --- | --- |
-| A Authentication | complete (status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-administration pass: the four new admin routes stay session-guarded as well; transition-ui pass: no session handling changed, the client route `/admin/transitions` only wraps the page in the existing `RequireSession`; ntfy-subscription pass: no session handling changed, the existing ntfy subscription route stays session-guarded only and takes the user id from the session) | 8bab9fd |
-| B Autorisation | complete (status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-administration pass: the route table gains the four `/api/v1/admin/transitions[/:id]` rows with the same guards; transition-ui pass: the API route table is unchanged, the client route table gains `/admin/transitions` behind `RequireSession`; ntfy-subscription pass: no new route, the subscription route stays session-guarded only with no permission key and no bearer scope) | 8bab9fd |
-| C Injection | complete (re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`; transition-ui pass: the page binds both status keys to `ticketStatusKeySchema` and the event key to `ticketTransitionEventKeySchema` before it sends the body and never assembles SQL, a path or a URL from client input; ntfy-topic pass: `newNtfyTopic()` is 128 random hex bits from `node:crypto`, `storeAccount` and `ntfyRecipients` keep every value drizzle-bound, no interpolation and no new select; ntfy-subscription pass: the new select reads the `external_id` column only under the session-bound `eq` pair, the provisioning write is the drizzle-bound upsert of `storeAccount`, the GET carries no body and no parameter at all) | 8bab9fd |
+| A Authentication | complete (own-topic-test pass: the new own-topic route stays session-guarded only and the user id comes from the session; status-admin pass: the four new admin routes stay session-guarded, no session handling changed; transition-administration pass: the four new admin routes stay session-guarded as well; transition-ui pass: no session handling changed, the client route `/admin/transitions` only wraps the page in the existing `RequireSession`; ntfy-subscription pass: no session handling changed, the existing ntfy subscription route stays session-guarded only and takes the user id from the session) | ce79f4a |
+| B Autorisation | complete (own-topic-test pass: the route table gains `POST /api/v1/notifications/accounts/ntfy/test` behind the session only, no permission key and no bearer scope; status-admin pass: the route table gains `GET`, `POST`, `PATCH`, `DELETE /api/v1/admin/statuses[/:key]` with the `settings.read`/`settings.write` preHandler, no public capability and no bearer scope; transition-administration pass: the route table gains the four `/api/v1/admin/transitions[/:id]` rows with the same guards; transition-ui pass: the API route table is unchanged, the client route table gains `/admin/transitions` behind `RequireSession`; ntfy-subscription pass: no new route, the subscription route stays session-guarded only with no permission key and no bearer scope) | ce79f4a |
+| C Injection | complete (own-topic-test pass: the new select reads the `externalId` column under the session-bound `eq` pair and the request body is never parsed; re-checked for the changed files at the transition-administration pass: the two bodies pass through the local request schemas, the `:id` path parameter is format-checked by `z.uuid()` before any select and otherwise enters only a drizzle-bound `eq`, every insert/update/delete and both existence probes bind their values through drizzle, an unknown status key answers before any write and a duplicate `(from_status, event_key)` maps SQLSTATE 23505 to `409 transition_duplicate`; transition-ui pass: the page binds both status keys to `ticketStatusKeySchema` and the event key to `ticketTransitionEventKeySchema` before it sends the body and never assembles SQL, a path or a URL from client input; ntfy-topic pass: `newNtfyTopic()` is 128 random hex bits from `node:crypto`, `storeAccount` and `ntfyRecipients` keep every value drizzle-bound, no interpolation and no new select; ntfy-subscription pass: the new select reads the `external_id` column only under the session-bound `eq` pair, the provisioning write is the drizzle-bound upsert of `storeAccount`, the GET carries no body and no parameter at all) | ce79f4a |
 | D Frontend | complete (transition-ui pass: the page renders the row identity and the machine keys only, no token, secret, cookie or account value enters the DOM and the PWA stores nothing new) | 587f7ad |
 | E HTTP-Hardening | complete (outbound ntfy request carries a timeout, WP-M14-53) | c65ce2d |
 | F Secrets/Config | complete (no gh-secret CLI run — compose + workflows read; re-checked at the ntfy-timeout pass) | c65ce2d |
@@ -580,7 +597,7 @@ IDOR keys checked: `objectNo` (DB-bound), `ticketId`/`ticketNo` (DB-bound),
 `example.com` e-mail only; ntfy-topic pass: no log line touched, the specs carry mock topics
 only and the adapter keeps logging the topic of a send (deviation recorded in
 `.security/findings.md`); ntfy-subscription pass: no log line touched, the tests
-carry the mock topic `stoerdesk-stored` and format assertions only) | 8bab9fd |
+carry the mock topic `stoerdesk-stored` and format assertions only; own-topic-test pass: no log line touched, the tests carry the mock topics `stoerdesk-stored`/`stoerdesk-other` only) | ce79f4a |
 
 Missing scanners: none needed — the repo ships `npm audit` (used); no dedicated
 secret scanner is configured (covered by compose/workflow reads; a future

@@ -1,7 +1,7 @@
 # WP-M14-121: the test of the own topic needs a route of the own user
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -17,7 +17,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/notifications/routes.ts, apps/api/src/notifications/__tests__/messages-routes.integration.spec.ts
+- apps/api/src/notifications/routes.ts, apps/api/src/notifications/__tests__/routes.unit.spec.ts
 - apps/web/src/settings/notifications-page.tsx, apps/web/src/settings/__tests__/notifications-page.test.tsx
 
 interfaces:
@@ -34,7 +34,9 @@ interfaces:
    cannot test the own subscription — the button answers `403`.
 2. Add the route `POST /api/v1/notifications/accounts/ntfy/test` behind the
    session: it sends the test message to the stored topic of the user of the
-   session and answers `delivered` with the machine code of a failure.
+   session and answers `delivered` with the machine code of a failure. The
+   stored topic is the only target — a topic of the request body is never read.
+   A user without an ntfy account answers `account_not_linked` and sends nothing.
 3. The button of the own topic calls the new route.
 
 ## Non-goals
@@ -57,8 +59,13 @@ subscription.
 
 ## Handoff
 
-- Files changed: the routes, the settings page and their tests
-- Interfaces added: `POST /api/v1/notifications/accounts/ntfy/test`
-- Verified: `npm run check`, `npm run build`
-- Follow-up WP: none
+- Files changed: `apps/api/src/notifications/routes.ts`,
+  `apps/web/src/settings/notifications-page.tsx` and their two tests
+- Interfaces added: `POST /api/v1/notifications/accounts/ntfy/test` — the session
+  alone, the stored topic of the user as the only target, `account_not_linked`
+  for a user without an ntfy account
+- Verified: `npm run check` (exit 0 — typecheck, lint, the whole vitest suite, the
+  i18n check, the WP check and the 14 e2e specs), the new unit tests in
+  `apps/api/src/notifications/__tests__/routes.unit.spec.ts` and the page test
+- Follow-up WP: WP-M14-128 (the inbox names the setup page of the web push)
 - Open question: none
