@@ -379,6 +379,7 @@ describe('the action contract', () => {
 describe('the offer and assign actions', () => {
   const poolTarget = { kind: 'pool', id: '0f5b9a4c-6c1e-4a51-9c1b-2f9d3f7a4b21' }
   const groupTarget = { kind: 'group', id: '7c2b1d84-9a44-4e93-8b2a-1f6c5d0e9b33' }
+  const userTarget = { kind: 'user', id: '2d7c5e18-3b4a-4f62-8c9d-1e0a7b6c5d44' }
 
   it('carries the two new action types', () => {
     expect(ESCALATION_ACTION_TYPES).toContain('offer')
@@ -407,6 +408,33 @@ describe('the offer and assign actions', () => {
               key: 'assign_the_group',
               type: 'assign',
               target: groupTarget,
+              condition: { all: [] },
+            },
+          ],
+          active: true,
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts a single technician as the target of an assignment', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [
+        {
+          key: 'review',
+          stageKey: 'review',
+          reference: 'received_at',
+          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          percent: null,
+          condition: { all: [] },
+          actions: [
+            {
+              key: 'assign_the_technician',
+              type: 'assign',
+              target: userTarget,
               condition: { all: [] },
             },
           ],
@@ -458,6 +486,24 @@ describe('the notify action', () => {
 
       expect(result.success).toBe(true)
     }
+  })
+
+  it('accepts the assignees of the ticket as the target', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      rules: [ruleWith({ target: { kind: 'assigned' } })],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a target of the notification without a kind', () => {
+    expect(
+      escalationConfigSchema.safeParse({
+        stages: DEFAULT_WORKFLOW_ESCALATION_STAGES,
+        rules: [ruleWith({ target: { id: userTarget.id } })],
+      }).success,
+    ).toBe(false)
   })
 
   it('keeps the channel-only action and its priority valid', () => {

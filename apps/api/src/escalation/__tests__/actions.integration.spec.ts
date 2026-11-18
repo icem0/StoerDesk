@@ -286,5 +286,85 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(targeted[0]?.target).toMatchObject({ ntfyPriority: 5 })
       expect(messageOf((targeted[0]?.target ?? {}) as Record<string, unknown>).ntfyPriority).toBe(5)
     })
+
+    it('notifies the technician of the ticket with the target assigned', async () => {
+      const email = `assigned-${randomUUID().slice(0, 8)}@example.invalid`
+      const topic = `stoerdesk-${randomUUID().slice(0, 8)}`
+      const [user] = await db
+        .insert(users)
+        .values({ email, passwordHash: 'not-a-real-hash', givenName: 'Nils', familyName: 'Assigned' })
+        .returning({ id: users.id })
+
+      if (user === undefined) {
+        throw new Error('user insert failed')
+      }
+
+      await db.insert(notificationAccounts).values({
+        userId: user.id,
+        channel: 'ntfy',
+        externalId: topic,
+      })
+      await db.insert(notificationPreferences).values({
+        userId: user.id,
+        eventType: 'ticket.escalated',
+        channel: 'ntfy',
+      })
+
+      const ticket = await createTicket('critical')
+
+      await db.insert(schema.ticketAssignees).values({ ticketId: ticket.id, userId: user.id })
+
+      await db.insert(schema.escalationActions).values({
+        key: 'assigned_notify',
+        ruleKey: seededRuleKey('review'),
+        type: 'notify',
+        config: { target: { kind: 'assigned' } },
+        condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+        position: 5,
+        active: true,
+      })
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+      const targeted = rows.filter(
+        (row) => (row.target as Record<string, unknown>).ntfyTopic === topic,
+      )
+
+      expect(targeted).toHaveLength(1)
+      expect(targeted[0]?.channel).toBe('ntfy')
+      expect(targeted[0]?.eventType).toBe('ticket.escalated')
+    })
+
+    it('reaches nobody with the target assigned when the ticket has no technician', async () => {
+      // Only the action with the target `assigned` may write a row with a
+      // topic here: the fixed recipient of the other action would otherwise
+      // hide the answer.
+      await db
+        .update(schema.escalationActions)
+        .set({ active: false })
+        .where(eq(schema.escalationActions.key, 'user_notify'))
+
+      const ticket = await createTicket('critical')
+
+      await db.insert(schema.escalationActions).values({
+        key: 'assigned_notify_empty',
+        ruleKey: seededRuleKey('review'),
+        type: 'notify',
+        config: { target: { kind: 'assigned' } },
+        condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+        position: 6,
+        active: true,
+      })
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+      const targeted = rows.filter(
+        (row) => typeof (row.target as Record<string, unknown>).ntfyTopic === 'string',
+      )
+
+      expect(targeted).toHaveLength(0)
+    })
   },
 )

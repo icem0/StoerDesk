@@ -340,6 +340,77 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect((rows[0]?.target as { ntfyTopic: string }).ntfyTopic).toBe('topic-0')
     })
 
+    it('assigns the ticket to one named technician', async () => {
+      const technicianId = technicianIds[0] ?? ''
+
+      await action(
+        'assign',
+        { kind: 'user', id: technicianId },
+        'assign_user',
+        seededRuleKey('new'),
+      )
+
+      const ticket = await createTicket('WORK_ORDER_CREATED')
+
+      const result = await fire(ticket.id, seededRuleKey('new'), 'new', 'e6')
+
+      expect(result.assigned).toBe(1)
+
+      const [moved] = await db
+        .select({ status: tickets.status })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(moved?.status).toBe('ASSIGNED')
+
+      const assignees = await db
+        .select({ userId: ticketAssignees.userId })
+        .from(ticketAssignees)
+        .where(eq(ticketAssignees.ticketId, ticket.id))
+
+      expect(assignees.map((row) => row.userId)).toStrictEqual([technicianId])
+
+      const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
+
+      const note = events.find((event) => event.type === 'escalation_note')
+
+      expect(note?.payload).toMatchObject({
+        target: { kind: 'user', id: technicianId },
+      })
+    })
+
+    it('offers the ticket to one named technician and names him', async () => {
+      const technicianId = technicianIds[1] ?? ''
+
+      await action(
+        'offer',
+        { kind: 'user', id: technicianId },
+        'offer_user',
+        seededRuleKey('acknowledgement'),
+      )
+
+      const ticket = await createTicket('WORK_ORDER_CREATED')
+
+      const result = await fire(ticket.id, seededRuleKey('acknowledgement'), 'acknowledgement', 'e7')
+
+      expect(result.offered).toBe(1)
+
+      const [moved] = await db
+        .select({
+          status: tickets.status,
+          offeredToUserId: tickets.offeredToUserId,
+          offerEscalatedAt: tickets.offerEscalatedAt,
+        })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(moved?.status).toBe('OFFERED')
+      expect(moved?.offeredToUserId).toBe(technicianId)
+      expect(moved?.offerEscalatedAt).toBeNull()
+    })
+
     it('changes nothing when the ticket has no step for the distribution', async () => {
       await action(
         'assign',

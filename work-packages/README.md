@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i) and the admin view of the inbox (WP-M14-141 … WP-M14-141c) and the internal comment that never reaches the customer (WP-M14-149 … WP-M14-149g) | 120  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i), the admin view of the inbox (WP-M14-141 … WP-M14-141c), the assignment that names a technician (WP-M14-150 … WP-M14-150d) and the internal comment that never reaches the customer (WP-M14-149 … WP-M14-149g) and the readiness calendar that names the technician of every shift (WP-M14-151) | 127  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -970,13 +970,13 @@ internen kommentar einfügen! dieser darf niemals gedruckt oder per E-Mail an
 den Kunden gehen … es soll einen eigenen berechtigungs key dafür geben sodass
 man ihn an mitarbeiter vergeben kann … die kommentare sollen in einer
 besonderen hintergrundfarbe ein textfeld erhalten in einem dunklen rot diese
-farbe soll man aber unter darstellung konfigurieren können“.
+farbe soll man aber unter darstellung konfigurieren können".
 
 ADR-0034 decides the shape: the internal comment is its own event type of the
 trail (`internal_comment`, no migration — the type column carries no check
 constraint), the key `ticket.comment.internal` belongs to no default role and the
 administration grants it to a role or to a colleague, the guarantee „never
-printed, never sent“ is a rule of the prepared send view and not a rule the
+printed, never sent" is a rule of the prepared send view and not a rule the
 office has to remember, and the colour is a hex value of the instance under
 „Darstellung“ (the default is a dark red). The decision splits into
 WP-M14-149a (the key), WP-M14-149b (the API), WP-M14-149c (the send view),
@@ -1567,10 +1567,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-149f | the offline queue carries the internal comment (out of band) | planned | yes |
 | WP-M14-149g | the ticket view writes and shows the internal comment (out of band) | planned | yes |
 | WP-M14-150 | the assignment names a technician and the notification reaches him — ADR-0033, the spec and the split (out of band) | done | yes |
-| WP-M14-150a | the contracts of the new targets and their consumers (out of band) | planned | yes |
-| WP-M14-150b | the distribution names the technician (out of band) | planned | yes |
+| WP-M14-150a | the contracts of the new targets and their consumers (out of band) | done | yes |
+| WP-M14-150b | the distribution names the technician (out of band) | done | yes |
 | WP-M14-150c | the claim and the acceptance name the technician (out of band) | planned | yes |
 | WP-M14-150d | the administration names the technician and the assigned recipient (out of band) | planned | yes |
+
+| WP-M14-151 | the readiness calendar names the technician of every shift (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

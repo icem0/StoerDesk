@@ -352,6 +352,15 @@ Ticket coupling:
   shifts, iCal feed, confirm, decline, swap) is below it and an admin reaches
   the administration of the readiness from there. The dashboard shows no
   readiness any more (WP-M10-32).
+- The **technician travels with the shift** (ADR-0032, WP-M14-151): the
+  calendar range `GET /api/v1/oncall/shifts` answers `technician` — the display
+  data of `user_id` — next to every shift of the range, because the technician
+  of a shift need not be a member of its pool (`specs/04-oncall.md` §4a.2 names
+  the pool as the candidates of a swap, §4a.3 keeps `user_id` a foreign key to
+  `users`). The readiness calendar names the technician of the shift it received
+  and asks for the members of a pool no more, so every role that reads the
+  calendar sees who has the readiness when; a shift with a technician is never
+  called "nicht besetzt".
 - The **names** of the technicians in the readiness calendar are a right of
   their own: the permission `oncall.read_names` (WP-M14-131). A role without it
   reads the same calendar — the state and the pool of every shift — but the row
@@ -2917,7 +2926,7 @@ trail (`internal_comment` — the type column of `ticket_events` carries no chec
 constraint, so no migration is needed), the key `ticket.comment.internal`
 belongs to no default role and the administration grants it to a role or to a
 colleague (the rule of `notification.read_all`), the guarantee „never printed,
-never sent“ is a rule of the prepared send view and of the event type, the
+never sent" is a rule of the prepared send view and of the event type, the
 colour is a hex value of the instance under „Darstellung“ (the default is a
 dark red) and the write stays offline-capable — an internal comment is never
 queued as a normal comment, because a normal comment is printed. The chain is
@@ -2925,7 +2934,6 @@ split into **WP-M14-149a** (the key), **WP-M14-149b** (the API),
 **WP-M14-149c** (the prepared send view), **WP-M14-149d** (the settings),
 **WP-M14-149e** (the page of the Darstellung), **WP-M14-149f** (the offline
 queue) and **WP-M14-149g** (the ticket view).
-
 
 
 **The assignment names a technician and the notification reaches him (WP-M14-150,
@@ -2954,6 +2962,37 @@ checked. The dispatcher resolves the target `assigned` from the rows of
 their own ntfy topic, a ticket without an assignee reaches nobody. The action
 editor of the administration carries the new kinds, so a configuration with
 them survives a save (ADR-0033).
+
+**The distribution names the technician (WP-M14-150b).** The target kind
+`user` of an `offer` and an `assign` action names one row of `users`: the
+technician of the installation, if the account is active. A deactivated account
+is nobody, so the distribution changes nothing — the rule of an empty pool.
+The assignment writes the row of `ticket_assignees` and notifies the
+technician on his own ntfy topic; the offer names him in `offered_to_user_id`,
+so the ticket waits for him. The test of the distribution proves both cases,
+the test of the actions proves the target `assigned` of a notification, and the
+contract test proves the kinds of the targets (ADR-0033).
+
+**The readiness calendar names the technician of every shift (WP-M14-151, out of
+band in phase 14).** The office reported that the readiness calendar answered
+„nicht besetzt" behind shifts that clearly had a technician and that an admin
+could not read who has the readiness when. The calendar had resolved the name of
+a technician over the members of the pool — but the technician of a shift need
+not be a member of its pool: `specs/04-oncall.md` §4a.2 makes the pool the
+candidates of a swap, §4a.3 keeps `user_id` a foreign key to `users` and the
+administration grid offers every active user for a grouped pool. **ADR-0032**
+decides that the technician travels with the shift: the calendar range
+`GET /api/v1/oncall/shifts` answers `technician` — the display data of `user_id`
+in the shape of a pool member — next to every shift of the range, still guarded
+by `oncall.read` like the members route of a pool, and the readiness calendar
+names the technician of the shift it received and asks for the members of a pool
+no more. The gate to the names stays in the web app (`oncall.read_names`,
+WP-M14-131/132): a role without it reads „besetzt" instead of the name. A shift
+with a technician is never called „nicht besetzt" — without a name in the answer
+the row reads „besetzt". The swap rules, the iCal feed and the administration
+grid keep their answers.
+
+
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

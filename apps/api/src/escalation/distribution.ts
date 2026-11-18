@@ -1,8 +1,8 @@
 import type { EscalationTarget } from '@stoerdesk/shared'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
-import { objects, ticketAssignees, ticketEvents, tickets } from '../db/schema'
+import { objects, ticketAssignees, ticketEvents, tickets, users } from '../db/schema'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { ntfyTopicsOfUsers } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
@@ -23,7 +23,8 @@ import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
  *
  * The assignment records the technicians in `ticket_assignees`
  * (`specs/02-data-model.md` §4.13); the offer names the on-call person of a
- * pool in `offered_to_user_id` and sets the offer timeout (WP-M14-82b). Every
+ * pool in `offered_to_user_id` and sets the offer timeout (WP-M14-82b), a user
+ * target names that technician (ADR-0033). Every
  * distribution writes one append-only `escalation_note` event and queues one
  * ntfy outbox row per technician on their own topic (WP-M14-82b).
  */
@@ -44,12 +45,23 @@ export type DistributionResult = {
 
 /**
  * The technicians of a target: the members of a readiness pool or of a user
- * group (§7.14). An unknown target has no technician.
+ * group, or one technician of the installation — a user target is that user,
+ * if the account is active (§7.14, ADR-0033). A deactivated account is nobody,
+ * so a target without a technician changes nothing.
  */
 export async function resolveTargetTechnicians(
   database: Db,
   target: EscalationTarget,
 ): Promise<string[]> {
+  if (target.kind === 'user') {
+    const rows = await database
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, target.id), eq(users.active, true)))
+
+    return rows.map((row) => row.id)
+  }
+
   return target.kind === 'pool'
     ? resolvePoolMemberIds(database, target.id)
     : resolveGroupMemberIds(database, target.id)
@@ -59,13 +71,18 @@ export async function resolveTargetTechnicians(
  * The offer names the on-call person of a pool and sets the offer timeout
  * (§7.14, WP-M14-82b): the payload for the `offered` step of the transition
  * table. A group target and a pool without a covering shift offer without a
- * person and without a timeout — the whole group receives the offer.
+ * person and without a timeout — the whole group receives the offer. A user
+ * target names that technician (§7.14, ADR-0033).
  */
 async function offerPayload(
   database: Db,
   target: EscalationTarget,
   now: Date,
 ): Promise<Record<string, unknown>> {
+  if (target.kind === 'user') {
+    return { offeredToUserId: target.id }
+  }
+
   if (target.kind !== 'pool') {
     return {}
   }
