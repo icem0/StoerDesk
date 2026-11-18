@@ -1445,7 +1445,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-129c | a malformed number is still rejected at every entry point (out of band) | planned | yes     |
 | WP-M14-130 | the health of the notification channels — ADR-0028, the spec and the split (out of band) | planned | yes |
 | WP-M14-130a | the dead subscription is named and removed (out of band)         | done    | yes     |
-| WP-M14-130b | the outbox learns the instance row of the warning (out of band)   | planned | yes     |
+| WP-M14-130b | the outbox learns the instance row of the warning (out of band)   | done    | yes     |
 | WP-M14-130c | the daily check warns over another channel (out of band)          | planned | yes     |
 | WP-M14-131 | the permission key of the names of the readiness (out of band)    | planned | yes     |
 | WP-M14-132 | the readiness calendar names the technicians only with the permission (out of band) | done | yes |

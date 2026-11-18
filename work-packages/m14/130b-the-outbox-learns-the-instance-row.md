@@ -1,7 +1,7 @@
 # WP-M14-130b: the outbox table learns the instance row of the warning
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -69,6 +69,6 @@ Expected: all green; the migration applies and the check knows the warning row.
 
 - Files changed: the migration, the schema and the journal
 - Interfaces added: the event type `channel.health_warning`
-- Verified: `npm run check`, `npm run build`
+- Verified: `npm run check` (exit 0), the migration spec of the instance row
 - Follow-up WP: WP-M14-130c (the daily check and the warning)
 - Open question: none

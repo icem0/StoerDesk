@@ -724,6 +724,19 @@ export const NOTIFICATION_EVENT_TYPES = [
   'oncall.unconfirmed_reminder',
 ] as const
 
+/**
+ * The event types of the instance rows — a user never selects a channel for
+ * them. The warning of a broken channel (`specs/10-notifications.md` §11.15,
+ * ADR-0028) belongs to no ticket and to no shift.
+ */
+export const NOTIFICATION_INSTANCE_EVENT_TYPES = ['channel.health_warning'] as const
+
+/** Every event type an `outbox` row may carry: the seven of §11.4 and the instance ones. */
+export const OUTBOX_EVENT_TYPES = [
+  ...NOTIFICATION_EVENT_TYPES,
+  ...NOTIFICATION_INSTANCE_EVENT_TYPES,
+] as const
+
 export const notificationChannels = pgTable(
   'notification_channels',
   {
@@ -938,11 +951,11 @@ export const outbox = pgTable(
     check('outbox_state_check', sql`${table.state} IN (${checkList(OUTBOX_STATUSES)})`),
     check(
       'outbox_event_type_check',
-      sql`${table.eventType} IN (${checkList(NOTIFICATION_EVENT_TYPES)})`,
+      sql`${table.eventType} IN (${checkList(OUTBOX_EVENT_TYPES)})`,
     ),
     check(
       'outbox_ticket_or_shift_check',
-      sql`(${table.ticketId} IS NOT NULL) <> (${table.shiftId} IS NOT NULL)`,
+      sql`(${table.ticketId} IS NOT NULL) <> (${table.shiftId} IS NOT NULL) OR (${table.eventType} = 'channel.health_warning' AND ${table.ticketId} IS NULL AND ${table.shiftId} IS NULL)`,
     ),
   ],
 )

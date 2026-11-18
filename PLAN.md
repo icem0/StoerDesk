@@ -2406,6 +2406,16 @@ error: the inbox never blocks on the state of the channel. The texts are
 `inbox.webpush.hint` and `inbox.webpush.setup` (de/en); the subscribe action
 stays the settings page of WP-M14-126a.
 
+**The outbox learns the instance row of the warning (WP-M14-130b, out of band in
+phase 14).** A warning of a broken channel belongs to no ticket and to no
+shift: it announces the state of a channel. Migration
+`0049_channel_health_warning.sql` adds the eighth type
+`channel.health_warning` to the check of the event type of the `outbox` table
+and widens the check of a ticket and a shift — a row of the warning type may
+carry neither, every other row keeps its rule of exactly one of the two. The
+seven event types a user selects channels for (§11.4) stay unchanged: the
+warning is never a selection of a user.
+
 **The dead subscription of the web push is named and removed (WP-M14-130a, out of
 band in phase 14).** The web push has no status query: the only signal is the
 answer of the push service to a real send. A `404` or a `410` means that the

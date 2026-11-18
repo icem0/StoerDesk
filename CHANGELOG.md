@@ -18,14 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
-- The dead subscription of the web push is named and removed (**WP-M14-130a**, out
-  of band in phase 14 — **ADR-0028**): a `404` or a `410` of the push service
-  means that the endpoint no longer exists. The adapter names such an endpoint as
-  dead, the send continues with the next device and the channel removes the row
-  of `push_subscriptions` after a send that reached a live device. Only when
-  every device of a send is dead the send fails with the code
-  `push_subscription_dead`, so the row of the outbox carries it as its
-  `lastError` and the chain falls back to the next channel.
+- The outbox learns the instance row of the channel health warning
+  (**WP-M14-130b**, out of band in phase 14 — **ADR-0028**): migration
+  `0049_channel_health_warning.sql` adds the event type
+  `channel.health_warning` to the check of the `outbox` table and lets a row
+  of that type carry neither a ticket nor a shift — the warning announces the
+  state of a channel, not the state of a ticket. Every other row keeps its rule
+  of exactly one of the two, and the seven event types a user selects channels
+  for stay unchanged.
 - The dead subscription of the web push is named and removed (**WP-M14-130a**, out
   of band in phase 14 — **ADR-0028**): a `404` or a `410` of the push service
   means that the endpoint no longer exists. The adapter names such an endpoint as
