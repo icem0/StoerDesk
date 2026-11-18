@@ -1,7 +1,7 @@
 # WP-M14-141c: the filter under `/notifications`
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens

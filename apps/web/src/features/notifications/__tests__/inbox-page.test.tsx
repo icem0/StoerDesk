@@ -1,11 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
 
 import { i18n } from '../../../i18n'
 import { InboxPage } from '../inbox-page'
+
+const ownUserId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+const otherUserId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 
 const message = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -16,6 +19,7 @@ const message = {
   body: 'normal · Rathaus',
   createdAt: '2026-11-17T09:30:00.000Z',
   readAt: null,
+  recipient: null,
 }
 
 /**
@@ -23,10 +27,14 @@ const message = {
  * WP-M14-124 and marks a message as read. The fake answers the routes of
  * WP-M14-120c and WP-M14-124 and records the read receipt, so the list, the
  * states, the setup link and the receipt run in memory.
+ *
+ * The permissions of `/v1/me` decide whether the filter of WP-M14-141c is
+ * shown: without `notification.read_all` the page stays the personal inbox.
  */
 function stub(
   messages: unknown[] = [message],
   webPushConfig = { publicKey: '', subscribed: false, subscriptions: 0 },
+  options: { permissions?: string[]; recipients?: unknown[] } = {},
 ) {
   const readReceipts: string[] = []
 
@@ -34,6 +42,21 @@ function stub(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
+
+      if (url.includes('/v1/me')) {
+        return Response.json({
+          user: {
+            id: ownUserId,
+            email: 'own@example.org',
+            givenName: 'Ola',
+            familyName: 'Owner',
+            locale: 'de',
+            theme: 'auto',
+            roles: [],
+            permissions: options.permissions ?? [],
+          },
+        })
+      }
 
       if (url.includes('/read') && init?.method === 'PATCH') {
         readReceipts.push(url)
@@ -48,7 +71,7 @@ function stub(
         return Response.json(webPushConfig)
       }
 
-      return Response.json({ messages })
+      return Response.json({ messages, recipients: options.recipients ?? [] })
     }),
   )
 
@@ -142,11 +165,11 @@ describe('InboxPage', () => {
 
     renderPage()
 
-    const link = await screen.findByRole('link', { name: 'Open setup page' })
+    const link = await screen.findByRole('link', { name: 'Einrichtungsseite öffnen' })
 
     expect(link.getAttribute('href')).toBe('/settings/notifications')
     expect(
-      screen.getByText('Push notifications are not enabled in this browser yet.'),
+      screen.getByText('Für diesen Browser sind noch keine Push-Benachrichtigungen eingerichtet.'),
     ).toBeTruthy()
   })
 
@@ -155,6 +178,105 @@ describe('InboxPage', () => {
 
     renderPage()
 
-    expect(screen.queryByRole('link', { name: 'Open setup page' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeNull()
+  })
+
+  it('shows no filter without the permission (WP-M14-141c)', async () => {
+    stub([message])
+
+    renderPage()
+
+    expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
+    expect(screen.queryByText('Empfänger')).toBeNull()
+    expect(screen.queryByText('Alle Kanäle')).toBeNull()
+  })
+
+  it('shows the filter with the permission and names the addressee of a row', async () => {
+    stub(
+      [
+        {
+          ...message,
+          recipient: { userId: otherUserId, name: 'Otto Other' },
+        },
+      ],
+      { publicKey: '', subscribed: false, subscriptions: 0 },
+      {
+        permissions: ['notification.read_all'],
+        recipients: [{ userId: otherUserId, name: 'Otto Other', count: 3 }],
+      },
+    )
+
+    renderPage()
+
+    expect(await screen.findByText('Empfänger')).toBeTruthy()
+    expect(screen.getByText('Alle Empfänger')).toBeTruthy()
+    expect(screen.getByText('Alle Kanäle')).toBeTruthy()
+    expect(screen.getByText('Alle Ereignisse')).toBeTruthy()
+    expect(screen.getByText('Alle Zustände')).toBeTruthy()
+    expect(screen.getByText('Nur ungelesene')).toBeTruthy()
+    expect(screen.getAllByText(/Otto Other/).length).toBeGreaterThan(0)
+  })
+
+  it('sends the chosen filter to the API (WP-M14-141c)', async () => {
+    const urls: string[] = []
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      urls.push(url)
+
+      if (url.includes('/v1/me')) {
+        return Response.json({
+          user: {
+            id: ownUserId,
+            email: 'own@example.org',
+            givenName: 'Ola',
+            familyName: 'Owner',
+            locale: 'de',
+            theme: 'auto',
+            roles: [],
+            permissions: ['notification.read_all'],
+          },
+        })
+      }
+
+      return Response.json({ messages: [], recipients: [] })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const select = await screen.findByLabelText('Kanal')
+
+    fireEvent.change(select, { target: { value: 'ntfy' } })
+
+    await waitFor(() => {
+      expect(
+        urls.some((url) => url.includes('/v1/notifications/messages') && url.includes('channel=ntfy')),
+      ).toBe(true)
+    })
+  })
+
+  it('takes no read receipt for the message of another user (WP-M14-141c)', async () => {
+    const readReceipts = stub(
+      [
+        {
+          ...message,
+          recipient: { userId: otherUserId, name: 'Otto Other' },
+        },
+      ],
+      { publicKey: '', subscribed: false, subscriptions: 0 },
+      { permissions: ['notification.read_all'] },
+    )
+
+    renderPage()
+
+    const entry = await screen.findByText('ST-2026-0001')
+
+    fireEvent.click(entry)
+
+    await waitFor(() => {
+      expect(readReceipts).toHaveLength(0)
+    })
   })
 })

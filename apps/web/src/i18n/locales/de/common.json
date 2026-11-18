@@ -272,6 +272,19 @@
     },
     "unreadCount": "{{count}} ungelesen",
     "showAll": "Alle Nachrichten anzeigen",
+    "recipient": "Empfänger",
+    "filter": {
+      "recipient": "Empfänger",
+      "recipientAll": "Alle Empfänger",
+      "channel": "Kanal",
+      "channelAll": "Alle Kanäle",
+      "event": "Ereignis",
+      "eventAll": "Alle Ereignisse",
+      "state": "Zustand",
+      "stateAll": "Alle Zustände",
+      "unreadOnly": "Nur ungelesene",
+      "reset": "Filter zurücksetzen"
+    },
     "webpush": {
       "hint": "Push notifications are not enabled in this browser yet.",
       "setup": "Open setup page"

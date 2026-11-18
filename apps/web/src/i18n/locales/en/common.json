@@ -272,6 +272,19 @@
     },
     "unreadCount": "{{count}} unread",
     "showAll": "Show all messages",
+    "recipient": "Recipient",
+    "filter": {
+      "recipient": "Recipient",
+      "recipientAll": "All recipients",
+      "channel": "Channel",
+      "channelAll": "All channels",
+      "event": "Event",
+      "eventAll": "All events",
+      "state": "State",
+      "stateAll": "All states",
+      "unreadOnly": "Unread only",
+      "reset": "Reset the filter"
+    },
     "webpush": {
       "hint": "Push notifications are not set up on this browser yet.",
       "setup": "Open the setup page"

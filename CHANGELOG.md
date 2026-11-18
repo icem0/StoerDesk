@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The inbox of the notifications carries the filter of the administration
+  (**WP-M14-141c**, out of band in phase 14): a role with the permission
+  `notification.read_all` sees above the list the addressee, the channel, the
+  event, the state of the delivery and the unread messages; every row names its
+  addressee. Without the permission the page stays the personal inbox of the
+  user — the own messages only.
 - The inbox of the notifications can be filtered for the administration
   (**WP-M14-141b**, out of band in phase 14): the route
   `GET /api/v1/notifications/messages` reads the filters of the addressee, the

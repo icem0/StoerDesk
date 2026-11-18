@@ -1520,7 +1520,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-141 | the admin sees which message arrived at which user — the spec and the split (out of band) | planned | yes |
 | WP-M14-141a | the permission key and the contracts of the filter (out of band) | done | yes |
 | WP-M14-141b | the API of the filtered inbox (out of band) | done | yes |
-| WP-M14-141c | the filter under `/notifications` (out of band) | planned | yes |
+| WP-M14-141c | the filter under `/notifications` (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

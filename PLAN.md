@@ -2694,6 +2694,17 @@ addressee of another user answers `403 forbidden`. An unknown value of a filter
 answers `400 invalid_request` with the field path. The read receipt and the
 unread count stay bound to the session user.
 
+**The filter under `/notifications` (WP-M14-141c, out of band in phase 14).**
+The page of the inbox reads the permission with `usePermission`: without
+`notification.read_all` the page stays exactly as it is — the own messages,
+the limit and the read receipt. With the permission the page adds the filter of
+§11.16 above the list: the addressee (the list of the addressees of the answer
+with the number of their messages), the channel, the event, the state of the
+delivery and the checkbox for the unread messages. The values live in the query
+of the URL, so a filtered view can be shared. Every row names its addressee,
+and the read receipt stays a right of the own messages: a row of another user
+is not clickable.
+
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
