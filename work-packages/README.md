@@ -1573,6 +1573,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-150d | the administration names the technician and the assigned recipient (out of band) | done | yes |
 
 | WP-M14-151 | the readiness calendar names the technician of every shift (out of band) | done | yes |
+| WP-M14-152 | the ticket history names the escalation and the notification — the spec and the split (out of band) | done | yes |
+| WP-M14-152a | the outbox event names its rule, its stage and its addressee (out of band) | planned | yes |
+| WP-M14-152b | the escalation names the target it was configured for (out of band) | planned | yes |
+| WP-M14-152c | the ticket history names stage, channel, recipient and target (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

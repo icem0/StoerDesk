@@ -210,6 +210,17 @@ The admin sees a failed channel in three places:
 - the ticket history carries the event `notification_failed` with the channel
   and the number of attempts.
 
+Both notification events name the configuration that queued the row next to the
+channel: the payload carries the key of the rule and the key of the stage of the
+escalation that produced the row (§7.5), the name of the addressee of a personal
+delivery (§11.3, §11.16 — given and family name, the e-mail only as the
+fallback) and the name of the target the action was configured for (§7.5, a
+readiness pool or a user). The ticket history renders these names, so the office
+sees where a message went and which escalation level sent it; without them a row
+of „Benachrichtigung gesendet“ names nobody and nothing (WP-M14-152). The names
+are display names of the installation — no topic, no token, no address and no
+contact value ever enters the payload.
+
 A warning that only lives in a list of a page is not a warning: the failing
 channels are shown in the settings menu of the administrator as well, until the
 channel works again.

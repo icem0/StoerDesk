@@ -3017,6 +3017,21 @@ with a technician is never called „nicht besetzt" — without a name in the an
 the row reads „besetzt". The swap rules, the iCal feed and the administration
 grid keep their answers.
 
+**The ticket history names the escalation and the notification (WP-M14-152, out
+of band in phase 14).** The office read three rows „Benachrichtigung gesendet /
+System" and one row „Eskaliert / System" and could answer neither where the
+message went nor which stage fired. The audit trail stays: the history **names**
+what happened. An `escalated` and an `escalation_note` event show the display
+name of their stage from the stage chain (`GET /api/v1/escalation-stages`, §7.9)
+— a raw stage key never enters the history. The firing of the first stage (§7.11)
+is the arrival of the ticket: its audit row and its actions stay, its history row
+is spared. The payload of `notification_sent` and `notification_failed` carries
+the rule and the stage that queued the row, the name of the addressee of a
+personal delivery and the name of the target the action was configured for
+(§11.8) — display names only, no topic, no token, no address. The chain is split
+into **WP-M14-152a** (the event of the outbox names rule, stage, recipient and
+target), **WP-M14-152b** (the escalation names the target of the action) and
+**WP-M14-152c** (the history renders stage, channel, recipient and target).
 
 
 ## 17. Work package rules for small models

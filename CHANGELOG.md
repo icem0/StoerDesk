@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ticket history names the escalation and the notification (**WP-M14-152**,
+  out of band in phase 14): an escalated ticket shows the **display name** of the
+  stage that fired — read from the stage chain of the administration — and the
+  entry of the first stage is spared, because the report entry already says that
+  the ticket arrived. A „Benachrichtigung gesendet“ row names the channel, the
+  addressee of the message and the target the escalation action was configured
+  for (the readiness pool or the user), next to the rule and the stage that
+  queued the row. No topic, token, address or contact value enters the payload.
+  The decision splits into WP-M14-152a, WP-M14-152b and WP-M14-152c.
 - The readiness calendar names the technician of every shift (**WP-M14-151**, out
   of band in phase 14): the calendar range `GET /api/v1/oncall/shifts` answers the
   display data of the technician of a shift next to the shift, and the readiness

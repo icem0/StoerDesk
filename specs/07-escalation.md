@@ -211,6 +211,14 @@ Every firing writes exactly one append-only `escalated` event with the payload
 The `comment` event of a `history` action carries the configured text; the
 `escalation_note` events of `status_change`, `offer` and `assign` stay separate.
 
+The ticket history renders the firing with the **display name** of its stage —
+the names the administration maintains for the stage (`escalation_stages.names`,
+read with `GET /api/v1/escalation-stages` of §7.9). A raw stage key never enters
+the history, and a stage that was removed shows as unknown. The firing of the
+**first stage** (§7.11) is the arrival of the ticket: its audit row and its
+actions stay, but the history shows no row for it — the report entry already
+says that the ticket arrived (WP-M14-152).
+
 ## 7.8 The job
 
 `apps/api/src/jobs/escalation.ts` keeps the queue `ticket-escalation` and the
