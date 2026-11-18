@@ -24,6 +24,10 @@ import {
   type UpdateChannelConfigurationRequest,
   updateChannelConfigurationRequestSchema,
   updateNotificationPreferencesRequestSchema,
+  webPushConfigResponseSchema,
+  webPushSubscriptionRequestSchema,
+  webPushSubscriptionResponseSchema,
+  webPushUnsubscribeRequestSchema,
 } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
 import type { preHandlerHookHandler } from 'fastify'
@@ -44,6 +48,12 @@ import {
   requestNtfyVerification,
 } from './verification'
 import { deleteAccount, storeAccount } from './accounts'
+import {
+  countWebPushSubscriptions,
+  deleteWebPushSubscription,
+  readWebPushPublicKey,
+  storeWebPushSubscription,
+} from './web-push-subscriptions'
 import { readPreferences, writePreferences } from './preferences'
 import {
   storeMatrixAccount,
@@ -654,6 +664,85 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
 
           throw error
         }
+      },
+    )
+
+    /**
+     * `GET /api/v1/notifications/accounts/webpush` (WP-M14-124): the VAPID
+     * public key of the instance and how many devices the signed-in user has
+     * registered. The endpoint is part of the request body of `POST`/`DELETE`
+     * only — never of this answer and never of a log line.
+     */
+    app.get(
+      '/api/v1/notifications/accounts/webpush',
+      { preHandler: requireSession },
+      async (request) => {
+        const userId = request.user?.id ?? ''
+        const [publicKey, subscriptions] = await Promise.all([
+          readWebPushPublicKey(database, env),
+          countWebPushSubscriptions(database, userId),
+        ])
+
+        return webPushConfigResponseSchema.parse({
+          publicKey,
+          subscribed: subscriptions > 0,
+          subscriptions,
+        })
+      },
+    )
+
+    /**
+     * `POST /api/v1/notifications/accounts/webpush` (WP-M14-124): registers the
+     * browser subscription of the signed-in user. The endpoint is the device
+     * identity, so a repeat subscription replaces the old row instead of adding
+     * a second copy for the same notification.
+     */
+    app.post(
+      '/api/v1/notifications/accounts/webpush',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = webPushSubscriptionRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply
+            .code(422)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        await storeWebPushSubscription(database, request.user?.id ?? '', {
+          endpoint: body.data.endpoint,
+          p256dh: body.data.keys.p256dh,
+          auth: body.data.keys.auth,
+        })
+
+        return webPushSubscriptionResponseSchema.parse({ subscribed: true })
+      },
+    )
+
+    /**
+     * `DELETE /api/v1/notifications/accounts/webpush` (WP-M14-124): removes one
+     * device of the signed-in user. The answer is idempotent `204` — the browser
+     * has already dropped its local subscription when it calls this route.
+     */
+    app.delete(
+      '/api/v1/notifications/accounts/webpush',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = webPushUnsubscribeRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply
+            .code(422)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        await deleteWebPushSubscription(
+          database,
+          request.user?.id ?? '',
+          body.data.endpoint,
+        )
+
+        return reply.code(204).send()
       },
     )
 

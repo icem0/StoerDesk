@@ -1419,6 +1419,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-121 | the test of the own topic needs a route of the own user (out of band) | planned | yes |
 | WP-M14-122 | the bell opens the messages of the inbox (out of band)              | done    | yes     |
 | WP-M14-123 | the ntfy setup guide names the topic-prefix ACL (out of band)       | done    | yes     |
+| WP-M14-124 | the web-push subscription endpoint (out of band)                    | done    | yes     |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

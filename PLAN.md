@@ -2331,6 +2331,17 @@ read-write and the recipient (`everyone` or a dedicated user) read-only on
 missing read entry lets the delivery succeed while the recipient's personal
 link answers `403`. No product code, route, schema or UI changes.
 
+**The web-push subscription endpoint stores the browser of a user (WP-M14-124,
+out of band in phase 14).** `push_subscriptions` existed since migration `0019`,
+but no route wrote it, so the adapter always saw an empty list. The three
+session-guarded routes under `/api/v1/notifications/accounts/webpush` now answer
+the VAPID public key and the device count of the signed-in user (`GET`), store
+`{ endpoint, keys }` (`POST`) and remove one endpoint idempotently (`DELETE`).
+The endpoint is the device identity: a repeated subscription replaces the old
+row and a second user on a shared device takes it over, so the drain never sends
+the same notification twice to one browser. No migration was needed. The service
+worker and the settings UI follow in **WP-M14-125**.
+
 
 
 ## 17. Work package rules for small models

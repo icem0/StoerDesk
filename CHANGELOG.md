@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The web-push subscription endpoint stores the browser of a user (WP-M14-124,
+  out of band in phase 14): `GET /api/v1/notifications/accounts/webpush` answers
+  the VAPID public key and the device count of the signed-in user,
+  `POST` stores `{ endpoint, keys }` and `DELETE` removes one endpoint
+  idempotently. The endpoint is the device identity, so a repeated subscription
+  replaces the old row and the drain never sends the same notification twice to
+  one browser. No migration: `push_subscriptions` already existed.
 - The ntfy setup guide names the topic-prefix ACL (WP-M14-123, out of band in
   phase 14): the personal topics are `stoerdesk-<random>`, so the user of
   `NTFY_TOKEN` needs read-write on `stoerdesk-*` **and** the recipient

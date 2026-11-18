@@ -128,6 +128,38 @@ export const storeNotificationAccountRequestSchema = z.object({
 })
 
 /**
+ * The web-push device of a user (`specs/10-notifications.md` §11.1, §11.3,
+ * WP-M14-124). A browser subscription is a capability URL plus two keys the
+ * push service hands out; the payload itself stays encrypted (RFC 8291), so
+ * the server never stores a secret of the user. The endpoint is never echoed
+ * by an answer and never logged.
+ */
+export const webPushSubscriptionRequestSchema = z.object({
+  endpoint: z.url().max(2000),
+  keys: z.object({
+    p256dh: z.string().min(1).max(500),
+    auth: z.string().min(1).max(500),
+  }),
+})
+
+export const webPushUnsubscribeRequestSchema = z.object({
+  endpoint: z.url().max(2000),
+})
+
+/** The own state of the channel: the VAPID public key and the device count. */
+export const webPushConfigResponseSchema = z.object({
+  /** URL-safe base64 VAPID public key; empty while the channel is not configured. */
+  publicKey: z.string(),
+  /** How many devices the signed-in user has registered on this server. */
+  subscribed: z.boolean(),
+  subscriptions: z.number().int().nonnegative(),
+})
+
+export const webPushSubscriptionResponseSchema = z.object({
+  subscribed: z.literal(true),
+})
+
+/**
  * The event types a user selects channels for (`specs/10-notifications.md`
  * §11.4, WP-M14-16, ADR-0021): the four ticket events and the three readiness
  * events. Migration `0039` of WP-M14-27 widens the check of
@@ -232,6 +264,10 @@ export type ConfirmChannelVerificationResponse = z.infer<
 export type NotificationAccount = z.infer<typeof notificationAccountSchema>
 export type NotificationAccountListResponse = z.infer<typeof notificationAccountListResponseSchema>
 export type StoreNotificationAccountRequest = z.infer<typeof storeNotificationAccountRequestSchema>
+export type WebPushSubscriptionRequest = z.infer<typeof webPushSubscriptionRequestSchema>
+export type WebPushUnsubscribeRequest = z.infer<typeof webPushUnsubscribeRequestSchema>
+export type WebPushConfigResponse = z.infer<typeof webPushConfigResponseSchema>
+export type WebPushSubscriptionResponse = z.infer<typeof webPushSubscriptionResponseSchema>
 export type NotificationPreferenceEntry = z.infer<typeof notificationPreferenceSchema>
 export type NotificationPreferencesListResponse = z.infer<
   typeof notificationPreferencesListResponseSchema
