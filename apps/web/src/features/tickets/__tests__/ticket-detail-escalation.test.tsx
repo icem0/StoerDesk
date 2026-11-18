@@ -19,7 +19,7 @@ function stages(key: string, names: Record<string, string>, events: string[]) {
   return [{ key, names, events }]
 }
 
-function fixture(status: string, reachable: unknown[]) {
+function fixture(status: string, reachable: unknown[], extraEvents: unknown[] = []) {
   return {
     ticket: {
       id: '11111111-1111-4111-8111-111111111111',
@@ -62,6 +62,7 @@ function fixture(status: string, reachable: unknown[]) {
         },
         createdAt: '2026-11-10T09:00:00.000Z',
       },
+      ...extraEvents,
     ],
     photos: [],
     timeline: {
@@ -86,6 +87,7 @@ function renderPage(
   status: string,
   reachable: unknown[],
   writeError?: { status: number; body: unknown },
+  extraEvents: unknown[] = [],
 ): {
   writes: string[]
   bodies: Record<string, unknown>[]
@@ -106,6 +108,21 @@ function renderPage(
       return Response.json({ templates: [] })
     }
 
+    // The stage chain of the installation (§7.9, WP-M14-152c): the history names
+    // a firing with the display name of its stage and spares the first stage.
+    if (path.includes('/v1/escalation-stages')) {
+      return Response.json({
+        stages: [
+          { key: 'new', names: { de: 'Neu', en: 'New' }, predecessor: null },
+          {
+            key: 'review',
+            names: { de: 'Prüfung', en: 'Review' },
+            predecessor: 'new',
+          },
+        ],
+      })
+    }
+
     if (path.includes(`/v1/tickets/${TICKET_NO}/`)) {
       const tail = path.split(`/v1/tickets/${TICKET_NO}/`)[1]
 
@@ -119,7 +136,7 @@ function renderPage(
       return Response.json({ ok: true })
     }
 
-    return Response.json(fixture(status, reachable))
+    return Response.json(fixture(status, reachable, extraEvents))
   })
 
   vi.stubGlobal('fetch', fetchMock)
@@ -217,6 +234,86 @@ describe('TicketDetailPage stage selection', () => {
     const history = screen.getByTestId('ticket-history').textContent ?? ''
     expect(history).toContain('Manuell eskaliert')
     expect(history).toContain('Eskalationsstufe: Gruppe')
+  })
+
+  it('names the stage of a fired rule with the name of the stage and spares the first stage', async () => {
+    renderPage(
+      'IN_REVIEW',
+      stages('work_order', { de: 'Auftrag angelegt', en: 'Work order created' },
+        ['work_order_set']),
+      undefined,
+      [
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          type: 'escalated',
+          actorKind: 'system',
+          actorName: null,
+          payload: {
+            rule: 'new#1',
+            stage: 'new',
+            thresholdAt: '2026-11-10T08:15:00.000Z',
+            deadlineAt: '2026-11-12T19:00:00.000Z',
+          },
+          createdAt: '2026-11-10T08:15:00.000Z',
+        },
+        {
+          id: '55555555-5555-5555-8555-555555555555',
+          type: 'escalated',
+          actorKind: 'system',
+          actorName: null,
+          payload: {
+            rule: 'review#1',
+            stage: 'review',
+            thresholdAt: '2026-11-10T09:00:00.000Z',
+            deadlineAt: '2026-11-12T19:00:00.000Z',
+          },
+          createdAt: '2026-11-10T09:00:00.000Z',
+        },
+      ],
+    )
+
+    await waitFor(() => expect(screen.getByTestId('ticket-history')).toBeTruthy())
+    const history = screen.getByTestId('ticket-history').textContent ?? ''
+
+    expect(history).toContain('Eskaliert')
+    expect(history).toContain('Eskalationsstufe: Prüfung')
+    expect(history.includes('Eskalationsstufe: Neu')).toBe(false)
+    expect(history.includes('Eskalationsstufe: new')).toBe(false)
+    expect(history.includes('Eskalationsstufe: review')).toBe(false)
+  })
+
+  it('names the channel, the recipient and the configured target of a notification', async () => {
+    renderPage(
+      'IN_REVIEW',
+      stages('work_order', { de: 'Auftrag angelegt', en: 'Work order created' },
+        ['work_order_set']),
+      undefined,
+      [
+        {
+          id: '66666666-6666-6666-8666-666666666666',
+          type: 'notification_sent',
+          actorKind: 'system',
+          actorName: null,
+          payload: {
+            channel: 'ntfy',
+            ticketNo: TICKET_NO,
+            attempts: 1,
+            rule: 'review#1',
+            stage: 'review',
+            target: 'SiTec',
+            recipient: 'Erik Escalation',
+          },
+          createdAt: '2026-11-10T09:01:00.000Z',
+        },
+      ],
+    )
+
+    await waitFor(() => expect(screen.getByTestId('ticket-history')).toBeTruthy())
+    const history = screen.getByTestId('ticket-history').textContent ?? ''
+
+    expect(history).toContain('Benachrichtigung gesendet')
+    expect(history).toContain('ntfy · Empfäng: Erik Escalation · Target: SiTec')
+    expect(history).toContain('Eskalationsstufe: Prüfung')
   })
 })
 

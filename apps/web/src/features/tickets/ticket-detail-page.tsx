@@ -201,6 +201,21 @@ export function TicketDetailPage() {
     retry: false,
   })
 
+  /**
+   * The whole stage chain of the installation (`GET /api/v1/escalation-stages`,
+   * §7.9): the ticket history names the stage of a firing with the display name
+   * the administration maintains and spares the firing of the first stage — the
+   * arrival of the ticket (§7.11, WP-M14-152c).
+   */
+  const stageChain = useQuery({
+    queryKey: ['escalation', 'stages'],
+    queryFn: () =>
+      apiFetch<{
+        stages: { key: string; names: Record<string, string>; predecessor: string | null }[]
+      }>('/v1/escalation-stages'),
+    retry: false,
+  })
+
   const internalCommentColor = display.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR
 
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
@@ -409,6 +424,65 @@ export function TicketDetailPage() {
   const availableStages = ticketQuery.data?.availableStages ?? []
   const stageName = (stage: { names: Record<string, string> }): string =>
     stage.names[locale] ?? stage.names.en ?? stage.names.de ?? ''
+
+  const chain = stageChain.isSuccess ? (stageChain.data.stages ?? []) : []
+  const chainName = (key: string): string => {
+    const stage = chain.find((entry) => entry.key === key)
+
+    return stage === undefined
+      ? t('detail.field.unknown')
+      : stage.names[locale] ?? stage.names.en ?? stage.names.de ?? t('detail.field.unknown')
+  }
+  const firstStageKey = chain.find((entry) => entry.predecessor === null)?.key ?? null
+
+  /** The stage key an event payload names, `null` when it carries no stage. */
+  const eventStageKey = (payload: Record<string, unknown>): string | null =>
+    typeof payload.stageKey === 'string'
+      ? payload.stageKey
+      : typeof payload.stage === 'string'
+        ? payload.stage
+        : null
+
+  /**
+   * What the escalation configured for a notification row (§11.8, WP-M14-152a,
+   * WP-M14-152b): the channel, the addressee of a personal message and the
+   * target of the action. The names are display data of the installation — no
+   * topic, no token and no address ever arrives in the payload.
+   */
+  const notificationDetails = (payload: Record<string, unknown>): string | null => {
+    const parts: string[] = []
+
+    if (typeof payload.channel === 'string') {
+      parts.push(t(`detail.notification.channels.${payload.channel}`, {
+        defaultValue: payload.channel,
+      }))
+    }
+
+    if (typeof payload.recipient === 'string') {
+      parts.push(t('detail.notification.recipient', { name: payload.recipient }))
+    }
+
+    if (typeof payload.target === 'string') {
+      parts.push(t('detail.notification.target', { name: payload.target }))
+    }
+
+    return parts.length === 0 ? null : parts.join(' · ')
+  }
+
+  /**
+   * The firing of the first stage is the arrival of the ticket (§7.11): the audit
+   * row and the actions of the rule stay in the database, the history shows no
+   * row for it — the report entry already says that the ticket arrived
+   * (WP-M14-152c).
+   */
+  const historyEvents = events.filter(
+    (event) =>
+      !(
+        event.type === 'escalated' &&
+        firstStageKey !== null &&
+        eventStageKey(event.payload) === firstStageKey
+      ),
+  )
 
   /**
    * The technicians the escalation assigned to this ticket (§7.14, ADR-0026,
@@ -1509,7 +1583,7 @@ export function TicketDetailPage() {
                   </div>
                 </div>
               ) : null}
-              {events.map((event) => (
+              {historyEvents.map((event) => (
               <div key={event.id} className="p-3 flex gap-3">
                 <div className="w-36 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-mono text-slate-500">
@@ -1530,27 +1604,30 @@ export function TicketDetailPage() {
                         : t(`actorKind.${event.actorKind}`)}
                   </div>
                   {(() => {
-                    const stageKey =
-                      typeof event.payload.stageKey === 'string'
-                        ? event.payload.stageKey
-                        : typeof event.payload.stage === 'string'
-                          ? event.payload.stage
-                          : null
+                    const stageKey = eventStageKey(event.payload)
                     const stage =
                       stageKey === null
                         ? null
                         : typeof event.payload.stageName === 'string'
                           ? event.payload.stageName
-                          : stageKey
+                          : chainName(stageKey)
                     const text =
                       typeof event.payload.text === 'string'
                         ? event.payload.text
                         : typeof event.payload.reason === 'string'
                           ? event.payload.reason
                           : null
-                    if (text === null || text.trim() === '') {
+                    const details =
+                      event.type === 'notification_sent' ||
+                      event.type === 'notification_failed'
+                        ? notificationDetails(event.payload)
+                        : null
+                    const hasText = text !== null && text.trim() !== ''
+
+                    if (!hasText && stage === null && details === null) {
                       return null
                     }
+
                     return (
                       <>
                         {stage !== null && (
@@ -1558,25 +1635,30 @@ export function TicketDetailPage() {
                             {t('detail.escalation.historyStage', { stage })}
                           </p>
                         )}
-                        <p
-                          className={
-                            event.type === 'internal_comment'
-                              ? `mt-2 whitespace-pre-wrap rounded-lg border-l-2 px-3 py-2 text-sm ${textOnColor(internalCommentColor)}`
-                              : event.type === 'comment' || event.type === 'escalation_set'
-                                ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
-                                : 'mt-1 text-xs text-slate-400'
-                          }
-                          style={
-                            event.type === 'internal_comment'
-                              ? {
-                                  backgroundColor: internalCommentColor,
-                                  borderLeftColor: internalCommentColor,
-                                }
-                              : undefined
-                          }
-                        >
-                          {text}
-                        </p>
+                        {details !== null && (
+                          <p className="mt-1 text-xs text-slate-400">{details}</p>
+                        )}
+                        {hasText && (
+                          <p
+                            className={
+                              event.type === 'internal_comment'
+                                ? `mt-2 whitespace-pre-wrap rounded-lg border-l-2 px-3 py-2 text-sm ${textOnColor(internalCommentColor)}`
+                                : event.type === 'comment' || event.type === 'escalation_set'
+                                  ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
+                                  : 'mt-1 text-xs text-slate-400'
+                            }
+                            style={
+                              event.type === 'internal_comment'
+                                ? {
+                                    backgroundColor: internalCommentColor,
+                                    borderLeftColor: internalCommentColor,
+                                  }
+                                : undefined
+                            }
+                          >
+                            {text}
+                          </p>
+                        )}
                       </>
                     )
                   })()}

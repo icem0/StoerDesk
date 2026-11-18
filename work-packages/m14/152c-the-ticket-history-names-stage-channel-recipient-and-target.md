@@ -1,7 +1,7 @@
 # WP-M14-152c: the ticket history names stage, channel, recipient and target
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -70,8 +70,13 @@ suppressed row of the first stage and the named notification recipient.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/features/tickets/ticket-detail-page.tsx` (the
+  stage chain, the named history rows and the suppressed row of the first stage),
+  `apps/web/src/i18n/locales/{de,en}/ticket.json`, the ticket detail test,
+  `work-packages/README.md`, this document
+- Interfaces added: `detail.notification.channels.<kind>`, `detail.notification
+  .recipient`, `detail.notification.target`; the stage chain of the history
+- Verified: `npm run typecheck -w @stoerdesk/web`, `npm run lint` (0 errors),
+  `npm run i18n:check` and the web suite green (393 tests)
 - Follow-up WP: none
 - Open question: none

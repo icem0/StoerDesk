@@ -464,6 +464,19 @@
       "placeholder": "Comment or a note for the team …",
       "historyStage": "Escalation stage: {{stage}}"
     },
+    "notification": {
+      "channels": {
+        "signal": "Signal",
+        "matrix": "Matrix",
+        "ntfy": "ntfy",
+        "email": "E-Mail",
+        "telegram": "Telegram",
+        "webpush": "Web Push",
+        "whatsapp": "WhatsApp"
+      },
+      "recipient": "Addressee: {{name}}",
+      "target": "Configured target: {{name}}"
+    },
     "comment": {
       "submit": "Save comment",
       "internalLabel": "Internal comment",
