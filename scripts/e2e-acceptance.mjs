@@ -1037,7 +1037,7 @@ async function item5(shared) {
 
   // office path: the escalation section offers the acknowledged milestone
   await gotoStable(page, `${webBase}/tickets/${ticketNo}`)
-  await page.locator('#ticket-escalation-stage').selectOption('acknowledged')
+  await page.locator('[data-testid="ticket-stage-acknowledged"]').click()
 
   // §16.3 open point (acknowledge rule on the office path): the panel refuses an
   // acknowledge without content — the result is the required field, the note is

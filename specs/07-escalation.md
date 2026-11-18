@@ -242,11 +242,12 @@ paths.
 
 ## 7.10 The ticket view
 
-The ticket detail carries one control for the stages: a selection of the stages
-the ticket can still reach. Choosing a stage performs the workflow transition of
-that milestone (with its own form, e.g. the AA/SA number of the work order) and
-marks the stage as reached. The separate buttons of the workflow steps are gone —
-the selection replaces them. The actions that are no milestone (decline, claim,
+The ticket detail carries the stages the ticket can still reach as buttons next
+to each other: every reachable milestone stands there as a button, so the office
+reaches it without opening a selection. A click performs the workflow transition
+of that milestone (with its own form, e.g. the AA/SA number of the work order)
+and marks the stage as reached. The form of the milestone stands below the
+buttons, not above them. The actions that are no milestone (decline, claim,
 e-mail, cancel, delete) stay buttons.
 
 The server answers the reachable stages with the ticket (`availableStages`); the

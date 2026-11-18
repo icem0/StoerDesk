@@ -26,10 +26,12 @@ import { TicketTimeline } from './ticket-timeline'
  * - Object row: object name + object number side by side, labels above.
  * - Three fields side by side: Erfasser, Meldender, Quelle with labels above.
  * - Description, photos, history follow below.
- * - The escalation section carries the selection of the stages the ticket can
- *   still reach: choosing a stage runs the workflow transition of that milestone
- *   with its own form (WP-M13-09). The actions that are no milestone (decline,
- *   claim, cancel, delete) stay buttons; the comment goes to the comment route.
+ * - The escalation section carries the stages the ticket can still reach as
+ *   buttons next to each other (WP-M14-153): the selection was a pulldown, which
+ *   a touch screen cannot use well. A click runs the workflow transition of that
+ *   milestone with its own form, which opens below the buttons (WP-M13-09). The
+ *   actions that are no milestone (decline, claim, cancel, delete) stay buttons;
+ *   the comment goes to the comment route.
  * - The top-right hamburger menu is gone (WP-M12-06).
  * - The way back to the list is gone for good (WP-M12-09).
  */
@@ -497,6 +499,24 @@ export function TicketDetailPage() {
    * send view and the cancel button live in the header (WP-M12-09, WP-M14-22).
    */
   const status = ticket.status
+
+  /**
+   * The milestones the ticket can still reach, one button each (WP-M14-153):
+   * a selection is hard to use on a touch screen, so the reachable steps stand
+   * next to each other. The wording is the wording of the former selection: the
+   * name of the milestone, or the name of the step when one milestone is
+   * reached by several steps.
+   */
+  const stageButtons = availableStages.flatMap((stage) =>
+    stage.events.map((event) => ({
+      key: `${stage.key}:${event}`,
+      event,
+      label:
+        stage.events.length === 1 || ACTION_LABELS[event] === undefined
+          ? stageName(stage)
+          : t(ACTION_LABELS[event]),
+    })),
+  )
   const req = (name: string) => (fields[name] ?? '').trim()
 
   async function submitComment() {
@@ -1424,6 +1444,27 @@ export function TicketDetailPage() {
         </div>
 
         <div className="flex flex-col gap-3 border-b border-slate-700/70 px-4 py-3">
+          {status !== 'CLOSED' && status !== 'CANCELLED' && stageButtons.length > 0 && (
+            <div>
+              <p className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                {t('detail.escalation.stageLabel')}
+              </p>
+              <div className="flex flex-wrap gap-2" data-testid="ticket-escalation-stages">
+                {stageButtons.map((button) => (
+                  <button
+                    key={button.key}
+                    data-testid={`ticket-stage-${button.event}`}
+                    className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                    onClick={() => void handleOption(button.event)}
+                    type="button"
+                  >
+                    {button.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
             {menuEntries.map((entry) => (
               <button
@@ -1446,48 +1487,9 @@ export function TicketDetailPage() {
 
         {status !== 'CLOSED' && status !== 'CANCELLED' && (
           <div className="p-4">
-            <label
-              htmlFor="ticket-escalation-stage"
-              className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500"
-            >
-              {t('detail.escalation.stageLabel')}
-            </label>
-            <select
-              id="ticket-escalation-stage"
-              data-testid="ticket-escalation-stage"
-              className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-950/40 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
-              value=""
-              onChange={(event) => {
-                const event_ = event.target.value
-
-                if (event_ === '') {
-                  return
-                }
-
-                setSelectedAction(event_)
-              }}
-            >
-              <option value="">{t('detail.escalation.chooseStage')}</option>
-              {availableStages.map((stage) =>
-                stage.events.length === 1 ? (
-                  <option key={stage.key} value={stage.events[0]}>
-                    {stageName(stage)}
-                  </option>
-                ) : (
-                  <optgroup key={stage.key} label={stageName(stage)}>
-                    {stage.events.map((event_) => (
-                      <option key={event_} value={event_}>
-                        {t(ACTION_LABELS[event_] ?? 'detail.action.assign')}
-                      </option>
-                    ))}
-                  </optgroup>
-                ),
-              )}
-            </select>
-
             {mayWriteInternal ? (
               <>
-                <label className="mt-3 flex items-start gap-2 text-xs text-slate-400">
+                <label className="flex items-start gap-2 text-xs text-slate-400">
                   <input
                     type="checkbox"
                     name="internalComment"

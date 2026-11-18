@@ -200,18 +200,18 @@ function history(page: Page) {
 }
 
 /**
- * The milestones of the workflow are reached through the stage selection of the
- * detail page (`WP-M13-09`, `specs/07-escalation.md` §7.10): choosing the stage
- * of the next milestone shows its "Bestätigen"/"Abbrechen" pair inline below
- * the selection, and confirming performs the transition. The select carries the
- * event of the milestone as its option value.
+ * The milestones of the workflow are reached through the stage buttons of the
+ * detail page (`WP-M14-153`, `specs/07-escalation.md` §7.10): the reachable
+ * milestones stand next to each other as buttons, a click shows the
+ * "Bestätigen"/"Abbrechen" pair inline below the buttons, and confirming
+ * performs the transition. The button of a milestone carries its event.
  */
 async function performStage(
   page: Page,
   event: string,
   confirmLabel: string,
 ): Promise<void> {
-  await page.getByTestId('ticket-escalation-stage').selectOption(event)
+  await page.getByTestId(`ticket-stage-${event}`).click()
   await page.getByRole('button', { name: confirmLabel }).click()
 }
 
@@ -261,7 +261,7 @@ for (const language of ['de', 'en'] as const) {
     // entry already says that the ticket arrived (§7.11, WP-M14-152c).
     await expect(page.getByText(texts.event.escalated, { exact: false })).toHaveCount(0)
 
-    // 1. Review: NEW → IN_REVIEW (stage selection, no body).
+    // 1. Review: NEW → IN_REVIEW (stage button, no body).
     await performStage(page, 'review_started', texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'IN_REVIEW'))
     await expect(history(page).getByText(texts.event.review_started)).toBeVisible()
@@ -271,18 +271,18 @@ for (const language of ['de', 'en'] as const) {
     // contract of WP-M14-42, WP-M14-76). The step runs through the UI, because
     // the office enters the work order there — an API call would prove nothing
     // about the path the office takes.
-    await page.getByTestId('ticket-escalation-stage').selectOption('work_order_set')
+    await page.getByTestId('ticket-stage-work_order_set').click()
     await page.locator('input[name="workOrderText"]').fill('AA 4711')
     await page.getByRole('button', { name: texts.confirm }).click()
     await expect(statusBadge(page)).toHaveText(statusText(language, 'WORK_ORDER_CREATED'))
     await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
-    // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (stage selection, no body).
+    // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (stage button, no body).
     await performStage(page, 'assigned', texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ASSIGNED'))
     await expect(history(page).getByText(texts.event.assigned)).toBeVisible()
 
-    // 4. Accept: ASSIGNED → ACCEPTED (stage selection, no body).
+    // 4. Accept: ASSIGNED → ACCEPTED (stage button, no body).
     await performStage(page, 'accepted', texts.confirm)
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ACCEPTED'))
     await expect(history(page).getByText(texts.event.accepted)).toBeVisible()

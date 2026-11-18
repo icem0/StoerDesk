@@ -3091,6 +3091,18 @@ into **WP-M14-152a** (the event of the outbox names rule, stage, recipient and
 target), **WP-M14-152b** (the escalation names the target of the action) and
 **WP-M14-152c** (the history renders stage, channel, recipient and target).
 
+**The milestones of the ticket view are buttons (WP-M14-153, out of band in
+phase 14).** The office reported that the „Workflow Stufen" of the ticket detail
+was a pulldown menu: on a touch screen the milestone lies one step away and is
+hidden behind the menu, and the confirmation of a milestone (the number of the
+work order, the result of the acknowledge) appeared **above** the control that
+opened it. The reachable milestones are buttons now: every stage the ticket can
+still reach (`availableStages`, §7.10) stands next to the others, and the form
+of the milestone stands **below** the buttons. The wording stays the wording of
+the former selection — the name of the milestone, or the name of the step when
+one milestone is reached by several steps — so no new text is needed; ADR-0017
+names the new shape of the ticket view.
+
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

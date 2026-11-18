@@ -49,8 +49,8 @@ condition applies.
    two deadline rules stay global.
 3. **The manual catalogue, the `escalation_set` event and the manual escalation
    route are removed.** The workflow records who reached which milestone; the
-   ticket view selects a stage and performs the transition of that milestone
-   instead of writing a note.
+   ticket view reaches a stage with a button and performs the transition of that
+   milestone instead of writing a note.
 4. **The configuration is relational and in the database**: `escalation_stages`,
    `escalation_rules`, `escalation_actions` and `escalation_firings`. The rules
    are not code any more, so an installation can change them without a release.
@@ -91,8 +91,9 @@ condition applies.
 - The workflow and the escalation share one vocabulary: the stage is the
   milestone, the rule is the deadline of that milestone, the action is the
   consequence.
-- The ticket view has one control for the milestones instead of one button per
-  step; the forms of the steps (AA/SA number, assignee, result) stay.
+- The ticket view has one button per reachable milestone instead of a selection
+  of the milestones; the forms of the steps (AA/SA number, assignee, result) stay
+  below their buttons (WP-M14-153).
 - The former settings rows `ticket.escalation.<rule>.minutes` and
   `ticket.escalation_stages` are read once during the migration and are
   read-only afterwards.

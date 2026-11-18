@@ -158,10 +158,16 @@ function renderPage(
   return { writes, bodies }
 }
 
-function stageOptions(): string[] {
-  const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
+/**
+ * The events of the stage buttons the view offers (WP-M14-153): every reachable
+ * milestone stands next to the others as a button.
+ */
+function stageEvents(): string[] {
+  const group = screen.getByTestId('ticket-escalation-stages')
 
-  return Array.from(select.options).map((option) => option.value)
+  return Array.from(group.querySelectorAll('button')).map(
+    (button) => (button.getAttribute('data-testid') ?? '').replace('ticket-stage-', ''),
+  )
 }
 
 afterEach(() => {
@@ -169,8 +175,8 @@ afterEach(() => {
   void i18n.changeLanguage('de')
 })
 
-describe('TicketDetailPage stage selection', () => {
-  it('offers the reachable stages of the ticket instead of the workflow buttons', async () => {
+describe('TicketDetailPage stage buttons', () => {
+  it('offers the reachable stages of the ticket as buttons next to each other', async () => {
     const { writes } = renderPage(
       'WORK_ORDER_CREATED',
       stages('assignment', { de: 'Zuweisen oder Anbieten', en: 'Assign or offer' },
@@ -178,19 +184,18 @@ describe('TicketDetailPage stage selection', () => {
     )
 
     await waitFor(() => expect(screen.getByTestId('ticket-action-section')).toBeTruthy())
-    expect(screen.queryByRole('button', { name: 'Zuweisen' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Anbieten' })).toBeNull()
-    expect(stageOptions()).toStrictEqual(['', 'assigned', 'offered'])
+    await waitFor(() => expect(stageEvents()).toStrictEqual(['assigned', 'offered']))
+    expect(screen.getByRole('button', { name: 'Zuweisen' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Anbieten' })).toBeTruthy()
     expect(writes).toHaveLength(0)
   })
 
-  it('a choice performs the workflow route of the milestone', async () => {
+  it('a button performs the workflow route of the milestone', async () => {
     const { writes } = renderPage('NEW', stages('review', { de: 'Prüfung', en: 'Review' },
       ['review_started']))
 
-    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
-    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'review_started' } })
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stages')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('ticket-stage-review_started'))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
@@ -199,14 +204,29 @@ describe('TicketDetailPage stage selection', () => {
     expect(writes[0]).toBe('review')
   })
 
+  it('the confirmation of a milestone stands below its buttons', async () => {
+    renderPage('NEW', stages('review', { de: 'Prüfung', en: 'Review' }, ['review_started']))
+
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stages')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('ticket-stage-review_started'))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
+    const button = screen.getByTestId('ticket-stage-review_started')
+    const confirm = screen.getByRole('button', { name: 'Bestätigen' })
+    expect(
+      button.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
   it('keeps the actions that are no milestone as buttons', async () => {
     renderPage('OFFERED', stages('acceptance', { de: 'Angenommen', en: 'Accepted' },
       ['accepted']))
 
-    await waitFor(() => expect(stageOptions()).toStrictEqual(['', 'accepted']))
+    await waitFor(() => expect(stageEvents()).toStrictEqual(['accepted']))
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Ablehnen' })).toBeTruthy(),
     )
+    expect(screen.getByRole('button', { name: 'Angenommen' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Annehmen' })).toBeNull()
   })
 
@@ -214,7 +234,7 @@ describe('TicketDetailPage stage selection', () => {
     const { bodies } = renderPage('NEW', stages('review', { de: 'Prüfung', en: 'Review' },
       ['review_started']))
 
-    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stages')).toBeTruthy())
     const text = screen.getByLabelText('Kommentar') as HTMLTextAreaElement
     fireEvent.change(text, { target: { value: 'Pump not working' } })
     fireEvent.click(screen.getByTestId('ticket-escalation-submit'))
@@ -331,9 +351,8 @@ describe('TicketDetailPage names the reason of a failed action', () => {
       },
     )
 
-    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
-    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'review_started' } })
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stages')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('ticket-stage-review_started'))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
@@ -352,9 +371,8 @@ describe('TicketDetailPage names the reason of a failed action', () => {
       { status: 400, body: { code: 'invalid_request', params: {} } },
     )
 
-    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
-    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'review_started' } })
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stages')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('ticket-stage-review_started'))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))
@@ -373,9 +391,8 @@ describe('TicketDetailPage names the reason of a failed action', () => {
       { status: 500, body: { code: 'internal_error', params: {} } },
     )
 
-    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stage')).toBeTruthy())
-    const select = screen.getByTestId('ticket-escalation-stage') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'review_started' } })
+    await waitFor(() => expect(screen.getByTestId('ticket-escalation-stages')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('ticket-stage-review_started'))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Bestätigen' })).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }))

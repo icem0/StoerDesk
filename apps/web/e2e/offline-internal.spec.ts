@@ -199,10 +199,10 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // The stage selection of the escalation section (WP-M13-09) opens the
+    // The stage button of the escalation section (WP-M14-153) opens the
     // confirmation panel of the acknowledge; go offline and confirm it: the
     // acknowledge cannot reach the server and is queued instead.
-    await page.getByTestId('ticket-escalation-stage').selectOption('acknowledged')
+    await page.getByTestId('ticket-stage-acknowledged').click()
     await page.context().setOffline(true)
     await page.locator('select[name="acknowledgeResult"]').selectOption('fixed')
     await page.getByRole('button', { name: texts.confirm }).click()
@@ -254,10 +254,10 @@ for (const language of ['de', 'en'] as const) {
     await page.goto(`/tickets/${ticketNo}`)
     await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
 
-    // Queue an acknowledge while offline: the stage selection of the escalation
-    // section (WP-M13-09) renders its confirmation panel inline, so the confirm
-    // button and the result field are addressed right below it.
-    await page.getByTestId('ticket-escalation-stage').selectOption('acknowledged')
+    // Queue an acknowledge while offline: the stage button of the escalation
+    // section (WP-M14-153) renders its confirmation panel below the buttons, so
+    // the confirm button and the result field are addressed right below it.
+    await page.getByTestId('ticket-stage-acknowledged').click()
     await page.context().setOffline(true)
     await page.locator('select[name="acknowledgeResult"]').selectOption('fixed')
     await page.getByRole('button', { name: texts.confirm }).click()

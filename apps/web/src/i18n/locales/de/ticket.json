@@ -458,7 +458,6 @@
       "title": "Eskalation & Aktionen",
       "hint": "Stufe wählen und Beschreibung eingeben",
       "stageLabel": "Workflow Stufen",
-      "chooseStage": "Auswahl Stufen…",
       "textLabel": "Kommentar",
       "placeholder": "Was ist passiert? Notiz für das Team …",
       "historyStage": "Eskalationsstufe: {{stage}}"

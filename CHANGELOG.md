@@ -330,6 +330,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
+- The milestones of the ticket view are buttons next to each other
+  (**WP-M14-153**, out of band in phase 14): the „Workflow Stufen" of the ticket
+  detail was a pulldown menu, and on a touch screen the milestone lay one step
+  away behind it. Every stage the ticket can still reach (`availableStages`) is a
+  button now, and the confirmation of a milestone — the number of the work
+  order, the result of the acknowledge — stands **below** the buttons instead of
+  above the control that opened it. The wording stays the wording of the former
+  selection, so no new text is needed.
 - A malformed ticket number is still rejected at every entry point
   (**WP-M14-129c**, out of band in phase 14 — **ADR-0027**): the widening of the
   format guard of the `:ticketNo` path parameter (WP-M9-29, SEC-015) knows both

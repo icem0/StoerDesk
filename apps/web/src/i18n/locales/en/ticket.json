@@ -459,7 +459,6 @@
       "title": "Escalation & actions",
       "hint": "Choose a stage; its workflow step runs",
       "stageLabel": "Workflow stage",
-      "chooseStage": "Choose a stage…",
       "textLabel": "Comment",
       "placeholder": "Comment or a note for the team …",
       "historyStage": "Escalation stage: {{stage}}"
