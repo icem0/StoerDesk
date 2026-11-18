@@ -2629,6 +2629,13 @@ also repairs the form: the state started empty, because the query answers after
 the first render — the office saw an empty form and the save wrote the empty
 fields over the object. The fields are filled when the answer arrives.
 
+**The administration shows the standard and the deviations (WP-M14-134g, out of
+band in phase 14).** The new page of the administration shows the standard
+priority of the instance and the list of the objects whose priority differs from
+it. The standard is written with one request; the write also deletes the
+deviations that no longer deviate. Without the permission to write the settings
+the select stays read-only.
+
 
 
 

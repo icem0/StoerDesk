@@ -1491,7 +1491,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-134d | the routes answer the standard and the deviations (out of band) | done | yes |
 | WP-M14-134e | the ticket takes the priority of the object (out of band) | done | yes |
 | WP-M14-134f | the object form carries the priority (out of band)  | done    | yes     |
-| WP-M14-134g | the administration shows the standard and the deviations (out of band) | planned | yes |
+| WP-M14-134g | the administration shows the standard and the deviations (out of band) | done | yes |
 | WP-M14-134h | the route and the menu entry of the defaults (out of band) | planned | yes |
 | WP-M14-134i | the create form starts from the priority of the object (out of band) | planned | yes |
 

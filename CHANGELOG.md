@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The administration shows the standard and the deviations
+  (**WP-M14-134g**, out of band in phase 14 — **ADR-0029**): the new page of the
+  administration shows the standard priority of the instance and the list of
+  the objects whose priority differs from it; the standard is written with one
+  request, the write also deletes the deviations that no longer deviate.
 - The object form carries the priority of the object (**WP-M14-134f**, out of
   band in phase 14 — **ADR-0029**): the create and the edit form carry the
   field "Priorität" with the option "Standard" and the four priorities. The

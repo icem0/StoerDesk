@@ -672,6 +672,39 @@
         "transition_duplicate": "A second step does already exist for that status and event key.",
         "unknown": "Saving failed."
       }
+    },
+    "defaults": {
+      "title": "Standardwerte",
+      "hint": "Die Standard-Priorität gilt für jedes Ticket, dessen Objekt keine eigene Priorität hat. Objekte mit abweichender Priorität stehen in der Liste darunter.",
+      "loading": "Lädt …",
+      "sessionNotice": "Die Standardwerte benötigen eine gültige Anmeldung.",
+      "forbiddenNotice": "Keine Berechtigung für die Standardwerte.",
+      "readOnly": "Nur lesbar: Zum Ändern fehlt die Berechtigung „Einstellungen schreiben“.",
+      "standard": "Standard-Priorität",
+      "standardHint": "Diese Priorität bekommt jedes Ticket eines Objekts ohne eigene Priorität.",
+      "priority": {
+        "low": "Niedrig",
+        "normal": "Normal",
+        "high": "Hoch",
+        "critical": "Kritisch"
+      },
+      "save": "Speichern",
+      "saving": "Wird gespeichert …",
+      "saved": "Gespeichert.",
+      "deviations": "Abweichende Objekte",
+      "deviationsHint": "Diese Objekte haben eine eigene Priorität. Die Priorität pflegt das Objektformular.",
+      "empty": "Kein Objekt mit abweichender Priorität.",
+      "columns": {
+        "objectNo": "Objektnummer",
+        "name": "Name",
+        "priority": "Priorität"
+      },
+      "errors": {
+        "session_invalid": "Die Anmeldung ist abgelaufen.",
+        "forbidden": "Keine Berechtigung für diese Aktion.",
+        "invalid_request": "Die Priorität ist ungültig.",
+        "unknown": "Speichern fehlgeschlagen."
+      }
     }
   },
   "apiKeys": {

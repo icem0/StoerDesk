@@ -672,6 +672,39 @@
         "transition_duplicate": "Another step already pairs that status with that event key.",
         "unknown": "Saving failed."
       }
+    },
+    "defaults": {
+      "title": "Default values",
+      "hint": "The default priority applies to every ticket whose object has no priority of its own. The objects with a priority of their own are listed below.",
+      "loading": "Loading …",
+      "sessionNotice": "The default values need a valid session.",
+      "forbiddenNotice": "No permission for the default values.",
+      "readOnly": "Read-only: you lack the permission to write the settings.",
+      "standard": "Default priority",
+      "standardHint": "This priority is the priority of every ticket of an object without a priority of its own.",
+      "priority": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "save": "Save",
+      "saving": "Saving …",
+      "saved": "Saved.",
+      "deviations": "Objects with their own priority",
+      "deviationsHint": "These objects have a priority of their own. The object form maintains it.",
+      "empty": "No object with a priority of its own.",
+      "columns": {
+        "objectNo": "Object number",
+        "name": "Name",
+        "priority": "Priority"
+      },
+      "errors": {
+        "session_invalid": "The session has expired.",
+        "forbidden": "No permission for this action.",
+        "invalid_request": "The priority is invalid.",
+        "unknown": "Saving failed."
+      }
     }
   },
   "apiKeys": {

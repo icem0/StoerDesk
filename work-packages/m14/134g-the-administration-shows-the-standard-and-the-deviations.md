@@ -1,7 +1,7 @@
 # WP-M14-134g: the administration shows the standard and the deviations
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -64,6 +64,6 @@ Expected: all green; the page shows the standard and the deviations.
 
 - Files changed: the new page, the labels in `de` and `en`
 - Interfaces added: `TicketDefaultsPage`
-- Verified: `npm run check` (exit 0), the page test of the defaults
+- Verified: `npm run check` (exit 0), the page test of the defaults proves the standard, the list, the save and the missing permission
 - Follow-up WP: WP-M14-134h (the route and the menu entry of the defaults)
 - Open question: none
