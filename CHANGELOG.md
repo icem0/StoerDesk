@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
+- The counter of the ticket number becomes one global row (**WP-M14-129a**, out
+  of band in phase 14 — **ADR-0027**): migration
+  `0048_ticket_no_counter_global.sql` replaces `ticket_no_counters` (one row per
+  calendar year) with `ticket_no_counter` (one row, the key `global`) and
+  `next_ticket_no()` returns `ST-` plus the counter padded to four digits —
+  without a calendar year. The new row is seeded with the highest number the
+  instance ever allocated, so a new number never counts below an old one, and
+  the allocated numbers stay untouched and readable.
 - The health of the notification channels (**WP-M14-130**, out of band in phase 14
   — **ADR-0028**): the office asked whether the web push can be checked every day
   and whether a broken notification function can announce itself over another

@@ -197,7 +197,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(201)
       const body = response.json<{ ticketNo: string; status: string; source?: string }>()
 
-      expect(body.ticketNo).toMatch(/^ST-\d{4}-\d{4}$/)
+      expect(body.ticketNo).toMatch(/^ST-\d{4,}$/)
       expect(body.status).toBe('NEW')
 
       ticketNo = body.ticketNo

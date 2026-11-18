@@ -20,9 +20,13 @@ const trimmedText = (max: number) =>
     .optional()
     .transform((value) => (value === '' ? undefined : value))
 
-/** Ticket number as printed on tickets (`specs/02-data-model.md` §4.11,
- * `ST-2026-0001`). */
-export const ticketNoSchema = z.string().trim().regex(/^ST-\d{4}-\d{4,}$/)
+/**
+ * Ticket number as printed on tickets (`specs/02-data-model.md` §4.11,
+ * ADR-0027): `ST-0001` — the `ST-` prefix and the counter padded to four
+ * digits, without a calendar year. The legacy shape `ST-2026-0001` of the
+ * yearly counter stays valid, because an allocated number is never rewritten.
+ */
+export const ticketNoSchema = z.string().trim().regex(/^ST-(\d{4,}|\d{4}-\d{4,})$/)
 
 /** `text_templates.key` values — machine keys, never translated text (plan §3). */
 export const faultTemplateKeySchema = textTemplateKeySchema

@@ -95,18 +95,18 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
       select table_name
       from information_schema.tables
       where table_schema = 'public'
-        and table_name in ('tickets', 'ticket_events', 'ticket_photos', 'ticket_no_counters')
+        and table_name in ('tickets', 'ticket_events', 'ticket_photos', 'ticket_no_counter')
       order by table_name`
 
     expect(rows.map((row) => row.table_name)).toEqual([
       'ticket_events',
-      'ticket_no_counters',
+      'ticket_no_counter',
       'ticket_photos',
       'tickets',
     ])
   })
 
-  it('allocates distinct ST-<year>-NNNN numbers under concurrent inserts', async () => {
+  it('allocates distinct ST-NNNN numbers without a year under concurrent inserts', async () => {
     const objectId = await newObject()
 
     const created = await Promise.all(
@@ -117,14 +117,19 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
       }),
     )
 
-    const year = new Date().getFullYear()
-
     expect(created).toHaveLength(5)
     expect(new Set(created).size).toBe(5)
 
     for (const ticketNo of created) {
-      expect(ticketNo).toMatch(new RegExp(`^ST-${year}-\\d{4}$`))
+      expect(ticketNo).toMatch(/^ST-\d{4,}$/)
     }
+  })
+
+  it('keeps a number of the yearly counter readable and never rewrites it', async () => {
+    const objectId = await newObject()
+    const legacy = await newTicket(objectId, { ticketNo: 'ST-1999-0001' })
+
+    expect(legacy.ticketNo).toBe('ST-1999-0001')
   })
 
   it('rejects a duplicate client_uuid and unknown enum values, the status key stays history', async () => {

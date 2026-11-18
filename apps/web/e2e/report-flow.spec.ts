@@ -149,7 +149,7 @@ for (const language of ['de', 'en'] as const) {
     // §7.3.2: confirmation with the generated ticket number and the status link.
     await expect(page.getByRole('heading', { level: 1, name: texts.doneTitle })).toBeVisible()
     await expect(page.getByTestId('report-ticket-no')).toContainText(texts.ticketNoPrefix)
-    await expect(page.getByTestId('report-ticket-no')).toContainText(/ST-\d{4}-\d{4,}/)
+    await expect(page.getByTestId('report-ticket-no')).toContainText(/ST-\d{4,}/)
     await expect(page.getByTestId('report-status-link')).toHaveAttribute(
       'href',
       /^\/s\/[A-Za-z0-9_-]{22}$/,
@@ -158,7 +158,7 @@ for (const language of ['de', 'en'] as const) {
     // §7.3.4: following the status link shows ticket number, status and deadline.
     await page.getByTestId('report-status-link').click()
 
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(/ST-\d{4}-\d{4,}/)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(/ST-\d{4,}/)
     await expect(page.getByTestId('status-badge')).toHaveText(texts.status.new)
     await expect(page.getByText(texts.status.deadlineLabel)).toBeVisible()
     await expect(page.locator('dd').last()).toContainText(/\d/)

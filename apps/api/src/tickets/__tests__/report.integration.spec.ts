@@ -192,9 +192,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(response.statusCode).toBe(201)
       expect(body.status).toBe('NEW')
-      expect(body.ticketNo).toMatch(
-        new RegExp(`^ST-${new Date().getFullYear()}-\\d{4}$`),
-      )
+      expect(body.ticketNo).toMatch(/^ST-\d{4,}$/)
       expect(body.statusToken).toMatch(QR_TOKEN_PATTERN)
       expect(body.clockSkewed).toBe(false)
       expect(body.photoCount).toBe(0)

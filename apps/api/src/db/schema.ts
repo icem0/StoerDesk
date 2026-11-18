@@ -423,13 +423,15 @@ const checkList = (values: readonly string[]) =>
   sql.raw(values.map((value) => `'${value}'`).join(', '))
 
 /**
- * Yearly counter of `ticket_no` (`specs/02-data-model.md` §4.11). One row per
- * calendar year, allocated by the `next_ticket_no()` function of migration 0004,
- * which is also the column default of `tickets.ticket_no`. The number is a
- * readable key, not an invoice number: a rolled back transaction may leave a gap.
+ * Global counter of `ticket_no` (`specs/02-data-model.md` §4.11, ADR-0027). One
+ * row with the key `global`, allocated by the `next_ticket_no()` function of
+ * migration 0004 — redefined without the calendar year by migration
+ * `0048_ticket_no_counter_global` — which is also the column default of
+ * `tickets.ticket_no`. The number is a readable key, not an invoice number: a
+ * rolled back transaction may leave a gap.
  */
-export const ticketNoCounters = pgTable('ticket_no_counters', {
-  year: integer('year').primaryKey(),
+export const ticketNoCounter = pgTable('ticket_no_counter', {
+  key: text('key').primaryKey(),
   nextValue: integer('next_value').notNull(),
 })
 
@@ -1483,7 +1485,7 @@ export type BmaSyncRunStatus = (typeof BMA_SYNC_RUN_STATUSES)[number]
 export type UpdateRun = typeof updateRuns.$inferSelect
 export type NewUpdateRun = typeof updateRuns.$inferInsert
 export type UpdateRunStatus = (typeof UPDATE_RUN_STATUSES)[number]
-export type TicketNoCounter = typeof ticketNoCounters.$inferSelect
+export type TicketNoCounter = typeof ticketNoCounter.$inferSelect
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
 export type TicketSource = (typeof TICKET_SOURCES)[number]

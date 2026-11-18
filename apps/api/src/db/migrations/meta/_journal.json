@@ -337,6 +337,13 @@
       "when": 1794794400000,
       "tag": "0047_notification_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1794880800000,
+      "tag": "0048_ticket_no_counter_global",
+      "breakpoints": true
     }
   ]
 }

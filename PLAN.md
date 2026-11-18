@@ -2436,11 +2436,27 @@ single row `global`), the format `ST-` plus the counter padded to four digits
 `ticketNoSchema` — the legacy shape and the new one, so an old bookmark, an old
 status page and a queued `ticket_no` of a client outbox resolve unchanged. The
 package writes no product code: the chain is split into **WP-M14-129a** (the
-database: migration `0048_ticket_no_counter_global.sql` and the Drizzle mirror),
-**WP-M14-129b** (the shared contract `ticketNoSchema`) and **WP-M14-129c** (the
-migration test, the contract test and the two report E2E assertions); the three
-documents exist and run in numeric order. The open items of the phase are
-**WP-M14-129a** … **WP-M14-129c**.
+counter, the contract and the assertions — one coupled slice, because the
+migration alone writes a number the old contract rejects),
+**WP-M14-129b** (a number of the yearly counter still resolves through the API)
+and **WP-M14-129c** (a malformed number is still rejected at every entry point);
+the three documents exist and run in numeric order. The open items of the phase
+are **WP-M14-129a** … **WP-M14-129c**.
+
+**The counter of the ticket number becomes one global row (WP-M14-129a, out of
+band in phase 14).** Migration `0048_ticket_no_counter_global.sql` replaces the
+yearly `ticket_no_counters` of migration `0004` with `ticket_no_counter` — one
+row, the key `global` — and redefines `next_ticket_no()`: it allocates through
+the same `INSERT … ON CONFLICT DO UPDATE … RETURNING`, but returns `ST-` plus
+the counter padded to four digits, without a calendar year. The new row is
+seeded with the highest `next_value` the yearly rows ever held, so a new number
+never counts below an old one; the yearly rows are dropped, and every allocated
+number stays untouched and readable. The Drizzle mirror follows the table
+(`ticketNoCounter`, `TicketNoCounter`), the shared contract `ticketNoSchema`
+knows both shapes — the year-free `ST-0001` and the legacy `ST-2026-0001` — and
+the ticket tables integration spec expects `ST-NNNN` and proves that a number of
+the yearly counter is still readable. The proof through the API and the guard
+against a malformed number follow in **WP-M14-129b** and **WP-M14-129c**.
 
 **The names of the readiness belong to a role (WP-M14-131/132, out of band in
 phase 14).** The office asked that the names of the technicians in the

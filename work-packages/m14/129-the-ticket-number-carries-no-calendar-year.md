@@ -65,7 +65,6 @@ year and the distance between two reports of one year.
 - No statistics change: frequency stays a question of the statistics layer, never
   of a number the customer sees.
 - No offset or random counter start (deferred alternative of ADR-0027).
-
 ## Acceptance
 
 ```bash
@@ -85,8 +84,10 @@ database or a browser (`PLAN.md` §18).
 - Verified: `npm run wp:check` (549 small-model WP, 0 failed) and `npm run check`
   green for typecheck, lint, vitest, `i18n:check` and `wp:check`; `test:e2e`
   skipped without a browser and a database — **unverified**, never green
-- Follow-up WP: WP-M14-129a (the database), WP-M14-129b (the shared contract),
-  WP-M14-129c (the tests) — all three files exist in this commit and run in
-  numeric order
-- Open question: WP-M14-121 and WP-M14-128 stay open in numeric order **before**
-  this chain
+- Follow-up WP: WP-M14-129a (the counter, the contract and the assertions — one
+  coupled slice, because the migration alone writes a number the old contract
+  rejects), WP-M14-129b (a number of the yearly counter still resolves through
+  the API), WP-M14-129c (a malformed number is still rejected) — all three files
+  exist and run in numeric order
+- Open question: none — WP-M14-121 and WP-M14-128 are done, the chain of this
+  package is the open item of the phase
