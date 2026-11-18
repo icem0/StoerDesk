@@ -59,3 +59,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0025](DECISIONS/0025-ticket-transitions-as-database-configuration.md) | The ticket transitions are database configuration (`ticket_transitions`, `0041`) | accepted |
 | [ADR-0026](DECISIONS/0026-the-escalation-offers-and-assigns-tickets.md) | The escalation offers and assigns tickets (`offer`, `assign`, `ticket_assignees`) | accepted |
 | [ADR-0027](DECISIONS/0027-ticket-number-without-year.md) | The ticket number carries no calendar year (`ST-0001`, one global counter, legacy numbers stay readable) | accepted |
+| [ADR-0028](DECISIONS/0028-the-channel-health-warning-goes-over-another-channel.md) | A broken channel warns over another channel, once a day (`push_subscription_dead`, `channel.health_warning`) | accepted |

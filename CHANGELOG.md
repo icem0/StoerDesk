@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The health of the notification channels (**WP-M14-130**, out of band in phase 14
+  — **ADR-0028**): the office asked whether the web push can be checked every day
+  and whether a broken notification function can announce itself over another
+  channel. The web push has no status query, so the check stays passive (a
+  `404`/`410` of the push service names a dead subscription), the daily check
+  reads the status of the outbox and names the broken channels, and a broken
+  channel warns once a day over the first other configured channel — the warning
+  never goes to the broken channel and never falls back. The warning is an
+  instance row of the new event type `channel.health_warning`. Nothing is
+  implemented in this package: the chain is split into **WP-M14-130a** (the dead
+  subscription), **WP-M14-130b** (the instance row) and **WP-M14-130c** (the
+  daily check and the warning).
 - The ticket number drops the calendar year (**WP-M14-129**, out of band in phase
   14 — **ADR-0027**): the customer sees the number on the confirmation page and on
   the public status page, and `ST-<year>-<counter>` over a per-year counter row

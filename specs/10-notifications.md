@@ -280,3 +280,33 @@ promises a delivery that cannot happen.
   of §11.8 and the readiness rule of ADR-0021: the allocation of a technician
   notifies that technician over the channels they selected, and a `DRAFT`
   readiness answers a confirm.
+
+## 11.15 The health of the channels
+
+The status of §11.8 shows what happened last. The health of a channel is the
+question whether it delivers **now**: a channel is *broken* when its last
+delivery failed and no delivery of it succeeded since.
+
+**The dead subscription of the web push.** The push service answers `404` or
+`410` for an endpoint that no longer exists — the browser revoked the
+notification permission, the browser was reinstalled or the subscription
+expired. Such an endpoint is *dead*: the adapter names it with the code
+`push_subscription_dead`, the channel removes the row of `push_subscriptions`
+and the row of the outbox carries that code as its `lastError` (§11.8). A
+delivery that reaches at least one live device removes the dead rows of the
+same send; a send where **every** device is dead fails with that code, so the
+chain of §11.1 falls back to the next channel.
+
+**The warning over another channel.** A broken channel warns the
+administration **once a day over another channel**: the daily check enqueues
+one row of the event type `channel.health_warning` for the first configured
+channel of the chain of §11.1 that is not the broken one. The warning never
+goes to the broken channel and never falls back further — the warning itself
+is the last word about the channel. The text names the broken channel and the
+machine code of its last failure, is translated (de/en) and carries no
+emergency number (`PLAN.md` §2). At most one warning per broken channel and
+per day; a channel that works again is silent.
+
+**The instance row.** A warning row belongs to no ticket and to no shift: it
+carries the event type `channel.health_warning`, no ticket, no shift and no
+personal message. The checks of the `outbox` table know that shape.

@@ -2400,6 +2400,25 @@ error: the inbox never blocks on the state of the channel. The texts are
 `inbox.webpush.hint` and `inbox.webpush.setup` (de/en); the subscribe action
 stays the settings page of WP-M14-126a.
 
+**The health of the notification channels (WP-M14-130, out of band in phase 14).**
+The office asked two questions about the web push: can the channel be checked
+every day, and can a message over another channel announce that the
+notification function is broken. The web push has no status query — the only
+signal is the answer of the push service to a real send, so **ADR-0028** decides:
+the check is **passive** (a `404` or `410` of the push service names a dead
+subscription and the next successful send removes its row), the **daily check**
+reads the rows of the outbox and names the channels that are broken (their last
+delivery failed and no delivery of them succeeded since), and a broken channel
+warns **once a day over another channel** — the first configured channel of the
+chain that is not the broken one, never with a fallback of its own. The warning
+is an instance row of the event type `channel.health_warning`: it belongs to no
+ticket and to no shift, so the checks of the `outbox` table learn that shape
+(migration `0049`). The text names the channel and the machine code of its last
+failure, is translated (de/en) and carries no emergency number (`PLAN.md` §2).
+The package writes no product code: the chain is split into **WP-M14-130a** (the
+dead subscription), **WP-M14-130b** (the instance row) and **WP-M14-130c** (the
+daily check and the warning); the three documents exist and run in numeric order.
+
 **The ticket number drops the year (WP-M14-129, out of band in phase 14).** The
 office pointed out what the visible number leaks: the customer sees it on the
 confirmation page (§7.3.2) and on the public status page (§7.3.4), so
