@@ -2670,6 +2670,20 @@ the chain is split into **WP-M14-141a** (the key and the contracts),
 
 
 
+**The permission key and the contracts of the filter (WP-M14-141a, out of band
+in phase 14).** The catalogue of `packages/shared/src/permissions.ts` gains the
+key `notification.read_all` — it belongs to no default role, `admin` holds it
+through the catalogue, the administration assigns it to a role over the role API
+(`specs/01-rbac.md` §3.8). The shared package learns the filter of the message
+list (`notificationMessageFilterSchema` — the addressee, the channel, the event,
+the state of the delivery and the unread messages), the addressee of a row
+(`notificationMessageRecipientSchema`) and the list of the addressees with the
+number of their messages (`notificationRecipientSummarySchema`). The answer of
+the inbox carries the two new fields; without the permission they stay empty.
+The seed writes the new key into the table `permissions` on the next start —
+no migration.
+
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

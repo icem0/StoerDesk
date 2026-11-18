@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The browser answers for its own push subscription (**WP-M14-142**, out of
+  band in phase 14): the web-push UI claimed a state of the browser that
+  nobody had asked — the card named a device as registered after one local
+  subscription, the inbox named the browser as not enabled from the device
+  count of the account. The new module `apps/web/src/lib/web-push.ts` holds one
+  probe that asks this browser for its own push subscription and names the
+  state it found: no push manager at all, a blocked permission, a registered
+  device, a browser without a subscription or a browser that did not answer. The
+  card of the settings page reads that probe instead of its own check, so a
+  device is named as registered only while the browser says so.
+- The messages of other users have a permission of their own (**WP-M14-141a**,
+  out of band in phase 14): the catalogue gains the key `notification.read_all`,
+  it belongs to no default role — the administration assigns it to a role over
+  the role API, `admin` holds it through the catalogue. The shared contracts
+  learn the filter of the message list (the addressee, the channel, the event,
+  the state of the delivery, the unread messages), the addressee of a row and
+  the list of the addressees with the number of their messages.
 - The admin sees which message arrived at which user (**WP-M14-141**, out of
   band in phase 14): the inbox of a user stays personal — the page
   `/notifications` and the bell show and count only the own messages. A second

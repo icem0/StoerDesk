@@ -1,7 +1,7 @@
 # WP-M14-141a: the permission key and the contracts of the filter
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -79,7 +79,9 @@ the filter and the answer of the inbox.
 ## Handoff
 
 - Files changed: `packages/shared/src/permissions.ts`,
-  `packages/shared/src/schemas/notification.ts`, this document,
+  `packages/shared/src/schemas/notification.ts`,
+  `packages/shared/src/__tests__/notification.test.ts`,
+  `packages/shared/src/__tests__/permissions.test.ts`, this document,
   `work-packages/README.md`, `CHANGELOG.md`, `PLAN.md` §16
 - Interfaces added: `notification.read_all`, `notificationMessageFilterSchema`,
   `notificationMessageRecipientSchema`, `notificationRecipientSummarySchema`

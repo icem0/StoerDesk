@@ -281,7 +281,26 @@ export type UpdateNotificationPreferencesRequest = z.infer<
  * WP-M14-120a): which channel a message was sent to, whether it arrived, and
  * when. No contact data, no photo, no translated UI text — the UI translates
  * the channel and event-type keys itself.
+ *
+ * The recipient (WP-M14-141a) is the addressee of the message. It is `null`
+ * without the permission `notification.read_all`: the inbox of a user stays
+ * personal and never names another user.
  */
+export const notificationMessageRecipientSchema = z.object({
+  userId: z.uuid(),
+  name: z.string(),
+})
+
+/**
+ * One addressee of the answer of the inbox (WP-M14-141a): the user and the
+ * number of the messages of the user under the filter of the answer.
+ */
+export const notificationRecipientSummarySchema = z.object({
+  userId: z.uuid(),
+  name: z.string(),
+  count: z.number().int().nonnegative(),
+})
+
 export const notificationMessageItemSchema = z.object({
   id: z.uuid(),
   channel: z.string(),
@@ -291,10 +310,28 @@ export const notificationMessageItemSchema = z.object({
   body: z.string(),
   createdAt: z.iso.datetime(),
   readAt: z.iso.datetime().nullable(),
+  recipient: notificationMessageRecipientSchema.nullable().default(null),
 })
 
 export const notificationMessageListResponseSchema = z.object({
   messages: z.array(notificationMessageItemSchema),
+  /** The addressees of the filter; empty without the permission. */
+  recipients: z.array(notificationRecipientSummarySchema).default([]),
+})
+
+/**
+ * The filter of the message list (`specs/10-notifications.md` §11.16,
+ * WP-M14-141a): the addressee, the channel, the event type, the state of the
+ * delivery and the unread messages. The filter of the addressee needs the
+ * permission `notification.read_all` for another user; the other filters
+ * narrow the own inbox.
+ */
+export const notificationMessageFilterSchema = z.object({
+  userId: z.uuid().optional(),
+  channel: notificationChannelKindSchema.optional(),
+  eventType: notificationEventTypeSchema.optional(),
+  state: z.enum(['PENDING', 'SENT', 'FAILED']).optional(),
+  unread: z.boolean().optional(),
 })
 
 /**
@@ -318,6 +355,9 @@ export type NotificationMessageItem = z.infer<typeof notificationMessageItemSche
 export type NotificationMessageListResponse = z.infer<
   typeof notificationMessageListResponseSchema
 >
+export type NotificationMessageRecipient = z.infer<typeof notificationMessageRecipientSchema>
+export type NotificationRecipientSummary = z.infer<typeof notificationRecipientSummarySchema>
+export type NotificationMessageFilter = z.infer<typeof notificationMessageFilterSchema>
 export type NotificationMessageReadResponse = z.infer<
   typeof notificationMessageReadResponseSchema
 >

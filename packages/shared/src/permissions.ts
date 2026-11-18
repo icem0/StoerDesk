@@ -60,6 +60,7 @@ export const PERMISSIONS = {
   notification: {
     read: 'notification.read',
     write: 'notification.write',
+    readAll: 'notification.read_all',
   },
   system: {
     update: 'system.update',
@@ -113,6 +114,7 @@ export const PERMISSION_KEYS: PermissionKey[] = [
   PERMISSIONS.stats.export,
   PERMISSIONS.notification.read,
   PERMISSIONS.notification.write,
+  PERMISSIONS.notification.readAll,
   PERMISSIONS.system.update,
 ]
 

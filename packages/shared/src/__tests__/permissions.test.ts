@@ -84,4 +84,16 @@ describe('default roles', () => {
       expect(DEFAULT_ROLES[roleKey]).not.toContain(PERMISSIONS.system.update)
     }
   })
+
+  it('grants the read of the messages of other users to the admin only', () => {
+    expect(DEFAULT_ROLES.admin).toContain(PERMISSIONS.notification.readAll)
+
+    for (const roleKey of SYSTEM_ROLE_KEYS) {
+      if (roleKey === 'admin') {
+        continue
+      }
+
+      expect(DEFAULT_ROLES[roleKey]).not.toContain(PERMISSIONS.notification.readAll)
+    }
+  })
 })
