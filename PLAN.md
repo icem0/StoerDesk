@@ -2746,6 +2746,16 @@ answer and never into a log line (`specs/10-notifications.md` §11.3). The chain
 continues with **WP-M14-145** (the card asks the server about this device) and
 **WP-M14-146** (the inbox asks the server about this device).
 
+**The card asks the server about this device (WP-M14-145, out of band in phase
+14).** „Dieses Gerät ist angemeldet.“ was the answer of the card as soon as the
+browser held a subscription — even when the server had no row for it and no
+push message could ever arrive. The card asks the server about the endpoint of
+this browser (`POST /api/v1/notifications/accounts/webpush/check`) and names the
+device as registered only while the server confirms it; a device the browser
+holds and the server does not know gets its own line and the register action —
+the button registers the existing subscription again, without a second
+permission prompt. While the server has not answered the card claims nothing.
+
 
 
 

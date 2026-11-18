@@ -1,7 +1,7 @@
 # WP-M14-145: the card asks the server about this device
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -68,6 +68,7 @@ does not know.
 
 - Files changed: the card, its test and the two locale files
 - Interfaces added: the text of the device the server does not know
-- Verified: —
-- Follow-up WP: none
+- Verified: `npm run check` (exit 0), the vitest file of the card
+- Follow-up WP: WP-M14-146 (the inbox asks the server about this device) — the
+  document exists in this commit
 - Open question: none

@@ -1,8 +1,12 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
 
-import type { WebPushConfigResponse, WebPushSubscriptionResponse } from '@stoerdesk/shared'
+import type {
+  WebPushConfigResponse,
+  WebPushSubscriptionCheckResponse,
+  WebPushSubscriptionResponse,
+} from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../../lib/api'
 import { pushSupported, useBrowserPush } from '../../lib/web-push'
 
@@ -19,7 +23,9 @@ import { pushSupported, useBrowserPush } from '../../lib/web-push'
  * The state of the device comes from the probe of `apps/web/src/lib/web-push.ts`
  * (WP-M14-142): the browser itself says whether it holds a subscription, so the
  * card claims nothing that was not checked — and the inbox names the same
- * cause.
+ * cause. The server says whether it knows the device (WP-M14-144): a device
+ * the browser holds and the server does not know gets its own line and the
+ * register action — no push message would ever arrive.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
@@ -82,6 +88,7 @@ function errorCode(error: unknown): string {
 
 export function WebPushSubscription() {
   const { t } = useTranslation('common')
+  const queryClient = useQueryClient()
   const { push, refresh } = useBrowserPush()
   const state = push?.state ?? null
   const endpoint = push?.endpoint ?? null
@@ -92,6 +99,25 @@ export function WebPushSubscription() {
     queryFn: () => apiFetch<WebPushConfigResponse>('/v1/notifications/accounts/webpush'),
     retry: false,
   })
+
+  // The browser knows its own subscription, the server knows its rows — only
+  // both together say whether a push can arrive (WP-M14-144). The endpoint
+  // travels in the body of the request and never in the answer.
+  const device = useQuery({
+    queryKey: ['webpush-device', endpoint],
+    queryFn: () =>
+      apiFetch<WebPushSubscriptionCheckResponse>('/v1/notifications/accounts/webpush/check', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({ endpoint }),
+      }),
+    enabled: endpoint !== null,
+    retry: false,
+  })
+
+  // `null` while the server has not answered: the card claims nothing then.
+  const deviceKnown =
+    device.isSuccess && typeof device.data.registered === 'boolean' ? device.data.registered : null
 
   const subscribe = useMutation({
     mutationFn: async (): Promise<WebPushSubscriptionResponse> => {
@@ -128,6 +154,7 @@ export function WebPushSubscription() {
     },
     onSuccess: () => {
       void config.refetch()
+      void queryClient.invalidateQueries({ queryKey: ['webpush-device'] })
     },
   })
 
@@ -151,6 +178,7 @@ export function WebPushSubscription() {
     },
     onSuccess: () => {
       void config.refetch()
+      void queryClient.invalidateQueries({ queryKey: ['webpush-device'] })
     },
   })
 
@@ -203,7 +231,24 @@ export function WebPushSubscription() {
 
           {supported && endpoint !== null ? (
             <>
-              <p className="text-sm text-emerald-400">{t('notifications.webpush.linked')}</p>
+              {deviceKnown === true ? (
+                <p className="text-sm text-emerald-400">{t('notifications.webpush.linked')}</p>
+              ) : null}
+
+              {deviceKnown === false ? (
+                <>
+                  <p className="text-sm text-amber-400">{t('notifications.webpush.notRegistered')}</p>
+                  <button
+                    className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                    disabled={subscribe.isPending}
+                    onClick={() => subscribe.mutate()}
+                    type="button"
+                  >
+                    {t('notifications.webpush.subscribe')}
+                  </button>
+                </>
+              ) : null}
+
               <button
                 className="self-start rounded bg-slate-700 px-4 py-2 font-medium text-slate-100 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 disabled={unsubscribe.isPending}

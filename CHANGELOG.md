@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The card asks the server about this device (**WP-M14-145**, out of band in
+  phase 14): „Dieses Gerät ist angemeldet.“ was the answer of the card as soon
+  as the browser held a subscription — even when the server had no row for it
+  and no push message could ever arrive. The card asks the server about the
+  endpoint of this browser and names the device as registered only while the
+  server confirms it; a device the browser holds and the server does not know
+  gets its own line and the register action.
 - The server answers whether it holds the device of this browser
   (**WP-M14-144**, out of band in phase 14): the route
   `POST /api/v1/notifications/accounts/webpush/check` tells the browser

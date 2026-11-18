@@ -24,10 +24,16 @@ function renderCard() {
   )
 }
 
-function stubConfig(publicKey: string, subscriptions = 0) {
-  return vi.fn(async () =>
-    Response.json({ publicKey, subscribed: subscriptions > 0, subscriptions }),
-  )
+function stubConfig(publicKey: string, subscriptions = 0, registered: boolean | null = true) {
+  return vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input)
+
+    if (url.includes('/webpush/check')) {
+      return Response.json({ registered: registered ?? true })
+    }
+
+    return Response.json({ publicKey, subscribed: subscriptions > 0, subscriptions })
+  })
 }
 
 beforeEach(async () => {
@@ -119,6 +125,10 @@ describe('WebPushSubscription', () => {
         return Response.json({ subscribed: true })
       }
 
+      if (url.endsWith('/v1/notifications/accounts/webpush/check')) {
+        return Response.json({ registered: true })
+      }
+
       return Response.json({ publicKey: PUBLIC_KEY, subscribed: false, subscriptions: 0 })
     })
     vi.stubGlobal('fetch', fetchMock)
@@ -194,5 +204,86 @@ describe('WebPushSubscription', () => {
 
     expect(await screen.findByText(/Benachrichtigungs-Erlaubnis wurde nicht erteilt/)).toBeTruthy()
     expect(screen.queryByText('Dieses Gerät ist angemeldet.')).toBeNull()
+  })
+
+  it('names a device the server does not know (WP-M14-145)', async () => {
+    const subscription = {
+      endpoint: 'https://push.example.org/secret/42',
+      toJSON: () => ({
+        endpoint: 'https://push.example.org/secret/42',
+        keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
+      }),
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    const pushManager = {
+      getSubscription: vi.fn().mockResolvedValue(subscription),
+      subscribe: vi.fn().mockResolvedValue(subscription),
+    }
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ pushManager }),
+        getRegistration: vi.fn().mockResolvedValue({ pushManager }),
+      },
+    })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', { permission: 'granted', requestPermission: vi.fn() })
+    vi.stubGlobal('fetch', stubConfig(PUBLIC_KEY, 0, false))
+
+    renderCard()
+
+    expect(
+      await screen.findByText(
+        'Der Server kennt dieses Gerät nicht — Push-Benachrichtigungen erreichen Sie hier nicht.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Dieses Gerät anmelden' })).toBeTruthy()
+    expect(screen.queryByText('Dieses Gerät ist angemeldet.')).toBeNull()
+  })
+
+  it('claims nothing while the server has not answered (WP-M14-145)', async () => {
+    const subscription = {
+      endpoint: 'https://push.example.org/secret/42',
+      toJSON: () => ({
+        endpoint: 'https://push.example.org/secret/42',
+        keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
+      }),
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    const pushManager = {
+      getSubscription: vi.fn().mockResolvedValue(subscription),
+      subscribe: vi.fn().mockResolvedValue(subscription),
+    }
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ pushManager }),
+        getRegistration: vi.fn().mockResolvedValue({ pushManager }),
+      },
+    })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', { permission: 'granted', requestPermission: vi.fn() })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('/webpush/check')) {
+          return Response.json({}, { status: 500 })
+        }
+
+        return Response.json({ publicKey: PUBLIC_KEY, subscribed: true, subscriptions: 1 })
+      }),
+    )
+
+    renderCard()
+
+    expect(await screen.findByText('1 Geräte sind für dieses Konto angemeldet.')).toBeTruthy()
+    expect(screen.queryByText('Dieses Gerät ist angemeldet.')).toBeNull()
+    expect(
+      screen.queryByText(
+        'Der Server kennt dieses Gerät nicht — Push-Benachrichtigungen erreichen Sie hier nicht.',
+      ),
+    ).toBeNull()
   })
 })
