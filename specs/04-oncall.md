@@ -98,6 +98,16 @@ a shift after it started (`PLAN.md` §8). A reassign of a `SWAP_REQUESTED` shift
 cancels the open swap and writes `swap_cancelled`. A shift that is `CONFIRMED`
 or `SWAP_REQUESTED` cannot be deleted (`409 oncall_shift_locked`).
 
+The calendar range `GET /api/v1/oncall/shifts` answers the **technician** next to
+the shift (ADR-0032, WP-M14-151): the row of a shift carries `technician` with
+the display data of `user_id` (`{ id, givenName, familyName, email }`, the shape
+of a pool member) or `null` while the slot has no technician. The technician of
+a shift need not be a member of its pool — §4a.2 makes the pool the candidates of
+a swap, not the owners of a shift — so the readiness calendar reads the name from
+the shift and never resolves it over the members of a pool. The answer stays
+guarded by `oncall.read` like the members route of a pool; the gate to the names
+is in the web app (`oncall.read_names`, WP-M14-131/132).
+
 ### 4a.3.1 Slot calculation
 
 Slots are local wall-clock weeks, not fixed 168-hour blocks. For a requested
@@ -246,7 +256,7 @@ on the "my on-call" page so the user can subscribe in a calendar app.
 | --- | --- | --- |
 | `GET/POST /api/v1/oncall/pools` | `oncall.read` / `oncall.admin` | list and create pools |
 | `PATCH/DELETE /api/v1/oncall/pools/:id` | `oncall.admin` | rename, deactivate, delete |
-| `GET /api/v1/oncall/shifts?from=&to=&poolId=` | `oncall.read` | calendar range |
+| `GET /api/v1/oncall/shifts?from=&to=&poolId=` | `oncall.read` | calendar range with the technician |
 | `POST /api/v1/oncall/shifts` | `oncall.plan` | create one shift |
 | `POST /api/v1/oncall/shifts/generate` | `oncall.plan` | idempotent weekly generation |
 | `PATCH /api/v1/oncall/shifts/:id` | `oncall.admin` | assign, publish, reassign |

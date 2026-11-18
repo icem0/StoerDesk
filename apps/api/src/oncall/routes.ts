@@ -224,9 +224,37 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           )
           .orderBy(oncallShifts.startsAt)
 
+        // The technician of a shift need not be a member of its pool
+        // (`specs/04-oncall.md` §4a.3 allows any user, §4a.2 the pool only names
+        // the candidates of a swap), so the shift list answers the display data of
+        // `user_id` itself (ADR-0032, WP-M14-151). The readiness calendar reads the
+        // name from the shift instead of resolving it over the members of a pool —
+        // the same guard `oncall.read` as the members route, the gate to the names
+        // stays in the web app (`oncall.read_names`, WP-M14-131/132).
+        const technicianIds = [...new Set(
+          rows.flatMap((row) => (row.userId === null ? [] : [row.userId])),
+        )]
+
+        const nameRows = technicianIds.length === 0
+          ? []
+          : await database
+              .select({
+                id: users.id,
+                givenName: users.givenName,
+                familyName: users.familyName,
+                email: users.email,
+              })
+              .from(users)
+              .where(inArray(users.id, technicianIds))
+
+        const technicians = new Map(nameRows.map((row) => [row.id, row]))
+
         return reply.send(
           shiftListResponseSchema.parse({
-            shifts: rows.map(shiftRow),
+            shifts: rows.map((row) => ({
+              ...shiftRow(row),
+              technician: row.userId === null ? null : technicians.get(row.userId) ?? null,
+            })),
           }),
         )
       },

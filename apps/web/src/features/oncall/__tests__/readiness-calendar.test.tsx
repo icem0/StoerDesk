@@ -11,6 +11,13 @@ import { ReadinessCalendar } from '../readiness-calendar'
 const poolId = '33333333-3333-4333-8333-333333333333'
 const memberId = '44444444-4444-4444-8444-444444444444'
 
+const member = {
+  id: memberId,
+  givenName: 'Max',
+  familyName: 'Mustermann',
+  email: 'max@example.com',
+}
+
 function localIsoDate(value: Date): string {
   const zoned = toZonedTime(value, ONCALL_TIMEZONE)
 
@@ -74,18 +81,7 @@ describe('ReadinessCalendar', () => {
     }
   })
 
-  it('colours a day by its shift state and names the technician', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () =>
-        Response.json({
-          members: [
-            { id: memberId, givenName: 'Max', familyName: 'Mustermann', email: 'max@example.com' },
-          ],
-        }),
-      ),
-    )
-
+  it('colours a day by its shift state and names the technician', () => {
     const today = localIsoDate(new Date())
     const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
     const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
@@ -100,10 +96,11 @@ describe('ReadinessCalendar', () => {
         endsAt,
         createdAt: startsAt,
         updatedAt: startsAt,
+        technician: member,
       },
     ])
 
-    const technician = await screen.findByText('Max Mustermann')
+    const technician = screen.getByText('Max Mustermann')
 
     expect(technician.closest('td')?.className).toContain('bg-emerald-500/15')
     // the legend names the state and the row of the shift repeats it (WP-M14-87)
@@ -112,16 +109,7 @@ describe('ReadinessCalendar', () => {
     expect(screen.getByText('Unbesetzt')).toBeDefined()
   })
 
-  it('names the state and the pool on the row of an unstaffed shift', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => Response.json({
-        members: [
-          { id: memberId, givenName: 'Max', familyName: 'Mustermann', email: 'max@example.com' },
-        ],
-      })),
-    )
-
+  it('names the state and the pool on the row of an unstaffed shift', () => {
     const today = localIsoDate(new Date())
     const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
     const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
@@ -146,7 +134,35 @@ describe('ReadinessCalendar', () => {
     expect(row.closest('td')?.className).toContain('bg-amber-500/15')
   })
 
-  it('hides the name of the technician without the permission (WP-M14-132)', async () => {
+  it('names the technician of a shift whose pool has no members (WP-M14-151)', () => {
+    const fetchMock = vi.fn(async () => Response.json({ members: [] }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        poolId,
+        userId: memberId,
+        state: 'PLANNED',
+        startsAt,
+        endsAt,
+        createdAt: startsAt,
+        updatedAt: startsAt,
+        technician: member,
+      },
+    ])
+
+    expect(screen.getByText('Max Mustermann')).toBeDefined()
+    // the calendar reads the technician of the shift, it never asks for a pool
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('hides the name of the technician without the permission (WP-M14-132)', () => {
     const fetchMock = vi.fn(async () => Response.json({ members: [] }))
 
     vi.stubGlobal('fetch', fetchMock)
@@ -166,6 +182,7 @@ describe('ReadinessCalendar', () => {
           endsAt,
           createdAt: startsAt,
           updatedAt: startsAt,
+          technician: member,
         },
       ],
       false,
@@ -202,5 +219,27 @@ describe('ReadinessCalendar', () => {
 
     expect(screen.getByText('nicht besetzt')).toBeDefined()
     expect(screen.queryByText('besetzt')).toBeNull()
+  })
+
+  it('reads besetzt for a technician without a name in the answer (WP-M14-151)', () => {
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        poolId,
+        userId: memberId,
+        state: 'CONFIRMED',
+        startsAt,
+        endsAt,
+        createdAt: startsAt,
+        updatedAt: startsAt,
+      },
+    ])
+
+    expect(screen.getByText('besetzt')).toBeDefined()
+    expect(screen.queryByText('nicht besetzt')).toBeNull()
   })
 })

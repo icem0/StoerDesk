@@ -72,6 +72,12 @@ function stubRoutes(permissions: string[]) {
               endsAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
               createdAt: plannedIso,
               updatedAt: plannedIso,
+              technician: {
+                id: techId,
+                givenName: 'Erika',
+                familyName: 'Example',
+                email: 'erika@example.com',
+              },
             },
             {
               id: '66666666-6666-4666-8666-666666666666',
@@ -82,6 +88,12 @@ function stubRoutes(permissions: string[]) {
               endsAt: new Date(new Date(calendarIso).getTime() + 8 * 60 * 60 * 1000).toISOString(),
               createdAt: calendarIso,
               updatedAt: calendarIso,
+              technician: {
+                id: memberId,
+                givenName: 'Max',
+                familyName: 'Mustermann',
+                email: 'max@example.com',
+              },
             },
             {
               id: '55555555-5555-4555-8555-555555555555',
@@ -92,6 +104,12 @@ function stubRoutes(permissions: string[]) {
               endsAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
               createdAt: pastIso,
               updatedAt: pastIso,
+              technician: {
+                id: techId,
+                givenName: 'Erika',
+                familyName: 'Example',
+                email: 'erika@example.com',
+              },
             },
           ],
         })

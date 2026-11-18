@@ -20,6 +20,12 @@ if (testDatabase.status === 'unavailable') {
 
 const { roles, userRoles, users } = schema
 
+type MemberRow = {
+  id: string
+  givenName: string
+  familyName: string
+  email: string
+}
 type ShiftRow = {
   id: string
   poolId: string
@@ -29,6 +35,7 @@ type ShiftRow = {
   endsAt: string
   createdAt: string
   updatedAt: string
+  technician?: MemberRow | null
 }
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 type SettingsBody = {
@@ -63,6 +70,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let adminId = ''
     let oncallId = ''
     let reporterId = ''
+    let outsiderId = ''
     let poolId = ''
     const cookies: Record<'admin' | 'oncall' | 'reporter', string> = {
       admin: '',
@@ -158,6 +166,21 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       adminId = await userIdFor('admin-routes@example.org')
       oncallId = await userIdFor('oncall-routes@example.org')
       reporterId = await userIdFor('reporter-routes@example.org')
+
+      // A technician who holds no role of the pool: the pool of the installation
+      // has no group, so its members are the active users with the `oncall` role
+      // and this outsider is nobody's member (`specs/04-oncall.md` §4a.2, §4a.3).
+      const [outsider] = await db
+        .insert(users)
+        .values({
+          email: 'outsider-routes@example.org',
+          passwordHash: 'no-login-for-route-user',
+          givenName: 'Otto',
+          familyName: 'Outside',
+        })
+        .returning({ id: users.id })
+
+      outsiderId = outsider!.id
 
       await db.insert(userRoles).values([
         { userId: adminId, roleId: await roleIdFor('admin') },
@@ -309,6 +332,40 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const body = response.json<{ shifts: ShiftRow[] }>()
       expect(body.shifts.length).toBeGreaterThanOrEqual(2)
       expect(body.shifts.every((shift) => shift.poolId === poolId)).toBe(true)
+    })
+
+    it('names the technician of every shift of the range (WP-M14-151)', async () => {
+      const created = await postShift(cookies['admin'], {
+        poolId,
+        userId: outsiderId,
+        publish: true,
+      })
+
+      expect(created.statusCode).toBe(201)
+
+      const from = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const to = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000)
+      const response = await getShifts(
+        { from: from.toISOString(), to: to.toISOString() },
+        cookies['oncall'],
+      )
+
+      expect(response.statusCode).toBe(200)
+      const body = response.json<{ shifts: ShiftRow[] }>()
+      const assigned = body.shifts.find((shift) => shift.userId === outsiderId)
+
+      // the technician is no member of the pool, the name still travels with the
+      // shift so the readiness calendar can name it (ADR-0032)
+      expect(assigned?.technician).toEqual({
+        id: outsiderId,
+        givenName: 'Otto',
+        familyName: 'Outside',
+        email: 'outsider-routes@example.org',
+      })
+
+      const unstaffed = body.shifts.find((shift) => shift.userId === null)
+
+      expect(unstaffed?.technician).toBeNull()
     })
 
     it('filters shifts by poolId', async () => {

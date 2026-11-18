@@ -44,6 +44,21 @@ export type CreatePoolRequest = z.infer<typeof createPoolRequestSchema>
 export type UpdatePoolRequest = z.infer<typeof updatePoolRequestSchema>
 export type OnCallPool = z.infer<typeof oncallPoolSchema>
 
+/**
+ * The display data of a person (`oncallMemberSchema`) — one pool member and one
+ * technician of a shift. The readiness calendar names a technician from the
+ * shift row, so the technician of a shift of a foreign pool travels with it
+ * (ADR-0032, WP-M14-151). The answer of the shift list is guarded by `oncall.read`
+ * like the members route of a pool; the gate to the names is in the web app
+ * (`oncall.read_names`, WP-M14-131/132).
+ */
+const memberRow = z.object({
+  id: z.string().uuid(),
+  givenName: z.string(),
+  familyName: z.string(),
+  email: z.string().email(),
+})
+
 const uuidOptional = z.string().uuid().optional()
 
 const shiftState = z.enum([
@@ -64,6 +79,8 @@ export const oncallShiftSchema = z.object({
   endsAt: z.date(),
   createdAt: z.date(),
   updatedAt: z.date(),
+  /** The technician of the shift (`specs/04-oncall.md` §4a.3, WP-M14-151). */
+  technician: memberRow.nullable().optional(),
 })
 
 export const createShiftRequestSchema = z.object({
@@ -205,12 +222,7 @@ export const icalUrlResponseSchema = z.object({
 export type IcalUrlResponse = z.infer<typeof icalUrlResponseSchema>
 
 /** One pool member offered as a swap target (WP-M8-14b). */
-export const oncallMemberSchema = z.object({
-  id: z.string().uuid(),
-  givenName: z.string(),
-  familyName: z.string(),
-  email: z.string().email(),
-})
+export const oncallMemberSchema = memberRow
 
 export const oncallMemberListResponseSchema = z.object({
   members: z.array(oncallMemberSchema),

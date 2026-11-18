@@ -1,11 +1,8 @@
 import { useMemo, useState } from 'react'
-import { useQueries } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 import type { OnCallShift } from '@stoerdesk/shared'
 import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
-
-import { apiFetch } from '../../lib/api'
 
 /**
  * The readiness calendar of the office (`specs/04-oncall.md` §4a.2, §4a.3;
@@ -14,20 +11,22 @@ import { apiFetch } from '../../lib/api'
  * Two month grids — the current and the following month — with one week per
  * row from Monday to Sunday and the ISO calendar week on the left. A day is
  * coloured by the state of its shifts, so a gap is visible at a glance. The
- * shifts come from the page, the names of the technicians from the members of
- * the pool (`GET /api/v1/oncall/pools/:id/members`). The week starts on Monday
- * — the week of the calendar, not the configurable week start of the plan
- * administration.
+ * shifts come from the page, and the technician travels with the shift: the
+ * shift list answers the display data of `user_id` (`ADR-0032`, WP-M14-151), so
+ * the calendar names the technician of every shift — also one who is no member
+ * of the pool and every role that reads the calendar sees who has the readiness
+ * when. The week starts on Monday — the week of the calendar, not the
+ * configurable week start of the plan administration.
  *
  * The names are a right of their own (`oncall.read_names`, WP-M14-131): a role
  * without the key reads the same calendar, but the row of a shift answers
- * "besetzt" instead of the name and the browser asks for no member at all
- * (WP-M14-132). The API keeps answering the names to `oncall.read` — the
- * members of a pool are the candidates of a swap.
+ * "besetzt" instead of the name (WP-M14-132). A shift that has a technician is
+ * never called "nicht besetzt" — without a name in the answer it reads
+ * "besetzt". The API keeps answering the names to `oncall.read` (`specs/01-rbac.md`
+ * §3.7); the gate is in this web app.
  */
 
 type Pool = { id: string; name: string }
-type Member = { id: string; givenName: string; familyName: string; email: string }
 type ShiftState =
   | 'UNFILLED'
   | 'DRAFT'
@@ -149,14 +148,16 @@ function monthLabel(iso: string, locale: string): string {
   }).format(new Date(`${iso}T12:00:00Z`))
 }
 
-function memberName(member: Member | undefined): string | null {
-  if (member === undefined) {
+function technicianName(shift: OnCallShift): string | null {
+  const technician = shift.technician
+
+  if (technician === undefined || technician === null) {
     return null
   }
 
-  const name = `${member.givenName} ${member.familyName}`.trim()
+  const name = `${technician.givenName} ${technician.familyName}`.trim()
 
-  return name === '' ? member.email : name
+  return name === '' ? technician.email : name
 }
 
 export function ReadinessCalendar(props: {
@@ -191,41 +192,6 @@ export function ReadinessCalendar(props: {
         new Date(shift.startsAt).getTime() < to && new Date(shift.endsAt).getTime() > from,
     )
   }, [props.shifts, fromIso, toIso])
-
-  // The key of the pools keeps the queries stable — a new array on every
-  // render would restart them for every render.
-  const poolKey = useMemo(
-    () => [...new Set(shifts.map((shift) => shift.poolId))].sort().join(','),
-    [shifts],
-  )
-
-  const memberQueries = useQueries({
-    queries: useMemo(
-      () =>
-        !showNames || poolKey === ''
-          ? []
-          : poolKey.split(',').map((poolId) => ({
-              queryKey: ['oncall', 'pool-members', poolId],
-              queryFn: () =>
-                apiFetch<{ members: Member[] }>(`/v1/oncall/pools/${poolId}/members`),
-              retry: false,
-              staleTime: 60_000,
-            })),
-      [poolKey, showNames],
-    ),
-  })
-
-  const namesByUser = new Map<string, string>()
-
-  for (const query of memberQueries) {
-    for (const member of query.data?.members ?? []) {
-      const name = memberName(member)
-
-      if (name !== null) {
-        namesByUser.set(member.id, name)
-      }
-    }
-  }
 
   const poolNames = useMemo(
     () => new Map(props.pools.map((pool) => [pool.id, pool.name])),
@@ -377,21 +343,22 @@ export function ReadinessCalendar(props: {
                               {cell.inMonth && rows.length > 0 ? (
                                 <ul className="flex flex-col gap-0.5">
                                   {rows.map((shift) => {
-                                    const technician =
-                                      shift.userId === null
-                                        ? null
-                                        : (namesByUser.get(shift.userId) ?? null)
+                                    const name = showNames
+                                      ? technicianName(shift)
+                                      : null
                                     const stateLabel = t(`admin.state.${shift.state}`)
                                     const poolName = poolNames.get(shift.poolId) ?? ''
-                                    // Without the permission `oncall.read_names`
-                                    // the row names nobody: a shift with a
-                                    // technician reads "besetzt", a slot without
-                                    // one "nicht besetzt" (WP-M14-132).
-                                    const holder = showNames
-                                      ? (technician ?? t('readiness.unassigned'))
-                                      : shift.userId === null
+                                    // A role without the permission `oncall.read_names`
+                                    // names nobody: a shift with a technician reads
+                                    // "besetzt", a slot without one "nicht besetzt"
+                                    // (WP-M14-132). A shift that has a technician is
+                                    // never called "nicht besetzt" — without a name in
+                                    // the answer it reads "besetzt" (WP-M14-151).
+                                    const holder =
+                                      name ??
+                                      (shift.userId === null
                                         ? t('readiness.unassigned')
-                                        : t('readiness.assigned')
+                                        : t('readiness.assigned'))
 
                                     return (
                                       <li
