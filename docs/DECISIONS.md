@@ -60,3 +60,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0026](DECISIONS/0026-the-escalation-offers-and-assigns-tickets.md) | The escalation offers and assigns tickets (`offer`, `assign`, `ticket_assignees`) | accepted |
 | [ADR-0027](DECISIONS/0027-ticket-number-without-year.md) | The ticket number carries no calendar year (`ST-0001`, one global counter, legacy numbers stay readable) | accepted |
 | [ADR-0028](DECISIONS/0028-the-channel-health-warning-goes-over-another-channel.md) | A broken channel warns over another channel, once a day (`push_subscription_dead`, `channel.health_warning`) | accepted |
+| [ADR-0029](DECISIONS/0029-the-object-priority-deviates-from-the-standard.md) | The priority of an object deviates from the standard (`object_priority_overrides`, `ticket.default_priority`) | accepted |

@@ -38,7 +38,7 @@ part of the product text. **(plan, §2)**
 | free text     | `description`, max. 4000 characters                                                                                                      | this slice |
 | photos        | up to 6, compressed client-side to max. 1600 px and JPEG quality 0.8                                                                     | plan §10   |
 | contact       | name optional, **phone or e-mail required** (at least one)                                                                               | plan §10   |
-| priority      | internal reports only; QR reports are always `normal`                                                                                    | plan §10   |
+| priority      | internal reports choose it; a QR report takes the deviation of the object, else the standard (`ticket.default_priority`) — ADR-0029     | plan §10   |
 | locale        | `de`/`en` of the reporter — used for later notifications, stored in the `created` event payload, never as a column label                 | plan §3    |
 | `client_uuid` | client-generated UUID, the idempotency key of offline replay                                                                             | plan §10   |
 
@@ -135,7 +135,9 @@ of WP-M2-09 replays against (`PLAN.md` §10, acceptance 20.2).
 ## 7.5 What one report writes
 
 In one transaction: one `tickets` row (`status = 'NEW'`, `source = 'QR'`,
-`priority = 'normal'`, reporter contact, `fault_template_keys`, `description`,
+`priority` = the effective priority of the object (`specs/02-data-model.md`
+§4.3.2): its deviation, else the standard, reporter contact,
+`fault_template_keys`, `description`,
 `client_uuid`, `status_token`, `ticket_no` by §4.11) and one append-only
 `ticket_events` row `type = 'created'` with
 `actor_kind = 'public'`, `actor_user_id = NULL` and

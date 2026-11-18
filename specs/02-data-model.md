@@ -72,6 +72,26 @@ assignment of a report or ticket can be chosen from.
   picker, search, stickers and print sheets, CSV import upsert and
   `PUT/DELETE /objects/{object_no}` of the object API. **(plan, §11)**
 
+### 4.3.2 `object_priority_overrides` — the priority of an object deviates from the standard
+
+ADR-0029. The priority is **not** a column of `objects`: the standard priority
+is a setting (`ticket.default_priority`, default `normal`), and this table
+holds only the objects whose priority differs from that standard. A row that
+equals the standard is not stored — the table holds deviations, nothing else.
+
+| Column | Type | Rule |
+| --- | --- | --- |
+| `object_id` | UUID | primary key, foreign key to `objects`, `ON DELETE CASCADE` |
+| `priority` | text, not null | check over `low`, `normal`, `high`, `critical` — the deviation of this object |
+| `created_at`, `updated_at` | timestamptz | as §4.2 |
+
+- The **effective priority** of an object is the row of this table, else the
+  standard of the setting `ticket.default_priority`.
+- Changing the standard deletes the rows that now equal the standard, in the
+  same transaction.
+- The object number links the row to the object outside the database
+  (§4.3.1); inside the database the row points at the uuid of the object.
+
 ### 4.4 `systems` — maintenance subsystems of an object
 
 | Column | Type | Rule |

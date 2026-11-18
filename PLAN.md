@@ -183,6 +183,9 @@ Core tables:
 - `systems` — object reference, type (`BMA`, `LICHTRUF`, `RWA`, `EMA`,
   `SPRACHALARM`, `SONSTIGE`), label, optional own `qr_token`
 - `contracts_refs` — optional object-level AA/SA default and service level
+- `object_priority_overrides` — the priority of an object deviates from the
+  standard (ADR-0029): the object reference and the deviation; the standard
+  itself is the setting `ticket.default_priority`
 - `tickets` — readable `ticket_no`, object/system, status, priority, title,
   description, `reported_at`, `received_at`, source, reporter data, work-order
   type/number, assignment data, response timestamps, `client_uuid`, flags,
@@ -417,7 +420,8 @@ Fields:
   at least one required,
 - up to 6 photos, compressed client-side to max. 1600 px and JPEG quality 0.8,
 - contact name plus phone or e-mail (at least one),
-- priority only for internal users; QR reports start as `normal`.
+- priority: the internal user chooses it; a QR report takes the deviation of the
+  object, else the standard (ADR-0029).
 
 Behaviour:
 
@@ -2790,6 +2794,10 @@ These decisions need an ADR or explicit approval before the related WP starts:
   never an OS password (ADR-0004, `specs/18-self-update.md`).
 - multi-tenancy (default: no),
 - contract-type deadlines stay deferred (ADR-0008); per-priority defaults resolved by ADR-0008 (WP-M6-03), editable in the administration (WP-M6-16); per-object-type deadlines (Objektart) are undecided — they need an ADR before a work package,
+- the priority per object — **resolved by ADR-0029**: the standard is the setting
+  `ticket.default_priority` (default `normal`), the deviations live in
+  `object_priority_overrides` (WP-M14-134 … WP-M14-134i); the scope per object
+  type (Objektart) stays undecided and needs its own ADR,
 - the shape of the escalation configuration — **resolved by ADR-0017**: the workflow milestones are the stages, the deadlines per priority, the conditions and the actions live in the database and are maintained in `/admin/escalation`; the former manual stage catalogue is removed; the number of stages and the predecessor of a stage — **resolved by ADR-0023**: the stage set is a validated chain in the database, a stage names its predecessor or none and the predecessor carries the clock,
 - whether shift swaps require admin approval by default (default: yes) — **resolved by
   ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the

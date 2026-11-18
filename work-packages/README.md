@@ -24,7 +24,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c) | 106  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i) | 116  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -922,6 +922,25 @@ never leak into another one. Two cases of the page test prove it — the checkbo
 of the second role show its own grants, and the saved body carries the grants of
 the role that is open now.
 
+**The priority of the object deviates from the standard (WP-M14-134, out of band
+in phase 14, requested by the office).** The office asked for the priority per
+object and for the standard values in the administration: „wir machen einen
+parallelen tabelle in der nur die abweichungen vom standard mit der
+objektnummer verknüpft wird". Today the priority is only a field of the request
+and the standard priority is hard-coded as `normal` — the QR report of a clinic
+starts `normal` like every other report.
+
+**ADR-0029** decides: the standard is the setting `ticket.default_priority`
+(default `normal`), the deviations live in the parallel table
+`object_priority_overrides` (migration `0050`) and hold only what differs from
+the standard — a value that equals the standard removes the row, and changing
+the standard deletes the rows that no longer deviate. The effective priority of
+an object is its deviation, else the standard; the object summary carries the
+effective priority and the stored deviation. A new ticket takes the deviation:
+the internal form preselects it, the QR report has no other choice, and the
+explicit choice of the internal user still wins. The decision splits into
+WP-M14-134a … WP-M14-134i.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1465,6 +1484,16 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-131 | the permission key of the names of the readiness (out of band)    | planned | yes     |
 | WP-M14-132 | the readiness calendar names the technicians only with the permission (out of band) | done | yes |
 | WP-M14-133 | the roles page edits one role at a time (out of band)                | done    | yes |
+| WP-M14-134 | the priority of the object deviates from the standard — ADR-0029, the spec and the split (out of band) | planned | yes |
+| WP-M14-134a | the table of the priority deviations (out of band)     | planned | yes     |
+| WP-M14-134b | the contracts of the priority and of the standard (out of band) | planned | yes |
+| WP-M14-134c | the service reads and writes the deviation (out of band) | planned | yes |
+| WP-M14-134d | the routes answer the standard and the deviations (out of band) | planned | yes |
+| WP-M14-134e | the ticket takes the priority of the object (out of band) | planned | yes |
+| WP-M14-134f | the object form carries the priority (out of band)  | planned | yes     |
+| WP-M14-134g | the administration shows the standard and the deviations (out of band) | planned | yes |
+| WP-M14-134h | the route and the menu entry of the defaults (out of band) | planned | yes |
+| WP-M14-134i | the create form starts from the priority of the object (out of band) | planned | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

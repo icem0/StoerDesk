@@ -43,6 +43,13 @@ one of `BMA`, `LICHTRUF`, `RWA`, `EMA`, `SPRACHALARM`, `SONSTIGE`. `qrToken` is
 the object's current QR token and is nullable only for rows created before
 WP-M2-02. Timestamps stay internal.
 
+**Priority (ADR-0029).** The summary carries two fields of the priority:
+
+- `priority` — the **effective** priority of the object: its deviation, else
+  the standard (`ticket.default_priority`, default `normal`).
+- `priorityOverride` — the stored deviation, `null` when the object follows the
+  standard. The two are equal only when the object deviates.
+
 **List query.**
 
 - `search` — case-insensitive contains over `object_no`, `name`, `street`,
@@ -70,6 +77,12 @@ Rows are ordered by `objectNo`. An invalid query value answers
   belong to the object answers `400 invalid_request`. QR tokens are never
   accepted from the client and never change through this API.
 - An empty PATCH body is a no-op (`200` with the unchanged summary).
+- `priority` is optional on create and PATCH and holds the deviation of the
+  object: `null` removes the row of `object_priority_overrides`
+  (`specs/02-data-model.md` §4.3.2), a value stores it. A value that equals the
+  standard removes the row as well — the table holds only deviations. An absent
+  field on PATCH leaves the deviation unchanged. A value outside `low`,
+  `normal`, `high`, `critical` answers `400 invalid_request`.
 
 **Errors.** Unknown `object_no` answers `404 object_not_found`; malformed
 bodies, queries or path values answer `400 invalid_request` with field paths;

@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The priority of the object deviates from the standard (**WP-M14-134**, out of
+  band in phase 14 — **ADR-0029**): the office asked for the priority per
+  object and for the standard values in the administration. The standard
+  priority is the setting `ticket.default_priority` (default `normal`), the
+  deviations live in the parallel table `object_priority_overrides` and hold
+  only what differs from the standard — a value that equals the standard
+  removes the row, and changing the standard deletes the rows that no longer
+  deviate. The effective priority of an object is its deviation, else the
+  standard; the object summary carries both. A new ticket takes the deviation:
+  the internal form preselects it, the QR report has no other choice, and the
+  explicit choice of the internal user still wins. The chain runs in
+  WP-M14-134a … WP-M14-134i.
 - The names of the readiness calendar belong to a role (**WP-M14-131**, out of
   band in phase 14): the office asked that the names of the technicians in the
   readiness calendar are visible to the admins and to nobody else — or to a role
