@@ -7,6 +7,7 @@ import type {
   NotificationMessageItem,
   NotificationMessageListResponse,
   WebPushConfigResponse,
+  WebPushSubscriptionCheckResponse,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../../auth/usePermission'
@@ -36,17 +37,32 @@ const NOTIFICATION_EVENTS = [
 const NOTIFICATION_STATES = ['PENDING', 'SENT', 'FAILED'] as const
 
 /** The cause of the hint of the web push; `none` means: no hint. */
-type WebPushHint = 'none' | 'not_subscribed' | 'unsupported' | 'denied' | 'not_configured'
+type WebPushHint =
+  | 'none'
+  | 'not_subscribed'
+  | 'unsupported'
+  | 'denied'
+  | 'not_configured'
+  | 'not_registered'
 
 /**
  * The cause of the hint. The state of the browser comes from the probe of
- * WP-M14-142, the state of the server from the configuration of the channel —
- * the hint names the cause it found and stays silent while a question is open:
- * a statement about the browser that was never checked is a lie.
+ * WP-M14-142, the state of the server from the configuration of the channel
+ * and from the answer whether the server knows this device (WP-M14-144) — the
+ * hint names the cause it found and stays silent while a question is open: a
+ * statement about the browser that was never checked is a lie.
  */
-function webPushHint(push: BrowserPush | null, serverConfigured: boolean | null): WebPushHint {
-  if (push === null || push.state === 'subscribed' || push.state === 'unknown') {
+function webPushHint(
+  push: BrowserPush | null,
+  serverConfigured: boolean | null,
+  deviceKnown: boolean | null,
+): WebPushHint {
+  if (push === null || push.state === 'unknown') {
     return 'none'
+  }
+
+  if (push.state === 'subscribed') {
+    return deviceKnown === false ? 'not_registered' : 'none'
   }
 
   if (push.state === 'unsupported') {
@@ -164,13 +180,34 @@ export function InboxPage() {
   })
 
   const serverConfigured = webPush.isSuccess ? (webPush.data?.publicKey ?? '') !== '' : null
-  const hint = webPushHint(push, serverConfigured)
+
+  // Does the server know the device of this browser? The browser knows its own
+  // subscription, the server knows its rows — only both together say whether a
+  // push message can arrive (WP-M14-144). The endpoint travels in the body and
+  // never in the answer.
+  const device = useQuery({
+    queryKey: ['webpush-device', push?.endpoint ?? ''],
+    queryFn: () =>
+      apiFetch<WebPushSubscriptionCheckResponse>('/v1/notifications/accounts/webpush/check', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ endpoint: push?.endpoint }),
+      }),
+    enabled: push !== null && push.endpoint !== null,
+    retry: false,
+  })
+
+  const deviceKnown =
+    device.isSuccess && typeof device.data.registered === 'boolean' ? device.data.registered : null
+
+  const hint = webPushHint(push, serverConfigured, deviceKnown)
 
   const hintTexts = {
     not_subscribed: t('inbox.webpush.hint'),
     unsupported: t('inbox.webpush.unsupported'),
     denied: t('inbox.webpush.denied'),
     not_configured: t('inbox.webpush.notConfigured'),
+    not_registered: t('inbox.webpush.notRegistered'),
   }
 
   const stateOf = (message: NotificationMessageItem) =>

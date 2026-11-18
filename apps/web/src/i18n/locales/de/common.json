@@ -291,7 +291,8 @@
       "setup": "Einrichtungsseite öffnen",
       "unsupported": "Dieser Browser kann keine Push-Benachrichtigungen empfangen.",
       "denied": "Die Push-Benachrichtigungen sind in diesem Browser gesperrt.",
-      "notConfigured": "Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen)."
+      "notConfigured": "Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).",
+      "notRegistered": "Der Server kennt dieses Gerät nicht — hier erreichen Sie keine Push-Benachrichtigungen."
     }
   }
 }

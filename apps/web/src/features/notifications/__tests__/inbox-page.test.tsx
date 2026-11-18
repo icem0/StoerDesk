@@ -34,7 +34,7 @@ const message = {
 function stub(
   messages: unknown[] = [message],
   webPushConfig = { publicKey: '', subscribed: false, subscriptions: 0 },
-  options: { permissions?: string[]; recipients?: unknown[] } = {},
+  options: { permissions?: string[]; recipients?: unknown[]; registered?: boolean } = {},
 ) {
   const readReceipts: string[] = []
 
@@ -65,6 +65,10 @@ function stub(
           id: message.id,
           readAt: new Date().toISOString(),
         })
+      }
+
+      if (url.includes('/accounts/webpush/check')) {
+        return Response.json({ registered: options.registered ?? true })
       }
 
       if (url.includes('/accounts/webpush')) {
@@ -261,6 +265,24 @@ describe('InboxPage', () => {
     expect(
       screen.queryByText('Für diesen Browser sind noch keine Push-Benachrichtigungen eingerichtet.'),
     ).toBeNull()
+  })
+
+  it('names a device the server does not know (WP-M14-146)', async () => {
+    stub(
+      [message],
+      { publicKey: 'vapid-public-key', subscribed: true, subscriptions: 1 },
+      { registered: false },
+    )
+    stubBrowser('subscribed')
+
+    renderPage()
+
+    expect(
+      await screen.findByText(
+        'Der Server kennt dieses Gerät nicht — hier erreichen Sie keine Push-Benachrichtigungen.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Einrichtungsseite öffnen' })).toBeTruthy()
   })
 
   it('shows no setup hint while the browser has not answered (WP-M14-143)', async () => {

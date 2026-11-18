@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The inbox asks the server about this device (**WP-M14-146**, out of band in
+  phase 14): a browser whose device the server does not know receives no push
+  message, and the inbox of WP-M14-143 stayed silent because the browser itself
+  holds a subscription. The page asks the server about the endpoint of this
+  browser and names that case with its own text and the link to the setup page,
+  where the card registers the device again.
 - The card asks the server about this device (**WP-M14-145**, out of band in
   phase 14): „Dieses Gerät ist angemeldet.“ was the answer of the card as soon
   as the browser held a subscription — even when the server had no row for it

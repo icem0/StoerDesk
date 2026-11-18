@@ -1,7 +1,7 @@
 # WP-M14-146: the inbox asks the server about this device
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -59,8 +59,8 @@ Expected: all green; the inbox names the device the server does not know.
 
 ## Handoff
 
-- Files changed: the inbox page and its test
+- Files changed: the inbox page, its test and the two locale files
 - Interfaces added: the text of the device the server does not know
-- Verified: —
-- Follow-up WP: none
+- Verified: `npm run check` (exit 0), the vitest file of the inbox
+- Follow-up WP: none — the chain of the push is closed
 - Open question: none

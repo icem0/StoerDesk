@@ -1525,7 +1525,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-143 | the inbox asks this browser (out of band) | done | yes |
 | WP-M14-144 | the server answers whether it holds the device of this browser (out of band) | done | yes |
 | WP-M14-145 | the card asks the server about this device (out of band) | done | yes |
-| WP-M14-146 | the inbox asks the server about this device (out of band) | planned | yes |
+| WP-M14-146 | the inbox asks the server about this device (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

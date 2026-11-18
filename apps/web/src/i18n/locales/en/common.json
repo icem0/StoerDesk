@@ -291,7 +291,8 @@
       "setup": "Open the setup page",
       "unsupported": "This browser cannot receive push notifications.",
       "denied": "Push notifications are blocked in this browser.",
-      "notConfigured": "Web push is not configured on this server (the VAPID keys are missing)."
+      "notConfigured": "Web push is not configured on this server (the VAPID keys are missing).",
+      "notRegistered": "The server does not know this device — no push message reaches you here."
     }
   }
 }

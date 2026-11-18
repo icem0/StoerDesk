@@ -2756,6 +2756,16 @@ holds and the server does not know gets its own line and the register action —
 the button registers the existing subscription again, without a second
 permission prompt. While the server has not answered the card claims nothing.
 
+**The inbox asks the server about this device (WP-M14-146, out of band in phase
+14).** A browser whose device the server does not know receives no push
+message, and the inbox of WP-M14-143 stayed silent because the browser itself
+holds a subscription. The page asks the server about the endpoint of this
+browser (`POST /api/v1/notifications/accounts/webpush/check`) and names that
+case with its own text (`inbox.webpush.notRegistered`) and the link to the setup
+page, where the card of WP-M14-145 registers the device again. With that the
+chain of the push is closed: the browser says what it has, the server says what
+it knows, and both pages name the same cause.
+
 
 
 
