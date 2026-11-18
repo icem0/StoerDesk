@@ -2792,6 +2792,15 @@ minute, not once per ticket. The chain is split into **WP-M14-147a** (the shared
 contract), **WP-M14-147b** (the engine), **WP-M14-147c** (the configuration
 service) and **WP-M14-147d** (the administration).
 
+**The condition of the readiness shift in the shared contract (WP-M14-147a).**
+The leaves of §7.4 gain the field `shift` — the operators `eq` and `ne`, the
+value the uuid of a readiness pool. The facts of a ticket gain the optional
+fact `staffedPools`: the ids of the pools with a staffed shift at the moment of
+the evaluation. The evaluator matches a pool of that list; without the fact the
+leaf never matches, so a rule that asks for a staffed pool never fires because
+nobody answered. The evaluation stays a pure function — the API collects the
+fact (WP-M14-147b).
+
 
 
 

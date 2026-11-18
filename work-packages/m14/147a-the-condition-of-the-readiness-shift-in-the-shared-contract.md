@@ -1,7 +1,7 @@
 # WP-M14-147a: the condition of the readiness shift in the shared contract
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens

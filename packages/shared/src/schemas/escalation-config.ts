@@ -381,6 +381,11 @@ export const escalationConditionLeafSchema = z.union([
       z.array(z.string().regex(TIME_OF_DAY_INTERVAL_PATTERN)).min(1),
     ]),
   ),
+  /**
+   * The readiness shift of a pool (§7.4, ADR-0030): the value is the uuid of
+   * a readiness pool, the leaf matches when the pool has a staffed shift.
+   */
+  leaf('shift', ['eq', 'ne'], z.uuid()),
 ])
 
 export type EscalationConditionLeaf = z.infer<typeof escalationConditionLeafSchema>
@@ -699,6 +704,13 @@ export type EscalationFacts = {
    * when it is absent, the current `Europe/Berlin` time is used.
    */
   timeOfDay?: string | null
+  /**
+   * The readiness pools that are staffed at the moment of the evaluation
+   * (§7.4, ADR-0030): the ids of the pools with a shift that covers now. A
+   * `shift` leaf matches a pool of this list. Without the fact the leaf never
+   * matches — a rule that asks for a shift needs the readiness of the scan.
+   */
+  staffedPools?: readonly string[]
 }
 
 const listValue = (value: unknown): string[] =>
@@ -790,6 +802,20 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
       const within = listValue(leaf.value).some((interval) => timeOfDayIntervalMatches(interval, minutes))
 
       return leaf.operator === 'notIn' ? !within : within
+    }
+
+    case 'shift': {
+      const staffed = facts.staffedPools
+
+      // Without the readiness of the scan the leaf never matches: a rule that
+      // asks for a staffed pool must not fire because nobody answered.
+      if (staffed === undefined) {
+        return false
+      }
+
+      const equals = staffed.includes(String(leaf.value))
+
+      return leaf.operator === 'ne' ? !equals : equals
     }
 
     default:

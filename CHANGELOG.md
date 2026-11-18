@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The condition of the readiness shift in the shared contract (**WP-M14-147a**,
+  out of band in phase 14): the conditions of a rule gain the field `shift` with
+  the uuid of a readiness pool, and the facts of a ticket gain the pools that
+  are staffed at that moment. A pool with a shift matches, a pool without one
+  does not, and without the readiness of the scan the field never matches.
 - The administration sets a new password for a colleague (**WP-M14-148**, out
   of band in phase 14): the user management was missing a way to hand a new
   colleague an account without inventing a password for them. The server

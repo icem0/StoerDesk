@@ -620,3 +620,59 @@ describe('the condition evaluation', () => {
     ).toBe(false)
   })
 })
+
+describe('the readiness shift in a condition (§7.4, ADR-0030)', () => {
+  const pool = '6f0a1b7c-5d4e-4f8a-9b2c-3d4e5f6a7b8c'
+  const other = '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d'
+
+  it('matches a pool with a staffed shift', () => {
+    expect(
+      evaluateEscalationCondition(
+        { field: 'shift', operator: 'eq', value: pool },
+        { ...facts, staffedPools: [pool] },
+      ),
+    ).toBe(true)
+  })
+
+  it('does not match a pool without a staffed shift', () => {
+    expect(
+      evaluateEscalationCondition(
+        { field: 'shift', operator: 'eq', value: other },
+        { ...facts, staffedPools: [pool] },
+      ),
+    ).toBe(false)
+  })
+
+  it('asks for a pool without a shift with ne', () => {
+    expect(
+      evaluateEscalationCondition(
+        { field: 'shift', operator: 'ne', value: other },
+        { ...facts, staffedPools: [pool] },
+      ),
+    ).toBe(true)
+    expect(
+      evaluateEscalationCondition(
+        { field: 'shift', operator: 'ne', value: pool },
+        { ...facts, staffedPools: [pool] },
+      ),
+    ).toBe(false)
+  })
+
+  it('never matches without the readiness of the scan', () => {
+    expect(evaluateEscalationCondition({ field: 'shift', operator: 'eq', value: pool }, facts)).toBe(
+      false,
+    )
+    expect(evaluateEscalationCondition({ field: 'shift', operator: 'ne', value: pool }, facts)).toBe(
+      false,
+    )
+  })
+
+  it('accepts the leaf in the contract and refuses a value that is no uuid', () => {
+    expect(
+      escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: pool }).success,
+    ).toBe(true)
+    expect(
+      escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: 'pool' }).success,
+    ).toBe(false)
+  })
+})
