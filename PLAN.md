@@ -2973,6 +2973,13 @@ so the ticket waits for him. The test of the distribution proves both cases,
 the test of the actions proves the target `assigned` of a notification, and the
 contract test proves the kinds of the targets (ADR-0033).
 
+**The claim and the acceptance name the technician (WP-M14-150c).** The
+`claimed` and the `accepted` step of the workflow write the row of
+`ticket_assignees` in the transaction of the step, when a **user** performs it:
+the technician who takes the ticket himself is an assignee of the ticket, and
+the target `assigned` of a notification reaches him. A system action writes no
+row — the escalation writes its own rows (ADR-0026, ADR-0033).
+
 **The readiness calendar names the technician of every shift (WP-M14-151, out of
 band in phase 14).** The office reported that the readiness calendar answered
 „nicht besetzt" behind shifts that clearly had a technician and that an admin

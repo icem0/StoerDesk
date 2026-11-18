@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
-import { ticketEvents, tickets } from '../db/schema'
+import { ticketAssignees, ticketEvents, tickets } from '../db/schema'
 import { closeOpenPause } from './pauses'
 import { readTicketTransitions, resolveTransition } from './transition-service'
 
@@ -149,6 +149,22 @@ export async function transitionTicket(ctx: TransitionContext) {
 
     if (insertedEvent === undefined) {
       throw TICKET_NOT_FOUND(ticketId)
+    }
+
+    // The technician who takes the ticket himself — the `claimed` and the
+    // `accepted` step — is an assignee of the ticket
+    // (`specs/02-data-model.md` §4.13, ADR-0033): the `assigned` target of a
+    // notification of the escalation reaches him. A system action writes no
+    // row: the escalation writes its own rows (ADR-0026).
+    if (
+      (event === 'claimed' || event === 'accepted') &&
+      actorKind === 'user' &&
+      actorUserId !== undefined
+    ) {
+      await tx
+        .insert(ticketAssignees)
+        .values({ ticketId: updated.id, userId: actorUserId })
+        .onConflictDoNothing()
     }
 
     // The timeline stops at acknowledgement and the ticket leaves the workflow;

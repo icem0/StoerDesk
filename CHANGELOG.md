@@ -48,6 +48,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ticket and is notified on his own ntfy topic; an offer names him in
   `offered_to_user_id`, so the ticket waits for him. A deactivated account is
   nobody: the distribution changes nothing (ADR-0033).
+- The technician who takes the ticket himself is its assignee
+  (**WP-M14-150c**, out of band in phase 14): the `claimed` and the `accepted`
+  step of the workflow write the row of `ticket_assignees` in the transaction of
+  the step. A ticket that a technician claimed after an offer or that he
+  accepted now carries him as the assignee — the target `assigned` of the
+  notification action reaches him. A system action writes no row: the
+  escalation writes its own rows (ADR-0033).
 - The administration offers the pool in the condition (**WP-M14-147d**, out of
   band in phase 14): the field „Bereitschafts-Schicht" of a condition offers
   the readiness pools of the installation with their names, and the value of a

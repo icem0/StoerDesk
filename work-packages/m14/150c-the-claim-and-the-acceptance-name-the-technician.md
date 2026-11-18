@@ -1,7 +1,7 @@
 # WP-M14-150c: the claim and the acceptance name the technician
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M14-150a
 phase: 14
 milestone: m14
@@ -59,6 +59,7 @@ Expected: all green; the workflow test proves the row of the technician.
 
 - Files changed: the workflow and its test
 - Interfaces added: the assignee row of the claim and of the acceptance
-- Verified: —
+- Verified: typecheck (api), ESLint, vitest (the workflow columns 5/5),
+  `i18n:check`, `wp:check`
 - Follow-up WP: WP-M14-150d (the administration)
 - Open question: none

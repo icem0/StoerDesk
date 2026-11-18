@@ -1569,7 +1569,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-150 | the assignment names a technician and the notification reaches him — ADR-0033, the spec and the split (out of band) | done | yes |
 | WP-M14-150a | the contracts of the new targets and their consumers (out of band) | done | yes |
 | WP-M14-150b | the distribution names the technician (out of band) | done | yes |
-| WP-M14-150c | the claim and the acceptance name the technician (out of band) | planned | yes |
+| WP-M14-150c | the claim and the acceptance name the technician (out of band) | done | yes |
 | WP-M14-150d | the administration names the technician and the assigned recipient (out of band) | planned | yes |
 
 | WP-M14-151 | the readiness calendar names the technician of every shift (out of band) | done | yes |

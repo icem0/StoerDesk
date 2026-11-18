@@ -23,7 +23,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped workflow column integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, tickets, users } = schema
+const { objects, tickets, ticketAssignees, users } = schema
 
 describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integration)', () => {
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
@@ -127,5 +127,75 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
 
     expect(row?.status).toBe('IN_REVIEW')
     expect(row?.acknowledgedAt).toBeNull()
+  })
+
+  it('names the technician of a claim as the assignee of the ticket', async () => {
+    const [ticketId] = (await openTicket()).split('|')
+
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'review_started', actorUserId })
+    await transitionTicket({
+      database: db,
+      ticketId: ticketId ?? '',
+      event: 'work_order_set',
+      actorUserId,
+      payload: { text: 'AA 4711' },
+    })
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'offered', actorUserId })
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'claimed', actorUserId })
+
+    const assignees = await db
+      .select({ userId: ticketAssignees.userId })
+      .from(ticketAssignees)
+      .where(eq(ticketAssignees.ticketId, ticketId ?? ''))
+
+    expect(assignees.map((row) => row.userId)).toStrictEqual([actorUserId])
+  })
+
+  it('names the technician of an acceptance as the assignee of the ticket', async () => {
+    const [ticketId] = (await openTicket()).split('|')
+
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'review_started', actorUserId })
+    await transitionTicket({
+      database: db,
+      ticketId: ticketId ?? '',
+      event: 'work_order_set',
+      actorUserId,
+      payload: { text: 'AA 4711' },
+    })
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'assigned', actorUserId })
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'accepted', actorUserId })
+
+    const assignees = await db
+      .select({ userId: ticketAssignees.userId })
+      .from(ticketAssignees)
+      .where(eq(ticketAssignees.ticketId, ticketId ?? ''))
+
+    expect(assignees.map((row) => row.userId)).toStrictEqual([actorUserId])
+  })
+
+  it('writes no assignee for a system action', async () => {
+    const [ticketId] = (await openTicket()).split('|')
+
+    await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'review_started', actorUserId })
+    await transitionTicket({
+      database: db,
+      ticketId: ticketId ?? '',
+      event: 'work_order_set',
+      actorUserId,
+      payload: { text: 'AA 4711' },
+    })
+    await transitionTicket({
+      database: db,
+      ticketId: ticketId ?? '',
+      event: 'assigned',
+      actorKind: 'system',
+    })
+
+    const assignees = await db
+      .select({ userId: ticketAssignees.userId })
+      .from(ticketAssignees)
+      .where(eq(ticketAssignees.ticketId, ticketId ?? ''))
+
+    expect(assignees).toHaveLength(0)
   })
 })
