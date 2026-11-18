@@ -270,6 +270,10 @@
       "whatsapp": "WhatsApp Web"
     },
     "unreadCount": "{{count}} ungelesen",
-    "showAll": "Alle Nachrichten anzeigen"
+    "showAll": "Alle Nachrichten anzeigen",
+    "webpush": {
+      "hint": "Push notifications are not enabled in this browser yet.",
+      "setup": "Open setup page"
+    }
   }
 }

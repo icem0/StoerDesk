@@ -1,7 +1,7 @@
 # WP-M14-128: the inbox names the setup page when web push is not set up
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -28,9 +28,9 @@ interfaces:
 - The inbox reads `GET /v1/notifications/accounts/webpush` under the shared
   query key `['webpush-config']` (react-query dedupes it with the card of
   WP-M14-126a — no second request).
-- `inbox.webpushSetup` (de/en) — the link text of the setup hint; the link
-  points to `/settings/notifications`, the entry of the settings menu that owns
-  the web-push card.
+- `inbox.webpush.hint` and `inbox.webpush.setup` (de/en) — the hint line and the
+  link text of the setup hint; the link points to `/settings/notifications`, the
+  entry of the settings menu that owns the web-push card.
 
 ## Task
 
@@ -43,12 +43,13 @@ sees no way to it.
 1. Import `WebPushConfigResponse` from `@stoerdesk/shared` and read
    `GET /v1/notifications/accounts/webpush` under `['webpush-config']`.
 2. When the answer carries no VAPID key or no device of this user, show one
-   line below the messages: a link to `/settings/notifications` with the text
-   of `inbox.webpushSetup`. A configured channel with a device shows nothing
-   extra.
+   hint line below the messages: the text of `inbox.webpush.hint` and a link to
+   `/settings/notifications` with the text of `inbox.webpush.setup`. A
+   configured channel with a device shows nothing extra.
 3. A failed or pending config query shows no hint and no error line — the
    inbox never blocks on the channel state.
-4. Add `inbox.webpushSetup` in `de` and `en`; no literal string in the page.
+4. Add `inbox.webpush.hint` and `inbox.webpush.setup` in `de` and `en`; no
+   literal string in the page.
 
 ## Non-goals
 
@@ -75,7 +76,8 @@ and without a key, and no link with a device.
 - Files changed: the inbox page, its test, the two locale files and this WP
 - Interfaces added: the shared `['webpush-config']` key on the inbox page and
   the setup link
-- Verified: `npx vitest run apps/web/src/features/notifications/__tests__/inbox-page.test.tsx`,
-  `npm run i18n:check`
+- Verified: `npm run check` (exit 0 — typecheck, lint, the whole vitest suite, the
+  i18n check, the WP check and the 14 e2e specs),
+  `npx vitest run apps/web/src/features/notifications/__tests__/inbox-page.test.tsx`
 - Follow-up WP: none
 - Open question: none

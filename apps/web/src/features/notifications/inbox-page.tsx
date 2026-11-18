@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import type {
   NotificationMessageItem,
   NotificationMessageListResponse,
+  WebPushConfigResponse,
 } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
@@ -19,7 +20,9 @@ import { apiFetch } from '../../lib/api'
  *
  * The page never shows a contact of a reporter and never a photo (§11.5): the
  * title is the ticket number or the name of the pool, the body carries the
- * machine-readable params of the message.
+ * machine-readable params of the message. While web push is not set up the page
+ * names the setup page of the settings menu (WP-M14-128) — it only links there,
+ * registering this browser stays the card of WP-M14-126a.
  */
 export function InboxPage() {
   const { t } = useTranslation('common')
@@ -36,15 +39,29 @@ export function InboxPage() {
 
   const markRead = useMutation({
     mutationFn: (id: string) =>
-      apiFetch<{ id: string; readAt: string | null }>(
-        `/v1/notifications/messages/${id}/read`,
-        { method: 'PATCH' },
-      ),
+      apiFetch<{ id: string; readAt: string | null }>(`/v1/notifications/messages/${id}/read`, {
+        method: 'PATCH',
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['notification-messages'] })
       void queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] })
     },
   })
+
+  // The office asked: an inbox whose browser is not registered for web push
+  // names the way there (WP-M14-128). The card of WP-M14-126a on
+  // `/settings/notifications` owns the subscribe action; the inbox only links
+  // to it. A pending or failed config query shows no hint — the inbox never
+  // blocks on the channel state.
+  const webPush = useQuery({
+    queryKey: ['webpush-config'],
+    queryFn: () => apiFetch<WebPushConfigResponse>('/v1/notifications/accounts/webpush'),
+    retry: false,
+  })
+
+  const webPushNotSetUp =
+    webPush.isSuccess &&
+    ((webPush.data?.publicKey ?? '') === '' || (webPush.data?.subscriptions ?? 0) === 0)
 
   const stateOf = (message: NotificationMessageItem) =>
     t(`inbox.state.${message.state.toLowerCase()}`)
@@ -79,9 +96,7 @@ export function InboxPage() {
         </select>
       </div>
 
-      {messages.isPending ? (
-        <p className="mt-4 text-slate-400">{t('auth.loading')}</p>
-      ) : null}
+      {messages.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
 
       {messages.isError ? (
         <p className="mt-4 text-sm text-rose-400" role="alert">
@@ -135,6 +150,18 @@ export function InboxPage() {
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {webPushNotSetUp ? (
+        <p className="mt-6 flex flex-col gap-1">
+          <span className="text-sm text-slate-400">{t('inbox.webpush.hint')}</span>
+          <Link
+            className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            to="/settings/notifications"
+          >
+            {t('inbox.webpush.setup')}
+          </Link>
+        </p>
       ) : null}
     </main>
   )

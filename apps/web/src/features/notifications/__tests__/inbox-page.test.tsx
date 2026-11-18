@@ -19,11 +19,15 @@ const message = {
 }
 
 /**
- * No backend: the page reads the messages of the inbox and marks a message as
- * read. The fake answers the two routes of WP-M14-120c and records the read
- * receipt, so the list, the states and the receipt run in memory.
+ * No backend: the page reads the messages of the inbox, the web-push config of
+ * WP-M14-124 and marks a message as read. The fake answers the routes of
+ * WP-M14-120c and WP-M14-124 and records the read receipt, so the list, the
+ * states, the setup link and the receipt run in memory.
  */
-function stub(messages: unknown[] = [message]) {
+function stub(
+  messages: unknown[] = [message],
+  webPushConfig = { publicKey: '', subscribed: false, subscriptions: 0 },
+) {
   const readReceipts: string[] = []
 
   vi.stubGlobal(
@@ -38,6 +42,10 @@ function stub(messages: unknown[] = [message]) {
           id: message.id,
           readAt: new Date().toISOString(),
         })
+      }
+
+      if (url.includes('/accounts/webpush')) {
+        return Response.json(webPushConfig)
       }
 
       return Response.json({ messages })
@@ -69,7 +77,12 @@ describe('InboxPage', () => {
   it('lists the messages of the inbox with their channel and state', async () => {
     stub([
       message,
-      { ...message, id: '22222222-2222-4222-8222-222222222222', state: 'FAILED', title: 'ST-2026-0002' },
+      {
+        ...message,
+        id: '22222222-2222-4222-8222-222222222222',
+        state: 'FAILED',
+        title: 'ST-2026-0002',
+      },
     ])
 
     renderPage()
@@ -97,10 +110,10 @@ describe('InboxPage', () => {
   })
 
   it('requests the chosen number of messages', async () => {
-    let lastUrl = ''
+    const urls: string[] = []
 
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      lastUrl = String(input)
+      urls.push(String(input))
 
       return Response.json({ messages: [] })
     })
@@ -111,8 +124,9 @@ describe('InboxPage', () => {
 
     await screen.findByText('Noch keine Nachricht.')
 
-    expect(lastUrl).toContain('/v1/notifications/messages')
-    expect(lastUrl).toContain('limit=50')
+    expect(
+      urls.some((url) => url.includes('/v1/notifications/messages') && url.includes('limit=50')),
+    ).toBe(true)
   })
 
   it('shows the empty state without a message', async () => {
@@ -121,5 +135,26 @@ describe('InboxPage', () => {
     renderPage()
 
     expect(await screen.findByText('Noch keine Nachricht.')).toBeTruthy()
+  })
+
+  it('names the setup page while web push is not set up (WP-M14-128)', async () => {
+    stub([message])
+
+    renderPage()
+
+    const link = await screen.findByRole('link', { name: 'Open setup page' })
+
+    expect(link.getAttribute('href')).toBe('/settings/notifications')
+    expect(
+      screen.getByText('Push notifications are not enabled in this browser yet.'),
+    ).toBeTruthy()
+  })
+
+  it('shows no setup hint when this browser is registered for web push (WP-M14-128)', async () => {
+    stub([message], { publicKey: 'vapid-public-key', subscribed: true, subscriptions: 1 })
+
+    renderPage()
+
+    expect(screen.queryByRole('link', { name: 'Open setup page' })).toBeNull()
   })
 })
