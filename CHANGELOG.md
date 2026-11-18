@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The server answers whether it holds the device of this browser
+  (**WP-M14-144**, out of band in phase 14): the route
+  `POST /api/v1/notifications/accounts/webpush/check` tells the browser
+  whether the server still knows its device. The browser knows its own
+  subscription, the server knows its rows — only both together say whether a
+  push can arrive. The endpoint travels in the body of the request and never
+  in an answer.
 - The inbox asks this browser (**WP-M14-143**, out of band in phase 14): the
   hint of the web push no longer claims that the browser is not enabled while
   nobody asked it. The page reads the state of the browser from the probe and

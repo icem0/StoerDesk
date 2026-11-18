@@ -2735,6 +2735,17 @@ configuration is named without a link, because the user cannot fix that. The
 page stays silent while a question is open — nothing is claimed without a
 check. The German texts replace the English sentence of WP-M14-128.
 
+**The server answers whether it holds the device of this browser (WP-M14-144,
+out of band in phase 14).** The browser knows its own subscription, the server
+knows its rows — only both together say whether a push can arrive. The new
+route `POST /api/v1/notifications/accounts/webpush/check` answers the question
+for the signed-in user: `hasWebPushSubscription` reads the row of the user and
+the endpoint, and the answer carries a boolean only. The endpoint is a
+capability URL, so it travels in the body of the request and never in an
+answer and never into a log line (`specs/10-notifications.md` §11.3). The chain
+continues with **WP-M14-145** (the card asks the server about this device) and
+**WP-M14-146** (the inbox asks the server about this device).
+
 
 
 

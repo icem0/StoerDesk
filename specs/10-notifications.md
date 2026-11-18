@@ -105,6 +105,16 @@ A user has at most one account per channel (`unique (user_id, channel)`).
   and the settings page shows it as a QR code.
 - **WhatsApp Web:** the bridge owns the session and the pairing; StörDesk reads
   the chats of the bridge (`GET /status`) and stores the chat id of the user.
+- **Web Push:** the device of a browser is the row of the table
+  `push_subscriptions`; the endpoint is the identity of the browser, a repeated
+  subscription replaces the old row and a shared device belongs to the user who
+  subscribed last. The route
+  `POST /api/v1/notifications/accounts/webpush/check` answers whether the
+  server still holds the row of this device of this user: the browser knows its
+  own subscription, the server knows its rows, and only both together say
+  whether a push can arrive (WP-M14-144). The endpoint is a capability URL — it
+  travels in the body of the request and never in an answer and never into a
+  log line.
 
 ## 11.4 The event types and the selection of the channels
 

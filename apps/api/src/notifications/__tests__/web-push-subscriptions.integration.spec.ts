@@ -77,6 +77,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         payload: JSON.stringify(body),
       })
 
+    const check = (cookie: string, body: unknown) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/accounts/webpush/check',
+        headers: { cookie, 'content-type': 'application/json' },
+        payload: JSON.stringify(body),
+      })
+
     const subscription = {
       endpoint,
       keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
@@ -163,6 +171,26 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(repeat.statusCode).toBe(200)
       expect((await config(ownerCookie)).json<ConfigBody>().subscriptions).toBe(1)
+    })
+
+    it('answers whether the server holds the device of this browser (WP-M14-144)', async () => {
+      const own = await check(ownerCookie, { endpoint })
+      const foreign = await check(otherCookie, { endpoint })
+      const unknown = await check(ownerCookie, { endpoint: 'https://push.example.org/secret/77' })
+
+      expect(own.statusCode).toBe(200)
+      expect(own.json<{ registered: boolean }>()).toEqual({ registered: true })
+      expect(foreign.json<{ registered: boolean }>()).toEqual({ registered: false })
+      expect(unknown.json<{ registered: boolean }>()).toEqual({ registered: false })
+    })
+
+    it('refuses the check without a session or without an endpoint (WP-M14-144)', async () => {
+      const withoutSession = await check('', { endpoint })
+      const withoutEndpoint = await check(ownerCookie, {})
+
+      expect(withoutSession.statusCode).toBe(401)
+      expect(withoutEndpoint.statusCode).toBe(422)
+      expect(withoutEndpoint.json<{ code?: string }>().code).toBe('invalid_request')
     })
 
     it('moves the endpoint of a shared device to the user who subscribes last', async () => {

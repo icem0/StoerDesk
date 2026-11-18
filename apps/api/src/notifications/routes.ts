@@ -26,6 +26,8 @@ import {
   updateChannelConfigurationRequestSchema,
   updateNotificationPreferencesRequestSchema,
   webPushConfigResponseSchema,
+  webPushSubscriptionCheckRequestSchema,
+  webPushSubscriptionCheckResponseSchema,
   webPushSubscriptionRequestSchema,
   webPushSubscriptionResponseSchema,
   webPushUnsubscribeRequestSchema,
@@ -52,6 +54,7 @@ import { deleteAccount, storeAccount } from './accounts'
 import {
   countWebPushSubscriptions,
   deleteWebPushSubscription,
+  hasWebPushSubscription,
   readWebPushPublicKey,
   storeWebPushSubscription,
 } from './web-push-subscriptions'
@@ -718,6 +721,35 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         })
 
         return webPushSubscriptionResponseSchema.parse({ subscribed: true })
+      },
+    )
+
+    /**
+     * `POST /api/v1/notifications/accounts/webpush/check` (WP-M14-144): answers
+     * whether the server still holds the row of this device of this user. The
+     * browser knows its own subscription, the server knows its rows — only both
+     * together say whether a push can arrive. The endpoint travels in the body
+     * and never in the answer.
+     */
+    app.post(
+      '/api/v1/notifications/accounts/webpush/check',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = webPushSubscriptionCheckRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply
+            .code(422)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        const registered = await hasWebPushSubscription(
+          database,
+          request.user?.id ?? '',
+          body.data.endpoint,
+        )
+
+        return webPushSubscriptionCheckResponseSchema.parse({ registered })
       },
     )
 

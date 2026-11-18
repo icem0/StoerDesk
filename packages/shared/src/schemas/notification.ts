@@ -146,6 +146,22 @@ export const webPushUnsubscribeRequestSchema = z.object({
   endpoint: z.url().max(2000),
 })
 
+/**
+ * The question whether the server still holds the device of this browser
+ * (`specs/10-notifications.md` §11.3, WP-M14-144): the browser knows its own
+ * subscription, the server knows its rows — only both together say whether a
+ * push can arrive. The endpoint is a capability URL, so it travels in the body
+ * of the request and never in the answer.
+ */
+export const webPushSubscriptionCheckRequestSchema = z.object({
+  endpoint: z.url().max(2000),
+})
+
+/** The answer of the check: a boolean, never the endpoint itself. */
+export const webPushSubscriptionCheckResponseSchema = z.object({
+  registered: z.boolean(),
+})
+
 /** The own state of the channel: the VAPID public key and the device count. */
 export const webPushConfigResponseSchema = z.object({
   /** URL-safe base64 VAPID public key; empty while the channel is not configured. */
@@ -266,6 +282,12 @@ export type NotificationAccountListResponse = z.infer<typeof notificationAccount
 export type StoreNotificationAccountRequest = z.infer<typeof storeNotificationAccountRequestSchema>
 export type WebPushSubscriptionRequest = z.infer<typeof webPushSubscriptionRequestSchema>
 export type WebPushUnsubscribeRequest = z.infer<typeof webPushUnsubscribeRequestSchema>
+export type WebPushSubscriptionCheckRequest = z.infer<
+  typeof webPushSubscriptionCheckRequestSchema
+>
+export type WebPushSubscriptionCheckResponse = z.infer<
+  typeof webPushSubscriptionCheckResponseSchema
+>
 export type WebPushConfigResponse = z.infer<typeof webPushConfigResponseSchema>
 export type WebPushSubscriptionResponse = z.infer<typeof webPushSubscriptionResponseSchema>
 export type NotificationPreferenceEntry = z.infer<typeof notificationPreferenceSchema>

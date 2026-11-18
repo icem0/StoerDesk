@@ -1,7 +1,7 @@
 # WP-M14-144: the server answers whether it holds the device of this browser
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -74,6 +74,7 @@ Expected: all green; the route answers `registered` for the own device only.
 
 - Files changed: the shared contracts, the service, the routes and the test
 - Interfaces added: `hasWebPushSubscription`, the two schemas and the route
-- Verified: —
-- Follow-up WP: none
+- Verified: `npm run check` (exit 0), the vitest file of the web-push routes
+- Follow-up WP: WP-M14-145 (the card asks the server about this device) — the
+  document exists in this commit
 - Open question: none
