@@ -1,7 +1,7 @@
 # WP-M14-147b: the engine reads the readiness
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens
@@ -78,10 +78,11 @@ pool without a shift.
 
 - Files changed: `apps/api/src/oncall/coupling.ts`,
   `apps/api/src/tickets/escalation.ts`, `apps/api/src/escalation/actions.ts`,
-  the integration test, this document, `work-packages/README.md`, `CHANGELOG.md`,
+  `apps/api/src/escalation/__tests__/readiness-shift.integration.spec.ts`,
+  `docs/REPO-MAP.md`, this document, `work-packages/README.md`, `CHANGELOG.md`,
   `PLAN.md` §16
-- Interfaces added: `resolveStaffedPoolIds`, `resolveOnDutyUserIds`, the fact
-  `staffedPools` in the scan
+- Interfaces added: `resolveStaffedPoolIds`, `resolveOnDutyUserIds`,
+  `ONCALL_STAFFED_STATES`, the fact `staffedPools` in the scan
 - Verified: `npm run check`
 - Follow-up WP: WP-M14-147c
 - Open question: none

@@ -1528,13 +1528,13 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-146 | the inbox asks the server about this device (out of band) | done | yes |
 | WP-M14-147 | the readiness shift in the conditions of the escalation — the spec and the split (out of band) | done | yes |
 | WP-M14-147a | the condition of the readiness shift in the shared contract (out of band) | done | yes |
-| WP-M14-147b | the engine reads the readiness (out of band) | planned | yes |
+| WP-M14-147b | the engine reads the readiness (out of band) | done | yes |
 | WP-M14-147c | the configuration service checks the pool of the condition (out of band) | planned | yes |
 | WP-M14-147d | the administration offers the pool in the condition (out of band) | planned | yes |
 | WP-M14-148 | the administration sets a new password for a colleague — ADR-0031, the spec and the split (out of band) | done | yes |
 | WP-M14-148a | the column of the open password change (out of band) | done | yes |
 | WP-M14-148b | the contracts of the open password change (out of band) | done | yes |
-| WP-M14-148c | the session knows the open password change (out of band) | planned | yes |
+| WP-M14-148c | the session knows the open password change (out of band) | done | yes |
 | WP-M14-148d | the administration sets the one-time password (out of band) | planned | yes |
 | WP-M14-148e | the colleague sets his own password (out of band) | planned | yes |
 | WP-M14-148f | the administration hands the one-time password over (out of band) | planned | yes |

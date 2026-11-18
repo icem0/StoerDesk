@@ -2801,6 +2801,18 @@ leaf never matches, so a rule that asks for a staffed pool never fires because
 nobody answered. The evaluation stays a pure function — the API collects the
 fact (WP-M14-147b).
 
+**The engine reads the readiness (WP-M14-147b).** `apps/api/src/oncall/coupling.ts`
+answers the readiness of a moment: `resolveStaffedPoolIds` returns the pools
+with a staffed shift — a `CONFIRMED`, a `SWAP_REQUESTED` or a `PLANNED` shift
+that covers the moment and has a technician — and `resolveOnDutyUserIds` the
+technicians with a shift in one pool. The scan of the escalation reads the
+staffed pools once per minute and hands them to the facts of every ticket, so
+the condition `shift` of a rule can ask for the readiness service. A `notify`
+action with a readiness pool as its target reaches the technicians with a shift
+in that pool — the members of the pool without a shift receive nothing
+(ADR-0030). The `offer` and the `assign` action keep their meaning: they
+distribute the ticket to the whole team of the target (§7.14).
+
 
 
 
@@ -2834,6 +2846,15 @@ list carry the flag `mustChangePassword` (default `false`, so a caller that does
 not know the flag stays valid), and the answer of the reset carries the
 plaintext of the one-time password as `temporaryPassword`. The session that
 reads the flag and the guard that blocks the account follow in WP-M14-148c.
+
+**The session knows the open password change (WP-M14-148c, out of band in phase
+14).** The session reads the flag of the one-time password per request, so a
+reset takes effect without a new login. While the flag is set, every guarded
+route answers `403 { code: 'password_change_required' }` — the account may log
+in, but it may not work before the user sets a password of their own. `GET
+/api/v1/me` and `PATCH /api/v1/users/me` stay reachable; the own password clears
+the flag and ends the sessions of the other devices. The route of the
+administration follows in WP-M14-148d.
 
 
 

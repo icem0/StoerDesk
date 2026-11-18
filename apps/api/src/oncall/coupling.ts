@@ -26,7 +26,7 @@ import type { NotificationEventType } from '@stoerdesk/shared'
 type Db = Database['database']
 
 /** The shift states that count for ticket coupling (§4a.6). */
-const COUPLING_STATES = ['CONFIRMED', 'SWAP_REQUESTED', 'PLANNED'] as const
+export const ONCALL_STAFFED_STATES = ['CONFIRMED', 'SWAP_REQUESTED', 'PLANNED'] as const
 
 export type OnCallResolutionKind = 'confirmed' | 'planned' | 'unstaffed'
 
@@ -92,7 +92,7 @@ export async function resolveOnCallPerson(
     .where(
       and(
         eq(oncallShifts.poolId, poolId),
-        inArray(oncallShifts.state, COUPLING_STATES),
+        inArray(oncallShifts.state, ONCALL_STAFFED_STATES),
         lte(oncallShifts.startsAt, at),
         gt(oncallShifts.endsAt, at),
       ),
@@ -118,13 +118,67 @@ export async function resolveOnCallPerson(
   }
 }
 
+/**
+ * The pools with a staffed shift at `at` (`specs/04-oncall.md` §4a.6,
+ * ADR-0030): a `CONFIRMED`, a `SWAP_REQUESTED` or a `PLANNED` shift that
+ * covers the moment and has a technician. The scan of the escalation reads the
+ * pools once, so the condition `shift` of a rule can ask for the readiness
+ * service (§7.4).
+ */
+export async function resolveStaffedPoolIds(
+  database: Db,
+  at: Date = new Date(),
+): Promise<string[]> {
+  const rows = await database
+    .select({ poolId: oncallShifts.poolId })
+    .from(oncallShifts)
+    .where(
+      and(
+        inArray(oncallShifts.state, ONCALL_STAFFED_STATES),
+        isNotNull(oncallShifts.userId),
+        lte(oncallShifts.startsAt, at),
+        gt(oncallShifts.endsAt, at),
+      ),
+    )
+
+  return [...new Set(rows.map((row) => row.poolId))]
+}
+
+/**
+ * The technicians with a shift in the pool at `at` (ADR-0030): the addressees
+ * of a notification with a readiness pool as its target. A pool without a
+ * staffed shift has no addressee — the members of the pool without a shift
+ * receive nothing.
+ */
+export async function resolveOnDutyUserIds(
+  database: Db,
+  poolId: string,
+  at: Date = new Date(),
+): Promise<string[]> {
+  const rows = await database
+    .select({ userId: oncallShifts.userId })
+    .from(oncallShifts)
+    .where(
+      and(
+        eq(oncallShifts.poolId, poolId),
+        inArray(oncallShifts.state, ONCALL_STAFFED_STATES),
+        isNotNull(oncallShifts.userId),
+        lte(oncallShifts.startsAt, at),
+        gt(oncallShifts.endsAt, at),
+      ),
+    )
+
+  return [
+    ...new Set(rows.map((row) => row.userId).filter((userId): userId is string => userId !== null)),
+  ]
+}
+
 export type OfferTicketInput = {
   database: Db
   ticketNo: string
   actorUserId: string
   poolId?: string
 }
-
 export type OfferTicketResult = {
   ticket: typeof tickets.$inferSelect
   warning?: 'oncall_unconfirmed' | 'oncall_unstaffed'

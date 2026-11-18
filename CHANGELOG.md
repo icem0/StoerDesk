@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The session knows the open password change (**WP-M14-148c**, out of band in
+  phase 14): the session reads the flag of the one-time password per request,
+  so a reset takes effect without a new login. While the flag is set, every
+  guarded route answers `403 { code: 'password_change_required' }` — the
+  account may log in, but it may not work before the user sets a password of
+  their own. `GET /api/v1/me` and `PATCH /api/v1/users/me` stay reachable; the
+  own password clears the flag and ends the sessions of the other devices.
+- The engine reads the readiness (**WP-M14-147b**, out of band in phase 14): the
+  scan of the escalation reads the pools with a staffed shift once per minute
+  and the condition „Bereitschafts-Schicht" matches a pool of them. A
+  notification with a readiness pool as its target reaches the technicians who
+  have a shift in that pool — the members of the pool without a shift receive
+  nothing (ADR-0030).
 - The contracts of the open password change (**WP-M14-148b**, out of band in
   phase 14): the answer of the login and of `GET /api/v1/me` and the row of the
   user list carry the flag `mustChangePassword`, and the answer of the reset

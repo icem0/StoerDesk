@@ -11,7 +11,7 @@ import {
 
 import type { Database } from '../db/client'
 import { dispatchEscalationActions } from '../escalation/actions'
-import { escalateOnCallOffers } from '../oncall/coupling'
+import { escalateOnCallOffers, resolveStaffedPoolIds } from '../oncall/coupling'
 import {
   escalationFirings,
   escalationRules,
@@ -297,6 +297,7 @@ function factsFor(
   stages: readonly StageRow[],
   externalType: string | null,
   now: number,
+  staffedPools: readonly string[],
 ): EscalationFacts {
   const timeline = computeTicketTimeline({
     reportedAt: ticket.reportedAt,
@@ -318,6 +319,7 @@ function factsFor(
     elapsedMinutes: Math.max(0, Math.round((now - reported) / 60000)),
     paused: pauses.some((pause) => pause.endedAt === null),
     stageReached: reachedStages(events, stages),
+    staffedPools,
   }
 }
 
@@ -335,9 +337,10 @@ async function evaluateOne(
   stages: readonly StageRow[],
   externalType: string | null,
   now: number,
+  staffedPools: readonly string[],
 ): Promise<EscalationFired[]> {
   const fired: EscalationFired[] = []
-  const facts = factsFor(ticket, events, pauses, stages, externalType, now)
+  const facts = factsFor(ticket, events, pauses, stages, externalType, now, staffedPools)
 
   for (const rule of rules) {
     const decision = decisionFor(ticket, rule, events, pauses, stages, now)
@@ -392,6 +395,7 @@ async function evaluateOne(
           eventId: event.id,
         },
         facts,
+        new Date(now),
       )
     }
 
@@ -462,6 +466,9 @@ export async function evaluateEscalations(
 
   const externalTypeByObject = new Map(objectRows.map((row) => [row.id, row.externalType]))
   const nowMs = now.getTime()
+  // The readiness of the scan (§7.4, ADR-0030): the pools with a staffed shift
+  // at this moment. One query for the whole scan, not one per ticket.
+  const staffedPools = await resolveStaffedPoolIds(database, now)
   let fired = 0
 
   for (const ticket of candidates) {
@@ -474,6 +481,7 @@ export async function evaluateEscalations(
       stages,
       externalTypeByObject.get(ticket.objectId) ?? null,
       nowMs,
+      staffedPools,
     )
 
     fired += ticketFired.length
@@ -515,6 +523,8 @@ export async function evaluateTicketEscalations(
     readEscalationStageChain(database),
   ])
 
+  const staffedPools = await resolveStaffedPoolIds(database, now)
+
   return await evaluateOne(
     database,
     ticket,
@@ -524,5 +534,6 @@ export async function evaluateTicketEscalations(
     stages,
     objectRows[0]?.externalType ?? null,
     now.getTime(),
+    staffedPools,
   )
 }
