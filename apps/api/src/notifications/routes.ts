@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin'
-import { and, count, desc, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   channelConfigurationListResponseSchema,
@@ -13,6 +13,7 @@ import {
   matrixLinkingRequestSchema,
   notificationAccountSchema,
   notificationChannelKindSchema,
+  notificationMessageFilterSchema,
   notificationPreferencesListResponseSchema,
   notificationMessageListResponseSchema,
   notificationMessageReadResponseSchema,
@@ -29,7 +30,7 @@ import {
   webPushSubscriptionResponseSchema,
   webPushUnsubscribeRequestSchema,
 } from '@stoerdesk/shared'
-import { requirePermission } from '../auth/requirePermission'
+import { effectivePermissions, requirePermission } from '../auth/requirePermission'
 import type { preHandlerHookHandler } from 'fastify'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
@@ -55,6 +56,7 @@ import {
   storeWebPushSubscription,
 } from './web-push-subscriptions'
 import { readPreferences, writePreferences } from './preferences'
+import { readMessages, readRecipients, type MessageScope } from './messages'
 import {
   storeMatrixAccount,
   MatrixLinkingError,
@@ -900,44 +902,67 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
      * and when. The newest message comes first. Paginated with `limit` (default
      * 50, max 200) and `offset`; a value that is not a number falls back to the
      * default.
+     *
+     * The filters of §11.16 (WP-M14-141b) narrow the answer: the addressee,
+     * the channel, the event, the state of the delivery and the unread
+     * messages. The inbox of a user stays personal: without the permission
+     * `notification.read_all` the answer holds the own messages, the addressee
+     * of a row is `null` and the addressee of another user answers
+     * `403 forbidden`.
      */
     app.get(
       '/api/v1/notifications/messages',
       { preHandler: requireSession },
-      async (request) => {
+      async (request, reply) => {
         const userId = request.user?.id ?? ''
-        const query = request.query as { limit?: string; offset?: string }
+        const query = request.query as Record<string, string | undefined>
         const limit = boundedNumber(query.limit, 50, 1, 200)
         const offset = boundedNumber(query.offset, 0, 0, 100_000)
 
-        const rows = await database
-          .select({
-            id: notificationMessages.id,
-            channel: notificationMessages.channel,
-            eventType: notificationMessages.eventType,
-            state: notificationMessages.state,
-            title: notificationMessages.title,
-            body: notificationMessages.body,
-            createdAt: notificationMessages.createdAt,
-            readAt: notificationMessages.readAt,
-          })
-          .from(notificationMessages)
-          .where(eq(notificationMessages.userId, userId))
-          .orderBy(desc(notificationMessages.createdAt))
-          .limit(limit)
-          .offset(offset)
+        const parsed = notificationMessageFilterSchema.safeParse({
+          ...(query.userId === undefined || query.userId === '' ? {} : { userId: query.userId }),
+          ...(query.channel === undefined || query.channel === '' ? {} : { channel: query.channel }),
+          ...(query.eventType === undefined || query.eventType === ''
+            ? {}
+            : { eventType: query.eventType }),
+          ...(query.state === undefined || query.state === '' ? {} : { state: query.state }),
+          ...(query.unread === undefined || query.unread === ''
+            ? {}
+            : { unread: query.unread === 'true' ? true : query.unread === 'false' ? false : query.unread }),
+        })
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        const filter = parsed.data
+        const held = await effectivePermissions(request, database)
+        const mayReadAll = held.includes(PERMISSIONS.notification.readAll)
+
+        if (!mayReadAll && filter.userId !== undefined && filter.userId !== userId) {
+          request.log.debug({ code: 'forbidden', required: PERMISSIONS.notification.readAll })
+
+          return reply.code(403).send({ code: 'forbidden', params: {} })
+        }
+
+        const scope: MessageScope = {
+          userId: mayReadAll ? (filter.userId ?? null) : userId,
+          filter: {
+            ...(filter.channel === undefined ? {} : { channel: filter.channel }),
+            ...(filter.eventType === undefined ? {} : { eventType: filter.eventType }),
+            ...(filter.state === undefined ? {} : { state: filter.state }),
+            ...(filter.unread === undefined ? {} : { unread: filter.unread }),
+          },
+          limit,
+          offset,
+          withRecipient: mayReadAll,
+        }
 
         return notificationMessageListResponseSchema.parse({
-          messages: rows.map((row) => ({
-            id: row.id,
-            channel: row.channel,
-            eventType: row.eventType,
-            state: row.state,
-            title: row.title,
-            body: row.body,
-            createdAt: row.createdAt.toISOString(),
-            readAt: row.readAt?.toISOString() ?? null,
-          })),
+          messages: await readMessages(database, scope),
+          recipients: await readRecipients(database, scope),
         })
       },
     )

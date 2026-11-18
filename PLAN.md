@@ -2683,6 +2683,17 @@ the inbox carries the two new fields; without the permission they stay empty.
 The seed writes the new key into the table `permissions` on the next start —
 no migration.
 
+**The API of the filtered inbox (WP-M14-141b, out of band in phase 14).**
+The new module `apps/api/src/notifications/messages.ts` reads the messages of
+the filter and the addressees with the number of their messages. The route
+`GET /api/v1/notifications/messages` reads the filters of the addressee, the
+channel, the event, the state of the delivery and the unread messages: without
+the permission `notification.read_all` the answer holds the own messages, the
+addressee of a row is `null` and the list of the addressees is empty, and the
+addressee of another user answers `403 forbidden`. An unknown value of a filter
+answers `400 invalid_request` with the field path. The read receipt and the
+unread count stay bound to the session user.
+
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

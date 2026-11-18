@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The inbox of the notifications can be filtered for the administration
+  (**WP-M14-141b**, out of band in phase 14): the route
+  `GET /api/v1/notifications/messages` reads the filters of the addressee, the
+  channel, the event, the state of the delivery and the unread messages. With the
+  permission `notification.read_all` the answer holds the messages of every
+  user, every row names its addressee and the answer lists the addressees with
+  the number of their messages. Without the permission the inbox stays personal —
+  the own messages, no addressee and `403 forbidden` for the messages of
+  another user.
 - The browser answers for its own push subscription (**WP-M14-142**, out of
   band in phase 14): the web-push UI claimed a state of the browser that
   nobody had asked — the card named a device as registered after one local

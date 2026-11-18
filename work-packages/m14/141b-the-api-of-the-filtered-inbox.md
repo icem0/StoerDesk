@@ -1,7 +1,7 @@
 # WP-M14-141b: the API of the filtered inbox
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
