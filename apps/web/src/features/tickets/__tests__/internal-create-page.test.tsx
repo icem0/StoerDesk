@@ -42,6 +42,7 @@ function stubTicketError(code: string, status: number, titleEnabled = false) {
             objectNo: '12345_01',
             name: 'Rathaus',
             externalType: 'Brandmeldeanlage',
+            priority: 'normal',
             systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
           },
         ],
@@ -71,6 +72,7 @@ function stubMultipleObjects() {
             objectNo: '10000_01',
             name: 'Feuerwache',
             externalType: 'Brandmeldeanlage',
+            priority: 'normal',
             systems: [],
           },
           {
@@ -78,6 +80,7 @@ function stubMultipleObjects() {
             objectNo: '12345_01',
             name: 'Rathaus',
             externalType: 'Brandmeldeanlage',
+            priority: 'normal',
             systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
           },
           {
@@ -85,6 +88,7 @@ function stubMultipleObjects() {
             objectNo: '90000_01',
             name: 'Schule',
             externalType: null,
+            priority: 'normal',
             systems: [],
           },
         ],
@@ -114,6 +118,7 @@ function stubNetworkFailure() {
             objectNo: '12345_01',
             name: 'Rathaus',
             externalType: 'Brandmeldeanlage',
+            priority: 'normal',
             systems: [{ id: SYSTEM_ID, type: 'BMA', label: 'BMA Mitte' }],
           },
         ],
@@ -154,6 +159,7 @@ function stubTicketCreated(ticketNo: string) {
             objectNo: '12345_01',
             name: 'Rathaus',
             externalType: 'Brandmeldeanlage',
+            priority: 'normal',
             systems: [],
           },
         ],
@@ -166,7 +172,7 @@ function stubTicketCreated(ticketNo: string) {
  * Stubs the whole path of the internal form with a chosen title switch and
  * records the body of the create request (WP-M9-25).
  */
-function stubInternalForm(titleEnabled: boolean) {
+function stubInternalForm(titleEnabled: boolean, priority = 'normal') {
   const bodies: Record<string, unknown>[] = []
   /** Every answer of the title switch — a test waits for it. */
   const switchCalls: boolean[] = []
@@ -220,6 +226,7 @@ function stubInternalForm(titleEnabled: boolean) {
             objectNo: '12345_01',
             name: 'Rathaus',
             externalType: 'Brandmeldeanlage',
+            priority: `${priority}`,
             systems: [],
           },
         ],
@@ -417,6 +424,20 @@ describe('InternalCreatePage', () => {
     await screen.findByRole('option', { name: 'Normal (72h)' })
     await screen.findByRole('option', { name: 'Hoch (24h)' })
     await screen.findByRole('option', { name: 'Kritisch (8h)' })
+  })
+
+  it('starts the priority with the priority of the picked object', async () => {
+    stubInternalForm(false, 'critical')
+    renderPage()
+
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+
+    fireEvent.focus(searchInput)
+    fireEvent.click(await screen.findByText('12345_01'))
+
+    await waitFor(() =>
+      expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('critical'),
+    )
   })
 
   it('offers the title field and sends it while the switch is on', async () => {

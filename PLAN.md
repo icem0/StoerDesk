@@ -2641,6 +2641,11 @@ phase 14).** The route `/admin/defaults` opens the page of the standard values,
 and the menu of the administration carries the entry "Standardwerte" next to
 the escalation.
 
+**The create form starts from the priority of the object (WP-M14-134i, out of
+band in phase 14).** Picking an object in the internal report takes the
+effective priority of that object into the select of the priority: the deviation
+applies unless the user chooses another one.
+
 
 
 

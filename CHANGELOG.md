@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The internal report form starts from the priority of the object
+  (**WP-M14-134i**, out of band in phase 14 — **ADR-0029**): picking an object
+  takes the effective priority of that object into the select of the priority —
+  the user may still choose another one.
 - The standard values have their own entry in the menu of the administration
   (**WP-M14-134h**, out of band in phase 14 — **ADR-0029**): the route
   `/admin/defaults` opens the page of the standard priority and of the

@@ -1,7 +1,7 @@
 # WP-M14-134i: the create form starts from the priority of the object
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 16k tokens
@@ -59,6 +59,6 @@ Expected: all green; the internal form starts from the priority of the object.
 
 - Files changed: the internal create form
 - Interfaces added: the preselection of the priority of the picked object
-- Verified: `npm run check` (exit 0), the page test of the internal form
+- Verified: `npm run check` (exit 0), the page test of the internal form proves the preselection of the priority of the object
 - Follow-up WP: none — the chain of ADR-0029 is closed
 - Open question: none

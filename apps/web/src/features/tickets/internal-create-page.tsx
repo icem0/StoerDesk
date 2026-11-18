@@ -9,6 +9,7 @@ import {
   type InternalCreateTicketResponse,
   type ReporterUserListResponse,
   type StandardTextLocale,
+  type TicketPriority,
   type TitleSwitchResponse,
 } from '@stoerdesk/shared'
 
@@ -40,6 +41,8 @@ type ObjectOption = {
   objectNo: string
   name: string
   externalType: string | null
+  /** The effective priority of the object (ADR-0029). */
+  priority: TicketPriority
 }
 
 function objectType(object: ObjectOption): string | null {
@@ -300,7 +303,7 @@ export function InternalCreatePage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [faultKeys, setFaultKeys] = useState<string[]>([])
-  const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'critical'>('normal')
+  const [priority, setPriority] = useState<TicketPriority>('normal')
   const [contactName, setContactName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [contactEmail, setContactEmail] = useState('')
@@ -339,6 +342,9 @@ export function InternalCreatePage() {
   function pickObject(object: ObjectOption) {
     setPickedObject(object)
     setSelectedObjectId(object.id)
+    // The priority of the object is the start of the form (ADR-0029): the user
+    // may choose another one.
+    setPriority(object.priority ?? 'normal')
   }
 
   function changeReporterKind(kind: 'internal' | 'external') {
@@ -530,7 +536,7 @@ export function InternalCreatePage() {
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
             onChange={(event) =>
-              setPriority(event.target.value as 'low' | 'normal' | 'high' | 'critical')
+              setPriority(event.target.value as TicketPriority)
             }
           >
             <option value="low">{priorityLabel('low', t('internal.create.priority.low'))}</option>
