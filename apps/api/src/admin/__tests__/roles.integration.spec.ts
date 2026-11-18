@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import { DEFAULT_ROLES, PERMISSION_KEYS } from '@stoerdesk/shared'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
@@ -173,13 +174,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(200)
       expect(body.roles).toHaveLength(5)
 
-      const expected: Record<string, number> = {
-        reporter_internal: 8,
-        office: 19,
-        oncall: 15,
-        manager: 12,
-        admin: 39,
-      }
+      // The counts come from the catalog of the shared package: a hard-coded
+      // number goes stale with every new permission key (WP-M14-131 added the
+      // key of the names of the readiness).
+      const expected: Record<string, number> = Object.fromEntries(
+        Object.entries(DEFAULT_ROLES).map(([key, grants]) => [key, grants.length]),
+      )
 
       for (const [key, grants] of Object.entries(expected)) {
         const role = roleOf(body, key)
@@ -321,7 +321,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         'admin',
       )
 
-      expect(adminGrantsAfter.permissionKeys).toHaveLength(39)
+      expect(adminGrantsAfter.permissionKeys).toHaveLength(PERMISSION_KEYS.length)
     })
 
     it('refuses to delete a protected or still assigned role and then removes it', async () => {
