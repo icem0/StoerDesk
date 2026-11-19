@@ -155,6 +155,24 @@ body:has(.theme-light) {
 }
 
 /*
+ * On phones the tab strip of the shell (WP-M16-05) scrolls with momentum in the
+ * horizontal direction only: the strip itself must never slide vertically inside
+ * the sticky header, and a thumb lands on the strip, not between its tabs. The
+ * entries stay at least 44 px high (`min-h-11` on the entries themselves) and the
+ * strip reaches the edge of the screen through its negative margin.
+ */
+.shell-tab-strip {
+  overscroll-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .shell-tab-strip {
+    min-height: 44px;
+  }
+}
+
+/*
  * Printable QR sticker sheets (WP-M2-03, specs/08-objects-api.md §9.3): A6 cards of
  * 105 × 148 mm, one per A6 page or four per A4 page. The sheet format writes its own
  * `@page` rule from the component, so the grid stays gapless and the dashed border is

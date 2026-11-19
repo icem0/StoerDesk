@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   so tickets, statistics, readiness and inbox live in one tab strip. The shell of
   a phone gets a compact identity row, a tab strip that scrolls horizontally only
   with 44 px targets that reach to the edge of the screen, and the safe areas of a
-  notch. The public report form, the status page and the printed stickers keep the
+  notch (WP-M16-05, v1.1.325). The public report form, the status page and the printed stickers keep the
   default blue (ADR-0036). The contracts and the routes of the accent colour are
   implemented (WP-M16-01, v1.1.315): `accentColor` travels in the `branding` row,
   the branding route keeps a stored colour when the body carries none and answers
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   prefilled from the instance, and one save writes the whole row — a colour that
   is no hex value never leaves the browser. The inbox of the unread messages leaves
   the action cluster of the header and becomes an entry of the header menu right after
-  the readiness entry with its badge (WP-M16-04, v1.1.322), so tickets, statistics,
+  the readiness entry with its badge (WP-M16-04, v1.1.324), so tickets, statistics,
   readiness and inbox live in one tab strip. The shell paints it (WP-M16-03,
   v1.1.318): the saved hex value travels into the CSS custom property
   `--brand-accent` on the root of the shell, `styles.css` derives the ramp

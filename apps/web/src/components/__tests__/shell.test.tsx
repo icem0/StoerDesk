@@ -280,6 +280,25 @@ describe('Shell settings access', () => {
     expect(hrefs).toEqual(['/tickets', '/stats', '/oncall'])
   })
 
+  it('keeps the tab strip of a phone scrollable horizontally only (WP-M16-05)', async () => {
+    stubMe(signedInMe())
+    renderShell()
+
+    expect(await screen.findByText(marker)).toBeTruthy()
+
+    const nav = document.querySelector('nav')
+    expect(nav).toBeTruthy()
+    expect(nav?.getAttribute('class') ?? '').toContain('overscroll-y-none')
+    expect(nav?.getAttribute('class') ?? '').toContain('shell-tab-strip')
+    expect(nav?.getAttribute('class') ?? '').toContain('overflow-x-auto')
+
+    const root = document.querySelector('.theme-dark')
+    expect(root?.getAttribute('class') ?? '').toContain('safe-area-inset-left')
+
+    const content = document.querySelector('.shell-main')
+    expect(content?.getAttribute('class') ?? '').toContain('safe-area-inset-bottom')
+  })
+
   it('applies the theme of the signed-in user on the shell root', async () => {
     stubMe({
       user: { ...signedInMe().user, theme: 'light' },

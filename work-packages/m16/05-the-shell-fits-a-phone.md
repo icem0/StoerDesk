@@ -1,7 +1,7 @@
 # WP-M16-05: the shell fits a phone
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-04
 phase: 16
 milestone: m16
@@ -74,8 +74,11 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/components/Shell.tsx`, `apps/web/src/styles.css`,
+  `apps/web/src/components/__tests__/shell.test.tsx`, `PLAN.md` §16
+- Interfaces added: the marker class `shell-tab-strip` of the header menu, the safe-area
+  insets of the shell root and of the content, the compact identity row of a phone
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run wp:check`,
+  `npm run build`
 - Follow-up WP: none — phase 16 is closed
 - Open question: none

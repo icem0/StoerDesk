@@ -131,7 +131,7 @@ export function Shell() {
 
   return (
     <div
-      className={`theme-${effectiveTheme} flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white`}
+      className={`theme-${effectiveTheme} flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]`}
       style={{ '--brand-accent': accent } as CSSProperties}
     >
 
@@ -141,13 +141,13 @@ export function Shell() {
           <span className="order-1 flex min-w-0 items-center gap-2">
             <img
               alt={t('app.logoAlt')}
-              className="h-8 w-auto shrink-0 rounded-lg sm:h-9"
+              className="h-7 w-auto shrink-0 rounded-lg sm:h-9"
               decoding="async"
               height="120"
               src="/logo.png"
               width="128"
             />
-            <span className="hidden min-w-0 truncate font-semibold tracking-tight sm:block">
+            <span className="hidden min-w-0 truncate font-semibold tracking-tight text-sm sm:block sm:text-base">
               {title}
             </span>
           </span>
@@ -170,7 +170,7 @@ export function Shell() {
            */}
           <nav
             aria-label={t('app.navigation')}
-            className="order-3 -mx-3 flex w-full items-center gap-1 overflow-x-auto px-3 pb-1 sm:order-2 sm:mx-0 sm:w-auto sm:flex-1 sm:justify-center sm:px-0 sm:pb-0"
+            className="shell-tab-strip order-3 -mx-4 flex w-full items-center gap-1 overscroll-y-none overflow-x-auto px-4 pb-1 sm:order-2 sm:-mx-0 sm:w-auto sm:flex-1 sm:justify-center sm:px-3 sm:pb-0"
           >
             {headerLinks.map((link) => (
               <NavLink
@@ -194,7 +194,7 @@ export function Shell() {
         </div>
       </header>
 
-      <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">
+      <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 pb-[env(safe-area-inset-bottom)] sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">
         {me.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
         {me.isError ? <LoginForm /> : null}
         {me.data ? <Outlet /> : null}

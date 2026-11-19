@@ -3378,6 +3378,19 @@ accent colour), **WP-M16-02** (the field under „Darstellung“), **WP-M16-03**
 and **WP-M16-05** (the mobile shell and the exit criterion). Every file exists
 in this commit.
 
+**The interface has one accent colour, the inbox sits in the menu and the
+shell fits a phone (WP-M16-05, phase 16).** The chain of the facelift is
+implemented: **WP-M16-01** adds the contract `accentColor` and the routes of the
+branding, **WP-M16-02** the field „Akzentcolor“ under „Darstellung“ with its own
+swatch, **WP-M16-03** the ramp `--color-accent-300 … --color-accent-700` and the
+classes of the header and of the settings menu, **WP-M16-04** the inbox as the
+fourth entry of the header menu right after the readiness entry and **WP-M16-05**
+the mobile shell: a compact identity row, a tab strip that scrolls horizontally
+only with 44 px targets that reach to the edge of the screen and the safe areas of
+a notch. The phase-16 exit criterion is met: the administration paints the whole
+interface with one saved colour, the bell sits in the menu next to the readiness
+and the shell fits a phone.
+
 **The way of the escalation (WP-M17-00, phase 17, out of band at the request of
 the office).** The office read the escalation administration and asked: „das ziel
 ist eine person, der übertragungsweg eine andere geschichte! jeder kann selbst
