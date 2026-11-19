@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new workflow step has a page of its own (**WP-M14-167**, out of band in
+  phase 14): the input mask „Übergang anlegen" is not glued below the table of the steps
+  any more, the table offers a button that opens the page `/admin/transitions/new`.
+  The page needs `settings.write` and returns to the table after the step is created.
+  The editing of a step and the removal stay where they were (v1.1.292).
 - The new status has a page of its own (**WP-M14-166**, out of band in phase
   14): the input mask „Status anlegen" is not glued below the table of the statuses
   any more, the table offers a button that opens the page `/admin/statuses/new`. The

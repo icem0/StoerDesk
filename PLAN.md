@@ -3218,6 +3218,12 @@ way the mask of the new webhook was (WP-M14-165). It is a page of its own now �
 `settings.write` and returns to the table after the status is created; the editing of
 a status and the removal stay where they were.
 
+**The new workflow step has a page of its own (WP-M14-167, out of band in phase
+14).** The input mask of the new step was glued below the table of the steps, the same
+way the mask of the new status was (WP-M14-166). It is a page of its own now —
+`/admin/transitions/new` — and the table offers a button that opens it. The page needs
+`settings.write` and returns to the table after the step is created.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of

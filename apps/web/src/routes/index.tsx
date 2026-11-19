@@ -8,6 +8,7 @@ import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { StatusCreatePage } from '../admin/status-create-page'
 import { TransitionPage } from '../admin/transition-page'
+import { TransitionCreatePage } from '../admin/transition-create-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { WebhookCreatePage } from '../admin/webhook-create-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
@@ -197,6 +198,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <TransitionPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new workflow step (WP-M14-167): the form does
+        // not lie below the table of the steps any more.
+        path: '/admin/transitions/new',
+        element: (
+          <RequireSession>
+            <TransitionCreatePage />
           </RequireSession>
         ),
       },
