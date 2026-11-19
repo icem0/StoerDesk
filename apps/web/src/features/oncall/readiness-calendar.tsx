@@ -11,6 +11,7 @@ import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
  * Two month grids — the current and the following month — with one week per
  * row from Monday to Sunday and the ISO calendar week on the left. A day is
  * coloured by the state of its shifts, so a gap is visible at a glance. The
+ *
  * shifts come from the page, and the technician travels with the shift: the
  * shift list answers the display data of `user_id` (`ADR-0032`, WP-M14-151), so
  * the calendar names the technician of every shift — also one who is no member
@@ -330,7 +331,6 @@ export function ReadinessCalendar(props: {
                             ? 'border-slate-800 bg-slate-950/40'
                             : STATE_STYLE[state].cell
                           : 'border-slate-900 bg-slate-950/20 text-slate-600'
-
                         return (
                           <td
                             className={`min-h-20 rounded border align-top ${cellStyle}`}
@@ -361,18 +361,21 @@ export function ReadinessCalendar(props: {
                                         : t('readiness.assigned'))
 
                                     return (
-                                      <li
-                                        className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[10px] leading-tight text-slate-300"
-                                        key={shift.id}
-                                        title={`${stateLabel} – ${poolName} – ${holder}`}
-                                      >
-                                        <span
-                                          aria-hidden="true"
-                                          className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${STATE_STYLE[shift.state].dot}`}
-                                        />
-                                        <span className="font-medium text-slate-200">{stateLabel}</span>
-                                        <span className="truncate">{holder}</span>
-                                        <span className="truncate text-slate-400">{poolName}</span>
+                                      <li key={shift.id}>
+                                        <button
+                                          className="flex w-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-[10px] leading-tight text-slate-300"
+                                          onClick={() => setSelectedShift(shift)}
+                                          title={`${stateLabel} – ${poolName} – ${holder}`}
+                                          type="button"
+                                        >
+                                          <span
+                                            aria-hidden="true"
+                                            className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${STATE_STYLE[shift.state].dot}`}
+                                          />
+                                          <span className="font-medium text-slate-200">{stateLabel}</span>
+                                          <span className="truncate">{holder}</span>
+                                          <span className="truncate text-slate-400">{poolName}</span>
+                                        </button>
                                       </li>
                                     )
                                   })}
@@ -390,6 +393,15 @@ export function ReadinessCalendar(props: {
           </div>
         ))}
       </div>
+
+      {selectedShift !== null ? (
+        <ShiftDetailDialog
+          onClose={() => setSelectedShift(null)}
+          poolName={poolNames.get(selectedShift.poolId) ?? null}
+          shift={selectedShift}
+          showNames={showNames}
+        />
+      ) : null}
     </section>
   )
 }
