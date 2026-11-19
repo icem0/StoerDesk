@@ -1620,7 +1620,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-04 | the bell becomes an entry of the header menu | planned | yes |
 | WP-M16-05 | the shell fits a phone and the phase-16 criterion | planned | yes |
 | WP-M17-00 | the recipient chooses the way — the spec, ADR-0037 and the split | done | yes |
-| WP-M17-01 | the escalation delivers over the way of the recipient (the API) | planned | yes |
+| WP-M17-01 | the escalation delivers over the way of the recipient (the API) | done | yes |
 | WP-M17-02 | the administration separates the target from the way | planned | yes |
 | WP-M17-03 | the own page names the way of the escalation | planned | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -287,6 +287,129 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(messageOf((targeted[0]?.target ?? {}) as Record<string, unknown>).ntfyPriority).toBe(5)
     })
 
+    it('delivers the escalation over the channel the recipient chose (ADR-0037)', async () => {
+      const email = `telegram-${randomUUID().slice(0, 8)}@example.invalid`
+      const topic = `stoerdesk-${randomUUID().slice(0, 8)}`
+      const [user] = await db
+        .insert(users)
+        .values({ email, passwordHash: 'not-a-real-hash', givenName: 'Tara', familyName: 'Telegram' })
+        .returning({ id: users.id })
+
+      if (user === undefined) {
+        throw new Error('user insert failed')
+      }
+
+      // The ntfy account exists, but the recipient chose telegram for the
+      // escalation — the choice of the recipient is the way (ADR-0037).
+      await db.insert(notificationAccounts).values({
+        userId: user.id,
+        channel: 'ntfy',
+        externalId: topic,
+      })
+      await db.insert(notificationPreferences).values({
+        userId: user.id,
+        eventType: 'ticket.escalated',
+        channel: 'telegram',
+      })
+      await db.insert(schema.escalationActions).values({
+        key: 'telegram_notify',
+        ruleKey: seededRuleKey('review'),
+        type: 'notify',
+        config: { target: { kind: 'user', id: user.id } },
+        condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+        position: 7,
+        active: true,
+      })
+
+      const ticket = await createTicket('critical')
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+      const personal = rows.filter(
+        (row) => (row.target as Record<string, unknown>).targetName === 'Tara Telegram',
+      )
+
+      expect(personal).toHaveLength(1)
+      expect(personal[0]?.channel).toBe('telegram')
+      expect((personal[0]?.target as Record<string, unknown>).ntfyTopic).toBeUndefined()
+    })
+
+    it('delivers the escalation on the own ntfy topic without a selection (ADR-0037)', async () => {
+      const email = `fallback-${randomUUID().slice(0, 8)}@example.invalid`
+      const topic = `stoerdesk-${randomUUID().slice(0, 8)}`
+      const [user] = await db
+        .insert(users)
+        .values({ email, passwordHash: 'not-a-real-hash', givenName: 'Frieda', familyName: 'Fallback' })
+        .returning({ id: users.id })
+
+      if (user === undefined) {
+        throw new Error('user insert failed')
+      }
+
+      // No selection row: the recipient keeps their own ntfy topic.
+      await db.insert(notificationAccounts).values({
+        userId: user.id,
+        channel: 'ntfy',
+        externalId: topic,
+      })
+      await db.insert(schema.escalationActions).values({
+        key: 'fallback_notify',
+        ruleKey: seededRuleKey('review'),
+        type: 'notify',
+        config: { target: { kind: 'user', id: user.id } },
+        condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+        position: 8,
+        active: true,
+      })
+
+      const ticket = await createTicket('critical')
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+      const personal = rows.filter(
+        (row) => (row.target as Record<string, unknown>).targetName === 'Frieda Fallback',
+      )
+
+      expect(personal).toHaveLength(1)
+      expect(personal[0]?.channel).toBe('ntfy')
+      expect((personal[0]?.target as Record<string, unknown>).ntfyTopic).toBe(topic)
+    })
+
+    it('reaches nobody without a selection and without an ntfy account', async () => {
+      const email = `nobody-${randomUUID().slice(0, 8)}@example.invalid`
+      const [user] = await db
+        .insert(users)
+        .values({ email, passwordHash: 'not-a-real-hash', givenName: 'Nele', familyName: 'Nobody' })
+        .returning({ id: users.id })
+
+      if (user === undefined) {
+        throw new Error('user insert failed')
+      }
+
+      await db.insert(schema.escalationActions).values({
+        key: 'nobody_notify',
+        ruleKey: seededRuleKey('review'),
+        type: 'notify',
+        config: { target: { kind: 'user', id: user.id } },
+        condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+        position: 9,
+        active: true,
+      })
+
+      const ticket = await createTicket('critical')
+
+      await evaluateTicketEscalations(db, ticket.id, now)
+
+      const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
+      const personal = rows.filter(
+        (row) => (row.target as Record<string, unknown>).targetName === 'Nele Nobody',
+      )
+
+      expect(personal).toHaveLength(0)
+    })
+
     it('notifies the technician of the ticket with the target assigned', async () => {
       const email = `assigned-${randomUUID().slice(0, 8)}@example.invalid`
       const topic = `stoerdesk-${randomUUID().slice(0, 8)}`
@@ -339,11 +462,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('reaches nobody with the target assigned when the ticket has no technician', async () => {
       // Only the action with the target `assigned` may write a row with a
       // topic here: the fixed recipient of the other action would otherwise
-      // hide the answer.
+      // hide the answer. Every action that names a recipient is switched off.
       await db
         .update(schema.escalationActions)
         .set({ active: false })
-        .where(eq(schema.escalationActions.key, 'user_notify'))
+        .where(inArray(schema.escalationActions.key, ['user_notify', 'telegram_notify', 'fallback_notify']))
 
       const ticket = await createTicket('critical')
 

@@ -335,9 +335,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
 
-      expect(rows).toHaveLength(1)
-      expect(rows[0]?.eventType).toBe('ticket.escalated')
-      expect((rows[0]?.target as { ntfyTopic: string }).ntfyTopic).toBe('topic-0')
+      // Both technicians of the pool are notified: the one who selected ntfy
+      // for the escalation and the one without a selection, who keeps their
+      // own ntfy topic (ADR-0037).
+      expect(rows).toHaveLength(2)
+      expect(rows.every((row) => row.channel === 'ntfy')).toBe(true)
+      expect(rows.every((row) => row.eventType === 'ticket.escalated')).toBe(true)
+      expect((rows.map((row) => row.target as { ntfyTopic: string }).map((t) => t.ntfyTopic)).sort())
+        .toStrictEqual(['topic-0', 'topic-1'])
     })
 
     it('assigns the ticket to one named technician', async () => {

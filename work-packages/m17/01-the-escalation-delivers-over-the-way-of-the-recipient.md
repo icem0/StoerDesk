@@ -1,7 +1,7 @@
 # WP-M17-01: the escalation delivers over the way of the recipient
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M17-00
 phase: 17
 milestone: m17
@@ -82,8 +82,14 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/api/src/notifications/receivers.ts`,
+  `apps/api/src/escalation/actions.ts`, `apps/api/src/escalation/distribution.ts`,
+  the integration test `apps/api/src/escalation/__tests__/actions.integration.spec.ts`
+  and the distribution test
+- Interfaces added: `escalationRecipients(database, eventType, userIds)` and the
+  type `EscalationRecipient { userId, channel, topic }`; the lookup
+  `ntfyTopicsOfUsers()` is gone
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`,
+  `npm run wp:check`
 - Follow-up WP: WP-M17-02, WP-M17-03 (each file exists in the commit of the split)
 - Open question: none

@@ -76,55 +76,115 @@ export async function ntfyRecipients(
 }
 
 /**
- * The own topics of a list of users (`specs/10-notifications.md` §11.3, §11.4,
- * `specs/07-escalation.md` §7.14, ADR-0026, WP-M14-82b): the stored topic
- * (`external_id`) of every user of the list who selected the ntfy channel for
- * the event type — the broadcast of a distribution reaches the technicians of
- * the target on their own topics, never the instance topic. The user id comes
- * with the topic, so the caller can record the message for the addressee
- * (WP-M14-120b). A user without an ntfy account contributes nothing; the
- * topics are deduplicated.
+ * One recipient of an escalation with the way the message takes
+ * (`specs/07-escalation.md` §7.5, `specs/10-notifications.md` §11.4, ADR-0037).
  */
-export async function ntfyTopicsOfUsers(
+export interface EscalationRecipient {
+  /** The addressee of the message. */
+  userId: string
+  /** The channel the recipient chose for the event type. */
+  channel: string
+  /** The own ntfy topic of the recipient — empty for every other channel. */
+  topic: string
+}
+
+/**
+ * The recipients of an escalation with their way (`specs/07-escalation.md`
+ * §7.5, `specs/10-notifications.md` §11.4, ADR-0037): the target of the action
+ * names the recipient, the recipient names the way. Every recipient gets one
+ * entry per channel they selected for the event type
+ * (`notification_preferences`); a recipient **without** a selection keeps the
+ * personal fallback of ADR-0037 — their own ntfy topic
+ * (`notification_accounts`) — and a recipient without an ntfy account contributes
+ * nothing. The action never becomes a broadcast: a target addresses people.
+ *
+ * Only machine keys and the topic of a user leave this module — never a secret
+ * and never contact data (§11.13).
+ */
+export async function escalationRecipients(
   database: DbSelect,
   eventType: string,
   userIds: readonly string[],
-): Promise<NtfyRecipient[]> {
+): Promise<EscalationRecipient[]> {
   if (userIds.length === 0) {
     return []
   }
 
-  const rows = await database
-    .select({
-      userId: notificationPreferences.userId,
-      externalId: notificationAccounts.externalId,
-    })
-    .from(notificationPreferences)
-    .innerJoin(
-      notificationAccounts,
-      and(
-        eq(notificationAccounts.userId, notificationPreferences.userId),
-        eq(notificationAccounts.channel, 'ntfy'),
+  const [selections, accounts] = await Promise.all([
+    database
+      .select({
+        userId: notificationPreferences.userId,
+        channel: notificationPreferences.channel,
+      })
+      .from(notificationPreferences)
+      .where(
+        and(
+          eq(notificationPreferences.eventType, eventType),
+          inArray(notificationPreferences.userId, userIds),
+        ),
       ),
-    )
-    .where(
-      and(
-        eq(notificationPreferences.eventType, eventType),
-        eq(notificationPreferences.channel, 'ntfy'),
-        inArray(notificationPreferences.userId, userIds),
+    database
+      .select({
+        userId: notificationAccounts.userId,
+        externalId: notificationAccounts.externalId,
+      })
+      .from(notificationAccounts)
+      .where(
+        and(
+          eq(notificationAccounts.channel, 'ntfy'),
+          inArray(notificationAccounts.userId, userIds),
+        ),
       ),
-    )
+  ])
 
-  const recipients: NtfyRecipient[] = []
+  const topicByUser = new Map<string, string>()
+
+  for (const account of accounts) {
+    if (account.externalId !== '' && !topicByUser.has(account.userId)) {
+      topicByUser.set(account.userId, account.externalId)
+    }
+  }
+
+  const channelsByUser = new Map<string, string[]>()
+
+  for (const selection of selections) {
+    const channels = channelsByUser.get(selection.userId) ?? []
+
+    if (!channels.includes(selection.channel)) {
+      channels.push(selection.channel)
+    }
+
+    channelsByUser.set(selection.userId, channels)
+  }
+
+  const recipients: EscalationRecipient[] = []
   const seen = new Set<string>()
 
-  for (const row of rows) {
-    if (row.externalId === '' || row.externalId === null || seen.has(row.externalId)) {
+  for (const userId of userIds) {
+    const channels = channelsByUser.get(userId) ?? []
+    const topic = topicByUser.get(userId) ?? ''
+
+    if (channels.length === 0) {
+      // Without a selection the recipient keeps their own ntfy topic
+      // (ADR-0037); without an ntfy account there is no personal way left.
+      if (topic === '') {
+        continue
+      }
+
+      recipients.push({ userId, channel: 'ntfy', topic })
       continue
     }
 
-    seen.add(row.externalId)
-    recipients.push({ userId: row.userId, topic: row.externalId })
+    for (const channel of channels) {
+      const key = `${userId}:${channel}`
+
+      if (seen.has(key)) {
+        continue
+      }
+
+      seen.add(key)
+      recipients.push({ userId, channel, topic: channel === 'ntfy' ? topic : '' })
+    }
   }
 
   return recipients

@@ -54,7 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician, a readiness pool or the assignees of the ticket writes one row per
   recipient and per channel that recipient selected; a recipient without a
   selection keeps their own ntfy topic, and the channels of the installation
-  belong to the `notify` action without a target — the broadcast.
+  belong to the `notify` action without a target — the broadcast. The dispatcher
+  writes the rows (WP-M17-01): one per recipient and per channel that recipient
+  selected, the personal fallback on the own ntfy topic for a recipient without
+  a selection — the message is no longer lost when nobody touched the settings.
 - The readiness knows a duty window per weekday (**WP-M15-01 … WP-M15-05**,
   phase 15, ADR-0035): the plan of a pool with office hours is expressible.
   The office reported that the shift of the pool „Verwaltung" — on Monday from

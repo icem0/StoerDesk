@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm'
 import type { Database } from '../db/client'
 import { objects, ticketAssignees, ticketEvents, tickets, users } from '../db/schema'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
-import { ntfyTopicsOfUsers } from '../notifications/receivers'
+import { escalationRecipients } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
 import { readOncallSettings } from '../oncall/settings'
@@ -26,7 +26,8 @@ import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
  * pool in `offered_to_user_id` and sets the offer timeout (WP-M14-82b), a user
  * target names that technician (ADR-0033). Every
  * distribution writes one append-only `escalation_note` event and queues one
- * ntfy outbox row per technician on their own topic (WP-M14-82b).
+ * outbox row per technician over the way the technician chose for the event
+ * (ADR-0037).
  */
 
 type Db = Database['database']
@@ -39,7 +40,7 @@ export type DistributionResult = {
   changed: boolean
   /** The number of the technicians of the target. */
   technicians: number
-  /** The number of the queued ntfy rows (the technicians with an account). */
+  /** The number of the queued rows (one per technician and way). */
   notified: number
 }
 
@@ -102,8 +103,8 @@ async function offerPayload(
 /**
  * Hands the ticket to the technicians of the target: the step of the
  * transition table, the assignees of the assignment, one `escalation_note`
- * event with `{ rule, stage, target }` and one ntfy outbox row per technician
- * with an account.
+ * event with `{ rule, stage, target }` and one outbox row per technician over
+ * the way the technician chose (ADR-0037).
  */
 export async function distributeTicket(
   database: Db,
@@ -164,7 +165,7 @@ export async function distributeTicket(
   })
 
   const eventType = input.kind === 'offer' ? 'ticket.escalated' : 'ticket.assigned'
-  const recipients = await ntfyTopicsOfUsers(database, eventType, technicians)
+  const recipients = await escalationRecipients(database, eventType, technicians)
 
   if (recipients.length > 0) {
     const ticketRows = await database
@@ -183,12 +184,14 @@ export async function distributeTicket(
     if (ticket !== undefined) {
       // The personal deliveries of the distribution (WP-M14-120b): each
       // technician gets a message row next to the outbox row, so the inbox
-      // shows the assignment and whether it arrived.
+      // shows the assignment and whether it arrived. The way is the one the
+      // technician chose for the event (ADR-0037); only ntfy knows the
+      // personal address of the recipient.
       await enqueuePersonalDeliveries(
         database,
         recipients.map((recipient) => ({
           userId: recipient.userId,
-          channel: 'ntfy',
+          channel: recipient.channel,
           eventType,
           title: ticket.ticketNo,
           body: [
@@ -206,7 +209,7 @@ export async function distributeTicket(
             objectName: ticket.objectName,
             escalationRule: input.ruleKey,
             escalationStage: input.stageKey,
-            ntfyTopic: recipient.topic,
+            ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
           },
         })),
       )

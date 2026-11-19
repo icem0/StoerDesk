@@ -25,7 +25,7 @@ import {
   webhookDeliveries,
   webhookEndpoints,
 } from '../db/schema'
-import { ntfyTopicsOfUsers } from '../notifications/receivers'
+import { escalationRecipients } from '../notifications/receivers'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { resolveOnDutyUserIds } from '../oncall/coupling'
 import { transitionTicket } from '../tickets/workflow'
@@ -46,7 +46,9 @@ import { distributeTicket } from './distribution'
  * technicians of their target. A `notify` action with a readiness pool as its
  * target reaches the technicians who have a shift in that pool at this moment
  * (ADR-0030); the target `assigned` reaches the technicians of the ticket
- * (ADR-0033). Every action carries its own condition: an
+ * (ADR-0033). The way of such a notification is the one the recipient chose
+ * for `ticket.escalated` (ADR-0037); without a target the action keeps the
+ * broadcast over the channels of the installation. Every action carries its own condition: an
  * action whose condition does not match does not run. Apart from the two
  * distribution actions no action changes an assignment, a priority, a deadline
  * or a work order.
@@ -245,7 +247,7 @@ export async function dispatchEscalationActions(
             : notifyTarget.data.kind === 'pool'
               ? await resolveOnDutyUserIds(database, notifyTarget.data.id, at)
               : await resolveAssigneeIds(database, firing.ticketId)
-        const recipients = await ntfyTopicsOfUsers(database, 'ticket.escalated', userIds)
+        const recipients = await escalationRecipients(database, 'ticket.escalated', userIds)
 
         if (recipients.length === 0) {
           continue
@@ -253,12 +255,14 @@ export async function dispatchEscalationActions(
 
         // The personal deliveries of the escalation (WP-M14-120b): each
         // notified user gets a message row next to the outbox row, so the
-        // inbox shows the escalation and whether it arrived.
+        // inbox shows the escalation and whether it arrived. The way is the
+        // one the recipient chose for `ticket.escalated` (ADR-0037); only ntfy
+        // knows the personal address of the recipient.
         await enqueuePersonalDeliveries(
           database,
           recipients.map((recipient) => ({
             userId: recipient.userId,
-            channel: 'ntfy',
+            channel: recipient.channel,
             eventType: 'ticket.escalated',
             title: ticket.ticketNo,
             body: [
@@ -270,7 +274,10 @@ export async function dispatchEscalationActions(
               .filter((value) => value !== '' && value !== undefined)
               .join(' · '),
             ticketId: firing.ticketId,
-            target: { ...rowTarget, ntfyTopic: recipient.topic },
+            target: {
+              ...rowTarget,
+              ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
+            },
           })),
         )
 
