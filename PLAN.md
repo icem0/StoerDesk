@@ -3182,6 +3182,14 @@ way the mask of the new user was (WP-M14-158). It is a page of its own now —
 `user.write`, links back to the list and returns to the list after the group is
 created; the editing of a group stays below the table.
 
+**The new fault type has a page of its own (WP-M14-162, out of band in phase
+14).** Every record of the administration was created with a mask that was glued
+below or above the list of the records. The mask of the new fault type
+(„Störungsart anlegen") is a page of its own now — `/admin/text-templates/new` — and
+the list offers a button that opens it. The page needs `settings.write`, links
+back to the list and returns to the list after the fault type is created; the
+editing, the archiving and the delete stay where they were.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of

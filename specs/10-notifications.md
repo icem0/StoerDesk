@@ -225,6 +225,30 @@ A warning that only lives in a list of a page is not a warning: the failing
 channels are shown in the settings menu of the administrator as well, until the
 channel works again.
 
+### The quittature of a delivery problem
+
+A failed delivery is a **problem of the channel** until somebody has seen it.
+The administration *quits* it, and the warning is silent until the next
+failure:
+
+- the badge of the settings menu **is a link**: it leads to the page
+  `/admin/delivery`, where the admin sees which channel fails, since when,
+  with which machine code and which messages never arrived,
+- the badge counts the channels with a failure that nobody acknowledged,
+- the quittature stores the **time** of the acknowledgement — the `settings` row
+  `notifications.delivery_acknowledged` with one entry per channel. Every
+  failure after that time is a new failure and opens the problem again: a
+  solved problem stays solved and a new one is never silent,
+- the acknowledgement belongs to the instance and not to a user: the next admin
+  sees the same state. The user that acknowledged is named next to the time,
+- `notification.write` acknowledges, `notification.read` reads the problems,
+- the quittature never deletes a failed row: a message that never arrived stays
+  lost and stays visible.
+
+The time of a failure is the time the delivery failed — the `updated_at` of the
+row of the outbox — and not the time the row was queued. A delivery that was
+queued before the quittature and failed after it is a new failure.
+
 ## 11.9 The mandatory minimum channels of critical tickets
 
 The setting `notifications.minimum_channels` holds the list of the channel
@@ -253,6 +277,8 @@ promises a delivery that cannot happen.
 | `PATCH /api/v1/admin/channels/:kind` | `notification.write` | the configuration of a channel; a secret is write-only |
 | `POST /api/v1/admin/channels/:kind/test` | `notification.write` | sends a test message and answers `{ delivered }`; an optional body `{ topic }` overrides the test target (for example an ntfy test topic) |
 | `GET /api/v1/notifications/status` | `notification.read` | the status of every channel (§11.8) |
+| `GET /api/v1/notifications/delivery` | `notification.read` | the delivery problems and the lost messages (§11.8) |
+| `POST /api/v1/notifications/delivery/acknowledge` | `notification.write` | the quittature of the problems (§11.8) |
 | `GET /api/v1/notifications/accounts` | session | the own accounts |
 | `POST /api/v1/notifications/accounts/telegram/code` | session | a one-time code for the Telegram bot |
 | `POST /api/v1/notifications/accounts/telegram` | session | the code is checked, the account is stored |
@@ -266,6 +292,10 @@ promises a delivery that cannot happen.
 - `/admin/channels` — the administration of the channels: the state of every
   channel, the configuration, the write-only secret, the test message and the
   failing channels with the time of the last failure.
+- `/admin/delivery` — the delivery problems (§11.8): the failing channels with
+  the time of the last failure, the machine code and the number of the
+  unacknowledged failures, the messages that never arrived and the quittature
+  of the problems.
 - `/settings/notifications` — the own channels: the linked accounts (Telegram,
   Matrix, ntfy, WhatsApp Web), the subscription QR of ntfy and the selection of
   the channels per event type, the seven event types of §11.4 (ADR-0021).

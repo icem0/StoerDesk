@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The new fault type has a page of its own (**WP-M14-162**, out of band in
+  phase 14): the input mask „Störungsart anlegen" is not glued above the list of the
+  fault types any more, the list offers a button that opens the page
+  `/admin/text-templates/new`. The page needs `settings.write`, links back to the list
+  and returns to the list after the fault type is created. The editing, the
+  archiving and the delete stay where they were (v1.1.281).
 - The new group has a page of its own (**WP-M14-160**, out of band in phase 14):
   the input mask „Gruppe anlegen" is not glued below the list of the groups any
   more, the list offers a button that opens the page `/admin/groups/new`. The

@@ -23,6 +23,7 @@ import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
 import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { OncallPage } from '../admin/oncall-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
+import { TextTemplateCreatePage } from '../admin/text-template-create-page'
 import { UsersPage } from '../admin/users-page'
 import { UserCreatePage } from '../admin/user-create-page'
 import { RequireSession } from '../auth/require-session'
@@ -229,6 +230,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <TextTemplatesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new fault type (WP-M14-162): the form does not
+        // lie above the list of the fault types any more.
+        path: '/admin/text-templates/new',
+        element: (
+          <RequireSession>
+            <TextTemplateCreatePage />
           </RequireSession>
         ),
       },
