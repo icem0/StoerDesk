@@ -588,6 +588,30 @@
         "lastFailure": "at {{time}}"
       }
     },
+    "delivery": {
+      "title": "Gestörte Zustellungen",
+      "hint": "Hier stehen die Kanäle, deren Zustellung fehlgeschlagen ist, und die Nachrichten, die nie angekommen sind. Ein Problem wird quittiert, wenn es gesehen und übernommen ist — ein neuer Fehler danach öffnet es wieder.",
+      "loading": "Gestörte Zustellungen werden geladen …",
+      "empty": "Keine gestörte Zustellung: alle Kanäle liefern.",
+      "problems": {
+        "title": "Gestörte Kanäle",
+        "failed": "{{count}} fehlgeschlagene Zustellungen",
+        "open": "{{count}} nicht quittiert",
+        "lastFailure": "Letzter Fehler: {{time}}",
+        "acknowledgedAt": "Quittiert am {{time}}",
+        "acknowledgedBy": "Quittiert von {{by}}"
+      },
+      "acknowledge": "Quittieren",
+      "acknowledgeAll": "Alle quittieren",
+      "acknowledged": "Das Problem ist quittiert.",
+      "failures": {
+        "title": "Verlorene Nachrichten",
+        "empty": "Keine verlorene Nachricht.",
+        "attempts": "{{count}} Versuche",
+        "noTicket": "ohne Ticket"
+      },
+      "channelsLink": "Kanäle verwalten"
+    },
     "status": {
       "title": "Statusverwaltung",
       "hint": "The Ticket-Status are configuration: their names, their colour and position, their active switch and terminal flag. A ticket that still carries a status can never be deleted.",

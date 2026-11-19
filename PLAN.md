@@ -3205,6 +3205,12 @@ the mask of the new fault type was (WP-M14-162). It is a page of its own now —
 `apikey.write` and shows the one-time panel with the plaintext token after the key is
 created; the revocation of a key stays on the list.
 
+**The new webhook has a page of its own (WP-M14-165, out of band in phase 14).**
+The input mask of the new webhook was glued above the list of the endpoints, the
+same way the mask of the new API key was (WP-M14-164). It is a page of its own now
+— `/admin/webhooks/new` — and the list offers a button that opens it. The page needs
+`settings.write` and shows the signing secret after the endpoint is created.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of
@@ -3233,6 +3239,17 @@ one entry per channel with the time and the user — and belongs to the instance
 not to a user. `GET /api/v1/notifications/delivery` (`notification.read`) and
 `POST /api/v1/notifications/delivery/acknowledge` (`notification.write`) are the
 two routes of §11.11; a body without a channel acknowledges every open problem.
+
+**The page of the delivery problems (WP-M14-161b, out of band in phase 14).**
+`apps/web/src/admin/delivery-page.tsx` (`DeliveryPage`, the route
+`/admin/delivery`) shows the channels whose delivery failed: the number of the
+failed deliveries, the failures nobody quit, the time of the last failure, the
+machine code and the name of the user that quit the problem — and the messages
+that never arrived with their ticket. `notification.write` offers the quittature
+per problem and for all open problems; the page links to the channel
+administration, where the cause of a failure usually waits (a wrong topic, a
+missing secret, an unreachable server). The texts live in the `settings`
+namespace in `de` and `en`.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

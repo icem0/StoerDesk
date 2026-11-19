@@ -1,7 +1,7 @@
 # WP-M14-161b: the page of the delivery problems
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 22k tokens
@@ -79,6 +79,6 @@ guarded quittature and the answer of the write.
   namespace, the test and the repository docs
 - Interfaces added: `DeliveryPage`, the route `/admin/delivery`, the keys
   `settings.delivery.*`
-- Verified: (fill after the gates run)
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`, `npm run test:run`, `npm run i18n:check`, `npm run wp:check`
 - Follow-up WP: WP-M14-161c (the badge of the settings menu becomes the link)
 - Open question: none

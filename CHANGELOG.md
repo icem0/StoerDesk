@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The delivery problems have a page (**WP-M14-161b**, out of band in phase 14): the
+  page `/admin/delivery` names the channels whose delivery failed — the number
+  of the failed deliveries, the ones nobody quit, the time of the last failure,
+  the machine code and the name of the user that quit the problem — and lists
+  the messages that never arrived with their ticket. `notification.write` quits
+  a problem there, `notification.read` reads the problems (v1.1.285).
 - The delivery problems of the channels are quittable (**WP-M14-161a**, out of band
   in phase 14): the office reported the badge „Zustellung gestört (1)" of the
   settings menu — a text without a destination that counts the channels of the
@@ -20,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new webhook has a page of its own (**WP-M14-165**, out of band in phase
+  14): the input mask „Neuen Endpunkt anlegen" is not glued above the list of the
+  endpoints any more, the list offers a button that opens the page
+  `/admin/webhooks/new`. The page needs `settings.write` and shows the signing
+  secret after the endpoint is created — the server answers it only once (v1.1.290).
 - The new API key has a page of its own (**WP-M14-164**, out of band in phase
   14): the input mask „Neuen Schlüssel anlegen" is not glued above the list of the keys
   any more, the list offers a button that opens the page `/admin/api-keys/new`. The

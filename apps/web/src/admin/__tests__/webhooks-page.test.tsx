@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -7,7 +7,6 @@ import { MemoryRouter } from 'react-router-dom'
 import { i18n } from '../../i18n'
 import { WebhooksPage } from '../webhooks-page'
 
-const secret = `whsec_${'a'.repeat(43)}`
 
 const summary = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -70,24 +69,13 @@ describe('WebhooksPage', () => {
     expect(screen.getByText(/settings.write/)).toBeTruthy()
   })
 
-  it('creates an endpoint and shows the signing secret once', async () => {
-    stub({
-      me: meResponse(['settings.read', 'settings.write']),
-      list: { webhooks: [] },
-      created: { webhook: summary, secret },
-    })
+  it('offers the button of the own page of a new endpoint with settings.write', async () => {
+    stub({ me: meResponse(['settings.read', 'settings.write']), list: { webhooks: [] } })
     renderPage()
 
-    fireEvent.change(await screen.findByLabelText('URL'), {
-      target: { value: 'https://example.org/hook' },
-    })
-    fireEvent.click(screen.getByText('Endpunkt anlegen'))
-
-    expect(await screen.findByText('Signatur-Schlüssel einmalig sichtbar')).toBeTruthy()
-    expect(screen.getByText(secret)).toBeTruthy()
-
-    fireEvent.click(screen.getByText('Schließen'))
-    expect(screen.queryByText(secret)).toBeNull()
+    expect(
+      await screen.findByRole('link', { name: 'Neuen Endpunkt anlegen' }),
+    ).toBeTruthy()
   })
 
   it('shows the forbidden notice without settings.read', async () => {

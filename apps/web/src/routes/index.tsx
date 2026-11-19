@@ -8,6 +8,7 @@ import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { TransitionPage } from '../admin/transition-page'
 import { WebhooksPage } from '../admin/webhooks-page'
+import { WebhookCreatePage } from '../admin/webhook-create-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
@@ -193,6 +194,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <WebhooksPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new webhook (WP-M14-165): the form does not lie
+        // above the list of the webhooks any more.
+        path: '/admin/webhooks/new',
+        element: (
+          <RequireSession>
+            <WebhookCreatePage />
           </RequireSession>
         ),
       },
