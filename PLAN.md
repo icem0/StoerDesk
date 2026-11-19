@@ -314,9 +314,22 @@ Defaults:
 | `oncall.escalate_to_group_after_min`  | 10               |
 | `oncall.reminder_unconfirmed_h`       | 24               |
 | `oncall.unfilled_warning_days`        | 14               |
+| `oncall.weekly_windows`               | `[]` — no window, the continuous plan |
 
 Slots are calculated in `Europe/Berlin` local time, not as fixed 168-hour
 blocks, so DST changes remain correct. Start and end are stored as UTC.
+
+**Duty windows (WP-M15-01 … WP-M15-05, ADR-0035).** The plan of the readiness
+has two shapes. The **continuous plan** is the one above: a week start, a start
+time and a duration in days — one shift covers `duration_days` days. The
+**window plan** describes the duty of every weekday on its own and lives in the
+setting `oncall.weekly_windows`: one window per weekday with a start and an end
+in `Europe/Berlin` (the office: Monday to Thursday 07:30–17:00, Friday
+07:00–12:00). A stored window makes the window plan the plan; without a window
+the continuous plan stands, and its values stay stored. Every window is a shift
+of its own — state, technician, confirmation, swap and iCal entry — and outside
+the windows there is no on-call person, so the offer of a ticket goes to the
+group.
 
 Shift states: `DRAFT` → `PLANNED` → `CONFIRMED` | `DECLINED` |
 `SWAP_REQUESTED`; a slot without a technician is `UNFILLED`. The technician can
@@ -725,6 +738,7 @@ explanation. Offline is a core feature and appears early.
 | **12** | Acceptance: criteria slice, end-to-end acceptance suite for the items of §20                              | every acceptance item is `PASS` or `UNVERIFIED` by design, never a green skip                 |
 | **13** | Escalation logic: the workflow stages, the waiting deadlines per priority, the conditions and the actions | a stage fires its rule once, the actions run, the old stage system is gone |
 | **14** | Administration consolidation and messenger channels: the administration home disappears into the settings menu, the channels become configurable (ntfy, Telegram, Matrix, WhatsApp Web), the accounts are linked and the users choose their channels; the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) | every channel is configured in the administration, a linked account receives a ticket notification and a failure stays visible; a stage or a status can be added, removed and chained to a predecessor |
+| **15** | Duty windows of the readiness: the plan knows a duty window per weekday beside the continuous plan (WP-M15-01 … WP-M15-05) | a pool with office hours is expressible; every window is a shift of its own and the coupling names the technician only inside a window |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -3133,6 +3147,23 @@ twelve latest reports by `reported_at`, without test and suspected-spam
 tickets); the statistics convert a duration of 60 minutes or more to hours with
 at most one decimal.
 
+
+**The readiness knows a duty window per weekday (WP-M15-01, phase 15).** The
+office reported that the plan of the pool „Verwaltung" cannot be expressed: the
+shift runs on Monday from 07:30 to 17:00 and on Friday from 07:00 to 12:00,
+and the settings know a week start, a start time and a duration in days — so a
+shift is a block that never ends and the plan has no end of a duty at all.
+**ADR-0035** decides the second shape of the plan: the **window plan** lives in
+the setting `oncall.weekly_windows` and carries one window per weekday with a
+start and an end in `Europe/Berlin`; a stored window makes the window plan the
+plan, without a window the continuous plan of ADR-0011 stands and its values
+stay stored. Every window is a shift of its own — state, technician,
+confirmation, swap, iCal entry — and outside the windows there is no on-call
+person, so the offer of a ticket goes to the group. The window plan does not
+change the shifts that exist: the windows create new shifts next to the old
+ones. The chain is split into **WP-M15-02** (the shared contracts and the
+window generator), **WP-M15-03** (the API and the planner), **WP-M15-04** (the
+administration form) and **WP-M15-05** (the exit criterion).
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

@@ -66,3 +66,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0032](DECISIONS/0032-the-technician-of-a-shift-travels-with-the-shift.md) | The technician of a shift travels with the shift (`technician` in the shift list, the readiness calendar names every technician) | accepted |
 | [ADR-0033](DECISIONS/0033-the-assignment-names-a-technician.md) | The assignment names a technician, the notification reaches the assigned technician (`user` target, `assigned` target) | accepted |
 | [ADR-0034](DECISIONS/0034-the-internal-comment-never-leaves-the-office.md) | The internal comment never leaves the office (`internal_comment`, the key `ticket.comment.internal`, the colour under „Darstellung“) | accepted |
+| [ADR-0035](DECISIONS/0035-the-readiness-knows-a-duty-window-per-weekday.md) | The readiness knows a duty window per weekday (`oncall.weekly_windows`, the window plan beside the continuous plan) | accepted |

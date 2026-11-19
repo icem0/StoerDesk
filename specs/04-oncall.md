@@ -3,7 +3,7 @@
 **Chapter:** 5a
 **Scope:** ~280 lines
 **Status:** reviewed for phase 8 (WP-M8-01), amended for the readiness rules of
-WP-M14-26 (ADR-0021)
+WP-M14-26 (ADR-0021) and for the duty windows of WP-M15-01 (ADR-0035)
 
 The binding summary is `PLAN.md` §8. This slice details the settings, pools,
 weekly slots, the shift state machine, confirm/decline, swaps, ticket coupling
@@ -26,11 +26,18 @@ needed for them.
 | `oncall.reminder_unconfirmed_h` | `24` | positive integer, max. 720 |
 | `oncall.unfilled_warning_days` | `14` | positive integer, max. 365 |
 | `oncall.default_pool_id` | — | UUID of an active pool |
+| `oncall.weekly_windows` | `[]` | array of `{ weekday, start, end }` — §4a.3.2 |
 
 `readOncallSettings(database)` returns the resolved values once per request and
 is the only reader; it never writes. The administration page writes the keys
 through `PUT /api/v1/settings/oncall` (`settings.write`), validated against the
 table above.
+
+The plan of the readiness has two shapes (§4a.3.2): the **continuous plan** of
+ADR-0011 — a week start, a start time and a duration in days — and the
+**window plan**, a duty window per weekday. A stored window makes the window
+plan the plan; without a window the continuous plan stands. The values of the
+continuous plan stay stored and take effect again when the windows are removed.
 
 ## 4a.2 Pools
 
@@ -129,6 +136,50 @@ is a pure shared function; it returns `{ startsAt, endsAt }` pairs and is the
 only place the local-time rule lives. The planning service uses it and
 `INSERT … ON CONFLICT (pool_id, starts_at) DO NOTHING`, so a repeated
 generation never moves or overwrites an existing slot.
+
+### 4a.3.2 Duty windows
+
+The continuous plan of §4a.3.1 describes a duty that never ends: one shift
+covers `duration_days` days. A pool with office hours — the „Verwaltung" of the
+office, on Monday from 07:30 to 17:00 and on Friday from 07:00 to 12:00 —
+cannot be expressed that way, because the plan knows no end of a duty. The
+window plan describes the duty of every weekday on its own.
+
+A window is
+
+| Field | Type | Rule |
+| --- | --- | --- |
+| `weekday` | integer | `0`–`6`, `0` = Sunday (the numbering of `week_start_weekday`) |
+| `start` | text | `^([01]\d|2[0-3]):[0-5]\d$`, wall clock of `Europe/Berlin` |
+| `end` | text | the same pattern, later than `start` on the same day |
+
+At most one window per weekday; a weekday without a window is a free day. A
+window that ends before it starts (a night duty) is not part of this version —
+the continuous plan covers a duty around the clock.
+
+The generator `generateOncallWindowSlots({ from, to, weeklyWindows })` is a
+pure shared function beside `generateOncallSlots`. For a requested range it
+emits one slot per window per week: the start is the `start` of the window on
+that weekday, the end its `end` on the same day, both converted to UTC with
+`date-fns-tz`. A window that contains a DST change is one hour shorter or
+longer than its wall-clock length.
+
+Example (Europe/Berlin, the windows of Monday to Thursday 07:30–17:00 and of
+Friday 07:00–12:00):
+
+| Window | Local | UTC (winter) | Length |
+| --- | --- | --- | --- |
+| Monday | 2026-11-02 07:30 → 17:00 | 06:30Z → 16:00Z | 9.5 h |
+| Friday | 2026-11-06 07:00 → 12:00 | 06:00Z → 11:00Z | 5 h |
+
+Every window is a shift of its own: it has a state, a technician, a
+confirmation, a swap and an entry in the personal iCal feed (§4a.3, §4a.4,
+§4a.5, §4a.7). Outside the windows there is no shift and therefore no on-call
+person: the offer of a ticket goes to the group (§4a.6).
+
+The window plan does not change the shifts that exist. A shift of the
+continuous plan keeps its times until the admin deletes it (§4a.3); the
+windows create new shifts next to it.
 
 ## 4a.4 Confirmation and decline
 

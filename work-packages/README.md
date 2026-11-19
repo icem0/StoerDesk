@@ -25,6 +25,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
 | [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
 | [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i), the admin view of the inbox (WP-M14-141 … WP-M14-141c), the assignment that names a technician (WP-M14-150 … WP-M14-150d) and the internal comment that never reaches the customer (WP-M14-149 … WP-M14-149g) and the readiness calendar that names the technician of every shift (WP-M14-151) and the milestones of the ticket view as buttons (WP-M14-153) | 128  |
+| [m15](m15/) | Phase 15: duty windows of the readiness — the plan knows a duty window per weekday beside the continuous plan (the spec and ADR-0035, the shared contracts and the generator, the API and the planner, the administration form, the exit criterion) | 5   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1584,6 +1585,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-154b | the shift dialog shows the history on click (out of band) | done | no |
 | WP-M14-155 | the start page is the ticket list, the wall display shows reports and statistics (out of band) | done | yes |
 | WP-M15-00 | the notifications page test names the German texts (out of band) | done | yes |
+| WP-M15-01 | the duty windows — the spec, ADR-0035 and the split | done | yes |
+| WP-M15-02 | the shared contracts and the window generator | planned | yes |
+| WP-M15-03 | the API and the planner read the windows | planned | yes |
+| WP-M15-04 | the administration edits the duty windows | planned | yes |
+| WP-M15-05 | the duty windows satisfy their criterion | planned | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 
 

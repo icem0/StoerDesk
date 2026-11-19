@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The readiness knows a duty window per weekday (**WP-M15-01 … WP-M15-05**,
+  phase 15, ADR-0035): the plan of a pool with office hours is expressible.
+  The office reported that the shift of the pool „Verwaltung" — on Monday from
+  07:30 to 17:00 and on Friday from 07:00 to 12:00 — could not be mapped,
+  because the settings knew a week start, a start time and a duration in days
+  and therefore no end of a duty at all. The new setting
+  `oncall.weekly_windows` carries one window per weekday with a start and an
+  end in `Europe/Berlin`; a stored window makes the window plan the plan, and
+  without a window the continuous plan stays as it is. Every window is a shift
+  of its own — state, technician, confirmation, swap and the personal iCal
+  feed — and outside the windows there is no on-call person, so the offer of a
+  ticket goes to the group. The windows create new shifts; the shifts of the
+  continuous plan keep their times until the admin deletes them.
 - The dashboard page is gone and the start page is the ticket list (**WP-M14-155**,
   out of band in phase 14): the root route redirects to `/tickets`, the header menu
   names the ticket list, the statistics and the readiness, and the former dashboard
