@@ -15,6 +15,7 @@ import {
   updateShiftRequestSchema,
   icalUrlResponseSchema,
   oncallMemberListResponseSchema,
+  oncallShiftHistoryResponseSchema,
 } from '@stoerdesk/shared'
 
 import { loadEffectivePermissions, requirePermission } from '../auth/requirePermission'
@@ -23,6 +24,7 @@ import type { Database } from '../db/client'
 import { oncallPools, oncallShifts, users } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
+import { readShiftHistory } from './events'
 import { resolveDefaultPool } from './coupling'
 import { resolvePoolMemberIds } from './members'
 import { serializeIcal, verifyIcalToken, icalTokenFor } from './ical'
@@ -260,6 +262,24 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
       },
     )
 
+    app.get<{ Params: { id: string } }>(
+      '/api/v1/oncall/shifts/:id/history',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.read) },
+      async (request, reply) => {
+        const shiftId = parseUuidParam(request.params.id)
+
+        if (shiftId === null) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        await requireShift(database, shiftId)
+
+        const events = await readShiftHistory(database, shiftId)
+
+        return reply.send(oncallShiftHistoryResponseSchema.parse({ events }))
+      },
+    )
+
     app.post(
       '/api/v1/oncall/shifts',
       { preHandler: requirePermission(database, PERMISSIONS.oncall.plan) },
@@ -276,7 +296,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
             )
         }
 
-        const { poolId, userId, publish, startsAt, endsAt, createdByUserId } = parsed.data
+        const { poolId, userId, publish, startsAt, endsAt } = parsed.data
 
         const created = await createShift(database, {
           poolId,
@@ -284,7 +304,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           publish,
           startsAt: startsAt === undefined ? undefined : new Date(startsAt),
           endsAt: endsAt === undefined ? undefined : new Date(endsAt),
-          createdByUserId: createdByUserId ?? null,
+          createdByUserId: request.user?.id ?? null,
         })
 
         const full = await requireShift(database, created.id)
@@ -309,13 +329,13 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
             )
         }
 
-        const { poolId, from, to, createdByUserId } = parsed.data
+        const { poolId, from, to } = parsed.data
 
         const result = await generateShifts(database, {
           poolId,
           from: new Date(from),
           to: new Date(to),
-          createdByUserId: createdByUserId ?? null,
+          createdByUserId: request.user?.id ?? null,
         })
 
         return reply.send(generateShiftsResponseSchema.parse(result))

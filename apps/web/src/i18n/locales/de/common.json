@@ -12,8 +12,8 @@
     "logoAlt": "Logo von StörDesk",
     "navigation": "Hauptnavigation",
     "nav": {
-      "dashboard": "Dashboard",
       "tickets": "Tickets",
+      "stats": "Statistik",
       "oncall": "Bereitschaft"
     },
     "titleWithCompany": "{{company}} @ {{product}}",

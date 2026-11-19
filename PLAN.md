@@ -3123,6 +3123,16 @@ transition and the decline reason, never the raw payload. **WP-M14-154b** adds
 the shift dialog and opens it from the readiness calendar and from an own shift,
 with the existing `oncall.read_names` gate.
 
+**The start page is the ticket list and the wall display shows reports and
+statistics (WP-M14-155, out of band in phase 14).** The office asked for the
+dashboard page to disappear: the start page is the ticket list, the statistics
+took the place of the dashboard in the header menu, and the wall display shows
+the latest reports on one side and the statistics on the other. The root route
+redirects to `/tickets`; the snapshot contract gains `recentTickets` (the
+twelve latest reports by `reported_at`, without test and suspected-spam
+tickets); the statistics convert a duration of 60 minutes or more to hours with
+at most one decimal.
+
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

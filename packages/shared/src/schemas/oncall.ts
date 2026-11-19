@@ -89,14 +89,12 @@ export const createShiftRequestSchema = z.object({
   publish: z.boolean().optional(),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
-  createdByUserId: uuidOptional,
 })
 
 export const generateShiftsRequestSchema = z.object({
   poolId: z.string().uuid(),
   from: z.string().datetime(),
   to: z.string().datetime(),
-  createdByUserId: uuidOptional,
 })
 
 export const generateShiftsResponseSchema = z.object({
@@ -106,6 +104,27 @@ export const generateShiftsResponseSchema = z.object({
 
 export const shiftListResponseSchema = z.object({
   shifts: z.array(oncallShiftSchema),
+})
+
+/**
+ * One step of the append-only shift history (`specs/04-oncall.md` §4a.10,
+ * WP-M14-154a). The raw event payload stays on the server: the route names the
+ * acting person, the person an assignment or a swap refers to, the state
+ * transition of an assignment and the reason of a decline.
+ */
+export const oncallShiftHistoryEntrySchema = z.object({
+  id: z.uuid(),
+  type: z.string(),
+  createdAt: z.date(),
+  actor: memberRow.nullable(),
+  person: memberRow.nullable(),
+  fromState: shiftState.nullable(),
+  toState: shiftState.nullable(),
+  reason: z.string().nullable(),
+})
+
+export const oncallShiftHistoryResponseSchema = z.object({
+  events: z.array(oncallShiftHistoryEntrySchema),
 })
 
 export const updateShiftRequestSchema = z.object({
@@ -202,6 +221,8 @@ export const updateOncallSettingsRequestSchema = z
   .strict()
 
 export type OnCallShift = z.infer<typeof oncallShiftSchema>
+export type OnCallShiftHistoryEntry = z.infer<typeof oncallShiftHistoryEntrySchema>
+export type OnCallShiftHistoryResponse = z.infer<typeof oncallShiftHistoryResponseSchema>
 export type CreateShiftRequest = z.infer<typeof createShiftRequestSchema>
 export type GenerateShiftsRequest = z.infer<typeof generateShiftsRequestSchema>
 export type GenerateShiftsResponse = z.infer<typeof generateShiftsResponseSchema>

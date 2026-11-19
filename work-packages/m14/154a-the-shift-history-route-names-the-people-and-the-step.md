@@ -1,7 +1,7 @@
 # WP-M14-154a: the shift history route names the people and the step
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -24,7 +24,7 @@ files-write:
 - packages/shared/src/schemas/oncall.ts
 - apps/api/src/oncall/events.ts
 - apps/api/src/oncall/routes.ts
-- specs/04-oncall.md (§4a.10, §4a.8)
+- apps/api/src/oncall/__tests__/routes.integration.spec.ts
 
 interfaces:
 
@@ -60,8 +60,9 @@ interfaces:
 
 ## Non-goals
 
-- No new write path and no migration: `oncall_events` already carries every
-  step.
+- No new table and no migration: `oncall_events` already carries every step;
+  only the attribution of the create and generate event moves to the session
+  user.
 - No name gate in the API: the route follows the shift list and answers the
   people to `oncall.read`; the web app gates `oncall.read_names`.
 - No UI in this WP — WP-M14-154b renders the dialog.

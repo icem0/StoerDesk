@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The dashboard page is gone and the start page is the ticket list (**WP-M14-155**,
+  out of band in phase 14): the root route redirects to `/tickets`, the header menu
+  names the ticket list, the statistics and the readiness, and the former dashboard
+  start page with its live hook is removed. The wall display shows two sides — the
+  latest reports on the left and the statistics on the right — and the snapshot
+  contract carries `recentTickets`, twelve latest reports by `reported_at`, without
+  test and suspected-spam tickets. Statistics no longer print 60 minutes or more as
+  minutes: they convert the value to hours with at most one decimal (v1.1.263).
 - The shift history shows who did what and when (**WP-M14-154**, out of band in
   phase 14): every shift carries its append-only history — created, assigned by
   whom to whom, published, confirmed, declined with the reason, and every swap

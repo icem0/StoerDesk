@@ -107,6 +107,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function getHistory(id: string, cookie?: string) {
+      return app.inject({
+        method: 'GET',
+        url: `/api/v1/oncall/shifts/${id}/history`,
+        headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
     function postShift(cookie: string, payload: Record<string, unknown>) {
       return app.inject({
         method: 'POST',
@@ -366,6 +374,61 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const unstaffed = body.shifts.find((shift) => shift.userId === null)
 
       expect(unstaffed?.technician).toBeNull()
+    })
+
+    it('answers the named history of a shift (WP-M14-154a)', async () => {
+      const created = await postShift(cookies['admin'], {
+        poolId,
+        userId: oncallId,
+        publish: true,
+      })
+      const shiftId = created.json<ShiftRow>().id
+
+      const reassigned = await patchShift(cookies['admin'], shiftId, {
+        userId: outsiderId,
+      })
+
+      expect(reassigned.statusCode).toBe(200)
+
+      const anonymous = await getHistory(shiftId)
+      const forbidden = await getHistory(shiftId, cookies['reporter'])
+
+      expect(anonymous.statusCode).toBe(401)
+      expect(anonymous.json<ErrorResponseBody>().code).toBe('session_invalid')
+      expect(forbidden.statusCode).toBe(403)
+      expect(forbidden.json<ErrorResponseBody>().code).toBe('forbidden')
+
+      const missing = await getHistory('00000000-0000-0000-0000-000000000000', cookies['oncall'])
+
+      expect(missing.statusCode).toBe(404)
+      expect(missing.json<ErrorResponseBody>().code).toBe('oncall_shift_not_found')
+
+      const response = await getHistory(shiftId, cookies['oncall'])
+
+      expect(response.statusCode).toBe(200)
+      const body = response.json<{
+        events: {
+          type: string
+          actor: MemberRow | null
+          person: MemberRow | null
+          fromState: string | null
+          toState: string | null
+          reason: string | null
+        }[]
+      }>()
+
+      expect(body.events.map((event) => event.type)).toEqual([
+        'shift_created',
+        'shift_updated',
+      ])
+      expect(body.events[0]!.actor?.id).toBe(adminId)
+      expect(body.events[0]!.person?.id).toBe(oncallId)
+      expect(body.events[1]!.actor?.id).toBe(adminId)
+      expect(body.events[1]!.person?.id).toBe(outsiderId)
+      expect(body.events[1]!.person?.givenName).toBe('Otto')
+      expect(body.events[1]!.fromState).toBe('PLANNED')
+      expect(body.events[1]!.toState).toBe('DRAFT')
+      expect(body.events[1]!.reason).toBeNull()
     })
 
     it('filters shifts by poolId', async () => {
