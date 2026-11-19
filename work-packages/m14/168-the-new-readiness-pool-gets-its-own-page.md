@@ -1,7 +1,7 @@
 # WP-M14-168: the new readiness pool gets its own page
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -76,8 +76,17 @@ return to the administration.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/oncall-pool-create-page.tsx` (new),
+  `apps/web/src/admin/oncall-page.tsx` (the button instead of the inline form),
+  `apps/web/src/routes/index.tsx` (the route), the new test,
+  `docs/REPO-MAP.md`, `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document
+- Interfaces added: `OncallPoolCreatePage`, the route `/admin/oncall/pools/new`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `npm run lint` (0 errors),
+  `npm run i18n:check`, `npm run test:run` and `npm run wp:check` green
+- Follow-up WP: WP-M14-169 (the new escalation stage gets its own page) — its
+  file is created with this commit (`AGENTS.md`, _Open follow-ups (mandatory
+  closure)_)
+- Open question: none
 - Follow-up WP: none — the comment of the office is closed
 - Open question: none

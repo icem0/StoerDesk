@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new readiness pool has a page of its own (**WP-M14-168**, out of band in
+  phase 14): the input mask „Pool anlegen" is not glued below the list of the pools
+  any more, the list offers a button that opens the page `/admin/oncall/pools/new`. The
+  page needs `oncall.admin` and returns to the readiness administration after the
+  pool is created. The shifts, the members and the settings stay where they were
+  (v1.1.296).
 - The new workflow step has a page of its own (**WP-M14-167**, out of band in
   phase 14): the input mask „Übergang anlegen" is not glued below the table of the steps
   any more, the table offers a button that opens the page `/admin/transitions/new`.

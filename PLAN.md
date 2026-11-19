@@ -3224,6 +3224,12 @@ way the mask of the new status was (WP-M14-166). It is a page of its own now —
 `/admin/transitions/new` — and the table offers a button that opens it. The page needs
 `settings.write` and returns to the table after the step is created.
 
+**The new readiness pool has a page of its own (WP-M14-168, out of band in phase
+14).** The input mask of the new pool was glued below the list of the pools, the same
+way the mask of the new workflow step was (WP-M14-167). It is a page of its own now —
+`/admin/oncall/pools/new` — and the list offers a button that opens it. The page needs
+`oncall.admin` and returns to the readiness administration after the pool is created.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of

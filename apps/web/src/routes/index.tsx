@@ -28,6 +28,7 @@ import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
 import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { DetectedErrorCreatePage } from '../admin/detected-error-create-page'
 import { OncallPage } from '../admin/oncall-page'
+import { OncallPoolCreatePage } from '../admin/oncall-pool-create-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { TextTemplateCreatePage } from '../admin/text-template-create-page'
 import { UsersPage } from '../admin/users-page'
@@ -280,6 +281,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <OncallPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new readiness pool (WP-M14-168): the form does
+        // not lie below the list of the pools any more.
+        path: '/admin/oncall/pools/new',
+        element: (
+          <RequireSession>
+            <OncallPoolCreatePage />
           </RequireSession>
         ),
       },

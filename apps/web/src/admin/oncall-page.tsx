@@ -199,26 +199,11 @@ function PoolSection({
 }) {
   const { t } = useTranslation('oncall')
   const queryClient = useQueryClient()
-  const [name, setName] = useState('')
-  const [groupId, setGroupId] = useState('')
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['oncall', 'pools'] })
     void queryClient.invalidateQueries({ queryKey: ['oncall', 'settings'] })
   }
-
-  const create = useMutation({
-    mutationFn: () =>
-      apiFetch<OnCallPool>('/v1/oncall/pools', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ name, groupId: groupId === '' ? null : groupId }),
-      }),
-    onSuccess: () => {
-      setName('')
-      invalidate()
-    },
-  })
 
   const update = useMutation({
     mutationFn: (input: { id: string; body: Record<string, unknown> }) =>
@@ -271,11 +256,15 @@ function PoolSection({
         </div>
       )}
 
-      {create.isError ? (
-        <p role="alert" className="mt-2 text-sm text-red-400">
-          {errorMessage(t, create.error)}
-        </p>
+      {canAdmin ? (
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/oncall/pools/new"
+        >
+          {t('admin.pools.createTitle')}
+        </Link>
       ) : null}
+
       {update.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, update.error)}
@@ -287,49 +276,6 @@ function PoolSection({
         </p>
       ) : null}
 
-      <form
-        className="mt-4 flex flex-wrap items-end gap-3 border-t border-slate-800 pt-4"
-        onSubmit={(event) => {
-          event.preventDefault()
-          create.mutate()
-        }}
-      >
-        <h3 className="w-full text-sm font-semibold">{t('admin.pools.createTitle')}</h3>
-        <label className="flex flex-col gap-1 text-sm">
-          {t('admin.pools.name')}
-          <input
-            className="rounded bg-slate-950 p-2 text-slate-100"
-            maxLength={100}
-            required
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            disabled={!canAdmin}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t('admin.pools.group')}
-          <select
-            className="rounded bg-slate-950 p-2 text-slate-100"
-            value={groupId}
-            onChange={(event) => setGroupId(event.target.value)}
-            disabled={!canAdmin}
-          >
-            <option value="">{t('admin.pools.noGroup')}</option>
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-          type="submit"
-          disabled={!canAdmin || create.isPending || name.trim() === ''}
-        >
-          {t('admin.pools.create')}
-        </button>
-      </form>
     </section>
   )
 }
