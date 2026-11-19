@@ -82,7 +82,7 @@
     },
     "settings": {
       "title": "On-call settings",
-      "hint": "The eight oncall keys of the specification. Empty or invalid values fall back to the default.",
+      "hint": "The oncall keys of the specification. Empty or invalid values fall back to the default.",
       "weekStart": "Week start",
       "startTime": "Start time (Europe/Berlin)",
       "durationDays": "Duration in days",
@@ -92,6 +92,13 @@
       "defaultPool": "Default pool",
       "noDefaultPool": "No default pool",
       "swapApproval": "Swap requires admin approval",
+      "windows": {
+        "title": "Duty windows",
+        "hint": "The duty of the pool on every weekday. A day without a window is a free day.",
+        "planHint": "With a duty window the week start, the start time and the duration do not apply — the windows are the plan.",
+        "from": "from",
+        "to": "to"
+      },
       "save": "Save settings",
       "saved": "Settings saved."
     },

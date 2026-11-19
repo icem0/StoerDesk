@@ -58,6 +58,9 @@ const handledErrorCodes = [
 const jsonHeaders = { 'content-type': 'application/json' }
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const
 
+/** The duty windows of the week plan: Monday first, Sunday last. */
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const
+
 function errorMessage(t: TFunction<'oncall'>, error: unknown): string {
   const code =
     error instanceof ApiError &&
@@ -831,6 +834,7 @@ function SettingsSection({
           'oncall.reminder_unconfirmed_h': body.reminderUnconfirmedH,
           'oncall.unfilled_warning_days': body.unfilledWarningDays,
           'oncall.default_pool_id': body.defaultPoolId,
+          'oncall.weekly_windows': body.weeklyWindows,
         }),
       }),
     onSuccess: (savedSettings) => {
@@ -844,6 +848,41 @@ function SettingsSection({
     const parsed = Number(value)
 
     return Number.isFinite(parsed) ? parsed : fallback
+  }
+
+  // The window plan (§4a.3.2) replaces the continuous plan: with at least one
+  // window the week start, the start time and the duration have no effect.
+  const windowPlan = values.weeklyWindows.length > 0
+
+  const setWindow = (weekday: number, patch: { start?: string; end?: string }) => {
+    setValues({
+      ...values,
+      weeklyWindows: values.weeklyWindows.map((window) =>
+        window.weekday === weekday ? { ...window, ...patch } : window,
+      ),
+    })
+  }
+
+  const toggleWindow = (weekday: number, active: boolean) => {
+    if (!active) {
+      setValues({
+        ...values,
+        weeklyWindows: values.weeklyWindows.filter((window) => window.weekday !== weekday),
+      })
+
+      return
+    }
+
+    const start = values.startTime < '17:00' ? values.startTime : '07:00'
+    const end = start < '17:00' ? '17:00' : '23:00'
+
+    setValues({
+      ...values,
+      weeklyWindows: [
+        ...values.weeklyWindows,
+        { weekday, start, end },
+      ].sort((left, right) => left.weekday - right.weekday),
+    })
   }
 
   return (
@@ -867,7 +906,7 @@ function SettingsSection({
             onChange={(event) =>
               setValues({ ...values, weekStartWeekday: Number(event.target.value) })
             }
-            disabled={!canWrite}
+            disabled={!canWrite || windowPlan}
           >
             {WEEKDAYS.map((day) => (
               <option key={day} value={day}>
@@ -884,7 +923,7 @@ function SettingsSection({
             required
             value={values.startTime}
             onChange={(event) => setValues({ ...values, startTime: event.target.value })}
-            disabled={!canWrite}
+            disabled={!canWrite || windowPlan}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -899,7 +938,7 @@ function SettingsSection({
             onChange={(event) =>
               setValues({ ...values, durationDays: number(event.target.value, values.durationDays) })
             }
-            disabled={!canWrite}
+            disabled={!canWrite || windowPlan}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -994,6 +1033,50 @@ function SettingsSection({
           {t('admin.settings.swapApproval')}
         </label>
       </div>
+
+      <fieldset className="flex flex-col gap-2 rounded border border-slate-700 p-3">
+        <legend className="px-1 text-sm font-medium">{t('admin.settings.windows.title')}</legend>
+        <p className="text-sm text-slate-400">{t('admin.settings.windows.hint')}</p>
+
+        {WEEKDAY_ORDER.map((day) => {
+          const window = values.weeklyWindows.find((entry) => entry.weekday === day)
+
+          return (
+            <div key={day} className="flex flex-wrap items-center gap-3 text-sm">
+              <label className="flex min-w-40 items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={window !== undefined}
+                  onChange={(event) => toggleWindow(day, event.target.checked)}
+                  disabled={!canWrite}
+                />
+                {t(`admin.weekday.${day}`)}
+              </label>
+              <input
+                aria-label={`${t('admin.settings.windows.from')} ${t(`admin.weekday.${day}`)}`}
+                className="rounded bg-slate-950 p-2 text-slate-100"
+                type="time"
+                value={window?.start ?? ''}
+                onChange={(event) => setWindow(day, { start: event.target.value })}
+                disabled={!canWrite || window === undefined}
+              />
+              <input
+                aria-label={`${t('admin.settings.windows.to')} ${t(`admin.weekday.${day}`)}`}
+                className="rounded bg-slate-950 p-2 text-slate-100"
+                type="time"
+                min={window?.start}
+                value={window?.end ?? ''}
+                onChange={(event) => setWindow(day, { end: event.target.value })}
+                disabled={!canWrite || window === undefined}
+              />
+            </div>
+          )
+        })}
+
+        {windowPlan ? (
+          <p className="text-sm text-amber-400">{t('admin.settings.windows.planHint')}</p>
+        ) : null}
+      </fieldset>
 
       {save.isError ? (
         <p role="alert" className="text-sm text-red-400">

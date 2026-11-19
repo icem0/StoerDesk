@@ -82,7 +82,7 @@
     },
     "settings": {
       "title": "Bereitschafts-Einstellungen",
-      "hint": "Die acht oncall-Schlüssel aus der Spezifikation. Leere oder ungültige Werte fallen auf den Standard zurück.",
+      "hint": "Die oncall-Schlüssel aus der Spezifikation. Leere oder ungültige Werte fallen auf den Standard zurück.",
       "weekStart": "Wochenstart",
       "startTime": "Startzeit (Europe/Berlin)",
       "durationDays": "Dauer in Tagen",
@@ -92,6 +92,13 @@
       "defaultPool": "Standard-Pool",
       "noDefaultPool": "Kein Standard-Pool",
       "swapApproval": "Tausch braucht Admin-Freigabe",
+      "windows": {
+        "title": "Dienstfenster",
+        "hint": "Der Dienst des Pools an jedem Wochentag. Ein Tag ohne Fenster ist ein freier Tag.",
+        "planHint": "Mit einem Dienstfenster gelten Wochenstart, Startzeit und Dauer nicht — die Fenster sind der Plan.",
+        "from": "von",
+        "to": "bis"
+      },
       "save": "Einstellungen speichern",
       "saved": "Einstellungen gespeichert."
     },
