@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The interface has one server-wide accent colour, the inbox sits in the menu
+  and the shell fits a phone (**WP-M16-00 … WP-M16-05**, phase 16, ADR-0036):
+  the office asked for a facelift of the whole interface — „mach die akzentfarbe
+  im menü unter darstellung serverweit einstellbar, verbessere die Ansicht auf
+  dem mobilgerät und rücke die Benachrichtungs glocke den button zum menü dazu
+  neben den button für Bereitschaft“. The accent colour of the interface — the
+  active menu entry, the links of the settings menu, the focus ring, the badge of
+  the unread messages — is no longer a Tailwind step of the build but a value of
+  the instance: `accentColor` of the `branding` settings row, a hex value the
+  administration sets under „Darstellung“ next to the colour of the internal
+  comment, default `#0ea5e9` — the blue the interface painted before. The shell
+  writes it into the CSS custom property `--brand-accent`, `styles.css` derives
+  the ramp `--color-accent-300 … --color-accent-700` with `color-mix()` and the
+  interface classes paint `*-accent-*`; the light theme mixes the same colour
+  towards black. The bell of the unread messages leaves the action cluster of the
+  header and becomes an entry of the header menu right after the readiness entry,
+  so tickets, statistics, readiness and inbox live in one tab strip. The shell of
+  a phone gets a compact identity row, a tab strip that scrolls horizontally only
+  with 44 px targets that reach to the edge of the screen, and the safe areas of a
+  notch. The public report form, the status page and the printed stickers keep the
+  default blue (ADR-0036).
 - The readiness knows a duty window per weekday (**WP-M15-01 … WP-M15-05**,
   phase 15, ADR-0035): the plan of a pool with office hours is expressible.
   The office reported that the shift of the pool „Verwaltung" — on Monday from

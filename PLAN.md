@@ -665,6 +665,10 @@ Requirements:
   by color alone,
 - dark mode via `prefers-color-scheme`, plus a theme per user (`auto`, `light`,
   `dark`) that the user management sets (WP-M2-92),
+- one accent colour for the whole interface, configured by the administration
+  under „Darstellung“ and carried to the shell as `--brand-accent` (ADR-0036),
+- the inbox of the internal notification layer is an entry of the header menu,
+  right after the readiness entry, with its unread badge (WP-M14-120e),
 - all text through i18n.
 
 ## 15. Non-functional requirements
@@ -743,6 +747,7 @@ explanation. Offline is a core feature and appears early.
 | **13** | Escalation logic: the workflow stages, the waiting deadlines per priority, the conditions and the actions | a stage fires its rule once, the actions run, the old stage system is gone |
 | **14** | Administration consolidation and messenger channels: the administration home disappears into the settings menu, the channels become configurable (ntfy, Telegram, Matrix, WhatsApp Web), the accounts are linked and the users choose their channels; the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) | every channel is configured in the administration, a linked account receives a ticket notification and a failure stays visible; a stage or a status can be added, removed and chained to a predecessor |
 | **15** | Duty windows of the readiness: the plan knows a duty window per weekday beside the continuous plan (WP-M15-01 … WP-M15-05) | a pool with office hours is expressible; every window is a shift of its own and the coupling names the technician only inside a window |
+| **16** | Facelift of the interface: one server-wide accent colour under „Darstellung“ (ADR-0036), the inbox as an entry of the header menu, the shell on a phone (WP-M16-00 … WP-M16-05) | the administration paints the whole interface with one saved colour, the bell sits in the menu next to the readiness and the shell fits a phone |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -3328,6 +3333,23 @@ Monday shift and proves that the coupling names him inside his window and
 nobody outside every window. The phase-15 exit criterion is met: a pool with
 office hours is expressible, every window is a shift of its own and the
 coupling names the technician only inside a window. Phase 15 is closed.
+
+**The accent colour of the interface (WP-M16-00, phase 16).** The office asked
+for a facelift of the whole interface, for the accent colour of the menu under
+„Darstellung“ as a value of the server and for the mobile view. **ADR-0036**
+decides the model: one accent colour per instance, `accentColor` as a hex value
+of the existing `branding` settings row, `#0ea5e9` as its default — the blue the
+interface painted before. The administration sets it under „Darstellung“ and
+the shell carries it into the CSS custom property `--brand-accent`; `styles.css`
+derives the ramp `--color-accent-300 … --color-accent-700` with `color-mix()`,
+and every interface class paints `*-accent-*` instead of a fixed Tailwind step.
+`specs/13-ui.md` was filled from `PLAN.md` §14 and gained §14.4 (the accent
+colour), §14.5 (the inbox inside the header menu) and §14.6 (the shell on a
+phone). The phase is split into **WP-M16-01** (the contracts and the API of the
+accent colour), **WP-M16-02** (the field under „Darstellung“), **WP-M16-03**
+(the accent ramp in the shell), **WP-M16-04** (the bell inside the header menu)
+and **WP-M16-05** (the mobile shell and the exit criterion). Every file exists
+in this commit.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
