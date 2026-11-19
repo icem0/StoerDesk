@@ -418,14 +418,12 @@ export function InboxPage() {
       {hint !== 'none' ? (
         <p className="mt-6 flex flex-col gap-1">
           <span className="text-sm text-slate-400">{hintTexts[hint]}</span>
-          {hint === 'not_configured' ? null : (
-            <Link
-              className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-              to="/settings/notifications"
-            >
-              {t('inbox.webpush.setup')}
-            </Link>
-          )}
+          <Link
+            className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            to="/settings/notifications"
+          >
+            {t('inbox.webpush.setup')}
+          </Link>
         </p>
       ) : null}
     </main>

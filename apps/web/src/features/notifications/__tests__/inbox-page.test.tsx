@@ -213,7 +213,8 @@ describe('InboxPage', () => {
         'Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).',
       ),
     ).toBeTruthy()
-    expect(screen.queryByRole('link', { name: i18n.t('inbox.webpush.setup') })).toBeNull()
+    const link = await screen.findByRole('link', { name: i18n.t('inbox.webpush.setup') })
+    expect(link.getAttribute('href')).toBe('/settings/notifications')
   })
 
   it('names this browser when it has no subscription (WP-M14-143)', async () => {
