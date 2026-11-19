@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new API key has a page of its own (**WP-M14-164**, out of band in phase
+  14): the input mask „Neuen Schlüssel anlegen" is not glued above the list of the keys
+  any more, the list offers a button that opens the page `/admin/api-keys/new`. The
+  page needs `apikey.write` and shows the one-time panel with the plaintext token
+  after the key is created — the server answers the token only once (v1.1.288).
 - The new detected error has a page of its own (**WP-M14-163**, out of band in
   phase 14): the input mask „Festgestellten Fehler anlegen" is not glued above the
   list of the catalog any more, the list offers a button that opens the page

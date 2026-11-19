@@ -2,7 +2,9 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 
 import { App } from '../App'
 import { ApiKeysPage } from '../admin/api-keys-page'
+import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
+import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { TransitionPage } from '../admin/transition-page'
 import { WebhooksPage } from '../admin/webhooks-page'
@@ -137,10 +139,30 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new API key (WP-M14-164): the form does not lie
+        // above the list of the keys any more.
+        path: '/admin/api-keys/new',
+        element: (
+          <RequireSession>
+            <ApiKeyCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/channels',
         element: (
           <RequireSession>
             <ChannelsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The delivery problems of §11.8 (WP-M14-161b): the failing channels,
+        // the lost messages and the quittature of a problem.
+        path: '/admin/delivery',
+        element: (
+          <RequireSession>
+            <DeliveryPage />
           </RequireSession>
         ),
       },
