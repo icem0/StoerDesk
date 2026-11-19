@@ -47,7 +47,9 @@ function useSystemTheme(): 'light' | 'dark' {
  * internal user needs without opening the settings page. The start page is the
  * ticket list; the statistics took the place of the retired dashboard. `/tickets`
  * and `/stats` are matched by prefix, so a ticket detail keeps the `tickets`
- * entry active and the readiness page its own entry.
+ * entry active and the readiness page its own entry. Since WP-M16-04 the inbox
+ * follows these three as an entry of its own (`specs/13-ui.md` §14.5), so the
+ * four surfaces the internal user opens every day live in one menu row.
  */
 const headerLinks = [
   { key: 'tickets', path: '/tickets' },
@@ -150,18 +152,21 @@ export function Shell() {
             </span>
           </span>
 
-          {/* Right: version, bell and settings. On phones this stays in the first row. */}
+          {/* Right: version and settings. The bell is not here any more — since
+               WP-M16-04 it is an entry of the menu below (specs/13-ui.md §14.5). */}
           <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
-            {me.data ? <NotificationBell /> : null}
             {me.data ? <SettingsLink /> : null}
           </div>
 
           {/*
-           * Single navigation element for both layouts (one DOM node, so no duplicate
-           * links): on desktop it takes the middle of the header row and stays centred
-           * between logo and actions; on phones it wraps onto its own row and scrolls
-           * horizontally as a broad tab strip (44 px touch targets).
+           * Single navigation element for both layouts (one DOM node, so no
+           * duplicate links): on desktop it takes the middle of the header row
+           * and stays centred between logo and actions; on phones it wraps onto
+           * its own row and scrolls horizontally as a broad tab strip (44 px
+           * touch targets). Since WP-M16-04 the inbox is an entry of this menu
+           * right after the readiness, so the four surfaces the internal user
+           * opens every day live in one row (specs/13-ui.md §14.5).
            */}
           <nav
             aria-label={t('app.navigation')}
@@ -184,6 +189,7 @@ export function Shell() {
                 {t(`app.nav.${link.key}`)}
               </NavLink>
             ))}
+            {me.data ? <NotificationBell /> : null}
           </nav>
         </div>
       </header>

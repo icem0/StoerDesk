@@ -74,6 +74,18 @@ describe('NotificationBell', () => {
     expect(screen.queryByText('ST-2026-0001')).toBeNull()
   })
 
+  it('paints the accent of the instance like an entry of the menu (WP-M16-04)', async () => {
+    stub(4)
+
+    renderBell()
+
+    expect(await screen.findByTestId('unread-count')).toBeTruthy()
+
+    const link = screen.getByRole('link', { name: 'Benachrichtigungen' })
+    expect(link.getAttribute('class')).toContain('min-h-11')
+    expect(link.getAttribute('class')).toContain('text-accent-300')
+  })
+
   it('shows no messages and fetches none by itself', async () => {
     stub(1)
 

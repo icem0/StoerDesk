@@ -238,6 +238,48 @@ describe('Shell settings access', () => {
     expect(screen.queryByTestId('unread-count')).toBeNull()
   })
 
+  it('shows the inbox as an entry of the menu after the readiness (WP-M16-04)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('/v1/notifications/messages/unread-count')) {
+          return Response.json({ count: 3 })
+        }
+
+        if (url.includes('/v1/me')) {
+          return Response.json(signedInMe())
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+    renderShell()
+
+    expect(await screen.findByRole('link', { name: 'Benachrichtigungen' })).toBeTruthy()
+
+    const nav = document.querySelector('nav')
+    expect(nav).toBeTruthy()
+
+    const hrefs = [...(nav?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href'))
+    expect(hrefs).toEqual(['/tickets', '/stats', '/oncall', '/notifications'])
+
+    const actionCluster = nav?.querySelector('a[href="/settings"]')
+    expect(actionCluster).toBeNull()
+  })
+
+  it('shows no inbox entry while the session is anonymous', async () => {
+    stubMe(Response.json({ code: 'session_invalid', params: {} }, { status: 401 }))
+    renderShell()
+
+    expect(await screen.findByText('Anmeldung')).toBeTruthy()
+
+    const nav = document.querySelector('nav')
+    const hrefs = [...(nav?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href'))
+    expect(hrefs).toEqual(['/tickets', '/stats', '/oncall'])
+  })
+
   it('applies the theme of the signed-in user on the shell root', async () => {
     stubMe({
       user: { ...signedInMe().user, theme: 'light' },

@@ -5,11 +5,15 @@ import { Link } from 'react-router-dom'
 import { apiFetch } from '../lib/api'
 
 /**
- * The bell of the header (WP-M14-120e, WP-M14-122, WP-M14-127): the badge of
- * the unread messages and one click that opens the inbox page
- * `/notifications`. The office asked for the page itself — the panel of
- * WP-M14-122 that repeated the latest messages inside the header is gone, so a
- * message is marked as read on the inbox page of WP-M14-120d only.
+ * The bell of the header menu (WP-M14-120e, WP-M14-122, WP-M14-127, WP-M16-04):
+ * the badge of the unread messages and one click that opens the inbox page
+ * `/notifications`. Since WP-M16-04 it is not an action of the header any more —
+ * it is an **entry of the header menu** right after the readiness entry, styled
+ * like the other entries, so the internal user finds tickets, statistics,
+ * readiness and inbox in one row and a phone scrolls through all four in the tab
+ * strip. The panel of WP-M14-122 that repeated the latest messages inside the
+ * header is gone, so a message is marked as read on the inbox page of WP-M14-120d
+ * only.
  *
  * The count comes from `GET /api/v1/notifications/messages/unread-count` and is
  * refetched when the window regains the focus, so a message that arrives while
@@ -30,17 +34,17 @@ export function NotificationBell() {
   return (
     <Link
       aria-label={t('app.inbox')}
-      className={`relative flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+      className={`relative flex min-h-11 shrink-0 items-center justify-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
         count > 0
-          ? 'border-sky-500/40 bg-sky-600/10 text-sky-300'
-          : 'border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100'
+          ? 'bg-accent-600/10 text-accent-300'
+          : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
       }`}
       title={t('app.inbox')}
       to="/notifications"
     >
       <svg
         aria-hidden="true"
-        className="h-5 w-5"
+        className="h-5 w-5 shrink-0"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -53,7 +57,7 @@ export function NotificationBell() {
       </svg>
       {count > 0 ? (
         <span
-          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold text-white"
+          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1 text-[11px] font-semibold text-slate-950"
           data-testid="unread-count"
         >
           {count > 99 ? '99+' : count}

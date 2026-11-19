@@ -35,12 +35,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   /api/v1/settings/display` answers it beside the colour of the internal comment. The page of the Darstellung
   gets the field (WP-M16-02, v1.1.317): „Akzentcolor“ with its own swatch,
   prefilled from the instance, and one save writes the whole row — a colour that
-  is no hex value never leaves the browser. The shell paints it (WP-M16-03,
+  is no hex value never leaves the browser. The inbox of the unread messages leaves
+  the action cluster of the header and becomes an entry of the header menu right after
+  the readiness entry with its badge (WP-M16-04, v1.1.322), so tickets, statistics,
+  readiness and inbox live in one tab strip. The shell paints it (WP-M16-03,
   v1.1.318): the saved hex value travels into the CSS custom property
   `--brand-accent` on the root of the shell, `styles.css` derives the ramp
   `--color-accent-300 … --color-accent-700` from it and the active menu entry,
   the links of the settings menu, the settings gear and their focus rings paint
-  the accent classes instead of the fixed Tailwind blues.
+  the accent classes instead of the fixed Tailwind blues. Each colour under
+  „Darstellung“ also gets a colour picker (WP-M16-06): the browser picker of
+  `input type="color"` sits beside the hex field of the internal comment colour
+  and of the accent colour, is prefilled with the stored colour and writes the
+  picked tone into the same state as that field — the colour that was changed
+  last is the colour the save writes, and a colour that is no hex value still
+  never leaves the browser.
 - The recipient of an escalation decides over which way it arrives
   (**WP-M17-00 … WP-M17-03**, phase 17, ADR-0037): the office read the
   escalation administration and asked — „das ziel ist eine person, der

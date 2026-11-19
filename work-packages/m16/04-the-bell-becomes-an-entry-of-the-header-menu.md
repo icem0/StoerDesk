@@ -1,7 +1,7 @@
 # WP-M16-04: the bell becomes an entry of the header menu
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-03
 phase: 16
 milestone: m16
@@ -67,9 +67,12 @@ after it.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/components/Shell.tsx`, `apps/web/src/components/notification-bell.tsx`,
+  the two test files of the shell and of the bell
+- Interfaces added: the inbox as the fourth entry of the header menu (tickets, statistics,
+  readiness, inbox), the badge of WP-M14-120e on a menu entry, the action cluster of the
+  header keeps version and gear only
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run wp:check`
 - Follow-up WP: WP-M16-05 (the mobile shell and the exit criterion) — the file
   exists in the commit of the split
 - Open question: none

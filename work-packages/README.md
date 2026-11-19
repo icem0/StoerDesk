@@ -1617,8 +1617,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-01 | the accent colour reaches the API (contracts and branding routes) | done | yes |
 | WP-M16-02 | the accent colour sits under „Darstellung“ (the field and the swatch) | done | yes |
 | WP-M16-03 | the shell paints the accent colour of the server (the ramp and the classes) | done | yes |
-| WP-M16-04 | the bell becomes an entry of the header menu | planned | yes |
+| WP-M16-04 | the bell becomes an entry of the header menu | done | yes |
 | WP-M16-05 | the shell fits a phone and the phase-16 criterion | planned | yes |
+| WP-M16-06 | the colour picker of the colours under „Darstellung“ (out of band) | done | yes |
 | WP-M17-00 | the recipient chooses the way — the spec, ADR-0037 and the split | done | yes |
 | WP-M17-01 | the escalation delivers over the way of the recipient (the API) | done | yes |
 | WP-M17-02 | the administration separates the target from the way | done | yes |
