@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { LogoutButton } from '../auth/login-form'
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
-import { type ChannelStatusListResponse } from '@stoerdesk/shared'
+import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
 
 /**
  * Settings overview (WP-M12-07): every settings and administration surface in
@@ -16,6 +16,12 @@ import { type ChannelStatusListResponse } from '@stoerdesk/shared'
  * outbox is visible here as well (WP-M14-19, §11.8): a badge in the header names
  * the number of the failing channels until every channel works again — the
  * warning is not only the list on the channel page and the tile of the dashboard.
+ *
+ * Since WP-M14-161c the badge is the **link** to the page of the delivery
+ * problems (`/admin/delivery`): there the admin sees the problem and quits it.
+ * The badge counts the **open** problems — the channels with a failure nobody
+ * quit — so a quit problem is silent and a failure after the quittature brings
+ * the badge back.
  */
 
 const SETTINGS_SECTIONS = [
@@ -63,6 +69,7 @@ const SETTINGS_SECTIONS = [
       { key: 'bmaSync', path: '/admin/bma-sync' },
       { key: 'apiKeys', path: '/admin/api-keys' },
       { key: 'channels', path: '/admin/channels' },
+      { key: 'delivery', path: '/admin/delivery' },
       { key: 'statuses', path: '/admin/statuses' },
       { key: 'transitions', path: '/admin/transitions' },
       { key: 'webhooks', path: '/admin/webhooks' },
@@ -74,13 +81,13 @@ export function SettingsPage() {
   const { t } = useTranslation('common')
   const me = useMe()
   const mayReadChannels = usePermission('notification.read')
-  const statusQuery = useQuery({
-    queryKey: ['channelStatus'],
-    queryFn: () => apiFetch<ChannelStatusListResponse>('/v1/notifications/status'),
+  const deliveryQuery = useQuery({
+    queryKey: ['deliveryProblems'],
+    queryFn: () => apiFetch<DeliveryProblemsResponse>('/v1/notifications/delivery'),
     enabled: mayReadChannels,
     retry: false,
   })
-  const failingChannels = (statusQuery.data?.channels ?? []).filter((channel) => channel.failed > 0)
+  const openProblems = (deliveryQuery.data?.problems ?? []).filter((problem) => problem.open)
 
   return (
     <section className="flex flex-col gap-6">
@@ -92,14 +99,14 @@ export function SettingsPage() {
             {t('auth.signedInAs', { email: me.data.user.email })}
           </p>
         ) : null}
-        {statusQuery.isSuccess && failingChannels.length > 0 ? (
-          <p
+        {deliveryQuery.isSuccess && openProblems.length > 0 ? (
+          <NavLink
             aria-live="polite"
-            className="mt-1 rounded bg-rose-900/40 px-2 py-0.5 text-sm font-medium text-rose-300"
-            role="alert"
+            className="mt-1 w-fit rounded bg-rose-900/40 px-2 py-0.5 text-sm font-medium text-rose-300 hover:bg-rose-900/60"
+            to="/admin/delivery"
           >
-            {t('app.channelWarning.badge', { count: failingChannels.length })}
-          </p>
+            {t('app.channelWarning.badge', { count: openProblems.length })}
+          </NavLink>
         ) : null}
       </div>
 

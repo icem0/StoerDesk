@@ -3258,6 +3258,14 @@ administration, where the cause of a failure usually waits (a wrong topic, a
 missing secret, an unreachable server). The texts live in the `settings`
 namespace in `de` and `en`.
 
+**The badge of the settings menu is the link to the problems (WP-M14-161c, out of
+band in phase 14).** The badge „Zustellung gestört (n)" of the settings menu is
+a `NavLink` to `/admin/delivery` and counts the **open** problems — the channels
+with a failure nobody quit. A quit problem is silent, a failure after the
+quittature brings the badge back, and a solved problem stays solved. The
+settings menu gained the entry „Zustellungsprobleme" (`auth.links.delivery`),
+so the page is reachable without the badge too.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

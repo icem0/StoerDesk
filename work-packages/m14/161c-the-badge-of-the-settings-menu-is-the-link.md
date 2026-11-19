@@ -1,7 +1,7 @@
 # WP-M14-161c: the badge of the settings menu is the link to the problems
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -71,6 +71,6 @@ problems and the silence after the quittature.
   test and the repository docs
 - Interfaces added: `auth.links.delivery`; the badge is a link to
   `/admin/delivery`
-- Verified: (fill after the gates run)
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`, `npm run test:run`, `npm run i18n:check`, `npm run wp:check`
 - Follow-up WP: none
 - Open question: none
