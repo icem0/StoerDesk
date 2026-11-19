@@ -1591,6 +1591,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M15-03 | the API and the planner read the windows | done | yes |
 | WP-M15-04 | the administration edits the duty windows | done | yes |
 | WP-M15-05 | the duty windows satisfy their criterion | done | yes |
+| WP-M15-06 | the readiness calendar hint names the marker in German (out of band) | done | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 | WP-M14-158 | the new user gets its own page (out of band) | done | yes |
 | WP-M14-159 | the new role gets its own page (out of band) | done | yes |

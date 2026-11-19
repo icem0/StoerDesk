@@ -702,6 +702,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Fixed
+- The readiness calendar hint is proper German (**WP-M15-06**, out of band in
+  phase 15): the German hint of the readiness calendar carried the half-English
+  text „Der jetige Däy besonnders marked.“ from WP-M14-156 - the
+  translation of the current-day marker landed broken in the committed state.
+  It names the marker now: „Der jetrige Tag is specially marked.“
 - The test of the own channels page names the German texts (**WP-M15-00**, out
   of band in phase 15): the commit `7a4cbd00` translated the page
   `/settings/notifications` and updated the readiness-selection and the
