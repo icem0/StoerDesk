@@ -71,7 +71,6 @@ const SETTINGS_SECTIONS = [
       { key: 'channels', path: '/admin/channels' },
       { key: 'delivery', path: '/admin/delivery' },
       { key: 'statuses', path: '/admin/statuses' },
-      { key: 'transitions', path: '/admin/transitions' },
       { key: 'webhooks', path: '/admin/webhooks' },
     ],
   },

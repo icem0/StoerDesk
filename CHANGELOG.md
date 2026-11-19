@@ -460,6 +460,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   custom role can take it over the role API. The gate in the web app follows in
   **WP-M14-132**.
 
+### Removed
+- The page of the transition administration is gone (**WP-M14-177**, out of band
+  in phase 14): the steps of the workflow are managed in the escalation
+  administration, so the „Übergangverwaltung" at `/admin/transitions` and its entry
+  in the menu of the settings are gone. The table and the API stay what they are —
+  the steps are the state machine of the ticket (v1.1.302).
+
 ### Changed
 - The milestones of the ticket view are buttons next to each other
   (**WP-M14-153**, out of band in phase 14): the „Workflow Stufen" of the ticket

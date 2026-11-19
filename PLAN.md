@@ -3303,6 +3303,14 @@ steps of the workflow, grouped by the level of the chain and the status it
 waits in (WP-M14-175). One place for the levels and the steps — the way out of
 a level is the way out of the status the ticket waits in.
 
+**The page of the transition administration is gone (WP-M14-177, out of band in
+phase 14).** The steps of the workflow are managed in the escalation
+administration (WP-M14-175/176), so the page of its own — the
+„Übergangverwaltung" at `/admin/transitions` — and its entry in the menu of the
+settings are gone. The table `ticket_transitions`, the API and the service stay
+what they are: the steps are the state machine of the ticket, and an unknown
+or inactive combination answers `409 invalid_transition`.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

@@ -1,7 +1,7 @@
 # WP-M14-177: the page of the transition administration is gone
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 12k tokens
@@ -62,9 +62,20 @@ Expected: all green; no route and no menu entry lead to the old page.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/transition-page.tsx` (deleted),
+  `apps/web/src/admin/__tests__/transition-page.test.tsx` (deleted),
+  `apps/web/src/routes/index.tsx` (the route),
+  `apps/web/src/settings/settings-page.tsx` (the entry of the menu),
+  `docs/REPO-MAP.md` (the row of the page), `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document and the file of WP-M14-178
+- Interfaces added: none — the route and the menu entry are gone
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run i18n:check` and `npm run test:run` green
 - Follow-up WP: WP-M14-178 (the dead texts and the spec) — its file is created
   with this commit (`AGENTS.md`, _Open follow-ups (mandatory closure)_)
 - Open question: none
+
+- Note (rebase decision): the page of the new workflow step of WP-M14-167 sat
+  below the transitions page; with the page gone the step gets created by the editor
+  of the escalation administration, so the create page, its test, its route and its
+  menu entry are removed as well.
