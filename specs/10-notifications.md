@@ -54,6 +54,17 @@ The rule of ADR-0005 applies to every secret: it is write-only, never answered
 by the API, never written into a log and never shown in the administration. The
 administration answers `secretSet: boolean` instead.
 
+**The VAPID trio of the web push is one value.** The public key, the private key
+and the subject of the web push belong together: the browser subscribes with the
+public key, the server signs with the private key, and the push service accepts
+a send only when both belong to the same pair. The row of the administration
+therefore wins over the environment **as a whole** — a row that carries the
+public key, the subject *and* the secret replaces the trio of the environment,
+a row that carries only a part of it leaves the trio of the environment
+untouched. A public key of the row beside a private key of the environment is a
+pair that does not belong together: every send of it fails at the push service
+with `403` and the delivery fails with `send_failed` (WP-M14-170).
+
 For **ntfy** the secret is the **access token of the server** (ADR-0022): a
 self-hosted server or a server with access control refuses a publish without
 one. The row's `secret` with the `NTFY_TOKEN` environment fallback is handed to

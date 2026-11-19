@@ -1,3 +1,5 @@
+import { eq } from 'drizzle-orm'
+
 import type { Database } from '../db/client'
 import type { Env } from '../config/env'
 import {
@@ -119,6 +121,87 @@ function environmentSettings(env: Env): Record<ChannelKind, EnvironmentSettings>
   }
 }
 
+/**
+ * The VAPID trio of the web push: the public key, the private key and the
+ * subject belong **together**. The row of the administration wins over the
+ * environment as a whole (§11.2, WP-M14-158): a row that carries all three
+ * values replaces the trio of the environment, a row that carries only a part
+ * of it leaves the trio of the environment untouched. A public key of the row
+ * beside a private key of the environment is a pair that does not belong
+ * together — the browser would subscribe with a key the server cannot sign
+ * for, and every send would fail at the push service.
+ */
+export interface WebPushTrio {
+  /** The VAPID public key — the browser subscribes with it. */
+  publicKey: string
+  /** The VAPID private key — the server signs with it, it never leaves the server. */
+  privateKey: string
+  /** The VAPID subject — the `sub` claim of the push service. */
+  subject: string
+}
+
+/** The effective VAPID trio: the row of the administration as a whole, else the environment. */
+export function webPushTrio(
+  row: { config: Record<string, string>; secret: string } | undefined,
+  env: Env,
+): WebPushTrio {
+  const rowKey = row?.config.publicKey ?? ''
+  const rowSubject = row?.config.subject ?? ''
+  const rowSecret = row?.secret ?? ''
+
+  if (rowKey !== '' && rowSubject !== '' && rowSecret !== '') {
+    return { publicKey: rowKey, privateKey: rowSecret, subject: rowSubject }
+  }
+
+  return {
+    publicKey: env.VAPID_PUBLIC_KEY,
+    privateKey: env.VAPID_PRIVATE_KEY,
+    subject: env.VAPID_SUBJECT,
+  }
+}
+
+/**
+ * The effective configuration of the web push: the VAPID trio, whether the
+ * administration switched the channel off and whether the trio is complete
+ * enough to send. The browser reads the public key of it
+ * (`apps/api/src/notifications/web-push-subscriptions.ts`), the channel sends
+ * with the trio (`apps/api/src/notifications/channels/index.ts`) — both read
+ * this one value, so the key the browser subscribes with and the key the
+ * server signs with can never differ (WP-M14-158).
+ */
+export interface WebPushConfiguration extends WebPushTrio {
+  /** False while the administration switched the channel off. */
+  enabled: boolean
+  /** True while the trio is complete — the channel can send. */
+  usable: boolean
+}
+
+export async function readWebPushConfiguration(
+  database: Db,
+  env: Env,
+): Promise<WebPushConfiguration> {
+  const [row] = await database
+    .select({
+      enabled: notificationChannels.enabled,
+      config: notificationChannels.config,
+      secret: notificationChannels.secret,
+    })
+    .from(notificationChannels)
+    .where(eq(notificationChannels.kind, 'webpush'))
+    .limit(1)
+
+  const trio = webPushTrio(
+    row === undefined ? undefined : { config: publicSettings(row.config), secret: row.secret },
+    env,
+  )
+
+  return {
+    ...trio,
+    enabled: row?.enabled ?? true,
+    usable: trio.publicKey !== '' && trio.privateKey !== '' && trio.subject !== '',
+  }
+}
+
 /** Narrows a stored kind to one of the seven kinds of §11.1. */
 function asKind(value: string): ChannelKind | undefined {
   for (const kind of kinds) {
@@ -131,7 +214,7 @@ function asKind(value: string): ChannelKind | undefined {
 }
 
 /** Reads the public `config` jsonb as a flat map of string settings. */
-function publicSettings(value: unknown): Record<string, string> {
+export function publicSettings(value: unknown): Record<string, string> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return {}
   }
@@ -225,8 +308,21 @@ export async function readChannelConfiguration(
   }
 
   const config = { ...emptyRequired, ...fallback.config, ...(row?.config ?? {}) }
-  const secret =
-    row === undefined || row.secret === '' ? fallback.secret : row.secret
+  let secret = row === undefined || row.secret === '' ? fallback.secret : row.secret
+
+  // The VAPID trio is one value: the row of the administration wins over the
+  // environment as a whole, so the public key of the administration never
+  // travels beside the private key of the environment (WP-M14-158).
+  if (kind === 'webpush') {
+    const trio = webPushTrio(
+      row === undefined ? undefined : { config: row.config, secret: row.secret },
+      env,
+    )
+
+    config.publicKey = trio.publicKey
+    config.subject = trio.subject
+    secret = trio.privateKey
+  }
 
   const usable =
     rule.requiredConfig.every((key) => config[key] !== '') &&

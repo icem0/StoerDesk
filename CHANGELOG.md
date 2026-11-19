@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The web push sends with one VAPID trio (**WP-M14-170**, out of band in phase
+  14): the office reported that the web push of the instance delivered nothing
+  — every send of the channel failed and the delivery page named the code
+  `send_failed`. The browser subscribed with the public key of the effective
+  configuration while the server signed every send with the keys of the
+  environment alone: as soon as the two differ, the browser holds a
+  subscription of a key pair the server does not own, the push service answers
+  `403` and every delivery fails. The VAPID trio is now one value — the row of
+  the administration wins over the environment as a whole, a row that carries
+  only a part of it leaves the trio of the environment untouched — and the
+  browser, the administration and the send always see the same key (v1.1.330).
 - The interface has one server-wide accent colour, the inbox sits in the menu
   and the shell fits a phone (**WP-M16-00 … WP-M16-05**, phase 16, ADR-0036):
   the office asked for a facelift of the whole interface — „mach die akzentfarbe

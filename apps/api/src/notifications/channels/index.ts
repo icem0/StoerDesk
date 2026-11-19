@@ -4,6 +4,7 @@ import type { Env } from '../../config/env'
 import { databaseConnectionUrl } from '../../config/env'
 import { createDatabase } from '../../db/client'
 import { notificationChannels, pushSubscriptions } from '../../db/schema'
+import { readWebPushConfiguration } from '../config'
 
 export interface NotificationMessage {
   title: string
@@ -135,10 +136,17 @@ const telegramChannel = async (
  * that one read, the same shape the pg-boss jobs use (`jobs/bma-sync.ts`,
  * WP-M2-36): the drain never hands its pool to a channel.
  *
+ * The send uses the **effective VAPID trio** (WP-M14-158): the row of the
+ * administration wins over the environment as a whole, so the key the browser
+ * subscribed with and the key the server signs with are never two different
+ * keys. Before, the send read the environment alone while the browser
+ * subscribed with the public key of the administration — the push service
+ * answered `403` for every send and the delivery failed with `send_failed`.
+ *
  * A device the push service rejects as dead (`404`/`410`) is removed from
  * `push_subscriptions` after a send that reached at least one live device
- * (§11.15, ADR-0028). A send where **every** device is dead keeps its rows: the
- * retry of the drain probes them again and the row ends `FAILED` with the code
+ * (§11.15, ADR-0028). A send where **every** device is dead keeps its rows:
+ * the retry of the drain probes them again and the row ends `FAILED` with the code
  * `push_subscription_dead`, so the chain of §11.1 falls back to the next channel.
  */
 const webPushChannel = async (
@@ -151,6 +159,8 @@ const webPushChannel = async (
   const { client, database } = createDatabase(databaseConnectionUrl(env))
 
   try {
+    const configuration = await readWebPushConfiguration(database, env)
+
     const subscriptions = await database
       .select({
         endpoint: pushSubscriptions.endpoint,
@@ -161,9 +171,9 @@ const webPushChannel = async (
 
     const result = await sendWebPushNotification(
       {
-        publicKey: env.VAPID_PUBLIC_KEY,
-        privateKey: env.VAPID_PRIVATE_KEY,
-        subject: env.VAPID_SUBJECT,
+        publicKey: configuration.publicKey,
+        privateKey: configuration.privateKey,
+        subject: configuration.subject,
       },
       message,
       messageLink(env, options),

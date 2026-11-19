@@ -3,7 +3,7 @@ import { and, count, eq, inArray } from 'drizzle-orm'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { pushSubscriptions } from '../db/schema'
-import { readChannelConfiguration } from './config'
+import { readWebPushConfiguration } from './config'
 
 type Db = Database['database']
 
@@ -17,18 +17,19 @@ export interface WebPushSubscriptionInput {
 /**
  * The VAPID public key the browser needs to subscribe
  * (`specs/10-notifications.md` §11.1, WP-M14-124). Empty while the channel is
- * disabled or the key is missing, so the settings page can hide the action
- * instead of offering a subscription that can never be sent to.
+ * disabled or the trio is incomplete, so the settings page can hide the action
+ * instead of offering a subscription that can never be sent to. The key comes
+ * from the effective VAPID trio (WP-M14-158) — the same value the server
+ * signs with, so the browser can never subscribe with a foreign key.
  */
 export async function readWebPushPublicKey(database: Db, env: Env): Promise<string> {
-  const configurations = await readChannelConfiguration(database, env)
-  const channel = configurations.find((configuration) => configuration.kind === 'webpush')
+  const configuration = await readWebPushConfiguration(database, env)
 
-  if (channel === undefined || !channel.enabled) {
+  if (!configuration.enabled || !configuration.usable) {
     return ''
   }
 
-  return channel.config.publicKey ?? ''
+  return configuration.publicKey
 }
 
 /** How many devices the user has registered on this server. */

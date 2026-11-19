@@ -6,9 +6,11 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createSession } from '../../auth/session'
+import { loadEnv } from '../../config/env'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { buildServer } from '../../index'
+import { readWebPushConfiguration } from '../config'
 import { pruneDeadWebPushSubscriptions } from '../web-push-subscriptions'
 
 const testDatabase = await openTestDatabase()
@@ -17,7 +19,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped web-push subscription routes: ${testDatabase.reason}\n`)
 }
 
-const { users, pushSubscriptions } = schema
+const { users, pushSubscriptions, notificationChannels } = schema
 
 const publicKey = 'BPm1NEFHt4bH8m8mV0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ'
 const endpoint = 'https://push.example.org/secret/42'
@@ -213,6 +215,39 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(own.statusCode).toBe(204)
       expect(again.statusCode).toBe(204)
       expect((await config(otherCookie)).json<ConfigBody>().subscriptions).toBe(0)
+    })
+
+    it('uses one VAPID trio for the browser and the server (WP-M14-158)', async () => {
+      const env = loadEnv(process.env)
+
+      // Without a row of the administration the trio of the environment counts.
+      expect((await config(ownerCookie)).json<ConfigBody>().publicKey).toBe(publicKey)
+
+      await db.insert(notificationChannels).values({
+        kind: 'webpush',
+        name: 'webpush',
+        enabled: true,
+        config: { publicKey: 'rowPublicKey', subject: 'mailto:row@example.org' },
+      })
+
+      // A row without a secret leaves the trio of the environment untouched —
+      // the private key of the environment never travels beside the public key
+      // of the row.
+      expect((await config(ownerCookie)).json<ConfigBody>().publicKey).toBe(publicKey)
+      expect((await readWebPushConfiguration(db, env)).publicKey).toBe(publicKey)
+      expect((await readWebPushConfiguration(db, env)).subject).toBe('mailto:admin@example.org')
+
+      // A complete row wins as a whole.
+      await db
+        .update(notificationChannels)
+        .set({ secret: 'rowPrivateKey' })
+        .where(eq(notificationChannels.kind, 'webpush'))
+
+      expect((await config(ownerCookie)).json<ConfigBody>().publicKey).toBe('rowPublicKey')
+      expect((await readWebPushConfiguration(db, env)).privateKey).toBe('rowPrivateKey')
+      expect((await readWebPushConfiguration(db, env)).subject).toBe('mailto:row@example.org')
+
+      await db.delete(notificationChannels).where(eq(notificationChannels.kind, 'webpush'))
     })
 
     it('removes the dead devices and keeps the live ones (WP-M14-130a)', async () => {
