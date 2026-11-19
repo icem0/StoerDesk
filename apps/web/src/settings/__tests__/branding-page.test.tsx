@@ -25,7 +25,12 @@ function renderPage() {
 
 function stubSessionAndBranding(
   permissions: string[],
-  branding: { companyName: string; titleEnabled: boolean; internalCommentColor?: string },
+  branding: {
+    companyName: string
+    titleEnabled: boolean
+    internalCommentColor?: string
+    accentColor?: string
+  },
 ) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
@@ -92,7 +97,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' }),
+        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' }),
       }),
     )
   })
@@ -121,7 +126,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' }),
       }),
     )
   })
@@ -153,7 +158,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' }),
       }),
     )
   })
@@ -240,6 +245,7 @@ describe('BrandingPage', () => {
           titleEnabled: false,
           logo: '',
           internalCommentColor: '#450a0a',
+          accentColor: '#0ea5e9',
         }),
       }),
     )
@@ -259,6 +265,109 @@ describe('BrandingPage', () => {
     )) as HTMLInputElement
 
     fireEvent.change(field, { target: { value: 'darkred' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    expect(
+      await screen.findByText(/Die Farbe muss ein Hex-Wert sein|colour must be a hex value/i),
+    ).toBeTruthy()
+
+    const puts = fetchMock.mock.calls.filter(
+      (call) => (call as unknown as [RequestInfo | URL, RequestInit?])[1]?.method === 'PUT',
+    )
+    expect(puts).toHaveLength(0)
+  })
+
+  it('prefills the accent colour from the API and saves the typed value', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      {
+        companyName: 'Beispiel GmbH',
+        titleEnabled: false,
+        internalCommentColor: '#450a0a',
+        accentColor: '#1d4ed8',
+      },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const field = (await screen.findByLabelText(
+      /Akzentcolor|Accent colour/i,
+    )) as HTMLInputElement
+    expect(field.value).toBe('#1d4ed8')
+
+    fireEvent.change(field, { target: { value: '#0f766e' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(
+      screen.findByText(/Gespeichert\.|Saved\./i),
+    ).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          companyName: 'Beispiel GmbH',
+          titleEnabled: false,
+          logo: '',
+          internalCommentColor: '#450a0a',
+          accentColor: '#0f766e',
+        }),
+      }),
+    )
+  })
+
+  it('shows the stored accent colour of the instance in the accent swatch', async () => {
+    vi.stubGlobal(
+      'fetch',
+      stubSessionAndBranding(['settings.read', 'settings.write'], {
+        companyName: 'Beispiel GmbH',
+        titleEnabled: false,
+        accentColor: '#1d4ed8',
+      }),
+    )
+
+    renderPage()
+
+    const swatch = await screen.findByTestId('branding-accent-swatch')
+    expect((swatch as HTMLElement).style.backgroundColor).toBe('rgb(29, 78, 216)')
+  })
+
+  it('shows the blue of the instance while no accent colour is configured', async () => {
+    vi.stubGlobal(
+      'fetch',
+      stubSessionAndBranding(['settings.read'], {
+        companyName: 'Beispiel GmbH',
+        titleEnabled: false,
+      }),
+    )
+
+    renderPage()
+
+    const field = (await screen.findByLabelText(
+      /Akzentcolor|Accent colour/i,
+    )) as HTMLInputElement
+    expect(field.value).toBe('#0ea5e9')
+
+    const swatch = await screen.findByTestId('branding-accent-swatch')
+    expect((swatch as HTMLElement).style.backgroundColor).toBe('rgb(14, 165, 233)')
+  })
+
+  it('keeps an accent colour that is no hex value in the browser', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const field = (await screen.findByLabelText(
+      /Akzentcolor|Accent colour/i,
+    )) as HTMLInputElement
+
+    fireEvent.change(field, { target: { value: 'teal' } })
     fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
 
     expect(

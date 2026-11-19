@@ -1,7 +1,7 @@
 # WP-M16-02: the accent colour sits under „Darstellung“
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-01
 phase: 16
 milestone: m16
@@ -70,9 +70,14 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: WP-M16-03, WP-M16-04, WP-M16-05 (each file exists in the commit
-  of the split)
+- Files changed: `apps/web/src/settings/branding-page.tsx`, the two `common.json`
+  locale files, `apps/web/src/settings/__tests__/branding-page.test.tsx`
+- Interfaces added: the field `accentColor` and the swatch
+  `branding-accent-swatch` on the form of the Darstellung, the keys
+  `branding.field.accentColor` and `branding.hintAccentColor` in `de` and `en`,
+  `accentColor` in the body of the save
+- Verified: `npm run typecheck`, `npm run lint`, `npm run i18n:check`,
+  `npm run test:run`, `npm run wp:check`
+- Follow-up WP: WP-M16-03, WP-M16-04, WP-M16-05 (each file exists in the commit of
+  the split)
 - Open question: none

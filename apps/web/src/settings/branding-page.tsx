@@ -8,6 +8,7 @@ import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 
 import type { BrandingResponse, UpdateBrandingRequest } from '@stoerdesk/shared'
+import { DEFAULT_ACCENT_COLOR } from '@stoerdesk/shared'
 
 /**
  * Administration page for the public branding (WP-M2-30). An administrator
@@ -15,6 +16,13 @@ import type { BrandingResponse, UpdateBrandingRequest } from '@stoerdesk/shared'
  * to the name in the shell header (WP-M2-31, WP-M4-09). The logo travels as a
  * base64 data URL inside the `branding` settings row, so every branded view
  * (header, PDF, e-mail) can render it without an extra round trip.
+ *
+ * Since WP-M14-149e the page also carries the colour of the internal comment,
+ * and since WP-M16-02 the **accent colour of the interface** (ADR-0036): both
+ * are values of the instance under „Darstellung“, and one save writes the whole
+ * row. The shell reads the accent colour from the branding request and paints
+ * the active menu entry, the links of the settings menu, the focus ring and the
+ * unread badge with it.
  */
 
 const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
@@ -70,6 +78,8 @@ export function BrandingPage() {
   const [logoError, setLogoError] = useState<string | null>(null)
   const [color, setColor] = useState<string | null>(null)
   const [colorError, setColorError] = useState<string | null>(null)
+  const [accent, setAccent] = useState<string | null>(null)
+  const [accentError, setAccentError] = useState<string | null>(null)
 
   const branding = useQuery({
     queryKey: ['branding'],
@@ -79,6 +89,7 @@ export function BrandingPage() {
 
   const currentLogo = branding.data?.logo ?? ''
   const currentColor = color ?? branding.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR
+  const currentAccent = accent ?? branding.data?.accentColor ?? DEFAULT_ACCENT_COLOR
 
   const mutation = useMutation({
     mutationFn: (body: UpdateBrandingRequest) =>
@@ -93,6 +104,8 @@ export function BrandingPage() {
       setTitleEnabled(null)
       setLogoDataUrl(null)
       setLogoError(null)
+      setAccent(null)
+      setAccentError(null)
     },
   })
 
@@ -136,14 +149,23 @@ export function BrandingPage() {
           event.preventDefault()
           setLogoError(null)
           setColorError(null)
+          setAccentError(null)
           const form = new FormData(event.currentTarget)
           const logoToSend =
             logoDataUrl === null ? currentLogo : logoDataUrl
           const colorToSend = String(form.get('internalCommentColor') ?? '').trim()
+          const accentToSend = String(form.get('accentColor') ?? '').trim()
 
           // A colour that is no hex value never leaves the browser.
-          if (!HEX_COLOR.test(colorToSend)) {
-            setColorError(t('branding.errors.colorInvalid'))
+          if (!HEX_COLOR.test(colorToSend) || !HEX_COLOR.test(accentToSend)) {
+            if (!HEX_COLOR.test(colorToSend)) {
+              setColorError(t('branding.errors.colorInvalid'))
+            }
+
+            if (!HEX_COLOR.test(accentToSend)) {
+              setAccentError(t('branding.errors.colorInvalid'))
+            }
+
             return
           }
 
@@ -152,6 +174,7 @@ export function BrandingPage() {
             titleEnabled: form.get('titleEnabled') === 'on',
             logo: logoToSend,
             internalCommentColor: colorToSend,
+            accentColor: accentToSend,
           })
         }}
       >
@@ -232,6 +255,29 @@ export function BrandingPage() {
         />
         {colorError !== null ? (
           <p role="alert" className="text-xs text-rose-400">{colorError}</p>
+        ) : null}
+
+        {/* The accent colour of the interface (ADR-0036): the shell carries it
+            into `--brand-accent` and paints the active menu entry, the links of
+            the settings menu, the focus ring and the unread badge with it. */}
+        <label className="flex flex-col gap-1 text-sm">
+          {t('branding.field.accentColor')}
+          <input
+            name="accentColor"
+            className="rounded bg-slate-950 p-2 text-slate-100"
+            defaultValue={branding.data?.accentColor ?? DEFAULT_ACCENT_COLOR}
+            disabled={!mayWrite}
+            onChange={(event) => setAccent(event.target.value)}
+          />
+        </label>
+        <p className="text-xs text-slate-400">{t('branding.hintAccentColor')}</p>
+        <div
+          className="h-8 w-32 rounded border border-slate-700"
+          style={{ backgroundColor: currentAccent }}
+          data-testid="branding-accent-swatch"
+        />
+        {accentError !== null ? (
+          <p role="alert" className="text-xs text-rose-400">{accentError}</p>
         ) : null}
 
         {currentLogo && !logoDataUrl && (
