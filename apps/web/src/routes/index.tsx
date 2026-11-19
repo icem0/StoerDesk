@@ -22,6 +22,7 @@ import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { OncallPage } from '../admin/oncall-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { UsersPage } from '../admin/users-page'
+import { UserCreatePage } from '../admin/user-create-page'
 import { RequireSession } from '../auth/require-session'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { InboxPage } from '../features/notifications/inbox-page'
@@ -74,6 +75,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <UsersPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new user (WP-M14-158): the form does not lie
+        // below the list of the users any more.
+        path: '/admin/users/new',
+        element: (
+          <RequireSession>
+            <UserCreatePage />
           </RequireSession>
         ),
       },

@@ -95,7 +95,7 @@ describe('UsersPage', () => {
 
     expect(await screen.findByText('admin@example.com')).toBeTruthy()
     expect(screen.getByText('Bearbeiten')).toBeTruthy()
-    expect(screen.getByText('Benutzer anlegen')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Benutzer anlegen' })).toBeTruthy()
   })
 
   it('shows the session notice when /me answers 401', async () => {
