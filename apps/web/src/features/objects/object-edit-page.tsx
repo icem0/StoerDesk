@@ -278,7 +278,7 @@ export function ObjectEditPage() {
 
         <div className="col-span-full flex gap-3">
           <button
-            className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             type="submit"
             disabled={submitting || name === ''}
           >

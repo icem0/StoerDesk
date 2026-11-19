@@ -120,7 +120,7 @@ export function ObjectListPage() {
           <p className="text-sm text-slate-400">{t('list.hint')}</p>
         </div>
         <button
-          className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           type="button"
           onClick={() => navigate('/objects/create')}
         >

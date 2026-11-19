@@ -100,7 +100,7 @@ export function MySettingsPage() {
   return (
     <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
       <Link
-        className="mt-6 inline-block rounded bg-slate-800 px-3 py-2 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        className="mt-6 inline-block rounded bg-slate-800 px-3 py-2 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
       >
         {t('branding.back')}
@@ -181,7 +181,7 @@ export function MySettingsPage() {
             {t('auth.changePassword.title')}
           </button>
           <button
-            className="rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+            className="rounded bg-accent-700 px-4 py-2 font-medium text-white disabled:opacity-50"
             type="submit"
             disabled={mutation.isPending}
           >

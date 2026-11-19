@@ -1,7 +1,7 @@
 # WP-M16-09: the objects and the settings of the colleagues follow the accent
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-08
 phase: 16
 milestone: m16
@@ -54,9 +54,10 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: the four pages of the task, `work-packages/README.md`, `CHANGELOG.md`
+- Interfaces added: the primary action of the object pages and of the personal settings
+  wears the accent of the instance
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run wp:check`
 - Follow-up WP: WP-M16-10a … WP-M16-10g (the administration) — each file exists
   in the commit of the split
 - Open question: none
