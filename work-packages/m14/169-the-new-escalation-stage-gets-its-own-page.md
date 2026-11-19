@@ -1,7 +1,7 @@
 # WP-M14-169: the new escalation stage gets its own page
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens
@@ -78,8 +78,16 @@ return to the administration.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/escalation-stage-create-page.tsx` (new),
+  `apps/web/src/admin/escalation-page.tsx` (the button instead of the inline form,
+  the form exported), `apps/web/src/routes/index.tsx` (the route), the new test,
+  `docs/REPO-MAP.md`, `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document
+- Interfaces added: `EscalationStageCreatePage`, the route
+  `/admin/escalation/stages/new`, the exported `AddStageForm`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `npm run lint` (0 errors),
+  `npm run i18n:check`, `npm run test:run` and `npm run wp:check` green
+- Follow-up WP: none — the comment of the office is closed
+- Open question: none
 - Follow-up WP: none — the comment of the office is closed
 - Open question: none

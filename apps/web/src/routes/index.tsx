@@ -24,6 +24,7 @@ import { GroupsPage } from '../admin/groups-page'
 import { GroupCreatePage } from '../admin/group-create-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { EscalationPage } from '../admin/escalation-page'
+import { EscalationStageCreatePage } from '../admin/escalation-stage-create-page'
 import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
 import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { DetectedErrorCreatePage } from '../admin/detected-error-create-page'
@@ -247,6 +248,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <EscalationPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new escalation stage (WP-M14-169): the form does
+        // not lie below the list of the stages any more.
+        path: '/admin/escalation/stages/new',
+        element: (
+          <RequireSession>
+            <EscalationStageCreatePage />
           </RequireSession>
         ),
       },

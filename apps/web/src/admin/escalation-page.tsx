@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import {
   ESCALATION_REFERENCE_EVENTS,
@@ -461,10 +462,12 @@ export function EscalationPage() {
           </ol>
 
           {canWrite ? (
-            <AddStageForm
-              stages={config.stages}
-              onAdd={(stage) => void saveStages.mutate({ stages: [...config.stages, stage] })}
-            />
+            <Link
+              className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              to="/admin/escalation/stages/new"
+            >
+              {t('admin.escalation.stage.add')}
+            </Link>
           ) : null}
 
           {saveStages.isError ? (
@@ -483,7 +486,7 @@ export function EscalationPage() {
 const stageKeyPattern = /^[a-z][a-z0-9_]{0,39}$/
 
 /** The add row of the stage tab: a new stage joins the chain (WP-M14-65). */
-function AddStageForm({
+export function AddStageForm({
   stages,
   onAdd,
 }: {

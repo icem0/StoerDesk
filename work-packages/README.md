@@ -1595,7 +1595,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-166 | the new status gets its own page (out of band) | done | yes |
 | WP-M14-167 | the new transition gets its own page (out of band) | done | yes |
 | WP-M14-168 | the new readiness pool gets its own page (out of band) | done | yes |
-| WP-M14-169 | the new escalation stage gets its own page (out of band) | planned | yes |
+| WP-M14-169 | the new escalation stage gets its own page (out of band) | done | yes |
 | WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
 | WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
 | WP-M14-161b | the page of the delivery problems (out of band) | done | yes |

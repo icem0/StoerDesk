@@ -3230,6 +3230,12 @@ way the mask of the new workflow step was (WP-M14-167). It is a page of its own 
 `/admin/oncall/pools/new` — and the list offers a button that opens it. The page needs
 `oncall.admin` and returns to the readiness administration after the pool is created.
 
+**The new escalation stage has a page of its own (WP-M14-169, out of band in phase
+14).** The input mask of the new stage was glued below the list of the stages of the
+chain, the same way the mask of the new readiness pool was (WP-M14-168). It is a page
+of its own now — `/admin/escalation/stages/new` — and the list offers a button that
+opens it. The page needs `settings.write` and writes the chain with the new stage.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of

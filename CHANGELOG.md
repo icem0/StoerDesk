@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new escalation stage has a page of its own (**WP-M14-169**, out of band in
+  phase 14): the input mask „Stufe hinzufügen" is not glued below the list of the stages
+  of the chain any more, the list offers a button that opens the page
+  `/admin/escalation/stages/new`. The page needs `settings.write` and writes the chain
+  with the new stage. The rules, the actions and the editor of the chain stay where
+  they were (v1.1.297).
 - The new readiness pool has a page of its own (**WP-M14-168**, out of band in
   phase 14): the input mask „Pool anlegen" is not glued below the list of the pools
   any more, the list offers a button that opens the page `/admin/oncall/pools/new`. The
