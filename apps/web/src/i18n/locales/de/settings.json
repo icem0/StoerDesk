@@ -868,15 +868,15 @@
     }
   },
   "notifications": {
-    "heading": "Readiness events",
-    "hint": "The channels of an unselected readiness event go to the instance chain.",
-    "instanceHint": "The channels of the instance",
-    "save": "Save the readiness selection",
-    "saved": "The readiness selection was saved.",
+    "heading": "Bereitschafts-Ereignisse",
+    "hint": "Die Kanäle eines nicht ausgewählten Bereitschafts-Ereignisses gehen an die Kette der Installation.",
+    "instanceHint": "Die Kanäle der Installation",
+    "save": "Bereitschafts-Auswahl speichern",
+    "saved": "Die Bereitschafts-Auswahl wurde gespeichert.",
     "events": {
-      "oncall.assigned": "Bereitschaft allocation",
-      "oncall.swap_requested": "Swap request",
-      "oncall.unconfirmed_reminder": "Unconfirmed reminder"
+      "oncall.assigned": "Bereitschaft zugewiesen",
+      "oncall.swap_requested": "Tausch angefragt",
+      "oncall.unconfirmed_reminder": "Nicht bestätigte Erinnerung"
     },
     "ntfy": {
       "test": {

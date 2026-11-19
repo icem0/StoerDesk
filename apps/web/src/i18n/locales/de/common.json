@@ -129,6 +129,31 @@
         "password_change_required": "Bitte zuerst ein eigenes Passwort festlegen.",
         "unknown": "Das Passwort konnte nicht gespeichert werden. Bitte später erneut versuchen."
       }
+    },
+    "changePassword": {
+      "title": "Passwort ändern",
+      "hint": "Gib dein aktuelles Passwort und ein neues Passwort zweimal ein. Das neue Passwort braucht mindestens 12 Zeichen.",
+      "fields": {
+        "oldPassword": "Aktuelles Passwort",
+        "password": "Neues Passwort",
+        "repetition": "Neues Passwort wiederholen"
+      },
+      "criteria": {
+        "heading": "Sicherheit",
+        "length": "Mindestens 12 Zeichen",
+        "met": "{{criterion}} erfüllt",
+        "notMet": "{{criterion}} nicht erfüllt"
+      },
+      "lengthHint": "Mindestens 12 Zeichen.",
+      "tooShort": "Das neue Passwort braucht mindestens 12 Zeichen.",
+      "mismatch": "Die beiden neuen Passwörter stimmen nicht überein.",
+      "submit": "Passwort speichern",
+      "errors": {
+        "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+        "invalid_request": "Das Passwort ist unvollständig oder zu kurz.",
+        "password_wrong": "Das aktuelle Passwort ist nicht richtig.",
+        "unknown": "Das Passwort konnte nicht gespeichert werden. Bitte später erneut versuchen."
+      }
     }
   },
   "ntfy": {
@@ -140,82 +165,82 @@
     "selectionHint": "Aktiviere ntfy oben bei den Ereignissen, die an dieses Abo gehen sollen."
   },
   "notifications": {
-    "title": "Your channels",
-    "hint": "The channels with the state of the account connected for the signed-in user.",
+    "title": "Deine Kanäle",
+    "hint": "Die Kanäle mit dem Zustand des für die angemeldete Person verknüpften Kontos.",
     "administration": {
-      "hint": "The configuration of the channels itself, the write-only secrets and the test message live in the Kanal-Administration.",
-      "link": "Kanal-Administration (Administration → Channels)"
+      "hint": "Die Konfiguration der Kanäle selbst, die schreibgeschützten Geheimnisse und die Testnachricht leben in der Kanal-Administration.",
+      "link": "Kanal-Administration (Administration → Kanäle)"
     },
     "kinds": {
       "signal": "Signal",
       "matrix": "Matrix",
       "ntfy": "ntfy",
-      "email": "Email",
+      "email": "E-Mail",
       "telegram": "Telegram",
       "webpush": "Web Push",
       "whatsapp": "WhatsApp Web"
     },
     "state": {
-      "linked": "Connected",
-      "notLinked": "Not connected yet",
-      "none": "No account needed",
-      "later": "Follows in a later package"
+      "linked": "Verknüpft",
+      "notLinked": "Noch nicht verknüpft",
+      "none": "Kein Konto nötig",
+      "later": "Folgt in einem späteren Paket"
     },
     "selection": {
-      "heading": "Selected channels per event",
-      "hint": "The escalation rule of the admin decides the channels of an escalation; the mandatory minimum channels of a critical ticket are added to every event.",
-      "save": "Save the selection",
-      "saved": "The selection was saved.",
-      "noAccount": "No account connected",
+      "heading": "Ausgewählte Kanäle pro Ereignis",
+      "hint": "Die Eskalationsregel der Administration entscheidet über die Kanäle einer Eskalation; die Pflichtkanäle einer kritischen Meldung werden jedem Ereignis hinzugefügt.",
+      "save": "Auswahl speichern",
+      "saved": "Die Auswahl wurde gespeichert.",
+      "noAccount": "Kein Konto verknüpft",
       "events": {
-        "ticket.created": "New ticket",
-        "ticket.assigned": "Assigned or offered",
-        "ticket.escalated": "Escalated",
-        "ticket.resolved": "Resolved",
-        "oncall.assigned": "Readiness assigned",
-        "oncall.swap_requested": "Swap requested",
-        "oncall.unconfirmed_reminder": "Unconfirmed readiness"
+        "ticket.created": "Neuer Vorgang",
+        "ticket.assigned": "Zugewiesen oder angeboten",
+        "ticket.escalated": "Eskaliert",
+        "ticket.resolved": "Erledigt",
+        "oncall.assigned": "Bereitschaft zugewiesen",
+        "oncall.swap_requested": "Tausch angefragt",
+        "oncall.unconfirmed_reminder": "Nicht bestätigte Bereitschaft"
       },
       "errors": {
-        "session_invalid": "The session has expired – please log in again.",
-        "invalid_request": "The selection could not be loaded or saved – please try again.",
-        "unknown": "An unexpected error has occurred."
+        "session_invalid": "Die Sitzung ist abgelaufen – bitte erneut anmelden.",
+        "invalid_request": "Die Auswahl konnte nicht geladen oder gespeichert werden – bitte erneut versuchen.",
+        "unknown": "Ein unerwarteter Fehler ist aufgetreten."
       }
     },
     "telegram": {
-      "guidance": "Please send the code shown below as a message to the StörDesk Telegram bot.",
-      "expiresHint": "The code is only valid for ten minutes and can only be used once.",
-      "submit": "Connect the Telegram account",
-      "linked": "Telegram account connected: Chat id {{chatId}}",
-      "accountLabel": "Name of the chat: {{label}}",
-      "removeHint": "Removing a connected account follows in the next package."
+      "guidance": "Sende den unten gezeigten Code als Nachricht an den StörDesk Telegram-Bot.",
+      "expiresHint": "Der Code ist nur zehn Minuten gültig und kann nur einmal verwendet werden.",
+      "submit": "Telegram-Konto verknüpfen",
+      "linked": "Telegram-Konto verknüpft: Chat-ID {{chatId}}",
+      "accountLabel": "Name des Chats: {{label}}",
+      "removeHint": "Das Entfernen eines verknüpften Kontos folgt in einem späteren Paket."
     },
     "matrix": {
-      "guidance": "Enter your Matrix homeserver, your Matrix id and your access token. The account is only stored when the homeserver confirms the id.",
+      "guidance": "Gib deinen Matrix-Homeserver, deine Matrix-ID und deinen Zugangstoken ein. Das Konto wird nur gespeichert, wenn der Homeserver die ID bestätigt.",
       "homeserverField": "Homeserver",
-      "matrixIdField": "Matrix id",
-      "tokenField": "Access token",
-      "tokenPlaceholder": "The token is only sent once and never shown again.",
-      "submit": "Connect the Matrix account",
-      "linked": "Matrix account connected: {{matrixId}}",
-      "secretSet": "The access token is stored.",
-      "remove": "Remove the Matrix account",
-      "removed": "The Matrix account was removed.",
+      "matrixIdField": "Matrix-ID",
+      "tokenField": "Zugangstoken",
+      "tokenPlaceholder": "Der Token wird nur einmal gesendet und nie wieder angezeigt.",
+      "submit": "Matrix-Konto verknüpfen",
+      "linked": "Matrix-Konto verknüpft: {{matrixId}}",
+      "secretSet": "Der Zugangstoken ist gespeichert.",
+      "remove": "Matrix-Konto entfernen",
+      "removed": "Das Matrix-Konto wurde entfernt.",
       "errors": {
-        "session_invalid": "The session has expired. Please log in again.",
-        "invalid_request": "The homeserver refused the id and the token – please check your input.",
-        "homeserver_unreachable": "The Matrix homeserver could not be reached.",
-        "unknown": "An unexpected error has occurred."
+        "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+        "invalid_request": "Der Homeserver hat die ID und den Token zurückgewiesen – bitte die Eingabe prüfen.",
+        "homeserver_unreachable": "Der Matrix-Homeserver ist nicht erreichbar.",
+        "unknown": "Ein unerwarteter Fehler ist aufgetreten."
       }
     },
     "whatsapp": {
-      "guidance": "The chats are owned by the bridge of the operator; the pairing stays there. Pick one of the chats of the bridge to connect it as your account.",
-      "notConnected": "The WhatsApp Web bridge is not connected. Pair it in the bridge first.",
-      "connectChat": "Connect “{{label}}”",
-      "linked": "WhatsApp Web account connected: Chat id {{chatId}}",
-      "accountLabel": "Chat name: {{label}}",
-      "remove": "Remove the WhatsApp Web account",
-      "removed": "The WhatsApp Web account was removed."
+      "guidance": "Die Chats gehören zur Brücke des Betreibers; die Kopplung bleibt dort. Wähle einen der Chats der Brücke, um ihn als dein Konto zu verknüpfen.",
+      "notConnected": "Die WhatsApp Web Brücke ist nicht verbunden. Kopple sie in der Brücke zuerst.",
+      "connectChat": "„{{label}}“ verknüpfen",
+      "linked": "WhatsApp Web Konto verknüpft: Chat-ID {{chatId}}",
+      "accountLabel": "Chat-Name: {{label}}",
+      "remove": "WhatsApp Web Konto entfernen",
+      "removed": "Das WhatsApp Web Konto wurde entfernt."
     },
     "webpush": {
       "guidance": "Web Push braucht keinen Anbieter-Account: dieser Browser meldet sich direkt beim Push-Dienst an. Das funktioniert am Desktop und in der installierten App auf Android; auf dem iPhone erst ab iOS 16.4 als installierte App.",
@@ -228,8 +253,18 @@
       "unsupported": "Dieser Browser unterstützt keine Push-Nachrichten. Auf dem iPhone die App zuerst zum Home-Bildschirm hinzufügen.",
       "qrHint": "Auf dem Handy öffnen und dort anmelden:",
       "qrLabel": "QR-Code zu den Benachrichtigungs-Einstellungen",
+      "install": {
+        "title": "Web-App (PWA) installieren",
+        "windows": "Windows: Öffne StörDesk in Chrome oder Edge. Klicke in der Adressleiste auf das Installations-Symbol („Diese Seite als App installieren“) oder auf „… → Apps → Diese Seite als App installieren“.",
+        "android": "Android: Öffne StörDesk in Chrome. Tippe auf „… → Zum Startbildschirm hinzufügen“ oder „App installieren“.",
+        "ios": "iPhone/iPad: Öffne StörDesk in Safari. Tippe auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. Web Push benötigt ab iOS 16.4 die installierte App."
+      },
+      "activate": {
+        "title": "Web Push aktivieren",
+        "hint": "Nach der Installation: Gehe zu Einstellungen → Benachrichtigungen, öffne den Bereich „Web Push“ und klicke auf „Dieses Gerät anmelden“. Erteile dem Browser die Erlaubnis für Push-Benachrichtigungen. Danach erreichen dich Push-Nachrichten hier."
+      },
       "errors": {
-        "denied": "Die Benachrichtigungs-Erlaubnis wurde nicht erteilt. Bitte im Browser erlauben und erneut versuchen.",
+        "denied": "Die Erlaubnis für Benachrichtigungen wurde nicht erteilt. Bitte im Browser erlauben und erneut versuchen.",
         "not_configured": "Web Push ist auf diesem Server nicht konfiguriert.",
         "unsupported": "Dieser Browser unterstützt keine Push-Nachrichten.",
         "session_invalid": "Die Sitzung ist abgelaufen. Bitte neu anmelden.",
@@ -238,10 +273,10 @@
       }
     },
     "errors": {
-      "session_invalid": "The session has expired. Please log in again.",
-      "invalid_request": "The code is invalid, expired or already used – please request a new one.",
+      "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+      "invalid_request": "Der Code ist ungültig, abgelaufen oder bereits verwendet – bitte einen neuen anfordern.",
       "channel_not_configured": "Der Kanal ist auf diesem Server nicht konfiguriert.",
-      "unknown": "An unexpected error has occurred."
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten."
     }
   },
   "my": {

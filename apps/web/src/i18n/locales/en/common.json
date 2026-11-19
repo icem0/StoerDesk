@@ -129,6 +129,31 @@
         "password_change_required": "Please set a password of your own first.",
         "unknown": "The password could not be saved. Please try again later."
       }
+    },
+    "changePassword": {
+      "title": "Change password",
+      "hint": "Enter your current password and a new password twice. The new password needs at least 12 characters.",
+      "fields": {
+        "oldPassword": "Current password",
+        "password": "New password",
+        "repetition": "Repeat the new password"
+      },
+      "criteria": {
+        "heading": "Security",
+        "length": "At least 12 characters",
+        "met": "{{criterion}} met",
+        "notMet": "{{criterion}} not met"
+      },
+      "lengthHint": "At least 12 characters.",
+      "tooShort": "The new password needs at least 12 characters.",
+      "mismatch": "The two new passwords do not match.",
+      "submit": "Save password",
+      "errors": {
+        "session_invalid": "Your session has expired. Please sign in again.",
+        "invalid_request": "The password is incomplete or too short.",
+        "password_wrong": "The current password is not correct.",
+        "unknown": "The password could not be saved. Please try again later."
+      }
     }
   },
   "ntfy": {
@@ -235,6 +260,16 @@
         "session_invalid": "The session has expired. Please sign in again.",
         "invalid_request": "The registration could not be stored. Please try again.",
         "unknown": "The registration failed."
+      },
+      "install": {
+        "title": "Install the web app (PWA)",
+        "windows": "Windows: Open StörDesk in Chrome or Edge. Click the install icon in the address bar (“Install this site as an app”) or “… → Apps → Install this site as an app”.",
+        "android": "Android: Open StörDesk in Chrome. Tap “… → Add to Home screen” or “Install app”.",
+        "ios": "iPhone/iPad: Open StörDesk in Safari. Tap the Share button and then “Add to Home Screen”. Web Push requires the installed app from iOS 16.4."
+      },
+      "activate": {
+        "title": "Activate Web Push",
+        "hint": "After installation: go to Settings → Notifications, open the “Web Push” section and click “Register this device”. Grant the browser permission to show notifications. Push messages will then reach you here."
       }
     },
     "errors": {

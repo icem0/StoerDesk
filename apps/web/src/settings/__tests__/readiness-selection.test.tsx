@@ -77,11 +77,11 @@ describe('WP-M14-32 readiness block of /settings/notifications', () => {
     })
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: 'Readiness events' }),
+      await screen.findByRole('heading', { level: 2, name: 'Bereitschafts-Ereignisse' }),
     ).toBeTruthy()
-    expect(screen.getByText('Bereitschaft allocation')).toBeTruthy()
-    expect(screen.getByText('Swap request')).toBeTruthy()
-    expect(screen.getByText('Unconfirmed reminder')).toBeTruthy()
+    expect(screen.getByText('Bereitschaft zugewiesen')).toBeTruthy()
+    expect(screen.getByText('Tausch angefragt')).toBeTruthy()
+    expect(screen.getByText('Nicht bestätigte Erinnerung')).toBeTruthy()
 
     const assignedNtfy = container.querySelector(
       '[id="readiness-oncall.assigned:ntfy"]',
@@ -98,7 +98,7 @@ describe('WP-M14-32 readiness block of /settings/notifications', () => {
     ) as HTMLInputElement
     expect(swapCheckbox.checked).toBe(false)
 
-    expect(screen.getAllByText('The channels of the instance')).toHaveLength(2)
+    expect(screen.getAllByText('Die Kanäle der Installation')).toHaveLength(2)
 
     // `matrix` is disabled: no checkbox is rendered for that channel.
     expect(
@@ -119,12 +119,12 @@ describe('WP-M14-32 readiness block of /settings/notifications', () => {
     })
 
     const saveButton = screen.getByRole('button', {
-      name: 'Save the readiness selection',
+      name: 'Bereitschafts-Auswahl speichern',
     })
 
     fireEvent.click(saveButton)
 
-    await screen.findByText('The readiness selection was saved.')
+    await screen.findByText('Die Bereitschafts-Auswahl wurde gespeichert.')
     const expectedBody = JSON.stringify({
       preferences: [
         { eventType: 'oncall.assigned', channel: 'ntfy' },

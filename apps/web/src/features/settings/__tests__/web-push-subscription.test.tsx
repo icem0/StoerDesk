@@ -202,7 +202,7 @@ describe('WebPushSubscription', () => {
 
     renderCard()
 
-    expect(await screen.findByText(/Benachrichtigungs-Erlaubnis wurde nicht erteilt/)).toBeTruthy()
+    expect(await screen.findByText(/Erlaubnis für Benachrichtigungen wurde nicht erteilt/)).toBeTruthy()
     expect(screen.queryByText('Dieses Gerät ist angemeldet.')).toBeNull()
   })
 
