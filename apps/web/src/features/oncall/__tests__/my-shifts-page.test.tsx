@@ -60,6 +60,28 @@ function stubRoutes(permissions: string[]) {
         })
       }
 
+      if (url.includes('/history')) {
+        return Response.json({
+          events: [
+            {
+              id: '77777777-7777-4777-8777-777777777777',
+              type: 'shift_created',
+              createdAt: '2024-05-01T08:00:00.000Z',
+              actor: {
+                id: techId,
+                givenName: 'Erika',
+                familyName: 'Example',
+                email: 'erika@example.com',
+              },
+              person: null,
+              fromState: null,
+              toState: null,
+              reason: null,
+            },
+          ],
+        })
+      }
+
       if (url.includes('/v1/oncall/shifts')) {
         return Response.json({
           shifts: [
@@ -216,6 +238,17 @@ describe('MyShiftsPage', () => {
     await waitForCount('Bestätigt', 2)
     await waitForText('Tausch anfragen')
     await waitForText('Ablehnen')
+  })
+
+  it('opens the details of an own shift with its history (WP-M14-154b)', async () => {
+    renderPage(['oncall.read', 'oncall.confirm', 'oncall.swap', 'oncall.read_names'])
+
+    await waitForText('Meine Bereitschaftsschichten')
+    fireEvent.click(screen.getAllByText('Details / Verlauf')[0]!)
+
+    await waitForText('Schichtdetails')
+    await waitForText('Angelegt')
+    await waitForText('Verlauf')
   })
 
   it('declines a shift with a reason and shows the error inline', async () => {

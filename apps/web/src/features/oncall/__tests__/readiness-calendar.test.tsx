@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
@@ -242,4 +242,64 @@ describe('ReadinessCalendar', () => {
     expect(screen.getByText('besetzt')).toBeDefined()
     expect(screen.queryByText('nicht besetzt')).toBeNull()
   })
-})
+
+  it('opens the shift dialog with the history of the shift (WP-M14-154b)', async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({
+        events: [
+          {
+            id: '77777777-7777-4777-8777-777777777777',
+            type: 'shift_created',
+            createdAt: '2024-05-01T08:00:00.000Z',
+            actor: { id: memberId, givenName: 'Max', familyName: 'Mustermann', email: 'max@example.com' },
+            person: null,
+            fromState: null,
+            toState: null,
+            reason: null,
+          },
+          {
+            id: '88888888-8888-4888-8888-888888888888',
+            type: 'shift_updated',
+            createdAt: '2024-05-02T09:30:00.000Z',
+            actor: { id: memberId, givenName: 'Max', familyName: 'Mustermann', email: 'max@example.com' },
+            person: { id: memberId, givenName: 'Max', familyName: 'Mustermann', email: 'max@example.com' },
+            fromState: 'UNFILLED',
+            toState: 'PLANNED',
+            reason: null,
+          },
+        ],
+      }),
+    )
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        poolId,
+        userId: memberId,
+        state: 'PLANNED',
+        startsAt,
+        endsAt,
+        createdAt: startsAt,
+        updatedAt: startsAt,
+        technician: member,
+      },
+    ])
+
+    fireEvent.click(screen.getByText('Max Mustermann'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeDefined()
+    })
+    await waitFor(() => {
+      expect(screen.getByText('Angelegt')).toBeDefined()
+    })
+    expect(screen.getByText('Zugewiesen')).toBeDefined()
+    expect(screen.getByText('Verlauf')).toBeDefined()
+  })
+});

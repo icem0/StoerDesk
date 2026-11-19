@@ -4,6 +4,8 @@ import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 import type { OnCallShift } from '@stoerdesk/shared'
 import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
+import { ShiftDetailDialog } from './shift-detail-dialog'
+
 /**
  * The readiness calendar of the office (`specs/04-oncall.md` §4a.2, §4a.3;
  * WP-M10-33, WP-M10-41).
@@ -11,7 +13,6 @@ import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
  * Two month grids — the current and the following month — with one week per
  * row from Monday to Sunday and the ISO calendar week on the left. A day is
  * coloured by the state of its shifts, so a gap is visible at a glance. The
- *
  * shifts come from the page, and the technician travels with the shift: the
  * shift list answers the display data of `user_id` (`ADR-0032`, WP-M14-151), so
  * the calendar names the technician of every shift — also one who is no member
@@ -169,6 +170,7 @@ export function ReadinessCalendar(props: {
 }) {
   const { t, i18n } = useTranslation('oncall')
   const [windowStart, setWindowStart] = useState(() => monthStartIso(new Date()))
+  const [selectedShift, setSelectedShift] = useState<OnCallShift | null>(null)
   const showNames = props.showNames ?? true
 
   const fromIso = useMemo(

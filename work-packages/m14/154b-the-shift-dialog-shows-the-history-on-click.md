@@ -1,7 +1,7 @@
 # WP-M14-154b: the shift dialog shows the history on click
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens
@@ -24,7 +24,7 @@ files-write:
 - apps/web/src/features/oncall/{shift-detail-dialog.tsx,readiness-calendar.tsx,my-shifts-page.tsx}
 - apps/web/src/i18n/locales/{de,en}/oncall.json
 - apps/web/src/features/oncall/__tests__/{readiness-calendar,my-shifts-page}.test.tsx
-- specs/04-oncall.md (§4a.10)
+- apps/web/src/features/oncall/shift-detail-dialog.tsx
 
 interfaces:
 
@@ -82,8 +82,8 @@ person name.
 ## Handoff
 
 - Files changed: the dialog, the calendar, the own-shift page, the two locale
-  files, the two web tests, `specs/04-oncall.md` §4a.10,
-  `work-packages/README.md`, this document
+  files, the two web tests, `docs/REPO-MAP.md`, `work-packages/README.md`,
+  this document
 - Interfaces added: `ShiftDetailDialog`, the click targets of the calendar and
   of the own shift card
 - Verified: targeted web suite, typecheck, lint, `npm run i18n:check`,

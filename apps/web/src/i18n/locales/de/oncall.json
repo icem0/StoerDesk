@@ -136,7 +136,8 @@
       "copied": "Kopiert.",
       "errors": {
         "reasonTooShort": "Bitte einen Grund von mindestens 5 Zeichen angeben."
-      }
+      },
+      "details": "Details / Verlauf"
     },
     "weekday": {
       "0": "Sonntag",
@@ -166,6 +167,38 @@
       "oncall_decline_reason_required": "Ein Grund von 5 bis 500 Zeichen ist erforderlich.",
       "swap_already_open": "Für diese Schicht liegt bereits ein offener Tauschwunsch vor.",
       "unknown": "Die Aktion ist fehlgeschlagen. Bitte später erneut versuchen."
+    },
+    "shiftDetail": {
+      "title": "Schichtdetails",
+      "state": "Status",
+      "pool": "Bereitschaftspool",
+      "period": "Zeitraum",
+      "technician": "Techniker",
+      "history": "Verlauf",
+      "empty": "Für diese Schicht ist noch kein Verlauf vorhanden.",
+      "error": "Der Verlauf konnte nicht geladen werden.",
+      "close": "Schließen",
+      "actor": "Ausgeführt von",
+      "person": "Betroffen",
+      "transition": "Statuswechsel",
+      "reason": "Grund",
+      "unknownStep": "Schritt",
+      "steps": {
+        "shift_created": "Angelegt",
+        "shift_updated": "Geändert",
+        "shift_updated_assigned": "Zugewiesen",
+        "shift_updated_published": "Veröffentlicht",
+        "confirmed": "Bestätigt",
+        "declined": "Abgelehnt",
+        "swap_requested": "Tausch angefragt",
+        "swap_accepted": "Tausch angenommen",
+        "swap_approved": "Tausch freigegeben",
+        "swap_rejected": "Tausch abgelehnt",
+        "swap_cancelled": "Tausch zurückgezogen",
+        "shift_deleted": "Gelöscht",
+        "offered": "Angeboten",
+        "offer_escalated": "Angebot eskaliert"
+      }
     }
   }
 }

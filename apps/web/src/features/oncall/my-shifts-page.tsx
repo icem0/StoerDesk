@@ -11,6 +11,7 @@ import { apiFetch, ApiError } from '../../lib/api'
 import { useMe, usePermission } from '../../auth/usePermission'
 import { useShiftActions } from './use-shift-actions'
 import { ReadinessCalendar } from './readiness-calendar'
+import { ShiftDetailDialog } from './shift-detail-dialog'
 
 /**
  * My on-call shifts (`specs/04-oncall.md` §4a.4, §4a.5, §4a.7; WP-M8-14).
@@ -91,6 +92,7 @@ function MyShiftsPageContent({
   const { t } = useTranslation('oncall')
   const queryClient = useQueryClient()
   const [now] = useState(() => Date.now())
+  const [detailShift, setDetailShift] = useState<OnCallShift | null>(null)
 
   const from = new Date(now - RANGE_DAYS * DAY_MS).toISOString()
   const to = new Date(now + RANGE_DAYS * DAY_MS).toISOString()
@@ -257,6 +259,7 @@ function MyShiftsPageContent({
                   void requestSwapFn(shiftId, targetUserId).then(() => void invalidate())
                 }
                 onCancelSwap={(swapId) => void cancelSwapFn(swapId).then(() => void invalidate())}
+                onShowDetails={(shift) => setDetailShift(shift)}
               />
             ))}
           </div>
@@ -280,11 +283,21 @@ function MyShiftsPageContent({
                 maySwap={false}
                 membersOf={membersOf}
                 meUserId={meUserId}
+                onShowDetails={(shift) => setDetailShift(shift)}
               />
             ))}
           </div>
         )}
       </section>
+
+      {detailShift !== null ? (
+        <ShiftDetailDialog
+          onClose={() => setDetailShift(null)}
+          poolName={poolNames[detailShift.poolId] ?? null}
+          shift={detailShift}
+          showNames={mayShowNames}
+        />
+      ) : null}
     </main>
   )
 }
@@ -297,6 +310,7 @@ function ShiftCard({
   meUserId,
   onRequestSwap,
   onCancelSwap,
+  onShowDetails,
 }: {
   shift: OnCallShift & { poolName: string | null }
   mayConfirm?: boolean
@@ -305,6 +319,7 @@ function ShiftCard({
   meUserId: string
   onRequestSwap?: (shiftId: string, targetUserId: string | undefined) => void
   onCancelSwap?: (swapId: string) => void
+  onShowDetails?: (shift: OnCallShift) => void
 }) {
   const { t, i18n } = useTranslation('oncall')
   const queryClient = useQueryClient()
@@ -436,6 +451,15 @@ function ShiftCard({
             onClick={() => void cancelMut.mutate()}
           >
             {t('admin.myShifts.cancel')}
+          </button>
+        ) : null}
+        {onShowDetails ? (
+          <button
+            className="rounded bg-slate-700 px-3 py-1 text-slate-100"
+            onClick={() => onShowDetails(shift)}
+            type="button"
+          >
+            {t('admin.myShifts.details')}
           </button>
         ) : null}
       </div>

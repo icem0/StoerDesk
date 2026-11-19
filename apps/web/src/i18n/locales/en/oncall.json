@@ -136,7 +136,8 @@
       "copied": "Copied.",
       "errors": {
         "reasonTooShort": "Please enter a reason of at least 5 characters."
-      }
+      },
+      "details": "Details / History"
     },
     "weekday": {
       "0": "Sunday",
@@ -166,6 +167,38 @@
       "oncall_decline_reason_required": "A reason of 5 to 500 characters is required.",
       "swap_already_open": "There is already an open swap request for this shift.",
       "unknown": "The action failed. Please try again later."
+    },
+    "shiftDetail": {
+      "title": "Shift details",
+      "state": "State",
+      "pool": "On-call pool",
+      "period": "Period",
+      "technician": "Technician",
+      "history": "History",
+      "empty": "This shift has no history yet.",
+      "error": "The history could not be loaded.",
+      "close": "Close",
+      "actor": "Done by",
+      "person": "Concerning",
+      "transition": "State change",
+      "reason": "Reason",
+      "unknownStep": "Step",
+      "steps": {
+        "shift_created": "Created",
+        "shift_updated": "Changed",
+        "shift_updated_assigned": "Assigned",
+        "shift_updated_published": "Published",
+        "confirmed": "Confirmed",
+        "declined": "Declined",
+        "swap_requested": "Swap requested",
+        "swap_accepted": "Swap accepted",
+        "swap_approved": "Swap approved",
+        "swap_rejected": "Swap rejected",
+        "swap_cancelled": "Swap cancelled",
+        "shift_deleted": "Deleted",
+        "offered": "Offered",
+        "offer_escalated": "Offer escalated"
+      }
     }
   }
 }
