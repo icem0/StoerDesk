@@ -41,7 +41,8 @@ docker compose restart api
 ## Wo die Einstellung sichtbar ist
 
 - **Admin:** unter `/settings/notifications` (Karte „Web Push“) steht, ob der Kanal konfiguriert ist.
-- **Nutzer:** unter `/notifications` erscheint der Hinweis, solange die Schlüssel fehlen.
+- **Nutzer:** unter `/notifications` erscheint der Hinweis, solange die Schlüssel fehlen — the message itself is the link to the guide at /help/web-push.
+- **Guide in the app:** under /help/web-push are the same steps as in this document.
 - **API:** `GET /api/v1/notifications/accounts/webpush` antwortet mit dem öffentlichen Schlüssel (oder leer, wenn nicht konfiguriert).
 
 ## Sicherheit

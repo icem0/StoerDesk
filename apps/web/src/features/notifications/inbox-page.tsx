@@ -87,8 +87,12 @@ function webPushHint(
  * title is the ticket number or the name of the pool, the body carries the
  * machine-readable params of the message. While this browser receives no push
  * message the page names the cause and the setup page of the settings menu
- * (WP-M14-128, WP-M14-143) — it only links there, registering this browser
- * stays the card of WP-M14-126a.
+ *  (WP-M14-128, WP-M14-143) — it only links there, registering this browser
+ *  stays the card of WP-M14-126a. The hint sits at the top of the page, right
+ *  under the heading, so a channel problem is never below the fold; a server
+ *  without VAPID keys names its message itself as the link to the setup guide
+ *  at `/help/web-push` (the guide carries the VAPID key generation, the
+ *  `.env` entry and the restart of the API).
  *
  * The inbox of a user stays personal: the list shows the own messages only.
  * A role with the permission `notification.read_all` (WP-M14-141c) gets the
@@ -234,6 +238,27 @@ export function InboxPage() {
           {t('back')}
         </Link>
       </div>
+
+      {hint !== 'none' ? (
+        <p className="mt-4 flex flex-col gap-1">
+          {hint === 'not_configured' ? (
+            <Link
+              className="text-sm text-amber-400 underline hover:text-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              to="/help/web-push"
+            >
+              {hintTexts[hint]}
+            </Link>
+          ) : (
+            <span className="text-sm text-slate-400">{hintTexts[hint]}</span>
+          )}
+          <Link
+            className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            to="/settings/notifications"
+          >
+            {t('inbox.webpush.setup')}
+          </Link>
+        </p>
+      ) : null}
 
       {canReadAll ? (
         <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-700 p-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -413,18 +438,6 @@ export function InboxPage() {
             )
           })}
         </ul>
-      ) : null}
-
-      {hint !== 'none' ? (
-        <p className="mt-6 flex flex-col gap-1">
-          <span className="text-sm text-slate-400">{hintTexts[hint]}</span>
-          <Link
-            className="mt-1 inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 text-sm text-sky-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-            to="/settings/notifications"
-          >
-            {t('inbox.webpush.setup')}
-          </Link>
-        </p>
       ) : null}
     </main>
   )

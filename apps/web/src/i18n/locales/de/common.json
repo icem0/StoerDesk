@@ -351,5 +351,25 @@
       "notConfigured": "Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).",
       "notRegistered": "Der Server kennt dieses Gerät nicht — hier erreichen Sie keine Push-Benachrichtigungen."
     }
+  },
+  "help": {
+    "webpush": {
+      "title": "Web Push (VAPID) — Setup Guide",
+      "hint": "Web Push is switched off by default in StörDesk. The channel sends as soon as all three values are set in the environment of the API:",
+      "why": "This is no error, but the intended safe state: every server needs its own key pair, so that the push service can assign the devices unambiguously to this server.",
+      "publicKey": "VAPID_PUBLIC_KEY — the public key that the browser receives",
+      "privateKey": "VAPID_PRIVATE_KEY — the private key with which the VAPID-JWT is signed",
+      "subject": "VAPID_SUBJECT — the contact address („mailto:“ or „https:“) for the push service",
+      "generateTitle": "1 · Key pair create",
+      "command": "npx web-push generate-vapid-keys",
+      "generateHint": "The command outputs the three values (Public Key, Private Key, Subject) — copy all three.",
+      "envTitle": "2 · In .env create",
+      "envHint": "Enter the values into your local .env file — never commit them, never build them into the image, and restart the API container (docker compose restart api).",
+      "restartTitle": "3 · What happens then",
+      "restartHint": "Once the keys are set and the API is restarted: the notice under „Notifications“ disappears, the public key is delivered to the browser and under „Settings → Notifications“ the section „Web Push“ offers the registration of the devices.",
+      "secret": "The private key is a secret: never commit it, never log it, never send it to the browser.",
+      "settingsLink": "Notification settings open",
+      "inboxLink": "Back to the notifications"
+    }
   }
 }

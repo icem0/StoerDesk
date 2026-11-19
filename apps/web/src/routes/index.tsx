@@ -37,6 +37,7 @@ import { UserCreatePage } from '../admin/user-create-page'
 import { RequireSession } from '../auth/require-session'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { InboxPage } from '../features/notifications/inbox-page'
+import { WebPushHelpPage } from '../features/notifications/web-push-help-page'
 import { TvPage } from '../features/dashboard/tv-page'
 import { StatsPage } from '../features/stats/stats-page'
 import { StickerPage } from '../features/objects/sticker-page'
@@ -381,6 +382,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <InboxPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The setup guide of web push (VAPID): the inbox links its message
+        // about a missing server configuration to this page.
+        path: '/help/web-push',
+        element: (
+          <RequireSession>
+            <WebPushHelpPage />
           </RequireSession>
         ),
       },

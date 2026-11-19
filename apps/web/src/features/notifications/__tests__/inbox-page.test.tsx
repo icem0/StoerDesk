@@ -213,6 +213,11 @@ describe('InboxPage', () => {
         'Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).',
       ),
     ).toBeTruthy()
+    const helpLink = await screen.findByRole('link', {
+      name: 'Web Push ist auf diesem Server nicht konfiguriert (die VAPID-Schlüssel fehlen).',
+    })
+    expect(helpLink.getAttribute('href')).toBe('/help/web-push')
+    expect(helpLink.getAttribute('href')).toBe('/help/web-push')
     const link = await screen.findByRole('link', { name: i18n.t('inbox.webpush.setup') })
     expect(link.getAttribute('href')).toBe('/settings/notifications')
   })
