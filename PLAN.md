@@ -367,6 +367,14 @@ Ticket coupling:
   answers "besetzt" instead of the name (WP-M14-132). The API keeps answering
   the names to `oncall.read` (the members of a pool are the candidates of a
   swap); the gate is in the web app.
+- The **shift history** (WP-M14-154, out of band in phase 14): a click on a
+  shift of the readiness calendar or on an own shift opens a dialog with the
+  state, the pool, the period, the technician and the append-only history of
+  the shift. The history names every step with its time and its acting person —
+  created, assigned (by whom to whom), published, confirmed, declined (with the
+  reason) and every swap step. `GET /api/v1/oncall/shifts/:id/history`
+  (`oncall.read`) answers the named fields only, never a raw event payload; the
+  name gate of `oncall.read_names` applies as in the calendar (§4a.10).
 
 ## 9. Timeline and escalation
 
@@ -3102,6 +3110,18 @@ of the milestone stands **below** the buttons. The wording stays the wording of
 the former selection — the name of the milestone, or the name of the step when
 one milestone is reached by several steps — so no new text is needed; ADR-0017
 names the new shape of the ticket view.
+
+**The shift history shows who did what and when (WP-M14-154, out of band in
+phase 14).** The office asked for a history of every shift — „erstellt am, von,
+abgelehnt, zugewiesen von, an, angenommen von am" — and for it to open on a
+click on a shift, also in the calendar. The append-only `oncall_events` trail
+already carries every step (§4a.4, §4a.5); the chain adds the missing read side.
+**WP-M14-154a** adds the shared history contract, `readShiftHistory` and
+`GET /api/v1/oncall/shifts/:id/history` behind `oncall.read`; the answer carries
+the type, the time, the acting person, the referenced person, the state
+transition and the decline reason, never the raw payload. **WP-M14-154b** adds
+the shift dialog and opens it from the readiness calendar and from an own shift,
+with the existing `oncall.read_names` gate.
 
 
 ## 17. Work package rules for small models

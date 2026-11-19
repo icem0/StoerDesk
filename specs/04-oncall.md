@@ -267,6 +267,7 @@ on the "my on-call" page so the user can subscribe in a calendar app.
 | `POST /api/v1/oncall/swaps/:id/accept` | `oncall.swap` | atomic first acceptance |
 | `POST /api/v1/oncall/swaps/:id/(approve\|reject)` | `oncall.admin` | approval decision |
 | `POST /api/v1/oncall/swaps/:id/cancel` | `oncall.swap` / `oncall.admin` | withdraw |
+| `GET /api/v1/oncall/shifts/:id/history` | `oncall.read` | the append-only history of one shift |
 | `GET /api/v1/oncall/warnings` | `oncall.read` | unstaffed and unconfirmed slots |
 | `GET /api/v1/oncall/ical/:token.ics` | — | personal calendar feed |
 
@@ -286,3 +287,16 @@ trigger of `PLAN.md` §15, like `ticket_events`.
 - Offline support covers confirm and decline only, through the existing outbox
   mechanism.
 - The iCal feed is read-only; it never writes shifts.
+
+## 4a.10 Shift history
+
+Every shift carries its append-only history (`oncall_events`, §4a.4, §4a.5) in
+the shift view and in the readiness calendar: `GET /api/v1/oncall/shifts/:id/history`
+(`oncall.read`) answers the events of one shift oldest first with the type, the
+timestamp, the acting person, the person an assignment or a swap refers to, the
+state transition of an assignment and the decline reason. A raw event payload
+never leaves the route. The history names no technician to a role without
+`oncall.read_names`: the API answers the people like the shift list of §4a.3 and
+the web app gates the names (`WP-M14-131/132`). A click on a shift of the
+readiness calendar or on an own shift opens the dialog with the state, the pool,
+the period, the technician and that history.

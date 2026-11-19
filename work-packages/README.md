@@ -1579,6 +1579,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-152b | the escalation names the target it was configured for (out of band) | done | yes |
 | WP-M14-152c | the ticket history names stage, channel, recipient and target (out of band) | done | yes |
 | WP-M14-153 | the milestones of the ticket view are buttons next to each other (out of band) | done | yes |
+| WP-M14-154 | the shift history shows who did what and when — the spec and the split (out of band) | done | yes |
+| WP-M14-154a | the shift history route names the people and the step (out of band) | planned | no |
+| WP-M14-154b | the shift dialog shows the history on click (out of band) | planned | no |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The shift history shows who did what and when (**WP-M14-154**, out of band in
+  phase 14): every shift carries its append-only history — created, assigned by
+  whom to whom, published, confirmed, declined with the reason, and every swap
+  step, each with its local time. `GET /api/v1/oncall/shifts/:id/history`
+  (`oncall.read`) answers the named fields only. A click on a shift in the
+  readiness calendar or on an own shift opens the dialog with the state, the
+  pool, the period, the technician and the history; the `oncall.read_names` gate
+  stays. The chain splits into WP-M14-154a (the route) and WP-M14-154b (the
+  dialog).
 - The ticket history names the escalation and the notification (**WP-M14-152**,
   out of band in phase 14): an escalated ticket shows the **display name** of the
   stage that fired — read from the stage chain of the administration — and the
