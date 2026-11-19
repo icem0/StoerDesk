@@ -3,7 +3,7 @@
 **Chapter:** 8 (escalation) with the rules of `PLAN.md` §9
 **Scope:** ~190 lines
 **Status:** reviewed for phase 13 (WP-M13-01), extended for phase 14 (WP-M14-58,
-WP-M14-76)
+WP-M14-76) and for the way of the escalation (WP-M17-00, ADR-0037)
 
 The binding summary is `PLAN.md` §9. This slice defines the escalation stages, the
 waiting deadlines of the stages, the conditions under which a rule fires and the
@@ -142,7 +142,7 @@ the night.
 
 | Type | Configuration | Effect |
 | --- | --- | --- |
-| `notify` | `target` (one user, a readiness pool **or** the assignees of the ticket) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target on their own ntfy topic, with the selected ntfy priority; without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
+| `notify` | `target` (one user, a readiness pool **or** the assignees of the ticket) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target and per channel the addressee selected for `ticket.escalated` (§11.4, ADR-0037); without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
 | `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
 | `history` | `text` (optional, 1–500 characters), no key in the administration | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
@@ -151,8 +151,11 @@ the night.
 
 A `notify` action with a `target` replaces the channel broadcast of the action:
 the selected user, the technicians who have a shift in the selected readiness
-pool at this moment, or the assignees of the ticket receive the notification on
-the own ntfy topic (ADR-0030, ADR-0033).
+pool at this moment, or the assignees of the ticket receive the notification —
+and the **way is their own**: every recipient gets one row per channel they
+selected for `ticket.escalated` under `/settings/notifications` (§11.4,
+ADR-0037). A recipient without a selection row receives the notification on
+their own ntfy topic (ADR-0030, ADR-0033).
 The members of the pool without a shift receive nothing — the readiness service
 is the team that is on duty. A user without an ntfy account contributes
 nothing. A ticket without an assignee has nobody to notify — the target

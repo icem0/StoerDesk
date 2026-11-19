@@ -27,6 +27,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i), the admin view of the inbox (WP-M14-141 … WP-M14-141c), the assignment that names a technician (WP-M14-150 … WP-M14-150d) and the internal comment that never reaches the customer (WP-M14-149 … WP-M14-149g) and the readiness calendar that names the technician of every shift (WP-M14-151) and the milestones of the ticket view as buttons (WP-M14-153) | 128  |
 | [m15](m15/) | Phase 15: duty windows of the readiness — the plan knows a duty window per weekday beside the continuous plan (the spec and ADR-0035, the shared contracts and the generator, the API and the planner, the administration form, the exit criterion) | 5   |
 | [m16](m16/) | Phase 16: the facelift of the interface — the accent colour (the spec and ADR-0036, the contracts and the API, the field under „Darstellung“, the accent ramp of the shell), the bell inside the header menu, the shell on a phone | 6   |
+| [m17](m17/) | Phase 17: the way of the escalation — the recipient of an escalation decides over which channel it arrives (the spec and ADR-0037, the API, the administration, the own page) | 4   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -986,6 +987,25 @@ WP-M14-149d (the settings), WP-M14-149e (the page of the Darstellung),
 WP-M14-149f (the offline queue) and WP-M14-149g (the ticket view). Every child
 is implemented, the chain of the internal comment is closed.
 
+**The way of the escalation (WP-M17-00, phase 17, out of band at the request of
+the office).** The office read the escalation administration and asked: „das ziel
+ist eine person, der übertragungsweg eine andere geschichte! jeder kann selbst
+bestimmen unter /settings/notifications über welchen weg eine benachrichtigung
+bei welcher art von nachricht bei ihm verwendet werden soll.“ The target select
+of a `notify` action carried the empty entry „Kanäle der Installation“ next to
+the people, and the dispatcher delivered a targeted escalation over ntfy only —
+and only to a recipient who had ticked ntfy for `ticket.escalated` in their own
+settings: a technician with Telegram received nothing and a technician who never
+touched the selection received nothing — silently. ADR-0037 decides the model:
+the target answers the *who*, the selection of the recipient answers the *how*; a
+recipient without a selection keeps their own ntfy topic, and the channels of
+the installation belong to the `notify` action without a target — the
+broadcast. `specs/07-escalation.md` §7.5 and `specs/10-notifications.md` §11.4
+carry the rule, `PLAN.md` §9 and §12 the summary. The phase is split into
+WP-M17-01 (the API — the recipients of an escalation), WP-M17-02 (the
+administration separates the target from the way) and WP-M17-03 (the own page
+names the rule). Every file exists in the commit of the split.
+
 ## Open follow-ups
 
 The table is the machine-readable backlog of record (rule: `AGENTS.md`
@@ -1599,6 +1619,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-03 | the shell paints the accent colour of the server (the ramp and the classes) | done | yes |
 | WP-M16-04 | the bell becomes an entry of the header menu | planned | yes |
 | WP-M16-05 | the shell fits a phone and the phase-16 criterion | planned | yes |
+| WP-M17-00 | the recipient chooses the way — the spec, ADR-0037 and the split | done | yes |
+| WP-M17-01 | the escalation delivers over the way of the recipient (the API) | planned | yes |
+| WP-M17-02 | the administration separates the target from the way | planned | yes |
+| WP-M17-03 | the own page names the way of the escalation | planned | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 | WP-M14-158 | the new user gets its own page (out of band) | done | yes |
 | WP-M14-159 | the new role gets its own page (out of band) | done | yes |

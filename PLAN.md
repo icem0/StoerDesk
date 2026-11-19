@@ -455,6 +455,14 @@ now. A `notify` action with a readiness pool as its target reaches the
 technicians who have a shift in that pool; the members of the pool without a
 shift receive nothing.
 
+Since ADR-0037 the target of a `notify` action answers the *who* and the
+selection of the recipient answers the *how*: a technician, a readiness pool or
+the assignees of the ticket receive the escalation over the channels they
+selected for `ticket.escalated` under `/settings/notifications`; without a
+selection the notification arrives on their own ntfy topic. The channels of the
+installation belong to the `notify` action **without** a target — the broadcast
+of the escalation.
+
 ## 10. Report form and offline
 
 Public route: `/m/<qr_token>`. Status page: `/s/<status_token>`.
@@ -594,8 +602,8 @@ Rules:
   and `ticket.resolved` plus the readiness types `oncall.assigned`,
   `oncall.swap_requested` and `oncall.unconfirmed_reminder` (ADR-0021); users
   choose the channels per event type, the admin defines the mandatory minimum
-  channels for `critical` and the escalation rule decides the channels of an
-  escalation,
+  channels for `critical` and the escalation rule decides the recipient of an
+  escalation — the recipient decides the way (ADR-0037),
 - 3 retries with backoff, then the next channel in the escalation chain,
 - `notification_sent` and `notification_failed` events in the ticket history,
 - message content: ticket number, priority, object name/location, system type,
@@ -748,6 +756,7 @@ explanation. Offline is a core feature and appears early.
 | **14** | Administration consolidation and messenger channels: the administration home disappears into the settings menu, the channels become configurable (ntfy, Telegram, Matrix, WhatsApp Web), the accounts are linked and the users choose their channels; the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44, WP-M14-58 … WP-M14-67) | every channel is configured in the administration, a linked account receives a ticket notification and a failure stays visible; a stage or a status can be added, removed and chained to a predecessor |
 | **15** | Duty windows of the readiness: the plan knows a duty window per weekday beside the continuous plan (WP-M15-01 … WP-M15-05) | a pool with office hours is expressible; every window is a shift of its own and the coupling names the technician only inside a window |
 | **16** | Facelift of the interface: one server-wide accent colour under „Darstellung“ (ADR-0036), the inbox as an entry of the header menu, the shell on a phone (WP-M16-00 … WP-M16-05) | the administration paints the whole interface with one saved colour, the bell sits in the menu next to the readiness and the shell fits a phone |
+| **17** | The way of the escalation: the recipient of an escalation decides over which channel it arrives (ADR-0037, WP-M17-00 … WP-M17-03) | an escalation that names a technician arrives over the channel that technician selected; without a selection it arrives on their own ntfy topic |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -3368,6 +3377,29 @@ accent colour), **WP-M16-02** (the field under „Darstellung“), **WP-M16-03**
 (the accent ramp in the shell), **WP-M16-04** (the bell inside the header menu)
 and **WP-M16-05** (the mobile shell and the exit criterion). Every file exists
 in this commit.
+
+**The way of the escalation (WP-M17-00, phase 17, out of band at the request of
+the office).** The office read the escalation administration and asked: „das ziel
+ist eine person, der übertragungsweg eine andere geschichte! jeder kann selbst
+bestimmen unter /settings/notifications über welchen weg eine benachrichtigung
+bei welcher art von nachricht bei ihm verwendet werden soll.“ The target select
+of a `notify` action carried the empty entry „Kanäle der Installation“ next to
+the people, and the dispatcher delivered a targeted escalation over ntfy only —
+and only to a recipient who had ticked ntfy for `ticket.escalated` in their own
+settings. A technician with Telegram received nothing, a technician who never
+touched the selection received nothing, and §11.4 rule 1 promised the opposite
+of what happened: that the rule of the administration decides the channels.
+**ADR-0037** decides the model: the target answers the *who*, the selection of
+the recipient answers the *how*. A targeted escalation writes one row per
+recipient and per channel the recipient selected; a recipient without a selection
+keeps their own ntfy topic; the channels of the installation belong to the
+`notify` action without a target — the broadcast. The personal routing of the
+channels other than ntfy stays the named limitation of ADR-0033 decision 4.
+`specs/07-escalation.md` §7.5 and `specs/10-notifications.md` §11.4 carry the
+rule. The phase is split into **WP-M17-01** (the API — the recipients of an
+escalation), **WP-M17-02** (the administration separates the target from the way)
+and **WP-M17-03** (the own page names the rule). Every file exists in this
+commit.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

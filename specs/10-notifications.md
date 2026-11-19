@@ -3,7 +3,7 @@
 **Chapter:** 11 (notifications)
 **Scope:** ~190 lines
 **Status:** reviewed for phase 14 (WP-M14-03), amended for the readiness rules of
-WP-M14-26 (ADR-0021)
+WP-M14-26 (ADR-0021) and for the way of the escalation (WP-M17-00, ADR-0037)
 
 The binding summary is `PLAN.md` §12. This slice defines the channels of the
 outbox, where their configuration lives, how a user links an account, which
@@ -132,16 +132,23 @@ The event types of the notification are fixed:
 
 `notification_preferences` holds the selection of a user: one row per
 `(user_id, event_type, channel)`. A user without a row for an event type is
-notified through the channels of the instance (the chain of §11.1). Migration
+notified through the channels of the instance (the chain of §11.1) — the
+exception is an escalation that names the user as its recipient: it arrives on
+their own ntfy topic (ADR-0037). Migration
 `0034` widens the event check of that table to the seven types (ADR-0021).
 
 The precedence of the rules is fixed:
 
-1. The **escalation rule** of the admin decides the channels of
-   `ticket.escalated` — the selection of the user does not change it.
+1. The **escalation rule** of the admin decides **whether** and **to whom** a
+   `ticket.escalated` notification goes — the target of the action. It does not
+   decide the way: a target names the recipient, the recipient decides the
+   channel (§11.4 rule 2, ADR-0037). Only a `notify` action **without** a
+   target takes the channels of the installation — that action is the broadcast.
 2. The **selection of the user** decides the channels of `ticket.created`,
    `ticket.assigned` and `ticket.resolved` as well as the three readiness
-   events.
+   events — and the channels of a `ticket.escalated` that names the user as its
+   recipient (ADR-0037). A user without a row for that event type is notified
+   over their own ntfy topic.
 3. The **mandatory minimum channels** of the admin (§11.9) are added to every
    event of a critical ticket. They cannot be switched off by a user.
 

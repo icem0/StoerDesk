@@ -68,3 +68,4 @@ Format: one file per decision in `docs/DECISIONS/`, numbered consecutively.
 | [ADR-0034](DECISIONS/0034-the-internal-comment-never-leaves-the-office.md) | The internal comment never leaves the office (`internal_comment`, the key `ticket.comment.internal`, the colour under „Darstellung“) | accepted |
 | [ADR-0035](DECISIONS/0035-the-readiness-knows-a-duty-window-per-weekday.md) | The readiness knows a duty window per weekday (`oncall.weekly_windows`, the window plan beside the continuous plan) | accepted |
 | [ADR-0036](DECISIONS/0036-the-interface-has-one-server-wide-accent-colour.md) | The interface has one server-wide accent colour (`accentColor` in the `branding` row, `--brand-accent`, the ramp `--color-accent-*`) | accepted |
+| [ADR-0037](DECISIONS/0037-the-recipient-chooses-the-way-of-the-escalation.md) | The recipient chooses the way of the escalation that names them (the target answers the *who*, the selection of the recipient the *how*) | accepted |

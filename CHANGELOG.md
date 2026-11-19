@@ -41,6 +41,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `--color-accent-300 … --color-accent-700` from it and the active menu entry,
   the links of the settings menu, the settings gear and their focus rings paint
   the accent classes instead of the fixed Tailwind blues.
+- The recipient of an escalation decides over which way it arrives
+  (**WP-M17-00 … WP-M17-03**, phase 17, ADR-0037): the office read the
+  escalation administration and asked — „das ziel ist eine person, der
+  übertragungsweg eine andere geschichte!“. The target select of a `notify`
+  action carried the empty entry „Kanäle der Installation“ next to the people,
+  and the dispatcher delivered a targeted escalation over ntfy only — and only to
+  a recipient who had ticked ntfy for `ticket.escalated` in their own settings:
+  a technician with Telegram received nothing, a technician who never touched
+  the selection received nothing, silently. The target answers the *who*, the
+  selection of the recipient answers the *how*: an escalation that names a
+  technician, a readiness pool or the assignees of the ticket writes one row per
+  recipient and per channel that recipient selected; a recipient without a
+  selection keeps their own ntfy topic, and the channels of the installation
+  belong to the `notify` action without a target — the broadcast.
 - The readiness knows a duty window per weekday (**WP-M15-01 … WP-M15-05**,
   phase 15, ADR-0035): the plan of a pool with office hours is expressible.
   The office reported that the shift of the pool „Verwaltung" — on Monday from
