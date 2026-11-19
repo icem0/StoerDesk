@@ -3168,6 +3168,28 @@ user is created; the editing of a user stays below the table. The same request
 covers the mask of the new role (**WP-M14-159**) and of the new group
 (**WP-M14-160**).
 
+**The new role has a page of its own (WP-M14-159, out of band in phase 14).**
+The input mask „Rolle anlegen" was glued below the list of the roles, the same
+way the mask of the new user was (WP-M14-158). It is a page of its own now —
+`/admin/roles/new` — and the list offers a button that opens it. The page needs
+`role.write`, links back to the list and returns to the list after the role is
+created; the grant editor of a role stays below the table.
+
+**The delivery problem is a link and can be quit (WP-M14-161, out of band in
+phase 14).** The office reported the badge „Zustellung gestört (1)" of the
+settings menu: it is a text without a destination, it counts the channels of
+the whole history of the outbox, and a single failure of the past keeps it red
+forever. The badge becomes the **link** to the page `/admin/delivery`, where
+the admin sees which channel fails, since when, with which machine code and
+which messages never arrived — and where the problem is **quit**. The
+quittature stores the *time* of the acknowledgement (the `settings` row
+`notifications.delivery_acknowledged`, one entry per channel): every failure
+after that time opens the problem again, so a solved problem stays solved and a
+new one is never silent. The rule and the contract stand in
+`specs/10-notifications.md` §11.8, §11.11 and §11.12; the package is split into
+**WP-M14-161a** (the contracts, the service and the two routes), **WP-M14-161b**
+(the page) and **WP-M14-161c** (the badge and the entry of the menu).
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

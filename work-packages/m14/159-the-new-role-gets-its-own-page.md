@@ -1,7 +1,7 @@
 # WP-M14-159: the new role gets its own page
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -80,9 +80,20 @@ return to the list.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/role-form-parts.tsx` (new),
+  `apps/web/src/admin/role-create-page.tsx` (new),
+  `apps/web/src/admin/roles-page.tsx` (the button instead of the inline form),
+  `apps/web/src/routes/index.tsx` (the route), the two tests,
+  `docs/REPO-MAP.md`, `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document
+- Interfaces added: `RoleCreatePage`, the route `/admin/roles/new`, the shared
+  parts of `role-form-parts.tsx`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `npm run lint` (0 errors),
+  `npm run i18n:check`, `npm run test:run` and `npm run wp:check` green
+- Follow-up WP: WP-M14-160 (the new group gets its own page) — its file is
+  created with the commit of WP-M14-159 (`AGENTS.md`, _Open follow-ups
+  (mandatory closure)_)
+- Open question: none
 - Follow-up WP: WP-M14-160 (the new group gets its own page) — its file is
   created with the commit of WP-M14-159 (`AGENTS.md`, _Open follow-ups
   (mandatory closure)_)

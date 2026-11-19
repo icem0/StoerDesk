@@ -2,41 +2,20 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import type { TFunction } from 'i18next'
-import { PERMISSION_KEYS } from '@stoerdesk/shared'
 import type {
-  CreateRoleRequest,
   RoleListResponse,
   RoleSummary,
   UpdateRoleRequest,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
-import { ApiError, apiFetch } from '../lib/api'
-
-const handledErrorCodes = [
-  'session_invalid',
-  'forbidden',
-  'invalid_request',
-  'role_not_found',
-  'role_key_taken',
-  'system_role_protected',
-  'role_in_use',
-  'unknown_permission_key',
-] as const
-
-const jsonHeaders = { 'content-type': 'application/json' }
-
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
-  const code =
-    error instanceof ApiError &&
-    error.code !== undefined &&
-    (handledErrorCodes as readonly string[]).includes(error.code)
-      ? error.code
-      : 'unknown'
-
-  return t(`admin.roles.errors.${code}`)
-}
+import { apiFetch } from '../lib/api'
+import {
+  PermissionCheckboxes,
+  errorMessage,
+  jsonHeaders,
+  toggleKey,
+} from './role-form-parts'
 
 function useRoles() {
   return useQuery({
@@ -44,99 +23,6 @@ function useRoles() {
     queryFn: () => apiFetch<RoleListResponse>('/v1/roles'),
     retry: false,
   })
-}
-
-function PermissionCheckboxes({
-  selected,
-  onToggle,
-}: {
-  selected: string[]
-  onToggle: (key: string) => void
-}) {
-  const { t } = useTranslation('settings')
-
-  return (
-    <fieldset className="flex flex-col gap-1">
-      <legend className="mb-1 text-sm text-slate-400">
-        {t('admin.roles.fields.permissionsLabel')}
-      </legend>
-      <div className="grid max-h-64 grid-cols-2 gap-x-4 gap-y-1 overflow-y-auto border border-slate-700 rounded p-2">
-        {PERMISSION_KEYS.map((key) => (
-          <label key={key} className="flex items-center gap-1 text-xs">
-            <input
-              type="checkbox"
-              checked={selected.includes(key)}
-              onChange={() => onToggle(key)}
-            />
-            {key}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  )
-}
-
-function toggleKey(selected: string[], key: string): string[] {
-  return selected.includes(key) ? selected.filter((entry) => entry !== key) : [...selected, key]
-}
-
-function CreateRoleForm() {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-  const [values, setValues] = useState<CreateRoleRequest>({ key: '', permissionKeys: [] })
-
-  const mutation = useMutation({
-    mutationFn: (body: CreateRoleRequest) =>
-      apiFetch<RoleSummary>('/v1/roles', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(body),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['roles'] })
-      setValues({ key: '', permissionKeys: [] })
-    },
-  })
-
-  return (
-    <form
-      className="mt-6 flex flex-col gap-3 border-t border-slate-800 pt-4"
-      onSubmit={(event) => {
-        event.preventDefault()
-        mutation.mutate(values)
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t('admin.roles.createTitle')}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.roles.fields.key')}
-        <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          type="text"
-          required
-          value={values.key}
-          onChange={(event) => setValues({ ...values, key: event.target.value })}
-        />
-      </label>
-      <PermissionCheckboxes
-        selected={values.permissionKeys}
-        onToggle={(key) =>
-          setValues({ ...values, permissionKeys: toggleKey(values.permissionKeys, key) })
-        }
-      />
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-400">
-          {errorMessage(t, mutation.error)}
-        </p>
-      ) : null}
-      <button
-        className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-        type="submit"
-        disabled={mutation.isPending}
-      >
-        {t('admin.roles.create')}
-      </button>
-    </form>
-  )
 }
 
 function EditRoleForm({ role }: { role: RoleSummary }) {
@@ -241,6 +127,14 @@ export function RolesPage() {
         {t('admin.back')}
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.roles.title')}</h1>
+      {canWrite ? (
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/roles/new"
+        >
+          {t('admin.roles.createTitle')}
+        </Link>
+      ) : null}
       <p className="mt-2 text-sm text-slate-400">{t('admin.roles.systemHint')}</p>
       {roles.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
@@ -288,7 +182,6 @@ export function RolesPage() {
       {canWrite && editingRole && editingRole.key !== 'admin' ? (
         <EditRoleForm key={editingRole.key} role={editingRole} />
       ) : null}
-      {canWrite ? <CreateRoleForm /> : null}
     </main>
   )
 }

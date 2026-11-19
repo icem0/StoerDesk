@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The new role has a page of its own (**WP-M14-159**, out of band in phase 14): the
+  input mask „Rolle anlegen" is not glued below the list of the roles any more,
+  the list offers a button that opens the page `/admin/roles/new`. The page needs
+  `role.write`, links back to the list and returns to the list after the role is
+  created. The grant editor of a role stays where it was (v1.1.279).
 - The new user has a page of its own (**WP-M14-158**, out of band in phase 14): the
   input mask „Benutzer anlegen" is not glued below the list of the users any more,
   the list offers a button that opens the page `/admin/users/new`. The page needs

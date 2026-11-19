@@ -14,6 +14,7 @@ import { NotificationsPage } from '../settings/notifications-page'
 import { SettingsPage } from '../settings/settings-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
+import { RoleCreatePage } from '../admin/role-create-page'
 import { GroupsPage } from '../admin/groups-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { EscalationPage } from '../admin/escalation-page'
@@ -93,6 +94,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new role (WP-M14-159): the form does not lie
+        // below the list of the roles any more.
+        path: '/admin/roles/new',
+        element: (
+          <RequireSession>
+            <RoleCreatePage />
           </RequireSession>
         ),
       },
