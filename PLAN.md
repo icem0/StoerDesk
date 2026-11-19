@@ -3190,6 +3190,14 @@ the list offers a button that opens it. The page needs `settings.write`, links
 back to the list and returns to the list after the fault type is created; the
 editing, the archiving and the delete stay where they were.
 
+**The new detected error has a page of its own (WP-M14-163, out of band in phase
+14).** The input mask of the new detected error was glued above the list of the
+catalog, the same way the mask of the new fault type was (WP-M14-162). It is a page
+of its own now — `/admin/detected-errors/new` — and the list offers a button that
+opens it. The page needs `settings.write`, links back to the list and returns to the
+list after the error is created; the editing, the archiving and the delete stay where
+they were.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of

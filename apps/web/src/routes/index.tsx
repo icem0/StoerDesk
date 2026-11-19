@@ -21,6 +21,7 @@ import { RouteErrorPage } from '../components/route-error-page'
 import { EscalationPage } from '../admin/escalation-page'
 import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
 import { DetectedErrorsPage } from '../admin/detected-errors-page'
+import { DetectedErrorCreatePage } from '../admin/detected-error-create-page'
 import { OncallPage } from '../admin/oncall-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { TextTemplateCreatePage } from '../admin/text-template-create-page'
@@ -206,6 +207,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <DetectedErrorsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new detected error (WP-M14-163): the form does
+        // not lie above the list of the catalog any more.
+        path: '/admin/detected-errors/new',
+        element: (
+          <RequireSession>
+            <DetectedErrorCreatePage />
           </RequireSession>
         ),
       },

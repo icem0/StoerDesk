@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new detected error has a page of its own (**WP-M14-163**, out of band in
+  phase 14): the input mask „Festgestellten Fehler anlegen" is not glued above the
+  list of the catalog any more, the list offers a button that opens the page
+  `/admin/detected-errors/new`. The page needs `settings.write`, links back to the
+  list and returns to the list after the error is created. The editing, the archiving
+  and the delete stay where they were (v1.1.285).
 - The new fault type has a page of its own (**WP-M14-162**, out of band in
   phase 14): the input mask „Störungsart anlegen" is not glued above the list of the
   fault types any more, the list offers a button that opens the page
