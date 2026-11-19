@@ -61,7 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   administration separates the two decisions (WP-M17-02): the target select
   names a person — the empty entry reads as the broadcast of the installation —
   and the channels of the installation disappear as soon as a target is named,
-  because the way belongs to the recipient.
+  because the way belongs to the recipient. The own page names the rule
+  (WP-M17-03): the selection decides over which way a notification arrives, the
+  escalation rule decides to whom an escalation goes — and the row of the
+  escalation says that an escalation which addresses you arrives over your
+  selection, without a selection over your own ntfy topic.
 - The readiness knows a duty window per weekday (**WP-M15-01 … WP-M15-05**,
   phase 15, ADR-0035): the plan of a pool with office hours is expressible.
   The office reported that the shift of the pool „Verwaltung" — on Monday from

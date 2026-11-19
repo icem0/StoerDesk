@@ -191,7 +191,8 @@
     },
     "selection": {
       "heading": "Ausgewählte Kanäle pro Ereignis",
-      "hint": "Die Eskalationsregel der Administration entscheidet über die Kanäle einer Eskalation; die Pflichtkanäle einer kritischen Meldung werden jedem Ereignis hinzugefügt.",
+      "hint": "Deine Auswahl entscheidet, über welchen Weg eine Nachricht bei dir ankommt. Bei einer Eskalation entscheidet die Regel der Administration, an wen sie geht — du entscheidest, über welchen Kanal sie ankommt. Die Pflichtkanäle einer kritischen Meldung werden jedem Ereignis hinzugefügt.",
+      "escalatedHint": "Eine Eskalation, die dich adressiert, kommt über deine Auswahl; ohne Auswahl über dein eigenes ntfy-Thema.",
       "save": "Auswahl speichern",
       "saved": "Die Auswahl wurde gespeichert.",
       "noAccount": "Kein Konto verknüpft",

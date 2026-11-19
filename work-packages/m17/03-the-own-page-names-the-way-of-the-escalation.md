@@ -1,7 +1,7 @@
 # WP-M17-03: the own page names the way of the escalation
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M17-02
 phase: 17
 milestone: m17
@@ -67,8 +67,13 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/settings/notifications-page.tsx`,
+  `apps/web/src/i18n/locales/de/common.json`,
+  `apps/web/src/i18n/locales/en/common.json`, the test
+  `apps/web/src/settings/__tests__/notifications-page.test.tsx`
+- Interfaces added: the text `notifications.selection.escalatedHint` — the row of
+  the escalation names the way of the recipient
+- Verified: `npm run typecheck`, `npm run lint`, `npm run i18n:check`,
+  `npm run test:run`, `npm run wp:check`
 - Follow-up WP: none — phase 17 is closed
 - Open question: none

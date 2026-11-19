@@ -191,7 +191,8 @@
     },
     "selection": {
       "heading": "Selected channels per event",
-      "hint": "The escalation rule of the admin decides the channels of an escalation; the mandatory minimum channels of a critical ticket are added to every event.",
+      "hint": "Your selection decides over which way a notification reaches you. For an escalation the rule of the admin decides to whom it goes — you decide over which channel it arrives. The mandatory minimum channels of a critical ticket are added to every event.",
+      "escalatedHint": "An escalation that addresses you arrives over your selection; without a selection over your own ntfy topic.",
       "save": "Save the selection",
       "saved": "The selection was saved.",
       "noAccount": "No account connected",

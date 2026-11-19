@@ -409,6 +409,12 @@ const testReason = (code: string): string => {
               {t(`notifications.selection.events.${eventType}`)}
             </span>
 
+            {eventType === 'ticket.escalated' ? (
+              <span className="text-xs text-slate-400">
+                {t('notifications.selection.escalatedHint')}
+              </span>
+            ) : null}
+
             {NOTIFICATION_CHANNEL_KINDS.filter((kind) => configuredKinds.has(kind)).map(
               (kind) => {
                 const key = `${eventType}:${kind}`

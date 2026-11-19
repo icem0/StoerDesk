@@ -618,4 +618,33 @@ describe('NotificationsPage', () => {
       }),
     )
   })
+
+  it('names the way of the escalation on the row of the escalation (ADR-0037)', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/admin/channels')) {
+        return Response.json({
+          channels: [{ kind: 'ntfy', enabled: true, label: 'ntfy', config: {}, secretSet: false }],
+        })
+      }
+
+      if (url.endsWith('/v1/notifications/preferences')) {
+        return Response.json({ preferences: [] })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    expect(await screen.findByText('Eskaliert')).toBeTruthy()
+    expect(
+      screen.getByText('Eine Eskalation, die dich adressiert, kommt über deine Auswahl; ohne Auswahl über dein eigenes ntfy-Thema.'),
+    ).toBeTruthy()
+    expect(
+      screen.getByText(/Bei einer Eskalation entscheidet die Regel der Administration, an wen sie geht/),
+    ).toBeTruthy()
+  })
 })
