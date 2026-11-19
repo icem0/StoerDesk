@@ -3311,6 +3311,12 @@ settings are gone. The table `ticket_transitions`, the API and the service stay
 what they are: the steps are the state machine of the ticket, and an unknown
 or inactive combination answers `409 invalid_transition`.
 
+**The texts of the deleted page are gone (WP-M14-178, out of band in phase 14).**
+The texts of the transition administration and the entry of the menu are
+removed, and `specs/07-escalation.md` §7.13 names the place: the steps of the
+workflow are managed in the escalation administration, with the levels, and the
+target status of a step is free — also the status of an earlier level.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

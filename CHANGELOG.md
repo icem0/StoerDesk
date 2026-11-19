@@ -461,6 +461,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Removed
+- The texts of the deleted transition page are gone (**WP-M14-178**, out of band
+  in phase 14): the texts `admin.transition.*` and the entry of the menu are removed,
+  and `specs/07-escalation.md` §7.13 names the escalation administration as the place
+  of the steps of the workflow (v1.1.303).
 - The page of the transition administration is gone (**WP-M14-177**, out of band
   in phase 14): the steps of the workflow are managed in the escalation
   administration, so the „Übergangverwaltung" at `/admin/transitions` and its entry

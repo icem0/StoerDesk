@@ -368,6 +368,13 @@ is dropped in `0041`: the rows of `ticket_statuses` and their key-format CHECK
 (`0040`) are the status configuration, and a status a ticket still carries must
 survive a deactivation.
 
+The steps are managed **with the levels of the escalation** (WP-M14-175 … WP-M14-177):
+the tab `Übergänge` of `/admin/escalation` groups them by the level of the chain
+and the status the ticket waits in — the way out of a level is the way out of that
+status. The target status of a step is free: also the status of an earlier level,
+so a level can lead back (a way back). The page of the transition administration
+of its own is gone; the table, the API and the service stay what they are.
+
 ## 7.14 The offer and the assign action (ADR-0026, ADR-0033)
 
 The office asked for two more actions of a rule: a ticket that waits too long for

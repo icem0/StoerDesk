@@ -1,7 +1,7 @@
 # WP-M14-178: the dead texts of the deleted page are gone and the spec names the place
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 12k tokens
@@ -65,8 +65,11 @@ Expected: all green; the texts of the deleted page are gone.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: the four locale files, `specs/07-escalation.md` (§7.13),
+  `docs/REPO-MAP.md`, `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document
+- Interfaces added: none — the dead texts are gone and the spec names the place
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run i18n:check` and `npm run test:run` green
 - Follow-up WP: none — the comment of the office is closed
 - Open question: none
