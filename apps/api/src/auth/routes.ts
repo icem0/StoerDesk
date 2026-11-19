@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  changeMyPasswordRequestSchema,
   loginRequestSchema,
   meResponseSchema,
   updateMyUserRequestSchema,
@@ -257,6 +258,70 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           mustChangePassword: passwordHash === undefined ? target.mustChangePassword : false,
         }),
       )
+    },
+  )
+
+  // Self-service: the colleague replaces their own password. The old password is
+  // verified against the stored hash, so a stolen session alone is not enough.
+  // A written password clears the one-time-password flag and ends the sessions
+  // of the other devices (§3.9).
+  app.post(
+    '/api/v1/users/me/password',
+    { preHandler: [requireUser], config: { allowPendingPasswordChange: true } },
+    async (request, reply) => {
+      const user = request.user
+
+      if (user === undefined) {
+        return reply.code(401).send({ code: 'session_invalid', params: {} })
+      }
+
+      const parsed = changeMyPasswordRequestSchema.safeParse(request.body)
+
+      if (!parsed.success) {
+        return reply.code(400).send({
+          code: 'invalid_request',
+          params: {
+            fields: [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))],
+          },
+        })
+      }
+
+      const { oldPassword, newPassword } = parsed.data
+
+      const [account] = await database
+        .select({ id: users.id, passwordHash: users.passwordHash })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1)
+
+      if (account === undefined) {
+        return reply.code(404).send({ code: 'user_not_found', params: { fields: ['id'] } })
+      }
+
+      const passwordMatches = await verifyPassword(account.passwordHash, oldPassword)
+
+      if (passwordMatches !== true) {
+        return reply.code(400).send({ code: 'password_wrong', params: { fields: ['oldPassword'] } })
+      }
+
+      const passwordHash = await hashPassword(newPassword)
+
+      await database
+        .update(users)
+        .set({ passwordHash, mustChangePassword: false, updatedAt: new Date() })
+        .where(eq(users.id, user.id))
+
+      // The sessions die with the secret: the session of this browser stays
+      // alive, the sessions of the other devices do not.
+      const token = request.cookies[SESSION_COOKIE_NAME]
+
+      await destroyUserSessions(
+        database,
+        user.id,
+        token === undefined || token === '' ? undefined : hashSessionToken(token),
+      )
+
+      return reply.code(200).send({ ok: true })
     },
   )
 }

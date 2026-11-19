@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
 import { ApiError, apiFetch } from '../lib/api'
+import { PasswordChangeDialog } from '../auth/password-change-dialog'
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
@@ -16,7 +17,6 @@ interface MySettingsFormValues {
   familyName: string
   locale: UserLocale
   theme: UserTheme
-  password: string
 }
 
 const handledErrorCodes = [
@@ -60,7 +60,6 @@ export function MySettingsPage() {
     familyName: me.data?.user.familyName ?? '',
     locale: me.data?.user.locale ?? 'de',
     theme: me.data?.user.theme ?? 'auto',
-    password: '',
   })
 
   const mutation = useMutation({
@@ -75,9 +74,6 @@ export function MySettingsPage() {
       }
       body.locale = values.locale
       body.theme = values.theme
-      if (values.password !== '') {
-        body.password = values.password
-      }
 
       return apiFetch<{ user: { id: string } }>('/v1/users/me', {
         method: 'PATCH',
@@ -86,6 +82,8 @@ export function MySettingsPage() {
       })
     },
   })
+
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
 
   if (me.isPending) {
     return <p>{t('auth.loading')}</p>
@@ -174,18 +172,14 @@ export function MySettingsPage() {
             <option value="dark">{t('my.themeValues.dark')}</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t('my.fields.password')}
-          <input
-            className="rounded bg-slate-950 p-2 text-slate-100"
-            type="password"
-            minLength={12}
-            maxLength={256}
-            value={values.password}
-            onChange={(event) => setValues({ ...values, password: event.target.value })}
-          />
-        </label>
         <div className="flex gap-2">
+          <button
+            className="rounded border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+            onClick={() => setPasswordDialogOpen(true)}
+            type="button"
+          >
+            {t('auth.changePassword.title')}
+          </button>
           <button
             className="rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
             type="submit"
@@ -198,6 +192,14 @@ export function MySettingsPage() {
           ) : null}
         </div>
       </form>
+
+      <PasswordChangeDialog
+        open={passwordDialogOpen}
+        onClose={() => setPasswordDialogOpen(false)}
+        onChange={() => {
+          void me.refetch()
+        }}
+      />
     </main>
   )
 }

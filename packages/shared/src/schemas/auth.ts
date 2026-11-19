@@ -52,3 +52,16 @@ export const resetPasswordResponseSchema = z.object({
 })
 
 export type ResetPasswordResponse = z.infer<typeof resetPasswordResponseSchema>
+
+/**
+ * Payload of `POST /api/v1/users/me/password`: the colleague replaces their
+ * own password. The old password is verified server-side against the stored
+ * hash; the new one needs at least 12 characters (the policy of
+ * `specs/01-rbac.md` §3.9).
+ */
+export const changeMyPasswordRequestSchema = z.object({
+  oldPassword: z.string().min(1).max(256),
+  newPassword: z.string().min(12).max(256),
+})
+
+export type ChangeMyPasswordRequest = z.infer<typeof changeMyPasswordRequestSchema>
