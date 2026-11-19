@@ -3284,6 +3284,18 @@ quittature brings the badge back, and a solved problem stays solved. The
 settings menu gained the entry „Zustellungsprobleme" (`auth.links.delivery`),
 so the page is reachable without the badge too.
 
+**The steps of the workflow belong to the levels of the escalation (WP-M14-175,
+out of band in phase 14).** The steps of the workflow — the rows of
+`ticket_transitions` (§7.13, ADR-0025) — had a page of their own, the
+„Übergangverwaltung", next to the page of the levels. The office asked for one
+place: the steps are managed with the levels, because the way out of a level is
+the way out of the status the ticket waits in. The editor groups the steps by
+the level of the chain and the status it waits in, and the target status of a
+step is free — also the status of an earlier level, so a level can lead back
+(a way back). The page of the transition administration is gone (WP-M14-177); the
+table and the API stay what they are: the steps are the state machine of the
+ticket, and an unknown or inactive combination answers `409 invalid_transition`.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

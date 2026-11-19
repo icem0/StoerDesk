@@ -460,6 +460,34 @@
         "invalid_request": "At least one value is invalid: a deadline must be between 1 and 8760 hours.",
         "stageChainInvalid": "The stage chain is invalid: check the keys, the predecessor and the position.",
         "unknown": "Saving failed."
+      },
+      "transitions": {
+        "hint": "A transition moves the ticket from one status to another one. The target status is free — also the status of an earlier stage (a way back). Without a transition the ticket cannot change its status.",
+        "withoutStage": "Other statuses",
+        "deadEnd": "No transition: the ticket cannot leave this status.",
+        "emptyNotice": "The workflow has no transitions: the ticket cannot change its status any more.",
+        "createTitle": "Create transition",
+        "create": "Create",
+        "delete": "Delete",
+        "removeHint": "Remove this transition permanently?",
+        "removeConfirm": "Remove",
+        "removeCancel": "Cancel",
+        "fields": {
+          "fromStatus": "From status",
+          "toStatus": "To status",
+          "eventKey": "Event",
+          "active": "Active",
+          "choose": "Please choose"
+        },
+        "errors": {
+          "session_invalid": "Session expired – please sign in again.",
+          "forbidden": "Access denied – missing permission.",
+          "invalid_request": "Invalid input – please check the fields.",
+          "invalid_status_key": "The status key names no status.",
+          "transition_not_found": "Transition not found.",
+          "transition_duplicate": "A transition already pairs that status with that event.",
+          "unknown": "Saving failed."
+        }
       }
     },
     "channels": {

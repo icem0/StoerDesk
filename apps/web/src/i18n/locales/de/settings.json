@@ -460,6 +460,34 @@
         "invalid_request": "Mindestens ein Wert ist ungültig: Fristen 1 bis 8760 Stunden.",
         "stageChainInvalid": "Die Stufenkette ist ungültig: Schlüssel, Vorgänger und Position prüfen.",
         "unknown": "Speichern fehlgeschlagen."
+      },
+      "transitions": {
+        "hint": "Ein Übergang führt das Ticket von einem Status in einen anderen. Der Zielstatus ist frei wählbar — auch der Status einer früheren Stufe (ein Rückweg). Ohne einen Übergang kann das Ticket seinen Status nicht wechseln.",
+        "withoutStage": "Weitere Status",
+        "deadEnd": "Kein Übergang: Das Ticket kann aus diesem Status nicht wechseln.",
+        "emptyNotice": "Der Workflow hat keine Übergänge: Das Ticket kann seinen Status nicht mehr wechseln.",
+        "createTitle": "Übergang anlegen",
+        "create": "Anlegen",
+        "delete": "Löschen",
+        "removeHint": "Diesen Übergang dauerhaft entfernen?",
+        "removeConfirm": "Entfernen",
+        "removeCancel": "Abbrechen",
+        "fields": {
+          "fromStatus": "Ausgangsstatus",
+          "toStatus": "Zielstatus",
+          "eventKey": "Ereignis",
+          "active": "Aktiv",
+          "choose": "Bitte wählen"
+        },
+        "errors": {
+          "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
+          "forbidden": "Keine Berechtigung für diese Aktion.",
+          "invalid_request": "Eingabe ungültig – bitte die Felder prüfen.",
+          "invalid_status_key": "Der Status-Schlüssel benennt keinen Status.",
+          "transition_not_found": "Übergang nicht gefunden.",
+          "transition_duplicate": "Für diesen Status und dieses Ereignis existiert bereits ein Übergang.",
+          "unknown": "Speichern fehlgeschlagen."
+        }
       }
     },
     "channels": {

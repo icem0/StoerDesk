@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The steps of the workflow belong to the levels of the escalation (**WP-M14-175**,
+  out of band in phase 14): the office asked for one place for the steps of the
+  workflow — the rows of `ticket_transitions` (§7.13, ADR-0025) — and the levels
+  of the chain. The editor groups the steps by the level of the chain and the
+  status the ticket waits in, and the target status of a step is free: also the
+  status of an earlier level, so a level can lead back (a way back). The table
+  and the API stay what they are — the steps are the state machine of the ticket
+  (v1.1.289).
 - The badge of the delivery problem is a link (**WP-M14-161c**, out of band in
   phase 14): the office reported the badge „Zustellung gestört (1)" of the
   settings menu — a text without a destination that counted the channels of the
@@ -21,8 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   of the failed deliveries, the ones nobody quit, the time of the last failure,
   the machine code and the name of the user that quit the problem — and lists
   the messages that never arrived with their ticket. `notification.write` quits
-  a problem there, `notification.read` reads the problems (v1.1.285).
-- The delivery problems of the channels are quittable (**WP-M14-161a**, out of band
+  a problem there, `notification.read` reads the problems (v1.1.285).- The delivery problems of the channels are quittable (**WP-M14-161a**, out of band
   in phase 14): the office reported the badge „Zustellung gestört (1)" of the
   settings menu — a text without a destination that counts the channels of the
   whole history of the outbox and never goes away. The API of the delivery
