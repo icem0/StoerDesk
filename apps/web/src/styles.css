@@ -7,6 +7,27 @@
     -apple-system,
     'Segoe UI',
     sans-serif;
+
+  /*
+   * The accent colour of the instance (ADR-0036, WP-M16-03). The shell writes
+   * the saved hex value of the branding into `--brand-accent` on its own root,
+   * the ramp below is derived from it and every interface class paints
+   * `*-accent-*`: one configuration line repaints the frame of the interface —
+   * the active menu entry, the links of the settings menu, the focus ring and
+   * the unread badge. The ramp is declared on the theme classes because a custom
+   * property is substituted where it is declared, and the shell writes the
+   * colour on the very same element. The blues of the dashboard, the statistics
+   * and the readiness calendar are semantics and stay untouched.
+   */
+  --brand-accent: #0ea5e9;
+}
+
+.theme-dark {
+  --color-accent-300: color-mix(in oklab, var(--brand-accent) 62%, white);
+  --color-accent-400: color-mix(in oklab, var(--brand-accent) 84%, white);
+  --color-accent-500: var(--brand-accent);
+  --color-accent-600: color-mix(in oklab, var(--brand-accent) 84%, black);
+  --color-accent-700: color-mix(in oklab, var(--brand-accent) 64%, black);
 }
 
 body {
@@ -25,6 +46,14 @@ body {
  */
 .theme-light {
   color-scheme: light;
+
+  /* The accent of the instance towards black (ADR-0036): the steps that carry
+   * text or a border have to stay readable on a light background. */
+  --color-accent-300: color-mix(in oklab, var(--brand-accent) 74%, black);
+  --color-accent-400: color-mix(in oklab, var(--brand-accent) 82%, black);
+  --color-accent-500: color-mix(in oklab, var(--brand-accent) 86%, black);
+  --color-accent-600: color-mix(in oklab, var(--brand-accent) 88%, black);
+  --color-accent-700: color-mix(in oklab, var(--brand-accent) 78%, black);
 
   --color-slate-50: #f8fafc;
   --color-slate-100: #0f172a;

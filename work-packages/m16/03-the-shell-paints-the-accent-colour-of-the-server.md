@@ -1,7 +1,7 @@
 # WP-M16-03: the shell paints the accent colour of the server
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-01
 phase: 16
 milestone: m16
@@ -70,8 +70,14 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/styles.css`, `apps/web/src/components/Shell.tsx`,
+  `apps/web/src/settings/settings-page.tsx`,
+  `apps/web/src/components/__tests__/shell.test.tsx`
+- Interfaces added: the CSS custom property `--brand-accent` on the shell root,
+  the ramp `--color-accent-300 … --color-accent-700` in `styles.css` and the
+  interface classes `bg-accent-*`, `border-accent-*`, `text-accent-*`,
+  `ring-accent-*`
+- Verified: `npm run typecheck`, `npm run lint`, `npm run i18n:check`,
+  `npm run test:run`, `npm run wp:check`, `npm run test:e2e`
 - Follow-up WP: WP-M16-04, WP-M16-05 (each file exists in the commit of the split)
 - Open question: none

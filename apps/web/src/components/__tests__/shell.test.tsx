@@ -83,7 +83,10 @@ describe('Shell settings access', () => {
     expect(screen.queryByRole('link', { name: 'Benutzerverwaltung' })).toBeNull()
   })
 
-  function stubSessionAndBranding(permissions: string[], branding: { companyName: string }) {
+  function stubSessionAndBranding(
+    permissions: string[],
+    branding: { companyName: string; accentColor?: string },
+  ) {
     return vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
 
@@ -144,6 +147,25 @@ describe('Shell settings access', () => {
     expect(screen.getByRole('link', { name: 'Bereitschaft' }).getAttribute('aria-current')).toBe(
       'page',
     )
+  })
+
+  it('carries the accent colour of the instance into the shell (WP-M16-03)', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['user.read'],
+      { companyName: '', accentColor: '#0f766e' },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    renderShell('/oncall')
+
+    expect(await screen.findByText(marker)).toBeTruthy()
+
+    const shellRoot = document.querySelector('.theme-dark')
+    expect(shellRoot).toBeTruthy()
+    expect(shellRoot?.getAttribute('style') ?? '').toContain('#0f766e')
+
+    const readiness = screen.getByRole('link', { name: 'Bereitschaft' })
+    expect(readiness.getAttribute('aria-current')).toBe('page')
+    expect(readiness.getAttribute('class')).toContain('text-accent-300')
   })
 
   it('marks the ticket link as active on /tickets', async () => {

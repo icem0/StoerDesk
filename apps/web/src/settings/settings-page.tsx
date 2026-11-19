@@ -22,6 +22,11 @@ import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
  * The badge counts the **open** problems — the channels with a failure nobody
  * quit — so a quit problem is silent and a failure after the quittature brings
  * the badge back.
+ *
+ * Since WP-M16-03 the links of the menu paint the accent colour of the instance
+ * (ADR-0036): the menu of the presentation follows the colour the
+ * administration saved under „Darstellung“, so a branded instance paints its
+ * frame everywhere the shell and the settings menu are.
  */
 
 const SETTINGS_SECTIONS = [
@@ -120,9 +125,9 @@ export function SettingsPage() {
               <li key={item.key}>
                 <NavLink
                   className={({ isActive }) =>
-                    `flex min-h-11 items-center rounded-xl border px-4 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                    `flex min-h-11 items-center rounded-xl border px-4 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
                       isActive
-                        ? 'border-sky-500/40 bg-sky-600/10 text-sky-300'
+                        ? 'border-accent-500/40 bg-accent-600/10 text-accent-300'
                         : 'border-slate-700 bg-slate-900/60 text-slate-200 hover:border-slate-600 hover:bg-slate-800/60'
                     }`
                   }

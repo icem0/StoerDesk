@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router-dom'
@@ -10,6 +11,7 @@ import { AppVersion } from './app-version'
 import { NotificationBell } from './notification-bell'
 
 import type { BrandingResponse } from '@stoerdesk/shared'
+import { DEFAULT_ACCENT_COLOR } from '@stoerdesk/shared'
 
 /**
  * System preference of the theme (WP-M2-92d): the setting `auto` follows
@@ -83,9 +85,9 @@ function SettingsLink() {
     <NavLink
       aria-label={t('app.settings')}
       className={({ isActive }) =>
-        `flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+        `flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
           isActive
-            ? 'border-sky-500/40 bg-sky-600/10 text-sky-300'
+            ? 'border-accent-500/40 bg-accent-600/10 text-accent-300'
             : 'border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100'
         }`
       }
@@ -118,10 +120,19 @@ export function Shell() {
   const theme = me.data?.user.theme ?? 'auto'
   const effectiveTheme = theme === 'auto' ? systemTheme : theme
 
+  // The accent colour of the instance (ADR-0036, WP-M16-03): the value the
+  // administration saved under „Darstellung“ is written into `--brand-accent` on
+  // the shell root, the ramp `--color-accent-*` in `styles.css` derives from it
+  // and the interface classes paint `*-accent-*`. The branding request above
+  // already carries it, so this needs no request of its own.
+  const accent = branding?.accentColor ?? DEFAULT_ACCENT_COLOR
+
   return (
     <div
       className={`theme-${effectiveTheme} flex min-h-dvh flex-col bg-slate-950 text-slate-100 print:bg-white`}
+      style={{ '--brand-accent': accent } as CSSProperties}
     >
+
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm print:hidden">
         <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:flex-nowrap sm:px-6 sm:py-3">
           {/* Left (desktop): logo sits at the very left edge when there is enough space. */}
@@ -161,9 +172,9 @@ export function Shell() {
                 className={({ isActive: routerActive }) => {
                   const active = routerActive
 
-                  return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                  return `flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
                     active
-                      ? 'bg-sky-600/10 text-sky-300'
+                      ? 'bg-accent-600/10 text-accent-300'
                       : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
                   }`
                 }}
