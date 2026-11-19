@@ -1584,6 +1584,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-154a | the shift history route names the people and the step (out of band) | done | no |
 | WP-M14-154b | the shift dialog shows the history on click (out of band) | done | no |
 | WP-M14-155 | the start page is the ticket list, the wall display shows reports and statistics (out of band) | done | yes |
+| WP-M14-156 | the readiness calendar marks the current day specially (out of band) | done | yes |
 | WP-M15-00 | the notifications page test names the German texts (out of band) | done | yes |
 | WP-M15-01 | the duty windows — the spec, ADR-0035 and the split | done | yes |
 | WP-M15-02 | the shared contracts and the window generator | done | yes |
@@ -1591,6 +1592,21 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M15-04 | the administration edits the duty windows | done | yes |
 | WP-M15-05 | the duty windows satisfy their criterion | done | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
+| WP-M14-158 | the new user gets its own page (out of band) | done | yes |
+| WP-M14-159 | the new role gets its own page (out of band) | done | yes |
+| WP-M14-160 | the new group gets its own page (out of band) | done | yes |
+| WP-M14-162 | the new fault type gets its own page (out of band) | done | yes |
+| WP-M14-163 | the new detected error gets its own page (out of band) | done | yes |
+| WP-M14-164 | the new API key gets its own page (out of band) | done | yes |
+| WP-M14-165 | the new webhook gets its own page (out of band) | done | yes |
+| WP-M14-166 | the new status gets its own page (out of band) | done | yes |
+| WP-M14-167 | the new transition gets its own page (out of band) | done | yes |
+| WP-M14-168 | the new readiness pool gets its own page (out of band) | done | yes |
+| WP-M14-169 | the new escalation stage gets its own page (out of band) | done | yes |
+| WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
+| WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
+| WP-M14-161b | the page of the delivery problems (out of band) | done | yes |
+| WP-M14-161c | the badge of the settings menu is the link to the problems (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

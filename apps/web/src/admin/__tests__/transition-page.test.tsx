@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -112,7 +112,7 @@ describe('TransitionPage', () => {
     renderPage()
 
     expect(await screen.findByText(firstId)).toBeTruthy()
-    expect(screen.getByText('Übergang anlegen')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Übergang anlegen' })).toBeTruthy()
     expect(screen.getAllByText('Bearbeiten')).toHaveLength(3)
     expect(screen.getAllByText('Lösch')).toHaveLength(3)
   })
@@ -165,44 +165,4 @@ describe('TransitionPage', () => {
     expect(await screen.findByText('Step not found.')).toBeTruthy()
   })
 
-  it('a step that duplicates an existing one is refused (409 transition_duplicate)', async () => {
-    const writes: Record<string, unknown>[] = []
-
-    stubRoutes({
-      '/v1/me': meResponse(['settings.read', 'settings.write']),
-      '/v1/admin/transitions': (_url: string, init?: RequestInit) => {
-        if (init?.method !== 'POST') {
-          return Response.json(transitionList)
-        }
-
-        writes.push(JSON.parse(String(init.body)))
-
-        return Response.json(
-          {
-            code: 'transition_duplicate',
-            params: { fromStatus: 'NEW', eventKey: 'review_started' },
-          },
-          { status: 409 },
-        )
-      },
-    })
-    renderPage()
-
-    await screen.findByText(firstId)
-
-    fireEvent.change(screen.getByLabelText('From (status)'), { target: { value: 'NEW' } })
-    fireEvent.change(screen.getByLabelText('To (status)'), { target: { value: 'IN_REVIEW' } })
-    fireEvent.change(screen.getByLabelText('Event key'), { target: { value: 'review_started' } })
-    fireEvent.submit(screen.getByTestId('transition-form'))
-
-    expect(await screen.findByText('A second step does already exist for that status and event key.')).toBeTruthy()
-    expect(writes).toEqual([
-      {
-        fromStatus: 'NEW',
-        toStatus: 'IN_REVIEW',
-        eventKey: 'review_started',
-        active: true,
-      },
-    ])
-  })
 })

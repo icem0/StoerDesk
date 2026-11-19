@@ -13,6 +13,10 @@ import { ShiftDetailDialog } from './shift-detail-dialog'
  * Two month grids — the current and the following month — with one week per
  * row from Monday to Sunday and the ISO calendar week on the left. A day is
  * coloured by the state of its shifts, so a gap is visible at a glance. The
+ * cell of the current Berlin calendar date is ringed and its date number
+ * stands semibold — today without a shift is still ringed, so the office can
+ * read the state of the day against the wall clock without counting weeks
+ * (WP-M14-156). The
  * shifts come from the page, and the technician travels with the shift: the
  * shift list answers the display data of `user_id` (`ADR-0032`, WP-M14-151), so
  * the calendar names the technician of every shift — also one who is no member
@@ -173,6 +177,9 @@ export function ReadinessCalendar(props: {
   const [selectedShift, setSelectedShift] = useState<OnCallShift | null>(null)
   const showNames = props.showNames ?? true
 
+  // The marker of the current day: the Berlin calendar date of now (WP-M14-156).
+  const todayIso = localIsoDate(new Date())
+
   const fromIso = useMemo(
     () => fromZonedTime(`${windowStart}T00:00:00`, ONCALL_TIMEZONE).toISOString(),
     [windowStart],
@@ -328,18 +335,22 @@ export function ReadinessCalendar(props: {
                       {week.map((cell) => {
                         const rows = shiftsByDay.get(cell.iso) ?? []
                         const state = aggregateState(rows)
-                        const cellStyle = cell.inMonth
+                        const isToday = cell.iso === todayIso
+                        const stateStyle = cell.inMonth
                           ? state === null
                             ? 'border-slate-800 bg-slate-950/40'
                             : STATE_STYLE[state].cell
                           : 'border-slate-900 bg-slate-950/20 text-slate-600'
+                        const cellStyle = isToday
+                          ? `${stateStyle} ring-sky-300 ring-1`
+                          : stateStyle
                         return (
                           <td
                             className={`min-h-20 rounded border align-top ${cellStyle}`}
                             key={cell.iso}
                           >
                             <div className="flex h-full flex-col gap-1 p-1">
-                              <span className="text-xs font-medium">
+                              <span className={`text-xs ${isToday ? 'font-semibold' : 'font-medium'}`}>
                                 {Number(cell.iso.slice(8))}
                               </span>
                               {cell.inMonth && rows.length > 0 ? (

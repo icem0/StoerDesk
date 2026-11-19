@@ -97,6 +97,7 @@
       "dashboardSettings": "Dashboard und Statistik",
       "apiKeys": "API-Schlüssel",
       "channels": "Kanäle",
+      "delivery": "Zustellungsprobleme",
       "webhooks": "Webhooks",
       "branding": "Darstellung",
       "escalation": "Eskalation",

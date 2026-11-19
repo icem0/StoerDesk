@@ -2,40 +2,17 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import type { TFunction } from 'i18next'
 import type {
-  CreateGroupRequest,
   GroupListResponse,
   GroupSummary,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
-import { ApiError, apiFetch } from '../lib/api'
+import { apiFetch } from '../lib/api'
+import { errorMessage, jsonHeaders } from './group-form-parts'
 
 interface GroupFormValues {
   name: string
-}
-
-const handledErrorCodes = [
-  'session_invalid',
-  'forbidden',
-  'invalid_request',
-  'group_not_found',
-  'group_name_taken',
-  'group_in_use',
-] as const
-
-const jsonHeaders = { 'content-type': 'application/json' }
-
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
-  const code =
-    error instanceof ApiError &&
-    error.code !== undefined &&
-    (handledErrorCodes as readonly string[]).includes(error.code)
-      ? error.code
-      : 'unknown'
-
-  return t(`admin.groups.errors.${code}`)
 }
 
 function useGroups() {
@@ -44,64 +21,6 @@ function useGroups() {
     queryFn: () => apiFetch<GroupListResponse>('/v1/groups'),
     retry: false,
   })
-}
-
-function toggleName(values: GroupFormValues, name: string): GroupFormValues {
-  return { ...values, name }
-}
-
-function CreateGroupForm() {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-  const [values, setValues] = useState<GroupFormValues>({ name: '' })
-
-  const mutation = useMutation({
-    mutationFn: (body: CreateGroupRequest) =>
-      apiFetch<GroupSummary>('/v1/groups', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(body),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['groups'] })
-      setValues({ name: '' })
-    },
-  })
-
-  return (
-    <form
-      className="mt-6 flex flex-col gap-3 border-t border-slate-800 pt-4"
-      onSubmit={(event) => {
-        event.preventDefault()
-        mutation.mutate({ name: values.name })
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t('admin.groups.createTitle')}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.groups.fields.name')}
-        <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          type="text"
-          required
-          maxLength={120}
-          value={values.name}
-          onChange={(event) => setValues(toggleName(values, event.target.value))}
-        />
-      </label>
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-400">
-          {errorMessage(t, mutation.error)}
-        </p>
-      ) : null}
-      <button
-        className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-        type="submit"
-        disabled={mutation.isPending}
-      >
-        {t('admin.groups.create')}
-      </button>
-    </form>
-  )
 }
 
 function EditGroupForm({ group }: { group: GroupSummary }) {
@@ -145,7 +64,7 @@ function EditGroupForm({ group }: { group: GroupSummary }) {
           required
           maxLength={120}
           value={values.name}
-          onChange={(event) => setValues(toggleName(values, event.target.value))}
+          onChange={(event) => setValues({ ...values, name: event.target.value })}
         />
       </label>
       {mutation.isError || deletion.isError ? (
@@ -212,6 +131,14 @@ export function GroupsPage() {
         {t('admin.back')}
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.groups.title')}</h1>
+      {canWrite ? (
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/groups/new"
+        >
+          {t('admin.groups.createTitle')}
+        </Link>
+      ) : null}
       {groups.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, groups.error)}
@@ -246,7 +173,6 @@ export function GroupsPage() {
         </tbody>
       </table>
       {canWrite && editingGroup ? <EditGroupForm group={editingGroup} /> : null}
-      {canWrite ? <CreateGroupForm /> : null}
     </main>
   )
 }

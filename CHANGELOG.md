@@ -21,6 +21,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   feed — and outside the windows there is no on-call person, so the offer of a
   ticket goes to the group. The windows create new shifts; the shifts of the
   continuous plan keep their times until the admin deletes them.
+- The badge of the delivery problem is a link (**WP-M14-161c**, out of band in
+  phase 14): the office reported the badge „Zustellung gestört (1)" of the
+  settings menu — a text without a destination that counted the channels of the
+  whole history of the outbox and therefore never went away. The badge is now
+  the link to the page `/admin/delivery` and counts the **open** problems — the
+  channels with a failure nobody quit: a quit problem is silent and a failure
+  after the quittature brings the badge back. The settings menu gained the
+  entry „Zustellungsprobleme" (v1.1.286).
+- The delivery problems have a page (**WP-M14-161b**, out of band in phase 14): the
+  page `/admin/delivery` names the channels whose delivery failed — the number
+  of the failed deliveries, the ones nobody quit, the time of the last failure,
+  the machine code and the name of the user that quit the problem — and lists
+  the messages that never arrived with their ticket. `notification.write` quits
+  a problem there, `notification.read` reads the problems (v1.1.285).
+- The delivery problems of the channels are quittable (**WP-M14-161a**, out of band
+  in phase 14): the office reported the badge „Zustellung gestört (1)" of the
+  settings menu — a text without a destination that counts the channels of the
+  whole history of the outbox and never goes away. The API of the delivery
+  problems (`GET /api/v1/notifications/delivery`, `notification.read`) names the
+  failing channels with the time of the last failure, the machine code of the
+  failure and the messages that never arrived; `POST
+  /api/v1/notifications/delivery/acknowledge` (`notification.write`) quits a
+  problem: the acknowledgement stores the *time* of the quittature (the
+  `settings` row `notifications.delivery_acknowledged`), so every failure after
+  it opens the problem again — a solved problem stays solved and a new one is
+  never silent (v1.1.283).
+- The new escalation stage has a page of its own (**WP-M14-169**, out of band in
+  phase 14): the input mask „Stufe hinzufügen" is not glued below the list of the stages
+  of the chain any more, the list offers a button that opens the page
+  `/admin/escalation/stages/new`. The page needs `settings.write` and writes the chain
+  with the new stage. The rules, the actions and the editor of the chain stay where
+  they were (v1.1.297).
+- The new readiness pool has a page of its own (**WP-M14-168**, out of band in
+  phase 14): the input mask „Pool anlegen" is not glued below the list of the pools
+  any more, the list offers a button that opens the page `/admin/oncall/pools/new`. The
+  page needs `oncall.admin` and returns to the readiness administration after the
+  pool is created. The shifts, the members and the settings stay where they were
+  (v1.1.296).
+- The new workflow step has a page of its own (**WP-M14-167**, out of band in
+  phase 14): the input mask „Übergang anlegen" is not glued below the table of the steps
+  any more, the table offers a button that opens the page `/admin/transitions/new`.
+  The page needs `settings.write` and returns to the table after the step is created.
+  The editing of a step and the removal stay where they were (v1.1.292).
+- The new status has a page of its own (**WP-M14-166**, out of band in phase
+  14): the input mask „Status anlegen" is not glued below the table of the statuses
+  any more, the table offers a button that opens the page `/admin/statuses/new`. The
+  page needs `settings.write` and returns to the table after the status is created.
+  The editing of a status and the removal stay where they were (v1.1.291).
+- The new webhook has a page of its own (**WP-M14-165**, out of band in phase
+  14): the input mask „Neuen Endpunkt anlegen" is not glued above the list of the
+  endpoints any more, the list offers a button that opens the page
+  `/admin/webhooks/new`. The page needs `settings.write` and shows the signing
+  secret after the endpoint is created — the server answers it only once (v1.1.290).
+- The new API key has a page of its own (**WP-M14-164**, out of band in phase
+  14): the input mask „Neuen Schlüssel anlegen" is not glued above the list of the keys
+  any more, the list offers a button that opens the page `/admin/api-keys/new`. The
+  page needs `apikey.write` and shows the one-time panel with the plaintext token
+  after the key is created — the server answers the token only once (v1.1.288).
+- The new detected error has a page of its own (**WP-M14-163**, out of band in
+  phase 14): the input mask „Festgestellten Fehler anlegen" is not glued above the
+  list of the catalog any more, the list offers a button that opens the page
+  `/admin/detected-errors/new`. The page needs `settings.write`, links back to the
+  list and returns to the list after the error is created. The editing, the archiving
+  and the delete stay where they were (v1.1.285).
+- The new fault type has a page of its own (**WP-M14-162**, out of band in
+  phase 14): the input mask „Störungsart anlegen" is not glued above the list of the
+  fault types any more, the list offers a button that opens the page
+  `/admin/text-templates/new`. The page needs `settings.write`, links back to the list
+  and returns to the list after the fault type is created. The editing, the
+  archiving and the delete stay where they were (v1.1.281).
+- The new group has a page of its own (**WP-M14-160**, out of band in phase 14):
+  the input mask „Gruppe anlegen" is not glued below the list of the groups any
+  more, the list offers a button that opens the page `/admin/groups/new`. The
+  page needs `user.write`, links back to the list and returns to the list after
+  the group is created. The editing of a group stays where it was (v1.1.280).
+- The new role has a page of its own (**WP-M14-159**, out of band in phase 14): the
+  input mask „Rolle anlegen" is not glued below the list of the roles any more,
+  the list offers a button that opens the page `/admin/roles/new`. The page needs
+  `role.write`, links back to the list and returns to the list after the role is
+  created. The grant editor of a role stays where it was (v1.1.279).
+- The new user has a page of its own (**WP-M14-158**, out of band in phase 14): the
+  input mask „Benutzer anlegen" is not glued below the list of the users any more,
+  the list offers a button that opens the page `/admin/users/new`. The page needs
+  `user.write`, links back to the list and returns to the list after the user is
+  created. The editing of a user stays where it was (v1.1.264).
+- The readiness calendar marks the current day specially (**WP-M14-156**,
+  out of band in phase 14): the office asked whether the current day is
+  marked specially. The cell of the **Berlin calendar date of now** keeps its
+  state colour and gains a ring and a semibold date number — today without a
+  shift is still ringed, so the gap of today is visible at a glance. The hint
+  of the calendar (`oncall.readiness.hint`) names the marker in `de` and `en`.
+- The browser can install the app again (**WP-M14-157**, out of band in phase 14):
+  the web manifest now carries a **192 px and a 512 px** PNG icon of the logo
+  centred on a square canvas (`apps/web/public/pwa-192x192.png`,
+  `apps/web/public/pwa-512x512.png`), declared by `pwaIcons` in
+  `apps/web/src/pwa-manifest.ts` — before it had one 128 × 120 px icon with
+  `sizes: "any"`, and Chrome and Edge need both sizes before they show the install
+  chip or fire `beforeinstallprompt`. The web image serves
+  `manifest.webmanifest` as `application/manifest+json` (the default `mime.types`
+  of nginx has no entry for the extension). A test reads the PNG header, so a
+  declared size can no longer drift away from the asset. The stack still serves
+  plain HTTP: over an LAN IP or an unsecured domain no browser offers an install
+  at all, TLS stays the task of the deployment (`docs/DEPLOYMENT.md` §HTTPS).
 - The dashboard page is gone and the start page is the ticket list (**WP-M14-155**,
   out of band in phase 14): the root route redirects to `/tickets`, the header menu
   names the ticket list, the statistics and the readiness, and the former dashboard

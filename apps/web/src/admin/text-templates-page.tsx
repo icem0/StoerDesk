@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import type { TFunction } from 'i18next'
 import type {
-  CreateTextTemplateRequest,
   TextTemplateListResponse,
   TextTemplateSummary,
   TextTemplateTranslations,
@@ -12,7 +10,12 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
-import { ApiError, apiFetch } from '../lib/api'
+import { apiFetch } from '../lib/api'
+import {
+  TranslationFields,
+  errorMessage,
+  jsonHeaders,
+} from './text-template-form-parts'
 
 /**
  * Fault type administration (`specs/06-report-form.md` §7.9, WP-M2-40c).
@@ -22,28 +25,6 @@ import { ApiError, apiFetch } from '../lib/api'
  * tickets) and delete it only while no ticket carries it. The server enforces
  * `settings.read`/`settings.write`; the UI only hides what the role may not do.
  */
-
-const handledErrorCodes = [
-  'session_invalid',
-  'forbidden',
-  'invalid_request',
-  'text_template_not_found',
-  'text_template_in_use',
-  'text_template_key_taken',
-] as const
-
-const jsonHeaders = { 'content-type': 'application/json' }
-
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
-  const code =
-    error instanceof ApiError &&
-    error.code !== undefined &&
-    (handledErrorCodes as readonly string[]).includes(error.code)
-      ? error.code
-      : 'unknown'
-
-  return t(`admin.textTemplates.errors.${code}`)
-}
 
 function useTextTemplates() {
   return useQuery({
@@ -60,97 +41,6 @@ function useTextTemplates() {
  */
 function alphabeticalTemplates(templates: TextTemplateSummary[]): TextTemplateSummary[] {
   return [...templates].sort((a, b) => a.key.localeCompare(b.key))
-}
-
-function TranslationFields({
-  values,
-  onChange,
-}: {
-  values: TextTemplateTranslations
-  onChange: (values: TextTemplateTranslations) => void
-}) {
-  const { t } = useTranslation('settings')
-
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.textTemplates.fields.de')}
-        <input
-          className="rounded bg-slate-950 p-2 text-slate-100"
-          maxLength={200}
-          required
-          value={values.de}
-          onChange={(event) => onChange({ ...values, de: event.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.textTemplates.fields.en')}
-        <input
-          className="rounded bg-slate-950 p-2 text-slate-100"
-          maxLength={200}
-          required
-          value={values.en}
-          onChange={(event) => onChange({ ...values, en: event.target.value })}
-        />
-      </label>
-    </div>
-  )
-}
-
-function CreateTemplateForm() {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-  const [key, setKey] = useState('')
-  const [values, setValues] = useState<TextTemplateTranslations>({ de: '', en: '' })
-
-  const mutation = useMutation({
-    mutationFn: (body: CreateTextTemplateRequest) =>
-      apiFetch<TextTemplateSummary>('/v1/text-templates', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(body),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['text-templates'] })
-      setKey('')
-      setValues({ de: '', en: '' })
-    },
-  })
-
-  return (
-    <form
-      className="mt-6 flex flex-col gap-3 rounded border border-slate-700 bg-slate-900 p-4"
-      onSubmit={(event) => {
-        event.preventDefault()
-        mutation.mutate({ key, translations: values })
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t('admin.textTemplates.createTitle')}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.textTemplates.fields.key')}
-        <input
-          className="rounded bg-slate-950 p-2 text-slate-100"
-          type="text"
-          required
-          value={key}
-          onChange={(event) => setKey(event.target.value)}
-        />
-      </label>
-      <TranslationFields values={values} onChange={setValues} />
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-400">
-          {errorMessage(t, mutation.error)}
-        </p>
-      ) : null}
-      <button
-        className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-        type="submit"
-        disabled={mutation.isPending}
-      >
-        {t('admin.textTemplates.create')}
-      </button>
-    </form>
-  )
 }
 
 function EditTemplateForm({
@@ -325,11 +215,16 @@ export function TextTemplatesPage() {
       ) : null}
 
       {canWrite ? (
-        editing === null ? (
-          <CreateTemplateForm />
-        ) : (
-          <EditTemplateForm template={editing} onClose={() => setEditing(null)} />
-        )
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/text-templates/new"
+        >
+          {t('admin.textTemplates.createTitle')}
+        </Link>
+      ) : null}
+
+      {canWrite && editing ? (
+        <EditTemplateForm template={editing} onClose={() => setEditing(null)} />
       ) : null}
 
       <div className="mt-6 overflow-x-auto">

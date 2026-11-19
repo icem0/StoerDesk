@@ -97,6 +97,7 @@
       "dashboardSettings": "Dashboard and statistics",
       "apiKeys": "API keys",
       "channels": "Channels",
+      "delivery": "Delivery problems",
       "webhooks": "Webhooks",
       "branding": "Appearance",
       "escalation": "Escalation",

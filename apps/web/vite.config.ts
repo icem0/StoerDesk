@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+import { pwaIcons } from './src/pwa-manifest'
+
 import { resolveAppVersion } from './app-version.mjs'
 
 export default defineConfig(({ mode }) => {
@@ -43,7 +45,7 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           start_url: '/',
           lang: 'de',
-          icons: [{ src: '/logo.png', sizes: 'any', type: 'image/png' }],
+          icons: pwaIcons,
         },
       }),
     ],

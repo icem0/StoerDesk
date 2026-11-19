@@ -2,16 +2,15 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import type { TFunction } from 'i18next'
 import type {
-  DetectedErrorCreateRequest,
   DetectedErrorListResponse,
   DetectedErrorResponse,
   DetectedErrorUpdateRequest,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
-import { ApiError, apiFetch } from '../lib/api'
+import { apiFetch } from '../lib/api'
+import { errorMessage, jsonHeaders } from './detected-error-form-parts'
 
 /**
  * Festgestellte Fehler — Admin-Katalog (`specs/13-detected-errors.md` §13.5,
@@ -21,28 +20,6 @@ import { ApiError, apiFetch } from '../lib/api'
  * Archivieren/Reaktivieren, Löschen (blockiert bei Nutzung → `409
  * detected_error_in_use`). Geschützt mit `settings.read`/`settings.write`.
  */
-
-const handledErrorCodes = [
-  'session_invalid',
-  'forbidden',
-  'invalid_request',
-  'detected_error_not_found',
-  'detected_error_in_use',
-  'detected_error_key_taken',
-] as const
-
-const jsonHeaders = { 'content-type': 'application/json' }
-
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
-  const code =
-    error instanceof ApiError &&
-    error.code !== undefined &&
-    (handledErrorCodes as readonly string[]).includes(error.code)
-      ? error.code
-      : 'unknown'
-
-  return t(`detectedErrors.errors.${code}`)
-}
 
 function useDetectedErrors() {
   return useQuery({
@@ -54,81 +31,6 @@ function useDetectedErrors() {
 
 function alphabetical(items: DetectedErrorResponse[]): DetectedErrorResponse[] {
   return [...items].sort((a, b) => a.key.localeCompare(b.key))
-}
-
-function CreateErrorForm() {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-  const [key, setKey] = useState('')
-  const [labelDe, setLabelDe] = useState('')
-  const [labelEn, setLabelEn] = useState('')
-
-  const mutation = useMutation({
-    mutationFn: (body: DetectedErrorCreateRequest) =>
-      apiFetch<DetectedErrorResponse>('/v1/detected-errors', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(body),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['detected-errors'] })
-      setKey('')
-      setLabelDe('')
-      setLabelEn('')
-    },
-  })
-
-  return (
-    <form
-      className="mt-6 flex flex-col gap-3 rounded border border-slate-700 bg-slate-900 p-4"
-      onSubmit={(event) => {
-        event.preventDefault()
-        mutation.mutate({ key, labelDe, labelEn })
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t('detectedErrors.createTitle')}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('detectedErrors.fields.key')}
-        <input
-          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
-          type="text"
-          required
-          value={key}
-          onChange={(event) => setKey(event.target.value)}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('detectedErrors.fields.de')}
-        <input
-          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
-          required
-          value={labelDe}
-          onChange={(event) => setLabelDe(event.target.value)}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('detectedErrors.fields.en')}
-        <input
-          className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
-          required
-          value={labelEn}
-          onChange={(event) => setLabelEn(event.target.value)}
-        />
-      </label>
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-400">
-          {errorMessage(t, mutation.error)}
-        </p>
-      ) : null}
-      <button
-        className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-        type="submit"
-        disabled={mutation.isPending}
-      >
-        {t('detectedErrors.create')}
-      </button>
-    </form>
-  )
 }
 
 function EditErrorForm({
@@ -338,11 +240,16 @@ export function DetectedErrorsPage() {
       ) : null}
 
       {canWrite ? (
-        editing === null ? (
-          <CreateErrorForm />
-        ) : (
-          <EditErrorForm item={editing} onClose={() => setEditing(null)} />
-        )
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/detected-errors/new"
+        >
+          {t('detectedErrors.createTitle')}
+        </Link>
+      ) : null}
+
+      {canWrite && editing ? (
+        <EditErrorForm item={editing} onClose={() => setEditing(null)} />
       ) : null}
 
       <div className="mt-6 overflow-x-auto">

@@ -81,6 +81,19 @@ describe('ReadinessCalendar', () => {
     }
   })
 
+  it('marks the current day with a ring (WP-M14-156)', () => {
+    renderCalendar()
+
+    const todayNumber = String(Number(localIsoDate(new Date()).slice(8)))
+    const ringed = screen
+      .getAllByRole('cell')
+      .filter((cell) => cell.className.includes('ring-sky-300'))
+
+    // exactly one day is ringed — also today, when it has no shift at all
+    expect(ringed).toHaveLength(1)
+    expect(ringed[0]!.textContent).toContain(todayNumber)
+  })
+
   it('colours a day by its shift state and names the technician', () => {
     const today = localIsoDate(new Date())
     const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)

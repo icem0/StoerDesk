@@ -1,7 +1,7 @@
 {
   "readiness": {
     "title": "Readiness calendar",
-    "hint": "The current and the following month with every shift. The colour of a day shows the state of the shift. The times are Europe/Berlin.",
+    "hint": "The current and the following month with every shift. The colour of a day shows the state of the shift. The current day is specially marked. The times are Europe/Berlin.",
     "previous": "Previous month",
     "next": "Next month",
     "weekColumn": "Wk",

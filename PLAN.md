@@ -388,6 +388,10 @@ Ticket coupling:
   reason) and every swap step. `GET /api/v1/oncall/shifts/:id/history`
   (`oncall.read`) answers the named fields only, never a raw event payload; the
   name gate of `oncall.read_names` applies as in the calendar (§4a.10).
+- The **current day is marked specially** in the readiness calendar (WP-M14-156):
+  the cell of the Berlin calendar date of now keeps its state colour and gains
+  a ring and a semibold date number; today without a shift stays ringed, so the
+  office reads gaps and shifts against the wall clock without counting weeks.
 
 ## 9. Timeline and escalation
 
@@ -3147,6 +3151,152 @@ twelve latest reports by `reported_at`, without test and suspected-spam
 tickets); the statistics convert a duration of 60 minutes or more to hours with
 at most one decimal.
 
+**The readiness calendar marks the current day specially (WP-M14-156, out of band
+in phase 14).** The office asked whether the current day is marked specially in
+the readiness calendar. The cell of the Berlin calendar date of now keeps its
+state colour and gains a ring and a semibold date number — today without a shift
+is still ringed, so the gap of today is visible at a glance; the hint of the
+calendar names the marker in `de` and `en`.
+
+**The browser offers no install (WP-M14-157, out of band in phase 14).** The
+browser showed no install prompt and no install chip in the address bar: the
+manifest carried one icon only — `/logo.png` at 128 × 120 px declared with
+`sizes: "any"`. Chrome and Edge need a **192 px and a 512 px icon** before they
+offer an install, so they kept the app uninstallable and silent. The manifest
+icons are a module now (`apps/web/src/pwa-manifest.ts`, `pwaIcons`) with the two
+square PNGs of the logo on its own background (`apps/web/public/pwa-192x192.png`,
+`apps/web/public/pwa-512x512.png`); the test reads the `IHDR` of the files, so a
+declared size cannot drift away from the asset again. The web image also serves
+`/manifest.webmanifest` as `application/manifest+json` — the default `mime.types`
+of nginx has no entry for the extension. The stack still serves plain HTTP: over
+an LAN IP or an unsecured domain no browser offers an install at all, and TLS
+stays the task of the deployment (`docs/DEPLOYMENT.md` §HTTPS).
+
+**The new user has a page of its own (WP-M14-158, out of band in phase 14).**
+The office reported that the input mask „Benutzer anlegen" was glued below the
+list of the users: the list of the installation is long, the mask lies far below
+it, and the mask hides the list while it is open. The mask is a page of its own
+now — `/admin/users/new` — and the list offers a button that opens it. The page
+needs `user.write`, links back to the list and returns to the list after the
+user is created; the editing of a user stays below the table. The same request
+covers the mask of the new role (**WP-M14-159**) and of the new group
+(**WP-M14-160**).
+
+**The new role has a page of its own (WP-M14-159, out of band in phase 14).**
+The input mask „Rolle anlegen" was glued below the list of the roles, the same
+way the mask of the new user was (WP-M14-158). It is a page of its own now —
+`/admin/roles/new` — and the list offers a button that opens it. The page needs
+`role.write`, links back to the list and returns to the list after the role is
+created; the grant editor of a role stays below the table.
+
+**The new group has a page of its own (WP-M14-160, out of band in phase 14).**
+The input mask „Gruppe anlegen" was glued below the list of the groups, the same
+way the mask of the new user was (WP-M14-158). It is a page of its own now —
+`/admin/groups/new` — and the list offers a button that opens it. The page needs
+`user.write`, links back to the list and returns to the list after the group is
+created; the editing of a group stays below the table.
+
+**The new fault type has a page of its own (WP-M14-162, out of band in phase
+14).** Every record of the administration was created with a mask that was glued
+below or above the list of the records. The mask of the new fault type
+(„Störungsart anlegen") is a page of its own now — `/admin/text-templates/new` — and
+the list offers a button that opens it. The page needs `settings.write`, links
+back to the list and returns to the list after the fault type is created; the
+editing, the archiving and the delete stay where they were.
+
+**The new detected error has a page of its own (WP-M14-163, out of band in phase
+14).** The input mask of the new detected error was glued above the list of the
+catalog, the same way the mask of the new fault type was (WP-M14-162). It is a page
+of its own now — `/admin/detected-errors/new` — and the list offers a button that
+opens it. The page needs `settings.write`, links back to the list and returns to the
+list after the error is created; the editing, the archiving and the delete stay where
+they were.
+
+**The new API key has a page of its own (WP-M14-164, out of band in phase 14).**
+The input mask of the new API key was glued above the list of the keys, the same way
+the mask of the new fault type was (WP-M14-162). It is a page of its own now —
+`/admin/api-keys/new` — and the list offers a button that opens it. The page needs
+`apikey.write` and shows the one-time panel with the plaintext token after the key is
+created; the revocation of a key stays on the list.
+
+**The new webhook has a page of its own (WP-M14-165, out of band in phase 14).**
+The input mask of the new webhook was glued above the list of the endpoints, the
+same way the mask of the new API key was (WP-M14-164). It is a page of its own now
+— `/admin/webhooks/new` — and the list offers a button that opens it. The page needs
+`settings.write` and shows the signing secret after the endpoint is created.
+
+**The new status has a page of its own (WP-M14-166, out of band in phase 14).**
+The input mask of the new status was glued below the table of the statuses, the same
+way the mask of the new webhook was (WP-M14-165). It is a page of its own now —
+`/admin/statuses/new` — and the table offers a button that opens it. The page needs
+`settings.write` and returns to the table after the status is created; the editing of
+a status and the removal stay where they were.
+
+**The new workflow step has a page of its own (WP-M14-167, out of band in phase
+14).** The input mask of the new step was glued below the table of the steps, the same
+way the mask of the new status was (WP-M14-166). It is a page of its own now —
+`/admin/transitions/new` — and the table offers a button that opens it. The page needs
+`settings.write` and returns to the table after the step is created.
+
+**The new readiness pool has a page of its own (WP-M14-168, out of band in phase
+14).** The input mask of the new pool was glued below the list of the pools, the same
+way the mask of the new workflow step was (WP-M14-167). It is a page of its own now —
+`/admin/oncall/pools/new` — and the list offers a button that opens it. The page needs
+`oncall.admin` and returns to the readiness administration after the pool is created.
+
+**The new escalation stage has a page of its own (WP-M14-169, out of band in phase
+14).** The input mask of the new stage was glued below the list of the stages of the
+chain, the same way the mask of the new readiness pool was (WP-M14-168). It is a page
+of its own now — `/admin/escalation/stages/new` — and the list offers a button that
+opens it. The page needs `settings.write` and writes the chain with the new stage.
+
+**The delivery problem is a link and can be quit (WP-M14-161, out of band in
+phase 14).** The office reported the badge „Zustellung gestört (1)" of the
+settings menu: it is a text without a destination, it counts the channels of
+the whole history of the outbox, and a single failure of the past keeps it red
+forever. The badge becomes the **link** to the page `/admin/delivery`, where
+the admin sees which channel fails, since when, with which machine code and
+which messages never arrived — and where the problem is **quit**. The
+quittature stores the *time* of the acknowledgement (the `settings` row
+`notifications.delivery_acknowledged`, one entry per channel): every failure
+after that time opens the problem again, so a solved problem stays solved and a
+new one is never silent. The rule and the contract stand in
+`specs/10-notifications.md` §11.8, §11.11 and §11.12; the package is split into
+**WP-M14-161a** (the contracts, the service and the two routes), **WP-M14-161b**
+(the page) and **WP-M14-161c** (the badge and the entry of the menu).
+
+**The delivery problems of the API and their quittature (WP-M14-161a, out of band
+in phase 14).** `apps/api/src/notifications/delivery.ts` reads the problems of the
+channels: per channel the failed deliveries, the failures nobody acknowledged, the
+times of the last failure and the last success, the machine code of the last
+failure and the name of the user that acknowledged — plus the failed rows of the
+outbox, the messages that never arrived. The times are the times of the
+*failure* (`updated_at`), not the times of the queueing: a delivery that was
+queued before the quittature and failed after it is a new failure. The
+acknowledgement lives in the settings row `notifications.delivery_acknowledged` —
+one entry per channel with the time and the user — and belongs to the instance,
+not to a user. `GET /api/v1/notifications/delivery` (`notification.read`) and
+`POST /api/v1/notifications/delivery/acknowledge` (`notification.write`) are the
+two routes of §11.11; a body without a channel acknowledges every open problem.
+
+**The page of the delivery problems (WP-M14-161b, out of band in phase 14).**
+`apps/web/src/admin/delivery-page.tsx` (`DeliveryPage`, the route
+`/admin/delivery`) shows the channels whose delivery failed: the number of the
+failed deliveries, the failures nobody quit, the time of the last failure, the
+machine code and the name of the user that quit the problem — and the messages
+that never arrived with their ticket. `notification.write` offers the quittature
+per problem and for all open problems; the page links to the channel
+administration, where the cause of a failure usually waits (a wrong topic, a
+missing secret, an unreachable server). The texts live in the `settings`
+namespace in `de` and `en`.
+
+**The badge of the settings menu is the link to the problems (WP-M14-161c, out of
+band in phase 14).** The badge „Zustellung gestört (n)" of the settings menu is
+a `NavLink` to `/admin/delivery` and counts the **open** problems — the channels
+with a failure nobody quit. A quit problem is silent, a failure after the
+quittature brings the badge back, and a solved problem stays solved. The
+settings menu gained the entry „Zustellungsprobleme" (`auth.links.delivery`),
+so the page is reachable without the badge too.
 
 **The readiness knows a duty window per weekday (WP-M15-01, phase 15).** The
 office reported that the plan of the pool „Verwaltung" cannot be expressed: the

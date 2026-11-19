@@ -76,6 +76,16 @@ check) are enforced by the API exactly as in the online path.
 - `precacheAndRoute(self.__WB_MANIFEST)` precaches the app shell, JS, CSS,
   icons, locales and the generated `sw.js`; a manifest makes the PWA
   installable.
+- The manifest icons (`apps/web/src/pwa-manifest.ts`, `pwaIcons`) carry a
+  192 px and a 512 px PNG: a browser only offers an install when both sizes are
+  there, one small icon with `sizes: "any"` keeps the app uninstallable and
+  silent (WP-M14-157). The icons are the logo of `docs/material/logo.png`
+  centred on a square canvas (`apps/web/public/pwa-192x192.png`,
+  `apps/web/public/pwa-512x512.png`); the plugin precaches them through its
+  `includeManifestIcons` default.
+- The web image serves `manifest.webmanifest` as
+  `application/manifest+json` (`apps/web/nginx-pwa.conf.template`): the
+  default `mime.types` of nginx has no entry for the extension (WP-M14-157).
 - The service worker registers a Workbox `BackgroundSyncPlugin` with the tag
   `sync-report` for the public report POST. The route matches the API path
   (`<api-base>/v1/public/tickets`, default `/api/v1/public/tickets`) rather than

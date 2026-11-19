@@ -2,10 +2,15 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 
 import { App } from '../App'
 import { ApiKeysPage } from '../admin/api-keys-page'
+import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
+import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
+import { StatusCreatePage } from '../admin/status-create-page'
 import { TransitionPage } from '../admin/transition-page'
+import { TransitionCreatePage } from '../admin/transition-create-page'
 import { WebhooksPage } from '../admin/webhooks-page'
+import { WebhookCreatePage } from '../admin/webhook-create-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
 import { BrandingPage } from '../settings/branding-page'
 import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
@@ -14,14 +19,21 @@ import { NotificationsPage } from '../settings/notifications-page'
 import { SettingsPage } from '../settings/settings-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
+import { RoleCreatePage } from '../admin/role-create-page'
 import { GroupsPage } from '../admin/groups-page'
+import { GroupCreatePage } from '../admin/group-create-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { EscalationPage } from '../admin/escalation-page'
+import { EscalationStageCreatePage } from '../admin/escalation-stage-create-page'
 import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
 import { DetectedErrorsPage } from '../admin/detected-errors-page'
+import { DetectedErrorCreatePage } from '../admin/detected-error-create-page'
 import { OncallPage } from '../admin/oncall-page'
+import { OncallPoolCreatePage } from '../admin/oncall-pool-create-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
+import { TextTemplateCreatePage } from '../admin/text-template-create-page'
 import { UsersPage } from '../admin/users-page'
+import { UserCreatePage } from '../admin/user-create-page'
 import { RequireSession } from '../auth/require-session'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { InboxPage } from '../features/notifications/inbox-page'
@@ -78,10 +90,30 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new user (WP-M14-158): the form does not lie
+        // below the list of the users any more.
+        path: '/admin/users/new',
+        element: (
+          <RequireSession>
+            <UserCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/roles',
         element: (
           <RequireSession>
             <RolesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new role (WP-M14-159): the form does not lie
+        // below the list of the roles any more.
+        path: '/admin/roles/new',
+        element: (
+          <RequireSession>
+            <RoleCreatePage />
           </RequireSession>
         ),
       },
@@ -94,6 +126,16 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new group (WP-M14-160): the form does not lie
+        // below the list of the groups any more.
+        path: '/admin/groups/new',
+        element: (
+          <RequireSession>
+            <GroupCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/api-keys',
         element: (
           <RequireSession>
@@ -102,10 +144,30 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new API key (WP-M14-164): the form does not lie
+        // above the list of the keys any more.
+        path: '/admin/api-keys/new',
+        element: (
+          <RequireSession>
+            <ApiKeyCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/channels',
         element: (
           <RequireSession>
             <ChannelsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The delivery problems of §11.8 (WP-M14-161b): the failing channels,
+        // the lost messages and the quittature of a problem.
+        path: '/admin/delivery',
+        element: (
+          <RequireSession>
+            <DeliveryPage />
           </RequireSession>
         ),
       },
@@ -121,6 +183,16 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new status (WP-M14-166): the form does not lie
+        // below the table of the statuses any more.
+        path: '/admin/statuses/new',
+        element: (
+          <RequireSession>
+            <StatusCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         // The transition administration of WP-M14-39b: the workflow steps are
         // configuration (`specs/07-escalation.md` §7.13, ADR-0025), the rows of
         // `ticket_transitions` are read, created, edited and deleted here.
@@ -132,10 +204,30 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new workflow step (WP-M14-167): the form does
+        // not lie below the table of the steps any more.
+        path: '/admin/transitions/new',
+        element: (
+          <RequireSession>
+            <TransitionCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/webhooks',
         element: (
           <RequireSession>
             <WebhooksPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new webhook (WP-M14-165): the form does not lie
+        // above the list of the webhooks any more.
+        path: '/admin/webhooks/new',
+        element: (
+          <RequireSession>
+            <WebhookCreatePage />
           </RequireSession>
         ),
       },
@@ -160,6 +252,16 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new escalation stage (WP-M14-169): the form does
+        // not lie below the list of the stages any more.
+        path: '/admin/escalation/stages/new',
+        element: (
+          <RequireSession>
+            <EscalationStageCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/defaults',
         element: (
           <RequireSession>
@@ -176,10 +278,30 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        // The own page of the new detected error (WP-M14-163): the form does
+        // not lie above the list of the catalog any more.
+        path: '/admin/detected-errors/new',
+        element: (
+          <RequireSession>
+            <DetectedErrorCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
         path: '/admin/oncall',
         element: (
           <RequireSession>
             <OncallPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new readiness pool (WP-M14-168): the form does
+        // not lie below the list of the pools any more.
+        path: '/admin/oncall/pools/new',
+        element: (
+          <RequireSession>
+            <OncallPoolCreatePage />
           </RequireSession>
         ),
       },
@@ -196,6 +318,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <TextTemplatesPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new fault type (WP-M14-162): the form does not
+        // lie above the list of the fault types any more.
+        path: '/admin/text-templates/new',
+        element: (
+          <RequireSession>
+            <TextTemplateCreatePage />
           </RequireSession>
         ),
       },

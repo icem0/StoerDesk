@@ -128,7 +128,7 @@ describe('RolesPage', () => {
     renderPage()
 
     expect(await screen.findByText('dispatcher')).toBeTruthy()
-    expect(screen.getByText('Rolle anlegen')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Rolle anlegen' })).toBeTruthy()
     expect(screen.getAllByText('Bearbeiten')).toHaveLength(2)
     expect(screen.getAllByText('schreibgeschützt')).toHaveLength(1)
   })

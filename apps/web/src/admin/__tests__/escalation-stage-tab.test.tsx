@@ -132,16 +132,12 @@ describe('the stage tab of the escalation administration', () => {
     expect(within(first).queryByRole('button', { name: 'Stufe entfernen' })).toBeNull()
   })
 
-  it('renders the add row and the remove action with the cascade hint', async () => {
+  it('offers the button of the own page of a new stage and the remove action with the cascade hint', async () => {
     void i18n.changeLanguage('de')
     renderPage()
     await openStagesTab('Stufen & Regeln')
 
-    const add = screen.getByTestId('escalation-stage-add')
-
-    expect(within(add).getByLabelText('Schlüssel')).toBeTruthy()
-    expect(within(add).getByLabelText('Name (Deutsch)')).toBeTruthy()
-    expect(within(add).getByLabelText('Name (Englisch)')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Stufe hinzufügen' })).toBeTruthy()
 
     const nightShift = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')[1] as HTMLElement
 
@@ -153,35 +149,6 @@ describe('the stage tab of the escalation administration', () => {
       'Die Stufe wird aus der Kette entfernt; ihre Regeln werden mit entfernt.',
     )
     expect(dialog.textContent).toContain('night_shift')
-  })
-
-  it('joins a new stage to the chain instead of opening a second one', async () => {
-    void i18n.changeLanguage('de')
-    renderPage()
-    await openStagesTab('Stufen & Regeln')
-
-    const add = screen.getByTestId('escalation-stage-add')
-    const predecessor = within(add).getByLabelText('Vorgänger') as HTMLSelectElement
-
-    expect([...predecessor.options].map((option) => option.value)).not.toContain('')
-    expect(predecessor.value).toBe('work_order')
-  })
-
-  it('does not send a stage set while the key is empty', async () => {
-    void i18n.changeLanguage('de')
-    const writes = renderPage()
-    await openStagesTab('Stufen & Regeln')
-
-    const add = screen.getByTestId('escalation-stage-add')
-
-    fireEvent.change(within(add).getByLabelText('Name (Deutsch)'), { target: { value: 'Büro' } })
-    fireEvent.change(within(add).getByLabelText('Name (Englisch)'), { target: { value: 'Office' } })
-    fireEvent.submit(add)
-
-    await waitFor(() =>
-      expect(screen.getByText('Schlüssel, beide Namen und eine Position zwischen 1 und 20 sind erforderlich.')).toBeTruthy(),
-    )
-    expect(writes).toHaveLength(0)
   })
 
   it('names the chain texts in German and English', async () => {

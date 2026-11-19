@@ -2,69 +2,29 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import type { TFunction } from 'i18next'
 import type {
-  CreateUserRequest,
   ResetPasswordResponse,
-  RoleListResponse,
   UserListResponse,
   UserSummary,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
-import { ApiError, apiFetch } from '../lib/api'
-
-type UserLocale = 'de' | 'en'
-type UserTheme = 'auto' | 'light' | 'dark'
-
-interface UserFormValues {
-  email: string
-  password: string
-  givenName: string
-  familyName: string
-  locale: UserLocale
-  theme: UserTheme
-  active: boolean
-  roleKeys: string[]
-}
-
-const handledErrorCodes = [
-  'session_invalid',
-  'forbidden',
-  'invalid_request',
-  'email_taken',
-  'last_admin',
-  'unknown_role_key',
-  'user_not_found',
-] as const
-
-const jsonHeaders = { 'content-type': 'application/json' }
-
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
-  const code =
-    error instanceof ApiError &&
-    error.code !== undefined &&
-    (handledErrorCodes as readonly string[]).includes(error.code)
-      ? error.code
-      : 'unknown'
-
-  return t(`admin.users.errors.${code}`)
-}
+import { apiFetch } from '../lib/api'
+import {
+  RoleCheckboxes,
+  errorMessage,
+  jsonHeaders,
+  useRoles,
+  type UserFormValues,
+  type UserLocale,
+  type UserTheme,
+} from './user-form-parts'
 
 function useUsers() {
   return useQuery({
     queryKey: ['users'],
     queryFn: () => apiFetch<UserListResponse>('/v1/users'),
     retry: false,
-  })
-}
-
-function useRoles(enabled: boolean) {
-  return useQuery({
-    queryKey: ['roles'],
-    queryFn: () => apiFetch<RoleListResponse>('/v1/roles'),
-    retry: false,
-    enabled,
   })
 }
 
@@ -112,179 +72,6 @@ function TemporaryPasswordPanel(props: {
         </button>
       </div>
     </section>
-  )
-}
-
-function RoleCheckboxes({
-  selected,
-  roleKeys,
-  onToggle,
-}: {
-  selected: string[]
-  roleKeys: string[]
-  onToggle: (key: string) => void
-}) {
-  const { t } = useTranslation('settings')
-
-  return (
-    <fieldset className="flex flex-wrap gap-3">
-      <legend className="mb-1 text-sm text-slate-400">{t('admin.users.fields.rolesLabel')}</legend>
-      {roleKeys.map((key) => (
-        <label key={key} className="flex items-center gap-1 text-sm">
-          <input type="checkbox" checked={selected.includes(key)} onChange={() => onToggle(key)} />
-          {key}
-        </label>
-      ))}
-    </fieldset>
-  )
-}
-
-function CreateUserForm({ roleKeys }: { roleKeys: string[] }) {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-  const [values, setValues] = useState<UserFormValues>({
-    email: '',
-    password: '',
-    givenName: '',
-    familyName: '',
-    locale: 'de',
-    theme: 'auto',
-    active: true,
-    roleKeys: [],
-  })
-
-  const mutation = useMutation({
-    mutationFn: (body: CreateUserRequest) =>
-      apiFetch<UserSummary>('/v1/users', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(body),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['users'] })
-      setValues({
-        email: '',
-        password: '',
-        givenName: '',
-        familyName: '',
-        locale: 'de',
-        theme: 'auto',
-        active: true,
-        roleKeys: [],
-      })
-    },
-  })
-
-  return (
-    <form
-      className="mt-6 flex flex-col gap-3 border-t border-slate-800 pt-4"
-      onSubmit={(event) => {
-        event.preventDefault()
-        mutation.mutate(values)
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t('admin.users.createTitle')}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.users.fields.email')}
-        <input
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          type="email"
-          required
-          value={values.email}
-          onChange={(event) => setValues({ ...values, email: event.target.value })}
-        />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t('admin.users.fields.givenName')}
-            <input
-              className="rounded bg-slate-900 p-2 text-slate-100"
-              type="text"
-              maxLength={64}
-              value={values.givenName}
-              onChange={(event) =>
-                setValues({ ...values, givenName: event.target.value.trim() })}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t('admin.users.fields.familyName')}
-            <input
-              className="rounded bg-slate-900 p-2 text-slate-100"
-              type="text"
-              maxLength={64}
-              value={values.familyName}
-              onChange={(event) =>
-                setValues({ ...values, familyName: event.target.value.trim() })}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t('admin.users.fields.password')}
-            <input
-              className="rounded bg-slate-900 p-2 text-slate-100"
-              type="password"
-              required
-              minLength={12}
-          value={values.password}
-          onChange={(event) => setValues({ ...values, password: event.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.users.fields.locale')}
-        <select
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          value={values.locale}
-          onChange={(event) => setValues({ ...values, locale: event.target.value as UserLocale })}
-        >
-          <option value="de">{t('admin.users.locales.de')}</option>
-          <option value="en">{t('admin.users.locales.en')}</option>
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {t('admin.users.fields.theme')}
-        <select
-          className="rounded bg-slate-900 p-2 text-slate-100"
-          name="theme"
-          value={values.theme}
-          onChange={(event) =>
-            setValues({ ...values, theme: event.target.value as UserTheme })}
-        >
-          <option value="auto">{t('admin.users.themeValues.auto')}</option>
-          <option value="light">{t('admin.users.themeValues.light')}</option>
-          <option value="dark">{t('admin.users.themeValues.dark')}</option>
-        </select>
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={values.active}
-          onChange={(event) => setValues({ ...values, active: event.target.checked })}
-        />
-        {t('admin.users.fields.activeLabel')}
-      </label>
-      <RoleCheckboxes
-        selected={values.roleKeys}
-        roleKeys={roleKeys}
-        onToggle={(key) =>
-          setValues({
-            ...values,
-            roleKeys: values.roleKeys.includes(key)
-              ? values.roleKeys.filter((entry) => entry !== key)
-              : [...values.roleKeys, key],
-          })
-        }
-      />
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-400">
-          {errorMessage(t, mutation.error)}
-        </p>
-      ) : null}
-      <button
-        className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
-        type="submit"
-        disabled={mutation.isPending}
-      >
-        {t('admin.users.create')}
-      </button>
-    </form>
   )
 }
 
@@ -485,6 +272,14 @@ export function UsersPage() {
         {t('admin.back')}
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.users.title')}</h1>
+      {canWrite ? (
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/users/new"
+        >
+          {t('admin.users.createTitle')}
+        </Link>
+      ) : null}
       {users.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, users.error)}
@@ -566,7 +361,6 @@ export function UsersPage() {
         </tbody>
       </table>
       {canWrite && editingUser ? <EditUserForm user={editingUser} roleKeys={roleKeys} /> : null}
-      {canWrite ? <CreateUserForm roleKeys={roleKeys} /> : null}
     </main>
   )
 }

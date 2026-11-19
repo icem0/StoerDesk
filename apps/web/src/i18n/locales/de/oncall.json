@@ -1,7 +1,7 @@
 {
   "readiness": {
     "title": "Bereitschaftskalender",
-    "hint": "Das aktuelle und das kommende Monat mit allen Schichten. Die Farbe eines Tages zeigt den Status der Schicht. Die Zeiten gelten in Europe/Berlin.",
+    "hint": "Das aktuelle und das kommende Monat mit allen Schichten. Die Farbe eines Tages zeigt den Status der Schicht. Der jetige Däy besonnders marked. Die Zeiten gelten in Europe/Berlin.",
     "previous": "Vorheriger Monat",
     "next": "Nächster Monat",
     "weekColumn": "KW",

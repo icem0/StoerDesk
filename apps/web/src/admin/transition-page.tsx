@@ -39,14 +39,14 @@ const handledErrorCodes = [
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
-type TransitionWriteBody = {
+export type TransitionWriteBody = {
   fromStatus: string
   toStatus: string
   eventKey: string
   active: boolean
 }
 
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
+export function errorMessage(t: TFunction<'settings'>, error: unknown): string {
   const code =
     error instanceof ApiError &&
     error.code !== undefined &&
@@ -215,11 +215,12 @@ export function TransitionPage() {
         />
       ) : null}
       {canWrite ? (
-        <TransitionForm
-          transition={null}
-          canWrite
-          onSave={(body) => void writeTransition.mutate({ id: null, body })}
-        />
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/transitions/new"
+        >
+          {t('admin.transition.createTitle')}
+        </Link>
       ) : null}
     </main>
   )
@@ -268,7 +269,7 @@ function TransitionRemoveDialog({
   )
 }
 
-function TransitionForm({
+export function TransitionForm({
   transition,
   canWrite,
   onSave,

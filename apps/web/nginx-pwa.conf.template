@@ -27,6 +27,14 @@ server {
         try_files $uri =404;
     }
 
+    # The manifest must be served as application/manifest+json: the default
+    # mime.types of nginx has no entry for the .webmanifest extension, so the
+    # file would otherwise go out as application/octet-stream.
+    location = /manifest.webmanifest {
+        types { application/manifest+json webmanifest; }
+        try_files $uri =404;
+    }
+
     location = /healthz {
         access_log off;
         add_header Content-Type text/plain;

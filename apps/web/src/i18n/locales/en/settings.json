@@ -588,6 +588,30 @@
       "curlTokenHint": "The command carries $NTFY_TOKEN: the stored key is never shown — export a variable of that name in your shell.",
       "ntfyTokenHint": "No key stored yet: a self-hosted ntfy server needs its access token in the secret field — without it every publish is refused."
     },
+    "delivery": {
+      "title": "Delivery problems",
+      "hint": "The channels whose delivery failed and the messages that never arrived. A problem is quit when it has been seen and taken over — a new failure afterwards opens it again.",
+      "loading": "Loading the delivery problems …",
+      "empty": "No delivery problem: every channel delivers.",
+      "problems": {
+        "title": "Failing channels",
+        "failed": "{{count}} failed deliveries",
+        "open": "{{count}} not quit",
+        "lastFailure": "Last failure: {{time}}",
+        "acknowledgedAt": "Quit at {{time}}",
+        "acknowledgedBy": "Quit by {{by}}"
+      },
+      "acknowledge": "Quit",
+      "acknowledgeAll": "Quit all",
+      "acknowledged": "The problem is quit.",
+      "failures": {
+        "title": "Lost messages",
+        "empty": "No lost message.",
+        "attempts": "{{count}} attempts",
+        "noTicket": "without ticket"
+      },
+      "channelsLink": "Manage the channels"
+    },
     "status": {
       "title": "Ticket statuses",
       "hint": "The ticket statuses are configuration: their names, their colour and their position, their active switch and their terminal flag. A status that a ticket still carries can never be deleted.",

@@ -1,13 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
 
 import { i18n } from '../../i18n'
 import { ApiKeysPage } from '../api-keys-page'
-
-const token = `sk_${'a'.repeat(43)}`
 
 const summary = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -73,24 +71,11 @@ describe('ApiKeysPage', () => {
     expect(screen.getByText(/apikey.write/)).toBeTruthy()
   })
 
-  it('creates a key and shows the plaintext token once', async () => {
-    stub({
-      me: meResponse(['apikey.read', 'apikey.write']),
-      list: { keys: [] },
-      created: { key: summary, token },
-    })
+  it('offers the button of the own page of a new key with apikey.write', async () => {
+    stub({ me: meResponse(['apikey.read', 'apikey.write']), list: { keys: [] } })
     renderPage()
 
-    fireEvent.change(await screen.findByLabelText(/Bezeichnung/), {
-      target: { value: 'Monitoring' },
-    })
-    fireEvent.click(screen.getByText('Schlüssel anlegen'))
-
-    expect(await screen.findByText('Schlüssel einmalig sichtbar')).toBeTruthy()
-    expect(screen.getByText(token)).toBeTruthy()
-
-    fireEvent.click(screen.getByText('Schließen'))
-    expect(screen.queryByText(token)).toBeNull()
+    expect(await screen.findByRole('link', { name: 'Neuen Schlüssel anlegen' })).toBeTruthy()
   })
 
   it('shows the forbidden notice without apikey.read', async () => {
