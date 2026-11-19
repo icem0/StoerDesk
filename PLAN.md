@@ -3303,6 +3303,24 @@ quittature brings the badge back, and a solved problem stays solved. The
 settings menu gained the entry „Zustellungsprobleme" (`auth.links.delivery`),
 so the page is reachable without the badge too.
 
+**The delivery problems name their cause (WP-M14-161d, out of band in phase
+14).** The office reported that the lost messages of `/admin/delivery` showed
+the raw machine code `ticket.created` instead of the name of the event, and a
+reason without the code of the failure. The page asked the `notifications`
+namespace for the event — a namespace the web app does not have, so the default
+value won and the machine value stood there. The seven events of §11.4 carry
+their name in the `common` namespace now, the warning of a broken channel
+(§11.15) its own; an event without a name keeps its machine value. The reason
+comes from the texts of the delivery page: the texts of the channel
+administration belong to the ntfy channel and name its topic and its token, so
+they are wrong for every other channel — the codes of all channels get their
+own text, the channel decides between them (`send_failed` of the push service
+and the one of the mail server differ), and a code without a text is named as
+such. The machine code stands beside the reason, because §11.8 asks the admin
+to see it. A lost message is a card now: the channel, the event, the ticket and
+the time in the first line, the reason and the code in the second, the attempts
+in the third; a failed web push links the setup guide of the VAPID keys.
+
 **The readiness knows a duty window per weekday (WP-M15-01, phase 15).** The
 office reported that the plan of the pool „Verwaltung" cannot be expressed: the
 shift runs on Monday from 07:30 to 17:00 and on Friday from 07:00 to 12:00,

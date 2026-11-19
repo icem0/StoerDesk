@@ -727,6 +727,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Fixed
+- The delivery problems name their cause (**WP-M14-161d**, out of band in phase
+  14): the office reported that the lost messages of `/admin/delivery` showed the
+  raw machine code `ticket.created` instead of the name of the event, and the
+  reason „Der Versand ist fehlgeschlagen." without the code of the failure. The
+  page asked the `notifications` namespace for the event — a namespace that does
+  not exist in the web app, so the default value won and the machine value
+  stood there; the seven events of §11.4 carry their name in the `common`
+  namespace now, and the warning of a broken channel its own. The reason comes
+  from the texts of the delivery page: the texts of the channel administration
+  belong to the ntfy channel and name its topic and its token, so they are
+  wrong for every other channel — the code `send_failed` of the push service and
+  the one of the mail server now say what happened. The machine code stands
+  beside the reason, because §11.8 asks the admin to see it, and a lost message
+  is a card now: the channel, the event, the ticket and the time in the first
+  line, the reason and the code in the second, the attempts in the third. A
+  failed web push links the setup guide of the VAPID keys.
 - The setup guide of web push speaks German (**WP-M14-128**, out of band in phase
   14): the German locale of the page `/help/web-push` carried the English texts —
   the reference locale `de` was no German at all (PLAN.md §3, §3.1). The page

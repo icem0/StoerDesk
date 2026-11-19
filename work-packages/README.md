@@ -1615,6 +1615,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
 | WP-M14-161b | the page of the delivery problems (out of band) | done | yes |
 | WP-M14-161c | the badge of the settings menu is the link to the problems (out of band) | done | yes |
+| WP-M14-161d | the delivery problems name their cause in the interface language (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

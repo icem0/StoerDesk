@@ -596,6 +596,8 @@
       "problems": {
         "title": "Failing channels",
         "failed": "{{count}} failed deliveries",
+        "failed_one": "{{count}} failed delivery",
+        "failed_other": "{{count}} failed deliveries",
         "open": "{{count}} not quit",
         "lastFailure": "Last failure: {{time}}",
         "acknowledgedAt": "Quit at {{time}}",
@@ -604,11 +606,38 @@
       "acknowledge": "Quit",
       "acknowledgeAll": "Quit all",
       "acknowledged": "The problem is quit.",
+      "code": "Error code: {{code}}",
+      "events": {
+        "channel.health_warning": "Channel notice"
+      },
+      "reasons": {
+        "send_failed": "The delivery failed: the channel does not accept the message.",
+        "http_error": "The service of the channel answered with an error.",
+        "http_timeout": "The service of the channel did not answer in time.",
+        "httpStatus": "The service of the channel answered with HTTP {{status}}.",
+        "no_keys": "Web push is not configured: the VAPID keys are missing.",
+        "no_token": "The channel misses its secret (bot token, access token …).",
+        "no_sender": "The channel misses a sender address.",
+        "no_recipients": "No recipient is configured for the channel.",
+        "push_subscription_dead": "Every web push subscription is dead: the devices have to allow the notification again.",
+        "channel_unconfigured": "The channel is not configured or not enabled.",
+        "unknown": "The delivery failed with an unknown error.",
+        "webpush": {
+          "send_failed": "The push service did not accept the delivery."
+        },
+        "email": {
+          "send_failed": "The mail server did not accept the message."
+        }
+      },
       "failures": {
         "title": "Lost messages",
         "empty": "No lost message.",
         "attempts": "{{count}} attempts",
-        "noTicket": "without ticket"
+        "attempts_one": "{{count}} attempt",
+        "attempts_other": "{{count}} attempts",
+        "noTicket": "without ticket",
+        "ticket": "Ticket {{ticket}}",
+        "webPushGuide": "Guide: set up web push (VAPID)"
       },
       "channelsLink": "Manage the channels"
     },

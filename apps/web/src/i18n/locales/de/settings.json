@@ -596,6 +596,8 @@
       "problems": {
         "title": "Gestörte Kanäle",
         "failed": "{{count}} fehlgeschlagene Zustellungen",
+        "failed_one": "{{count}} fehlgeschlagene Zustellung",
+        "failed_other": "{{count}} fehlgeschlagene Zustellungen",
         "open": "{{count}} nicht quittiert",
         "lastFailure": "Letzter Fehler: {{time}}",
         "acknowledgedAt": "Quittiert am {{time}}",
@@ -604,11 +606,38 @@
       "acknowledge": "Quittieren",
       "acknowledgeAll": "Alle quittieren",
       "acknowledged": "Das Problem ist quittiert.",
+      "code": "Fehlercode: {{code}}",
+      "events": {
+        "channel.health_warning": "Kanalanzeige"
+      },
+      "reasons": {
+        "send_failed": "Die Zustellung ist fehlgeschlagen: der Kanal nimmt die Nachricht nicht an.",
+        "http_error": "Der Dienst des Kanals hat mit einem Fehler geantwortet.",
+        "http_timeout": "Der Dienst des Kanals hat nicht rechtzeitig geantwortet.",
+        "httpStatus": "Der Dienst des Kanals hat mit HTTP {{status}} geantwortet.",
+        "no_keys": "Web Push ist nicht konfiguriert: die VAPID-Schlüssel fehlen.",
+        "no_token": "Dem Kanal fehlt sein Geheimnis (Bot-Token, Zugangstoken …).",
+        "no_sender": "Dem Kanal fehlt eine Absenderadresse.",
+        "no_recipients": "Für den Kanal ist kein Empfänger eingetragen.",
+        "push_subscription_dead": "Alle Web-Push-Abos sind abgelaufen: die Geräte müssen die Benachrichtigung neu erlauben.",
+        "channel_unconfigured": "Der Kanal ist nicht konfiguriert oder nicht aktiviert.",
+        "unknown": "Die Zustellung ist mit einem unbekannten Fehler fehlgeschlagen.",
+        "webpush": {
+          "send_failed": "Der Push-Dienst hat die Zustellung nicht angenommen."
+        },
+        "email": {
+          "send_failed": "Der Mailserver hat die Nachricht nicht angenommen."
+        }
+      },
       "failures": {
         "title": "Verlorene Nachrichten",
         "empty": "Keine verlorene Nachricht.",
         "attempts": "{{count}} Versuche",
-        "noTicket": "ohne Ticket"
+        "attempts_one": "{{count}} Versuch",
+        "attempts_other": "{{count}} Versuche",
+        "noTicket": "ohne Ticket",
+        "ticket": "Vorgang {{ticket}}",
+        "webPushGuide": "Anleitung: Web Push (VAPID) einrichten"
       },
       "channelsLink": "Kanäle verwalten"
     },

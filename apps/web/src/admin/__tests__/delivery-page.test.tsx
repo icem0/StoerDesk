@@ -41,11 +41,11 @@ const problems = {
   failures: [
     {
       id: '22222222-2222-4222-8222-222222222222',
-      channel: 'ntfy',
+      channel: 'webpush',
       eventType: 'ticket.created',
       failedAt: '2026-11-18T09:00:05.000Z',
       attempts: 3,
-      error: 'http_error',
+      error: 'send_failed',
       ticketNo: 'ST-0001',
     },
   ],
@@ -125,16 +125,35 @@ describe('DeliveryPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Gestörte Zustellungen' })).toBeTruthy()
-    expect(await screen.findAllByText('ntfy')).toHaveLength(2)
+    expect(await screen.findByText('ntfy')).toBeTruthy()
     expect(screen.getByText('Matrix')).toBeTruthy()
+    expect(screen.getByText('Web Push')).toBeTruthy()
     expect(screen.getByText('3 fehlgeschlagene Zustellungen')).toBeTruthy()
     expect(screen.getByText('2 nicht quittiert')).toBeTruthy()
     expect(screen.getAllByText(/Letzter Fehler:/)).toHaveLength(2)
     expect(screen.getByText('Verlorene Nachrichten')).toBeTruthy()
     expect(screen.getByText('3 Versuche')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'ST-0001' }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: 'Vorgang ST-0001' }).getAttribute('href')).toBe(
       '/tickets/ST-0001',
     )
+  })
+
+  it('names the event of a lost message in the interface language', async () => {
+    stub({ me: meResponse(['notification.read', 'notification.write']) })
+    renderPage()
+
+    expect(await screen.findByText('Verlorene Nachrichten')).toBeTruthy()
+    expect(screen.getByText('Neuer Vorgang')).toBeTruthy()
+    expect(screen.queryByText('ticket.created')).toBeNull()
+  })
+
+  it('names the reason of the failure and the machine code beside it', async () => {
+    stub({ me: meResponse(['notification.read', 'notification.write']) })
+    renderPage()
+
+    expect(await screen.findByText('Verlorene Nachrichten')).toBeTruthy()
+    expect(screen.getByText('Der Push-Dienst hat die Zustellung nicht angenommen.')).toBeTruthy()
+    expect(screen.getAllByText('Fehlercode: send_failed')).toHaveLength(2)
   })
 
   it('quits an open problem and names the user that quit it', async () => {
