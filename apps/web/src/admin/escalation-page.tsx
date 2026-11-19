@@ -23,6 +23,7 @@ import { usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 import { EscalationConditionBuilder } from './escalation-condition-builder'
 import { EscalationActionEditor } from './escalation-action-editor'
+import { EscalationTransitions } from './escalation-transitions'
 
 /**
  * The escalation administration (`specs/07-escalation.md` §7.1–§7.9, ADR-0017,
@@ -31,7 +32,9 @@ import { EscalationActionEditor } from './escalation-action-editor'
  * The tab "Fristen" carries the deadline hours per priority (the form of the
  * former deadlines page); the tab "Stufen & Regeln" carries the stages with
  * their names, their active flag and their rules: the reference, the minutes
- * per priority, the condition and the ordered actions of a rule. The
+ * per priority, the condition and the ordered actions of a rule; the tab
+ * "Übergänge" carries the steps of the workflow, grouped by the stage of the
+ * chain (WP-M14-176, `specs/07-escalation.md` §7.13). The
  * administration saves the rules with one request
  * (`PUT /api/v1/escalation/config`) and the stage names with
  * `PUT /api/v1/escalation/stages`. Without `settings.write` the editors stay
@@ -233,6 +236,13 @@ export function EscalationPage() {
           type="button"
         >
           {t('admin.escalation.tabs.stages')}
+        </button>
+        <button
+          className={`rounded px-3 py-2 text-sm ${tab === 'transitions' ? 'bg-sky-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+          onClick={() => setTab('transitions')}
+          type="button"
+        >
+          {t('admin.escalation.tabs.transitions')}
         </button>
       </div>
 
@@ -479,6 +489,13 @@ export function EscalationPage() {
           {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
         </div>
       ) : null}
+
+      {/*
+        The steps of the workflow (WP-M14-176): the way out of a level is the
+        way out of the status it waits in, so the steps are managed here, with
+        the levels (`specs/07-escalation.md` §7.13).
+      */}
+      {tab === 'transitions' ? <EscalationTransitions stages={config.stages} /> : null}
     </section>
   )
 }

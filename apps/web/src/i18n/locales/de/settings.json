@@ -277,7 +277,8 @@
       "saved": "Gespeichert.",
       "tabs": {
         "fristen": "Fristen",
-        "stages": "Stufen & Regeln"
+        "stages": "Stufen & Regeln",
+        "transitions": "Übergänge"
       },
       "hours": {
         "low": "Niedrig",

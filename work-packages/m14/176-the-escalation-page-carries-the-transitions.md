@@ -1,7 +1,7 @@
 # WP-M14-176: the escalation page carries the editor of the transitions
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 15k tokens
@@ -61,9 +61,15 @@ Expected: all green; the test of the tabs expects the third tab.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/escalation-page.tsx` (the third tab),
+  `apps/web/src/admin/__tests__/escalation-stage-tab.test.tsx` (the test of the tab),
+  the two locale files, `docs/REPO-MAP.md`, `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document and the files of WP-M14-177 and
+  WP-M14-178
+- Interfaces added: the tab `Übergänge` of the escalation administration,
+  `admin.escalation.tabs.transitions`
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run i18n:check` and the tests of the tabs (6/6) green
 - Follow-up WP: WP-M14-177 (the page of the transition administration is gone)
   and WP-M14-178 (the dead texts and the spec) — their files are created with
   this commit (`AGENTS.md`, _Open follow-ups (mandatory closure)_)

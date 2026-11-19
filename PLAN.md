@@ -3296,6 +3296,13 @@ step is free — also the status of an earlier level, so a level can lead back
 table and the API stay what they are: the steps are the state machine of the
 ticket, and an unknown or inactive combination answers `409 invalid_transition`.
 
+**The escalation administration carries the steps of the workflow (WP-M14-176,
+out of band in phase 14).** The levels of the escalation have their own tab
+next to the deadlines: the third tab `Übergänge` carries the editor of the
+steps of the workflow, grouped by the level of the chain and the status it
+waits in (WP-M14-175). One place for the levels and the steps — the way out of
+a level is the way out of the status the ticket waits in.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

@@ -277,7 +277,8 @@
       "saved": "Saved.",
       "tabs": {
         "fristen": "Deadlines",
-        "stages": "Stages & rules"
+        "stages": "Stages & rules",
+        "transitions": "Transitions"
       },
       "hours": {
         "low": "Low",

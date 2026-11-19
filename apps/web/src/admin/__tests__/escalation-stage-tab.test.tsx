@@ -73,6 +73,52 @@ function renderPage() {
       return Response.json({ channels: [] })
     }
 
+    if (path.includes('/v1/admin/transitions')) {
+      return Response.json({
+        transitions: [
+          {
+            id: '11111111-1111-4111-8111-111111111111',
+            fromStatus: 'NEW',
+            toStatus: 'IN_REVIEW',
+            eventKey: 'review_started',
+            condition: null,
+            active: true,
+          },
+        ],
+      })
+    }
+
+    if (path.includes('/v1/admin/statuses')) {
+      return Response.json({
+        statuses: [
+          {
+            key: 'NEW',
+            nameDe: 'Neu',
+            nameEn: 'New',
+            color: '#6b7280',
+            position: 1,
+            active: true,
+            isTerminal: false,
+            ticketCount: 0,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+          {
+            key: 'IN_REVIEW',
+            nameDe: 'In Prüfung',
+            nameEn: 'In Review',
+            color: '#d97706',
+            position: 2,
+            active: true,
+            isTerminal: false,
+            ticketCount: 0,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      })
+    }
+
     return Response.json({ webhooks: [] })
   })
 
@@ -149,6 +195,20 @@ describe('the stage tab of the escalation administration', () => {
       'Die Stufe wird aus der Kette entfernt; ihre Regeln werden mit entfernt.',
     )
     expect(dialog.textContent).toContain('night_shift')
+  })
+
+  it('carries the steps of the workflow in the third tab', async () => {
+    void i18n.changeLanguage('de')
+    renderPage()
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Übergänge' }))
+
+    const editor = await screen.findByTestId('escalation-transitions')
+
+    expect(await within(editor).findByText('review_started')).toBeTruthy()
+    // The level that owns the status of the review is named with its status.
+    expect(within(editor).getByText('Prüfung · In Prüfung')).toBeTruthy()
   })
 
   it('names the chain texts in German and English', async () => {

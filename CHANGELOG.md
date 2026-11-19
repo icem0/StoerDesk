@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The escalation administration carries the steps of the workflow (**WP-M14-176**,
+  out of band in phase 14): the third tab `Übergänge` of the escalation page groups
+  the steps of the workflow by the level of the chain and the status it waits in, so
+  the levels and the steps of the workflow are managed in one place (v1.1.298).
 - The steps of the workflow belong to the levels of the escalation (**WP-M14-175**,
   out of band in phase 14): the office asked for one place for the steps of the
   workflow — the rows of `ticket_transitions` (§7.13, ADR-0025) — and the levels

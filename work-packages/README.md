@@ -1597,7 +1597,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-168 | the new readiness pool gets its own page (out of band) | done | yes |
 | WP-M14-169 | the new escalation stage gets its own page (out of band) | done | yes |
 | WP-M14-175 | the steps of the workflow belong to the levels of the escalation (out of band) | done | yes |
-| WP-M14-176 | the escalation page carries the editor of the transitions (out of band) | planned | yes || WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
+| WP-M14-176 | the escalation page carries the editor of the transitions (out of band) | done | yes |
+| WP-M14-177 | the page of the transition administration is gone (out of band) | planned | yes |
+| WP-M14-178 | the dead texts and the spec (out of band) | planned | yes |
+| WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
 | WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
 | WP-M14-161b | the page of the delivery problems (out of band) | done | yes |
 | WP-M14-161c | the badge of the settings menu is the link to the problems (out of band) | done | yes |

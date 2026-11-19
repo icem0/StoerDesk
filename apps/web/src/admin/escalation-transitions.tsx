@@ -264,7 +264,7 @@ export function EscalationTransitions({ stages }: { stages: readonly EscalationS
         </p>
       ) : null}
 
-      {writeError !== undefined ? (
+      {updateTransition.isError || createTransition.isError || deleteTransition.isError ? (
         <p role="alert" className="text-sm text-rose-400">
           {errorMessage(t, writeError)}
         </p>
