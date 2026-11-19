@@ -105,12 +105,12 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
   return (
     <li data-testid="ticket-row">
       <Link
-        className="grid min-h-11 grid-cols-1 gap-x-4 gap-y-2 px-3 py-3 transition-colors hover:bg-slate-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] md:items-center"
+        className="grid min-h-11 grid-cols-1 gap-x-4 gap-y-2 px-3 py-3 transition-colors hover:bg-slate-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] md:items-center"
         to={`/tickets/${ticket.ticketNo}`}
       >
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 font-mono text-sm font-semibold text-sky-300">
+            <span className="shrink-0 font-mono text-sm font-semibold text-accent-300">
               {ticket.ticketNo}
             </span>
             <span className="truncate text-sm font-medium text-slate-200">{ticket.objectName}</span>
@@ -208,7 +208,7 @@ export function TicketListPage() {
           <p className="text-sm text-slate-400">{t('list.hint')}</p>
         </div>
         <button
-          className="min-h-11 rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+          className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700"
           type="button"
           onClick={() => navigate('/tickets/create')}
         >

@@ -226,7 +226,7 @@ function MyShiftsPageContent({
               value={ical.data.url}
             />
             <button
-              className="rounded bg-sky-700 px-4 py-2 font-medium text-white"
+              className="rounded bg-accent-700 px-4 py-2 font-medium text-white"
               onClick={copyIcal}
             >
               {t('admin.myShifts.copy')}
@@ -437,7 +437,7 @@ function ShiftCard({
         ) : null}
         {shift.state === 'CONFIRMED' && maySwap && onRequestSwap && openSwap === null ? (
           <button
-            className="rounded bg-sky-700 px-3 py-1 text-white disabled:opacity-50"
+            className="rounded bg-accent-700 px-3 py-1 text-white disabled:opacity-50"
             disabled={requestMut.isPending}
             onClick={() => setSwapOpen(true)}
           >
@@ -734,7 +734,7 @@ function SwapForm({
           {t('common:back')}
         </button>
         <button
-          className="rounded bg-sky-700 px-3 py-1 text-white disabled:opacity-50"
+          className="rounded bg-accent-700 px-3 py-1 text-white disabled:opacity-50"
           disabled={pending}
           type="submit"
         >

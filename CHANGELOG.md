@@ -27,7 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   so tickets, statistics, readiness and inbox live in one tab strip. The shell of
   a phone gets a compact identity row, a tab strip that scrolls horizontally only
   with 44 px targets that reach to the edge of the screen, and the safe areas of a
-  notch (WP-M16-05, v1.1.325). The public report form, the status page and the printed stickers keep the
+  notch (WP-M16-05, v1.1.325). The primary action of a page wears the accent as well
+  (WP-M16-08, WP-M16-09): the buttons of the ticket list, of the ticket view, of the
+  internal creation, of the readiness, of the object pages and of the personal settings
+  are painted with the colour of the instance instead of the fixed blue of the build. The public report form, the status page and the printed stickers keep the
   default blue (ADR-0036). The contracts and the routes of the accent colour are
   implemented (WP-M16-01, v1.1.315): `accentColor` travels in the `branding` row,
   the branding route keeps a stored colour when the body carries none and answers

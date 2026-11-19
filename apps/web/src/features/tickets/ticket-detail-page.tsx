@@ -1096,7 +1096,7 @@ export function TicketDetailPage() {
           </p>
           <div className="flex gap-2">
             <button
-              className="min-w-[90px] rounded px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="min-w-[90px] rounded px-4 py-2 text-sm font-medium text-white bg-accent-600 hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void saveComment()}
               type="button"
             >
@@ -1145,7 +1145,7 @@ export function TicketDetailPage() {
               aria-label={t('detail.menu.send')}
               title={t('detail.menu.send')}
               data-testid="ticket-send-button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void handleOption('send')}
               type="button"
             >
@@ -1155,7 +1155,7 @@ export function TicketDetailPage() {
             </button>
             <button
               data-testid="ticket-cancel-button"
-              className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void handleOption(status === 'CANCELLED' ? 'uncancel' : 'cancel')}
               type="button"
             >
@@ -1416,7 +1416,7 @@ export function TicketDetailPage() {
             <a
               href={lightbox.url}
               download
-              className="mt-3 inline-flex items-center gap-1.5 rounded bg-sky-600 px-3 py-1.5 text-xs text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="mt-3 inline-flex items-center gap-1.5 rounded bg-accent-600 px-3 py-1.5 text-xs text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
             >
               {t('detail.photos.download')}
               <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1434,7 +1434,7 @@ export function TicketDetailPage() {
         className="col-span-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60 shadow-sm"
       >
         <div className="flex items-center gap-2 border-b border-slate-700/70 bg-slate-800/50 px-4 py-2.5">
-          <svg aria-hidden="true" className="h-4 w-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" className="h-4 w-4 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h8M8 14h5m-9 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11l-4 4H6a2 2 0 0 1-2-2z" />
           </svg>
           <span className="text-sm font-medium text-slate-200">
@@ -1454,7 +1454,7 @@ export function TicketDetailPage() {
                   <button
                     key={button.key}
                     data-testid={`ticket-stage-${button.event}`}
-                    className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                    className="min-h-11 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
                     onClick={() => void handleOption(button.event)}
                     type="button"
                   >
@@ -1469,7 +1469,7 @@ export function TicketDetailPage() {
             {menuEntries.map((entry) => (
               <button
                 key={entry.value}
-                className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
                 onClick={() => void handleOption(entry.value)}
                 type="button"
               >
@@ -1510,7 +1510,7 @@ export function TicketDetailPage() {
             </label>
             <textarea
               id="ticket-comment"
-              className="min-h-24 w-full resize-y rounded-lg border border-slate-600 bg-slate-950/40 px-3.5 py-3 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+              className="min-h-24 w-full resize-y rounded-lg border border-slate-600 bg-slate-950/40 px-3.5 py-3 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/40"
               style={
                 internalComment
                   ? { backgroundColor: internalCommentColor, borderColor: internalCommentColor }
@@ -1543,7 +1543,7 @@ export function TicketDetailPage() {
               </span>
               <button
                 data-testid="ticket-escalation-submit"
-                className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-sky-600 shadow-sm hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-accent-600 shadow-sm hover:bg-accent-700 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
                 type="button"
                 disabled={req('commentText') === ''}
                 onClick={() => void submitComment()}
@@ -1633,7 +1633,7 @@ export function TicketDetailPage() {
                     return (
                       <>
                         {stage !== null && (
-                          <p className="mt-1 text-xs text-sky-300">
+                          <p className="mt-1 text-xs text-accent-300">
                             {t('detail.escalation.historyStage', { stage })}
                           </p>
                         )}
@@ -1646,7 +1646,7 @@ export function TicketDetailPage() {
                               event.type === 'internal_comment'
                                 ? `mt-2 whitespace-pre-wrap rounded-lg border-l-2 px-3 py-2 text-sm ${textOnColor(internalCommentColor)}`
                                 : event.type === 'comment' || event.type === 'escalation_set'
-                                  ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-sky-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
+                                  ? 'mt-2 whitespace-pre-wrap rounded-lg border-l-2 border-accent-500/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200'
                                   : 'mt-1 text-xs text-slate-400'
                             }
                             style={

@@ -258,7 +258,7 @@ function ObjectPicker({
                   role="option"
                   aria-selected={highlighted === index}
                   className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-slate-200 ${
-                    highlighted === index ? 'bg-sky-600/20 text-white' : 'hover:bg-slate-800'
+                    highlighted === index ? 'bg-accent-600/20 text-white' : 'hover:bg-slate-800'
                   }`}
                   type="button"
                   onMouseDown={(event) => {
@@ -715,7 +715,7 @@ export function InternalCreatePage() {
 
         <div className="col-span-full flex gap-3">
           <button
-            className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             type="submit"
             disabled={
               submitting ||
