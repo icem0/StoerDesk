@@ -354,7 +354,7 @@ export function ReadinessCalendar(props: {
                                 {Number(cell.iso.slice(8))}
                               </span>
                               {cell.inMonth && rows.length > 0 ? (
-                                <ul className="flex flex-col gap-0.5">
+                                <ul className="flex flex-1 flex-col gap-0.5">
                                   {rows.map((shift) => {
                                     const name = showNames
                                       ? technicianName(shift)
@@ -374,9 +374,9 @@ export function ReadinessCalendar(props: {
                                         : t('readiness.assigned'))
 
                                     return (
-                                      <li key={shift.id}>
+                                      <li className="flex flex-1" key={shift.id}>
                                         <button
-                                          className="flex w-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-[10px] leading-tight text-slate-300"
+                                          className="flex flex-1 w-full h-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-[10px] leading-tight text-slate-300"
                                           onClick={() => setSelectedShift(shift)}
                                           title={`${stateLabel} – ${poolName} – ${holder}`}
                                           type="button"
