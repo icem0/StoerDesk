@@ -1601,6 +1601,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-177 | the page of the transition administration is gone (out of band) | done | yes |
 | WP-M14-178 | the dead texts and the spec (out of band) | done | yes |
 | WP-M14-179 | the security plan names the transition administration pass (out of band) | done | yes |
+| WP-M14-180 | the records name the released versions and the module map the editor (out of band) | done | yes |
 | WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
 | WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
 | WP-M14-161b | the page of the delivery problems (out of band) | done | yes |

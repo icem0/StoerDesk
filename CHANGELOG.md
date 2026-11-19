@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The escalation administration carries the steps of the workflow (**WP-M14-176**,
   out of band in phase 14): the third tab `Übergänge` of the escalation page groups
   the steps of the workflow by the level of the chain and the status it waits in, so
-  the levels and the steps of the workflow are managed in one place (v1.1.298).
+  the levels and the steps of the workflow are managed in one place (v1.1.301).
 - The steps of the workflow belong to the levels of the escalation (**WP-M14-175**,
   out of band in phase 14): the office asked for one place for the steps of the
   workflow — the rows of `ticket_transitions` (§7.13, ADR-0025) — and the levels
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   status the ticket waits in, and the target status of a step is free: also the
   status of an earlier level, so a level can lead back (a way back). The table
   and the API stay what they are — the steps are the state machine of the ticket
-  (v1.1.289).
+  (v1.1.297).
 - The badge of the delivery problem is a link (**WP-M14-161c**, out of band in
   phase 14): the office reported the badge „Zustellung gestört (1)" of the
   settings menu — a text without a destination that counted the channels of the
