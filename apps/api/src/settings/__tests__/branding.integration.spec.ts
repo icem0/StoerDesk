@@ -24,6 +24,7 @@ type BrandingResponseBody = {
   titleEnabled?: boolean
   logo: string
   internalCommentColor?: string
+  accentColor?: string
 }
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
@@ -157,19 +158,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
     })
 
     it('stores and returns the company name', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
     })
 
     it('resets to the empty name', async () => {
@@ -178,7 +179,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
     })
 
     it('rejects a too long name with 400 invalid_request', async () => {
@@ -207,19 +208,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
     })
 
     it('stores and returns titleEnabled true', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH', titleEnabled: true })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
     })
 
     it('resets titleEnabled to false', async () => {
@@ -228,7 +229,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' })
     })
 
     it('rejects a logo whose bytes do not match the claim', async () => {
@@ -275,6 +276,61 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await putBranding(cookies['admin'], {
         companyName: 'Beispiel GmbH',
         internalCommentColor: 'darkred',
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json<ErrorResponseBody>().code).toBe('invalid_request')
+    })
+
+    it('answers the default accent colour of the interface', async () => {
+      const branding = await getBranding(cookies['admin'])
+
+      expect(branding.statusCode).toBe(200)
+      expect(branding.json<BrandingResponseBody>().accentColor).toBe('#0ea5e9')
+
+      const display = await getDisplay(cookies['office'])
+
+      expect(display.statusCode).toBe(200)
+      expect(display.json<{ accentColor?: string }>().accentColor).toBe('#0ea5e9')
+    })
+
+    it('stores the accent colour and answers it for the shell and the view', async () => {
+      const put = await putBranding(cookies['admin'], {
+        companyName: 'Beispiel GmbH',
+        accentColor: '#0f766e',
+      })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<BrandingResponseBody>().accentColor).toBe('#0f766e')
+
+      const branding = await getBranding(cookies['admin'])
+
+      expect(branding.statusCode).toBe(200)
+      expect(branding.json<BrandingResponseBody>()).toEqual({
+        companyName: 'Beispiel GmbH',
+        titleEnabled: false,
+        logo: '',
+        internalCommentColor: '#450a0a',
+        accentColor: '#0f766e',
+      })
+
+      const display = await getDisplay(cookies['office'])
+
+      expect(display.statusCode).toBe(200)
+      expect(display.json<{ accentColor?: string }>().accentColor).toBe('#0f766e')
+    })
+
+    it('keeps the stored accent colour when the body carries none', async () => {
+      const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<BrandingResponseBody>().accentColor).toBe('#0f766e')
+    })
+
+    it('rejects an accent colour that is no hex value', async () => {
+      const response = await putBranding(cookies['admin'], {
+        companyName: 'Beispiel GmbH',
+        accentColor: 'teal',
       })
 
       expect(response.statusCode).toBe(400)

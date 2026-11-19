@@ -3,6 +3,7 @@ import fp from 'fastify-plugin'
 
 import {
   brandingResponseSchema,
+  DEFAULT_ACCENT_COLOR,
   displaySettingsResponseSchema,
   PERMISSIONS,
   titleSwitchResponseSchema,
@@ -31,6 +32,12 @@ import { detectImageType } from '../tickets/photos'
  * The row carries the colour of the internal comment as well (ADR-0034): the
  * administration sets it under „Darstellung", and `GET /api/v1/settings/display`
  * (`ticket.read`) answers it for the ticket view — a colour is no secret.
+ *
+ * Since ADR-0036 the row carries the accent colour of the interface as well:
+ * `accentColor` answers in the branding response for the shell and in the
+ * display response beside the internal comment colour. One save of the
+ * Darstellung writes the whole row, a body without the colour keeps the stored
+ * one, and the shell carries the value into the CSS property `--brand-accent`.
  */
 
 /** At most 500 kB of logo payload stored in the settings row. */
@@ -88,6 +95,25 @@ function storedInternalCommentColor(value: unknown): string {
   return HEX_COLOR.test(color) ? color : DEFAULT_INTERNAL_COMMENT_COLOR
 }
 
+/**
+ * The accent colour of the interface (ADR-0036): the stored value of the row,
+ * else the default of the server — the blue the shell painted before. The
+ * administration sets it under „Darstellung“ and the shell carries it into
+ * `--brand-accent`; a row with a value that is no hex colour answers the
+ * default as well.
+ */
+function storedAccentColor(value: unknown): string {
+  const color =
+    value !== null &&
+    value !== undefined &&
+    typeof value === 'object' &&
+    typeof (value as { accentColor?: unknown }).accentColor === 'string'
+      ? (value as { accentColor: string }).accentColor
+      : ''
+
+  return HEX_COLOR.test(color) ? color : DEFAULT_ACCENT_COLOR
+}
+
 /** Validates an optional logo data URL; `''`/`null`/`undefined` means "remove". */
 function validateLogo(logo: unknown): string | { code: string; params: Record<string, unknown> } {
   if (logo === undefined || logo === null || logo === '') {
@@ -127,6 +153,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           titleEnabled: storedTitleEnabled(rows[0]?.value),
           logo: storedLogo(rows[0]?.value),
           internalCommentColor: storedInternalCommentColor(rows[0]?.value),
+          accentColor: storedAccentColor(rows[0]?.value),
         })
       },
     )
@@ -149,6 +176,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
 
         return displaySettingsResponseSchema.parse({
           internalCommentColor: storedInternalCommentColor(rows[0]?.value),
+          accentColor: storedAccentColor(rows[0]?.value),
         })
       },
     )
@@ -198,36 +226,33 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
         const internalCommentColor =
           parsed.data.internalCommentColor ?? storedInternalCommentColor(current[0]?.value)
 
-        await database
-          .insert(settings)
-          .values({
-            key: BRANDING_KEY,
-            value: {
-              companyName: parsed.data.companyName,
-              titleEnabled: parsed.data.titleEnabled,
-              logo,
-              internalCommentColor,
-            },
-          })
-          .onConflictDoUpdate({
-            target: settings.key,
-            set: {
-              value: {
-                companyName: parsed.data.companyName,
-                titleEnabled: parsed.data.titleEnabled,
-                logo,
-                internalCommentColor,
-              },
-              updatedAt: new Date(),
-            },
-          })
+        // A body without the accent colour keeps the stored one — the page of the
+        // Darstellung sends the colour, an older client does not (ADR-0036).
+        const accentColor = parsed.data.accentColor ?? storedAccentColor(current[0]?.value)
 
-        return brandingResponseSchema.parse({
+        const row = {
           companyName: parsed.data.companyName,
           titleEnabled: parsed.data.titleEnabled,
           logo,
           internalCommentColor,
-        })
+          accentColor,
+        }
+
+        await database
+          .insert(settings)
+          .values({
+            key: BRANDING_KEY,
+            value: row,
+          })
+          .onConflictDoUpdate({
+            target: settings.key,
+            set: {
+              value: row,
+              updatedAt: new Date(),
+            },
+          })
+
+        return brandingResponseSchema.parse(row)
       },
     )
   },

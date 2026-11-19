@@ -28,7 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   a phone gets a compact identity row, a tab strip that scrolls horizontally only
   with 44 px targets that reach to the edge of the screen, and the safe areas of a
   notch. The public report form, the status page and the printed stickers keep the
-  default blue (ADR-0036).
+  default blue (ADR-0036). The contracts and the routes of the accent colour are
+  implemented (WP-M16-01, v1.1.315): `accentColor` travels in the `branding` row,
+  the branding route keeps a stored colour when the body carries none and answers
+  the default `#0ea5e9` before anything is configured, and `GET
+  /api/v1/settings/display` answers it beside the colour of the internal comment.
 - The readiness knows a duty window per weekday (**WP-M15-01 … WP-M15-05**,
   phase 15, ADR-0035): the plan of a pool with office hours is expressible.
   The office reported that the shift of the pool „Verwaltung" — on Monday from

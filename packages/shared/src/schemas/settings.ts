@@ -23,6 +23,13 @@ export const brandingResponseSchema = z.object({
    * and of the entry in the history. A hex value of the form `#rrggbb`.
    */
   internalCommentColor: z.string(),
+  /**
+   * The accent colour of the interface (ADR-0036): the active menu entry, the
+   * links of the settings menu, the focus ring and the unread badge. A value of
+   * the instance, configured under „Darstellung“ and defaulting to the blue of
+   * the shell (`DEFAULT_ACCENT_COLOR`).
+   */
+  accentColor: z.string(),
 })
 
 /** The default colour of the internal comment: a dark red (ADR-0034). */
@@ -31,12 +38,18 @@ export const DEFAULT_INTERNAL_COMMENT_COLOR = '#7f1d1d'
 /** A colour of the form `#rrggbb`. */
 export const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/)
 
+/** The default accent colour of the interface: the blue of the shell (ADR-0036). */
+export const DEFAULT_ACCENT_COLOR = '#0ea5e9'
+
 /**
  * The display values of the ticket view: every colleague who may read a ticket
  * may read a colour of the presentation, so the route needs no `settings.read`.
+ * The accent colour of the interface (ADR-0036) travels here as well, because a
+ * colour of the presentation is no secret and the shell needs both colours.
  */
 export const displaySettingsResponseSchema = z.object({
   internalCommentColor: z.string(),
+  accentColor: z.string(),
 })
 
 /** Whether the installation captures a ticket title at all (`PLAN.md` §14, WP-M9-24). */
@@ -52,6 +65,8 @@ export const updateBrandingRequestSchema = z.object({
   logo: z.string().optional(),
   /** The colour of the internal comment; a body without it keeps the stored one. */
   internalCommentColor: hexColorSchema.optional(),
+  /** The accent colour of the interface (ADR-0036); a body without it keeps it. */
+  accentColor: hexColorSchema.optional(),
 })
 
 export type BrandingResponse = z.infer<typeof brandingResponseSchema>

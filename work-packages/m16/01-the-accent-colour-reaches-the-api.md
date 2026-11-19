@@ -1,7 +1,7 @@
 # WP-M16-01: the accent colour reaches the API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-00
 phase: 16
 milestone: m16
@@ -70,9 +70,13 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: WP-M16-02, WP-M16-03, WP-M16-04, WP-M16-05 (each file exists in
-  the commit of the split)
+- Files changed: `packages/shared/src/schemas/settings.ts`, `apps/api/src/settings/branding.ts`,
+  `apps/api/src/settings/__tests__/branding.integration.spec.ts`
+- Interfaces added: `accentColor` in `brandingResponseSchema`, `displaySettingsResponseSchema`
+  and `updateBrandingRequestSchema`, `DEFAULT_ACCENT_COLOR`, `storedAccentColor(value)`
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run`, `npm run wp:check`
+  against a reachable Postgres
+- Follow-up WP: WP-M16-02, WP-M16-03, WP-M16-04, WP-M16-05 (each file exists in the
+  commit of the split)
 - Open question: none
+
