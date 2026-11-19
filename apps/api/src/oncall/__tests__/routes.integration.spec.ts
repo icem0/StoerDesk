@@ -47,6 +47,7 @@ type SettingsBody = {
   reminderUnconfirmedH: number
   unfilledWarningDays: number
   defaultPoolId: string | null
+  weeklyWindows: Array<{ weekday: number; start: string; end: string }>
 }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -561,6 +562,86 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(badTime.json<ErrorResponseBody>().code).toBe('invalid_request')
       expect(badKey.statusCode).toBe(400)
       expect(badKey.json<ErrorResponseBody>().code).toBe('invalid_request')
+    })
+
+    it('writes the duty windows and reads them back', async () => {
+      const windows = [
+        { weekday: 1, start: '07:30', end: '17:00' },
+        { weekday: 5, start: '07:00', end: '12:00' },
+      ]
+      const response = await putSettings(cookies['admin'], { 'oncall.weekly_windows': windows })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<SettingsBody>().weeklyWindows).toEqual(windows)
+
+      const back = await getSettings(cookies['oncall'])
+
+      expect(back.statusCode).toBe(200)
+      expect(back.json<SettingsBody>().weeklyWindows).toEqual(windows)
+    })
+
+    it('rejects a malformed duty window with 400', async () => {
+      const backwards = await putSettings(cookies['admin'], {
+        'oncall.weekly_windows': [{ weekday: 1, start: '17:00', end: '07:30' }],
+      })
+      const twice = await putSettings(cookies['admin'], {
+        'oncall.weekly_windows': [
+          { weekday: 1, start: '07:30', end: '17:00' },
+          { weekday: 1, start: '09:00', end: '12:00' },
+        ],
+      })
+
+      expect(backwards.statusCode).toBe(400)
+      expect(backwards.json<ErrorResponseBody>().code).toBe('invalid_request')
+      expect(twice.statusCode).toBe(400)
+      expect(twice.json<ErrorResponseBody>().code).toBe('invalid_request')
+    })
+
+    it('creates one shift per duty window', async () => {
+      await putSettings(cookies['admin'], {
+        'oncall.weekly_windows': [
+          { weekday: 1, start: '07:30', end: '17:00' },
+          { weekday: 5, start: '07:00', end: '12:00' },
+        ],
+      })
+
+      const generated = await postGenerate(cookies['admin'], {
+        poolId,
+        from: '2026-11-09T00:00:00.000Z',
+        to: '2026-11-16T00:00:00.000Z',
+      })
+
+      expect(generated.statusCode).toBe(200)
+      expect(generated.json<{ created: number }>().created).toBe(2)
+
+      const shifts = await db
+        .select({ startsAt: oncallShifts.startsAt, endsAt: oncallShifts.endsAt })
+        .from(oncallShifts)
+        .where(eq(oncallShifts.poolId, poolId))
+
+      const windowShifts = shifts
+        .map((shift) => ({
+          startsAt: shift.startsAt.toISOString(),
+          endsAt: shift.endsAt.toISOString(),
+        }))
+        .filter(
+          (shift) =>
+            shift.startsAt >= '2026-11-09T00:00:00.000Z' &&
+            shift.startsAt < '2026-11-16T00:00:00.000Z',
+        )
+        .sort((left, right) => left.startsAt.localeCompare(right.startsAt))
+
+      expect(windowShifts).toEqual([
+        { startsAt: '2026-11-09T06:30:00.000Z', endsAt: '2026-11-09T16:00:00.000Z' },
+        { startsAt: '2026-11-13T06:00:00.000Z', endsAt: '2026-11-13T11:00:00.000Z' },
+      ])
+
+      // The continuous plan is the plan again - the shared test database keeps
+      // the state of the settings for the other files.
+      const restored = await putSettings(cookies['admin'], { 'oncall.weekly_windows': [] })
+
+      expect(restored.statusCode).toBe(200)
+      expect(restored.json<SettingsBody>().weeklyWindows).toEqual([])
     })
   },
 )

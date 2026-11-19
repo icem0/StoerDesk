@@ -10,7 +10,7 @@ import {
 } from '../db/schema'
 import { enqueueOncallOutbox } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
-import { generateOncallSlots } from '@stoerdesk/shared'
+import { generateOncallSlots, generateOncallWindowSlots } from '@stoerdesk/shared'
 import { readOncallSettings } from './settings'
 
 type Db = Database['database']
@@ -230,13 +230,18 @@ export async function generateShifts(
 
   const settings = await readOncallSettings(database)
 
-  const slots = generateOncallSlots({
-    from,
-    to,
-    weekStartWeekday: settings.weekStartWeekday,
-    startTime: settings.startTime,
-    durationDays: settings.durationDays,
-  })
+  // The window plan (`specs/04-oncall.md` §4a.3.2) creates one shift per duty
+  // window; without a window the continuous plan of ADR-0011 is the plan.
+  const slots =
+    settings.weeklyWindows.length > 0
+      ? generateOncallWindowSlots({ from, to, weeklyWindows: settings.weeklyWindows })
+      : generateOncallSlots({
+          from,
+          to,
+          weekStartWeekday: settings.weekStartWeekday,
+          startTime: settings.startTime,
+          durationDays: settings.durationDays,
+        })
 
   if (slots.length === 0) {
     return { created: 0, skipped: 0 }

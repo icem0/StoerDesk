@@ -1587,7 +1587,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M15-00 | the notifications page test names the German texts (out of band) | done | yes |
 | WP-M15-01 | the duty windows — the spec, ADR-0035 and the split | done | yes |
 | WP-M15-02 | the shared contracts and the window generator | done | yes |
-| WP-M15-03 | the API and the planner read the windows | planned | yes |
+| WP-M15-03 | the API and the planner read the windows | done | yes |
 | WP-M15-04 | the administration edits the duty windows | planned | yes |
 | WP-M15-05 | the duty windows satisfy their criterion | planned | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |

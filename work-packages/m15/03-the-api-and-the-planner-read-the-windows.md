@@ -1,7 +1,7 @@
-# WP-M15-03: the API and the planner read the windows
+# WP-M15-03: the API reads and writes the duty windows
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M15-02
 phase: 15
 milestone: m15
@@ -21,37 +21,34 @@ files-read:
 files-write:
 
 - apps/api/src/oncall/settings.ts
-- apps/api/src/oncall/routes.ts
 - apps/api/src/oncall/service.ts
 - apps/api/src/oncall/__tests__/routes.integration.spec.ts
+- docs/REPO-MAP.md
 
 interfaces:
 
-- `GET /api/v1/settings/oncall` — answers `weeklyWindows`
+- `readOncallSettings(database)` — resolves the duty windows
+- `writeOncallSettings(database, patch)` — stores `oncall.weekly_windows`
+- `generateShifts(database, input)` — creates one shift per duty window
 - `PUT /api/v1/settings/oncall` — writes `oncall.weekly_windows`
-- `readOncallSettings(database)` — resolves the windows
-- `writeOncallSettings(database, patch)` — stores the windows
-- `generateShifts(database, input)` — creates one shift per window
 
 ## Task
 
 1. `apps/api/src/oncall/settings.ts` knows the ninth key
    `oncall.weekly_windows`: the read resolves it over the settings rows, the
-   write stores it in the same transaction as the other keys and keeps it in
-   the merged record of the write.
-2. `apps/api/src/oncall/routes.ts` answers `weeklyWindows` in the settings
-   response and accepts `oncall.weekly_windows` in the request. A malformed
-   window — a weekday outside `0`–`6`, a time that is no `HH:MM`, an end
-   before the start, a second window on a weekday — answers
-   `400 invalid_request` with the field path.
-3. `apps/api/src/oncall/service.ts` uses the windows: with at least one window
+   write keeps it in the merged record and upserts it in the same transaction
+   as the other keys.
+2. `apps/api/src/oncall/service.ts` uses the windows: with at least one window
    the generation creates one shift per window per week
    (`generateOncallWindowSlots`), without a window it keeps the continuous plan
    (`generateOncallSlots`). The insert stays idempotent
    (`ON CONFLICT (pool_id, starts_at) DO NOTHING`).
-4. The integration test writes the windows of the office through the API, reads
-   them back, generates the shifts of a week and proves the five shifts with
-   their times; a malformed window is refused.
+3. The integration test writes the windows of the office through the API, reads
+   them back, generates the shifts of a week and proves the two shifts with
+   their times; a window with an end before the start and a second window on
+   the same weekday are refused with `400 invalid_request`. The test restores
+   the continuous plan at the end, because the settings are shared state.
+4. `docs/REPO-MAP.md` names the settings module and the two generators.
 
 ## Non-goals
 
@@ -74,10 +71,10 @@ Expected: all green; the new test fails before the change and passes after it.
 ## Handoff
 
 - Files changed: `apps/api/src/oncall/settings.ts`,
-  `apps/api/src/oncall/routes.ts`, `apps/api/src/oncall/service.ts`, the
-  integration test file
+  `apps/api/src/oncall/service.ts`, the integration test file,
+  `docs/REPO-MAP.md`
 - Interfaces added: the contracts above
-- Verified: the commands above
+- Verified: the commands above with a reachable Postgres
 - Follow-up WP: WP-M15-04 (the administration form) — the file exists in the
   commit of the split
 - Open question: none
