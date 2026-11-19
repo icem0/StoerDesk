@@ -620,6 +620,10 @@
         "no_sender": "The channel misses a sender address.",
         "no_recipients": "No recipient is configured for the channel.",
         "push_subscription_dead": "Every web push subscription is dead: the devices have to allow the notification again.",
+        "push_unauthorized": "The push service rejected the authorization (401/403): the VAPID key does not belong to the registered device — the devices have to register again.",
+        "push_rejected": "The push service answered the delivery with an error.",
+        "push_unreachable": "The push service did not answer: the connection failed (network, DNS or TLS).",
+        "vapid_key_mismatch": "The public VAPID key does not belong to the private key — both have to be a pair.",
         "channel_unconfigured": "The channel is not configured or not enabled.",
         "unknown": "The delivery failed with an unknown error.",
         "webpush": {

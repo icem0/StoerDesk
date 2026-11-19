@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A failing web push names its cause (**WP-M14-171**, out of band in phase 14):
+  every failed delivery of the channel showed the same code `send_failed`, so
+  the operator could not tell a rejected key from an unreachable push service
+  from a device that is gone. The codes of the adapter now name the cause:
+  `vapid_key_mismatch` when the public key does not belong to the private key
+  (the pair is checked before the request), `push_unauthorized` for the `401`
+  and the `403` of the push service, `push_rejected` for another answer of the
+  service and `push_unreachable` for a request without an answer — the message
+  names the errno of the transport (`ENOTFOUND`, `ETIMEDOUT` …), never the
+  endpoint of a device and never a key. The page of the delivery problems shows
+  the cause in German and in English (v1.1.331).
 - The web push sends with one VAPID trio (**WP-M14-170**, out of band in phase
   14): the office reported that the web push of the instance delivered nothing
   — every send of the channel failed and the delivery page named the code

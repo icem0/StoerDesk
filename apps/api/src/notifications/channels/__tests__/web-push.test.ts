@@ -1,3 +1,5 @@
+import { createECDH } from 'node:crypto'
+
 import { describe, expect, it, vi } from 'vitest'
 
 import * as webPush from 'web-push'
@@ -6,9 +8,15 @@ import { sendWebPushNotification } from '../web-push'
 describe('sendWebPushNotification', () => {
   const message = { title: 'T-2026-0007', body: 'urgent · Lift 2' }
 
+  // A real pair of keys: the adapter checks that the public key belongs to the
+  // private key (WP-M14-171). The pair is generated per run and carries no
+  // secret of an instance.
+  const curve = createECDH('prime256v1')
+  curve.generateKeys()
+
   const vapidKeys = {
-    publicKey: 'BPm1NEFHt4bH8m8mV0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ',
-    privateKey: 'fMy7mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ',
+    publicKey: curve.getPublicKey().toString('base64url'),
+    privateKey: curve.getPrivateKey().toString('base64url'),
     subject: 'mailto:admin@example.org',
   }
 
@@ -199,13 +207,39 @@ describe('sendWebPushNotification', () => {
     } catch (error) {
       const webPushError = error as unknown as { name: string; code: string; message: string }
       expect(webPushError.name).toBe('WebPushError')
-      expect(webPushError.code).toBe('send_failed')
+      expect(webPushError.code).toBe('push_rejected')
       expect(webPushError.message).toContain('503')
 
       return
     }
 
     expect('the send unexpectedly succeeded').toBe('a rejected endpoint is required')
+  })
+
+  it('names the rejected authorization of the push service (WP-M14-171)', async () => {
+    for (const statusCode of [401, 403]) {
+      const sendMock = vi.fn(() => {
+        throw new webPush.WebPushError('Received unexpected response code', statusCode, {}, '', 'x')
+      })
+
+      try {
+        await sendWebPushNotification(
+          vapidKeys,
+          message,
+          '',
+          [subscription],
+          sendMock as unknown as typeof webPush.sendNotification,
+        )
+      } catch (error) {
+        const webPushError = error as unknown as { code: string; message: string }
+        expect(webPushError.code).toBe('push_unauthorized')
+        expect(webPushError.message).toContain(String(statusCode))
+
+        continue
+      }
+
+      expect('the send unexpectedly succeeded').toBe('a rejected authorization is required')
+    }
   })
 
   it('names a transport failure without a status code', async () => {
@@ -224,12 +258,64 @@ describe('sendWebPushNotification', () => {
     } catch (error) {
       const webPushError = error as unknown as { name: string; code: string; message: string }
       expect(webPushError.name).toBe('WebPushError')
-      expect(webPushError.code).toBe('send_failed')
-      expect(webPushError.message).toBe('The push service send failed')
+      expect(webPushError.code).toBe('push_unreachable')
+      expect(webPushError.message).toBe('The push service did not answer')
 
       return
     }
 
     expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('names the errno of a transport failure in the message (WP-M14-171)', async () => {
+    const sendMock = vi.fn(async () => {
+      throw Object.assign(new Error('getaddrinfo ENOTFOUND fcm.googleapis.com'), {
+        code: 'ENOTFOUND',
+      })
+    })
+
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('push_unreachable')
+      expect(webPushError.message).toBe('The push service did not answer: ENOTFOUND')
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('refuses to send when the public key does not belong to the private key (WP-M14-171)', async () => {
+    const sendMock = vi.fn(async () => ({ statusCode: 201, body: '', headers: {} }))
+
+    const other = createECDH('prime256v1')
+    other.generateKeys()
+
+    try {
+      await sendWebPushNotification(
+        { ...vapidKeys, publicKey: other.getPublicKey().toString('base64url') },
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('vapid_key_mismatch')
+      expect(webPushError.message).toMatch(/public key/i)
+      expect(sendMock.mock.calls).toEqual([])
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a foreign key pair is required')
   })
 })

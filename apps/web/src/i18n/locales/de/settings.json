@@ -620,6 +620,10 @@
         "no_sender": "Dem Kanal fehlt eine Absenderadresse.",
         "no_recipients": "Für den Kanal ist kein Empfänger eingetragen.",
         "push_subscription_dead": "Alle Web-Push-Abos sind abgelaufen: die Geräte müssen die Benachrichtigung neu erlauben.",
+        "push_unauthorized": "Der Push-Dienst hat die Berechtigung abgelehnt (401/403): der VAPID-Schlüssel passt nicht zum angemeldeten Gerät — die Geräte müssen neu angemeldet werden.",
+        "push_rejected": "Der Push-Dienst hat die Zustellung mit einem Fehler beantwortet.",
+        "push_unreachable": "Der Push-Dienst hat nicht geantwortet: die Verbindung ist fehlgeschlagen (Netzwerk, DNS oder TLS).",
+        "vapid_key_mismatch": "Der öffentliche VAPID-Schlüssel gehört nicht zum privaten Schlüssel — beide müssen ein Paar sein.",
         "channel_unconfigured": "Der Kanal ist nicht konfiguriert oder nicht aktiviert.",
         "unknown": "Die Zustellung ist mit einem unbekannten Fehler fehlgeschlagen.",
         "webpush": {

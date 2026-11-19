@@ -374,6 +374,14 @@ delivery that reaches at least one live device removes the dead rows of the
 same send; a send where **every** device is dead fails with that code, so the
 chain of §11.1 falls back to the next channel.
 
+**The codes of a failing web push.** A send of the web push that fails names
+its cause: keys that do not belong together fail with `vapid_key_mismatch`
+before the request, a rejected authorization of the push service (`401`,
+`403`) with `push_unauthorized`, another answer of the push service with
+`push_rejected` and a request without an answer with `push_unreachable`. The
+code travels into the `lastError` of the row of the outbox (§11.8) and into
+the log of the API — never the endpoint of a device, never a key (WP-M14-171).
+
 **The warning over another channel.** A broken channel warns the
 administration **once a day over another channel**: the daily check enqueues
 one row of the event type `channel.health_warning` for the first configured

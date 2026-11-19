@@ -1455,6 +1455,7 @@ async function item11(shared) {
   // §16.2/11: the delivery side of the web-push channel — the adapter reads the
   // `push_subscriptions` rows and builds the VAPID-signed request (ADR-0010).
   const delivered = oneShot('web-push delivery side', `
+  import { createECDH } from 'node:crypto'
   import { sendWebPushNotification, type WebPushConfig, type NotificationMessage, type WebPushSubscription } from '${join(apiSrc, 'notifications/channels/web-push')}'
   const rows = await db.select({
     endpoint: schema.pushSubscriptions.endpoint,
@@ -1476,9 +1477,11 @@ async function item11(shared) {
   }
 
   const captured = []
+  const curve = createECDH('prime256v1')
+  curve.generateKeys()
   const config = {
-    publicKey: 'BPm1NEFHt4bH8m8mV0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ0mQ',
-    privateKey: 'fMy7e2eOnlyPrivateKeyNotARealSecretAAAAAAAAAAAAAAAAAAAAAAA',
+    publicKey: curve.getPublicKey().toString('base64url'),
+    privateKey: curve.getPrivateKey().toString('base64url'),
     subject: 'mailto:acceptance@e2e.invalid',
   }
 

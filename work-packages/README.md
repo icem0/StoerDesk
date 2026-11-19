@@ -1653,6 +1653,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-161c | the badge of the settings menu is the link to the problems (out of band) | done | yes |
 | WP-M14-161d | the delivery problems name their cause in the interface language (out of band) | done | yes |
 | WP-M14-170 | the web push sends with one VAPID trio (out of band) | done | yes |
+| WP-M14-171 | a failing web push names its cause (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

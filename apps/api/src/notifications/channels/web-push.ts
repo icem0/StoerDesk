@@ -1,3 +1,5 @@
+import { createECDH } from 'node:crypto'
+
 import { t, type ServerLocale } from '@stoerdesk/shared'
 import * as webPush from 'web-push'
 
@@ -47,6 +49,31 @@ export class WebPushError extends Error {
 }
 
 /**
+ * Whether the public key belongs to the private key: the browser subscribes
+ * with the public key, the server signs with the private key, and the push
+ * service accepts a send only when both belong to the same pair (RFC 8292). A
+ * pair that does not belong together fails at the push service with `403` for
+ * every device — the operator sees the code `vapid_key_mismatch` instead of
+ * the generic `send_failed` (WP-M14-171).
+ */
+export function isVapidPair(publicKey: string, privateKey: string): boolean {
+  try {
+    const privateBytes = Buffer.from(privateKey, 'base64url')
+
+    if (privateBytes.length !== 32) {
+      return false
+    }
+
+    const curve = createECDH('prime256v1')
+    curve.setPrivateKey(privateBytes)
+
+    return curve.getPublicKey().equals(Buffer.from(publicKey, 'base64url'))
+  } catch {
+    return false
+  }
+}
+
+/**
  * The label of the deep link, resolved through the shared server `t()` over
  * `server.{de,en}.json` — the same `notification.action_label` the ntfy action,
  * the e-mail body and the Telegram text carry (`PLAN.md` §3.1, WP-M7-04b).
@@ -90,6 +117,13 @@ export interface WebPushSendResult {
  * Only when **every** device of the send is dead the send fails with the code
  * `push_subscription_dead` — the row of the outbox carries that code as its
  * `lastError` and the chain of §11.1 falls back to the next channel.
+ *
+ * Every other failure names its cause (WP-M14-171): the keys that do not belong
+ * together fail with `vapid_key_mismatch` before the request, a rejected
+ * authorization with `push_unauthorized`, another answer of the push service
+ * with `push_rejected` and a request without an answer with
+ * `push_unreachable`. The operator reads the cause in the log of the API and
+ * on the page of the delivery problems.
  */
 export async function sendWebPushNotification(
   config: WebPushConfig,
@@ -104,6 +138,13 @@ export async function sendWebPushNotification(
 
   if (subscriptions.length === 0) {
     return { deadEndpoints: [] }
+  }
+
+  if (!isVapidPair(config.publicKey, config.privateKey)) {
+    throw new WebPushError(
+      'vapid_key_mismatch',
+      'The VAPID public key does not belong to the private key',
+    )
   }
 
   const body = `${message.title}\n${message.body}`
@@ -137,12 +178,7 @@ export async function sendWebPushNotification(
         continue
       }
 
-      throw new WebPushError(
-        'send_failed',
-        statusCode === undefined
-          ? 'The push service send failed'
-          : `The push service responded with ${statusCode}`,
-      )
+      throw new WebPushError(codeOf(statusCode), messageOf(error, statusCode))
     }
   }
 
@@ -164,4 +200,49 @@ function statusCodeOf(error: unknown): number | undefined {
   const statusCode = (error as { statusCode?: unknown } | null)?.statusCode
 
   return typeof statusCode === 'number' ? statusCode : undefined
+}
+
+/**
+ * The code of a failed send (WP-M14-171) — the machine-readable name the
+ * delivery page and the log show:
+ *
+ * - `push_unauthorized`: the push service answered `401` or `403` — the key
+ *   does not belong to the registered device,
+ * - `push_rejected`: the push service answered with another error,
+ * - `push_unreachable`: the push service did not answer at all — the request
+ *   failed before a response (network, DNS, TLS).
+ */
+function codeOf(statusCode: number | undefined): string {
+  if (statusCode === 401 || statusCode === 403) {
+    return 'push_unauthorized'
+  }
+
+  return statusCode === undefined ? 'push_unreachable' : 'push_rejected'
+}
+
+/**
+ * The message of a failed send: the status the push service answered with or
+ * the errno of a transport failure (`ENOTFOUND`, `ETIMEDOUT` …). Never the
+ * endpoint of a device — the endpoint is a capability url — and never a key.
+ */
+function messageOf(error: unknown, statusCode: number | undefined): string {
+  if (statusCode !== undefined) {
+    return `The push service responded with ${statusCode}`
+  }
+
+  const errno = errnoOf(error)
+
+  return errno === ''
+    ? 'The push service did not answer'
+    : `The push service did not answer: ${errno}`
+}
+
+/**
+ * The errno of a transport failure (`ENOTFOUND`, `ECONNREFUSED`,
+ * `ETIMEDOUT` …) — a short machine name, never a text of the error.
+ */
+function errnoOf(error: unknown): string {
+  const code = (error as { code?: unknown } | null)?.code
+
+  return typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,19}$/.test(code) ? code : ''
 }
