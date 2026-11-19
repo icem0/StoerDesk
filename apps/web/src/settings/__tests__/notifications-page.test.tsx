@@ -60,18 +60,18 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Your channels' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Deine Kanäle' })).toBeTruthy()
     expect(await screen.findByRole('heading', { level: 2, name: 'Telegram' })).toBeTruthy()
 
-    expect(screen.getAllByText('Not connected yet')).toHaveLength(1)
-    expect(screen.getAllByText('No account needed')).toHaveLength(2)
-    expect(screen.getAllByText('Follows in a later package')).toHaveLength(4)
+    expect(screen.getAllByText('Noch nicht verknüpft')).toHaveLength(1)
+    expect(screen.getAllByText('Kein Konto nötig')).toHaveLength(2)
+    expect(screen.getAllByText('Folgt in einem späteren Paket')).toHaveLength(4)
 
-    expect(screen.getByText(/Please send the code|Send the code/i)).toBeTruthy()
+    expect(screen.getByText(/Sende den unten gezeigten Code/)).toBeTruthy()
     expect(await screen.findByText('AB2C3D')).toBeTruthy()
 
-    expect(screen.getByRole('button', { name: 'Connect the Telegram account' })).toBeTruthy()
-    expect(screen.getByText(/Removing a connected account/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' })).toBeTruthy()
+    expect(screen.getByText(/Das Entfernen eines verknüpften Kontos/)).toBeTruthy()
   })
 
   it('names the channel administration under the header and in the ntfy fallback', async () => {
@@ -80,7 +80,7 @@ describe('NotificationsPage', () => {
     renderPage()
 
     const administrationLinks = screen.queryAllByRole('link', {
-      name: 'Kanal-Administration (Administration → Channels)',
+      name: 'Kanal-Administration (Administration → Kanäle)',
     })
     expect(administrationLinks).toHaveLength(2)
 
@@ -90,7 +90,7 @@ describe('NotificationsPage', () => {
 
     expect(
       await screen.findByText(
-        'The configuration of the channels itself, the write-only secrets and the test message live in the Kanal-Administration.'
+        'Die Konfiguration der Kanäle selbst, die schreibgeschützten Geheimnisse und die Testnachricht leben in der Kanal-Administration.'
       )
     ).toBeTruthy()
   })
@@ -102,13 +102,13 @@ describe('NotificationsPage', () => {
     renderPage()
 
     await screen.findByText('AB2C3D')
-    fireEvent.click(screen.getByRole('button', { name: 'Connect the Telegram account' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' }))
 
     expect(
-      await screen.findByText('Telegram account connected: Chat id 4711')
+      await screen.findByText('Telegram-Konto verknüpft: Chat-ID 4711')
     ).toBeTruthy()
     expect(
-      await screen.findByText(/(Name of the chat|Chat name): Depression Team/)
+      await screen.findByText(/Name des Chats: Depression Team/)
     ).toBeTruthy()
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -139,10 +139,10 @@ describe('NotificationsPage', () => {
     renderPage()
 
     await screen.findByText('ZZ9YY8')
-    fireEvent.click(screen.getByRole('button', { name: 'Connect the Telegram account' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' }))
 
     expect(
-      await screen.findByText(/The code is invalid/i)
+      await screen.findByText(/Der Code ist ungültig/)
     ).toBeTruthy()
   })
 
@@ -176,8 +176,8 @@ describe('NotificationsPage', () => {
     const homeserverInput = await screen.findByLabelText('Homeserver', {
       selector: '#matrix-homeserver',
     })
-    const matrixIdInput = screen.getByLabelText('Matrix id', { selector: '#matrix-matrixid' })
-    const tokenInput = screen.getByLabelText('Access token', { selector: '#matrix-token' })
+    const matrixIdInput = screen.getByLabelText('Matrix-ID', { selector: '#matrix-matrixid' })
+    const tokenInput = screen.getByLabelText('Zugangstoken', { selector: '#matrix-token' })
     expect((tokenInput as HTMLInputElement).value).toBe('')
 
     fireEvent.change(homeserverInput, { target: { value: 'https://matrix.example.org' } })
@@ -185,13 +185,13 @@ describe('NotificationsPage', () => {
     fireEvent.change(tokenInput, { target: { value: 'secret-token' } })
     expect((tokenInput as HTMLInputElement).value).toBe('secret-token')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Connect the Matrix account' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Matrix-Konto verknüpfen' }))
 
     expect(
-      await screen.findByText('Matrix account connected: alice@example.org')
+      await screen.findByText('Matrix-Konto verknüpft: alice@example.org')
     ).toBeTruthy()
-    expect(screen.getByText('The access token is stored.')).toBeTruthy()
-    expect((screen.getByLabelText('Access token', { selector: '#matrix-token' }) as HTMLInputElement).value).toBe('')
+    expect(screen.getByText('Der Zugangstoken ist gespeichert.')).toBeTruthy()
+    expect((screen.getByLabelText('Zugangstoken', { selector: '#matrix-token' }) as HTMLInputElement).value).toBe('')
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/matrix',
       expect.objectContaining({
@@ -230,17 +230,17 @@ describe('NotificationsPage', () => {
     fireEvent.change(screen.getByLabelText('Homeserver', { selector: '#matrix-homeserver' }), {
       target: { value: 'https://matrix.example.org' },
     })
-    fireEvent.change(screen.getByLabelText('Matrix id', { selector: '#matrix-matrixid' }), {
+    fireEvent.change(screen.getByLabelText('Matrix-ID', { selector: '#matrix-matrixid' }), {
       target: { value: 'alice@example.org' },
     })
-    fireEvent.change(screen.getByLabelText('Access token', { selector: '#matrix-token' }), {
+    fireEvent.change(screen.getByLabelText('Zugangstoken', { selector: '#matrix-token' }), {
       target: { value: 'secret-token' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Connect the Matrix account' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Matrix-Konto verknüpfen' }))
 
     expect(
-      await screen.findByText(/The homeserver refused the id and the token/i)
+      await screen.findByText(/Der Homeserver hat die ID und den Token zurückgewiesen/)
     ).toBeTruthy()
   })
 
@@ -274,19 +274,19 @@ describe('NotificationsPage', () => {
     fireEvent.change(screen.getByLabelText('Homeserver', { selector: '#matrix-homeserver' }), {
       target: { value: 'https://matrix.example.org' },
     })
-    fireEvent.change(screen.getByLabelText('Matrix id', { selector: '#matrix-matrixid' }), {
+    fireEvent.change(screen.getByLabelText('Matrix-ID', { selector: '#matrix-matrixid' }), {
       target: { value: 'alice@example.org' },
     })
-    fireEvent.change(screen.getByLabelText('Access token', { selector: '#matrix-token' }), {
+    fireEvent.change(screen.getByLabelText('Zugangstoken', { selector: '#matrix-token' }), {
       target: { value: 'secret-token' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Connect the Matrix account' }))
-    expect(await screen.findByText('Matrix account connected: alice@example.org')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Matrix-Konto verknüpfen' }))
+    expect(await screen.findByText('Matrix-Konto verknüpft: alice@example.org')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove the Matrix account' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Matrix-Konto entfernen' }))
 
-    expect(await screen.findByText('The Matrix account was removed.')).toBeTruthy()
+    expect(await screen.findByText('Das Matrix-Konto wurde entfernt.')).toBeTruthy()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/matrix',
       expect.objectContaining({ method: 'DELETE' }),
@@ -480,9 +480,9 @@ describe('NotificationsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Office Chat/ }))
 
     expect(
-      await screen.findByText('WhatsApp Web account connected: Chat id chat-2')
+      await screen.findByText('WhatsApp Web Konto verknüpft: Chat-ID chat-2')
     ).toBeTruthy()
-    expect(screen.getByText('Chat name: Office Chat')).toBeTruthy()
+    expect(screen.getByText('Chat-Name: Office Chat')).toBeTruthy()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/whatsapp',
       expect.objectContaining({
@@ -511,7 +511,7 @@ describe('NotificationsPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })).toBeTruthy()
-    expect(await screen.findByText(/The WhatsApp Web bridge is not connected/i)).toBeTruthy()
+    expect(await screen.findByText(/Die WhatsApp Web Brücke ist nicht verbunden/)).toBeTruthy()
     expect(screen.queryAllByText('Depression Team')).toHaveLength(0)
   })
 
@@ -551,11 +551,11 @@ describe('NotificationsPage', () => {
 
     const connectButton = await screen.findByRole('button', { name: /Depression Team/ })
     fireEvent.click(connectButton)
-    expect(await screen.findByText('WhatsApp Web account connected: Chat id chat-1')).toBeTruthy()
+    expect(await screen.findByText('WhatsApp Web Konto verknüpft: Chat-ID chat-1')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove the WhatsApp Web account' }))
+    fireEvent.click(screen.getByRole('button', { name: 'WhatsApp Web Konto entfernen' }))
 
-    expect(await screen.findByText('The WhatsApp Web account was removed.')).toBeTruthy()
+    expect(await screen.findByText('Das WhatsApp Web Konto wurde entfernt.')).toBeTruthy()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/whatsapp',
       expect.objectContaining({ method: 'DELETE' }),
@@ -597,9 +597,9 @@ describe('NotificationsPage', () => {
     const { container } = renderPage()
 
     await waitFor(() => {
-      expect(screen.queryAllByText('No account connected').length).toBeGreaterThan(0)
+      expect(screen.queryAllByText('Kein Konto verknüpft').length).toBeGreaterThan(0)
     })
-    expect(screen.getByText('New ticket')).toBeTruthy()
+    expect(screen.getByText('Neuer Vorgang')).toBeTruthy()
 
     const ntfyCheckbox = container.querySelector('[id="pref-ticket.created:ntfy"]') as HTMLInputElement
     const emailCheckbox = container.querySelector('[id="pref-ticket.created:email"]') as HTMLInputElement
@@ -607,9 +607,9 @@ describe('NotificationsPage', () => {
     expect(emailCheckbox.checked).toBe(false)
     expect(emailCheckbox.disabled).toBe(false)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save the selection' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Auswahl speichern' }))
 
-    await screen.findByText('The selection was saved.')
+    await screen.findByText('Die Auswahl wurde gespeichert.')
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/preferences',
       expect.objectContaining({

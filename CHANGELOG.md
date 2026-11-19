@@ -586,6 +586,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Fixed
+- The test of the own channels page names the German texts (**WP-M15-00**, out
+  of band in phase 15): the commit `7a4cbd00` translated the page
+  `/settings/notifications` and updated the readiness-selection and the
+  web-push tests, but not `notifications-page.test.tsx` — the test still
+  expected the English texts („Your channels", „Connect the Telegram
+  account", …) while the page renders the German ones, and eleven of its
+  fifteen tests were red before the first package of phase 15.
 - The object form is filled with the object (**WP-M14-134f**, out of band in
   phase 14): the state of the edit form started empty, because the query
   answers after the first render — the office saw an empty form and the save

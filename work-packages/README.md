@@ -1583,6 +1583,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-154a | the shift history route names the people and the step (out of band) | done | no |
 | WP-M14-154b | the shift dialog shows the history on click (out of band) | done | no |
 | WP-M14-155 | the start page is the ticket list, the wall display shows reports and statistics (out of band) | done | yes |
+| WP-M15-00 | the notifications page test names the German texts (out of band) | done | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 
 
