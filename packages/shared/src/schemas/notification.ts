@@ -102,6 +102,77 @@ export type ChannelStatusItem = z.infer<typeof channelStatusItemSchema>
 export type ChannelStatusListResponse = z.infer<typeof channelStatusListResponseSchema>
 
 /**
+ * The delivery problems of the channels (`specs/10-notifications.md` §11.8,
+ * WP-M14-161a): a channel with failed deliveries that nobody acknowledged.
+ *
+ * The acknowledgement carries the time of the last quittature — a failure
+ * after it opens the problem again, so a solved problem stays solved and a
+ * new one is never silent. The times are the times of the failure itself
+ * (`updated_at` of the outbox row), not the time the row was queued.
+ */
+export const deliveryProblemSchema = z.object({
+  channel: z.string(),
+  /** The failed deliveries of the channel in total. */
+  failed: z.number().int().nonnegative(),
+  /** The failures that happened after the acknowledgement — the open problem. */
+  unacknowledged: z.number().int().nonnegative(),
+  /** The time of the last failure; null when the channel never failed. */
+  lastFailureAt: z.iso.datetime().nullable(),
+  /** The time of the last success; null when the channel never delivered. */
+  lastSuccessAt: z.iso.datetime().nullable(),
+  /** The machine code of the last failure; never translated text. */
+  lastError: z.string().nullable(),
+  /** The time of the last quittature; null when nobody acknowledged it. */
+  acknowledgedAt: z.iso.datetime().nullable(),
+  /** The name of the user that acknowledged the problem the last time. */
+  acknowledgedBy: z.string().nullable(),
+  /** True while the problem waits for a quittature. */
+  open: z.boolean(),
+})
+
+/**
+ * One lost message: a failed row of the outbox (`specs/10-notifications.md`
+ * §11.8). The row names the ticket the message announced — never a contact
+ * value, never a photo and never a secret of the channel.
+ */
+export const deliveryFailureSchema = z.object({
+  id: z.uuid(),
+  channel: z.string(),
+  eventType: z.string(),
+  failedAt: z.iso.datetime(),
+  attempts: z.number().int().nonnegative(),
+  error: z.string().nullable(),
+  /** The ticket the message announced; null for a readiness or a health warning. */
+  ticketNo: z.string().nullable(),
+})
+
+/** The answer of the delivery problems: the problems and the lost messages. */
+export const deliveryProblemsResponseSchema = z.object({
+  problems: z.array(deliveryProblemSchema),
+  failures: z.array(deliveryFailureSchema),
+})
+
+/**
+ * The quittature of the problems (`specs/10-notifications.md` §11.8): the named
+ * channels, or every open problem when the list is missing or empty.
+ */
+export const acknowledgeDeliveryRequestSchema = z.object({
+  channels: z.array(z.string().trim().min(1).max(64)).max(64).optional(),
+})
+
+/** The answer of the quittature: the time and the channels it closed. */
+export const acknowledgeDeliveryResponseSchema = z.object({
+  acknowledgedAt: z.iso.datetime(),
+  channels: z.array(z.string()),
+})
+
+export type DeliveryProblem = z.infer<typeof deliveryProblemSchema>
+export type DeliveryFailure = z.infer<typeof deliveryFailureSchema>
+export type DeliveryProblemsResponse = z.infer<typeof deliveryProblemsResponseSchema>
+export type AcknowledgeDeliveryRequest = z.infer<typeof acknowledgeDeliveryRequestSchema>
+export type AcknowledgeDeliveryResponse = z.infer<typeof acknowledgeDeliveryResponseSchema>
+
+/**
  * The account of a user at one channel (`specs/10-notifications.md` §11.3,
  * WP-M14-08). The secret is write-only: a request may carry it, an answer never
  * does — it only reports `secretSet` (ADR-0005 rule, §11.13).

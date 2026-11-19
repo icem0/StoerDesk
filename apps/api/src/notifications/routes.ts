@@ -2,9 +2,12 @@ import fp from 'fastify-plugin'
 import { and, count, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import {
+  acknowledgeDeliveryRequestSchema,
+  acknowledgeDeliveryResponseSchema,
   channelConfigurationListResponseSchema,
   channelConfigurationSchema,
   channelStatusListResponseSchema,
+  deliveryProblemsResponseSchema,
   channelVerificationResponseSchema,
   confirmChannelVerificationRequestSchema,
   confirmChannelVerificationResponseSchema,
@@ -51,6 +54,7 @@ import {
   requestNtfyVerification,
 } from './verification'
 import { deleteAccount, storeAccount } from './accounts'
+import { acknowledgeDeliveryProblems, readDeliveryProblems } from './delivery'
 import {
   countWebPushSubscriptions,
   deleteWebPushSubscription,
@@ -546,6 +550,52 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         channelStatusListResponseSchema.parse({
           channels: (await resolveChannelStatus(database)) ?? [],
         }),
+    )
+
+    /**
+     * `GET /api/v1/notifications/delivery` (`specs/10-notifications.md` §11.8,
+     * §11.11, WP-M14-161a): the delivery problems and the lost messages — per
+     * channel the failed deliveries, the failures nobody acknowledged and the
+     * times of the last failure and the last success, plus the failed rows of
+     * the outbox, the messages that never arrived. A failing channel is a
+     * warning for the administration, never an error of the API.
+     */
+    app.get(
+      '/api/v1/notifications/delivery',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.read) },
+      async () => deliveryProblemsResponseSchema.parse(await readDeliveryProblems(database)),
+    )
+
+    /**
+     * `POST /api/v1/notifications/delivery/acknowledge` (`specs/10-notifications.md`
+     * §11.8, §11.11, WP-M14-161a): the quittature of the problems — the named
+     * channels, or every open problem when the body names none. The time of
+     * the quittature is the watermark of the channel: a failure after it
+     * opens the problem again.
+     */
+    app.post(
+      '/api/v1/notifications/delivery/acknowledge',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.write) },
+      async (request, reply) => {
+        const parsed = acknowledgeDeliveryRequestSchema.safeParse(request.body ?? {})
+
+        if (!parsed.success) {
+          const fields = [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))]
+
+          return reply.code(400).send({ code: 'invalid_request', params: { fields } })
+        }
+
+        const answer = await acknowledgeDeliveryProblems(
+          database,
+          parsed.data.channels,
+          request.user?.id ?? '',
+        )
+
+        return acknowledgeDeliveryResponseSchema.parse({
+          acknowledgedAt: answer.acknowledgedAt.toISOString(),
+          channels: answer.channels,
+        })
+      },
     )
 
     app.post(

@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The delivery problems of the channels are quittable (**WP-M14-161a**, out of band
+  in phase 14): the office reported the badge „Zustellung gestört (1)" of the
+  settings menu — a text without a destination that counts the channels of the
+  whole history of the outbox and never goes away. The API of the delivery
+  problems (`GET /api/v1/notifications/delivery`, `notification.read`) names the
+  failing channels with the time of the last failure, the machine code of the
+  failure and the messages that never arrived; `POST
+  /api/v1/notifications/delivery/acknowledge` (`notification.write`) quits a
+  problem: the acknowledgement stores the *time* of the quittature (the
+  `settings` row `notifications.delivery_acknowledged`), so every failure after
+  it opens the problem again — a solved problem stays solved and a new one is
+  never silent (v1.1.283).
 - The new fault type has a page of its own (**WP-M14-162**, out of band in
   phase 14): the input mask „Störungsart anlegen" is not glued above the list of the
   fault types any more, the list offers a button that opens the page

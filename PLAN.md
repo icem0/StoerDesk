@@ -3205,6 +3205,20 @@ new one is never silent. The rule and the contract stand in
 **WP-M14-161a** (the contracts, the service and the two routes), **WP-M14-161b**
 (the page) and **WP-M14-161c** (the badge and the entry of the menu).
 
+**The delivery problems of the API and their quittature (WP-M14-161a, out of band
+in phase 14).** `apps/api/src/notifications/delivery.ts` reads the problems of the
+channels: per channel the failed deliveries, the failures nobody acknowledged, the
+times of the last failure and the last success, the machine code of the last
+failure and the name of the user that acknowledged — plus the failed rows of the
+outbox, the messages that never arrived. The times are the times of the
+*failure* (`updated_at`), not the times of the queueing: a delivery that was
+queued before the quittature and failed after it is a new failure. The
+acknowledgement lives in the settings row `notifications.delivery_acknowledged` —
+one entry per channel with the time and the user — and belongs to the instance,
+not to a user. `GET /api/v1/notifications/delivery` (`notification.read`) and
+`POST /api/v1/notifications/delivery/acknowledge` (`notification.write`) are the
+two routes of §11.11; a body without a channel acknowledges every open problem.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
