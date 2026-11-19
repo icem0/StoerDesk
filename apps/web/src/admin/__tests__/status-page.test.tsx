@@ -125,7 +125,7 @@ describe('StatusPage', () => {
     renderPage()
 
     expect(await screen.findByText('NEW')).toBeTruthy()
-    expect(screen.getByText('Status anlegen')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Status anlegen' })).toBeTruthy()
     expect(screen.getAllByText('Bearbeiten')).toHaveLength(4)
     expect(screen.getAllByText('Lösch')).toHaveLength(4)
   })

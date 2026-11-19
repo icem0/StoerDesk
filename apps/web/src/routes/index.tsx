@@ -6,6 +6,7 @@ import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
+import { StatusCreatePage } from '../admin/status-create-page'
 import { TransitionPage } from '../admin/transition-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { WebhookCreatePage } from '../admin/webhook-create-page'
@@ -175,6 +176,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <AdminStatusPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new status (WP-M14-166): the form does not lie
+        // below the table of the statuses any more.
+        path: '/admin/statuses/new',
+        element: (
+          <RequireSession>
+            <StatusCreatePage />
           </RequireSession>
         ),
       },

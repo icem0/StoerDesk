@@ -1592,10 +1592,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-163 | the new detected error gets its own page (out of band) | done | yes |
 | WP-M14-164 | the new API key gets its own page (out of band) | done | yes |
 | WP-M14-165 | the new webhook gets its own page (out of band) | done | yes |
+| WP-M14-166 | the new status gets its own page (out of band) | done | yes |
+| WP-M14-167 | the new transition gets its own page (out of band) | planned | yes |
 | WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
 | WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
 | WP-M14-161b | the page of the delivery problems (out of band) | done | yes |
-| WP-M14-161c | the badge of the settings menu is the link to the problems (out of band) | planned | yes |
+| WP-M14-161c | the badge of the settings menu is the link to the problems (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

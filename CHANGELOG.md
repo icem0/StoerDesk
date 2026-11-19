@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The badge of the delivery problem is a link (**WP-M14-161c**, out of band in
+  phase 14): the office reported the badge „Zustellung gestört (1)" of the
+  settings menu — a text without a destination that counted the channels of the
+  whole history of the outbox and therefore never went away. The badge is now
+  the link to the page `/admin/delivery` and counts the **open** problems — the
+  channels with a failure nobody quit: a quit problem is silent and a failure
+  after the quittature brings the badge back. The settings menu gained the
+  entry „Zustellungsprobleme" (v1.1.286).
 - The delivery problems have a page (**WP-M14-161b**, out of band in phase 14): the
   page `/admin/delivery` names the channels whose delivery failed — the number
   of the failed deliveries, the ones nobody quit, the time of the last failure,
@@ -26,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `settings` row `notifications.delivery_acknowledged`), so every failure after
   it opens the problem again — a solved problem stays solved and a new one is
   never silent (v1.1.283).
+- The new status has a page of its own (**WP-M14-166**, out of band in phase
+  14): the input mask „Status anlegen" is not glued below the table of the statuses
+  any more, the table offers a button that opens the page `/admin/statuses/new`. The
+  page needs `settings.write` and returns to the table after the status is created.
+  The editing of a status and the removal stay where they were (v1.1.291).
 - The new webhook has a page of its own (**WP-M14-165**, out of band in phase
   14): the input mask „Neuen Endpunkt anlegen" is not glued above the list of the
   endpoints any more, the list offers a button that opens the page

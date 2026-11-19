@@ -240,11 +240,12 @@ export function StatusPage() {
         />
       ) : null}
       {canWrite ? (
-        <StatusForm
-          status={null}
-          canWrite
-          onSave={(body) => void writeStatus.mutate({ key: null, body })}
-        />
+        <Link
+          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          to="/admin/statuses/new"
+        >
+          {t('admin.status.createTitle')}
+        </Link>
       ) : null}
     </main>
   )

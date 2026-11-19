@@ -3211,6 +3211,13 @@ same way the mask of the new API key was (WP-M14-164). It is a page of its own n
 — `/admin/webhooks/new` — and the list offers a button that opens it. The page needs
 `settings.write` and shows the signing secret after the endpoint is created.
 
+**The new status has a page of its own (WP-M14-166, out of band in phase 14).**
+The input mask of the new status was glued below the table of the statuses, the same
+way the mask of the new webhook was (WP-M14-165). It is a page of its own now —
+`/admin/statuses/new` — and the table offers a button that opens it. The page needs
+`settings.write` and returns to the table after the status is created; the editing of
+a status and the removal stay where they were.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of
