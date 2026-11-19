@@ -401,8 +401,41 @@ describe('the action editor of the escalation page', () => {
       {
         key: NOTIFY_ACTION.key,
         type: 'notify',
-        channels: ['ntfy'],
         target: { kind: 'assigned' },
+        condition: { all: [] },
+      },
+    ])
+  })
+
+  it('separates the target of a notification from the way (ADR-0037)', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-action-list')).toBeTruthy())
+
+    const list = screen.getByTestId('escalation-action-list')
+
+    // Without a target the action is the broadcast of the installation.
+    expect(within(list).getByText('Kein Ziel — Rundsendung an die Kanäle der Installation')).toBeTruthy()
+    expect(list.querySelector('select[multiple]')).toBeTruthy()
+
+    const target = screen.getByTestId('escalation-notify-target') as unknown as HTMLSelectElement
+    fireEvent.change(target, { target: { value: USER_ID } })
+
+    // With a target the channels of the installation disappear and the hint
+    // names the way of the recipient.
+    await waitFor(() => expect(list.querySelector('select[multiple]')).toBeNull())
+    expect(within(list).getByText(/die Kanäle, die es selbst ausgewählt hat/)).toBeTruthy()
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
+    expect(rule.actions).toEqual([
+      {
+        key: NOTIFY_ACTION.key,
+        type: 'notify',
+        target: { kind: 'user', id: USER_ID },
         condition: { all: [] },
       },
     ])
@@ -467,7 +500,6 @@ describe('the action editor of the escalation page', () => {
       {
         key: NOTIFY_ACTION.key,
         type: 'notify',
-        channels: ['ntfy'],
         target: { kind: 'user', id: USER_ID },
         priority: 'urgent',
         condition: { all: [] },

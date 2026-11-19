@@ -431,7 +431,7 @@
         "target": "Ziel",
         "targetAssigned": "Der zugewiesene Techniker des Tickets — der Techniker, dem die Eskalation das Ticket zugewiesen hat, und der Techniker, der es nach einem Angebot selbst angenommen hat.",
         "targetEmpty": "kein Ziel gewählt",
-        "targetChannels": "Kanäle der Installation",
+        "targetChannels": "Kein Ziel — Rundsendung an die Kanäle der Installation",
         "priority": "Wichtigkeit",
         "ticketPriority": "Ticket-Priorität",
         "priorities": {
@@ -441,7 +441,7 @@
           "high": "Hoch",
           "urgent": "Dringend"
         },
-        "notifyHint": "Das Ziel erhält die Nachricht per ntfy; die Kanalauswahl entfällt.",
+        "notifyHint": "Das Ziel erhält die Nachricht über die Kanäle, die es selbst ausgewählt hat — ohne Auswahl über sein eigenes ntfy-Thema.",
         "add": "Aktion hinzufügen",
         "remove": "Aktion #{{number}} entfernen"
       },

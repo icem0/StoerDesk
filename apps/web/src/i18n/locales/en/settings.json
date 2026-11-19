@@ -431,7 +431,7 @@
         "target": "Target",
         "targetAssigned": "The assigned technician of the ticket — the technician the escalation assigned it to, and the technician who accepted it himself after an offer.",
         "targetEmpty": "no target chosen",
-        "targetChannels": "Channels of the installation",
+        "targetChannels": "No target — broadcast to the channels of the installation",
         "priority": "Priority",
         "ticketPriority": "Ticket priority",
         "priorities": {
@@ -441,7 +441,7 @@
           "high": "High",
           "urgent": "Urgent"
         },
-        "notifyHint": "The target receives the notification via ntfy; the channel selection is not used.",
+        "notifyHint": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic.",
         "add": "Add action",
         "remove": "Remove action #{{number}}"
       },

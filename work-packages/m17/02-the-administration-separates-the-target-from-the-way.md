@@ -1,7 +1,7 @@
 # WP-M17-02: the administration separates the target from the way
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M17-01
 phase: 17
 milestone: m17
@@ -71,8 +71,15 @@ Expected: all green; the new assertions fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/escalation-action-editor.tsx`,
+  `apps/web/src/i18n/locales/de/settings.json`,
+  `apps/web/src/i18n/locales/en/settings.json`, the test
+  `apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx`
+- Interfaces added: the texts `admin.escalation.action.targetChannels` (the empty
+  target reads as the broadcast of the installation) and
+  `admin.escalation.action.notifyHint` (the target receives the message over the
+  way it chose itself)
+- Verified: `npm run typecheck`, `npm run lint`, `npm run i18n:check`,
+  `npm run test:run`, `npm run wp:check`
 - Follow-up WP: WP-M17-03 (the file exists in the commit of the split)
 - Open question: none

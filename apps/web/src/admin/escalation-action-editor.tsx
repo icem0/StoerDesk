@@ -16,11 +16,16 @@ import { EscalationConditionBuilder } from './escalation-condition-builder'
  * (`specs/07-escalation.md` §7.5, WP-M13-16).
  *
  * An action has a type (`notify`, `webhook`, `history`), its configuration —
- * the configured channels of the installation for a `notify` action, the
- * webhook endpoints of the administration for a `webhook` action, the note
- * text for a `history` action — and its own condition, built with the
- * condition builder of WP-M13-15. The order of the actions is the order of the
- * dispatcher and is changed by drag and drop.
+ * the configured channels of the installation for a `notify` action **without
+ * a target**, the webhook endpoints of the administration for a `webhook`
+ * action, the note text for a `history` action — and its own condition, built
+ * with the condition builder of WP-M13-15. The order of the actions is the
+ * order of the dispatcher and is changed by drag and drop.
+ *
+ * A `notify` action **with** a target names the recipient — a technician, a
+ * readiness pool or the technicians of the ticket — and leaves the way of the
+ * message to them: they receive it over the channels they selected themselves
+ * (ADR-0037). The editor therefore shows the channels only without a target.
  */
 
 type ActionShape = {
@@ -119,7 +124,10 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
   return {
     key: shape.key,
     type: 'notify',
-    channels: targeted ? ['ntfy'] : (shape.channels ?? []),
+    // A `notify` action with a target carries no channels: the way of the
+    // message belongs to the recipient (ADR-0037). Without a target the
+    // channels of the installation are the way of the broadcast.
+    ...(targeted ? {} : { channels: shape.channels ?? [] }),
     // The target `assigned` names the technicians of the ticket and carries
     // no id (`specs/07-escalation.md` §7.14, ADR-0033).
     ...(shape.targetKind === 'assigned'
