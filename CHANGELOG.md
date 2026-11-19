@@ -769,6 +769,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Fixed
+- The accent colour of the instance paints the interface again (**WP-M16-07**,
+  phase 16, ADR-0036): the classes `text-accent-300`, `bg-accent-600/10` and
+  `ring-accent-400` were in the markup of the header and of the settings menu,
+  but Tailwind had never generated the utilities for them — a colour that is no
+  part of the theme needs a `@theme inline` block, and the ramp has to be
+  declared on the theme classes, because the shell writes `--brand-accent` on
+  that very element. The menu of WP-M16-03 stayed blue for every colour of the
+  instance; the new E2E test `apps/web/e2e/accent.spec.ts` saves a colour
+  through the API of the branding and proves that the active entry of the menu
+  wears it.
 - The delivery problems name their cause (**WP-M14-161d**, out of band in phase
   14): the office reported that the lost messages of `/admin/delivery` showed the
   raw machine code `ticket.created` instead of the name of the event, and the
