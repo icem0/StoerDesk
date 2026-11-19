@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The new group has a page of its own (**WP-M14-160**, out of band in phase 14):
+  the input mask „Gruppe anlegen" is not glued below the list of the groups any
+  more, the list offers a button that opens the page `/admin/groups/new`. The
+  page needs `user.write`, links back to the list and returns to the list after
+  the group is created. The editing of a group stays where it was (v1.1.280).
 - The new role has a page of its own (**WP-M14-159**, out of band in phase 14): the
   input mask „Rolle anlegen" is not glued below the list of the roles any more,
   the list offers a button that opens the page `/admin/roles/new`. The page needs

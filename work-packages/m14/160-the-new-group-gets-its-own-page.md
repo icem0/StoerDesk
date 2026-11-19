@@ -1,7 +1,7 @@
 # WP-M14-160: the new group gets its own page
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 18k tokens
@@ -79,8 +79,17 @@ return to the list.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/group-form-parts.tsx` (new),
+  `apps/web/src/admin/group-create-page.tsx` (new),
+  `apps/web/src/admin/groups-page.tsx` (the button instead of the inline form),
+  `apps/web/src/routes/index.tsx` (the route), the new test,
+  `docs/REPO-MAP.md`, `PLAN.md` §16, `CHANGELOG.md`,
+  `work-packages/README.md`, this document
+- Interfaces added: `GroupCreatePage`, the route `/admin/groups/new`, the shared
+  parts of `group-form-parts.tsx`
+- Verified: `npm run typecheck -w @stoerdesk/web`, `npm run lint` (0 errors),
+  `npm run i18n:check`, `npm run test:run` and `npm run wp:check` green
+- Follow-up WP: none — the comment of the office is closed
+- Open question: none
 - Follow-up WP: none — the comment of the office is closed
 - Open question: none

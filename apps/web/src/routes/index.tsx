@@ -16,6 +16,7 @@ import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
 import { RoleCreatePage } from '../admin/role-create-page'
 import { GroupsPage } from '../admin/groups-page'
+import { GroupCreatePage } from '../admin/group-create-page'
 import { RouteErrorPage } from '../components/route-error-page'
 import { EscalationPage } from '../admin/escalation-page'
 import { TicketDefaultsPage } from '../admin/ticket-defaults-page'
@@ -112,6 +113,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <GroupsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The own page of the new group (WP-M14-160): the form does not lie
+        // below the list of the groups any more.
+        path: '/admin/groups/new',
+        element: (
+          <RequireSession>
+            <GroupCreatePage />
           </RequireSession>
         ),
       },

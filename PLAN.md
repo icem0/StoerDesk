@@ -3175,6 +3175,13 @@ way the mask of the new user was (WP-M14-158). It is a page of its own now —
 `role.write`, links back to the list and returns to the list after the role is
 created; the grant editor of a role stays below the table.
 
+**The new group has a page of its own (WP-M14-160, out of band in phase 14).**
+The input mask „Gruppe anlegen" was glued below the list of the groups, the same
+way the mask of the new user was (WP-M14-158). It is a page of its own now —
+`/admin/groups/new` — and the list offers a button that opens it. The page needs
+`user.write`, links back to the list and returns to the list after the group is
+created; the editing of a group stays below the table.
+
 **The delivery problem is a link and can be quit (WP-M14-161, out of band in
 phase 14).** The office reported the badge „Zustellung gestört (1)" of the
 settings menu: it is a text without a destination, it counts the channels of

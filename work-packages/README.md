@@ -1587,7 +1587,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 | WP-M14-158 | the new user gets its own page (out of band) | done | yes |
 | WP-M14-159 | the new role gets its own page (out of band) | done | yes |
-| WP-M14-160 | the new group gets its own page (out of band) | planned | yes |
+| WP-M14-160 | the new group gets its own page (out of band) | done | yes |
 | WP-M14-161 | the delivery problem is a link and can be quit — the spec and the split (out of band) | done | yes |
 | WP-M14-161a | the delivery problems of the API and their quittature (out of band) | done | yes |
 | WP-M14-161b | the page of the delivery problems (out of band) | planned | yes |
