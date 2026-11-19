@@ -666,6 +666,26 @@ stays the only enforcement point; the note of the colleagues is rendered as
 text and no token, secret or cookie enters the DOM) and K re-checked (no log
 line added, the test carries mock values only). No new finding.
 
+escalation-way pass: 2026-11-19, diff `8264b46d..653f3471` (WP-M17-00 … WP-M17-03 —
+the spec of `specs/07-escalation.md` §7.5 and `specs/10-notifications.md` §11.4,
+ADR-0037, the resolver `apps/api/src/notifications/receivers.ts`, the dispatcher
+`apps/api/src/escalation/actions.ts`, the distribution
+`apps/api/src/escalation/distribution.ts`, the escalation editor
+`apps/web/src/admin/escalation-action-editor.tsx`, the own page
+`apps/web/src/settings/notifications-page.tsx` and the locale files) — areas A and
+B re-checked in full (no new API route, no new capability and no bearer scope: the
+package changes the routing of an internal service, the route table of the
+installation is unchanged), C re-checked for the changed files (the resolver reads
+`notification_preferences` and `notification_accounts` through drizzle with bound
+values — `eq` and `inArray` over column references, no interpolation and no client
+input at all: the user ids come from the rows of the installation, the target of
+the action and the shifts of the pool), D re-checked (the changed web modules
+render the new texts as text by React and change labels only — no route, no sink
+for foreign input), H re-run (`npm audit --omit=dev` reports the same 4 advisories
+in `@fastify/static` and its transitive `glob`/`minimatch` — SEC-022 stays open, no
+dependency changed in this diff) and K re-checked (no log line added; the topic of
+a recipient travels in the row of the outbox as before, the tests carry mock
+topics and `example.invalid` addresses only). No new finding.
 ## Route table (checked structure — B)
 
 Complete at the repeat pass: 91 routes, 78 guarded by `requirePermission`, 2 by
