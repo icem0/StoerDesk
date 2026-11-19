@@ -9,8 +9,8 @@ import { i18n } from '../../../i18n'
 import { TvPage } from '../tv-page'
 
 /**
- * The wall monitor renders the same blocks as the start page (WP-M10-36) and
- * nothing can be clicked there — a display is never interactive.
+ * The wall monitor renders the latest reports on one side and the statistics
+ * on the other. Nothing can be clicked there — a display is never interactive.
  */
 const snapshot: DashboardSnapshot = {
   generatedAt: '2026-03-10T08:00:00.000Z',
@@ -56,6 +56,16 @@ const snapshot: DashboardSnapshot = {
       },
     ],
   },
+  recentTickets: [
+    {
+      ticketNo: 'ST-2026-0042',
+      objectName: 'Feuerwache Nord',
+      status: 'IN_REVIEW',
+      priority: 'high',
+      reportedAt: '2026-03-09T08:00:00.000Z',
+      lastEvent: { type: 'review_started', at: '2026-03-09T09:00:00.000Z' },
+    },
+  ],
   burningNow: [
     {
       ticketNo: 'ST-2026-0042',
@@ -118,24 +128,31 @@ describe('TvPage wall display', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText('Dieser Wandmonitor ist nicht eingerichtet oder wurde zurückgesetzt.')).toBeTruthy()
-    expect(screen.queryByText('Offene Tickets')).toBeNull()
+    expect(
+      await screen.findByText(
+        'Dieser Wandmonitor ist nicht eingerichtet oder wurde zurückgesetzt.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText('Letzte Meldungen')).toBeNull()
   })
 
-  it('renders the same blocks as the start page', async () => {
+  it('shows the latest reports on one side and the statistics on the other', async () => {
     renderTv()
 
     expect(await screen.findByText('12 Tag(e) ohne Störung')).toBeTruthy()
     expect(screen.getByText('Rekord: 30 Tag(e)')).toBeTruthy()
     expect(screen.getByText('Auswertungen (4 Meldungen, 30 Tage)')).toBeTruthy()
-    expect(screen.getByText('60 min')).toBeTruthy()
+    // 60 minutes and more are shown in hours.
+    expect(screen.getByText('1 h')).toBeTruthy()
+    expect(screen.getByText('1,5 h')).toBeTruthy()
+    expect(screen.getByText('6 h')).toBeTruthy()
     expect(screen.getByText('keine Daten')).toBeTruthy()
 
-    const heading = screen.getByRole('heading', { name: 'Offene Tickets' })
+    const heading = screen.getByRole('heading', { name: 'Letzte Meldungen' })
     expect(heading).toBeTruthy()
     expect(screen.getByText('Feuerwache Nord')).toBeTruthy()
     expect(screen.getByText('ST-2026-0042')).toBeTruthy()
-    expect(screen.getByText('noch 6 h')).toBeTruthy()
+    expect(screen.getByText(/Gemeldet:/)).toBeTruthy()
     expect(screen.getByText(/In Prüfung gesetzt/)).toBeTruthy()
 
     // The channel tile is visible (the TV snapshot carries it here for the test).

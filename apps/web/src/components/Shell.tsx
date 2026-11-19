@@ -42,13 +42,14 @@ function useSystemTheme(): 'light' | 'dark' {
 
 /**
  * Top-level entries of the header nav (WP-M2-28, WP-M10-35): the three pages the
- * internal user needs without opening the settings page. `/` is matched exactly,
- * `/tickets` and `/oncall` by prefix, so a ticket detail keeps the `tickets`
- * entry and the readiness page its own entry active.
+ * internal user needs without opening the settings page. The start page is the
+ * ticket list; the statistics took the place of the retired dashboard. `/tickets`
+ * and `/stats` are matched by prefix, so a ticket detail keeps the `tickets`
+ * entry active and the readiness page its own entry.
  */
 const headerLinks = [
-  { key: 'dashboard', path: '/' },
   { key: 'tickets', path: '/tickets' },
+  { key: 'stats', path: '/stats' },
   { key: 'oncall', path: '/oncall' },
 ] as const
 
@@ -157,7 +158,6 @@ export function Shell() {
           >
             {headerLinks.map((link) => (
               <NavLink
-                end={link.path === '/'}
                 className={({ isActive: routerActive }) => {
                   const active = routerActive
 

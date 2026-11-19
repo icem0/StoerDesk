@@ -22,6 +22,7 @@
       "acknowledge": "Avg time to acknowledge",
       "processing": "Avg processing time",
       "minutes": "{{count}} min",
+      "hours": "{{value}} h",
       "noData": "no data"
     },
     "topFault": {
@@ -49,15 +50,14 @@
     "tv": {
       "notFound": "This wall display is not configured or has been reset."
     },
-    "openTickets": {
-      "title": "Open tickets",
-      "empty": "No open tickets",
-      "remaining": "{{hours}} h left",
-      "overdue": "{{hours}} h overdue",
+    "recentTickets": {
+      "title": "Latest reports",
+      "empty": "No reports yet",
+      "reportedAt": "Reported: {{time}}",
       "lastEvent": "Last event: {{label}} · {{time}}"
     },
-    "loading": "Loading dashboard …",
-    "loadError": "The dashboard could not be loaded."
+    "loading": "Loading the wall display …",
+    "loadError": "The wall display could not be loaded."
   },
   "report": {
     "title": "Report a malfunction",

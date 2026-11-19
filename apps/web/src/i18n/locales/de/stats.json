@@ -39,7 +39,7 @@
   },
   "reaction": {
     "title": "Reaktionszeiten",
-    "hint": "In Minuten; Pausen werden separat ausgewiesen.",
+    "hint": "In Minuten, ab 60 Minuten in Stunden; Pausen werden separat ausgewiesen.",
     "phase": {
       "review": "Prüfung",
       "firstResponse": "Erste Rückmeldung",
@@ -50,8 +50,10 @@
     "average": "Mittelwert",
     "p90": "P90",
     "minutes": "{{value}} min",
+    "hours": "{{value}} h",
     "pausedTickets": "{{count}} Meldungen mit Pause",
-    "pauseMinutes": "{{count}} Pausenminuten"
+    "pauseMinutes": "{{count}} Pausenminuten",
+    "pauseHours": "{{value}} Pausenstunden"
   },
   "frequency": {
     "title": "Häufigkeit",

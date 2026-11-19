@@ -123,23 +123,24 @@ describe('Shell settings access', () => {
     stubMe(signedInMe())
     renderShell()
 
-    const dashboard = screen.getByRole('link', { name: 'Dashboard' })
     const tickets = screen.getByRole('link', { name: 'Tickets' })
+    const stats = screen.getByRole('link', { name: 'Statistik' })
     const oncall = screen.getByRole('link', { name: 'Bereitschaft' })
-    expect(dashboard.getAttribute('href')).toBe('/')
     expect(tickets.getAttribute('href')).toBe('/tickets')
+    expect(stats.getAttribute('href')).toBe('/stats')
     expect(oncall.getAttribute('href')).toBe('/oncall')
-    expect(dashboard.getAttribute('aria-current')).toBeNull()
     expect(tickets.getAttribute('aria-current')).toBeNull()
+    expect(stats.getAttribute('aria-current')).toBeNull()
     expect(oncall.getAttribute('aria-current')).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Dashboard' })).toBeNull()
   })
 
   it('marks the readiness link as active on /oncall', async () => {
     stubMe(signedInMe())
     renderShell('/oncall')
 
-    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBeNull()
     expect(screen.getByRole('link', { name: 'Tickets' }).getAttribute('aria-current')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Statistik' }).getAttribute('aria-current')).toBeNull()
     expect(screen.getByRole('link', { name: 'Bereitschaft' }).getAttribute('aria-current')).toBe(
       'page',
     )
@@ -149,7 +150,7 @@ describe('Shell settings access', () => {
     stubMe(signedInMe())
     renderShell('/tickets')
 
-    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Statistik' }).getAttribute('aria-current')).toBeNull()
     expect(screen.getByRole('link', { name: 'Tickets' }).getAttribute('aria-current')).toBe('page')
   })
 

@@ -1,29 +1,24 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 
 import type { DashboardSnapshot } from '@stoerdesk/shared'
 import type { TFunction } from 'i18next'
 
 import { i18n } from '../../i18n'
+import { formatHours, isHourValue } from '../../lib/duration'
 import { useFaultCatalog } from '../../features/tickets/use-fault-catalog'
 
-import { OpenTickets } from './open-tickets'
+import { RecentTickets } from './recent-tickets'
 
 /**
- * One display for both surfaces (WP-M10-36): the start page of the office and
- * the wall monitor render the same blocks of the dashboard — first the
- * statistics (the fault-free counter, the four tiles and the evaluations of
- * the averages), then the list of the open tickets with the mini timeline
- * and the last entry of the history, then the channel tile.
+ * The wall display (`specs/11-dashboard.md` §11.7).
  *
- * `interactive` decides whether the display can be used: on the start page
- * every tile and every ticket number is a link and the primary action is
- * offered; on the wall monitor nothing is clickable — it is a display only,
- * so no link and no action button is rendered there.
+ * Two sides: the latest reports on the left, the statistics on the right. The
+ * display is never interactive — a wall monitor shows, it does not navigate.
+ * The durations of the statistics use minutes below one hour and hours from
+ * 60 minutes on (`specs/12-stats.md` §12.2).
  */
 
-const TILE_CLASS =
-  'block rounded-xl border border-slate-700 bg-slate-900/60 p-4 transition-colors hover:border-slate-600 hover:bg-slate-800/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400'
+const TILE_CLASS = 'block rounded-xl border border-slate-700 bg-slate-900/60 p-4'
 
 function TileValue(props: { label: string; value: string; tone: string }) {
   return (
@@ -34,12 +29,8 @@ function TileValue(props: { label: string; value: string; tone: string }) {
   )
 }
 
-function Tile(props: { label: string; value: string; tone: string; to: string; interactive: boolean }) {
-  return props.interactive ? (
-    <Link className={`${TILE_CLASS} min-h-11`} to={props.to}>
-      <TileValue label={props.label} tone={props.tone} value={props.value} />
-    </Link>
-  ) : (
+function Tile(props: { label: string; value: string; tone: string }) {
+  return (
     <div className={`${TILE_CLASS} min-h-11`}>
       <TileValue label={props.label} tone={props.tone} value={props.value} />
     </div>
@@ -90,30 +81,36 @@ function EvaluationRow(props: { label: string; value: string }) {
   )
 }
 
-function minutesLabel(t: TFunction<'ticket'>, minutes: number | null): string {
-  return minutes === null ? t('dashboard.evaluations.noData') : t('dashboard.evaluations.minutes', { count: minutes })
+function durationLabel(t: TFunction<'ticket'>, minutes: number | null, locale: string): string {
+  if (minutes === null) {
+    return t('dashboard.evaluations.noData')
+  }
+
+  return isHourValue(minutes)
+    ? t('dashboard.evaluations.hours', { value: formatHours(minutes, locale) })
+    : t('dashboard.evaluations.minutes', { count: minutes })
 }
 
-export function DashboardDisplay(props: { snapshot: DashboardSnapshot; interactive: boolean }) {
+export function DashboardDisplay(props: { snapshot: DashboardSnapshot }) {
   const { t } = useTranslation('ticket')
-  const { snapshot, interactive } = props
+  const { snapshot } = props
 
-  const { faultFree, evaluations, tiles, burningNow, topFault } = snapshot
+  const { faultFree, evaluations, tiles, topFault, recentTickets } = snapshot
   const channels = tiles.channels ?? null
-  const catalogLocale = i18n.language === 'en' ? 'en' : 'de'
+  const locale = i18n.language
+  const catalogLocale = locale === 'en' ? 'en' : 'de'
   const faultCatalog = useFaultCatalog(catalogLocale)
   const topFaultLabel =
     topFault === undefined || topFault === null
       ? ''
-      : faultCatalog.find((entry) => entry.key === topFault.key)?.text ?? topFault.key
+      : (faultCatalog.find((entry) => entry.key === topFault.key)?.text ?? topFault.key)
 
   return (
-    <section className="flex flex-col gap-6">
-      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-        <h1 className="text-lg font-semibold">{t('dashboard.greeting')}</h1>
-        <p className="mt-1 text-sm text-slate-400">{t('dashboard.hint')}</p>
+    <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+      <RecentTickets rows={recentTickets} />
 
-        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+      <div className="flex flex-col gap-6">
+        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {t('dashboard.faultFree.title')}
           </p>
@@ -133,98 +130,69 @@ export function DashboardDisplay(props: { snapshot: DashboardSnapshot; interacti
           )}
         </div>
 
-        {interactive ? (
-          <Link
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-            to="/tickets/create"
-          >
-            {t('dashboard.primaryAction')}
-          </Link>
+        <div className="grid grid-cols-2 gap-3">
+          <Tile label={t('dashboard.tiles.open')} tone="text-sky-300" value={String(tiles.open)} />
+          <Tile
+            label={t('dashboard.tiles.overdue')}
+            tone="text-rose-300"
+            value={String(tiles.overdue)}
+          />
+          <Tile
+            label={t('dashboard.tiles.unreviewed')}
+            tone="text-amber-300"
+            value={String(tiles.unreviewed)}
+          />
+          <Tile
+            label={t('dashboard.tiles.pool')}
+            tone="text-purple-300"
+            value={String(tiles.poolSize)}
+          />
+        </div>
+
+        {evaluations !== undefined ? (
+          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {t('dashboard.evaluations.title', { count: evaluations.tickets })}
+            </p>
+            <dl className="mt-2 grid grid-cols-1 gap-2">
+              <EvaluationRow
+                label={t('dashboard.evaluations.review')}
+                value={durationLabel(t, evaluations.averageReviewMinutes, locale)}
+              />
+              <EvaluationRow
+                label={t('dashboard.evaluations.firstResponse')}
+                value={durationLabel(t, evaluations.averageFirstResponseMinutes, locale)}
+              />
+              <EvaluationRow
+                label={t('dashboard.evaluations.acknowledge')}
+                value={durationLabel(t, evaluations.averageAcknowledgeMinutes, locale)}
+              />
+              <EvaluationRow
+                label={t('dashboard.evaluations.processing')}
+                value={durationLabel(t, evaluations.averageProcessingMinutes, locale)}
+              />
+            </dl>
+          </div>
         ) : null}
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile
-          interactive={interactive}
-          label={t('dashboard.tiles.open')}
-          to="/tickets?open=true"
-          tone="text-sky-300"
-          value={String(tiles.open)}
-        />
-        <Tile
-          interactive={interactive}
-          label={t('dashboard.tiles.overdue')}
-          to="/tickets?overdue=true"
-          tone="text-rose-300"
-          value={String(tiles.overdue)}
-        />
-        <Tile
-          interactive={interactive}
-          label={t('dashboard.tiles.unreviewed')}
-          to="/tickets?status=NEW"
-          tone="text-amber-300"
-          value={String(tiles.unreviewed)}
-        />
-        <Tile
-          interactive={interactive}
-          label={t('dashboard.tiles.pool')}
-          to="/tickets?status=OFFERED"
-          tone="text-purple-300"
-          value={String(tiles.poolSize)}
-        />
-      </div>
+        {topFault !== undefined && topFault !== null ? (
+          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {t('dashboard.topFault.title')}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-sky-200">{topFaultLabel}</p>
+            <p className="mt-1 text-sm text-slate-400">
+              {t('dashboard.topFault.count', { count: topFault.count })}
+            </p>
+          </div>
+        ) : null}
 
-      {evaluations !== undefined ? (
-        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t('dashboard.evaluations.title', { count: evaluations.tickets })}
-          </p>
-          <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <EvaluationRow
-              label={t('dashboard.evaluations.review')}
-              value={minutesLabel(t, evaluations.averageReviewMinutes)}
-            />
-            <EvaluationRow
-              label={t('dashboard.evaluations.firstResponse')}
-              value={minutesLabel(t, evaluations.averageFirstResponseMinutes)}
-            />
-            <EvaluationRow
-              label={t('dashboard.evaluations.acknowledge')}
-              value={minutesLabel(t, evaluations.averageAcknowledgeMinutes)}
-            />
-            <EvaluationRow
-              label={t('dashboard.evaluations.processing')}
-              value={minutesLabel(t, evaluations.averageProcessingMinutes)}
-            />
-          </dl>
-        </div>
-      ) : null}
-
-      <OpenTickets generatedAt={snapshot.generatedAt} linkRows={interactive} rows={burningNow} />
-
-      {topFault !== undefined && topFault !== null ? (
-        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t('dashboard.topFault.title')}
-          </p>
-          <p className="mt-1 text-lg font-semibold text-sky-200">{topFaultLabel}</p>
-          <p className="mt-1 text-sm text-slate-400">
-            {t('dashboard.topFault.count', { count: topFault.count })}
-          </p>
-        </div>
-      ) : null}
-
-      {channels !== null && channels.length > 0 ? (
-        interactive ? (
-          <Link className={`${TILE_CLASS} min-h-11`} to="/admin">
-            <ChannelTileContent channels={channels} t={t} />
-          </Link>
-        ) : (
+        {channels !== null && channels.length > 0 ? (
           <div className={`${TILE_CLASS} min-h-11`}>
             <ChannelTileContent channels={channels} t={t} />
           </div>
-        )
-      ) : null}
+        ) : null}
+      </div>
     </section>
   )
 }

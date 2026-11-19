@@ -11,6 +11,7 @@ import type {
 
 import { useMe, usePermission } from '../../auth/usePermission'
 import { apiBaseUrl, apiFetch, type ApiError } from '../../lib/api'
+import { formatHours, isHourValue } from '../../lib/duration'
 
 /**
  * Statistics page at `/stats` (`specs/12-stats.md` §12.1–§12.5, §12.9, WP-M9-15).
@@ -153,7 +154,7 @@ function FrequencyChart(props: {
 }
 
 export function StatsPage() {
-  const { t } = useTranslation('stats')
+  const { t, i18n } = useTranslation('stats')
   const me = useMe()
   const mayRead = usePermission('stats.read')
   const mayExport = usePermission('stats.export')
@@ -210,6 +211,10 @@ export function StatsPage() {
   ] as const
 
   const exportHref = `${apiBaseUrl}/v1/stats/export.csv?${frequencyQuery}`
+  const duration = (minutes: number): string =>
+    isHourValue(minutes)
+      ? t('reaction.hours', { value: formatHours(minutes, i18n.language) })
+      : t('reaction.minutes', { value: minutes })
 
   return (
     <section className="flex flex-col gap-6">
@@ -404,15 +409,15 @@ export function StatsPage() {
                   <dd className="text-right tabular-nums text-slate-200">{phase.data.count}</dd>
                   <dt className="text-slate-500">{t('reaction.median')}</dt>
                   <dd className="text-right tabular-nums text-slate-200">
-                    {t('reaction.minutes', { value: phase.data.medianMinutes })}
+                    {duration(phase.data.medianMinutes)}
                   </dd>
                   <dt className="text-slate-500">{t('reaction.average')}</dt>
                   <dd className="text-right tabular-nums text-slate-200">
-                    {t('reaction.minutes', { value: phase.data.averageMinutes })}
+                    {duration(phase.data.averageMinutes)}
                   </dd>
                   <dt className="text-slate-500">{t('reaction.p90')}</dt>
                   <dd className="text-right tabular-nums text-slate-200">
-                    {t('reaction.minutes', { value: phase.data.p90Minutes })}
+                    {duration(phase.data.p90Minutes)}
                   </dd>
                 </dl>
               )}
@@ -422,7 +427,11 @@ export function StatsPage() {
         {reaction.data !== undefined ? (
           <p className="mt-3 text-sm text-slate-400">
             {t('reaction.pausedTickets', { count: reaction.data.pausedTickets })} ·{' '}
-            {t('reaction.pauseMinutes', { count: reaction.data.pauseMinutes })}
+            {isHourValue(reaction.data.pauseMinutes)
+              ? t('reaction.pauseHours', {
+                  value: formatHours(reaction.data.pauseMinutes, i18n.language),
+                })
+              : t('reaction.pauseMinutes', { count: reaction.data.pauseMinutes })}
           </p>
         ) : null}
       </div>

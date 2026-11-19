@@ -10,6 +10,7 @@ import {
   buildDashboardSnapshot,
   resolveBurningNow,
   resolveChannelStatus,
+  resolveRecentTickets,
   resolveDashboardEvaluations,
   resolveDashboardTiles,
   resolveFaultFreeCounter,
@@ -337,6 +338,18 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
       })
       expect(onlyRow(second, 'second burning row').lastEvent).toBeNull()
       expect(onlyRow(third, 'third burning row').lastEvent).toBeNull()
+    })
+
+    it('lists the latest reports newest first and keeps test tickets off the wall', async () => {
+      const recent = await resolveRecentTickets(db)
+
+      expect(recent.map((row) => row.ticketNo)).toEqual([
+        'ST-2026-0004',
+        'ST-2026-0002',
+        'ST-2026-0005',
+        'ST-2026-0006',
+        'ST-2026-0001',
+      ])
     })
 
   it('builds the full snapshot', async () => {

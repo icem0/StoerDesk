@@ -39,6 +39,13 @@ type TvBody = {
     deadlineAt: string
     reportedAt: string
   }>
+  recentTickets: Array<{
+    ticketNo: string
+    objectName: string
+    status: string
+    priority: string
+    reportedAt: string
+  }>
 }
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
@@ -157,12 +164,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('TV routes (integration)'
 
     expect(row.ticketNo).toBe('ST-2026-0001')
     expect(row.objectName).toBe('Feuerwache Nord')
+
+    const recent = onlyRow(body.recentTickets, 'recent ticket')
+    expect(recent.ticketNo).toBe('ST-2026-0001')
+    expect(recent.objectName).toBe('Feuerwache Nord')
   })
 
   it('anonymises object names when tv_anonymize is true', async () => {
-    await db
-      .insert(settings)
-      .values({ key: 'dashboard.tv_anonymize', value: true })
+    await db.insert(settings).values({ key: 'dashboard.tv_anonymize', value: true })
 
     const response = await getTv(tvToken)
 
@@ -174,5 +183,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('TV routes (integration)'
     expect(row.ticketNo).toBe('ST-2026-0001')
     expect(row.objectName).not.toBe('Feuerwache Nord')
     expect(row.objectName).toMatch(/^Object-[A-Za-z0-9]{8}$/)
+
+    const recent = onlyRow(body.recentTickets, 'recent ticket')
+    expect(recent.objectName).toMatch(/^Object-[A-Za-z0-9]{8}$/)
   })
 })

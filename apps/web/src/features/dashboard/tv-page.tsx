@@ -15,10 +15,9 @@ import { DashboardDisplay } from './display'
  * number or channel detail. A wrong or rotated token answers `404 tv_not_found`;
  * the page shows no data and stops polling.
  *
- * The wall monitor shows the dashboard itself (WP-M10-36): it renders the same
- * `DashboardDisplay` the start page renders, with `interactive: false` — no
- * link is active and the primary action is not offered, because a wall monitor
- * is a display only.
+ * The wall monitor shows two sides: the latest reports on the left and the
+ * statistics on the right. Nothing is clickable — a wall monitor is a display
+ * only.
  */
 
 function useTv(token: string | undefined) {
@@ -59,7 +58,7 @@ export function TvPage() {
 
   return (
     <main className="flex min-h-dvh flex-col bg-slate-950 p-6 text-slate-100">
-      <DashboardDisplay interactive={false} snapshot={snapshot} />
+      <DashboardDisplay snapshot={snapshot} />
     </main>
   )
 }

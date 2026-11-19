@@ -62,6 +62,20 @@ const burningNowRowSchema = z.object({
 })
 
 /**
+ * One of the latest reports of the wall display. The ticket is ordered by its
+ * `reported_at`, not by a deadline: the wall display answers "what came in
+ * last", while the statistics sit next to it. The row carries no contact data.
+ */
+const recentTicketRowSchema = z.object({
+  ticketNo: ticketNoSchema,
+  objectName: z.string(),
+  status: ticketStatusSchema,
+  priority: z.enum(TICKET_PRIORITIES),
+  reportedAt: z.iso.datetime(),
+  lastEvent: z.object({ type: z.string(), at: z.iso.datetime() }).nullable(),
+})
+
+/**
  * Evaluation block of the snapshot (`specs/11-dashboard.md` §11.4a, WP-M10-19,
  * ADR-0015): averages only — no median, no p90, no max, so the worst
  * reaction time is never calculated and never displayed on the dashboard.
@@ -108,9 +122,11 @@ export const dashboardSnapshotSchema = z.object({
     channels: z.array(channelTileSchema).nullable(),
   }),
   burningNow: z.array(burningNowRowSchema),
+  recentTickets: z.array(recentTicketRowSchema),
 })
 
 export type DashboardSnapshot = z.infer<typeof dashboardSnapshotSchema>
+export type DashboardRecentTicket = z.infer<typeof recentTicketRowSchema>
 export type DashboardEvaluations = z.infer<typeof dashboardEvaluationsSchema>
 export type DashboardTopFault = z.infer<typeof topFaultSchema>
 

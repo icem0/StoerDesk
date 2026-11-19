@@ -5,7 +5,7 @@ import {
   dashboardSnapshotSchema,
 } from '@stoerdesk/shared'
 import { readDashboardSettings, verifyTvToken } from '../settings/dashboard'
-import { buildDashboardSnapshot, resolveBurningNow } from './service'
+import { buildDashboardSnapshot, resolveBurningNow, resolveRecentTickets } from './service'
 import type { Database } from '../db/client'
 
 type Db = Database['database']
@@ -54,15 +54,17 @@ export const tvRoutes = fp<TvRoutesOptions>(
 
         const settings = await readDashboardSettings(database)
 
-        const objectIdByTicketNo = new Map(
-          (await resolveBurningNow(database)).map((row) => [
-            row.ticketNo,
-            row.objectId,
-          ]),
-        )
+        const objectIdByTicketNo = new Map([
+          ...(await resolveBurningNow(database)).map(
+            (row) => [row.ticketNo, row.objectId] as const,
+          ),
+          ...(await resolveRecentTickets(database)).map(
+            (row) => [row.ticketNo, row.objectId] as const,
+          ),
+        ])
 
         if (settings.tvAnonymize) {
-          for (const row of snapshot.burningNow) {
+          for (const row of [...snapshot.burningNow, ...snapshot.recentTickets]) {
             const objectId = objectIdByTicketNo.get(row.ticketNo)
 
             if (objectId !== undefined) {

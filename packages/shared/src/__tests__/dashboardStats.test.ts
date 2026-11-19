@@ -99,6 +99,16 @@ describe('dashboardSnapshotSchema', () => {
       onCall: null,
       channels: null,
     },
+    recentTickets: [
+      {
+        ticketNo: 'ST-2026-0007',
+        objectName: 'Feuerwache Nord',
+        status: 'ACKNOWLEDGED',
+        priority: 'critical',
+        reportedAt: '2026-03-09T08:00:00Z',
+        lastEvent: { type: 'acknowledged', at: '2026-03-09T11:00:00Z' },
+      },
+    ],
     burningNow: [
       {
         ticketNo: 'ST-2026-0007',

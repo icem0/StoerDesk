@@ -25,7 +25,6 @@ import { UsersPage } from '../admin/users-page'
 import { RequireSession } from '../auth/require-session'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
 import { InboxPage } from '../features/notifications/inbox-page'
-import { StartPage } from '../features/dashboard/start-page'
 import { TvPage } from '../features/dashboard/tv-page'
 import { StatsPage } from '../features/stats/stats-page'
 import { StickerPage } from '../features/objects/sticker-page'
@@ -60,12 +59,9 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     children: [
       {
+        // The dashboard page is gone: the start page is the ticket list.
         path: '/',
-        element: (
-          <RequireSession>
-            <StartPage />
-          </RequireSession>
-        ),
+        element: <Navigate replace to="/tickets" />,
       },
       {
         // The administration home is gone (WP-M14-01): every administration

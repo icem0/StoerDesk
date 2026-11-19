@@ -408,6 +408,61 @@ export async function resolveBurningNow(
   })
 }
 
+type RecentTicketRow = NonNullable<DashboardSnapshot['recentTickets']>[number]
+type RecentTicketRowWithId = RecentTicketRow & { objectId: string }
+
+/**
+ * The latest reports of the wall display, newest first. Unlike `burningNow`
+ * the list is not limited to open tickets: the office screen answers "what
+ * came in last". Test and suspected-spam reports stay off the wall. The
+ * `objectId` is stripped by `dashboardSnapshotSchema`; the TV route keeps it
+ * for the optional pseudonymisation.
+ */
+export async function resolveRecentTickets(database: Db): Promise<RecentTicketRowWithId[]> {
+  const rows = (await database.execute(sql`
+    SELECT t.ticket_no, t.object_id, t.object_name, t.status, t.priority,
+      t.reported_at, e.type AS last_event_type, e.created_at AS last_event_at
+    FROM stats_tickets AS t
+    LEFT JOIN LATERAL (
+      SELECT te.type, te.created_at
+      FROM ticket_events AS te
+      JOIN tickets AS tk ON tk.id = te.ticket_id
+      WHERE tk.ticket_no = t.ticket_no
+      ORDER BY te.created_at DESC, te.id DESC
+      LIMIT 1
+    ) AS e ON TRUE
+    WHERE t.is_test = false
+      AND t.suspected_spam = false
+    ORDER BY t.reported_at DESC, t.ticket_no DESC
+    LIMIT 12
+  `)) as {
+    ticket_no: string
+    object_id: string
+    object_name: string
+    status: string
+    priority: string
+    reported_at: Date
+    last_event_type: string | null
+    last_event_at: Date | null
+  }[]
+
+  return rows.map((row) => ({
+    ticketNo: row.ticket_no,
+    objectName: row.object_name,
+    objectId: row.object_id,
+    status: row.status as TicketStatus,
+    priority: row.priority as TicketPriority,
+    reportedAt: new Date(row.reported_at).toISOString(),
+    lastEvent:
+      row.last_event_type === null || row.last_event_at === null
+        ? null
+        : {
+            type: row.last_event_type,
+            at: new Date(row.last_event_at).toISOString(),
+          },
+  }))
+}
+
 /** One dashboard snapshot, computed in the database (`specs/11-dashboard.md` §11.2).
  * Optional sections (`onCall`, `channels`) are `null` when the caller has no
  * permission for them; the snapshot never fails because a section is missing. */
@@ -437,5 +492,6 @@ export async function buildDashboardSnapshot(
     topFault,
     tiles,
     burningNow: await resolveBurningNow(database, now),
+    recentTickets: await resolveRecentTickets(database),
   })
 }
