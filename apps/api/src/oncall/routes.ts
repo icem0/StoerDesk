@@ -464,6 +464,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           reminderUnconfirmedH: settingsResolved.reminderUnconfirmedH,
           unfilledWarningDays: settingsResolved.unfilledWarningDays,
           defaultPoolId: settingsResolved.defaultPoolId ?? null,
+          weeklyWindows: settingsResolved.weeklyWindows,
         })
       },
     )
@@ -495,6 +496,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           reminderUnconfirmedH: written.reminderUnconfirmedH,
           unfilledWarningDays: written.unfilledWarningDays,
           defaultPoolId: written.defaultPoolId ?? null,
+          weeklyWindows: written.weeklyWindows,
         })
       },
     )

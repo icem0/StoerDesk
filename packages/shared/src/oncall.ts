@@ -17,6 +17,17 @@ export const ONCALL_TIMEZONE = 'Europe/Berlin'
 /** `0` = Sunday, `1` = Monday, …, `6` = Saturday. */
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
+/**
+ * One duty window of the window plan (`specs/04-oncall.md` §4a.3.2, ADR-0035):
+ * the duty of one weekday with its start and its end as the wall clock of
+ * `Europe/Berlin`. The end is later than the start on the same day.
+ */
+export type OncallWindow = {
+  weekday: Weekday
+  start: string // `HH:MM`
+  end: string // `HH:MM`, later than `start`
+}
+
 /** Resolved on-call settings (`specs/04-oncall.md` §4a.1). */
 export type OncallSettings = {
   weekStartWeekday: Weekday
@@ -27,6 +38,7 @@ export type OncallSettings = {
   reminderUnconfirmedH: number // 1–720 (hours)
   unfilledWarningDays: number // 1–365 (days)
   defaultPoolId: string | undefined // UUID of an active pool
+  weeklyWindows: OncallWindow[] // the window plan (§4a.3.2), empty = continuous plan
 }
 
 export const ONCALL_SETTINGS_DEFAULTS: OncallSettings = {
@@ -38,6 +50,7 @@ export const ONCALL_SETTINGS_DEFAULTS: OncallSettings = {
   reminderUnconfirmedH: 24,
   unfilledWarningDays: 14,
   defaultPoolId: undefined,
+  weeklyWindows: [],
 }
 
 const START_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -53,6 +66,46 @@ function isBoolean(value: unknown): value is boolean {
 
 function isString(value: unknown): value is string {
   return typeof value === 'string'
+}
+
+/**
+ * Resolves the duty windows of the window plan (`specs/04-oncall.md` §4a.3.2).
+ * A value that is no array falls back to the default (the continuous plan); a
+ * malformed entry is dropped, a second window of the same weekday is ignored.
+ * The result is sorted by the weekday.
+ */
+function resolveWeeklyWindows(value: unknown): OncallWindow[] {
+  if (!Array.isArray(value)) {
+    return ONCALL_SETTINGS_DEFAULTS.weeklyWindows
+  }
+
+  const windows: OncallWindow[] = []
+  const seen = new Set<number>()
+
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null) {
+      continue
+    }
+
+    const { weekday, start, end } = entry as Record<string, unknown>
+
+    if (!isInteger(weekday) || weekday < 0 || weekday > 6 || seen.has(weekday)) {
+      continue
+    }
+
+    if (!isString(start) || !START_TIME_RE.test(start)) {
+      continue
+    }
+
+    if (!isString(end) || !START_TIME_RE.test(end) || end <= start) {
+      continue
+    }
+
+    seen.add(weekday)
+    windows.push({ weekday: weekday as Weekday, start, end })
+  }
+
+  return windows.sort((left, right) => left.weekday - right.weekday)
 }
 
 /**
@@ -109,6 +162,8 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
       ? values.defaultPoolId
       : ONCALL_SETTINGS_DEFAULTS.defaultPoolId
 
+  const weeklyWindows = resolveWeeklyWindows(values.weeklyWindows)
+
   return {
     weekStartWeekday,
     startTime,
@@ -118,6 +173,7 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
     reminderUnconfirmedH,
     unfilledWarningDays,
     defaultPoolId,
+    weeklyWindows,
   }
 }
 
@@ -190,6 +246,87 @@ export function generateOncallSlots({
 
     candidate.setDate(candidate.getDate() + durationDays)
     startsAt = fromZonedTime(candidate, ONCALL_TIMEZONE)
+  }
+
+  return slots
+}
+
+/**
+ * Generates the duty windows of the window plan for `[from, to)` in
+ * `Europe/Berlin` (`specs/04-oncall.md` §4a.3.2, ADR-0035).
+ *
+ * One slot per window per week: the start is the `start` of the window on its
+ * weekday, the end its `end` on the same day. Both ends are read as the local
+ * wall clock and converted to UTC with `date-fns-tz`, so a window that contains
+ * a DST change is one hour shorter or longer than its wall-clock length.
+ *
+ * Without a window the list is empty — the continuous plan of
+ * `generateOncallSlots` is the plan then.
+ */
+export function generateOncallWindowSlots({
+  from,
+  to,
+  weeklyWindows,
+}: {
+  from: Date
+  to: Date
+  weeklyWindows: OncallWindow[]
+}): OncallSlot[] {
+  const slots: OncallSlot[] = []
+
+  if (weeklyWindows.length === 0) {
+    return slots
+  }
+
+  const byWeekday = new Map<number, OncallWindow>()
+
+  for (const window of weeklyWindows) {
+    byWeekday.set(window.weekday, window)
+  }
+
+  // The local days of the range; the walk is over the local wall clock, so a
+  // DST change never skips or repeats a day.
+  const fromLocal = toZonedTime(from, ONCALL_TIMEZONE)
+  const toLocal = toZonedTime(to, ONCALL_TIMEZONE)
+
+  const day = new Date(fromLocal.getFullYear(), fromLocal.getMonth(), fromLocal.getDate())
+  const lastDay = new Date(toLocal.getFullYear(), toLocal.getMonth(), toLocal.getDate())
+
+  while (day <= lastDay) {
+    const window = byWeekday.get(day.getDay())
+
+    if (window !== undefined) {
+      const [startHour, startMinute] = window.start.split(':').map((part) => Number(part))
+      const [endHour, endMinute] = window.end.split(':').map((part) => Number(part))
+
+      const startLocal = new Date(
+        day.getFullYear(),
+        day.getMonth(),
+        day.getDate(),
+        startHour,
+        startMinute,
+        0,
+        0,
+      )
+      const endLocal = new Date(
+        day.getFullYear(),
+        day.getMonth(),
+        day.getDate(),
+        endHour,
+        endMinute,
+        0,
+        0,
+      )
+
+      const startsAt = fromZonedTime(startLocal, ONCALL_TIMEZONE)
+      const endsAt = fromZonedTime(endLocal, ONCALL_TIMEZONE)
+
+      if (startsAt < to && endsAt > from) {
+        slots.push({ startsAt, endsAt })
+      }
+    }
+
+    day.setDate(day.getDate() + 1)
   }
 
   return slots

@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   generateOncallSlots,
+  generateOncallWindowSlots,
   ONCALL_SETTINGS_DEFAULTS,
   resolveOncallSettings,
   type OncallSettings,
+  type OncallWindow,
 } from '../oncall'
 
 const HOUR = 60 * 60 * 1000
@@ -113,6 +115,55 @@ describe('resolveOncallSettings', () => {
     const settings = resolveOncallSettings({ [key]: value } as Record<string, unknown>)
     expect(settings.defaultPoolId).toBeUndefined()
   })
+
+  it('resolves the duty windows and sorts them by the weekday', () => {
+    const settings = resolveOncallSettings({
+      weeklyWindows: [
+        { weekday: 5, start: '07:00', end: '12:00' },
+        { weekday: 1, start: '07:30', end: '17:00' },
+      ],
+    })
+
+    expect(settings.weeklyWindows).toEqual([
+      { weekday: 1, start: '07:30', end: '17:00' },
+      { weekday: 5, start: '07:00', end: '12:00' },
+    ])
+  })
+
+  it('falls back to the continuous plan when the windows are no array', () => {
+    const settings = resolveOncallSettings({ weeklyWindows: '07:30-17:00' })
+
+    expect(settings.weeklyWindows).toEqual([])
+  })
+
+  it('drops a malformed window and keeps the valid ones', () => {
+    const settings = resolveOncallSettings({
+      weeklyWindows: [
+        { weekday: 1, start: '07:30', end: '17:00' },
+        { weekday: 7, start: '07:30', end: '17:00' },
+        { weekday: 2, start: '7:30', end: '17:00' },
+        { weekday: 3, start: '17:00', end: '07:30' },
+        { weekday: 4, start: '07:30', end: '17:00', extra: true },
+        'not-a-window',
+      ],
+    })
+
+    expect(settings.weeklyWindows).toEqual([
+      { weekday: 1, start: '07:30', end: '17:00' },
+      { weekday: 4, start: '07:30', end: '17:00' },
+    ])
+  })
+
+  it('keeps the first window of a weekday', () => {
+    const settings = resolveOncallSettings({
+      weeklyWindows: [
+        { weekday: 1, start: '07:30', end: '17:00' },
+        { weekday: 1, start: '09:00', end: '12:00' },
+      ],
+    })
+
+    expect(settings.weeklyWindows).toEqual([{ weekday: 1, start: '07:30', end: '17:00' }])
+  })
 })
 
 describe('generateOncallSlots', () => {
@@ -220,5 +271,87 @@ describe('generateOncallSlots', () => {
 
     expect(slots).toHaveLength(1)
     expect(slots[0]!.startsAt.getTime()).toBe(from.getTime())
+  })
+})
+
+describe('generateOncallWindowSlots', () => {
+  const officeWindows: OncallWindow[] = [
+    { weekday: 1, start: '07:30', end: '17:00' },
+    { weekday: 2, start: '07:30', end: '17:00' },
+    { weekday: 3, start: '07:30', end: '17:00' },
+    { weekday: 4, start: '07:30', end: '17:00' },
+    { weekday: 5, start: '07:00', end: '12:00' },
+  ]
+
+  it('emits one slot per window of the week', () => {
+    const slots = generateOncallWindowSlots({
+      from: new Date('2026-11-02T00:00:00.000Z'),
+      to: new Date('2026-11-09T00:00:00.000Z'),
+      weeklyWindows: officeWindows,
+    })
+
+    expect(slots).toHaveLength(5)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-02T06:30:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-11-02T16:00:00.000Z').getTime())
+    expect(slots[3]!.endsAt.getTime()).toBe(new Date('2026-11-05T16:00:00.000Z').getTime())
+    expect(slots[4]!.startsAt.getTime()).toBe(new Date('2026-11-06T06:00:00.000Z').getTime())
+    expect(slots[4]!.endsAt.getTime()).toBe(new Date('2026-11-06T11:00:00.000Z').getTime())
+  })
+
+  it('emits no slot for a weekday without a window', () => {
+    const slots = generateOncallWindowSlots({
+      from: new Date('2026-11-06T00:00:00.000Z'),
+      to: new Date('2026-11-09T00:00:00.000Z'),
+      weeklyWindows: officeWindows,
+    })
+
+    expect(slots).toHaveLength(1)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-06T06:00:00.000Z').getTime())
+  })
+
+  it('emits the windows of every week of the range', () => {
+    const slots = generateOncallWindowSlots({
+      from: new Date('2026-11-02T00:00:00.000Z'),
+      to: new Date('2026-11-16T00:00:00.000Z'),
+      weeklyWindows: officeWindows,
+    })
+
+    expect(slots).toHaveLength(10)
+    expect(slots[5]!.startsAt.getTime()).toBe(new Date('2026-11-09T06:30:00.000Z').getTime())
+  })
+
+  it('emits nothing without a window - the continuous plan is the plan then', () => {
+    const slots = generateOncallWindowSlots({
+      from: new Date('2026-11-02T00:00:00.000Z'),
+      to: new Date('2026-11-09T00:00:00.000Z'),
+      weeklyWindows: [],
+    })
+
+    expect(slots).toHaveLength(0)
+  })
+
+  it('emits a window over a DST change one hour shorter', () => {
+    const slots = generateOncallWindowSlots({
+      from: new Date('2026-03-29T00:00:00.000Z'),
+      to: new Date('2026-03-30T00:00:00.000Z'),
+      weeklyWindows: [{ weekday: 0, start: '00:30', end: '03:30' }],
+    })
+
+    expect(slots).toHaveLength(1)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-03-28T23:30:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-03-29T01:30:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime() - slots[0]!.startsAt.getTime()).toBe(2 * HOUR)
+  })
+
+  it('leaves a window out that lies outside the range', () => {
+    const slots = generateOncallWindowSlots({
+      from: new Date('2026-11-02T07:00:00.000Z'),
+      to: new Date('2026-11-02T12:00:00.000Z'),
+      weeklyWindows: officeWindows,
+    })
+
+    expect(slots).toHaveLength(1)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-02T06:30:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-11-02T16:00:00.000Z').getTime())
   })
 })

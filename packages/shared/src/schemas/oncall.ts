@@ -193,6 +193,23 @@ export const oncallSwapListResponseSchema = z.object({
   ),
 })
 
+/**
+ * One duty window of the window plan (`specs/04-oncall.md` §4a.3.2, ADR-0035):
+ * the weekday with the start and the end of the duty as the wall clock of
+ * `Europe/Berlin`. The end is later than the start on the same day; a night
+ * window is not part of this version.
+ */
+export const oncallWindowSchema = z
+  .object({
+    weekday: z.number().int().min(0).max(6),
+    start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  })
+  .refine((window) => window.end > window.start, {
+    message: 'The end of a duty window is later than its start.',
+    path: ['end'],
+  })
+
 export const oncallSettingsResponseSchema = z.object({
   weekStartWeekday: z.number().int().min(0).max(6),
   startTime: z.string(),
@@ -202,6 +219,7 @@ export const oncallSettingsResponseSchema = z.object({
   reminderUnconfirmedH: z.number().int().min(1).max(720),
   unfilledWarningDays: z.number().int().min(1).max(365),
   defaultPoolId: z.string().uuid().nullable(),
+  weeklyWindows: z.array(oncallWindowSchema),
 })
 
 export const updateOncallSettingsRequestSchema = z
@@ -217,6 +235,14 @@ export const updateOncallSettingsRequestSchema = z
     'oncall.reminder_unconfirmed_h': z.number().int().min(1).max(720).optional(),
     'oncall.unfilled_warning_days': z.number().int().min(1).max(365).optional(),
     'oncall.default_pool_id': z.string().uuid().nullable().optional(),
+    'oncall.weekly_windows': z
+      .array(oncallWindowSchema)
+      .max(7)
+      .refine(
+        (windows) => new Set(windows.map((window) => window.weekday)).size === windows.length,
+        { message: 'At most one duty window per weekday.', path: ['oncall.weekly_windows'] },
+      )
+      .optional(),
   })
   .strict()
 
@@ -233,6 +259,7 @@ export type SwapAcceptResponse = z.infer<typeof swapAcceptResponseSchema>
 export type OncallSwapListResponse = z.infer<typeof oncallSwapListResponseSchema>
 export type OnCallSettingsResponse = z.infer<typeof oncallSettingsResponseSchema>
 export type UpdateOncallSettingsRequest = z.infer<typeof updateOncallSettingsRequestSchema>
+export type OncallWindowInput = z.infer<typeof oncallWindowSchema>
 
 /** Response of `GET /api/v1/oncall/ical-url`: a relative URL the caller resolves
  * against its own origin; the token itself stays on the server (WP-M8-14b). */
