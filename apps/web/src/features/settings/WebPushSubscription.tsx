@@ -8,7 +8,7 @@ import type {
   WebPushSubscriptionResponse,
 } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../../lib/api'
-import { pushSupported, useBrowserPush } from '../../lib/web-push'
+import { keyToBase64Url, pushSupported, useBrowserPush } from '../../lib/web-push'
 
 /**
  * The web-push card of the settings page (`specs/10-notifications.md` §11.1,
@@ -78,6 +78,23 @@ export function subscriptionBody(subscription: PushSubscription): {
   }
 }
 
+/**
+ * Whether the subscription of the browser belongs to an **older** key pair: a
+ * subscription of a key the server does not own is refused by the push service
+ * for every send (`403`), and the browser keeps it — `subscribe()` returns the
+ * subscription it holds. The card replaces such a device (WP-M14-172).
+ *
+ * A browser that does not name its key claims nothing: the device stays as it
+ * is until the browser or the server knows better.
+ */
+export function subscriptionIsStale(subscriptionKey: string | null, serverKey: string): boolean {
+  if (subscriptionKey === null || serverKey === '') {
+    return false
+  }
+
+  return subscriptionKey.replace(/=+$/, '') !== serverKey.replace(/=+$/, '')
+}
+
 function errorCode(error: unknown): string {
   if (error instanceof WebPushActionError) {
     return error.code
@@ -135,6 +152,23 @@ export function WebPushSubscription() {
       }
 
       const registration = await navigator.serviceWorker.ready
+      const current = (await registration.pushManager.getSubscription()) ?? null
+      const currentKey = keyToBase64Url(current?.options.applicationServerKey)
+
+      // A subscription of an older key pair belongs to a key the server does
+      // not own: the push service refuses every send for it. The browser keeps
+      // it, so the card removes it — in the browser and on the server — before
+      // it registers the device again with the key of the server (WP-M14-172).
+      if (current !== null && subscriptionIsStale(currentKey, publicKey)) {
+        await current.unsubscribe()
+
+        await apiFetch<void>('/v1/notifications/accounts/webpush', {
+          method: 'DELETE',
+          headers: jsonHeaders,
+          body: JSON.stringify({ endpoint: current.endpoint }),
+        })
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
@@ -184,6 +218,16 @@ export function WebPushSubscription() {
 
   const publicKey = config.data?.publicKey ?? ''
   const error = subscribe.error ?? unsubscribe.error
+  /**
+   * The browser holds a subscription of a key pair the server does not own:
+   * the key of the server was renewed after the device registered. The push
+   * service refuses every send for such a device, so the card names it and
+   * registers it again (WP-M14-172).
+   */
+  const stale =
+    state === 'subscribed' &&
+    publicKey !== '' &&
+    subscriptionIsStale(push?.key ?? null, publicKey)
   const qrValue =
     typeof window === 'undefined' ? PAGE_PATH : `${window.location.origin}${PAGE_PATH}`
 
@@ -231,11 +275,25 @@ export function WebPushSubscription() {
 
           {supported && endpoint !== null ? (
             <>
-              {deviceKnown === true ? (
+              {stale ? (
+                <>
+                  <p className="text-sm text-amber-400">{t('notifications.webpush.keyChanged')}</p>
+                  <button
+                    className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                    disabled={subscribe.isPending}
+                    onClick={() => subscribe.mutate()}
+                    type="button"
+                  >
+                    {t('notifications.webpush.subscribe')}
+                  </button>
+                </>
+              ) : null}
+
+              {deviceKnown === true && !stale ? (
                 <p className="text-sm text-emerald-400">{t('notifications.webpush.linked')}</p>
               ) : null}
 
-              {deviceKnown === false ? (
+              {deviceKnown === false && !stale ? (
                 <>
                   <p className="text-sm text-amber-400">{t('notifications.webpush.notRegistered')}</p>
                   <button

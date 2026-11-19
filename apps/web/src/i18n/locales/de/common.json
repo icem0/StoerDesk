@@ -257,6 +257,7 @@
       "remove": "Dieses Gerät abmelden",
       "linked": "Dieses Gerät ist angemeldet.",
       "notRegistered": "Der Server kennt dieses Gerät nicht — Push-Benachrichtigungen erreichen Sie hier nicht.",
+      "keyChanged": "Der Schlüssel des Servers wurde erneuert — dieses Gerät muss neu angemeldet werden.",
       "deviceCount": "{{count}} Geräte sind für dieses Konto angemeldet.",
       "notConfigured": "Web Push ist auf diesem Server nicht konfiguriert (VAPID-Schlüssel fehlen).",
       "unsupported": "Dieser Browser unterstützt keine Push-Nachrichten. Auf dem iPhone die App zuerst zum Home-Bildschirm hinzufügen.",

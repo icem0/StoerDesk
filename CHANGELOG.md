@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The device registers itself again when the key of the server changed
+  (**WP-M14-172**, out of band in phase 14): after the server renewed its VAPID
+  keys, no push message arrived any more and the user could not repair it — a
+  subscription belongs to the key it was created with, the browser keeps the
+  subscription of the old key pair and `subscribe()` returns it instead of a
+  new one, so the push service refused every send for it (`403`). The card of
+  the settings page compares the key of the browser with the key of the server,
+  names the device („Der Schlüssel des Servers wurde erneuert — dieses Gerät
+  muss neu angemeldet werden.") and registers it again: the old subscription is
+  unsubscribed in the browser, its endpoint is deleted on the server and the
+  device registers itself with the key of the server (v1.1.332).
 - A failing web push names its cause (**WP-M14-171**, out of band in phase 14):
   every failed delivery of the channel showed the same code `send_failed`, so
   the operator could not tell a rejected key from an unreachable push service

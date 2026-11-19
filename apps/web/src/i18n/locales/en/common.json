@@ -257,6 +257,7 @@
       "remove": "Unregister this device",
       "linked": "This device is registered.",
       "notRegistered": "The server does not know this device — no push message reaches you here.",
+      "keyChanged": "The key of the server was renewed — this device has to register again.",
       "deviceCount": "{{count}} devices are registered for this account.",
       "notConfigured": "Web Push is not configured on this server (VAPID keys are missing).",
       "unsupported": "This browser does not support push messages. On the iPhone, add the app to the home screen first.",

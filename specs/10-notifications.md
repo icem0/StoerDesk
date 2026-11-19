@@ -125,7 +125,13 @@ A user has at most one account per channel (`unique (user_id, channel)`).
   own subscription, the server knows its rows, and only both together say
   whether a push can arrive (WP-M14-144). The endpoint is a capability URL — it
   travels in the body of the request and never in an answer and never into a
-  log line.
+  log line. **A device of an older key pair:** a subscription belongs to the
+  VAPID key it was created with, and the push service refuses every send for a
+  key pair the server does not own. When the server renews its keys, the
+  browser keeps its subscription — `subscribe()` returns the subscription it
+  holds — and the card of the settings page compares the key of the browser
+  with the key of the server: the device is named and registered again, in the
+  browser and on the server (WP-M14-172).
 
 ## 11.4 The event types and the selection of the channels
 

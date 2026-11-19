@@ -10,12 +10,12 @@ import { pushSupported, readBrowserPush } from '../web-push'
 function stubBrowser({
   supported = true,
   permission = 'default',
-  subscription = null as { endpoint: string } | null,
+  subscription = null as { endpoint: string; options?: { applicationServerKey?: ArrayBuffer } } | null,
   registration = true,
 }: {
   supported?: boolean
   permission?: NotificationPermission
-  subscription?: { endpoint: string } | null
+  subscription?: { endpoint: string; options?: { applicationServerKey?: ArrayBuffer } } | null
   registration?: boolean
 } = {}) {
   Reflect.deleteProperty(navigator, 'serviceWorker')
@@ -66,13 +66,13 @@ describe('readBrowserPush', () => {
   it('names a browser that cannot deliver push at all', async () => {
     stubBrowser({ supported: false })
 
-    expect(await readBrowserPush()).toEqual({ state: 'unsupported', endpoint: null })
+    expect(await readBrowserPush()).toEqual({ state: 'unsupported', endpoint: null, key: null })
   })
 
   it('names a blocked permission', async () => {
     stubBrowser({ permission: 'denied' })
 
-    expect(await readBrowserPush()).toEqual({ state: 'denied', endpoint: null })
+    expect(await readBrowserPush()).toEqual({ state: 'denied', endpoint: null, key: null })
   })
 
   it('names the subscription of this browser with its endpoint', async () => {
@@ -81,13 +81,29 @@ describe('readBrowserPush', () => {
     expect(await readBrowserPush()).toEqual({
       state: 'subscribed',
       endpoint: 'https://push.example.org/secret/42',
+      key: null,
+    })
+  })
+
+  it('names the key this browser subscribed with (WP-M14-172)', async () => {
+    stubBrowser({
+      subscription: {
+        endpoint: 'https://push.example.org/secret/42',
+        options: { applicationServerKey: new Uint8Array([4, 5, 6]).buffer },
+      },
+    })
+
+    expect(await readBrowserPush()).toEqual({
+      state: 'subscribed',
+      endpoint: 'https://push.example.org/secret/42',
+      key: 'BAUG',
     })
   })
 
   it('names a browser without a registration as not registered', async () => {
     stubBrowser({ registration: false })
 
-    expect(await readBrowserPush()).toEqual({ state: 'not_subscribed', endpoint: null })
+    expect(await readBrowserPush()).toEqual({ state: 'not_subscribed', endpoint: null, key: null })
   })
 
   it('claims nothing when the browser does not answer', async () => {
@@ -101,6 +117,6 @@ describe('readBrowserPush', () => {
       },
     })
 
-    expect(await readBrowserPush()).toEqual({ state: 'unknown', endpoint: null })
+    expect(await readBrowserPush()).toEqual({ state: 'unknown', endpoint: null, key: null })
   })
 })

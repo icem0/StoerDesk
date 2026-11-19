@@ -286,4 +286,97 @@ describe('WebPushSubscription', () => {
       ),
     ).toBeNull()
   })
+
+  it('names the device of an older key pair and registers it again (WP-M14-172)', async () => {
+    // The server renewed its key: the browser still holds the subscription of
+    // the old key pair, the push service refuses every send for it.
+    const renewedKey = 'BAUG'
+    const oldSubscription = {
+      endpoint: 'https://push.example.org/secret/42',
+      options: { applicationServerKey: new Uint8Array([1, 2, 3]).buffer },
+      toJSON: () => ({
+        endpoint: 'https://push.example.org/secret/42',
+        keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
+      }),
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    const newSubscription = {
+      endpoint: 'https://push.example.org/secret/43',
+      options: { applicationServerKey: new Uint8Array([4, 5, 6]).buffer },
+      toJSON: () => ({
+        endpoint: 'https://push.example.org/secret/43',
+        keys: { p256dh: 'BPm1p256dh2', auth: 'authSecret43' },
+      }),
+      unsubscribe: vi.fn().mockResolvedValue(true),
+    }
+    let current: unknown = oldSubscription
+    const pushManager = {
+      getSubscription: vi.fn(async () => current),
+      subscribe: vi.fn(async () => {
+        current = newSubscription
+
+        return newSubscription
+      }),
+    }
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ pushManager }),
+        getRegistration: vi.fn().mockResolvedValue({ pushManager }),
+      },
+    })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', {
+      permission: 'granted',
+      requestPermission: vi.fn().mockResolvedValue('granted'),
+    })
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (init?.method === 'DELETE') {
+        return new Response(null, { status: 204 })
+      }
+
+      if (init?.method === 'POST' && url.endsWith('/v1/notifications/accounts/webpush')) {
+        return Response.json({ subscribed: true })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/webpush/check')) {
+        return Response.json({ registered: true })
+      }
+
+      return Response.json({ publicKey: renewedKey, subscribed: true, subscriptions: 1 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderCard()
+
+    expect(
+      await screen.findByText(
+        'Der Schlüssel des Servers wurde erneuert — dieses Gerät muss neu angemeldet werden.',
+      ),
+    ).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dieses Gerät anmelden' }))
+
+    await waitFor(() => expect(oldSubscription.unsubscribe).toHaveBeenCalled())
+
+    const removed = fetchMock.mock.calls.find(([, request]) => request?.method === 'DELETE')?.[1] as
+      | RequestInit
+      | undefined
+
+    expect(JSON.parse(String(removed?.body))).toEqual({
+      endpoint: 'https://push.example.org/secret/42',
+    })
+
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([, request]) =>
+            request?.method === 'POST' &&
+            String(request.body).includes('https://push.example.org/secret/43'),
+        ),
+      ).toBe(true),
+    )
+  })
 })

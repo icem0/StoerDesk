@@ -25,6 +25,31 @@ export interface BrowserPush {
   state: BrowserPushState
   /** The endpoint of the subscription of this browser; `null` while there is none. */
   endpoint: string | null
+  /**
+   * The VAPID key this browser subscribed with, URL-safe base64 without padding
+   * (`null` while there is no subscription). The card compares it with the key
+   * of the server: a subscription of an older key pair is refused by the push
+   * service for every send (WP-M14-172).
+   */
+  key: string | null
+}
+
+/**
+ * The bytes of the key of a subscription as URL-safe base64 without padding —
+ * the same form the key of the server travels in.
+ */
+export function keyToBase64Url(buffer: ArrayBuffer | null | undefined): string | null {
+  if (buffer === null || buffer === undefined) {
+    return null
+  }
+
+  let binary = ''
+
+  for (const byte of new Uint8Array(buffer)) {
+    binary += String.fromCharCode(byte)
+  }
+
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 /** Whether this browser can subscribe at all; iOS needs the installed app. */
@@ -46,11 +71,11 @@ export function pushSupported(): boolean {
  */
 export async function readBrowserPush(): Promise<BrowserPush> {
   if (!pushSupported()) {
-    return { state: 'unsupported', endpoint: null }
+    return { state: 'unsupported', endpoint: null, key: null }
   }
 
   if (Notification.permission === 'denied') {
-    return { state: 'denied', endpoint: null }
+    return { state: 'denied', endpoint: null, key: null }
   }
 
   try {
@@ -60,9 +85,10 @@ export async function readBrowserPush(): Promise<BrowserPush> {
     return {
       state: subscription === null ? 'not_subscribed' : 'subscribed',
       endpoint: subscription?.endpoint ?? null,
+      key: keyToBase64Url(subscription?.options?.applicationServerKey),
     }
   } catch {
-    return { state: 'unknown', endpoint: null }
+    return { state: 'unknown', endpoint: null, key: null }
   }
 }
 
