@@ -8,6 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The new user has a page of its own (**WP-M14-158**, out of band in phase 14): the
+  input mask „Benutzer anlegen" is not glued below the list of the users any more,
+  the list offers a button that opens the page `/admin/users/new`. The page needs
+  `user.write`, links back to the list and returns to the list after the user is
+  created. The editing of a user stays where it was (v1.1.264).
+- The readiness calendar marks the current day specially (**WP-M14-156**,
+  out of band in phase 14): the office asked whether the current day is
+  marked specially. The cell of the **Berlin calendar date of now** keeps its
+  state colour and gains a ring and a semibold date number — today without a
+  shift is still ringed, so the gap of today is visible at a glance. The hint
+  of the calendar (`oncall.readiness.hint`) names the marker in `de` and `en`.
+- The browser can install the app again (**WP-M14-157**, out of band in phase 14):
+  the web manifest now carries a **192 px and a 512 px** PNG icon of the logo
+  centred on a square canvas (`apps/web/public/pwa-192x192.png`,
+  `apps/web/public/pwa-512x512.png`), declared by `pwaIcons` in
+  `apps/web/src/pwa-manifest.ts` — before it had one 128 × 120 px icon with
+  `sizes: "any"`, and Chrome and Edge need both sizes before they show the install
+  chip or fire `beforeinstallprompt`. The web image serves
+  `manifest.webmanifest` as `application/manifest+json` (the default `mime.types`
+  of nginx has no entry for the extension). A test reads the PNG header, so a
+  declared size can no longer drift away from the asset. The stack still serves
+  plain HTTP: over an LAN IP or an unsecured domain no browser offers an install
+  at all, TLS stays the task of the deployment (`docs/DEPLOYMENT.md` §HTTPS).
 - The dashboard page is gone and the start page is the ticket list (**WP-M14-155**,
   out of band in phase 14): the root route redirects to `/tickets`, the header menu
   names the ticket list, the statistics and the readiness, and the former dashboard

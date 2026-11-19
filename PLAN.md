@@ -375,6 +375,10 @@ Ticket coupling:
   reason) and every swap step. `GET /api/v1/oncall/shifts/:id/history`
   (`oncall.read`) answers the named fields only, never a raw event payload; the
   name gate of `oncall.read_names` applies as in the calendar (§4a.10).
+- The **current day is marked specially** in the readiness calendar (WP-M14-156):
+  the cell of the Berlin calendar date of now keeps its state colour and gains
+  a ring and a semibold date number; today without a shift stays ringed, so the
+  office reads gaps and shifts against the wall clock without counting weeks.
 
 ## 9. Timeline and escalation
 
@@ -3133,6 +3137,36 @@ twelve latest reports by `reported_at`, without test and suspected-spam
 tickets); the statistics convert a duration of 60 minutes or more to hours with
 at most one decimal.
 
+**The readiness calendar marks the current day specially (WP-M14-156, out of band
+in phase 14).** The office asked whether the current day is marked specially in
+the readiness calendar. The cell of the Berlin calendar date of now keeps its
+state colour and gains a ring and a semibold date number — today without a shift
+is still ringed, so the gap of today is visible at a glance; the hint of the
+calendar names the marker in `de` and `en`.
+
+**The browser offers no install (WP-M14-157, out of band in phase 14).** The
+browser showed no install prompt and no install chip in the address bar: the
+manifest carried one icon only — `/logo.png` at 128 × 120 px declared with
+`sizes: "any"`. Chrome and Edge need a **192 px and a 512 px icon** before they
+offer an install, so they kept the app uninstallable and silent. The manifest
+icons are a module now (`apps/web/src/pwa-manifest.ts`, `pwaIcons`) with the two
+square PNGs of the logo on its own background (`apps/web/public/pwa-192x192.png`,
+`apps/web/public/pwa-512x512.png`); the test reads the `IHDR` of the files, so a
+declared size cannot drift away from the asset again. The web image also serves
+`/manifest.webmanifest` as `application/manifest+json` — the default `mime.types`
+of nginx has no entry for the extension. The stack still serves plain HTTP: over
+an LAN IP or an unsecured domain no browser offers an install at all, and TLS
+stays the task of the deployment (`docs/DEPLOYMENT.md` §HTTPS).
+
+**The new user has a page of its own (WP-M14-158, out of band in phase 14).**
+The office reported that the input mask „Benutzer anlegen" was glued below the
+list of the users: the list of the installation is long, the mask lies far below
+it, and the mask hides the list while it is open. The mask is a page of its own
+now — `/admin/users/new` — and the list offers a button that opens it. The page
+needs `user.write`, links back to the list and returns to the list after the
+user is created; the editing of a user stays below the table. The same request
+covers the mask of the new role (**WP-M14-159**) and of the new group
+(**WP-M14-160**).
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
