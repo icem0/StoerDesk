@@ -58,6 +58,11 @@
     "hintLogo": "PNG oder JPEG, höchstens 500 kB. Wird im Header, in PDFs und E-Mails verwendet.",
     "hintInternalCommentColor": "Der Hintergrund des Feldes und des Eintrags im Verlauf der Ticketansicht. Ein Hex-Wert wie #7f1d1d; Standard ist ein dunkles Rot.",
     "hintAccentColor": "Das Akzentcolor der Interface: Menu, Links, Focus. Standard: #0ea5e9.",
+    "picker": {
+      "internalCommentColor": "Picker (internen Kommentar)",
+      "accentColor": "Picker (Interface)"
+    },
+    "hintPicker": "Open the picker to choose a tone visually; the field beside it stays available for the exact Hex value (like #0ea5e9).",
     "logoRemove": "Logo entfernen",
     "save": "Speichern",
     "saved": "Gespeichert.",

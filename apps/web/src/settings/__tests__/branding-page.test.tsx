@@ -379,4 +379,130 @@ describe('BrandingPage', () => {
     )
     expect(puts).toHaveLength(0)
   })
+
+  it('picks the accent colour with the picker and saves it', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false, accentColor: '#1d4ed8' },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const picker = (await screen.findByLabelText(
+      /Picker \(Interface\)|Picker \(interface\)/i,
+    )) as HTMLInputElement
+    expect(picker.value).toBe('#1d4ed8')
+
+    fireEvent.change(picker, { target: { value: '#0f766e' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(screen.findByText(/Gespeichert\.|Saved\./i)).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          companyName: 'Beispiel GmbH',
+          titleEnabled: false,
+          logo: '',
+          internalCommentColor: '#7f1d1d',
+          accentColor: '#0f766e',
+        }),
+      }),
+    )
+  })
+
+  it('picks the colour of the internal comment with its picker', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const picker = (await screen.findByLabelText(
+      /Picker \(internen Kommentar\)|Picker \(internal comment\)/i,
+    )) as HTMLInputElement
+    expect(picker.value).toBe('#7f1d1d')
+
+    fireEvent.change(picker, { target: { value: '#450a0a' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(screen.findByText(/Gespeichert\.|Saved\./i)).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          companyName: 'Beispiel GmbH',
+          titleEnabled: false,
+          logo: '',
+          internalCommentColor: '#450a0a',
+          accentColor: '#0ea5e9',
+        }),
+      }),
+    )
+  })
+
+  it('saves both colours when both pickers were used', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const commentPicker = (await screen.findByLabelText(
+      /Picker \(internen Kommentar\)|Picker \(internal comment\)/i,
+    )) as HTMLInputElement
+    const accentPicker = (await screen.findByLabelText(
+      /Picker \(Interface\)|Picker \(interface\)/i,
+    )) as HTMLInputElement
+
+    fireEvent.change(commentPicker, { target: { value: '#450a0a' } })
+    fireEvent.change(accentPicker, { target: { value: '#0f766e' } })
+    fireEvent.click(screen.getByRole('button', { name: /Speichern|Save/i }))
+
+    await expect(screen.findByText(/Gespeichert\.|Saved\./i)).resolves.toBeTruthy()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/settings/branding',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          companyName: 'Beispiel GmbH',
+          titleEnabled: false,
+          logo: '',
+          internalCommentColor: '#450a0a',
+          accentColor: '#0f766e',
+        }),
+      }),
+    )
+  })
+
+  it('disables the pickers without settings.write', async () => {
+    const fetchMock = stubSessionAndBranding(['settings.read'], {
+      companyName: 'Beispiel GmbH',
+      titleEnabled: true,
+      accentColor: '#1d4ed8',
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const commentPicker = (await screen.findByLabelText(
+      /Picker \(internen Kommentar\)|Picker \(internal comment\)/i,
+    )) as HTMLInputElement
+    const accentPicker = (await screen.findByLabelText(
+      /Picker \(Interface\)|Picker \(interface\)/i,
+    )) as HTMLInputElement
+
+    expect(commentPicker.disabled).toBe(true)
+    expect(accentPicker.disabled).toBe(true)
+  })
 })

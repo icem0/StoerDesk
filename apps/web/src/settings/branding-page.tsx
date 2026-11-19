@@ -20,9 +20,12 @@ import { DEFAULT_ACCENT_COLOR } from '@stoerdesk/shared'
  * Since WP-M14-149e the page also carries the colour of the internal comment,
  * and since WP-M16-02 the **accent colour of the interface** (ADR-0036): both
  * are values of the instance under „Darstellung“, and one save writes the whole
- * row. The shell reads the accent colour from the branding request and paints
- * the active menu entry, the links of the settings menu, the focus ring and the
- * unread badge with it.
+ * row. Since WP-M16-06 each colour also has a **colour picker** beside its hex
+ * field: the browser picker of `input type="color"` writes the picked tone into
+ * the same state as the hex field, so the colour that was changed last is the
+ * colour that is saved. The shell reads the accent colour from the branding
+ * request and paints the active menu entry, the links of the settings menu, the
+ * focus ring and the unread badge with it.
  */
 
 const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
@@ -153,8 +156,10 @@ export function BrandingPage() {
           const form = new FormData(event.currentTarget)
           const logoToSend =
             logoDataUrl === null ? currentLogo : logoDataUrl
-          const colorToSend = String(form.get('internalCommentColor') ?? '').trim()
-          const accentToSend = String(form.get('accentColor') ?? '').trim()
+          // A colour comes from the state the picker and the hex field share, so
+          // the value that was changed last is the value that is saved (WP-M16-06).
+          const colorToSend = currentColor
+          const accentToSend = currentAccent
 
           // A colour that is no hex value never leaves the browser.
           if (!HEX_COLOR.test(colorToSend) || !HEX_COLOR.test(accentToSend)) {
@@ -247,7 +252,21 @@ export function BrandingPage() {
             onChange={(event) => setColor(event.target.value)}
           />
         </label>
+        {/* The colour picker (WP-M16-06): the browser picks the tone visually and
+            writes it into the same state as the hex field above. */}
+        <label className="flex flex-col gap-1 text-sm">
+          {t('branding.picker.internalCommentColor')}
+          <input
+            name="internalCommentColorPicker"
+            type="color"
+            className="inline-block h-11 w-11 rounded border border-slate-700"
+            defaultValue={branding.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR}
+            disabled={!mayWrite}
+            onChange={(event) => setColor(event.target.value)}
+          />
+        </label>
         <p className="text-xs text-slate-400">{t('branding.hintInternalCommentColor')}</p>
+        <p className="text-xs text-slate-400">{t('branding.hintPicker')}</p>
         <div
           className="h-8 w-32 rounded border border-slate-700"
           style={{ backgroundColor: currentColor }}
@@ -270,7 +289,21 @@ export function BrandingPage() {
             onChange={(event) => setAccent(event.target.value)}
           />
         </label>
+        {/* The accent colour picker (WP-M16-06): the browser picks the tone
+            visually and writes it into the same state as the hex field above. */}
+        <label className="flex flex-col gap-1 text-sm">
+          {t('branding.picker.accentColor')}
+          <input
+            name="accentColorPicker"
+            type="color"
+            className="inline-block h-11 w-11 rounded border border-slate-700"
+            defaultValue={branding.data?.accentColor ?? DEFAULT_ACCENT_COLOR}
+            disabled={!mayWrite}
+            onChange={(event) => setAccent(event.target.value)}
+          />
+        </label>
         <p className="text-xs text-slate-400">{t('branding.hintAccentColor')}</p>
+        <p className="text-xs text-slate-400">{t('branding.hintPicker')}</p>
         <div
           className="h-8 w-32 rounded border border-slate-700"
           style={{ backgroundColor: currentAccent }}

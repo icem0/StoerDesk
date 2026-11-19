@@ -58,6 +58,11 @@
     "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",
     "hintInternalCommentColor": "The background of the field and of the entry in the history of the ticket view. A hex value like #7f1d1d; the default is a dark red.",
     "hintAccentColor": "The accent colour of the interface: menu entry, menu link, focus ring, unread badge. Default: #0ea5e9.",
+    "picker": {
+      "internalCommentColor": "Picker (internal comment)",
+      "accentColor": "Picker (interface)"
+    },
+    "hintPicker": "Open the picker to choose a colour visually; the field beside it stays available for the exact hex value (like #0ea5e9).",
     "logoRemove": "Remove logo",
     "save": "Save",
     "saved": "Saved.",
