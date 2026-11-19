@@ -16,11 +16,30 @@ Das ist kein Fehler, sondern der gewünschte sichere Zustand: jeder Server brauc
 
 ## Schlüssel erzeugen
 
+Führen Sie den Befehl in einem Terminal aus, in dem Node und npm installiert sind
+(`npx` gehört zu npm). In welchem Ordner Sie den Befehl starten, ist egal: er liest
+das Projekt nicht, wird nicht mit ihm gestartet und erzeugt jedes Mal ein neues
+Schlüsselpaar.
+
 ```bash
 npx web-push generate-vapid-keys
 ```
 
-Das gibt drei Werte aus (Public Key, Private Key, Subject). Kopieren Sie alle drei.
+Der Befehl gibt die drei Werte aus (öffentlicher Schlüssel, privater Schlüssel,
+Subject) — kopieren Sie alle drei.
+
+### Im Docker-Stack
+
+Dort läuft derselbe Befehl im **API-Container** — dort ist Node installiert und das
+Paket `web-push` liegt bereits im Image:
+
+```bash
+docker compose exec api npx web-push generate-vapid-keys
+```
+
+Der **Web-Container** des Stacks ist nginx und hat kein Node. Ein `docker exec` in
+diesen Container endet mit `exec: "npx": executable file not found in $PATH` — der
+Befehl gehört in den API-Container oder in ein Terminal auf dem Host.
 
 ## In `.env` eintragen
 
@@ -41,8 +60,8 @@ docker compose restart api
 ## Wo die Einstellung sichtbar ist
 
 - **Admin:** unter `/settings/notifications` (Karte „Web Push“) steht, ob der Kanal konfiguriert ist.
-- **Nutzer:** unter `/notifications` erscheint der Hinweis, solange die Schlüssel fehlen — the message itself is the link to the guide at /help/web-push.
-- **Guide in the app:** under /help/web-push are the same steps as in this document.
+- **Nutzer:** unter `/notifications` erscheint der Hinweis, solange die Schlüssel fehlen — im Zustand `not_configured` ist die Meldung selbst ein Link auf die Anleitung unter `/help/web-push`.
+- **Anleitung in der App:** unter `/help/web-push` stehen dieselben Schritte wie in diesem Dokument.
 - **API:** `GET /api/v1/notifications/accounts/webpush` antwortet mit dem öffentlichen Schlüssel (oder leer, wenn nicht konfiguriert).
 
 ## Sicherheit
@@ -53,7 +72,7 @@ docker compose restart api
 
 ## Was danach passiert
 
-Sobald die drei Werte gesetzt sind und der API neu gestartet ist:
+Sobald die drei Werte gesetzt sind und die API neu gestartet ist:
 
 1. verschwindet der Hinweis unter `/notifications`,
 2. der öffentliche Schlüssel wird an den Browser ausgeliefert,

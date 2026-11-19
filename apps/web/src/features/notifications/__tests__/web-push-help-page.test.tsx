@@ -16,13 +16,51 @@ describe('WebPushHelpPage', () => {
       </I18nextProvider>,
     )
 
-    expect(await screen.findByText('Web Push (VAPID) — Setup Guide')).toBeTruthy()
-    expect(screen.getByText('VAPID_PUBLIC_KEY — the public key that the browser receives')).toBeTruthy()
-    expect(screen.getByText('npx web-push generate-vapid-keys')).toBeTruthy()
+    expect(await screen.findByText(i18n.t('help.webpush.title'))).toBeTruthy()
+    expect(screen.getByText(i18n.t('help.webpush.publicKey'))).toBeTruthy()
+    expect(screen.getByText(i18n.t('help.webpush.command'))).toBeTruthy()
     expect(
-      screen.getByText(
-        'The private key is a secret: never commit it, never log it, never send it to the browser.',
-      ),
+      screen.getByText(i18n.t('help.webpush.secret')),
+    ).toBeTruthy()
+  })
+
+  it('offers the command in a code field with a copy button', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter initialEntries={['/help/web-push']}>
+          <WebPushHelpPage />
+        </MemoryRouter>
+      </I18nextProvider>,
+    )
+
+    const hostField = screen.getByText(i18n.t('help.webpush.command'))
+    expect(hostField.tagName).toBe('CODE')
+    expect(
+      screen.getByRole('button', {
+        name: i18n.t('help.webpush.copyToClipboardCommand', {
+          label: i18n.t('help.webpush.commandHostLabel'),
+        }),
+      }),
+    ).toBeTruthy()
+  })
+
+  it('offers the command of the Docker stack with a copy button', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter initialEntries={['/help/web-push']}>
+          <WebPushHelpPage />
+        </MemoryRouter>
+      </I18nextProvider>,
+    )
+
+    const dockerField = screen.getByText(i18n.t('help.webpush.commandDocker'))
+    expect(dockerField.tagName).toBe('CODE')
+    expect(
+      screen.getByRole('button', {
+        name: i18n.t('help.webpush.copyToClipboardCommand', {
+          label: i18n.t('help.webpush.commandDockerLabel'),
+        }),
+      }),
     ).toBeTruthy()
   })
 

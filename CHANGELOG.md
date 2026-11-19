@@ -702,6 +702,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the first stage (WP-M14-91).
 
 ### Fixed
+- The setup guide of web push speaks German (**WP-M14-128**, out of band in phase
+  14): the German locale of the page `/help/web-push` carried the English texts —
+  the reference locale `de` was no German at all (PLAN.md §3, §3.1). The page
+  names the three `VAPID_*` values, the generate command, the entry in the `.env`
+  and the restart in German now. The command sits in a code field with a copy
+  button, so a user who does not know the command copies it as it is, and the
+  hint says where the command runs: in a terminal with Node and npm — the folder
+  does not matter, the command neither reads nor is started with the project.
+  The second code field holds the command of the Docker stack
+  (`docker compose exec api npx web-push generate-vapid-keys`), because the web
+  container of the stack is nginx and has no Node: a `docker exec` into it ends
+  with `exec: "npx": executable file not found in $PATH`.
 - The readiness calendar hint is proper German (**WP-M15-06**, out of band in
   phase 15): the German hint of the readiness calendar carried the half-English
   text „Der jetige Däy besonnders marked.“ from WP-M14-156 - the
