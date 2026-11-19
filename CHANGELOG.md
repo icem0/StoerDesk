@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The operator guide of the web push names the diagnosis (**WP-M14-173**, out of
+  band in phase 14): `docs/VAPID-SETUP.md` gained the section „Wenn nichts
+  ankommt: die Diagnose" — the command that reads the log of the failed sends,
+  the table of the codes of the channel (`push_unauthorized`, `push_unreachable`,
+  `push_rejected`, `vapid_key_mismatch`, `push_subscription_dead`, `no_keys`)
+  with the cause and the action for each of them, the check of the egress from
+  the API container and the check of the configuration of the channel against
+  the `.env`. The section „Schlüssel erneuert: die Geräte müssen sich neu
+  anmelden" names the way back after a renewal of the keys (v1.1.333).
 - The device registers itself again when the key of the server changed
   (**WP-M14-172**, out of band in phase 14): after the server renewed its VAPID
   keys, no push message arrived any more and the user could not repair it — a

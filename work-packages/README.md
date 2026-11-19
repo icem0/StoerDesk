@@ -1655,6 +1655,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-170 | the web push sends with one VAPID trio (out of band) | done | yes |
 | WP-M14-171 | a failing web push names its cause (out of band) | done | yes |
 | WP-M14-172 | the device registers itself again when the key of the server changed (out of band) | done | yes |
+| WP-M14-173 | the operator guide names the diagnosis of the web push (out of band) | done | yes |
 
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in

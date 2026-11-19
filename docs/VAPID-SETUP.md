@@ -66,9 +66,52 @@ docker compose restart api
 
 ## Sicherheit
 
-- `VAPID_PRIVATE_KEY` ist ein Geheimnis. Nie commiten, nie loggen, nie an den Browser senden.
+- `VAPID_PRIVATE_KEY` ist ein Geheimnis. Nie committen, nie loggen, nie an den Browser senden.
 - Die `.env` wird von Docker Compose gelesen und bleibt über Neustarts erhalten.
 - Mehrere Installationen auf demselben Host brauchen jeweils eigene Schlüsselpaare.
+
+## Wenn nichts ankommt: die Diagnose
+
+Bleibt die Zustellung leer, nennt die Seite `/admin/delivery` den **Fehlercode** des Kanals. Im Log der API steht derselbe Code mit der Ursache:
+
+```bash
+docker compose logs api --since 24h 2>&1 | grep "notification send failed" | tail -5
+```
+
+Die Zeile trägt `code` (der Fehlercode) und `err.message` (die Ursache in einem Satz):
+
+| Fehlercode | Ursache | Was zu tun ist |
+| --- | --- | --- |
+| `push_unauthorized` | Der Push-Dienst hat die Berechtigung abgelehnt (`401`/`403`): der Schlüssel des Servers passt nicht zum angemeldeten Gerät. | Meist wurden die Schlüssel erneuert, **nachdem** sich das Gerät angemeldet hatte — siehe unten. |
+| `push_unreachable` | Der Push-Dienst hat nicht geantwortet: die Verbindung ist fehlgeschlagen (Netzwerk, DNS, TLS). | Ausgang aus dem API-Container prüfen: `docker compose exec api node -e "fetch('https://fcm.googleapis.com').then(r=>console.log(r.status)).catch(e=>console.log(e.cause?.code))"` — `ENOTFOUND` oder `ETIMEDOUT` heißt: die Firewall des Hosts lässt den Push-Dienst nicht durch. |
+| `push_rejected` | Der Push-Dienst hat mit einem anderen Fehler geantwortet (im Log die Statusnummer). | Die Statusnummer im Log mit der Meldung des Push-Dienstes abgleichen. |
+| `vapid_key_mismatch` | Der öffentliche Schlüssel gehört nicht zum privaten Schlüssel. | Das Schlüsselpaar neu erzeugen und beide Werte gemeinsam eintragen. |
+| `push_subscription_dead` | Alle angemeldeten Geräte sind abgelaufen. | Die Nutzer müssen die Benachrichtigungen im Browser neu erlauben. |
+| `no_keys` | Dem Kanal fehlt einer der drei Werte. | `.env` prüfen und den API-Container neu starten. |
+
+### Die Konfiguration des Kanals
+
+Der Kanal liest sein Trio — öffentlicher Schlüssel, privater Schlüssel, Subject — **als Ganzes**: die Zeile `webpush` der Tabelle `notification_channels` gewinnt über die `.env`, aber nur, wenn sie **alle drei** Werte trägt. Eine Zeile mit nur einem Teil davon lässt die Werte der `.env` unverändert gelten. Ein öffentlicher Schlüssel aus der Zeile neben einem privaten Schlüssel aus der `.env` wäre ein Paar, das nicht zusammengehört — der Push-Dienst lehnt dann jede Zustellung mit `403` ab.
+
+Prüfen, was der Server tatsächlich verwendet:
+
+```bash
+docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+  "SELECT enabled, config->>'publicKey' AS public_key, (secret <> '') AS has_private_key
+   FROM notification_channels WHERE kind='webpush';"
+docker compose exec api printenv VAPID_PUBLIC_KEY
+```
+
+Sind beide öffentlichen Schlüssel verschieden, ist die Zeile unvollständig oder veraltet: entweder den fehlenden geheimen Schlüssel in der Zeile nachtragen oder die Zeile löschen.
+
+## Schlüssel erneuert: die Geräte müssen sich neu anmelden
+
+Ein Abo gehört zu dem Schlüsselpaar, mit dem es erzeugt wurde. Wird das Paar erneuert, lehnt der Push-Dienst jede Zustellung für das alte Abo ab (`403`) — und der Browser behält sein Abo, weil `subscribe()` das vorhandene zurückgibt.
+
+Ab StörDesk **v1.1.332** erkennt die Karte „Web Push“ unter `/settings/notifications` das: Sie vergleicht den Schlüssel des Browsers mit dem Schlüssel des Servers, nennt das Gerät („Der Schlüssel des Servers wurde erneuert — dieses Gerät muss neu angemeldet werden.") und meldet es beim Klick auf „Dieses Gerät anmelden“ neu an. Für ältere Stände genügt derselbe Weg von Hand:
+
+1. Unter `/settings/notifications` auf „Dieses Gerät abmelden“ klicken (das entfernt das Abo im Browser **und** die Zeile auf dem Server),
+2. danach auf „Dieses Gerät anmelden“ klicken — das Gerät meldet sich mit dem neuen Schlüssel an.
 
 ## Was danach passiert
 
