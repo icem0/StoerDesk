@@ -3165,6 +3165,20 @@ ones. The chain is split into **WP-M15-02** (the shared contracts and the
 window generator), **WP-M15-03** (the API and the planner), **WP-M15-04** (the
 administration form) and **WP-M15-05** (the exit criterion).
 
+**The duty windows satisfy their criterion (WP-M15-05, phase 15).** The
+chain of the duty windows is implemented: **WP-M15-02** adds the shared
+contracts and the window generator, **WP-M15-03** the write path of the API and
+the planner, **WP-M15-04** the block „Dienstfenster" of the administration and
+**WP-M15-05** the criterion itself. The integration test
+`apps/api/src/oncall/__tests__/window-plan.integration.spec.ts` writes the
+windows of the office — Monday to Thursday 07:30–17:00 and Friday 07:00–12:00
+— through the API, generates the shifts of a week and proves that the week
+holds exactly the five shifts with their times; it assigns a technician to the
+Monday shift and proves that the coupling names him inside his window and
+nobody outside every window. The phase-15 exit criterion is met: a pool with
+office hours is expressible, every window is a shift of its own and the
+coupling names the technician only inside a window. Phase 15 is closed.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

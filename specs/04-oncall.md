@@ -338,6 +338,9 @@ trigger of `PLAN.md` §15, like `ticket_events`.
 - Offline support covers confirm and decline only, through the existing outbox
   mechanism.
 - The iCal feed is read-only; it never writes shifts.
+- The window plan creates new shifts next to the shifts of the continuous
+  plan; it never changes a shift that exists. The admin deletes the future
+  shifts of the old plan — a shift is never deleted after it started (§4a.3).
 
 ## 4a.10 Shift history
 
