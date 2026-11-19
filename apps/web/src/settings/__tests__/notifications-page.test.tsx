@@ -67,11 +67,11 @@ describe('NotificationsPage', () => {
     expect(screen.getAllByText('Kein Konto nötig')).toHaveLength(2)
     expect(screen.getAllByText('Folgt in einem späteren Paket')).toHaveLength(4)
 
-    expect(screen.getByText(/Sende den unten gezeigten Code/)).toBeTruthy()
+    expect(screen.getByText(/Sende den unten gezeigten Code/i)).toBeTruthy()
     expect(await screen.findByText('AB2C3D')).toBeTruthy()
 
     expect(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' })).toBeTruthy()
-    expect(screen.getByText(/Das Entfernen eines verknüpften Kontos/)).toBeTruthy()
+    expect(screen.getByText(/Das Entfernen eines verknüpften Kontos/i)).toBeTruthy()
   })
 
   it('names the channel administration under the header and in the ntfy fallback', async () => {
@@ -142,7 +142,7 @@ describe('NotificationsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' }))
 
     expect(
-      await screen.findByText(/Der Code ist ungültig/)
+      await screen.findByText(/Der Code ist ungültig, abgelaufen oder bereits verwendet/i)
     ).toBeTruthy()
   })
 
@@ -240,7 +240,7 @@ describe('NotificationsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Matrix-Konto verknüpfen' }))
 
     expect(
-      await screen.findByText(/Der Homeserver hat die ID und den Token zurückgewiesen/)
+      await screen.findByText(/Der Homeserver hat die ID und den Token zurückgewiesen/i)
     ).toBeTruthy()
   })
 
@@ -511,7 +511,7 @@ describe('NotificationsPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })).toBeTruthy()
-    expect(await screen.findByText(/Die WhatsApp Web Brücke ist nicht verbunden/)).toBeTruthy()
+    expect(await screen.findByText(/Die WhatsApp Web Brücke ist nicht verbunden/i)).toBeTruthy()
     expect(screen.queryAllByText('Depression Team')).toHaveLength(0)
   })
 
