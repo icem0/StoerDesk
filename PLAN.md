@@ -758,6 +758,7 @@ explanation. Offline is a core feature and appears early.
 | **16** | Facelift of the interface: one server-wide accent colour under „Darstellung“ (ADR-0036), the inbox as an entry of the header menu, the shell on a phone (WP-M16-00 … WP-M16-05) | the administration paints the whole interface with one saved colour, the bell sits in the menu next to the readiness and the shell fits a phone |
 | **17** | The way of the escalation: the recipient of an escalation decides over which channel it arrives (ADR-0037, WP-M17-00 … WP-M17-03) | an escalation that names a technician arrives over the channel that technician selected; without a selection it arrives on their own ntfy topic |
 | **18** | The entries of the house in the ticket history: the internal event types as one shared list, the frame in the colour of the internal entries under „Darstellung“ (ADR-0038, WP-M18-01) | every internal row of the history carries a frame in the saved colour and none of those rows reaches the printout or the e-mail of the customer |
+| **20** | Duty blocks of the readiness: a block spans consecutive weekdays with a daily pattern, one shift per block per week, blocks replace the day windows of a pool (ADR-0040, WP-M20-01 … WP-M20-06) | the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the technician week one shift; the coupling and the iCal feed read the pattern |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.

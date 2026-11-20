@@ -141,6 +141,10 @@ generation never moves or overwrites an existing slot.
 
 ### 4a.3.2 Duty windows
 
+> Amended by §4a.3.3 (ADR-0040): a window is a block that may span consecutive
+> weekdays, and one block is one shift per week. The text below describes the
+> one-day form, which is the block with `from` = `to`.
+
 The continuous plan of §4a.3.1 describes a duty that never ends: one shift
 covers `duration_days` days. A pool with office hours — the „Verwaltung" of the
 office, on Monday from 07:30 to 17:00 and on Friday from 07:00 to 12:00 —
@@ -186,6 +190,36 @@ continuous plan keeps its times until the admin deletes it (§4a.3); the
 windows create new shifts next to it. The administration edits the windows per
 pool with `PATCH /api/v1/oncall/pools/:id`; a pool without windows uses the
 global continuous plan.
+
+### 4a.3.3 Duty blocks (ADR-0040)
+
+A duty block replaces the one-day window of §4a.3.2 as the unit of the window
+plan. It is the target model; it takes effect with WP-M20-03.
+
+| Field | Type | Rule |
+| --- | --- | --- |
+| `from_weekday` | integer | `0`–`6`, `0` = Sunday |
+| `to_weekday` | integer | `0`–`6`, not earlier than `from_weekday` within Monday to Sunday |
+| `start` | text | `HH:MM`, wall clock of `Europe/Berlin` |
+| `end` | text | `HH:MM`, later than `start` |
+
+A block that spans days is one shift per week. Its span runs from the first day
+at `start` to the last day at `end`; the shift stores the pattern `weekdays`
+(the covered weekdays), `daily_start` and `daily_end`. Inside the span the duty
+is the daily window only: a time on a covered weekday between `daily_start` and
+`daily_end` is covered, every other time of the span is not.
+
+Example (office): Monday to Thursday 07:00–17:00 is one block, Friday 07:00–12:00
+is a second block. Each block is one shift per week, so the week holds two
+shifts, not five. The duty around the clock is the block Monday to Sunday,
+00:00–24:00.
+
+Coupling (§4a.6) and the personal iCal feed (§4a.7) read the pattern: the iCal
+feed names one recurring entry per block (`RRULE` with `BYDAY`).
+
+Confirmation, decline, swap and history (§4a.4, §4a.5, §4a.10) act on the whole
+block; one technician holds the block. Single days cannot be swapped in this
+version.
 
 ## 4a.4 Confirmation and decline
 

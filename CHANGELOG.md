@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The duty blocks of the readiness are specified (**WP-M20-01**, phase 20,
+  ADR-0040): a block spans consecutive weekdays with a daily pattern, so the office
+  week „Mo–Do 07:00–17:00, Fr 07:00–12:00“ becomes two shifts instead of five day
+  shifts, and a technician duty „Mo–So“ becomes one shift. ADR-0035 is amended for
+  the one-weekday window. The implementation follows in WP-M20-02 … WP-M20-06.
 - The assignment of the office is planned (**WP-M19-01**, phase 19, ADR-0039): one
   technician per ticket with a status (`offered`, `accepted`, `declined`), a
   configurable assignee pool in the escalation settings, the refusal passes to the

@@ -1,6 +1,6 @@
 # ADR-0035: The readiness knows a duty window per weekday
 
-- Status: accepted
+- Status: accepted (decisions 2 and 3 amended by ADR-0040)
 - Date: 2026-11-19
 - Stakeholders: admin, office, on-call technicians
 
