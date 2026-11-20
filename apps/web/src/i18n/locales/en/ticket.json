@@ -347,6 +347,7 @@
         "actionFailed": "The action could not be performed.",
         "invalid_request": "The submitted data was rejected. Please check the input.",
         "invalid_transition": "This step is not possible in the status “{{status}}”.",
+        "invalid_event": "Unknown event.",
         "ticket_not_found": "The ticket does not exist (any more).",
         "session_invalid": "The session has expired. Please sign in again.",
         "forbidden": "This action needs a permission that is missing.",

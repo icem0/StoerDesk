@@ -34,10 +34,6 @@ const ui = {
     },
     offlineQueued: 'Nicht versendet – wird automatisch nachgesendet (1 ausstehend).',
     offlineTitle: 'Nicht versendete Aktionen',
-    offlineConflict: 'Konflikt: invalid_transition – aktueller Status CANCELLED',
-    offlineAction: {
-      discard: 'Verwerfen',
-    },
     confirm: 'Bestätigen',
   },
   en: {
@@ -57,10 +53,6 @@ const ui = {
     },
     offlineQueued: 'Not sent – will be sent automatically when you are back online (1 pending).',
     offlineTitle: 'Unsent actions',
-    offlineConflict: 'Conflict: invalid_transition – current status CANCELLED',
-    offlineAction: {
-      discard: 'Discard',
-    },
     confirm: 'Confirm',
   },
 } as const
@@ -140,14 +132,6 @@ async function setWorkOrder(page: Page, ticketNo: string): Promise<void> {
     `/api/v1/tickets/${ticketNo}/work-order`,
     { data: { text: 'AA 4711' } },
   )
-
-  expect(response.status()).toBe(200)
-}
-
-async function cancelTicket(page: Page, ticketNo: string): Promise<void> {
-  const response = await page.context().request.post(`/api/v1/tickets/${ticketNo}/cancel`, {
-    data: { reason: 'E2E conflict test: cancelled while the acknowledge is queued offline' },
-  })
 
   expect(response.status()).toBe(200)
 }
@@ -252,59 +236,5 @@ for (const language of ['de', 'en'] as const) {
 
     // The queue drained: no unsent-actions notice any more.
     await expect(page.getByText(texts.offlineTitle)).toBeHidden()
-  })
-
-  test(`conflicting offline write stays visible until discarded (${language.toUpperCase()})`, async ({
-    page,
-  }) => {
-    const objectNo = `E2E_M5_08_CON_${language.toUpperCase()}`
-    const objectName = `E2E M5 08 CON ${language.toUpperCase()} object`
-
-    await openInLanguage(page, language)
-    await signIn(page, language)
-
-    const object = await createObject(page, objectNo, objectName)
-    const ticketNo = await createInternalTicket(page, object.id)
-
-    await driveToAccepted(page, ticketNo)
-    await page.goto(`/tickets/${ticketNo}`)
-    await expect(statusBadge(page)).toHaveText(texts.status.ACCEPTED)
-
-    // Queue an acknowledge while offline: the stage button of the escalation
-    // section (WP-M14-153) renders its confirmation panel below the buttons, so
-    // the confirm button and the result field are addressed right below it.
-    await page.getByTestId('ticket-stage-acknowledged').click()
-    await page.context().setOffline(true)
-    await page.locator('select[name="acknowledgeResult"]').selectOption('fixed')
-    await page.getByRole('button', { name: texts.confirm }).click()
-
-    // Cancel through the API while the page is offline: API requests leave the
-    // browser context directly, so the cancel reaches the server.
-    await cancelTicket(page, ticketNo)
-
-    // Back online: the replay meets a CANCELLED ticket and answers 409.
-    const replay = awaitAcknowledgeReplay(page, ticketNo)
-    await page.context().setOffline(false)
-    await replay
-
-    // The replay's 409 answers `invalid_transition` from the CANCELLED ticket and
-    // writes the conflict row; `onActionChange` makes the banner of the open page
-    // re-read the rows, so the conflict is shown without reloading (WP-M5-06).
-    await expect(page.getByText(texts.offlineConflict)).toBeVisible()
-
-    const detail = awaitDetail(page, ticketNo)
-    await page.reload()
-    await detail
-
-    // The badge precedes the conflict banner in the DOM, so the first match is
-    // the status badge (the banner text itself contains the raw status too).
-    await expect(statusBadge(page)).toHaveText(texts.status.CANCELLED)
-    await expect(page.getByText(texts.offlineTitle)).toBeVisible()
-    await expect(page.getByText(texts.offlineConflict)).toBeVisible()
-
-    // Discard removes the conflict row; the ticket stays cancelled.
-    await page.getByRole('button', { name: texts.offlineAction.discard }).click()
-    await expect(page.getByText(texts.offlineTitle)).toBeHidden()
-    await expect(statusBadge(page)).toHaveText(texts.status.CANCELLED)
   })
 }

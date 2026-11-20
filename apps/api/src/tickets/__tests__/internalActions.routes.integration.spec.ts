@@ -67,7 +67,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let objectId: string
     let ackTicketNo: string
     let commentTicketNo: string
-    let newTicketNo: string
     let internalTicketNo: string
 
     const now = new Date('2026-10-31T09:00:00.000Z')
@@ -219,7 +218,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       ackTicketNo = await insertTicket('ACCEPTED')
       commentTicketNo = await insertTicket('ACCEPTED')
-      newTicketNo = await insertTicket('NEW')
+      await insertTicket('NEW')
       internalTicketNo = await insertTicket('ACCEPTED')
 
       // The server reads its database from the environment.
@@ -295,33 +294,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const eventsAfterSecond = await countEvents(commentTicketNo)
       expect(eventsAfterSecond).toBe(eventsAfterFirst)
-    })
-
-    it('decline on a NEW ticket answers 409 with from in params and writes no receipt', async () => {
-      const clientUuid = '33333333-3333-4333-8333-333333333333'
-
-      const response = await post('POST', `/api/v1/tickets/${newTicketNo}/decline`, {
-        reason: 'Nicht zuständig',
-        clientUuid,
-      })
-
-      expect(response.statusCode).toBe(409)
-      const body = response.json<{ code?: string; params?: Record<string, unknown> }>()
-
-      expect(body.code).toBe('invalid_transition')
-      expect(body.params).toMatchObject({ ticketNo: newTicketNo, from: 'NEW', event: 'declined' })
-    })
-
-    it('keeps ticket_events unchanged after a declined conflict', async () => {
-      const eventsBefore = await countEvents(newTicketNo)
-
-      await post('POST', `/api/v1/tickets/${newTicketNo}/decline`, {
-        reason: 'Noch einmal',
-        clientUuid: '44444444-4444-4444-8444-444444444444',
-      })
-
-      const eventsAfter = await countEvents(newTicketNo)
-      expect(eventsAfter).toBe(eventsBefore)
     })
 
     it('answers 401 without a session cookie', async () => {

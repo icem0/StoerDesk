@@ -345,6 +345,7 @@
       "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
       "invalid_request": "Die Angaben wurden abgelehnt. Bitte die Eingaben prüfen.",
       "invalid_transition": "Dieser Schritt ist im Status „{{status}}“ nicht möglich.",
+      "invalid_event": "Unbekanntes Ereignis.",
       "assign_target_empty": "Das gewählte Ziel hat keinen aktiven Techniker. Bitte ein anderes Ziel wählen.",
       "ticket_not_found": "Die Meldung existiert nicht (mehr).",
       "session_invalid": "Die Anmeldung ist abgelaufen. Bitte erneut anmelden.",

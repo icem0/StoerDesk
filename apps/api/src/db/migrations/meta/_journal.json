@@ -372,6 +372,13 @@
       "when": 1795226400000,
       "tag": "0052_oncall_pool_weekly_windows",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1795312800000,
+      "tag": "0053_drop_ticket_transitions",
+      "breakpoints": true
     }
   ]
 }

@@ -416,41 +416,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(moved?.offerEscalatedAt).toBeNull()
     })
 
-    it('changes nothing when the ticket has no step for the distribution', async () => {
-      await action(
-        'assign',
-        { kind: 'group', id: groupId },
-        'assign_review_step',
-        seededRuleKey('work_order'),
-      )
-
-      const ticket = await createTicket('NEW')
-
-      const result = await fire(ticket.id, seededRuleKey('work_order'), 'work_order', 'e3')
-
-      expect(result.assigned).toBe(0)
-      expect(result.offered).toBe(0)
-
-      const [unchanged] = await db
-        .select({ status: tickets.status })
-        .from(tickets)
-        .where(eq(tickets.id, ticket.id))
-        .limit(1)
-
-      expect(unchanged?.status).toBe('NEW')
-
-      const assignees = await db
-        .select({ userId: ticketAssignees.userId })
-        .from(ticketAssignees)
-        .where(eq(ticketAssignees.ticketId, ticket.id))
-
-      expect(assignees).toHaveLength(0)
-
-      const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
-
-      expect(events.find((event) => event.type === 'escalation_note')).toBeUndefined()
-    })
-
     it('changes nothing for a target without a technician', async () => {
       const [emptyGroup] = await db
         .insert(groups)

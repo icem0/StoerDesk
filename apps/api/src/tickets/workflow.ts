@@ -1,20 +1,18 @@
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
 import { ticketAssignees, ticketEvents, tickets } from '../db/schema'
 import { closeOpenPause } from './pauses'
-import { readTicketTransitions, resolveTransition } from './transition-service'
 
 /**
- * Ticket state machine (`PLAN.md` §7, WP-M2-19b).
+ * Ticket workflow events (`PLAN.md` §7, WP-M2-19b).
  *
- * `transitionTicket()` validates the current status against the rows of
- * `ticket_transitions` — the steps are configuration (`specs/07-escalation.md`
- * §7.13, ADR-0025, WP-M14-38c) — updates the ticket row and writes one append-only
- * `ticket_events` row in the same transaction. Unknown or inactive combinations
- * throw `TicketTransitionError` (HTTP 409 `invalid_transition`).
- * Permission enforcement happens at the route guard (`requirePermission`);
- * this function only validates the state-machine transition.
+ * `transitionTicket()` writes the ticket status that the event names and one
+ * append-only `ticket_events` row in the same transaction. The status an event
+ * sets is fixed in code (`WORKFLOW_EVENT_STATUS`); there is no transition table
+ * and no check of the previous status (`specs/07-escalation.md` §7.13, ADR-0027).
+ * An escalation stage decides when a status is set and records the change in the
+ * history. Permission enforcement happens at the route guard (`requirePermission`).
  *
  * The workflow columns (`assigned_user_id`, `reviewed_by_user_id`, `accepted_at`,
  * `acknowledged_at`, `closed_at`, …) are added by migration 0006 and will be
@@ -40,8 +38,27 @@ export class TicketTransitionError extends Error {
   }
 }
 
-const INVALID_TRANSITION = (ticketNo: string, from: string, event: string) =>
-  new TicketTransitionError(409, 'invalid_transition', { ticketNo, from, event })
+/** The status each workflow event sets. Every event has exactly one target. */
+export const WORKFLOW_EVENT_STATUS = {
+  review_started: 'IN_REVIEW',
+  work_order_set: 'WORK_ORDER_CREATED',
+  assigned: 'ASSIGNED',
+  offered: 'OFFERED',
+  claimed: 'ASSIGNED',
+  accepted: 'ACCEPTED',
+  declined: 'WORK_ORDER_CREATED',
+  acknowledged: 'ACKNOWLEDGED',
+  closed: 'CLOSED',
+  reopened: 'NEW',
+  uncancelled: 'NEW',
+  cancelled: 'CANCELLED',
+} as const satisfies Record<string, string>
+
+export type WorkflowEvent = keyof typeof WORKFLOW_EVENT_STATUS
+
+export function isWorkflowEvent(event: string): event is WorkflowEvent {
+  return Object.prototype.hasOwnProperty.call(WORKFLOW_EVENT_STATUS, event)
+}
 
 const TICKET_NOT_FOUND = (ticketId: string) =>
   new TicketTransitionError(404, 'ticket_not_found', { ticketId })
@@ -64,12 +81,12 @@ export async function transitionTicket(ctx: TransitionContext) {
   const eventPayload =
     actorKind === 'system' && apiKeyId !== undefined ? { ...payload, apiKeyId } : payload
 
+  if (!isWorkflowEvent(event)) {
+    throw new TicketTransitionError(400, 'invalid_event', { event })
+  }
+
   const [ticket] = await database
-    .select({
-      id: tickets.id,
-      ticketNo: tickets.ticketNo,
-      status: tickets.status,
-    })
+    .select({ id: tickets.id, ticketNo: tickets.ticketNo })
     .from(tickets)
     .where(eq(tickets.id, ticketId))
     .limit(1)
@@ -78,23 +95,12 @@ export async function transitionTicket(ctx: TransitionContext) {
     throw TICKET_NOT_FOUND(ticketId)
   }
 
-  const fromStatus = ticket.status
-  const transitions = await readTicketTransitions(database)
-  const transition = resolveTransition(transitions, fromStatus, event)
-
-  if (transition === undefined) {
-    throw INVALID_TRANSITION(ticket.ticketNo, fromStatus, event)
-  }
+  const toStatus = WORKFLOW_EVENT_STATUS[event]
 
   return await database.transaction(async (tx) => {
-    // The UPDATE re-checks the status (`UPDATE … WHERE status = <from>`), so two
-    // concurrent transitions of the same ticket produce exactly one winner —
-    // the first acceptance wins atomically (`PLAN.md` §12, the claim conflict of
-    // §16.1/3). A stale status read alone must never decide the transition.
-    // The workflow columns of `PLAN.md` §7 belong to the transition that sets
-    // them (`specs/05-timeline.md` §5.2: the timeline stops at `acknowledged`).
-    // They are written in the same statement as the status, so a reader never
-    // sees a status whose timestamp is missing.
+    // The workflow columns of `PLAN.md` §7 belong to the event that sets them
+    // (`specs/05-timeline.md` §5.2: the timeline stops at `acknowledged`). They
+    // are written in the same statement as the status.
     const at = new Date()
     const workflowColumns: Partial<typeof tickets.$inferInsert> = {}
 
@@ -128,12 +134,12 @@ export async function transitionTicket(ctx: TransitionContext) {
 
     const [updated] = await tx
       .update(tickets)
-      .set({ ...workflowColumns, status: transition.toStatus, updatedAt: at })
-      .where(and(eq(tickets.id, ticketId), eq(tickets.status, fromStatus)))
+      .set({ ...workflowColumns, status: toStatus, updatedAt: at })
+      .where(eq(tickets.id, ticketId))
       .returning()
 
     if (updated === undefined) {
-      throw INVALID_TRANSITION(ticket.ticketNo, fromStatus, event)
+      throw TICKET_NOT_FOUND(ticketId)
     }
 
     const [insertedEvent] = await tx

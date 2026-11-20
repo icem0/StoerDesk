@@ -144,15 +144,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<ListBody>().tickets.some((row) => row.ticketNo === ticketNo)).toBe(true)
     })
 
-    it('rejects the work-order update from NEW with 409', async () => {
-      const response = await call('PATCH', `/api/v1/tickets/${ticketNo}/work-order`, {
-        text: 'Electric WO-1',
-      })
-
-      expect(response.statusCode).toBe(409)
-      expect(response.json<ErrorBody>().code).toBe('invalid_transition')
-    })
-
     it('sets the work order as a system actor from IN_REVIEW', async () => {
       await db.update(tickets).set({ status: 'IN_REVIEW' }).where(eq(tickets.ticketNo, ticketNo))
 

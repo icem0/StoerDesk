@@ -19,7 +19,6 @@ if (testDatabase.status === 'unavailable') {
 
 const { users, roles, userRoles, objects, tickets } = schema
 
-type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
 function onlyRow<T>(rows: T[], what: string): T {
   const [row] = rows
@@ -174,20 +173,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         '00000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000002',
       ])
-    })
-
-    it('refuses close on a non-ACKNOWLEDGED ticket with 409', async () => {
-      await db
-        .update(tickets)
-        .set({ status: 'NEW' })
-        .where(eq(tickets.ticketNo, 'ST-2026-9900'))
-
-      const response = await closeTicket(officeCookie, 'ST-2026-9900')
-      expect(response.statusCode).toBe(409)
-      expect(response.json<ErrorResponseBody>()).toEqual({
-        code: 'invalid_transition',
-        params: { ticketNo: 'ST-2026-9900', from: 'NEW', event: 'closed' },
-      })
     })
   },
 )

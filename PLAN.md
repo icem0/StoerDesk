@@ -204,13 +204,11 @@ Core tables:
   removes its rules (migration `0037_escalation_stage_chain`)
 - `escalation_firings` — the firing log of the escalation: unique over
   `(ticket_id, rule_key, threshold_at)`, so a rule fires once per threshold
-- `ticket_statuses` and `ticket_transitions` — the workflow as configuration (ADR-0025,
-  WP-M14-35, WP-M14-38a … WP-M14-38c): the status rows (`key`, `names` de/en, `color`,
-  `position`, `active`, `is_terminal`) and the steps (`from_status`, `to_status` as foreign
-  keys to `ticket_statuses.key` with `ON DELETE cascade`, `event_key` unique per step, the
-  nullable `condition_json` stored now and evaluated only from WP-M14-41, `active`);
-  migration `0041_ticket_transitions.sql` seeds the 22 steps of §7 and drops
-  `tickets_status_check`
+- `ticket_statuses` — the statuses as configuration (ADR-0025, WP-M14-35): the status
+  rows (`key`, `names` de/en, `color`, `position`, `active`, `is_terminal`). The steps
+  between the statuses are not stored: the workflow events set their status in code and
+  the escalation stages set it by `status_change` (ADR-0041, `0053` drops the former
+  `ticket_transitions` table)
 - `users`, `groups`, `user_groups`, `sessions`, `api_keys`
   - `users.theme` — `auto` (follows `prefers-color-scheme`), `light` or `dark`
     (WP-M2-92)
@@ -292,9 +290,10 @@ Rules:
 9. **Reopen:** office or manager reopens with a reason; event `reopened`.
 10. **Cancel:** office or admin cancels with a reason; event `cancelled`.
 
-All transitions run through `transitionTicket(ticketId, event, actor, payload)`.
-The function checks role, current status and guards, and writes the event in the
-same database transaction. Invalid transitions return HTTP 409.
+All workflow events run through `transitionTicket(ticketId, event, actor, payload)`.
+The event sets its target status (`WORKFLOW_EVENT_STATUS` in `tickets/workflow.ts`)
+and writes the event in the same database transaction. There is no check of the
+previous status (ADR-0041); the history records every change.
 
 Critical priority shortens deadlines and triggers immediate escalation.
 

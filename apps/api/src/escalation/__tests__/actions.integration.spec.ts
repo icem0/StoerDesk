@@ -200,15 +200,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
 
-      const step = events.find(
-        (event) => event.type === 'review_started' && event.actorKind === 'system',
-      )
-
-      expect(step?.payload).toMatchObject({
-        rule: seededRuleKey('review'),
-        stage: 'review',
-      })
-
       const note = events.find((event) => {
         if (event.type !== 'escalation_note') {
           return false

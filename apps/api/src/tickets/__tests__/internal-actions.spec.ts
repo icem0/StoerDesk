@@ -40,7 +40,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let ackReplayTicketNo: string
     let foreignTicketNo: string
     let commentTicketNo: string
-    let newTicketNo: string
 
     const now = new Date('2026-10-31T09:00:00.000Z')
     const deadline = new Date(now.getTime() + 72 * 60 * 60 * 1000)
@@ -99,7 +98,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ackReplayTicketNo = await insertTicket('ACCEPTED')
       foreignTicketNo = await insertTicket('ACCEPTED')
       commentTicketNo = await insertTicket('ACCEPTED')
-      newTicketNo = await insertTicket('NEW')
     })
 
     afterAll(async () => {
@@ -206,33 +204,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         code: 'action_actor_mismatch',
         params: { clientUuid, ticketNo: foreignTicketNo },
       })
-    })
-
-    it('rejects an invalid transition with 409, `from` in params and no receipt', async () => {
-      const clientUuid = 'client-invalid-1'
-
-      // newTicketNo is NEW; acknowledge from NEW is not a valid transition.
-      await expect(
-        applyInternalAction({
-          database: db,
-          ticketNo: newTicketNo,
-          clientUuid,
-          action: 'acknowledge',
-          actorUserId: actorId,
-          payload: {},
-        }),
-      ).rejects.toMatchObject({
-        statusCode: 409,
-        code: 'invalid_transition',
-        params: { ticketNo: newTicketNo, from: 'NEW', event: 'acknowledged' },
-      })
-
-      const receipts = await db
-        .select()
-        .from(internalActionReceipts)
-        .where(eq(internalActionReceipts.clientUuid, clientUuid))
-
-      expect(receipts).toHaveLength(0)
     })
 
     it('leaves tickets.status untouched for a comment', async () => {

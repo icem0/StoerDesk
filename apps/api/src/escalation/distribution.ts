@@ -14,12 +14,12 @@ import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
  * The distribution of a ticket by the escalation (`specs/07-escalation.md`
  * §7.14, ADR-0026, WP-M14-82).
  *
- * The `offer` and the `assign` action of a fired rule hand the ticket to the
- * technicians of a target — a readiness pool or a user group. Both perform a
- * step of the transition table (`§7.13`, ADR-0025): the offer the `offered`
- * step, the assignment the `assigned` step. A ticket whose status has no such
- * step keeps its status and the action changes nothing — the rule of the
- * `status_change` action.
+  * The `offer` and the `assign` action of a fired rule hand the ticket to the
+ * technicians of a target — a readiness pool or a user group. Both set their
+ * workflow status through the event (`offered` or `assigned`, ADR-0027): the
+ * offer sets `OFFERED`, the assignment sets `ASSIGNED`. A ticket whose
+ * technicians are missing keeps its status and the action changes nothing.
+
  *
  * The assignment records the technicians in `ticket_assignees`
  * (`specs/02-data-model.md` §4.13); the offer names the on-call person of a
@@ -36,7 +36,7 @@ type Db = Database['database']
 export type DistributionKind = 'offer' | 'assign'
 
 export type DistributionResult = {
-  /** False when the ticket has no step of the transition table for it. */
+  /** False when the ticket was not changed (no technician, or the ticket is gone). */
   changed: boolean
   /** The number of the technicians of the target. */
   technicians: number
@@ -69,9 +69,8 @@ export async function resolveTargetTechnicians(
 }
 
 /**
- * The offer names the on-call person of a pool and sets the offer timeout
- * (§7.14, WP-M14-82b): the payload for the `offered` step of the transition
- * table. A group target and a pool without a covering shift offer without a
+  * The offer names the on-call person of a pool and sets the offer timeout
+ * (§7.14, WP-M14-82b): the payload for the `offered` event. A group target and a pool without a covering shift offer without a
  * person and without a timeout — the whole group receives the offer. A user
  * target names that technician (§7.14, ADR-0033).
  */
@@ -137,8 +136,7 @@ export async function distributeTicket(
       payload: { rule: input.ruleKey, stage: input.stageKey, ...offer, ...(input.payload ?? {}) },
     })
   } catch (error) {
-    // Without an active step of the transition table the action changes
-    // nothing (§7.13) — a ticket outside `WORK_ORDER_CREATED` stays as it is.
+    // A ticket that is gone changes nothing; any other error is a failure.
     if (error instanceof TicketTransitionError) {
       return { changed: false, technicians: 0, notified: 0 }
     }

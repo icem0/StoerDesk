@@ -28,8 +28,6 @@ import {
 import { escalationRecipients } from '../notifications/receivers'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { resolveOnDutyUserIds } from '../oncall/coupling'
-import { transitionTicket } from '../tickets/workflow'
-import { readTicketTransitions } from '../tickets/transition-service'
 import { distributeTicket } from './distribution'
 
 /**
@@ -38,10 +36,9 @@ import { distributeTicket } from './distribution'
  *
  * `notify` writes one outbox row per selected channel, `webhook` one delivery
  * row per selected endpoint, `history` one normal comment in the ticket
- * history and `status_change` performs the step of the `ticket_transitions`
- * table that leads from the current status of the ticket to the configured
- * target (§7.5, §7.13, ADR-0025, WP-M14-40b) and appends one `escalation_note`
- * event documenting the change. The `offer` and the `assign` action
+ * history and `status_change` sets the status of the ticket to the configured
+ * target and appends one `escalation_note` event documenting the change
+ * (§7.5, ADR-0027). The `offer` and the `assign` action
  * distribute the ticket (§7.14, ADR-0026): they hand it to the
  * technicians of their target. A `notify` action with a readiness pool as its
  * target reaches the technicians who have a shift in that pool at this moment
@@ -370,24 +367,13 @@ export async function dispatchEscalationActions(
       }
 
       const from = ticket.status
-      const transitions = await readTicketTransitions(database)
-      const step = transitions.find(
-        (transition) =>
-          transition.active && transition.fromStatus === from && transition.toStatus === toStatus,
-      )
 
-      // Without an active step to the target the action changes nothing (§7.13).
-      if (step === undefined) {
-        continue
-      }
-
-      await transitionTicket({
-        database,
-        ticketId: firing.ticketId,
-        event: step.eventKey,
-        actorKind: 'system',
-        payload: { rule: firing.ruleKey, stage: firing.stageKey },
-      })
+      // The stage sets the status directly (ADR-0027): no transition table and
+      // no check of the previous status. The history documents the change.
+      await database
+        .update(tickets)
+        .set({ status: toStatus, updatedAt: new Date() })
+        .where(eq(tickets.id, firing.ticketId))
 
       await database.insert(ticketEvents).values({
         ticketId: firing.ticketId,

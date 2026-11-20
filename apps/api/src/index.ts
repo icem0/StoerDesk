@@ -57,7 +57,6 @@ import { pauseRoutes } from './tickets/pauses'
 import { publicReportRoutes } from './tickets/report'
 import { publicStatusRoutes } from './tickets/status'
 import { ticketStatusRoutes } from './tickets/status-routes'
-import { ticketTransitionRoutes } from './tickets/transition-routes'
 import { dashboardRoutes } from './dashboard/routes'
 import { tvRoutes } from './dashboard/tv-routes'
 import { statsRoutes } from './stats/routes'
@@ -153,7 +152,6 @@ export async function buildServer() {
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(detectedErrorsRoutes, { database })
   await app.register(ticketStatusRoutes, { database })
-  await app.register(ticketTransitionRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(externalObjectRoutes, { database })
   await app.register(objectImportRoutes, { database })
@@ -173,7 +171,11 @@ export async function buildServer() {
   await app.register(publicStatusRoutes, { database })
   await app.register(publicDuplicateRoutes, { database })
   await app.register(tvRoutes, { database })
-  await app.register(internalTicketRoutes, { database })
+  await app.register(internalTicketRoutes, {
+    database,
+    uploadDir: env.UPLOAD_DIR,
+    maxPhotoBytes: env.UPLOAD_MAX_BYTES,
+  })
   await app.register(externalTicketRoutes, { database })
   await app.register(ticketListRoutes, { database })
   await app.register(ticketDetailRoutes, { database })

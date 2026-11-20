@@ -1,6 +1,7 @@
 # ADR-0025: The ticket transitions are database configuration
 
-- Status: accepted
+- Status: superseded by ADR-0041 (the workflow events set the status; the
+  transition table is removed)
 - Date: 2026-11-15
 - Stakeholders: office, manager, admin
 

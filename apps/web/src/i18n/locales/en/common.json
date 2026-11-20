@@ -112,7 +112,6 @@
       "escalation": "Escalation",
       "notifications": "Notifications",
       "statuses": "Statuses",
-      "transitions": "Transitions",
       "defaults": "Default values"
     },
     "errors": {

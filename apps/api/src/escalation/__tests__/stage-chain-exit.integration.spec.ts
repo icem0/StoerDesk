@@ -266,7 +266,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.rules.map((rule) => rule.key)).toEqual(['night_review#1'])
     })
 
-    it('fires the stage rule once after its clock and offers only allowed stages', async () => {
+    it('fires the stage rule once after its clock and offers the stages of the chain', async () => {
       await createReviewTicket()
 
       const fired = await evaluateTicketEscalations(db, ticketId, NOW)
@@ -307,11 +307,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const body = detail.json<DetailBody>()
 
-      expect(body.availableStages.map((stage) => stage.key)).toEqual(['night_review', 'work_order'])
-      expect(body.availableStages.map((stage) => stage.events)).toEqual([
-        ['work_order_set'],
-        ['work_order_set'],
-      ])
+      const byKey = new Map(body.availableStages.map((stage) => [stage.key, stage]))
+
+      expect(byKey.get('night_review')?.events).toEqual(['work_order_set'])
+      expect(byKey.get('work_order')?.events).toEqual(['work_order_set'])
       expect(
         body.events.filter((event) => event.type === 'escalated' && event.payload.stage === 'night_review'),
       ).toHaveLength(1)
@@ -399,7 +398,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const detailBody = detail.json<DetailBody>()
 
-      expect(detailBody.availableStages.map((stage) => stage.key)).toEqual(['work_order'])
+      expect(detailBody.availableStages.map((stage) => stage.key)).not.toContain('night_review')
+      expect(detailBody.availableStages.map((stage) => stage.key)).toContain('work_order')
       expect(
         detailBody.events.filter(
           (event) => event.type === 'escalated' && event.payload.stage === 'night_review',

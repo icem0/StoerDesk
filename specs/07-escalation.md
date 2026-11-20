@@ -145,7 +145,7 @@ the night.
 | `notify`        | `target` (one user, a readiness pool **or** the assignees of the ticket) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target and per channel the addressee selected for `ticket.escalated` (§11.4, ADR-0037); without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain                                                                               |
 | `webhook`       | `endpointIds` (webhook endpoints of the administration)                                                                                                                                           | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker                                                                                                                                                                                                                                       |
 | `history`       | `text` (optional, 1–500 characters), no key in the administration                                                                                                                                 | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key                                                                                                                                                                                                         |
-| `status_change` | `toStatus` (the key of a row of `ticket_statuses`)                                                                                                                                                | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }`                                                                                  |
+| `status_change` | `toStatus` (the key of a row of `ticket_statuses`)                                                                                                                                                | the dispatcher sets the ticket status to that target directly (§7.13, ADR-0041); one append-only `escalation_note` event records the change with `{ rule, stage, from, to }`                                                                                  |
 | `offer`         | `target` (a readiness pool, a user group or one technician, §7.14)                                                                                                                                | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once, a user target names that technician in `offered_to_user_id`; every technician of the target is notified (§7.14) |
 | `assign`        | `mode` (`pool`: one employee chosen from the assignee pool of §7.14; `user`: one fixed technician), `user` (the technician, mode `user`), `acceptance` (boolean, _Annahme erforderlich_)          | the dispatcher runs the `assigned` step of `ticket_transitions` for one technician, sets `assigned_user_id`, `assignment_status` (`offered` or `accepted`) and `assigned_by_user_id` (NULL for the system); the technician is notified (§7.14, ADR-0039)                                                                                |
 
@@ -179,8 +179,7 @@ the rule and the action (`#1`, `#2`) — it never names them. The migration
 numbered keys; the actions and the firing log follow the rename of their rule.
 
 Only a `status_change` action may move the status of a ticket (WP-M14-40 … WP-M14-40c):
-it performs a step of the configurable transition table, so the workflow columns
-stay keyed by the `event_key` of that step and an unknown target status answers
+it sets the status directly (§7.13, ADR-0041), and an unknown target status answers
 `400 invalid_status_key` on `PUT /api/v1/escalation/config` (WP-M14-40b). The
 `offer` and the `assign` action distribute a ticket (§7.14, ADR-0026): they
 perform a step of the same table and record the assignees. No action of a rule
@@ -254,8 +253,7 @@ buttons, not above them. The actions that are no milestone (decline, claim,
 e-mail, cancel, delete) stay buttons.
 
 The server answers the reachable stages with the ticket (`availableStages`); the
-workflow transitions themselves are the rows of the `ticket_transitions` table
-(`§7.13`, ADR-0025, WP-M14-38).
+workflow events themselves are fixed in code (`§7.13`, ADR-0041).
 
 ## 7.11 The stage chain is configurable (ADR-0023)
 
@@ -267,12 +265,12 @@ key that was not used before is created. At most 20 stages exist at a time.
 | ------------- | -------------------------------------------------------------------------------------------------------- |
 | `key`         | free stage key (`^[a-z][a-z0-9_]{0,39}$`), unique, the identity of the stage                             |
 | `predecessor` | the key of the stage before this one, or `null` — the stage without predecessor waits from `received_at` |
-| `reached_by`  | the transition event keys that reach this stage; an empty array means the workflow never reaches it      |
+| `reached_by`  | the workflow event keys that reach this stage; an empty array means the workflow never reaches it      |
 
 The chain is validated by the pure function `validateEscalationStageChain` in
 `packages/shared`: unique keys, a predecessor that exists and is not the stage
 itself, no cycle, the position of a stage greater than the position of its
-predecessor, and every `reached_by` entry being an event key of the transition
+predecessor, and every `reached_by` entry being a workflow event key of the code map
 map of `apps/api/src/tickets/workflow.ts`. A violation answers
 `400 invalid_request` with the field paths and writes nothing.
 
@@ -325,8 +323,7 @@ stage and a chain at the position limit stay untouched.
   `POST /api/v1/tickets/:ticketNo/escalate` are removed: the workflow already
   records who reached which milestone.
 - Only a `status_change` action of a fired rule moves the status of a ticket
-  (WP-M14-40 … WP-M14-40b): it performs a step of the `ticket_transitions` table
-  (§7.13), so the workflow columns stay keyed by the `event_key` of that step. The
+  (WP-M14-40 … WP-M14-40b): it sets the status directly (§7.13, ADR-0041). The
   `offer` and the `assign` action distribute a ticket (§7.14, ADR-0026) and
   therefore also perform a step of that table. No action changes the priority, the
   deadline or the work order of a ticket.
@@ -339,37 +336,28 @@ stage and a chain at the position limit stay untouched.
   (WP-M14-59, WP-M14-60); the shared list survives only as the seed default
   chain and the last use of it leaves the code with WP-M14-64.
 
-## 7.13 The ticket transitions are configuration (ADR-0025)
+## 7.13 The workflow events set the status (ADR-0041)
 
-WP-M14-35 made the **statuses** rows of `ticket_statuses`; the steps between them
-were still the code map `TRANSITIONS` in `apps/api/src/tickets/workflow.ts`
-(`PLAN.md` §7). A status the administrator adds could never be entered or left.
-`ticket_transitions` (migration `0041`) carries the steps as rows:
+The ticket workflow has no transition table. Each workflow event (`review_started`,
+`work_order_set`, `assigned`, `offered`, `claimed`, `accepted`, `declined`,
+`acknowledged`, `closed`, `reopened`, `uncancelled`, `cancelled`) names one
+target status in the code map `WORKFLOW_EVENT_STATUS` in
+`apps/api/src/tickets/workflow.ts`. `transitionTicket()` writes that status, the
+workflow columns (`review_started_at`, `accepted_at`, `acknowledged_at`,
+`closed_at`, …) and one `ticket_events` row in one transaction. It does not check
+the previous status: no event is refused because of the status the ticket has.
+An unknown event key answers `400 invalid_event`.
 
-| Field            | Meaning                                                                                                  |
-| ---------------- | -------------------------------------------------------------------------------------------------------- |
-| `from_status`    | foreign key to `ticket_statuses.key`, `ON DELETE cascade` — a removed status removes its steps           |
-| `to_status`      | foreign key to `ticket_statuses.key`, `ON DELETE cascade`                                                |
-| `event_key`      | the event that performs the step (`review_started`, `closed`, …); unique over `(from_status, event_key)` |
-| `condition_json` | nullable jsonb, the condition of the step — stored from `0041`, evaluated only from WP-M14-41            |
-| `active`         | an inactive row never changes a ticket                                                                   |
+The escalation stages decide **when** a status is set (§7.4 to §7.12). A stage of
+the `status_change` action sets its `toStatus` directly and appends one
+`escalation_note` event `{ rule, stage, from, to }`, so every change of status is
+recorded in the history. The ticket view offers the active stages whose `reached_by`
+events are workflow events (§7.10).
 
-`transitionTicket()` resolves the row of `(current status, event)`; an unknown or
-inactive combination answers `409 invalid_transition`. The workflow columns
-(`review_started_at`, `accepted_at`, `acknowledged_at`, `closed_at`, …) stay keyed
-by `event_key`: the row decides the new status, the event decides the timestamp.
-The wildcard row `'*'` of the old map becomes one `cancelled` row per status — the
-foreign key forbids a `*` key and a Postgres unique index would let duplicate
-NULL rows through.
-
-The migration seeds the `PLAN.md` §7 workflow (22 rows), so the workflow of an
-installed instance never changes; `PUT`/`POST` of the transition administration
-(WP-M14-39) edits rows. The nine statuses the foreign keys need are seeded
-idempotently in the same migration and `apps/api/src/db/seed/statuses.ts` stays
-the bootstrap of the API start. The old `tickets_status_check` of migration `0004`
-is dropped in `0041`: the rows of `ticket_statuses` and their key-format CHECK
-(`0040`) are the status configuration, and a status a ticket still carries must
-survive a deactivation.
+The statuses are configuration: the rows of `ticket_statuses` (§7.1) are created,
+renamed and deactivated in the administration. The table `ticket_transitions`
+of the earlier design (ADR-0025, migrations `0041`/`0042`) is removed by migration
+`0053`; its administration page and its API are gone.
 
 ## 7.14 The offer and the assign action (ADR-0026, ADR-0033, ADR-0039)
 
@@ -425,10 +413,10 @@ Every change writes one `ticket_events` row of the step it performs, so the
 history of the assignments stays in the event log; the columns hold only the
 current state.
 
-The step names are the existing steps of `ticket_transitions` (§7.13): `assigned`
-for `assign`, `accepted` and `declined` for the answer. A ticket whose status has
-no such step keeps its status and the action writes nothing — the same rule as
-`status_change`.
+The event names are the workflow events of §7.13: `assigned`
+for `assign`, `accepted` and `declined` for the answer. A ticket that has no
+technician for the target keeps its status and the action writes nothing; the
+status itself is never a condition (§7.13, ADR-0041).
 
 ### The notifications
 

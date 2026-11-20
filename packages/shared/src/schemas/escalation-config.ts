@@ -54,7 +54,7 @@ export type EscalationReferenceEvent = (typeof ESCALATION_REFERENCE_EVENTS)[numb
 
 /**
  * The actions of a rule (§7.5); only a `status_change` action moves the status
- * and only through a step of the transition table (WP-M14-40, §7.13, ADR-0025).
+ * and sets it directly (§7.13, ADR-0027).
  * The `offer` and the `assign` action distribute a ticket — they carry the
  * target of the distribution (ADR-0026, §7.14).
  */
@@ -261,7 +261,7 @@ export function escalationStageClockEvents(
  * duplicate keys, a missing or self-referencing predecessor, a second stage
  * without a predecessor, a cycle, a position that is not greater than the
  * predecessor's and an unknown `reachedBy` event. `eventKeys` are the event
- * keys of the transition map.
+ * keys of the workflow (`tickets/workflow.ts`).
  */
 export function validateEscalationStageChain(
   stages: readonly EscalationStageConfig[],
@@ -491,11 +491,9 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('status_change'),
     /**
-     * The target status of the action (§7.5, WP-M14-40) — the key of a row of
-     * `ticket_statuses`; the dispatcher performs the step of
-     * `ticket_transitions` (§7.13) that leads from the current status of the
-     * ticket to it, so the key format is the one of `ticketStatusKeySchema`
-     * and the service checks the row itself (WP-M14-40b).
+     * The target status of the action (§7.5, ADR-0027) — the key of a row of
+     * `ticket_statuses`; the dispatcher sets it directly.
+     * The key format is the one of `ticketStatusKeySchema`.
      */
     toStatus: ticketStatusKeySchema,
     condition: escalationConditionSchema,
@@ -505,8 +503,7 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     type: z.literal('offer'),
     /**
      * The pool of technicians the ticket is offered to (§7.14, ADR-0026) — a
-     * readiness pool or a user group. The offer performs the `offered` step of
-     * the transition table.
+     * readiness pool or a user group. The offer sets the `OFFERED` status.
      */
     target: escalationTargetSchema,
     condition: escalationConditionSchema,
@@ -516,8 +513,8 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     type: z.literal('assign'),
     /**
      * The pool of technicians the ticket is assigned to (§7.14, ADR-0026) — a
-     * readiness pool or a user group. The assignment performs the `assigned`
-     * step of the transition table and records the technicians.
+      * readiness pool or a user group. The assignment sets the `ASSIGNED` status
+      * and records the technicians.
      */
     target: escalationTargetSchema,
     condition: escalationConditionSchema,

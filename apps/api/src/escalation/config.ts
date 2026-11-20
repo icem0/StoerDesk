@@ -17,7 +17,7 @@ import {
 
 import type { Database } from '../db/client'
 import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses, users } from '../db/schema'
-import { readTicketTransitions } from '../tickets/transition-service'
+import { WORKFLOW_EVENT_STATUS } from '../tickets/workflow'
 
 /**
  * The configuration of the escalation (`specs/07-escalation.md` §7.9,
@@ -110,34 +110,22 @@ export async function readEscalationStages(database: Db): Promise<
 }
 
 /**
- * The event keys of the transition table — the workflow events an installation
- * knows (ADR-0025). The stages may name them and nothing else.
+ * The workflow event keys an installation knows (`tickets/workflow.ts`). The
+ * stages may name them and nothing else.
  */
-async function readTransitionEventKeys(database: Db): Promise<string[]> {
-  const transitions = await readTicketTransitions(database)
-
-  return [...new Set(transitions.map((transition) => transition.eventKey))]
+function readTransitionEventKeys(): string[] {
+  return Object.keys(WORKFLOW_EVENT_STATUS)
 }
 
 /**
- * The stages the ticket can still reach, with the events that reach them. The
- * ticket view offers them instead of one button per workflow step
- * (`specs/07-escalation.md` §7.10). A stage qualifies when one of its
- * `reached_by` events is a step the current status allows: the **active** rows
- * of `ticket_transitions` whose `from_status` is that status (ADR-0025). The
- * table is the only source of truth, so an administrator who deactivates a step
- * or changes its source status never sees a stage the engine would reject.
+ * The stages with the events that reach them. The ticket view offers them instead
+ * of one button per workflow step (`specs/07-escalation.md` §7.10). There is no
+ * status condition: a stage is reachable by its events, the history documents the
+ * change (ADR-0027).
  */
 export async function readReachableStages(
   database: Db,
-  status: string,
 ): Promise<{ key: string; names: Record<string, string>; events: string[] }[]> {
-  const transitions = await readTicketTransitions(database)
-  const allowedEvents = new Set(
-    transitions
-      .filter((transition) => transition.active && transition.fromStatus === status)
-      .map((transition) => transition.eventKey),
-  )
   const stages = await readEscalationStages(database)
 
   return stages.flatMap((stage) => {
@@ -145,13 +133,14 @@ export async function readReachableStages(
       return []
     }
 
-    const events = stage.reachedBy.filter((event) => allowedEvents.has(event))
+    const events = stage.reachedBy.filter((event) => event in WORKFLOW_EVENT_STATUS)
 
     return events.length === 0
       ? []
       : [{ key: stage.key, names: stage.names, events }]
   })
 }
+
 
 /** Reads the whole configuration: the stages, the rules and their actions. */
 export async function readEscalationConfig(database: Db): Promise<EscalationConfig> {
@@ -403,8 +392,8 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 /**
  * Replaces the whole stage chain in one transaction. A submitted key is
  * created or updated; a stage that is missing from the body is deleted and
- * its rules follow through the `ON DELETE cascade` of §7.11. The chain is
- * validated against the transition map before anything is written.
+  * its rules follow through the `ON DELETE cascade` of §7.11. The chain is
+ * validated against the workflow events before anything is written.
  */
 export async function writeEscalationStages(
   database: Db,
@@ -416,10 +405,7 @@ export async function writeEscalationStages(
     throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
   }
 
-  const chainIssues = validateEscalationStageChain(
-    parsed.data.stages,
-    await readTransitionEventKeys(database),
-  )
+  const chainIssues = validateEscalationStageChain(parsed.data.stages, readTransitionEventKeys())
 
   if (chainIssues.length > 0) {
     throw new EscalationConfigError(400, 'invalid_request', { fields: chainIssues })

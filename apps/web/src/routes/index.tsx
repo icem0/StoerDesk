@@ -7,8 +7,6 @@ import { ChannelsPage } from '../admin/channels-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { StatusCreatePage } from '../admin/status-create-page'
-import { TransitionPage } from '../admin/transition-page'
-import { TransitionCreatePage } from '../admin/transition-create-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { WebhookCreatePage } from '../admin/webhook-create-page'
 import { BmaSyncPage } from '../admin/bma-sync-page'
@@ -190,27 +188,6 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <StatusCreatePage />
-          </RequireSession>
-        ),
-      },
-      {
-        // The transition administration of WP-M14-39b: the workflow steps are
-        // configuration (`specs/07-escalation.md` §7.13, ADR-0025), the rows of
-        // `ticket_transitions` are read, created, edited and deleted here.
-        path: '/admin/transitions',
-        element: (
-          <RequireSession>
-            <TransitionPage />
-          </RequireSession>
-        ),
-      },
-      {
-        // The own page of the new workflow step (WP-M14-167): the form does
-        // not lie below the table of the steps any more.
-        path: '/admin/transitions/new',
-        element: (
-          <RequireSession>
-            <TransitionCreatePage />
           </RequireSession>
         ),
       },

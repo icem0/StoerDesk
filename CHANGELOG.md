@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Removed
+- The transition table `ticket_transitions` and its administration page
+  `/admin/transitions` are removed (ADR-0041, migration `0053`). A workflow event
+  sets its target status in code, and a `status_change` action of an escalation
+  stage sets the status directly; the history documents every change. No step
+  between two statuses is checked any more. A replayed offline action on a
+  ticket in another status is no longer refused with `invalid_transition`.
+  ADR-0025 is superseded.
+
 ### Added
 - The duty blocks of the readiness are specified (**WP-M20-01**, phase 20,
   ADR-0040): a block spans consecutive weekdays with a daily pattern, so the office

@@ -209,7 +209,7 @@ export async function getTicketDetail(
         .filter((event) => markerTypes.has(event.type))
         .map((event) => ({ type: event.type, at: event.createdAt.toISOString() })),
     },
-    availableStages: await readReachableStages(database, ticketRow.status),
+    availableStages: await readReachableStages(database),
     pauses: pauses.map((pause) => ({
       id: pause.id,
       ticketId: pause.ticketId,
