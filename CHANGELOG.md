@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The web push card names an incomplete trio on its row (**WP-M15-11**, out of
+  band in phase 15): a row that stored only a public key without the private key
+  (or the other way round) leaves the values of the `.env` untouched (WP-M14-170)
+  — the browser subscribed with one key, the server signed with another and the
+  push service refused every send with `403`, while the card looked fine. The card
+  of `webpush` warns now while its row is incomplete: the values of the `.env`
+  still apply beside the stored part, one generated pair has to be saved together
+  or the row has to be deleted (v1.1.340).
 - The web push test send never reports success while no device is subscribed
   (**WP-M15-10**, out of band in phase 15): the card answered „Testnachricht
   gesendet." on a server whose VAPID trio was fine — an empty subscription list is

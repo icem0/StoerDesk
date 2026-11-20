@@ -324,6 +324,17 @@ describe('ChannelsPage', () => {
     expect(screen.queryByText(/ntfy-Server hat den Code/)).toBeNull()
   })
 
+  it('names an incomplete web push trio on its row (WP-M15-11)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [{ ...webpush, secretSet: false }, matrix] },
+    })
+    renderPage()
+
+    const warnings = await screen.findAllByText(/The row of this card is incomplete/)
+    expect(warnings).toHaveLength(1)
+  })
+
   it('names the access token when the publication is refused (WP-M14-52)', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),

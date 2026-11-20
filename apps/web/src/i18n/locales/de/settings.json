@@ -518,6 +518,7 @@
       "copy": "Kopieren",
       "copyToClipboard": "In die Zwischenablage kopieren",
       "ntfyTokenHint": "No key saved yet: a self-hosted ntfy server needs its access token in the secret field — without it every publication is refused.",
+      "webpushIncompleteTrio": "The row of this card is incomplete: Either the public key is saved without the private key (the Secret field) — the values of the .env still apply beside it and the push service rejects every send. Generate one key pair and save public key, private key and Subject together, or delete the row.",
       "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung notification.write.",
       "verification": {
         "heading": "ntfy-Verbindung prüfen",

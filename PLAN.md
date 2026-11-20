@@ -3407,6 +3407,15 @@ counts the rows of `push_subscriptions` and answers `delivered: false` with the
 code `push_no_subscription` without a single row; the adapter and its no-op for a
 ticket notification stay untouched.
 
+**The card names an incomplete VAPID trio (WP-M15-11, out of band in phase 15).**
+A row of the administration that stored only a public key without the private key
+(or the other way round) leaves the values of the `.env` untouched (WP-M14-170):
+the browser subscribed with one key, the server signed with another and the push
+service refused every send with `403` while the card looked fine. The card of
+`webpush` warns now while its row is incomplete — the values of the `.env` still
+apply beside the stored part, one generated pair has to be saved together or the
+row has to be deleted.
+
 **The accent colour of the interface (WP-M16-00, phase 16).** The office asked
 for a facelift of the whole interface, for the accent colour of the menu under
 „Darstellung“ as a value of the server and for the mobile view. **ADR-0036**

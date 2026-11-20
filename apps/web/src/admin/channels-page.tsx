@@ -293,6 +293,9 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       <p className="text-xs text-slate-400">
         {channel.secretSet ? t('admin.channels.secretSet') : t('admin.channels.secretUnset')}
       </p>
+      {channel.kind === 'webpush' && channel.secretSet !== (config.publicKey !== '') ? (
+        <p className="text-xs text-amber-300">{t('admin.channels.webpushIncompleteTrio')}</p>
+      ) : null}
       <label className="flex flex-col gap-1 text-sm" htmlFor={fieldId(channel.kind, 'secret')}>
         {t('admin.channels.secret')}
         <input

@@ -339,6 +339,15 @@ delivery problems. The card of the web push never explains a failure with an
 ntfy sentence, the card of Matrix never claims a taken topic (WP-M14-161d,
 WP-M15-09).
 
+**An incomplete VAPID trio is named on the card.** The trio is one value
+(WP-M14-170): a row of the administration that carries only a part of it — a
+public key without the private key, a Subject without a key — leaves the values
+of the environment untouched, so the browser subscribes with one key and the
+server signs with another and the push service refuses every send. While the row
+of `webpush` is incomplete the card warns about it: the values of the `.env`
+still apply beside the stored part, one generated pair has to be saved together
+or the row has to be deleted (WP-M15-11).
+
 **The state of the push in the browser.** The card of `/settings/notifications`
 and the inbox of `/notifications` ask **this browser** for its own push
 subscription — never the account of the user on the server. A browser without a
