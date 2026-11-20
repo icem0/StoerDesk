@@ -8,12 +8,12 @@ import { i18n } from '../../i18n'
 import { OncallPage } from '../oncall-page'
 
 /**
- * The administration of the readiness (ADR-0035, WP-M15-04): the block of the
- * duty windows belongs to the card „Bereitschafts-Einstellungen" and writes the
- * key `oncall.weekly_windows`.
+ * The administration of the readiness (ADR-0035, WP-M15-07): the duty windows
+ * belong to each pool and are written through `PATCH /v1/oncall/pools/:id`.
  */
 
 const adminId = '11111111-1111-4111-8111-111111111111'
+const poolId = '22222222-2222-4222-8222-222222222222'
 
 const settings = {
   weekStartWeekday: 1,
@@ -24,10 +24,11 @@ const settings = {
   reminderUnconfirmedH: 24,
   unfilledWarningDays: 14,
   defaultPoolId: null,
-  weeklyWindows: [] as Array<{ weekday: number; start: string; end: string }>,
 }
 
-function stubRoutes(calls?: { method: string; body: unknown }[], windows = settings.weeklyWindows) {
+type Window = { weekday: number; start: string; end: string }
+
+function stubRoutes(calls?: { method: string; body: unknown }[], windows: Window[] = []) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -57,15 +58,24 @@ function stubRoutes(calls?: { method: string; body: unknown }[], windows = setti
       }
 
       if (url.includes('/v1/settings/oncall')) {
-        if (method === 'PUT') {
-          return Response.json({ ...settings, weeklyWindows: windows })
-        }
-
-        return Response.json({ ...settings, weeklyWindows: windows })
+        return Response.json(settings)
       }
 
       if (url.includes('/v1/oncall/pools')) {
-        return Response.json({ pools: [] })
+        return Response.json({
+          pools: [
+            {
+              id: poolId,
+              name: 'Verwaltung',
+              groupId: null,
+              active: true,
+              weeklyWindows: windows,
+              shiftCount: 0,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+          ],
+        })
       }
 
       if (url.includes('/v1/oncall/warnings')) {
@@ -108,12 +118,12 @@ afterEach(() => {
 })
 
 describe('OncallPage', () => {
-  it('shows a row per weekday in the block of the duty windows', async () => {
+  it('shows a row per weekday in the block of the pool duty times', async () => {
     stubRoutes()
 
     renderPage()
 
-    expect(await screen.findByText('Dienstfenster')).toBeTruthy()
+    expect(await screen.findByText('Dienstzeiten je Pool')).toBeTruthy()
 
     for (const weekday of [
       'Montag',
@@ -128,7 +138,7 @@ describe('OncallPage', () => {
     }
   })
 
-  it('writes the windows of the plan and keeps the continuous plan in the body', async () => {
+  it('writes the duty windows of the pool', async () => {
     const calls: { method: string; body: unknown }[] = []
     stubRoutes(calls)
 
@@ -143,27 +153,26 @@ describe('OncallPage', () => {
     const to = screen.getByLabelText('bis Montag') as HTMLInputElement
     fireEvent.change(to, { target: { value: '17:00' } })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Einstellungen speichern' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Dienstzeiten speichern' }))
 
     await waitFor(() => {
-      const put = calls.find((call) => call.method === 'PUT')
+      const patch = calls.find((call) => call.method === 'PATCH')
 
-      expect(put).toBeDefined()
-      expect((put?.body as Record<string, unknown>)['oncall.weekly_windows']).toEqual([
-        { weekday: 1, start: '07:30', end: '17:00' },
-      ])
-      expect((put?.body as Record<string, unknown>)['oncall.duration_days']).toBe(7)
+      expect(patch).toBeDefined()
+      expect(patch?.body).toEqual({
+        weeklyWindows: [{ weekday: 1, start: '07:30', end: '17:00' }],
+      })
     })
   })
 
-  it('disables the continuous plan when a duty window is set', async () => {
+  it('keeps the continuous plan editable beside the pool windows', async () => {
     stubRoutes(undefined, [{ weekday: 1, start: '07:30', end: '17:00' }])
 
     renderPage()
 
     const duration = (await screen.findByLabelText('Dauer in Tagen')) as HTMLInputElement
 
-    expect(duration.disabled).toBe(true)
-    expect(screen.getByText(/Wochenstart, Startzeit und Dauer nicht/)).toBeTruthy()
+    expect(duration.disabled).toBe(false)
+    expect(screen.getByText(/nutzt seine eigenen Dienstfenster/)).toBeTruthy()
   })
 })

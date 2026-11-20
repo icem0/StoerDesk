@@ -89,18 +89,23 @@
       "escalateAfter": "Weiterleitung an Gruppe nach (Minuten)",
       "reminderHours": "Erinnerung unbestätigt nach (Stunden)",
       "unfilledDays": "Warnfenster unbesetzt (Tage)",
-      "defaultPool": "Standard-Pool",
+      "defaultPool": "Standard-Pool für Ticket-Angebote",
       "noDefaultPool": "Kein Standard-Pool",
+      "defaultPoolHint": "Nur für Ticket-Angebote und die Dashboard-Kachel: Ist kein Pool am Ticket angegeben, wird dieser Pool befragt. Die Dienstzeiten der Pools stehen weiter unten.",
       "swapApproval": "Tausch braucht Admin-Freigabe",
-      "windows": {
-        "title": "Dienstfenster",
-        "hint": "Der Dienst des Pools an jedem Wochentag. Ein Tag ohne Fenster ist ein freier Tag.",
-        "planHint": "Mit einem Dienstfenster gelten Wochenstart, Startzeit und Dauer nicht — die Fenster sind der Plan.",
-        "from": "von",
-        "to": "bis"
-      },
       "save": "Einstellungen speichern",
       "saved": "Einstellungen gespeichert."
+    },
+    "schedule": {
+      "title": "Dienstzeiten je Pool",
+      "hint": "Jeder Pool hat seinen eigenen Dienstplan. Ein Tag ohne Fenster ist ein freier Tag.",
+      "pool": "Pool",
+      "from": "von",
+      "to": "bis",
+      "windowPlan": "Dieser Pool nutzt seine eigenen Dienstfenster.",
+      "noWindows": "Ohne Fenster gilt der Dauer-Plan aus den Einstellungen (Wochenstart, Startzeit, Dauer).",
+      "save": "Dienstzeiten speichern",
+      "saved": "Dienstzeiten gespeichert."
     },
     "state": {
       "UNFILLED": "Unbesetzt",

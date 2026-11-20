@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm'
+import type { OncallWindow } from '@stoerdesk/shared'
 import {
   type AnyPgColumn,
   boolean,
@@ -710,11 +711,9 @@ export const ticketPurges = pgTable(
     reason: text('reason'),
     deletedEventsCount: integer('deleted_events_count').notNull(),
     deletedPhotosCount: integer('deleted_photos_count').notNull(),
-    createdAt: timestamp('created_at', timestampOptions)
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
   },
-  (table) => [index('ticket_purges_created_at_idx').on(table.createdAt)]
+  (table) => [index('ticket_purges_created_at_idx').on(table.createdAt)],
 )
 
 /**
@@ -937,10 +936,7 @@ export const notificationMessages = pgTable(
   },
   (table) => [
     index('notification_messages_user_id_state_idx').on(table.userId, table.state),
-    index('notification_messages_user_id_created_at_idx').on(
-      table.userId,
-      table.createdAt,
-    ),
+    index('notification_messages_user_id_created_at_idx').on(table.userId, table.createdAt),
     check(
       'notification_messages_state_check',
       sql`${table.state} IN ('PENDING', 'SENT', 'FAILED')`,
@@ -974,10 +970,7 @@ export const outbox = pgTable(
     index('outbox_shift_id_idx').on(table.shiftId),
     index('outbox_notification_message_id_idx').on(table.notificationMessageId),
     check('outbox_state_check', sql`${table.state} IN (${checkList(OUTBOX_STATUSES)})`),
-    check(
-      'outbox_event_type_check',
-      sql`${table.eventType} IN (${checkList(OUTBOX_EVENT_TYPES)})`,
-    ),
+    check('outbox_event_type_check', sql`${table.eventType} IN (${checkList(OUTBOX_EVENT_TYPES)})`),
     check(
       'outbox_ticket_or_shift_check',
       sql`(${table.ticketId} IS NOT NULL) <> (${table.shiftId} IS NOT NULL) OR (${table.eventType} = 'channel.health_warning' AND ${table.ticketId} IS NULL AND ${table.shiftId} IS NULL)`,
@@ -1013,7 +1006,7 @@ export const internalActionReceipts = pgTable(
     uniqueIndex('internal_action_receipts_client_uuid_key').on(table.clientUuid),
     index('internal_action_receipts_ticket_id_idx').on(table.ticketId),
     index('internal_action_receipts_created_at_idx').on(table.createdAt),
-  ]
+  ],
 )
 
 /**
@@ -1065,7 +1058,10 @@ export const bmaSyncRuns = pgTable(
     errorCode: text('error_code'),
   },
   (table) => [
-    check('bma_sync_runs_status_check', sql`${table.status} IN (${checkList(BMA_SYNC_RUN_STATUSES)})`),
+    check(
+      'bma_sync_runs_status_check',
+      sql`${table.status} IN (${checkList(BMA_SYNC_RUN_STATUSES)})`,
+    ),
     index('bma_sync_runs_started_at_idx').on(table.startedAt),
   ],
 )
@@ -1137,6 +1133,11 @@ export const oncallPools = pgTable(
     /** NULL: every active `oncall` user is eligible for this pool. */
     groupId: uuid('group_id').references(() => groups.id, { onDelete: 'set null' }),
     active: boolean('active').notNull().default(true),
+    /**
+     * The duty windows of this pool (`specs/04-oncall.md` §4a.3.2): one window
+     * per weekday with a start and an end, or none for the continuous plan.
+     */
+    weeklyWindows: jsonb('weekly_windows').$type<OncallWindow[]>().notNull().default([]),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
@@ -1180,14 +1181,8 @@ export const oncallShifts = pgTable(
       table.endsAt,
     ),
     uniqueIndex('oncall_shifts_pool_id_starts_at_key').on(table.poolId, table.startsAt),
-    check(
-      'oncall_shifts_state_check',
-      sql`${table.state} IN (${checkList(ONCALL_SHIFT_STATES)})`,
-    ),
-    check(
-      'oncall_shifts_ends_at_after_starts_at_check',
-      sql`${table.endsAt} > ${table.startsAt}`,
-    ),
+    check('oncall_shifts_state_check', sql`${table.state} IN (${checkList(ONCALL_SHIFT_STATES)})`),
+    check('oncall_shifts_ends_at_after_starts_at_check', sql`${table.endsAt} > ${table.startsAt}`),
   ],
 )
 
@@ -1283,9 +1278,7 @@ export const detectedErrors = pgTable(
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
-  (table) => [
-    index('detected_errors_key_idx').on(table.key),
-  ],
+  (table) => [index('detected_errors_key_idx').on(table.key)],
 )
 
 /**
@@ -1443,10 +1436,7 @@ export const ticketStatuses = pgTable(
   (table) => [
     uniqueIndex('ticket_statuses_key_key').on(table.key),
     index('ticket_statuses_position_idx').on(table.position),
-    check(
-      'ticket_statuses_key_format_check',
-      sql`${table.key} ~ '^[A-Z][A-Z0-9_]{0,39}$'`,
-    ),
+    check('ticket_statuses_key_format_check', sql`${table.key} ~ '^[A-Z][A-Z0-9_]{0,39}$'`),
   ],
 )
 

@@ -23,7 +23,7 @@ export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
  * `Europe/Berlin`. The end is later than the start on the same day.
  */
 export type OncallWindow = {
-  weekday: Weekday
+  weekday: number // 0–6, `0` = Sunday
   start: string // `HH:MM`
   end: string // `HH:MM`, later than `start`
 }
@@ -38,7 +38,6 @@ export type OncallSettings = {
   reminderUnconfirmedH: number // 1–720 (hours)
   unfilledWarningDays: number // 1–365 (days)
   defaultPoolId: string | undefined // UUID of an active pool
-  weeklyWindows: OncallWindow[] // the window plan (§4a.3.2), empty = continuous plan
 }
 
 export const ONCALL_SETTINGS_DEFAULTS: OncallSettings = {
@@ -50,7 +49,6 @@ export const ONCALL_SETTINGS_DEFAULTS: OncallSettings = {
   reminderUnconfirmedH: 24,
   unfilledWarningDays: 14,
   defaultPoolId: undefined,
-  weeklyWindows: [],
 }
 
 const START_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -69,14 +67,14 @@ function isString(value: unknown): value is string {
 }
 
 /**
- * Resolves the duty windows of the window plan (`specs/04-oncall.md` §4a.3.2).
- * A value that is no array falls back to the default (the continuous plan); a
- * malformed entry is dropped, a second window of the same weekday is ignored.
- * The result is sorted by the weekday.
+ * Resolves the duty windows of one pool (`specs/04-oncall.md` §4a.3.2). A value
+ * that is no array resolves to the empty list (the pool uses the continuous
+ * plan); a malformed entry is dropped, a second window of the same weekday is
+ * ignored. The result is sorted by the weekday.
  */
-function resolveWeeklyWindows(value: unknown): OncallWindow[] {
+export function resolveOncallWindows(value: unknown): OncallWindow[] {
   if (!Array.isArray(value)) {
-    return ONCALL_SETTINGS_DEFAULTS.weeklyWindows
+    return []
   }
 
   const windows: OncallWindow[] = []
@@ -117,8 +115,8 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
     isInteger(values.weekStartWeekday) &&
     values.weekStartWeekday >= 0 &&
     values.weekStartWeekday <= 6
-    ? (values.weekStartWeekday as Weekday)
-    : ONCALL_SETTINGS_DEFAULTS.weekStartWeekday
+      ? (values.weekStartWeekday as Weekday)
+      : ONCALL_SETTINGS_DEFAULTS.weekStartWeekday
 
   const startTime =
     isString(values.startTime) && START_TIME_RE.test(values.startTime)
@@ -126,9 +124,7 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
       : ONCALL_SETTINGS_DEFAULTS.startTime
 
   const durationDays =
-    isInteger(values.durationDays) &&
-    values.durationDays >= 1 &&
-    values.durationDays <= 28
+    isInteger(values.durationDays) && values.durationDays >= 1 && values.durationDays <= 28
       ? values.durationDays
       : ONCALL_SETTINGS_DEFAULTS.durationDays
 
@@ -162,8 +158,6 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
       ? values.defaultPoolId
       : ONCALL_SETTINGS_DEFAULTS.defaultPoolId
 
-  const weeklyWindows = resolveWeeklyWindows(values.weeklyWindows)
-
   return {
     weekStartWeekday,
     startTime,
@@ -173,7 +167,6 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
     reminderUnconfirmedH,
     unfilledWarningDays,
     defaultPoolId,
-    weeklyWindows,
   }
 }
 
@@ -223,9 +216,7 @@ export function generateOncallSlots({
     0,
     0,
   )
-  candidate.setDate(
-    candidate.getDate() + ((weekStartWeekday - candidate.getDay() + 7) % 7),
-  )
+  candidate.setDate(candidate.getDate() + ((weekStartWeekday - candidate.getDay() + 7) % 7))
 
   let startsAt = fromZonedTime(candidate, ONCALL_TIMEZONE)
 

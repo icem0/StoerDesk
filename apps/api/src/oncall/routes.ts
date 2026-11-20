@@ -233,21 +233,22 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
         // name from the shift instead of resolving it over the members of a pool —
         // the same guard `oncall.read` as the members route, the gate to the names
         // stays in the web app (`oncall.read_names`, WP-M14-131/132).
-        const technicianIds = [...new Set(
-          rows.flatMap((row) => (row.userId === null ? [] : [row.userId])),
-        )]
+        const technicianIds = [
+          ...new Set(rows.flatMap((row) => (row.userId === null ? [] : [row.userId]))),
+        ]
 
-        const nameRows = technicianIds.length === 0
-          ? []
-          : await database
-              .select({
-                id: users.id,
-                givenName: users.givenName,
-                familyName: users.familyName,
-                email: users.email,
-              })
-              .from(users)
-              .where(inArray(users.id, technicianIds))
+        const nameRows =
+          technicianIds.length === 0
+            ? []
+            : await database
+                .select({
+                  id: users.id,
+                  givenName: users.givenName,
+                  familyName: users.familyName,
+                  email: users.email,
+                })
+                .from(users)
+                .where(inArray(users.id, technicianIds))
 
         const technicians = new Map(nameRows.map((row) => [row.id, row]))
 
@@ -255,7 +256,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           shiftListResponseSchema.parse({
             shifts: rows.map((row) => ({
               ...shiftRow(row),
-              technician: row.userId === null ? null : technicians.get(row.userId) ?? null,
+              technician: row.userId === null ? null : (technicians.get(row.userId) ?? null),
             })),
           }),
         )
@@ -464,7 +465,6 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           reminderUnconfirmedH: settingsResolved.reminderUnconfirmedH,
           unfilledWarningDays: settingsResolved.unfilledWarningDays,
           defaultPoolId: settingsResolved.defaultPoolId ?? null,
-          weeklyWindows: settingsResolved.weeklyWindows,
         })
       },
     )
@@ -496,7 +496,6 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           reminderUnconfirmedH: written.reminderUnconfirmedH,
           unfilledWarningDays: written.unfilledWarningDays,
           defaultPoolId: written.defaultPoolId ?? null,
-          weeklyWindows: written.weeklyWindows,
         })
       },
     )
@@ -638,7 +637,8 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
 
         const memberUserIds = await resolvePoolMemberIds(database, parsedId.data)
 
-        const members =          memberUserIds.length === 0
+        const members =
+          memberUserIds.length === 0
             ? []
             : await database
                 .select({

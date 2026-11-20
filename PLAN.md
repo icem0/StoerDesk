@@ -314,22 +314,22 @@ Defaults:
 | `oncall.escalate_to_group_after_min`  | 10               |
 | `oncall.reminder_unconfirmed_h`       | 24               |
 | `oncall.unfilled_warning_days`        | 14               |
-| `oncall.weekly_windows`               | `[]` — no window, the continuous plan |
 
 Slots are calculated in `Europe/Berlin` local time, not as fixed 168-hour
 blocks, so DST changes remain correct. Start and end are stored as UTC.
 
-**Duty windows (WP-M15-01 … WP-M15-05, ADR-0035).** The plan of the readiness
-has two shapes. The **continuous plan** is the one above: a week start, a start
-time and a duration in days — one shift covers `duration_days` days. The
-**window plan** describes the duty of every weekday on its own and lives in the
-setting `oncall.weekly_windows`: one window per weekday with a start and an end
-in `Europe/Berlin` (the office: Monday to Thursday 07:30–17:00, Friday
-07:00–12:00). A stored window makes the window plan the plan; without a window
-the continuous plan stands, and its values stay stored. Every window is a shift
-of its own — state, technician, confirmation, swap and iCal entry — and outside
-the windows there is no on-call person, so the offer of a ticket goes to the
-group.
+**Duty windows (WP-M15-01 … WP-M15-05, WP-M15-07, ADR-0035).** The plan of a
+readiness pool has two shapes. The **continuous plan** is the one above: a
+global week start, a start time and a duration in days — one shift covers
+`duration_days` days. The **window plan** describes the duty of every weekday
+on its own and lives on the pool (`oncall_pools.weekly_windows`): one window per
+weekday with a start and an end in `Europe/Berlin` (the office: Monday to
+Thursday 07:30–17:00, Friday 07:00–12:00). Every pool carries its own windows,
+so „Verwaltung" and „Servicetechniker" keep different duty times. A stored pool
+window makes the window plan the plan for that pool; without a window the pool
+uses the continuous plan. Every window is a shift of its own — state,
+technician, confirmation, swap and iCal entry — and outside the windows there is
+no on-call person, so the offer of a ticket goes to the group.
 
 Shift states: `DRAFT` → `PLANNED` → `CONFIRMED` | `DECLINED` |
 `SWAP_REQUESTED`; a slot without a technician is `UNFILLED`. The technician can

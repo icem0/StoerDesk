@@ -2,12 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import {
-  oncallPools,
-  oncallShifts,
-  outbox,
-  type OnCallShiftState,
-} from '../db/schema'
+import { oncallPools, oncallShifts, outbox, type OnCallShiftState } from '../db/schema'
 import { enqueueOncallOutbox } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
 import { generateOncallSlots, generateOncallWindowSlots } from '@stoerdesk/shared'
@@ -15,12 +10,7 @@ import { readOncallSettings } from './settings'
 
 type Db = Database['database']
 
-const CREATABLE_STATES = new Set<OnCallShiftState>([
-  'UNFILLED',
-  'DRAFT',
-  'PLANNED',
-  'DECLINED',
-])
+const CREATABLE_STATES = new Set<OnCallShiftState>(['UNFILLED', 'DRAFT', 'PLANNED', 'DECLINED'])
 
 const UPDATABLE_TO = new Set<OnCallShiftState>(['DRAFT', 'PLANNED'])
 
@@ -81,7 +71,7 @@ function toShiftResult(row: {
 
 async function requirePool(database: Db, poolId: string) {
   const [pool] = await database
-    .select({ id: oncallPools.id })
+    .select({ id: oncallPools.id, weeklyWindows: oncallPools.weeklyWindows })
     .from(oncallPools)
     .where(eq(oncallPools.id, poolId))
     .limit(1)
@@ -136,10 +126,7 @@ async function assignedAnnouncementQueued(executor: Pick<Db, 'select'>, shiftId:
  * technician it is `DRAFT`, and with `publish` it is `PLANNED`.
  * Writes one `shift_created` event in the same transaction.
  */
-export async function createShift(
-  database: Db,
-  input: CreateShiftInput,
-): Promise<ShiftResult> {
+export async function createShift(database: Db, input: CreateShiftInput): Promise<ShiftResult> {
   const { poolId, userId, publish, startsAt, endsAt, createdByUserId } = input
 
   await requirePool(database, poolId)
@@ -226,15 +213,16 @@ export async function generateShifts(
 ): Promise<{ created: number; skipped: number }> {
   const { poolId, from, to, createdByUserId } = input
 
-  await requirePool(database, poolId)
+  const pool = await requirePool(database, poolId)
 
   const settings = await readOncallSettings(database)
 
-  // The window plan (`specs/04-oncall.md` §4a.3.2) creates one shift per duty
-  // window; without a window the continuous plan of ADR-0011 is the plan.
+  // The window plan (`specs/04-oncall.md` §4a.3.2) belongs to the pool and
+  // creates one shift per duty window; without a window the continuous plan of
+  // ADR-0011 is the plan.
   const slots =
-    settings.weeklyWindows.length > 0
-      ? generateOncallWindowSlots({ from, to, weeklyWindows: settings.weeklyWindows })
+    pool.weeklyWindows.length > 0
+      ? generateOncallWindowSlots({ from, to, weeklyWindows: pool.weeklyWindows })
       : generateOncallSlots({
           from,
           to,
@@ -302,11 +290,11 @@ export async function updateShift(
   }
 
   if (!CREATABLE_STATES.has(fromState) || !UPDATABLE_TO.has(toState)) {
-    throw new OncallServiceError(
-      409,
-      'oncall_shift_invalid_transition',
-      { shiftId, from: fromState, to: toState! },
-    )
+    throw new OncallServiceError(409, 'oncall_shift_invalid_transition', {
+      shiftId,
+      from: fromState,
+      to: toState!,
+    })
   }
 
   if (fromState === toState && patch.userId === shift.userId) {
@@ -320,9 +308,7 @@ export async function updateShift(
         state: toState!,
         userId: patch.userId !== undefined ? patch.userId : shift.userId,
         declinedAt:
-          patch.userId !== undefined || toState !== 'DECLINED'
-            ? null
-            : shift.declinedAt ?? null,
+          patch.userId !== undefined || toState !== 'DECLINED' ? null : (shift.declinedAt ?? null),
         updatedAt: new Date(),
       })
       .where(eq(oncallShifts.id, shiftId))

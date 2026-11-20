@@ -15,7 +15,6 @@ const ONCALL_KEYS = [
   'oncall.reminder_unconfirmed_h',
   'oncall.unfilled_warning_days',
   'oncall.default_pool_id',
-  'oncall.weekly_windows',
 ] as const
 
 type OncallSettingKey = (typeof ONCALL_KEYS)[number]
@@ -29,7 +28,6 @@ const SETTING_KEY_TO_CAMEL: Record<OncallSettingKey, keyof OncallSettings> = {
   'oncall.reminder_unconfirmed_h': 'reminderUnconfirmedH',
   'oncall.unfilled_warning_days': 'unfilledWarningDays',
   'oncall.default_pool_id': 'defaultPoolId',
-  'oncall.weekly_windows': 'weeklyWindows',
 }
 
 function asOncallSettingKey(key: string): OncallSettingKey | undefined {
@@ -55,9 +53,7 @@ function settingRow(key: string, value: unknown) {
 }
 
 export async function readOncallSettings(database: Db): Promise<OncallSettings> {
-  const rows = await database
-    .select({ key: settings.key, value: settings.value })
-    .from(settings)
+  const rows = await database.select({ key: settings.key, value: settings.value }).from(settings)
 
   const values: Record<string, unknown> = {}
 
@@ -98,7 +94,6 @@ export async function writeOncallSettings(
     escalateToGroupAfterMin: before.escalateToGroupAfterMin,
     reminderUnconfirmedH: before.reminderUnconfirmedH,
     unfilledWarningDays: before.unfilledWarningDays,
-    weeklyWindows: before.weeklyWindows,
   }
 
   if (before.defaultPoolId !== undefined) {

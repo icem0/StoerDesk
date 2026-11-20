@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Every readiness pool keeps its own duty times (**WP-M15-07**, out of band in
+  phase 15): the duty windows moved from the global setting
+  `oncall.weekly_windows` to the pool (`oncall_pools.weekly_windows`), so
+  „Verwaltung" and „Servicetechniker" can run different shift times at the same
+  time. `/admin/oncall` gained the block „Dienstzeiten je Pool"; the migration
+  copies the stored global windows once into every active pool. The global
+  continuous plan (week start, start time, duration) stays the fallback for a
+  pool without windows. The „Standard-Pool" is now labelled as what it is — the
+  pool for ticket offers and the dashboard tile — and carries a hint that it is
+  not a duty-time setting.
 - The operator guide of the web push names the diagnosis (**WP-M14-173**, out of
   band in phase 14): `docs/VAPID-SETUP.md` gained the section „Wenn nichts
   ankommt: die Diagnose" — the command that reads the log of the failed sends,

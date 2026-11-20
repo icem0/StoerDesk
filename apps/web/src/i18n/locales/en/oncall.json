@@ -89,18 +89,23 @@
       "escalateAfter": "Escalate to group after (minutes)",
       "reminderHours": "Remind unconfirmed after (hours)",
       "unfilledDays": "Unstaffed warning window (days)",
-      "defaultPool": "Default pool",
+      "defaultPool": "Default pool for ticket offers",
       "noDefaultPool": "No default pool",
+      "defaultPoolHint": "Only for ticket offers and the dashboard tile: when a ticket names no pool, this pool is asked. The pool duty times are below.",
       "swapApproval": "Swap requires admin approval",
-      "windows": {
-        "title": "Duty windows",
-        "hint": "The duty of the pool on every weekday. A day without a window is a free day.",
-        "planHint": "With a duty window the week start, the start time and the duration do not apply — the windows are the plan.",
-        "from": "from",
-        "to": "to"
-      },
       "save": "Save settings",
       "saved": "Settings saved."
+    },
+    "schedule": {
+      "title": "Duty times per pool",
+      "hint": "Every pool has its own plan. A day without a window is a free day.",
+      "pool": "Pool",
+      "from": "from",
+      "to": "to",
+      "windowPlan": "This pool uses its own duty windows.",
+      "noWindows": "Without windows the continuous plan of the settings applies (week start, start time, duration).",
+      "save": "Save duty times",
+      "saved": "Duty times saved."
     },
     "state": {
       "UNFILLED": "Unfilled",

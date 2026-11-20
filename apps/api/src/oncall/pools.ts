@@ -46,11 +46,7 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 async function findPoolById(database: Db, id: string) {
-  const [pool] = await database
-    .select()
-    .from(oncallPools)
-    .where(eq(oncallPools.id, id))
-    .limit(1)
+  const [pool] = await database.select().from(oncallPools).where(eq(oncallPools.id, id)).limit(1)
 
   return pool
 }
@@ -80,6 +76,7 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
             name: oncallPools.name,
             groupId: oncallPools.groupId,
             active: oncallPools.active,
+            weeklyWindows: oncallPools.weeklyWindows,
             createdAt: oncallPools.createdAt,
             updatedAt: oncallPools.updatedAt,
             shiftCount: sql<number>`count(${oncallShifts.id})`.mapWith(Number),
@@ -102,13 +99,23 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
         if (!parsed.success) {
           return reply
             .code(400)
-            .send(invalidRequest([...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))]))
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
         }
 
         try {
           const [created] = await database
             .insert(oncallPools)
-            .values({ name: parsed.data.name, groupId: parsed.data.groupId })
+            .values({
+              name: parsed.data.name,
+              groupId: parsed.data.groupId,
+              ...(parsed.data.weeklyWindows !== undefined
+                ? { weeklyWindows: parsed.data.weeklyWindows }
+                : {}),
+            })
             .returning()
 
           return reply.code(201).send(oncallPoolSchema.parse(created))
@@ -140,7 +147,11 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
         if (!parsed.success) {
           return reply
             .code(400)
-            .send(invalidRequest([...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))]))
+            .send(
+              invalidRequest([
+                ...new Set(parsed.error.issues.map((issue) => issue.path.join('.'))),
+              ]),
+            )
         }
 
         const pool = await findPoolById(database, parsedId.data)
@@ -156,6 +167,9 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
               ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
               ...(parsed.data.groupId !== undefined ? { groupId: parsed.data.groupId } : {}),
               ...(parsed.data.active !== undefined ? { active: parsed.data.active } : {}),
+              ...(parsed.data.weeklyWindows !== undefined
+                ? { weeklyWindows: parsed.data.weeklyWindows }
+                : {}),
               updatedAt: new Date(),
             })
             .where(eq(oncallPools.id, parsedId.data))

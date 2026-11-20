@@ -47,7 +47,6 @@ type SettingsBody = {
   reminderUnconfirmedH: number
   unfilledWarningDays: number
   defaultPoolId: string | null
-  weeklyWindows: Array<{ weekday: number; start: string; end: string }>
 }
 
 function onlyRow<T>(rows: T[], what: string): T {
@@ -163,6 +162,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return app.inject({
         method: 'PUT',
         url: '/api/v1/settings/oncall',
+        headers: { cookie },
+        payload,
+      })
+    }
+
+    function patchPool(cookie: string, id: string, payload: Record<string, unknown>) {
+      return app.inject({
+        method: 'PATCH',
+        url: `/api/v1/oncall/pools/${id}`,
         headers: { cookie },
         payload,
       })
@@ -418,10 +426,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         }[]
       }>()
 
-      expect(body.events.map((event) => event.type)).toEqual([
-        'shift_created',
-        'shift_updated',
-      ])
+      expect(body.events.map((event) => event.type)).toEqual(['shift_created', 'shift_updated'])
       expect(body.events[0]!.actor?.id).toBe(adminId)
       expect(body.events[0]!.person?.id).toBe(oncallId)
       expect(body.events[1]!.actor?.id).toBe(adminId)
@@ -564,28 +569,34 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(badKey.json<ErrorResponseBody>().code).toBe('invalid_request')
     })
 
-    it('writes the duty windows and reads them back', async () => {
+    it('writes the duty windows of a pool and reads them back', async () => {
       const windows = [
         { weekday: 1, start: '07:30', end: '17:00' },
         { weekday: 5, start: '07:00', end: '12:00' },
       ]
-      const response = await putSettings(cookies['admin'], { 'oncall.weekly_windows': windows })
+      const response = await patchPool(cookies['admin'], poolId, { weeklyWindows: windows })
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<SettingsBody>().weeklyWindows).toEqual(windows)
 
-      const back = await getSettings(cookies['oncall'])
+      const back = await app.inject({
+        method: 'GET',
+        url: '/api/v1/oncall/pools',
+        headers: { cookie: cookies['oncall'] },
+      })
+      const pool = back
+        .json<{ pools: Array<{ id: string; weeklyWindows: typeof windows }> }>()
+        .pools.find((row) => row.id === poolId)
 
       expect(back.statusCode).toBe(200)
-      expect(back.json<SettingsBody>().weeklyWindows).toEqual(windows)
+      expect(pool?.weeklyWindows).toEqual(windows)
     })
 
     it('rejects a malformed duty window with 400', async () => {
-      const backwards = await putSettings(cookies['admin'], {
-        'oncall.weekly_windows': [{ weekday: 1, start: '17:00', end: '07:30' }],
+      const backwards = await patchPool(cookies['admin'], poolId, {
+        weeklyWindows: [{ weekday: 1, start: '17:00', end: '07:30' }],
       })
-      const twice = await putSettings(cookies['admin'], {
-        'oncall.weekly_windows': [
+      const twice = await patchPool(cookies['admin'], poolId, {
+        weeklyWindows: [
           { weekday: 1, start: '07:30', end: '17:00' },
           { weekday: 1, start: '09:00', end: '12:00' },
         ],
@@ -598,8 +609,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('creates one shift per duty window', async () => {
-      await putSettings(cookies['admin'], {
-        'oncall.weekly_windows': [
+      await patchPool(cookies['admin'], poolId, {
+        weeklyWindows: [
           { weekday: 1, start: '07:30', end: '17:00' },
           { weekday: 5, start: '07:00', end: '12:00' },
         ],
@@ -636,12 +647,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         { startsAt: '2026-11-13T06:00:00.000Z', endsAt: '2026-11-13T11:00:00.000Z' },
       ])
 
-      // The continuous plan is the plan again - the shared test database keeps
-      // the state of the settings for the other files.
-      const restored = await putSettings(cookies['admin'], { 'oncall.weekly_windows': [] })
+      // The continuous plan is the plan again - the pool keeps no window.
+      const restored = await patchPool(cookies['admin'], poolId, { weeklyWindows: [] })
 
       expect(restored.statusCode).toBe(200)
-      expect(restored.json<SettingsBody>().weeklyWindows).toEqual([])
+      expect(restored.json<{ weeklyWindows: unknown[] }>().weeklyWindows).toEqual([])
     })
   },
 )

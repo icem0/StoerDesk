@@ -79,10 +79,10 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return `session=${session.token}`
     }
 
-    function putSettings(payload: Record<string, unknown>) {
+    function patchPool(id: string, payload: Record<string, unknown>) {
       return app.inject({
-        method: 'PUT',
-        url: '/api/v1/settings/oncall',
+        method: 'PATCH',
+        url: `/api/v1/oncall/pools/${id}`,
         headers: { cookie },
         payload,
       })
@@ -145,10 +145,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('expresses the office hours of the pool as five shifts of a week', async () => {
-      await putSettings({
-        'oncall.weekly_windows': OFFICE_WINDOWS,
-        'oncall.default_pool_id': poolId,
-      })
+      await patchPool(poolId, { weeklyWindows: OFFICE_WINDOWS })
 
       const generated = await postGenerate({
         poolId,
@@ -181,10 +178,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('names the technician of a shift only inside its window', async () => {
-      await putSettings({
-        'oncall.weekly_windows': OFFICE_WINDOWS,
-        'oncall.default_pool_id': poolId,
-      })
+      await patchPool(poolId, { weeklyWindows: OFFICE_WINDOWS })
       await postGenerate({
         poolId,
         from: '2026-11-02T00:00:00.000Z',

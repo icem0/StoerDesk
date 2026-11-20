@@ -7,6 +7,31 @@ import { z } from 'zod'
  * `groupId` is an optional UUID referencing `groups`.
  */
 
+/**
+ * One duty window of the window plan (`specs/04-oncall.md` §4a.3.2, ADR-0035):
+ * the weekday with the start and the end of the duty as the wall clock of
+ * `Europe/Berlin`. The end is later than the start on the same day; a night
+ * window is not part of this version.
+ */
+export const oncallWindowSchema = z
+  .object({
+    weekday: z.number().int().min(0).max(6),
+    start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  })
+  .refine((window) => window.end > window.start, {
+    message: 'The end of a duty window is later than its start.',
+    path: ['end'],
+  })
+
+/** At most one duty window per weekday (`specs/04-oncall.md` §4a.3.2). */
+export const oncallWindowsSchema = z
+  .array(oncallWindowSchema)
+  .max(7)
+  .refine((windows) => new Set(windows.map((window) => window.weekday)).size === windows.length, {
+    message: 'At most one duty window per weekday.',
+  })
+
 const trimmedName = z.string().trim().min(1).max(100)
 
 const optionalGroupId = z
@@ -19,12 +44,14 @@ const optionalGroupId = z
 export const createPoolRequestSchema = z.object({
   name: trimmedName,
   groupId: optionalGroupId,
+  weeklyWindows: oncallWindowsSchema.optional(),
 })
 
 export const updatePoolRequestSchema = z.object({
   name: trimmedName.optional(),
   groupId: optionalGroupId,
   active: z.boolean().optional(),
+  weeklyWindows: oncallWindowsSchema.optional(),
 })
 
 export const oncallPoolSchema = z.object({
@@ -32,6 +59,7 @@ export const oncallPoolSchema = z.object({
   name: z.string(),
   groupId: z.string().uuid().nullable(),
   active: z.boolean(),
+  weeklyWindows: oncallWindowsSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -193,23 +221,6 @@ export const oncallSwapListResponseSchema = z.object({
   ),
 })
 
-/**
- * One duty window of the window plan (`specs/04-oncall.md` §4a.3.2, ADR-0035):
- * the weekday with the start and the end of the duty as the wall clock of
- * `Europe/Berlin`. The end is later than the start on the same day; a night
- * window is not part of this version.
- */
-export const oncallWindowSchema = z
-  .object({
-    weekday: z.number().int().min(0).max(6),
-    start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-    end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  })
-  .refine((window) => window.end > window.start, {
-    message: 'The end of a duty window is later than its start.',
-    path: ['end'],
-  })
-
 export const oncallSettingsResponseSchema = z.object({
   weekStartWeekday: z.number().int().min(0).max(6),
   startTime: z.string(),
@@ -219,7 +230,6 @@ export const oncallSettingsResponseSchema = z.object({
   reminderUnconfirmedH: z.number().int().min(1).max(720),
   unfilledWarningDays: z.number().int().min(1).max(365),
   defaultPoolId: z.string().uuid().nullable(),
-  weeklyWindows: z.array(oncallWindowSchema),
 })
 
 export const updateOncallSettingsRequestSchema = z
@@ -235,14 +245,6 @@ export const updateOncallSettingsRequestSchema = z
     'oncall.reminder_unconfirmed_h': z.number().int().min(1).max(720).optional(),
     'oncall.unfilled_warning_days': z.number().int().min(1).max(365).optional(),
     'oncall.default_pool_id': z.string().uuid().nullable().optional(),
-    'oncall.weekly_windows': z
-      .array(oncallWindowSchema)
-      .max(7)
-      .refine(
-        (windows) => new Set(windows.map((window) => window.weekday)).size === windows.length,
-        { message: 'At most one duty window per weekday.', path: ['oncall.weekly_windows'] },
-      )
-      .optional(),
   })
   .strict()
 

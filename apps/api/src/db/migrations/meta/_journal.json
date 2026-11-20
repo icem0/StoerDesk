@@ -365,6 +365,13 @@
       "when": 1795140000000,
       "tag": "0051_users_must_change_password",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1795226400000,
+      "tag": "0052_oncall_pool_weekly_windows",
+      "breakpoints": true
     }
   ]
 }

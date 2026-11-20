@@ -5,6 +5,7 @@ import {
   generateOncallWindowSlots,
   ONCALL_SETTINGS_DEFAULTS,
   resolveOncallSettings,
+  resolveOncallWindows,
   type OncallSettings,
   type OncallWindow,
 } from '../oncall'
@@ -87,9 +88,7 @@ describe('resolveOncallSettings', () => {
     ['escalateToGroupAfterMin', '10'],
   ])('falls back to the default escalation minutes for %s = %j', (key, value) => {
     const settings = resolveOncallSettings({ [key]: value } as Record<string, unknown>)
-    expect(settings.escalateToGroupAfterMin).toBe(
-      ONCALL_SETTINGS_DEFAULTS.escalateToGroupAfterMin,
-    )
+    expect(settings.escalateToGroupAfterMin).toBe(ONCALL_SETTINGS_DEFAULTS.escalateToGroupAfterMin)
   })
 
   it.each([
@@ -115,54 +114,48 @@ describe('resolveOncallSettings', () => {
     const settings = resolveOncallSettings({ [key]: value } as Record<string, unknown>)
     expect(settings.defaultPoolId).toBeUndefined()
   })
+})
 
+describe('resolveOncallWindows', () => {
   it('resolves the duty windows and sorts them by the weekday', () => {
-    const settings = resolveOncallSettings({
-      weeklyWindows: [
+    expect(
+      resolveOncallWindows([
         { weekday: 5, start: '07:00', end: '12:00' },
         { weekday: 1, start: '07:30', end: '17:00' },
-      ],
-    })
-
-    expect(settings.weeklyWindows).toEqual([
+      ]),
+    ).toEqual([
       { weekday: 1, start: '07:30', end: '17:00' },
       { weekday: 5, start: '07:00', end: '12:00' },
     ])
   })
 
   it('falls back to the continuous plan when the windows are no array', () => {
-    const settings = resolveOncallSettings({ weeklyWindows: '07:30-17:00' })
-
-    expect(settings.weeklyWindows).toEqual([])
+    expect(resolveOncallWindows('07:30-17:00')).toEqual([])
   })
 
   it('drops a malformed window and keeps the valid ones', () => {
-    const settings = resolveOncallSettings({
-      weeklyWindows: [
+    expect(
+      resolveOncallWindows([
         { weekday: 1, start: '07:30', end: '17:00' },
         { weekday: 7, start: '07:30', end: '17:00' },
         { weekday: 2, start: '7:30', end: '17:00' },
         { weekday: 3, start: '17:00', end: '07:30' },
         { weekday: 4, start: '07:30', end: '17:00', extra: true },
         'not-a-window',
-      ],
-    })
-
-    expect(settings.weeklyWindows).toEqual([
+      ]),
+    ).toEqual([
       { weekday: 1, start: '07:30', end: '17:00' },
       { weekday: 4, start: '07:30', end: '17:00' },
     ])
   })
 
   it('keeps the first window of a weekday', () => {
-    const settings = resolveOncallSettings({
-      weeklyWindows: [
+    expect(
+      resolveOncallWindows([
         { weekday: 1, start: '07:30', end: '17:00' },
         { weekday: 1, start: '09:00', end: '12:00' },
-      ],
-    })
-
-    expect(settings.weeklyWindows).toEqual([{ weekday: 1, start: '07:30', end: '17:00' }])
+      ]),
+    ).toEqual([{ weekday: 1, start: '07:30', end: '17:00' }])
   })
 })
 

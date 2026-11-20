@@ -25,19 +25,20 @@ needed for them.
 | `oncall.escalate_to_group_after_min` | `10` | positive integer, max. 1440 |
 | `oncall.reminder_unconfirmed_h` | `24` | positive integer, max. 720 |
 | `oncall.unfilled_warning_days` | `14` | positive integer, max. 365 |
-| `oncall.default_pool_id` | — | UUID of an active pool |
-| `oncall.weekly_windows` | `[]` | array of `{ weekday, start, end }` — §4a.3.2 |
+| `oncall.default_pool_id` | — | UUID of an active pool for ticket offers and the dashboard tile |
 
 `readOncallSettings(database)` returns the resolved values once per request and
 is the only reader; it never writes. The administration page writes the keys
 through `PUT /api/v1/settings/oncall` (`settings.write`), validated against the
 table above.
 
-The plan of the readiness has two shapes (§4a.3.2): the **continuous plan** of
-ADR-0011 — a week start, a start time and a duration in days — and the
-**window plan**, a duty window per weekday. A stored window makes the window
-plan the plan; without a window the continuous plan stands. The values of the
-continuous plan stay stored and take effect again when the windows are removed.
+The plan of a readiness pool has two shapes (§4a.3.2): the **continuous plan**
+of ADR-0011 — the global week start, start time and duration in days — and the
+**window plan**, a duty window per weekday stored on the pool (§4a.2). A stored
+pool window makes the window plan the plan for that pool; without a window the
+pool uses the continuous plan. The two plans belong to different scopes: the
+continuous plan is global, the windows are per pool, so „Verwaltung" and
+„Servicetechniker" can keep different duty times at the same time.
 
 ## 4a.2 Pools
 
@@ -49,6 +50,7 @@ A pool is one on-call calendar (for example "fire alarm" or "nurse call").
 | `name` | text, not null | trimmed, 1–100 characters, unique case-insensitively |
 | `group_id` | UUID, nullable | foreign key to `groups`, `ON DELETE SET NULL` |
 | `active` | boolean, not null, default `true` | inactive pools keep their shifts but offer no new slots |
+| `weekly_windows` | jsonb, not null, default `[]` | the duty windows of this pool — §4a.3.2 |
 | `created_at`, `updated_at` | timestamptz | as `specs/02-data-model.md` §4.2 |
 
 The optional `group_id` defines the pool membership: "ask the whole pool" means
@@ -143,7 +145,9 @@ The continuous plan of §4a.3.1 describes a duty that never ends: one shift
 covers `duration_days` days. A pool with office hours — the „Verwaltung" of the
 office, on Monday from 07:30 to 17:00 and on Friday from 07:00 to 12:00 —
 cannot be expressed that way, because the plan knows no end of a duty. The
-window plan describes the duty of every weekday on its own.
+window plan describes the duty of every weekday on its own and belongs to one
+pool (`oncall_pools.weekly_windows`, §4a.2): every pool carries its own windows,
+so two pools can keep different duty times.
 
 A window is
 
@@ -179,7 +183,9 @@ person: the offer of a ticket goes to the group (§4a.6).
 
 The window plan does not change the shifts that exist. A shift of the
 continuous plan keeps its times until the admin deletes it (§4a.3); the
-windows create new shifts next to it.
+windows create new shifts next to it. The administration edits the windows per
+pool with `PATCH /api/v1/oncall/pools/:id`; a pool without windows uses the
+global continuous plan.
 
 ## 4a.4 Confirmation and decline
 
@@ -306,7 +312,7 @@ on the "my on-call" page so the user can subscribe in a calendar app.
 | Method and path | Permission | Purpose |
 | --- | --- | --- |
 | `GET/POST /api/v1/oncall/pools` | `oncall.read` / `oncall.admin` | list and create pools |
-| `PATCH/DELETE /api/v1/oncall/pools/:id` | `oncall.admin` | rename, deactivate, delete |
+| `PATCH/DELETE /api/v1/oncall/pools/:id` | `oncall.admin` | rename, deactivate, delete, edit the pool duty windows |
 | `GET /api/v1/oncall/shifts?from=&to=&poolId=` | `oncall.read` | calendar range with the technician |
 | `POST /api/v1/oncall/shifts` | `oncall.plan` | create one shift |
 | `POST /api/v1/oncall/shifts/generate` | `oncall.plan` | idempotent weekly generation |
