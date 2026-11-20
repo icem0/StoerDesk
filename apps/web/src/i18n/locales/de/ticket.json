@@ -160,6 +160,9 @@
         "object": "Objekt",
         "objectSearchPlaceholder": "Objekt suchen (Nummer, Name, Adresse)",
         "objectPlaceholder": "Objekt auswählen",
+        "objectNone": "Ohne Objekt",
+        "objectInfo": "Angaben zum Objekt",
+        "objectInfoHint": "Name, Anschrift und Kontakt, falls das Objekt nicht in der Liste ist",
         "title": "Titel",
         "description": "Beschreibung",
         "faults": "Störungsarten",
@@ -384,6 +387,7 @@
     "field": {
       "object": "Objekt",
       "objectNo": "Objektnummer",
+      "objectInfo": "Information zum Objekt",
       "status": "Status",
       "priority": "Priorität",
       "source": "Quelle",

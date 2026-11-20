@@ -26,6 +26,7 @@ import {
   writeObjectPriority,
 } from './priority'
 import { generateQrToken, qrRoutes } from './qr'
+import { WITHOUT_OBJECT_OBJECT_NO } from '../db/schema'
 
 /**
  * Object list API (`specs/08-objects-api.md` §9.1).
@@ -164,7 +165,20 @@ export async function listObjects(database: Db, query: ObjectListQuery): Promise
 
   const rows = query.limit === undefined ? await ordered : await ordered.limit(query.limit)
 
-  return summarizeRows(database, rows)
+  // The reserved object „Ohne Objekt" (OHNE-OBJEKT) stands in for customers
+  // without a contract: it is pinned to the end of every list (ADR-0042).
+  const marked = rows.map((row) => ({
+    ...row,
+    pinned: row.objectNo === WITHOUT_OBJECT_OBJECT_NO,
+  }))
+  marked.sort((a, b) => {
+    if (a.pinned === b.pinned) {
+      return a.objectNo.localeCompare(b.objectNo)
+    }
+    return a.pinned ? 1 : -1
+  })
+
+  return summarizeRows(database, marked)
 }
 
 export async function getObject(database: Db, objectNo: string): Promise<ObjectSummary> {
@@ -286,6 +300,10 @@ export async function updateObject(
 
 export async function softDeleteObject(database: Db, objectNo: string): Promise<void> {
   const row = await findByObjectNo(database, objectNo)
+
+  if (row.objectNo === WITHOUT_OBJECT_OBJECT_NO) {
+    throw new ObjectRouteError(422, 'object_reserved', { fields: ['objectNo'] })
+  }
 
   await database
     .update(objects)

@@ -44,6 +44,8 @@ type ObjectOption = {
   externalType: string | null
   /** The effective priority of the object (ADR-0029). */
   priority: TicketPriority
+  /** `true` for the reserved object „Ohne Objekt" — it sorts last (ADR-0042). */
+  pinned: boolean
 }
 
 function objectType(object: ObjectOption): string | null {
@@ -150,11 +152,17 @@ function ObjectPicker({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const objectsQuery = useObjects(debouncedSearch)
-  const objects = objectsQuery.data?.objects ?? []
+  const allObjects = objectsQuery.data?.objects ?? []
   const isLoading = objectsQuery.isPending
   const isError = objectsQuery.isError
 
-  // Debounce the search so the object list API is not hit on every keystroke.
+  // The reserved object „Ohne Objekt" is pinned to the end of the list
+  // (ADR-0042): the regular matches come first, the reserved entry last.
+  const pinnedObjects = allObjects.filter((object) => object.pinned === true)
+  const regularObjects = allObjects.filter((object) => object.pinned !== true)
+  const objects = [...regularObjects, ...pinnedObjects]
+
+  // Debounce the search so the API is not hit on every keystroke.
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 150)
 
@@ -205,7 +213,8 @@ function ObjectPicker({
     }
   }
 
-  const noMatch = search.trim() !== '' && !isLoading && !isError && objects.length === 0
+  const noMatch =
+    search.trim() !== '' && !isLoading && !isError && regularObjects.length === 0 && pinnedObjects.length === 0
   const value = open ? search : selected !== undefined ? objectLabel(selected) : ''
 
   return (
@@ -269,7 +278,9 @@ function ObjectPicker({
                   onClick={() => handlePick(object)}
                 >
                   <span className="font-mono text-slate-400">{object.objectNo}</span>
-                  <span className="flex-1">{object.name}</span>
+                  <span className="flex-1">
+                    {object.pinned ? t('internal.create.fields.objectNone') : object.name}
+                  </span>
                   {type !== null ? (
                     <span className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200">
                       {type}
@@ -301,6 +312,7 @@ export function InternalCreatePage() {
 
   const [selectedObjectId, setSelectedObjectId] = useState('')
   const [pickedObject, setPickedObject] = useState<ObjectOption | undefined>(undefined)
+  const [objectInfo, setObjectInfo] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [faultKeys, setFaultKeys] = useState<string[]>([])
@@ -403,6 +415,12 @@ export function InternalCreatePage() {
         // WP-M9-25: the title travels only while the branding switch is on.
         title: titleEnabled && title.trim() !== '' ? title.trim() : undefined,
         description: description || undefined,
+        /**
+         * Only the reserved object „Ohne Objekt" carries a free description of
+         * the foreign object (ADR-0042).
+         */
+        objectInfo:
+          pickedObject?.pinned === true && objectInfo.trim() !== '' ? objectInfo.trim() : undefined,
         faultTemplateKeys: faultKeys,
         photos,
         priority,
@@ -484,6 +502,22 @@ export function InternalCreatePage() {
           </label>
           <ObjectPicker selected={pickedObject} onPick={pickObject} />
         </div>
+        {pickedObject?.pinned === true ? (
+          <div className="flex flex-col gap-2 col-span-full">
+            <label className="text-sm font-medium text-slate-200" htmlFor="internal-create-object-info">
+              {t('internal.create.fields.objectInfo')}
+            </label>
+            <textarea
+              className="rounded bg-slate-900 p-2 text-slate-100"
+              id="internal-create-object-info"
+              maxLength={4000}
+              value={objectInfo}
+              onChange={(event) => setObjectInfo(event.target.value)}
+              rows={3}
+            />
+            <p className="text-xs text-slate-500">{t('internal.create.fields.objectInfoHint')}</p>
+          </div>
+        ) : null}
 
         {titleEnabled ? (
           <div className="flex flex-col gap-2 col-span-full">

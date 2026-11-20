@@ -1387,6 +1387,27 @@ export function TicketDetailPage() {
         </tbody>
       </table>
 
+      {/* Angaben zum Objekt einer Meldung ohne Objekt (ADR-0042) */}
+      {ticket.objectInfoText ? (
+        <table className="w-full border-collapse mt-2 rounded-lg border border-slate-700 bg-slate-900/50">
+          <tbody>
+            <tr>
+              <th
+                className="text-left text-xs text-slate-500 uppercase tracking-wider px-3 py-2 border-b border-slate-700 bg-slate-800/50 font-medium"
+                scope="col"
+              >
+                {t('detail.field.objectInfo')}
+              </th>
+            </tr>
+            <tr>
+              <td className="text-left text-sm text-slate-200 px-3 py-2">
+                {ticket.objectInfoText}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      ) : null}
+
       {/* Erfasser / Meldender / Quelle: 3 Spalten × 2 Zeilen (Labelzeile + Wertzeile) */}
       <table className="w-full border-collapse mt-4 rounded-lg border border-slate-700 bg-slate-900/50">
         <tbody>

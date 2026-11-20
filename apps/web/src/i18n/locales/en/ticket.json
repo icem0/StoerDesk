@@ -161,6 +161,9 @@
         "object": "Object",
         "objectSearchPlaceholder": "Search objects (number, name, address)",
         "objectPlaceholder": "Select an object",
+        "objectNone": "No object",
+        "objectInfo": "Information about the object",
+        "objectInfoHint": "Name, address and contact if the object is not in the list",
         "title": "Title",
         "description": "Description",
         "faults": "Fault types",
@@ -385,6 +388,7 @@
     "field": {
       "object": "Object",
       "objectNo": "Object no.",
+      "objectInfo": "Information about the object",
       "status": "Status",
       "priority": "Priority",
       "source": "Source",
