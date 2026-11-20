@@ -53,11 +53,13 @@
       "titleEnabled": "Ticket title",
       "logo": "Company logo",
       "internalCommentColor": "Colour of the internal comment",
-      "accentColor": "Accent colour"
+      "accentColor": "Accent colour",
+      "ticketSortDirection": "Newest first"
     },
     "hintLogo": "PNG or JPEG, at most 500 kB. Used in header, PDFs and e-mails.",
     "hintInternalCommentColor": "The background of the field and of the entry in the history of the ticket view. A hex value like #7f1d1d; the default is a dark red.",
     "hintAccentColor": "The accent colour of the interface: menu entry, menu link, focus ring, unread badge. Default: #0ea5e9.",
+    "hintTicketSortDirection": "Switched on: the newest message is on top. Switched off: the oldest message is on top.",
     "picker": {
       "internalCommentColor": "Picker (internal comment)",
       "accentColor": "Picker (interface)"

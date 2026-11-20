@@ -53,11 +53,13 @@
       "titleEnabled": "Titel bei Ticket erfassen",
       "logo": "Firmenlogo",
       "internalCommentColor": "Farbe des internen Kommentars",
-      "accentColor": "Akzentcolor"
+      "accentColor": "Akzentcolor",
+      "ticketSortDirection": "Neueste zuerst"
     },
     "hintLogo": "PNG oder JPEG, höchstens 500 kB. Wird im Header, in PDFs und E-Mails verwendet.",
     "hintInternalCommentColor": "Der Hintergrund des Feldes und des Eintrags im Verlauf der Ticketansicht. Ein Hex-Wert wie #7f1d1d; Standard ist ein dunkles Rot.",
     "hintAccentColor": "Das Akzentcolor der Interface: Menu, Links, Focus. Standard: #0ea5e9.",
+    "hintTicketSortDirection": "Eingeschaltet: die neueste Meldung steht oben. Ausgeschaltet: die älteste Meldung steht oben.",
     "picker": {
       "internalCommentColor": "Picker (internen Kommentar)",
       "accentColor": "Picker (Interface)"

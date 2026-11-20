@@ -97,7 +97,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' }),
+        body: JSON.stringify({ companyName: 'Neue GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' }),
       }),
     )
   })
@@ -126,7 +126,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' }),
       }),
     )
   })
@@ -158,7 +158,7 @@ describe('BrandingPage', () => {
       '/api/v1/settings/branding',
       expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9' }),
+        body: JSON.stringify({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' }),
       }),
     )
   })
@@ -246,6 +246,7 @@ describe('BrandingPage', () => {
           logo: '',
           internalCommentColor: '#450a0a',
           accentColor: '#0ea5e9',
+          ticketSortDirection: 'desc',
         }),
       }),
     )
@@ -313,6 +314,7 @@ describe('BrandingPage', () => {
           logo: '',
           internalCommentColor: '#450a0a',
           accentColor: '#0f766e',
+          ticketSortDirection: 'desc',
         }),
       }),
     )
@@ -409,6 +411,7 @@ describe('BrandingPage', () => {
           logo: '',
           internalCommentColor: '#7f1d1d',
           accentColor: '#0f766e',
+          ticketSortDirection: 'desc',
         }),
       }),
     )
@@ -443,6 +446,7 @@ describe('BrandingPage', () => {
           logo: '',
           internalCommentColor: '#450a0a',
           accentColor: '#0ea5e9',
+          ticketSortDirection: 'desc',
         }),
       }),
     )
@@ -480,6 +484,7 @@ describe('BrandingPage', () => {
           logo: '',
           internalCommentColor: '#450a0a',
           accentColor: '#0f766e',
+          ticketSortDirection: 'desc',
         }),
       }),
     )

@@ -129,14 +129,14 @@ describe('TicketListPage rows', () => {
     expect(link.textContent).toContain('OBJ-1')
   })
 
-  it('asks the API for the deadline order with the nearest deadline on top', async () => {
+  it('asks the API for the report-time order with the newest report on top', async () => {
     const { fetchMock } = renderList()
 
     await screen.findByText('M-4712')
 
     const requested = fetchMock.mock.calls.map((call) => String(call[0])).join(' ')
 
-    expect(requested).toContain('order=deadlineAt')
-    expect(requested).toContain('direction=asc')
+    expect(requested).toContain('direction=desc')
+    expect(requested).not.toContain('order=deadlineAt')
   })
 })

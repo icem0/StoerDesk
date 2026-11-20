@@ -1632,6 +1632,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-07 | the accent classes exist and paint the menu | done | yes |
 | WP-M16-08 | the primary action of the daily surfaces follows the accent | done | yes |
 | WP-M16-09 | the objects and the settings of the colleagues follow the accent | done | yes |
+| WP-M16-11 | the sort direction of the ticket list sits under „Darstellung“ | done | yes |
 | WP-M16-10a | the administration follows the accent — the users and the roles | planned | yes |
 | WP-M16-10b | the administration follows the accent — the groups and the standard texts | planned | yes |
 | WP-M16-10c | the administration follows the accent — the statuses and the transitions | planned | yes |

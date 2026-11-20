@@ -3447,6 +3447,17 @@ a notch. The phase-16 exit criterion is met: the administration paints the whole
 interface with one saved colour, the bell sits in the menu next to the readiness
 and the shell fits a phone.
 
+**The sort direction of the ticket list (WP-M16-11, phase 16, requested by the
+office).** The office asked for the list of the Meldungen to be reversed: the
+newest report on top, the oldest at the bottom, with a choice between ascending
+and descending under „Darstellung“. **WP-M16-11** adds the instance value
+`ticketSortDirection` (`'asc' | 'desc'`, default `'desc'`) to the branding row
+and to `GET /api/v1/settings/display`, a checkbox „Neueste zuerst“ / „Newest
+first“ on the form of the Darstellung, and makes the ticket list at `/tickets`
+order by `reportedAt` in the configured direction instead of the hard-coded
+deadline order. The direction is an instance value under „Darstellung“, not a
+per-user preference, and needs no new table or migration.
+
 **The way of the escalation (WP-M17-00, phase 17, out of band at the request of
 the office).** The office read the escalation administration and asked: „das ziel
 ist eine person, der übertragungsweg eine andere geschichte! jeder kann selbst

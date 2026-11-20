@@ -2,7 +2,12 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import type { TicketListItem, TicketListResponse, TimelineState } from '@stoerdesk/shared'
+import type {
+  DisplaySettingsResponse,
+  TicketListItem,
+  TicketListResponse,
+  TimelineState,
+} from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
@@ -52,6 +57,7 @@ function useTickets(query: {
   overdue?: string
   limit?: number
   offset?: number
+  direction?: 'asc' | 'desc'
 }) {
   const params = new URLSearchParams()
   if (query.search) params.set('search', query.search)
@@ -61,11 +67,17 @@ function useTickets(query: {
   if (query.overdue) params.set('overdue', query.overdue)
   if (query.limit !== undefined) params.set('limit', String(query.limit))
   if (query.offset !== undefined) params.set('offset', String(query.offset))
+  if (query.direction !== undefined) params.set('direction', query.direction)
 
-  // The office reads the list by the deadline: the nearest one is on top
-  // (WP-M9-20, `specs/05-timeline.md` §5.4).
-  params.set('order', 'deadlineAt')
-  params.set('direction', 'asc')
+  // The list orders by the report time: the configured direction puts the newest
+  // report on top (`'desc'`) or the oldest one (`'asc'`). The administration sets
+  // the direction under „Darstellung“; the default is descending.
+  if (query.direction !== undefined) {
+    params.delete('order')
+  } else {
+    params.set('order', 'reportedAt')
+    params.set('direction', 'desc')
+  }
 
   return useQuery({
     queryKey: ['tickets', 'list', query],
@@ -155,6 +167,17 @@ export function TicketListPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
+  // The display values of the instance (ADR-0034): the sort direction of the list
+  // is configured under „Darstellung“ and read by every colleague who may read a
+  // ticket, so the route needs no `settings.read`.
+  const display = useQuery({
+    queryKey: ['settings', 'display'],
+    queryFn: () => apiFetch<DisplaySettingsResponse>('/v1/settings/display'),
+    retry: false,
+  })
+
+  const direction = display.data?.ticketSortDirection ?? 'desc'
+
   // The URL is the single source of truth, so the dashboard tiles open the list
   // with the matching filter (WP-M2-22, WP-M2-23).
   const search = searchParams.get('search') ?? ''
@@ -185,6 +208,7 @@ export function TicketListPage() {
     overdue: overdue ? 'true' : undefined,
     limit: 25,
     offset,
+    direction,
   })
 
   const filtered = useMemo(() => {

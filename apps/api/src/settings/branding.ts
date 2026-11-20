@@ -4,9 +4,11 @@ import fp from 'fastify-plugin'
 import {
   brandingResponseSchema,
   DEFAULT_ACCENT_COLOR,
+  DEFAULT_TICKET_SORT_DIRECTION,
   displaySettingsResponseSchema,
   PERMISSIONS,
   titleSwitchResponseSchema,
+  type TicketSortDirection,
   updateBrandingRequestSchema,
 } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
@@ -114,6 +116,23 @@ function storedAccentColor(value: unknown): string {
   return HEX_COLOR.test(color) ? color : DEFAULT_ACCENT_COLOR
 }
 
+/**
+ * The sort direction of the ticket list under „Darstellung“: the stored value of
+ * the row, else the default of the server — `'desc'` puts the newest report on
+ * top. A row with a value that is not `'asc'` or `'desc'` answers the default.
+ */
+function storedTicketSortDirection(value: unknown): TicketSortDirection {
+  const direction =
+    value !== null &&
+    value !== undefined &&
+    typeof value === 'object' &&
+    typeof (value as { ticketSortDirection?: unknown }).ticketSortDirection === 'string'
+      ? (value as { ticketSortDirection: TicketSortDirection }).ticketSortDirection
+      : ''
+
+  return direction === 'asc' || direction === 'desc' ? direction : DEFAULT_TICKET_SORT_DIRECTION
+}
+
 /** Validates an optional logo data URL; `''`/`null`/`undefined` means "remove". */
 function validateLogo(logo: unknown): string | { code: string; params: Record<string, unknown> } {
   if (logo === undefined || logo === null || logo === '') {
@@ -154,6 +173,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           logo: storedLogo(rows[0]?.value),
           internalCommentColor: storedInternalCommentColor(rows[0]?.value),
           accentColor: storedAccentColor(rows[0]?.value),
+          ticketSortDirection: storedTicketSortDirection(rows[0]?.value),
         })
       },
     )
@@ -177,6 +197,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
         return displaySettingsResponseSchema.parse({
           internalCommentColor: storedInternalCommentColor(rows[0]?.value),
           accentColor: storedAccentColor(rows[0]?.value),
+          ticketSortDirection: storedTicketSortDirection(rows[0]?.value),
         })
       },
     )
@@ -230,12 +251,18 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
         // Darstellung sends the colour, an older client does not (ADR-0036).
         const accentColor = parsed.data.accentColor ?? storedAccentColor(current[0]?.value)
 
+        // A body without the sort direction keeps the stored one — the page of the
+        // Darstellung sends the direction, an older client does not.
+        const ticketSortDirection =
+          parsed.data.ticketSortDirection ?? storedTicketSortDirection(current[0]?.value)
+
         const row = {
           companyName: parsed.data.companyName,
           titleEnabled: parsed.data.titleEnabled,
           logo,
           internalCommentColor,
           accentColor,
+          ticketSortDirection,
         }
 
         await database

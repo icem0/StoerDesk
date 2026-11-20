@@ -7,8 +7,8 @@ import type { TFunction } from 'i18next'
 import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 
-import type { BrandingResponse, UpdateBrandingRequest } from '@stoerdesk/shared'
-import { DEFAULT_ACCENT_COLOR } from '@stoerdesk/shared'
+import type { BrandingResponse, TicketSortDirection, UpdateBrandingRequest } from '@stoerdesk/shared'
+import { DEFAULT_ACCENT_COLOR, DEFAULT_TICKET_SORT_DIRECTION } from '@stoerdesk/shared'
 
 /**
  * Administration page for the public branding (WP-M2-30). An administrator
@@ -83,6 +83,7 @@ export function BrandingPage() {
   const [colorError, setColorError] = useState<string | null>(null)
   const [accent, setAccent] = useState<string | null>(null)
   const [accentError, setAccentError] = useState<string | null>(null)
+  const [ticketSortDirection, setTicketSortDirection] = useState<TicketSortDirection | null>(null)
 
   const branding = useQuery({
     queryKey: ['branding'],
@@ -93,6 +94,8 @@ export function BrandingPage() {
   const currentLogo = branding.data?.logo ?? ''
   const currentColor = color ?? branding.data?.internalCommentColor ?? DEFAULT_INTERNAL_COMMENT_COLOR
   const currentAccent = accent ?? branding.data?.accentColor ?? DEFAULT_ACCENT_COLOR
+  const currentTicketSortDirection =
+    ticketSortDirection ?? branding.data?.ticketSortDirection ?? DEFAULT_TICKET_SORT_DIRECTION
 
   const mutation = useMutation({
     mutationFn: (body: UpdateBrandingRequest) =>
@@ -109,6 +112,7 @@ export function BrandingPage() {
       setLogoError(null)
       setAccent(null)
       setAccentError(null)
+      setTicketSortDirection(null)
     },
   })
 
@@ -160,6 +164,7 @@ export function BrandingPage() {
           // the value that was changed last is the value that is saved (WP-M16-06).
           const colorToSend = currentColor
           const accentToSend = currentAccent
+          const ticketSortDirectionToSend = currentTicketSortDirection
 
           // A colour that is no hex value never leaves the browser.
           if (!HEX_COLOR.test(colorToSend) || !HEX_COLOR.test(accentToSend)) {
@@ -180,6 +185,7 @@ export function BrandingPage() {
             logo: logoToSend,
             internalCommentColor: colorToSend,
             accentColor: accentToSend,
+            ticketSortDirection: ticketSortDirectionToSend,
           })
         }}
       >
@@ -312,6 +318,21 @@ export function BrandingPage() {
         {accentError !== null ? (
           <p role="alert" className="text-xs text-rose-400">{accentError}</p>
         ) : null}
+
+        {/* The sort direction of the ticket list under „Darstellung“: the checkbox
+            switches between the newest report on top (descending) and the oldest
+            one on top (ascending). */}
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            name="ticketSortDirection"
+            checked={currentTicketSortDirection === 'desc'}
+            disabled={!mayWrite || mutation.isPending}
+            onChange={(event) => setTicketSortDirection(event.target.checked ? 'desc' : 'asc')}
+            type="checkbox"
+          />
+          {t('branding.field.ticketSortDirection')}
+        </label>
+        <p className="text-xs text-slate-400">{t('branding.hintTicketSortDirection')}</p>
 
         {currentLogo && !logoDataUrl && (
           <div className="flex items-center gap-2">
