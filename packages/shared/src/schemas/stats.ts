@@ -41,6 +41,9 @@ export const statsFilterSchema = z
     includeTest: z.boolean().optional(),
     includeSpam: z.boolean().optional(),
     bucket: z.enum(['day', 'week', 'month']).optional(),
+    /** `true` keeps only tickets without an object, `false` only tickets with
+     * an object, `undefined` keeps both (WP-M18-07, ADR-0042). */
+    withoutObject: z.boolean().optional(),
   })
   .refine(
     (data) => data.from === undefined || data.to === undefined || data.from <= data.to,

@@ -22,6 +22,9 @@ Every statistics read takes the same filter object:
 | `technician` | optional user id, matched against `tickets.assigned_user_id` |
 | `includeTest` | optional boolean, default `false` |
 | `includeSpam` | optional boolean, default `false` |
+| `withoutObject` | optional boolean — `true` keeps only tickets without an object
+  (customers without a contract, the reserved object `OHNE-OBJEKT`),
+  `false` keeps only tickets with an object, `undefined` keeps both (WP-M18-07) |
 
 A ticket counts when its `reported_at` falls inside the local range. `is_test`
 tickets are excluded unless `includeTest` is true; `suspected_spam` tickets are
@@ -76,7 +79,9 @@ and then by lower-case object number, limited to 25 rows, with
 `conspicuous` is independent of the selected range: it is true when the object
 has more than `stats.conspicuous_threshold` tickets in the 90 days before `to`
 (default 3, editable on `/admin/dashboard`). The flag never hides a row; it
-marks it.
+marks it. The reserved object `OHNE-OBJEKT` (customers without a contract,
+WP-M18-07) appears like any other object in this list — its count is the number
+of tickets without an object in the range.
 
 ## 12.5 Deadline compliance and declines
 
