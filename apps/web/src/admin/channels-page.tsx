@@ -296,6 +296,13 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       {channel.kind === 'webpush' && channel.secretSet !== (config.publicKey !== '') ? (
         <p className="text-xs text-amber-300">{t('admin.channels.webpushIncompleteTrio')}</p>
       ) : null}
+      {channel.kind === 'webpush' ? (
+        <p className="text-xs text-slate-400">
+          <Link className="text-sky-300 underline" to="/help/web-push">
+            {t('admin.channels.webpushGuide')}
+          </Link>
+        </p>
+      ) : null}
       <label className="flex flex-col gap-1 text-sm" htmlFor={fieldId(channel.kind, 'secret')}>
         {t('admin.channels.secret')}
         <input
@@ -450,7 +457,9 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
         >
           {test.data.delivered
             ? t('admin.channels.testDelivered')
-            : t('admin.channels.testFailed', { reason: reasonOf(test.data.code ?? '', channel.kind) })}
+            : t('admin.channels.testFailed', {
+                reason: reasonOf(test.data.code ?? '', channel.kind),
+              })}
         </p>
       ) : null}
       {test.isError ? (
