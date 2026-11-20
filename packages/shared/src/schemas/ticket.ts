@@ -274,6 +274,8 @@ export const internalCreateTicketRequestSchema = z.object({
   objectId: z.uuid(),
   title: trimmedText(200),
   description: trimmedText(4000),
+  /** Free text about the object of a ticket without an object (WP-M18-02, ADR-0042). */
+  objectInfo: trimmedText(4000).optional(),
   faultTemplateKeys: z
     .array(faultTemplateKeySchema)
     .max(9)
@@ -487,6 +489,8 @@ export const ticketDetailResponseSchema = z.object({
     priority: z.string(),
     title: z.string().nullable(),
     description: z.string().nullable(),
+    /** Free text about the object of a ticket without an object (WP-M18-02, ADR-0042). */
+    objectInfoText: z.string().nullable(),
     faultTemplateKeys: z.array(z.string()),
     source: z.string(),
     reportedAt: z.iso.datetime(),

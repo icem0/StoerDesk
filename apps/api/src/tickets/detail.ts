@@ -60,6 +60,8 @@ export async function getTicketDetail(
       priority: tickets.priority,
       title: tickets.title,
       description: tickets.description,
+      /** Free text about the object of a ticket without an object (ADR-0042). */
+      objectInfoText: tickets.objectInfoText,
       faultTemplateKeys: tickets.faultTemplateKeys,
       source: tickets.source,
       reportedAt: tickets.reportedAt,

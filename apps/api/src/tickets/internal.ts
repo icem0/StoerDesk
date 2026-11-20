@@ -151,6 +151,8 @@ export async function createInternalTicket(
         objectId: object.id,
         title: titleEnabled ? (input.title ?? null) : null,
         description: input.description ?? null,
+        /** Free text about a foreign object the office cannot choose (ADR-0042). */
+        objectInfoText: input.objectInfo ?? null,
         faultTemplateKeys: input.faultTemplateKeys,
         priority,
         source: 'INTERNAL',

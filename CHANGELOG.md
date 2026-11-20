@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ADR-0025 is superseded.
 
 ### Added
+- The API stores `object_info_text` (**WP-M18-04**, phase 18, ADR-0042): internal tickets carry the free data of a foreign object in `object_info_text`; the object list pins the reserved row „Ohne Objekt" via `pinned` and sorts it last. The form shows it in WP-M18-05.
 - The object „Ohne Objekt" and the field `object_info_text` (**WP-M18-03**, phase 18, ADR-0042): a reserved object row (`OHNE-OBJEKT`) stands in for customers without a contract of the installation; tickets keep `object_id NOT NULL` and store the free data of the foreign object in `object_info_text`, arriving with priority `low` from the object's priority deviation. The database column exists; the API and the form follow in WP-M18-04 … WP-M18-05.
 - The duty blocks of the readiness are specified (**WP-M20-01**, phase 20,
   ADR-0040): a block spans consecutive weekdays with a daily pattern, so the office

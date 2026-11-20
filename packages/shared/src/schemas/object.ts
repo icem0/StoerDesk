@@ -61,6 +61,8 @@ export const objectSummarySchema = z.object({
   priority: ticketPrioritySchema,
   /** The stored deviation, `null` when the object follows the standard. */
   priorityOverride: ticketPrioritySchema.nullable(),
+  /** `true` for the reserved object „Ohne Objekt" — the list pins it last (WP-M18-02, ADR-0042). */
+  pinned: z.boolean(),
 })
 
 export const objectListResponseSchema = z.object({
