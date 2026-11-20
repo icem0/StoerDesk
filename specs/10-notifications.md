@@ -404,6 +404,14 @@ interface language for a failing test send: the codes `no_keys`,
 the texts of the channel administration belong to the ntfy channel and name its
 topic and its token (WP-M15-08).
 
+**The test send of the web push reaches a device.** An empty subscription list
+stays a no-op of the adapter (§11.15, WP-M7-09): a ticket notification to nobody
+is silent. The **probe** of the administration is different — `POST
+/api/v1/admin/channels/webpush/test` counts the rows of `push_subscriptions` and
+without a single row answers `delivered: false` with the code
+`push_no_subscription`: a click that reached no device proves nothing and must
+never look like a success (WP-M15-10).
+
 **The warning over another channel.** A broken channel warns the
 administration **once a day over another channel**: the daily check enqueues
 one row of the event type `channel.health_warning` for the first configured

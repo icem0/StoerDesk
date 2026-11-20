@@ -621,6 +621,7 @@
         "no_sender": "The channel misses a sender address.",
         "no_recipients": "No recipient is configured for the channel.",
         "push_subscription_dead": "Every web push subscription is dead: the devices have to allow the notification again.",
+        "push_no_subscription": "No device is subscribed yet: the test send reached nobody — register a device on the settings page first.",
         "push_unauthorized": "The push service rejected the authorization (401/403): the VAPID key does not belong to the registered device — the devices have to register again.",
         "push_rejected": "The push service answered the delivery with an error.",
         "push_unreachable": "The push service did not answer: the connection failed (network, DNS or TLS).",

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { loadEnv } from '../../config/env'
 import type { Database } from '../../db/client'
-import { notificationChannels, notificationChannelVerifications, notificationAccounts } from '../../db/schema'
+import { notificationChannels, notificationChannelVerifications, notificationAccounts, pushSubscriptions } from '../../db/schema'
 import type { NotificationChannel } from '../channels'
 import { notificationChannelRoutes } from '../routes'
 
@@ -28,6 +28,7 @@ function fakeDatabase(
   held: string[],
   statusRows: Array<Record<string, unknown>> = [],
   accounts: Array<Record<string, unknown>> = [],
+  subscriptions: Array<Record<string, unknown>> = [],
 ): Db {
   const verifications: Array<Record<string, unknown>> = []
   Object.assign(verifications, {
@@ -61,6 +62,10 @@ function fakeDatabase(
 
         if (table === notificationAccounts) {
           return accountsQuery
+        }
+
+        if (table === pushSubscriptions) {
+          return { limit: async (_count: number) => subscriptions }
         }
 
         return overridesQuery
@@ -144,6 +149,7 @@ async function buildApp(options: {
   channels?: readonly NotificationChannel[]
   statusRows?: Array<Record<string, unknown>>
   accounts?: Array<Record<string, unknown>>
+  subscriptions?: Array<Record<string, unknown>>
 }): Promise<FastifyInstance> {
   const app = Fastify({ logger: false })
 
@@ -165,7 +171,13 @@ async function buildApp(options: {
   })
 
   await app.register(notificationChannelRoutes, {
-    database: fakeDatabase(options.store, options.held, options.statusRows ?? [], options.accounts ?? []),
+    database: fakeDatabase(
+      options.store,
+      options.held,
+      options.statusRows ?? [],
+      options.accounts ?? [],
+      options.subscriptions ?? [],
+    ),
     env: loadEnv({}),
     ...(options.channels === undefined ? {} : { channels: options.channels }),
   })
@@ -374,6 +386,50 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ delivered: true })
+  })
+
+  it('answers push_no_subscription while no device is subscribed (WP-M15-10)', async () => {
+    const accepting: NotificationChannel = { name: 'webpush', send: async () => {} }
+    const app = await buildApp({
+      held: ['notification.write'],
+      store: [row({ kind: 'webpush' })],
+      channels: [accepting],
+    })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/admin/channels/webpush/test',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ delivered: false, code: 'push_no_subscription' })
+  })
+
+  it('sends the web push test message only when a device is subscribed (WP-M15-10)', async () => {
+    const accepted: string[] = []
+    const accepting: NotificationChannel = {
+      name: 'webpush',
+      send: async () => {
+        accepted.push('sent')
+      },
+    }
+    const app = await buildApp({
+      held: ['notification.write'],
+      store: [row({ kind: 'webpush' })],
+      channels: [accepting],
+      subscriptions: [{ id: '11111111-1111-4111-8111-111111111111' }],
+    })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/admin/channels/webpush/test',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ delivered: true })
+    expect(accepted).toEqual(['sent'])
   })
 
   it('needs notification.write for the test send', async () => {

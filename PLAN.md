@@ -3397,6 +3397,16 @@ the log of the API and to the page of the delivery problems. The duplicated
 texts of WP-M15-08 were dropped from `admin.channels.errors` — one text per code
 in `admin.delivery.reasons` serves both pages.
 
+**The web push test send never reports success while no device is subscribed
+(WP-M15-10, out of band in phase 15).** The card answered „Testnachricht
+gesendet." although no browser of a user had ever subscribed: an empty
+subscription list is a no-op of the adapter (§11.15, WP-M7-09), so the click
+delivered nothing and proved nothing — the operator chased keys and firewall
+while the state was „nobody is subscribed". The probe of the administration now
+counts the rows of `push_subscriptions` and answers `delivered: false` with the
+code `push_no_subscription` without a single row; the adapter and its no-op for a
+ticket notification stay untouched.
+
 **The accent colour of the interface (WP-M16-00, phase 16).** The office asked
 for a facelift of the whole interface, for the accent colour of the menu under
 „Darstellung“ as a value of the server and for the mobile view. **ADR-0036**

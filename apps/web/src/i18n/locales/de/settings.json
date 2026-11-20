@@ -621,6 +621,7 @@
         "no_sender": "Dem Kanal fehlt eine Absenderadresse.",
         "no_recipients": "Für den Kanal ist kein Empfänger eingetragen.",
         "push_subscription_dead": "Alle Web-Push-Abos sind abgelaufen: die Geräte müssen die Benachrichtigung neu erlauben.",
+        "push_no_subscription": "It was sent to no device: No browser of a user is subscribed to Web Push yet — first one device register itself under /settings/notifications.",
         "push_unauthorized": "Der Push-Dienst hat die Berechtigung abgelehnt (401/403): der VAPID-Schlüssel passt nicht zum angemeldeten Gerät — die Geräte müssen neu angemeldet werden.",
         "push_rejected": "Der Push-Dienst hat die Zustellung mit einem Fehler beantwortet.",
         "push_unreachable": "Der Push-Dienst hat nicht geantwortet: die Verbindung ist fehlgeschlagen (Netzwerk, DNS oder TLS).",

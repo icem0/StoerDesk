@@ -43,6 +43,7 @@ import {
   notificationChannels,
   notificationAccounts,
   notificationMessages,
+  pushSubscriptions,
 } from '../db/schema'
 import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
 import { resolveChannelStatus } from '../dashboard/service'
@@ -475,6 +476,25 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
                 NTFY_TOPIC: effective?.topic ?? '',
                 NTFY_TOKEN: effective?.token ?? env.NTFY_TOKEN,
               })
+
+        // A test send that reaches no device is not a success: the web push
+        // delivers to the browsers of the users, and without one single
+        // subscription the click proves nothing about the channel — the answer
+        // names that state instead of delivering an empty success
+        // (WP-M15-10, §11.15).
+        if (kind.data === 'webpush') {
+          const subscribers = await database
+            .select({ id: pushSubscriptions.id })
+            .from(pushSubscriptions)
+            .limit(1)
+
+          if (subscribers.length === 0) {
+            return channelTestResponseSchema.parse({
+              delivered: false,
+              code: 'push_no_subscription',
+            })
+          }
+        }
 
         const result = await sendTestMessage(testRegistry, kind.data, body.data.topic)
 

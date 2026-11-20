@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The web push test send never reports success while no device is subscribed
+  (**WP-M15-10**, out of band in phase 15): the card answered „Testnachricht
+  gesendet." on a server whose VAPID trio was fine — an empty subscription list is
+  a no-op of the adapter (§11.15, WP-M7-09), so the click delivered nothing and
+  proved nothing. `POST /api/v1/admin/channels/webpush/test` now counts the rows
+  of `push_subscriptions` and answers `delivered: false` with the code
+  `push_no_subscription` without a single row; the text of the code (de/en) names
+  that no browser is subscribed and that a device has to register itself on the
+  settings page. The adapter and the no-op of a ticket notification stay as they
+  are (v1.1.339).
 - The channel card explains a failure with the texts of its channel (**WP-M15-09**,
   out of band in phase 15): the card of the web push answered a failing test send
   with „Der ntfy-Server hat den Code … geantwortet: Prüfen Sie URL und Thema …"
