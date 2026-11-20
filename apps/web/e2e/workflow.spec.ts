@@ -302,16 +302,18 @@ for (const language of ['de', 'en'] as const) {
     await expect(statusBadge(page)).toHaveText(statusText(language, 'CLOSED'))
     await expect(history(page).getByText(texts.event.closed)).toBeVisible()
 
-    // Full audit trail: all seven events in order.
+    // Full audit trail: all seven events in order. The history renders newest
+    // first by default (ticketSortDirection 'desc', WP-M16-11d), so the
+    // expectation follows the rendered direction, newest event on top.
     const rows = history(page).locator('.text-sm.font-medium.text-slate-200')
     await expect(rows).toContainText([
-      texts.event.created,
-      texts.event.review_started,
-      texts.event.work_order_set,
-      texts.event.assigned,
-      texts.event.accepted,
-      texts.event.acknowledged,
       texts.event.closed,
+      texts.event.acknowledged,
+      texts.event.accepted,
+      texts.event.assigned,
+      texts.event.work_order_set,
+      texts.event.review_started,
+      texts.event.created,
     ])
     // Every internal transition (create, review, work order, assign, accept,
     // acknowledge, close) is written by the same signed-in administrator, so
