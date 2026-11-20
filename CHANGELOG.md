@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ADR-0025 is superseded.
 
 ### Added
+- QR stickers, CSV import and deletion protect „Ohne Objekt" (**WP-M18-06**, phase 18, ADR-0042): a CSV row with the reserved object number is skipped by the import preview, the sticker sheet never offers it for printing, and deleting it answers `422 object_reserved`.
 - The internal form offers „Ohne Objekt" (**WP-M18-05**, phase 18, ADR-0042): the object picker pins the reserved row last and, when it is chosen, shows a free text field for the data of the foreign object; the ticket view shows it as „Information zum Objekt".
 - The API stores `object_info_text` (**WP-M18-04**, phase 18, ADR-0042): internal tickets carry the free data of a foreign object in `object_info_text`; the object list pins the reserved row „Ohne Objekt" via `pinned` and sorts it last. The form shows it in WP-M18-05.
 - The object „Ohne Objekt" and the field `object_info_text` (**WP-M18-03**, phase 18, ADR-0042): a reserved object row (`OHNE-OBJEKT`) stands in for customers without a contract of the installation; tickets keep `object_id NOT NULL` and store the free data of the foreign object in `object_info_text`, arriving with priority `low` from the object's priority deviation. The database column exists; the API and the form follow in WP-M18-04 … WP-M18-05.

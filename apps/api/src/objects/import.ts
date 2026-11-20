@@ -24,7 +24,7 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { objects } from '../db/schema'
+import { objects, WITHOUT_OBJECT_OBJECT_NO } from '../db/schema'
 import { generateQrToken } from './qr'
 
 /**
@@ -319,36 +319,43 @@ async function storedRows(database: Db, objectNos: string[]): Promise<Map<string
 
 /** Validates every row and classifies it against the stored objects. */
 async function planRows(database: Db, document: ObjectCsvDocument): Promise<RowPlan[]> {
-  const plans = document.rows.map(({ line, values }): RowPlan => {
-    const candidate = Object.fromEntries(
-      document.targets.map((target): [ObjectImportTarget, string] => [
-        target,
-        values[target] ?? '',
-      ]),
-    )
+  const plans = document.rows
+    .map(({ line, values }): RowPlan | null => {
+      // The reserved object „Ohne Objekt" is not part of the import (ADR-0042).
+      if ((values.objectNo ?? '').trim().toLowerCase() === WITHOUT_OBJECT_OBJECT_NO.toLowerCase()) {
+        return null
+      }
 
-    const parsed = createObjectRequestSchema.safeParse(candidate)
+      const candidate = Object.fromEntries(
+        document.targets.map((target): [ObjectImportTarget, string] => [
+          target,
+          values[target] ?? '',
+        ]),
+      )
 
-    if (!parsed.success) {
+      const parsed = createObjectRequestSchema.safeParse(candidate)
+
+      if (!parsed.success) {
+        return {
+          line,
+          objectNo: (values.objectNo ?? '').trim(),
+          values: null,
+          action: 'error',
+          changed: [],
+          errors: [rowError(fieldPaths(parsed.error))],
+        }
+      }
+
       return {
         line,
-        objectNo: (values.objectNo ?? '').trim(),
-        values: null,
-        action: 'error',
+        objectNo: parsed.data.objectNo,
+        values: parsed.data,
+        action: 'new',
         changed: [],
-        errors: [rowError(fieldPaths(parsed.error))],
+        errors: [],
       }
-    }
-
-    return {
-      line,
-      objectNo: parsed.data.objectNo,
-      values: parsed.data,
-      action: 'new',
-      changed: [],
-      errors: [],
-    }
-  })
+    })
+    .filter((plan): plan is RowPlan => plan !== null)
 
   const stored = await storedRows(
     database,

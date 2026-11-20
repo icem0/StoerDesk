@@ -82,7 +82,10 @@ export function StickerPage() {
   const [format, setFormat] = useState<StickerFormat>('a4')
 
   const visible = useMemo(
-    () => (objects.data?.objects ?? []).filter((object) => matchesSearch(object, search)),
+    () =>
+      (objects.data?.objects ?? [])
+        .filter((object) => !object.pinned)
+        .filter((object) => matchesSearch(object, search)),
     [objects.data, search],
   )
   const selected = visible.filter((object) => !deselected.includes(object.objectNo))
