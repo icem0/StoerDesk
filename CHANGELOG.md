@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ADR-0025 is superseded.
 
 ### Added
+- Tests for tickets without an object (**WP-M18-08**, phase 18, ADR-0042): creating through the reserved object arrives with priority `low`, stores `object_info_text` and is counted by the statistics filter `withoutObject: true`; the web picker lists „Ohne Objekt" last and submits the info field.
 - Statistics count tickets without an object (**WP-M18-07**, phase 18, ADR-0042): `GET /api/v1/stats/*` gains the filter `withoutObject` — `true` shows only tickets of customers without a contract, `false` only tickets of contract objects; the top-objects list keeps showing the reserved row with its count.
 - QR stickers, CSV import and deletion protect „Ohne Objekt" (**WP-M18-06**, phase 18, ADR-0042): a CSV row with the reserved object number is skipped by the import preview, the sticker sheet never offers it for printing, and deleting it answers `422 object_reserved`.
 - The internal form offers „Ohne Objekt" (**WP-M18-05**, phase 18, ADR-0042): the object picker pins the reserved row last and, when it is chosen, shows a free text field for the data of the foreign object; the ticket view shows it as „Information zum Objekt".

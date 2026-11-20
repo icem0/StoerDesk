@@ -2,6 +2,7 @@ import { sql, type SQL } from 'drizzle-orm'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 
 import type { StatsFilter } from '@stoerdesk/shared'
+import { WITHOUT_OBJECT_OBJECT_ID } from '../db/schema'
 
 /** The time zone of every local calendar boundary (`PLAN.md` §15). */
 const BERLIN = 'Europe/Berlin'
@@ -149,6 +150,16 @@ export function buildStatsFilter(filter: StatsFilter, now: Date): StatsFilterQue
 
   if (filter.technician !== undefined && filter.technician !== '') {
     conditions.push(sql`"assigned_user_id" = ${filter.technician}`)
+  }
+
+  if (filter.withoutObject !== undefined) {
+    if (filter.withoutObject) {
+      // Tickets without an object: the reserved object stands in
+      // (specs/02-data-model.md §4.3.3, ADR-0042).
+      conditions.push(sql`"object_id" = ${WITHOUT_OBJECT_OBJECT_ID}`)
+    } else {
+      conditions.push(sql`"object_id" <> ${WITHOUT_OBJECT_OBJECT_ID}`)
+    }
   }
 
   return {

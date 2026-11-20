@@ -518,4 +518,116 @@ describe('InternalCreatePage', () => {
     )
     expect(bodies.length).toBe(0)
   })
+
+  const RESERVED_OBJECT_ID = '00000000-0000-0000-0000-000000000001'
+
+  /**
+   * Stub with two objects: a regular one and the reserved „Ohne Objekt" pinned
+   * last (ADR-0042).
+   */
+  function stubReservedObject() {
+    const bodies: Record<string, unknown>[] = []
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input)
+
+        if (path.includes('/v1/settings/title-switch')) {
+          return Response.json({ titleEnabled: false })
+        }
+
+        if (path.includes('/v1/settings/deadline-hours')) {
+          return Response.json({ low: 168, normal: 72, high: 24, critical: 8 })
+        }
+
+        if (path.includes('/v1/tickets/reporter-users')) {
+          return Response.json({ users: [] })
+        }
+
+        if (path.includes('/v1/tickets') && path.endsWith('/tickets')) {
+          bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+
+          return Response.json(
+            {
+              ticketId: '55555555-5555-4555-8555-555555555555',
+              ticketNo: 'ST-2025-0001',
+              status: 'NEW',
+              statusToken: 'st-1234',
+              reportedAt: '2025-01-01T08:00:00Z',
+              receivedAt: '2025-01-01T08:00:00Z',
+              deadlineAt: '2025-01-04T08:00:00Z',
+            },
+            { status: 201 },
+          )
+        }
+
+        if (path.includes('/v1/text-templates')) {
+          return Response.json({ templates: [] })
+        }
+
+        return Response.json({
+          objects: [
+            {
+              id: OBJECT_ID,
+              objectNo: '12345_01',
+              name: 'Rathaus',
+              externalType: 'Brandmeldeanlage',
+              priority: 'normal',
+              pinned: false,
+              systems: [],
+            },
+            {
+              id: RESERVED_OBJECT_ID,
+              objectNo: 'OHNE-OBJEKT',
+              name: 'Ohne Objekt',
+              externalType: null,
+              priority: 'low',
+              pinned: true,
+              systems: [],
+            },
+          ],
+        })
+      }),
+    )
+
+    return { bodies }
+  }
+
+  it('lists the reserved object last in the picker', async () => {
+    stubReservedObject()
+    renderPage()
+
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+    fireEvent.focus(searchInput)
+
+    const listbox = screen.getByRole('listbox')
+    const options = listbox.querySelectorAll('[role="option"]')
+    expect(options.length).toBe(2)
+    expect(options[options.length - 1]!.textContent).toContain('OHNE-OBJEKT')
+  })
+
+  it('shows the object info field for the reserved object and sends it', async () => {
+    const { bodies } = stubReservedObject()
+    renderPage()
+
+    const searchInput = (await screen.findByRole('searchbox')) as HTMLInputElement
+    fireEvent.focus(searchInput)
+    await screen.findByText('Rathaus')
+
+    const listbox = screen.getByRole('listbox')
+    const options = listbox.querySelectorAll('[role="option"]')
+    fireEvent.click(options[options.length - 1]!)
+
+    const infoField = (await screen.findByLabelText('Angaben zum Objekt')) as HTMLTextAreaElement
+    fireEvent.change(infoField, { target: { value: 'Fremdfirma Muster GmbH' } })
+
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('low')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Meldung erstellen' }))
+
+    await waitFor(() => expect(bodies.length).toBe(1))
+    expect(bodies[0]?.objectId).toBe(RESERVED_OBJECT_ID)
+    expect(bodies[0]?.objectInfo).toBe('Fremdfirma Muster GmbH')
+  })
 })
