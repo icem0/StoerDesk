@@ -24,6 +24,7 @@ import { deadlineAtForPriority } from './deadline'
 import { evaluateTicketEscalations } from './escalation'
 import { createExternalTicket, fieldPaths as externalFieldPaths } from './external'
 import { applyInternalAction } from './internal-actions'
+import { MAX_REPORT_PHOTOS, saveReportPhotos, validateReportPhotos } from './photos'
 import { objectLocation } from './report'
 
 /**
@@ -58,7 +59,18 @@ export async function createInternalTicket(
   database: Db,
   input: InternalCreateTicketRequest,
   actorUserId: string,
+  options?: { uploadDir: string; maxPhotoBytes: number },
 ): Promise<InternalCreateTicketResponse> {
+  const { maxPhotoBytes } = options ?? { maxPhotoBytes: 0 }
+
+  // §7.4/SEC-014: an invalid photo array (count, data URL, decoded size, magic
+  // bytes) must be rejected before the ticket transaction, so an over-limit or
+  // bad-type creation never leaves an orphan ticket row behind.
+  const photos = input.photos ?? []
+  if (photos.length > 0) {
+    validateReportPhotos(photos, maxPhotoBytes)
+  }
+
   // Resolve the object (must be active).
   const [object] = await database
     .select({
@@ -205,6 +217,11 @@ export async function createInternalTicket(
     }
   })
 
+  // Store photos under `<UPLOAD_DIR>/tickets/<ticketId>/<photoId>.<ext>`.
+  if (photos.length > 0) {
+    await saveReportPhotos({ database, ...options! }, created.ticketId, photos)
+  }
+
   await evaluateTicketEscalations(database, created.ticketId)
 
   return created
@@ -212,13 +229,18 @@ export async function createInternalTicket(
 
 export type InternalTicketRouteOptions = {
   database: Db
+  uploadDir: string
+  maxPhotoBytes: number
 }
 
 export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
-  async (app, { database }) => {
+  async (app, { database, uploadDir, maxPhotoBytes }) => {
     app.post(
       '/api/v1/tickets',
-      { preHandler: requireScopeOrPermission(database, 'tickets:write', PERMISSIONS.ticket.create) },
+      {
+        bodyLimit: Math.ceil(MAX_REPORT_PHOTOS * maxPhotoBytes * 1.4),
+        preHandler: requireScopeOrPermission(database, 'tickets:write', PERMISSIONS.ticket.create),
+      },
       async (request, reply) => {
         const apiKey = request.apiKey
 
@@ -258,7 +280,10 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
         }
 
         try {
-          const result = await createInternalTicket(database, parsed.data, user.id)
+          const result = await createInternalTicket(database, parsed.data, user.id, {
+            uploadDir,
+            maxPhotoBytes,
+          })
           return reply.code(201).send(internalCreateTicketResponseSchema.parse(result))
         } catch (error) {
           if (error instanceof InternalTicketRouteError) {

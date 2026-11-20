@@ -14,6 +14,7 @@ import {
 } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
+import { PhotoUpload } from './photo-upload'
 import { useFaultCatalog } from './use-fault-catalog'
 
 /**
@@ -311,6 +312,7 @@ export function InternalCreatePage() {
   const [reportedByUserId, setReportedByUserId] = useState('')
   const [reporterChannel, setReporterChannel] = useState<'phone' | 'email' | 'messenger'>('phone')
   const [reportedAt, setReportedAt] = useState(() => localDateTimeValue(new Date()))
+  const [photos, setPhotos] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reportTimeWarning, setReportTimeWarning] = useState(false)
@@ -402,6 +404,7 @@ export function InternalCreatePage() {
         title: titleEnabled && title.trim() !== '' ? title.trim() : undefined,
         description: description || undefined,
         faultTemplateKeys: faultKeys,
+        photos,
         priority,
         contact: {
           name: contactName || undefined,
@@ -507,6 +510,16 @@ export function InternalCreatePage() {
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             rows={4}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2 col-span-full">
+          <PhotoUpload
+            photos={photos}
+            onAdd={(photo) => setPhotos((current) => [...current, photo])}
+            onRemove={(index) =>
+              setPhotos((current) => current.filter((_, position) => position !== index))
+            }
           />
         </div>
 
