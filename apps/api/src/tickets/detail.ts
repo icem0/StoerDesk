@@ -231,6 +231,7 @@ export async function getTicketDetail(
       priority: ticketRow.priority,
       title: titleEnabled ? ticketRow.title : null,
       description: ticketRow.description,
+      objectInfoText: ticketRow.objectInfoText,
       faultTemplateKeys: ticketRow.faultTemplateKeys,
       source: ticketRow.source,
       reportedAt: ticketRow.reportedAt.toISOString(),

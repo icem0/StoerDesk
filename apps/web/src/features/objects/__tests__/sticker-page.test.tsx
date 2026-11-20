@@ -28,6 +28,7 @@ function object(objectNo: string, name: string, qrToken: string | null): ObjectS
     qrToken,
     priority: 'normal',
     priorityOverride: null,
+    pinned: false,
   }
 }
 
