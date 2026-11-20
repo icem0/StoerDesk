@@ -92,6 +92,18 @@ equals the standard is not stored — the table holds deviations, nothing else.
 - The object number links the row to the object outside the database
   (§4.3.1); inside the database the row points at the uuid of the object.
 
+### 4.3.3 The object „Ohne Objekt" — tickets without an object (WP-M18-02)
+
+The object list contains exactly one reserved row: object number `OHNE-OBJEKT`,
+name „Ohne Objekt", active, no QR token, no external id. It stands in for a
+foreign object when the office creates an internal ticket for a customer without
+a contract of the installation (`PLAN.md` §7 rule 1, ADR-0042). The row is
+seeded by a hand-written migration with a fixed UUID, is never assigned a QR
+token, is excluded from stickers and the CSV import, and cannot be soft-deleted
+through the object API. Its priority deviation is `low`
+(`object_priority_overrides`, ADR-0029): a ticket created with this object
+arrives with priority `low`.
+
 ### 4.4 `systems` — maintenance subsystems of an object
 
 | Column | Type | Rule |
@@ -189,6 +201,7 @@ of this row.
 | `title` | text, nullable | short summary filled by the office during review; the public form sends none |
 | `description` | text, nullable | free text of the report, max. 4000 characters |
 | `fault_template_keys` | text[], not null, default `{}` | multi-select of `text_templates.key` (§4.5) — machine keys, never translated text **(plan, §3)** |
+| `object_info_text` | text, nullable | free text about the object of a ticket without an object (WP-M18-02) |
 | `source` | text, not null, default `'QR'` | check over `QR`, `INTERNAL`, `API`; statistics group by source **(plan, §13)** |
 | `reported_at` | timestamptz, not null | device capture time, or server time when the clock differed (§4.8.1) |
 | `received_at` | timestamptz, not null, default `now()` | server time is authoritative **(plan, §15)** |
@@ -205,7 +218,8 @@ of this row.
 `offered_to_user_id`, `offer_escalated_at`, the work-order type and number, the
 response timestamps and `ticket_pauses` belong to the **workflow phase 4**
 (`PLAN.md` §6/§7) and arrive with that phase by `ALTER TABLE`, because no phase 2
-path writes them; the index `tickets(assigned_user_id, status)` of `PLAN.md` §6
+path writes them; `object_info_text` of §4.8 arrives in phase 18 by `ALTER TABLE`
+(WP-M18-03); the index `tickets(assigned_user_id, status)` of `PLAN.md` §6
 comes with them.
 
 Indexes: `tickets_ticket_no_key` (unique), `tickets_client_uuid_key` (unique —

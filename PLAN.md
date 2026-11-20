@@ -268,7 +268,11 @@ the previous distribution step.
 Rules:
 
 1. **Create:** QR or internal form creates `NEW` and a `created` event.
-   Notification to `office`.
+   Notification to `office`. The internal form may choose the reserved object
+   „Ohne Objekt" (`OHNE-OBJEKT`): the ticket then has no object of the
+   installation, stores the free data of the foreign object in
+   `object_info_text` and gets priority `low` through the priority deviation of
+   that object (ADR-0042).
 2. **Review:** office sets `IN_REVIEW` and `reviewed_by_user_id`. Other office
    users see who is working on it.
 3. **Work order:** office enters AA/SA type and number. Mandatory before the
@@ -3500,6 +3504,23 @@ WP-M16-06), and the same predicate keeps them out of the prepared send view —
 one list, two consumers, no channel name, no addressee and no target in a
 document of the customer. The workflow steps and the steps of the pause stay
 unframed. The phase is a single WP: **WP-M18-01**.
+
+**Tickets without an object (WP-M18-02 … WP-M18-07, phase 18).** The office asked
+for internal tickets for customers without a contract of the installation: „das
+Objekt gehört nicht zu uns, die Störung wollen wir trotzdem erfassen.“ **ADR-0042**
+decides the model: a reserved object row „Ohne Objekt" (`OHNE-OBJEKT`) stands in
+for the missing object, `tickets.object_id` stays `NOT NULL`, and the free data
+of the foreign object live in the new nullable column `object_info_text`. The
+priority deviation of the reserved object is `low` (ADR-0029), so every such
+ticket arrives with priority `low` and its deadline follows that priority. The
+object list pins the row last, the internal picker offers it, QR codes,
+stickers, the CSV import and the deletion of the object are guarded against it,
+and the statistics gain the filter `withoutObject`. The chain is **WP-M18-02**
+(the spec, ADR-0042 and the split), **WP-M18-03** (the reserved object row and
+the column), **WP-M18-04** (the API stores the field and pins the row),
+**WP-M18-05** (the internal form and the ticket view), **WP-M18-06** (the
+guards around the object) and **WP-M18-07** (the statistics filter and the
+exit criterion).
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
