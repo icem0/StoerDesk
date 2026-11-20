@@ -9,26 +9,27 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 
 ## Phases and milestones
 
-| Directory | Content                                                                       | WPs |
-| --------- | ----------------------------------------------------------------------------- | --- |
-| [m0](m0/) | Phase 0: startability, plan anchor, Docker smoke test, image publishing       | 5   |
-| [m1](m1/) | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)   | 40  |
-| [m2](m2/) | Phase 2: report online (objects, QR, report form, status page, spam, offline) | 71  |
-| [m3](m3/) | Phase 3: offline sync closure and the update control (check + deploy webhook) | 15  |
-| [m4](m4/) | Phase 4: ticket workflow online — E2E test for the complete workflow          | 1   |
-| [m5](m5/) | Phase 5: offline internal actions — queue, receipts, replay, conflicts | 9  |
-| [m7](m7/) | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link | 11 |
-| [m8](m8/) | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions | 16 |
-| [m9](m9/) | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion | 18 |
-| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault | 24 |
-| [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError` | 10 |
-| [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12 | 2 |
-| [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page | 18 |
-| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i), the admin view of the inbox (WP-M14-141 … WP-M14-141c), the assignment that names a technician (WP-M14-150 … WP-M14-150d) and the internal comment that never reaches the customer (WP-M14-149 … WP-M14-149g) and the readiness calendar that names the technician of every shift (WP-M14-151) and the milestones of the ticket view as buttons (WP-M14-153) | 128  |
-| [m15](m15/) | Phase 15: duty windows of the readiness — the plan knows a duty window per weekday beside the continuous plan (the spec and ADR-0035, the shared contracts and the generator, the API and the planner, the administration form, the exit criterion), and the windows belong to the pool (WP-M15-07 … WP-M15-07d), and the web push card names the cause of a failing test send and explains every failure with the texts of its channel (WP-M15-08, WP-M15-09), and the test send of the web push names that no device is subscribed (WP-M15-10), and the card names an incomplete VAPID trio (WP-M15-11) | 14  |
-| [m16](m16/) | Phase 16: the facelift of the interface — the accent colour (the spec and ADR-0036, the contracts and the API, the field under „Darstellung“, the accent ramp of the shell), the bell inside the header menu, the shell on a phone | 6   |
-| [m17](m17/) | Phase 17: the way of the escalation — the recipient of an escalation decides over which channel it arrives (the spec and ADR-0037, the API, the administration, the own page) | 4   |
-| [m18](m18/) | Phase 18: the entries of the house in the ticket history — the internal event types as one shared list, the frame in the colour under „Darstellung“, the prepared send view leaves them out (ADR-0038) | 1   |
+| Directory   | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | WPs |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| [m0](m0/)   | Phase 0: startability, plan anchor, Docker smoke test, image publishing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | 5   |
+| [m1](m1/)   | Phase 1: foundation (monorepo, Compose, DB, i18n, RBAC, auth, admin UI, CI)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 40  |
+| [m2](m2/)   | Phase 2: report online (objects, QR, report form, status page, spam, offline)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 71  |
+| [m3](m3/)   | Phase 3: offline sync closure and the update control (check + deploy webhook)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 15  |
+| [m4](m4/)   | Phase 4: ticket workflow online — E2E test for the complete workflow                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | 1   |
+| [m5](m5/)   | Phase 5: offline internal actions — queue, receipts, replay, conflicts                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 9   |
+| [m7](m7/)   | Phase 7: ntfy channel adapter, channel test, ntfy onboarding, outbox, drain worker, fallback chain, exit criterion, e-mail channel adapter, Telegram channel adapter, matrix and signal locale/deep link                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | 11  |
+| [m8](m8/)   | Phase 8: on-call calendar — pools, DST slots, planning, confirm/decline, swaps, ticket coupling, iCal, offline shift actions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 16  |
+| [m9](m9/)   | Phase 9: dashboard and statistics — test flag, SQL views, contracts, dashboard service/route/SSE/settings, TV display, statistics services/routes/CSV, web dashboard, statistics page, TV page, dashboard settings, exit criterion                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 18  |
+| [m10](m10/) | Phase 10: API and hardening — API keys, external object/ticket API, webhooks, OpenAPI, CSV import, privacy retention/export, backup/restore drill, exit criterion, dashboard evaluation averages, recent-usage fault catalog order, dashboard most-frequent fault                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 24  |
+| [m11](m11/) | Phase 11: detected errors — admin catalog (CRUD, archive), close with comment + detected errors, statistics `byDetectedError`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 10  |
+| [m12](m12/) | Phase 12: acceptance — criteria slice mirrored from PLAN.md §20, end-to-end acceptance suite for items 1–12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 2   |
+| [m13](m13/) | Phase 13: escalation logic — workflow stages, waiting deadlines per priority, conditions, actions, stage selection in the ticket view, the localized administration page                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | 18  |
+| [m14](m14/) | Phase 14: administration consolidation and messenger channels — the administration home disappears into the settings menu, the channels become configurable, the accounts are linked, the readiness allocation announces itself, the workflow and the escalation stages become a configurable chain (WP-M14-35 … WP-M14-44 — WP-M14-38 split into WP-M14-38a … WP-M14-38c — WP-M14-58 … WP-M14-67) and ntfy becomes an optional Compose profile (WP-M14-69 … WP-M14-72) — **closed** (WP-M14-73 … WP-M14-75) — out of band again for the office (WP-M14-76 … WP-M14-78) and the escalation offers and assigns tickets (WP-M14-79 … WP-M14-85 with the split children WP-M14-82b and WP-M14-85b), with the office reports on the ticket view and on the readiness calendar (WP-M14-86, WP-M14-87), the inbox of the internal notification layer and its bell (WP-M14-120 … WP-M14-120e, WP-M14-122, WP-M14-127) and the web-push channel of the browser (WP-M14-124 … WP-M14-126b), the ticket number without the year (WP-M14-129 … WP-M14-129c), the health of the notification channels (WP-M14-130 … WP-M14-130c), the priority of the object deviates from the standard (WP-M14-134 … WP-M14-134i), the admin view of the inbox (WP-M14-141 … WP-M14-141c), the assignment that names a technician (WP-M14-150 … WP-M14-150d) and the internal comment that never reaches the customer (WP-M14-149 … WP-M14-149g) and the readiness calendar that names the technician of every shift (WP-M14-151) and the milestones of the ticket view as buttons (WP-M14-153) | 128 |
+| [m15](m15/) | Phase 15: duty windows of the readiness — the plan knows a duty window per weekday beside the continuous plan (the spec and ADR-0035, the shared contracts and the generator, the API and the planner, the administration form, the exit criterion), and the windows belong to the pool (WP-M15-07 … WP-M15-07d), and the web push card names the cause of a failing test send and explains every failure with the texts of its channel (WP-M15-08, WP-M15-09), and the test send of the web push names that no device is subscribed (WP-M15-10), and the card names an incomplete VAPID trio (WP-M15-11)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 14  |
+| [m16](m16/) | Phase 16: the facelift of the interface — the accent colour (the spec and ADR-0036, the contracts and the API, the field under „Darstellung“, the accent ramp of the shell), the bell inside the header menu, the shell on a phone                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 6   |
+| [m17](m17/) | Phase 17: the way of the escalation — the recipient of an escalation decides over which channel it arrives (the spec and ADR-0037, the API, the administration, the own page)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 4   |
+| [m18](m18/) | Phase 18: the entries of the house in the ticket history — the internal event types as one shared list, the frame in the colour under „Darstellung“, the prepared send view leaves them out (ADR-0038)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 1   |
+| [m19](m19/) | Phase 19: the assignment of the office — one technician per ticket with a status (`offered`, `accepted`, `declined`), a configurable assignee pool, a refusal passes to the next member, the assigner is notified (ADR-0039)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 8   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -195,17 +196,17 @@ promotion, the post-promote deploy job and the Docker smoke test that no longer 
 > is queued in the same transaction as the `notification_failed` event — only when the
 > ticket has no pending row for that channel already — and the drain claims it in the same
 > run; `OutboxDrainResult` gained `fallback` with the log code `channel_fallback`.
-**WP-M7-06** (`06-phase-7-exit-criterion.md`) is **implemented** as the phase-7 exit
-criterion: `apps/api/src/notifications/__tests__/notification-exit.integration.spec.ts`
-runs the real API on a throwaway database — the only `PENDING` outbox row of a
-ticket sits on the failing signal channel, `drainOutbox` ends it `FAILED` after
-three attempts, queues the `PENDING` fallback row of the next channel of
-`escalationChain` in the same transaction and claims it in the same run, where a
-local Matrix mock answers and the row ends `SENT` — and the `GET /api/v1/tickets/:ticketNo`
-answer carries exactly one `notification_failed` (`attempts: 3`) and one
-`notification_sent` event next to the `created` event; a second drain over the terminal
-rows writes no event and no row and the last channel of the chain ends `FAILED`
-without a fallback. Phase 7 is closed, no product code changed.
+> **WP-M7-06** (`06-phase-7-exit-criterion.md`) is **implemented** as the phase-7 exit
+> criterion: `apps/api/src/notifications/__tests__/notification-exit.integration.spec.ts`
+> runs the real API on a throwaway database — the only `PENDING` outbox row of a
+> ticket sits on the failing signal channel, `drainOutbox` ends it `FAILED` after
+> three attempts, queues the `PENDING` fallback row of the next channel of
+> `escalationChain` in the same transaction and claims it in the same run, where a
+> local Matrix mock answers and the row ends `SENT` — and the `GET /api/v1/tickets/:ticketNo`
+> answer carries exactly one `notification_failed` (`attempts: 3`) and one
+> `notification_sent` event next to the `created` event; a second drain over the terminal
+> rows writes no event and no row and the last channel of the chain ends `FAILED`
+> without a fallback. Phase 7 is closed, no product code changed.
 
 **WP-M7-07** (`07-smtp-channel-adapter.md`) is **implemented** as the e-mail channel the
 phase-7 content line of `PLAN.md` §16 and `PLAN.md` §12 name: `apps/api/src/notifications/channels/email.ts`
@@ -500,7 +501,7 @@ missing link line on `/settings/notifications`; the two pages are not merged.
 out of band in phase 14, requested by the office; done).** The office reported
 `admin.channels.errors.FST_ERR_CTP_EMPTY_JSON_BODY` on the ntfy card: neither the
 test message nor the one-time code reached the API, so the target stayed
-*unverified* and produced no outbox row. Removing the separate ntfy test topic
+_unverified_ and produced no outbox row. Removing the separate ntfy test topic
 (`eb3f6d7`) also removed the request body, while the page still sent
 `content-type: application/json` — Fastify 5 rejects an empty body with that
 content type before the route runs, so the optional-body contract of §11.11 was
@@ -998,7 +999,7 @@ the people, and the dispatcher delivered a targeted escalation over ntfy only �
 and only to a recipient who had ticked ntfy for `ticket.escalated` in their own
 settings: a technician with Telegram received nothing and a technician who never
 touched the selection received nothing — silently. ADR-0037 decides the model:
-the target answers the *who*, the selection of the recipient answers the *how*; a
+the target answers the _who_, the selection of the recipient answers the _how_; a
 recipient without a selection keeps their own ntfy topic, and the channels of
 the installation belong to the `notify` action without a target — the
 broadcast. `specs/07-escalation.md` §7.5 and `specs/10-notifications.md` §11.4
@@ -1014,549 +1015,549 @@ _Open follow-ups (mandatory closure)_). The status prose above is history only.
 Update a row in the commit that adds, starts or finishes the item. Open items of the
 running phase are implemented in numeric order before the next phase starts.
 
-| WP        | Content                                                             | Status                  | WP file |
-| --------- | ------------------------------------------------------------------- | ----------------------- | ------- |
-| WP-M1-01  | monorepo workspaces, strict TS, ESLint/Prettier/Vitest              | done                    | yes     |
-| WP-M1-02  | Compose stack, `Dockerfile`, complete `.env.example`                | done                    | yes     |
-| WP-M1-03  | Drizzle base schema, `0000_base_tables`, UUID v7                    | done                    | yes     |
-| WP-M1-04  | i18n skeleton, server `t()`, `i18n:check`, lint rule                | done                    | yes     |
-| WP-M1-05  | RBAC tables, `0001_rbac_tables`, system role seed                   | done                    | yes     |
-| WP-M1-06  | Argon2id hash and the bootstrap administrator seed                  | done                    | yes     |
-| WP-M1-07  | session core and the shared auth schemas                            | done                    | yes     |
-| WP-M1-07b | `sessionPlugin`, `requireUser`, login/logout/me, limit              | done                    | yes     |
-| WP-M1-08  | effective permissions and `requirePermission`                       | done                    | yes     |
-| WP-M1-09  | admin users API (list, create, update)                              | done                    | yes     |
-| WP-M1-10  | English CI step names and governance files                          | done                    | yes     |
-| WP-M1-10b | valid GitHub issue forms with the 112-only notice                   | done                    | yes     |
-| WP-M1-10c | English `docs/` placeholders                                        | done                    | yes     |
-| WP-M1-10f | traceable CI run, job and step names                                | done                    | yes     |
-| WP-M1-10g | versioned run names for the publish chain                           | superseded by WP-M1-10h | yes     |
-| WP-M1-10h | CI on the version tag, version carried by the run name              | done                    | yes     |
-| WP-M1-10i | publish run label carries one line of "what is new"                 | done                    | yes     |
-| WP-M1-09c | `usePermission` and the admin users UI                              | done                    | yes     |
-| WP-M1-09d | admin roles UI                                                      | done                    | yes     |
-| WP-M1-09e | login form, logout button and route guard in `apps/web`             | done                    | yes     |
-| WP-M1-10d | English ADRs and `docs/DECISIONS.md`                                | done                    | yes     |
-| WP-M1-11  | `docs/REPO-MAP.md` English and current                              | done                    | yes     |
-| WP-M1-12  | Playwright smoke test "login as admin works"                        | done                    | yes     |
-| WP-M1-13  | UI layout shell with header and navigation                          | done                    | yes     |
-| WP-M1-14  | base seed keeps an existing administrator untouched                 | done                    | yes     |
-| WP-M2-00  | core object tables and demo seed                                    | done                    | yes     |
-| WP-M2-01  | object list CRUD API                                                | done                    | yes     |
-| WP-M2-02  | QR generation, regeneration, public resolution                      | done                    | yes     |
-| WP-M2-02b | QR demo tokens and daily pg-boss cleanup                            | done                    | yes     |
-| WP-M2-03  | printable QR sticker sheets (A6/A4 web print)                       | done                    | yes     |
-| WP-M1-15  | app version visible in the web shell                                | done                    | yes     |
-| WP-M1-16  | current git version in the deployment environment                   | done                    | yes     |
-| WP-M1-17  | responsive shell with a settings gear next to version               | done                    | yes     |
-| WP-M2-04  | ticket tables, events, photos and the counter                       | done                    | yes     |
-| WP-M2-04b | public `POST /api/v1/public/tickets` with idempotency               | done                    | yes     |
-| WP-M2-04c | report photo upload to the uploads volume                           | done                    | yes     |
-| WP-M2-05  | public report form UI at `/m/:token` (web)                          | done                    | yes     |
-| WP-M2-05b | photo upload with client canvas compression                         | done                    | yes     |
-| WP-M2-05c | report form smoke E2E in de and en                                  | done                    | yes     |
-| WP-M2-06  | public ticket status API by `status_token`                          | done                    | yes     |
-| WP-M2-06b | public status page at `/s/:token` (web)                             | done                    | yes     |
-| WP-M2-07  | report throttle table and suspicion detection                       | done                    | yes     |
-| WP-M2-07b | Altcha captcha API primitives                                       | done                    | yes     |
-| WP-M2-07c | spam decision on the report create path                             | done                    | yes     |
-| WP-M2-07d | honeypot field and Altcha widget in the form (web)                  | done                    | yes     |
-| WP-M2-08  | duplicate hint: open tickets and public comment                     | done                    | yes     |
-| WP-M2-09  | offline report — Dexie outbox and send flow                         | done                    | yes     |
-| WP-M2-09a | service worker and offline sync                                     | done                    | yes     |
-| WP-M2-09b | offline E2E test                                                    | done                    | yes     |
-| WP-M2-10  | phase 2 exit-criterion E2E (report → status page)                   | done                    | yes     |
-| WP-M2-11  | object list UI (read): searchable, filterable table                 | done                    | yes     |
-| WP-M2-12  | object create UI                                                    | done                    | yes     |
-| WP-M2-13  | object edit UI                                                      | done                    | yes     |
-| WP-M2-14  | object delete UI (soft delete)                                      | done                    | yes     |
-| WP-M2-15  | internal ticket creation API (server)                               | done                    | yes     |
-| WP-M2-16  | internal ticket creation UI (web)                                   | done                    | yes     |
-| WP-M2-17  | ticket list API (server)                                            | done                    | yes     |
-| WP-M2-17b | ticket list UI (web)                                                | done                    | yes     |
-| WP-M2-18a | ticket detail API (server)                                          | done                    | yes     |
-| WP-M2-18b | ticket detail UI (web)                                              | done                    | yes     |
-| WP-M2-19a | DB migration for ticket workflow columns                            | done                    | yes     |
-| WP-M2-19b | transitionTicket() state machine                                    | done                    | yes     |
-| WP-M2-19c | workflow API routes                                                 | done                    | yes     |
-| WP-M2-19d | workflow UI actions                                                 | done                    | yes     |
-| WP-M2-20  | navigation for tickets and objects                                  | done                    | yes     |
-| WP-M2-21  | ticket list filters (open, overdue) and ordering                    | done                    | yes     |
-| WP-M2-22  | start page with ticket capture as primary action                    | done                    | yes     |
-| WP-M2-23  | ticket list links and query parameters                              | done                    | yes     |
-| WP-M2-24  | administration home page                                            | done                    | yes     |
-| WP-M1-18  | publish chain: no cancelled run, correct `latest`                   | done                    | yes     |
-| WP-M1-19  | one tag per push for every commit                                   | done                    | yes     |
-| WP-M1-20  | the push command in the governance documents                        | done                    | yes     |
-| WP-M1-21  | serialised promotion of `latest`                                    | done                    | yes     |
-| WP-M1-22  | the app version reads version tags only                             | done                    | yes     |
-| WP-M1-23  | record of the login card and version display (3e1c0f8)              | done                    | yes     |
-| WP-M1-24  | record of the RBAC/admin bootstrap on API start (71fd066)           | done                    | yes     |
-| WP-M1-25  | record of the CI db tests and publish queue (3 commits)             | done                    | yes     |
-| WP-M1-26  | record of the configurable login rate limit (2 commits)             | done                    | yes     |
-| WP-M1-27  | record of the end-of-session commit rule (7e64dd1)                  | done                    | yes     |
-| WP-M1-28  | CI hardening: pre-push guard, promote gate, deploy job, smoke fails  | done                    | yes     |
-| WP-M2-25  | grouped settings menu in the shell                                  | done                    | yes     |
-| WP-M2-26  | back links in the admin pages                                       | done                    | yes     |
-| WP-M2-27  | show a hint when internal ticket creation fails                     | done                    | yes     |
-| WP-M2-28  | logo and top-level buttons in the shell header                      | done                    | yes     |
-| WP-M2-29  | branding settings API (company name)                                | done                    | yes     |
-| WP-M2-30  | branding input field in the administration                          | done                    | yes     |
-| WP-M2-31  | company name in the shell header                                    | done                    | yes     |
-| WP-M2-32  | record of the BMAcloud decision commit `a6804ed`                    | done                    | yes     |
-| WP-M2-33  | BMAcloud read-only client and its environment                       | done                    | yes     |
-| WP-M2-34  | the `bma_sync_runs` table (migration `0007`)                        | done                    | yes     |
-| WP-M2-35  | the BMAcloud sync service (mapping, conflicts)                      | done                    | yes     |
-| WP-M2-36  | BMAcloud admin API and the scheduled sync job                       | done                    | yes     |
-| WP-M2-36b | `GET /admin/bma-sync/schedule` for the page prefill                 | done                    | yes     |
-| WP-M2-37  | BMAcloud sync page in the administration                            | done                    | yes     |
-| WP-M2-38  | BMAcloud sync card on the administration home                       | done                    | yes     |
-| WP-M2-39  | external-maintained badge in the object list                        | done                    | yes     |
-| WP-M2-40  | fault template archive schema and shared contracts                  | done                    | yes     |
-| WP-M2-40b | fault template admin and public catalog API                         | done                    | yes     |
-| WP-M2-40c | fault template administration UI                                    | done                    | yes     |
-| WP-M2-40d | fault template entry on the administration home                     | done                    | yes     |
-| WP-M2-40e | public report form uses the live fault catalog                      | done                    | yes     |
-| WP-M2-40f | internal create and detail use the live fault catalog               | done                    | yes     |
-| WP-M2-41  | bootstrap standard fault types                                      | done                    | yes     |
-| WP-M2-41b | E2E fault-chip labels of the bootstrap list                         | done                    | yes     |
-| WP-M2-42  | bootstrap the standard fault types on the API start                 | done                    | yes     |
-| WP-M2-43  | self-update decision (ADR-0004), spec 18 and WP plan                | done                    | yes     |
-| WP-M2-44  | admin update page — clean PWA update (stage 1)                      | done                    | yes     |
-| WP-M2-45  | BMAcloud bearer key in `settings` and its admin routes              | done                    | yes     |
-| WP-M2-46  | the scheduled pull reads the effective bearer key                   | done                    | yes     |
-| WP-M2-47  | API-key field on the BMAcloud sync page                             | done                    | yes     |
-| WP-M2-48  | host update agent decision (ADR-0006) and work plan                 | done                    | yes     |
-| WP-M2-49  | shared contracts: `system.update` and the update schemas            | done                    | yes     |
-| WP-M2-50  | the `update_runs` table and migration `0009`                        | done                    | yes     |
-| WP-M2-51  | the update agent service core (`apps/agent`)                        | done                    | yes     |
-| WP-M2-52  | the update agent HTTP server                                        | done                    | yes     |
-| WP-M2-53  | the agent image, compose service and env wiring                     | done                    | yes     |
-| WP-M2-53b | the compose invocation of the agent and its image in the smoke test | done                    | yes     |
-| WP-M2-54  | the admin update API                                                | done                    | yes     |
-| WP-M2-55  | the host update section in the admin update page                    | done                    | yes     |
-| WP-M2-56  | documentation of the host update                                    | done                    | yes     |
-| WP-M2-57  | the status route names the reason of an unreachable agent           | done                    | yes     |
-| WP-M2-58  | the page shows why the agent is not reachable                       | done                    | yes     |
-| WP-M2-59  | the agent generates its own token (state volume)                    | done                    | yes     |
-| WP-M2-60  | the API reads the token from the state volume                       | done                    | yes     |
-| WP-M2-61  | the admin page carries the guide for the host update                | done                    | yes     |
-| WP-M2-62  | documentation of the token without the environment                  | done                    | yes     |
-| WP-M2-63  | the update availability check of the admin page                     | done                    | yes     |
-| WP-M2-64  | objects.external_type behind migration 0010                         | done                    | yes     |
-| WP-M2-65  | the BMAcloud contract knows the Anlagentyp                          | done                    | yes     |
-| WP-M2-65b | the sync writes the external system type                            | done                    | yes     |
-| WP-M2-66  | the object list shows the system type                               | done                    | yes     |
-| WP-M2-67  | the migration snapshot chain is complete again                      | done                    | yes     |
-| WP-M2-68  | the update run carries the failure output of the agent              | done                    | yes     |
-| WP-M2-69  | `update_runs.error_detail` and the API answer                       | done                    | yes     |
-| WP-M2-70  | the host update page shows the failure output                       | done                    | yes     |
-| WP-M2-71  | the host update works in panel (Arcane) deployments                 | done                    | yes     |
-| WP-M2-72  | the host update runs as a shell script without the agent            | done                    | yes     |
-| WP-M2-73  | the panel build fetches the current sources                         | done                    | yes     |
-| WP-M2-74  | the host update shows the version and starts with a button          | done                    | yes     |
-| WP-M2-75  | `ticket.delete` permission key (admin only)                         | done                    | yes     |
-| WP-M2-76  | `ticket_purges` append-only log of hard-deleted tickets             | done                    | yes     |
-| WP-M2-77  | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets            | done                    | yes     |
-| WP-M2-78  | "Endgültig löschen" button on the ticket detail page                | done                    | yes     |
-| WP-M2-80  | remove systems level from DB schema                                 | done                    | yes     |
-| WP-M2-81  | remove systems level from shared schemas                            | done                    | yes     |
-| WP-M2-82  | remove systems level from ticket API                                | done                    | yes     |
-| WP-M2-83  | remove systems level from object API                                | done                    | yes     |
-| WP-M2-84  | remove systems level from report form                               | done                    | yes     |
-| WP-M2-85  | remove systems level from internal create                           | done                    | yes     |
-| WP-M2-86  | remove systems level from object UI                                 | done                    | yes     |
-| WP-M2-87  | remove systems level from i18n                                      | done                    | yes     |
-| WP-M2-88a | remove systems level from API tests part 1                          | done                    | yes     |
-| WP-M2-88b | remove systems level from API tests part 2                          | done                    | yes     |
-| WP-M2-88c | remove systems level from web test and seed                         | done                    | yes     |
-| WP-M2-89  | public report optional title with the branding switch (backend)     | done                    | yes     |
-| WP-M2-90  | public QR resolve carries `titleEnabled`                            | done                    | yes     |
-| WP-M2-90b | branding page title checkbox                                        | done                    | yes     |
-| WP-M2-90c | report form optional title field                                    | done                    | yes     |
-| WP-M2-91  | always visible ticket detail action panel with inline fields       | done                    | yes     |
-| WP-M2-91b | mobile-first ticket list cards                                      | done                    | yes     |
-| WP-M2-92  | `users.theme` column and migration 0016                             | done                    | yes     |
-| WP-M2-92b | theme through the session and the login response                | done                    | yes     |
-| WP-M2-92c | theme in the shared schemas and in the admin user API              | done                    | yes     |
-| WP-M2-92d | theme class in the shell and light palette in styles.css            | done                    | yes     |
-| WP-M2-92e | theme select in the user settings (users page)                      | done                    | yes     |
-| WP-M2-93  | `users.given_name`/`users.family_name` and migration 0018          | done                    | yes     |
-| WP-M2-94  | name fields in the shared schemas and the admin user API            | done                    | yes     |
-| WP-M2-94b | name fields in the users page UI                                    | done                    | yes     |
-| WP-M2-95  | internal ticket creation honours the branding title switch          | done                    | yes     |
-| WP-M2-98  | reporter metadata columns and migration 0028                       | done                    | yes     |
-| WP-M2-98b | internal create accepts report time, channel and reporter kind      | done                    | yes     |
-| WP-M2-98c | internal create form captures reporter, channel and report time     | done                    | yes     |
-| WP-M2-98d | timeline shows report time and capture time                         | done                    | yes     |
-| WP-M2-98e | ticket detail shows report time, channel and reporter kind          | done                    | yes     |
-| WP-M3-01  | offline background sync matches the API path                        | done                    | yes     |
-| WP-M3-02  | the update script removes the images it replaces                    | done                    | yes     |
-| WP-M3-02b | the update agent removes the images it replaces                     | done                    | yes     |
-| WP-M3-03  | the agent start command finds the project dir on the host           | done                    | yes     |
-| WP-M3-04  | the start command pins `--project-directory` and fills `.env`       | done                    | yes     |
-| WP-M3-04b | der Startbefehl bricht ohne `docker-compose.yml` ab                 | done                    | yes     |
-| WP-M3-05  | shared error code `update_step_timeout` for self-update           | done                    | yes     |
-| WP-M3-06  | the update agent run can never hang forever                       | done                    | yes     |
-| WP-M3-07  | the update contract (spec §18, ADR-0007) and the GitHub client     | done                    | yes     |
-| WP-M3-08  | the update API: `check` and `start` with the environment keys      | done                    | yes     |
-| WP-M3-09  | the deployment configuration of the update control                  | done                    | yes     |
-| WP-M3-10  | the update menu in the shell header                                | done                    | yes     |
-| WP-M3-11  | the removal of the update agent                                   | done                    | yes     |
-| WP-M3-12  | the documentation of the new update control                        | done                    | yes     |
-| WP-M3-13  | the not found page and the error boundary of the router            | done                    | yes     |
-| WP-M3-14  | the update menu tells a lost connection from a refused webhook     | done                    | yes     |
-| WP-M3-15  | host deploy hook for the update menu (`npm run deploy:hook`)         | done                    | yes     |
-| WP-M3-16  | update.sh compares the running version, not the folder             | done                    | yes     |
-| WP-M3-17  | forced pre-migration database dump before the API starts            | done                    | yes     |
-| WP-M4-01  | Ticket workflow E2E test — complete workflow with audit trail       | done                    | yes     |
-| WP-M4-06  | fix ticket hard-delete blocked by append-only trigger               | done                    | yes     |
-| WP-M5-01  | the outbox stores queued internal actions (Dexie v2)                | done                    | yes     |
-| WP-M5-02  | `internal_action_receipts` table and migration 0013                     | done                    | yes     |
-| WP-M5-03  | `applyInternalAction`: replay-safe acknowledge/comment/decline      | done                    | yes     |
-| WP-M5-04  | `clientUuid` on the action routes + internal comment route          | done                    | yes     |
-| WP-M5-05  | the detail page queues actions offline and replays them             | done                    | yes     |
-| WP-M5-06  | conflict UI: failed and conflicting offline writes stay visible     | done                    | yes     |
-| WP-M5-07  | stale-while-revalidate cache for internal ticket reads              | done                    | yes     |
-| WP-M5-08  | offline internal actions E2E — phase 5 exit criterion               | done                    | yes     |
-| WP-M5-09  | sign-out clears the `internal-tickets` cache                        | done                    | yes     |
-| WP-M5-10  | comment POST sends its client uuid; standalone comment box           | done                    | no      |
-| WP-M5-11  | comment composer facelift and readable history entries               | done                    | no      |
-| WP-M5-12  | missing ticket event and source translations                         | done                    | no      |
-| WP-M5-13  | remaining admin error-code translations                              | done                    | no      |
-| WP-M5-14  | history actor names from the directory, not the login                | done                    | no      |
-| WP-M5-15  | history actors as name or "Extern: name"                             | done                    | no      |
-| WP-M5-16  | workflow E2E expects the actor name, not the actor kind              | done                    | yes     |
-| WP-M5-17  | the ticket view shows a write immediately                             | done                    | yes     |
-| WP-M5-18  | comment confirmation and browser spell check                          | done                    | yes     |
-| WP-M6-01  | phase-6 specification, ADR-0008 and work-package split              | done                    | yes     |
-| WP-M6-02  | shared deadline and timeline contracts                              | done                    | yes     |
-| WP-M6-03  | per-priority deadlines on ticket creation                           | done                    | yes     |
-| WP-M6-04  | `ticket_pauses` table and migration 0014                            | done                    | yes     |
-| WP-M6-05  | pause service                                                       | done                    | yes     |
-| WP-M6-06  | pause routes and acknowledge auto-close                             | done                    | yes     |
-| WP-M6-07  | escalation rule definitions                                         | done                    | yes     |
-| WP-M6-08  | escalation scan and event writer                                    | done                    | yes     |
-| WP-M6-09  | pg-boss escalation job                                              | done                    | yes     |
-| WP-M6-10  | timeline and pause data in the ticket API                           | done                    | yes     |
-| WP-M6-11  | web timeline bar and pause controls                                 | done                    | yes     |
-| WP-M6-12  | list mini timeline and remaining time                               | done                    | yes     |
-| WP-M6-13 | phase-6 exit criterion and record   | done                    | yes     |
-| WP-M6-14  | deadline and reaction settings contract (shared schema)             | done                    | yes     |
-| WP-M6-14b | deadline settings route `GET/PUT /api/v1/settings/deadlines`        | done                    | yes     |
-| WP-M6-15  | deadline admin page `DeadlinesPage` (de/en)                         | done                    | yes     |
-| WP-M6-16  | `/admin/deadlines` route and the available menu entry               | done                    | yes     |
-| WP-M6-17  | effective deadline hours readable with `ticket.create`             | done                    | yes     |
-| WP-M6-18  | priority select shows the configured deadline                      | done                    | yes     |
-| WP-M7-01  | ntfy channel adapter and its env wiring                             | done                    | yes     |
-| WP-M7-02  | ntfy channel unit test                                              | done                    | yes     |
-| WP-M7-03  | ntfy QR code, onboarding and i18n label                             | done                    | yes     |
-| WP-M7-04  | outbox rows in the ticket create transaction                        | done                    | yes     |
-| WP-M7-04b | the localized ntfy action label                                   | done                    | yes     |
-| WP-M7-04c | the outbox drain worker, its retries and its pg-boss schedule      | done                    | yes     |
-| WP-M7-05  | the notification channel fallback chain                                       | done                    | yes     |
-| WP-M7-06  | the phase-7 exit criterion and record                                         | done                    | yes     |
-| WP-M7-07  | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)               | done                    | yes     |
-| WP-M7-08  | the Telegram channel adapter over the Bot API (`fetch`)                | done                    | yes     |
-| WP-M7-09  | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)        | done                    | yes     |
-| WP-M7-10  | matrix and signal channels — locale, deep link and the localized label | done                    | yes     |
-| WP-M8-01  | phase-8 specification, ADR-0011 and the work-package split          | done                    | yes     |
-| WP-M8-02  | on-call tables and migration 0020                                   | done                    | yes     |
-| WP-M8-03  | DST-safe on-call slot calculation                                   | done                    | yes     |
-| WP-M8-04  | on-call pool API                                                    | done                    | yes     |
-| WP-M8-05  | on-call settings and shift planning service                         | done                    | yes     |
-| WP-M8-06  | on-call shift and settings routes                                   | done                    | yes     |
-| WP-M8-07  | shift confirm and decline                                           | done                    | yes     |
-| WP-M8-08  | swap request and atomic acceptance service                          | done                    | yes     |
-| WP-M8-09  | swap routes                                                         | done                    | yes     |
-| WP-M8-10  | on-call ticket coupling and warnings                                | done                    | yes     |
-| WP-M8-11  | on-call offer timeout to the group                                  | done                    | yes     |
-| WP-M8-12  | personal on-call iCal feed                                          | done                    | yes     |
-| WP-M8-13  | on-call administration page                                         | done                    | yes     |
-| WP-M8-13b | pending swap list route `GET /api/v1/oncall/swaps`                  | done                    | yes     |
-| WP-M8-14  | my on-call shifts page                                              | done                    | yes     |
-| WP-M8-14b | on-call self-service read routes                                    | done                    | yes     |
-| WP-M8-15  | offline shift confirm and decline                                   | done                    | yes     |
-| WP-M8-16  | phase-8 exit criterion and record                                   | done                    | yes     |
-| WP-M9-01  | dashboard and statistics specification, ADR-0012 and phase-9 split  | done                    | yes     |
-| WP-M9-02  | `tickets.is_test` flag                                              | done                    | yes     |
-| WP-M9-03  | statistics SQL views                                                | done                    | yes     |
-| WP-M9-04  | shared dashboard and statistics contracts                           | done                    | yes     |
-| WP-M9-05  | dashboard service                                                   | done                    | yes     |
-| WP-M9-06  | dashboard route                                                     | done                    | yes     |
-| WP-M9-07  | dashboard SSE stream                                                | done                    | yes     |
-| WP-M9-08  | dashboard settings                                                  | done                    | yes     |
-| WP-M9-09  | TV display route                                                    | done                    | yes     |
-| WP-M9-10  | statistics: reaction times and frequency                           | done                    | yes     |
-| WP-M9-11  | statistics: objects and compliance                                 | done                    | yes     |
-| WP-M9-12  | statistics routes                                                   | done                    | yes     |
-| WP-M9-13  | statistics CSV export                                               | done                    | yes     |
-| WP-M9-14  | web dashboard                                                       | done                    | yes     |
-| WP-M9-15  | web statistics page                                                 | done                    | yes     |
-| WP-M9-16  | web TV page                                                         | done                    | yes     |
-| WP-M9-17  | web dashboard settings                                              | done                    | yes     |
-| WP-M9-18  | phase-9 exit criterion and record                                   | done                    | yes     |
-| WP-M9-19  | dashboard tiles without the burning-now list                        | done                    | yes     |
-| WP-M9-20  | ticket list order: open tickets by the deadline                     | done                    | yes     |
-| WP-M9-21  | ticket list rows with the timeline in the middle                    | done                    | yes     |
-| WP-M9-22  | milestone markers on the timeline bar                               | done                    | yes     |
-| WP-M9-23  | one reading point for the branding title switch                     | done                    | yes     |
-| WP-M9-24  | ticket view honours the branding title switch                     | done                    | yes     |
-| WP-M9-25  | internal creation form honours the branding title switch          | done                    | yes     |
-| WP-M9-26  | record: object list facelift (commit `d1e34eb` without a WP)      | done                    | yes     |
-| WP-M9-27  | ticket_purges append-only and reason length cap (SEC-013)         | done                    | yes     |
-| WP-M9-28  | shared LIKE escaping for ticket and object search (SEC-012)       | done                    | yes     |
-| WP-M9-29  | ticket number validated at the entry points (SEC-015)             | done                    | yes     |
-| WP-M9-30  | workflow, delete, photo and comment route hardening               | done                    | yes     |
-| WP-M9-31  | report photo preflight before the ticket transaction (SEC-014)    | done                    | yes     |
-| WP-M9-32  | branding logo magic-byte check (SEC-019)                          | done                    | yes     |
-| WP-M9-33  | iCal feed expiry, active recheck, log redaction (SEC-005/011)     | done                    | yes     |
-| WP-M9-34  | SESSION_SECRET min length + logout cookie presence (SEC-016/006)  | done                    | yes     |
-| WP-M9-35  | remove the dead prefix on the on-call pools plugin (SEC-010)      | done                    | yes     |
-| WP-M9-36  | public comment route: status token + throttle (SEC-004, API)      | done                    | yes     |
-| WP-M9-37  | public comment web flow: honeypot + captcha + mismatch notice     | done                    | yes     |
-| WP-M9-38  | BMAcloud credentials GET needs object.import (SEC-009)            | done                    | yes     |
-| WP-M9-39  | the dashboard stream captures its baseline before the first snapshot | done                  | yes     |
-| WP-M10-01 | API and hardening specification, ADR-0013/0014 and phase-10 split | done                    | yes     |
-| WP-M10-02 | API-key table, shared contracts and migration                     | done                    | yes     |
-| WP-M10-03 | admin API-key routes and hashing service                          | done                    | yes     |
-| WP-M10-04 | admin API-key page                                                | done                    | yes     |
-| WP-M10-05 | bearer API-key authentication and scope guard                     | done                    | yes     |
-| WP-M10-06 | OpenAPI document under `/api/docs`                                | done                    | yes     |
-| WP-M10-07 | external object API with updated-since, upsert and bulk           | done                    | yes     |
-| WP-M10-08 | external ticket API and API-key work-order update                 | done                    | yes     |
-| WP-M10-09 | webhook endpoints, table and admin API                            | done                    | yes     |
-| WP-M10-10 | webhook delivery worker with HMAC and backoff                     | done                    | yes     |
-| WP-M10-11 | webhook admin page and OpenAPI paths                              | done                    | yes     |
-| WP-M10-12 | CSV parsing, mapping and preview service                          | done                    | yes     |
-| WP-M10-13 | CSV import preview and commit routes                             | done                    | yes     |
-| WP-M10-14 | CSV import page                                                   | done                    | yes     |
-| WP-M10-15 | privacy retention job                                             | done                    | yes     |
-| WP-M10-16 | personal-data export and erasure routes                           | done                    | yes     |
-| WP-M10-17 | uploads backup, restore procedure and drill                       | done                    | yes     |
-| WP-M10-18 | phase-10 exit criterion and record                                | done                    | yes     |
-| WP-M10-19 | dashboard evaluations: average durations, no worst value          | done                    | yes     |
-| WP-M10-19b | evaluation block on the dashboard start page                     | done                    | yes     |
+| WP         | Content                                                                     | Status                  | WP file |
+| ---------- | --------------------------------------------------------------------------- | ----------------------- | ------- |
+| WP-M1-01   | monorepo workspaces, strict TS, ESLint/Prettier/Vitest                      | done                    | yes     |
+| WP-M1-02   | Compose stack, `Dockerfile`, complete `.env.example`                        | done                    | yes     |
+| WP-M1-03   | Drizzle base schema, `0000_base_tables`, UUID v7                            | done                    | yes     |
+| WP-M1-04   | i18n skeleton, server `t()`, `i18n:check`, lint rule                        | done                    | yes     |
+| WP-M1-05   | RBAC tables, `0001_rbac_tables`, system role seed                           | done                    | yes     |
+| WP-M1-06   | Argon2id hash and the bootstrap administrator seed                          | done                    | yes     |
+| WP-M1-07   | session core and the shared auth schemas                                    | done                    | yes     |
+| WP-M1-07b  | `sessionPlugin`, `requireUser`, login/logout/me, limit                      | done                    | yes     |
+| WP-M1-08   | effective permissions and `requirePermission`                               | done                    | yes     |
+| WP-M1-09   | admin users API (list, create, update)                                      | done                    | yes     |
+| WP-M1-10   | English CI step names and governance files                                  | done                    | yes     |
+| WP-M1-10b  | valid GitHub issue forms with the 112-only notice                           | done                    | yes     |
+| WP-M1-10c  | English `docs/` placeholders                                                | done                    | yes     |
+| WP-M1-10f  | traceable CI run, job and step names                                        | done                    | yes     |
+| WP-M1-10g  | versioned run names for the publish chain                                   | superseded by WP-M1-10h | yes     |
+| WP-M1-10h  | CI on the version tag, version carried by the run name                      | done                    | yes     |
+| WP-M1-10i  | publish run label carries one line of "what is new"                         | done                    | yes     |
+| WP-M1-09c  | `usePermission` and the admin users UI                                      | done                    | yes     |
+| WP-M1-09d  | admin roles UI                                                              | done                    | yes     |
+| WP-M1-09e  | login form, logout button and route guard in `apps/web`                     | done                    | yes     |
+| WP-M1-10d  | English ADRs and `docs/DECISIONS.md`                                        | done                    | yes     |
+| WP-M1-11   | `docs/REPO-MAP.md` English and current                                      | done                    | yes     |
+| WP-M1-12   | Playwright smoke test "login as admin works"                                | done                    | yes     |
+| WP-M1-13   | UI layout shell with header and navigation                                  | done                    | yes     |
+| WP-M1-14   | base seed keeps an existing administrator untouched                         | done                    | yes     |
+| WP-M2-00   | core object tables and demo seed                                            | done                    | yes     |
+| WP-M2-01   | object list CRUD API                                                        | done                    | yes     |
+| WP-M2-02   | QR generation, regeneration, public resolution                              | done                    | yes     |
+| WP-M2-02b  | QR demo tokens and daily pg-boss cleanup                                    | done                    | yes     |
+| WP-M2-03   | printable QR sticker sheets (A6/A4 web print)                               | done                    | yes     |
+| WP-M1-15   | app version visible in the web shell                                        | done                    | yes     |
+| WP-M1-16   | current git version in the deployment environment                           | done                    | yes     |
+| WP-M1-17   | responsive shell with a settings gear next to version                       | done                    | yes     |
+| WP-M2-04   | ticket tables, events, photos and the counter                               | done                    | yes     |
+| WP-M2-04b  | public `POST /api/v1/public/tickets` with idempotency                       | done                    | yes     |
+| WP-M2-04c  | report photo upload to the uploads volume                                   | done                    | yes     |
+| WP-M2-05   | public report form UI at `/m/:token` (web)                                  | done                    | yes     |
+| WP-M2-05b  | photo upload with client canvas compression                                 | done                    | yes     |
+| WP-M2-05c  | report form smoke E2E in de and en                                          | done                    | yes     |
+| WP-M2-06   | public ticket status API by `status_token`                                  | done                    | yes     |
+| WP-M2-06b  | public status page at `/s/:token` (web)                                     | done                    | yes     |
+| WP-M2-07   | report throttle table and suspicion detection                               | done                    | yes     |
+| WP-M2-07b  | Altcha captcha API primitives                                               | done                    | yes     |
+| WP-M2-07c  | spam decision on the report create path                                     | done                    | yes     |
+| WP-M2-07d  | honeypot field and Altcha widget in the form (web)                          | done                    | yes     |
+| WP-M2-08   | duplicate hint: open tickets and public comment                             | done                    | yes     |
+| WP-M2-09   | offline report — Dexie outbox and send flow                                 | done                    | yes     |
+| WP-M2-09a  | service worker and offline sync                                             | done                    | yes     |
+| WP-M2-09b  | offline E2E test                                                            | done                    | yes     |
+| WP-M2-10   | phase 2 exit-criterion E2E (report → status page)                           | done                    | yes     |
+| WP-M2-11   | object list UI (read): searchable, filterable table                         | done                    | yes     |
+| WP-M2-12   | object create UI                                                            | done                    | yes     |
+| WP-M2-13   | object edit UI                                                              | done                    | yes     |
+| WP-M2-14   | object delete UI (soft delete)                                              | done                    | yes     |
+| WP-M2-15   | internal ticket creation API (server)                                       | done                    | yes     |
+| WP-M2-16   | internal ticket creation UI (web)                                           | done                    | yes     |
+| WP-M2-17   | ticket list API (server)                                                    | done                    | yes     |
+| WP-M2-17b  | ticket list UI (web)                                                        | done                    | yes     |
+| WP-M2-18a  | ticket detail API (server)                                                  | done                    | yes     |
+| WP-M2-18b  | ticket detail UI (web)                                                      | done                    | yes     |
+| WP-M2-19a  | DB migration for ticket workflow columns                                    | done                    | yes     |
+| WP-M2-19b  | transitionTicket() state machine                                            | done                    | yes     |
+| WP-M2-19c  | workflow API routes                                                         | done                    | yes     |
+| WP-M2-19d  | workflow UI actions                                                         | done                    | yes     |
+| WP-M2-20   | navigation for tickets and objects                                          | done                    | yes     |
+| WP-M2-21   | ticket list filters (open, overdue) and ordering                            | done                    | yes     |
+| WP-M2-22   | start page with ticket capture as primary action                            | done                    | yes     |
+| WP-M2-23   | ticket list links and query parameters                                      | done                    | yes     |
+| WP-M2-24   | administration home page                                                    | done                    | yes     |
+| WP-M1-18   | publish chain: no cancelled run, correct `latest`                           | done                    | yes     |
+| WP-M1-19   | one tag per push for every commit                                           | done                    | yes     |
+| WP-M1-20   | the push command in the governance documents                                | done                    | yes     |
+| WP-M1-21   | serialised promotion of `latest`                                            | done                    | yes     |
+| WP-M1-22   | the app version reads version tags only                                     | done                    | yes     |
+| WP-M1-23   | record of the login card and version display (3e1c0f8)                      | done                    | yes     |
+| WP-M1-24   | record of the RBAC/admin bootstrap on API start (71fd066)                   | done                    | yes     |
+| WP-M1-25   | record of the CI db tests and publish queue (3 commits)                     | done                    | yes     |
+| WP-M1-26   | record of the configurable login rate limit (2 commits)                     | done                    | yes     |
+| WP-M1-27   | record of the end-of-session commit rule (7e64dd1)                          | done                    | yes     |
+| WP-M1-28   | CI hardening: pre-push guard, promote gate, deploy job, smoke fails         | done                    | yes     |
+| WP-M2-25   | grouped settings menu in the shell                                          | done                    | yes     |
+| WP-M2-26   | back links in the admin pages                                               | done                    | yes     |
+| WP-M2-27   | show a hint when internal ticket creation fails                             | done                    | yes     |
+| WP-M2-28   | logo and top-level buttons in the shell header                              | done                    | yes     |
+| WP-M2-29   | branding settings API (company name)                                        | done                    | yes     |
+| WP-M2-30   | branding input field in the administration                                  | done                    | yes     |
+| WP-M2-31   | company name in the shell header                                            | done                    | yes     |
+| WP-M2-32   | record of the BMAcloud decision commit `a6804ed`                            | done                    | yes     |
+| WP-M2-33   | BMAcloud read-only client and its environment                               | done                    | yes     |
+| WP-M2-34   | the `bma_sync_runs` table (migration `0007`)                                | done                    | yes     |
+| WP-M2-35   | the BMAcloud sync service (mapping, conflicts)                              | done                    | yes     |
+| WP-M2-36   | BMAcloud admin API and the scheduled sync job                               | done                    | yes     |
+| WP-M2-36b  | `GET /admin/bma-sync/schedule` for the page prefill                         | done                    | yes     |
+| WP-M2-37   | BMAcloud sync page in the administration                                    | done                    | yes     |
+| WP-M2-38   | BMAcloud sync card on the administration home                               | done                    | yes     |
+| WP-M2-39   | external-maintained badge in the object list                                | done                    | yes     |
+| WP-M2-40   | fault template archive schema and shared contracts                          | done                    | yes     |
+| WP-M2-40b  | fault template admin and public catalog API                                 | done                    | yes     |
+| WP-M2-40c  | fault template administration UI                                            | done                    | yes     |
+| WP-M2-40d  | fault template entry on the administration home                             | done                    | yes     |
+| WP-M2-40e  | public report form uses the live fault catalog                              | done                    | yes     |
+| WP-M2-40f  | internal create and detail use the live fault catalog                       | done                    | yes     |
+| WP-M2-41   | bootstrap standard fault types                                              | done                    | yes     |
+| WP-M2-41b  | E2E fault-chip labels of the bootstrap list                                 | done                    | yes     |
+| WP-M2-42   | bootstrap the standard fault types on the API start                         | done                    | yes     |
+| WP-M2-43   | self-update decision (ADR-0004), spec 18 and WP plan                        | done                    | yes     |
+| WP-M2-44   | admin update page — clean PWA update (stage 1)                              | done                    | yes     |
+| WP-M2-45   | BMAcloud bearer key in `settings` and its admin routes                      | done                    | yes     |
+| WP-M2-46   | the scheduled pull reads the effective bearer key                           | done                    | yes     |
+| WP-M2-47   | API-key field on the BMAcloud sync page                                     | done                    | yes     |
+| WP-M2-48   | host update agent decision (ADR-0006) and work plan                         | done                    | yes     |
+| WP-M2-49   | shared contracts: `system.update` and the update schemas                    | done                    | yes     |
+| WP-M2-50   | the `update_runs` table and migration `0009`                                | done                    | yes     |
+| WP-M2-51   | the update agent service core (`apps/agent`)                                | done                    | yes     |
+| WP-M2-52   | the update agent HTTP server                                                | done                    | yes     |
+| WP-M2-53   | the agent image, compose service and env wiring                             | done                    | yes     |
+| WP-M2-53b  | the compose invocation of the agent and its image in the smoke test         | done                    | yes     |
+| WP-M2-54   | the admin update API                                                        | done                    | yes     |
+| WP-M2-55   | the host update section in the admin update page                            | done                    | yes     |
+| WP-M2-56   | documentation of the host update                                            | done                    | yes     |
+| WP-M2-57   | the status route names the reason of an unreachable agent                   | done                    | yes     |
+| WP-M2-58   | the page shows why the agent is not reachable                               | done                    | yes     |
+| WP-M2-59   | the agent generates its own token (state volume)                            | done                    | yes     |
+| WP-M2-60   | the API reads the token from the state volume                               | done                    | yes     |
+| WP-M2-61   | the admin page carries the guide for the host update                        | done                    | yes     |
+| WP-M2-62   | documentation of the token without the environment                          | done                    | yes     |
+| WP-M2-63   | the update availability check of the admin page                             | done                    | yes     |
+| WP-M2-64   | objects.external_type behind migration 0010                                 | done                    | yes     |
+| WP-M2-65   | the BMAcloud contract knows the Anlagentyp                                  | done                    | yes     |
+| WP-M2-65b  | the sync writes the external system type                                    | done                    | yes     |
+| WP-M2-66   | the object list shows the system type                                       | done                    | yes     |
+| WP-M2-67   | the migration snapshot chain is complete again                              | done                    | yes     |
+| WP-M2-68   | the update run carries the failure output of the agent                      | done                    | yes     |
+| WP-M2-69   | `update_runs.error_detail` and the API answer                               | done                    | yes     |
+| WP-M2-70   | the host update page shows the failure output                               | done                    | yes     |
+| WP-M2-71   | the host update works in panel (Arcane) deployments                         | done                    | yes     |
+| WP-M2-72   | the host update runs as a shell script without the agent                    | done                    | yes     |
+| WP-M2-73   | the panel build fetches the current sources                                 | done                    | yes     |
+| WP-M2-74   | the host update shows the version and starts with a button                  | done                    | yes     |
+| WP-M2-75   | `ticket.delete` permission key (admin only)                                 | done                    | yes     |
+| WP-M2-76   | `ticket_purges` append-only log of hard-deleted tickets                     | done                    | yes     |
+| WP-M2-77   | `DELETE /api/v1/tickets/:ticketNo` for cancelled tickets                    | done                    | yes     |
+| WP-M2-78   | "Endgültig löschen" button on the ticket detail page                        | done                    | yes     |
+| WP-M2-80   | remove systems level from DB schema                                         | done                    | yes     |
+| WP-M2-81   | remove systems level from shared schemas                                    | done                    | yes     |
+| WP-M2-82   | remove systems level from ticket API                                        | done                    | yes     |
+| WP-M2-83   | remove systems level from object API                                        | done                    | yes     |
+| WP-M2-84   | remove systems level from report form                                       | done                    | yes     |
+| WP-M2-85   | remove systems level from internal create                                   | done                    | yes     |
+| WP-M2-86   | remove systems level from object UI                                         | done                    | yes     |
+| WP-M2-87   | remove systems level from i18n                                              | done                    | yes     |
+| WP-M2-88a  | remove systems level from API tests part 1                                  | done                    | yes     |
+| WP-M2-88b  | remove systems level from API tests part 2                                  | done                    | yes     |
+| WP-M2-88c  | remove systems level from web test and seed                                 | done                    | yes     |
+| WP-M2-89   | public report optional title with the branding switch (backend)             | done                    | yes     |
+| WP-M2-90   | public QR resolve carries `titleEnabled`                                    | done                    | yes     |
+| WP-M2-90b  | branding page title checkbox                                                | done                    | yes     |
+| WP-M2-90c  | report form optional title field                                            | done                    | yes     |
+| WP-M2-91   | always visible ticket detail action panel with inline fields                | done                    | yes     |
+| WP-M2-91b  | mobile-first ticket list cards                                              | done                    | yes     |
+| WP-M2-92   | `users.theme` column and migration 0016                                     | done                    | yes     |
+| WP-M2-92b  | theme through the session and the login response                            | done                    | yes     |
+| WP-M2-92c  | theme in the shared schemas and in the admin user API                       | done                    | yes     |
+| WP-M2-92d  | theme class in the shell and light palette in styles.css                    | done                    | yes     |
+| WP-M2-92e  | theme select in the user settings (users page)                              | done                    | yes     |
+| WP-M2-93   | `users.given_name`/`users.family_name` and migration 0018                   | done                    | yes     |
+| WP-M2-94   | name fields in the shared schemas and the admin user API                    | done                    | yes     |
+| WP-M2-94b  | name fields in the users page UI                                            | done                    | yes     |
+| WP-M2-95   | internal ticket creation honours the branding title switch                  | done                    | yes     |
+| WP-M2-98   | reporter metadata columns and migration 0028                                | done                    | yes     |
+| WP-M2-98b  | internal create accepts report time, channel and reporter kind              | done                    | yes     |
+| WP-M2-98c  | internal create form captures reporter, channel and report time             | done                    | yes     |
+| WP-M2-98d  | timeline shows report time and capture time                                 | done                    | yes     |
+| WP-M2-98e  | ticket detail shows report time, channel and reporter kind                  | done                    | yes     |
+| WP-M3-01   | offline background sync matches the API path                                | done                    | yes     |
+| WP-M3-02   | the update script removes the images it replaces                            | done                    | yes     |
+| WP-M3-02b  | the update agent removes the images it replaces                             | done                    | yes     |
+| WP-M3-03   | the agent start command finds the project dir on the host                   | done                    | yes     |
+| WP-M3-04   | the start command pins `--project-directory` and fills `.env`               | done                    | yes     |
+| WP-M3-04b  | der Startbefehl bricht ohne `docker-compose.yml` ab                         | done                    | yes     |
+| WP-M3-05   | shared error code `update_step_timeout` for self-update                     | done                    | yes     |
+| WP-M3-06   | the update agent run can never hang forever                                 | done                    | yes     |
+| WP-M3-07   | the update contract (spec §18, ADR-0007) and the GitHub client              | done                    | yes     |
+| WP-M3-08   | the update API: `check` and `start` with the environment keys               | done                    | yes     |
+| WP-M3-09   | the deployment configuration of the update control                          | done                    | yes     |
+| WP-M3-10   | the update menu in the shell header                                         | done                    | yes     |
+| WP-M3-11   | the removal of the update agent                                             | done                    | yes     |
+| WP-M3-12   | the documentation of the new update control                                 | done                    | yes     |
+| WP-M3-13   | the not found page and the error boundary of the router                     | done                    | yes     |
+| WP-M3-14   | the update menu tells a lost connection from a refused webhook              | done                    | yes     |
+| WP-M3-15   | host deploy hook for the update menu (`npm run deploy:hook`)                | done                    | yes     |
+| WP-M3-16   | update.sh compares the running version, not the folder                      | done                    | yes     |
+| WP-M3-17   | forced pre-migration database dump before the API starts                    | done                    | yes     |
+| WP-M4-01   | Ticket workflow E2E test — complete workflow with audit trail               | done                    | yes     |
+| WP-M4-06   | fix ticket hard-delete blocked by append-only trigger                       | done                    | yes     |
+| WP-M5-01   | the outbox stores queued internal actions (Dexie v2)                        | done                    | yes     |
+| WP-M5-02   | `internal_action_receipts` table and migration 0013                         | done                    | yes     |
+| WP-M5-03   | `applyInternalAction`: replay-safe acknowledge/comment/decline              | done                    | yes     |
+| WP-M5-04   | `clientUuid` on the action routes + internal comment route                  | done                    | yes     |
+| WP-M5-05   | the detail page queues actions offline and replays them                     | done                    | yes     |
+| WP-M5-06   | conflict UI: failed and conflicting offline writes stay visible             | done                    | yes     |
+| WP-M5-07   | stale-while-revalidate cache for internal ticket reads                      | done                    | yes     |
+| WP-M5-08   | offline internal actions E2E — phase 5 exit criterion                       | done                    | yes     |
+| WP-M5-09   | sign-out clears the `internal-tickets` cache                                | done                    | yes     |
+| WP-M5-10   | comment POST sends its client uuid; standalone comment box                  | done                    | no      |
+| WP-M5-11   | comment composer facelift and readable history entries                      | done                    | no      |
+| WP-M5-12   | missing ticket event and source translations                                | done                    | no      |
+| WP-M5-13   | remaining admin error-code translations                                     | done                    | no      |
+| WP-M5-14   | history actor names from the directory, not the login                       | done                    | no      |
+| WP-M5-15   | history actors as name or "Extern: name"                                    | done                    | no      |
+| WP-M5-16   | workflow E2E expects the actor name, not the actor kind                     | done                    | yes     |
+| WP-M5-17   | the ticket view shows a write immediately                                   | done                    | yes     |
+| WP-M5-18   | comment confirmation and browser spell check                                | done                    | yes     |
+| WP-M6-01   | phase-6 specification, ADR-0008 and work-package split                      | done                    | yes     |
+| WP-M6-02   | shared deadline and timeline contracts                                      | done                    | yes     |
+| WP-M6-03   | per-priority deadlines on ticket creation                                   | done                    | yes     |
+| WP-M6-04   | `ticket_pauses` table and migration 0014                                    | done                    | yes     |
+| WP-M6-05   | pause service                                                               | done                    | yes     |
+| WP-M6-06   | pause routes and acknowledge auto-close                                     | done                    | yes     |
+| WP-M6-07   | escalation rule definitions                                                 | done                    | yes     |
+| WP-M6-08   | escalation scan and event writer                                            | done                    | yes     |
+| WP-M6-09   | pg-boss escalation job                                                      | done                    | yes     |
+| WP-M6-10   | timeline and pause data in the ticket API                                   | done                    | yes     |
+| WP-M6-11   | web timeline bar and pause controls                                         | done                    | yes     |
+| WP-M6-12   | list mini timeline and remaining time                                       | done                    | yes     |
+| WP-M6-13   | phase-6 exit criterion and record                                           | done                    | yes     |
+| WP-M6-14   | deadline and reaction settings contract (shared schema)                     | done                    | yes     |
+| WP-M6-14b  | deadline settings route `GET/PUT /api/v1/settings/deadlines`                | done                    | yes     |
+| WP-M6-15   | deadline admin page `DeadlinesPage` (de/en)                                 | done                    | yes     |
+| WP-M6-16   | `/admin/deadlines` route and the available menu entry                       | done                    | yes     |
+| WP-M6-17   | effective deadline hours readable with `ticket.create`                      | done                    | yes     |
+| WP-M6-18   | priority select shows the configured deadline                               | done                    | yes     |
+| WP-M7-01   | ntfy channel adapter and its env wiring                                     | done                    | yes     |
+| WP-M7-02   | ntfy channel unit test                                                      | done                    | yes     |
+| WP-M7-03   | ntfy QR code, onboarding and i18n label                                     | done                    | yes     |
+| WP-M7-04   | outbox rows in the ticket create transaction                                | done                    | yes     |
+| WP-M7-04b  | the localized ntfy action label                                             | done                    | yes     |
+| WP-M7-04c  | the outbox drain worker, its retries and its pg-boss schedule               | done                    | yes     |
+| WP-M7-05   | the notification channel fallback chain                                     | done                    | yes     |
+| WP-M7-06   | the phase-7 exit criterion and record                                       | done                    | yes     |
+| WP-M7-07   | the e-mail channel adapter over SMTP (nodemailer, ADR-0009)                 | done                    | yes     |
+| WP-M7-08   | the Telegram channel adapter over the Bot API (`fetch`)                     | done                    | yes     |
+| WP-M7-09   | the Web Push (VAPID) channel adapter over `web-push` (ADR-0010)             | done                    | yes     |
+| WP-M7-10   | matrix and signal channels — locale, deep link and the localized label      | done                    | yes     |
+| WP-M8-01   | phase-8 specification, ADR-0011 and the work-package split                  | done                    | yes     |
+| WP-M8-02   | on-call tables and migration 0020                                           | done                    | yes     |
+| WP-M8-03   | DST-safe on-call slot calculation                                           | done                    | yes     |
+| WP-M8-04   | on-call pool API                                                            | done                    | yes     |
+| WP-M8-05   | on-call settings and shift planning service                                 | done                    | yes     |
+| WP-M8-06   | on-call shift and settings routes                                           | done                    | yes     |
+| WP-M8-07   | shift confirm and decline                                                   | done                    | yes     |
+| WP-M8-08   | swap request and atomic acceptance service                                  | done                    | yes     |
+| WP-M8-09   | swap routes                                                                 | done                    | yes     |
+| WP-M8-10   | on-call ticket coupling and warnings                                        | done                    | yes     |
+| WP-M8-11   | on-call offer timeout to the group                                          | done                    | yes     |
+| WP-M8-12   | personal on-call iCal feed                                                  | done                    | yes     |
+| WP-M8-13   | on-call administration page                                                 | done                    | yes     |
+| WP-M8-13b  | pending swap list route `GET /api/v1/oncall/swaps`                          | done                    | yes     |
+| WP-M8-14   | my on-call shifts page                                                      | done                    | yes     |
+| WP-M8-14b  | on-call self-service read routes                                            | done                    | yes     |
+| WP-M8-15   | offline shift confirm and decline                                           | done                    | yes     |
+| WP-M8-16   | phase-8 exit criterion and record                                           | done                    | yes     |
+| WP-M9-01   | dashboard and statistics specification, ADR-0012 and phase-9 split          | done                    | yes     |
+| WP-M9-02   | `tickets.is_test` flag                                                      | done                    | yes     |
+| WP-M9-03   | statistics SQL views                                                        | done                    | yes     |
+| WP-M9-04   | shared dashboard and statistics contracts                                   | done                    | yes     |
+| WP-M9-05   | dashboard service                                                           | done                    | yes     |
+| WP-M9-06   | dashboard route                                                             | done                    | yes     |
+| WP-M9-07   | dashboard SSE stream                                                        | done                    | yes     |
+| WP-M9-08   | dashboard settings                                                          | done                    | yes     |
+| WP-M9-09   | TV display route                                                            | done                    | yes     |
+| WP-M9-10   | statistics: reaction times and frequency                                    | done                    | yes     |
+| WP-M9-11   | statistics: objects and compliance                                          | done                    | yes     |
+| WP-M9-12   | statistics routes                                                           | done                    | yes     |
+| WP-M9-13   | statistics CSV export                                                       | done                    | yes     |
+| WP-M9-14   | web dashboard                                                               | done                    | yes     |
+| WP-M9-15   | web statistics page                                                         | done                    | yes     |
+| WP-M9-16   | web TV page                                                                 | done                    | yes     |
+| WP-M9-17   | web dashboard settings                                                      | done                    | yes     |
+| WP-M9-18   | phase-9 exit criterion and record                                           | done                    | yes     |
+| WP-M9-19   | dashboard tiles without the burning-now list                                | done                    | yes     |
+| WP-M9-20   | ticket list order: open tickets by the deadline                             | done                    | yes     |
+| WP-M9-21   | ticket list rows with the timeline in the middle                            | done                    | yes     |
+| WP-M9-22   | milestone markers on the timeline bar                                       | done                    | yes     |
+| WP-M9-23   | one reading point for the branding title switch                             | done                    | yes     |
+| WP-M9-24   | ticket view honours the branding title switch                               | done                    | yes     |
+| WP-M9-25   | internal creation form honours the branding title switch                    | done                    | yes     |
+| WP-M9-26   | record: object list facelift (commit `d1e34eb` without a WP)                | done                    | yes     |
+| WP-M9-27   | ticket_purges append-only and reason length cap (SEC-013)                   | done                    | yes     |
+| WP-M9-28   | shared LIKE escaping for ticket and object search (SEC-012)                 | done                    | yes     |
+| WP-M9-29   | ticket number validated at the entry points (SEC-015)                       | done                    | yes     |
+| WP-M9-30   | workflow, delete, photo and comment route hardening                         | done                    | yes     |
+| WP-M9-31   | report photo preflight before the ticket transaction (SEC-014)              | done                    | yes     |
+| WP-M9-32   | branding logo magic-byte check (SEC-019)                                    | done                    | yes     |
+| WP-M9-33   | iCal feed expiry, active recheck, log redaction (SEC-005/011)               | done                    | yes     |
+| WP-M9-34   | SESSION_SECRET min length + logout cookie presence (SEC-016/006)            | done                    | yes     |
+| WP-M9-35   | remove the dead prefix on the on-call pools plugin (SEC-010)                | done                    | yes     |
+| WP-M9-36   | public comment route: status token + throttle (SEC-004, API)                | done                    | yes     |
+| WP-M9-37   | public comment web flow: honeypot + captcha + mismatch notice               | done                    | yes     |
+| WP-M9-38   | BMAcloud credentials GET needs object.import (SEC-009)                      | done                    | yes     |
+| WP-M9-39   | the dashboard stream captures its baseline before the first snapshot        | done                    | yes     |
+| WP-M10-01  | API and hardening specification, ADR-0013/0014 and phase-10 split           | done                    | yes     |
+| WP-M10-02  | API-key table, shared contracts and migration                               | done                    | yes     |
+| WP-M10-03  | admin API-key routes and hashing service                                    | done                    | yes     |
+| WP-M10-04  | admin API-key page                                                          | done                    | yes     |
+| WP-M10-05  | bearer API-key authentication and scope guard                               | done                    | yes     |
+| WP-M10-06  | OpenAPI document under `/api/docs`                                          | done                    | yes     |
+| WP-M10-07  | external object API with updated-since, upsert and bulk                     | done                    | yes     |
+| WP-M10-08  | external ticket API and API-key work-order update                           | done                    | yes     |
+| WP-M10-09  | webhook endpoints, table and admin API                                      | done                    | yes     |
+| WP-M10-10  | webhook delivery worker with HMAC and backoff                               | done                    | yes     |
+| WP-M10-11  | webhook admin page and OpenAPI paths                                        | done                    | yes     |
+| WP-M10-12  | CSV parsing, mapping and preview service                                    | done                    | yes     |
+| WP-M10-13  | CSV import preview and commit routes                                        | done                    | yes     |
+| WP-M10-14  | CSV import page                                                             | done                    | yes     |
+| WP-M10-15  | privacy retention job                                                       | done                    | yes     |
+| WP-M10-16  | personal-data export and erasure routes                                     | done                    | yes     |
+| WP-M10-17  | uploads backup, restore procedure and drill                                 | done                    | yes     |
+| WP-M10-18  | phase-10 exit criterion and record                                          | done                    | yes     |
+| WP-M10-19  | dashboard evaluations: average durations, no worst value                    | done                    | yes     |
+| WP-M10-19b | evaluation block on the dashboard start page                                | done                    | yes     |
 | WP-M10-30  | the open tickets of the snapshot carry the mini timeline and the last event | done                    | yes     |
-| WP-M10-31  | one list of the open tickets for the dashboard and the wall display    | done                    | yes     |
-| WP-M10-32  | the start page shows the statistics and the open tickets               | done                    | yes     |
-| WP-M10-33  | the readiness calendar of the office                                   | done                    | yes     |
-| WP-M10-34  | the on-call page shows the calendar and the own readiness              | done                    | yes     |
-| WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                         | done                    | yes     |
+| WP-M10-31  | one list of the open tickets for the dashboard and the wall display         | done                    | yes     |
+| WP-M10-32  | the start page shows the statistics and the open tickets                    | done                    | yes     |
+| WP-M10-33  | the readiness calendar of the office                                        | done                    | yes     |
+| WP-M10-34  | the on-call page shows the calendar and the own readiness                   | done                    | yes     |
+| WP-M10-35  | "Bereitschaft" becomes a menu entry of its own                              | done                    | yes     |
 
-| WP-M10-36  | one display for the dashboard and the wall monitor, links off on the wall | done                  | yes     |
+| WP-M10-36 | one display for the dashboard and the wall monitor, links off on the wall | done | yes |
 
-| WP-M10-40  | shell header: logo left, menu centred, mobile tab strip                 | done                    | yes     |
-| WP-M10-41  | readiness calendar: two month grids, KW column, state colours           | done                    | yes     |
-| WP-M10-20 | fault catalog ordered by recent usage in the report and office forms | done                    | yes     |
-| WP-M10-20b | fault catalog management screen keeps its alphabetical order    | done                    | yes     |
-| WP-M10-21 | dashboard snapshot carries the most frequent fault              | done                    | yes     |
-| WP-M10-21b | most frequent fault on the dashboard start page                | done                    | yes     |
-| WP-M11-11  | ticket detail names the reported fault type                      | done                    | yes     |
-| WP-M11-12  | the internal report-time warning is German again                | done                    | yes     |
-| WP-M11-01  | detected errors — specification, ADR and phase-11 split        | done                    | yes     |
-| WP-M11-02  | `detected_errors`-Tabelle und `tickets.detected_error_keys`    | done                    | yes     |
-| WP-M11-03  | API CRUD `/api/v1/detected-errors`                             | done                    | yes     |
-| WP-M11-04  | Close-Route akzeptiert Kommentar und festgestellte Fehler      | done                    | yes     |
-| WP-M11-05  | Statistik: `byDetectedError` und View-Erweiterung              | done                    | yes     |
-| WP-M11-06  | Admin-UI `DetectedErrorsPage` (CRUD, archivieren)              | done                    | yes     |
-| WP-M11-07  | Ticket-Detail Close-Panel mit festgestellten Fehlern           | done                    | yes     |
-| WP-M11-08  | Statistik-UI `byDetectedError`-Chart                           | done                    | yes     |
-| WP-M11-09  | Integrationstests (API, Close, Statistik)                      | done                    | yes     |
-| WP-M11-10  | Phase-11 Exit-Kriterium und Record                             | done                    | yes     |
-| WP-M12-01  | acceptance criteria slice and phase-12 split                     | done                    | yes     |
-| WP-M12-02  | acceptance end-to-end suite for items 1–12                      | done                    | yes     |
-| WP-M12-03  | escalation-stage catalog — shared contract and settings API     | done                    | yes     |
-| WP-M12-04  | admin UI for escalation stages                                  | done                    | yes     |
-| WP-M12-05  | manual escalation write API                                     | done                    | yes     |
-| WP-M12-06  | ticket detail — menu removed, escalation section added          | done                    | yes     |
-| WP-M12-07  | settings overview page `/settings`, grouped by topic                | done                    | yes     |
-| WP-M12-08  | shell gear opens the settings page — dropdown removed             | done                    | yes     |
-| WP-M12-09  | ticket detail — e-mail icon and cancel in the header, no back button | done                  | yes     |
-| WP-M13-01  | escalation stages as the workflow milestones — spec, ADR-0017, phase split | done                  | yes     |
-| WP-M13-02  | shared contracts of the escalation configuration                   | done                    | yes     |
-| WP-M13-03  | the escalation tables and the migration `0031`                     | done                    | yes     |
-| WP-M13-04  | the seed of the stages and the rules                              | done                    | yes     |
-| WP-M13-05  | the configuration API of the escalation                           | done                    | yes     |
-| WP-M13-06  | the engine on the database rules                                 | done                    | yes     |
-| WP-M13-07a | the webhook event type of the escalation                          | done                    | yes     |
-| WP-M13-07b | the actions of a fired rule (notify, webhook, history)            | done                    | yes     |
-| WP-M13-08  | the reachable stages of a ticket                                 | done                    | yes     |
-| WP-M13-09  | the stage selection replaces the workflow buttons                 | done                 | yes     |
-| WP-M13-10  | the removal of the old escalation API                            | done                 | yes     |
-| WP-M13-11  | the removal of the old shared contracts                          | done                 | yes     |
-| WP-M13-12  | the removal of the old administration page                       | done                 | yes     |
-| WP-M13-13  | the cleanup of the texts and of the legacy settings              | done                 | yes     |
-| WP-M13-14  | the administration page of the escalation                        | done                 | yes     |
-| WP-M13-15  | the rule editor and the condition builder                        | done                 | yes     |
-| WP-M13-16  | the action editor                                               | done                 | yes     |
-| WP-M13-17  | the exit criterion of the escalation phase                       | done                 | yes     |
-| WP-M13-18  | the escalation page speaks the language of the interface          | done                 | yes     |
-| WP-M14-01  | the administration home disappears — its links live in the settings menu | done              | yes     |
-| WP-M14-02  | the administration pages lead back to the settings menu           | done                    | yes     |
-| WP-M14-03  | the messenger channels — spec, ADR-0019, ADR-0020, phase split     | done                    | yes     |
-| WP-M14-04  | the configuration of the channels in the database (migration 0033)  | done                   | yes     |
-| WP-M14-05  | the API of the channel configuration                               | done                   | yes     |
-| WP-M14-06  | the administration page of the channels                            | done                   | yes     |
-| WP-M14-07  | the content of a message and the urgency of ntfy                   | done                   | yes     |
-| WP-M14-08  | the accounts of the users                                          | done                   | yes     |
-| WP-M14-09  | the Telegram linking via a one-time code                           | done                   | yes     |
-| WP-M14-10  | the own channels — the page and the Telegram section               | done                   | yes     |
-| WP-M14-11  | the Matrix account linking                                         | done                   | yes     |
-| WP-M14-12  | the Matrix section of the settings page                            | done                   | yes     |
-| WP-M14-13  | the ntfy onboarding with the QR of the subscription                | done                   | yes     |
-| WP-M14-14  | the WhatsApp Web bridge as a channel                               | done                   | yes     |
-| WP-M14-15  | the chats of the bridge and the WhatsApp Web account               | done                   | yes     |
-| WP-M14-16  | the selection of the channels per event type — the API             | done                   | yes     |
-| WP-M14-17  | the selection of the channels per event type in the settings page  | done                   | yes     |
-| WP-M14-18  | the mandatory minimum channels of critical tickets                 | done                   | yes     |
-| WP-M14-19  | the warning on a failed channel                                    | done                   | yes     |
-| WP-M14-20  | the notifications of the internal ticket creation                  | done                   | yes     |
-| WP-M14-21  | the exit criterion of the messenger channels                        | done                    | yes     |
-| WP-M14-22  | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes     |
-| WP-M14-23  | the escalation administration fully localized (out of band)                 | done    | yes     |
-| WP-M14-24  | the escalation administration explains itself (out of band)                 | done    | yes     |
-| WP-M14-25  | stage names label the reached-stage condition values (out of band)          | done    | yes     |
-| WP-M14-26  | the readiness allocation — spec, ADR-0021 and the split of the chain       | done    | yes     |
-| WP-M14-27  | the outbox and the preferences know the readiness (migration 0039)          | done    | yes     |
-| WP-M14-28  | the readiness message, the shift enqueue and the shift branch of the drain | done    | yes     |
-| WP-M14-29  | the allocation and a swap request enqueue their rows                       | done    | yes     |
-| WP-M14-30  | an assigned readiness can be accepted (confirmable `DRAFT`)                 | done    | yes     |
-| WP-M14-31  | an unconfirmed readiness reminds once                                       | done    | yes     |
-| WP-M14-32  | the readiness selection of the technician in the settings page          | done      | yes     |
-| WP-M14-34  | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes     |
-| WP-M14-33  | the ntfy deep link of the QR carries the host (out of band)               | done    | yes     |
-| WP-M14-35  | configurable ticket statuses in the database (replaces hardcoded enum)    | done    | yes     |
-| WP-M14-36  | ticket status management API (CRUD for statuses)                          | done    | yes     |
-| WP-M14-37  | ticket status management UI (admin page for statuses)                     | done    | yes     |
-| WP-M14-38  | the ticket transitions — spec, ADR-0025 and the split of the chain         | done    | yes     |
-| WP-M14-38a | the transition table in the database (migration 0041)                    | done    | yes     |
-| WP-M14-38b | the transition contracts and the transition service                      | done    | yes     |
-| WP-M14-38c | the workflow engine reads the transition table                           | done    | yes     |
-| WP-M14-39  | the ticket transition administration API (CRUD)                             | done    | yes     |
-| WP-M14-39b | ticket transition management UI (admin page for transitions)              | done    | yes     |
-| WP-M14-40  | status_change as escalation action — the database layer (migration 0042)  | done    | yes     |
-| WP-M14-40b | the status_change contract and the engine (config jsonb, dispatcher)       | done    | yes     |
-| WP-M14-40c | status_change in the escalation administration UI                          | done    | yes     |
-| WP-M14-41  | time-based conditions for escalation rules (night/day workflows)          | done      | yes     |
-| WP-M14-42  | work order as free text (API core: migration, schema, workflow, detail)   | done    | yes     |
-| WP-M14-43  | work order as free text (UI + i18n)                                       | done    | yes     |
-| WP-M14-44  | work order text column in the ticket list API                             | done    | yes     |
-| WP-M14-45  | ntfy delivers the selected events to the topic of the user (out of band)  | done    | yes     |
-| WP-M14-46  | the ntfy QR survives a missing Telegram bot (out of band)                 | done    | yes     |
-| WP-M14-47  | ntfy counts as configured only after the code came back (out of band)     | done    | yes     |
-| WP-M14-48  | the administration confirms the ntfy code (out of band)                   | done    | yes     |
-| WP-M14-49  | a failed ntfy test send explains itself (out of band)                     | done    | yes     |
-| WP-M14-50  | every ntfy error code explains itself (out of band)                       | done    | yes     |
-| WP-M14-51  | the ntfy access token reaches every send (out of band)                    | done    | yes     |
-| WP-M14-52  | ntfy 401 and 403 name the access token (out of band)                      | done    | yes     |
-| WP-M14-53  | the ntfy request carries a timeout (out of band)                          | done    | yes     |
-| WP-M14-54  | the own channels page links to the channel administration (out of band)   | done    | yes     |
-| WP-M14-55  | the test send and the verification request carry a JSON body (out of band) | done    | yes     |
-| WP-M14-56  | a rejected test request names its status and code (out of band)          | done    | yes     |
-| WP-M14-57  | the copied ntfy curl is one shell command (out of band)                  | done    | yes     |
-| WP-M14-58  | the escalation stage chain — spec, ADR-0023 and the split (out of band) | done    | yes     |
-| WP-M14-59  | the stage chain in the database (migration 0037) (out of band)         | done    | yes     |
-| WP-M14-60  | the shared contracts and the chain validator (out of band)             | done    | yes     |
-| WP-M14-61  | the seed carries the stage chain (out of band)                         | done    | yes     |
-| WP-M14-62  | the stage set is replaced as one validated chain (out of band)         | done    | yes     |
-| WP-M14-63  | the escalation engine reads the stage chain (out of band)              | done    | yes     |
-| WP-M14-64  | the available stages come from the stage chain (out of band)           | done    | yes     |
-| WP-M14-65  | the administration adds, removes and chains stages (out of band)       | done    | yes     |
-| WP-M14-66  | the stage tab of the administration is tested (out of band)            | done    | yes     |
-| WP-M14-67  | the configurable stage chain satisfies its criterion (out of band)     | done    | yes     |
-| WP-M14-68  | every notification message links to its ticket (out of band)      | done    | yes     |
-| WP-M14-69  | ntfy as an optional Compose profile (ADR-0024)                         | done    | yes     |
-| WP-M14-70  | setup script for the ntfy access control list and token (ADR-0024)    | done    | yes     |
-| WP-M14-71  | Cloudflare Tunnel profile for ntfy (ADR-0024)                          | done    | yes     |
-| WP-M14-72  | random ntfy topic per user and backup of the ntfy volume (ADR-0024)    | done    | yes     |
-| WP-M14-72b | the subscription QR shows the stored ntfy topic (follow-up of 72)       | done    | yes     |
-| WP-M14-73  | the phase-14 record is closed (the stale status fields, the roadmap)     | done    | yes     |
-| WP-M14-74  | the tunnel token does not stop the core stack (the Docker smoke test)    | done    | yes     |
-| WP-M14-75  | the tunnel dependency is a valid compose schema (the Docker smoke test)  | done    | yes     |
-| WP-M14-76  | the office work-order route accepts the free text (out of band)          | done    | yes     |
-| WP-M14-77  | the ticket view names the reason of a failed action (out of band)       | done    | yes     |
-| WP-M14-78  | the offered stages come from the transition table (out of band)         | done    | yes     |
-| WP-M14-79  | the offer and assign actions — spec, ADR-0026 and the split (out of band)  | done    | yes     |
-| WP-M14-80  | the offer and assign actions in the database (0043, 0044) (out of band)    | done    | yes     |
-| WP-M14-81  | the shared contracts of the offer and assign actions (out of band)         | done    | yes     |
-| WP-M14-82  | the engine offers and assigns a ticket (out of band)                      | done    | yes     |
-| WP-M14-82b | the offer names the responsible person and the technicians are notified     | done    | yes     |
-| WP-M14-83  | the configuration service knows the target of an action (out of band)      | done    | yes     |
-| WP-M14-84  | the administration offers and assigns (out of band)                        | done    | yes     |
-| WP-M14-85  | the ticket view names the assignees (out of band)                          | done    | yes     |
-| WP-M14-85b | the ticket view test proves the assignees (split child of 85)              | done    | yes     |
-| WP-M14-86  | the acknowledge result is a selection (follow-up of 78)                    | done    | yes     |
-| WP-M14-87  | the readiness calendar names state, technician and pool (out of band)   | done    | yes     |
-| WP-M14-88  | the notify action selects a recipient and an ntfy priority (out of band) | done    | yes     |
-| WP-M14-89  | the notify engine delivers to the selected recipient (out of band)       | done    | yes     |
-| WP-M14-90  | the administration selects the notify recipient and priority (out of band) | done    | yes     |
-| WP-M14-91  | the first escalation stage fires when a ticket is created (out of band)  | done    | yes     |
-| WP-M14-92  | the first escalation stage is never deleted (out of band)                | done    | yes     |
-| WP-M14-93a | the note action carries no key (split child of 93, out of band)          | done    | yes     |
-| WP-M14-93b | the note action writes a ticket comment (split child of 93, out of band)  | done    | yes     |
-| WP-M14-93c | the tests and the spec prove the note action (split child of 93, out of band) | done    | yes     |
-| WP-M14-94  | the time sequence of a rule gets its own frame (out of band)            | done    | yes     |
-| WP-M14-94b | the module map names the frame of the time sequence (split child of 94)  | done    | yes     |
-| WP-M14-95  | the module map names the escalation changes of phase 14 (out of band)    | done    | yes     |
-| WP-M14-96  | the API tests follow the numbered rules (out of band)                    | done    | yes     |
-| WP-M14-97  | the remaining API tests follow the numbered rules (out of band)          | done    | yes     |
-| WP-M14-98  | the contract knows the numbered keys (out of band)                      | done    | yes     |
-| WP-M14-99  | the migration numbers the rules and their actions (out of band)         | done    | yes     |
-| WP-M14-99b | the test of the numbering migration (split child of 99, out of band)   | done    | yes     |
-| WP-M14-100 | the service derives the keys (out of band)                             | done    | yes     |
-| WP-M14-101 | the administration numbers the rules (out of band)                       | done    | yes     |
-| WP-M14-102 | the action editor numbers the actions (out of band)                      | done    | yes     |
-| WP-M14-103 | the spec and the module map name the taxonomy (out of band)              | done    | yes     |
-| WP-M14-104 | the shared test follows the numbered defaults (out of band)              | done    | yes     |
-| WP-M14-105 | a chain has one first stage (out of band)                               | done    | yes     |
-| WP-M14-106 | the service protects only the first stage (out of band)                  | done    | yes     |
-| WP-M14-107 | the administration protects the first stage only (out of band)          | done    | yes     |
-| WP-M14-108 | the spec names the single first stage (out of band)                     | done    | yes     |
-| WP-M14-109 | the action editor deletes a chosen action (out of band)                   | done    | yes     |
-| WP-M14-110 | the rule form shows no number (out of band)                          | done    | yes     |
-| WP-M14-111 | the action editor shows the number as a label (out of band)            | done    | yes     |
-| WP-M14-112 | the condition builder shows the mode below the conditions (out of band) | done   | yes     |
-| WP-M14-113 | the shared contract knows the clock of a stage (out of band)            | done    | yes     |
-| WP-M14-114 | the engine and the service use the clock of a stage (out of band)      | done    | yes     |
-| WP-M14-115 | the API tests follow the chain of the defaults (out of band)         | done    | yes     |
-| WP-M14-116 | the shared contract knows the stage NEW (out of band)                  | done    | yes     |
-| WP-M14-117 | the migration adds the stage NEW (out of band)                         | done    | yes     |
-| WP-M14-118 | the spec and the module map name the stage NEW (out of band)         | done    | yes     |
+| WP-M10-40 | shell header: logo left, menu centred, mobile tab strip | done | yes |
+| WP-M10-41 | readiness calendar: two month grids, KW column, state colours | done | yes |
+| WP-M10-20 | fault catalog ordered by recent usage in the report and office forms | done | yes |
+| WP-M10-20b | fault catalog management screen keeps its alphabetical order | done | yes |
+| WP-M10-21 | dashboard snapshot carries the most frequent fault | done | yes |
+| WP-M10-21b | most frequent fault on the dashboard start page | done | yes |
+| WP-M11-11 | ticket detail names the reported fault type | done | yes |
+| WP-M11-12 | the internal report-time warning is German again | done | yes |
+| WP-M11-01 | detected errors — specification, ADR and phase-11 split | done | yes |
+| WP-M11-02 | `detected_errors`-Tabelle und `tickets.detected_error_keys` | done | yes |
+| WP-M11-03 | API CRUD `/api/v1/detected-errors` | done | yes |
+| WP-M11-04 | Close-Route akzeptiert Kommentar und festgestellte Fehler | done | yes |
+| WP-M11-05 | Statistik: `byDetectedError` und View-Erweiterung | done | yes |
+| WP-M11-06 | Admin-UI `DetectedErrorsPage` (CRUD, archivieren) | done | yes |
+| WP-M11-07 | Ticket-Detail Close-Panel mit festgestellten Fehlern | done | yes |
+| WP-M11-08 | Statistik-UI `byDetectedError`-Chart | done | yes |
+| WP-M11-09 | Integrationstests (API, Close, Statistik) | done | yes |
+| WP-M11-10 | Phase-11 Exit-Kriterium und Record | done | yes |
+| WP-M12-01 | acceptance criteria slice and phase-12 split | done | yes |
+| WP-M12-02 | acceptance end-to-end suite for items 1–12 | done | yes |
+| WP-M12-03 | escalation-stage catalog — shared contract and settings API | done | yes |
+| WP-M12-04 | admin UI for escalation stages | done | yes |
+| WP-M12-05 | manual escalation write API | done | yes |
+| WP-M12-06 | ticket detail — menu removed, escalation section added | done | yes |
+| WP-M12-07 | settings overview page `/settings`, grouped by topic | done | yes |
+| WP-M12-08 | shell gear opens the settings page — dropdown removed | done | yes |
+| WP-M12-09 | ticket detail — e-mail icon and cancel in the header, no back button | done | yes |
+| WP-M13-01 | escalation stages as the workflow milestones — spec, ADR-0017, phase split | done | yes |
+| WP-M13-02 | shared contracts of the escalation configuration | done | yes |
+| WP-M13-03 | the escalation tables and the migration `0031` | done | yes |
+| WP-M13-04 | the seed of the stages and the rules | done | yes |
+| WP-M13-05 | the configuration API of the escalation | done | yes |
+| WP-M13-06 | the engine on the database rules | done | yes |
+| WP-M13-07a | the webhook event type of the escalation | done | yes |
+| WP-M13-07b | the actions of a fired rule (notify, webhook, history) | done | yes |
+| WP-M13-08 | the reachable stages of a ticket | done | yes |
+| WP-M13-09 | the stage selection replaces the workflow buttons | done | yes |
+| WP-M13-10 | the removal of the old escalation API | done | yes |
+| WP-M13-11 | the removal of the old shared contracts | done | yes |
+| WP-M13-12 | the removal of the old administration page | done | yes |
+| WP-M13-13 | the cleanup of the texts and of the legacy settings | done | yes |
+| WP-M13-14 | the administration page of the escalation | done | yes |
+| WP-M13-15 | the rule editor and the condition builder | done | yes |
+| WP-M13-16 | the action editor | done | yes |
+| WP-M13-17 | the exit criterion of the escalation phase | done | yes |
+| WP-M13-18 | the escalation page speaks the language of the interface | done | yes |
+| WP-M14-01 | the administration home disappears — its links live in the settings menu | done | yes |
+| WP-M14-02 | the administration pages lead back to the settings menu | done | yes |
+| WP-M14-03 | the messenger channels — spec, ADR-0019, ADR-0020, phase split | done | yes |
+| WP-M14-04 | the configuration of the channels in the database (migration 0033) | done | yes |
+| WP-M14-05 | the API of the channel configuration | done | yes |
+| WP-M14-06 | the administration page of the channels | done | yes |
+| WP-M14-07 | the content of a message and the urgency of ntfy | done | yes |
+| WP-M14-08 | the accounts of the users | done | yes |
+| WP-M14-09 | the Telegram linking via a one-time code | done | yes |
+| WP-M14-10 | the own channels — the page and the Telegram section | done | yes |
+| WP-M14-11 | the Matrix account linking | done | yes |
+| WP-M14-12 | the Matrix section of the settings page | done | yes |
+| WP-M14-13 | the ntfy onboarding with the QR of the subscription | done | yes |
+| WP-M14-14 | the WhatsApp Web bridge as a channel | done | yes |
+| WP-M14-15 | the chats of the bridge and the WhatsApp Web account | done | yes |
+| WP-M14-16 | the selection of the channels per event type — the API | done | yes |
+| WP-M14-17 | the selection of the channels per event type in the settings page | done | yes |
+| WP-M14-18 | the mandatory minimum channels of critical tickets | done | yes |
+| WP-M14-19 | the warning on a failed channel | done | yes |
+| WP-M14-20 | the notifications of the internal ticket creation | done | yes |
+| WP-M14-21 | the exit criterion of the messenger channels | done | yes |
+| WP-M14-22 | the prepared send view replaces the e-mail and the pdf views (out of band) | done | yes |
+| WP-M14-23 | the escalation administration fully localized (out of band) | done | yes |
+| WP-M14-24 | the escalation administration explains itself (out of band) | done | yes |
+| WP-M14-25 | stage names label the reached-stage condition values (out of band) | done | yes |
+| WP-M14-26 | the readiness allocation — spec, ADR-0021 and the split of the chain | done | yes |
+| WP-M14-27 | the outbox and the preferences know the readiness (migration 0039) | done | yes |
+| WP-M14-28 | the readiness message, the shift enqueue and the shift branch of the drain | done | yes |
+| WP-M14-29 | the allocation and a swap request enqueue their rows | done | yes |
+| WP-M14-30 | an assigned readiness can be accepted (confirmable `DRAFT`) | done | yes |
+| WP-M14-31 | an unconfirmed readiness reminds once | done | yes |
+| WP-M14-32 | the readiness selection of the technician in the settings page | done | yes |
+| WP-M14-34 | the prepared send view offers an HTML copy instead of the e-mail button (out of band) | done | yes |
+| WP-M14-33 | the ntfy deep link of the QR carries the host (out of band) | done | yes |
+| WP-M14-35 | configurable ticket statuses in the database (replaces hardcoded enum) | done | yes |
+| WP-M14-36 | ticket status management API (CRUD for statuses) | done | yes |
+| WP-M14-37 | ticket status management UI (admin page for statuses) | done | yes |
+| WP-M14-38 | the ticket transitions — spec, ADR-0025 and the split of the chain | done | yes |
+| WP-M14-38a | the transition table in the database (migration 0041) | done | yes |
+| WP-M14-38b | the transition contracts and the transition service | done | yes |
+| WP-M14-38c | the workflow engine reads the transition table | done | yes |
+| WP-M14-39 | the ticket transition administration API (CRUD) | done | yes |
+| WP-M14-39b | ticket transition management UI (admin page for transitions) | done | yes |
+| WP-M14-40 | status_change as escalation action — the database layer (migration 0042) | done | yes |
+| WP-M14-40b | the status_change contract and the engine (config jsonb, dispatcher) | done | yes |
+| WP-M14-40c | status_change in the escalation administration UI | done | yes |
+| WP-M14-41 | time-based conditions for escalation rules (night/day workflows) | done | yes |
+| WP-M14-42 | work order as free text (API core: migration, schema, workflow, detail) | done | yes |
+| WP-M14-43 | work order as free text (UI + i18n) | done | yes |
+| WP-M14-44 | work order text column in the ticket list API | done | yes |
+| WP-M14-45 | ntfy delivers the selected events to the topic of the user (out of band) | done | yes |
+| WP-M14-46 | the ntfy QR survives a missing Telegram bot (out of band) | done | yes |
+| WP-M14-47 | ntfy counts as configured only after the code came back (out of band) | done | yes |
+| WP-M14-48 | the administration confirms the ntfy code (out of band) | done | yes |
+| WP-M14-49 | a failed ntfy test send explains itself (out of band) | done | yes |
+| WP-M14-50 | every ntfy error code explains itself (out of band) | done | yes |
+| WP-M14-51 | the ntfy access token reaches every send (out of band) | done | yes |
+| WP-M14-52 | ntfy 401 and 403 name the access token (out of band) | done | yes |
+| WP-M14-53 | the ntfy request carries a timeout (out of band) | done | yes |
+| WP-M14-54 | the own channels page links to the channel administration (out of band) | done | yes |
+| WP-M14-55 | the test send and the verification request carry a JSON body (out of band) | done | yes |
+| WP-M14-56 | a rejected test request names its status and code (out of band) | done | yes |
+| WP-M14-57 | the copied ntfy curl is one shell command (out of band) | done | yes |
+| WP-M14-58 | the escalation stage chain — spec, ADR-0023 and the split (out of band) | done | yes |
+| WP-M14-59 | the stage chain in the database (migration 0037) (out of band) | done | yes |
+| WP-M14-60 | the shared contracts and the chain validator (out of band) | done | yes |
+| WP-M14-61 | the seed carries the stage chain (out of band) | done | yes |
+| WP-M14-62 | the stage set is replaced as one validated chain (out of band) | done | yes |
+| WP-M14-63 | the escalation engine reads the stage chain (out of band) | done | yes |
+| WP-M14-64 | the available stages come from the stage chain (out of band) | done | yes |
+| WP-M14-65 | the administration adds, removes and chains stages (out of band) | done | yes |
+| WP-M14-66 | the stage tab of the administration is tested (out of band) | done | yes |
+| WP-M14-67 | the configurable stage chain satisfies its criterion (out of band) | done | yes |
+| WP-M14-68 | every notification message links to its ticket (out of band) | done | yes |
+| WP-M14-69 | ntfy as an optional Compose profile (ADR-0024) | done | yes |
+| WP-M14-70 | setup script for the ntfy access control list and token (ADR-0024) | done | yes |
+| WP-M14-71 | Cloudflare Tunnel profile for ntfy (ADR-0024) | done | yes |
+| WP-M14-72 | random ntfy topic per user and backup of the ntfy volume (ADR-0024) | done | yes |
+| WP-M14-72b | the subscription QR shows the stored ntfy topic (follow-up of 72) | done | yes |
+| WP-M14-73 | the phase-14 record is closed (the stale status fields, the roadmap) | done | yes |
+| WP-M14-74 | the tunnel token does not stop the core stack (the Docker smoke test) | done | yes |
+| WP-M14-75 | the tunnel dependency is a valid compose schema (the Docker smoke test) | done | yes |
+| WP-M14-76 | the office work-order route accepts the free text (out of band) | done | yes |
+| WP-M14-77 | the ticket view names the reason of a failed action (out of band) | done | yes |
+| WP-M14-78 | the offered stages come from the transition table (out of band) | done | yes |
+| WP-M14-79 | the offer and assign actions — spec, ADR-0026 and the split (out of band) | done | yes |
+| WP-M14-80 | the offer and assign actions in the database (0043, 0044) (out of band) | done | yes |
+| WP-M14-81 | the shared contracts of the offer and assign actions (out of band) | done | yes |
+| WP-M14-82 | the engine offers and assigns a ticket (out of band) | done | yes |
+| WP-M14-82b | the offer names the responsible person and the technicians are notified | done | yes |
+| WP-M14-83 | the configuration service knows the target of an action (out of band) | done | yes |
+| WP-M14-84 | the administration offers and assigns (out of band) | done | yes |
+| WP-M14-85 | the ticket view names the assignees (out of band) | done | yes |
+| WP-M14-85b | the ticket view test proves the assignees (split child of 85) | done | yes |
+| WP-M14-86 | the acknowledge result is a selection (follow-up of 78) | done | yes |
+| WP-M14-87 | the readiness calendar names state, technician and pool (out of band) | done | yes |
+| WP-M14-88 | the notify action selects a recipient and an ntfy priority (out of band) | done | yes |
+| WP-M14-89 | the notify engine delivers to the selected recipient (out of band) | done | yes |
+| WP-M14-90 | the administration selects the notify recipient and priority (out of band) | done | yes |
+| WP-M14-91 | the first escalation stage fires when a ticket is created (out of band) | done | yes |
+| WP-M14-92 | the first escalation stage is never deleted (out of band) | done | yes |
+| WP-M14-93a | the note action carries no key (split child of 93, out of band) | done | yes |
+| WP-M14-93b | the note action writes a ticket comment (split child of 93, out of band) | done | yes |
+| WP-M14-93c | the tests and the spec prove the note action (split child of 93, out of band) | done | yes |
+| WP-M14-94 | the time sequence of a rule gets its own frame (out of band) | done | yes |
+| WP-M14-94b | the module map names the frame of the time sequence (split child of 94) | done | yes |
+| WP-M14-95 | the module map names the escalation changes of phase 14 (out of band) | done | yes |
+| WP-M14-96 | the API tests follow the numbered rules (out of band) | done | yes |
+| WP-M14-97 | the remaining API tests follow the numbered rules (out of band) | done | yes |
+| WP-M14-98 | the contract knows the numbered keys (out of band) | done | yes |
+| WP-M14-99 | the migration numbers the rules and their actions (out of band) | done | yes |
+| WP-M14-99b | the test of the numbering migration (split child of 99, out of band) | done | yes |
+| WP-M14-100 | the service derives the keys (out of band) | done | yes |
+| WP-M14-101 | the administration numbers the rules (out of band) | done | yes |
+| WP-M14-102 | the action editor numbers the actions (out of band) | done | yes |
+| WP-M14-103 | the spec and the module map name the taxonomy (out of band) | done | yes |
+| WP-M14-104 | the shared test follows the numbered defaults (out of band) | done | yes |
+| WP-M14-105 | a chain has one first stage (out of band) | done | yes |
+| WP-M14-106 | the service protects only the first stage (out of band) | done | yes |
+| WP-M14-107 | the administration protects the first stage only (out of band) | done | yes |
+| WP-M14-108 | the spec names the single first stage (out of band) | done | yes |
+| WP-M14-109 | the action editor deletes a chosen action (out of band) | done | yes |
+| WP-M14-110 | the rule form shows no number (out of band) | done | yes |
+| WP-M14-111 | the action editor shows the number as a label (out of band) | done | yes |
+| WP-M14-112 | the condition builder shows the mode below the conditions (out of band) | done | yes |
+| WP-M14-113 | the shared contract knows the clock of a stage (out of band) | done | yes |
+| WP-M14-114 | the engine and the service use the clock of a stage (out of band) | done | yes |
+| WP-M14-115 | the API tests follow the chain of the defaults (out of band) | done | yes |
+| WP-M14-116 | the shared contract knows the stage NEW (out of band) | done | yes |
+| WP-M14-117 | the migration adds the stage NEW (out of band) | done | yes |
+| WP-M14-118 | the spec and the module map name the stage NEW (out of band) | done | yes |
 | WP-M14-119 | channel repair UI — the translated `lastError` and the own-topic test (out of band) | done | yes |
-| WP-M14-120 | the internal notification inbox — spec and split (out of band)         | done    | yes     |
+| WP-M14-120 | the internal notification inbox — spec and split (out of band) | done | yes |
 | WP-M14-120a | the database and the contracts of the notification messages (out of band) | done | yes |
-| WP-M14-120b | the delivery layer records every personal message (out of band)      | done    | yes     |
-| WP-M14-120c | the API of the notification inbox (out of band)                       | done    | yes     |
-| WP-M14-120d | the inbox page (out of band)                                          | done    | yes     |
-| WP-M14-120e | the bell in the shell with the unread count (out of band)             | done    | yes     |
-| WP-M14-121 | the test of the own topic needs a route of the own user (out of band) | done | yes     |
-| WP-M14-122 | the bell opens the messages of the inbox (out of band)              | done    | yes     |
-| WP-M14-123 | the ntfy setup guide names the topic-prefix ACL (out of band)       | done    | yes     |
-| WP-M14-124 | the web-push subscription endpoint (out of band)                    | done    | yes     |
-| WP-M14-125 | the service worker shows the push message (out of band)             | done    | yes     |
-| WP-M14-126a | the web-push card (out of band)                                     | done    | yes     |
-| WP-M14-126b | the web-push card on the settings page (out of band)                | done    | yes     |
-| WP-M14-127 | the bell opens the inbox page in one click (out of band)              | done    | yes     |
-| WP-M14-128 | the inbox names the setup page when web push is not set up (out of band) | done    | yes     |
-| WP-M14-129 | the ticket number without the year — spec, ADR-0027 and the split (out of band) | done    | yes     |
-| WP-M14-129a | the year-free number — the counter, the contract and the assertions (out of band) | done    | yes     |
-| WP-M14-129b | a number of the yearly counter still resolves through the API (out of band) | done    | yes     |
-| WP-M14-129c | a malformed number is still rejected at every entry point (out of band) | done    | yes     |
+| WP-M14-120b | the delivery layer records every personal message (out of band) | done | yes |
+| WP-M14-120c | the API of the notification inbox (out of band) | done | yes |
+| WP-M14-120d | the inbox page (out of band) | done | yes |
+| WP-M14-120e | the bell in the shell with the unread count (out of band) | done | yes |
+| WP-M14-121 | the test of the own topic needs a route of the own user (out of band) | done | yes |
+| WP-M14-122 | the bell opens the messages of the inbox (out of band) | done | yes |
+| WP-M14-123 | the ntfy setup guide names the topic-prefix ACL (out of band) | done | yes |
+| WP-M14-124 | the web-push subscription endpoint (out of band) | done | yes |
+| WP-M14-125 | the service worker shows the push message (out of band) | done | yes |
+| WP-M14-126a | the web-push card (out of band) | done | yes |
+| WP-M14-126b | the web-push card on the settings page (out of band) | done | yes |
+| WP-M14-127 | the bell opens the inbox page in one click (out of band) | done | yes |
+| WP-M14-128 | the inbox names the setup page when web push is not set up (out of band) | done | yes |
+| WP-M14-129 | the ticket number without the year — spec, ADR-0027 and the split (out of band) | done | yes |
+| WP-M14-129a | the year-free number — the counter, the contract and the assertions (out of band) | done | yes |
+| WP-M14-129b | a number of the yearly counter still resolves through the API (out of band) | done | yes |
+| WP-M14-129c | a malformed number is still rejected at every entry point (out of band) | done | yes |
 | WP-M14-130 | the health of the notification channels — ADR-0028, the spec and the split (out of band) | planned | yes |
-| WP-M14-130a | the dead subscription is named and removed (out of band)         | done    | yes     |
-| WP-M14-130b | the outbox learns the instance row of the warning (out of band)   | done    | yes     |
-| WP-M14-130c | the daily check warns over another channel (out of band)          | done    | yes     |
-| WP-M14-131 | the permission key of the names of the readiness (out of band)    | planned | yes     |
+| WP-M14-130a | the dead subscription is named and removed (out of band) | done | yes |
+| WP-M14-130b | the outbox learns the instance row of the warning (out of band) | done | yes |
+| WP-M14-130c | the daily check warns over another channel (out of band) | done | yes |
+| WP-M14-131 | the permission key of the names of the readiness (out of band) | planned | yes |
 | WP-M14-132 | the readiness calendar names the technicians only with the permission (out of band) | done | yes |
-| WP-M14-133 | the roles page edits one role at a time (out of band)                | done    | yes |
+| WP-M14-133 | the roles page edits one role at a time (out of band) | done | yes |
 | WP-M14-134 | the priority of the object deviates from the standard — ADR-0029, the spec and the split (out of band) | planned | yes |
-| WP-M14-134a | the table of the priority deviations (out of band)     | done    | yes     |
+| WP-M14-134a | the table of the priority deviations (out of band) | done | yes |
 | WP-M14-134b | the contracts of the priority and of the standard (out of band) | done | yes |
 | WP-M14-134c | the service reads and writes the deviation (out of band) | done | yes |
 | WP-M14-134d | the routes answer the standard and the deviations (out of band) | done | yes |
 | WP-M14-134e | the ticket takes the priority of the object (out of band) | done | yes |
-| WP-M14-134f | the object form carries the priority (out of band)  | done    | yes     |
+| WP-M14-134f | the object form carries the priority (out of band) | done | yes |
 | WP-M14-134g | the administration shows the standard and the deviations (out of band) | done | yes |
 | WP-M14-134h | the route and the menu entry of the defaults (out of band) | done | yes |
 | WP-M14-134i | the create form starts from the priority of the object (out of band) | done | yes |
@@ -1645,6 +1646,14 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M17-02 | the administration separates the target from the way | done | yes |
 | WP-M17-03 | the own page names the way of the escalation | done | yes |
 | WP-M18-01 | the entries of the house in the ticket history are framed (ADR-0038) | done | yes |
+| WP-M19-01 | the assignment names one technician and its status — spec and ADR-0039 | done | yes |
+| WP-M19-02 | ticket columns `assignment_status` and `assigned_by_user_id` | planned | yes |
+| WP-M19-03 | assignee pool as an escalation setting | planned | yes |
+| WP-M19-04 | assignment service and refusal chain | planned | yes |
+| WP-M19-05 | routes of the assignment and the `assign` action mode | planned | yes |
+| WP-M19-06 | picker of the ticket view and pool editor | planned | yes |
+| WP-M19-07 | notices of the assignment (assignee and assigner) | planned | yes |
+| WP-M19-08 | retire `ticket_assignees` | planned | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 | WP-M14-158 | the new user gets its own page (out of band) | done | yes |
 | WP-M14-159 | the new role gets its own page (out of band) | done | yes |
@@ -1666,7 +1675,6 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-171 | a failing web push names its cause (out of band) | done | yes |
 | WP-M14-172 | the device registers itself again when the key of the server changed (out of band) | done | yes |
 | WP-M14-173 | the operator guide names the diagnosis of the web push (out of band) | done | yes |
-
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
@@ -1959,7 +1967,7 @@ a real throwaway database and Chromium — locally 10/10 and in the CI check run
 of ADR-0006 needed a second, privileged container next to the application — the Docker
 socket of the host, `git` and the Docker CLI in the image, a state volume and a start
 command whose path differs per deployment panel. The operator already runs a deployment
-tool, so the application only has to know *that* a newer commit exists and *that* the
+tool, so the application only has to know _that_ a newer commit exists and _that_ the
 operator wants it. **WP-M3-07** writes the contract (`specs/18-self-update.md` §18.1–§18.7)
 and the decision (ADR-0007; ADR-0006 is superseded) and adds the read-only client of the
 GitHub API. **WP-M3-08** adds `GET /api/v1/admin/update/check` and
@@ -2088,6 +2096,7 @@ header, the labels under `dashboard.evaluations.*` in `de` and `en`, and no
 max/p90/median line anywhere — the worst reaction time is not part of the page.
 
 ## Validation
+
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
 visible at once, the save must warn that the comment can no longer be corrected,
@@ -2104,7 +2113,6 @@ offers "Speichern" and "Abbrechen"; the write runs only after the
 confirmation. The spell check is the one of the browser — the field carries the
 interface language and `spellCheck`, so it works offline and ships no extra
 download.
-
 
 ```bash
 npm run wp:check

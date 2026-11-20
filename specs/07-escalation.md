@@ -18,14 +18,14 @@ workflow (`review`, `work_order`, `assignment`, `acceptance`,
 `acknowledgement`); §7.11 makes the set itself configurable. The display names
 are maintained in the administration.
 
-| Key | Stage | Waiting state | Reference of the clock |
-| --- | --- | --- | --- |
-| `new` | Neu / New | `NEW` | `received_at` |
-| `review` | Prüfung / Review | `NEW` | `received_at` |
-| `work_order` | Auftrag angelegt / Work order created | `IN_REVIEW` | `review_started` |
-| `assignment` | Zuweisen oder Anbieten / Assign or offer | `WORK_ORDER_CREATED` | `work_order_set` |
-| `acceptance` | Angenommen / Accepted | `OFFERED`, `ASSIGNED` | `offered`, `assigned` |
-| `acknowledgement` | Quittiert / Acknowledged | `ACCEPTED` | `accepted` |
+| Key               | Stage                                    | Waiting state         | Reference of the clock |
+| ----------------- | ---------------------------------------- | --------------------- | ---------------------- |
+| `new`             | Neu / New                                | `NEW`                 | `received_at`          |
+| `review`          | Prüfung / Review                         | `NEW`                 | `received_at`          |
+| `work_order`      | Auftrag angelegt / Work order created    | `IN_REVIEW`           | `review_started`       |
+| `assignment`      | Zuweisen oder Anbieten / Assign or offer | `WORK_ORDER_CREATED`  | `work_order_set`       |
+| `acceptance`      | Angenommen / Accepted                    | `OFFERED`, `ASSIGNED` | `offered`, `assigned`  |
+| `acknowledgement` | Quittiert / Acknowledged                 | `ACCEPTED`            | `accepted`             |
 
 A stage is **reached** when the ticket enters the workflow state that follows
 the milestone: `review_started`, `work_order_set`, `assigned`/`offered`,
@@ -54,15 +54,15 @@ The deadline of a stage is the number of minutes the ticket may wait for the
 milestone. It is stored per priority, so a critical ticket waits less than a low
 one. The defaults of ADR-0008 are the seed of the configuration:
 
-| Rule (stage) | Reference | `low` | `normal` | `high` | `critical` |
-| --- | --- | --- | --- | --- | --- |
-| `new` | `received_at` | 15 | 15 | 15 | 5 |
-| `review` | `received_at` | 15 | 15 | 15 | 5 |
-| `work_order` | `review_started` | 30 | 30 | 30 | 30 |
-| `assignment` | `work_order_set` | 30 | 30 | 30 | 30 |
-| `acceptance` (offer) | `offered` | 20 | 20 | 20 | 10 |
-| `acceptance` (assignment) | `assigned` | 15 | 15 | 15 | 15 |
-| `acknowledgement` | `accepted` | 60 | 60 | 60 | 60 |
+| Rule (stage)              | Reference        | `low` | `normal` | `high` | `critical` |
+| ------------------------- | ---------------- | ----- | -------- | ------ | ---------- |
+| `new`                     | `received_at`    | 15    | 15       | 15     | 5          |
+| `review`                  | `received_at`    | 15    | 15       | 15     | 5          |
+| `work_order`              | `review_started` | 30    | 30       | 30     | 30         |
+| `assignment`              | `work_order_set` | 30    | 30       | 30     | 30         |
+| `acceptance` (offer)      | `offered`        | 20    | 20       | 20     | 10         |
+| `acceptance` (assignment) | `assigned`       | 15    | 15       | 15     | 15         |
+| `acknowledgement`         | `accepted`       | 60    | 60       | 60     | 60         |
 
 The rule of the first stage `new` is due with the ticket itself (§7.11),
 independent of its minutes; the minutes of its row are the ADR-0008 default of
@@ -77,15 +77,15 @@ A rule is the unit of configuration. It holds the trigger (which clock and which
 minutes), the condition (when the rule applies at all) and the actions (what
 happens when it fires).
 
-| Field | Meaning |
-| --- | --- |
-| `key` | the identity of the rule: the key of its stage and its number — `review#1` (§7.5) |
-| `stageKey` | the stage the rule belongs to; `null` for the deadline rules |
+| Field       | Meaning                                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `key`       | the identity of the rule: the key of its stage and its number — `review#1` (§7.5)                                      |
+| `stageKey`  | the stage the rule belongs to; `null` for the deadline rules                                                           |
 | `reference` | the event that starts the clock (`received_at`, `review_started`, `work_order_set`, `offered`, `assigned`, `accepted`) |
-| `minutes` | the deadline per priority (`low`, `normal`, `high`, `critical`) |
-| `percent` | the deadline rule only: the percentage of the timeline |
-| `condition` | the condition group of §7.4; empty means "always" |
-| `actions` | the ordered actions of §7.5 |
+| `minutes`   | the deadline per priority (`low`, `normal`, `high`, `critical`)                                                        |
+| `percent`   | the deadline rule only: the percentage of the timeline                                                                 |
+| `condition` | the condition group of §7.4; empty means "always"                                                                      |
+| `actions`   | the ordered actions of §7.5                                                                                            |
 
 A rule fires when its clock has passed its deadline **and** its condition matches.
 The rule of a stage that is already reached never fires again: the ticket has left
@@ -101,20 +101,20 @@ testable.
 { "all": [ … ] }   { "any": [ … ] }   { "field": …, "operator": …, "value": … }
 ```
 
-| Field | Type | Operators |
-| --- | --- | --- |
-| `priority` | `low`, `normal`, `high`, `critical` | `eq`, `ne`, `in`, `notIn` |
-| `status` | ticket status | `eq`, `ne`, `in`, `notIn` |
-| `source` | `QR`, `INTERNAL`, `API` | `eq`, `ne`, `in`, `notIn` |
-| `systemType` | `BMA`, `LICHTRUF`, `RWA`, `EMA`, `SPRACHALARM`, `SONSTIGE` | `eq`, `ne`, `in`, `notIn` |
-| `objectExternalType` | string | `eq`, `ne`, `contains` |
-| `assigned` | boolean | `eq` |
-| `deadlinePercent` | number 0–100 | `gt`, `gte`, `lt`, `lte`, `eq` |
-| `elapsedMinutes` | number | `gt`, `gte`, `lt`, `lte`, `eq` |
-| `paused` | boolean | `eq` |
-| `stageReached` | stage key | `eq`, `ne`, `in`, `notIn` |
-| `time_of_day` | interval `HH:MM`–`HH:MM`, one or more | `in`, `notIn` |
-| `shift` | readiness pool (uuid) | `eq`, `ne` |
+| Field                | Type                                                       | Operators                      |
+| -------------------- | ---------------------------------------------------------- | ------------------------------ |
+| `priority`           | `low`, `normal`, `high`, `critical`                        | `eq`, `ne`, `in`, `notIn`      |
+| `status`             | ticket status                                              | `eq`, `ne`, `in`, `notIn`      |
+| `source`             | `QR`, `INTERNAL`, `API`                                    | `eq`, `ne`, `in`, `notIn`      |
+| `systemType`         | `BMA`, `LICHTRUF`, `RWA`, `EMA`, `SPRACHALARM`, `SONSTIGE` | `eq`, `ne`, `in`, `notIn`      |
+| `objectExternalType` | string                                                     | `eq`, `ne`, `contains`         |
+| `assigned`           | boolean                                                    | `eq`                           |
+| `deadlinePercent`    | number 0–100                                               | `gt`, `gte`, `lt`, `lte`, `eq` |
+| `elapsedMinutes`     | number                                                     | `gt`, `gte`, `lt`, `lte`, `eq` |
+| `paused`             | boolean                                                    | `eq`                           |
+| `stageReached`       | stage key                                                  | `eq`, `ne`, `in`, `notIn`      |
+| `time_of_day`        | interval `HH:MM`–`HH:MM`, one or more                      | `in`, `notIn`                  |
+| `shift`              | readiness pool (uuid)                                      | `eq`, `ne`                     |
 
 A condition group holds at most two levels and at most 20 leaves. The evaluation
 is a pure function in `packages/shared`, used by the API and by the administration
@@ -140,14 +140,14 @@ An action is what happens when a rule fires. Every action carries its own
 condition, so one rule can notify the office always and the management only in
 the night.
 
-| Type | Configuration | Effect |
-| --- | --- | --- |
-| `notify` | `target` (one user, a readiness pool **or** the assignees of the ticket) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target and per channel the addressee selected for `ticket.escalated` (§11.4, ADR-0037); without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain |
-| `webhook` | `endpointIds` (webhook endpoints of the administration) | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker |
-| `history` | `text` (optional, 1–500 characters), no key in the administration | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key |
-| `status_change` | `toStatus` (the key of a row of `ticket_statuses`) | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }` |
-| `offer` | `target` (a readiness pool, a user group or one technician, §7.14) | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once, a user target names that technician in `offered_to_user_id`; every technician of the target is notified (§7.14) |
-| `assign` | `target` (a readiness pool, a user group or one technician, §7.14) | the dispatcher runs the `assigned` step of `ticket_transitions`; every technician of the target becomes an assignee of the ticket (`ticket_assignees`) and is notified (§7.14) |
+| Type            | Configuration                                                                                                                                                                                     | Effect                                                                                                                                                                                                                                                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notify`        | `target` (one user, a readiness pool **or** the assignees of the ticket) **or** `channels` (a subset of the configured channels); optional `priority` (`min`, `low`, `default`, `high`, `urgent`) | with a target: one outbox row per addressee of the target and per channel the addressee selected for `ticket.escalated` (§11.4, ADR-0037); without a target: one outbox row per channel, delivered by the outbox worker with its retry and fallback chain                                                                               |
+| `webhook`       | `endpointIds` (webhook endpoints of the administration)                                                                                                                                           | one delivery row per endpoint, sent with the HMAC signature and the backoff of the webhook worker                                                                                                                                                                                                                                       |
+| `history`       | `text` (optional, 1–500 characters), no key in the administration                                                                                                                                 | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key                                                                                                                                                                                                         |
+| `status_change` | `toStatus` (the key of a row of `ticket_statuses`)                                                                                                                                                | the dispatcher runs the step of `ticket_transitions` (§7.13) that leads from the current status of the ticket to that target through `transitionTicket()`; one append-only `escalation_note` event records the change with `{ rule, stage, from, to }`                                                                                  |
+| `offer`         | `target` (a readiness pool, a user group or one technician, §7.14)                                                                                                                                | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once, a user target names that technician in `offered_to_user_id`; every technician of the target is notified (§7.14) |
+| `assign`        | `mode` (`pool`: one employee chosen from the assignee pool of §7.14; `user`: one fixed technician), `user` (the technician, mode `user`), `acceptance` (boolean, _Annahme erforderlich_)          | the dispatcher runs the `assigned` step of `ticket_transitions` for one technician, sets `assigned_user_id`, `assignment_status` (`offered` or `accepted`) and `assigned_by_user_id` (NULL for the system); the technician is notified (§7.14, ADR-0039)                                                                                |
 
 A `notify` action with a `target` replaces the channel broadcast of the action:
 the selected user, the technicians who have a shift in the selected readiness
@@ -188,12 +188,12 @@ ever changes the priority, the deadline or the work order of a ticket.
 
 ## 7.6 Data model
 
-| Table | Columns |
-| --- | --- |
-| `escalation_stages` | `id`, `key` (unique), `names` (jsonb, one label per locale), `position`, `active`, `predecessor` (nullable, the key of a stage), `reached_by` (jsonb, the event keys that reach the stage) |
-| `escalation_rules` | `id`, `key` (unique), `stage_key` (the key of a stage, nullable), `reference`, `minutes` (jsonb, per priority), `percent` (nullable), `condition` (jsonb), `position`, `active` |
-| `escalation_actions` | `id`, `key` (unique per rule), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active` |
-| `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)` |
+| Table                | Columns                                                                                                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `escalation_stages`  | `id`, `key` (unique), `names` (jsonb, one label per locale), `position`, `active`, `predecessor` (nullable, the key of a stage), `reached_by` (jsonb, the event keys that reach the stage) |
+| `escalation_rules`   | `id`, `key` (unique), `stage_key` (the key of a stage, nullable), `reference`, `minutes` (jsonb, per priority), `percent` (nullable), `condition` (jsonb), `position`, `active`            |
+| `escalation_actions` | `id`, `key` (unique per rule), `rule_key` (foreign key), `type`, `config` (jsonb), `condition` (jsonb), `position`, `active`                                                               |
+| `escalation_firings` | `id`, `ticket_id`, `rule_key`, `threshold_at`, `fired_at` — unique over `(ticket_id, rule_key, threshold_at)`                                                                              |
 
 The `key` is the identity of a stage, a rule and an action, not the UUID. The key
 of a stage is free and stays editable while the stage is created. The key of a
@@ -232,12 +232,12 @@ user names (`PLAN.md` §15).
 
 ## 7.9 API
 
-| Route | Permission | Meaning |
-| --- | --- | --- |
-| `GET /api/v1/escalation/config` | `settings.read` | stages, rules and actions of the installation |
+| Route                           | Permission       | Meaning                                                 |
+| ------------------------------- | ---------------- | ------------------------------------------------------- |
+| `GET /api/v1/escalation/config` | `settings.read`  | stages, rules and actions of the installation           |
 | `PUT /api/v1/escalation/config` | `settings.write` | replaces the rules and their actions in one transaction |
 | `PUT /api/v1/escalation/stages` | `settings.write` | replaces the whole stage set in one transaction (§7.12) |
-| `GET /api/v1/escalation-stages` | `ticket.read` | the five stages with their names for the ticket view |
+| `GET /api/v1/escalation-stages` | `ticket.read`    | the five stages with their names for the ticket view    |
 
 The staff read answers the stages of the ticket view; the administration edits the
 configuration. A malformed body answers `400 invalid_request` with the field
@@ -263,11 +263,11 @@ The set of stages is configuration, not code. `PUT /api/v1/escalation/stages`
 replaces the whole set in one transaction: a row that is missing is deleted, a
 key that was not used before is created. At most 20 stages exist at a time.
 
-| Field | Meaning |
-| --- | --- |
-| `key` | free stage key (`^[a-z][a-z0-9_]{0,39}$`), unique, the identity of the stage |
+| Field         | Meaning                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------- |
+| `key`         | free stage key (`^[a-z][a-z0-9_]{0,39}$`), unique, the identity of the stage                             |
 | `predecessor` | the key of the stage before this one, or `null` — the stage without predecessor waits from `received_at` |
-| `reached_by` | the transition event keys that reach this stage; an empty array means the workflow never reaches it |
+| `reached_by`  | the transition event keys that reach this stage; an empty array means the workflow never reaches it      |
 
 The chain is validated by the pure function `validateEscalationStageChain` in
 `packages/shared`: unique keys, a predecessor that exists and is not the stage
@@ -346,13 +346,13 @@ were still the code map `TRANSITIONS` in `apps/api/src/tickets/workflow.ts`
 (`PLAN.md` §7). A status the administrator adds could never be entered or left.
 `ticket_transitions` (migration `0041`) carries the steps as rows:
 
-| Field | Meaning |
-| --- | --- |
-| `from_status` | foreign key to `ticket_statuses.key`, `ON DELETE cascade` — a removed status removes its steps |
-| `to_status` | foreign key to `ticket_statuses.key`, `ON DELETE cascade` |
-| `event_key` | the event that performs the step (`review_started`, `closed`, …); unique over `(from_status, event_key)` |
-| `condition_json` | nullable jsonb, the condition of the step — stored from `0041`, evaluated only from WP-M14-41 |
-| `active` | an inactive row never changes a ticket |
+| Field            | Meaning                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `from_status`    | foreign key to `ticket_statuses.key`, `ON DELETE cascade` — a removed status removes its steps           |
+| `to_status`      | foreign key to `ticket_statuses.key`, `ON DELETE cascade`                                                |
+| `event_key`      | the event that performs the step (`review_started`, `closed`, …); unique over `(from_status, event_key)` |
+| `condition_json` | nullable jsonb, the condition of the step — stored from `0041`, evaluated only from WP-M14-41            |
+| `active`         | an inactive row never changes a ticket                                                                   |
 
 `transitionTicket()` resolves the row of `(current status, event)`; an unknown or
 inactive combination answers `409 invalid_transition`. The workflow columns
@@ -371,67 +371,82 @@ is dropped in `0041`: the rows of `ticket_statuses` and their key-format CHECK
 (`0040`) are the status configuration, and a status a ticket still carries must
 survive a deactivation.
 
-## 7.14 The offer and the assign action (ADR-0026, ADR-0033)
+## 7.14 The offer and the assign action (ADR-0026, ADR-0033, ADR-0039)
 
-The office asked for two more actions of a rule: a ticket that waits too long for
-a technician shall be **offered** to a pool of technicians, and a ticket shall be
-**assigned** to technicians. Both actions distribute the ticket; they are the
-first actions of a rule that change more than a notification.
+Two actions distribute a ticket. `offer` (ADR-0026) hands it to the on-call person
+of a pool with the offer timeout chain; that behaviour is unchanged. `assign`
+(ADR-0039) gives the ticket to **one** technician, who answers the assignment. The
+assignment is the same step in the escalation and in the ticket view.
 
-### The target
+### The offer target (unchanged)
 
-Both actions carry a `target`: the technicians the ticket goes to.
+`offer` carries a `target`: `kind` `pool` (a row of `oncall_pools`) or `group`
+(a row of `groups`), and its `id`. A pool target names the on-call person of the
+pool in `offered_to_user_id` and sets the offer timeout
+(`oncall.escalate_to_group_after_min`); a group target notifies the whole group at
+once. A target without a technician changes nothing.
 
-| Field | Meaning |
-| --- | --- |
-| `kind` | `pool` — a row of `oncall_pools` (a readiness pool); `group` — a row of `groups` (a user group of the administration); `user` — one row of `users` (one technician of the installation, ADR-0033) |
-| `id` | the UUID of that pool, group or user |
+### The assignee pool
 
-The **technicians of the target** are the active members of the group of the
-target: for a pool the members of its `group_id`, otherwise every active user
-holding the `oncall` role — the same rule as
-`GET /api/v1/oncall/pools/:id/members` (`specs/04-oncall.md` §4a.5); for a group
-the members of `user_groups`; for a user that one user, if the account is
-active. A target without a technician changes nothing.
+The **assignee pool** is a setting `escalation.assignee_pool`: an ordered list of
+user ids, maintained under `/settings/escalation`. It is the list the office
+chooses from. Inactive users are skipped; an empty pool offers every active user
+in the picker of the ticket view.
 
-### The effect
+### The assign action
 
-| Action | Step | Effect |
-| --- | --- | --- |
-| `offer` | `offered` | the ticket leaves `WORK_ORDER_CREATED` for `OFFERED`. A pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout (`oncall.escalate_to_group_after_min`), so the existing offer timeout hands the ticket to the group; a group target has no on-call person and no timeout — the whole group is notified at once; a user target names that technician in `offered_to_user_id`. |
-| `assign` | `assigned` | the ticket leaves `WORK_ORDER_CREATED` for `ASSIGNED`. Every technician of the target becomes an assignee of the ticket — a row of `ticket_assignees` (`specs/02-data-model.md` §4.12). |
+| Field        | Meaning                                                                                                                                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`       | `pool` — the escalation offers the ticket to the first active member of the assignee pool; on a refusal to the next one (decision 4 of ADR-0039). `user` — the escalation names one technician in `user`. |
+| `user`       | the UUID of one user, only with `mode = user`                                                                                                                                                             |
+| `acceptance` | `true`: the status is `offered` and waits for the technician's answer; `false`: the status is `accepted` at once                                                                                          |
 
-Both actions perform a step of the `ticket_transitions` table (§7.13), so a
-ticket whose status has no such step keeps its status and the action writes
-nothing — the same rule as the `status_change` action. One append-only
-`escalation_note` event records the distribution with
-`{ rule, stage, target }`.
+In the ticket view the workflow action _Zuweisen_ offers the same picker: the
+office chooses one member of the assignee pool (or any active user when the pool
+is empty) and states _Annahme erforderlich_ for this assignment. The picker names
+the person who made the assignment: the actor of the event is stored as
+`assigned_by_user_id`.
 
-### The assignees of the ticket
+### The state of an assignment
 
-The **assignees of a ticket** are the technicians who work on it: the
-technicians of an assignment of the escalation and the technician who takes the
-ticket himself — the `claimed` and the `accepted` step of the workflow,
-performed by a user, write a row of `ticket_assignees`
-(`specs/02-data-model.md` §4.13, ADR-0033). The rows are the current state of
-the distribution, the events of the workflow stay its history.
+The ticket carries the assignment in three columns (ADR-0039, decision 2):
+`assigned_user_id` (the technician), `assignment_status` and
+`assigned_by_user_id` (the user who made the assignment, NULL for the system).
 
-### The notification
+| From                     | Event                                 | To `assignment_status`  | Notification                                                                                                       |
+| ------------------------ | ------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| none                     | `assign`, acceptance on               | `offered`               | the technician (`ticket.assigned`)                                                                                 |
+| none                     | `assign`, acceptance off              | `accepted`              | the technician (`ticket.assigned`)                                                                                 |
+| `offered`                | technician accepts (`accepted` step)  | `accepted`              | the assigner (`ticket.assignment_answered`)                                                                        |
+| `offered`                | technician declines (`declined` step) | `declined`              | the assigner (`ticket.assignment_answered`); the escalation offers the next pool member (`offered`), if one exists |
+| `declined` or `accepted` | `assign` again                        | `offered` or `accepted` | the new technician                                                                                                 |
 
-Every technician of the target is notified on the channels they selected for the
-event type of `specs/10-notifications.md` §11.4: `ticket.escalated` for the
-offer, `ticket.assigned` for the assignment. Only ntfy has an address per user
-today (§11.3), so the broadcast writes one outbox row per technician with an
-ntfy account on their own topic; the other channels of the instance reach the
-office and are the business of the `notify` action. A technician without a
-selection receives nothing.
+Every change writes one `ticket_events` row of the step it performs, so the
+history of the assignments stays in the event log; the columns hold only the
+current state.
 
-The office is therefore informed twice over: the `escalated` event of the firing
-and the `notify` action, if the rule carries one.
+The step names are the existing steps of `ticket_transitions` (§7.13): `assigned`
+for `assign`, `accepted` and `declined` for the answer. A ticket whose status has
+no such step keeps its status and the action writes nothing — the same rule as
+`status_change`.
 
-A `notify` action with the target `assigned` reaches the assignees of the
-ticket instead of a fixed addressee (ADR-0033): the technician the escalation
-assigned and the technician who took the ticket after an offer. The target
-carries no id — the dispatcher reads the assignees of the ticket when the rule
-fires; a ticket without an assignee reaches nobody.
+### The notifications
 
+- The **assigned technician** receives `ticket.assigned` on the channels they
+  selected for that event type (`specs/10-notifications.md` §11.4). Only ntfy has
+  an address per user today (§11.3); the other channels reach the office and are
+  the business of the `notify` action.
+- The **assigner** (`assigned_by_user_id`) receives `ticket.assignment_answered`
+  when the technician accepts or declines. A rule-made assignment has no assigner
+  and notifies nobody this way.
+- The `notify` action (§7.5) with the target `assigned` reaches the assigned
+  technician; with the target `assigner` it reaches the user who made the
+  assignment. A ticket without an assignee or without an assigner reaches nobody.
+
+### The retired model
+
+`ticket_assignees` (§4.13 of `specs/02-data-model.md`, migration 0044) is no
+longer written by the `assign` action. The `offer` action wrote no assignees
+before, so it is unaffected. The table and its read in the ticket detail are
+retired in WP-M19-06; until then the ticket view shows the assigned technician
+from `assigned_user_id`.

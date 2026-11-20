@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The assignment of the office is planned (**WP-M19-01**, phase 19, ADR-0039): one
+  technician per ticket with a status (`offered`, `accepted`, `declined`), a
+  configurable assignee pool in the escalation settings, the refusal passes to the
+  next pool member, and the user who made the assignment is notified. The work
+  packages WP-M19-02 … WP-M19-08 implement it step by step.
 - The entries of the house in the ticket history are framed (**WP-M18-01**,
   phase 18, ADR-0038): the office could not tell which rows of the history belong
   to the ticket and which are the chatter of the house — „Benachrichtigung
