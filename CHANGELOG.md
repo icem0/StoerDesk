@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The channel card names the cause of a failing web push (**WP-M15-08**, out of
+  band in phase 15): the office reported a failing test send of the Web Push card
+  as „Der ntfy-Server hat den Code push_unreachable geantwortet: Prüfen Sie URL
+  und Thema und versuchen Sie es erneut." — the adapter named the cause already,
+  but the card translated the code through the texts of the ntfy channel, so an
+  unknown code fell back to the ntfy sentence. `admin.channels.errors` gained the
+  six texts of the web push (`no_keys`, `vapid_key_mismatch`,
+  `push_unauthorized`, `push_rejected`, `push_unreachable`,
+  `push_subscription_dead`) in `de` and `en`; each names the cause and the action
+  of the operator — the VAPID trio on the card, the registration of the device,
+  the egress of the API container — never an endpoint, never a key (v1.1.337).
 - Every readiness pool keeps its own duty times (**WP-M15-07**, out of band in
   phase 15): the duty windows moved from the global setting
   `oncall.weekly_windows` to the pool (`oncall_pools.weekly_windows`), so

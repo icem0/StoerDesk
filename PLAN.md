@@ -3361,6 +3361,29 @@ nobody outside every window. The phase-15 exit criterion is met: a pool with
 office hours is expressible, every window is a shift of its own and the
 coupling names the technician only inside a window. Phase 15 is closed.
 
+**The duty windows belong to the pool (WP-M15-07 … WP-M15-07d, out of band in
+phase 15).** The office reported that both readiness pools run one setting:
+„Verwaltung" works Monday to Thursday 07:30–17:00 while „Servicetechniker" has
+its own shift times. The windows moved from the global setting
+`oncall.weekly_windows` to the pool (`oncall_pools.weekly_windows`): migration
+`0052` copies the stored global windows once into every active pool and deletes
+the global row, the pool contract and the pool `PATCH` carry `weeklyWindows`,
+`generateShifts` reads the windows of its own pool and falls back to the global
+continuous plan without windows, and `/admin/oncall` gained the block
+„Dienstzeiten je Pool". The default pool keeps its meaning — the pool for ticket
+offers and the dashboard tile — and says so.
+
+**The web push card names the cause of a failing test send (WP-M15-08, out of
+band in phase 15).** The office read the Web Push card of the channel
+administration: „Testnachricht fehlgeschlagen: Der ntfy-Server hat den Code
+push_unreachable geantwortet: Prüfen Sie URL und Thema und versuchen Sie es
+erneut." — the card had no text for a code of the web push and fell back to the
+ntfy sentence. The adapter already named the cause (WP-M14-171); the card now
+carries the six texts of the push channel in `admin.channels.errors`
+(`no_keys`, `vapid_key_mismatch`, `push_unauthorized`, `push_rejected`,
+`push_unreachable`, `push_subscription_dead`) in `de` and `en`, each naming the
+cause and the action of the operator, never an endpoint and never a key.
+
 **The accent colour of the interface (WP-M16-00, phase 16).** The office asked
 for a facelift of the whole interface, for the accent colour of the menu under
 „Darstellung“ as a value of the server and for the mobile view. **ADR-0036**

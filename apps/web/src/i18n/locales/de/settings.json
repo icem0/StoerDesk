@@ -573,7 +573,13 @@
         "http_415": "Medientyp nicht unterstützt (415).",
         "http_429": "Zu viele Anfragen (429): später erneut versuchen.",
         "channel_unconfigured": "Kanal nicht konfiguriert: der ntfy-Kanal ist nicht aktiviert oder noch nicht verifiziert — zuerst konfigurieren und den Verifizierungscode eingeben.",
-        "http_timeout": "Keine Antwort rechtzeitig (Timeout): der ntfy-Server hat innerhalb von zehn Sekunden nicht geantwortet — Adresse und Netzwerk prüfen; der Versand bleibt wiederholbar."
+        "http_timeout": "Keine Antwort rechtzeitig (Timeout): der ntfy-Server hat innerhalb von zehn Sekunden nicht geantwortet — Adresse und Netzwerk prüfen; der Versand bleibt wiederholbar.",
+        "no_keys": "Web Push is not configured: a VAPID key is missing. The three keys — public key, private key, Subject — belong in the .env or in the fields of this card.",
+        "vapid_key_mismatch": "The public VAPID key does not belong to the private key. The two are a pair that belongs together: generate a new key pair and save both values together.",
+        "push_unauthorized": "The push service rejected the permission (401/403). The key of the server does not fit the registered device: the device must register itself again.",
+        "push_rejected": "The push service answered the send with an error. The status from the log of the API belongs to the message of the push service.",
+        "push_unreachable": "The push service did not answer: the connection failed (network, DNS or TLS). The exit from the API container belongs to the test: ENOTFOUND or ETIMEDOUT means that the firewall of the host does not let the push service through.",
+        "push_subscription_dead": "All web-push subscriptions are dead. The devices must allow the notification in the browser again."
       },
       "minimum": {
         "title": "Pflichtkanäle für kritische Meldungen",

@@ -387,6 +387,12 @@ before the request, a rejected authorization of the push service (`401`,
 `push_rejected` and a request without an answer with `push_unreachable`. The
 code travels into the `lastError` of the row of the outbox (§11.8) and into
 the log of the API — never the endpoint of a device, never a key (WP-M14-171).
+The card of the channel administration (§11.12) names the same cause in the
+interface language for a failing test send: the codes `no_keys`,
+`vapid_key_mismatch`, `push_unauthorized`, `push_rejected`,
+`push_unreachable` and `push_subscription_dead` carry their own texts, because
+the texts of the channel administration belong to the ntfy channel and name its
+topic and its token (WP-M15-08).
 
 **The warning over another channel.** A broken channel warns the
 administration **once a day over another channel**: the daily check enqueues

@@ -25,6 +25,15 @@ const ntfy = {
   verified: false,
 }
 
+const webpush = {
+  kind: 'webpush',
+  enabled: true,
+  label: 'Web Push',
+  config: { publicKey: 'BLg2publickey', subject: 'mailto:admin@example.org' },
+  secretSet: true,
+  verified: true,
+}
+
 function meResponse(permissions: string[]) {
   return {
     user: {
@@ -281,6 +290,21 @@ describe('ChannelsPage', () => {
     fireEvent.click(buttons[0] as HTMLElement)
 
     expect(await screen.findByText(/http_999/)).toBeTruthy()
+  })
+
+  it('names the cause of a failing web push test send (WP-M15-08)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [webpush] },
+      test: { delivered: false, code: 'push_unreachable' },
+    })
+    renderPage()
+
+    const buttons = await screen.findAllByText('Testnachricht senden')
+    fireEvent.click(buttons[0] as HTMLElement)
+
+    expect(await screen.findByText(/did not answer: the connection failed/)).toBeTruthy()
+    expect(screen.queryByText(/ntfy-Server hat den Code/)).toBeNull()
   })
 
   it('names the access token when the publication is refused (WP-M14-52)', async () => {
