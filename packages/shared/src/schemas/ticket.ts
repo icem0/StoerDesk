@@ -455,6 +455,8 @@ export const ticketListItemSchema = z.object({
   remainingMs: z.number().nonnegative(),
   /** Free text of the work order (AA / SA), set at work_order_set. */
   workOrderText: z.string().nullable(),
+  /** Name of the assigned technician, if one is assigned to the ticket. */
+  assignedUserName: z.string().nullable(),
 })
 
 export const ticketListResponseSchema = z.object({

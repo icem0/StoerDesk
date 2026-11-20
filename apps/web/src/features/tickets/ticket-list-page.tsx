@@ -143,6 +143,14 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
         </span>
 
         <span className="flex flex-wrap items-center gap-2 md:justify-end">
+          {ticket.assignedUserName && (
+            <span
+              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-700 text-slate-200"
+              title={ticket.assignedUserName}
+            >
+              {ticket.assignedUserName}
+            </span>
+          )}
           <span
             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[ticket.status] ?? 'bg-slate-900/30 text-slate-300'}`}
           >

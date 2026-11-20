@@ -321,6 +321,7 @@
     "row": {
       "times": "reported {{reported}} · due {{deadline}}"
     },
+    "technician": "Technician",
     "actions": {
       "create": "New report"
     }

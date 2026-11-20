@@ -320,6 +320,7 @@
     "row": {
       "times": "gemeldet {{reported}} · Frist {{deadline}}"
     },
+    "technician": "Techniker",
     "actions": {
       "create": "Neue Meldung"
     }

@@ -28,7 +28,7 @@ import {
 
 import { requireScopeOrPermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { objects, tickets } from '../db/schema'
+import { objects, tickets, users } from '../db/schema'
 
 /**
  * Ticket list (`PLAN.md` §6, WP-M2-17).
@@ -157,9 +157,11 @@ export async function listTickets(
       closedAt: tickets.closedAt,
       updatedAt: tickets.updatedAt,
       workOrderText: tickets.workOrderText,
+      assignedUserName: sql`trim(${users.givenName} || ' ' || ${users.familyName})`.as('assigned_user_name'),
     })
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
+    .leftJoin(users, eq(tickets.assignedUserId, users.id))
     .where(where)
     .orderBy(...orderColumns)
     .limit(query.limit)
@@ -190,6 +192,7 @@ export async function listTickets(
         percent: timeline.percent,
         remainingMs: timeline.remainingMs,
         workOrderText: row.workOrderText,
+        assignedUserName: (row.assignedUserName as string | null),
       }
     }),
     total,
