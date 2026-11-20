@@ -3,7 +3,11 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import type { DisplaySettingsResponse, TicketDetailResponse } from '@stoerdesk/shared'
+import { DEFAULT_TICKET_SORT_DIRECTION } from '@stoerdesk/shared'
+import type {
+  DisplaySettingsResponse,
+  TicketDetailResponse,
+} from '@stoerdesk/shared'
 import type { StandardTextLocale } from '@stoerdesk/shared'
 import { isInternalTicketEvent } from '@stoerdesk/shared'
 
@@ -505,14 +509,23 @@ export function TicketDetailPage() {
    * row for it — the report entry already says that the ticket arrived
    * (WP-M14-152c).
    */
-  const historyEvents = events.filter(
-    (event) =>
-      !(
-        event.type === 'escalated' &&
-        firstStageKey !== null &&
-        eventStageKey(event.payload) === firstStageKey
-      ),
-  )
+  const historyEvents = events
+    .filter(
+      (event) =>
+        !(
+          event.type === 'escalated' &&
+          firstStageKey !== null &&
+          eventStageKey(event.payload) === firstStageKey
+        ),
+    )
+    .sort((a, b) => {
+      const aTime = Date.parse(a.createdAt)
+      const bTime = Date.parse(b.createdAt)
+      // Die Richtung der Darstellung („Darstellung“ → „Neueste zuerst“) gilt auch
+      // für den Verlauf: 'desc' zeigt die neueste Meldung oben, 'asc' die älteste.
+      const direction = display.data?.ticketSortDirection ?? DEFAULT_TICKET_SORT_DIRECTION
+      return direction === 'desc' ? bTime - aTime : aTime - bTime
+    })
 
   /**
    * The technicians the escalation assigned to this ticket (§7.14, ADR-0026,
