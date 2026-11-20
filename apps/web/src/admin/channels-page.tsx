@@ -72,13 +72,40 @@ function fieldId(kind: string, field: string): string {
   return `${kind}-${field}`
 }
 
-/** Builds a translate-based error-code → readable-reason function for one component. */
+/**
+ * Builds a translate-based error-code → readable-reason function for one component.
+ *
+ * The texts of the channel administration (`admin.channels.errors.*`) are written
+ * for ntfy: they name its topic, its token and its server (WP-M14-161d). Every
+ * other channel reads the neutral texts of the delivery page
+ * (`admin.delivery.reasons.<kind>.<code>`, then `admin.delivery.reasons.<code>`),
+ * so the card of the web push never answers with an ntfy sentence and the card of
+ * Matrix never claims a taken topic (WP-M15-09). A code without a text falls back
+ * to `admin.channels.errors.channel_error`, which names the machine code and
+ * points to the log of the API and to the page of the delivery problems.
+ */
 function makeReasonOf(t: unknown) {
   const translate = t as (key: string, opts?: unknown) => string
 
-  return (code: string): string => {
+  return (code: string, kind: string): string => {
     if (code === '') {
       return ''
+    }
+
+    if (kind !== 'ntfy') {
+      const own = translate(`admin.delivery.reasons.${kind}.${code}`, { defaultValue: '' })
+
+      if (own !== '') {
+        return own
+      }
+
+      const neutral = translate(`admin.delivery.reasons.${code}`, { defaultValue: '' })
+
+      if (neutral !== '') {
+        return neutral
+      }
+
+      return translate('admin.channels.errors.channel_error', { code })
     }
 
     const key = `admin.channels.errors.${code}`
@@ -187,13 +214,13 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
   const apiReason = (error: unknown): string => {
     const raw = error instanceof ApiError ? error.params?.reason : undefined
 
-    return typeof raw === 'string' && raw !== '' ? reasonOf(raw) : ''
+    return typeof raw === 'string' && raw !== '' ? reasonOf(raw, 'ntfy') : ''
   }
   const verificationErrorText = (error: unknown): string => {
     const code = errorCode(error)
     const key = `admin.channels.verification.errors.${code}`
     const translated = t(key)
-    const reason = apiReason(error) === '' ? reasonOf(code) : apiReason(error)
+    const reason = apiReason(error) === '' ? reasonOf(code, 'ntfy') : apiReason(error)
 
     return translated === key
       ? t('admin.channels.verification.errors.unknown', { reason })
@@ -420,7 +447,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
         >
           {test.data.delivered
             ? t('admin.channels.testDelivered')
-            : t('admin.channels.testFailed', { reason: reasonOf(test.data.code ?? '') })}
+            : t('admin.channels.testFailed', { reason: reasonOf(test.data.code ?? '', channel.kind) })}
         </p>
       ) : null}
       {test.isError ? (
@@ -556,7 +583,7 @@ export function ChannelsPage() {
                 ) : null}
                 {channel.lastError !== null && channel.lastError !== '' ? (
                   <span className="text-rose-300 text-xs ml-2">
-                    {reasonOf(channel.lastError)}
+                    {reasonOf(channel.lastError, channel.name)}
                   </span>
                 ) : null}
               </li>

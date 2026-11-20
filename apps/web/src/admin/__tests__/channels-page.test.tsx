@@ -261,7 +261,7 @@ describe('ChannelsPage', () => {
     fireEvent.click(buttons[0] as HTMLElement)
 
     expect(
-      await screen.findByText('Testnachricht fehlgeschlagen: Der Versand ist fehlgeschlagen.'),
+      await screen.findByText(/Testnachricht fehlgeschlagen: Die Zustellung ist fehlgeschlagen/),
     ).toBeTruthy()
     expect(screen.getByText(/Zustand: fehlgeschlagen/)).toBeTruthy()
   })
@@ -269,6 +269,7 @@ describe('ChannelsPage', () => {
   it('explains an ntfy test send failure with the server answer', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [ntfy] },
       test: { delivered: false, code: 'http_407' },
     })
     renderPage()
@@ -282,6 +283,7 @@ describe('ChannelsPage', () => {
   it('explains an unknown ntfy error code generically', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [ntfy] },
       test: { delivered: false, code: 'http_999' },
     })
     renderPage()
@@ -290,6 +292,21 @@ describe('ChannelsPage', () => {
     fireEvent.click(buttons[0] as HTMLElement)
 
     expect(await screen.findByText(/http_999/)).toBeTruthy()
+  })
+
+  it('explains a failing test send of another channel without the words of ntfy (WP-M15-09)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [matrix] },
+      test: { delivered: false, code: 'http_407' },
+    })
+    renderPage()
+
+    const buttons = await screen.findAllByText('Testnachricht senden')
+    fireEvent.click(buttons[0] as HTMLElement)
+
+    expect(await screen.findByText(/error code http_407/)).toBeTruthy()
+    expect(screen.queryByText(/bereits vergeben/)).toBeNull()
   })
 
   it('names the cause of a failing web push test send (WP-M15-08)', async () => {
@@ -303,13 +320,14 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText(/did not answer: the connection failed/)).toBeTruthy()
+    expect(await screen.findByText(/Verbindung ist fehlgeschlagen/)).toBeTruthy()
     expect(screen.queryByText(/ntfy-Server hat den Code/)).toBeNull()
   })
 
   it('names the access token when the publication is refused (WP-M14-52)', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),
+      channels: { channels: [ntfy] },
       test: { delivered: false, code: 'http_401' },
     })
     renderPage()

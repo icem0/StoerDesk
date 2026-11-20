@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The channel card explains a failure with the texts of its channel (**WP-M15-09**,
+  out of band in phase 15): the card of the web push answered a failing test send
+  with „Der ntfy-Server hat den Code … geantwortet: Prüfen Sie URL und Thema …"
+  and any other channel would get the same ntfy sentence — one text namespace
+  (`admin.channels.errors`) served all cards, although its texts name the topic,
+  the token and the server of ntfy (WP-M14-161d). The card now decides with the
+  channel kind: ntfy keeps its texts, every other channel reads the neutral texts
+  of the delivery page (`admin.delivery.reasons`), and a code without a text falls
+  back to a sentence that names the machine code and points to the log of the API
+  and to the page of the delivery problems. The six duplicated push texts of
+  WP-M15-08 are gone from `admin.channels.errors` — both pages share the texts of
+  `admin.delivery.reasons` now (v1.1.338).
 - The channel card names the cause of a failing web push (**WP-M15-08**, out of
   band in phase 15): the office reported a failing test send of the Web Push card
   as „Der ntfy-Server hat den Code push_unreachable geantwortet: Prüfen Sie URL

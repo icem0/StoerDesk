@@ -329,6 +329,16 @@ promises a delivery that cannot happen.
   the administration (`notifications.administration.link`, WP-M14-54) — the link
   carries no permission check and the two layers stay apart.
 
+**The texts of the channel administration belong to their channel.** The texts in
+`admin.channels.errors` are written for ntfy: they name its topic, its token and
+its server. Every other channel reads the neutral texts of the delivery page
+(`admin.delivery.reasons.<channel>.<code>`, then `admin.delivery.reasons.<code>`)
+on the card as well, and a code without a text falls back to a sentence that
+names the machine code and points to the log of the API and to the page of the
+delivery problems. The card of the web push never explains a failure with an
+ntfy sentence, the card of Matrix never claims a taken topic (WP-M14-161d,
+WP-M15-09).
+
 **The state of the push in the browser.** The card of `/settings/notifications`
 and the inbox of `/notifications` ask **this browser** for its own push
 subscription — never the account of the user on the server. A browser without a

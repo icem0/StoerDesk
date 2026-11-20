@@ -572,12 +572,7 @@
         "http_429": "Too many requests (429): try again later.",
         "channel_unconfigured": "Channel not configured: the ntfy channel is not enabled or not verified yet — configure and verify it first.",
         "http_timeout": "No answer in time (timeout): the ntfy server never answered within ten seconds — check the address and the network; the row stays retryable.",
-        "no_keys": "Web push is not configured: a VAPID key is missing. The three keys — public key, private key, subject — belong in the .env or in the fields of this card.",
-        "vapid_key_mismatch": "The public VAPID key does not belong to the private key. Both are one pair that belongs together: generate a new key pair and save both values together.",
-        "push_unauthorized": "The push service rejected the authorization (401/403). The key of the server does not fit the registered device: the device has to register itself again.",
-        "push_rejected": "The push service answered the send with an error. The status from the log of the API belongs to the message of the push service.",
-        "push_unreachable": "The push service did not answer: the connection failed (network, DNS or TLS). Check the egress from the API container: ENOTFOUND or ETIMEDOUT means that the firewall of the host keeps the push service out.",
-        "push_subscription_dead": "Every web push subscription is dead. The devices have to allow the notification in the browser again."
+        "channel_error": "The channel answered with the code {{code}}: the cause stands in the log of the API and on the page of the delivery problems."
       },
       "minimum": {
         "title": "Mandatory minimum channels for critical tickets",
@@ -631,6 +626,7 @@
         "push_unreachable": "The push service did not answer: the connection failed (network, DNS or TLS).",
         "vapid_key_mismatch": "The public VAPID key does not belong to the private key — both have to be a pair.",
         "channel_unconfigured": "The channel is not configured or not enabled.",
+        "channel_not_configured": "The channel is not configured: its fields are incomplete — nothing reaches a target that was never saved.",
         "unknown": "The delivery failed with an unknown error.",
         "webpush": {
           "send_failed": "The push service did not accept the delivery."
