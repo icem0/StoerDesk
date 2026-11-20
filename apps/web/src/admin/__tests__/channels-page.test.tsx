@@ -320,7 +320,7 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText(/Verbindung ist fehlgeschlagen/)).toBeTruthy()
+    expect(await screen.findByText(/keine Verbindung zum Push-Dienst/)).toBeTruthy()
     expect(screen.queryByText(/ntfy-Server hat den Code/)).toBeNull()
   })
 

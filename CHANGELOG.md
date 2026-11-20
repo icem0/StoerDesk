@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- A failing web push names its cause and the next step (**WP-M14-175**): a DNS
+  failure of the push service is `push_dns_failed`, a timeout `push_timeout`, any
+  other transport failure `push_unreachable`. The texts of the delivery page name
+  the cause and the step for every code (de, en), and `docs/VAPID-SETUP.md` lists
+  the codes.
+
 ### Removed
 - The transition table `ticket_transitions` and its administration page
   `/admin/transitions` are removed (ADR-0041, migration `0053`). A workflow event

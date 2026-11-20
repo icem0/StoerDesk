@@ -121,8 +121,8 @@ export interface WebPushSendResult {
  * Every other failure names its cause (WP-M14-171): the keys that do not belong
  * together fail with `vapid_key_mismatch` before the request, a rejected
  * authorization with `push_unauthorized`, another answer of the push service
- * with `push_rejected` and a request without an answer with
- * `push_unreachable`. The operator reads the cause in the log of the API and
+ * with `push_rejected` and a request without an answer with `push_dns_failed`,
+ * `push_timeout` or `push_unreachable` (by the errno). The operator reads the cause in the log of the API and
  * on the page of the delivery problems.
  */
 export async function sendWebPushNotification(
@@ -178,7 +178,7 @@ export async function sendWebPushNotification(
         continue
       }
 
-      throw new WebPushError(codeOf(statusCode), messageOf(error, statusCode))
+      throw new WebPushError(codeOf(statusCode, error), messageOf(error, statusCode))
     }
   }
 
@@ -209,15 +209,32 @@ function statusCodeOf(error: unknown): number | undefined {
  * - `push_unauthorized`: the push service answered `401` or `403` — the key
  *   does not belong to the registered device,
  * - `push_rejected`: the push service answered with another error,
- * - `push_unreachable`: the push service did not answer at all — the request
- *   failed before a response (network, DNS, TLS).
+ * - `push_dns_failed`: the host of the push service does not resolve (`ENOTFOUND`,
+ *   `EAI_AGAIN`) — DNS of the container,
+ * - `push_timeout`: the push service did not answer in time (`ETIMEDOUT`,
+ *   `ESOCKETTIMEDOUT`) — typically a firewall that drops the packets,
+ * - `push_unreachable`: any other transport failure (refused, reset, TLS).
  */
-function codeOf(statusCode: number | undefined): string {
+function codeOf(statusCode: number | undefined, error: unknown): string {
   if (statusCode === 401 || statusCode === 403) {
     return 'push_unauthorized'
   }
 
-  return statusCode === undefined ? 'push_unreachable' : 'push_rejected'
+  if (statusCode !== undefined) {
+    return 'push_rejected'
+  }
+
+  const errno = errnoOf(error)
+
+  if (errno === 'ENOTFOUND' || errno === 'EAI_AGAIN') {
+    return 'push_dns_failed'
+  }
+
+  if (errno === 'ETIMEDOUT' || errno === 'ESOCKETTIMEDOUT') {
+    return 'push_timeout'
+  }
+
+  return 'push_unreachable'
 }
 
 /**

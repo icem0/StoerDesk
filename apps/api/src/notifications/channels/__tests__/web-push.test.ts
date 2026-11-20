@@ -39,12 +39,11 @@ describe('sendWebPushNotification', () => {
 
     expect(sendMock).toHaveBeenCalledTimes(1)
 
-    const [subscriptionArg, payload, options] =
-      sendMock.mock.calls[0] as unknown as [
-        { endpoint: string; keys: Record<string, string> },
-        string,
-        { vapidDetails: Record<string, string> },
-      ]
+    const [subscriptionArg, payload, options] = sendMock.mock.calls[0] as unknown as [
+      { endpoint: string; keys: Record<string, string> },
+      string,
+      { vapidDetails: Record<string, string> },
+    ]
 
     expect(subscriptionArg.endpoint).toBe('https://push.example.org/secret/42')
     expect(subscriptionArg.keys).toEqual({ p256dh: 'BPm1p256dh', auth: 'authSecret42' })
@@ -267,7 +266,7 @@ describe('sendWebPushNotification', () => {
     expect('the send unexpectedly succeeded').toBe('a failing transport is required')
   })
 
-  it('names the errno of a transport failure in the message (WP-M14-171)', async () => {
+  it('names a DNS failure of the push service as push_dns_failed (WP-M14-175)', async () => {
     const sendMock = vi.fn(async () => {
       throw Object.assign(new Error('getaddrinfo ENOTFOUND fcm.googleapis.com'), {
         code: 'ENOTFOUND',
@@ -284,8 +283,34 @@ describe('sendWebPushNotification', () => {
       )
     } catch (error) {
       const webPushError = error as unknown as { code: string; message: string }
-      expect(webPushError.code).toBe('push_unreachable')
+      expect(webPushError.code).toBe('push_dns_failed')
       expect(webPushError.message).toBe('The push service did not answer: ENOTFOUND')
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('names a timeout of the push service as push_timeout (WP-M14-175)', async () => {
+    const sendMock = vi.fn(async () => {
+      throw Object.assign(new Error('connect ETIMEDOUT 142.250.0.1:443'), {
+        code: 'ETIMEDOUT',
+      })
+    })
+
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('push_timeout')
+      expect(webPushError.message).toBe('The push service did not answer: ETIMEDOUT')
 
       return
     }

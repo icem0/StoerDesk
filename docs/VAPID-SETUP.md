@@ -83,7 +83,9 @@ Die Zeile trägt `code` (der Fehlercode) und `err.message` (die Ursache in einem
 | Fehlercode | Ursache | Was zu tun ist |
 | --- | --- | --- |
 | `push_unauthorized` | Der Push-Dienst hat die Berechtigung abgelehnt (`401`/`403`): der Schlüssel des Servers passt nicht zum angemeldeten Gerät. | Meist wurden die Schlüssel erneuert, **nachdem** sich das Gerät angemeldet hatte — siehe unten. |
-| `push_unreachable` | Der Push-Dienst hat nicht geantwortet: die Verbindung ist fehlgeschlagen (Netzwerk, DNS, TLS). | Ausgang aus dem API-Container prüfen: `docker compose exec api node -e "fetch('https://fcm.googleapis.com').then(r=>console.log(r.status)).catch(e=>console.log(e.cause?.code))"` — `ENOTFOUND` oder `ETIMEDOUT` heißt: die Firewall des Hosts lässt den Push-Dienst nicht durch. |
+| `push_dns_failed` | Der API-Server kann den Host des Push-Dienstes nicht auflösen (`ENOTFOUND`, `EAI_AGAIN`). | DNS des API-Containers prüfen (`dns:` in der `docker-compose.yml` oder Docker-DNS). |
+| `push_timeout` | Der Push-Dienst antwortet nicht rechtzeitig (`ETIMEDOUT`): meist verwirft eine Firewall die Pakete. | Ausgehendes HTTPS (Port 443) vom API-Server zum Host des Abos freigeben. |
+| `push_unreachable` | Verbindung abgelehnt, abgebrochen oder TLS-Fehler (andere Ursache im Log). | Netzwerkweg und TLS vom API-Container zum Push-Dienst prüfen: `docker compose exec api node -e "fetch('https://fcm.googleapis.com').then(r=>console.log(r.status)).catch(e=>console.log(e.cause?.code))"`. |
 | `push_rejected` | Der Push-Dienst hat mit einem anderen Fehler geantwortet (im Log die Statusnummer). | Die Statusnummer im Log mit der Meldung des Push-Dienstes abgleichen. |
 | `vapid_key_mismatch` | Der öffentliche Schlüssel gehört nicht zum privaten Schlüssel. | Das Schlüsselpaar neu erzeugen und beide Werte gemeinsam eintragen. |
 | `push_subscription_dead` | Alle angemeldeten Geräte sind abgelaufen. | Die Nutzer müssen die Benachrichtigungen im Browser neu erlauben. |
