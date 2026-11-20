@@ -626,6 +626,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **WP-M14-132**.
 
 ### Changed
+- The send view button of the ticket detail shows a clean paper plane (out of
+  band): the header icon was the Lucide "send" glyph (`m22 2-11 16-7-12 22-4z`),
+  whose nose overshoots the 24 grid and whose outline crosses itself, so the
+  browser clipped it and the plane read as a broken bowtie. The button now draws
+  the **Feather "send"** icon (MIT): a concave paper-plane outline and its crease
+  line, both fully inside the 24 grid, same 2 px stroke and round joins as the
+  other icons of the header (v1.1.340).
 - The milestones of the ticket view are buttons next to each other
   (**WP-M14-153**, out of band in phase 14): the „Workflow Stufen" of the ticket
   detail was a pulldown menu, and on a touch screen the milestone lay one step

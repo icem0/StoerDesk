@@ -1150,7 +1150,8 @@ export function TicketDetailPage() {
               type="button"
             >
               <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m22 2-11 16-7-12 22-4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m22 2-7 20-4-9-9-4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m22 2-11 11" />
               </svg>
             </button>
             <button
