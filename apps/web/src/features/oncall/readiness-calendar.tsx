@@ -348,6 +348,13 @@ export function ReadinessCalendar(props: {
                           <td
                             className={`min-h-20 rounded border align-top ${cellStyle}`}
                             key={cell.iso}
+                            onClick={() => {
+                              const first = rows[0]
+
+                              if (first) {
+                                setSelectedShift(first)
+                              }
+                            }}
                           >
                             <div className="flex h-full flex-col gap-1 p-1">
                               <span className={`text-xs ${isToday ? 'font-semibold' : 'font-medium'}`}>
@@ -377,7 +384,10 @@ export function ReadinessCalendar(props: {
                                       <li className="flex flex-1" key={shift.id}>
                                         <button
                                           className="flex flex-1 w-full h-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-[10px] leading-tight text-slate-300"
-                                          onClick={() => setSelectedShift(shift)}
+                                          onClick={(event) => {
+                                            event.stopPropagation()
+                                            setSelectedShift(shift)
+                                          }}
                                           title={`${stateLabel} – ${poolName} – ${holder}`}
                                           type="button"
                                         >
