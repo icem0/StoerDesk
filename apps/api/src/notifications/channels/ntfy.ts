@@ -121,10 +121,14 @@ export async function sendNtfyNotification(
   const url = `${config.url.replace(/\/+$/, '')}/`
   const timeoutMs = config.timeoutMs ?? NTFY_TIMEOUT_MS
 
+  const body = pwaUrl !== ''
+    ? `${message.body}\n\n${actionLabel(config)}: ${pwaUrl}`
+    : message.body
+
   const payload: Record<string, unknown> = {
     topic,
     title: message.title,
-    message: message.body,
+    message: body,
     priority,
   }
 
@@ -138,7 +142,7 @@ export async function sendNtfyNotification(
     topic,
     priority,
     title: message.title,
-    body: message.body,
+    body,
     pwaUrl,
   })
 

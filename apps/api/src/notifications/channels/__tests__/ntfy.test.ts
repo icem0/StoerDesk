@@ -32,7 +32,7 @@ describe('sendNtfyNotification', () => {
     }
     expect(payload.topic).toBe('stoerdesk')
     expect(payload.title).toBe('New ticket')
-    expect(payload.message).toBe('Lift 2 is broken')
+    expect(payload.message).toBe('Lift 2 is broken\n\nÖffnen: https://stoerdesk.local/pwa')
     expect(payload.priority).toBe(3)
     expect(payload.actions).toEqual([
       { action: 'view', label: 'Öffnen', url: 'https://stoerdesk.local/pwa' },
