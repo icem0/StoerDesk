@@ -1,10 +1,11 @@
 import fp from 'fastify-plugin'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import type { PermissionKey } from '@stoerdesk/shared'
 
 import {
   closeRequestSchema,
+  escalationTargetSchema,
   PERMISSIONS,
   ticketNoSchema,
   workOrderRequestSchema,
@@ -12,7 +13,8 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { ticketEvents, tickets } from '../db/schema'
+import { groups, oncallPools, ticketEvents, tickets, users } from '../db/schema'
+import { assignTicketByUser } from '../escalation/distribution'
 import { offerTicket } from '../oncall/coupling'
 import { transitionTicket } from './workflow'
 import { applyInternalAction } from './internal-actions'
@@ -34,6 +36,7 @@ function fieldPaths(error: z.ZodError): string[] {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
 }
 const OFFER_BODY = z.object({ poolId: z.string().uuid().optional() })
+const ASSIGN_BODY = z.object({ target: escalationTargetSchema })
 const ACK_RESULT = z.enum(['fixed', 'partially_fixed', 'follow_up_required', 'no_fault_found'])
 
 type RouteDef = {
@@ -136,7 +139,6 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
     const routes: RouteDef[] = [
       { path: '/api/v1/tickets/:ticketNo/review', event: 'review_started', permission: PERM(PERMISSIONS.ticket.review) },
       { path: '/api/v1/tickets/:ticketNo/work-order', event: 'work_order_set', permission: PERM(PERMISSIONS.ticket.review), body: workOrderRequestSchema },
-      { path: '/api/v1/tickets/:ticketNo/assign', event: 'assigned', permission: PERM(PERMISSIONS.ticket.assign) },
       { path: '/api/v1/tickets/:ticketNo/claim', event: 'claimed', permission: PERM(PERMISSIONS.ticket.claim) },
       { path: '/api/v1/tickets/:ticketNo/accept', event: 'accepted', permission: PERM(PERMISSIONS.ticket.accept) },
       { path: '/api/v1/tickets/:ticketNo/decline', event: 'declined', permission: PERM(PERMISSIONS.ticket.decline), body: z.object({ reason: DECLINE_REASON, clientUuid: z.string().uuid().optional() }), action: 'decline' },
@@ -153,6 +155,96 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
         makeHandler(route.event, route.body, route.action),
       )
     }
+
+    // The manual assignment names its target (ADR-0033, WP-M19-02): a readiness
+    // pool, a user group or one technician — the kinds the escalation offers.
+    // Without a target the request is refused.
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/assign',
+      { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
+      async (request, reply) => {
+        const actor = request.user
+
+        if (actor === undefined) {
+          return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(request.params.ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+        }
+
+        const parsed = ASSIGN_BODY.safeParse(request.body ?? {})
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        const [row] = await database
+          .select({ id: tickets.id })
+          .from(tickets)
+          .where(eq(tickets.ticketNo, request.params.ticketNo))
+          .limit(1)
+
+        if (row === undefined) {
+          return reply.code(404).send({ code: 'ticket_not_found', params: { ticketNo: request.params.ticketNo } })
+        }
+
+        try {
+          const updated = await assignTicketByUser(database, {
+            ticketId: row.id,
+            actorUserId: actor.id,
+            target: parsed.data.target,
+          })
+
+          return reply.code(200).send(updated)
+        } catch (error) {
+          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+          throw error
+        }
+      },
+    )
+
+    // The targets the office can choose in the assignment: the active readiness
+    // pools, the user groups and the active technicians (§7.14). Permission:
+    // ticket.assign.
+    app.get(
+      '/api/v1/ticket-assign-targets',
+      { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
+      async () => {
+        const poolRows = await database
+          .select({ id: oncallPools.id, name: oncallPools.name })
+          .from(oncallPools)
+          .where(eq(oncallPools.active, true))
+          .orderBy(asc(oncallPools.name))
+
+        const groupRows = await database
+          .select({ id: groups.id, name: groups.name })
+          .from(groups)
+          .orderBy(asc(groups.name))
+
+        const userRows = await database
+          .select({
+            id: users.id,
+            email: users.email,
+            givenName: users.givenName,
+            familyName: users.familyName,
+          })
+          .from(users)
+          .where(eq(users.active, true))
+          .orderBy(asc(users.familyName), asc(users.givenName))
+
+        return {
+          pools: poolRows,
+          groups: groupRows,
+          users: userRows.map((row) => ({
+            id: row.id,
+            name: `${row.givenName ?? ''} ${row.familyName ?? ''}`.trim() || row.email,
+          })),
+        }
+      },
+    )
 
     // Close accepts an optional body: `comment` is written as a `comment`
     // event, `detectedErrorKeys` is stored on `tickets.detected_error_keys`.

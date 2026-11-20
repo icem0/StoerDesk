@@ -277,8 +277,12 @@ for (const language of ['de', 'en'] as const) {
     await expect(statusBadge(page)).toHaveText(statusText(language, 'WORK_ORDER_CREATED'))
     await expect(history(page).getByText(texts.event.work_order_set)).toBeVisible()
 
-    // 3. Assign: WORK_ORDER_CREATED → ASSIGNED (stage button, no body).
-    await performStage(page, 'assigned', texts.confirm)
+    // 3. Assign: WORK_ORDER_CREATED → ASSIGNED. The assignment names its target
+    // in the panel (a readiness pool, a user group or a technician); the first
+    // target of the list is chosen.
+    await page.getByTestId('ticket-stage-assigned').click()
+    await page.locator('select[name="assignTarget"]').selectOption({ index: 1 })
+    await page.getByRole('button', { name: texts.confirm }).click()
     await expect(statusBadge(page)).toHaveText(statusText(language, 'ASSIGNED'))
     await expect(history(page).getByText(texts.event.assigned)).toBeVisible()
 

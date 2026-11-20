@@ -333,8 +333,17 @@
     "assignees": {
       "title": "assigned technicians"
     },
+    "assignTarget": {
+      "label": "Assign to",
+      "placeholder": "Choose a target …",
+      "pools": "Readiness pools",
+      "groups": "User groups",
+      "users": "Technicians",
+      "empty": "No targets available. Please create user groups or readiness pools in the administration."
+    },
       "errors": {
         "notFound": "Ticket not found.",
+        "assign_target_empty": "The chosen target has no active technician. Please choose another target.",
         "actionFailed": "The action could not be performed.",
         "invalid_request": "The submitted data was rejected. Please check the input.",
         "invalid_transition": "This step is not possible in the status “{{status}}”.",

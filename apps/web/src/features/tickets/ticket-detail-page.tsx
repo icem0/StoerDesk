@@ -121,6 +121,17 @@ const ACKNOWLEDGE_RESULTS = [
 ] as const
 
 /**
+ * The targets of the manual assignment (`GET /api/v1/ticket-assign-targets`,
+ * §7.14, ADR-0033). The ids are the rows of the readiness pools, the user
+ * groups and the technicians; a user carries a display name only.
+ */
+type AssignTargetsResponse = {
+  pools: { id: string; name: string }[]
+  groups: { id: string; name: string }[]
+  users: { id: string; name: string }[]
+}
+
+/**
  * The default colour of the internal comment: a dark red (ADR-0034). The
  * administration sets the real value under „Darstellung".
  */
@@ -220,6 +231,18 @@ export function TicketDetailPage() {
       apiFetch<{
         stages: { key: string; names: Record<string, string>; predecessor: string | null }[]
       }>('/v1/escalation-stages'),
+    retry: false,
+  })
+
+  /**
+   * The targets the assignment can name (`GET /api/v1/ticket-assign-targets`,
+   * §7.14): the readiness pools, the user groups and the technicians — loaded
+   * only while the assignment panel is open.
+   */
+  const assignTargets = useQuery({
+    queryKey: ['tickets', 'assign-targets'],
+    queryFn: () => apiFetch<AssignTargetsResponse>('/v1/ticket-assign-targets'),
+    enabled: selectedAction === 'assigned',
     retry: false,
   })
 
@@ -924,6 +947,88 @@ export function TicketDetailPage() {
             >
               {t('detail.action.abort')}
             </button>
+          </div>
+        )
+      }
+      case 'assigned': {
+        const value = req('assignTarget')
+        const missing = value === ''
+        const targets = assignTargets.data
+        const noTargets =
+          targets !== undefined &&
+          targets.pools.length === 0 &&
+          targets.groups.length === 0 &&
+          targets.users.length === 0
+        const optionsOf = (entries: { id: string; name: string }[], kind: string) =>
+          entries.map((entry) => (
+            <option key={`${kind}:${entry.id}`} value={`${kind}:${entry.id}`}>
+              {entry.name}
+            </option>
+          ))
+        return (
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2 items-end">
+              <label className="flex flex-col gap-1 text-xs text-slate-400 w-full sm:w-96">
+                {t('detail.assignTarget.label')}
+                <select
+                  className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
+                  name="assignTarget"
+                  value={fields.assignTarget ?? ''}
+                  disabled={assignTargets.isPending || noTargets}
+                  onChange={(event) => setFields({ ...fields, assignTarget: event.target.value })}
+                >
+                  <option value="">{t('detail.assignTarget.placeholder')}</option>
+                  {(targets?.pools.length ?? 0) > 0 && (
+                    <optgroup label={t('detail.assignTarget.pools')}>
+                      {optionsOf(targets?.pools ?? [], 'pool')}
+                    </optgroup>
+                  )}
+                  {(targets?.groups.length ?? 0) > 0 && (
+                    <optgroup label={t('detail.assignTarget.groups')}>
+                      {optionsOf(targets?.groups ?? [], 'group')}
+                    </optgroup>
+                  )}
+                  {(targets?.users.length ?? 0) > 0 && (
+                    <optgroup label={t('detail.assignTarget.users')}>
+                      {optionsOf(targets?.users ?? [], 'user')}
+                    </optgroup>
+                  )}
+                </select>
+              </label>
+              <button
+                className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
+                type="button"
+                disabled={missing}
+                onClick={() => {
+                  if (missing) {
+                    setLastError(t('detail.errors.fieldRequired'))
+                    return
+                  }
+                  const separator = value.indexOf(':')
+                  const kind = value.slice(0, separator)
+                  const id = value.slice(separator + 1)
+                  void handleAction('assigned', {
+                    target: { kind, id },
+                  })
+                }}
+              >
+                {t('detail.action.confirm')}
+              </button>
+              <button
+                className="min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+                type="button"
+                onClick={() => {
+                  setSelectedAction(null)
+                  setFields({})
+                  setLastError(null)
+                }}
+              >
+                {t('detail.action.abort')}
+              </button>
+            </div>
+            {noTargets && (
+              <p className="text-xs text-slate-400">{t('detail.assignTarget.empty')}</p>
+            )}
           </div>
         )
       }

@@ -164,57 +164,120 @@ export async function distributeTicket(
     },
   })
 
-  const eventType = input.kind === 'offer' ? 'ticket.escalated' : 'ticket.assigned'
-  const recipients = await escalationRecipients(database, eventType, technicians)
+  const notified = await notifyTechnicians(database, {
+    ticketId: input.ticketId,
+    eventType: input.kind === 'offer' ? 'ticket.escalated' : 'ticket.assigned',
+    technicians,
+    ruleKey: input.ruleKey,
+    stageKey: input.stageKey,
+  })
 
-  if (recipients.length > 0) {
-    const ticketRows = await database
-      .select({
-        ticketNo: tickets.ticketNo,
-        priority: tickets.priority,
-        objectName: objects.name,
-      })
-      .from(tickets)
-      .innerJoin(objects, eq(objects.id, tickets.objectId))
-      .where(eq(tickets.id, input.ticketId))
-      .limit(1)
+  return { changed: true, technicians: technicians.length, notified }
+}
 
-    const ticket = ticketRows[0]
+/**
+ * Queues the personal deliveries of a distribution to the technicians the event
+ * reaches (ADR-0037). Shared by the escalation and the manual assignment.
+ */
+async function notifyTechnicians(
+  database: Db,
+  input: {
+    ticketId: string
+    eventType: 'ticket.escalated' | 'ticket.assigned'
+    technicians: string[]
+    ruleKey: string | null
+    stageKey: string | null
+  },
+): Promise<number> {
+  const recipients = await escalationRecipients(database, input.eventType, input.technicians)
 
-    if (ticket !== undefined) {
-      // The personal deliveries of the distribution (WP-M14-120b): each
-      // technician gets a message row next to the outbox row, so the inbox
-      // shows the assignment and whether it arrived. The way is the one the
-      // technician chose for the event (ADR-0037); only ntfy knows the
-      // personal address of the recipient.
-      await enqueuePersonalDeliveries(
-        database,
-        recipients.map((recipient) => ({
-          userId: recipient.userId,
-          channel: recipient.channel,
-          eventType,
-          title: ticket.ticketNo,
-          body: [
-            ticket.priority,
-            ticket.objectName,
-            input.ruleKey,
-            input.stageKey,
-          ]
-            .filter((value) => value !== '' && value !== undefined)
-            .join(' · '),
-          ticketId: input.ticketId,
-          target: {
-            ticketNo: ticket.ticketNo,
-            priority: ticket.priority,
-            objectName: ticket.objectName,
-            escalationRule: input.ruleKey,
-            escalationStage: input.stageKey,
-            ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
-          },
-        })),
-      )
-    }
+  if (recipients.length === 0) {
+    return 0
   }
 
-  return { changed: true, technicians: technicians.length, notified: recipients.length }
+  const ticketRows = await database
+    .select({
+      ticketNo: tickets.ticketNo,
+      priority: tickets.priority,
+      objectName: objects.name,
+    })
+    .from(tickets)
+    .innerJoin(objects, eq(objects.id, tickets.objectId))
+    .where(eq(tickets.id, input.ticketId))
+    .limit(1)
+
+  const ticket = ticketRows[0]
+
+  if (ticket !== undefined) {
+    // The personal deliveries of the distribution (WP-M14-120b): each
+    // technician gets a message row next to the outbox row, so the inbox
+    // shows the assignment and whether it arrived. The way is the one the
+    // technician chose for the event (ADR-0037); only ntfy knows the
+    // personal address of the recipient.
+    await enqueuePersonalDeliveries(
+      database,
+      recipients.map((recipient) => ({
+        userId: recipient.userId,
+        channel: recipient.channel,
+        eventType: input.eventType,
+        title: ticket.ticketNo,
+        body: [ticket.priority, ticket.objectName, input.ruleKey, input.stageKey]
+          .filter((value) => value !== '' && value !== null && value !== undefined)
+          .join(' · '),
+        ticketId: input.ticketId,
+        target: {
+          ticketNo: ticket.ticketNo,
+          priority: ticket.priority,
+          objectName: ticket.objectName,
+          escalationRule: input.ruleKey,
+          escalationStage: input.stageKey,
+          ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
+        },
+      })),
+    )
+  }
+
+  return recipients.length
+}
+
+/**
+ * The manual assignment of the office (`specs/07-escalation.md` §7.14, ADR-0033,
+ * WP-M19-02): the office names a readiness pool, a user group or one technician
+ * of the ticket in the ticket view. The ticket takes the `assigned` step, the
+ * technicians of the target become assignees and receive the `ticket.assigned`
+ * notification. A target without an active technician is refused — the ticket
+ * stays as it is.
+ */
+export async function assignTicketByUser(
+  database: Db,
+  input: { ticketId: string; actorUserId: string; target: EscalationTarget },
+): Promise<typeof tickets.$inferSelect> {
+  const technicians = await resolveTargetTechnicians(database, input.target)
+
+  if (technicians.length === 0) {
+    throw new TicketTransitionError(422, 'assign_target_empty', {})
+  }
+
+  const { ticket } = await transitionTicket({
+    database,
+    ticketId: input.ticketId,
+    event: 'assigned',
+    actorUserId: input.actorUserId,
+    payload: { target: { kind: input.target.kind, id: input.target.id } },
+  })
+
+  await database
+    .insert(ticketAssignees)
+    .values(technicians.map((userId) => ({ ticketId: input.ticketId, userId })))
+    .onConflictDoNothing()
+
+  await notifyTechnicians(database, {
+    ticketId: input.ticketId,
+    eventType: 'ticket.assigned',
+    technicians,
+    ruleKey: null,
+    stageKey: null,
+  })
+
+  return ticket
 }

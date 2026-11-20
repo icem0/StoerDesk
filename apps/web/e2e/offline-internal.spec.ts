@@ -173,8 +173,24 @@ function awaitDetail(page: Page, ticketNo: string) {
 async function driveToAccepted(page: Page, ticketNo: string): Promise<void> {
   await transition(page, ticketNo, 'review')
   await setWorkOrder(page, ticketNo)
-  await transition(page, ticketNo, 'assign')
+  await assignToSelf(page, ticketNo)
   await transition(page, ticketNo, 'accept')
+}
+
+/**
+ * The assignment names its target (§7.14, ADR-0033): the signed-in admin is an
+ * active technician, so the admin is the target of the assignment.
+ */
+async function assignToSelf(page: Page, ticketNo: string): Promise<void> {
+  const me = await page.context().request.get('/api/v1/me')
+  expect(me.status()).toBe(200)
+  const body = (await me.json()) as { user: { id: string } }
+
+  const response = await page.context().request.post(`/api/v1/tickets/${ticketNo}/assign`, {
+    data: { target: { kind: 'user', id: body.user.id } },
+  })
+
+  expect(response.status()).toBe(200)
 }
 
 for (const language of ['de', 'en'] as const) {

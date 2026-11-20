@@ -332,11 +332,20 @@
     "assignees": {
       "title": "Zuweisen"
     },
+    "assignTarget": {
+      "label": "Zuweisen an",
+      "placeholder": "Ziel wählen …",
+      "pools": "Bereitschaftspools",
+      "groups": "Benutzergruppen",
+      "users": "Techniker",
+      "empty": "Keine Ziele vorhanden. Bitte Benutzergruppen oder Bereitschaftspools in der Administration anlegen."
+    },
     "errors": {
       "notFound": "Meldung nicht gefunden.",
       "actionFailed": "Die Aktion konnte nicht ausgeführt werden.",
       "invalid_request": "Die Angaben wurden abgelehnt. Bitte die Eingaben prüfen.",
       "invalid_transition": "Dieser Schritt ist im Status „{{status}}“ nicht möglich.",
+      "assign_target_empty": "Das gewählte Ziel hat keinen aktiven Techniker. Bitte ein anderes Ziel wählen.",
       "ticket_not_found": "Die Meldung existiert nicht (mehr).",
       "session_invalid": "Die Anmeldung ist abgelaufen. Bitte erneut anmelden.",
       "forbidden": "Für diese Aktion fehlt die Berechtigung.",
