@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { DisplaySettingsResponse, TicketDetailResponse } from '@stoerdesk/shared'
 import type { StandardTextLocale } from '@stoerdesk/shared'
+import { isInternalTicketEvent } from '@stoerdesk/shared'
 
 import { apiBaseUrl, apiFetch, ApiError } from '../../lib/api'
 import { i18n } from '../../i18n'
@@ -32,6 +33,10 @@ import { TicketTimeline } from './ticket-timeline'
  *   milestone with its own form, which opens below the buttons (WP-M13-09). The
  *   actions that are no milestone (decline, claim, cancel, delete) stay buttons;
  *   the comment goes to the comment route.
+ * - A history entry that stays in the house — an internal comment, the firing of
+ *   a rule, an escalation note or the delivery of a message — carries a frame in
+ *   the colour of the internal entries under „Darstellung", so the office sees at
+ *   a glance which rows never left to the customer (WP-M18-01, ADR-0034, ADR-0038).
  * - The top-right hamburger menu is gone (WP-M12-06).
  * - The way back to the list is gone for good (WP-M12-09).
  */
@@ -1587,7 +1592,22 @@ export function TicketDetailPage() {
                 </div>
               ) : null}
               {historyEvents.map((event) => (
-              <div key={event.id} className="p-3 flex gap-3">
+              <div
+                key={event.id}
+                data-testid={
+                  isInternalTicketEvent(event.type) ? 'history-internal' : undefined
+                }
+                className={
+                  isInternalTicketEvent(event.type)
+                    ? 'p-3 flex gap-3 rounded-lg border-2 bg-slate-800/40'
+                    : 'p-3 flex gap-3'
+                }
+                style={
+                  isInternalTicketEvent(event.type)
+                    ? { borderColor: internalCommentColor }
+                    : undefined
+                }
+              >
                 <div className="w-36 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-mono text-slate-500">
                     {formatEventDateTime(event.createdAt)}

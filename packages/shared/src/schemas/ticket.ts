@@ -146,11 +146,22 @@ export const PUBLIC_TICKET_EVENT_TYPES = [
 ] as const
 
 /**
- * The event types that never reach the customer (ADR-0034): the internal
- * comment is a note of the colleagues — it is neither printed nor sent with
- * the prepared send view. The list is the single place that names them.
+ * The event types that never reach the customer (ADR-0034, ADR-0038): the
+ * internal comment is a note of the colleagues, the escalation rows name the
+ * rules, the stages, the channels and the addressees of the installation and
+ * the delivery rows name the technician who was reached — none of them belongs
+ * to the story of the customer. The list is the single place that names them:
+ * the ticket view frames those entries and the prepared send view leaves them
+ * out (WP-M18-01).
  */
-export const INTERNAL_TICKET_EVENT_TYPES = ['internal_comment'] as const
+export const INTERNAL_TICKET_EVENT_TYPES = [
+  'internal_comment',
+  'escalated',
+  'escalation_set',
+  'escalation_note',
+  'notification_sent',
+  'notification_failed',
+] as const
 
 export function isInternalTicketEvent(type: string): boolean {
   return (INTERNAL_TICKET_EVENT_TYPES as readonly string[]).includes(type)

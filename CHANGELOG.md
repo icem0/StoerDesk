@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The entries of the house in the ticket history are framed (**WP-M18-01**,
+  phase 18, ADR-0038): the office could not tell which rows of the history belong
+  to the ticket and which are the chatter of the house — „Benachrichtigung
+  gesendet“, the system rows of a firing, „Eskalationsstufe: …“, the line „ntfy ·
+  Empfäng: … · Target: …“ and an internal comment sat beside the workflow steps,
+  and only the internal comment had a mark. The shared list
+  `INTERNAL_TICKET_EVENT_TYPES` of `packages/shared/src/schemas/ticket.ts` now
+  names the rows that never leave the office — `internal_comment`, `escalated`,
+  `escalation_set`, `escalation_note`, `notification_sent`,
+  `notification_failed` — and the ticket view frames each of those rows in the
+  colour of the internal entries under „Darstellung“ (`internalCommentColor`,
+  default dark red, WP-M14-149d). One list, two consumers: the prepared send
+  view and the copied e-mail leave those rows out as well, so a channel, an
+  addressee and a target never travel in a document of the customer (v1.1.342).
 - The web push card names an incomplete trio on its row (**WP-M15-11**, out of
   band in phase 15): a row that stored only a public key without the private key
   (or the other way round) leaves the values of the `.env` untouched (WP-M14-170)

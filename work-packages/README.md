@@ -28,6 +28,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m15](m15/) | Phase 15: duty windows of the readiness — the plan knows a duty window per weekday beside the continuous plan (the spec and ADR-0035, the shared contracts and the generator, the API and the planner, the administration form, the exit criterion), and the windows belong to the pool (WP-M15-07 … WP-M15-07d), and the web push card names the cause of a failing test send and explains every failure with the texts of its channel (WP-M15-08, WP-M15-09), and the test send of the web push names that no device is subscribed (WP-M15-10), and the card names an incomplete VAPID trio (WP-M15-11) | 14  |
 | [m16](m16/) | Phase 16: the facelift of the interface — the accent colour (the spec and ADR-0036, the contracts and the API, the field under „Darstellung“, the accent ramp of the shell), the bell inside the header menu, the shell on a phone | 6   |
 | [m17](m17/) | Phase 17: the way of the escalation — the recipient of an escalation decides over which channel it arrives (the spec and ADR-0037, the API, the administration, the own page) | 4   |
+| [m18](m18/) | Phase 18: the entries of the house in the ticket history — the internal event types as one shared list, the frame in the colour under „Darstellung“, the prepared send view leaves them out (ADR-0038) | 1   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1643,6 +1644,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M17-01 | the escalation delivers over the way of the recipient (the API) | done | yes |
 | WP-M17-02 | the administration separates the target from the way | done | yes |
 | WP-M17-03 | the own page names the way of the escalation | done | yes |
+| WP-M18-01 | the entries of the house in the ticket history are framed (ADR-0038) | done | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 | WP-M14-158 | the new user gets its own page (out of band) | done | yes |
 | WP-M14-159 | the new role gets its own page (out of band) | done | yes |

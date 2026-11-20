@@ -108,9 +108,15 @@ function renderPage(
       return Response.json({ templates: [] })
     }
 
-    // The stage chain of the installation (§7.9, WP-M14-152c): the history names
-    // a firing with the display name of its stage and spares the first stage.
-    if (path.includes('/v1/escalation-stages')) {
+        // The colour of the internal entries under „Darstellung“ (WP-M14-149d,
+        // WP-M18-01): the ticket view frames the entries of the house in it.
+        if (path.includes('/v1/settings/display')) {
+          return Response.json({ internalCommentColor: '#450a0a' })
+        }
+
+        // The stage chain of the installation (§7.9, WP-M14-152c): the history names
+        // a firing with the display name of its stage and spares the first stage.
+        if (path.includes('/v1/escalation-stages')) {
       return Response.json({
         stages: [
           { key: 'new', names: { de: 'Neu', en: 'New' }, predecessor: null },
@@ -334,6 +340,70 @@ describe('TicketDetailPage stage buttons', () => {
     expect(history).toContain('Benachrichtigung gesendet')
     expect(history).toContain('ntfy · Empfäng: Erik Escalation · Target: SiTec')
     expect(history).toContain('Eskalationsstufe: Prüfung')
+  })
+
+  it('frames the entries of the house in the colour of the Darstellung', async () => {
+    renderPage(
+      'IN_REVIEW',
+      stages('work_order', { de: 'Auftrag angelegt', en: 'Work order created' },
+        ['work_order_set']),
+      undefined,
+      [
+        {
+          id: '77777777-7777-4777-8777-777777777771',
+          type: 'internal_comment',
+          actorKind: 'user',
+          actorName: 'Max Muster',
+          payload: { text: 'Nur für die Kollegen' },
+          createdAt: '2026-11-10T09:02:00.000Z',
+        },
+        {
+          id: '77777777-7777-4777-8777-777777777772',
+          type: 'escalation_note',
+          actorKind: 'system',
+          actorName: null,
+          payload: { rule: 'review#1', stage: 'review', from: 'NEW', to: 'IN_REVIEW' },
+          createdAt: '2026-11-10T09:03:00.000Z',
+        },
+        {
+          id: '77777777-7777-4777-8777-777777777773',
+          type: 'notification_failed',
+          actorKind: 'system',
+          actorName: null,
+          payload: { channel: 'ntfy', recipient: 'Erik Escalation', target: 'SiTec' },
+          createdAt: '2026-11-10T09:04:00.000Z',
+        },
+        {
+          id: '77777777-7777-4777-8777-777777777774',
+          type: 'assigned',
+          actorKind: 'user',
+          actorName: 'Max Muster',
+          payload: {},
+          createdAt: '2026-11-10T09:05:00.000Z',
+        },
+      ],
+    )
+
+    await waitFor(() => expect(screen.getByTestId('ticket-history')).toBeTruthy())
+    const history = screen.getByTestId('ticket-history')
+    const framed = Array.from(history.querySelectorAll('[data-testid="history-internal"]'))
+
+    expect(framed).toHaveLength(4)
+
+    for (const row of framed) {
+      expect(String(row.getAttribute('style') ?? '')).toContain('rgb(69, 10, 10)')
+    }
+
+    const rows = Array.from(history.children)
+    const workflowRow = rows.find((row) => (row.textContent ?? '').includes('Zugewiesen'))
+    const historicStageRow = rows.find((row) =>
+      (row.textContent ?? '').includes('Manuell eskaliert'),
+    )
+
+    expect(workflowRow?.getAttribute('style')).toBeNull()
+    expect(String(historicStageRow?.getAttribute('style') ?? '')).toContain(
+      'rgb(69, 10, 10)',
+    )
   })
 })
 

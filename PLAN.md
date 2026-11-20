@@ -757,6 +757,7 @@ explanation. Offline is a core feature and appears early.
 | **15** | Duty windows of the readiness: the plan knows a duty window per weekday beside the continuous plan (WP-M15-01 … WP-M15-05) | a pool with office hours is expressible; every window is a shift of its own and the coupling names the technician only inside a window |
 | **16** | Facelift of the interface: one server-wide accent colour under „Darstellung“ (ADR-0036), the inbox as an entry of the header menu, the shell on a phone (WP-M16-00 … WP-M16-05) | the administration paints the whole interface with one saved colour, the bell sits in the menu next to the readiness and the shell fits a phone |
 | **17** | The way of the escalation: the recipient of an escalation decides over which channel it arrives (ADR-0037, WP-M17-00 … WP-M17-03) | an escalation that names a technician arrives over the channel that technician selected; without a selection it arrives on their own ntfy topic |
+| **18** | The entries of the house in the ticket history: the internal event types as one shared list, the frame in the colour of the internal entries under „Darstellung“ (ADR-0038, WP-M18-01) | every internal row of the history carries a frame in the saved colour and none of those rows reaches the printout or the e-mail of the customer |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -3468,6 +3469,26 @@ rule. The phase is split into **WP-M17-01** (the API — the recipients of an
 escalation), **WP-M17-02** (the administration separates the target from the way)
 and **WP-M17-03** (the own page names the rule). Every file exists in this
 commit.
+
+**The entries of the house in the ticket history (WP-M18-01, phase 18).** The
+office read the history of a ticket and asked: „in der ticketansicht sind im
+verlauf bestimmte entries only internally visible … ich want that all internal
+history entries are marked with a frame in the colour one can define for internal
+events / comments“. The rows of the house — a firing of a rule („Eskaliert“,
+„Eskalationsstufe: …“), an escalation note, the delivery of a message (the row
+„Benachrichtigung gesendet“ with its channel, its addressee and its target) and
+the internal
+comment — sat in the same list as the workflow steps of the ticket, and only the
+internal comment had a mark. **ADR-0038** decides the model:
+`INTERNAL_TICKET_EVENT_TYPES` in `packages/shared/src/schemas/ticket.ts` names
+the event types that never leave the office (`internal_comment`, `escalated`,
+`escalation_set`, `escalation_note`, `notification_sent`, `notification_failed`);
+the ticket view frames those rows in the colour of the internal entries under
+„Darstellung“ (the field `internalCommentColor` of ADR-0034 with its picker of
+WP-M16-06), and the same predicate keeps them out of the prepared send view —
+one list, two consumers, no channel name, no addressee and no target in a
+document of the customer. The workflow steps and the steps of the pause stay
+unframed. The phase is a single WP: **WP-M18-01**.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

@@ -54,6 +54,22 @@ function fixture() {
         payload: { text: 'Nur für die Kollegen' },
         createdAt: '2026-11-10T09:30:00.000Z',
       },
+      {
+        id: '44444444-4444-4444-8444-444444444441',
+        type: 'escalated',
+        actorKind: 'system',
+        actorName: null,
+        payload: { rule: 'review#1', stage: 'review' },
+        createdAt: '2026-11-10T09:45:00.000Z',
+      },
+      {
+        id: '55555555-5555-5555-8555-555555555551',
+        type: 'notification_sent',
+        actorKind: 'system',
+        actorName: null,
+        payload: { channel: 'ntfy', recipient: 'Erik Escalation', target: 'SiTec' },
+        createdAt: '2026-11-10T09:46:00.000Z',
+      },
     ],
     photos: [],
     timeline: {
@@ -128,5 +144,18 @@ describe('TicketSendPage — the internal comment stays in the house', () => {
 
     expect(content?.textContent).toContain('Der Kunde kommt um zehn.')
     expect(content?.textContent).not.toContain('Nur für die Kollegen')
+  })
+
+  it('leaves the escalation rows and the delivery rows out of the printout', async () => {
+    renderPage()
+
+    await waitFor(() => expect(screen.getByText('Der Kunde kommt um zehn.')).toBeTruthy())
+
+    const content = document.querySelector('[data-testid="ticket-send-content"]')
+
+    expect(content?.textContent).not.toContain('Benachrichtigung gesendet')
+    expect(content?.textContent).not.toContain('Erik Escalation')
+    expect(content?.textContent).not.toContain('SiTec')
+    expect(content?.textContent).not.toContain('Eskaliert')
   })
 })
