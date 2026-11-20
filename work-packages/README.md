@@ -1649,7 +1649,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M17-03 | the own page names the way of the escalation | done | yes |
 | WP-M18-01 | the entries of the house in the ticket history are framed (ADR-0038) | done | yes |
 | WP-M18-02 | a ticket without an object — spec, ADR and the split | planned | yes |
-| WP-M18-03 | the object „Ohne Objekt" and the field `object_info_text` | planned | yes |
+| WP-M18-03 | the object „Ohne Objekt" and the field `object_info_text` | done | yes |
 | WP-M18-04 | the API stores `object_info_text` and pins the object in the list | planned | yes |
 | WP-M18-05 | the internal form offers „Ohne Objekt" and the object info field | planned | yes |
 | WP-M18-06 | QR, stickers, import and deletion protect „Ohne Objekt" | planned | yes |

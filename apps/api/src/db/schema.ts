@@ -474,14 +474,18 @@ export const tickets = pgTable(
     ticketNo: text('ticket_no')
       .notNull()
       .default(sql`next_ticket_no()`),
-    /** Objects are only soft-deleted, so a report never loses its object. */
+    /** Objects are only soft-deleted, so a report never loses its object. The
+     * reserved row „Ohne Objekt" (OHNE-OBJEKT) stands in for customers without
+     * a contract of the installation (ADR-0042). */
     objectId: uuid('object_id')
       .notNull()
       .references(() => objects.id, { onDelete: 'restrict' }),
     status: text('status').notNull().default('NEW'),
     priority: text('priority').notNull().default('normal'),
     title: text('title'),
+    /** Free text about the object of a ticket without an object (WP-M18-03). */
     description: text('description'),
+    objectInfoText: text('object_info_text'),
     /** `text_templates.key` values — machine keys, never translated text. */
     faultTemplateKeys: text('fault_template_keys')
       .array()
@@ -1512,3 +1516,13 @@ export type NotificationPreference = typeof notificationPreferences.$inferSelect
 export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
 export type TicketStatusRow = typeof ticketStatuses.$inferSelect
 export type NewTicketStatusRow = typeof ticketStatuses.$inferInsert
+
+/**
+ * The reserved object standing in for tickets without an object (ADR-0042):
+ * customers without a contract of the installation get a ticket with this
+ * object and a free description in `tickets.object_info_text`. The row is
+ * seeded by migration `0054_ticket_without_object.sql` with a fixed UUID so
+ * the offline outbox can replay the same object id on every client.
+ */
+export const WITHOUT_OBJECT_OBJECT_ID = '00000000-0000-0000-0000-000000000001' as const
+export const WITHOUT_OBJECT_OBJECT_NO = 'OHNE-OBJEKT' as const
