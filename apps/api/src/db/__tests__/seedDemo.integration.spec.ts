@@ -62,7 +62,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const first = await seedDemo(db)
 
       expect(first).toEqual({ objects: 3, templates: 8, translations: 16 })
-      expect(await countRows(db, objects)).toBe(3)
+      // The reserved object „Ohne Objekt" is seeded by migration 0054 and is not
+      // part of the demo seed.
+      expect(await countRows(db, objects)).toBe(4)
       expect(await countRows(db, textTemplates)).toBe(8)
       expect(await countRows(db, textTemplateTranslations)).toBe(16)
 
@@ -81,6 +83,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const tokens = await db
         .select({ objectNo: objects.objectNo, qrToken: objects.qrToken })
         .from(objects)
+        .where(sql`${objects.objectNo} <> 'OHNE-OBJEKT'`)
 
       // WP-M2-02b: the demo seed no longer leaves `qr_token` NULL.
       expect(tokens).toHaveLength(3)
@@ -92,7 +95,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const second = await seedDemo(db)
 
       expect(second).toEqual({ objects: 0, templates: 0, translations: 0 })
-      expect(await countRows(db, objects)).toBe(3)
+      expect(await countRows(db, objects)).toBe(4)
       expect(await countRows(db, textTemplates)).toBe(8)
       expect(await countRows(db, textTemplateTranslations)).toBe(16)
     })
@@ -172,7 +175,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const tokens = await db.select({ qrToken: objects.qrToken }).from(objects)
 
-      expect(new Set(tokens.map((row) => row.qrToken)).size).toBe(3)
+      expect(
+        new Set(tokens.filter((row) => row.qrToken !== null).map((row) => row.qrToken)).size,
+      ).toBe(3)
     })
 
     it('rejects a duplicated object_no, also when it differs only in case', async () => {

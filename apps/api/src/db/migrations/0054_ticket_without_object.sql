@@ -14,12 +14,12 @@
 INSERT INTO "objects" ("id", "object_no", "name", "street", "house_number",
   "postal_code", "city", "contact_name", "contact_phone", "contact_email",
   "qr_token", "external_id", "active", "notes", "created_at", "updated_at")
-VALUES ('00000000-0000-0000-0000-000000000001', 'OHNE-OBJEKT', 'Ohne Objekt',
+VALUES ('00000000-0000-4000-8000-000000000001', 'OHNE-OBJEKT', 'Ohne Objekt',
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, now(), now())
 ON CONFLICT ("id") DO NOTHING;
 
 INSERT INTO "object_priority_overrides" ("object_id", "priority", "created_at", "updated_at")
-VALUES ('00000000-0000-0000-0000-000000000001', 'low', now(), now())
+VALUES ('00000000-0000-4000-8000-000000000001', 'low', now(), now())
 ON CONFLICT ("object_id") DO UPDATE SET
   "priority" = EXCLUDED."priority",
   "updated_at" = now();

@@ -86,11 +86,11 @@ type ObjectRow = typeof objects.$inferSelect
  * priority — the effective priority and the stored deviation.
  */
 export function summarizeObject(
-  row: ObjectRow,
+  row: ObjectRow & { pinned?: boolean },
   priority: TicketPriority,
   priorityOverride: TicketPriority | null,
 ): ObjectSummary {
-  return objectSummarySchema.parse({ ...row, priority, priorityOverride })
+  return objectSummarySchema.parse({ ...row, pinned: row.pinned === true, priority, priorityOverride })
 }
 
 async function findByObjectNo(database: Executor, objectNo: string): Promise<ObjectRow> {

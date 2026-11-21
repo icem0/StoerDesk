@@ -191,6 +191,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           objectName: 'Klinik',
           priority: 'critical',
         },
+        {
+          objectId: '00000000-0000-4000-8000-000000000001',
+          objectNo: 'OHNE-OBJEKT',
+          objectName: 'Ohne Objekt',
+          priority: 'low',
+        },
       ])
     })
 
@@ -203,11 +209,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .select({ objectId: objectPriorityOverrides.objectId })
         .from(objectPriorityOverrides)
 
-      expect(rows).toHaveLength(0)
+      expect(rows).toHaveLength(1)
+      expect(rows[0]!.objectId).toBe('00000000-0000-4000-8000-000000000001')
 
       const list = await getOverrides(cookies['admin'])
 
-      expect(list.json<OverridesBody>().overrides).toEqual([])
+      expect(list.json<OverridesBody>().overrides).toEqual([
+        {
+          objectId: '00000000-0000-4000-8000-000000000001',
+          objectNo: 'OHNE-OBJEKT',
+          objectName: 'Ohne Objekt',
+          priority: 'low',
+        },
+      ])
     })
   },
 )

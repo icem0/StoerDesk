@@ -1524,5 +1524,5 @@ export type NewTicketStatusRow = typeof ticketStatuses.$inferInsert
  * seeded by migration `0054_ticket_without_object.sql` with a fixed UUID so
  * the offline outbox can replay the same object id on every client.
  */
-export const WITHOUT_OBJECT_OBJECT_ID = '00000000-0000-0000-0000-000000000001' as const
+export const WITHOUT_OBJECT_OBJECT_ID = '00000000-0000-4000-8000-000000000001' as const
 export const WITHOUT_OBJECT_OBJECT_NO = 'OHNE-OBJEKT' as const
