@@ -1,6 +1,7 @@
 # WP-M0-01: Build from the local checkout by default
 
 format: small-model
+status: done
 depends-on: —
 phase: 0
 context-budget: 18k tokens

@@ -1,7 +1,7 @@
 # WP-M2-100: Photos on internal ticket creation (server + UI)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M2-15, WP-M2-16
 phase: 2
 context-budget: 30k tokens

@@ -1,7 +1,7 @@
 # WP-M4-02: Groups administration API (server)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M1-05
 phase: 4
 context-budget: 18k tokens

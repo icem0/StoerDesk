@@ -1,7 +1,7 @@
 # WP-M16-11: the sort direction of the ticket list sits under „Darstellung“
 
 format: small-model
-status: in_progress
+status: done
 depends-on: WP-M16-02
 phase: 16
 milestone: m16

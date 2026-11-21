@@ -1,7 +1,7 @@
 # WP-M16-11b: the frontend sort-direction checkbox and list order
 
 format: small-model
-status: in_progress
+status: done
 depends-on: WP-M16-02, WP-M16-11, WP-M16-11a
 phase: 16
 milestone: m16

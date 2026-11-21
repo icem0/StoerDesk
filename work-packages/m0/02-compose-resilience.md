@@ -1,6 +1,7 @@
 # WP-M0-02: Start the UI even when the API is not healthy
 
 format: small-model
+status: done
 depends-on: WP-M0-01
 phase: 0
 context-budget: 16k tokens

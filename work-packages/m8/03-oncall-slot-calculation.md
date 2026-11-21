@@ -1,7 +1,7 @@
 # WP-M8-03: DST-safe on-call slot calculation
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-01
 phase: 8
 milestone: m8

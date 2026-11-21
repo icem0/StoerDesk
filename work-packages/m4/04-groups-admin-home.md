@@ -1,7 +1,7 @@
 # WP-M4-04: Groups administration link on the administration home
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M4-03
 phase: 4
 context-budget: 14k tokens

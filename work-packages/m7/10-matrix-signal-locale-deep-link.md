@@ -1,7 +1,7 @@
 # WP-M7-10: matrix and signal channels — locale, deep link and the localized action label
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M7-01 (ntfy channel adapter and its env wiring), WP-M7-04b (the localized ntfy action label), WP-M7-08 (the Telegram channel adapter), WP-M7-09 (the Web Push channel adapter)
 phase: 7
 context-budget: 17k tokens

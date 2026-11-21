@@ -1,5 +1,7 @@
 # WP-M14-174 — Techniker-Name in der Ticketübersicht
 
+status: done
+
 ## Ziel
 
 In der Ticketübersicht (`TicketListPage`, `apps/web/src/features/tickets/ticket-list-page.tsx`) wird vor dem Status-Badge ein weiteres Feld angezeigt, das den Namen des zugewiesenen Technikers trägt. So hat der Blick auf die Liste sofort im Überblick, welcher Mitarbeiter ein Ticket bestätigt bzw. übernommen hat.

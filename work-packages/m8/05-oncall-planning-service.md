@@ -1,7 +1,7 @@
 # WP-M8-05: on-call settings and shift planning service
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-02, WP-M8-03
 phase: 8
 milestone: m8

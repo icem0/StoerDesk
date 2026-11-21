@@ -1,5 +1,5 @@
 format: small-model
-status: pending
+status: done
 depends-on: WP-M2-82
 phase: 2
 context-budget: 12k tokens

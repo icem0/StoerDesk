@@ -1,7 +1,7 @@
 # WP-M7-01: ntfy channel adapter (server-side push)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M1-12
 phase: 7
 context-budget: 22k tokens

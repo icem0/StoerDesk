@@ -1,7 +1,7 @@
 # WP-M6-13: phase-6 exit criterion and record
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M6-08, WP-M6-10, WP-M6-11
 phase: 6
 milestone: m6

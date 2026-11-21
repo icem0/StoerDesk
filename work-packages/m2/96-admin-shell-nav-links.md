@@ -1,7 +1,7 @@
 # WP-M2-96: admin shell navigation links for groups, bma-sync and text-templates
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M2-94b (name fields in the users page UI)
 phase: 2
 context-budget: 14k tokens

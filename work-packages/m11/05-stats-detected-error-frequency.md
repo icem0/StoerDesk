@@ -1,7 +1,7 @@
 # WP-M11-05: Statistik — `byDetectedError` und View-Erweiterung
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-02
 phase: 11
 milestone: m11

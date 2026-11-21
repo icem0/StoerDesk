@@ -1,7 +1,7 @@
 # WP-M4-08: Serve ticket photos and render them as an image gallery
 
 format: small-model
-status: in_progress
+status: done
 depends-on: WP-M2-04c, WP-M2-18b
 phase: 4
 context-budget: 18k tokens

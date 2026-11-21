@@ -1,7 +1,7 @@
 # WP-M11-03: API — CRUD `/api/v1/detected-errors`
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-02
 phase: 11
 milestone: m11

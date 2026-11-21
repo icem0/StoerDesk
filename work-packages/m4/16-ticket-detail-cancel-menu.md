@@ -1,7 +1,7 @@
-# WP-M4-06: Ticket detail cancel menu instead of always-visible fields
+# WP-M4-16: Ticket detail cancel menu instead of always-visible fields
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M4-05, WP-M2-91, WP-M2-78
 phase: 4
 context-budget: 18k tokens
@@ -56,5 +56,6 @@ Expected: all green. A cancelled ticket shows no permanent input fields; only af
 - Files changed: `apps/web/src/features/tickets/ticket-detail-page.tsx`, `apps/web/src/i18n/locales/de/ticket.json`, `apps/web/src/i18n/locales/en/ticket.json`
 - Interfaces added: none (UI rework only)
 - Verified:
+- Note: landed in commit `e13836b5` under the then-shared id `WP-M4-06`; renumbered to `WP-M4-16` because `WP-M4-06` is the hard-delete bugfix.
 - Follow-up WP: none
 - Open question: none

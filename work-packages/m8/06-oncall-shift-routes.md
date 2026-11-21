@@ -1,7 +1,7 @@
 # WP-M8-06: on-call shift and settings routes
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-04, WP-M8-05
 phase: 8
 milestone: m8

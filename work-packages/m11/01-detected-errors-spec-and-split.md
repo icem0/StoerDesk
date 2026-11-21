@@ -1,7 +1,7 @@
 # WP-M11-01: Festgestellte Fehler — Spezifikation, ADR und Phase-11-Split
 
 format: small-model
-status: in_progress
+status: done
 depends-on: WP-M10-18
 phase: 11
 milestone: m11

@@ -1,7 +1,7 @@
 # WP-M11-07: Ticket-Detail Close-Panel mit festgestellten Fehlern
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-04
 phase: 11
 milestone: m11

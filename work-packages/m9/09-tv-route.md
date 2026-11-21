@@ -1,7 +1,7 @@
 # WP-M9-09: token-protected TV snapshot route
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M9-05, WP-M9-08
 phase: 9
 milestone: m9

@@ -1,7 +1,7 @@
 # WP-M11-10: Phase-11 Exit-Kriterium und Record
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-01, WP-M11-02, WP-M11-03, WP-M11-04, WP-M11-05, WP-M11-06, WP-M11-07, WP-M11-08, WP-M11-09
 phase: 11
 milestone: m11

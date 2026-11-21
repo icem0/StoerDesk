@@ -1,7 +1,7 @@
 # WP-M8-14b: on-call self-service read routes
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-12
 phase: 8
 milestone: m8

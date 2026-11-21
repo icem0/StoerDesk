@@ -1,7 +1,7 @@
 # WP-M11-06: Admin-UI — `DetectedErrorsPage` (CRUD, archivieren)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-03
 phase: 11
 milestone: m11

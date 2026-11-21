@@ -1,7 +1,7 @@
 # WP-M4-14: Favicon from company logo
 
 format: small-model
-status: planned
+status: done
 depends-on: —
 phase: 4
 context-budget: 12k tokens

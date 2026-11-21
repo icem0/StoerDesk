@@ -1,7 +1,7 @@
 # WP-M8-04: on-call pool API
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M8-02
 phase: 8
 milestone: m8

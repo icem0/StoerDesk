@@ -1,7 +1,7 @@
 # WP-M10-18: Phase-10 exit criterion and record
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-17
 phase: 10
 milestone: m10

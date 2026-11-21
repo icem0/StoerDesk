@@ -1,7 +1,7 @@
 # WP-M11-02: DB — `detected_errors`-Tabelle und `tickets.detected_error_keys`
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-01
 phase: 11
 milestone: m11

@@ -1,7 +1,7 @@
 # WP-M4-15: User-group membership API (server)
 
 format: small-model
-status: planned
+status: in progress
 depends-on: WP-M4-02
 phase: 4
 context-budget: 20k tokens

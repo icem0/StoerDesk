@@ -1,6 +1,7 @@
 # WP-M0-05: Publish versioned Docker images after a green check
 
 format: small-model
+status: done
 depends-on: WP-M0-04
 phase: 0
 context-budget: 18k tokens

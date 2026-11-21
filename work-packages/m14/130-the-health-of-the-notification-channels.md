@@ -1,7 +1,7 @@
 # WP-M14-130: the health of the notification channels — ADR-0028, the spec and the split
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens

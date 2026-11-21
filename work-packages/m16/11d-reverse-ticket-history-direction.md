@@ -1,7 +1,7 @@
 # WP-M16-11d: reverse ticket history direction under „Darstellung“
 
 format: small-model
-status: in_progress
+status: done
 depends-on: WP-M16-11
 phase: 16
 milestone: m16

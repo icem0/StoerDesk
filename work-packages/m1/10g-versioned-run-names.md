@@ -1,7 +1,7 @@
 # WP-M1-10g: versioned CI run names for the publish chain
 
 format: small-model
-status: overtaken by WP-M1-10h
+status: superseded by WP-M1-10h
 depends-on: WP-M1-10f
 phase: 1
 context-budget: 20k tokens

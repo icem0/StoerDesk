@@ -1,7 +1,7 @@
 # WP-M11-09: Tests — Integrationstests für API, Close und Statistik
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-03, WP-M11-04, WP-M11-05, WP-M11-06, WP-M11-07
 phase: 11
 milestone: m11

@@ -1,6 +1,7 @@
 # WP-M0-03: Anchor the binding build plan
 
 format: small-model
+status: done
 depends-on: —
 phase: 0
 context-budget: 18k tokens

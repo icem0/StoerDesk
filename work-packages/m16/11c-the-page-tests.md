@@ -1,7 +1,7 @@
 # WP-M16-11c: the page tests for the sort direction
 
 format: small-model
-status: in_progress
+status: done
 depends-on: WP-M16-11a, WP-M16-11b
 phase: 16
 milestone: m16

@@ -1,7 +1,7 @@
 # WP-M14-134: the priority of the object deviates from the standard — ADR-0029, the spec and the split
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 20k tokens

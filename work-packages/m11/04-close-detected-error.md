@@ -1,7 +1,7 @@
 # WP-M11-04: Close-Route akzeptiert Kommentar und festgestellte Fehler
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M11-02
 phase: 11
 milestone: m11

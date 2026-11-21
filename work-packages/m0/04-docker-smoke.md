@@ -1,6 +1,7 @@
 # WP-M0-04: Add a repeatable Docker smoke test
 
 format: small-model
+status: done
 depends-on: WP-M0-01, WP-M0-02
 phase: 0
 context-budget: 14k tokens

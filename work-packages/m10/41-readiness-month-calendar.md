@@ -1,7 +1,7 @@
 # WP-M10-41: the readiness calendar as a two-month grid
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M10-33, WP-M10-34
 phase: 10
 milestone: m10
