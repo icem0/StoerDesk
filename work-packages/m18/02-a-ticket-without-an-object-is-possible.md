@@ -1,7 +1,7 @@
 # WP-M18-02: a ticket without an object — spec, ADR and the split
 
 format: small-model
-status: planned
+status: done
 depends-on: —
 phase: 18
 milestone: m18
