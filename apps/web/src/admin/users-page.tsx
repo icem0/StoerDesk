@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type {
+  GroupListResponse,
+  GroupMemberListResponse,
   ResetPasswordResponse,
   UserListResponse,
   UserSummary,
@@ -24,6 +26,41 @@ function useUsers() {
   return useQuery({
     queryKey: ['users'],
     queryFn: () => apiFetch<UserListResponse>('/v1/users'),
+    retry: false,
+  })
+}
+
+/**
+ * The group names of every user (WP-M4-15c). Membership is only readable from
+ * the group side, so the query reads the groups and then the member list of
+ * every group and turns the rows into a map `userId -> group names`.
+ */
+function useMemberships() {
+  return useQuery({
+    queryKey: ['memberships'],
+    queryFn: async () => {
+      const groups = await apiFetch<GroupListResponse>('/v1/groups')
+      const memberLists = await Promise.all(
+        groups.groups.map(async (group) => ({
+          name: group.name,
+          response: await apiFetch<GroupMemberListResponse>(`/v1/groups/${group.id}/members`),
+        })),
+      )
+
+      const memberships: Record<string, string[]> = {}
+
+      for (const group of memberLists) {
+        for (const member of group.response.members) {
+          memberships[member.userId] = [...(memberships[member.userId] ?? []), group.name]
+        }
+      }
+
+      for (const names of Object.values(memberships)) {
+        names.sort((left, right) => left.localeCompare(right))
+      }
+
+      return memberships
+    },
     retry: false,
   })
 }
@@ -106,6 +143,7 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] })
+      void queryClient.invalidateQueries({ queryKey: ['memberships'] })
     },
   })
 
@@ -226,6 +264,7 @@ export function UsersPage() {
   } | null>(null)
 
   const users = useUsers()
+  const memberships = useMemberships()
   const roles = useRoles(canWrite)
 
   const resetPassword = useMutation({
@@ -238,6 +277,7 @@ export function UsersPage() {
     onSuccess: (answer, user) => {
       setTemporaryPassword({ email: user.email, password: answer.temporaryPassword })
       void queryClient.invalidateQueries({ queryKey: ['users'] })
+      void queryClient.invalidateQueries({ queryKey: ['memberships'] })
     },
   })
 
@@ -305,6 +345,7 @@ export function UsersPage() {
             <th>{t('admin.users.table.locale')}</th>
             <th>{t('admin.users.table.active')}</th>
             <th>{t('admin.users.table.roles')}</th>
+            <th>{t('admin.users.table.groups')}</th>
             {canWrite ? <th>{t('admin.users.table.actions')}</th> : null}
           </tr>
         </thead>
@@ -325,6 +366,7 @@ export function UsersPage() {
               <td>{t(`admin.users.locales.${user.locale}`)}</td>
               <td>{user.active ? t('admin.users.active') : t('admin.users.inactive')}</td>
               <td>{user.roleKeys.join(', ')}</td>
+              <td>{(memberships.data?.[user.id] ?? []).join(', ')}</td>
               {canWrite ? (
                 <td>
                   <div className="flex flex-wrap gap-2">

@@ -1711,7 +1711,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M4-14 | favicon from the company logo | done | yes |
 | WP-M4-15 | user-group membership API | done | yes |
 | WP-M4-15b | member panel on the groups page | done | yes |
-| WP-M4-15c | users page shows the groups of a user | planned | yes |
+| WP-M4-15c | users page shows the groups of a user | done | yes |
 | WP-M4-16 | ticket detail cancel menu instead of always-visible fields | done | yes |
 | WP-M14-174 | the assigned technician name in the ticket list (out of band) | done | yes |
 | WP-M16-11a | the backend sort direction | done | yes |

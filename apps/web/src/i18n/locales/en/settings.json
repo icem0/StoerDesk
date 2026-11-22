@@ -46,6 +46,7 @@
         "locale": "Language",
         "active": "Active",
         "roles": "Roles",
+        "groups": "Groups",
         "actions": "Actions"
       },
       "active": "active",

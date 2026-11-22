@@ -1,7 +1,7 @@
 # WP-M4-15c: The users page shows the groups of a user (web)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M4-15
 phase: 4
 context-budget: 18k tokens
@@ -64,8 +64,14 @@ Expected: all green; the extended test fails before the change and passes after 
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/users-page.tsx` (`useMemberships`, the
+  `Groups` column), `apps/web/src/admin/__tests__/users-page.test.tsx` (the two
+  group assertions), `apps/web/src/i18n/locales/de/settings.json` and
+  `apps/web/src/i18n/locales/en/settings.json` (`admin.users.table.groups`)
+- Interfaces added: `useMemberships()` and the `admin.users.table.groups` column
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run i18n:check` (1851 keys in de and en),
+  `npm run test:run -- apps/web/src/admin/__tests__/users-page.test.tsx` (9 passed)
+  and `npm run wp:check`
 - Follow-up WP: none
 - Open question: none

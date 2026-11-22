@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ADR-0025 is superseded.
 
 ### Added
+- The users page shows the groups of a user (**WP-M4-15c**, out of band in phase
+  4): a `Groups` column names the groups of every row, read through
+  `GET /api/v1/groups` and the member list of every group and sorted by group
+  name; the users page has no write access, assigning stays on the groups page.
 - The member panel of the groups page (**WP-M4-15b**, out of band in phase 4):
   selecting a group next to its edit form shows its members, a remove button per
   member and an add form with one checkbox per user not yet in the group; the

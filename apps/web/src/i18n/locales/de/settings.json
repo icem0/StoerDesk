@@ -46,6 +46,7 @@
         "locale": "Sprache",
         "active": "Aktiv",
         "roles": "Rollen",
+        "groups": "Gruppen",
         "actions": "Aktionen"
       },
       "active": "aktiv",

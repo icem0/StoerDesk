@@ -70,7 +70,20 @@ afterEach(() => {
 
 describe('UsersPage', () => {
   it('renders the user table for a session with user.read', async () => {
+    const groupId = '77777777-7777-4777-8777-777777777777'
+
     stubRoutes({
+      [`/v1/groups/${groupId}/members`]: {
+        members: [
+          {
+            userId: adminUser.id,
+            email: adminUser.email,
+            givenName: 'Ada',
+            familyName: 'Admin',
+          },
+        ],
+      },
+      '/v1/groups': { groups: [{ id: groupId, name: 'Technik', userCount: 1 }] },
       '/v1/me': meResponse(['user.read']),
       '/v1/users': { users: [adminUser] },
     })
@@ -79,6 +92,60 @@ describe('UsersPage', () => {
     expect(await screen.findByText('admin@example.com')).toBeTruthy()
     expect(screen.getByText('Benutzerverwaltung')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Zurück zu den Einstellungen' })).toBeTruthy()
+    expect(screen.getByText('Gruppen')).toBeTruthy()
+    expect(await screen.findByText('Technik')).toBeTruthy()
+  })
+
+  it('lists the groups of every user sorted by group name', async () => {
+    const technikId = '88888888-8888-4888-8888-888888888888'
+    const readinessId = '99999999-9999-4999-8999-999999999999'
+    const colleague = {
+      id: '22222222-2222-4222-8222-222222222222',
+      email: 'kollege@example.com',
+      givenName: 'Kai',
+      familyName: 'Kollege',
+      locale: 'de',
+      theme: 'auto',
+      active: true,
+      roleKeys: ['oncall'],
+    }
+
+    stubRoutes({
+      [`/v1/groups/${technikId}/members`]: {
+        members: [
+          { userId: adminUser.id, email: adminUser.email, givenName: 'Ada', familyName: 'Admin' },
+          {
+            userId: colleague.id,
+            email: colleague.email,
+            givenName: colleague.givenName,
+            familyName: colleague.familyName,
+          },
+        ],
+      },
+      [`/v1/groups/${readinessId}/members`]: {
+        members: [
+          { userId: adminUser.id, email: adminUser.email, givenName: 'Ada', familyName: 'Admin' },
+        ],
+      },
+      '/v1/groups': {
+        groups: [
+          { id: technikId, name: 'Technik', userCount: 2 },
+          { id: readinessId, name: 'Bereitschaft', userCount: 1 },
+        ],
+      },
+      '/v1/me': meResponse(['user.read']),
+      '/v1/users': { users: [adminUser, colleague] },
+    })
+
+    renderPage()
+
+    const adminRow = (await screen.findByText('admin@example.com')).closest('tr') as HTMLElement
+
+    expect(await within(adminRow).findByText('Bereitschaft, Technik')).toBeTruthy()
+
+    const colleagueRow = screen.getByText('kollege@example.com').closest('tr') as HTMLElement
+
+    expect(within(colleagueRow).getByText('Technik')).toBeTruthy()
   })
 
   it('offers create and edit controls only with user.write', async () => {
