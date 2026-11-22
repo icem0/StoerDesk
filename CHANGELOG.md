@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ADR-0025 is superseded.
 
 ### Added
+- The user-group membership API (**WP-M4-15**, out of band in phase 4):
+  `GET`/`POST /api/v1/groups/:id/members` and
+  `DELETE /api/v1/groups/:id/members/:userId` list, add and remove the rows of
+  `user_groups` behind `user.read`/`user.write`; the add runs in one transaction,
+  a duplicate answers `409 membership_exists`, an unknown group or user
+  `404 group_not_found`/`404 user_not_found`, and the member count of
+  `GET /api/v1/groups` follows the written rows.
 - Tests for tickets without an object (**WP-M18-08**, phase 18, ADR-0042): creating through the reserved object arrives with priority `low`, stores `object_info_text` and is counted by the statistics filter `withoutObject: true`; the web picker lists „Ohne Objekt" last and submits the info field.
 - Statistics count tickets without an object (**WP-M18-07**, phase 18, ADR-0042): `GET /api/v1/stats/*` gains the filter `withoutObject` — `true` shows only tickets of customers without a contract, `false` only tickets of contract objects; the top-objects list keeps showing the reserved row with its count.
 - QR stickers, CSV import and deletion protect „Ohne Objekt" (**WP-M18-06**, phase 18, ADR-0042): a CSV row with the reserved object number is skipped by the import preview, the sticker sheet never offers it for printing, and deleting it answers `422 object_reserved`.

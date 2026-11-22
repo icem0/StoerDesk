@@ -1,7 +1,7 @@
 # WP-M4-15: User-group membership API (server)
 
 format: small-model
-status: in progress
+status: done
 depends-on: WP-M4-02
 phase: 4
 context-budget: 20k tokens
@@ -70,9 +70,14 @@ Expected: all green; the new spec fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `packages/shared/src/schemas/group.ts` (member contracts),
+  `apps/api/src/admin/groups.ts` (three member routes, transactional add),
+  `apps/api/src/admin/__tests__/groups-membership.integration.spec.ts` (new)
+- Interfaces added: `GET`/`POST /api/v1/groups/:id/members` and
+  `DELETE /api/v1/groups/:id/members/:userId`
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run test:run -- apps/api/src/admin/__tests__/groups-membership.integration.spec.ts`
+  (10 passed) and `npm run wp:check`
 - Follow-up WP: WP-M4-15b (`15b-groups-membership-ui.md`) and WP-M4-15c
   (`15c-groups-membership-users-ui.md`) — both files exist in this commit.
 - Open question: none

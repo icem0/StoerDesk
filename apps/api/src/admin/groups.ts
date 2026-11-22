@@ -283,43 +283,52 @@ export const adminGroupsRoutes = fp<AdminGroupsRouteOptions>(
         const groupId = parsedId.data
         const userId = parsed.data.userId
 
-        await findGroup(database, groupId)
+        const membership = await database.transaction(async (tx) => {
+          const [group] = await tx
+            .select({ id: groups.id })
+            .from(groups)
+            .where(eq(groups.id, groupId))
+            .limit(1)
 
-        const unknownUser = await database
-          .select({ id: users.id })
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1)
+          if (group === undefined) {
+            throw new GroupRouteError(404, 'group_not_found', { fields: ['id'] })
+          }
 
-        if (unknownUser.length === 0) {
-          return reply.code(404).send({ code: 'user_not_found', params: { fields: ['userId'] } })
-        }
+          const [user] = await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1)
 
-        const knownMembership = await database
-          .select({ userId: userGroups.userId })
-          .from(userGroups)
-          .where(and(eq(userGroups.userId, userId), eq(userGroups.groupId, groupId)))
-          .limit(1)
+          if (user === undefined) {
+            throw new GroupRouteError(404, 'user_not_found', { fields: ['userId'] })
+          }
 
-        if (knownMembership.length > 0) {
-          return reply
-            .code(409)
-            .send({
-              code: 'membership_exists',
-              params: { fields: ['id', 'userId'], userId, groupId },
+          const [knownMembership] = await tx
+            .select({ userId: userGroups.userId })
+            .from(userGroups)
+            .where(and(eq(userGroups.userId, userId), eq(userGroups.groupId, groupId)))
+            .limit(1)
+
+          if (knownMembership !== undefined) {
+            throw new GroupRouteError(409, 'membership_exists', { fields: ['id', 'userId'] })
+          }
+
+          const [inserted] = await tx
+            .insert(userGroups)
+            .values({ userId, groupId })
+            .returning({ userId: userGroups.userId, groupId: userGroups.groupId })
+
+          if (inserted === undefined) {
+            throw new GroupRouteError(500, 'group_membership_failed', {
+              fields: ['id', 'userId'],
             })
-        }
+          }
 
-        const [inserted] = await database
-          .insert(userGroups)
-          .values({ userId, groupId })
-          .returning({ userId: userGroups.userId, groupId: userGroups.groupId })
+          return inserted
+        })
 
-        if (inserted === undefined) {
-          throw new GroupRouteError(500, 'group_membership_failed', { fields: ['id', 'userId'] })
-        }
-
-        return reply.code(201).send(groupMembershipSchema.parse(inserted))
+        return reply.code(201).send(groupMembershipSchema.parse(membership))
       },
     )
 
