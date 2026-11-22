@@ -1,7 +1,7 @@
 # WP-M4-15b: Member panel on the groups page (web)
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M4-15
 phase: 4
 context-budget: 20k tokens
@@ -71,8 +71,18 @@ in parity.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/groups-page.tsx` (`MemberPanel`, `useMemberList`,
+  `useUsers`), `apps/web/src/admin/__tests__/groups-page.test.tsx` (new),
+  `apps/web/src/i18n/locales/de/settings.json` and
+  `apps/web/src/i18n/locales/en/settings.json` (`admin.groups.members.*` and the
+  three member error keys)
+- Interfaces added: `MemberPanel({ group })`, `useMemberList(groupId)`, `useUsers()`
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run i18n:check` (1850 keys in de and en),
+  `npm run test:run -- apps/web/src/admin/__tests__/groups-page.test.tsx` (2 passed)
+  and `npm run wp:check`
 - Follow-up WP: WP-M4-15c (`15c-groups-membership-users-ui.md`)
-- Open question: none
+- Open question: none — the three member error codes are mapped by a local
+  `memberErrorMessage` in `groups-page.tsx`, because `handledErrorCodes` lives in
+  `group-form-parts.tsx`, which is outside this WP's `files-write` and would have
+  made the write set five files (`PLAN.md` §17: max. 4).

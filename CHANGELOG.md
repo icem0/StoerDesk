@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ADR-0025 is superseded.
 
 ### Added
+- The member panel of the groups page (**WP-M4-15b**, out of band in phase 4):
+  selecting a group next to its edit form shows its members, a remove button per
+  member and an add form with one checkbox per user not yet in the group; the
+  writes reuse the member routes of WP-M4-15 and refresh the group and member
+  lists, and the three member error codes have their own de/en texts.
 - The user-group membership API (**WP-M4-15**, out of band in phase 4):
   `GET`/`POST /api/v1/groups/:id/members` and
   `DELETE /api/v1/groups/:id/members/:userId` list, add and remove the rows of

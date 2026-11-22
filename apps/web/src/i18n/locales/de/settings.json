@@ -153,6 +153,18 @@
       "fields": {
         "name": "Name"
       },
+      "members": {
+        "title": "Mitglieder von {{name}}",
+        "loading": "Lädt …",
+        "empty": "Noch keine Mitglieder.",
+        "name": "Name",
+        "email": "E-Mail",
+        "actions": "Aktionen",
+        "remove": "Entfernen",
+        "addTitle": "Mitglied hinzufügen",
+        "add": "Hinzufügen",
+        "noCandidates": "Alle Benutzer sind bereits Mitglied."
+      },
       "errors": {
         "session_invalid": "Sitzung abgelaufen – bitte neu anmelden.",
         "forbidden": "Zugriff verweigert – fehlende Berechtigung.",
@@ -160,6 +172,9 @@
         "group_not_found": "Gruppe nicht gefunden.",
         "group_name_taken": "Dieser Gruppenname ist bereits vergeben.",
         "group_in_use": "Die Gruppe wird noch von Benutzern verwendet.",
+        "user_not_found": "Benutzer nicht gefunden.",
+        "membership_exists": "Dieser Benutzer ist bereits Mitglied der Gruppe.",
+        "membership_not_found": "Dieser Benutzer ist kein Mitglied der Gruppe.",
         "unknown": "Speichern fehlgeschlagen."
       }
     },

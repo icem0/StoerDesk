@@ -153,6 +153,18 @@
       "fields": {
         "name": "Name"
       },
+      "members": {
+        "title": "Members of {{name}}",
+        "loading": "Loading …",
+        "empty": "No members yet.",
+        "name": "Name",
+        "email": "E-mail",
+        "actions": "Actions",
+        "remove": "Remove",
+        "addTitle": "Add member",
+        "add": "Add",
+        "noCandidates": "All users are already members."
+      },
       "errors": {
         "session_invalid": "Session expired – please sign in again.",
         "forbidden": "Access denied – missing permission.",
@@ -160,6 +172,9 @@
         "group_not_found": "Group not found.",
         "group_name_taken": "This group name is already taken.",
         "group_in_use": "Users still belong to this group.",
+        "user_not_found": "User not found.",
+        "membership_exists": "This user is already a member of the group.",
+        "membership_not_found": "This user is not a member of the group.",
         "unknown": "Saving failed."
       }
     },
