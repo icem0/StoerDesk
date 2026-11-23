@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The history of a ticket sorts its `Meldung gemeldet` row of a backdated
+  report by date and time (**WP-M2-98e**, out of band in phase 16): the row was
+  pinned above the list and appeared on top of newer entries of later days, so
+  the history looked sorted by the clock time only. The row now sorts together
+  with the events of the ticket and follows the direction under „Darstellung“
+  like every other row.
 - The web push reaches the push service again (**WP-M14-176**, out of band in
   phase 14): the channel took the sender of the `web-push` library through a
   namespace import, and the built API runs as an ES module — Node exposes a

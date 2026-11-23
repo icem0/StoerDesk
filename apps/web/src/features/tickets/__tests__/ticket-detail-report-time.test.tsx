@@ -6,13 +6,24 @@ import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import type { TicketDetailResponse } from '@stoerdesk/shared'
+
 import { i18n } from '../../../i18n'
 import { TicketDetailPage } from '../ticket-detail-page'
 
 const REPORTED_AT = '2026-11-09T19:00:00.000Z'
 const RECEIVED_AT = '2026-11-10T08:00:00.000Z'
 
-function fixture() {
+const CREATED_EVENT = {
+  id: '22222222-2222-4222-8222-222222222222',
+  type: 'created',
+  actorKind: 'user',
+  actorName: 'Max Muster',
+  payload: { reporterChannel: 'email', reporterKind: 'external' },
+  createdAt: RECEIVED_AT,
+}
+
+function fixture(events: TicketDetailResponse['events'] = [CREATED_EVENT]) {
   return {
     ticket: {
       id: '11111111-1111-4111-8111-111111111111',
@@ -34,16 +45,7 @@ function fixture() {
       recordedBy: 'Max Muster',
       statusToken: null,
     },
-    events: [
-      {
-        id: '22222222-2222-4222-8222-222222222222',
-        type: 'created',
-        actorKind: 'user',
-        actorName: 'Max Muster',
-        payload: { reporterChannel: 'email', reporterKind: 'external' },
-        createdAt: RECEIVED_AT,
-      },
-    ],
+    events,
     photos: [],
     timeline: {
       reportedAt: REPORTED_AT,
@@ -62,7 +64,7 @@ function fixture() {
   }
 }
 
-function renderPage() {
+function renderPage(events?: TicketDetailResponse['events']) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL) => {
@@ -76,7 +78,7 @@ function renderPage() {
         return Response.json({ templates: [] })
       }
 
-      return Response.json(fixture())
+      return Response.json(fixture(events))
     }),
   )
 
@@ -110,5 +112,29 @@ describe('TicketDetailPage report metadata', () => {
     expect(screen.getAllByText('E-Mail').length).toBeGreaterThan(0)
     expect(screen.getByText('Externer Melder')).toBeTruthy()
     expect(screen.getByText('Erfasst am')).toBeTruthy()
+  })
+
+  it('sorts the backdated report row by its date and time, not pinned on top', async () => {
+    renderPage([
+      CREATED_EVENT,
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        type: 'commented',
+        actorKind: 'user',
+        actorName: 'Max Muster',
+        payload: { text: 'Rückfrage' },
+        createdAt: '2026-11-10T09:00:00.000Z',
+      },
+    ])
+
+    await waitFor(() => expect(screen.getByTestId('history-reported')).toBeTruthy())
+
+    // Default direction is 'desc' (newest first): comment 10.11. 09:00, created
+    // 10.11. 08:00, reported 09.11. 19:00 — the reported row belongs at the end,
+    // not above the newer rows.
+    const text = screen.getByTestId('ticket-history').textContent ?? ''
+    expect(text.indexOf('Kommentiert')).toBeGreaterThan(-1)
+    expect(text.indexOf('Kommentiert')).toBeLessThan(text.indexOf('Meldung eingegangen'))
+    expect(text.indexOf('Meldung eingegangen')).toBeLessThan(text.indexOf('Meldung gemeldet'))
   })
 })

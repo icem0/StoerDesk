@@ -509,23 +509,35 @@ export function TicketDetailPage() {
    * row for it — the report entry already says that the ticket arrived
    * (WP-M14-152c).
    */
-  const historyEvents = events
-    .filter(
-      (event) =>
-        !(
-          event.type === 'escalated' &&
-          firstStageKey !== null &&
-          eventStageKey(event.payload) === firstStageKey
-        ),
-    )
-    .sort((a, b) => {
-      const aTime = Date.parse(a.createdAt)
-      const bTime = Date.parse(b.createdAt)
-      // Die Richtung der Darstellung („Darstellung“ → „Neueste zuerst“) gilt auch
-      // für den Verlauf: 'desc' zeigt die neueste Meldung oben, 'asc' die älteste.
-      const direction = display.data?.ticketSortDirection ?? DEFAULT_TICKET_SORT_DIRECTION
-      return direction === 'desc' ? bTime - aTime : aTime - bTime
-    })
+  const historyEvents = events.filter(
+    (event) =>
+      !(
+        event.type === 'escalated' &&
+        firstStageKey !== null &&
+        eventStageKey(event.payload) === firstStageKey
+      ),
+  )
+
+  /**
+   * The report row of a backdated ticket is a history row like every other: it
+   * sorts by its own time (`reportedAt`) and follows the same direction as the
+   * events of the ticket. Pinning it above the list showed an entry of a past
+   * day on top of newer ones (WP-M2-98e).
+   */
+  const historyRows: Array<
+    | { kind: 'event'; at: string; event: (typeof historyEvents)[number] }
+    | { kind: 'reported'; at: string }
+  > = [
+    ...historyEvents.map((event) => ({ kind: 'event' as const, at: event.createdAt, event })),
+    ...(backdatedReport ? [{ kind: 'reported' as const, at: ticket.reportedAt }] : []),
+  ].sort((a, b) => {
+    const aTime = Date.parse(a.at)
+    const bTime = Date.parse(b.at)
+    // Die Richtung der Darstellung („Darstellung“ → „Neueste zuerst“) gilt auch
+    // für den Verlauf: 'desc' zeigt die neueste Meldung oben, 'asc' die älteste.
+    const direction = display.data?.ticketSortDirection ?? DEFAULT_TICKET_SORT_DIRECTION
+    return direction === 'desc' ? bTime - aTime : aTime - bTime
+  })
 
   /**
    * The technicians the escalation assigned to this ticket (§7.14, ADR-0026,
@@ -1713,24 +1725,34 @@ export function TicketDetailPage() {
             <p className="p-3 text-slate-400">{t('detail.historyEmpty')}</p>
           ) : (
             <>
-              {backdatedReport ? (
-                <div className="p-3 flex gap-3" data-testid="history-reported">
-                  <div className="w-36 shrink-0 whitespace-nowrap">
-                    <span className="text-xs font-mono text-slate-500">
-                      {formatEventDateTime(ticket.reportedAt)}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-slate-200">
-                      {t('status.events.reported')}
+              {historyRows.map((row) => {
+                if (row.kind === 'reported') {
+                  return (
+                    <div
+                      key="history-reported"
+                      className="p-3 flex gap-3"
+                      data-testid="history-reported"
+                    >
+                      <div className="w-36 shrink-0 whitespace-nowrap">
+                        <span className="text-xs font-mono text-slate-500">
+                          {formatEventDateTime(ticket.reportedAt)}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-slate-200">
+                          {t('status.events.reported')}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {ticket.reporterName ?? t('detail.field.unknown')}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-400">
-                      {ticket.reporterName ?? t('detail.field.unknown')}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              {historyEvents.map((event) => (
+                  )
+                }
+
+                const event = row.event
+
+                return (
               <div
                 key={event.id}
                 data-testid={
@@ -1826,7 +1848,8 @@ export function TicketDetailPage() {
                   })()}
                 </div>
               </div>
-              ))}
+                )
+              })}
             </>
           )}
         </div>
