@@ -692,9 +692,7 @@
       "createTitle": "Create status",
       "editTitle": "Edit status {{key}}",
       "table": {
-        "key": "Key",
-        "nameDe": "Name de",
-        "nameEn": "Name en",
+        "name": "Name",
         "color": "Colour",
         "position": "Position",
         "active": "Active",

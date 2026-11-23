@@ -107,27 +107,49 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+async function openRowMenu(index: number) {
+  const buttons = await screen.findAllByRole('button', { name: 'Aktionen' })
+
+  await vi.waitFor(() => void (buttons[index] as HTMLElement).click())
+}
+
 describe('StatusPage', () => {
   it('renders the status table for a session with settings.read', async () => {
     stubRoutes({ '/v1/me': meResponse(['settings.read']), '/v1/admin/statuses': statusList })
     renderPage()
 
-    expect(await screen.findByText('NEW')).toBeTruthy()
-    expect(screen.getByText('IN_REVIEW')).toBeTruthy()
+    expect(await screen.findByText('Neu')).toBeTruthy()
     expect(screen.getByText('Statusverwaltung')).toBeTruthy()
     expect(screen.getByText('final')).toBeTruthy()
     expect(screen.getByText('inactive')).toBeTruthy()
     expect(screen.queryByText('Anlegen')).toBeNull()
   })
 
+  it('shows the name of the interface language and no second name', async () => {
+    stubRoutes({ '/v1/me': meResponse(['settings.read']), '/v1/admin/statuses': statusList })
+    renderPage()
+
+    expect(await screen.findByText('In Prüfung')).toBeTruthy()
+    expect(screen.queryByText('In Review')).toBeNull()
+    // The key is the tooltip of the name, no column of its own.
+    const cell = screen.getByText('Neu')
+
+    expect(cell.getAttribute('title')).toBe('NEW')
+    expect(screen.queryByText('NEW')).toBeNull()
+  })
+
   it('offers create, edit and delete controls with settings.write', async () => {
     stubRoutes({ '/v1/me': meResponse(['settings.read', 'settings.write']), '/v1/admin/statuses': statusList })
     renderPage()
 
-    expect(await screen.findByText('NEW')).toBeTruthy()
+    expect(await screen.findByText('Neu')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Status anlegen' })).toBeTruthy()
-    expect(screen.getAllByText('Bearbeiten')).toHaveLength(4)
-    expect(screen.getAllByText('Lösch')).toHaveLength(4)
+    expect(screen.getAllByRole('button', { name: 'Aktionen' })).toHaveLength(4)
+
+    await openRowMenu(0)
+
+    expect(screen.getByRole('menuitem', { name: 'Bearbeiten' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Lösch' })).toBeTruthy()
   })
 
   it('shows the session notice when /me answers 401', async () => {
@@ -157,9 +179,9 @@ describe('StatusPage', () => {
     })
     renderPage()
 
-    await screen.findByText('NEW')
-    const [firstDelete] = screen.getAllByText('Lösch')
-    await vi.waitFor(() => void firstDelete?.click())
+    await screen.findByText('Neu')
+    await openRowMenu(0)
+    await vi.waitFor(() => void screen.getByRole('menuitem', { name: 'Lösch' }).click())
 
     expect(await screen.findByText(/Remove the status NEW permanently/)).toBeTruthy()
 
@@ -180,9 +202,9 @@ describe('StatusPage', () => {
     })
     renderPage()
 
-    await screen.findByText('IN_REVIEW')
-    const [, secondDelete] = screen.getAllByText('Lösch')
-    await vi.waitFor(() => void secondDelete?.click())
+    await screen.findByText('In Prüfung')
+    await openRowMenu(1)
+    await vi.waitFor(() => void screen.getByRole('menuitem', { name: 'Lösch' }).click())
 
     expect(await screen.findByText(/Remove the status IN_REVIEW permanently/)).toBeTruthy()
 

@@ -87,6 +87,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   actions sit behind the `…` button and the edit shows the key beside the texts
   of both languages. The delete of an archived entry stays blocked and names the
   reason on hover.
+- The ticket statuses show the name of the language of the interface only
+  (**WP-M16-18**, out of band in phase 16, ADR-0043): the list of
+  `/admin/statuses` carried the key, the German and the English name in three
+  columns. The row shows the name of the language of the interface, the actions
+  sit behind the `…` button and the edit shows the key read-only beside the
+  names of both languages — the key of a status stays immutable, the workflow,
+  the escalation stages and the tickets reference it.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

@@ -87,7 +87,22 @@ export function StatusForm({
             }
           />
         </label>
-      ) : null}
+      ) : (
+        /*
+          The key of an existing status is immutable — the workflow, the
+          escalation stages and the tickets reference it. The edit shows it
+          beside the names of every language (ADR-0043).
+        */
+        <label className="flex flex-col gap-1 text-xs text-slate-400">
+          {t('admin.status.fields.key')}
+          <input
+            className="w-40 rounded bg-slate-950 p-2 font-mono text-sm text-slate-100 read-only:opacity-60"
+            readOnly
+            type="text"
+            value={values.key}
+          />
+        </label>
+      )}
 
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs text-slate-400">

@@ -15,19 +15,26 @@ import {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
+import { languageRecord, localizedName } from '../lib/localized-name'
 import { StatusForm } from './status-form'
 
 /**
  * The status administration (WP-M14-37, `specs/07-escalation.md` §7.9 and
- * §7.1). The table is the `ticket_statuses` table of WP-M14-35: key, the two
- * names, colour, position, the active switch, the terminal flag and the
- * number of tickets that carry the status. The form of WP-M14-37 creates and
- * edits a status, a delete only removes a status no ticket carries and never
- * the last active one — the API answers `409 status_in_use` and
+ * §7.1). The table is the `ticket_statuses` table of WP-M14-35: the name, the
+ * colour, the position, the active switch, the terminal flag and the number of
+ * tickets that carry the status. The form of WP-M14-37 creates and edits a
+ * status, a delete only removes a status no ticket carries and never the last
+ * active one — the API answers `409 status_in_use` and
  * `409 status_last_active` and the page names both (`specs/07-escalation.md`
  * §7.9). Without `settings.write` the editors stay read-only; the server
  * enforces the permission again.
+ *
+ * Since WP-M16-18 the list follows the rule of `specs/13-ui.md` §14.8
+ * (ADR-0043): the row shows **one** name — the name of the language of the
+ * interface — and the actions of the row sit behind one `…` button. The key and
+ * the texts of every language stand together in the edit.
  */
 
 const handledErrorCodes = [
@@ -62,7 +69,7 @@ function useStatuses() {
 }
 
 export function StatusPage() {
-  const { t } = useTranslation('settings')
+  const { t, i18n } = useTranslation('settings')
   const me = useMe()
   const canRead = usePermission('settings.read')
   const canWrite = usePermission('settings.write')
@@ -150,9 +157,7 @@ export function StatusPage() {
       <table className="mt-4 w-full text-left text-sm">
         <thead>
           <tr className="border-b border-slate-700 text-slate-400">
-            <th>{t('admin.status.table.key')}</th>
-            <th>{t('admin.status.table.nameDe')}</th>
-            <th>{t('admin.status.table.nameEn')}</th>
+            <th>{t('admin.status.table.name')}</th>
             <th>{t('admin.status.table.color')}</th>
             <th>{t('admin.status.table.position')}</th>
             <th>{t('admin.status.table.active')}</th>
@@ -164,9 +169,13 @@ export function StatusPage() {
         <tbody>
           {rows.map((row) => (
             <tr key={row.key} className="border-b border-slate-800">
-              <td>{row.key}</td>
-              <td>{row.nameDe}</td>
-              <td>{row.nameEn}</td>
+              <td title={row.key}>
+                {localizedName(
+                  languageRecord({ de: row.nameDe, en: row.nameEn }),
+                  i18n.language,
+                  row.key,
+                )}
+              </td>
               <td>
                 <span
                   className="inline-block h-4 w-4 rounded-full border border-slate-600"
@@ -181,24 +190,22 @@ export function StatusPage() {
               <td>{row.ticketCount}</td>
               {canWrite ? (
                 <td>
-                  <div className="flex gap-2">
-                    <button
-                      className="rounded border border-slate-600 px-2 py-1 text-xs"
-                      type="button"
-                      onClick={() =>
-                        setEditingKey(editingKey === row.key ? null : row.key)
-                      }
-                    >
-                      {t('admin.status.edit')}
-                    </button>
-                    <button
-                      className="rounded border border-rose-600 px-2 py-1 text-xs text-rose-300"
-                      type="button"
-                      onClick={() => setRemoveCandidate(row.key)}
-                    >
-                      {t('admin.status.delete')}
-                    </button>
-                  </div>
+                  <RowMenu
+                    items={[
+                      {
+                        key: 'edit',
+                        label: t('admin.status.edit'),
+                        onSelect: () =>
+                          setEditingKey(editingKey === row.key ? null : row.key),
+                      },
+                      {
+                        key: 'delete',
+                        label: t('admin.status.delete'),
+                        tone: 'danger',
+                        onSelect: () => setRemoveCandidate(row.key),
+                      },
+                    ]}
+                  />
                 </td>
               ) : null}
             </tr>

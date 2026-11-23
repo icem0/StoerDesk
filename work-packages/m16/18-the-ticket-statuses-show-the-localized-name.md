@@ -1,7 +1,7 @@
 # WP-M16-18: the ticket statuses show the localized name
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-17
 phase: 16
 milestone: m16

@@ -691,9 +691,7 @@
       "createTitle": "Status anlegen",
       "editTitle": "Status {{key}} edit",
       "table": {
-        "key": "Schl.",
-        "nameDe": "Name (de)",
-        "nameEn": "Name (en)",
+        "name": "Name",
         "color": "Color",
         "position": "Position",
         "active": "Aktiv",
