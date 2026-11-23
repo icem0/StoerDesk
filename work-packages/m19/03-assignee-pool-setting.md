@@ -1,7 +1,7 @@
 # WP-M19-03: the assignee pool is an escalation setting
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 16k tokens
@@ -53,8 +53,24 @@ Expected: an integration test writes a pool, reads it back in order, and gets
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/escalation/assignee-pool.ts (new),
+  apps/api/src/escalation/config.ts,
+  packages/shared/src/schemas/escalation-config.ts,
+  apps/web/src/admin/escalation-page.tsx (the empty pool of the state),
+  apps/api/src/escalation/__tests__/assignee-pool.integration.spec.ts (new),
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: the setting `escalation.assignee_pool`,
+  `readAssigneePool`, `readAssigneePoolIds`, `validateAssigneePool`,
+  `writeAssigneePool`, `resolveAssigneePool`, `nextAssignee`, `firstAssignee`,
+  `EscalationConfig.assigneePool`
+- Verified: `npm run typecheck --workspaces --if-present` and the integration
+  spec of the pool (the list keeps its order, a deactivated and a duplicated id
+  are refused with `400 invalid_assignee`); `npm run wp:check` green
 - Follow-up WP: none
 - Open question: none
+- Notes: the contract of the pool lives in
+  `packages/shared/src/schemas/escalation-config.ts` — the file
+  `packages/shared/src/schemas/escalation.ts` of the plan does not exist. The
+  route file needed no change: the body of `PUT /api/v1/escalation/config`
+  reaches the service unchanged, and the pool is optional — a body without
+  `assigneePool` leaves the list untouched.

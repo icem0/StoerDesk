@@ -18,6 +18,12 @@ import {
 import type { Database } from '../db/client'
 import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses, users } from '../db/schema'
 import { WORKFLOW_EVENT_STATUS } from '../tickets/workflow'
+import {
+  AssigneePoolError,
+  readAssigneePool,
+  validateAssigneePool,
+  writeAssigneePool,
+} from './assignee-pool'
 
 /**
  * The configuration of the escalation (`specs/07-escalation.md` §7.9,
@@ -50,9 +56,14 @@ function fieldPaths(error: z.ZodError): string[] {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
 }
 
-/** The body of `PUT /api/v1/escalation/config`: the rules with their actions. */
+/**
+ * The body of `PUT /api/v1/escalation/config`: the rules with their actions and
+ * — optionally — the assignee pool (§7.14, ADR-0039, WP-M19-03). A body
+ * without `assigneePool` leaves the pool untouched.
+ */
 export const escalationRulesBodySchema = z.object({
   rules: z.array(escalationRuleConfigSchema).max(50),
+  assigneePool: z.array(z.uuid()).max(50).optional(),
 })
 
 function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
@@ -186,7 +197,11 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
     active: row.active,
   }))
 
-  return escalationConfigSchema.parse({ stages, rules })
+  return escalationConfigSchema.parse({
+    stages,
+    rules,
+    assigneePool: await readAssigneePool(database),
+  })
 }
 
 /**
@@ -199,6 +214,23 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 
   if (!parsed.success) {
     throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
+  }
+
+  // The assignee pool (§7.14, ADR-0039) names active users only: an unknown or
+  // a deactivated user is refused with `400 invalid_assignee` before anything
+  // is written.
+  let assigneePool: string[] | undefined
+
+  if (parsed.data.assigneePool !== undefined) {
+    try {
+      assigneePool = await validateAssigneePool(database, parsed.data.assigneePool)
+    } catch (error) {
+      if (error instanceof AssigneePoolError) {
+        throw new EscalationConfigError(error.statusCode, error.code, error.params)
+      }
+
+      throw error
+    }
   }
 
   const stageRows = await database
@@ -386,13 +418,17 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
     }
   })
 
+  if (assigneePool !== undefined) {
+    await writeAssigneePool(database, assigneePool)
+  }
+
   return readEscalationConfig(database)
 }
 
 /**
  * Replaces the whole stage chain in one transaction. A submitted key is
  * created or updated; a stage that is missing from the body is deleted and
-  * its rules follow through the `ON DELETE cascade` of §7.11. The chain is
+ * its rules follow through the `ON DELETE cascade` of §7.11. The chain is
  * validated against the workflow events before anything is written.
  */
 export async function writeEscalationStages(

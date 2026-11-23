@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The escalation knows the pool of the office (**WP-M19-03**, phase 19,
+  ADR-0039): the assignee pool is an ordered list of active users under the
+  escalation settings — the list the office assigns a ticket to and the order
+  in which a refusal passes the ticket to the next member. The configuration
+  reads the list back with the names, a deactivated or a duplicated user is
+  refused with `400 invalid_assignee`, and a body without the pool leaves the
+  list untouched.
 - The ticket carries the state of its assignment (**WP-M19-02**, phase 19,
   ADR-0039): a ticket gets the columns `assignment_status` (`offered`,
   `accepted`, `declined` or none) and `assigned_by_user_id` — the user who

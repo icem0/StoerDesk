@@ -590,10 +590,24 @@ export const escalationRuleConfigSchema = z
 
 export type EscalationRuleConfig = z.infer<typeof escalationRuleConfigSchema>
 
+/**
+ * One member of the assignee pool (`specs/07-escalation.md` §7.14, ADR-0039,
+ * WP-M19-03): the id of the user and the display name. The pool is the ordered
+ * list the office assigns a ticket to — no contact value.
+ */
+export const escalationAssigneePoolMemberSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+})
+
+export type EscalationAssigneePoolMember = z.infer<typeof escalationAssigneePoolMemberSchema>
+
 export const escalationConfigSchema = z
   .object({
     stages: z.array(escalationStageConfigSchema).max(20),
     rules: z.array(escalationRuleConfigSchema).max(50),
+    /** The assignee pool of the installation (§7.14, ADR-0039). */
+    assigneePool: z.array(escalationAssigneePoolMemberSchema).max(50).default([]),
   })
   .superRefine((config, context) => {
     const stageKeys = new Set<string>()

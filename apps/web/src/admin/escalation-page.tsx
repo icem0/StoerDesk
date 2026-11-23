@@ -149,7 +149,7 @@ export function EscalationPage() {
   const [savedHours, setSavedHours] = useState<DeadlineHours | null>(null)
   const [savedConfig, setSavedConfig] = useState<EscalationConfig | null>(null)
   const hours = savedHours ?? (settingsQuery.data?.hours ?? DEADLINE_HOURS)
-  const config = savedConfig ?? (configQuery.data ?? { stages: [], rules: [] })
+  const config = savedConfig ?? (configQuery.data ?? { stages: [], rules: [], assigneePool: [] })
 
   const saveHours = useMutation({
     mutationFn: (body: DeadlineSettings) =>
