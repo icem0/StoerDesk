@@ -114,7 +114,7 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
         </div>
         <button
           aria-label={t('admin.update.close')}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700 text-slate-300 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700 text-slate-300 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
           onClick={onClose}
           type="button"
         >
@@ -186,7 +186,7 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
             reloaded by hand, the new version is then visible. */}
         {started || start.isError ? (
           <button
-            className="mt-3 w-full rounded border border-slate-600 px-4 py-2 font-medium text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="mt-3 w-full rounded border border-slate-600 px-4 py-2 font-medium text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
             onClick={() => window.location.reload()}
             type="button"
           >
@@ -200,7 +200,7 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
               <p>{t('admin.update.confirm')}</p>
               <div className="flex flex-wrap gap-2">
                 <button
-                  className="rounded bg-sky-700 px-3 py-2 font-medium text-white disabled:opacity-50"
+                  className="rounded bg-accent-600 px-3 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
                   disabled={start.isPending}
                   onClick={() => start.mutate()}
                   type="button"
@@ -219,7 +219,7 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
             </div>
           ) : (
             <button
-              className="mt-3 w-full rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+              className="mt-3 w-full rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
               disabled={start.isPending}
               onClick={() => setConfirming(true)}
               type="button"

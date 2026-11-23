@@ -1,8 +1,8 @@
 # WP-M16-10h: the administration follows the accent — the detected errors
 
 format: small-model
-status: planned
-depends-on: WP-M16-NaN
+status: done
+depends-on: WP-M16-10g
 phase: 16
 milestone: m16
 context-budget: 14k tokens
@@ -56,9 +56,19 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: the next batch of the sweep — every file exists in the commit of
-  the split
-- Open question: none
+- Files changed: apps/web/src/admin/update-panel.tsx,
+  apps/web/src/admin/detected-errors-page.tsx,
+  apps/web/src/admin/detected-error-create-page.tsx
+- Interfaces added: none — the primary actions and the focus rings of the three
+  pages wear the accent of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `focus-visible:ring-accent-400`, the field labels of
+  the two forms carry `focus:border-accent-400` and
+  `focus:ring-accent-500/30`); the rose of a failed answer and the slate of the
+  reload button stay
+- Verified: `npm run typecheck`, `npm run lint`, `npm run i18n:check`,
+  `npm run wp:check` and the page tests — all green; the API integration tests
+  stay red in this container before and after the change (no Docker, the DB hook
+  times out), so they are reported as unverified
+- Follow-up WP: none — this closes the last open item of phase 16
+- Open question: none — the WP carried the broken dependency `WP-M16-NaN`; it is
+  corrected to `WP-M16-10g` in this commit

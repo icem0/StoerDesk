@@ -59,7 +59,7 @@ export function DetectedErrorCreatePage() {
   return (
     <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
       <Link
-        className="text-sm text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        className="text-sm text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/admin/detected-errors"
       >
         {t('detectedErrors.title')}
@@ -75,7 +75,7 @@ export function DetectedErrorCreatePage() {
         <label className="flex flex-col gap-1 text-sm">
           {t('detectedErrors.fields.key')}
           <input
-            className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
+            className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-accent-400 focus:ring-1 focus:ring-accent-500/30"
             type="text"
             required
             value={key}
@@ -85,7 +85,7 @@ export function DetectedErrorCreatePage() {
         <label className="flex flex-col gap-1 text-sm">
           {t('detectedErrors.fields.de')}
           <input
-            className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
+            className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-accent-400 focus:ring-1 focus:ring-accent-500/30"
             required
             value={labelDe}
             onChange={(event) => setLabelDe(event.target.value)}
@@ -94,7 +94,7 @@ export function DetectedErrorCreatePage() {
         <label className="flex flex-col gap-1 text-sm">
           {t('detectedErrors.fields.en')}
           <input
-            className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-sky-400 focus:ring-1 focus:ring-sky-500/30"
+            className="rounded border border-slate-700 bg-slate-950 p-2 text-slate-100 focus:border-accent-400 focus:ring-1 focus:ring-accent-500/30"
             required
             value={labelEn}
             onChange={(event) => setLabelEn(event.target.value)}
@@ -106,7 +106,7 @@ export function DetectedErrorCreatePage() {
           </p>
         ) : null}
         <button
-          className="self-start rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+          className="self-start rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
           type="submit"
           disabled={mutation.isPending}
         >
