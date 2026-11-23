@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The API integration tests get the time their migration needs (**WP-M16-21**, out
+  of band in phase 16): the check run of the version v1.2.37 failed although its
+  commit changed only the web app — the file
+  `statsExport.integration.spec.ts` reported "Hook timed out in 10000ms" in the
+  hook that creates the throwaway database and migrates it. On the two-core
+  runner of the gate the migrations of the parallel files compete for the same
+  PostgreSQL instance, so the last of them needs more than ten seconds. The
+  hook of the API project gets a minute now; the assertions keep their own
+  timeout and stay as strict as they are.
 - The delete of a fault type that a ticket still carries is greyed out and
   explains itself on hover (**WP-M16-13**, out of band in phase 16): the hint
   „Wird von Vorgängen verwendet" was a line of its own under the button and broke
