@@ -12,7 +12,11 @@ import {
 import { TicketTransitionError } from '../tickets/workflow'
 import { enqueueOncallOutbox } from '../notifications/outbox'
 import { readOncallSettings } from './settings'
-import type { NotificationEventType } from '@stoerdesk/shared'
+import {
+  isCoveredByPattern,
+  parseOncallPattern,
+  type NotificationEventType,
+} from '@stoerdesk/shared'
 
 /**
  * On-call ticket coupling (`specs/04-oncall.md` §4a.6, WP-M8-10).
@@ -86,7 +90,11 @@ export async function resolveOnCallPerson(
       id: oncallShifts.id,
       userId: oncallShifts.userId,
       state: oncallShifts.state,
+      startsAt: oncallShifts.startsAt,
       endsAt: oncallShifts.endsAt,
+      weekdays: oncallShifts.weekdays,
+      dailyStart: oncallShifts.dailyStart,
+      dailyEnd: oncallShifts.dailyEnd,
     })
     .from(oncallShifts)
     .where(
@@ -99,10 +107,24 @@ export async function resolveOnCallPerson(
     )
     .orderBy(asc(oncallShifts.startsAt))
 
-  const confirmed = rows.find(
+  // A shift of a duty block covers only the instants of its pattern
+  // (`specs/04-oncall.md` §4a.3.3, ADR-0040 decision 5); a shift without a
+  // pattern covers its whole span.
+  const covered = rows.filter((row) =>
+    isCoveredByPattern(
+      {
+        startsAt: row.startsAt,
+        endsAt: row.endsAt,
+        pattern: parseOncallPattern(row),
+      },
+      at,
+    ),
+  )
+
+  const confirmed = covered.find(
     (row) => row.state === 'CONFIRMED' || row.state === 'SWAP_REQUESTED',
   )
-  const planned = rows.find((row) => row.state === 'PLANNED')
+  const planned = covered.find((row) => row.state === 'PLANNED')
   const shift = confirmed ?? planned
 
   if (shift === undefined) {
@@ -130,7 +152,14 @@ export async function resolveStaffedPoolIds(
   at: Date = new Date(),
 ): Promise<string[]> {
   const rows = await database
-    .select({ poolId: oncallShifts.poolId })
+    .select({
+      poolId: oncallShifts.poolId,
+      startsAt: oncallShifts.startsAt,
+      endsAt: oncallShifts.endsAt,
+      weekdays: oncallShifts.weekdays,
+      dailyStart: oncallShifts.dailyStart,
+      dailyEnd: oncallShifts.dailyEnd,
+    })
     .from(oncallShifts)
     .where(
       and(
@@ -141,7 +170,22 @@ export async function resolveStaffedPoolIds(
       ),
     )
 
-  return [...new Set(rows.map((row) => row.poolId))]
+  return [
+    ...new Set(
+      rows
+        .filter((row) =>
+          isCoveredByPattern(
+            {
+              startsAt: row.startsAt,
+              endsAt: row.endsAt,
+              pattern: parseOncallPattern(row),
+            },
+            at,
+          ),
+        )
+        .map((row) => row.poolId),
+    ),
+  ]
 }
 
 /**
@@ -156,7 +200,14 @@ export async function resolveOnDutyUserIds(
   at: Date = new Date(),
 ): Promise<string[]> {
   const rows = await database
-    .select({ userId: oncallShifts.userId })
+    .select({
+      userId: oncallShifts.userId,
+      startsAt: oncallShifts.startsAt,
+      endsAt: oncallShifts.endsAt,
+      weekdays: oncallShifts.weekdays,
+      dailyStart: oncallShifts.dailyStart,
+      dailyEnd: oncallShifts.dailyEnd,
+    })
     .from(oncallShifts)
     .where(
       and(
@@ -169,7 +220,21 @@ export async function resolveOnDutyUserIds(
     )
 
   return [
-    ...new Set(rows.map((row) => row.userId).filter((userId): userId is string => userId !== null)),
+    ...new Set(
+      rows
+        .filter((row) =>
+          isCoveredByPattern(
+            {
+              startsAt: row.startsAt,
+              endsAt: row.endsAt,
+              pattern: parseOncallPattern(row),
+            },
+            at,
+          ),
+        )
+        .map((row) => row.userId)
+        .filter((userId): userId is string => userId !== null),
+    ),
   ]
 }
 

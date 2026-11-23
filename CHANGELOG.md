@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The coupling reads the pattern of a duty block (**WP-M20-06**, phase 20,
+  ADR-0040): a ticket is offered to the technician only inside the pattern of
+  the shift — its covered weekdays and its daily window; a shift without a
+  pattern keeps covering its whole span.
 - The administration edits the duty blocks (**WP-M20-05**, phase 20, ADR-0040):
   the rows of the plan of a pool carry the weekdays „von – bis“ with the daily
   window, a row can be added and removed, and the two presets of the office

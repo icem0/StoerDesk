@@ -237,8 +237,7 @@ export function resolveOncallBlocks(value: unknown): OncallBlock[] {
   }
 
   return blocks.sort(
-    (left, right) =>
-      oncallWeekdayOrder(left.fromWeekday) - oncallWeekdayOrder(right.fromWeekday),
+    (left, right) => oncallWeekdayOrder(left.fromWeekday) - oncallWeekdayOrder(right.fromWeekday),
   )
 }
 
@@ -562,6 +561,44 @@ export function generateOncallBlockSlots({
 }
 
 /**
+ * The pattern of a shift as it is stored (`weekdays`, `daily_start`,
+ * `daily_end` — `specs/04-oncall.md` §4a.3.3).
+ */
+export type StoredOncallPattern = {
+  weekdays: string | null
+  dailyStart: string | null
+  dailyEnd: string | null
+}
+
+/**
+ * Reads the stored pattern of a shift. A shift without a pattern (the
+ * continuous plan of ADR-0011, the rows of an older version) has none and
+ * covers its whole span; a malformed pattern is read as none.
+ */
+export function parseOncallPattern(stored: StoredOncallPattern): OncallBlockPattern | null {
+  const { weekdays, dailyStart, dailyEnd } = stored
+
+  if (typeof weekdays !== 'string' || weekdays.trim() === '') {
+    return null
+  }
+
+  if (typeof dailyStart !== 'string' || typeof dailyEnd !== 'string') {
+    return null
+  }
+
+  const days = weekdays
+    .split(',')
+    .map((part) => Number(part.trim()))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+
+  if (days.length === 0) {
+    return null
+  }
+
+  return { weekdays: days, dailyStart, dailyEnd }
+}
+
+/**
  * Answers whether the `instant` lies inside the duty of a shift
  * (`specs/04-oncall.md` §4a.3.3, ADR-0040 decision 5): the instant lies in the
  * span of the shift, its local weekday belongs to the pattern and its local
@@ -590,5 +627,8 @@ export function isCoveredByPattern(
 
   const minutes = local.getHours() * 60 + local.getMinutes()
 
-  return minutes >= oncallTimeMinutes(pattern.dailyStart) && minutes < oncallTimeMinutes(pattern.dailyEnd)
+  return (
+    minutes >= oncallTimeMinutes(pattern.dailyStart) &&
+    minutes < oncallTimeMinutes(pattern.dailyEnd)
+  )
 }

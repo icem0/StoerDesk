@@ -11,6 +11,7 @@ import * as schema from '../../db/schema'
 import { objects, oncallPools, oncallShifts, ticketEvents, tickets } from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { buildServer } from '../../index'
+import { resolveOnCallPerson } from '../coupling'
 
 const testDatabase = await openTestDatabase()
 
@@ -80,10 +81,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       startsAt: Date,
       endsAt: Date,
       userId: string | null,
+      pattern?: { weekdays: string; dailyStart: string; dailyEnd: string },
     ): Promise<string> {
       const [row] = await db
         .insert(oncallShifts)
-        .values({ poolId: pool, userId, state, startsAt, endsAt })
+        .values({
+          poolId: pool,
+          userId,
+          state,
+          startsAt,
+          endsAt,
+          ...(pattern === undefined ? {} : pattern),
+        })
         .returning({ id: oncallShifts.id })
 
       return onlyRow(row ? [row] : [], 'the inserted shift').id
@@ -265,6 +274,45 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         poolId: plannedPoolId,
         warning: 'oncall_unconfirmed',
       })
+    })
+
+    it('names the technician only inside the pattern of the duty block', async () => {
+      await insertShift(
+        confirmedPoolId,
+        'CONFIRMED',
+        new Date('2026-11-02T06:00:00.000Z'),
+        new Date('2026-11-05T16:00:00.000Z'),
+        technicianId,
+        { weekdays: '1,2', dailyStart: '07:00', dailyEnd: '17:00' },
+      )
+
+      const monday = await resolveOnCallPerson(db, {
+        at: new Date('2026-11-02T07:00:00.000Z'),
+        poolId: confirmedPoolId,
+      })
+      const mondayEvening = await resolveOnCallPerson(db, {
+        at: new Date('2026-11-02T17:00:00.000Z'),
+        poolId: confirmedPoolId,
+      })
+      const wednesday = await resolveOnCallPerson(db, {
+        at: new Date('2026-11-04T09:00:00.000Z'),
+        poolId: confirmedPoolId,
+      })
+      const friday = await resolveOnCallPerson(db, {
+        at: new Date('2026-11-06T14:00:00.000Z'),
+        poolId: confirmedPoolId,
+      })
+      const saturday = await resolveOnCallPerson(db, {
+        at: new Date('2026-11-07T08:00:00.000Z'),
+        poolId: confirmedPoolId,
+      })
+
+      expect(monday.kind).toBe('confirmed')
+      expect(monday.userId).toBe(technicianId)
+      expect(mondayEvening.kind).toBe('unstaffed')
+      expect(wednesday.kind).toBe('unstaffed')
+      expect(friday.kind).toBe('unstaffed')
+      expect(saturday.kind).toBe('unstaffed')
     })
 
     it('clears the technician and warns when no shift covers the offer', async () => {

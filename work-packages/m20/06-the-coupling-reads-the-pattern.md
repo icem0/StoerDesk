@@ -1,7 +1,7 @@
 # WP-M20-06: the coupling reads the pattern
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-05
 phase: 20
 milestone: m20
