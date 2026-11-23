@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The row menu of the administration escapes the scroll container
+  (**WP-M16-22**, out of band in phase 16, ADR-0043): the menu of a row hung
+  absolutely inside the row, so the table of the fault types clipped the menu
+  of its last row after a few pixels — the admin had to scroll to see the
+  actions of the last entry. The menu hangs in the body of the document now,
+  opens upwards when there is no room below the button and follows the button
+  while the page scrolls.
 - The API integration tests get the time their migration needs (**WP-M16-21**, out
   of band in phase 16): the check run of the version v1.2.37 failed although its
   commit changed only the web app — the file

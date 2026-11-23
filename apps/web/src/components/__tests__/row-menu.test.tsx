@@ -91,4 +91,14 @@ describe('RowMenu', () => {
 
     expect(onSelect).not.toHaveBeenCalled()
   })
+
+  it('hangs in the body of the document, so no scroll container clips it', () => {
+    renderMenu([{ key: 'edit', label: 'Bearbeiten', onSelect: vi.fn() }])
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aktionen' }))
+
+    const menu = screen.getByRole('menu')
+
+    expect(menu.parentElement).toBe(document.body)
+  })
 })

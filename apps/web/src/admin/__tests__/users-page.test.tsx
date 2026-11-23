@@ -277,7 +277,7 @@ describe('the one-time password of the administration', () => {
 
     const row = (await screen.findByText('kollege@example.com')).closest('tr') as HTMLElement
     fireEvent.click(within(row).getByRole('button', { name: 'Aktionen' }))
-    fireEvent.click(within(row).getByRole('menuitem', { name: 'Neues Passwort' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Neues Passwort' }))
 
     expect(await screen.findByText('cPhiW8kWNtdnXzvHHxGS')).toBeTruthy()
 
@@ -302,7 +302,7 @@ describe('the one-time password of the administration', () => {
 
     const row = (await screen.findByText('kollege@example.com')).closest('tr') as HTMLElement
     fireEvent.click(within(row).getByRole('button', { name: 'Aktionen' }))
-    fireEvent.click(within(row).getByRole('menuitem', { name: 'Neues Passwort' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Neues Passwort' }))
 
     expect(confirm).toHaveBeenCalled()
     expect(

@@ -168,7 +168,8 @@ describe('the stage tab of the escalation administration', () => {
     const nightShift = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')[1] as HTMLElement
 
     fireEvent.click(within(nightShift).getByRole('button', { name: 'Aktionen' }))
-    fireEvent.click(within(nightShift).getByRole('menuitem', { name: 'Stufe entfernen' }))
+    // The menu hangs in the body of the document, not in the row (WP-M16-22).
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Stufe entfernen' }))
 
     const dialog = screen.getByRole('alertdialog')
 
