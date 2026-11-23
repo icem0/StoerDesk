@@ -5,10 +5,20 @@ import type { Database } from '../db/client'
 import { oncallPools, oncallShifts, outbox, type OnCallShiftState } from '../db/schema'
 import { enqueueOncallOutbox } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
-import { generateOncallSlots, generateOncallWindowSlots } from '@stoerdesk/shared'
+import {
+  generateOncallBlockSlots,
+  generateOncallSlots,
+  resolveOncallBlocks,
+  type OncallBlockPattern,
+  type OncallSlot,
+} from '@stoerdesk/shared'
 import { readOncallSettings } from './settings'
 
 type Db = Database['database']
+
+/** A generated slot: a shift of a block carries its pattern, a shift of the
+ * continuous plan covers its whole span and has none. */
+type GeneratedSlot = OncallSlot & { pattern?: OncallBlockPattern }
 
 const CREATABLE_STATES = new Set<OnCallShiftState>(['UNFILLED', 'DRAFT', 'PLANNED', 'DECLINED'])
 
@@ -217,12 +227,15 @@ export async function generateShifts(
 
   const settings = await readOncallSettings(database)
 
-  // The window plan (`specs/04-oncall.md` §4a.3.2) belongs to the pool and
-  // creates one shift per duty window; without a window the continuous plan of
-  // ADR-0011 is the plan.
-  const slots =
-    pool.weeklyWindows.length > 0
-      ? generateOncallWindowSlots({ from, to, weeklyWindows: pool.weeklyWindows })
+  // The window plan (`specs/04-oncall.md` §4a.3.3, ADR-0040) belongs to the
+  // pool and creates one shift per duty block; a stored day window of
+  // ADR-0035 reads as a block of one day. Without a block the continuous plan
+  // of ADR-0011 is the plan.
+  const blocks = resolveOncallBlocks(pool.weeklyWindows)
+
+  const slots: GeneratedSlot[] =
+    blocks.length > 0
+      ? generateOncallBlockSlots({ from, to, blocks })
       : generateOncallSlots({
           from,
           to,
@@ -245,6 +258,15 @@ export async function generateShifts(
           endsAt: slot.endsAt,
           state: 'UNFILLED',
           createdByUserId: createdByUserId ?? null,
+          // A shift of a block carries its pattern; a shift of the continuous
+          // plan covers its whole span and has none.
+          ...(slot.pattern === undefined
+            ? {}
+            : {
+                weekdays: slot.pattern.weekdays.join(','),
+                dailyStart: slot.pattern.dailyStart,
+                dailyEnd: slot.pattern.dailyEnd,
+              }),
         })),
       )
       .onConflictDoNothing({

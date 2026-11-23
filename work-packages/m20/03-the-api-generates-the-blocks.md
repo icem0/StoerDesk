@@ -1,7 +1,7 @@
 # WP-M20-03: the API stores the pattern and generates the blocks
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-02
 phase: 20
 milestone: m20
@@ -35,7 +35,10 @@ interfaces:
 
 1. Migration adds the three shift columns. A shift without a pattern (the rows
    of the continuous plan and the day windows of an older version) keeps
-   covering its whole span; a shift of a block carries its pattern.
+   covering its whole span; a shift of a block carries its pattern. The
+   columns stay empty for the rows of an older version — a default that
+   describes a one-day block cannot be right for the continuous plan of
+   ADR-0011, whose shift covers seven days.
 2. `generateShifts` emits blocks: the plan of the pool is read with
    `resolveOncallBlocks`, a stored day window reads as a block of one day.
 3. The shift rows of a block carry the pattern (the covered weekdays with the

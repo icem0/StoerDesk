@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The API stores the pattern of a duty block (**WP-M20-03**, phase 20,
+  ADR-0040): a shift of a block carries its covered weekdays and its daily
+  window (migration `0059`), the generator emits one shift per block per week
+  and a stored day window reads as a block of one day. A shift without a
+  pattern — the continuous plan and the rows of an older version — keeps
+  covering its whole span.
 - The shared duty blocks of the readiness (**WP-M20-02**, phase 20, ADR-0040):
   a duty block spans consecutive weekdays with a daily window, `resolveOncallBlocks`
   reads a stored day window as a block of one day, `generateOncallBlockSlots`

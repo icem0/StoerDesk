@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import type { OncallWindow } from '@stoerdesk/shared'
+import type { OncallBlockInput, OncallWindow } from '@stoerdesk/shared'
 import {
   type AnyPgColumn,
   boolean,
@@ -1132,10 +1132,14 @@ export const oncallPools = pgTable(
     groupId: uuid('group_id').references(() => groups.id, { onDelete: 'set null' }),
     active: boolean('active').notNull().default(true),
     /**
-     * The duty windows of this pool (`specs/04-oncall.md` §4a.3.2): one window
-     * per weekday with a start and an end, or none for the continuous plan.
+     * The duty plan of this pool (`specs/04-oncall.md` §4a.3.2, §4a.3.3): the
+     * duty blocks of ADR-0040 — or the day windows of ADR-0035 for a pool of
+     * an older version — or none for the continuous plan.
      */
-    weeklyWindows: jsonb('weekly_windows').$type<OncallWindow[]>().notNull().default([]),
+    weeklyWindows: jsonb('weekly_windows')
+      .$type<OncallWindow[] | OncallBlockInput[]>()
+      .notNull()
+      .default([]),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
@@ -1164,6 +1168,15 @@ export const oncallShifts = pgTable(
     state: text('state').notNull().default('UNFILLED'),
     startsAt: timestamp('starts_at', timestampOptions).notNull(),
     endsAt: timestamp('ends_at', timestampOptions).notNull(),
+    /**
+     * The pattern of a duty block (`specs/04-oncall.md` §4a.3.3, ADR-0040):
+     * the covered weekdays (`0` = Sunday, comma separated) with the daily
+     * window of the block. Without a pattern the shift covers its whole span —
+     * the continuous plan of ADR-0011 and the day windows of ADR-0035.
+     */
+    weekdays: text('weekdays'),
+    dailyStart: text('daily_start'),
+    dailyEnd: text('daily_end'),
     confirmedAt: timestamp('confirmed_at', timestampOptions),
     declinedAt: timestamp('declined_at', timestampOptions),
     createdByUserId: uuid('created_by_user_id').references(() => users.id, {

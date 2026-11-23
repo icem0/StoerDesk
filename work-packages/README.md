@@ -1740,7 +1740,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-24d | the texts of the switch name the history | done | yes |
 | WP-M20-01 | the duty blocks — spec, ADR-0040 and the split | done | yes |
 | WP-M20-02 | the shared blocks and the pattern | done | yes |
-| WP-M20-03 | the API stores the pattern and generates the blocks | planned | yes |
+| WP-M20-03 | the API stores the pattern and generates the blocks | done | yes |
 | WP-M20-04 | the pool carries the duty blocks | planned | yes |
 | WP-M20-05 | the administration edits the blocks | planned | yes |
 | WP-M20-06 | the coupling reads the pattern | planned | yes |
