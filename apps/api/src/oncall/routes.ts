@@ -16,6 +16,7 @@ import {
   icalUrlResponseSchema,
   oncallMemberListResponseSchema,
   oncallShiftHistoryResponseSchema,
+  parseOncallPattern,
 } from '@stoerdesk/shared'
 
 import { loadEffectivePermissions, requirePermission } from '../auth/requirePermission'
@@ -145,6 +146,9 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
             startsAt: oncallShifts.startsAt,
             endsAt: oncallShifts.endsAt,
             updatedAt: oncallShifts.updatedAt,
+            weekdays: oncallShifts.weekdays,
+            dailyStart: oncallShifts.dailyStart,
+            dailyEnd: oncallShifts.dailyEnd,
             poolName: oncallPools.name,
           })
           .from(oncallShifts)
@@ -162,7 +166,12 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
         return reply
           .header('content-type', 'text/calendar; charset=utf-8')
           .header('cache-control', 'no-store')
-          .send(serializeIcal(rows, user.locale))
+          .send(
+            serializeIcal(
+              rows.map((row) => ({ ...row, pattern: parseOncallPattern(row) })),
+              user.locale,
+            ),
+          )
       },
     )
 

@@ -1,7 +1,7 @@
 # WP-M20-07: the iCal feed reads the pattern
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-06
 phase: 20
 milestone: m20

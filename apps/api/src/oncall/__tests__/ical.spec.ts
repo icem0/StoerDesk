@@ -83,6 +83,23 @@ describe('serializeIcal', () => {
     )
   })
 
+  it('writes one recurring entry per duty block', () => {
+    const calendar = serializeIcal(
+      [
+        {
+          ...shift,
+          pattern: { weekdays: [1, 2, 3, 4], dailyStart: '07:00', dailyEnd: '17:00' },
+        },
+      ],
+      'de',
+    )
+
+    expect(calendar).toContain('BEGIN:VTIMEZONE\r\n')
+    expect(calendar).toContain('RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH\r\n')
+    expect(calendar).toContain('DTSTART;TZID=Europe/Berlin:20261102T080000\r\n')
+    expect(calendar).toContain('DTEND;TZID=Europe/Berlin:20261102T180000\r\n')
+  })
+
   it('folds long lines at 75 octets', () => {
     const calendar = serializeIcal([{ ...shift, poolName: 'Bereitschaftsgruppe '.repeat(8) }], 'de')
 

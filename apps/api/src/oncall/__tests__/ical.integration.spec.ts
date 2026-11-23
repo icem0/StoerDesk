@@ -149,6 +149,32 @@ describe.skipIf(testDatabase.status === 'unavailable')('on-call iCal feed (integ
     expect(calendar.endsWith('END:VCALENDAR\r\n')).toBe(true)
   })
 
+  it('answers one recurring entry per duty block', async () => {
+    const startsAt = new Date(Date.now() + 5 * DAY)
+
+    await db.insert(oncallShifts).values({
+      poolId,
+      userId,
+      state: 'CONFIRMED',
+      startsAt,
+      endsAt: new Date(startsAt.getTime() + 3 * DAY),
+      weekdays: '1,2,3,4',
+      dailyStart: '07:00',
+      dailyEnd: '17:00',
+    })
+
+    const response = await getFeed(icalTokenFor(userId, secret))
+
+    expect(response.statusCode).toBe(200)
+
+    const calendar = response.body
+    expect(calendar).toContain('BEGIN:VTIMEZONE\r\n')
+    expect(calendar).toContain('TZID:Europe/Berlin\r\n')
+    expect(calendar).toContain('RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH\r\n')
+    expect(calendar).toMatch(/DTSTART;TZID=Europe\/Berlin:\d{8}T\d{6}\r\n/)
+    expect(calendar).toMatch(/DTEND;TZID=Europe\/Berlin:\d{8}T\d{6}\r\n/)
+  })
+
   it('answers 404 for a malformed, tampered or unknown-user token', async () => {
     const valid = icalTokenFor(userId, secret)
     const [id, signature] = valid.split('.') as [string, string]

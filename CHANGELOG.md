@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The iCal feed reads the pattern of a duty block (**WP-M20-07**, phase 20,
+  ADR-0040): a block is one recurring entry with the daily window and the
+  weekdays of the block (`RRULE:FREQ=WEEKLY;BYDAY=…`) in the zone of
+  `Europe/Berlin`.
 - The coupling reads the pattern of a duty block (**WP-M20-06**, phase 20,
   ADR-0040): a ticket is offered to the technician only inside the pattern of
   the shift — its covered weekdays and its daily window; a shift without a
