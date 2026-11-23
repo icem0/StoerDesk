@@ -74,6 +74,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   entry in the language of the interface, the fallback `de` and then the machine
   key. Every list of the administration uses them, so the menu behaves the same
   everywhere.
+- The fault types show the name of the language of the interface only
+  (**WP-M16-16**, out of band in phase 16, ADR-0043): the list of
+  `/admin/text-templates` carried the key, the German and the English name in
+  three columns and the actions of the row beside them. The row shows the name
+  of the language of the interface, the actions sit behind the `…` button and the
+  edit shows the key beside the translation texts.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

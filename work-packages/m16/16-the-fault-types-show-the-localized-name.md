@@ -1,7 +1,7 @@
 # WP-M16-16: the fault types show the localized name
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-15
 phase: 16
 milestone: m16

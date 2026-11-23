@@ -10,7 +10,9 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
+import { localizedName } from '../lib/localized-name'
 import {
   TranslationFields,
   errorMessage,
@@ -24,6 +26,11 @@ import {
  * edit it, archive it (it disappears from the form but keeps labelling existing
  * tickets) and delete it only while no ticket carries it. The server enforces
  * `settings.read`/`settings.write`; the UI only hides what the role may not do.
+ *
+ * Since WP-M16-16 the list follows the rule of `specs/13-ui.md` §14.8
+ * (ADR-0043): the row shows **one** name — the name of the language of the
+ * interface — and the actions of the row sit behind one `…` button. The key and
+ * the translation texts of every language stand together in the edit.
  */
 
 function useTextTemplates() {
@@ -78,6 +85,14 @@ function EditTemplateForm({
       <h2 className="text-lg font-semibold">
         {t('admin.textTemplates.editTitle', { key: template.key })}
       </h2>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.textTemplates.fields.key')}
+        <input
+          className="rounded bg-slate-950 p-2 font-mono text-slate-100 read-only:opacity-60"
+          readOnly
+          value={template.key}
+        />
+      </label>
       <TranslationFields values={values} onChange={setValues} />
       {mutation.isError ? (
         <p role="alert" className="text-sm text-red-400">
@@ -104,86 +119,34 @@ function EditTemplateForm({
   )
 }
 
-function ArchiveButton({ template }: { template: TextTemplateSummary }) {
-  const { t } = useTranslation('settings')
+export function TextTemplatesPage() {
+  const { t, i18n } = useTranslation('settings')
+  const me = useMe()
+  const canRead = usePermission('settings.read')
+  const canWrite = usePermission('settings.write')
+  const [editing, setEditing] = useState<TextTemplateSummary | null>(null)
+  const templates = useTextTemplates()
   const queryClient = useQueryClient()
 
-  const mutation = useMutation({
-    mutationFn: (archived: boolean) =>
+  const archiveMutation = useMutation({
+    mutationFn: (template: TextTemplateSummary) =>
       apiFetch<TextTemplateSummary>(`/v1/text-templates/${template.id}`, {
         method: 'PATCH',
         headers: jsonHeaders,
-        body: JSON.stringify({ archived }),
+        body: JSON.stringify({ archived: template.archivedAt === null }),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['text-templates'] })
     },
   })
 
-  return (
-    <button
-      className="rounded border border-slate-600 px-2 py-1 text-xs"
-      type="button"
-      disabled={mutation.isPending}
-      onClick={() => mutation.mutate(template.archivedAt === null)}
-    >
-      {template.archivedAt === null
-        ? t('admin.textTemplates.archive')
-        : t('admin.textTemplates.unarchive')}
-    </button>
-  )
-}
-
-function DeleteButton({ template }: { template: TextTemplateSummary }) {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-
-  const mutation = useMutation({
-    mutationFn: () => apiFetch(`/v1/text-templates/${template.id}`, { method: 'DELETE' }),
+  const deleteMutation = useMutation({
+    mutationFn: (template: TextTemplateSummary) =>
+      apiFetch(`/v1/text-templates/${template.id}`, { method: 'DELETE' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['text-templates'] })
     },
   })
-
-  const blocked = template.usageCount > 0
-
-  return (
-    <div className="flex flex-col gap-1">
-      {/*
-        The reason why the delete is blocked belongs to the button itself: a
-        disabled button shows no tooltip of its own, so the wrapper carries the
-        hint and the row keeps its shape.
-      */}
-      <span title={blocked ? t('admin.textTemplates.deleteBlocked') : undefined}>
-        <button
-          className={
-            blocked
-              ? 'rounded border border-slate-700 px-2 py-1 text-xs text-slate-500'
-              : 'rounded border border-red-700 px-2 py-1 text-xs text-red-300 disabled:opacity-40'
-          }
-          type="button"
-          disabled={blocked || mutation.isPending}
-          onClick={() => mutation.mutate()}
-        >
-          {t('admin.textTemplates.delete')}
-        </button>
-      </span>
-      {mutation.isError ? (
-        <span role="alert" className="text-xs text-red-400">
-          {errorMessage(t, mutation.error)}
-        </span>
-      ) : null}
-    </div>
-  )
-}
-
-export function TextTemplatesPage() {
-  const { t } = useTranslation('settings')
-  const me = useMe()
-  const canRead = usePermission('settings.read')
-  const canWrite = usePermission('settings.write')
-  const [editing, setEditing] = useState<TextTemplateSummary | null>(null)
-  const templates = useTextTemplates()
 
   if (me.isPending) {
     return <p>{t('admin.textTemplates.loading')}</p>
@@ -222,6 +185,12 @@ export function TextTemplatesPage() {
         </p>
       ) : null}
 
+      {deleteMutation.isError ? (
+        <p role="alert" className="mt-2 text-sm text-red-400">
+          {errorMessage(t, deleteMutation.error)}
+        </p>
+      ) : null}
+
       {canWrite ? (
         <Link
           className="mt-4 inline-block rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
@@ -239,43 +208,59 @@ export function TextTemplatesPage() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-700 text-slate-400">
-              <th>{t('admin.textTemplates.table.key')}</th>
-              <th>{t('admin.textTemplates.table.de')}</th>
-              <th>{t('admin.textTemplates.table.en')}</th>
+              <th>{t('admin.textTemplates.table.name')}</th>
               <th>{t('admin.textTemplates.table.status')}</th>
               <th>{t('admin.textTemplates.table.usage')}</th>
               {canWrite ? <th>{t('admin.textTemplates.table.actions')}</th> : null}
             </tr>
           </thead>
           <tbody>
-            {alphabeticalTemplates(templates.data?.templates ?? []).map((template) => (
-              <tr key={template.id} className="border-b border-slate-800 align-top">
-                <td className="py-2 font-mono text-xs text-slate-400">{template.key}</td>
-                <td className="py-2">{template.translations.de}</td>
-                <td className="py-2">{template.translations.en}</td>
-                <td className="py-2">
-                  {template.archivedAt === null
-                    ? t('admin.textTemplates.active')
-                    : t('admin.textTemplates.archived')}
-                </td>
-                <td className="py-2">{template.usageCount}</td>
-                {canWrite ? (
-                  <td className="py-2">
-                    <div className="flex flex-wrap items-start gap-2">
-                      <button
-                        className="rounded border border-slate-600 px-2 py-1 text-xs"
-                        type="button"
-                        onClick={() => setEditing(template)}
-                      >
-                        {t('admin.textTemplates.edit')}
-                      </button>
-                      <ArchiveButton template={template} />
-                      <DeleteButton template={template} />
-                    </div>
+            {alphabeticalTemplates(templates.data?.templates ?? []).map((template) => {
+              const blocked = template.usageCount > 0
+
+              return (
+                <tr key={template.id} className="border-b border-slate-800 align-top">
+                  <td className="py-2" title={template.key}>
+                    {localizedName(template.translations, i18n.language, template.key)}
                   </td>
-                ) : null}
-              </tr>
-            ))}
+                  <td className="py-2">
+                    {template.archivedAt === null
+                      ? t('admin.textTemplates.active')
+                      : t('admin.textTemplates.archived')}
+                  </td>
+                  <td className="py-2">{template.usageCount}</td>
+                  {canWrite ? (
+                    <td className="py-2">
+                      <RowMenu
+                        items={[
+                          {
+                            key: 'edit',
+                            label: t('admin.textTemplates.edit'),
+                            onSelect: () => setEditing(template),
+                          },
+                          {
+                            key: 'archive',
+                            label:
+                              template.archivedAt === null
+                                ? t('admin.textTemplates.archive')
+                                : t('admin.textTemplates.unarchive'),
+                            onSelect: () => archiveMutation.mutate(template),
+                          },
+                          {
+                            key: 'delete',
+                            label: t('admin.textTemplates.delete'),
+                            tone: 'danger',
+                            disabled: blocked,
+                            title: blocked ? t('admin.textTemplates.deleteBlocked') : undefined,
+                            onSelect: () => deleteMutation.mutate(template),
+                          },
+                        ]}
+                      />
+                    </td>
+                  ) : null}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
