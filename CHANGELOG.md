@@ -49,6 +49,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The administration shows the localized name and the actions of a row sit behind
+  one `…` button (**WP-M16-14 … WP-M16-20d**, out of band in phase 16,
+  ADR-0043): the office read the lists of the administration and asked for the
+  name of the set language only — „bei allen menüs sollten nur die für die
+  eingestellte namen lokalisierten namen angezeigt werden … es kann ja daneben
+  ein button mit … sein, er beinhaltet dann ein dropdown mit sachen wie Löschen,
+  bearbeiten usw … unter bearbeiten lässt sich ja der key sowie die
+  übersetzungstexte aller sprachen anzeigen“. A row of the fault types, of the
+  detected errors and of the ticket statuses carried the key, the German and the
+  English name next to each other, and every further language would have added
+  another column. The rule of ADR-0043: one name per row (the name of
+  `i18n.language`, the fallback `de` and then the machine key), the actions of the
+  row behind one `…` button (`RowMenu`), the edit with the key and one field per
+  language of the entry. The API stays as it is — the web composes the record of
+  the languages out of the answer. The rule is decided here; the pages follow in
+  WP-M16-15 … WP-M16-20d.
+- The administration of the detected errors and the update panel follow the accent
+  (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
+  link of a new one, the start of an update and the field labels of the forms
+  wear the accent colour of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `focus-visible:ring-accent-400`); the rose of a failed
+  answer and the slate of the reload stay. This closes the last open item of
+  phase 16.
 - The administration of the channels, of the delivery problems and of the BMAcloud
   pull follows the accent (**WP-M16-10g**, out of band in phase 16): the save of a
   channel, the "alle quittieren" of the delivery problems, the create submit of a

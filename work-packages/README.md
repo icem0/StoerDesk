@@ -1641,7 +1641,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-10e | the administration follows the accent — the readiness and the defaults of the tickets | done | yes |
 | WP-M16-10f | the administration follows the accent — the keys and the webhooks | done | yes |
 | WP-M16-10g | the administration follows the accent — the channels, the delivery and the update | done | yes |
-| WP-M16-10h | the administration follows the accent — the detected errors | planned | yes |
+| WP-M16-10h | the administration follows the accent — the detected errors | done | yes |
 | WP-M16-06 | the colour picker of the colours under „Darstellung“ (out of band) | done | yes |
 | WP-M16-12 | the localisation closes the notification and the shell text (out of band) | done | yes |
 | WP-M17-00 | the recipient chooses the way — the spec, ADR-0037 and the split | done | yes |
@@ -1721,6 +1721,16 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-11c | the page tests for the sort direction | done | yes |
 | WP-M16-11d | reverse ticket history direction under „Darstellung“ | done | yes |
 | WP-M16-13 | the blocked delete of a fault type explains itself on hover (out of band) | done | yes |
+| WP-M16-14 | the localized name and the row menu — the spec, ADR-0043 and the split (out of band) | done | yes |
+| WP-M16-15 | the shared row menu and the helper of the localized name (out of band) | planned | yes |
+| WP-M16-16 | the fault types show the localized name (out of band) | planned | yes |
+| WP-M16-17 | the detected errors show the localized name (out of band) | planned | yes |
+| WP-M16-18 | the ticket statuses show the localized name (out of band) | planned | yes |
+| WP-M16-19 | the stages of the escalation show the localized name (out of band) | planned | yes |
+| WP-M16-20a | the groups and the roles carry the row menu (out of band) | planned | yes |
+| WP-M16-20b | the users carry the row menu (out of band) | planned | yes |
+| WP-M16-20c | the webhooks and the API keys carry the row menu (out of band) | planned | yes |
+| WP-M16-20d | the readiness pools carry the row menu (out of band) | planned | yes |
 | WP-M20-01 | the duty blocks — spec, ADR-0040 and the split | done | yes |
 | WP-M20-02 | the shared blocks and the pattern | planned | yes |
 | WP-M20-03 | the API generates the blocks | planned | yes |

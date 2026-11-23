@@ -680,6 +680,9 @@ Requirements:
   under „Darstellung“ and carried to the shell as `--brand-accent` (ADR-0036),
 - the inbox of the internal notification layer is an entry of the header menu,
   right after the readiness entry, with its unread badge (WP-M14-120e),
+- every list of the administration that names an entry shows the name of the
+  set language only; the actions of the row sit behind one `…` button and the
+  edit shows the key and every translation (ADR-0043),
 - all text through i18n.
 
 ## 15. Non-functional requirements
@@ -3583,6 +3586,31 @@ delete. The key `admin.textTemplates.deleteBlocked` keeps its text in both
 languages; the delete guard of the API (`409 text_template_in_use`) and the usage
 count stay untouched. The detected errors administration carries the same line and
 is not part of this WP — the office named the fault types.
+
+**The administration shows the localized name (WP-M16-14 … WP-M16-20, out of band
+in phase 16).** The office read the administration and asked: every list shall
+show only the name of the set language; beside the name there may be one
+button with `…` that opens a menu with the actions of the row (delete, edit
+and the like); under „edit“ the key and the translation texts of all languages
+are visible. Today a row of the fault types, of the detected errors and of the
+ticket statuses carries the key, the German and the English name next to each
+other, and every further language would add another column and break the
+layout of the table. **ADR-0043** decides the rule: one name per row (the name
+of `i18n.language`, the fallback `de` and then the machine key), the actions
+behind one `…` button (a shared `RowMenu` in
+`apps/web/src/components/row-menu.tsx`), the key readable and never editable in
+the edit beside one field per language of the entry, and the API unchanged — the
+web composes the record of the languages out of the answer. The rule holds for
+every list of the administration that names an entry: the fault types, the
+detected errors, the ticket statuses, the stages of the escalation, the groups,
+the roles, the users, the channels, the webhooks, the API keys and the
+readiness pools. The split: **WP-M16-14** (the spec, the ADR and the split),
+**WP-M16-15** (the shared row menu and the helper of the localized name),
+**WP-M16-16** (the fault types), **WP-M16-17** (the detected errors),
+**WP-M16-18** (the ticket statuses), **WP-M16-19** (the stages of the
+escalation) and **WP-M16-20a … WP-M16-20d** (the lists with one name: the
+groups and the roles, the users, the webhooks and the API keys, the readiness
+pools).
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
