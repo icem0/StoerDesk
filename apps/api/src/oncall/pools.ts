@@ -6,6 +6,7 @@ import {
   oncallPoolSchema,
   PERMISSIONS,
   poolListResponseSchema,
+  mergeOncallBlocks,
   resolveOncallBlocks,
   updatePoolRequestSchema,
   type OncallBlockInput,
@@ -57,9 +58,14 @@ async function findPoolById(database: Db, id: string) {
  * The duty blocks of a pool (`specs/04-oncall.md` §4a.3.3, ADR-0040): a
  * stored day window of ADR-0035 reads as a block of one day. The blocks of the
  * answer and of the stored row carry the same fields.
+ *
+ * The plan is normalised (`specs/04-oncall.md` §4a.3.4, ADR-0044): blocks
+ * with the same daily window on consecutive weekdays become one block. The
+ * answer of the pool list and the stored plan of a pool are therefore the same
+ * blocks — a pool of the older version needs no manual work.
  */
 function planOf(value: unknown): OncallBlockInput[] {
-  return resolveOncallBlocks(value).map((block) => ({
+  return mergeOncallBlocks(resolveOncallBlocks(value)).map((block) => ({
     from_weekday: block.fromWeekday,
     to_weekday: block.toWeekday,
     start: block.start,

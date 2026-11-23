@@ -1,7 +1,7 @@
 # WP-M21-03: the API reads and writes the normalised plan
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M21-02
 phase: 21
 milestone: m21

@@ -17,6 +17,10 @@ import { resolveOnCallPerson } from '../coupling'
  * The exit criterion of phase 15 (`specs/04-oncall.md` §4a.3.2, ADR-0035): a
  * pool with office hours is expressible, every duty window is a shift of its
  * own, and the coupling names the technician only inside a window.
+ *
+ * Amended by ADR-0044 (`specs/04-oncall.md` §4a.3.4): the plan of the pool is
+ * normalised, so the day windows of the office become two blocks — Monday to
+ * Thursday and Friday — and the week holds two shifts instead of five.
  */
 
 const testDatabase = await openTestDatabase()
@@ -144,7 +148,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
     })
 
-    it('expresses the office hours of the pool as five shifts of a week', async () => {
+    it('expresses the office hours of the pool as two shifts of a week', async () => {
       await patchPool(poolId, { weeklyWindows: OFFICE_WINDOWS })
 
       const generated = await postGenerate({
@@ -154,10 +158,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
 
       expect(generated.statusCode).toBe(200)
-      expect(generated.json<{ created: number }>().created).toBe(5)
+      expect(generated.json<{ created: number }>().created).toBe(2)
 
       const shifts = await db
-        .select({ startsAt: oncallShifts.startsAt, endsAt: oncallShifts.endsAt })
+        .select({
+          startsAt: oncallShifts.startsAt,
+          endsAt: oncallShifts.endsAt,
+          weekdays: oncallShifts.weekdays,
+        })
         .from(oncallShifts)
         .where(eq(oncallShifts.poolId, poolId))
 
@@ -166,14 +174,20 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           .map((shift) => ({
             startsAt: shift.startsAt.toISOString(),
             endsAt: shift.endsAt.toISOString(),
+            weekdays: shift.weekdays,
           }))
           .sort((left, right) => left.startsAt.localeCompare(right.startsAt)),
       ).toEqual([
-        { startsAt: '2026-11-02T06:30:00.000Z', endsAt: '2026-11-02T16:00:00.000Z' },
-        { startsAt: '2026-11-03T06:30:00.000Z', endsAt: '2026-11-03T16:00:00.000Z' },
-        { startsAt: '2026-11-04T06:30:00.000Z', endsAt: '2026-11-04T16:00:00.000Z' },
-        { startsAt: '2026-11-05T06:30:00.000Z', endsAt: '2026-11-05T16:00:00.000Z' },
-        { startsAt: '2026-11-06T06:00:00.000Z', endsAt: '2026-11-06T11:00:00.000Z' },
+        {
+          startsAt: '2026-11-02T06:30:00.000Z',
+          endsAt: '2026-11-05T16:00:00.000Z',
+          weekdays: '1,2,3,4',
+        },
+        {
+          startsAt: '2026-11-06T06:00:00.000Z',
+          endsAt: '2026-11-06T11:00:00.000Z',
+          weekdays: '5',
+        },
       ])
     })
 

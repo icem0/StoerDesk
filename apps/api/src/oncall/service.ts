@@ -7,6 +7,7 @@ import { enqueueOncallOutbox } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
 import {
   generateOncallBlockSlots,
+  mergeOncallBlocks,
   generateOncallSlots,
   resolveOncallBlocks,
   type OncallBlockPattern,
@@ -231,7 +232,11 @@ export async function generateShifts(
   // pool and creates one shift per duty block; a stored day window of
   // ADR-0035 reads as a block of one day. Without a block the continuous plan
   // of ADR-0011 is the plan.
-  const blocks = resolveOncallBlocks(pool.weeklyWindows)
+  //
+  // The plan is normalised (`specs/04-oncall.md` §4a.3.4, ADR-0044): blocks
+  // with the same daily window on consecutive weekdays become one block, so a
+  // pool of the older version creates one shift per week and not one per day.
+  const blocks = mergeOncallBlocks(resolveOncallBlocks(pool.weeklyWindows))
 
   const slots: GeneratedSlot[] =
     blocks.length > 0

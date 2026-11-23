@@ -159,6 +159,38 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(second.skipped).toBe(first.created)
     })
 
+    it('generates one shift per block for a plan of day windows', async () => {
+      const [office] = await db
+        .insert(oncallPools)
+        .values({
+          name: 'Verwaltung Normalisierung',
+          groupId: null,
+          weeklyWindows: [
+            { weekday: 1, start: '07:30', end: '17:00' },
+            { weekday: 2, start: '07:30', end: '17:00' },
+            { weekday: 3, start: '07:30', end: '17:00' },
+            { weekday: 4, start: '07:30', end: '17:00' },
+            { weekday: 5, start: '07:00', end: '12:00' },
+          ],
+        })
+        .returning({ id: oncallPools.id })
+
+      const from = new Date('2026-11-02T00:00:00.000Z')
+      const to = new Date('2026-11-09T06:00:00.000Z')
+
+      const result = await generateShifts(db, { poolId: office!.id, from, to })
+
+      expect(result.created).toBe(2)
+
+      const shifts = await db
+        .select({ weekdays: oncallShifts.weekdays, dailyStart: oncallShifts.dailyStart })
+        .from(oncallShifts)
+        .where(eq(oncallShifts.poolId, office!.id))
+
+      expect(shifts.map((shift) => shift.weekdays)).toEqual(['1,2,3,4', '5'])
+      expect(shifts.map((shift) => shift.dailyStart)).toEqual(['07:30', '07:00'])
+    })
+
     it('deletes an UNFILLED shift', async () => {
       const shift = await createShift(db, { poolId })
 
