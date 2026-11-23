@@ -1,7 +1,7 @@
 # WP-M16-10a: the administration follows the accent — the users and the roles
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-09
 phase: 16
 milestone: m16
@@ -58,9 +58,18 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/users-page.tsx`,
+  `apps/web/src/admin/user-create-page.tsx`, `apps/web/src/admin/roles-page.tsx`,
+  `apps/web/src/admin/role-create-page.tsx`
+- Interfaces added: the primary action and the links of the pages of the users and
+  the roles wear the accent of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `text-accent-300`, `focus-visible:ring-accent-400`)
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run test:run -- apps/web/src/admin/__tests__/users-page.test.tsx
+  apps/web/src/admin/__tests__/roles-page.test.tsx
+  apps/web/src/admin/__tests__/user-create-page.test.tsx
+  apps/web/src/admin/__tests__/role-create-page.test.tsx` (21 passed) and
+  `npm run wp:check`
 - Follow-up WP: the next batch of the sweep — every file exists in the commit of
   the split
 - Open question: none

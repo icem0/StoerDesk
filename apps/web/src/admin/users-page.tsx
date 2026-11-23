@@ -240,7 +240,7 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
       ) : null}
       <div className="flex gap-2">
         <button
-          className="rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+          className="rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
           type="submit"
           disabled={mutation.isPending}
         >
@@ -306,7 +306,7 @@ export function UsersPage() {
   return (
     <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
       <Link
-        className="text-sm text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
       >
         {t('admin.back')}
@@ -314,7 +314,7 @@ export function UsersPage() {
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.users.title')}</h1>
       {canWrite ? (
         <Link
-          className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="mt-4 inline-block rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
           to="/admin/users/new"
         >
           {t('admin.users.createTitle')}

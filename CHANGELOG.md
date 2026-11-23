@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The administration of the users and the roles follows the accent (**WP-M16-10a**,
+  out of band in phase 16): the primary action and the links of the pages of the
+  users and the roles wear the accent colour of the instance; the semantic
+  colours of the states and the destructive action stay.
 - The escalation page carries the defaults of ADR-0008 (**WP-M14-135**, out of
   band in phase 14): before the settings answer the tab „Fristen“ shows
   168/72/24/8 hours, and a rule without minutes shows the seeded minutes per
