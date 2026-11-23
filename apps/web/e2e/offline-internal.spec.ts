@@ -162,8 +162,8 @@ async function driveToAccepted(page: Page, ticketNo: string): Promise<void> {
 }
 
 /**
- * The assignment names its target (§7.14, ADR-0033): the signed-in admin is an
- * active technician, so the admin is the target of the assignment.
+ * The assignment names one technician (§7.14, ADR-0039): the signed-in admin is
+ * an active technician, so the admin receives the ticket.
  */
 async function assignToSelf(page: Page, ticketNo: string): Promise<void> {
   const me = await page.context().request.get('/api/v1/me')
@@ -171,7 +171,7 @@ async function assignToSelf(page: Page, ticketNo: string): Promise<void> {
   const body = (await me.json()) as { user: { id: string } }
 
   const response = await page.context().request.post(`/api/v1/tickets/${ticketNo}/assign`, {
-    data: { target: { kind: 'user', id: body.user.id } },
+    data: { userId: body.user.id, acceptance: false },
   })
 
   expect(response.status()).toBe(200)

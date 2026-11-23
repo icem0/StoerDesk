@@ -61,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   row is backfilled.
 
 ### Fixed
+- The acceptance test of the offline workflow names the technician of the
+  assignment (**WP-M19-08**, phase 19): the route of the assignment takes the
+  technician and the flag _Annahme erforderlich_ since ADR-0039 — the test
+  still sent the former target of a distribution and the ticket was never
+  assigned.
 - The row menu of the administration escapes the scroll container
   (**WP-M16-22**, out of band in phase 16, ADR-0043): the menu of a row hung
   absolutely inside the row, so the table of the fault types clipped the menu

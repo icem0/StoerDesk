@@ -764,6 +764,7 @@ explanation. Offline is a core feature and appears early.
 | **16** | Facelift of the interface: one server-wide accent colour under „Darstellung“ (ADR-0036), the inbox as an entry of the header menu, the shell on a phone (WP-M16-00 … WP-M16-05) | the administration paints the whole interface with one saved colour, the bell sits in the menu next to the readiness and the shell fits a phone |
 | **17** | The way of the escalation: the recipient of an escalation decides over which channel it arrives (ADR-0037, WP-M17-00 … WP-M17-03) | an escalation that names a technician arrives over the channel that technician selected; without a selection it arrives on their own ntfy topic |
 | **18** | The entries of the house in the ticket history: the internal event types as one shared list, the frame in the colour of the internal entries under „Darstellung“ (ADR-0038, WP-M18-01) | every internal row of the history carries a frame in the saved colour and none of those rows reaches the printout or the e-mail of the customer |
+| **19** | The assignment of the office: one technician per ticket with a status (`offered`, `accepted`, `declined`), the pool of the office as a setting, a refusal passes the ticket to the next member of the pool, the assigner is notified (ADR-0039, WP-M19-01 … WP-M19-08) | the office assigns the ticket to one member of the pool, the technician answers the assignment, a refusal passes the ticket to the next member and the assigner is notified about the answer |
 | **20** | Duty blocks of the readiness: a block spans consecutive weekdays with a daily pattern, one shift per block per week, blocks replace the day windows of a pool (ADR-0040, WP-M20-01 … WP-M20-06) | the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the technician week one shift; the coupling and the iCal feed read the pattern |
 
 Each phase is split into small WPs before implementation. A phase is done only
@@ -3638,6 +3639,24 @@ menu of the last row of a list was clipped by the scroll container of its
 table — **WP-M16-22** hangs the menu in the body of the document, lets it open
 upwards when there is no room below the button and lets it follow the button
 while the page scrolls.
+
+**The assignment of the office (WP-M19-01 … WP-M19-08, done).** A ticket is
+handled by **one** person (ADR-0039). The ticket carries the technician
+(`tickets.assigned_user_id`), the state of the assignment (`offered`,
+`accepted`, `declined`) and the user who made it. The office chooses the
+technician in the ticket view — a member of the **pool of the office**, an
+ordered list under the escalation settings, with every active user as the
+fallback of an empty pool — and states _Annahme erforderlich_. The technician
+answers the assignment; a refusal passes the ticket to the next member of the
+pool, without a next member the ticket keeps the status `declined`. The
+assigned technician is notified, and the user who made the assignment is
+notified about the answer — the event `ticket.assignment_answered` and the
+target `assigner` of a notification action. The `assign` action of a rule
+gains the same mode (`pool` or `user`) beside the flag. The table of the
+technicians (`ticket_assignees`) is retired with the migration `0058`: the
+technician of the latest row of every ticket moves into
+`tickets.assigned_user_id`, the ticket view shows the one technician and the
+state of the assignment.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
