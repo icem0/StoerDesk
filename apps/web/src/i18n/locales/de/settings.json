@@ -529,6 +529,8 @@
       "testing": "Testnachricht wird gesendet …",
       "testDelivered": "Testnachricht gesendet.",
       "testFailed": "Testnachricht fehlgeschlagen: {{reason}}",
+      "testTitle": "StörDesk test",
+      "testBody": "This ist a test notification.",
       "curlCommand": "cURL-Befehl (ins Terminal kopieren)",
       "curlTokenHint": "The command carries $NTFY_TOKEN, the key is in the secret field and is never shown — set the variable of the same name in your shell first.",
       "copy": "Kopieren",

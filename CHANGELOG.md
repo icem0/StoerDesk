@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The test-notification message and the ntfy verification code follow the
+  language of the sender and the copied curl of the ntfy card is translated
+  (**WP-M16-12**, out of band in phase 16): the test message had been a hard-coded
+  pair `StörDesk test` / `This is a test notification.` in the API and in the
+  curl body of the channel administration, and the verification code was pinned
+  to German. `notification.test_title` and `notification.test_body` are added to
+  `server.{de,en}.json` and `settings.channels.testTitle` / `testBody` to the
+  web dictionaries; the API and the card now read them through the shared `t()`
+  and the session locale of the sender.
+- The CSV export of the statistics downloads as `stoerdesk-statistics-…csv`
+  (**WP-M16-12**): the German word `statistik` in the attachment name contradicted
+  the code-language rule (`PLAN.md` §3 L70).
+- The `<meta description>` of the boot HTML is English (**WP-M16-12**): it
+  matched the already-English vite PWA manifest instead of being German.
 - The history of a ticket sorts its `Meldung gemeldet` row of a backdated
   report by date and time (**WP-M2-98e**, out of band in phase 16): the row was
   pinned above the list and appeared on top of newer entries of later days, so

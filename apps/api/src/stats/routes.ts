@@ -252,7 +252,7 @@ export const statsRoutes = fp<StatsRoutesOptions>(
         reply.header('content-type', 'text/csv; charset=utf-8')
         reply.header(
           'content-disposition',
-          `attachment; filename="stoerdesk-statistik-${range.fromDate}-${range.toDate}.csv"`,
+          `attachment; filename="stoerdesk-statistics-${range.fromDate}-${range.toDate}.csv"`,
         )
 
         return reply.send(

@@ -194,4 +194,16 @@ describe('ntfy verification (WP-M14-47)', () => {
     expect(sent[0]?.url).toBe('https://ntfy.mock/')
     expect(sent[0]?.body?.includes('tk_env')).toBe(false)
   })
+
+  it('names the verification code in the language of the sender (WP-M16-12)', async () => {
+    const { database } = fakeDatabase({ url: 'https://ntfy.mock', topic: 'office' })
+    const { fetchImpl, sent } = capturingFetch()
+
+    await requestNtfyVerification(database, loadEnv({}), { fetchImpl, locale: 'en' })
+    await requestNtfyVerification(database, loadEnv({}), { fetchImpl, locale: 'de' })
+
+    expect(sent).toHaveLength(2)
+    expect(JSON.parse(sent[0]?.body ?? '{}').message).toMatch(/^StörDesk setup code: /)
+    expect(JSON.parse(sent[1]?.body ?? '{}').message).toMatch(/^StörDesk-Einrichtungscode: /)
+  })
 })

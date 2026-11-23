@@ -13,6 +13,13 @@ describe('server t()', () => {
     expect(t('en', 'sample.items', { count: 3 })).toBe('3 items')
   })
 
+  it('names the test notification in both locales', () => {
+    expect(t('de', 'notification.test_title')).toBe('StörDesk test')
+    expect(t('de', 'notification.test_body')).toBe('This ist a test notification.')
+    expect(t('en', 'notification.test_title')).toBe('StörDesk test')
+    expect(t('en', 'notification.test_body')).toBe('This is a test notification.')
+  })
+
   it('leaves unknown placeholders untouched', () => {
     expect(t('en', 'sample.items')).toBe('{{count}} items')
   })

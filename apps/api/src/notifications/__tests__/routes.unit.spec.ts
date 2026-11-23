@@ -150,6 +150,7 @@ async function buildApp(options: {
   statusRows?: Array<Record<string, unknown>>
   accounts?: Array<Record<string, unknown>>
   subscriptions?: Array<Record<string, unknown>>
+  locale?: string
 }): Promise<FastifyInstance> {
   const app = Fastify({ logger: false })
 
@@ -162,7 +163,7 @@ async function buildApp(options: {
         email: `${user}@example.org`,
         givenName: '',
         familyName: '',
-        locale: 'de',
+        locale: options.locale ?? 'de',
         theme: 'auto',
         roles: [],
         mustChangePassword: false,
@@ -386,6 +387,53 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ delivered: true })
+  })
+
+  it('sends the test message in the language of the sender (WP-M16-12)', async () => {
+    const captured: Array<{ title: string; body: string }> = []
+
+    const capture: NotificationChannel = {
+      name: 'ntfy',
+      send: async (message: { title: string; body: string }) => {
+        captured.push(message)
+      },
+    }
+
+    const app = await buildApp({
+      held: ['notification.write'],
+      store: [row()],
+      channels: [capture],
+      locale: 'en',
+    })
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/v1/admin/channels/ntfy/test',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    await app.close()
+    apps.splice(apps.indexOf(app), 1)
+
+    const deApp = await buildApp({
+      held: ['notification.write'],
+      store: [row()],
+      channels: [capture],
+      locale: 'de',
+    })
+
+    await deApp.inject({
+      method: 'POST',
+      url: '/api/v1/admin/channels/ntfy/test',
+      headers: { 'x-test-user': 'admin' },
+    })
+
+    await deApp.close()
+    apps.splice(apps.indexOf(deApp), 1)
+
+    expect(captured[0]?.title).toBe('StörDesk test')
+    expect(captured[0]?.body).toBe('This is a test notification.')
+    expect(captured[1]?.body).toBe('This ist a test notification.')
   })
 
   it('answers push_no_subscription while no device is subscribed (WP-M15-10)', async () => {

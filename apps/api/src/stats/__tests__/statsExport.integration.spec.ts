@@ -153,7 +153,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('statistics CSV export (i
     expect(response.statusCode).toBe(200)
     expect(String(response.headers['content-type'])).toContain('text/csv')
     expect(String(response.headers['content-disposition'])).toContain(
-      'filename="stoerdesk-statistik-2026-01-01-2026-12-31.csv"',
+      'filename="stoerdesk-statistics-2026-01-01-2026-12-31.csv"',
     )
 
     const body = response.body

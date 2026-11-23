@@ -3462,6 +3462,32 @@ order by `reportedAt` in the configured direction instead of the hard-coded
 deadline order. The direction is an instance value under „Darstellung“, not a
 per-user preference, and needs no new table or migration.
 
+**The localisation closes the notification and the shell text (WP-M16-12,
+out of band in phase 16).** The office asked to sweep the whole code for places
+where the user-facing text still bypasses the i18n mechanism. The sweep found:
+the **test-notification message** was a hard-coded pair `'StörDesk test'` /
+`'This is a test notification.'` in `apps/api/src/notifications/routes.ts` and
+repeated in the curl body of `apps/web/src/admin/channels-page.tsx` — every
+test send arrived in the inbox of the user in one language and the copied curl
+was German/English mixed. The **ntfy verification code** pinned `t('de',
+'notification.verification_code', …)` while every other ntfy/email/signal call
+uses `t(config.locale ?? 'de', …)`. The `<meta description>` in the boot
+HTML was German while the vite PWA manifest was already English. The **CSV
+attachment filename** `stoerdesk-statistik-…csv` carried a German word
+(`stats/routes.ts:255`), contradicting the code-language rule of §3 L70. The
+WP adds `notification.test_title` and `notification.test_body` to
+`server.{de,en}.json` and `settings.channels.testTitle` / `testBody` to the
+web dictionaries, threads the session locale of the sender through
+`sendTestMessage` and `requestNtfyVerification`, translates the curl body of
+the ntfy card, renames the CSV to `stoerdesk-statistics-…csv` and turns the
+meta description into English. The `de`-pinned `outbox.ts` message stays —
+its comment documents the reference locale on purpose — as do the
+registered-but-empty `errors.json`, `validation.json` and `seed.{de,en}.json`
+placeholders and the vite PWA manifest itself. The German demo objects in
+`apps/api/src/db/seed-demo.ts` are not touched: the column `objects.name`
+(`schema.ts:309`) is a single string without a locale map and a schema
+migration is needed for a data-model change, not a translation sweep.
+
 **The way of the escalation (WP-M17-00, phase 17, out of band at the request of
 the office).** The office read the escalation administration and asked: „das ziel
 ist eine person, der übertragungsweg eine andere geschichte! jeder kann selbst

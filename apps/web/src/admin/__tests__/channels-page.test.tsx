@@ -377,6 +377,32 @@ describe('ChannelsPage', () => {
     expect(lines.at(-1)?.startsWith('  -d ')).toBe(true)
   })
 
+  it('localises the title and the body of the copied curl (WP-M16-12)', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write']),
+      channels: {
+        channels: [matrix, { ...ntfy, enabled: true, verified: true, secretSet: false }],
+      },
+    })
+
+    i18n.changeLanguage('de')
+    renderPage()
+    const deCurl = await screen.findByDisplayValue(/^curl -X POST/)
+    const deCommand = String(deCurl.textContent ?? deCurl.getAttribute('value'))
+
+    i18n.changeLanguage('en')
+    renderPage()
+    const enCurl = await screen.findByDisplayValue(/^curl -X POST/)
+    const enCommand = String(enCurl.textContent ?? enCurl.getAttribute('value'))
+
+    i18n.changeLanguage('de')
+
+    expect(deCommand).toContain('StörDesk test')
+    expect(deCommand).toContain('This ist a test notification.')
+    expect(enCommand).toContain('StörDesk test')
+    expect(enCommand).toContain('This is a test notification.')
+  })
+
   it('keeps ntfy unverified until the code from the topic was confirmed', async () => {
     stub({
       me: meResponse(['notification.read', 'notification.write']),

@@ -110,7 +110,7 @@ export async function effectiveNtfyConfig(
 export async function requestNtfyVerification(
   database: Db,
   env: Env,
-  options: { fetchImpl?: typeof fetch } = {},
+  options: { fetchImpl?: typeof fetch; locale?: string } = {},
 ): Promise<{ expiresAt: string }> {
   const target = await effectiveNtfyConfig(database, env, { requireVerified: false })
 
@@ -148,7 +148,10 @@ export async function requestNtfyVerification(
   try {
     await sendNtfyNotification(
       target,
-      { title: 'StörDesk', body: t('de', 'notification.verification_code', { code }) },
+      {
+        title: 'StörDesk',
+        body: t(options.locale === 'en' ? 'en' : 'de', 'notification.verification_code', { code }),
+      },
       env.PWA_URL,
       options.fetchImpl,
     )

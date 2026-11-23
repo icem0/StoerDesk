@@ -49,12 +49,18 @@ function errorCode(error: unknown): string {
  * secret is write-only and stays out of the answer, the clipboard and the repo.
  * See https://docs.ntfy.sh/publish/#publish-as-json.
  */
-function buildNtfyCurl(url: string, topic: string, secretSet: boolean): string {
+function buildNtfyCurl(
+  url: string,
+  topic: string,
+  secretSet: boolean,
+  title: string,
+  message: string,
+): string {
   const base = `${url.replace(/\/+$/, '')}/`
   const body = JSON.stringify({
     topic,
-    title: 'StörDesk test',
-    message: 'This is a test notification.',
+    title,
+    message,
     priority: 3,
   })
   const lines = [
@@ -329,13 +335,19 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
                   className="flex-1 rounded bg-slate-950 p-2 text-slate-100 text-xs font-mono disabled:opacity-60"
                   id={fieldId(channel.kind, 'curlCommand')}
                   readOnly
-                  value={buildNtfyCurl(config.url!, config.topic!, channel.secretSet)}
+                  value={buildNtfyCurl(config.url!, config.topic!, channel.secretSet, t('admin.channels.testTitle'), t('admin.channels.testBody'))}
                 />
                 <button
                   className="min-h-11 rounded-lg border border-slate-600 px-3 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-60"
                   onClick={() => {
                     void navigator.clipboard.writeText(
-                      buildNtfyCurl(config.url!, config.topic!, channel.secretSet),
+                      buildNtfyCurl(
+                        config.url!,
+                        config.topic!,
+                        channel.secretSet,
+                        t('admin.channels.testTitle'),
+                        t('admin.channels.testBody'),
+                      ),
                     )
                   }}
                   title={t('admin.channels.copyToClipboard')}

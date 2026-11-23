@@ -1643,6 +1643,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-10g | the administration follows the accent — the channels, the delivery and the update | planned | yes |
 | WP-M16-10h | the administration follows the accent — the detected errors | planned | yes |
 | WP-M16-06 | the colour picker of the colours under „Darstellung“ (out of band) | done | yes |
+| WP-M16-12 | the localisation closes the notification and the shell text (out of band) | planned | yes |
 | WP-M17-00 | the recipient chooses the way — the spec, ADR-0037 and the split | done | yes |
 | WP-M17-01 | the escalation delivers over the way of the recipient (the API) | done | yes |
 | WP-M17-02 | the administration separates the target from the way | done | yes |

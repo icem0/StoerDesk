@@ -529,6 +529,8 @@
       "testing": "Sending test message …",
       "testDelivered": "Test message sent.",
       "testFailed": "Test message failed: {{reason}}",
+      "testTitle": "StörDesk test",
+      "testBody": "This is a test notification.",
       "curlCommand": "cURL command (copy to terminal)",
       "copy": "Copy",
       "copyToClipboard": "Copy to clipboard",

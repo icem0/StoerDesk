@@ -2,6 +2,8 @@ import fp from 'fastify-plugin'
 import { and, count, eq, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import {
+  PERMISSIONS,
+  t,
   acknowledgeDeliveryRequestSchema,
   acknowledgeDeliveryResponseSchema,
   channelConfigurationListResponseSchema,
@@ -21,7 +23,6 @@ import {
   notificationMessageListResponseSchema,
   notificationMessageReadResponseSchema,
   notificationUnreadCountResponseSchema,
-  PERMISSIONS,
   redeemTelegramLinkCodeRequestSchema,
   telegramLinkCodeResponseSchema,
   type ChannelConfiguration,
@@ -45,7 +46,7 @@ import {
   notificationMessages,
   pushSubscriptions,
 } from '../db/schema'
-import { configuredChannels, type NotificationChannel, type NotificationMessage } from './channels'
+import { configuredChannels, type NotificationChannel } from './channels'
 import { resolveChannelStatus } from '../dashboard/service'
 import { readChannelConfiguration } from './config'
 import {
@@ -127,11 +128,6 @@ export type NotificationChannelRoutesOptions = {
   ntfyFetch?: typeof fetch
 }
 
-const TEST_MESSAGE: NotificationMessage = {
-  title: 'StörDesk test',
-  body: 'This is a test notification.',
-}
-
 /** The body of a `PATCH`: only a non-empty secret replaces the stored one. */
 export function channelPatch(
   kind: string,
@@ -201,12 +197,16 @@ function failureCode(error: unknown): string {
  * Builds the test message and hands it to the adapter of the kind. A missing
  * adapter and a failing adapter are both a `delivered: false` with a code.
  * `testTopic` is an optional target override (for example an ntfy test topic)
- * that is handed to the adapter through the send options.
+ * that is handed to the adapter through the send options. `locale` is the
+ * language of the sender (`PLAN.md` §3.1): the title and the body of the test
+ * message reach the inbox of the user, so they come from `notification.test_*`
+ * in `server.{de,en}.json` and not from a literal.
  */
 export async function sendTestMessage(
   channels: readonly NotificationChannel[],
   kind: string,
   testTopic?: string,
+  locale?: string,
 ): Promise<{ delivered: boolean; code?: string }> {
   const channel = channels.find((candidate) => candidate.name === kind)
 
@@ -214,8 +214,13 @@ export async function sendTestMessage(
     return { delivered: false, code: 'channel_not_configured' }
   }
 
+  const lng = locale === 'en' ? 'en' : 'de'
+
   try {
-    await channel.send(TEST_MESSAGE, testTopic ? { topic: testTopic } : undefined)
+    await channel.send(
+      { title: t(lng, 'notification.test_title'), body: t(lng, 'notification.test_body') },
+      testTopic ? { topic: testTopic } : undefined,
+    )
 
     return { delivered: true }
   } catch (error) {
@@ -496,7 +501,7 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           }
         }
 
-        const result = await sendTestMessage(testRegistry, kind.data, body.data.topic)
+        const result = await sendTestMessage(testRegistry, kind.data, body.data.topic, request.user?.locale)
 
         return channelTestResponseSchema.parse(result)
       },
@@ -505,12 +510,14 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
     app.post(
       '/api/v1/admin/channels/ntfy/verification',
       { preHandler: requirePermission(database, PERMISSIONS.notification.write) },
-      async (_request, reply) => {
+      async (request, reply) => {
         try {
           const result = await requestNtfyVerification(
             database,
             env,
-            ntfyFetch === undefined ? {} : { fetchImpl: ntfyFetch },
+            ntfyFetch === undefined
+              ? { locale: request.user?.locale }
+              : { fetchImpl: ntfyFetch, locale: request.user?.locale },
           )
 
           return channelVerificationResponseSchema.parse(result)
@@ -968,7 +975,9 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
                 NTFY_TOKEN: effective?.token ?? env.NTFY_TOKEN,
               })
 
-        return channelTestResponseSchema.parse(await sendTestMessage(testRegistry, 'ntfy', topic))
+        return channelTestResponseSchema.parse(
+          await sendTestMessage(testRegistry, 'ntfy', topic, request.user?.locale),
+        )
       },
     )
 

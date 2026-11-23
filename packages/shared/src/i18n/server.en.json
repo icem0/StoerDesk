@@ -5,6 +5,8 @@
   },
   "notification": {
     "action_label": "Open",
+    "test_title": "StörDesk test",
+    "test_body": "This is a test notification.",
     "verification_code": "StörDesk setup code: {{code}}",
     "channel_health_warning": "The notification over {{channel}} is broken (error code {{code}}).",
     "channels": {
