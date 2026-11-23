@@ -1,7 +1,7 @@
 # WP-M16-17: the detected errors show the localized name
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-16
 phase: 16
 milestone: m16

@@ -856,9 +856,7 @@
       "en": "Englischer Text"
     },
     "table": {
-      "key": "Schlüssel",
-      "de": "Deutsch",
-      "en": "Englisch",
+      "name": "Name",
       "status": "Status",
       "usage": "Vorgänge",
       "actions": "Aktionen"

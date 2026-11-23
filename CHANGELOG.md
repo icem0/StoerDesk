@@ -80,6 +80,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   three columns and the actions of the row beside them. The row shows the name
   of the language of the interface, the actions sit behind the `…` button and the
   edit shows the key beside the translation texts.
+- The detected errors show the name of the language of the interface only
+  (**WP-M16-17**, out of band in phase 16, ADR-0043): the list of
+  `/admin/detected-errors` carried the key, the German and the English label in
+  three columns. The row shows the name of the language of the interface, the
+  actions sit behind the `…` button and the edit shows the key beside the texts
+  of both languages. The delete of an archived entry stays blocked and names the
+  reason on hover.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

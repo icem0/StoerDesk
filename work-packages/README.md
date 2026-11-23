@@ -1724,7 +1724,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-14 | the localized name and the row menu — the spec, ADR-0043 and the split (out of band) | done | yes |
 | WP-M16-15 | the shared row menu and the helper of the localized name (out of band) | done | yes |
 | WP-M16-16 | the fault types show the localized name (out of band) | done | yes |
-| WP-M16-17 | the detected errors show the localized name (out of band) | planned | yes |
+| WP-M16-17 | the detected errors show the localized name (out of band) | done | yes |
 | WP-M16-18 | the ticket statuses show the localized name (out of band) | planned | yes |
 | WP-M16-19 | the stages of the escalation show the localized name (out of band) | planned | yes |
 | WP-M16-20a | the groups and the roles carry the row menu (out of band) | planned | yes |

@@ -9,16 +9,23 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
+import { languageRecord, localizedName } from '../lib/localized-name'
 import { errorMessage, jsonHeaders } from './detected-error-form-parts'
 
 /**
  * Festgestellte Fehler — Admin-Katalog (`specs/13-detected-errors.md` §13.5,
  * WP-M11-06).
  *
- * Liste (key, de, en, status, usage), Anlegen/Bearbeiten (key + beide Sprachen),
+ * Liste (name, status, usage), Anlegen/Bearbeiten (key + beide Sprachen),
  * Archivieren/Reaktivieren, Löschen (blockiert bei Nutzung → `409
  * detected_error_in_use`). Geschützt mit `settings.read`/`settings.write`.
+ *
+ * Since WP-M16-17 the list follows the rule of `specs/13-ui.md` §14.8
+ * (ADR-0043): the row shows **one** name — the name of the language of the
+ * interface — and the actions of the row sit behind one `…` button. The key and
+ * the texts of every language stand together in the edit.
  */
 
 function useDetectedErrors() {
@@ -123,80 +130,34 @@ function EditErrorForm({
   )
 }
 
-function ArchiveButton({ item }: { item: DetectedErrorResponse }) {
-  const { t } = useTranslation('settings')
+export function DetectedErrorsPage() {
+  const { t, i18n } = useTranslation('settings')
+  const me = useMe()
+  const canRead = usePermission('settings.read')
+  const canWrite = usePermission('settings.write')
+  const [editing, setEditing] = useState<DetectedErrorResponse | null>(null)
+  const items = useDetectedErrors()
   const queryClient = useQueryClient()
 
-  const mutation = useMutation({
-    mutationFn: (archived: boolean) =>
+  const archiveMutation = useMutation({
+    mutationFn: (item: DetectedErrorResponse) =>
       apiFetch<DetectedErrorResponse>(`/v1/detected-errors/${item.key}`, {
         method: 'PATCH',
         headers: jsonHeaders,
-        body: JSON.stringify({ archivedAt: archived ? new Date().toISOString() : null }),
+        body: JSON.stringify({ archivedAt: item.archivedAt === null ? new Date().toISOString() : null }),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['detected-errors'] })
     },
   })
 
-  return (
-    <button
-      className="rounded border border-slate-600 px-2 py-1 text-xs"
-      type="button"
-      disabled={mutation.isPending}
-      onClick={() => mutation.mutate(item.archivedAt === null)}
-    >
-      {item.archivedAt === null
-        ? t('detectedErrors.archive')
-        : t('detectedErrors.unarchive')}
-    </button>
-  )
-}
-
-function DeleteButton({ item }: { item: DetectedErrorResponse }) {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-
-  const mutation = useMutation({
-    mutationFn: () => apiFetch(`/v1/detected-errors/${item.key}`, { method: 'DELETE' }),
+  const deleteMutation = useMutation({
+    mutationFn: (item: DetectedErrorResponse) =>
+      apiFetch(`/v1/detected-errors/${item.key}`, { method: 'DELETE' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['detected-errors'] })
     },
   })
-
-  const blocked = item.archivedAt !== null
-
-  return (
-    <div className="flex flex-col gap-1">
-      <button
-        className="rounded border border-red-700 px-2 py-1 text-xs text-red-300 disabled:opacity-40"
-        type="button"
-        disabled={blocked || mutation.isPending}
-        onClick={() => mutation.mutate()}
-      >
-        {t('detectedErrors.delete')}
-      </button>
-      {blocked ? (
-        <span className="text-xs text-slate-500">
-          {t('detectedErrors.deleteBlocked')}
-        </span>
-      ) : null}
-      {mutation.isError ? (
-        <span role="alert" className="text-xs text-red-400">
-          {errorMessage(t, mutation.error)}
-        </span>
-      ) : null}
-    </div>
-  )
-}
-
-export function DetectedErrorsPage() {
-  const { t } = useTranslation('settings')
-  const me = useMe()
-  const canRead = usePermission('settings.read')
-  const canWrite = usePermission('settings.write')
-  const [editing, setEditing] = useState<DetectedErrorResponse | null>(null)
-  const items = useDetectedErrors()
 
   if (me.isPending) {
     return <p>{t('detectedErrors.loading')}</p>
@@ -229,13 +190,17 @@ export function DetectedErrorsPage() {
       <h1 className="mt-2 text-2xl font-semibold">
         {t('detectedErrors.title')}
       </h1>
-      <p className="mt-2 text-sm text-slate-400">
-        {t('detectedErrors.hint')}
-      </p>
+      <p className="mt-2 text-sm text-slate-400">{t('detectedErrors.hint')}</p>
 
       {items.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, items.error)}
+        </p>
+      ) : null}
+
+      {deleteMutation.isError ? (
+        <p role="alert" className="mt-2 text-sm text-red-400">
+          {errorMessage(t, deleteMutation.error)}
         </p>
       ) : null}
 
@@ -256,43 +221,63 @@ export function DetectedErrorsPage() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-700 text-slate-400">
-              <th>{t('detectedErrors.table.key')}</th>
-              <th>{t('detectedErrors.table.de')}</th>
-              <th>{t('detectedErrors.table.en')}</th>
+              <th>{t('detectedErrors.table.name')}</th>
               <th>{t('detectedErrors.table.status')}</th>
               <th>{t('detectedErrors.table.usage')}</th>
               {canWrite ? <th>{t('detectedErrors.table.actions')}</th> : null}
             </tr>
           </thead>
           <tbody>
-            {alphabetical(items.data?.detectedErrors ?? []).map((item) => (
-              <tr key={item.key} className="border-b border-slate-800 align-top">
-                <td className="py-2 font-mono text-xs text-slate-400">{item.key}</td>
-                <td className="py-2">{item.labelDe}</td>
-                <td className="py-2">{item.labelEn}</td>
-                <td className="py-2">
-                  {item.archivedAt === null
-                    ? t('detectedErrors.active')
-                    : t('detectedErrors.archived')}
-                </td>
-                <td className="py-2">—</td>
-                {canWrite ? (
-                  <td className="py-2">
-                    <div className="flex flex-wrap items-start gap-2">
-                      <button
-                        className="rounded border border-slate-600 px-2 py-1 text-xs"
-                        type="button"
-                        onClick={() => setEditing(item)}
-                      >
-                        {t('detectedErrors.edit')}
-                      </button>
-                      <ArchiveButton item={item} />
-                      <DeleteButton item={item} />
-                    </div>
+            {alphabetical(items.data?.detectedErrors ?? []).map((item) => {
+              const blocked = item.archivedAt !== null
+
+              return (
+                <tr key={item.key} className="border-b border-slate-800 align-top">
+                  <td className="py-2" title={item.key}>
+                    {localizedName(
+                      languageRecord({ de: item.labelDe, en: item.labelEn }),
+                      i18n.language,
+                      item.key,
+                    )}
                   </td>
-                ) : null}
-              </tr>
-            ))}
+                  <td className="py-2">
+                    {item.archivedAt === null
+                      ? t('detectedErrors.active')
+                      : t('detectedErrors.archived')}
+                  </td>
+                  <td className="py-2">—</td>
+                  {canWrite ? (
+                    <td className="py-2">
+                      <RowMenu
+                        items={[
+                          {
+                            key: 'edit',
+                            label: t('detectedErrors.edit'),
+                            onSelect: () => setEditing(item),
+                          },
+                          {
+                            key: 'archive',
+                            label:
+                              item.archivedAt === null
+                                ? t('detectedErrors.archive')
+                                : t('detectedErrors.unarchive'),
+                            onSelect: () => archiveMutation.mutate(item),
+                          },
+                          {
+                            key: 'delete',
+                            label: t('detectedErrors.delete'),
+                            tone: 'danger',
+                            disabled: blocked,
+                            title: blocked ? t('detectedErrors.deleteBlocked') : undefined,
+                            onSelect: () => deleteMutation.mutate(item),
+                          },
+                        ]}
+                      />
+                    </td>
+                  ) : null}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

@@ -856,9 +856,7 @@
       "en": "English text"
     },
     "table": {
-      "key": "Key",
-      "de": "German",
-      "en": "English",
+      "name": "Name",
       "status": "Status",
       "usage": "Tickets",
       "actions": "Actions"
