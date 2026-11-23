@@ -1,8 +1,8 @@
 # WP-M16-10b: the administration follows the accent — the groups and the standard texts
 
 format: small-model
-status: planned
-depends-on: WP-M16-NaN
+status: done
+depends-on: WP-M16-10a
 phase: 16
 milestone: m16
 context-budget: 14k tokens
@@ -58,9 +58,18 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/groups-page.tsx`,
+  `apps/web/src/admin/group-create-page.tsx`, `apps/web/src/admin/text-templates-page.tsx`,
+  `apps/web/src/admin/text-template-create-page.tsx`
+- Interfaces added: the primary action and the links of the pages of the groups and
+  the standard texts wear the accent of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `text-accent-300`, `focus-visible:ring-accent-400`)
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run test:run -- apps/web/src/admin/__tests__/groups-page.test.tsx
+  apps/web/src/admin/__tests__/group-create-page.test.tsx
+  apps/web/src/admin/__tests__/text-templates-page.test.tsx
+  apps/web/src/admin/__tests__/text-template-create-page.test.tsx` (9 passed) and
+  `npm run wp:check`
 - Follow-up WP: the next batch of the sweep — every file exists in the commit of
   the split
 - Open question: none

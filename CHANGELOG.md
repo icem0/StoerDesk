@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The administration of the groups and the standard texts follows the accent
+  (**WP-M16-10b**, out of band in phase 16): the primary action and the links of
+  the pages of the groups and the fault types wear the accent colour of the
+  instance; the semantic colours of the states and the destructive action stay.
 - The administration of the users and the roles follows the accent (**WP-M16-10a**,
   out of band in phase 16): the primary action and the links of the pages of the
   users and the roles wear the accent colour of the instance; the semantic
