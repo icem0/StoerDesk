@@ -65,6 +65,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The switch under „Darstellung“ names the history of a ticket
+  (**WP-M16-24d**, phase 16): the texts of the switch were „Neueste zuerst“ and
+  a hint that spoke of the newest message — the switch steers the events of the
+  history in the ticket view, so the field reads „Verlauf: Neuestes zuerst“ /
+  „History: Newest first“ and the hint says that the switch applies to the
+  events of the history and names both of its states.
 - The direction of the history of a ticket is named `historySortDirection`
   (**WP-M16-24c**, phase 16): the value under „Darstellung“ steered the list of
   the tickets before, but it steers the history of a ticket — the field of the

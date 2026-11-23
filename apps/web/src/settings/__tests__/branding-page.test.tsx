@@ -510,4 +510,21 @@ describe('BrandingPage', () => {
     expect(commentPicker.disabled).toBe(true)
     expect(accentPicker.disabled).toBe(true)
   })
+
+  it('names the history of a ticket in the label and in the hint of the switch', async () => {
+    const fetchMock = stubSessionAndBranding(
+      ['settings.read', 'settings.write'],
+      { companyName: 'Beispiel GmbH', titleEnabled: false },
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    const label = await screen.findByLabelText(/Verlauf: Neuestes zuerst|History: Newest first/i)
+    expect((label as HTMLInputElement).checked).toBe(true)
+
+    expect(
+      screen.getByText(/Schalter gilt für die Ereignisse|switch applies to the events/i),
+    ).toBeTruthy()
+  })
 })

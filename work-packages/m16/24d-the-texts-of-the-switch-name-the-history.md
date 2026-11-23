@@ -1,7 +1,7 @@
 # WP-M16-24d: the texts of the switch name the history
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-24c
 phase: 16
 milestone: m16
@@ -67,6 +67,6 @@ Expected: green; the renamed texts fail before the change and pass after it.
   `apps/web/src/settings/branding-page.tsx` and its test
 - Interfaces added: the two renamed keys of the texts of the switch
 - Verified: `npm run typecheck`, `npm run lint`, `npm run i18n:check`, the page
-  test
-- Follow-up WP: none
+  test — the renamed texts fail before the change and pass after it
+- Follow-up WP: none — this closes the chain of WP-M16-24
 - Open question: none

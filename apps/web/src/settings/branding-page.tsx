@@ -330,9 +330,9 @@ export function BrandingPage() {
             onChange={(event) => setHistorySortDirection(event.target.checked ? 'desc' : 'asc')}
             type="checkbox"
           />
-          {t('branding.field.ticketSortDirection')}
+          {t('branding.field.historySortDirection')}
         </label>
-        <p className="text-xs text-slate-400">{t('branding.hintTicketSortDirection')}</p>
+        <p className="text-xs text-slate-400">{t('branding.hintHistorySortDirection')}</p>
 
         {currentLogo && !logoDataUrl && (
           <div className="flex items-center gap-2">

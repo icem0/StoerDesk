@@ -1737,7 +1737,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-24a | the API orders the list the way the office wants | done | yes |
 | WP-M16-24b | the list page asks for the order of the office | done | yes |
 | WP-M16-24c | the contract and the pages follow the renamed direction | done | yes |
-| WP-M16-24d | the texts of the switch name the history | planned | yes |
+| WP-M16-24d | the texts of the switch name the history | done | yes |
 | WP-M20-01 | the duty blocks — spec, ADR-0040 and the split | done | yes |
 | WP-M20-02 | the shared blocks and the pattern | planned | yes |
 | WP-M20-03 | the API generates the blocks | planned | yes |
