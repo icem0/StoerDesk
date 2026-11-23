@@ -3570,6 +3570,20 @@ regression test `web-push-esm.spec.ts` runs the adapter in a child process
 under Node — the loader of the production — because the Vitest runner resolves
 the CommonJS package differently and could not see the defect.
 
+**The blocked delete of a fault type explains itself on hover (WP-M16-13, out of
+band in phase 16).** The office read the fault type administration
+(`/admin/text-templates`) and asked: the hint „Wird von Vorgängen verwendet"
+breaks the layout of the row — the delete should simply be greyed out and the
+hint should appear on mouse-over. `DeleteButton`
+(`apps/web/src/admin/text-templates-page.tsx:137`) drops the line under the
+button: the button sits in a wrapper that carries the hint as its `title` (a
+disabled button shows no tooltip of its own), the blocked button is grey
+(`border-slate-700`, `text-slate-500`) and an unused fault type keeps the red
+delete. The key `admin.textTemplates.deleteBlocked` keeps its text in both
+languages; the delete guard of the API (`409 text_template_in_use`) and the usage
+count stay untouched. The detected errors administration carries the same line and
+is not part of this WP — the office named the fault types.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

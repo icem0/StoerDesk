@@ -149,17 +149,25 @@ function DeleteButton({ template }: { template: TextTemplateSummary }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <button
-        className="rounded border border-red-700 px-2 py-1 text-xs text-red-300 disabled:opacity-40"
-        type="button"
-        disabled={blocked || mutation.isPending}
-        onClick={() => mutation.mutate()}
-      >
-        {t('admin.textTemplates.delete')}
-      </button>
-      {blocked ? (
-        <span className="text-xs text-slate-500">{t('admin.textTemplates.deleteBlocked')}</span>
-      ) : null}
+      {/*
+        The reason why the delete is blocked belongs to the button itself: a
+        disabled button shows no tooltip of its own, so the wrapper carries the
+        hint and the row keeps its shape.
+      */}
+      <span title={blocked ? t('admin.textTemplates.deleteBlocked') : undefined}>
+        <button
+          className={
+            blocked
+              ? 'rounded border border-slate-700 px-2 py-1 text-xs text-slate-500'
+              : 'rounded border border-red-700 px-2 py-1 text-xs text-red-300 disabled:opacity-40'
+          }
+          type="button"
+          disabled={blocked || mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
+          {t('admin.textTemplates.delete')}
+        </button>
+      </span>
       {mutation.isError ? (
         <span role="alert" className="text-xs text-red-400">
           {errorMessage(t, mutation.error)}

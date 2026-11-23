@@ -1720,6 +1720,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-11b | the frontend sort direction | done | yes |
 | WP-M16-11c | the page tests for the sort direction | done | yes |
 | WP-M16-11d | reverse ticket history direction under „Darstellung“ | done | yes |
+| WP-M16-13 | the blocked delete of a fault type explains itself on hover (out of band) | done | yes |
 | WP-M20-01 | the duty blocks — spec, ADR-0040 and the split | done | yes |
 | WP-M20-02 | the shared blocks and the pattern | planned | yes |
 | WP-M20-03 | the API generates the blocks | planned | yes |

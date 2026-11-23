@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The delete of a fault type that a ticket still carries is greyed out and
+  explains itself on hover (**WP-M16-13**, out of band in phase 16): the hint
+  „Wird von Vorgängen verwendet" was a line of its own under the button and broke
+  the layout of the row. The line is gone — the button is grey and carries the
+  hint as its tooltip.
 - The test-notification message and the ntfy verification code follow the
   language of the sender and the copied curl of the ntfy card is translated
   (**WP-M16-12**, out of band in phase 16): the test message had been a hard-coded
