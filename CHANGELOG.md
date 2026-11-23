@@ -94,6 +94,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   sit behind the `…` button and the edit shows the key read-only beside the
   names of both languages — the key of a status stays immutable, the workflow,
   the escalation stages and the tickets reference it.
+- The stages of the escalation show the name of the language of the interface
+  (**WP-M16-19**, out of band in phase 16, ADR-0043): every stage of
+  `/admin/escalation` carried an open editor with a field for the key, one field
+  per language, the predecessor and the active switch — and the names of both
+  languages stood next to each other in every row. The stage shows one name, the
+  actions sit behind the `…` button and the editor opens with „Bearbeiten“. A
+  language that arrives later is a field of the editor, not a column of the
+  list.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

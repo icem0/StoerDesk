@@ -22,7 +22,9 @@ import {
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
+import { languagesOf, localizedName } from '../lib/localized-name'
 import { EscalationConditionBuilder } from './escalation-condition-builder'
 import { EscalationActionEditor } from './escalation-action-editor'
 
@@ -38,6 +40,12 @@ import { EscalationActionEditor } from './escalation-action-editor'
  * (`PUT /api/v1/escalation/config`) and the stage names with
  * `PUT /api/v1/escalation/stages`. Without `settings.write` the editors stay
  * read-only; the server enforces the permission again.
+ *
+ * Since WP-M16-19 the stage list follows the rule of `specs/13-ui.md` §14.8
+ * (ADR-0043): a stage shows **one** name — the name of the language of the
+ * interface — and the actions of the stage sit behind one `…` button. The
+ * editor of a stage opens with „Bearbeiten“ and carries the key and one field
+ * per language of the stage.
  *
  * The route `/admin/deadlines` redirects here, so old bookmarks keep working.
  */
@@ -137,6 +145,7 @@ export function EscalationPage() {
 
   const [tab, setTab] = useState('fristen')
   const [removeCandidate, setRemoveCandidate] = useState<string | null>(null)
+  const [editingStageKey, setEditingStageKey] = useState<string | null>(null)
   const [savedHours, setSavedHours] = useState<DeadlineHours | null>(null)
   const [savedConfig, setSavedConfig] = useState<EscalationConfig | null>(null)
   const hours = savedHours ?? (settingsQuery.data?.hours ?? DEADLINE_HOURS)
@@ -188,7 +197,7 @@ export function EscalationPage() {
   function stageName(key: string): string {
     const names = stageNames.get(key)
 
-    return names === undefined ? key : (names[i18n.language] ?? names.de ?? key)
+    return names === undefined ? key : localizedName(names, i18n.language, key)
   }
 
   const firstStageKey = escalationFirstStageKey(config.stages)
@@ -295,112 +304,124 @@ export function EscalationPage() {
 
               return (
                 <li key={key} className="rounded border p-3 border-slate-700 bg-slate-900">
-                  <p className="mb-1 text-sm font-medium text-slate-200">
-                    {stageName(key)}
-                    {' · '}
-                    {stage.active ? t('admin.escalation.stage.on') : t('admin.escalation.stage.off')}
-                  </p>
-                  <div className="flex flex-wrap items-end gap-2">
-                    <label className="text-xs text-slate-400">
-                      {t('admin.escalation.stage.key')}
-                      <input
-                        className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 read-only:opacity-60"
-                        readOnly
-                        value={key}
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-slate-200">
+                      {stageName(key)}
+                      {' · '}
+                      {stage.active
+                        ? t('admin.escalation.stage.on')
+                        : t('admin.escalation.stage.off')}
+                    </p>
+                    {canWrite ? (
+                      <RowMenu
+                        items={[
+                          {
+                            key: 'edit',
+                            label: t('admin.escalation.stage.edit'),
+                            onSelect: () =>
+                              setEditingStageKey(editingStageKey === key ? null : key),
+                          },
+                          ...(isFirst
+                            ? []
+                            : [
+                                {
+                                  key: 'remove',
+                                  label: t('admin.escalation.stage.remove'),
+                                  tone: 'danger' as const,
+                                  onSelect: () => setRemoveCandidate(key),
+                                },
+                              ]),
+                        ]}
                       />
-                    </label>
-                    <label className="text-xs text-slate-400">
-                      {t('admin.escalation.stage.nameDe')}
-                      <input
-                        className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                        disabled={!canWrite}
-                        required
-                        value={stage.names.de ?? ''}
-                        onChange={(event) =>
-                          void saveStages.mutate({
-                            stages: config.stages.map((entry) =>
-                              entry.key === key
-                                ? { ...entry, names: { ...entry.names, de: event.target.value } }
-                                : entry,
-                            ),
-                          })
-                        }
-                      />
-                    </label>
-                    <label className="text-xs text-slate-400">
-                      {t('admin.escalation.stage.nameEn')}
-                      <input
-                        className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                        disabled={!canWrite}
-                        required
-                        value={stage.names.en ?? ''}
-                        onChange={(event) =>
-                          void saveStages.mutate({
-                            stages: config.stages.map((entry) =>
-                              entry.key === key
-                                ? { ...entry, names: { ...entry.names, en: event.target.value } }
-                                : entry,
-                            ),
-                          })
-                        }
-                      />
-                    </label>
-                    <label className="text-xs text-slate-400">
-                      {t('admin.escalation.stage.predecessor')}
-                      <select
-                        className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                        disabled={!canWrite || isFirst}
-                        value={stage.predecessor ?? ''}
-                        onChange={(event) =>
-                          void saveStages.mutate({
-                            stages: config.stages.map((entry) =>
-                              entry.key === key
-                                ? {
-                                    ...entry,
-                                    predecessor:
-                                      event.target.value === '' ? null : event.target.value,
-                                  }
-                                : entry,
-                            ),
-                          })
-                        }
-                      >
-                        <option disabled value="">
-                          {t('admin.escalation.stage.predecessorNone')}
-                        </option>
-                        {otherStages.map((entry) => (
-                          <option key={entry.key} value={entry.key}>
-                            {stageName(entry.key)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-xs text-slate-400">
-                      {t('admin.escalation.stage.active')}
-                      <input
-                        className="w-16 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                        checked={stage.active}
-                        disabled={!canWrite}
-                        type="checkbox"
-                        onChange={(event) =>
-                          void saveStages.mutate({
-                            stages: config.stages.map((entry) =>
-                              entry.key === key ? { ...entry, active: event.target.checked } : entry,
-                            ),
-                          })
-                        }
-                      />
-                    </label>
-                    {canWrite && !isFirst ? (
-                      <button
-                        className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-                        onClick={() => setRemoveCandidate(key)}
-                        type="button"
-                      >
-                        {t('admin.escalation.stage.remove')}
-                      </button>
                     ) : null}
                   </div>
+                  {editingStageKey === key ? (
+                    <div className="flex flex-wrap items-end gap-2">
+                      <label className="text-xs text-slate-400">
+                        {t('admin.escalation.stage.key')}
+                        <input
+                          className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 read-only:opacity-60"
+                          readOnly
+                          value={key}
+                        />
+                      </label>
+                      {languagesOf(stage.names).map((locale) => (
+                        <label className="text-xs text-slate-400" key={locale}>
+                          {locale === 'de'
+                            ? t('admin.escalation.stage.nameDe')
+                            : locale === 'en'
+                              ? t('admin.escalation.stage.nameEn')
+                              : locale}
+                          <input
+                            className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                            disabled={!canWrite}
+                            required
+                            value={stage.names[locale] ?? ''}
+                            onChange={(event) =>
+                              void saveStages.mutate({
+                                stages: config.stages.map((entry) =>
+                                  entry.key === key
+                                    ? {
+                                        ...entry,
+                                        names: { ...entry.names, [locale]: event.target.value },
+                                      }
+                                    : entry,
+                                ),
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      <label className="text-xs text-slate-400">
+                        {t('admin.escalation.stage.predecessor')}
+                        <select
+                          className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                          disabled={!canWrite || isFirst}
+                          value={stage.predecessor ?? ''}
+                          onChange={(event) =>
+                            void saveStages.mutate({
+                              stages: config.stages.map((entry) =>
+                                entry.key === key
+                                  ? {
+                                      ...entry,
+                                      predecessor:
+                                        event.target.value === '' ? null : event.target.value,
+                                    }
+                                  : entry,
+                              ),
+                            })
+                          }
+                        >
+                          <option disabled value="">
+                            {t('admin.escalation.stage.predecessorNone')}
+                          </option>
+                          {otherStages.map((entry) => (
+                            <option key={entry.key} value={entry.key}>
+                              {stageName(entry.key)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs text-slate-400">
+                        {t('admin.escalation.stage.active')}
+                        <input
+                          className="w-16 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                          checked={stage.active}
+                          disabled={!canWrite}
+                          type="checkbox"
+                          onChange={(event) =>
+                            void saveStages.mutate({
+                              stages: config.stages.map((entry) =>
+                                entry.key === key
+                                  ? { ...entry, active: event.target.checked }
+                                  : entry,
+                              ),
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                  ) : null}
 
                   {removeCandidate === key ? (
                     <div

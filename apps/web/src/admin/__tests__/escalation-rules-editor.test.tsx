@@ -185,13 +185,18 @@ describe('the rule editor of the escalation page', () => {
   })
 
   it('shows the key of a stage before its names and its predecessor', async () => {
-    renderPage(['settings.read'])
+    renderPage(['settings.read', 'settings.write'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     openStagesTab()
     await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
 
     const stage = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')[0] as HTMLElement
+
+    // The editor of a stage opens with „Bearbeiten“ (WP-M16-19).
+    fireEvent.click(within(stage).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
+
     const labels = [...stage.querySelectorAll('label')].map((label) => label.textContent)
 
     expect(labels.slice(0, 3)).toEqual([
@@ -209,13 +214,19 @@ describe('the rule editor of the escalation page', () => {
   })
 
   it('shows no number for the rule of a stage', async () => {
-    renderPage(['settings.read'])
+    renderPage(['settings.read', 'settings.write'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     openStagesTab()
     await waitFor(() => expect(screen.getByTestId('escalation-rule-timeline')).toBeTruthy())
 
     expect(screen.queryByLabelText('Regel')).toBeNull()
+
+    const stage = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')[0] as HTMLElement
+
+    fireEvent.click(within(stage).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
+
     expect(screen.getAllByLabelText('Schlüssel')).toHaveLength(1)
   })
 

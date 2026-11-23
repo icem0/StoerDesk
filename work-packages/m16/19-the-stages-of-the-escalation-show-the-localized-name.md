@@ -1,7 +1,7 @@
 # WP-M16-19: the stages of the escalation show the localized name
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-18
 phase: 16
 milestone: m16

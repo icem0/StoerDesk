@@ -115,7 +115,11 @@ describe('the stage tab of the escalation administration', () => {
     expect(items[1]?.textContent).toContain('Nachtdienst')
     expect(items[2]?.textContent).toContain('Auftrag angelegt')
 
-    const predecessor = within(items[1] as HTMLElement).getAllByLabelText('Vorgänger')[0]
+    // The editor of a stage opens with „Bearbeiten“ (WP-M16-19).
+    fireEvent.click(within(items[1] as HTMLElement).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
+
+    const predecessor = within(items[1] as HTMLElement).getByLabelText('Vorgänger')
 
     expect(predecessor).toBeTruthy()
 
@@ -128,8 +132,30 @@ describe('the stage tab of the escalation administration', () => {
 
     const first = items[0] as HTMLElement
 
-    expect((within(first).getByLabelText('Vorgänger') as HTMLSelectElement).disabled).toBe(true)
-    expect(within(first).queryByRole('button', { name: 'Stufe entfernen' })).toBeNull()
+    fireEvent.click(within(first).getByRole('button', { name: 'Aktionen' }))
+
+    // The first stage of the chain has no remove action.
+    expect(screen.queryByRole('menuitem', { name: 'Stufe entfernen' })).toBeNull()
+  })
+
+  it('shows the name of the interface language and the key in the editor', async () => {
+    void i18n.changeLanguage('de')
+    renderPage()
+    await openStagesTab('Stufen & Regeln')
+
+    const items = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')
+
+    // The editor is closed until „Bearbeiten“ was chosen.
+    expect(within(items[1] as HTMLElement).queryByLabelText('Vorgänger')).toBeNull()
+
+    fireEvent.click(within(items[1] as HTMLElement).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
+
+    const editor = items[1] as HTMLElement
+
+    expect(within(editor).getByLabelText('Schlüssel')).toHaveProperty('value', 'night_shift')
+    expect(within(editor).getByLabelText('Name (Deutsch)')).toHaveProperty('value', 'Nachtdienst')
+    expect(within(editor).getByLabelText('Name (Englisch)')).toHaveProperty('value', 'Night shift')
   })
 
   it('offers the button of the own page of a new stage and the remove action with the cascade hint', async () => {
@@ -141,7 +167,8 @@ describe('the stage tab of the escalation administration', () => {
 
     const nightShift = within(screen.getByTestId('escalation-stage-list')).getAllByRole('listitem')[1] as HTMLElement
 
-    fireEvent.click(within(nightShift).getByRole('button', { name: 'Stufe entfernen' }))
+    fireEvent.click(within(nightShift).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(within(nightShift).getByRole('menuitem', { name: 'Stufe entfernen' }))
 
     const dialog = screen.getByRole('alertdialog')
 

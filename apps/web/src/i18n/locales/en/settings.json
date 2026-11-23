@@ -301,6 +301,7 @@
       },
       "stage": {
         "nameDe": "Name (German)",
+        "edit": "Edit",
         "nameEn": "Name (English)",
         "active": "Active",
         "on": "Active",
