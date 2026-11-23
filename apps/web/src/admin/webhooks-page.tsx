@@ -10,6 +10,7 @@ import {
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
 import {
   EventFields,
@@ -21,6 +22,8 @@ import {
 /**
  * Admin webhook page (`specs/08-objects-api.md` §9.5, WP-M10-11).
  * The signing secret is shown once in the create panel and never listed again.
+ * Since WP-M16-20c the actions of a row sit behind the shared row menu
+ * (ADR-0043).
  */
 
 function EditForm(props: { entry: WebhookSummary; onSaved: () => void; onCancel: () => void }) {
@@ -143,22 +146,21 @@ function WebhookRow(props: {
             </button>
           </div>
         ) : (
-          <div className="flex gap-2">
-            <button
-              className="min-h-11 self-start rounded-lg border border-slate-600 px-3 text-sm hover:bg-slate-800"
-              onClick={() => setEditing(true)}
-              type="button"
-            >
-              {t('webhooks.edit')}
-            </button>
-            <button
-              className="min-h-11 self-start rounded-lg border border-rose-700 px-3 text-sm text-rose-300 hover:bg-rose-950/40"
-              onClick={() => setConfirming(true)}
-              type="button"
-            >
-              {t('webhooks.delete')}
-            </button>
-          </div>
+          <RowMenu
+            items={[
+              {
+                key: 'edit',
+                label: t('webhooks.edit'),
+                onSelect: () => setEditing(true),
+              },
+              {
+                key: 'delete',
+                label: t('webhooks.delete'),
+                tone: 'danger',
+                onSelect: () => setConfirming(true),
+              },
+            ]}
+          />
         )
       ) : null}
     </li>

@@ -109,6 +109,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The users carry the row menu (**WP-M16-20b**, out of band in phase 16,
   ADR-0043): the edit of a colleague and the one-time password sit behind the
   `…` button of the row now.
+- The webhooks and the API keys carry the row menu (**WP-M16-20c**, out of band
+  in phase 16, ADR-0043): the edit and the delete of a webhook and the revoke
+  of an API key sit behind the `…` button of the row; both keep their
+  confirmation.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

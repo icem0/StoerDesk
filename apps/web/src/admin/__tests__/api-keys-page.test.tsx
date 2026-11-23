@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -83,5 +83,23 @@ describe('ApiKeysPage', () => {
     renderPage()
 
     expect(await screen.findByText('Keine Berechtigung.')).toBeTruthy()
+  })
+
+  it('carries the actions of the row in the menu and asks before the revoke', async () => {
+    stub({ me: meResponse(['apikey.read', 'apikey.write']), list: { keys: [summary] } })
+    renderPage()
+
+    expect(await screen.findByText('Monitoring')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aktionen' }))
+
+    const revoke = screen.getByRole('menuitem', { name: 'Widerrufen' })
+
+    expect(revoke).toBeTruthy()
+
+    fireEvent.click(revoke)
+
+    expect(screen.getByRole('button', { name: 'Wirklich widerrufen?' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Abbrechen' })).toBeTruthy()
   })
 })

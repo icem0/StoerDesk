@@ -8,12 +8,15 @@ import {
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
 import { errorCode } from './api-key-create-page'
 
 /**
  * Admin API-key page (`specs/08-objects-api.md` §9.5, WP-M10-04).
  * The plaintext token is shown once in the create panel and never listed again.
+ * Since WP-M16-20c the actions of a row sit behind the shared row menu
+ * (ADR-0043).
  */
 
 function KeyRow(props: { entry: ApiKeySummary; mayWrite: boolean; onRevoke: (id: string) => void }) {
@@ -59,13 +62,16 @@ function KeyRow(props: { entry: ApiKeySummary; mayWrite: boolean; onRevoke: (id:
             </button>
           </div>
         ) : (
-          <button
-            className="min-h-11 self-start rounded-lg border border-rose-700 px-3 text-sm text-rose-300 hover:bg-rose-950/40"
-            onClick={() => setConfirming(true)}
-            type="button"
-          >
-            {t('apiKeys.revoke')}
-          </button>
+          <RowMenu
+            items={[
+              {
+                key: 'revoke',
+                label: t('apiKeys.revoke'),
+                tone: 'danger',
+                onSelect: () => setConfirming(true),
+              },
+            ]}
+          />
         )
       ) : null}
     </li>

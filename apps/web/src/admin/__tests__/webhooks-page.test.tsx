@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -83,5 +83,21 @@ describe('WebhooksPage', () => {
     renderPage()
 
     expect(await screen.findByText('Keine Berechtigung.')).toBeTruthy()
+  })
+
+  it('carries the actions of the row in the menu and asks before the delete', async () => {
+    stub({ me: meResponse(['settings.read', 'settings.write']), list: { webhooks: [summary] } })
+    renderPage()
+
+    expect(await screen.findByText('https://example.org/hook')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aktionen' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Bearbeiten' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Löschen' }))
+
+    expect(screen.getByRole('button', { name: 'Wirklich löschen?' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Abbrechen' })).toBeTruthy()
   })
 })
