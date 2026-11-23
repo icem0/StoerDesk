@@ -1,7 +1,7 @@
 # WP-M16-20a: the groups and the roles carry the row menu
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-19
 phase: 16
 milestone: m16

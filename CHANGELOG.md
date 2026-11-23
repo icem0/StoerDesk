@@ -102,6 +102,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   actions sit behind the `…` button and the editor opens with „Bearbeiten“. A
   language that arrives later is a field of the editor, not a column of the
   list.
+- The groups and the roles carry the row menu (**WP-M16-20a**, out of band in
+  phase 16, ADR-0043): the edit of a group and of a role sits behind the `…`
+  button of the row now, so every list of the administration behaves the same.
+  The system role `admin` keeps its read-only note instead of a menu.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

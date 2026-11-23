@@ -93,7 +93,8 @@ function rowOf(key: string) {
 }
 
 function openEditor(key: string) {
-  fireEvent.click(within(rowOf(key)).getByRole('button', { name: 'Bearbeiten' }))
+  fireEvent.click(within(rowOf(key)).getByRole('button', { name: 'Aktionen' }))
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
 }
 
 function editorOf(key: string) {
@@ -129,8 +130,13 @@ describe('RolesPage', () => {
 
     expect(await screen.findByText('dispatcher')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Rolle anlegen' })).toBeTruthy()
-    expect(screen.getAllByText('Bearbeiten')).toHaveLength(2)
+    // Two custom roles carry the menu of their actions, the system role stays read-only.
+    expect(screen.getAllByRole('button', { name: 'Aktionen' })).toHaveLength(2)
     expect(screen.getAllByText('schreibgeschützt')).toHaveLength(1)
+
+    fireEvent.click(within(rowOf('dispatcher')).getByRole('button', { name: 'Aktionen' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Bearbeiten' })).toBeTruthy()
   })
 
   it('shows the session notice when /me answers 401', async () => {

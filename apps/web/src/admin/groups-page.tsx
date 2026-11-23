@@ -13,6 +13,7 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
 import { errorMessage, jsonHeaders } from './group-form-parts'
 
@@ -330,13 +331,16 @@ export function GroupsPage() {
               <td>{group.userCount}</td>
               {canWrite ? (
                 <td>
-                  <button
-                    className="rounded border border-slate-600 px-2 py-1 text-xs"
-                    type="button"
-                    onClick={() => setEditingGroup(editingGroup?.id === group.id ? null : group)}
-                  >
-                    {t('admin.groups.edit')}
-                  </button>
+                  <RowMenu
+                    items={[
+                      {
+                        key: 'edit',
+                        label: t('admin.groups.edit'),
+                        onSelect: () =>
+                          setEditingGroup(editingGroup?.id === group.id ? null : group),
+                      },
+                    ]}
+                  />
                 </td>
               ) : null}
             </tr>

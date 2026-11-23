@@ -9,6 +9,7 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
 import {
   PermissionCheckboxes,
@@ -163,15 +164,16 @@ export function RolesPage() {
                   {role.key === 'admin' ? (
                     <span className="text-xs text-slate-400">{t('admin.roles.readOnly')}</span>
                   ) : (
-                    <button
-                      className="rounded border border-slate-600 px-2 py-1 text-xs"
-                      type="button"
-                      onClick={() =>
-                        setEditingRoleKey(editingRoleKey === role.key ? null : role.key)
-                      }
-                    >
-                      {t('admin.roles.edit')}
-                    </button>
+                    <RowMenu
+                      items={[
+                        {
+                          key: 'edit',
+                          label: t('admin.roles.edit'),
+                          onSelect: () =>
+                            setEditingRoleKey(editingRoleKey === role.key ? null : role.key),
+                        },
+                      ]}
+                    />
                   )}
                 </td>
               ) : null}

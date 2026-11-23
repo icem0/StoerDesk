@@ -88,7 +88,8 @@ function renderPage() {
 
 async function openMembers() {
   expect(await screen.findByText('Technik')).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: 'Bearbeiten' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Aktionen' }))
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
 }
 
 afterEach(() => {
