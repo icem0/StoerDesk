@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the cause and the step for every code (de, en), and `docs/VAPID-SETUP.md` lists
   the codes.
 
+### Fixed
+- The workflow E2E expected the audit trail in the wrong order
+  (**WP-M16-11d**): the history of the ticket shows the newest entry on top
+  (`ticketSortDirection` `desc`), but `apps/web/e2e/workflow.spec.ts` still
+  expected the seven events of the trail in the chronological order. Playwright
+  compares the elements of a `toContainText` array one by one, so the assertion
+  timed out after five seconds in the German and in the English run of the
+  check run `v1.2.3` — all seven events were written and visible, only the
+  order of the expectation was wrong. The expectation follows the rendered
+  direction now. The check run of the version `v1.2.3` stays red, because a
+  published tag cannot be changed afterwards.
+
 ### Removed
 - The transition table `ticket_transitions` and its administration page
   `/admin/transitions` are removed (ADR-0041, migration `0053`). A workflow event
