@@ -102,20 +102,21 @@ Statusnummer des Push-Dienstes. Diese Zeile ist die schnellste Diagnose:
 docker compose logs api --since 24h 2>&1 | grep "notification send failed" | tail -5
 ```
 
-### Vor v1.2.22 kam kein Push an
+### Vor v1.2.25 kam kein Push an
 
-Bis **v1.2.21** holte der Kanal die Push-Bibliothek über einen Namespace-Import.
+Bis **v1.2.24** holte der Kanal die Push-Bibliothek über einen Namespace-Import.
 Die gebaute API läuft aber als ES-Modul, und Node stellt einen benannten Export
 eines CommonJS-Moduls nur dann bereit, wenn er ihn statisch lesen kann — der
 Sender der Bibliothek war dort `undefined`. Jede Zustellung scheiterte deshalb
 **vor** dem Netzwerk und wurde als `push_unreachable` gemeldet: „Der Push-Dienst
 hat nicht geantwortet (Netzwerk, DNS oder TLS)“. Das Netzwerk war nie die Ursache.
 
-Ab **v1.2.22** holt der Kanal den Sender über den Standard-Import, eine Zustellung
+Ab **v1.2.25** holt der Kanal den Sender über den Standard-Import, eine Zustellung
 vor der Anfrage trägt den eigenen Code `push_send_failed`, und die Anfrage läuft
-mit einem Zeitlimit von zehn Sekunden. Nach dem Update genügt es, das Gerät unter
-Einstellungen → Benachrichtigungen einmal ab- und wieder anzumelden, damit das Abo
-mit dem aktuellen Schlüsselpaar erneuert wird.
+mit einem Zeitlimit von zehn Sekunden. Die angemeldeten Geräte bleiben gültig —
+das Schlüsselpaar hat sich nicht geändert. Wer nach dem Update keine
+Benachrichtigung bekommt, meldet das Gerät unter Einstellungen → Benachrichtigungen
+einmal ab und wieder an; damit wird das Abo erneuert.
 
 ### Die Konfiguration des Kanals
 
