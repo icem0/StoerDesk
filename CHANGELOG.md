@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The ticket carries the state of its assignment (**WP-M19-02**, phase 19,
+  ADR-0039): a ticket gets the columns `assignment_status` (`offered`,
+  `accepted`, `declined` or none) and `assigned_by_user_id` — the user who
+  made the assignment, empty when a rule of the system made it. Both columns
+  are added without a default, so an existing ticket keeps its state and no
+  row is backfilled.
+
 ### Fixed
 - The row menu of the administration escapes the scroll container
   (**WP-M16-22**, out of band in phase 16, ADR-0043): the menu of a row hung

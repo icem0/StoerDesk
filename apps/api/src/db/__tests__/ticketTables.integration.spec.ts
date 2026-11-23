@@ -173,6 +173,39 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket tables (integrati
     )
   })
 
+  it('carries the state of an assignment (WP-M19-02)', async () => {
+    const objectId = await newObject()
+    const ticket = await newTicket(objectId)
+
+    const columns = await client<{ column_name: string; is_nullable: string }[]>`
+      select column_name, is_nullable
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'tickets'
+        and column_name in ('assignment_status', 'assigned_by_user_id')
+      order by column_name`
+
+    expect(columns.map((row) => row.column_name)).toEqual([
+      'assigned_by_user_id',
+      'assignment_status',
+    ])
+
+    for (const column of columns) {
+      expect(String(column.is_nullable)).toMatch(/^(y|yes)$/i)
+    }
+
+    const updated = await db
+      .update(tickets)
+      .set({ assignmentStatus: 'offered' })
+      .where(eq(tickets.id, ticket.id))
+      .returning({ assignmentStatus: tickets.assignmentStatus })
+    expect(updated[0]?.assignmentStatus).toBe('offered')
+
+    await expectPgError('23514', () =>
+      db.update(tickets).set({ assignmentStatus: 'pending' }).where(eq(tickets.id, ticket.id)),
+    )
+  })
+
   it('blocks updates and deletes on ticket_events', async () => {
     const objectId = await newObject()
     const ticket = await newTicket(objectId)

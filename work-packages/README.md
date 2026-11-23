@@ -1657,7 +1657,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M18-07 | statistics count tickets without an object | done | yes |
 | WP-M18-08 | tests for tickets without an object | done | yes |
 | WP-M19-01 | the assignment names one technician and its status — spec and ADR-0039 | done | yes |
-| WP-M19-02 | ticket columns `assignment_status` and `assigned_by_user_id` | planned | yes |
+| WP-M19-02 | ticket columns `assignment_status` and `assigned_by_user_id` | done | yes |
 | WP-M19-03 | assignee pool as an escalation setting | planned | yes |
 | WP-M19-04 | assignment service and refusal chain | planned | yes |
 | WP-M19-05 | routes of the assignment and the `assign` action mode | planned | yes |

@@ -532,6 +532,19 @@ export const tickets = pgTable(
      * (WP-M2-19a) and declared here so the snapshot chain describes the real database.
      */
     assignedUserId: uuid('assigned_user_id').references(() => users.id, { onDelete: 'set null' }),
+    /**
+     * The status of the assignment (`specs/07-escalation.md` §7.14, ADR-0039,
+     * WP-M19-02): `offered`, `accepted` or `declined`; NULL when the ticket has
+     * no assignment.
+     */
+    assignmentStatus: text('assignment_status'),
+    /**
+     * The user who made the assignment — the _Sachbearbeiter_ the acceptance
+     * notice reaches (ADR-0039, decision 2). NULL for a rule-made assignment.
+     */
+    assignedByUserId: uuid('assigned_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     reviewedByUserId: uuid('reviewed_by_user_id').references(() => users.id, {
       onDelete: 'set null',
     }),
@@ -559,6 +572,7 @@ export const tickets = pgTable(
     index('tickets_parent_ticket_id_idx').on(table.parentTicketId),
     index('tickets_reported_by_user_id_idx').on(table.reportedByUserId),
     index('tickets_assigned_user_id_status_idx').on(table.assignedUserId, table.status),
+    index('tickets_assigned_by_user_id_idx').on(table.assignedByUserId),
     index('tickets_is_test_reported_at_idx')
       .on(table.reportedAt)
       .where(sql`${table.isTest} = false`),
@@ -567,6 +581,10 @@ export const tickets = pgTable(
     // a ticket keeps its status key as history.
     check('tickets_priority_check', sql`${table.priority} IN (${checkList(TICKET_PRIORITIES)})`),
     check('tickets_source_check', sql`${table.source} IN (${checkList(TICKET_SOURCES)})`),
+    check(
+      'tickets_assignment_status_check',
+      sql`${table.assignmentStatus} IS NULL OR ${table.assignmentStatus} IN ('offered', 'accepted', 'declined')`,
+    ),
     check(
       'tickets_reporter_channel_check',
       sql`${table.reporterChannel} IS NULL OR ${table.reporterChannel} IN (${checkList(TICKET_REPORTER_CHANNELS)})`,

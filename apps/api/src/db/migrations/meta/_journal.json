@@ -386,6 +386,13 @@
       "when": 1795312800001,
       "tag": "0054_ticket_without_object",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1795399200001,
+      "tag": "0055_ticket_assignment_status",
+      "breakpoints": true
     }
   ]
 }

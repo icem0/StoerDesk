@@ -31,6 +31,16 @@ export const ticketNoSchema = z.string().trim().regex(/^ST-(\d{4,}|\d{4}-\d{4,})
 /** `text_templates.key` values — machine keys, never translated text (plan §3). */
 export const faultTemplateKeySchema = textTemplateKeySchema
 
+/**
+ * The status of an assignment (`specs/07-escalation.md` §7.14, ADR-0039,
+ * WP-M19-02): `offered` waits for the technician, `accepted` is the
+ * acceptance, `declined` is the refusal. A ticket without an assignment has
+ * no status — the column is NULL then.
+ */
+export const TICKET_ASSIGNMENT_STATUSES = ['offered', 'accepted', 'declined'] as const
+
+export type TicketAssignmentStatus = (typeof TICKET_ASSIGNMENT_STATUSES)[number]
+
 export const publicReportContactSchema = z.object({
   name: trimmedText(120),
   phone: trimmedText(60),

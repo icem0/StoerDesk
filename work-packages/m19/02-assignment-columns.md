@@ -1,7 +1,7 @@
 # WP-M19-02: the ticket carries the assignment status and the assigner
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 14k tokens
@@ -52,8 +52,18 @@ exist and reject a status outside the list.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/db/schema.ts,
+  apps/api/src/db/migrations/0055_ticket_assignment_status.sql,
+  apps/api/src/db/migrations/meta/_journal.json,
+  packages/shared/src/schemas/ticket.ts,
+  apps/api/src/db/__tests__/ticketTables.integration.spec.ts,
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: `tickets.assignment_status`, `tickets.assigned_by_user_id`,
+  `TICKET_ASSIGNMENT_STATUSES`
+- Verified: `npm run typecheck --workspaces --if-present` and the integration
+  spec of the ticket tables (the two columns exist, both are nullable and the
+  check refuses a status outside the list); `npm run wp:check` green
 - Follow-up WP: none
 - Open question: none
+- Note: the migration is hand-written — the snapshot chain of this repository
+  ends at `0014`, so the journal entry was added by hand beside it.
