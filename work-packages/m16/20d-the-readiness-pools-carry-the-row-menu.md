@@ -1,7 +1,7 @@
 # WP-M16-20d: the readiness pools carry the row menu
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-20c
 phase: 16
 milestone: m16

@@ -28,7 +28,11 @@ const settings = {
 
 type Window = { weekday: number; start: string; end: string }
 
-function stubRoutes(calls?: { method: string; body: unknown }[], windows: Window[] = []) {
+function stubRoutes(
+  calls?: { method: string; body: unknown }[],
+  windows: Window[] = [],
+  shiftCount = 0,
+) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -70,7 +74,7 @@ function stubRoutes(calls?: { method: string; body: unknown }[], windows: Window
               groupId: null,
               active: true,
               weeklyWindows: windows,
-              shiftCount: 0,
+              shiftCount,
               createdAt: '2026-01-01T00:00:00.000Z',
               updatedAt: '2026-01-01T00:00:00.000Z',
             },
@@ -174,5 +178,44 @@ describe('OncallPage', () => {
 
     expect(duration.disabled).toBe(false)
     expect(screen.getByText(/nutzt seine eigenen Dienstfenster/)).toBeTruthy()
+  })
+
+  it('shows the name of the pool and carries its actions in the menu', async () => {
+    stubRoutes()
+
+    renderPage()
+
+    expect((await screen.findAllByText('Verwaltung')).length).toBeGreaterThan(0)
+
+    // The editor of a pool opens with „Bearbeiten“ (WP-M16-20d).
+    expect(screen.queryByLabelText('Name')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aktionen' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Bearbeiten' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Deaktivieren' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Löschen' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
+
+    expect(screen.getByLabelText('Name')).toBeTruthy()
+    expect(screen.getByLabelText('Gruppe')).toBeTruthy()
+  })
+
+  it('keeps the delete of a pool with shifts blocked and names the reason', async () => {
+    stubRoutes(undefined, [], 2)
+
+    renderPage()
+
+    await screen.findAllByText('Verwaltung')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aktionen' }))
+
+    const remove = screen.getByRole('menuitem', { name: 'Löschen' }) as HTMLButtonElement
+
+    expect(remove.disabled).toBe(true)
+    expect(remove.getAttribute('title')).toBe(
+      'Ein Pool mit Schichten kann nicht gelöscht werden.',
+    )
   })
 })

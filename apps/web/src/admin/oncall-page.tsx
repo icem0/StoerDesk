@@ -16,6 +16,7 @@ import {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
 
 /**
@@ -301,36 +302,45 @@ function PoolRowForm({
   const { t } = useTranslation('oncall')
   const [name, setName] = useState(pool.name)
   const [groupId, setGroupId] = useState(pool.groupId ?? '')
+  const [editing, setEditing] = useState(false)
 
   const dirty = name !== pool.name || groupId !== (pool.groupId ?? '')
 
   return (
     <tr className="border-b border-slate-800 align-top">
       <td className="py-2 pr-2">
-        <input
-          aria-label={t('admin.pools.name')}
-          className="w-44 rounded bg-slate-950 p-1 text-slate-100"
-          maxLength={100}
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          disabled={!canAdmin}
-        />
+        {editing ? (
+          <input
+            aria-label={t('admin.pools.name')}
+            className="w-44 rounded bg-slate-950 p-1 text-slate-100"
+            maxLength={100}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={!canAdmin}
+          />
+        ) : (
+          pool.name
+        )}
       </td>
       <td className="py-2 pr-2">
-        <select
-          aria-label={t('admin.pools.group')}
-          className="rounded bg-slate-950 p-1 text-slate-100"
-          value={groupId}
-          onChange={(event) => setGroupId(event.target.value)}
-          disabled={!canAdmin}
-        >
-          <option value="">{t('admin.pools.noGroup')}</option>
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
+        {editing ? (
+          <select
+            aria-label={t('admin.pools.group')}
+            className="rounded bg-slate-950 p-1 text-slate-100"
+            value={groupId}
+            onChange={(event) => setGroupId(event.target.value)}
+            disabled={!canAdmin}
+          >
+            <option value="">{t('admin.pools.noGroup')}</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          groups.find((group) => group.id === pool.groupId)?.name ?? '—'
+        )}
       </td>
       <td className="py-2 pr-2">{pool.shiftCount}</td>
       <td className="py-2 pr-2">
@@ -338,32 +348,43 @@ function PoolRowForm({
           {pool.active ? t('admin.pools.activeOn') : t('admin.pools.activeOff')}
         </span>
       </td>
-      <td className="flex flex-wrap gap-2 py-2">
-        <button
-                            className="rounded bg-accent-600 px-3 py-1 text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
-          type="button"
-          disabled={!canAdmin || busy || !dirty || name.trim() === ''}
-          onClick={() => onSave({ name, groupId: groupId === '' ? null : groupId })}
-        >
-          {t('admin.pools.save')}
-        </button>
-        <button
-          className="rounded border border-slate-600 px-3 py-1 text-slate-200 disabled:opacity-50"
-          type="button"
-          disabled={!canAdmin || busy}
-          onClick={() => onSave({ active: !pool.active })}
-        >
-          {pool.active ? t('admin.pools.deactivate') : t('admin.pools.activate')}
-        </button>
-        <button
-          className="rounded border border-rose-800 px-3 py-1 text-rose-300 disabled:opacity-50"
-          type="button"
-          title={pool.shiftCount > 0 ? t('admin.pools.deleteHint') : undefined}
-          disabled={!canAdmin || busy || pool.shiftCount > 0}
-          onClick={onDelete}
-        >
-          {t('admin.pools.delete')}
-        </button>
+      <td className="py-2">
+        {editing ? (
+          <button
+            className="rounded bg-accent-600 px-3 py-1 text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
+            type="button"
+            disabled={!canAdmin || busy || !dirty || name.trim() === ''}
+            onClick={() => {
+              onSave({ name, groupId: groupId === '' ? null : groupId })
+              setEditing(false)
+            }}
+          >
+            {t('admin.pools.save')}
+          </button>
+        ) : (
+          <RowMenu
+            items={[
+              {
+                key: 'edit',
+                label: t('admin.pools.edit'),
+                onSelect: () => setEditing(true),
+              },
+              {
+                key: 'activate',
+                label: pool.active ? t('admin.pools.deactivate') : t('admin.pools.activate'),
+                onSelect: () => onSave({ active: !pool.active }),
+              },
+              {
+                key: 'delete',
+                label: t('admin.pools.delete'),
+                tone: 'danger',
+                disabled: pool.shiftCount > 0,
+                title: pool.shiftCount > 0 ? t('admin.pools.deleteHint') : undefined,
+                onSelect: onDelete,
+              },
+            ]}
+          />
+        )}
       </td>
     </tr>
   )

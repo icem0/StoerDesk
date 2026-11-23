@@ -25,6 +25,7 @@
       "hint": "A pool is one on-call calendar. Only a pool without shifts can be deleted.",
       "noPools": "No pool created yet.",
       "name": "Name",
+      "edit": "Edit",
       "group": "Group",
       "shiftCount": "Shifts",
       "active": "Status",

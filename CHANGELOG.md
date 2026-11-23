@@ -113,6 +113,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   in phase 16, ADR-0043): the edit and the delete of a webhook and the revoke
   of an API key sit behind the `…` button of the row; both keep their
   confirmation.
+- The readiness pools carry the row menu (**WP-M16-20d**, out of band in phase
+  16, ADR-0043): the pool row of `/admin/oncall` shows the name of the pool, the
+  editor with the name and the group opens with „Bearbeiten“ and the actions of
+  the row — activate and delete — sit in the same menu. A pool with shifts stays
+  protected against the delete and names the reason on hover.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

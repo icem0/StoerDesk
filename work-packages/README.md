@@ -1730,7 +1730,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-20a | the groups and the roles carry the row menu (out of band) | done | yes |
 | WP-M16-20b | the users carry the row menu (out of band) | done | yes |
 | WP-M16-20c | the webhooks and the API keys carry the row menu (out of band) | done | yes |
-| WP-M16-20d | the readiness pools carry the row menu (out of band) | planned | yes |
+| WP-M16-20d | the readiness pools carry the row menu (out of band) | done | yes |
 | WP-M20-01 | the duty blocks — spec, ADR-0040 and the split | done | yes |
 | WP-M20-02 | the shared blocks and the pattern | planned | yes |
 | WP-M20-03 | the API generates the blocks | planned | yes |

@@ -25,6 +25,7 @@
       "hint": "Ein Pool ist ein Bereitschaftskalender. Gelöscht werden darf nur ein Pool ohne Schichten.",
       "noPools": "Noch kein Pool angelegt.",
       "name": "Name",
+      "edit": "Bearbeiten",
       "group": "Gruppe",
       "shiftCount": "Schichten",
       "active": "Status",
