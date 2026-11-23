@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- The web push reaches the push service again (**WP-M14-176**, out of band in
+  phase 14): the channel took the sender of the `web-push` library through a
+  namespace import, and the built API runs as an ES module — Node exposes a
+  named export of a CommonJS module only when it can read it statically, so the
+  sender was `undefined` in the API image. Every push died with a `TypeError`
+  before the request and was reported as `push_unreachable` („Netzwerk, DNS oder
+  TLS") although no request ever left the server. The channel takes the sender
+  through the default export now, a build without a transport carries the new
+  code `push_send_failed`, a failure before the request no longer blames the
+  network, the errno of a transport failure reaches the log even when its name
+  is long (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the request runs with a
+  socket timeout of ten seconds. A test runs the adapter in a child process
+  under Node — the loader of the production — because the test runner resolves
+  the CommonJS package differently and could not see the defect.
+
 ### Changed
 - The administration of the groups and the standard texts follows the accent
   (**WP-M16-10b**, out of band in phase 16): the primary action and the links of
@@ -38,6 +54,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   check run `v1.2.3` — all seven events were written and visible, only the
   order of the expectation was wrong. The expectation follows the rendered
   direction now. The check run of the version `v1.2.3` stays red, because a
+  published tag cannot be changed afterwards.
+- The migration of the ticket without an object never arrived (**WP-M18-03**,
+  ADR-0042): the reserved object row „Ohne Objekt" carried the uuid
+  `00000000-0000-0000-0000-000000000001`, and a uuid of version 4 needs a `4`
+  in the version nibble — Postgres refused the insert. The migration
+  `0054_ticket_without_object` was missing in the journal as well, so it never
+  ran on a fresh database and the column `tickets.object_info_text` was never
+  added; every integration test of the API answered `column
+  "object_info_text" of relation "tickets" does not exist`. The uuid is a
+  valid v4 now, the journal registers the migration with a later timestamp and
+  the demo seed expects the reserved object. The check runs of the versions
+  `v1.2.7` … `v1.2.14` stay red, because they predate the repair and a
   published tag cannot be changed afterwards.
 
 ### Removed
