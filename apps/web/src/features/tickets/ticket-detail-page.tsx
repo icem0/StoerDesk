@@ -570,13 +570,6 @@ export function TicketDetailPage() {
   })
 
   /**
-   * The technicians the escalation assigned to this ticket (§7.14, ADR-0026,
-   * WP-M14-85) — name only, no contact value; empty for a ticket that was never
-   * distributed.
-   */
-  const assignees = ticket.assignees ?? []
-
-  /**
    * The assignment of the ticket (§7.14, ADR-0039): the technician and the
    * state of the assignment. The assigned technician answers it.
    */
@@ -1334,25 +1327,6 @@ export function TicketDetailPage() {
           </div>
         </div>
       </div>
-      {assignees.length > 0 ? (
-        <div
-          data-testid="ticket-assignees"
-          className="flex flex-wrap items-center gap-2 text-sm text-slate-300"
-        >
-          <span className="text-xs uppercase-tracking text-slate-400">
-            {t('detail.assignees.title')}
-          </span>
-          {assignees.map((assignee) => (
-            <span
-              key={assignee.id}
-              className="rounded px-2 py-0.5 bg-slate-900/40 text-slate-200"
-            >
-              {assignee.name}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
       {assignee !== null || assignmentStatus !== null ? (
         <div
           data-testid="ticket-assignment"

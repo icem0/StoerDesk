@@ -545,17 +545,6 @@ export const ticketDetailResponseSchema = z.object({
     /** Free text of the work order (AA / SA), set at work_order_set. */
     workOrderText: z.string().nullable(),
     /**
-     * The technicians the ticket is assigned to (`specs/02-data-model.md` §4.13,
-     * `ticket_assignees`, `specs/07-escalation.md` §7.14, ADR-0026, WP-M14-85) —
-     * their id and their name, no contact value; empty when nobody is assigned.
-     */
-    assignees: z.array(
-      z.object({
-        id: z.uuid(),
-        name: z.string(),
-      }),
-    ).default([]),
-    /**
      * The technician of the assignment (`specs/07-escalation.md` §7.14,
      * ADR-0039) — one person handles the ticket. Null when nobody is assigned.
      */

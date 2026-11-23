@@ -23,7 +23,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped workflow column integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, tickets, ticketAssignees, users } = schema
+const { objects, tickets, users } = schema
 
 describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integration)', () => {
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
@@ -144,11 +144,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
     await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'claimed', actorUserId })
 
     const assignees = await db
-      .select({ userId: ticketAssignees.userId })
-      .from(ticketAssignees)
-      .where(eq(ticketAssignees.ticketId, ticketId ?? ''))
+      .select({ assignedUserId: tickets.assignedUserId })
+      .from(tickets)
+      .where(eq(tickets.id, ticketId ?? ''))
 
-    expect(assignees.map((row) => row.userId)).toStrictEqual([actorUserId])
+    expect(assignees.map((row) => row.assignedUserId)).toStrictEqual([actorUserId])
   })
 
   it('names the technician of an acceptance as the assignee of the ticket', async () => {
@@ -166,11 +166,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
     await transitionTicket({ database: db, ticketId: ticketId ?? '', event: 'accepted', actorUserId })
 
     const assignees = await db
-      .select({ userId: ticketAssignees.userId })
-      .from(ticketAssignees)
-      .where(eq(ticketAssignees.ticketId, ticketId ?? ''))
+      .select({ assignedUserId: tickets.assignedUserId })
+      .from(tickets)
+      .where(eq(tickets.id, ticketId ?? ''))
 
-    expect(assignees.map((row) => row.userId)).toStrictEqual([actorUserId])
+    expect(assignees.map((row) => row.assignedUserId)).toStrictEqual([actorUserId])
   })
 
   it('writes no assignee for a system action', async () => {
@@ -192,10 +192,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('workflow columns (integr
     })
 
     const assignees = await db
-      .select({ userId: ticketAssignees.userId })
-      .from(ticketAssignees)
-      .where(eq(ticketAssignees.ticketId, ticketId ?? ''))
+      .select({ assignedUserId: tickets.assignedUserId })
+      .from(tickets)
+      .where(eq(tickets.id, ticketId ?? ''))
 
-    expect(assignees).toHaveLength(0)
+    expect(assignees[0]?.assignedUserId).toBeNull()
   })
 })

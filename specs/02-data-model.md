@@ -309,7 +309,7 @@ its own phase before its first WP. The `tickets` link to objects and systems is 
 UUID foreign key into the tables above; the object is chosen from the object
 list.
 
-### 4.13 `ticket_assignees` — the technicians of a ticket (WP-M14-80, ADR-0026)
+### 4.13 `ticket_assignees` — the retired table of the technicians (WP-M14-80, ADR-0026, WP-M19-08)
 
 The many-to-many of the technicians a ticket is assigned to — one row per ticket
 and technician:
@@ -321,6 +321,11 @@ and technician:
 | `assigned_at` | timestamp, not null | the moment of the assignment |
 
 The primary key is `(ticket_id, user_id)`: a technician is assigned once. The
-`assign` action of the escalation writes one row per technician of its target
-(`specs/07-escalation.md` §7.14); the assignment of a single technician keeps
-`tickets.assigned_user_id` of §4.8.
+`assign` action of the escalation wrote one row per technician of its target
+(`specs/07-escalation.md` §7.14).
+
+**The table is retired** (ADR-0039, WP-M19-08): a ticket is handled by **one**
+person, and the technician of the ticket is `tickets.assigned_user_id` of §4.8
+beside the status of the assignment. The migration `0058` copies the technician
+of the latest row of every ticket into that column and drops the table; the
+history of the assignments stays in the events of the ticket.

@@ -436,5 +436,6 @@ status itself is never a condition (§7.13, ADR-0041).
 `ticket_assignees` (§4.13 of `specs/02-data-model.md`, migration 0044) is no
 longer written by the `assign` action. The `offer` action wrote no assignees
 before, so it is unaffected. The table and its read in the ticket detail are
-retired in WP-M19-06; until then the ticket view shows the assigned technician
-from `assigned_user_id`.
+retired with the migration `0058` (WP-M19-08): the technician of the latest row
+moves into `tickets.assigned_user_id`, and the ticket detail answers the one
+`assignee` of the ticket instead of a list.

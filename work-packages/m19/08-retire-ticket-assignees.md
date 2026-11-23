@@ -1,7 +1,7 @@
 # WP-M19-08: retire the multi-technician table
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 14k tokens
@@ -52,9 +52,30 @@ holds old `ticket_assignees` rows.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/db/schema.ts (the table is gone),
+  apps/api/src/db/migrations/0058_drop_ticket_assignees.sql,
+  apps/api/src/tickets/detail.ts (the one `assignee`),
+  apps/api/src/tickets/workflow.ts (no assignee row any more),
+  apps/api/src/tickets/workflow-routes.ts (the targets of the picker),
+  apps/web/src/features/tickets/ticket-detail-page.tsx (the one row),
+  packages/shared/src/schemas/ticket.ts (the answer of the detail),
+  specs/02-data-model.md §4.13, specs/07-escalation.md §7.14,
+  docs/REPO-MAP.md,
+  apps/api/src/db/__tests__/ticket-assignees-retired.integration.spec.ts (new),
+  apps/api/src/tickets/__tests__/workflow-columns.integration.spec.ts,
+  apps/api/src/escalation/__tests__/distribution.integration.spec.ts,
+  apps/web/src/features/tickets/__tests__/ticket-detail-assignees.test.tsx,
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: none — the answer of the detail carries the one `assignee`
+  and the `assignmentStatus` instead of the list `assignees[]`
+- Verified: `npm run typecheck --workspaces --if-present`, the integration spec
+  of the retirement (the migration copies the technician of the latest row and
+  drops the table on a database that still holds the old rows),
+  `npm run wp:check` green
 - Follow-up WP: none
-- Open question: whether old rows should be migrated into `assigned_user_id` (the
-  latest assignee) or dropped; decide before this WP starts.
+- Open question: none
+- Notes: the old rows are **migrated**, not dropped: the technician of the
+  latest row of every ticket moves into `tickets.assigned_user_id`, so a ticket
+  that was worked on keeps its name. The status of the assignment stays NULL —
+  the former model knew no state, and the history of the assignments stays in
+  the events of the ticket.

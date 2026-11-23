@@ -689,30 +689,6 @@ export const ticketPhotos = pgTable(
 )
 
 /**
- * The technicians a ticket is assigned to (`specs/02-data-model.md` §4.13,
- * ADR-0026, WP-M14-80): the many-to-many of a distribution. The `assign`
- * action of the escalation hands a ticket to a whole pool of technicians, and
- * `tickets.assigned_user_id` holds exactly one technician. The primary key over
- * `(ticket_id, user_id)` keeps a technician assigned once.
- */
-export const ticketAssignees = pgTable(
-  'ticket_assignees',
-  {
-    ticketId: uuid('ticket_id')
-      .notNull()
-      .references(() => tickets.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    assignedAt: timestamp('assigned_at', timestampOptions).notNull().defaultNow(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.ticketId, table.userId], name: 'ticket_assignees_pk' }),
-    index('ticket_assignees_user_id_idx').on(table.userId),
-  ],
-)
-
-/**
  * Append-only log of permanently deleted tickets (`PLAN.md` §7 rule 10,
  * WP-M2-76). A hard-deleted ticket takes its events and photo rows with it;
  * this table keeps the accountability record without any reporter contact

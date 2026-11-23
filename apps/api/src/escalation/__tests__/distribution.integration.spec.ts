@@ -35,7 +35,6 @@ const {
   oncallPools,
   oncallShifts,
   outbox,
-  ticketAssignees,
   ticketEvents,
   tickets,
   userGroups,
@@ -258,15 +257,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(moved?.assignedUserId).toBe(technicianIds[0])
       expect(moved?.assignmentStatus).toBe('offered')
 
-      // One technician per ticket (§7.14): the multi-technician table is not
-      // written any more.
-      const assignees = await db
-        .select({ userId: ticketAssignees.userId })
-        .from(ticketAssignees)
-        .where(eq(ticketAssignees.ticketId, ticket.id))
-
-      expect(assignees).toHaveLength(0)
-
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
 
       const note = events.find((event) => event.type === 'escalation_note')
@@ -446,13 +436,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(moved?.status).toBe('ASSIGNED')
       expect(moved?.assignedUserId).toBe(technicianId)
       expect(moved?.assignmentStatus).toBe('offered')
-
-      const assignees = await db
-        .select({ userId: ticketAssignees.userId })
-        .from(ticketAssignees)
-        .where(eq(ticketAssignees.ticketId, ticket.id))
-
-      expect(assignees).toHaveLength(0)
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
 

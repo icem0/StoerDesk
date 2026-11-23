@@ -12,16 +12,13 @@ import { TicketDetailPage } from '../ticket-detail-page'
 const TICKET_NO = 'ST-2026-0001'
 
 /**
- * The technicians of a distributed ticket (`specs/07-escalation.md` §7.14,
- * ADR-0026, WP-M14-85b): the id and the name — no mail address, no telephone
- * number.
+ * The technician of an assigned ticket (`specs/07-escalation.md` §7.14,
+ * ADR-0039, WP-M19-08): one person handles the ticket — the id and the name,
+ * no mail address, no telephone number.
  */
-const ASSIGNMENTS = [
-  { id: '42424242-4242-4242-8242-424242424242', name: 'Max Muster' },
-  { id: '53535353-5353-5353-8353-535353535353', name: 'Benno Beispiel' },
-]
+const ASSIGNEE = { id: '42424242-4242-4242-8242-424242424242', name: 'Max Muster' }
 
-function fixture(status: string, assignees: { id: string; name: string }[]) {
+function fixture(status: string, assignee: { id: string; name: string } | null) {
   return {
     ticket: {
       id: '11111111-1111-4111-8111-111111111111',
@@ -42,7 +39,8 @@ function fixture(status: string, assignees: { id: string; name: string }[]) {
       reporterEmail: 'erika@example.invalid',
       recordedBy: 'Max Muster',
       statusToken: null,
-      assignees,
+      assignee,
+      assignmentStatus: assignee === null ? null : 'accepted',
     },
     events: [
       {
@@ -72,7 +70,7 @@ function fixture(status: string, assignees: { id: string; name: string }[]) {
   }
 }
 
-function renderPage(status: string, assignees: { id: string; name: string }[]) {
+function renderPage(status: string, assignee: { id: string; name: string } | null) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const path = String(input)
 
@@ -86,7 +84,7 @@ function renderPage(status: string, assignees: { id: string; name: string }[]) {
       return Response.json({ templates: [] })
     }
 
-    return Response.json(fixture(status, assignees))
+    return Response.json(fixture(status, assignee))
   })
 
   vi.stubGlobal('fetch', fetchMock)
@@ -111,29 +109,26 @@ afterEach(() => {
   void i18n.changeLanguage('de')
 })
 
-describe('TicketDetailPage assignees', () => {
-  it('names every technician of a distributed ticket', async () => {
-    renderPage('ASSIGNED', ASSIGNMENTS)
+describe('TicketDetailPage assignee', () => {
+  it('names the technician of an assigned ticket', async () => {
+    renderPage('ASSIGNED', ASSIGNEE)
 
-    const row = await waitFor(() => screen.getByTestId('ticket-assignees'))
-    expect(row.textContent).toContain('Zuweisen')
-
-    for (const assignee of ASSIGNMENTS) {
-      expect(row.textContent).toContain(assignee.name)
-    }
+    const row = await waitFor(() => screen.getByTestId('ticket-assignment'))
+    expect(row.textContent).toContain('Zuweisung')
+    expect(row.textContent).toContain(ASSIGNEE.name)
   })
 
-  it('shows no assignee row for a ticket without assignees', async () => {
-    renderPage('NEW', [])
+  it('shows no assignee row for a ticket without an assignee', async () => {
+    renderPage('NEW', null)
 
     await waitFor(() => expect(screen.getByTestId('ticket-action-section')).toBeTruthy())
-    expect(screen.queryByTestId('ticket-assignees')).toBeNull()
+    expect(screen.queryByTestId('ticket-assignment')).toBeNull()
   })
 
   it('names no contact value of a technician', async () => {
-    renderPage('ASSIGNED', ASSIGNMENTS)
+    renderPage('ASSIGNED', ASSIGNEE)
 
-    const row = await waitFor(() => screen.getByTestId('ticket-assignees'))
+    const row = await waitFor(() => screen.getByTestId('ticket-assignment'))
     expect(row.textContent.includes('erika@example.invalid')).toBe(false)
   })
 })

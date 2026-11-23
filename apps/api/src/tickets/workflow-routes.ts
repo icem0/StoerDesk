@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin'
 import { z } from 'zod'
-import { asc, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { PermissionKey } from '@stoerdesk/shared'
 
 import {
@@ -14,7 +14,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { groups, oncallPools, ticketEvents, tickets, users } from '../db/schema'
+import { ticketEvents, tickets, users } from '../db/schema'
 import { readAssigneePool } from '../escalation/assignee-pool'
 import { offerTicket } from '../oncall/coupling'
 import { answerAssignment, assignTicket, readAssignableUsers } from './assignment'
@@ -277,25 +277,10 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
     app.get(
       '/api/v1/ticket-assign-targets',
       { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
-      async () => {
-        const poolRows = await database
-          .select({ id: oncallPools.id, name: oncallPools.name })
-          .from(oncallPools)
-          .where(eq(oncallPools.active, true))
-          .orderBy(asc(oncallPools.name))
-
-        const groupRows = await database
-          .select({ id: groups.id, name: groups.name })
-          .from(groups)
-          .orderBy(asc(groups.name))
-
-        return {
-          assigneePool: await readAssigneePool(database),
-          pools: poolRows,
-          groups: groupRows,
-          users: await readAssignableUsers(database),
-        }
-      },
+      async () => ({
+        assigneePool: await readAssigneePool(database),
+        users: await readAssignableUsers(database),
+      }),
     )
 
     // Close accepts an optional body: `comment` is written as a `comment`

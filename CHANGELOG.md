@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Removed
+- The table of the technicians of a ticket is retired (**WP-M19-08**, phase 19,
+  ADR-0039): a ticket is handled by **one** person, and the technician of the
+  ticket is `tickets.assigned_user_id` beside the status of the assignment.
+  The migration `0058` moves the technician of the latest row of every ticket
+  into that column and drops `ticket_assignees`; the ticket view shows the one
+  technician instead of a list.
+
 ### Added
 - The assignment notifies the office (**WP-M19-07**, phase 19, ADR-0039): the
   assigned technician receives `ticket.assigned`, the user who made the

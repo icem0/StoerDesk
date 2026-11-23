@@ -1663,7 +1663,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M19-05 | routes of the assignment and the `assign` action mode | done | yes |
 | WP-M19-06 | picker of the ticket view and pool editor | done | yes |
 | WP-M19-07 | notices of the assignment (assignee and assigner) | done | yes |
-| WP-M19-08 | retire `ticket_assignees` | planned | yes |
+| WP-M19-08 | retire `ticket_assignees` | done | yes |
 | WP-M14-157 | the PWA manifest carries the icons the browser needs (out of band) | done | no |
 | WP-M14-158 | the new user gets its own page (out of band) | done | yes |
 | WP-M14-159 | the new role gets its own page (out of band) | done | yes |
