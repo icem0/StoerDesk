@@ -99,14 +99,21 @@
     },
     "schedule": {
       "title": "Duty times per pool",
-      "hint": "Every pool has its own plan. A day without a window is a free day.",
+      "hint": "Every pool has its own plan. A duty block spans several weekdays.",
       "pool": "Pool",
       "from": "from",
       "to": "to",
-      "windowPlan": "This pool uses its own duty windows.",
-      "noWindows": "Without windows the continuous plan of the settings applies (week start, start time, duration).",
+      "windowPlan": "This pool uses its own duty blocks.",
+      "noWindows": "Without duty blocks the continuous plan of the settings applies (week start, start time, duration).",
       "save": "Save duty times",
-      "saved": "Duty times saved."
+      "saved": "Duty times saved.",
+      "block": "Duty block",
+      "blockAdd": "Add duty block",
+      "blockRemove": "remove",
+      "aroundTheClock": "around the clock",
+      "presets": "Presets",
+      "presetOffice": "Office",
+      "presetTechnician": "Technician around the clock"
     },
     "state": {
       "UNFILLED": "Unfilled",

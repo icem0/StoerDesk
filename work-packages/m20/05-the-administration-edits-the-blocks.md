@@ -1,7 +1,7 @@
 # WP-M20-05: the administration edits the blocks
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-04
 phase: 20
 milestone: m20

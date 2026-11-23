@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The administration edits the duty blocks (**WP-M20-05**, phase 20, ADR-0040):
+  the rows of the plan of a pool carry the weekdays „von – bis“ with the daily
+  window, a row can be added and removed, and the two presets of the office
+  fill the rows — „Verwaltung“ (Mo–Do 07:00–17:00, Fr 07:00–12:00) and
+  „Technik rund um die Uhr“ (Mo–So 00:00–24:00).
 - The pool carries the duty blocks (**WP-M20-04**, phase 20, ADR-0040): the plan
   of a pool names its blocks with `from_weekday`, `to_weekday`, `start` and
   `end`, a stored day window of an older version reads as a block of one day,

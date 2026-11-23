@@ -824,62 +824,144 @@ function PoolScheduleForm({ pool, canAdmin }: { pool: PoolRow; canAdmin: boolean
     )
   }
 
+  const addBlock = () => {
+    setSaved(false)
+    setBlocks((current) => [
+      ...current,
+      { from_weekday: 1, to_weekday: 1, start: '07:00', end: '17:00' },
+    ])
+  }
+
+  const removeBlock = (index: number) => {
+    setSaved(false)
+    setBlocks((current) => current.filter((_, position) => position !== index))
+  }
+
+  const setAroundTheClock = (index: number, around: boolean) => {
+    setBlock(index, around ? { start: '00:00', end: '24:00' } : { start: '07:00', end: '17:00' })
+  }
+
+  const applyPreset = (preset: 'office' | 'technician') => {
+    setSaved(false)
+    setBlocks(
+      preset === 'office'
+        ? [
+            { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
+            { from_weekday: 5, to_weekday: 5, start: '07:00', end: '12:00' },
+          ]
+        : [{ from_weekday: 1, to_weekday: 0, start: '00:00', end: '24:00' }],
+    )
+  }
+
   return (
     <>
       <div className="mt-3 flex flex-col gap-2">
-        {blocks.map((block, index) => (
-          <div key={index} className="flex flex-wrap items-center gap-3 text-sm">
-            <label className="flex items-center gap-2">
-              {t('admin.schedule.from')}
-              <select
-                aria-label={`${pool.name} ${index + 1} ${t('admin.schedule.from')}`}
+        {blocks.map((block, index) => {
+          const aroundTheClock = block.start === '00:00' && block.end === '24:00'
+
+          return (
+            <div key={index} className="flex flex-wrap items-center gap-3 text-sm">
+              <label className="flex items-center gap-2">
+                {t('admin.schedule.from')}
+                <select
+                  aria-label={`${t('admin.schedule.block')} ${index + 1} ${t('admin.schedule.from')}`}
+                  className="rounded bg-slate-950 p-2 text-slate-100"
+                  value={block.from_weekday}
+                  onChange={(event) =>
+                    setBlock(index, { from_weekday: Number(event.target.value) })
+                  }
+                  disabled={!canAdmin}
+                >
+                  {WEEKDAY_ORDER.map((day) => (
+                    <option key={day} value={day}>
+                      {t(`admin.weekday.${day}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-2">
+                {t('admin.schedule.to')}
+                <select
+                  aria-label={`${t('admin.schedule.block')} ${index + 1} ${t('admin.schedule.to')}`}
+                  className="rounded bg-slate-950 p-2 text-slate-100"
+                  value={block.to_weekday}
+                  onChange={(event) => setBlock(index, { to_weekday: Number(event.target.value) })}
+                  disabled={!canAdmin}
+                >
+                  {WEEKDAY_ORDER.map((day) => (
+                    <option key={day} value={day}>
+                      {t(`admin.weekday.${day}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <input
+                aria-label={`${t('admin.schedule.block')} ${index + 1} ${t('admin.grid.startsAt')}`}
                 className="rounded bg-slate-950 p-2 text-slate-100"
-                value={block.from_weekday}
-                onChange={(event) => setBlock(index, { from_weekday: Number(event.target.value) })}
-                disabled={!canAdmin}
-              >
-                {WEEKDAY_ORDER.map((day) => (
-                  <option key={day} value={day}>
-                    {t(`admin.weekday.${day}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2">
-              {t('admin.schedule.to')}
-              <select
-                aria-label={`${pool.name} ${index + 1} ${t('admin.schedule.to')}`}
+                type="time"
+                value={block.start}
+                onChange={(event) => setBlock(index, { start: event.target.value })}
+                disabled={!canAdmin || aroundTheClock}
+              />
+              <input
+                aria-label={`${t('admin.schedule.block')} ${index + 1} ${t('admin.grid.endsAt')}`}
                 className="rounded bg-slate-950 p-2 text-slate-100"
-                value={block.to_weekday}
-                onChange={(event) => setBlock(index, { to_weekday: Number(event.target.value) })}
+                type="time"
+                min={block.start}
+                value={aroundTheClock ? '' : block.end}
+                onChange={(event) => setBlock(index, { end: event.target.value })}
+                disabled={!canAdmin || aroundTheClock}
+              />
+              <label className="flex items-center gap-2">
+                <input
+                  aria-label={`${t('admin.schedule.block')} ${index + 1} ${t('admin.schedule.aroundTheClock')}`}
+                  type="checkbox"
+                  checked={aroundTheClock}
+                  onChange={(event) => setAroundTheClock(index, event.target.checked)}
+                  disabled={!canAdmin}
+                />
+                {t('admin.schedule.aroundTheClock')}
+              </label>
+              <button
+                aria-label={`${t('admin.schedule.block')} ${index + 1} ${t('admin.schedule.blockRemove')}`}
+                className="rounded border border-slate-700 px-2 py-1 text-slate-300 hover:border-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
+                type="button"
                 disabled={!canAdmin}
+                onClick={() => removeBlock(index)}
               >
-                {WEEKDAY_ORDER.map((day) => (
-                  <option key={day} value={day}>
-                    {t(`admin.weekday.${day}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <input
-              aria-label={`${pool.name} ${index + 1} ${t('admin.grid.startsAt')}`}
-              className="rounded bg-slate-950 p-2 text-slate-100"
-              type="time"
-              value={block.start}
-              onChange={(event) => setBlock(index, { start: event.target.value })}
-              disabled={!canAdmin}
-            />
-            <input
-              aria-label={`${pool.name} ${index + 1} ${t('admin.grid.endsAt')}`}
-              className="rounded bg-slate-950 p-2 text-slate-100"
-              type="time"
-              min={block.start}
-              value={block.end}
-              onChange={(event) => setBlock(index, { end: event.target.value })}
-              disabled={!canAdmin}
-            />
-          </div>
-        ))}
+                {t('admin.schedule.blockRemove')}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+        <button
+          className="rounded border border-slate-700 px-2 py-1 text-slate-300 hover:border-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
+          type="button"
+          disabled={!canAdmin}
+          onClick={addBlock}
+        >
+          {t('admin.schedule.blockAdd')}
+        </button>
+        <span className="text-slate-400">{t('admin.schedule.presets')}</span>
+        <button
+          className="rounded border border-slate-700 px-2 py-1 text-slate-300 hover:border-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
+          type="button"
+          disabled={!canAdmin}
+          onClick={() => applyPreset('office')}
+        >
+          {t('admin.schedule.presetOffice')}
+        </button>
+        <button
+          className="rounded border border-slate-700 px-2 py-1 text-slate-300 hover:border-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
+          type="button"
+          disabled={!canAdmin}
+          onClick={() => applyPreset('technician')}
+        >
+          {t('admin.schedule.presetTechnician')}
+        </button>
       </div>
 
       <p className="mt-2 text-sm text-slate-400">

@@ -124,18 +124,16 @@ afterEach(() => {
 
 describe('OncallPage', () => {
   it('shows a row per duty block of the pool', async () => {
-    stubRoutes(undefined, [
-      { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
-    ])
+    stubRoutes(undefined, [{ from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' }])
 
     renderPage()
 
     expect(await screen.findByText('Dienstzeiten je Pool')).toBeTruthy()
 
-    expect((await screen.findByLabelText('Verwaltung 1 von')) as HTMLSelectElement).toBeTruthy()
-    expect((await screen.findByLabelText('Verwaltung 1 bis')) as HTMLSelectElement).toBeTruthy()
-    expect((await screen.findByLabelText('Verwaltung 1 Beginn')) as HTMLInputElement).toBeTruthy()
-    expect((await screen.findByLabelText('Verwaltung 1 Ende')) as HTMLInputElement).toBeTruthy()
+    expect((await screen.findByLabelText('Dienstblock 1 von')) as HTMLSelectElement).toBeTruthy()
+    expect((await screen.findByLabelText('Dienstblock 1 bis')) as HTMLSelectElement).toBeTruthy()
+    expect((await screen.findByLabelText('Dienstblock 1 Beginn')) as HTMLInputElement).toBeTruthy()
+    expect((await screen.findByLabelText('Dienstblock 1 Ende')) as HTMLInputElement).toBeTruthy()
   })
 
   it('writes the duty blocks of the pool', async () => {
@@ -144,13 +142,13 @@ describe('OncallPage', () => {
 
     renderPage()
 
-    const to = await screen.findByLabelText('Verwaltung 1 bis')
+    const to = await screen.findByLabelText('Dienstblock 1 bis')
     fireEvent.change(to, { target: { value: '4' } })
 
-    const from = screen.getByLabelText('Verwaltung 1 Beginn') as HTMLInputElement
+    const from = screen.getByLabelText('Dienstblock 1 Beginn') as HTMLInputElement
     fireEvent.change(from, { target: { value: '07:30' } })
 
-    const end = screen.getByLabelText('Verwaltung 1 Ende') as HTMLInputElement
+    const end = screen.getByLabelText('Dienstblock 1 Ende') as HTMLInputElement
     fireEvent.change(end, { target: { value: '17:00' } })
 
     fireEvent.click(screen.getByRole('button', { name: 'Dienstzeiten speichern' }))
@@ -165,17 +163,70 @@ describe('OncallPage', () => {
     })
   })
 
+  it('adds a block, removes a row and fills the presets of the office', async () => {
+    const calls: { method: string; body: unknown }[] = []
+    stubRoutes(calls, [{ from_weekday: 1, to_weekday: 1, start: '07:00', end: '17:00' }])
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Dienstblock hinzufügen' }))
+
+    expect((await screen.findByLabelText('Dienstblock 2 von')) as HTMLSelectElement).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dienstblock 2 entfernen' }))
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Dienstblock 2 von')).toBeNull()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Verwaltung' }))
+
+    expect((await screen.findByLabelText('Dienstblock 2 von')) as HTMLSelectElement).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dienstzeiten speichern' }))
+
+    await waitFor(() => {
+      const patch = calls.find((call) => call.method === 'PATCH')
+
+      expect(patch?.body).toEqual({
+        weeklyWindows: [
+          { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
+          { from_weekday: 5, to_weekday: 5, start: '07:00', end: '12:00' },
+        ],
+      })
+    })
+  })
+
+  it('fills the duty around the clock with the preset of the technician', async () => {
+    const calls: { method: string; body: unknown }[] = []
+    stubRoutes(calls)
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Technik rund um die Uhr' }))
+
+    expect((await screen.findByLabelText('Dienstblock 1 von')) as HTMLSelectElement).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dienstzeiten speichern' }))
+
+    await waitFor(() => {
+      const patch = calls.find((call) => call.method === 'PATCH')
+
+      expect(patch?.body).toEqual({
+        weeklyWindows: [{ from_weekday: 1, to_weekday: 0, start: '00:00', end: '24:00' }],
+      })
+    })
+  })
+
   it('keeps the continuous plan editable beside the pool blocks', async () => {
-    stubRoutes(undefined, [
-      { from_weekday: 1, to_weekday: 4, start: '07:30', end: '17:00' },
-    ])
+    stubRoutes(undefined, [{ from_weekday: 1, to_weekday: 4, start: '07:30', end: '17:00' }])
 
     renderPage()
 
     const duration = (await screen.findByLabelText('Dauer in Tagen')) as HTMLInputElement
 
     expect(duration.disabled).toBe(false)
-    expect(screen.getByText(/nutzt seine eigenen Dienstfenster/)).toBeTruthy()
+    expect(screen.getByText(/nutzt seine eigenen Dienstblöcke/)).toBeTruthy()
   })
 
   it('shows the name of the pool and carries its actions in the menu', async () => {

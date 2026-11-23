@@ -99,14 +99,21 @@
     },
     "schedule": {
       "title": "Dienstzeiten je Pool",
-      "hint": "Jeder Pool hat seinen eigenen Dienstplan. Ein Tag ohne Fenster ist ein freier Tag.",
+      "hint": "Jeder Pool hat seinen eigenen Dienstplan. Ein Dienstblock umfasst mehrere Wochentage.",
       "pool": "Pool",
       "from": "von",
       "to": "bis",
-      "windowPlan": "Dieser Pool nutzt seine eigenen Dienstfenster.",
-      "noWindows": "Ohne Fenster gilt der Dauer-Plan aus den Einstellungen (Wochenstart, Startzeit, Dauer).",
+      "windowPlan": "Dieser Pool nutzt seine eigenen Dienstblöcke.",
+      "noWindows": "Ohne Dienstblöcke gilt der Dauer-Plan aus den Einstellungen (Wochenstart, Startzeit, Dauer).",
       "save": "Dienstzeiten speichern",
-      "saved": "Dienstzeiten gespeichert."
+      "saved": "Dienstzeiten gespeichert.",
+      "block": "Dienstblock",
+      "blockAdd": "Dienstblock hinzufügen",
+      "blockRemove": "entfernen",
+      "aroundTheClock": "rund um die Uhr",
+      "presets": "Vorlagen",
+      "presetOffice": "Verwaltung",
+      "presetTechnician": "Technik rund um die Uhr"
     },
     "state": {
       "UNFILLED": "Unbesetzt",
