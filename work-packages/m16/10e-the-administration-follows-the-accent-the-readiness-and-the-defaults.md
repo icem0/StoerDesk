@@ -1,8 +1,8 @@
 # WP-M16-10e: the administration follows the accent — the readiness and the defaults of the tickets
 
 format: small-model
-status: planned
-depends-on: WP-M16-NaN
+status: done
+depends-on: WP-M16-10d
 phase: 16
 milestone: m16
 context-budget: 14k tokens
@@ -58,9 +58,16 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/escalation-stage-create-page.tsx`,
+  `apps/web/src/admin/oncall-page.tsx`,
+  `apps/web/src/admin/oncall-pool-create-page.tsx`,
+  `apps/web/src/admin/ticket-defaults-page.tsx`
+- Interfaces added: the primary action and the links of the readiness and of the
+  defaults of the tickets wear the accent of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `text-accent-300`, `focus-visible:ring-accent-400`)
+- Verified: `npm run typecheck`, `npx eslint` on the changed files, the tests of
+  the readiness and the defaults pages, `npm run wp:check` and `npm run test:e2e`
 - Follow-up WP: the next batch of the sweep — every file exists in the commit of
   the split
-- Open question: none
+- Open question: none — the WP carried the broken dependency `WP-M16-NaN`; it is
+  corrected to `WP-M16-10d` in this commit.

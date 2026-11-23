@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The administration of the readiness, of the defaults of the tickets and of the own
+  page of a new escalation stage follows the accent (**WP-M16-10e**, out of band in
+  phase 16): the primary actions, the create link and the back links of these pages
+  wear the accent colour of the instance; the semantic colours of the shift states,
+  the warnings and the destructive actions stay.
 - The administration of the escalation follows the accent (**WP-M16-10d**, out of
   band in phase 16): the primary actions, the tabs and the create link of the
   escalation administration wear the accent colour of the instance; the add

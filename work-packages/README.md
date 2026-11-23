@@ -1638,7 +1638,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-10b | the administration follows the accent — the groups and the standard texts | done | yes |
 | WP-M16-10c | the administration follows the accent — the statuses | done | yes |
 | WP-M16-10d | the administration follows the accent — the escalation | done | yes |
-| WP-M16-10e | the administration follows the accent — the readiness and the defaults of the tickets | planned | yes |
+| WP-M16-10e | the administration follows the accent — the readiness and the defaults of the tickets | done | yes |
 | WP-M16-10f | the administration follows the accent — the keys and the webhooks | planned | yes |
 | WP-M16-10g | the administration follows the accent — the channels, the delivery and the update | planned | yes |
 | WP-M16-10h | the administration follows the accent — the detected errors | planned | yes |
