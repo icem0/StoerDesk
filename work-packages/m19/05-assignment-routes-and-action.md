@@ -75,6 +75,11 @@ action test for `mode = pool`.
   `npm run i18n:check` and `npm run wp:check` green
 - Follow-up WP: none
 - Open question: none
+- Notes: the check run of the version v1.2.58 of this work package was red —
+  the acceptance test of the offline workflow (`apps/web/e2e/offline-internal.spec.ts`)
+  still sent the former target of the assignment. The test names the technician
+  since the version v1.2.62 (the fix commit after WP-M19-08); the check run of
+  that version is green.
 - Notes: the permission of the assignment stays `ticket.assign`, the answer of
   the assignment is guarded by `ticket.read` — the assignee check of the
   service is the second guard. The editor of the actions had to follow in this

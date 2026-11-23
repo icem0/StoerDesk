@@ -62,10 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - The acceptance test of the offline workflow names the technician of the
-  assignment (**WP-M19-08**, phase 19): the route of the assignment takes the
+  assignment (**WP-M19-05**, phase 19): the route of the assignment takes the
   technician and the flag _Annahme erforderlich_ since ADR-0039 — the test
-  still sent the former target of a distribution and the ticket was never
-  assigned.
+  still sent the former target of a distribution, so the ticket was never
+  assigned and the check runs of the versions v1.2.58 … v1.2.61 were red. The
+  test names the technician now; the check run of the version v1.2.62 is
+  green.
 - The row menu of the administration escapes the scroll container
   (**WP-M16-22**, out of band in phase 16, ADR-0043): the menu of a row hung
   absolutely inside the row, so the table of the fault types clipped the menu
