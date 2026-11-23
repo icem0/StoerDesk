@@ -65,6 +65,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   language of the entry. The API stays as it is — the web composes the record of
   the languages out of the answer. The rule is decided here; the pages follow in
   WP-M16-15 … WP-M16-20d.
+- The administration gets the shared row menu and the helper of the localized name
+  (**WP-M16-15**, out of band in phase 16, ADR-0043): `RowMenu`
+  (`apps/web/src/components/row-menu.tsx`) is the `…` button of a row — it opens
+  the actions of that row and closes on a click beside it, on `Escape` and after
+  an action was chosen, a blocked action keeps its reason in its tooltip — and
+  `localizedName` (`apps/web/src/lib/localized-name.ts`) answers the name of the
+  entry in the language of the interface, the fallback `de` and then the machine
+  key. Every list of the administration uses them, so the menu behaves the same
+  everywhere.
 - The administration of the detected errors and the update panel follow the accent
   (**WP-M16-10h**, out of band in phase 16): the save of a fault type, the create
   link of a new one, the start of an update and the field labels of the forms

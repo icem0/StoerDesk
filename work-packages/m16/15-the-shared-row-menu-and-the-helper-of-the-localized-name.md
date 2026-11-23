@@ -1,7 +1,7 @@
 # WP-M16-15: the shared row menu and the helper of the localized name
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-14
 phase: 16
 milestone: m16

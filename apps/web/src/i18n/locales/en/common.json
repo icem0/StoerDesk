@@ -362,6 +362,10 @@
       "notRegistered": "The server does not know this device — no push message reaches you here."
     }
   },
+  "rowMenu": {
+    "label": "Actions",
+    "glyph": "…"
+  },
   "help": {
     "webpush": {
       "title": "Web Push (VAPID) — setup guide",

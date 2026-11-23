@@ -1722,7 +1722,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-11d | reverse ticket history direction under „Darstellung“ | done | yes |
 | WP-M16-13 | the blocked delete of a fault type explains itself on hover (out of band) | done | yes |
 | WP-M16-14 | the localized name and the row menu — the spec, ADR-0043 and the split (out of band) | done | yes |
-| WP-M16-15 | the shared row menu and the helper of the localized name (out of band) | planned | yes |
+| WP-M16-15 | the shared row menu and the helper of the localized name (out of band) | done | yes |
 | WP-M16-16 | the fault types show the localized name (out of band) | planned | yes |
 | WP-M16-17 | the detected errors show the localized name (out of band) | planned | yes |
 | WP-M16-18 | the ticket statuses show the localized name (out of band) | planned | yes |
