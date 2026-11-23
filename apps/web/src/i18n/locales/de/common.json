@@ -205,6 +205,7 @@
       "events": {
         "ticket.created": "Neuer Vorgang",
         "ticket.assigned": "Zugewiesen oder angeboten",
+        "ticket.assignment_answered": "Zuweisung beantwortet",
         "ticket.escalated": "Eskaliert",
         "ticket.resolved": "Erledigt",
         "oncall.assigned": "Bereitschaft zugewiesen",

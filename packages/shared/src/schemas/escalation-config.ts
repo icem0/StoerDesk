@@ -85,17 +85,17 @@ export type EscalationTarget = z.infer<typeof escalationTargetSchema>
 
 /**
  * The target of a `notify` action: one user, a readiness pool whose
- * technicians receive the notification on their own ntfy topic, or the
- * assignees of the ticket (`assigned`) — the technician the escalation
- * assigned and the technician who took the ticket himself (§7.14, ADR-0033).
- * The target replaces the channel broadcast of the action. The target
- * `assigned` carries no id: the dispatcher reads the assignees of the ticket
- * when the rule fires.
+ * technicians receive the notification on their own ntfy topic, the technician
+ * of the ticket (`assigned`) or the user who made the assignment (`assigner`).
+ * The target replaces the channel broadcast of the action. The targets
+ * `assigned` and `assigner` carry no id: the dispatcher reads them from the
+ * ticket when the rule fires (§7.14, ADR-0039).
  */
 export const escalationNotifyTargetSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('user'), id: z.uuid() }),
   z.object({ kind: z.literal('pool'), id: z.uuid() }),
   z.object({ kind: z.literal('assigned') }),
+  z.object({ kind: z.literal('assigner') }),
 ])
 
 export type EscalationNotifyTarget = z.infer<typeof escalationNotifyTargetSchema>

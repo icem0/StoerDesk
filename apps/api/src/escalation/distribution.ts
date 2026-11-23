@@ -234,6 +234,8 @@ export async function assignTicketByEscalation(
       userId: input.userId,
       acceptance: input.acceptance,
       assignedBy: null,
+      // The notice of the assignment names the rule of the escalation.
+      rule: { ruleKey: input.ruleKey, stageKey: input.stageKey },
     })
   } catch (error) {
     // A ticket that is gone changes nothing; any other error is a failure.
@@ -259,15 +261,8 @@ export async function assignTicketByEscalation(
     },
   })
 
-  const notified = await notifyTechnicians(database, {
-    ticketId: input.ticketId,
-    eventType: 'ticket.assigned',
-    technicians: [input.userId],
-    ruleKey: input.ruleKey,
-    stageKey: input.stageKey,
-  })
-
-  return { changed: true, technicians: 1, notified }
+  // The technician is notified by the service of the assignment (§7.14).
+  return { changed: true, technicians: 1, notified: 0 }
 }
 
 /**

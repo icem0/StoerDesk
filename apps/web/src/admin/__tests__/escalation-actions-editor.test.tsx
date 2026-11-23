@@ -396,7 +396,7 @@ describe('the action editor of the escalation page', () => {
 
     const kindSelect = screen.getByTestId('escalation-notify-target-kind') as unknown as HTMLSelectElement
     const kinds = Array.from(kindSelect.options).map((option) => (option as { value: string }).value)
-    expect(kinds).toEqual(['user', 'pool', 'assigned'])
+    expect(kinds).toEqual(['user', 'pool', 'assigned', 'assigner'])
     fireEvent.change(kindSelect, { target: { value: 'assigned' } })
 
     await waitFor(() => expect(saved).toHaveLength(1))

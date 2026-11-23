@@ -426,7 +426,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const ticket = await createTicket('critical')
 
-      await db.insert(schema.ticketAssignees).values({ ticketId: ticket.id, userId: user.id })
+      // The technician of the ticket is the one the assignment named
+      // (§7.14, ADR-0039).
+      await db
+        .update(schema.tickets)
+        .set({ assignedUserId: user.id })
+        .where(eq(schema.tickets.id, ticket.id))
 
       await db.insert(schema.escalationActions).values({
         key: 'assigned_notify',

@@ -71,13 +71,13 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
     case 'notify':
       return {
         ...(action.channels === undefined ? {} : { channels: action.channels }),
-        // The target `assigned` carries no id: the dispatcher reads the
-        // assignees of the ticket when the rule fires (ADR-0033).
+        // The targets `assigned` and `assigner` carry no id: the dispatcher
+        // reads them from the ticket when the rule fires (§7.14, ADR-0039).
         ...(action.target === undefined
           ? {}
-          : action.target.kind === 'assigned'
-            ? { target: { kind: 'assigned' } }
-            : { target: { kind: action.target.kind, id: action.target.id } }),
+          : action.target.kind === 'user' || action.target.kind === 'pool'
+            ? { target: { kind: action.target.kind, id: action.target.id } }
+            : { target: { kind: action.target.kind } }),
         ...(action.priority === undefined ? {} : { priority: action.priority }),
       }
     case 'webhook':
@@ -333,9 +333,9 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
   for (const [ruleIndex, rule] of parsed.data.rules.entries()) {
     for (const [actionIndex, action] of rule.actions.entries()) {
       if (action.type === 'notify' && action.target !== undefined) {
-        // The target `assigned` names no row: the dispatcher reads the
-        // assignees of the ticket (ADR-0033).
-        if (action.target.kind === 'assigned') {
+        // The targets `assigned` and `assigner` name no row: the dispatcher
+        // reads them from the ticket (§7.14, ADR-0039).
+        if (action.target.kind === 'assigned' || action.target.kind === 'assigner') {
           continue
         }
 

@@ -5,6 +5,7 @@ import type { TicketAssignmentStatus } from '@stoerdesk/shared'
 import type { Database } from '../db/client'
 import { tickets, users } from '../db/schema'
 import { nextAssignee, resolveAssigneePool } from '../escalation/assignee-pool'
+import { notifyAssignee, notifyAssigner } from '../notifications/assignment'
 import { TicketTransitionError, transitionTicket } from './workflow'
 
 /**
@@ -51,6 +52,8 @@ export type AssignTicketInput = {
   acceptance: boolean
   /** The user who made the assignment; null when a rule of the system made it. */
   assignedBy?: string | null
+  /** The rule of the escalation that made the assignment — the notice names it. */
+  rule?: { ruleKey: string | null; stageKey: string | null } | null
 }
 
 export type AnswerAssignmentInput = {
@@ -108,6 +111,15 @@ export async function assignTicket(
     },
   })
 
+  // The technician is notified (§7.14, decision 5 of ADR-0039): the way is the
+  // one he chose for `ticket.assigned` (§11.4, ADR-0037).
+  await notifyAssignee(database, {
+    ticketId: input.ticketId,
+    userId: input.userId,
+    ruleKey: input.rule?.ruleKey ?? null,
+    stageKey: input.rule?.stageKey ?? null,
+  })
+
   return {
     changed: true,
     ticket,
@@ -116,11 +128,6 @@ export async function assignTicket(
     assignedByUserId: ticket.assignedByUserId,
   }
 }
-
-/**
- * The technician answers the assignment: only the assigned technician may
- * answer, and only an offered assignment waits for an answer.
- */
 export async function answerAssignment(
   database: Db,
   input: AnswerAssignmentInput,
@@ -174,9 +181,25 @@ export async function answerAssignment(
     })
 
     if (successor !== null) {
+      // The assigner is notified about the refusal before the ticket passes to
+      // the next member of the pool.
+      await notifyAssignerOfAnswer(database, {
+        ticketId: input.ticketId,
+        assignedBy: current.assignedByUserId,
+        answer: input.answer,
+        assigneeUserId: input.actorUserId,
+      })
+
       return successor
     }
   }
+
+  await notifyAssignerOfAnswer(database, {
+    ticketId: input.ticketId,
+    assignedBy: current.assignedByUserId,
+    answer: input.answer,
+    assigneeUserId: input.actorUserId,
+  })
 
   return {
     changed: true,
@@ -185,6 +208,40 @@ export async function answerAssignment(
     assignmentStatus: ticket.assignmentStatus as TicketAssignmentStatus | null,
     assignedByUserId: ticket.assignedByUserId,
   }
+}
+
+/**
+ * The notice of the answer (§7.14, decision 5 of ADR-0039): the user who made
+ * the assignment is notified. A rule-made assignment has no assigner and
+ * notifies nobody.
+ */
+async function notifyAssignerOfAnswer(
+  database: Db,
+  input: {
+    ticketId: string
+    assignedBy: string | null
+    answer: 'accepted' | 'declined'
+    assigneeUserId: string
+  },
+): Promise<void> {
+  if (input.assignedBy === null) {
+    return
+  }
+
+  const [assignee] = await database
+    .select({ givenName: users.givenName, familyName: users.familyName })
+    .from(users)
+    .where(eq(users.id, input.assigneeUserId))
+    .limit(1)
+
+  const name = `${assignee?.givenName ?? ''} ${assignee?.familyName ?? ''}`.trim()
+
+  await notifyAssigner(database, {
+    ticketId: input.ticketId,
+    userId: input.assignedBy,
+    answer: input.answer,
+    assigneeName: name,
+  })
 }
 
 /**

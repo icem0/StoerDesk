@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The assignment notifies the office (**WP-M19-07**, phase 19, ADR-0039): the
+  assigned technician receives `ticket.assigned`, the user who made the
+  assignment receives the new event `ticket.assignment_answered` when the
+  technician accepts or declines the ticket — a rule-made assignment has no
+  assigner and notifies nobody. The way is the one the recipient chose for the
+  event; the target `assigner` of a notification action reaches the user who
+  made the assignment.
 - The ticket view shows the assignment (**WP-M19-06**, phase 19, ADR-0039):
   the picker of _Zuweisen_ offers the pool of the office — with every active
   user as the fallback of an empty pool — beside the flag _Annahme

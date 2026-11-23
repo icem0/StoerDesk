@@ -451,7 +451,8 @@
           "user": "Benutzer",
           "pool": "Bereitschaftspool",
           "group": "Benutzergruppe",
-          "assigned": "Zugewiesener Techniker"
+          "assigned": "Zugewiesener Techniker",
+          "assigner": "Zuweisender Sachbearbeiter"
         },
         "target": "Ziel",
         "targetAssigned": "Der zugewiesene Techniker des Tickets — der Techniker, dem die Eskalation das Ticket zugewiesen hat, und der Techniker, der es nach einem Angebot selbst angenommen hat.",

@@ -451,7 +451,8 @@
           "user": "User",
           "pool": "Readiness pool",
           "group": "User group",
-          "assigned": "Assigned technician"
+          "assigned": "Assigned technician",
+          "assigner": "Assigning officer"
         },
         "target": "Target",
         "targetAssigned": "The assigned technician of the ticket — the technician the escalation assigned it to, and the technician who accepted it himself after an offer.",

@@ -1,7 +1,7 @@
 # WP-M19-07: the notices of the assignment
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 16k tokens
@@ -52,8 +52,33 @@ an assigner that is NULL.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: packages/shared/src/schemas/notification.ts,
+  packages/shared/src/schemas/escalation-config.ts,
+  apps/api/src/notifications/assignment.ts (new),
+  apps/api/src/tickets/assignment.ts,
+  apps/api/src/escalation/actions.ts,
+  apps/api/src/escalation/distribution.ts,
+  apps/api/src/db/migrations/0057_notification_event_assignment_answered.sql,
+  apps/web/src/admin/escalation-action-editor.tsx (the target `assigner`),
+  apps/web/src/i18n/locales/{de,en}/common.json,
+  apps/web/src/i18n/locales/{de,en}/settings.json,
+  apps/api/src/tickets/__tests__/assignment.integration.spec.ts,
+  apps/api/src/escalation/__tests__/actions.integration.spec.ts,
+  apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx,
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: the event type `ticket.assignment_answered`, the notify
+  target `assigner`, `notifyAssignee`, `notifyAssigner`
+- Verified: `npm run typecheck --workspaces --if-present` and the integration
+  spec of the assignment (an acceptance writes one outbox row for the assigner,
+  a rule-made assignment writes none), `npm run i18n:check` and
+  `npm run wp:check` green
 - Follow-up WP: none
 - Open question: none
+- Notes: the contract of the event types lives in
+  `packages/shared/src/schemas/notification.ts` — the file
+  `packages/shared/src/schemas/notifications.ts` of the plan does not exist. The
+  notice of the assignment moved into the service of the assignment, so the
+  manual assignment and the assignment of the escalation notify the technician
+  in the same way. The target `assigned` of a `notify` action reads the
+  technician of the ticket (`tickets.assigned_user_id`) instead of the retired
+  table.

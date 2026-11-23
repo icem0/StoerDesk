@@ -248,13 +248,15 @@ export const webPushSubscriptionResponseSchema = z.object({
 
 /**
  * The event types a user selects channels for (`specs/10-notifications.md`
- * §11.4, WP-M14-16, ADR-0021): the four ticket events and the three readiness
+ * §11.4, WP-M14-16, ADR-0021): the five ticket events and the three readiness
  * events. Migration `0039` of WP-M14-27 widens the check of
- * `notification_preferences` to these seven.
+ * `notification_preferences` to these seven; migration `0057` of WP-M19-07 adds
+ * the answer of an assignment.
  */
 export const NOTIFICATION_EVENT_TYPES = [
   'ticket.created',
   'ticket.assigned',
+  'ticket.assignment_answered',
   'ticket.escalated',
   'ticket.resolved',
   'oncall.assigned',

@@ -18,7 +18,7 @@ import {
   objects,
   oncallPools,
   outbox,
-  ticketAssignees,
+
   ticketEvents,
   tickets,
   users,
@@ -136,17 +136,32 @@ async function targetNameOf(
 }
 
 /**
- * The assignees of the ticket (§7.14, ADR-0033): the technicians the
- * escalation assigned and the technicians who took the ticket themselves. The
- * target `assigned` of a `notify` action reaches them.
+ * The recipients of the targets `assigned` and `assigner` (§7.14, ADR-0039):
+ * the technician of the ticket and the user who made the assignment. A ticket
+ * without an assignee or without an assigner reaches nobody.
  */
-async function resolveAssigneeIds(database: Db, ticketId: string): Promise<string[]> {
+async function resolveAssignmentTarget(
+  database: Db,
+  ticketId: string,
+  kind: 'assigned' | 'assigner',
+): Promise<string[]> {
   const rows = await database
-    .select({ userId: ticketAssignees.userId })
-    .from(ticketAssignees)
-    .where(eq(ticketAssignees.ticketId, ticketId))
+    .select({
+      assignedUserId: tickets.assignedUserId,
+      assignedByUserId: tickets.assignedByUserId,
+    })
+    .from(tickets)
+    .where(eq(tickets.id, ticketId))
+    .limit(1)
 
-  return rows.map((row) => row.userId)
+  const ticket = rows[0]
+  const userId = kind === 'assigned' ? ticket?.assignedUserId : ticket?.assignedByUserId
+
+  if (userId === null || userId === undefined) {
+    return []
+  }
+
+  return [userId]
 }
 
 /**
@@ -244,7 +259,7 @@ export async function dispatchEscalationActions(
             ? [notifyTarget.data.id]
             : notifyTarget.data.kind === 'pool'
               ? await resolveOnDutyUserIds(database, notifyTarget.data.id, at)
-              : await resolveAssigneeIds(database, firing.ticketId)
+              : await resolveAssignmentTarget(database, firing.ticketId, notifyTarget.data.kind)
         const recipients = await escalationRecipients(database, 'ticket.escalated', userIds)
 
         if (recipients.length === 0) {

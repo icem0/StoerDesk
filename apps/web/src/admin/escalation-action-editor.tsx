@@ -35,7 +35,7 @@ type ActionShape = {
   endpointIds?: string[]
   text?: string
   toStatus?: string
-  targetKind?: 'user' | 'pool' | 'group' | 'assigned'
+  targetKind?: 'user' | 'pool' | 'group' | 'assigned' | 'assigner'
   targetId?: string
   /** The mode of an `assign` action (`pool` or `user`, ADR-0039). */
   mode?: 'pool' | 'user'
@@ -156,8 +156,8 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
     ...(targeted ? {} : { channels: shape.channels ?? [] }),
     // The target `assigned` names the technicians of the ticket and carries
     // no id (`specs/07-escalation.md` §7.14, ADR-0033).
-    ...(shape.targetKind === 'assigned'
-      ? { target: { kind: 'assigned' } }
+    ...(shape.targetKind === 'assigned' || shape.targetKind === 'assigner'
+      ? { target: { kind: shape.targetKind } }
       : targeted
         ? { target: { kind: shape.targetKind ?? 'user', id: shape.targetId } }
         : {}),
@@ -300,7 +300,9 @@ export function EscalationActionEditor({
                             ? 'pool'
                             : event.target.value === 'assigned'
                               ? 'assigned'
-                              : 'user'
+                              : event.target.value === 'assigner'
+                                ? 'assigner'
+                                : 'user'
 
                         publish(
                           actions.map((entry, position) =>
@@ -320,10 +322,13 @@ export function EscalationActionEditor({
                       <option value="assigned">
                         {t('admin.escalation.action.targetKinds.assigned')}
                       </option>
+                      <option value="assigner">
+                        {t('admin.escalation.action.targetKinds.assigner')}
+                      </option>
                     </select>
                   </label>
 
-                  {action.targetKind === 'assigned' ? (
+                  {action.targetKind === 'assigned' || action.targetKind === 'assigner' ? (
                     <p className="text-xs text-slate-500">
                       {t('admin.escalation.action.targetAssigned')}
                     </p>
@@ -384,6 +389,7 @@ export function EscalationActionEditor({
                   </label>
 
                   {(action.targetKind ?? 'user') === 'assigned' ||
+                  (action.targetKind ?? 'user') === 'assigner' ||
                   (action.targetId ?? '') !== '' ? (
                     <p className="text-xs text-slate-500">
                       {t('admin.escalation.action.notifyHint')}

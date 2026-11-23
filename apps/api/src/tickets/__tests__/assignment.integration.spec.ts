@@ -25,7 +25,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped assignment integration: ${testDatabase.reason}\n`)
 }
 
-const { objects, tickets, users } = schema
+const { notificationAccounts, notificationPreferences, objects, outbox, tickets, users } = schema
 
 function onlyRow<T>(rows: T[], what: string): T {
   const [row] = rows
@@ -244,6 +244,61 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
 
     const state = await stateOf(ticketId)
     expect(state?.assignmentStatus).toBe('declined')
+  })
+
+  it('notifies the assigner about the answer and nobody without an assigner', async () => {
+    await db.insert(notificationAccounts).values({
+      userId: officeUserId,
+      channel: 'ntfy',
+      externalId: `office-topic-${randomUUID().slice(0, 6)}`,
+    })
+    await db.insert(notificationPreferences).values({
+      userId: officeUserId,
+      eventType: 'ticket.assignment_answered',
+      channel: 'ntfy',
+    })
+
+    const ticketId = await openWorkOrderTicket()
+    await assignTicket(db, {
+      ticketId,
+      userId: firstTechnicianId,
+      acceptance: true,
+      assignedBy: officeUserId,
+    })
+
+    await answerAssignment(db, {
+      ticketId,
+      actorUserId: firstTechnicianId,
+      answer: 'accepted',
+    })
+
+    const answered = await db
+      .select({ eventType: outbox.eventType })
+      .from(outbox)
+      .where(eq(outbox.ticketId, ticketId))
+
+    expect(answered.filter((row) => row.eventType === 'ticket.assignment_answered')).toHaveLength(1)
+
+    // A rule-made assignment has no assigner and notifies nobody this way.
+    const systemTicketId = await openWorkOrderTicket()
+    await assignTicket(db, {
+      ticketId: systemTicketId,
+      userId: firstTechnicianId,
+      acceptance: true,
+      assignedBy: null,
+    })
+    await answerAssignment(db, {
+      ticketId: systemTicketId,
+      actorUserId: firstTechnicianId,
+      answer: 'accepted',
+    })
+
+    const systemRows = await db
+      .select({ eventType: outbox.eventType })
+      .from(outbox)
+      .where(eq(outbox.ticketId, systemTicketId))
+
+    expect(systemRows.filter((row) => row.eventType === 'ticket.assignment_answered')).toHaveLength(0)
   })
 
   it('refuses an assignment to a deactivated technician', async () => {
