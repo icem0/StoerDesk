@@ -6,7 +6,9 @@ import {
   oncallPoolSchema,
   PERMISSIONS,
   poolListResponseSchema,
+  resolveOncallBlocks,
   updatePoolRequestSchema,
+  type OncallBlockInput,
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
@@ -51,6 +53,20 @@ async function findPoolById(database: Db, id: string) {
   return pool
 }
 
+/**
+ * The duty blocks of a pool (`specs/04-oncall.md` §4a.3.3, ADR-0040): a
+ * stored day window of ADR-0035 reads as a block of one day. The blocks of the
+ * answer and of the stored row carry the same fields.
+ */
+function planOf(value: unknown): OncallBlockInput[] {
+  return resolveOncallBlocks(value).map((block) => ({
+    from_weekday: block.fromWeekday,
+    to_weekday: block.toWeekday,
+    start: block.start,
+    end: block.end,
+  }))
+}
+
 async function countShifts(database: Db, poolId: string): Promise<number> {
   const rows = await database
     .select({ count: sql<number>`count(${oncallShifts.id})` })
@@ -86,7 +102,9 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
           .groupBy(oncallPools.id)
           .orderBy(oncallPools.name)
 
-        return poolListResponseSchema.parse({ pools: rows })
+        return poolListResponseSchema.parse({
+          pools: rows.map((row) => ({ ...row, weeklyWindows: planOf(row.weeklyWindows) })),
+        })
       },
     )
 
@@ -113,12 +131,21 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
               name: parsed.data.name,
               groupId: parsed.data.groupId,
               ...(parsed.data.weeklyWindows !== undefined
-                ? { weeklyWindows: parsed.data.weeklyWindows }
+                ? { weeklyWindows: planOf(parsed.data.weeklyWindows) }
                 : {}),
             })
             .returning()
 
-          return reply.code(201).send(oncallPoolSchema.parse(created))
+          if (created === undefined) {
+            return reply.code(500).send({ code: 'oncall_pool_create_failed', params: {} })
+          }
+
+          return reply.code(201).send(
+            oncallPoolSchema.parse({
+              ...created,
+              weeklyWindows: planOf(created.weeklyWindows),
+            }),
+          )
         } catch (error) {
           if (isUniqueViolation(error)) {
             return reply.code(409).send({
@@ -168,14 +195,25 @@ export const oncallPoolsRoutes = fp<OncallPoolsRouteOptions>(
               ...(parsed.data.groupId !== undefined ? { groupId: parsed.data.groupId } : {}),
               ...(parsed.data.active !== undefined ? { active: parsed.data.active } : {}),
               ...(parsed.data.weeklyWindows !== undefined
-                ? { weeklyWindows: parsed.data.weeklyWindows }
+                ? { weeklyWindows: planOf(parsed.data.weeklyWindows) }
                 : {}),
               updatedAt: new Date(),
             })
             .where(eq(oncallPools.id, parsedId.data))
             .returning()
 
-          return reply.code(200).send(oncallPoolSchema.parse(updated))
+          if (updated === undefined) {
+            return reply
+              .code(404)
+              .send({ code: 'oncall_pool_not_found', params: { fields: ['id'] } })
+          }
+
+          return reply.code(200).send(
+            oncallPoolSchema.parse({
+              ...updated,
+              weeklyWindows: planOf(updated.weeklyWindows),
+            }),
+          )
         } catch (error) {
           if (isUniqueViolation(error)) {
             return reply.code(409).send({

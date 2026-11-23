@@ -801,7 +801,7 @@ function PoolScheduleSection({ pools, canAdmin }: { pools: PoolRow[]; canAdmin: 
 function PoolScheduleForm({ pool, canAdmin }: { pool: PoolRow; canAdmin: boolean }) {
   const { t } = useTranslation('oncall')
   const queryClient = useQueryClient()
-  const [windows, setWindows] = useState<OnCallPool['weeklyWindows']>(pool.weeklyWindows)
+  const [blocks, setBlocks] = useState<OnCallPool['weeklyWindows']>(pool.weeklyWindows)
   const [saved, setSaved] = useState(false)
 
   const save = useMutation({
@@ -817,70 +817,73 @@ function PoolScheduleForm({ pool, canAdmin }: { pool: PoolRow; canAdmin: boolean
     },
   })
 
-  const setWindow = (weekday: number, patch: { start?: string; end?: string }) => {
+  const setBlock = (index: number, patch: Partial<OnCallPool['weeklyWindows'][number]>) => {
     setSaved(false)
-    setWindows((current) =>
-      current.map((window) => (window.weekday === weekday ? { ...window, ...patch } : window)),
-    )
-  }
-
-  const toggleWindow = (weekday: number, active: boolean) => {
-    setSaved(false)
-
-    if (!active) {
-      setWindows((current) => current.filter((window) => window.weekday !== weekday))
-
-      return
-    }
-
-    setWindows((current) =>
-      [...current, { weekday, start: '07:00', end: '17:00' }].sort(
-        (left, right) => left.weekday - right.weekday,
-      ),
+    setBlocks((current) =>
+      current.map((block, position) => (position === index ? { ...block, ...patch } : block)),
     )
   }
 
   return (
     <>
       <div className="mt-3 flex flex-col gap-2">
-        {WEEKDAY_ORDER.map((day) => {
-          const window = windows.find((entry) => entry.weekday === day)
-
-          return (
-            <div key={day} className="flex flex-wrap items-center gap-3 text-sm">
-              <label className="flex min-w-40 items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={window !== undefined}
-                  onChange={(event) => toggleWindow(day, event.target.checked)}
-                  disabled={!canAdmin}
-                />
-                {t(`admin.weekday.${day}`)}
-              </label>
-              <input
-                aria-label={`${t('admin.schedule.from')} ${t(`admin.weekday.${day}`)}`}
+        {blocks.map((block, index) => (
+          <div key={index} className="flex flex-wrap items-center gap-3 text-sm">
+            <label className="flex items-center gap-2">
+              {t('admin.schedule.from')}
+              <select
+                aria-label={`${pool.name} ${index + 1} ${t('admin.schedule.from')}`}
                 className="rounded bg-slate-950 p-2 text-slate-100"
-                type="time"
-                value={window?.start ?? ''}
-                onChange={(event) => setWindow(day, { start: event.target.value })}
-                disabled={!canAdmin || window === undefined}
-              />
-              <input
-                aria-label={`${t('admin.schedule.to')} ${t(`admin.weekday.${day}`)}`}
+                value={block.from_weekday}
+                onChange={(event) => setBlock(index, { from_weekday: Number(event.target.value) })}
+                disabled={!canAdmin}
+              >
+                {WEEKDAY_ORDER.map((day) => (
+                  <option key={day} value={day}>
+                    {t(`admin.weekday.${day}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2">
+              {t('admin.schedule.to')}
+              <select
+                aria-label={`${pool.name} ${index + 1} ${t('admin.schedule.to')}`}
                 className="rounded bg-slate-950 p-2 text-slate-100"
-                type="time"
-                min={window?.start}
-                value={window?.end ?? ''}
-                onChange={(event) => setWindow(day, { end: event.target.value })}
-                disabled={!canAdmin || window === undefined}
-              />
-            </div>
-          )
-        })}
+                value={block.to_weekday}
+                onChange={(event) => setBlock(index, { to_weekday: Number(event.target.value) })}
+                disabled={!canAdmin}
+              >
+                {WEEKDAY_ORDER.map((day) => (
+                  <option key={day} value={day}>
+                    {t(`admin.weekday.${day}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <input
+              aria-label={`${pool.name} ${index + 1} ${t('admin.grid.startsAt')}`}
+              className="rounded bg-slate-950 p-2 text-slate-100"
+              type="time"
+              value={block.start}
+              onChange={(event) => setBlock(index, { start: event.target.value })}
+              disabled={!canAdmin}
+            />
+            <input
+              aria-label={`${pool.name} ${index + 1} ${t('admin.grid.endsAt')}`}
+              className="rounded bg-slate-950 p-2 text-slate-100"
+              type="time"
+              min={block.start}
+              value={block.end}
+              onChange={(event) => setBlock(index, { end: event.target.value })}
+              disabled={!canAdmin}
+            />
+          </div>
+        ))}
       </div>
 
       <p className="mt-2 text-sm text-slate-400">
-        {windows.length > 0 ? t('admin.schedule.windowPlan') : t('admin.schedule.noWindows')}
+        {blocks.length > 0 ? t('admin.schedule.windowPlan') : t('admin.schedule.noWindows')}
       </p>
 
       {save.isError ? (
@@ -894,7 +897,7 @@ function PoolScheduleForm({ pool, canAdmin }: { pool: PoolRow; canAdmin: boolean
         className="mt-3 rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
         type="button"
         disabled={!canAdmin || save.isPending}
-        onClick={() => save.mutate(windows)}
+        onClick={() => save.mutate(blocks)}
       >
         {t('admin.schedule.save')}
       </button>

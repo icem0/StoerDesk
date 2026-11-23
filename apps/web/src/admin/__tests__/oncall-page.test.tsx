@@ -8,8 +8,9 @@ import { i18n } from '../../i18n'
 import { OncallPage } from '../oncall-page'
 
 /**
- * The administration of the readiness (ADR-0035, WP-M15-07): the duty windows
- * belong to each pool and are written through `PATCH /v1/oncall/pools/:id`.
+ * The administration of the readiness (ADR-0035, WP-M15-07): the duty blocks
+ * belong to each pool and are written through `PATCH /v1/oncall/pools/:id`
+ * (ADR-0040, WP-M20-04).
  */
 
 const adminId = '11111111-1111-4111-8111-111111111111'
@@ -26,11 +27,11 @@ const settings = {
   defaultPoolId: null,
 }
 
-type Window = { weekday: number; start: string; end: string }
+type Block = { from_weekday: number; to_weekday: number; start: string; end: string }
 
 function stubRoutes(
   calls?: { method: string; body: unknown }[],
-  windows: Window[] = [],
+  blocks: Block[] = [],
   shiftCount = 0,
 ) {
   vi.stubGlobal(
@@ -73,7 +74,7 @@ function stubRoutes(
               name: 'Verwaltung',
               groupId: null,
               active: true,
-              weeklyWindows: windows,
+              weeklyWindows: blocks,
               shiftCount,
               createdAt: '2026-01-01T00:00:00.000Z',
               updatedAt: '2026-01-01T00:00:00.000Z',
@@ -122,40 +123,35 @@ afterEach(() => {
 })
 
 describe('OncallPage', () => {
-  it('shows a row per weekday in the block of the pool duty times', async () => {
-    stubRoutes()
+  it('shows a row per duty block of the pool', async () => {
+    stubRoutes(undefined, [
+      { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
+    ])
 
     renderPage()
 
     expect(await screen.findByText('Dienstzeiten je Pool')).toBeTruthy()
 
-    for (const weekday of [
-      'Montag',
-      'Dienstag',
-      'Mittwoch',
-      'Donnerstag',
-      'Freitag',
-      'Samstag',
-      'Sonntag',
-    ]) {
-      expect(screen.getByLabelText(new RegExp(`^${weekday}$`))).toBeTruthy()
-    }
+    expect((await screen.findByLabelText('Verwaltung 1 von')) as HTMLSelectElement).toBeTruthy()
+    expect((await screen.findByLabelText('Verwaltung 1 bis')) as HTMLSelectElement).toBeTruthy()
+    expect((await screen.findByLabelText('Verwaltung 1 Beginn')) as HTMLInputElement).toBeTruthy()
+    expect((await screen.findByLabelText('Verwaltung 1 Ende')) as HTMLInputElement).toBeTruthy()
   })
 
-  it('writes the duty windows of the pool', async () => {
+  it('writes the duty blocks of the pool', async () => {
     const calls: { method: string; body: unknown }[] = []
-    stubRoutes(calls)
+    stubRoutes(calls, [{ from_weekday: 1, to_weekday: 1, start: '07:00', end: '17:00' }])
 
     renderPage()
 
-    const monday = await screen.findByLabelText('Montag')
-    fireEvent.click(monday)
+    const to = await screen.findByLabelText('Verwaltung 1 bis')
+    fireEvent.change(to, { target: { value: '4' } })
 
-    const from = screen.getByLabelText('von Montag') as HTMLInputElement
+    const from = screen.getByLabelText('Verwaltung 1 Beginn') as HTMLInputElement
     fireEvent.change(from, { target: { value: '07:30' } })
 
-    const to = screen.getByLabelText('bis Montag') as HTMLInputElement
-    fireEvent.change(to, { target: { value: '17:00' } })
+    const end = screen.getByLabelText('Verwaltung 1 Ende') as HTMLInputElement
+    fireEvent.change(end, { target: { value: '17:00' } })
 
     fireEvent.click(screen.getByRole('button', { name: 'Dienstzeiten speichern' }))
 
@@ -164,13 +160,15 @@ describe('OncallPage', () => {
 
       expect(patch).toBeDefined()
       expect(patch?.body).toEqual({
-        weeklyWindows: [{ weekday: 1, start: '07:30', end: '17:00' }],
+        weeklyWindows: [{ from_weekday: 1, to_weekday: 4, start: '07:30', end: '17:00' }],
       })
     })
   })
 
-  it('keeps the continuous plan editable beside the pool windows', async () => {
-    stubRoutes(undefined, [{ weekday: 1, start: '07:30', end: '17:00' }])
+  it('keeps the continuous plan editable beside the pool blocks', async () => {
+    stubRoutes(undefined, [
+      { from_weekday: 1, to_weekday: 4, start: '07:30', end: '17:00' },
+    ])
 
     renderPage()
 

@@ -1,7 +1,7 @@
 # WP-M20-04: the pool carries the duty blocks
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-03
 phase: 20
 milestone: m20
@@ -21,7 +21,7 @@ files-write:
 - packages/shared/src/schemas/oncall.ts
 - apps/api/src/oncall/pools.ts
 - apps/web/src/admin/oncall-page.tsx
-- apps/web/src/admin/**tests**/oncall-page.test.tsx
+- apps/web/src/admin/**tests**/oncall-page.test.tsx, apps/api/src/oncall/**tests**/routes.integration.spec.ts (the tests)
 
 interfaces:
 

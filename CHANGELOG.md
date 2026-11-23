@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The pool carries the duty blocks (**WP-M20-04**, phase 20, ADR-0040): the plan
+  of a pool names its blocks with `from_weekday`, `to_weekday`, `start` and
+  `end`, a stored day window of an older version reads as a block of one day,
+  and the administration shows one row per block — „von – bis“, start and end.
 - The API stores the pattern of a duty block (**WP-M20-03**, phase 20,
   ADR-0040): a shift of a block carries its covered weekdays and its daily
   window (migration `0059`), the generator emits one shift per block per week

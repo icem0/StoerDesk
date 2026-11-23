@@ -569,12 +569,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(badKey.json<ErrorResponseBody>().code).toBe('invalid_request')
     })
 
-    it('writes the duty windows of a pool and reads them back', async () => {
-      const windows = [
-        { weekday: 1, start: '07:30', end: '17:00' },
-        { weekday: 5, start: '07:00', end: '12:00' },
+    it('writes the duty blocks of a pool and reads them back', async () => {
+      const blocks = [
+        { from_weekday: 1, to_weekday: 4, start: '07:30', end: '17:00' },
+        { from_weekday: 5, to_weekday: 5, start: '07:00', end: '12:00' },
       ]
-      const response = await patchPool(cookies['admin'], poolId, { weeklyWindows: windows })
+      const response = await patchPool(cookies['admin'], poolId, { weeklyWindows: blocks })
 
       expect(response.statusCode).toBe(200)
 
@@ -584,11 +584,20 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         headers: { cookie: cookies['oncall'] },
       })
       const pool = back
-        .json<{ pools: Array<{ id: string; weeklyWindows: typeof windows }> }>()
+        .json<{ pools: Array<{ id: string; weeklyWindows: typeof blocks }> }>()
         .pools.find((row) => row.id === poolId)
 
       expect(back.statusCode).toBe(200)
-      expect(pool?.weeklyWindows).toEqual(windows)
+      expect(pool?.weeklyWindows).toEqual(blocks)
+    })
+
+    it('refuses a duty block whose last weekday lies before its first weekday', async () => {
+      const response = await patchPool(cookies['admin'], poolId, {
+        weeklyWindows: [{ from_weekday: 5, to_weekday: 2, start: '07:00', end: '17:00' }],
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json<ErrorResponseBody>().code).toBe('invalid_request')
     })
 
     it('rejects a malformed duty window with 400', async () => {

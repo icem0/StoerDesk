@@ -60,6 +60,13 @@ export const oncallBlockSchema = z
 /** The duty blocks of a pool (`specs/04-oncall.md` §4a.3.3). */
 export const oncallBlocksSchema = z.array(oncallBlockSchema).max(14)
 
+/**
+ * The duty plan of a request: the duty blocks of ADR-0040 or — for a client of
+ * an older version — the day windows of ADR-0035. A day window is read as a
+ * block of one day (ADR-0040 decision 3).
+ */
+export const oncallPlanSchema = z.union([oncallBlocksSchema, oncallWindowsSchema])
+
 const trimmedName = z.string().trim().min(1).max(100)
 
 const optionalGroupId = z
@@ -72,14 +79,14 @@ const optionalGroupId = z
 export const createPoolRequestSchema = z.object({
   name: trimmedName,
   groupId: optionalGroupId,
-  weeklyWindows: oncallWindowsSchema.optional(),
+  weeklyWindows: oncallPlanSchema.optional(),
 })
 
 export const updatePoolRequestSchema = z.object({
   name: trimmedName.optional(),
   groupId: optionalGroupId,
   active: z.boolean().optional(),
-  weeklyWindows: oncallWindowsSchema.optional(),
+  weeklyWindows: oncallPlanSchema.optional(),
 })
 
 export const oncallPoolSchema = z.object({
@@ -87,7 +94,8 @@ export const oncallPoolSchema = z.object({
   name: z.string(),
   groupId: z.string().uuid().nullable(),
   active: z.boolean(),
-  weeklyWindows: oncallWindowsSchema,
+  /** The duty blocks of the pool (`specs/04-oncall.md` §4a.3.3). */
+  weeklyWindows: oncallBlocksSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
 })
