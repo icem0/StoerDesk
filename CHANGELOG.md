@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The list of the tickets asks the API for the order of the office
+  (**WP-M16-24b**, phase 16): the page asked for the report time and sent the
+  direction of the switch under „Darstellung“ with it. The list reads no longer
+  `GET /api/v1/settings/display` and asks for `order=priority` without a
+  direction — the direction belongs to the history of a ticket.
 - The API orders the list of the tickets the way the office wants
   (**WP-M16-24a**, phase 16): `GET /api/v1/tickets` knows the order `priority`
   and it is the default of the staff list now — the open tickets first, then the

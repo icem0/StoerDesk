@@ -1,7 +1,7 @@
 # WP-M16-24b: the list page asks for the order of the office
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-24a
 phase: 16
 milestone: m16
@@ -57,6 +57,7 @@ Expected: green; the new assertion fails before the change and passes after it.
 - Files changed: `apps/web/src/features/tickets/ticket-list-page.tsx`,
   `apps/web/src/features/tickets/__tests__/ticket-list-page.test.tsx`
 - Interfaces added: the order of the office as the query of the list
-- Verified: `npm run typecheck`, `npm run lint`, the page test
+- Verified: `npm run typecheck`, `npm run lint`, the page test — the new
+  assertion fails before the change and passes after it
 - Follow-up WP: WP-M16-24c
 - Open question: none
