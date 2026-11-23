@@ -1,7 +1,7 @@
 # WP-M19-06: the picker of the ticket view and the pool editor
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 20k tokens
@@ -57,8 +57,30 @@ Expected: component tests for the picker, the status label and the pool order;
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/web/src/features/tickets/ticket-detail-page.tsx,
+  apps/web/src/admin/escalation-assignee-pool.tsx (new),
+  apps/web/src/admin/escalation-page.tsx (the tab of the pool),
+  apps/web/src/i18n/locales/{de,en}/ticket.json,
+  apps/web/src/i18n/locales/{de,en}/settings.json,
+  packages/shared/src/schemas/ticket.ts (the answer of the detail),
+  apps/api/src/tickets/detail.ts (the answer of the detail),
+  apps/web/src/features/tickets/__tests__/ticket-detail-assign.test.tsx,
+  apps/web/src/features/tickets/__tests__/ticket-detail-assignment.test.tsx (new),
+  apps/web/src/admin/__tests__/escalation-assignee-pool.test.tsx (new),
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: the picker of the assignment (the pool of the office, with
+  every active user as the fallback of an empty pool), the flag _Annahme
+  erforderlich_, the status label of the assignment, the buttons _Annehmen_ and
+  _Ablehnen_, the ordered pool editor
+- Verified: `npm run typecheck --workspaces --if-present`, the component tests
+  of the picker, of the status label and of the order of the pool,
+  `npm run i18n:check` and `npm run wp:check` green
 - Follow-up WP: none
-- Open question: confirm with the office that an empty pool may offer every active user.
+- Open question: none
+- Notes: the editor of the actions (the mode of the `assign` action) came with
+  WP-M19-05 — the contract of the action changed there and the administration
+  would otherwise have sent a body the server refuses. The detail answer
+  carries the technician and the status of the assignment (`assignee`,
+  `assignmentStatus`); the old list of the technicians (`assignees[]`) is
+  retired with the table in WP-M19-08. The empty pool offers every active
+  user — the office asked for it in the phase of the specification.

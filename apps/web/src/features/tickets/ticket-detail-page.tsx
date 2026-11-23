@@ -13,7 +13,7 @@ import { isInternalTicketEvent } from '@stoerdesk/shared'
 
 import { apiBaseUrl, apiFetch, ApiError } from '../../lib/api'
 import { i18n } from '../../i18n'
-import { usePermission } from '../../auth/usePermission'
+import { useMe, usePermission } from '../../auth/usePermission'
 import { useFaultCatalog } from './use-fault-catalog'
 import { useInternalActions } from './use-internal-actions'
 import { OfflineActionBanner } from './offline-action-banner'
@@ -126,12 +126,12 @@ const ACKNOWLEDGE_RESULTS = [
 
 /**
  * The targets of the manual assignment (`GET /api/v1/ticket-assign-targets`,
- * §7.14, ADR-0033). The ids are the rows of the readiness pools, the user
- * groups and the technicians; a user carries a display name only.
+ * §7.14, ADR-0039): the members of the pool of the office in the order of the
+ * chain and every active user of the installation. An empty pool offers every
+ * active user.
  */
 type AssignTargetsResponse = {
-  pools: { id: string; name: string }[]
-  groups: { id: string; name: string }[]
+  assigneePool: { id: string; name: string }[]
   users: { id: string; name: string }[]
 }
 
@@ -167,6 +167,8 @@ export function TicketDetailPage() {
   const navigate = useNavigate()
   const { ticketNo } = useParams()
   const [fields, setFields] = useState<Record<string, string>>({})
+  /** The flag _Annahme erforderlich_ of the assignment (§7.14, ADR-0039). */
+  const [assignAcceptance, setAssignAcceptance] = useState(true)
   const [lastError, setLastError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
@@ -211,6 +213,7 @@ export function TicketDetailPage() {
   }, [selectedAction])
 
   const ticketQuery = useTicket(ticketNo)
+  const me = useMe()
   const mayDelete = usePermission('ticket.delete')
   const mayWriteInternal = usePermission('ticket.comment.internal')
   const { queueAction, deliverNow, discard, pendingCount, rows } = useInternalActions(ticketNo ?? '')
@@ -255,6 +258,33 @@ export function TicketDetailPage() {
   const locale = (i18n.language === 'en' ? 'en' : 'de') as StandardTextLocale
   const catalog = useFaultCatalog(locale)
   const labels = Object.fromEntries(catalog.map((entry) => [entry.key, entry.text]))
+
+  /**
+   * The assigned technician answers the assignment (§7.14, ADR-0039): the
+   * acceptance or the refusal — a refusal passes the ticket to the next member
+   * of the pool of the office.
+   */
+  async function handleAssignmentAnswer(answer: 'accepted' | 'declined'): Promise<boolean> {
+    if (ticketNo === undefined) return false
+
+    try {
+      await apiFetch<never>(`/v1/tickets/${ticketNo}/assignment-answer`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ answer }),
+      })
+      void ticketQuery.refetch()
+      setLastError(null)
+      return true
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setLastError(actionErrorMessage(error.code, error.params))
+        return false
+      }
+
+      throw error
+    }
+  }
 
   async function handleAction(event: string, body?: Record<string, unknown>): Promise<boolean> {
     if (ticketNo === undefined) return false
@@ -545,6 +575,17 @@ export function TicketDetailPage() {
    * distributed.
    */
   const assignees = ticket.assignees ?? []
+
+  /**
+   * The assignment of the ticket (§7.14, ADR-0039): the technician and the
+   * state of the assignment. The assigned technician answers it.
+   */
+  const assignee = ticket.assignee ?? null
+  const assignmentStatus = ticket.assignmentStatus ?? null
+  const mayAnswer =
+    assignee !== null &&
+    assignmentStatus === 'offered' &&
+    me.data?.user?.id === assignee.id
 
   /**
    * Builds the list of workflow entries for the current status. The entries are
@@ -979,23 +1020,18 @@ export function TicketDetailPage() {
         const value = req('assignTarget')
         const missing = value === ''
         const targets = assignTargets.data
-        const noTargets =
-          targets !== undefined &&
-          targets.pools.length === 0 &&
-          targets.groups.length === 0 &&
-          targets.users.length === 0
-        const optionsOf = (entries: { id: string; name: string }[], kind: string) =>
-          entries.map((entry) => (
-            <option key={`${kind}:${entry.id}`} value={`${kind}:${entry.id}`}>
-              {entry.name}
-            </option>
-          ))
+        // The pool of the office decides who may be assigned (§7.14, ADR-0039);
+        // an empty pool offers every active user.
+        const pool = targets?.assigneePool ?? []
+        const candidates = pool.length > 0 ? pool : (targets?.users ?? [])
+        const noTargets = targets !== undefined && candidates.length === 0
         return (
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-2 items-end">
               <label className="flex flex-col gap-1 text-xs text-slate-400 w-full sm:w-96">
                 {t('detail.assignTarget.label')}
                 <select
+                  data-testid="ticket-assign-target"
                   className="rounded border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-sm text-slate-200 focus:border-blue-500 focus:outline-none min-h-11"
                   name="assignTarget"
                   value={fields.assignTarget ?? ''}
@@ -1003,22 +1039,22 @@ export function TicketDetailPage() {
                   onChange={(event) => setFields({ ...fields, assignTarget: event.target.value })}
                 >
                   <option value="">{t('detail.assignTarget.placeholder')}</option>
-                  {(targets?.pools.length ?? 0) > 0 && (
-                    <optgroup label={t('detail.assignTarget.pools')}>
-                      {optionsOf(targets?.pools ?? [], 'pool')}
-                    </optgroup>
-                  )}
-                  {(targets?.groups.length ?? 0) > 0 && (
-                    <optgroup label={t('detail.assignTarget.groups')}>
-                      {optionsOf(targets?.groups ?? [], 'group')}
-                    </optgroup>
-                  )}
-                  {(targets?.users.length ?? 0) > 0 && (
-                    <optgroup label={t('detail.assignTarget.users')}>
-                      {optionsOf(targets?.users ?? [], 'user')}
-                    </optgroup>
-                  )}
+                  {candidates.map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {entry.name}
+                    </option>
+                  ))}
                 </select>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-400 min-h-11">
+                <input
+                  data-testid="ticket-assign-acceptance"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-800"
+                  checked={assignAcceptance}
+                  onChange={(event) => setAssignAcceptance(event.target.checked)}
+                />
+                {t('detail.assignTarget.acceptance')}
               </label>
               <button
                 className={`min-h-11 rounded px-4 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 ${missing ? 'disabled' : ''}`}
@@ -1029,11 +1065,9 @@ export function TicketDetailPage() {
                     setLastError(t('detail.errors.fieldRequired'))
                     return
                   }
-                  const separator = value.indexOf(':')
-                  const kind = value.slice(0, separator)
-                  const id = value.slice(separator + 1)
                   void handleAction('assigned', {
-                    target: { kind, id },
+                    userId: value,
+                    acceptance: assignAcceptance,
                   })
                 }}
               >
@@ -1316,6 +1350,48 @@ export function TicketDetailPage() {
               {assignee.name}
             </span>
           ))}
+        </div>
+      ) : null}
+
+      {assignee !== null || assignmentStatus !== null ? (
+        <div
+          data-testid="ticket-assignment"
+          className="flex flex-wrap items-center gap-3 text-sm text-slate-300"
+        >
+          <span className="text-xs uppercase-tracking text-slate-400">
+            {t('detail.assignment.title')}
+          </span>
+          <span className="rounded px-2 py-0.5 bg-slate-900/40 text-slate-200">
+            {assignee?.name ?? t('detail.assignment.empty')}
+          </span>
+          {assignmentStatus !== null ? (
+            <span
+              data-testid="ticket-assignment-status"
+              className="rounded px-2 py-0.5 bg-slate-900/40 text-slate-200"
+            >
+              {t(`detail.assignment.status.${assignmentStatus}`)}
+            </span>
+          ) : null}
+          {mayAnswer ? (
+            <>
+              <button
+                data-testid="ticket-assignment-accept"
+                className="min-h-11 rounded px-3 py-2 text-sm font-medium text-slate-200 bg-emerald-600 hover:bg-emerald-500"
+                type="button"
+                onClick={() => void handleAssignmentAnswer('accepted')}
+              >
+                {t('detail.assignment.accept')}
+              </button>
+              <button
+                data-testid="ticket-assignment-decline"
+                className="min-h-11 rounded px-3 py-2 text-sm font-medium text-slate-200 bg-slate-600 hover:bg-slate-500"
+                type="button"
+                onClick={() => void handleAssignmentAnswer('declined')}
+              >
+                {t('detail.assignment.decline')}
+              </button>
+            </>
+          ) : null}
         </div>
       ) : null}
 

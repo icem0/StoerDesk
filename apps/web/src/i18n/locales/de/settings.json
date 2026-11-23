@@ -291,7 +291,8 @@
       "saved": "Gespeichert.",
       "tabs": {
         "fristen": "Fristen",
-        "stages": "Stufen & Regeln"
+        "stages": "Stufen & Regeln",
+        "pool": "Pool der Office"
       },
       "hours": {
         "low": "Niedrig",
@@ -412,6 +413,15 @@
           "true": "Ja",
           "false": "Nein"
         }
+      },
+      "pool": {
+        "hint": "Der Pool der Office: die Techniker, denen ein Ticket zugewiesen werden kann. Die Reihenfolge ist die Reihenfolge der Ablehnungskette — wer ablehnt, übergibt das Ticket an den nächsten in der Liste.",
+        "up": "Nach oben",
+        "down": "Nach unten",
+        "remove": "Entfernen",
+        "add": "Techniker hinzufügen",
+        "choose": "Techniker wählen …",
+        "empty": "Der Pool ist leer — die Auswahl der Zuweisung bietet dann jeden aktiven Benutzer an."
       },
       "action": {
         "type": "Typ",

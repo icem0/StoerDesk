@@ -555,6 +555,18 @@ export const ticketDetailResponseSchema = z.object({
         name: z.string(),
       }),
     ).default([]),
+    /**
+     * The technician of the assignment (`specs/07-escalation.md` §7.14,
+     * ADR-0039) — one person handles the ticket. Null when nobody is assigned.
+     */
+    assignee: z
+      .object({
+        id: z.uuid(),
+        name: z.string(),
+      })
+      .nullable(),
+    /** The state of the assignment: `offered`, `accepted` or `declined`. */
+    assignmentStatus: z.enum(TICKET_ASSIGNMENT_STATUSES).nullable(),
   }),
   events: z.array(
     z.object({

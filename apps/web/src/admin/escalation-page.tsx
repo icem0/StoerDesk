@@ -27,6 +27,7 @@ import { ApiError, apiFetch } from '../lib/api'
 import { languagesOf, localizedName } from '../lib/localized-name'
 import { EscalationConditionBuilder } from './escalation-condition-builder'
 import { EscalationActionEditor } from './escalation-action-editor'
+import { EscalationAssigneePool } from './escalation-assignee-pool'
 
 /**
  * The escalation administration (`specs/07-escalation.md` §7.1–§7.9, ADR-0017,
@@ -171,6 +172,17 @@ export function EscalationPage() {
     onSuccess: (saved) => setSavedConfig({ ...config, rules: (saved as EscalationConfig).rules }),
   })
 
+  const savePool = useMutation({
+    mutationFn: (body: { rules: EscalationRuleConfig[]; assigneePool: string[] }) =>
+      apiFetch<unknown>('/v1/escalation/config', {
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify(body),
+      }),
+    onSuccess: (saved) =>
+      setSavedConfig({ ...config, assigneePool: (saved as EscalationConfig).assigneePool }),
+  })
+
   const saveStages = useMutation({
     mutationFn: (body: { stages: EscalationStageConfig[] }) =>
       apiFetch<unknown>('/v1/escalation/stages', {
@@ -244,6 +256,13 @@ export function EscalationPage() {
           type="button"
         >
           {t('admin.escalation.tabs.stages')}
+        </button>
+        <button
+          className={`rounded px-3 py-2 text-sm ${tab === 'pool' ? 'bg-accent-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+          onClick={() => setTab('pool')}
+          type="button"
+        >
+          {t('admin.escalation.tabs.pool')}
         </button>
       </div>
 
@@ -498,6 +517,30 @@ export function EscalationPage() {
               {t('admin.escalation.errors.stageChainInvalid')}
             </p>
           ) : null}
+
+          {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
+        </div>
+      ) : null}
+
+      {tab === 'pool' ? (
+        <div className="flex flex-col gap-4">
+          {savePool.isError ? (
+            <p role="alert" className="text-sm text-rose-400">
+              {t('admin.escalation.errors.unknown')}
+            </p>
+          ) : null}
+
+          <EscalationAssigneePool
+            pool={config.assigneePool}
+            users={userTargets}
+            canWrite={canWrite}
+            onPool={(next) =>
+              void savePool.mutate({
+                rules: config.rules,
+                assigneePool: next.map((member) => member.id),
+              })
+            }
+          />
 
           {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
         </div>

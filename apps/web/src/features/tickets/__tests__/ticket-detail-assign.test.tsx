@@ -38,6 +38,8 @@ function fixture(status: string) {
       recordedBy: 'Max Muster',
       statusToken: null,
       assignees: [],
+      assignee: null,
+      assignmentStatus: null,
     },
     events: [
       {
@@ -75,9 +77,11 @@ function fixture(status: string) {
 }
 
 const TARGETS = {
-  pools: [{ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', name: 'Bereitschaft Nord' }],
-  groups: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', name: 'Elektrik' }],
-  users: [{ id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', name: 'Erika Techniker' }],
+  assigneePool: [{ id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', name: 'Erika Techniker' }],
+  users: [
+    { id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', name: 'Erika Techniker' },
+    { id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', name: 'Frank Techniker' },
+  ],
 }
 
 function renderPage(): { writes: string[]; bodies: Record<string, unknown>[] } {
@@ -146,7 +150,7 @@ afterEach(() => {
 })
 
 describe('TicketDetailPage assignment target', () => {
-  it('offers the pools, groups and technicians as targets of the assignment', async () => {
+  it('offers the pool of the office as the target of the assignment', async () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByTestId('ticket-stage-assigned')).toBeTruthy())
@@ -155,15 +159,10 @@ describe('TicketDetailPage assignment target', () => {
     const select = (await waitFor(() =>
       document.querySelector('select[name="assignTarget"]'),
     )) as HTMLSelectElement
-    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(4))
+    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(2))
 
     const values = Array.from(select.querySelectorAll('option')).map((option) => option.value)
-    expect(values).toStrictEqual([
-      '',
-      `pool:${TARGETS.pools[0]?.id ?? ''}`,
-      `group:${TARGETS.groups[0]?.id ?? ''}`,
-      `user:${TARGETS.users[0]?.id ?? ''}`,
-    ])
+    expect(values).toStrictEqual(['', TARGETS.assigneePool[0]?.id ?? ''])
   })
 
   it('confirms only with a chosen target and posts it to the assign route', async () => {
@@ -175,19 +174,20 @@ describe('TicketDetailPage assignment target', () => {
     const select = (await waitFor(() =>
       document.querySelector('select[name="assignTarget"]'),
     )) as HTMLSelectElement
-    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(4))
+    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(2))
 
     const confirm = screen.getByRole('button', { name: 'Bestätigen' }) as HTMLButtonElement
     expect(confirm.disabled).toBe(true)
 
-    fireEvent.change(select, { target: { value: `group:${TARGETS.groups[0]?.id ?? ''}` } })
+    fireEvent.change(select, { target: { value: TARGETS.assigneePool[0]?.id ?? '' } })
     expect(confirm.disabled).toBe(false)
     fireEvent.click(confirm)
 
     await waitFor(() => expect(writes).toHaveLength(1))
     expect(writes[0]).toBe('assign')
     expect(bodies[0]).toStrictEqual({
-      target: { kind: 'group', id: TARGETS.groups[0]?.id ?? '' },
+      userId: TARGETS.assigneePool[0]?.id ?? '',
+      acceptance: true,
     })
   })
 })

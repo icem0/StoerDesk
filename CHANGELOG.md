@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The ticket view shows the assignment (**WP-M19-06**, phase 19, ADR-0039):
+  the picker of _Zuweisen_ offers the pool of the office — with every active
+  user as the fallback of an empty pool — beside the flag _Annahme
+  erforderlich_, the state of the assignment has its own label, and the
+  assigned technician answers the assignment with _Annehmen_ or _Ablehnen_. The
+  escalation settings get the tab „Pool der Office“ with the ordered list of
+  the technicians: the order is the order of the refusal chain.
 - The office assigns the ticket to one technician (**WP-M19-05**, phase 19,
   ADR-0039): `POST /api/v1/tickets/:ticketNo/assign` takes the technician and
   the flag _Annahme erforderlich_, the technician answers the assignment with

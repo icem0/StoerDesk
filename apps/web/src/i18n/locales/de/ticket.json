@@ -336,13 +336,22 @@
     "assignees": {
       "title": "Zuweisen"
     },
+    "assignment": {
+      "title": "Zuweisung",
+      "status": {
+        "offered": "Angeboten — wartet auf die Annahme",
+        "accepted": "Angenommen",
+        "declined": "Abgelehnt"
+      },
+      "accept": "Annehmen",
+      "decline": "Ablehnen",
+      "empty": "Niemandem zugewiesen"
+    },
     "assignTarget": {
       "label": "Zuweisen an",
       "placeholder": "Ziel wählen …",
-      "pools": "Bereitschaftspools",
-      "groups": "Benutzergruppen",
-      "users": "Techniker",
-      "empty": "Keine Ziele vorhanden. Bitte Benutzergruppen oder Bereitschaftspools in der Administration anlegen."
+      "acceptance": "Annahme erforderlich",
+      "empty": "Keine Techniker vorhanden. Bitte den Pool der Office in den Eskalationseinstellungen pflegen."
     },
     "errors": {
       "notFound": "Meldung nicht gefunden.",

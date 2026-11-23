@@ -5,6 +5,7 @@ import {
   PERMISSIONS,
   ticketDetailResponseSchema,
   ticketNoSchema,
+  type TicketAssignmentStatus,
   type TicketDetailResponse,
 } from '@stoerdesk/shared'
 
@@ -75,6 +76,10 @@ export async function getTicketDetail(
       reporterEmail: tickets.reporterEmail,
       statusToken: tickets.statusToken,
       workOrderText: tickets.workOrderText,
+      /** The technician of the assignment (§7.14, ADR-0039). */
+      assignedUserId: tickets.assignedUserId,
+      /** The state of the assignment (§7.14, ADR-0039). */
+      assignmentStatus: tickets.assignmentStatus,
     })
     .from(tickets)
     .innerJoin(objects, eq(tickets.objectId, objects.id))
@@ -137,6 +142,27 @@ export async function getTicketDetail(
       name: `${row.givenName ?? ''} ${row.familyName ?? ''}`.trim(),
     }))
     .filter((assignee) => assignee.name !== '')
+
+  // The technician of the assignment (§7.14, ADR-0039): one person handles the
+  // ticket — id and name only, never a contact value.
+  let assignee: { id: string; name: string } | null = null
+
+  if (ticketRow.assignedUserId !== null) {
+    const [assigned] = await database
+      .select({
+        givenName: users.givenName,
+        familyName: users.familyName,
+      })
+      .from(users)
+      .where(eq(users.id, ticketRow.assignedUserId))
+      .limit(1)
+
+    const name = `${assigned?.givenName ?? ''} ${assigned?.familyName ?? ''}`.trim()
+
+    if (assigned !== undefined && name !== '') {
+      assignee = { id: ticketRow.assignedUserId, name }
+    }
+  }
 
   const actorUserIds = new Set<string>()
   for (const e of events) {
@@ -244,6 +270,8 @@ export async function getTicketDetail(
       statusToken: ticketRow.statusToken,
       workOrderText: ticketRow.workOrderText,
       assignees,
+      assignee,
+      assignmentStatus: (ticketRow.assignmentStatus as TicketAssignmentStatus | null) ?? null,
     },
     events: events.map((e) => ({
       id: e.id,

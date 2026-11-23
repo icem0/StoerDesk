@@ -337,13 +337,22 @@
     "assignees": {
       "title": "assigned technicians"
     },
+    "assignment": {
+      "title": "Assignment",
+      "status": {
+        "offered": "Offered — waiting for the acceptance",
+        "accepted": "Accepted",
+        "declined": "Declined"
+      },
+      "accept": "Accept",
+      "decline": "Decline",
+      "empty": "Nobody is assigned"
+    },
     "assignTarget": {
       "label": "Assign to",
       "placeholder": "Choose a target …",
-      "pools": "Readiness pools",
-      "groups": "User groups",
-      "users": "Technicians",
-      "empty": "No targets available. Please create user groups or readiness pools in the administration."
+      "acceptance": "Acceptance required",
+      "empty": "No technicians available. Please maintain the pool of the office in the escalation settings."
     },
       "errors": {
         "notFound": "Ticket not found.",
