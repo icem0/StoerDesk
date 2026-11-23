@@ -645,6 +645,7 @@
         "push_dns_failed": "The API server cannot resolve the host of the push service (DNS error). Fix: check the DNS setting of the API container (docker-compose.yml or Docker DNS).",
         "push_timeout": "The push service does not answer in time (timeout). Fix: allow outgoing HTTPS (port 443) from the API server to the host of the subscription in the firewall.",
         "push_unreachable": "The API server cannot open a connection to the push service (refused, aborted or TLS error). Fix: check the network path and TLS from the API container to the push service.",
+        "push_send_failed": "The send failed before a request left the server (invalid device subscription or missing push library). Fix: read the API log; unregister and register the device under Settings → Notifications.",
         "vapid_key_mismatch": "The public and the private VAPID key do not belong together. Fix: generate a new key pair and enter both values together on the channel page.",
         "channel_unconfigured": "The channel is not configured or not enabled.",
         "channel_not_configured": "The channel is not configured: its fields are incomplete — nothing reaches a target that was never saved.",

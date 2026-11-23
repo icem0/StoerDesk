@@ -86,10 +86,36 @@ Die Zeile trägt `code` (der Fehlercode) und `err.message` (die Ursache in einem
 | `push_dns_failed` | Der API-Server kann den Host des Push-Dienstes nicht auflösen (`ENOTFOUND`, `EAI_AGAIN`). | DNS des API-Containers prüfen (`dns:` in der `docker-compose.yml` oder Docker-DNS). |
 | `push_timeout` | Der Push-Dienst antwortet nicht rechtzeitig (`ETIMEDOUT`): meist verwirft eine Firewall die Pakete. | Ausgehendes HTTPS (Port 443) vom API-Server zum Host des Abos freigeben. |
 | `push_unreachable` | Verbindung abgelehnt, abgebrochen oder TLS-Fehler (andere Ursache im Log). | Netzwerkweg und TLS vom API-Container zum Push-Dienst prüfen: `docker compose exec api node -e "fetch('https://fcm.googleapis.com').then(r=>console.log(r.status)).catch(e=>console.log(e.cause?.code))"`. |
+| `push_send_failed` | Der Versand ist gescheitert, **bevor** eine Anfrage den Server verlassen hat: das Geräte-Abo in der Datenbank ist unbrauchbar oder die Push-Bibliothek fehlt in diesem Build. | Im Log nachsehen, welches Gerät betroffen ist. Ein unbrauchbares Abo meldet das Gerät unter Einstellungen → Benachrichtigungen ab und wieder an. |
 | `push_rejected` | Der Push-Dienst hat mit einem anderen Fehler geantwortet (im Log die Statusnummer). | Die Statusnummer im Log mit der Meldung des Push-Dienstes abgleichen. |
 | `vapid_key_mismatch` | Der öffentliche Schlüssel gehört nicht zum privaten Schlüssel. | Das Schlüsselpaar neu erzeugen und beide Werte gemeinsam eintragen. |
 | `push_subscription_dead` | Alle angemeldeten Geräte sind abgelaufen. | Die Nutzer müssen die Benachrichtigungen im Browser neu erlauben. |
 | `no_keys` | Dem Kanal fehlt einer der drei Werte. | `.env` prüfen und den API-Container neu starten. |
+
+Der Fehlercode allein sagt nicht, **wo** die Zustellung scheiterte: `push_unreachable`
+und `push_timeout` nennen das Netzwerk, `push_send_failed` die Strecke **vor** der
+Anfrage. Im Log der API steht zu jedem Fall die genaue Ursache — der Name des
+Fehlers (`ECONNREFUSED`, `ENOTFOUND`, `UNABLE_TO_VERIFY_LEAF_SIGNATURE` …) oder die
+Statusnummer des Push-Dienstes. Diese Zeile ist die schnellste Diagnose:
+
+```bash
+docker compose logs api --since 24h 2>&1 | grep "notification send failed" | tail -5
+```
+
+### Vor v1.2.22 kam kein Push an
+
+Bis **v1.2.21** holte der Kanal die Push-Bibliothek über einen Namespace-Import.
+Die gebaute API läuft aber als ES-Modul, und Node stellt einen benannten Export
+eines CommonJS-Moduls nur dann bereit, wenn er ihn statisch lesen kann — der
+Sender der Bibliothek war dort `undefined`. Jede Zustellung scheiterte deshalb
+**vor** dem Netzwerk und wurde als `push_unreachable` gemeldet: „Der Push-Dienst
+hat nicht geantwortet (Netzwerk, DNS oder TLS)“. Das Netzwerk war nie die Ursache.
+
+Ab **v1.2.22** holt der Kanal den Sender über den Standard-Import, eine Zustellung
+vor der Anfrage trägt den eigenen Code `push_send_failed`, und die Anfrage läuft
+mit einem Zeitlimit von zehn Sekunden. Nach dem Update genügt es, das Gerät unter
+Einstellungen → Benachrichtigungen einmal ab- und wieder anzumelden, damit das Abo
+mit dem aktuellen Schlüsselpaar erneuert wird.
 
 ### Die Konfiguration des Kanals
 

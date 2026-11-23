@@ -241,7 +241,7 @@ describe('sendWebPushNotification', () => {
     }
   })
 
-  it('names a transport failure without a status code', async () => {
+  it('names a failure before the request as push_send_failed (WP-M14-176)', async () => {
     const sendMock = vi.fn(async () => {
       throw new Error('socket hang up')
     })
@@ -257,13 +257,131 @@ describe('sendWebPushNotification', () => {
     } catch (error) {
       const webPushError = error as unknown as { name: string; code: string; message: string }
       expect(webPushError.name).toBe('WebPushError')
-      expect(webPushError.code).toBe('push_unreachable')
-      expect(webPushError.message).toBe('The push service did not answer')
+      expect(webPushError.code).toBe('push_send_failed')
+      expect(webPushError.message).toBe('The send failed before the request left the server')
 
       return
     }
 
     expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('names the errno of a transport failure (WP-M14-176)', async () => {
+    const sendMock = vi.fn(async () => {
+      throw Object.assign(new Error('connect ECONNREFUSED 142.250.0.1:443'), {
+        code: 'ECONNREFUSED',
+      })
+    })
+
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('push_unreachable')
+      expect(webPushError.message).toBe('The push service did not answer: ECONNREFUSED')
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('keeps the name of a TLS failure (WP-M14-176)', async () => {
+    const sendMock = vi.fn(async () => {
+      throw Object.assign(new Error('unable to verify the first certificate'), {
+        code: 'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+      })
+    })
+
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('push_unreachable')
+      expect(webPushError.message).toBe(
+        'The push service did not answer: UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+      )
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('names the timeout of the library as push_timeout (WP-M14-176)', async () => {
+    const sendMock = vi.fn(async () => {
+      throw new Error('Socket timeout')
+    })
+
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        sendMock as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('push_timeout')
+      expect(webPushError.message).toBe('The push service did not answer within 10000 ms')
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a failing transport is required')
+  })
+
+  it('refuses to send without a transport (WP-M14-176)', async () => {
+    try {
+      await sendWebPushNotification(
+        vapidKeys,
+        message,
+        '',
+        [subscription],
+        null as unknown as typeof webPush.sendNotification,
+      )
+    } catch (error) {
+      const webPushError = error as unknown as { code: string; message: string }
+      expect(webPushError.code).toBe('push_send_failed')
+      expect(webPushError.message).toBe('The web-push transport is not available in this build')
+
+      return
+    }
+
+    expect('the send unexpectedly succeeded').toBe('a missing transport is required')
+  })
+
+  it('sends the request with a socket timeout (WP-M14-176)', async () => {
+    const sendMock = vi.fn(async () => ({ statusCode: 201, body: '', headers: {} }))
+
+    await sendWebPushNotification(
+      vapidKeys,
+      message,
+      '',
+      [subscription],
+      sendMock as unknown as typeof webPush.sendNotification,
+    )
+
+    const [, , options] = sendMock.mock.calls[0] as unknown as [
+      unknown,
+      unknown,
+      { timeout?: number },
+    ]
+
+    expect(options.timeout).toBe(10000)
   })
 
   it('names a DNS failure of the push service as push_dns_failed (WP-M14-175)', async () => {

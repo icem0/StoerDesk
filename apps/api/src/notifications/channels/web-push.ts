@@ -1,7 +1,15 @@
 import { createECDH } from 'node:crypto'
 
 import { t, type ServerLocale } from '@stoerdesk/shared'
-import * as webPush from 'web-push'
+import webPush from 'web-push'
+
+/**
+ * The socket timeout of one push request (10 s) — the ntfy channel uses the
+ * same value (`NTFY_TIMEOUT_MS`). Without it a connection that is blackholed
+ * instead of refused keeps the request — and with it the drain of the outbox —
+ * waiting forever (WP-M14-176).
+ */
+const WEB_PUSH_TIMEOUT_MS = 10_000
 
 export interface WebPushConfig {
   /**
@@ -105,6 +113,9 @@ export interface WebPushSendResult {
  * and the VAPID JWT is signed with the private key, so the push service knows the
  * application behind the `VAPID_SUBJECT` address. `sendImpl` is the injectable
  * transport: a test hands it a mock sender, the product path hands it the library.
+ * The request carries the socket timeout of `WEB_PUSH_TIMEOUT_MS`, so a push
+ * service that accepts the connection but never answers cannot block the drain
+ * of the outbox.
  *
  * An empty subscription list is a no-op — the channel is configured, but nobody
  * subscribed yet. A rejected send stops the loop: the outbox row stays `PENDING`
@@ -122,8 +133,22 @@ export interface WebPushSendResult {
  * together fail with `vapid_key_mismatch` before the request, a rejected
  * authorization with `push_unauthorized`, another answer of the push service
  * with `push_rejected` and a request without an answer with `push_dns_failed`,
- * `push_timeout` or `push_unreachable` (by the errno). The operator reads the cause in the log of the API and
+ * `push_timeout` or `push_unreachable` (by the errno). A failure **before** the
+ * request leaves the server — a broken subscription row, a transport that is
+ * not available — carries `push_send_failed` and never blames the network
+ * (WP-M14-176). The operator reads the cause in the log of the API and
  * on the page of the delivery problems.
+ *
+ * **The transport of the library.** `web-push` is a CommonJS package whose
+ * `module.exports` carries `sendNotification` as a call expression
+ * (`webPush.sendNotification.bind(webPush)`). Node's ESM loader exposes such a
+ * property only through the **default** export — the named exports of a
+ * CommonJS module are the ones its lexer can read statically. The built API
+ * (`esbuild --format=esm`, Node ESM) therefore knows `sendNotification` only as
+ * the default export: a namespace import left it `undefined` there, every send
+ * died with a `TypeError` before the request, and the failure was reported as
+ * the unreachable push service (WP-M14-176). The guard above turns such a
+ * build into the named code `push_send_failed` instead of a silent misdiagnosis.
  */
 export async function sendWebPushNotification(
   config: WebPushConfig,
@@ -147,6 +172,13 @@ export async function sendWebPushNotification(
     )
   }
 
+  if (typeof sendImpl !== 'function') {
+    throw new WebPushError(
+      'push_send_failed',
+      'The web-push transport is not available in this build',
+    )
+  }
+
   const body = `${message.title}\n${message.body}`
   const payload = pwaUrl === '' ? body : `${body}\n\n${actionLabel(config)}: ${pwaUrl}`
   const deadEndpoints: string[] = []
@@ -166,6 +198,7 @@ export async function sendWebPushNotification(
             publicKey: config.publicKey,
             privateKey: config.privateKey,
           },
+          timeout: WEB_PUSH_TIMEOUT_MS,
         },
       )
 
@@ -203,7 +236,7 @@ function statusCodeOf(error: unknown): number | undefined {
 }
 
 /**
- * The code of a failed send (WP-M14-171) — the machine-readable name the
+ * The code of a failed send (WP-M14-171, WP-M14-176) — the machine-readable name the
  * delivery page and the log show:
  *
  * - `push_unauthorized`: the push service answered `401` or `403` — the key
@@ -212,8 +245,13 @@ function statusCodeOf(error: unknown): number | undefined {
  * - `push_dns_failed`: the host of the push service does not resolve (`ENOTFOUND`,
  *   `EAI_AGAIN`) — DNS of the container,
  * - `push_timeout`: the push service did not answer in time (`ETIMEDOUT`,
- *   `ESOCKETTIMEDOUT`) — typically a firewall that drops the packets,
+ *   `ESOCKETTIMEDOUT`, the timeout of the library) — typically a firewall that
+ *   drops the packets,
  * - `push_unreachable`: any other transport failure (refused, reset, TLS).
+ * - `push_send_failed`: the send failed **before** the request left the server —
+ *   a broken subscription row or a transport that is not available. Never the
+ *   network: a failure without a status and without an errno never reached the
+ *   push service (WP-M14-176).
  */
 function codeOf(statusCode: number | undefined, error: unknown): string {
   if (statusCode === 401 || statusCode === 403) {
@@ -224,6 +262,10 @@ function codeOf(statusCode: number | undefined, error: unknown): string {
     return 'push_rejected'
   }
 
+  if (isTimeoutOf(error)) {
+    return 'push_timeout'
+  }
+
   const errno = errnoOf(error)
 
   if (errno === 'ENOTFOUND' || errno === 'EAI_AGAIN') {
@@ -232,6 +274,10 @@ function codeOf(statusCode: number | undefined, error: unknown): string {
 
   if (errno === 'ETIMEDOUT' || errno === 'ESOCKETTIMEDOUT') {
     return 'push_timeout'
+  }
+
+  if (errno === '') {
+    return 'push_send_failed'
   }
 
   return 'push_unreachable'
@@ -247,19 +293,38 @@ function messageOf(error: unknown, statusCode: number | undefined): string {
     return `The push service responded with ${statusCode}`
   }
 
+  if (isTimeoutOf(error)) {
+    return `The push service did not answer within ${WEB_PUSH_TIMEOUT_MS} ms`
+  }
+
   const errno = errnoOf(error)
 
-  return errno === ''
-    ? 'The push service did not answer'
-    : `The push service did not answer: ${errno}`
+  if (errno !== '') {
+    return `The push service did not answer: ${errno}`
+  }
+
+  return 'The send failed before the request left the server'
+}
+
+/**
+ * Whether the library ended the request itself: after its socket timeout it
+ * destroys the request and rejects with a plain `Error('Socket timeout')` — the
+ * one failure of the transport without an errno (WP-M14-176).
+ */
+function isTimeoutOf(error: unknown): boolean {
+  return error instanceof Error && error.message === 'Socket timeout'
 }
 
 /**
  * The errno of a transport failure (`ENOTFOUND`, `ECONNREFUSED`,
- * `ETIMEDOUT` …) — a short machine name, never a text of the error.
+ * `ETIMEDOUT` …) and of a TLS failure (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`,
+ * `SELF_SIGNED_CERT_IN_CHAIN` …) — a short machine name, never a text of the
+ * error. The name of a TLS failure is longer than twenty characters, so the
+ * limit of sixty-three keeps it (WP-M14-176): a dropped errno turned a TLS
+ * failure into a failure without a cause.
  */
 function errnoOf(error: unknown): string {
   const code = (error as { code?: unknown } | null)?.code
 
-  return typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,19}$/.test(code) ? code : ''
+  return typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,63}$/.test(code) ? code : ''
 }

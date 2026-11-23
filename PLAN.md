@@ -3522,6 +3522,28 @@ the column), **WP-M18-04** (the API stores the field and pins the row),
 guards around the object) and **WP-M18-07** (the statistics filter and the
 exit criterion).
 
+**The web push of the built API (WP-M14-176, out of band in phase 14).** The
+delivery problems named `push_unreachable` for every push — „Der Push-Dienst hat
+nicht geantwortet: die Verbindung ist fehlgeschlagen (Netzwerk, DNS oder TLS)" —
+and no push ever reached a device. The cause was not the network: the adapter
+`apps/api/src/notifications/channels/web-push.ts` took the sender of the
+`web-push` library through a **namespace import**, and the built API runs as an
+ES module (`esbuild --format=esm`, Node ESM). Node exposes a named export of a
+CommonJS module only when its lexer can read the property statically, and the
+`module.exports` of the library carries `sendNotification` as a call expression
+(`webPush.sendNotification.bind(webPush)`) — so the sender was `undefined` in the
+API image, every send died with a `TypeError` before the request, and the
+failure was reported as an unreachable push service. The channel takes the
+sender through the **default** export now; a build without a transport carries
+the new code `push_send_failed` (a failure before the request never blames the
+network), the errno of a transport failure reaches the log even when its name is
+long (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`), the timeout of the library is
+`push_timeout`, and the request runs with a socket timeout of ten seconds so a
+push service that never answers cannot block the drain of the outbox. The
+regression test `web-push-esm.spec.ts` runs the adapter in a child process
+under Node — the loader of the production — because the Vitest runner resolves
+the CommonJS package differently and could not see the defect.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
