@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The administration of the statuses follows the accent (**WP-M16-10c**, out of
+  band in phase 16): the primary action and the links of the pages of the ticket
+  statuses wear the accent colour of the instance; the semantic colours of the
+  states and the destructive action stay.
 - The administration of the groups and the standard texts follows the accent
   (**WP-M16-10b**, out of band in phase 16): the primary action and the links of
   the pages of the groups and the fault types wear the accent colour of the

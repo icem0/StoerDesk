@@ -176,7 +176,7 @@ export function StatusForm({
       ) : null}
 
       <button
-        className="min-h-11 rounded bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+        className="min-h-11 rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
         disabled={values.nameDe === ''}
         type="submit"
       >

@@ -1636,7 +1636,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-11 | the sort direction of the ticket list sits under „Darstellung“ | done | yes |
 | WP-M16-10a | the administration follows the accent — the users and the roles | done | yes |
 | WP-M16-10b | the administration follows the accent — the groups and the standard texts | done | yes |
-| WP-M16-10c | the administration follows the accent — the statuses and the transitions | planned | yes |
+| WP-M16-10c | the administration follows the accent — the statuses | done | yes |
 | WP-M16-10d | the administration follows the accent — the escalation | planned | yes |
 | WP-M16-10e | the administration follows the accent — the readiness and the defaults of the tickets | planned | yes |
 | WP-M16-10f | the administration follows the accent — the keys and the webhooks | planned | yes |

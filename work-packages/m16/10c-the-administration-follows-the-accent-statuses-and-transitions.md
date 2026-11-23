@@ -1,8 +1,8 @@
-# WP-M16-10c: the administration follows the accent — the statuses and the transitions
+# WP-M16-10c: the administration follows the accent — the statuses
 
 format: small-model
-status: planned
-depends-on: WP-M16-NaN
+status: done
+depends-on: WP-M16-10b
 phase: 16
 milestone: m16
 context-budget: 14k tokens
@@ -14,14 +14,12 @@ files-read:
 - apps/web/src/admin/status-page.tsx
 - apps/web/src/admin/status-create-page.tsx
 - apps/web/src/admin/status-form.tsx
-- apps/web/src/admin/transition-page.tsx
 
 files-write:
 
 - apps/web/src/admin/status-page.tsx
 - apps/web/src/admin/status-create-page.tsx
 - apps/web/src/admin/status-form.tsx
-- apps/web/src/admin/transition-page.tsx
 
 interfaces:
 
@@ -30,7 +28,7 @@ interfaces:
 
 ## Task
 
-1. The pages of the statuses and the transitions wear the accent of the instance instead of the fixed
+1. The pages of the statuses wear the accent of the instance instead of the fixed
    blue of the build: the primary buttons become `bg-accent-600 text-white
    hover:bg-accent-700`, the focus rings become `focus-visible:ring-accent-400`
    and the links of a page become `text-accent-300`.
@@ -58,9 +56,18 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/status-page.tsx`,
+  `apps/web/src/admin/status-create-page.tsx`, `apps/web/src/admin/status-form.tsx`
+- Interfaces added: the primary action and the links of the pages of the statuses
+  wear the accent of the instance (`bg-accent-600`, `hover:bg-accent-700`,
+  `text-accent-300`, `focus-visible:ring-accent-400`)
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run test:run -- apps/web/src/admin/__tests__/status-page.test.tsx
+  apps/web/src/admin/__tests__/status-create-page.test.tsx` (9 passed) and
+  `npm run wp:check`
 - Follow-up WP: the next batch of the sweep — every file exists in the commit of
   the split
-- Open question: none
+- Open question: none — the WP named `apps/web/src/admin/transition-page.tsx`,
+  but the transition administration was removed with the transition table
+  (ADR-0041); the file list and the title of the WP were corrected in this
+  commit, the dependency `WP-M16-NaN` became `WP-M16-10b`.
