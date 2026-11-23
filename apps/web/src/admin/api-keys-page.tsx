@@ -111,7 +111,7 @@ export function ApiKeysPage() {
         <>
           {mayWrite ? (
             <Link
-              className="inline-flex min-h-11 items-center self-start rounded bg-sky-600 px-5 text-sm font-semibold text-white hover:bg-sky-500"
+              className="inline-flex min-h-11 items-center self-start rounded bg-accent-600 px-5 text-sm font-semibold text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               to="/admin/api-keys/new"
             >
               {t('apiKeys.createTitle')}

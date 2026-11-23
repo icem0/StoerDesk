@@ -70,7 +70,7 @@ function EditForm(props: { entry: WebhookSummary; onSaved: () => void; onCancel:
       ) : null}
       <div className="flex gap-2">
         <button
-          className="min-h-11 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+          className="min-h-11 rounded-lg bg-accent-600 px-4 text-sm font-semibold text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-60"
           disabled={mutation.isPending || url.trim() === '' || events.length === 0}
           type="submit"
         >
@@ -208,7 +208,7 @@ export function WebhooksPage() {
         <>
           {mayWrite ? (
             <Link
-              className="inline-flex min-h-11 items-center self-start rounded bg-sky-600 px-5 text-sm font-semibold text-white hover:bg-sky-500"
+              className="inline-flex min-h-11 items-center self-start rounded bg-accent-600 px-5 text-sm font-semibold text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               to="/admin/webhooks/new"
             >
               {t('webhooks.createTitle')}

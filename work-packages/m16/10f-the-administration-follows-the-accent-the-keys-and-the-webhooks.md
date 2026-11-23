@@ -1,8 +1,8 @@
 # WP-M16-10f: the administration follows the accent — the keys and the webhooks
 
 format: small-model
-status: planned
-depends-on: WP-M16-NaN
+status: done
+depends-on: WP-M16-10e
 phase: 16
 milestone: m16
 context-budget: 14k tokens
@@ -58,9 +58,18 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/web/src/admin/dashboard-settings-page.tsx,
+  apps/web/src/admin/api-keys-page.tsx, apps/web/src/admin/api-key-create-page.tsx,
+  apps/web/src/admin/webhooks-page.tsx
+- Interfaces added: the primary actions (create links, the save submits) and the
+  focus rings of the slate secondary actions of the pages of the keys and the
+  webhooks wear the accent of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `focus-visible:ring-accent-400`); the rose of the
+  revoke, delete and rotate confirmations and the amber note stay
+- Verified: `npm run typecheck`, `npm run lint`, `npm run test:run` with the
+  page tests of the keys and the webhooks, `npm run wp:check` and
+  `npm run test:e2e` — the whole `npm run check` green
 - Follow-up WP: the next batch of the sweep — every file exists in the commit of
   the split
-- Open question: none
+- Open question: none — the WP carried the broken dependency `WP-M16-NaN`; it is
+  corrected to `WP-M16-10e` in this commit.

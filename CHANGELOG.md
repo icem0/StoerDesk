@@ -44,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The administration of the keys and of the webhooks follows the accent (**WP-M16-10f**,
+  out of band in phase 16): the create links and the save submits of the pages of the
+  API keys and the webhooks and the save submit of the dashboard settings wear the
+  accent colour of the instance, the slate secondary actions take the accent ring;
+  the rose of the revoke, delete and rotate confirmations and the amber note stay.
 - The administration of the readiness, of the defaults of the tickets and of the own
   page of a new escalation stage follows the accent (**WP-M16-10e**, out of band in
   phase 16): the primary actions, the create link and the back links of these pages

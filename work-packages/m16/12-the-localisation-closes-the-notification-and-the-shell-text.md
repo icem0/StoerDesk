@@ -1,7 +1,7 @@
 # WP-M16-12: the localisation closes the notification and the shell text
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M1-04, WP-M7-04b, WP-M14-161d, WP-M15-09
 phase: 16
 milestone: m16
@@ -88,9 +88,20 @@ untranslated literal.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: none — phase 16 is not yet closed by the 10f/10g/10h chain; this WP
-  is out of band.
+- Files changed: `packages/shared/src/i18n/server.{de,en}.json`,
+  `apps/web/src/i18n/locales/{de,en}/settings.json`,
+  `apps/api/src/notifications/routes.ts`,
+  `apps/api/src/notifications/verification.ts`,
+  `apps/web/src/admin/channels-page.tsx`,
+  `apps/api/src/stats/routes.ts`, `apps/web/index.html`, `docs/I18N.md` and the
+  tests `t.test.ts`, `verification.unit.spec.ts`, `channels-page.test.tsx`
+- Interfaces added: `notification.test_title` / `notification.test_body` in the
+  server dictionaries, `admin.channels.testTitle` / `testBody` in the web
+  dictionaries, `sendTestMessage(…, locale)` and
+  `requestNtfyVerification(…, locale)` take the session locale of the sender
+- Verified: the record of this handoff is completed in the commit of
+  WP-M16-10f — the implementation shipped in commit 1a4731f0 with the whole
+  `npm run check` green including `i18n:check` and the new de/en assertions
+- Follow-up WP: none — phase 16 is not yet closed by the 10f/10g/10h chain; this
+  WP is out of band.
 - Open question: none

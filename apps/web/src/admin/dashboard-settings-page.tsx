@@ -34,7 +34,7 @@ function CopyButton(props: {
 }) {
   return (
     <button
-      className="min-h-11 rounded-lg border border-slate-600 px-3 text-sm text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+      className="min-h-11 rounded-lg border border-slate-600 px-3 text-sm text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
       onClick={() => void props.onCopy()}
       type="button"
     >
@@ -163,7 +163,7 @@ function SettingsForm(props: { initial: DashboardSettings; mayWrite: boolean }) 
             </div>
           ) : (
             <button
-              className="min-h-11 self-start rounded-lg border border-slate-600 px-3 text-sm text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="min-h-11 self-start rounded-lg border border-slate-600 px-3 text-sm text-slate-200 transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => setConfirmRotate(true)}
               type="button"
             >
@@ -228,7 +228,7 @@ function SettingsForm(props: { initial: DashboardSettings; mayWrite: boolean }) 
 
         {mayWrite ? (
           <button
-            className="min-h-11 self-start rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="min-h-11 self-start rounded-lg bg-accent-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
             disabled={mutation.isPending}
             type="submit"
           >
@@ -255,7 +255,7 @@ export function DashboardSettingsPage() {
   return (
     <section className="flex flex-col gap-4">
       <Link
-        className="inline-flex min-h-11 items-center self-start rounded bg-slate-800 px-3 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        className="inline-flex min-h-11 items-center self-start rounded bg-slate-800 px-3 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
       >
         {t('admin.back')}
