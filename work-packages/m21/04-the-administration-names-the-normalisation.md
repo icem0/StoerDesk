@@ -1,7 +1,7 @@
 # WP-M21-04: the administration names the normalisation
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M21-03
 phase: 21
 milestone: m21

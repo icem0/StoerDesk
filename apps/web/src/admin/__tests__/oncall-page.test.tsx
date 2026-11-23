@@ -134,6 +134,12 @@ describe('OncallPage', () => {
     expect((await screen.findByLabelText('Dienstblock 1 bis')) as HTMLSelectElement).toBeTruthy()
     expect((await screen.findByLabelText('Dienstblock 1 Beginn')) as HTMLInputElement).toBeTruthy()
     expect((await screen.findByLabelText('Dienstblock 1 Ende')) as HTMLInputElement).toBeTruthy()
+
+    expect(
+      await screen.findByText(
+        'Aufeinanderfolgende Tage mit derselben Dienstzeit bilden einen Dienstblock: Die Woche hält dann eine Schicht statt einer Schicht je Tag.',
+      ),
+    ).toBeTruthy()
   })
 
   it('writes the duty blocks of the pool', async () => {

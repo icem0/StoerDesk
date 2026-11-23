@@ -113,7 +113,8 @@
       "aroundTheClock": "around the clock",
       "presets": "Presets",
       "presetOffice": "Office",
-      "presetTechnician": "Technician around the clock"
+      "presetTechnician": "Technician around the clock",
+      "normalised": "Consecutive days with the same duty times form one duty block: the week then holds one shift instead of one shift per day."
     },
     "state": {
       "UNFILLED": "Unfilled",

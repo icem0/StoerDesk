@@ -968,6 +968,8 @@ function PoolScheduleForm({ pool, canAdmin }: { pool: PoolRow; canAdmin: boolean
         {blocks.length > 0 ? t('admin.schedule.windowPlan') : t('admin.schedule.noWindows')}
       </p>
 
+      <p className="mt-1 text-sm text-slate-400">{t('admin.schedule.normalised')}</p>
+
       {save.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, save.error)}

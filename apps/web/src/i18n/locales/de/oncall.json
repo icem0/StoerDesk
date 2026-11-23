@@ -113,7 +113,8 @@
       "aroundTheClock": "rund um die Uhr",
       "presets": "Vorlagen",
       "presetOffice": "Verwaltung",
-      "presetTechnician": "Technik rund um die Uhr"
+      "presetTechnician": "Technik rund um die Uhr",
+      "normalised": "Aufeinanderfolgende Tage mit derselben Dienstzeit bilden einen Dienstblock: Die Woche hält dann eine Schicht statt einer Schicht je Tag."
     },
     "state": {
       "UNFILLED": "Unbesetzt",
