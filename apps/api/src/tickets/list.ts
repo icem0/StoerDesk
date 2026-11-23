@@ -40,6 +40,11 @@ import { objects, tickets, users } from '../db/schema'
  * `order=deadlineAt` sorts by the deadline in the requested direction and
  * puts the open tickets before the finished ones (WP-M9-20,
  * `specs/05-timeline.md` §5.4).
+ *
+ * `order=priority` is the order of the office and the default of the staff
+ * list (WP-M16-24a, `specs/13-ui.md` §14.9): the open tickets first, then the
+ * urgency descending, then the nearest deadline and the ticket number. The
+ * direction belongs to the two orders by time.
  */
 
 type Db = Database['database']
@@ -53,6 +58,17 @@ const CLOSED_STATUSES: string[] = ['CLOSED', 'CANCELLED']
  * last places, so the list does not start with the oldest closed ticket.
  */
 const OPEN_FIRST = sql`CASE WHEN ${tickets.status} IN ('CLOSED', 'CANCELLED') THEN 1 ELSE 0 END`
+
+/**
+ * The urgency of the order of the office (WP-M16-24a): the highest urgency
+ * first. The rank is ascending, so `critical` (1) stands before `low` (4).
+ */
+const URGENCY_RANK = sql`CASE ${tickets.priority}
+            WHEN 'critical' THEN 1
+            WHEN 'high' THEN 2
+            WHEN 'normal' THEN 3
+            ELSE 4
+          END`
 
 function fieldPaths(error: z.ZodError) {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
@@ -122,16 +138,6 @@ export async function listTickets(
 
   const total = Number(totalResult?.count ?? 0)
 
-  const orderColumn =
-    query.order === 'priority'
-      ? sql`CASE ${tickets.priority}
-            WHEN 'critical' THEN 1
-            WHEN 'high' THEN 2
-            WHEN 'normal' THEN 3
-            ELSE 4
-          END`
-      : tickets.reportedAt
-
   const orderDirection = query.direction === 'asc' ? asc : desc
 
   // The ticket number is the tie-breaker, so the pages of a list stay stable
@@ -141,7 +147,12 @@ export async function listTickets(
       ? [asc(tickets.updatedAt), asc(tickets.ticketNo)]
       : query.order === 'deadlineAt'
         ? [asc(OPEN_FIRST), orderDirection(tickets.deadlineAt), asc(tickets.ticketNo)]
-        : [orderDirection(orderColumn)]
+        : query.order === 'priority'
+          // The order of the office (WP-M16-24a): the open tickets first, then
+          // the urgency descending, then the nearest deadline. The direction
+          // belongs to the two orders by time.
+          ? [asc(OPEN_FIRST), asc(URGENCY_RANK), asc(tickets.deadlineAt), asc(tickets.ticketNo)]
+          : [orderDirection(tickets.reportedAt)]
 
   const rows = await database
     .select({

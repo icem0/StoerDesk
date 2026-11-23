@@ -405,7 +405,13 @@ export const ticketListQuerySchema = z.object({
     .enum(['true', 'false'])
     .optional()
     .transform((value) => (value === undefined ? undefined : value === 'true')),
-  order: z.enum(['reportedAt', 'deadlineAt', 'priority']).default('reportedAt'),
+  /**
+   * The order of the staff list is the order of the office: `priority` puts the
+   * open tickets first, then the urgency descending, then the nearest deadline
+   * and the ticket number (WP-M16-24a, `specs/13-ui.md` §14.9). The direction
+   * belongs to the two orders by time.
+   */
+  order: z.enum(['reportedAt', 'deadlineAt', 'priority']).default('priority'),
   direction: z.enum(['asc', 'desc']).default('desc'),
   limit: z.coerce.number().min(1).max(100).default(25),
   offset: z.coerce.number().min(0).default(0),

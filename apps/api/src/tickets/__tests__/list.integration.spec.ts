@@ -146,4 +146,59 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket list (integration
     expect(numbers.indexOf(near.ticketNo)).toBeLessThan(numbers.indexOf(far.ticketNo))
     expect(numbers.indexOf(far.ticketNo)).toBeLessThan(numbers.indexOf(closed.ticketNo))
   })
+
+  it('orders the list of the office with the open tickets first and the highest urgency on top', async () => {
+    const critical = await insertTicket({
+      status: 'NEW',
+      priority: 'critical',
+      reportedAt: new Date('2026-11-10T08:00:00.000Z'),
+      deadlineAt: new Date('2026-11-21T08:00:00.000Z'),
+    })
+
+    const normal = await insertTicket({
+      status: 'NEW',
+      priority: 'normal',
+      reportedAt: new Date('2026-11-10T09:00:00.000Z'),
+      deadlineAt: new Date('2026-11-22T08:00:00.000Z'),
+    })
+
+    const low = await insertTicket({
+      status: 'NEW',
+      priority: 'low',
+      reportedAt: new Date('2026-11-10T10:00:00.000Z'),
+      deadlineAt: new Date('2026-11-23T08:00:00.000Z'),
+    })
+
+    const nearer = await insertTicket({
+      status: 'NEW',
+      priority: 'normal',
+      reportedAt: new Date('2026-11-10T11:00:00.000Z'),
+      deadlineAt: new Date('2026-11-21T20:00:00.000Z'),
+    })
+
+    const closed = await insertTicket({
+      status: 'CLOSED',
+      priority: 'critical',
+      reportedAt: new Date('2026-09-01T08:00:00.000Z'),
+      deadlineAt: new Date('2026-09-02T08:00:00.000Z'),
+    })
+
+    const result = await listTickets(db, {
+      open: undefined,
+      overdue: undefined,
+      order: 'priority',
+      direction: 'desc',
+      limit: 25,
+      offset: 0,
+    })
+
+    const numbers = result.tickets.map((item) => item.ticketNo)
+    const position = (ticketNo: string) => numbers.indexOf(ticketNo)
+
+    expect(position(critical.ticketNo)).toBeGreaterThanOrEqual(0)
+    expect(position(critical.ticketNo)).toBeLessThan(position(normal.ticketNo))
+    expect(position(normal.ticketNo)).toBeLessThan(position(low.ticketNo))
+    expect(position(nearer.ticketNo)).toBeLessThan(position(normal.ticketNo))
+    expect(position(closed.ticketNo)).toBeGreaterThan(position(low.ticketNo))
+  })
 })

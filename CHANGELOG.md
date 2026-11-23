@@ -65,6 +65,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The API orders the list of the tickets the way the office wants
+  (**WP-M16-24a**, phase 16): `GET /api/v1/tickets` knows the order `priority`
+  and it is the default of the staff list now — the open tickets first, then the
+  urgency descending (`critical`, `high`, `normal`, `low`), then the nearest
+  deadline, then the ticket number. The order `priority` sorted the urgency
+  before, but it mixed the closed tickets among the open ones, it ignored the
+  deadline and it followed the direction of the query. The order by the deadline
+  and the order by the report time keep their direction, the external list keeps
+  the order by the report time.
 - The list of the tickets is ordered the way the office wants and the switch
   under „Darstellung“ steers the history of a ticket (**WP-M16-24 … WP-M16-24d**,
   phase 16): the office read the switch „Neueste zuerst“ under „Darstellung“ and

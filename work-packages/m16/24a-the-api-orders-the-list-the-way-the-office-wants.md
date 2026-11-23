@@ -1,7 +1,7 @@
 # WP-M16-24a: the API orders the list the way the office wants
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-24
 phase: 16
 milestone: m16
@@ -69,6 +69,7 @@ Expected: green; the new assertion fails before the change and passes after it.
   `apps/api/src/tickets/__tests__/list.integration.spec.ts`
 - Interfaces added: the order of the office as `order=priority` and as the
   default of the staff list
-- Verified: `npm run typecheck`, `npm run lint`, the integration spec
+- Verified: `npm run typecheck`, `npm run lint`, the integration spec — the new
+  assertion fails before the change and passes after it
 - Follow-up WP: WP-M16-24b
 - Open question: none
