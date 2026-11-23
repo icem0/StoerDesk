@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The administration names the normalisation of the plan (**WP-M21-04**, phase 21,
+  ADR-0044): the plan of a pool names that consecutive days with the same duty
+  times form one duty block — the week then holds one shift instead of one
+  shift per day.
+- The API reads and writes the normalised plan (**WP-M21-03**, phase 21,
+  ADR-0044): the answer of the pool list, the plan of the generator and the
+  stored plan of a pool are the same blocks, so a pool whose plan was written
+  in the older form (one entry per weekday) creates one shift per week.
+- The shared normalisation of the duty blocks (**WP-M21-02**, phase 21,
+  ADR-0044): blocks with the same daily window on consecutive weekdays become
+  one block; a plan that covers a weekday twice with different windows stays as
+  it is.
 - The plan of a readiness pool is normalised (**WP-M21-01**, phase 21,
   ADR-0044): blocks with the same duty window on consecutive weekdays become
   one block, so a pool whose plan was written in the older form (one entry per

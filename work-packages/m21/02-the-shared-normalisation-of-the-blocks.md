@@ -1,7 +1,7 @@
 # WP-M21-02: the shared normalisation of the duty blocks
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M21-01
 phase: 21
 milestone: m21

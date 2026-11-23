@@ -5,6 +5,7 @@ import {
   generateOncallSlots,
   generateOncallWindowSlots,
   isCoveredByPattern,
+  mergeOncallBlocks,
   ONCALL_SETTINGS_DEFAULTS,
   resolveOncallBlocks,
   resolveOncallSettings,
@@ -406,6 +407,71 @@ describe('resolveOncallBlocks', () => {
 
   it('falls back to the continuous plan when the blocks are no array', () => {
     expect(resolveOncallBlocks('07:00-17:00')).toEqual([])
+  })
+})
+
+describe('mergeOncallBlocks', () => {
+  it('merges the day windows of Monday to Thursday into one block', () => {
+    const blocks = resolveOncallBlocks([
+      { weekday: 1, start: '07:30', end: '17:00' },
+      { weekday: 2, start: '07:30', end: '17:00' },
+      { weekday: 3, start: '07:30', end: '17:00' },
+      { weekday: 4, start: '07:30', end: '17:00' },
+      { weekday: 5, start: '07:00', end: '12:00' },
+    ])
+
+    expect(mergeOncallBlocks(blocks)).toEqual([
+      { fromWeekday: 1, toWeekday: 4, start: '07:30', end: '17:00' },
+      { fromWeekday: 5, toWeekday: 5, start: '07:00', end: '12:00' },
+    ])
+  })
+
+  it('merges seven days around the clock into one block', () => {
+    const blocks = resolveOncallBlocks([
+      { weekday: 0, start: '00:00', end: '23:59' },
+      { weekday: 1, start: '00:00', end: '23:59' },
+      { weekday: 2, start: '00:00', end: '23:59' },
+      { weekday: 3, start: '00:00', end: '23:59' },
+      { weekday: 4, start: '00:00', end: '23:59' },
+      { weekday: 5, start: '00:00', end: '23:59' },
+      { weekday: 6, start: '00:00', end: '23:59' },
+    ])
+
+    expect(mergeOncallBlocks(blocks)).toEqual([
+      { fromWeekday: 1, toWeekday: 0, start: '00:00', end: '23:59' },
+    ])
+  })
+
+  it('keeps two blocks with different daily windows apart', () => {
+    const blocks = resolveOncallBlocks([
+      { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
+      { from_weekday: 5, to_weekday: 5, start: '07:00', end: '12:00' },
+    ])
+
+    expect(mergeOncallBlocks(blocks)).toEqual(blocks)
+  })
+
+  it('keeps a block apart that a covered weekday separates', () => {
+    const blocks = resolveOncallBlocks([
+      { weekday: 1, start: '08:00', end: '16:00' },
+      { weekday: 2, start: '10:00', end: '12:00' },
+      { weekday: 3, start: '08:00', end: '16:00' },
+    ])
+
+    expect(mergeOncallBlocks(blocks)).toEqual(blocks)
+  })
+
+  it('keeps a contradictory plan as it is', () => {
+    const blocks = resolveOncallBlocks([
+      { from_weekday: 1, to_weekday: 2, start: '08:00', end: '16:00' },
+      { weekday: 2, start: '10:00', end: '12:00' },
+    ])
+
+    expect(mergeOncallBlocks(blocks)).toEqual(blocks)
+  })
+
+  it('returns an empty plan unchanged', () => {
+    expect(mergeOncallBlocks([])).toEqual([])
   })
 })
 

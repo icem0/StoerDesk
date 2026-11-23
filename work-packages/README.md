@@ -1748,9 +1748,9 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M20-07 | the iCal feed reads the pattern | done | yes |
 | WP-M20-08 | the duty blocks satisfy their criterion | done | yes |
 | WP-M21-01 | the normalisation of the plan — spec, ADR-0044 and the split | done | yes |
-| WP-M21-02 | the shared normalisation of the duty blocks | planned | yes |
-| WP-M21-03 | the API reads and writes the normalised plan | planned | yes |
-| WP-M21-04 | the administration names the normalisation | planned | yes |
+| WP-M21-02 | the shared normalisation of the duty blocks | done | yes |
+| WP-M21-03 | the API reads and writes the normalised plan | done | yes |
+| WP-M21-04 | the administration names the normalisation | done | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

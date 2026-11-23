@@ -173,6 +173,97 @@ export function oncallBlockWeekdays(block: OncallBlock): number[] {
 }
 
 /**
+ * Normalises the duty blocks of a plan (`specs/04-oncall.md` §4a.3.4,
+ * ADR-0044): blocks with the same daily window on consecutive weekdays of the
+ * week of Monday to Sunday become one block. The weekdays between two blocks
+ * must be covered by no other block; a block that is separated from its
+ * neighbour by a covered weekday stays as it is.
+ *
+ * The duty does not change: the covered weekdays and the daily window stay the
+ * same, only the number of blocks changes. A plan that covers a weekday twice
+ * with different daily windows is contradictory and stays as it is.
+ */
+export function mergeOncallBlocks(blocks: OncallBlock[]): OncallBlock[] {
+  if (blocks.length < 2) {
+    return [...blocks]
+  }
+
+  // The daily window of every covered weekday and the weekdays that two
+  // windows share.
+  const windowOf = new Map<number, string>()
+  const ambiguous = new Set<number>()
+
+  for (const block of blocks) {
+    const key = `${block.start}|${block.end}`
+
+    for (const weekday of oncallBlockWeekdays(block)) {
+      const seen = windowOf.get(weekday)
+
+      if (seen === undefined) {
+        windowOf.set(weekday, key)
+      } else if (seen !== key) {
+        ambiguous.add(weekday)
+      }
+    }
+  }
+
+  if (ambiguous.size > 0) {
+    return [...blocks]
+  }
+
+  // The weekdays of every daily window.
+  const weekdaysOf = new Map<string, number[]>()
+
+  for (const [weekday, key] of windowOf) {
+    const weekdays = weekdaysOf.get(key)
+
+    if (weekdays === undefined) {
+      weekdaysOf.set(key, [weekday])
+    } else {
+      weekdays.push(weekday)
+    }
+  }
+
+  const merged: OncallBlock[] = []
+
+  for (const [key, weekdays] of weekdaysOf) {
+    const [start, end] = key.split('|') as [string, string]
+    const ordered = [...weekdays].sort(
+      (left, right) => oncallWeekdayOrder(left) - oncallWeekdayOrder(right),
+    )
+
+    let from = ordered[0]!
+    let to = ordered[0]!
+
+    for (const weekday of ordered.slice(1)) {
+      // The days between two weekdays of the same window: a covered day
+      // belongs to another window and separates the two blocks.
+      let separated = false
+
+      for (let order = oncallWeekdayOrder(to) + 1; order < oncallWeekdayOrder(weekday); order += 1) {
+        if (windowOf.has((order + 1) % 7)) {
+          separated = true
+          break
+        }
+      }
+
+      if (separated) {
+        merged.push({ fromWeekday: from, toWeekday: to, start, end })
+        from = weekday
+      }
+
+      to = weekday
+    }
+
+    merged.push({ fromWeekday: from, toWeekday: to, start, end })
+  }
+
+  return merged.sort(
+    (left, right) => oncallWeekdayOrder(left.fromWeekday) - oncallWeekdayOrder(right.fromWeekday),
+  )
+}
+
+/**
  * Resolves the duty blocks of one pool (`specs/04-oncall.md` §4a.3.3,
  * ADR-0040 decision 3). A stored day window of ADR-0035 (`weekday`) reads as a
  * block with `from` = `to`; a stored block is read with its `from_weekday` and
