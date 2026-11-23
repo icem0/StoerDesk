@@ -11,12 +11,12 @@ spec-lines: 30
 
 files-read:
 
-- apps/api/src/oncall/__tests__/window-plan.integration.spec.ts
+- apps/api/src/oncall/**tests**/window-plan.integration.spec.ts
 - specs/04-oncall.md (§4a.3.3)
 
 files-write:
 
-- apps/api/src/oncall/__tests__/duty-blocks.integration.spec.ts
+- apps/api/src/oncall/**tests**/duty-blocks.integration.spec.ts
 - specs/04-oncall.md (§4a.9 boundary)
 - PLAN.md (§16 phase 20 status)
 

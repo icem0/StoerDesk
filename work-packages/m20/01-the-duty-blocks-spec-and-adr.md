@@ -60,7 +60,9 @@ Expected: `wp:check` green; `check` green (documentation only).
   `CHANGELOG.md`
 - Interfaces added: the contracts above
 - Verified: the commands above
-- Follow-up WP: WP-M20-02 … WP-M20-06 (files exist in this commit)
+- Follow-up WP: WP-M20-02 … WP-M20-08 (files exist in this commit; the phase was
+  split further in WP-M20-02, because the pool contract and the administration
+  that reads it belong to one commit)
 - Open question: the three decisions of the office are taken with the defaults of
   ADR-0040 (technician block 00:00–24:00 possible, one technician per block,
   blocks replace the day windows); the office confirms them before WP-M20-03

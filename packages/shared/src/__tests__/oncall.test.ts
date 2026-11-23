@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  generateOncallBlockSlots,
   generateOncallSlots,
   generateOncallWindowSlots,
+  isCoveredByPattern,
   ONCALL_SETTINGS_DEFAULTS,
+  resolveOncallBlocks,
   resolveOncallSettings,
   resolveOncallWindows,
+  type OncallBlock,
+  type OncallBlockPattern,
   type OncallSettings,
   type OncallWindow,
 } from '../oncall'
@@ -346,5 +351,201 @@ describe('generateOncallWindowSlots', () => {
     expect(slots).toHaveLength(1)
     expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-02T06:30:00.000Z').getTime())
     expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-11-02T16:00:00.000Z').getTime())
+  })
+})
+
+describe('resolveOncallBlocks', () => {
+  it('reads a stored day window as a block of one day', () => {
+    expect(resolveOncallBlocks([{ weekday: 3, start: '07:00', end: '12:00' }])).toEqual([
+      { fromWeekday: 3, toWeekday: 3, start: '07:00', end: '12:00' },
+    ])
+  })
+
+  it('reads a stored block with its weekdays', () => {
+    expect(
+      resolveOncallBlocks([
+        { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
+        { from_weekday: 5, to_weekday: 5, start: '07:00', end: '12:00' },
+      ]),
+    ).toEqual([
+      { fromWeekday: 1, toWeekday: 4, start: '07:00', end: '17:00' },
+      { fromWeekday: 5, toWeekday: 5, start: '07:00', end: '12:00' },
+    ])
+  })
+
+  it('sorts the blocks by the first day of the week of Monday to Sunday', () => {
+    expect(
+      resolveOncallBlocks([
+        { from_weekday: 0, to_weekday: 0, start: '07:00', end: '12:00' },
+        { from_weekday: 1, to_weekday: 1, start: '07:00', end: '12:00' },
+        { from_weekday: 6, to_weekday: 6, start: '07:00', end: '12:00' },
+      ]).map((block) => block.fromWeekday),
+    ).toEqual([1, 6, 0])
+  })
+
+  it('drops a block whose last weekday lies before its first weekday', () => {
+    expect(
+      resolveOncallBlocks([
+        { from_weekday: 5, to_weekday: 2, start: '07:00', end: '17:00' },
+        { from_weekday: 1, to_weekday: 1, start: '07:00', end: '17:00' },
+      ]),
+    ).toEqual([{ fromWeekday: 1, toWeekday: 1, start: '07:00', end: '17:00' }])
+  })
+
+  it('drops a malformed block and keeps the valid ones', () => {
+    expect(
+      resolveOncallBlocks([
+        { from_weekday: 1, to_weekday: 4, start: '7:00', end: '17:00' },
+        { from_weekday: 1, to_weekday: 4, start: '07:00', end: '17:00' },
+        { from_weekday: 7, to_weekday: 7, start: '07:00', end: '17:00' },
+        { from_weekday: 1, to_weekday: 4, start: '17:00', end: '07:00' },
+        'not-a-block',
+      ]),
+    ).toEqual([{ fromWeekday: 1, toWeekday: 4, start: '07:00', end: '17:00' }])
+  })
+
+  it('falls back to the continuous plan when the blocks are no array', () => {
+    expect(resolveOncallBlocks('07:00-17:00')).toEqual([])
+  })
+})
+
+describe('generateOncallBlockSlots', () => {
+  const officeBlocks: OncallBlock[] = [
+    { fromWeekday: 1, toWeekday: 4, start: '07:00', end: '17:00' },
+    { fromWeekday: 5, toWeekday: 5, start: '07:00', end: '12:00' },
+  ]
+
+  it('emits one slot per block of the week with its pattern', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-11-02T00:00:00.000Z'),
+      to: new Date('2026-11-09T00:00:00.000Z'),
+      blocks: officeBlocks,
+    })
+
+    expect(slots).toHaveLength(2)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-02T06:00:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-11-05T16:00:00.000Z').getTime())
+    expect(slots[0]!.pattern).toEqual({
+      weekdays: [1, 2, 3, 4],
+      dailyStart: '07:00',
+      dailyEnd: '17:00',
+    })
+    expect(slots[1]!.startsAt.getTime()).toBe(new Date('2026-11-06T06:00:00.000Z').getTime())
+    expect(slots[1]!.endsAt.getTime()).toBe(new Date('2026-11-06T11:00:00.000Z').getTime())
+    expect(slots[1]!.pattern).toEqual({
+      weekdays: [5],
+      dailyStart: '07:00',
+      dailyEnd: '12:00',
+    })
+  })
+
+  it('emits the blocks of every week of the range', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-11-02T00:00:00.000Z'),
+      to: new Date('2026-11-16T00:00:00.000Z'),
+      blocks: officeBlocks,
+    })
+
+    expect(slots).toHaveLength(4)
+    expect(slots[2]!.startsAt.getTime()).toBe(new Date('2026-11-09T06:00:00.000Z').getTime())
+  })
+
+  it('emits one slot for a block around the clock', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-11-01T23:00:00.000Z'),
+      to: new Date('2026-11-08T23:00:00.000Z'),
+      blocks: [{ fromWeekday: 1, toWeekday: 0, start: '00:00', end: '24:00' }],
+    })
+
+    expect(slots).toHaveLength(1)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-01T23:00:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-11-08T23:00:00.000Z').getTime())
+    expect(slots[0]!.pattern.weekdays).toEqual([1, 2, 3, 4, 5, 6, 0])
+  })
+
+  it('emits a block around the clock over a DST change one hour shorter', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-03-22T23:00:00.000Z'),
+      to: new Date('2026-03-29T22:00:00.000Z'),
+      blocks: [{ fromWeekday: 1, toWeekday: 0, start: '00:00', end: '24:00' }],
+    })
+
+    expect(slots).toHaveLength(1)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-03-22T23:00:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-03-29T22:00:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime() - slots[0]!.startsAt.getTime()).toBe(167 * HOUR)
+  })
+
+  it('emits a block of one day like a day window', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-11-04T00:00:00.000Z'),
+      to: new Date('2026-11-05T00:00:00.000Z'),
+      blocks: [{ fromWeekday: 3, toWeekday: 3, start: '07:00', end: '12:00' }],
+    })
+
+    expect(slots).toHaveLength(1)
+    expect(slots[0]!.startsAt.getTime()).toBe(new Date('2026-11-04T06:00:00.000Z').getTime())
+    expect(slots[0]!.endsAt.getTime()).toBe(new Date('2026-11-04T11:00:00.000Z').getTime())
+    expect(slots[0]!.pattern.weekdays).toEqual([3])
+  })
+
+  it('leaves a block out that lies outside the range', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-11-07T00:00:00.000Z'),
+      to: new Date('2026-11-09T00:00:00.000Z'),
+      blocks: officeBlocks,
+    })
+
+    expect(slots).toHaveLength(0)
+  })
+
+  it('emits nothing without a block - the continuous plan is the plan then', () => {
+    const slots = generateOncallBlockSlots({
+      from: new Date('2026-11-02T00:00:00.000Z'),
+      to: new Date('2026-11-09T00:00:00.000Z'),
+      blocks: [],
+    })
+
+    expect(slots).toHaveLength(0)
+  })
+})
+
+describe('isCoveredByPattern', () => {
+  const pattern: OncallBlockPattern = {
+    weekdays: [1, 2, 3, 4],
+    dailyStart: '07:00',
+    dailyEnd: '17:00',
+  }
+
+  const shift = {
+    startsAt: new Date('2026-11-02T06:00:00.000Z'),
+    endsAt: new Date('2026-11-05T16:00:00.000Z'),
+    pattern,
+  }
+
+  it('covers a time of a covered weekday inside the daily window', () => {
+    expect(isCoveredByPattern(shift, new Date('2026-11-02T07:00:00.000Z'))).toBe(true)
+  })
+
+  it('does not cover a time outside the daily window', () => {
+    expect(isCoveredByPattern(shift, new Date('2026-11-02T05:00:00.000Z'))).toBe(false)
+    expect(isCoveredByPattern(shift, new Date('2026-11-02T16:00:00.000Z'))).toBe(false)
+  })
+
+  it('does not cover a time of a weekday outside the pattern', () => {
+    expect(isCoveredByPattern(shift, new Date('2026-11-06T08:00:00.000Z'))).toBe(false)
+  })
+
+  it('does not cover a time outside the span', () => {
+    expect(isCoveredByPattern(shift, new Date('2026-11-01T08:00:00.000Z'))).toBe(false)
+  })
+
+  it('covers the whole span of a shift without a pattern', () => {
+    expect(
+      isCoveredByPattern(
+        { startsAt: new Date('2026-11-02T06:00:00.000Z'), endsAt: new Date('2026-11-03T06:00:00.000Z') },
+        new Date('2026-11-02T23:00:00.000Z'),
+      ),
+    ).toBe(true)
   })
 })

@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The shared duty blocks of the readiness (**WP-M20-02**, phase 20, ADR-0040):
+  a duty block spans consecutive weekdays with a daily window, `resolveOncallBlocks`
+  reads a stored day window as a block of one day, `generateOncallBlockSlots`
+  emits one shift per block per week with its pattern, and `isCoveredByPattern`
+  answers whether an instant lies inside the duty of a shift. The phase was
+  split further (WP-M20-02 … WP-M20-08), because the contract of the pool and
+  the administration that reads it belong to one commit.
 - The assignment notifies the office (**WP-M19-07**, phase 19, ADR-0039): the
   assigned technician receives `ticket.assigned`, the user who made the
   assignment receives the new event `ticket.assignment_answered` when the

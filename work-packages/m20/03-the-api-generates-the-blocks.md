@@ -12,39 +12,43 @@ spec-lines: 40
 files-read:
 
 - apps/api/src/oncall/service.ts (generation and the shift insert)
-- apps/api/src/oncall/pools.ts (the pool windows)
 - apps/api/src/db/schema.ts (`oncallShifts`)
+- apps/api/src/oncall/**tests**/window-plan.integration.spec.ts (the plan of the
+  pool and the shifts of a week)
 - docs/DECISIONS/0040-the-duty-block-carries-a-weekly-pattern.md
 
 files-write:
 
-- apps/api/src/db/migrations/ (one migration: `oncall_shifts` pattern columns)
+- apps/api/src/db/migrations/0059_oncall_shift_pattern.sql
 - apps/api/src/db/schema.ts
 - apps/api/src/oncall/service.ts
-- apps/api/src/oncall/pools.ts
+- apps/api/src/oncall/**tests**/block-generation.integration.spec.ts
 
 interfaces:
 
-- migration: `oncall_shifts.weekdays` (text), `daily_start`, `daily_end` (text),
-  defaults describing a one-day block; `oncall_pools.weekly_windows` keeps its column
-- `generateShifts` uses `generateOncallBlockSlots` when the pool has blocks
-- `PATCH /api/v1/oncall/pools/:id` accepts `weeklyWindows` as blocks
+- migration: `oncall_shifts.weekdays` (text), `daily_start`, `daily_end` (text);
+  a row without a pattern keeps covering its whole span
+- `generateShifts` emits one shift per block per week when the pool carries
+  blocks; the insert stays idempotent on `(pool_id, starts_at)`
 
 ## Task
 
-1. Migration adds the three shift columns with defaults that describe a one-day
-   block, so existing rows stay valid. Update `schema.ts`.
-2. `generateShifts` emits blocks; the insert stays idempotent on
-   `(pool_id, starts_at)`.
-3. The pool route validates blocks with the WP-M20-02 schema and refuses
-   `to_weekday` before `from_weekday` with `400 invalid_request`.
-4. Integration test: the office blocks generate two shifts for a week with
-   their spans and patterns; an existing day shift is untouched.
+1. Migration adds the three shift columns. A shift without a pattern (the rows
+   of the continuous plan and the day windows of an older version) keeps
+   covering its whole span; a shift of a block carries its pattern.
+2. `generateShifts` emits blocks: the plan of the pool is read with
+   `resolveOncallBlocks`, a stored day window reads as a block of one day.
+3. The shift rows of a block carry the pattern (the covered weekdays with the
+   daily window).
+4. Integration test: a pool with the office blocks generates two shifts for a
+   week with their spans and patterns; a day shift of an older version stays a
+   day shift.
 
 ## Non-goals
 
-- No change of the coupling and the iCal feed (WP-M20-04).
-- No form (WP-M20-05). No deletion of existing shifts.
+- No change of the pool route — the pool carries its blocks in WP-M20-04.
+- No change of the coupling and the iCal feed (WP-M20-06, WP-M20-07).
+- No deletion of existing shifts.
 
 ## Acceptance
 
@@ -60,7 +64,7 @@ change.
 
 ## Handoff
 
-- Files changed: the migration, `schema.ts`, `service.ts`, `pools.ts`
+- Files changed: the migration, `schema.ts`, `service.ts`, the new test
 - Interfaces added: the contracts above
 - Verified: the commands above
 - Follow-up WP: WP-M20-04

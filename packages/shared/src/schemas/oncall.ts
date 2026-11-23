@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { oncallTimeMinutes, oncallWeekdayOrder } from '../oncall.js'
+
 /**
  * On-call pool API schemas (`specs/04-oncall.md` §4a.2, WP-M8-04).
  *
@@ -31,6 +33,32 @@ export const oncallWindowsSchema = z
   .refine((windows) => new Set(windows.map((window) => window.weekday)).size === windows.length, {
     message: 'At most one duty window per weekday.',
   })
+
+/**
+ * One duty block of the window plan (`specs/04-oncall.md` §4a.3.3, ADR-0040):
+ * consecutive weekdays with a daily start and a daily end as the wall clock of
+ * `Europe/Berlin`. The `to_weekday` may not lie before the `from_weekday`
+ * within the week of Monday to Sunday; the end is later than the start and may
+ * be `24:00` — the duty around the clock.
+ */
+export const oncallBlockSchema = z
+  .object({
+    from_weekday: z.number().int().min(0).max(6),
+    to_weekday: z.number().int().min(0).max(6),
+    start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$|^24:00$/),
+  })
+  .refine((block) => oncallTimeMinutes(block.end) > oncallTimeMinutes(block.start), {
+    message: 'The end of a duty block is later than its start.',
+    path: ['end'],
+  })
+  .refine((block) => oncallWeekdayOrder(block.to_weekday) >= oncallWeekdayOrder(block.from_weekday), {
+    message: 'The last weekday of a duty block is not before its first weekday.',
+    path: ['to_weekday'],
+  })
+
+/** The duty blocks of a pool (`specs/04-oncall.md` §4a.3.3). */
+export const oncallBlocksSchema = z.array(oncallBlockSchema).max(14)
 
 const trimmedName = z.string().trim().min(1).max(100)
 
@@ -262,6 +290,7 @@ export type OncallSwapListResponse = z.infer<typeof oncallSwapListResponseSchema
 export type OnCallSettingsResponse = z.infer<typeof oncallSettingsResponseSchema>
 export type UpdateOncallSettingsRequest = z.infer<typeof updateOncallSettingsRequestSchema>
 export type OncallWindowInput = z.infer<typeof oncallWindowSchema>
+export type OncallBlockInput = z.infer<typeof oncallBlockSchema>
 
 /** Response of `GET /api/v1/oncall/ical-url`: a relative URL the caller resolves
  * against its own origin; the token itself stays on the server (WP-M8-14b). */

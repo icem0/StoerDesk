@@ -28,6 +28,33 @@ export type OncallWindow = {
   end: string // `HH:MM`, later than `start`
 }
 
+/**
+ * One duty block of the window plan (`specs/04-oncall.md` §4a.3.3, ADR-0040):
+ * consecutive weekdays with a daily start and a daily end as the wall clock of
+ * `Europe/Berlin`. The block spans from `fromWeekday` to `toWeekday` within
+ * Monday to Sunday; the end is later than the start, `24:00` ends the day.
+ */
+export type OncallBlock = {
+  fromWeekday: number // 0–6, `0` = Sunday
+  toWeekday: number // 0–6, not earlier than `fromWeekday` (Monday to Sunday)
+  start: string // `HH:MM`
+  end: string // `HH:MM` or `24:00`, later than `start`
+}
+
+/**
+ * The pattern of a duty block: the covered weekdays with the daily window.
+ * A shift of a block carries it; a shift without a pattern covers its whole
+ * span (the continuous plan of ADR-0011, ADR-0040 decision 6).
+ */
+export type OncallBlockPattern = {
+  weekdays: number[] // 0–6, `0` = Sunday
+  dailyStart: string // `HH:MM`
+  dailyEnd: string // `HH:MM` or `24:00`
+}
+
+/** A generated block slot: the span of the shift and its pattern. */
+export type OncallBlockSlot = OncallSlot & { pattern: OncallBlockPattern }
+
 /** Resolved on-call settings (`specs/04-oncall.md` §4a.1). */
 export type OncallSettings = {
   weekStartWeekday: Weekday
@@ -52,6 +79,8 @@ export const ONCALL_SETTINGS_DEFAULTS: OncallSettings = {
 }
 
 const START_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
+/** The end of a block may be `24:00` — the end of the day (ADR-0040 decision 6). */
+const END_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 
 function isInteger(value: unknown): value is number {
@@ -104,6 +133,113 @@ export function resolveOncallWindows(value: unknown): OncallWindow[] {
   }
 
   return windows.sort((left, right) => left.weekday - right.weekday)
+}
+
+/**
+ * The position of a weekday inside the week of Monday to Sunday (ADR-0040
+ * decision 1): Monday is `0`, Sunday is `6`. The order decides whether the
+ * `to_weekday` of a block lies behind its `from_weekday`.
+ */
+export function oncallWeekdayOrder(weekday: number): number {
+  return (weekday + 6) % 7
+}
+
+/** The minutes of the day of a wall clock of `Europe/Berlin`; `24:00` is 1440. */
+export function oncallTimeMinutes(time: string): number {
+  if (time === '24:00') {
+    return 24 * 60
+  }
+
+  const hours = Number(time.slice(0, 2))
+  const minutes = Number(time.slice(3, 5))
+
+  return hours * 60 + minutes
+}
+
+/** The weekdays a block covers, in the order of the week of Monday to Sunday. */
+export function oncallBlockWeekdays(block: OncallBlock): number[] {
+  const weekdays: number[] = []
+
+  for (let order = 0; order < 7; order += 1) {
+    if (
+      order >= oncallWeekdayOrder(block.fromWeekday) &&
+      order <= oncallWeekdayOrder(block.toWeekday)
+    ) {
+      weekdays.push((order + 1) % 7)
+    }
+  }
+
+  return weekdays
+}
+
+/**
+ * Resolves the duty blocks of one pool (`specs/04-oncall.md` §4a.3.3,
+ * ADR-0040 decision 3). A stored day window of ADR-0035 (`weekday`) reads as a
+ * block with `from` = `to`; a stored block is read with its `from_weekday` and
+ * its `to_weekday` (the camelCase spelling is accepted as well). A malformed
+ * entry and a block whose `to` lies before its `from` are dropped. The result
+ * is sorted by the first day of the block.
+ */
+export function resolveOncallBlocks(value: unknown): OncallBlock[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const blocks: OncallBlock[] = []
+
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null) {
+      continue
+    }
+
+    const record = entry as Record<string, unknown>
+
+    const rawFrom = record.from_weekday ?? record.fromWeekday
+    const rawTo = record.to_weekday ?? record.toWeekday
+    const rawWeekday = record.weekday
+
+    let from: unknown = rawFrom
+    let to: unknown = rawTo
+
+    // A stored day window of ADR-0035 is a block of one day.
+    if (from === undefined && to === undefined) {
+      from = rawWeekday
+      to = rawWeekday
+    }
+
+    if (!isInteger(from) || from < 0 || from > 6) {
+      continue
+    }
+
+    if (!isInteger(to) || to < 0 || to > 6) {
+      continue
+    }
+
+    if (oncallWeekdayOrder(to) < oncallWeekdayOrder(from)) {
+      continue
+    }
+
+    const { start, end } = record
+
+    if (!isString(start) || !START_TIME_RE.test(start)) {
+      continue
+    }
+
+    if (!isString(end) || !END_TIME_RE.test(end)) {
+      continue
+    }
+
+    if (oncallTimeMinutes(end) <= oncallTimeMinutes(start)) {
+      continue
+    }
+
+    blocks.push({ fromWeekday: from, toWeekday: to, start, end })
+  }
+
+  return blocks.sort(
+    (left, right) =>
+      oncallWeekdayOrder(left.fromWeekday) - oncallWeekdayOrder(right.fromWeekday),
+  )
 }
 
 /**
@@ -321,4 +457,138 @@ export function generateOncallWindowSlots({
   }
 
   return slots
+}
+
+/**
+ * Generates the duty blocks of the window plan for `[from, to)` in
+ * `Europe/Berlin` (`specs/04-oncall.md` §4a.3.3, ADR-0040 decision 2).
+ *
+ * One slot per block per week: the span runs from the first day of the block
+ * at its `start` to the last day of the block at its `end`, and the slot
+ * carries the pattern of the block — the covered weekdays with the daily
+ * window. The week of a block runs from Monday to Sunday.
+ */
+export function generateOncallBlockSlots({
+  from,
+  to,
+  blocks,
+}: {
+  from: Date
+  to: Date
+  blocks: OncallBlock[]
+}): OncallBlockSlot[] {
+  const slots: OncallBlockSlot[] = []
+
+  if (blocks.length === 0) {
+    return slots
+  }
+
+  const fromLocal = toZonedTime(from, ONCALL_TIMEZONE)
+  const toLocal = toZonedTime(to, ONCALL_TIMEZONE)
+
+  // The local Monday of the week that holds `from`.
+  const weekStart = new Date(fromLocal.getFullYear(), fromLocal.getMonth(), fromLocal.getDate())
+  weekStart.setDate(weekStart.getDate() - oncallWeekdayOrder(weekStart.getDay()))
+
+  const lastDay = new Date(toLocal.getFullYear(), toLocal.getMonth(), toLocal.getDate())
+
+  while (weekStart <= lastDay) {
+    for (const block of blocks) {
+      const weekdays = oncallBlockWeekdays(block)
+      const days: Date[] = []
+
+      for (let offset = 0; offset < 7; offset += 1) {
+        const day = new Date(weekStart.getTime())
+        day.setDate(day.getDate() + offset)
+
+        if (weekdays.includes(day.getDay())) {
+          days.push(day)
+        }
+      }
+
+      if (days.length === 0) {
+        continue
+      }
+
+      const first = days[0]!
+      const last = days[days.length - 1]!
+
+      const [startHour, startMinute] = block.start.split(':').map((part) => Number(part))
+      const startLocal = new Date(
+        first.getFullYear(),
+        first.getMonth(),
+        first.getDate(),
+        startHour,
+        startMinute,
+        0,
+        0,
+      )
+
+      const endMinutes = oncallTimeMinutes(block.end)
+      const endLocal = new Date(
+        last.getFullYear(),
+        last.getMonth(),
+        last.getDate(),
+        Math.floor(endMinutes / 60) % 24,
+        endMinutes % 60,
+        0,
+        0,
+      )
+
+      if (endMinutes >= 24 * 60) {
+        endLocal.setDate(endLocal.getDate() + 1)
+      }
+
+      const startsAt = fromZonedTime(startLocal, ONCALL_TIMEZONE)
+      const endsAt = fromZonedTime(endLocal, ONCALL_TIMEZONE)
+
+      if (startsAt < to && endsAt > from) {
+        slots.push({
+          startsAt,
+          endsAt,
+          pattern: {
+            weekdays,
+            dailyStart: block.start,
+            dailyEnd: block.end,
+          },
+        })
+      }
+    }
+
+    weekStart.setDate(weekStart.getDate() + 7)
+  }
+
+  return slots
+}
+
+/**
+ * Answers whether the `instant` lies inside the duty of a shift
+ * (`specs/04-oncall.md` §4a.3.3, ADR-0040 decision 5): the instant lies in the
+ * span of the shift, its local weekday belongs to the pattern and its local
+ * time lies in the daily window. A shift without a pattern covers its whole
+ * span.
+ */
+export function isCoveredByPattern(
+  shift: { startsAt: Date; endsAt: Date; pattern?: OncallBlockPattern | null },
+  instant: Date,
+): boolean {
+  if (instant < shift.startsAt || instant >= shift.endsAt) {
+    return false
+  }
+
+  const pattern = shift.pattern
+
+  if (pattern === undefined || pattern === null || pattern.weekdays.length === 0) {
+    return true
+  }
+
+  const local = toZonedTime(instant, ONCALL_TIMEZONE)
+
+  if (!pattern.weekdays.includes(local.getDay())) {
+    return false
+  }
+
+  const minutes = local.getHours() * 60 + local.getMinutes()
+
+  return minutes >= oncallTimeMinutes(pattern.dailyStart) && minutes < oncallTimeMinutes(pattern.dailyEnd)
 }

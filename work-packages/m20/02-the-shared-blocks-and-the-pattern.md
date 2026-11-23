@@ -1,7 +1,7 @@
 # WP-M20-02: the shared blocks and the pattern resolver
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-01
 phase: 20
 milestone: m20
@@ -13,14 +13,14 @@ files-read:
 
 - packages/shared/src/oncall.ts (the window resolver and the window generator)
 - packages/shared/src/schemas/oncall.ts (the window contracts)
-- packages/shared/src/__tests__/oncall.test.ts (the window tests)
+- packages/shared/src/**tests**/oncall.test.ts (the window tests)
 - docs/DECISIONS/0040-the-duty-block-carries-a-weekly-pattern.md
 
 files-write:
 
 - packages/shared/src/oncall.ts
 - packages/shared/src/schemas/oncall.ts
-- packages/shared/src/__tests__/oncall.test.ts
+- packages/shared/src/**tests**/oncall.test.ts
 
 interfaces:
 
@@ -29,6 +29,10 @@ interfaces:
   `from` = `to`; malformed entries and `to` before `from` are dropped
 - `generateOncallBlockSlots({ from, to, blocks })` — one slot per block per week,
   span from the first day at `start` to the last day at `end`, with the pattern
+- `isCoveredByPattern(shift, instant)` — span, covered weekday, daily window in
+  `Europe/Berlin`
+- `oncallBlockSchema` — the block of the API contract (weekdays `0`–`6`,
+  `from` ≤ `to`, `start` < `end`, `24:00` as the end of the day)
 
 ## Task
 

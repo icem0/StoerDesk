@@ -1,41 +1,41 @@
-# WP-M20-04: the coupling and the iCal feed read the pattern
+# WP-M20-06: the coupling reads the pattern
 
 format: small-model
 status: planned
-depends-on: WP-M20-03
+depends-on: WP-M20-05
 phase: 20
 milestone: m20
 context-budget: 16k tokens
-spec: specs/04-oncall.md §4a.6, §4a.7
+spec: specs/04-oncall.md §4a.6
 spec-lines: 40
 
 files-read:
 
 - apps/api/src/oncall/coupling.ts (`resolveOnCallPerson`)
-- apps/api/src/oncall/ical.ts (the personal feed)
+- apps/api/src/oncall/**tests**/coupling.integration.spec.ts
 - docs/DECISIONS/0040-the-duty-block-carries-a-weekly-pattern.md
 
 files-write:
 
 - apps/api/src/oncall/coupling.ts
-- apps/api/src/oncall/ical.ts
-- apps/api/src/oncall/__tests__/ical.integration.spec.ts
+- apps/api/src/oncall/**tests**/coupling.integration.spec.ts
 
 interfaces:
 
 - `resolveOnCallPerson` covers a time only inside the pattern of its shift
-- the iCal feed emits one `RRULE` (`FREQ=WEEKLY;BYDAY=…`) per block
 
 ## Task
 
-1. Coupling uses `isCoveredByPattern` of WP-M20-02 for a shift with a pattern.
-2. iCal emits one recurring entry per block with the daily window.
+1. The coupling reads the pattern of the shift and uses `isCoveredByPattern` of
+   WP-M20-02: a time on a free weekday or outside the daily window of the
+   block names nobody.
+2. A shift without a pattern keeps covering its whole span.
 3. Tests: a time inside the span on a covered weekday is covered; a time on a
-   free weekday or outside the daily window is not; the feed holds one entry per
-   block.
+   free weekday or outside the daily window is not.
 
 ## Non-goals
 
+- No change of the iCal feed (WP-M20-07).
 - No form, no migration.
 
 ## Acceptance
@@ -51,8 +51,8 @@ Expected: all green; the new tests fail before the change.
 
 ## Handoff
 
-- Files changed: `coupling.ts`, `ical.ts`, the iCal test
+- Files changed: `coupling.ts`, the coupling test
 - Interfaces added: the rules above
 - Verified: the commands above
-- Follow-up WP: WP-M20-05
+- Follow-up WP: WP-M20-07
 - Open question: none
