@@ -1,7 +1,7 @@
 # WP-M19-05: the routes of the assignment and the escalation action mode
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 18k tokens
@@ -52,9 +52,33 @@ action test for `mode = pool`.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/tickets/workflow-routes.ts,
+  packages/shared/src/schemas/ticket.ts, packages/shared/src/schemas/escalation-config.ts,
+  apps/api/src/escalation/actions.ts, apps/api/src/escalation/config.ts,
+  apps/api/src/escalation/distribution.ts,
+  apps/api/src/db/migrations/0056_escalation_action_assign_mode.sql,
+  apps/web/src/admin/escalation-action-editor.tsx (the mode of the `assign` action),
+  apps/web/src/i18n/locales/{de,en}/settings.json,
+  apps/api/src/tickets/__tests__/assignment-routes.integration.spec.ts (new),
+  apps/api/src/escalation/__tests__/distribution.integration.spec.ts,
+  apps/api/src/escalation/__tests__/config-routes.integration.spec.ts,
+  apps/api/src/escalation/__tests__/assign-target.integration.spec.ts,
+  apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx,
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: `POST /api/v1/tickets/:ticketNo/assign` (body
+  `{ userId, acceptance }`), `POST /api/v1/tickets/:ticketNo/assignment-answer`
+  (body `{ answer }`), `assignBodySchema`, `answerAssignmentBodySchema`,
+  the action config `{ mode, user?, acceptance }`
+- Verified: `npm run typecheck --workspaces --if-present`, the integration specs
+  of the routes (200, 400 for an unknown technician, 403 for the answer of a
+  foreign technician), the modes `pool` and `user` of the action,
+  `npm run i18n:check` and `npm run wp:check` green
 - Follow-up WP: none
-- Open question: the permission of `POST …/assign` is `ticket.assign` or a new key;
-  decide with the RBAC spec before this WP starts.
+- Open question: none
+- Notes: the permission of the assignment stays `ticket.assign`, the answer of
+  the assignment is guarded by `ticket.read` — the assignee check of the
+  service is the second guard. The editor of the actions had to follow in this
+  work package: the contract of the `assign` action changed, and the
+  administration would otherwise send a body the server refuses. The migration
+  `0056` rewrites the stored configurations of the former shape — a user target
+  becomes the mode `user`, every other target the mode `pool`.

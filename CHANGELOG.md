@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The office assigns the ticket to one technician (**WP-M19-05**, phase 19,
+  ADR-0039): `POST /api/v1/tickets/:ticketNo/assign` takes the technician and
+  the flag _Annahme erforderlich_, the technician answers the assignment with
+  `POST /api/v1/tickets/:ticketNo/assignment-answer`, and only the assigned
+  technician may answer. The `assign` action of the escalation gains a mode —
+  _Aus dem Pool der Office_ or _Fester Techniker_ — and the flag
+  _Annahme erforderlich_; a configuration of the former shape is rewritten by
+  the migration `0056`.
 - A ticket is assigned to one technician (**WP-M19-04**, phase 19, ADR-0039):
   the assignment names the technician in `tickets.assigned_user_id`, carries
   the state of the assignment (`offered`, `accepted`, `declined`) and the user

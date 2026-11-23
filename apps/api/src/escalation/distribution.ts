@@ -2,7 +2,7 @@ import type { EscalationTarget } from '@stoerdesk/shared'
 import { and, eq } from 'drizzle-orm'
 
 import type { Database } from '../db/client'
-import { objects, ticketAssignees, ticketEvents, tickets, users } from '../db/schema'
+import { objects, ticketEvents, tickets, users } from '../db/schema'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { escalationRecipients } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
@@ -333,46 +333,4 @@ async function notifyTechnicians(
   }
 
   return recipients.length
-}
-
-/**
- * The manual assignment of the office (`specs/07-escalation.md` §7.14, ADR-0033,
- * WP-M19-02): the office names a readiness pool, a user group or one technician
- * of the ticket in the ticket view. The ticket takes the `assigned` step, the
- * technicians of the target become assignees and receive the `ticket.assigned`
- * notification. A target without an active technician is refused — the ticket
- * stays as it is.
- */
-export async function assignTicketByUser(
-  database: Db,
-  input: { ticketId: string; actorUserId: string; target: EscalationTarget },
-): Promise<typeof tickets.$inferSelect> {
-  const technicians = await resolveTargetTechnicians(database, input.target)
-
-  if (technicians.length === 0) {
-    throw new TicketTransitionError(422, 'assign_target_empty', {})
-  }
-
-  const { ticket } = await transitionTicket({
-    database,
-    ticketId: input.ticketId,
-    event: 'assigned',
-    actorUserId: input.actorUserId,
-    payload: { target: { kind: input.target.kind, id: input.target.id } },
-  })
-
-  await database
-    .insert(ticketAssignees)
-    .values(technicians.map((userId) => ({ ticketId: input.ticketId, userId })))
-    .onConflictDoNothing()
-
-  await notifyTechnicians(database, {
-    ticketId: input.ticketId,
-    eventType: 'ticket.assigned',
-    technicians,
-    ruleKey: null,
-    stageKey: null,
-  })
-
-  return ticket
 }

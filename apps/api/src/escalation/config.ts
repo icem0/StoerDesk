@@ -87,11 +87,37 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
     case 'status_change':
       return { toStatus: action.toStatus }
     case 'offer':
-    case 'assign':
       return { target: { kind: action.target.kind, id: action.target.id } }
+    case 'assign':
+      return {
+        mode: action.mode,
+        ...(action.user === undefined ? {} : { user: action.user }),
+        acceptance: action.acceptance,
+      }
     default:
       return {}
   }
+}
+
+/**
+ * The configuration of an `assign` action (§7.14, ADR-0039): the mode, the
+ * technician of the mode `user` and the flag _Annahme erforderlich_. An
+ * installation that was written before the mode names its target in the former
+ * shape — a user target becomes the mode `user` with that technician, every
+ * other target becomes the mode `pool`.
+ */
+function assignActionConfig(config: Record<string, unknown>): Record<string, unknown> {
+  if (config.mode === 'pool' || config.mode === 'user') {
+    return config
+  }
+
+  const target = config.target as { kind?: string; id?: string } | undefined
+
+  if (target?.kind === 'user' && typeof target.id === 'string') {
+    return { mode: 'user', user: target.id, acceptance: true }
+  }
+
+  return { mode: 'pool', acceptance: true }
 }
 
 /** Reads the stage chain with its names, ordered by the positions. */
@@ -169,7 +195,7 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
       key: row.key,
       type: row.type,
       condition: row.condition,
-      ...config,
+      ...(row.type === 'assign' ? assignActionConfig(config) : config),
     }
 
     const list = actionsByRule.get(row.ruleKey) ?? []
@@ -322,7 +348,17 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
         continue
       }
 
-      if (action.type !== 'offer' && action.type !== 'assign') {
+      if (action.type === 'assign') {
+        // The technician of the mode `user` must exist (§7.14, ADR-0039); the
+        // mode `pool` names no row — the pool is a setting.
+        if (action.mode === 'user' && action.user !== undefined && !userIds.has(action.user)) {
+          unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.user`)
+        }
+
+        continue
+      }
+
+      if (action.type !== 'offer') {
         continue
       }
 

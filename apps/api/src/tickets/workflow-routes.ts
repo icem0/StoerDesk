@@ -4,8 +4,9 @@ import { asc, eq } from 'drizzle-orm'
 import type { PermissionKey } from '@stoerdesk/shared'
 
 import {
+  answerAssignmentBodySchema,
+  assignBodySchema,
   closeRequestSchema,
-  escalationTargetSchema,
   PERMISSIONS,
   ticketNoSchema,
   workOrderRequestSchema,
@@ -14,8 +15,9 @@ import {
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { groups, oncallPools, ticketEvents, tickets, users } from '../db/schema'
-import { assignTicketByUser } from '../escalation/distribution'
+import { readAssigneePool } from '../escalation/assignee-pool'
 import { offerTicket } from '../oncall/coupling'
+import { answerAssignment, assignTicket, readAssignableUsers } from './assignment'
 import { transitionTicket } from './workflow'
 import { applyInternalAction } from './internal-actions'
 
@@ -36,7 +38,6 @@ function fieldPaths(error: z.ZodError): string[] {
   return [...new Set(error.issues.map((issue) => issue.path.join('.')))]
 }
 const OFFER_BODY = z.object({ poolId: z.string().uuid().optional() })
-const ASSIGN_BODY = z.object({ target: escalationTargetSchema })
 const ACK_RESULT = z.enum(['fixed', 'partially_fixed', 'follow_up_required', 'no_fault_found'])
 
 type RouteDef = {
@@ -156,9 +157,10 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       )
     }
 
-    // The manual assignment names its target (ADR-0033, WP-M19-02): a readiness
-    // pool, a user group or one technician — the kinds the escalation offers.
-    // Without a target the request is refused.
+    // The manual assignment names one technician (§7.14, ADR-0039): a member
+    // of the assignee pool or any active user. The status of the assignment is
+    // `offered` when the technician has to answer, `accepted` at once
+    // otherwise. The user who made the assignment is stored with the ticket.
     app.post<{ Params: { ticketNo: string } }>(
       '/api/v1/tickets/:ticketNo/assign',
       { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
@@ -173,7 +175,70 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
           return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
         }
 
-        const parsed = ASSIGN_BODY.safeParse(request.body ?? {})
+        const parsed = assignBodySchema.safeParse(request.body ?? {})
+        if (!parsed.success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        const [row] = await database
+          .select({ id: tickets.id })
+          .from(tickets)
+          .where(eq(tickets.ticketNo, request.params.ticketNo))
+          .limit(1)
+
+        if (row === undefined) {
+          return reply.code(404).send({ code: 'ticket_not_found', params: { ticketNo: request.params.ticketNo } })
+        }
+
+        // The technician must be an active account — a deactivated account is
+        // nobody (§7.14, ADR-0039).
+        const [technician] = await database
+          .select({ id: users.id, active: users.active })
+          .from(users)
+          .where(eq(users.id, parsed.data.userId))
+          .limit(1)
+
+        if (technician === undefined || !technician.active) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['userId'] } })
+        }
+
+        try {
+          const result = await assignTicket(database, {
+            ticketId: row.id,
+            userId: parsed.data.userId,
+            acceptance: parsed.data.acceptance,
+            assignedBy: actor.id,
+          })
+
+          return reply.code(200).send(result.ticket)
+        } catch (error) {
+          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+          throw error
+        }
+      },
+    )
+
+    // The technician answers the assignment (§7.14, ADR-0039): only the
+    // assigned technician may answer. A refusal passes the ticket to the next
+    // member of the assignee pool.
+    app.post<{ Params: { ticketNo: string } }>(
+      '/api/v1/tickets/:ticketNo/assignment-answer',
+      { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.read)) },
+      async (request, reply) => {
+        const actor = request.user
+
+        if (actor === undefined) {
+          return reply.code(401).send({ code: 'session_invalid', params: {} })
+        }
+
+        if (!ticketNoSchema.safeParse(request.params.ticketNo).success) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+        }
+
+        const parsed = answerAssignmentBodySchema.safeParse(request.body ?? {})
         if (!parsed.success) {
           return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
@@ -189,13 +254,13 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
         }
 
         try {
-          const updated = await assignTicketByUser(database, {
+          const result = await answerAssignment(database, {
             ticketId: row.id,
             actorUserId: actor.id,
-            target: parsed.data.target,
+            answer: parsed.data.answer,
           })
 
-          return reply.code(200).send(updated)
+          return reply.code(200).send(result.ticket)
         } catch (error) {
           const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
           if (err.statusCode !== undefined) {
@@ -206,8 +271,8 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       },
     )
 
-    // The targets the office can choose in the assignment: the active readiness
-    // pools, the user groups and the active technicians (§7.14). Permission:
+    // The targets the office can choose in the assignment: the members of the
+    // assignee pool and the active technicians (§7.14, ADR-0039). Permission:
     // ticket.assign.
     app.get(
       '/api/v1/ticket-assign-targets',
@@ -224,24 +289,11 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
           .from(groups)
           .orderBy(asc(groups.name))
 
-        const userRows = await database
-          .select({
-            id: users.id,
-            email: users.email,
-            givenName: users.givenName,
-            familyName: users.familyName,
-          })
-          .from(users)
-          .where(eq(users.active, true))
-          .orderBy(asc(users.familyName), asc(users.givenName))
-
         return {
+          assigneePool: await readAssigneePool(database),
           pools: poolRows,
           groups: groupRows,
-          users: userRows.map((row) => ({
-            id: row.id,
-            name: `${row.givenName ?? ''} ${row.familyName ?? ''}`.trim() || row.email,
-          })),
+          users: await readAssignableUsers(database),
         }
       },
     )

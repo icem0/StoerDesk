@@ -49,6 +49,9 @@ type ConfigBody = {
       type: string
       text?: string
       target?: { kind: string; id: string }
+      mode?: string
+      user?: string
+      acceptance?: boolean
     }[]
     active: boolean
   }[]
@@ -81,6 +84,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     const db = drizzle(client, { schema })
 
     let app: FastifyInstance
+    let officeUserId = ''
     const cookies: Record<'admin' | 'office', string> = { admin: '', office: '' }
 
     async function userIdFor(email: string): Promise<string> {
@@ -136,6 +140,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const adminId = await userIdFor('admin-escalation@example.org')
       const officeId = await userIdFor('office-escalation@example.org')
+      officeUserId = officeId
 
       await db.insert(userRoles).values([
         { userId: adminId, roleId: await roleIdFor('admin') },
@@ -340,7 +345,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.params?.fields).toEqual(['rules.0.actions.0.toStatus'])
     })
 
-    it('keeps the target of an offer and an assign action', async () => {
+    it('keeps the target of an offer and the mode of an assign action', async () => {
       const suffix = Date.now().toString(36)
 
       const [group] = await db
@@ -372,9 +377,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
                 condition: { all: [] },
               },
               {
-                key: 'assign_the_group',
+                key: 'assign_the_technician',
                 type: 'assign',
-                target: { kind: 'group', id: groupId },
+                mode: 'user',
+                user: officeUserId,
+                acceptance: true,
                 condition: { all: [] },
               },
             ],
@@ -388,10 +395,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const body = response.json<ConfigBody>()
 
       expect(body.rules[0]?.actions[0]?.target).toEqual({ kind: 'pool', id: poolId })
-      expect(body.rules[0]?.actions[1]?.target).toEqual({ kind: 'group', id: groupId })
+      expect(body.rules[0]?.actions[1]?.mode).toBe('user')
+      expect(body.rules[0]?.actions[1]?.user).toBe(officeUserId)
+      expect(body.rules[0]?.actions[1]?.acceptance).toBe(true)
     })
 
-    it('refuses a target of an unknown pool and of an unknown group with 400 invalid_target', async () => {
+    it('refuses a target of an unknown pool and an unknown technician with 400 invalid_target', async () => {
       const response = await putConfig(cookies['admin'], {
         rules: [
           {
@@ -411,7 +420,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
               {
                 key: 'assign_the_ghost',
                 type: 'assign',
-                target: { kind: 'group', id: '22222222-2222-4222-8222-222222222222' },
+                mode: 'user',
+                user: '22222222-2222-4222-8222-222222222222',
+                acceptance: true,
                 condition: { all: [] },
               },
             ],
@@ -427,7 +438,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.code).toBe('invalid_target')
       expect(body.params?.fields).toEqual([
         'rules.0.actions.0.target.id',
-        'rules.0.actions.1.target.id',
+        'rules.0.actions.1.user',
       ])
     })
 

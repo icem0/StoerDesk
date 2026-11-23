@@ -457,6 +457,13 @@
           "urgent": "Urgent"
         },
         "notifyHint": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic.",
+        "assignMode": "Assignment mode",
+        "assignModes": {
+          "pool": "From the pool of the office",
+          "user": "Fixed technician"
+        },
+        "assignUser": "Technician",
+        "assignAcceptance": "Acceptance required",
         "add": "Add action",
         "remove": "Remove action #{{number}}"
       },

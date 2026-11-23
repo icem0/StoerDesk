@@ -131,6 +131,25 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    /** The `assign` action in its new shape (§7.14, ADR-0039): the mode. */
+    async function assignAction(
+      mode: 'pool' | 'user',
+      user: string | undefined,
+      acceptance: boolean,
+      key: string,
+      ruleKey: string,
+    ) {
+      await db.insert(escalationActions).values({
+        key,
+        ruleKey,
+        type: 'assign',
+        config: { mode, acceptance, ...(user === undefined ? {} : { user }) },
+        condition: { all: [] },
+        position: 0,
+        active: true,
+      })
+    }
+
     async function fire(
       ticketId: string,
       ruleKey: string,
@@ -267,6 +286,52 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .toStrictEqual(['topic-0'])
     })
 
+    it('assigns the ticket to the head of the pool in the mode pool', async () => {
+      await writeAssigneePool(db, [technicianIds[1] ?? '', technicianIds[0] ?? ''])
+      await assignAction('pool', undefined, true, 'assign_mode_pool', seededRuleKey('review'))
+
+      const ticket = await createTicket('WORK_ORDER_CREATED')
+
+      const result = await fire(ticket.id, seededRuleKey('review'), 'assignment', 'e8')
+
+      expect(result.assigned).toBe(1)
+
+      const [moved] = await db
+        .select({
+          assignedUserId: tickets.assignedUserId,
+          assignmentStatus: tickets.assignmentStatus,
+        })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(moved?.assignedUserId).toBe(technicianIds[1])
+      expect(moved?.assignmentStatus).toBe('offered')
+    })
+
+    it('assigns the ticket to the named technician in the mode user', async () => {
+      await assignAction('user', technicianIds[0] ?? '', false, 'assign_mode_user', seededRuleKey('work_order'))
+
+      const ticket = await createTicket('WORK_ORDER_CREATED')
+
+      const result = await fire(ticket.id, seededRuleKey('work_order'), null, 'e9')
+
+      expect(result.assigned).toBe(1)
+
+      const [moved] = await db
+        .select({
+          assignedUserId: tickets.assignedUserId,
+          assignmentStatus: tickets.assignmentStatus,
+        })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      expect(moved?.assignedUserId).toBe(technicianIds[0])
+      // Without the acceptance the assignment is accepted at once.
+      expect(moved?.assignmentStatus).toBe('accepted')
+    })
+
     it('offers the ticket to the technicians of a readiness pool', async () => {
       await action('offer', { kind: 'pool', id: poolId }, 'offer_pool', seededRuleKey('acceptance', 'offered'))
 
@@ -360,12 +425,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('assigns the ticket to one named technician', async () => {
       const technicianId = technicianIds[0] ?? ''
 
-      await action(
-        'assign',
-        { kind: 'user', id: technicianId },
-        'assign_user',
-        seededRuleKey('new'),
-      )
+      await assignAction('user', technicianId, true, 'assign_user', seededRuleKey('new'))
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 

@@ -41,6 +41,30 @@ export const TICKET_ASSIGNMENT_STATUSES = ['offered', 'accepted', 'declined'] as
 
 export type TicketAssignmentStatus = (typeof TICKET_ASSIGNMENT_STATUSES)[number]
 
+/**
+ * The body of the assignment of the ticket view (`specs/07-escalation.md`
+ * §7.14, ADR-0039): the technician the ticket goes to and whether the
+ * technician has to answer.
+ */
+export const assignBodySchema = z.object({
+  /** The technician — a member of the assignee pool or any active user. */
+  userId: z.uuid(),
+  /** `true` — the status is `offered` and waits for the answer of the technician. */
+  acceptance: z.boolean().default(true),
+})
+
+export type AssignBody = z.infer<typeof assignBodySchema>
+
+/**
+ * The body of the answer of an assignment: the technician accepts the ticket or
+ * declines it — a refusal passes the ticket to the next member of the pool.
+ */
+export const answerAssignmentBodySchema = z.object({
+  answer: z.enum(['accepted', 'declined']),
+})
+
+export type AnswerAssignmentBody = z.infer<typeof answerAssignmentBodySchema>
+
 export const publicReportContactSchema = z.object({
   name: trimmedText(120),
   phone: trimmedText(60),

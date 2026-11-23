@@ -8,13 +8,14 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '../../db/schema'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
+import { assignTicket } from '../../tickets/assignment'
 import { transitionTicket } from '../../tickets/workflow'
-import { assignTicketByUser } from '../distribution'
 
 /**
- * The manual assignment of the office (§7.14, ADR-0033, WP-M19-02): the target
- * is a user group; its technicians become the assignees of the ticket. A target
- * without an active technician is refused and the ticket keeps its status.
+ * The manual assignment of the office (`specs/07-escalation.md` §7.14,
+ * ADR-0039, WP-M19-05): the office names **one** technician. A deactivated
+ * account is nobody, so the assignment is refused and the ticket keeps its
+ * status.
  */
 
 const testDatabase = await openTestDatabase()
@@ -23,7 +24,17 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped assign target integration: ${testDatabase.reason}\n`)
 }
 
-const { groups, objects, ticketAssignees, tickets, userGroups, users } = schema
+const { objects, tickets, users } = schema
+
+function onlyRow<T>(rows: T[], what: string): T {
+  const [row] = rows
+
+  if (!row) {
+    throw new Error(`expected one ${what}`)
+  }
+
+  return row
+}
 
 describe.skipIf(testDatabase.status === 'unavailable')('assign target (integration)', () => {
   const url = testDatabase.status === 'available' ? testDatabase.url : ''
@@ -43,8 +54,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('assign target (integrati
         { email: `assign-member-${randomUUID()}@example.invalid`, passwordHash: 'unused' },
       ])
       .returning({ id: users.id })
-    actorUserId = inserted[0]?.id ?? ''
-    memberUserId = inserted[1]?.id ?? ''
+    actorUserId = onlyRow(inserted.slice(0, 1), 'actor user').id
+    memberUserId = onlyRow(inserted.slice(1, 2), 'member user').id
   })
 
   afterAll(async () => {
@@ -84,44 +95,35 @@ describe.skipIf(testDatabase.status === 'unavailable')('assign target (integrati
     return { id, ticketNo: ticket?.ticketNo ?? '' }
   }
 
-  it('assigns the ticket to the technicians of the chosen group', async () => {
-    const [group] = await db
-      .insert(groups)
-      .values({ name: `Elektrik ${randomUUID().slice(0, 6)}` })
-      .returning({ id: groups.id })
-    await db.insert(userGroups).values({ userId: memberUserId, groupId: group?.id ?? '' })
-
+  it('assigns the ticket to the chosen technician', async () => {
     const ticket = await openWorkOrderTicket()
-    const updated = await assignTicketByUser(db, {
+
+    const result = await assignTicket(db, {
       ticketId: ticket.id,
-      actorUserId,
-      target: { kind: 'group', id: group?.id ?? '' },
+      userId: memberUserId,
+      acceptance: true,
+      assignedBy: actorUserId,
     })
 
-    expect(updated.status).toBe('ASSIGNED')
-
-    const assignees = await db
-      .select({ userId: ticketAssignees.userId })
-      .from(ticketAssignees)
-      .where(eq(ticketAssignees.ticketId, ticket.id))
-    expect(assignees.map((row) => row.userId)).toStrictEqual([memberUserId])
+    expect(result.ticket.status).toBe('ASSIGNED')
+    expect(result.assignedUserId).toBe(memberUserId)
+    expect(result.assignmentStatus).toBe('offered')
+    expect(result.assignedByUserId).toBe(actorUserId)
   })
 
-  it('refuses a group without a technician and keeps the status', async () => {
-    const [group] = await db
-      .insert(groups)
-      .values({ name: `Leer ${randomUUID().slice(0, 6)}` })
-      .returning({ id: groups.id })
+  it('refuses a deactivated technician and keeps the status', async () => {
+    await db.update(users).set({ active: false }).where(eq(users.id, memberUserId))
 
     const ticket = await openWorkOrderTicket()
 
     await expect(
-      assignTicketByUser(db, {
+      assignTicket(db, {
         ticketId: ticket.id,
-        actorUserId,
-        target: { kind: 'group', id: group?.id ?? '' },
+        userId: memberUserId,
+        acceptance: true,
+        assignedBy: actorUserId,
       }),
-    ).rejects.toMatchObject({ code: 'assign_target_empty' })
+    ).rejects.toMatchObject({ code: 'assign_user_inactive' })
 
     const [row] = await db
       .select({ status: tickets.status })
@@ -129,5 +131,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('assign target (integrati
       .where(eq(tickets.id, ticket.id))
       .limit(1)
     expect(row?.status).toBe('WORK_ORDER_CREATED')
+
+    await db.update(users).set({ active: true }).where(eq(users.id, memberUserId))
   })
 })

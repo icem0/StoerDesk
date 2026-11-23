@@ -393,6 +393,13 @@
       "when": 1795399200001,
       "tag": "0055_ticket_assignment_status",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1795485600001,
+      "tag": "0056_escalation_action_assign_mode",
+      "breakpoints": true
     }
   ]
 }

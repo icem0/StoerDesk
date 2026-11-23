@@ -28,7 +28,8 @@ import {
 import { escalationRecipients } from '../notifications/receivers'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { resolveOnDutyUserIds } from '../oncall/coupling'
-import { distributeTicket } from './distribution'
+import { firstAssignee, resolveAssigneePool } from './assignee-pool'
+import { assignTicketByEscalation, distributeTicket } from './distribution'
 
 /**
  * The actions of a fired rule (`specs/07-escalation.md` §7.5, ADR-0017,
@@ -391,7 +392,7 @@ export async function dispatchEscalationActions(
       continue
     }
 
-    if (row.type === 'offer' || row.type === 'assign') {
+    if (row.type === 'offer') {
       const parsed = escalationTargetSchema.safeParse(config.target)
 
       if (!parsed.success || ticket === undefined) {
@@ -401,17 +402,47 @@ export async function dispatchEscalationActions(
       const outcome = await distributeTicket(database, {
         ticketId: firing.ticketId,
         target: parsed.data,
-        kind: row.type,
+        kind: 'offer',
         ruleKey: firing.ruleKey,
         stageKey: firing.stageKey,
       })
 
       if (outcome.changed) {
-        if (row.type === 'offer') {
-          result.offered += 1
-        } else {
-          result.assigned += 1
-        }
+        result.offered += 1
+      }
+
+      continue
+    }
+
+    if (row.type === 'assign') {
+      // The assignment hands the ticket to **one** technician (§7.14, ADR-0039):
+      // the first active member of the assignee pool or the technician the
+      // rule names.
+      const mode = config.mode === 'user' ? 'user' : 'pool'
+      const acceptance = config.acceptance !== false
+
+      let userId: string | null = null
+
+      if (mode === 'user') {
+        userId = typeof config.user === 'string' ? config.user : null
+      } else {
+        userId = firstAssignee(await resolveAssigneePool(database))
+      }
+
+      if (userId === null || ticket === undefined) {
+        continue
+      }
+
+      const outcome = await assignTicketByEscalation(database, {
+        ticketId: firing.ticketId,
+        userId,
+        acceptance,
+        ruleKey: firing.ruleKey,
+        stageKey: firing.stageKey,
+      })
+
+      if (outcome.changed) {
+        result.assigned += 1
       }
 
       continue

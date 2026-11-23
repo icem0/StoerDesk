@@ -320,7 +320,7 @@ describe('the action editor of the escalation page', () => {
     ])
   })
 
-  it('assigns the ticket to a user group and saves its target', async () => {
+  it('assigns the ticket from the pool of the office (WP-M19-05)', async () => {
     const saved = renderPage(['settings.read', 'settings.write'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
@@ -330,26 +330,31 @@ describe('the action editor of the escalation page', () => {
     const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
     fireEvent.change(typeSelect, { target: { value: 'assign' } })
 
-    const kindSelect = screen.getByTestId('escalation-action-target-kind') as unknown as HTMLSelectElement
-    fireEvent.change(kindSelect, { target: { value: 'group' } })
+    const modeSelect = screen.getByTestId('escalation-assign-mode') as unknown as HTMLSelectElement
+    expect(Array.from(modeSelect.options).map((option) => (option as { value: string }).value)).toEqual([
+      'pool',
+      'user',
+    ])
+    expect(modeSelect.value).toBe('pool')
 
-    const targetSelect = screen.getByTestId('escalation-action-target') as unknown as HTMLSelectElement
-    fireEvent.change(targetSelect, { target: { value: GROUP_ID } })
+    const acceptance = screen.getByTestId('escalation-assign-acceptance') as unknown as HTMLInputElement
+    expect(acceptance.checked).toBe(true)
 
-    await waitFor(() => expect(saved).toHaveLength(1))
-    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    await waitFor(() => expect(saved.length).toBeGreaterThan(0))
+    const body = (saved[saved.length - 1] ?? {}) as { rules?: unknown[] }
     const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
     expect(rule.actions).toEqual([
       {
         key: NOTIFY_ACTION.key,
         type: 'assign',
-        target: { kind: 'group', id: GROUP_ID },
+        mode: 'pool',
+        acceptance: true,
         condition: { all: [] },
       },
     ])
   })
 
-  it('assigns the ticket to one technician and saves its target', async () => {
+  it('assigns the ticket to one fixed technician (WP-M19-05)', async () => {
     const saved = renderPage(['settings.read', 'settings.write'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
@@ -359,24 +364,24 @@ describe('the action editor of the escalation page', () => {
     const typeSelect = screen.getByTestId('escalation-action-list').querySelector('select') as HTMLSelectElement
     fireEvent.change(typeSelect, { target: { value: 'assign' } })
 
-    const kindSelect = screen.getByTestId('escalation-action-target-kind') as unknown as HTMLSelectElement
-    const kinds = Array.from(kindSelect.options).map((option) => (option as { value: string }).value)
-    expect(kinds).toEqual(['pool', 'group', 'user'])
-    fireEvent.change(kindSelect, { target: { value: 'user' } })
+    const modeSelect = screen.getByTestId('escalation-assign-mode') as unknown as HTMLSelectElement
+    fireEvent.change(modeSelect, { target: { value: 'user' } })
 
-    const targetSelect = screen.getByTestId('escalation-action-target') as unknown as HTMLSelectElement
-    const offered = Array.from(targetSelect.options).map((option) => (option as { value: string }).value)
+    const userSelect = screen.getByTestId('escalation-assign-user') as unknown as HTMLSelectElement
+    const offered = Array.from(userSelect.options).map((option) => (option as { value: string }).value)
     expect(offered).toEqual(['', USER_ID])
-    fireEvent.change(targetSelect, { target: { value: USER_ID } })
+    fireEvent.change(userSelect, { target: { value: USER_ID } })
 
-    await waitFor(() => expect(saved).toHaveLength(1))
-    const body = (saved[0] ?? {}) as { rules?: unknown[] }
+    await waitFor(() => expect(saved.length).toBeGreaterThan(0))
+    const body = (saved[saved.length - 1] ?? {}) as { rules?: unknown[] }
     const rule = { ...((body.rules ?? [])[0] ?? {}) as Record<string, unknown> }
     expect(rule.actions).toEqual([
       {
         key: NOTIFY_ACTION.key,
         type: 'assign',
-        target: { kind: 'user', id: USER_ID },
+        mode: 'user',
+        user: USER_ID,
+        acceptance: true,
         condition: { all: [] },
       },
     ])

@@ -512,11 +512,18 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('assign'),
     /**
-     * The pool of technicians the ticket is assigned to (§7.14, ADR-0026) — a
-      * readiness pool or a user group. The assignment sets the `ASSIGNED` status
-      * and records the technicians.
+     * The mode of the assignment (§7.14, ADR-0039): `pool` hands the ticket to
+     * the first active member of the assignee pool, `user` names the technician
+     * in `user`.
      */
-    target: escalationTargetSchema,
+    mode: z.enum(['pool', 'user']).default('pool'),
+    /** The technician of the assignment — only with the mode `user`. */
+    user: z.uuid().optional(),
+    /**
+     * `true` — the technician has to answer the assignment (`offered`);
+     * `false` — the assignment is accepted at once.
+     */
+    acceptance: z.boolean().default(true),
     condition: escalationConditionSchema,
   }),
 ])
@@ -538,6 +545,26 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine(
         path: ['channels'],
         message: 'notify_needs_target_or_channel',
       })
+    }
+
+    if (action.type === 'assign') {
+      // The mode `user` names the technician, the mode `pool` takes him from
+      // the assignee pool of the installation (§7.14, ADR-0039).
+      if (action.mode === 'user' && action.user === undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['user'],
+          message: 'assign_needs_user',
+        })
+      }
+
+      if (action.mode === 'pool' && action.user !== undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['user'],
+          message: 'assign_pool_has_no_user',
+        })
+      }
     }
   },
 )

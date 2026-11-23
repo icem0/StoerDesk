@@ -91,7 +91,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
   afterAll(async () => {
     await client.end({ timeout: 2 })
 
-    if (testDatabase.status === 'unavailable') {
+    if (testDatabase.status === 'available') {
       await testDatabase.close()
     }
   })
