@@ -161,7 +161,7 @@ describe('UsersPage', () => {
     renderPage()
 
     expect(await screen.findByText('admin@example.com')).toBeTruthy()
-    expect(screen.getByText('Bearbeiten')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Aktionen' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Benutzer anlegen' })).toBeTruthy()
   })
 
@@ -209,7 +209,8 @@ describe('UsersPage', () => {
     vi.stubGlobal('fetch', fetchMock)
     renderPage()
 
-    fireEvent.click(await screen.findByText('Bearbeiten'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Bearbeiten' }))
 
     const editForm = (await screen.findByText('Benutzer bearbeiten')).closest('form')
     const select = within(editForm as HTMLElement).getByLabelText('Design') as HTMLSelectElement
@@ -275,7 +276,8 @@ describe('the one-time password of the administration', () => {
     renderPage()
 
     const row = (await screen.findByText('kollege@example.com')).closest('tr') as HTMLElement
-    fireEvent.click(within(row).getByText('Neues Passwort'))
+    fireEvent.click(within(row).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(within(row).getByRole('menuitem', { name: 'Neues Passwort' }))
 
     expect(await screen.findByText('cPhiW8kWNtdnXzvHHxGS')).toBeTruthy()
 
@@ -299,7 +301,8 @@ describe('the one-time password of the administration', () => {
     renderPage()
 
     const row = (await screen.findByText('kollege@example.com')).closest('tr') as HTMLElement
-    fireEvent.click(within(row).getByText('Neues Passwort'))
+    fireEvent.click(within(row).getByRole('button', { name: 'Aktionen' }))
+    fireEvent.click(within(row).getByRole('menuitem', { name: 'Neues Passwort' }))
 
     expect(confirm).toHaveBeenCalled()
     expect(

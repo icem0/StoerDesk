@@ -11,6 +11,7 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
 import {
   RoleCheckboxes,
@@ -369,33 +370,31 @@ export function UsersPage() {
               <td>{(memberships.data?.[user.id] ?? []).join(', ')}</td>
               {canWrite ? (
                 <td>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className="rounded border border-slate-600 px-2 py-1 text-xs"
-                      type="button"
-                      onClick={() => setEditingUser(editingUser?.id === user.id ? null : user)}
-                    >
-                      {t('admin.users.edit')}
-                    </button>
-                    <button
-                      className="rounded border border-slate-600 px-2 py-1 text-xs"
-                      type="button"
-                      disabled={resetPassword.isPending}
-                      onClick={() => {
-                        if (
-                          !window.confirm(
-                            t('admin.users.resetPassword.confirm', { email: user.email }),
-                          )
-                        ) {
-                          return
-                        }
+                  <RowMenu
+                    items={[
+                      {
+                        key: 'edit',
+                        label: t('admin.users.edit'),
+                        onSelect: () => setEditingUser(editingUser?.id === user.id ? null : user),
+                      },
+                      {
+                        key: 'reset-password',
+                        label: t('admin.users.resetPassword.action'),
+                        disabled: resetPassword.isPending,
+                        onSelect: () => {
+                          if (
+                            !window.confirm(
+                              t('admin.users.resetPassword.confirm', { email: user.email }),
+                            )
+                          ) {
+                            return
+                          }
 
-                        resetPassword.mutate(user)
-                      }}
-                    >
-                      {t('admin.users.resetPassword.action')}
-                    </button>
-                  </div>
+                          resetPassword.mutate(user)
+                        },
+                      },
+                    ]}
+                  />
                 </td>
               ) : null}
             </tr>

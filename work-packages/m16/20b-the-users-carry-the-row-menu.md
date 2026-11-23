@@ -1,7 +1,7 @@
 # WP-M16-20b: the users carry the row menu
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-20a
 phase: 16
 milestone: m16
