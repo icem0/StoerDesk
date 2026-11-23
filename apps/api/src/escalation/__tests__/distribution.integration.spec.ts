@@ -11,6 +11,7 @@ import { DEFAULT_WORKFLOW_ESCALATION_RULES, type EscalationFacts } from '@stoerd
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedEscalation } from '../../db/seed-escalation'
+import { writeAssigneePool } from '../assignee-pool'
 import { dispatchEscalationActions } from '../actions'
 
 /**
@@ -194,7 +195,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
     })
 
-    it('assigns the ticket to every technician of a group', async () => {
+    it('assigns the ticket to the head of the assignee pool', async () => {
       await action(
         'assign',
         { kind: 'group', id: groupId },
@@ -215,6 +216,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         })
       }
 
+      // The pool of the office decides who gets the ticket (§7.14, ADR-0039).
+      await writeAssigneePool(db, [technicianIds[0] ?? ''])
+
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
       const result = await fire(ticket.id, seededRuleKey('assignment'), 'assignment', 'e1')
@@ -222,19 +226,27 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(result.assigned).toBe(1)
 
       const [moved] = await db
-        .select({ status: tickets.status })
+        .select({
+          status: tickets.status,
+          assignedUserId: tickets.assignedUserId,
+          assignmentStatus: tickets.assignmentStatus,
+        })
         .from(tickets)
         .where(eq(tickets.id, ticket.id))
         .limit(1)
 
       expect(moved?.status).toBe('ASSIGNED')
+      expect(moved?.assignedUserId).toBe(technicianIds[0])
+      expect(moved?.assignmentStatus).toBe('offered')
 
+      // One technician per ticket (§7.14): the multi-technician table is not
+      // written any more.
       const assignees = await db
         .select({ userId: ticketAssignees.userId })
         .from(ticketAssignees)
         .where(eq(ticketAssignees.ticketId, ticket.id))
 
-      expect(assignees.map((row) => row.userId).sort()).toStrictEqual([...technicianIds].sort())
+      expect(assignees).toHaveLength(0)
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
 
@@ -243,16 +255,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(note?.payload).toMatchObject({
         rule: seededRuleKey('assignment'),
         stage: 'assignment',
-        target: { kind: 'group', id: groupId },
+        assignee: technicianIds[0],
       })
 
       const rows = await db.select().from(outbox).where(eq(outbox.ticketId, ticket.id))
 
-      expect(rows).toHaveLength(2)
+      expect(rows).toHaveLength(1)
       expect(rows.every((row) => row.channel === 'ntfy')).toBe(true)
       expect(rows.every((row) => row.eventType === 'ticket.assigned')).toBe(true)
       expect((rows.map((row) => row.target as { ntfyTopic: string }).map((t) => t.ntfyTopic)).sort())
-        .toStrictEqual(['topic-0', 'topic-1'])
+        .toStrictEqual(['topic-0'])
     })
 
     it('offers the ticket to the technicians of a readiness pool', async () => {
@@ -362,26 +374,32 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(result.assigned).toBe(1)
 
       const [moved] = await db
-        .select({ status: tickets.status })
+        .select({
+          status: tickets.status,
+          assignedUserId: tickets.assignedUserId,
+          assignmentStatus: tickets.assignmentStatus,
+        })
         .from(tickets)
         .where(eq(tickets.id, ticket.id))
         .limit(1)
 
       expect(moved?.status).toBe('ASSIGNED')
+      expect(moved?.assignedUserId).toBe(technicianId)
+      expect(moved?.assignmentStatus).toBe('offered')
 
       const assignees = await db
         .select({ userId: ticketAssignees.userId })
         .from(ticketAssignees)
         .where(eq(ticketAssignees.ticketId, ticket.id))
 
-      expect(assignees.map((row) => row.userId)).toStrictEqual([technicianId])
+      expect(assignees).toHaveLength(0)
 
       const events = await db.select().from(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id))
 
       const note = events.find((event) => event.type === 'escalation_note')
 
       expect(note?.payload).toMatchObject({
-        target: { kind: 'user', id: technicianId },
+        assignee: technicianId,
       })
     })
 
@@ -421,6 +439,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .insert(groups)
         .values({ name: `Leer ${randomUUID().slice(0, 6)}` })
         .returning({ id: groups.id })
+
+      // An empty pool of the office has nobody (§7.14, ADR-0039).
+      await writeAssigneePool(db, [])
 
       await action('assign', { kind: 'group', id: emptyGroup?.id ?? '' }, 'assign_empty', seededPercentRuleKey(100))
 

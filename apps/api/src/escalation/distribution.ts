@@ -8,7 +8,9 @@ import { escalationRecipients } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
 import { readOncallSettings } from '../oncall/settings'
+import { assignTicket, type AssignResult } from '../tickets/assignment'
 import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
+import { firstAssignee, resolveAssigneePool } from './assignee-pool'
 
 /**
  * The distribution of a ticket by the escalation (`specs/07-escalation.md`
@@ -100,11 +102,38 @@ async function offerPayload(
 }
 
 /**
- * Hands the ticket to the technicians of the target: the step of the
- * transition table, the assignees of the assignment, one `escalation_note`
- * event with `{ rule, stage, target }` and one outbox row per technician over
- * the way the technician chose (ADR-0037).
- */
+  * The technician of an assignment (`specs/07-escalation.md` §7.14, ADR-0039,
+  * decision 3): a user target names that technician; a pool or a group target
+  * takes the head of the assignee pool — the list the office maintains. A
+  * deactivated account is nobody, so a target without a technician changes
+  * nothing.
+  */
+export async function resolveAssignee(
+  database: Db,
+  target: EscalationTarget,
+): Promise<string | null> {
+  if (target.kind === 'user') {
+    const rows = await database
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, target.id), eq(users.active, true)))
+
+    return rows[0]?.id ?? null
+  }
+
+  return firstAssignee(await resolveAssigneePool(database))
+}
+
+/**
+  * Hands the ticket to the technicians of the target: the step of the
+  * transition table, the assignees of the assignment, one `escalation_note`
+  * event with `{ rule, stage, target }` and one outbox row per technician over
+  * the way the technician chose (ADR-0037).
+  *
+  * The `offer` hands the ticket to the on-call person of its target; the
+  * `assign` hands it to **one** technician (§7.14, ADR-0039) and writes no
+  * assignee row any more.
+  */
 export async function distributeTicket(
   database: Db,
   input: {
@@ -117,21 +146,36 @@ export async function distributeTicket(
     payload?: Record<string, unknown>
   },
 ): Promise<DistributionResult> {
+  if (input.kind === 'assign') {
+    const technician = await resolveAssignee(database, input.target)
+
+    if (technician === null) {
+      return { changed: false, technicians: 0, notified: 0 }
+    }
+
+    return assignTicketByEscalation(database, {
+      ticketId: input.ticketId,
+      userId: technician,
+      acceptance: true,
+      ruleKey: input.ruleKey,
+      stageKey: input.stageKey,
+    })
+  }
+
   const technicians = await resolveTargetTechnicians(database, input.target)
 
   if (technicians.length === 0) {
     return { changed: false, technicians: 0, notified: 0 }
   }
 
-  const event = input.kind === 'offer' ? 'offered' : 'assigned'
   const now = new Date()
-  const offer = input.kind === 'offer' ? await offerPayload(database, input.target, now) : {}
+  const offer = await offerPayload(database, input.target, now)
 
   try {
     await transitionTicket({
       database,
       ticketId: input.ticketId,
-      event,
+      event: 'offered',
       actorKind: 'system',
       payload: { rule: input.ruleKey, stage: input.stageKey, ...offer, ...(input.payload ?? {}) },
     })
@@ -142,13 +186,6 @@ export async function distributeTicket(
     }
 
     throw error
-  }
-
-  if (input.kind === 'assign') {
-    await database
-      .insert(ticketAssignees)
-      .values(technicians.map((userId) => ({ ticketId: input.ticketId, userId })))
-      .onConflictDoNothing()
   }
 
   await database.insert(ticketEvents).values({
@@ -164,13 +201,73 @@ export async function distributeTicket(
 
   const notified = await notifyTechnicians(database, {
     ticketId: input.ticketId,
-    eventType: input.kind === 'offer' ? 'ticket.escalated' : 'ticket.assigned',
+    eventType: 'ticket.escalated',
     technicians,
     ruleKey: input.ruleKey,
     stageKey: input.stageKey,
   })
 
   return { changed: true, technicians: technicians.length, notified }
+}
+
+/**
+ * The assignment of the escalation (`specs/07-escalation.md` §7.14, ADR-0039):
+ * the ticket goes to one technician, the assignment waits for the technician
+ * (`offered`) and the technician is notified. The rule of the escalation is
+ * recorded in the history beside the step of the workflow.
+ */
+export async function assignTicketByEscalation(
+  database: Db,
+  input: {
+    ticketId: string
+    userId: string
+    acceptance: boolean
+    ruleKey: string
+    stageKey: string | null
+  },
+): Promise<DistributionResult> {
+  let result: AssignResult
+
+  try {
+    result = await assignTicket(database, {
+      ticketId: input.ticketId,
+      userId: input.userId,
+      acceptance: input.acceptance,
+      assignedBy: null,
+    })
+  } catch (error) {
+    // A ticket that is gone changes nothing; any other error is a failure.
+    if (error instanceof TicketTransitionError) {
+      return { changed: false, technicians: 0, notified: 0 }
+    }
+
+    throw error
+  }
+
+  if (!result.changed) {
+    return { changed: false, technicians: 0, notified: 0 }
+  }
+
+  await database.insert(ticketEvents).values({
+    ticketId: input.ticketId,
+    type: 'escalation_note',
+    actorKind: 'system',
+    payload: {
+      rule: input.ruleKey,
+      stage: input.stageKey,
+      assignee: input.userId,
+    },
+  })
+
+  const notified = await notifyTechnicians(database, {
+    ticketId: input.ticketId,
+    eventType: 'ticket.assigned',
+    technicians: [input.userId],
+    ruleKey: input.ruleKey,
+    stageKey: input.stageKey,
+  })
+
+  return { changed: true, technicians: 1, notified }
 }
 
 /**

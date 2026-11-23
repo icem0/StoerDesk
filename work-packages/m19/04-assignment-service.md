@@ -1,7 +1,7 @@
 # WP-M19-04: the assignment service and the refusal chain
 
 format: small-model
-status: planned
+status: done
 phase: 19
 milestone: m19
 context-budget: 20k tokens
@@ -52,8 +52,24 @@ with an empty rest of the pool, and a foreign answer; the tests fail before the 
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: apps/api/src/tickets/assignment.ts (new),
+  apps/api/src/tickets/workflow.ts (the assignment columns),
+  apps/api/src/escalation/distribution.ts (the assignment of the escalation),
+  apps/api/src/tickets/__tests__/assignment.integration.spec.ts (new),
+  apps/api/src/escalation/__tests__/distribution.integration.spec.ts,
+  CHANGELOG.md, work-packages/README.md, this document
+- Interfaces added: `assignTicket`, `answerAssignment`,
+  `continueAssignmentChain`, `readAssignment`, `readAssignableUsers`,
+  `assignTicketByEscalation`, `resolveAssignee`
+- Verified: `npm run typecheck --workspaces --if-present` and the integration
+  specs of the assignment and of the distribution (the acceptance, the refusal
+  with the next pool member, the refusal without a further member, the answer
+  of a foreign user, the deactivated technician); `npm run wp:check` green
 - Follow-up WP: none
 - Open question: none
+- Notes: the refusal chain runs on the **pool**, not on the mode of the action
+  of the rule: a technician who is not a member of the pool has no successor,
+  so the ticket keeps the status `declined`. The mode of the action decides
+  only who receives the ticket first (WP-M19-05). The step `claimed` and the
+  step `accepted` write `tickets.assigned_user_id` — the column was read by
+  the list and by the statistics but never written before.

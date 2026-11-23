@@ -63,6 +63,39 @@ export function isWorkflowEvent(event: string): event is WorkflowEvent {
 const TICKET_NOT_FOUND = (ticketId: string) =>
   new TicketTransitionError(404, 'ticket_not_found', { ticketId })
 
+/**
+ * The workflow columns of an assignment (`specs/07-escalation.md` §7.14,
+ * ADR-0039, WP-M19-04): the technician, the status of the assignment and the
+ * user who made it. The payload carries them — the service of the assignment
+ * decides the values, the workflow writes them beside the status in the same
+ * statement.
+ */
+function assignmentColumnsOf(
+  payload: Record<string, unknown>,
+): Partial<typeof tickets.$inferInsert> {
+  const columns: Partial<typeof tickets.$inferInsert> = {}
+
+  if (typeof payload.assignedUserId === 'string') {
+    columns.assignedUserId = payload.assignedUserId
+  }
+
+  if (
+    payload.assignmentStatus === 'offered' ||
+    payload.assignmentStatus === 'accepted' ||
+    payload.assignmentStatus === 'declined'
+  ) {
+    columns.assignmentStatus = payload.assignmentStatus
+  }
+
+  if (payload.assignedByUserId === null) {
+    columns.assignedByUserId = null
+  } else if (typeof payload.assignedByUserId === 'string') {
+    columns.assignedByUserId = payload.assignedByUserId
+  }
+
+  return columns
+}
+
 type TransitionContext = {
   database: Db
   ticketId: string
@@ -126,6 +159,28 @@ export async function transitionTicket(ctx: TransitionContext) {
       }
     } else if (event === 'accepted') {
       workflowColumns.acceptedAt = at
+      // The technician who accepts is the technician of the ticket
+      // (`tickets.assigned_user_id`, ADR-0039, decision 1).
+      if (actorKind === 'user' && actorUserId !== undefined) {
+        workflowColumns.assignedUserId = actorUserId
+      }
+      // The answer of an assignment carries the status of the assignment
+      // (§7.14); the acceptance of an offer carries none.
+      Object.assign(workflowColumns, assignmentColumnsOf(payload))
+    } else if (event === 'assigned') {
+      // The assignment names one technician and the status of the assignment
+      // (§7.14, ADR-0039): the payload of the service carries them.
+      Object.assign(workflowColumns, assignmentColumnsOf(payload))
+    } else if (event === 'declined') {
+      // The refusal writes the status of the assignment; the technician stays
+      // the one of the offer.
+      Object.assign(workflowColumns, assignmentColumnsOf(payload))
+    } else if (event === 'claimed') {
+      // The technician who takes the ticket himself is its technician
+      // (`tickets.assigned_user_id`, ADR-0039, decision 1).
+      if (actorKind === 'user' && actorUserId !== undefined) {
+        workflowColumns.assignedUserId = actorUserId
+      }
     } else if (event === 'acknowledged') {
       workflowColumns.acknowledgedAt = at
     } else if (event === 'closed') {

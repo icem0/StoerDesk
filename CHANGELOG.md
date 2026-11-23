@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A ticket is assigned to one technician (**WP-M19-04**, phase 19, ADR-0039):
+  the assignment names the technician in `tickets.assigned_user_id`, carries
+  the state of the assignment (`offered`, `accepted`, `declined`) and the user
+  who made it. The technician answers the assignment — a refusal passes the
+  ticket to the next member of the pool of the office with the status
+  `offered`, without a next member the ticket keeps the status `declined`.
+  Only the assigned technician may answer; a deactivated account is nobody and
+  never receives a ticket.
 - The escalation knows the pool of the office (**WP-M19-03**, phase 19,
   ADR-0039): the assignee pool is an ordered list of active users under the
   escalation settings — the list the office assigns a ticket to and the order

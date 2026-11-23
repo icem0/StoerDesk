@@ -1659,7 +1659,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M19-01 | the assignment names one technician and its status — spec and ADR-0039 | done | yes |
 | WP-M19-02 | ticket columns `assignment_status` and `assigned_by_user_id` | done | yes |
 | WP-M19-03 | assignee pool as an escalation setting | done | yes |
-| WP-M19-04 | assignment service and refusal chain | planned | yes |
+| WP-M19-04 | assignment service and refusal chain | done | yes |
 | WP-M19-05 | routes of the assignment and the `assign` action mode | planned | yes |
 | WP-M19-06 | picker of the ticket view and pool editor | planned | yes |
 | WP-M19-07 | notices of the assignment (assignee and assigner) | planned | yes |
