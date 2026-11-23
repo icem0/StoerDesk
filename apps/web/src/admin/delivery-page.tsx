@@ -173,7 +173,7 @@ export function DeliveryPage() {
               <h2 className="text-lg font-semibold">{t('admin.delivery.problems.title')}</h2>
               {mayWrite && openProblems.length > 1 ? (
                 <button
-                  className="min-h-11 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+                  className="min-h-11 rounded-lg bg-accent-600 px-4 text-sm font-semibold text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-60"
                   disabled={acknowledge.isPending}
                   onClick={() => acknowledge.mutate([])}
                   type="button"
@@ -274,7 +274,7 @@ export function DeliveryPage() {
                     ) : null}
                     {failure.channel === 'webpush' &&
                     (failure.error === 'no_keys' || failure.error === 'send_failed') ? (
-                      <Link className="text-xs text-sky-300 underline" to="/help/web-push">
+                      <Link className="text-xs text-accent-300 underline" to="/help/web-push">
                         {t('admin.delivery.failures.webPushGuide')}
                       </Link>
                     ) : null}
@@ -284,7 +284,7 @@ export function DeliveryPage() {
                       </span>
                       {failure.ticketNo !== null ? (
                         <Link
-                          className="text-sky-300 underline"
+                          className="text-accent-300 underline"
                           to={`/tickets/${failure.ticketNo}`}
                         >
                           {t('admin.delivery.failures.ticket', { ticket: failure.ticketNo })}
@@ -312,7 +312,7 @@ export function DeliveryPage() {
         </p>
       ) : null}
 
-      <Link className="text-sm text-sky-300 underline" to="/admin/channels">
+      <Link className="text-sm text-accent-300 underline" to="/admin/channels">
         {t('admin.delivery.channelsLink')}
       </Link>
     </section>

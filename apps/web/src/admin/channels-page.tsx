@@ -304,7 +304,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       ) : null}
       {channel.kind === 'webpush' ? (
         <p className="text-xs text-slate-400">
-          <Link className="text-sky-300 underline" to="/help/web-push">
+          <Link className="text-accent-300 underline" to="/help/web-push">
             {t('admin.channels.webpushGuide')}
           </Link>
         </p>
@@ -382,7 +382,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
           {channel.enabled && !channel.secretSet ? (
             <p className="text-xs text-amber-300">{t('admin.channels.ntfyTokenHint')}</p>
           ) : null}
-          <Link className="text-xs text-sky-300 underline" to="/settings/notifications">
+          <Link className="text-xs text-accent-300 underline" to="/settings/notifications">
             {t('admin.channels.verification.personalLink')}
           </Link>
 
@@ -483,7 +483,7 @@ function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean }
       {mayWrite ? (
         <div className="flex flex-wrap gap-2">
           <button
-            className="min-h-11 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+            className="min-h-11 rounded-lg bg-accent-600 px-4 text-sm font-semibold text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-60"
             disabled={save.isPending}
             onClick={saveChannel}
             type="button"

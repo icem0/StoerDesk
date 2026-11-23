@@ -44,6 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The administration of the channels, of the delivery problems and of the BMAcloud
+  pull follows the accent (**WP-M16-10g**, out of band in phase 16): the save of a
+  channel, the "alle quittieren" of the delivery problems, the create submit of a
+  webhook, the save of the credentials and of the schedule and the "Jetzt
+  abgleichen" wear the accent colour of the instance, the text links of the pages
+  wear `text-accent-300`; the emerald of the token panel and of the verification,
+  the rose of the failures and the amber of the notes stay, and the badge of a
+  running pull keeps its blue — it is a state and not a brand (ADR-0036).
 - The administration of the keys and of the webhooks follows the accent (**WP-M16-10f**,
   out of band in phase 16): the create links and the save submits of the pages of the
   API keys and the webhooks and the save submit of the dashboard settings wear the

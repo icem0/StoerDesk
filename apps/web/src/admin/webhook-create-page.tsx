@@ -131,7 +131,7 @@ export function WebhookCreatePage() {
           </p>
         ) : null}
         <button
-          className="min-h-11 self-start rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+          className="min-h-11 self-start rounded-lg bg-accent-600 px-5 text-sm font-semibold text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-60"
           disabled={mutation.isPending || url.trim() === '' || events.length === 0}
           type="submit"
         >
