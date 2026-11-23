@@ -785,11 +785,28 @@ explanation. Offline is a core feature and appears early.
 | **19** | The assignment of the office: one technician per ticket with a status (`offered`, `accepted`, `declined`), the pool of the office as a setting, a refusal passes the ticket to the next member of the pool, the assigner is notified (ADR-0039, WP-M19-01 … WP-M19-08) | the office assigns the ticket to one member of the pool, the technician answers the assignment, a refusal passes the ticket to the next member and the assigner is notified about the answer |
 | **20** | Duty blocks of the readiness: a block spans consecutive weekdays with a daily pattern, one shift per block per week, blocks replace the day windows of a pool (ADR-0040, WP-M20-01 … WP-M20-08) | the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the technician week one shift; the coupling and the iCal feed read the pattern |
 | **21** | The normalisation of the duty plan: consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (ADR-0044, WP-M21-01 … WP-M21-04) | a pool with the plan of Monday to Friday shows one block and creates one shift per week; the plan of a pool of the older version needs no manual work |
+| **22** | The installability of the web app: a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | the browser offers the install of the app (no "Page has no manifest `<link>` URL"), the installed app holds the subscription of the web push |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**WP-M22-01 — the service worker takes over at once (done).** The browser
+offered no install of the app: the Firefox dialog of the install answered
+"Page has no manifest `<link>` URL", although the deployed document carries the
+link. The cause is the precache: it holds the shell of the app (`index.html`)
+beside the assets, so a browser that keeps the **old** service worker also
+keeps the old shell — a document of a build from before the manifest link
+existed. The worker of the deployment never called `skipWaiting()` and never
+`clients.claim()`, and the browser compares the script of the worker at most
+once a day, so the new worker arrived days late. The web push rides on the
+same shell: the subscription of the browser lives in the service worker of
+this scope. WP-M22-01 lets the new worker take over at once (`skipWaiting()`
+on `install`, `clients.claim()` on `activate`), forces the update check on the
+start of the app (`registration.update()`) and serves the shell with
+`Cache-Control: no-cache`, so a copy from the HTTP cache cannot hide the
+manifest link either.
 
 **WP-M21-01 — the normalisation of the plan (done).** The office plan of a pool
 that was written in the older form (one entry per weekday, ADR-0035) created

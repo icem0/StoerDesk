@@ -20,8 +20,16 @@ if (!container) {
 // Register the service worker so the app shell is available offline
 // (WP-M2-09a). Best effort: browsers without service workers or a dev server
 // without /sw.js just keep working online.
+//
+// The update check is forced (`registration.update()`): the browser compares
+// the script of the worker at most once a day, and a worker that is too old
+// serves the old shell from the precache — a document without the manifest
+// link, so the browser offers no install of the app (WP-M22-01).
 if (typeof navigator.serviceWorker !== 'undefined') {
-  void navigator.serviceWorker.register('/sw.js').catch(() => undefined)
+  void navigator.serviceWorker
+    .register('/sw.js')
+    .then((registration) => registration.update())
+    .catch(() => undefined)
 }
 
 // Reports written while offline are replayed on app start and whenever the

@@ -29,8 +29,7 @@ function pngSize(asset: string): [number, number] {
   return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)]
 }
 
-describe('pwaIcons', () => {
-  it('names a 192 px and a 512 px PNG icon', () => {
+describe('pwaIcons', () => {  it('names a 192 px and a 512 px PNG icon', () => {
     const sizes = pwaIcons.map((icon) => icon.sizes)
 
     expect(sizes).toEqual(['192x192', '512x512'])
@@ -49,5 +48,30 @@ describe('pwaIcons', () => {
 
   it('the app icon of the header stays a separate asset', () => {
     expect(pwaIcons.some((icon) => icon.src === '/logo.png')).toBe(false)
+  })
+})
+
+describe('the nginx config of the web image', () => {
+  /** The template lives beside the package, whether the package or the
+   * repository root runs the test. */
+  function nginxTemplate(): string {
+    const packageRoot = existsSync(join(process.cwd(), 'apps/web'))
+      ? join(process.cwd(), 'apps/web')
+      : process.cwd()
+
+    return readFileSync(join(packageRoot, 'nginx-pwa.conf.template'), 'utf8')
+  }
+
+  it('serves the manifest as application/manifest+json', () => {
+    const template = nginxTemplate()
+
+    expect(template).toContain('location = /manifest.webmanifest')
+    expect(template).toContain('application/manifest+json')
+  })
+
+  it('never serves the shell of the app from a stale cache', () => {
+    const template = nginxTemplate()
+
+    expect(template).toMatch(/location = \/index\.html \{[^}]*Cache-Control "no-cache"/s)
   })
 })

@@ -22,6 +22,53 @@ declare global {
 precacheAndRoute(self.__WB_MANIFEST)
 
 /**
+ * The part of the service-worker scope the takeover needs (WP-M22-01).
+ */
+export interface ServiceWorkerScope {
+  skipWaiting(): Promise<void>
+  clients: { claim(): Promise<void> }
+}
+
+/**
+ * The part of the event target the takeover registers its listeners on.
+ */
+export interface ServiceWorkerEvents {
+  addEventListener(
+    type: 'install' | 'activate',
+    listener: (event: { waitUntil(promise: Promise<unknown>): void }) => void,
+  ): void
+}
+
+/**
+ * A new version of the service worker takes over at once (WP-M22-01).
+ *
+ * The precache holds the shell of the app (`index.html`) beside the assets, so
+ * a browser that keeps the **old** service worker also keeps the old shell: a
+ * document without the `<link rel="manifest">` of the build, and the browser
+ * offers no install of the app ("Page has no manifest `<link>` URL" in
+ * Firefox). The web push of the browser rides on the same shell — the
+ * subscription lives in the service worker of this scope.
+ *
+ * `skipWaiting()` on `install` lets the new worker replace the old one without
+ * waiting for every tab of the old version to close, `clients.claim()` on
+ * `activate` hands the open pages to the new worker right away.
+ */
+export function registerTakeover(
+  scope: ServiceWorkerScope,
+  events: ServiceWorkerEvents,
+): void {
+  events.addEventListener('install', (event) => {
+    event.waitUntil(scope.skipWaiting())
+  })
+
+  events.addEventListener('activate', (event) => {
+    event.waitUntil(scope.clients.claim())
+  })
+}
+
+registerTakeover(self as unknown as ServiceWorkerScope, self as unknown as ServiceWorkerEvents)
+
+/**
  * Reports that fail while the device is offline are kept in this queue and
  * retried by the browser when the connection returns. The `sync-report` tag is
  * the background-sync channel announced by WP-M2-09a; browsers without

@@ -54,6 +54,16 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # The shell of the app (the HTML document) must never come from a stale
+    # cache: a copy without the `<link rel="manifest">` of the build keeps the
+    # browser from offering the install of the app (WP-M22-01). The rule of the
+    # document is `no-cache` — the browser may keep the copy, it has to ask
+    # again before it uses it.
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
     }

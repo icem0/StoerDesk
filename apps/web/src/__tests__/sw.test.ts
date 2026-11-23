@@ -12,8 +12,10 @@ import {
   focusOrOpen,
   invalidateCachedTicket,
   notificationFromPayload,
+  registerTakeover,
   ticketDetailUrl,
 } from '../sw'
+import type { ServiceWorkerEvents } from '../sw'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -98,6 +100,49 @@ describe('invalidateCachedTicket', () => {
     )
 
     expect(deleteEntry).not.toHaveBeenCalled()
+  })
+})
+
+describe('registerTakeover', () => {
+  function fakeEvents() {
+    const listeners = new Map<string, (event: { waitUntil(promise: Promise<unknown>): void }) => void>()
+
+    const events: ServiceWorkerEvents = {
+      addEventListener: (type, listener) => {
+        listeners.set(type, listener)
+      },
+    }
+
+    return { events, listeners }
+  }
+
+  it('lets the new worker take over the open pages at once', () => {
+    const skipWaiting = vi.fn().mockResolvedValue(undefined)
+    const claim = vi.fn().mockResolvedValue(undefined)
+    const { events, listeners } = fakeEvents()
+
+    registerTakeover({ skipWaiting, clients: { claim } }, events)
+
+    const waited: Promise<unknown>[] = []
+    const event = { waitUntil: (promise: Promise<unknown>) => waited.push(promise) }
+
+    listeners.get('install')?.(event)
+    listeners.get('activate')?.(event)
+
+    expect(skipWaiting).toHaveBeenCalledTimes(1)
+    expect(claim).toHaveBeenCalledTimes(1)
+    expect(waited).toHaveLength(2)
+  })
+
+  it('registers both listeners of the lifecycle', () => {
+    const { events, listeners } = fakeEvents()
+
+    registerTakeover(
+      { skipWaiting: vi.fn(), clients: { claim: vi.fn() } },
+      events,
+    )
+
+    expect([...listeners.keys()]).toEqual(['install', 'activate'])
   })
 })
 

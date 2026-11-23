@@ -86,6 +86,17 @@ check) are enforced by the API exactly as in the online path.
 - The web image serves `manifest.webmanifest` as
   `application/manifest+json` (`apps/web/nginx-pwa.conf.template`): the
   default `mime.types` of nginx has no entry for the extension (WP-M14-157).
+- A new version of the service worker takes over at once
+  (`apps/web/src/sw.ts`, WP-M22-01): `skipWaiting()` on `install` and
+  `clients.claim()` on `activate`. The precache holds the shell of the app
+  beside the assets, so a browser that keeps the old worker also keeps the
+  old shell — a document without the `<link rel="manifest">` of the build,
+  and the browser offers no install of the app. The app forces the update
+  check on start (`registration.update()` in `apps/web/src/main.tsx`),
+  because the browser compares the script of the worker at most once a day.
+- The shell of the app (`/index.html`) is served with `Cache-Control:
+  no-cache` (`apps/web/nginx-pwa.conf.template`, WP-M22-01): a copy from the
+  HTTP cache must not hide the manifest link of the build either.
 - The service worker registers a Workbox `BackgroundSyncPlugin` with the tag
   `sync-report` for the public report POST. The route matches the API path
   (`<api-base>/v1/public/tickets`, default `/api/v1/public/tickets`) rather than
