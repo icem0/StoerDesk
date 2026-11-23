@@ -1745,7 +1745,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M20-05 | the administration edits the blocks | done | yes |
 | WP-M20-06 | the coupling reads the pattern | done | yes |
 | WP-M20-07 | the iCal feed reads the pattern | done | yes |
-| WP-M20-08 | the duty blocks satisfy their criterion | planned | yes |
+| WP-M20-08 | the duty blocks satisfy their criterion | done | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

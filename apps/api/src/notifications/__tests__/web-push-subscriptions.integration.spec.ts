@@ -92,6 +92,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       keys: { p256dh: 'BPm1p256dh', auth: 'authSecret42' },
     }
 
+    // The VAPID keys of this file must not leak into another test file: the
+    // worker shares `process.env`, and the private key of the test is no key
+    // pair that `web-push` accepts (the adapter of the channel reads the
+    // environment).
+    const previousVapid = {
+      publicKey: process.env.VAPID_PUBLIC_KEY,
+      privateKey: process.env.VAPID_PRIVATE_KEY,
+      subject: process.env.VAPID_SUBJECT,
+    }
+
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
 
@@ -114,6 +124,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     afterAll(async () => {
       await app.close()
       await client.end({ timeout: 2 })
+
+      for (const [key, value] of [
+        ['VAPID_PUBLIC_KEY', previousVapid.publicKey],
+        ['VAPID_PRIVATE_KEY', previousVapid.privateKey],
+        ['VAPID_SUBJECT', previousVapid.subject],
+      ] as const) {
+        if (value === undefined) {
+          delete process.env[key]
+        } else {
+          process.env[key] = value
+        }
+      }
 
       if (testDatabase.status === 'available') {
         await testDatabase.close()

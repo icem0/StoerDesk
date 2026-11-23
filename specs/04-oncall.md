@@ -381,6 +381,12 @@ trigger of `PLAN.md` §15, like `ticket_events`.
 - The window plan creates new shifts next to the shifts of the continuous
   plan; it never changes a shift that exists. The admin deletes the future
   shifts of the old plan — a shift is never deleted after it started (§4a.3).
+- The duty blocks of §4a.3.3 replace the day windows of a pool in the plan,
+  but they never touch the shifts that exist: the shifts of the day windows of
+  ADR-0035 keep their times and cover their whole span, until the admin
+  deletes them. A shift without a pattern — of the continuous plan or of an
+  older version — keeps covering its whole span; only the shifts of a block
+  carry a pattern.
 
 ## 4a.10 Shift history
 

@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The duty blocks satisfy their criterion (**WP-M20-08**, phase 20, ADR-0040):
+  the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the
+  technician week holds one (Mo–So 00:00–24:00), and the coupling names the
+  technician only inside the pattern of the block.
 - The iCal feed reads the pattern of a duty block (**WP-M20-07**, phase 20,
   ADR-0040): a block is one recurring entry with the daily window and the
   weekdays of the block (`RRULE:FREQ=WEEKLY;BYDAY=…`) in the zone of
@@ -91,6 +95,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   row is backfilled.
 
 ### Fixed
+- The VAPID keys of a test no longer leak into the next test file
+  (**WP-M20-08**, phase 20): the integration test of the web push set them in
+  the environment of the worker without restoring them, and the unit test of
+  the channel then read a key pair that `web-push` rejects. The test restores
+  the environment.
 - The acceptance test of the offline workflow names the technician of the
   assignment (**WP-M19-05**, phase 19): the route of the assignment takes the
   technician and the flag _Annahme erforderlich_ since ADR-0039 — the test

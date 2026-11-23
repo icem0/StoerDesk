@@ -3658,6 +3658,23 @@ technician of the latest row of every ticket moves into
 `tickets.assigned_user_id`, the ticket view shows the one technician and the
 state of the assignment.
 
+**The duty blocks of the readiness (WP-M20-01 … WP-M20-08, done).** A duty
+block spans consecutive weekdays with a daily window (ADR-0040): the plan of a
+pool carries its blocks with `from_weekday`, `to_weekday`, `start` and `end`,
+a stored day window of ADR-0035 reads as a block of one day, and the
+administration shows one row per block — „von – bis“, start and end — with a
+button to add and to remove a row and the two presets of the office
+(„Verwaltung“ and „Technik rund um die Uhr“). **One block is one shift per
+week**: the shift spans from the first day of the block at its start to the
+last day at its end and carries the pattern of the block — the covered
+weekdays and the daily window (migration `0059`). The coupling names the
+technician only inside that pattern, and the personal iCal feed writes one
+recurring entry per block (`RRULE:FREQ=WEEKLY;BYDAY=…`) in the zone of
+`Europe/Berlin`. A shift without a pattern — the continuous plan of ADR-0011
+and the rows of an older version — keeps covering its whole span. The phase
+was split further than planned (WP-M20-02 … WP-M20-08), because the contract of
+the pool and the administration that reads it belong to one commit.
+
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be

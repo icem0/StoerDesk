@@ -1,7 +1,7 @@
 # WP-M20-08: the duty blocks satisfy their criterion
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M20-07
 phase: 20
 milestone: m20
@@ -16,7 +16,9 @@ files-read:
 
 files-write:
 
-- apps/api/src/oncall/**tests**/duty-blocks.integration.spec.ts
+- apps/api/src/oncall/__tests__/duty-blocks.integration.spec.ts
+- apps/api/src/notifications/__tests__/web-push-subscriptions.integration.spec.ts
+  (the environment of the worker)
 - specs/04-oncall.md (§4a.9 boundary)
 - PLAN.md (§16 phase 20 status)
 
@@ -33,6 +35,9 @@ interfaces:
 2. The test assigns the Monday block and proves: Monday 08:00 covered, Friday
    15:00 not covered, Saturday not covered for the office.
 3. `specs/04-oncall.md` §4a.9 names the boundary of the existing day shifts.
+4. The integration test of the web push restores the VAPID keys of the
+   environment of the worker: the keys leaked into the next test file and the
+   unit test of the channel read a key pair that `web-push` rejects.
 
 ## Non-goals
 
