@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The administration of the escalation follows the accent (**WP-M16-10d**, out of
+  band in phase 16): the primary actions, the tabs and the create link of the
+  escalation administration wear the accent colour of the instance; the add
+  buttons keep their slate and take the accent ring, the semantic colours of the
+  destructive actions and of the states stay.
 - The administration of the statuses follows the accent (**WP-M16-10c**, out of
   band in phase 16): the primary action and the links of the pages of the ticket
   statuses wear the accent colour of the instance; the semantic colours of the

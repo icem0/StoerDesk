@@ -1,8 +1,8 @@
 # WP-M16-10d: the administration follows the accent — the escalation
 
 format: small-model
-status: planned
-depends-on: WP-M16-NaN
+status: done
+depends-on: WP-M16-10c
 phase: 16
 milestone: m16
 context-budget: 14k tokens
@@ -11,14 +11,12 @@ spec-lines: 60
 
 files-read:
 
-- apps/web/src/admin/transition-create-page.tsx
 - apps/web/src/admin/escalation-page.tsx
 - apps/web/src/admin/escalation-action-editor.tsx
 - apps/web/src/admin/escalation-condition-builder.tsx
 
 files-write:
 
-- apps/web/src/admin/transition-create-page.tsx
 - apps/web/src/admin/escalation-page.tsx
 - apps/web/src/admin/escalation-action-editor.tsx
 - apps/web/src/admin/escalation-condition-builder.tsx
@@ -58,9 +56,23 @@ Expected: all green; the existing tests of the pages stay green.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `apps/web/src/admin/escalation-page.tsx`,
+  `apps/web/src/admin/escalation-action-editor.tsx`,
+  `apps/web/src/admin/escalation-condition-builder.tsx`
+- Interfaces added: the primary action and the tabs of the escalation
+  administration wear the accent of the instance (`bg-accent-600`,
+  `hover:bg-accent-700`, `bg-accent-700`, `focus-visible:ring-accent-400`), the
+  secondary add buttons keep their slate and take the accent ring
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run test:run -- apps/web/src/admin/__tests__/escalation-page-fallbacks.test.tsx
+  apps/web/src/admin/__tests__/escalation-stage-tab.test.tsx
+  apps/web/src/admin/__tests__/escalation-rules-editor.test.tsx
+  apps/web/src/admin/__tests__/escalation-actions-editor.test.tsx
+  apps/web/src/admin/__tests__/escalation-page-localization.test.tsx` and
+  `npm run wp:check`
 - Follow-up WP: the next batch of the sweep — every file exists in the commit of
   the split
-- Open question: none
+- Open question: none — the WP named `apps/web/src/admin/transition-create-page.tsx`
+  and the dependency `WP-M16-NaN`; the page of the transition administration was
+  removed with the transition table (ADR-0041, WP-M14-177), so the file list and
+  the dependency were corrected in this commit.

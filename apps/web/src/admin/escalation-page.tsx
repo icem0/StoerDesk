@@ -223,14 +223,14 @@ export function EscalationPage() {
 
       <div className="flex flex-wrap gap-2" data-testid="escalation-tabs">
         <button
-          className={`rounded px-3 py-2 text-sm ${tab === 'fristen' ? 'bg-sky-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+          className={`rounded px-3 py-2 text-sm ${tab === 'fristen' ? 'bg-accent-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
           onClick={() => setTab('fristen')}
           type="button"
         >
           {t('admin.escalation.tabs.fristen')}
         </button>
         <button
-          className={`rounded px-3 py-2 text-sm ${tab === 'stages' ? 'bg-sky-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+          className={`rounded px-3 py-2 text-sm ${tab === 'stages' ? 'bg-accent-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
           onClick={() => setTab('stages')}
           type="button"
         >
@@ -270,7 +270,7 @@ export function EscalationPage() {
           {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
           {canWrite ? (
             <button
-              className="min-h-11 rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void saveHours.mutate({ hours })}
               type="button"
             >
@@ -465,7 +465,7 @@ export function EscalationPage() {
 
           {canWrite ? (
             <Link
-              className="mt-4 inline-block rounded bg-sky-700 px-4 py-2 font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="mt-4 inline-block rounded bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               to="/admin/escalation/stages/new"
             >
               {t('admin.escalation.stage.add')}
@@ -617,7 +617,7 @@ export function AddStageForm({
           />
         </label>
         <button
-          className="min-h-11 rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
           type="submit"
         >
           {t('admin.escalation.stage.addConfirm')}
