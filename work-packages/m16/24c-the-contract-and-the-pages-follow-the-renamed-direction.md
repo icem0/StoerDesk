@@ -1,7 +1,7 @@
 # WP-M16-24c: the contract and the pages follow the renamed direction
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M16-24b
 phase: 16
 milestone: m16
@@ -84,6 +84,8 @@ Expected: green; the renamed field fails before the change and passes after it.
   `apps/web/src/features/tickets/ticket-detail-page.tsx` and their tests
 - Interfaces added: `historySortDirection` in the shared contracts and in the
   branding row
-- Verified: `npm run typecheck`, `npm run lint`, the two tests
+- Verified: `npm run typecheck`, `npm run lint`, the two tests — the integration
+  spec proves the fallback of the key `ticketSortDirection` of a row of an older
+  version and the write of the new key
 - Follow-up WP: WP-M16-24d
 - Open question: none

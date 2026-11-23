@@ -17,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped branding settings integration: ${testDatabase.reason}\n`)
 }
 
-const { users, roles, userRoles } = schema
+const { users, roles, userRoles, settings } = schema
 
 type BrandingResponseBody = {
   companyName?: string
@@ -25,6 +25,7 @@ type BrandingResponseBody = {
   logo: string
   internalCommentColor?: string
   accentColor?: string
+  historySortDirection?: string
 }
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
@@ -158,19 +159,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
     })
 
     it('stores and returns the company name', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
     })
 
     it('resets to the empty name', async () => {
@@ -179,7 +180,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
     })
 
     it('rejects a too long name with 400 invalid_request', async () => {
@@ -208,19 +209,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: '', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
     })
 
     it('stores and returns titleEnabled true', async () => {
       const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH', titleEnabled: true })
 
       expect(put.statusCode).toBe(200)
-      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(put.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
 
       const get = await getBranding(cookies['admin'])
 
       expect(get.statusCode).toBe(200)
-      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(get.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: true, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
     })
 
     it('resets titleEnabled to false', async () => {
@@ -229,7 +230,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await getBranding(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
-      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', ticketSortDirection: 'desc' })
+      expect(response.json<BrandingResponseBody>()).toEqual({ companyName: 'Beispiel GmbH', titleEnabled: false, logo: '', internalCommentColor: '#7f1d1d', accentColor: '#0ea5e9', historySortDirection: 'desc' })
     })
 
     it('rejects a logo whose bytes do not match the claim', async () => {
@@ -312,7 +313,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         logo: '',
         internalCommentColor: '#450a0a',
         accentColor: '#0f766e',
-        ticketSortDirection: 'desc',
+        historySortDirection: 'desc',
       })
 
       const display = await getDisplay(cookies['office'])
@@ -343,6 +344,47 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(response.statusCode).toBe(403)
       expect(response.json<ErrorResponseBody>().code).toBe('forbidden')
+    })
+
+    it('reads the direction of a row of an older version and writes the new key', async () => {
+      const oldRow = {
+        companyName: 'Beispiel GmbH',
+        titleEnabled: false,
+        logo: '',
+        internalCommentColor: '#7f1d1d',
+        accentColor: '#0ea5e9',
+        ticketSortDirection: 'asc',
+      }
+
+      await db
+        .insert(settings)
+        .values({ key: 'branding', value: oldRow })
+        .onConflictDoUpdate({ target: settings.key, set: { value: oldRow, updatedAt: new Date() } })
+
+      const branding = await getBranding(cookies['admin'])
+
+      expect(branding.statusCode).toBe(200)
+      expect(branding.json<BrandingResponseBody>().historySortDirection).toBe('asc')
+
+      const display = await getDisplay(cookies['office'])
+
+      expect(display.statusCode).toBe(200)
+      expect(display.json<{ historySortDirection?: string }>().historySortDirection).toBe('asc')
+
+      const put = await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH' })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<BrandingResponseBody>().historySortDirection).toBe('asc')
+
+      const stored = onlyRow(
+        await db.select({ value: settings.value }).from(settings).where(eq(settings.key, 'branding')).limit(1),
+        'branding row',
+      ).value as Record<string, unknown>
+
+      expect(stored.historySortDirection).toBe('asc')
+      expect(stored).not.toHaveProperty('ticketSortDirection')
+
+      await putBranding(cookies['admin'], { companyName: 'Beispiel GmbH', historySortDirection: 'desc' })
     })
   },
 )

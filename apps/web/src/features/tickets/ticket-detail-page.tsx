@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { DEFAULT_TICKET_SORT_DIRECTION } from '@stoerdesk/shared'
+import { DEFAULT_HISTORY_SORT_DIRECTION } from '@stoerdesk/shared'
 import type {
   DisplaySettingsResponse,
   TicketDetailResponse,
@@ -533,9 +533,9 @@ export function TicketDetailPage() {
   ].sort((a, b) => {
     const aTime = Date.parse(a.at)
     const bTime = Date.parse(b.at)
-    // Die Richtung der Darstellung („Darstellung“ → „Neueste zuerst“) gilt auch
-    // für den Verlauf: 'desc' zeigt die neueste Meldung oben, 'asc' die älteste.
-    const direction = display.data?.ticketSortDirection ?? DEFAULT_TICKET_SORT_DIRECTION
+    // The direction of the history under „Darstellung“ applies to the events of
+    // the history: 'desc' puts the newest event on top, 'asc' the oldest one.
+    const direction = display.data?.historySortDirection ?? DEFAULT_HISTORY_SORT_DIRECTION
     return direction === 'desc' ? bTime - aTime : aTime - bTime
   })
 

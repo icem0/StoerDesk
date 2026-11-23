@@ -65,6 +65,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The direction of the history of a ticket is named `historySortDirection`
+  (**WP-M16-24c**, phase 16): the value under „Darstellung“ steered the list of
+  the tickets before, but it steers the history of a ticket — the field of the
+  branding contract, of the display contract and of the update request is named
+  `historySortDirection` now, and so are `DEFAULT_HISTORY_SORT_DIRECTION` and
+  `HistorySortDirection` in the shared package. The key of the jsonb row
+  `branding` is `historySortDirection` as well; a row of an older version keeps
+  the key `ticketSortDirection` and is read as long as the new key is missing —
+  the next save writes the new key.
 - The list of the tickets asks the API for the order of the office
   (**WP-M16-24b**, phase 16): the page asked for the report time and sent the
   direction of the switch under „Darstellung“ with it. The list reads no longer

@@ -4,11 +4,11 @@ import fp from 'fastify-plugin'
 import {
   brandingResponseSchema,
   DEFAULT_ACCENT_COLOR,
-  DEFAULT_TICKET_SORT_DIRECTION,
+  DEFAULT_HISTORY_SORT_DIRECTION,
   displaySettingsResponseSchema,
   PERMISSIONS,
   titleSwitchResponseSchema,
-  type TicketSortDirection,
+  type HistorySortDirection,
   updateBrandingRequestSchema,
 } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
@@ -40,6 +40,11 @@ import { detectImageType } from '../tickets/photos'
  * display response beside the internal comment colour. One save of the
  * Darstellung writes the whole row, a body without the colour keeps the stored
  * one, and the shell carries the value into the CSS property `--brand-accent`.
+ *
+ * The row carries the direction of the history of a ticket as well (WP-M16-24c):
+ * the switch under „Darstellung“ steers the events of the history, the key of
+ * the row is `historySortDirection`, and a row of an older version with the key
+ * `ticketSortDirection` is read as long as the new key is missing.
  */
 
 /** At most 500 kB of logo payload stored in the settings row. */
@@ -117,20 +122,28 @@ function storedAccentColor(value: unknown): string {
 }
 
 /**
- * The sort direction of the ticket list under „Darstellung“: the stored value of
- * the row, else the default of the server — `'desc'` puts the newest report on
- * top. A row with a value that is not `'asc'` or `'desc'` answers the default.
+ * The sort direction of the history of a ticket under „Darstellung“: the stored
+ * value of the row, else the default of the server — `'desc'` puts the newest
+ * event of the history on top. A row with a value that is not `'asc'` or
+ * `'desc'` answers the default.
+ *
+ * A row of an older version carries the key `ticketSortDirection` (the
+ * direction steered the list of the tickets then); it is the fallback as long
+ * as the row has no key `historySortDirection` (WP-M16-24c).
  */
-function storedTicketSortDirection(value: unknown): TicketSortDirection {
-  const direction =
-    value !== null &&
-    value !== undefined &&
-    typeof value === 'object' &&
-    typeof (value as { ticketSortDirection?: unknown }).ticketSortDirection === 'string'
-      ? (value as { ticketSortDirection: TicketSortDirection }).ticketSortDirection
-      : ''
+function storedHistorySortDirection(value: unknown): HistorySortDirection {
+  const row =
+    value !== null && value !== undefined && typeof value === 'object'
+      ? (value as { historySortDirection?: unknown; ticketSortDirection?: unknown })
+      : {}
 
-  return direction === 'asc' || direction === 'desc' ? direction : DEFAULT_TICKET_SORT_DIRECTION
+  for (const candidate of [row.historySortDirection, row.ticketSortDirection]) {
+    if (candidate === 'asc' || candidate === 'desc') {
+      return candidate
+    }
+  }
+
+  return DEFAULT_HISTORY_SORT_DIRECTION
 }
 
 /** Validates an optional logo data URL; `''`/`null`/`undefined` means "remove". */
@@ -173,7 +186,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           logo: storedLogo(rows[0]?.value),
           internalCommentColor: storedInternalCommentColor(rows[0]?.value),
           accentColor: storedAccentColor(rows[0]?.value),
-          ticketSortDirection: storedTicketSortDirection(rows[0]?.value),
+          historySortDirection: storedHistorySortDirection(rows[0]?.value),
         })
       },
     )
@@ -197,7 +210,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
         return displaySettingsResponseSchema.parse({
           internalCommentColor: storedInternalCommentColor(rows[0]?.value),
           accentColor: storedAccentColor(rows[0]?.value),
-          ticketSortDirection: storedTicketSortDirection(rows[0]?.value),
+          historySortDirection: storedHistorySortDirection(rows[0]?.value),
         })
       },
     )
@@ -253,8 +266,8 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
 
         // A body without the sort direction keeps the stored one — the page of the
         // Darstellung sends the direction, an older client does not.
-        const ticketSortDirection =
-          parsed.data.ticketSortDirection ?? storedTicketSortDirection(current[0]?.value)
+        const historySortDirection =
+          parsed.data.historySortDirection ?? storedHistorySortDirection(current[0]?.value)
 
         const row = {
           companyName: parsed.data.companyName,
@@ -262,7 +275,7 @@ export const settingsBrandingRoutes = fp<{ database: Database['database'] }>(
           logo,
           internalCommentColor,
           accentColor,
-          ticketSortDirection,
+          historySortDirection,
         }
 
         await database

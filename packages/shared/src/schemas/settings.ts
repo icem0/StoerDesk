@@ -31,17 +31,18 @@ export const brandingResponseSchema = z.object({
    */
   accentColor: z.string(),
   /**
-   * The sort direction of the ticket list under „Darstellung“: `'desc'` puts the
-   * newest report on top, `'asc'` the oldest one. Defaults to `'desc'`.
+   * The sort direction of the history of a ticket under „Darstellung“: `'desc'`
+   * puts the newest event of the history on top, `'asc'` the oldest one.
+   * Defaults to `'desc'`.
    */
-  ticketSortDirection: z.enum(['asc', 'desc']),
+  historySortDirection: z.enum(['asc', 'desc']),
 })
 
-/** The default sort direction of the ticket list: the newest report on top. */
-export const DEFAULT_TICKET_SORT_DIRECTION: 'asc' | 'desc' = 'desc'
+/** The default sort direction of the history of a ticket: the newest event on top. */
+export const DEFAULT_HISTORY_SORT_DIRECTION: 'asc' | 'desc' = 'desc'
 
-/** The sort direction of the ticket list under „Darstellung“. */
-export type TicketSortDirection = 'asc' | 'desc'
+/** The sort direction of the history of a ticket under „Darstellung“. */
+export type HistorySortDirection = 'asc' | 'desc'
 
 /** The default colour of the internal comment: a dark red (ADR-0034). */
 export const DEFAULT_INTERNAL_COMMENT_COLOR = '#7f1d1d'
@@ -61,8 +62,8 @@ export const DEFAULT_ACCENT_COLOR = '#0ea5e9'
 export const displaySettingsResponseSchema = z.object({
   internalCommentColor: z.string(),
   accentColor: z.string(),
-  /** The sort direction of the ticket list under „Darstellung“. */
-  ticketSortDirection: z.enum(['asc', 'desc']),
+  /** The sort direction of the history of a ticket under „Darstellung“. */
+  historySortDirection: z.enum(['asc', 'desc']),
 })
 
 /** Whether the installation captures a ticket title at all (`PLAN.md` §14, WP-M9-24). */
@@ -80,8 +81,8 @@ export const updateBrandingRequestSchema = z.object({
   internalCommentColor: hexColorSchema.optional(),
   /** The accent colour of the interface (ADR-0036); a body without it keeps it. */
   accentColor: hexColorSchema.optional(),
-  /** The sort direction of the ticket list; a body without it keeps the stored one. */
-  ticketSortDirection: z.enum(['asc', 'desc']).optional(),
+  /** The sort direction of the history of a ticket; a body without it keeps the stored one. */
+  historySortDirection: z.enum(['asc', 'desc']).optional(),
 })
 
 export type BrandingResponse = z.infer<typeof brandingResponseSchema>

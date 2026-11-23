@@ -303,7 +303,7 @@ for (const language of ['de', 'en'] as const) {
     await expect(history(page).getByText(texts.event.closed)).toBeVisible()
 
     // Full audit trail: all seven events in order. The history renders newest
-    // first by default (ticketSortDirection 'desc', WP-M16-11d), so the
+    // first by default (historySortDirection 'desc', WP-M16-11d), so the
     // expectation follows the rendered direction, newest event on top.
     const rows = history(page).locator('.text-sm.font-medium.text-slate-200')
     await expect(rows).toContainText([
