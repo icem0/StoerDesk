@@ -3587,7 +3587,7 @@ languages; the delete guard of the API (`409 text_template_in_use`) and the usag
 count stay untouched. The detected errors administration carries the same line and
 is not part of this WP — the office named the fault types.
 
-**The administration shows the localized name (WP-M16-14 … WP-M16-20, out of band
+**The administration shows the localized name (WP-M16-14 … WP-M16-22, out of band
 in phase 16).** The office read the administration and asked: every list shall
 show only the name of the set language; beside the name there may be one
 button with `…` that opens a menu with the actions of the row (delete, edit
@@ -3598,19 +3598,30 @@ other, and every further language would add another column and break the
 layout of the table. **ADR-0043** decides the rule: one name per row (the name
 of `i18n.language`, the fallback `de` and then the machine key), the actions
 behind one `…` button (a shared `RowMenu` in
-`apps/web/src/components/row-menu.tsx`), the key readable and never editable in
-the edit beside one field per language of the entry, and the API unchanged — the
-web composes the record of the languages out of the answer. The rule holds for
-every list of the administration that names an entry: the fault types, the
-detected errors, the ticket statuses, the stages of the escalation, the groups,
-the roles, the users, the channels, the webhooks, the API keys and the
-The check run of the version v1.2.37 failed although its commit changed only the web app: the file `apps/api/src/stats/__tests__/statsExport.integration.spec.ts` reported "Hook timed out in 10000ms" in the hook that creates the throwaway database and migrates it — on the two-core runner of the gate the migrations of the parallel files compete for the same PostgreSQL instance. **WP-M16-21** gives the hook of the API project a minute (`hookTimeout: 60_000` in `apps/api/vitest.config.ts`); the assertions keep their own timeout. readiness pools. The split: **WP-M16-14** (the spec, the ADR and the split),
-**WP-M16-15** (the shared row menu and the helper of the localized name),
-**WP-M16-16** (the fault types), **WP-M16-17** (the detected errors),
-**WP-M16-18** (the ticket statuses), **WP-M16-19** (the stages of the
+`apps/web/src/components/row-menu.tsx`), the key readable beside one field per
+language of the entry, and the API unchanged — the web composes the record of
+the languages out of the answer. The rule holds for every list of the
+administration that names an entry: the fault types, the detected errors, the
+ticket statuses, the stages of the escalation, the groups, the roles, the
+users, the webhooks, the API keys and the readiness pools (the channels are
+configuration cards and keep their form). The split: **WP-M16-14** (the spec,
+the ADR and the split), **WP-M16-15** (the shared row menu and the helper of the
+localized name), **WP-M16-16** (the fault types), **WP-M16-17** (the detected
+errors), **WP-M16-18** (the ticket statuses), **WP-M16-19** (the stages of the
 escalation) and **WP-M16-20a … WP-M16-20d** (the lists with one name: the
 groups and the roles, the users, the webhooks and the API keys, the readiness
-pools).
+pools). Two follow-ups came out of the gates: the check run of the version
+v1.2.37 failed although its commit changed only the web app — the file
+`apps/api/src/stats/__tests__/statsExport.integration.spec.ts` reported "Hook
+timed out in 10000ms" in the hook that creates the throwaway database and
+migrates it, because the migrations of the parallel files compete for the same
+PostgreSQL instance on the two-core runner of the gate — **WP-M16-21** gives
+the hook of the API project a minute (`hookTimeout: 60_000` in
+`apps/api/vitest.config.ts`), the assertions keep their own timeout; and the
+menu of the last row of a list was clipped by the scroll container of its
+table — **WP-M16-22** hangs the menu in the body of the document, lets it open
+upwards when there is no room below the button and lets it follow the button
+while the page scrolls.
 
 ## 17. Work package rules for small models
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
