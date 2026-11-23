@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The plan of a readiness pool is normalised (**WP-M21-01**, phase 21,
+  ADR-0044): blocks with the same duty window on consecutive weekdays become
+  one block, so a pool whose plan was written in the older form (one entry per
+  weekday) shows one block for Monday to Friday and creates one shift per week
+  instead of one shift per day.
 - The duty blocks satisfy their criterion (**WP-M20-08**, phase 20, ADR-0040):
   the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the
   technician week holds one (Mo–So 00:00–24:00), and the coupling names the

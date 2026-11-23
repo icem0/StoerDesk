@@ -221,6 +221,28 @@ Confirmation, decline, swap and history (§4a.4, §4a.5, §4a.10) act on the who
 block; one technician holds the block. Single days cannot be swapped in this
 version.
 
+### 4a.3.4 The plan is normalised (ADR-0044)
+
+The plan of a pool is normalised: blocks that share the same daily window and
+lie on consecutive weekdays of the week of Monday to Sunday become one block.
+The weekdays between two such blocks must not be covered by another block; a
+block that is separated from its neighbour by a covered weekday stays as it is.
+
+The normalisation never changes the duty — the covered weekdays and the daily
+window stay the same, only the number of blocks changes. A plan that covers a
+weekday twice with different daily windows is contradictory; the normalisation
+returns it unchanged and the administration resolves it.
+
+The normalisation happens where the plan is read and written: the answer of
+`GET /api/v1/oncall/pools` and the plan of the generator use the normalised
+blocks, and a plan that is written with `PATCH /api/v1/oncall/pools/:id` is
+stored normalised. A pool whose plan was written in the older form of §4a.3.2
+(one entry per weekday) therefore shows its plan as blocks and creates one
+shift per block per week — without a migration.
+
+The shifts of the older plan stay as they are (§4a.9); the admin deletes them
+and generates the blocks.
+
 ## 4a.4 Confirmation and decline
 
 `POST /api/v1/oncall/shifts/:id/confirm` and

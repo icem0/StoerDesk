@@ -334,6 +334,24 @@ uses the continuous plan. Every window is a shift of its own — state,
 technician, confirmation, swap and iCal entry — and outside the windows there is
 no on-call person, so the offer of a ticket goes to the group.
 
+**Duty blocks (WP-M20-01 … WP-M20-08, ADR-0040).** A **duty block** replaces
+the one-day window as the unit of the plan: a block spans consecutive weekdays
+with a daily start and end, and it is one shift per week. The office plan is
+therefore two shifts a week (Monday to Thursday 07:00–17:00, Friday
+07:00–12:00) instead of five, and the technician confirms a block once. The
+block stores its pattern (`weekdays`, `daily_start`, `daily_end`); the coupling
+and the personal iCal feed read it.
+
+**The normalisation of the plan (WP-M21-01 … WP-M21-04, ADR-0044).** The plan
+of a pool is normalised: blocks with the same daily window on consecutive
+weekdays become one block, the weekdays in between must not be covered by
+another block, and a plan that covers a weekday twice with different windows
+stays as it is. The normalisation happens where the plan is read and written —
+the answer of the pool list, the plan of the generator and the stored plan of a
+pool — so a pool whose plan was written in the older form (one entry per
+weekday) shows its plan as blocks and creates one shift per block per week.
+The shifts of the older plan stay until the admin deletes them (§4a.9).
+
 Shift states: `DRAFT` → `PLANNED` → `CONFIRMED` | `DECLINED` |
 `SWAP_REQUESTED`; a slot without a technician is `UNFILLED`. The technician can
 also accept an assigned `DRAFT` readiness — the acceptance publishes it (ADR-0021).
@@ -766,11 +784,25 @@ explanation. Offline is a core feature and appears early.
 | **18** | The entries of the house in the ticket history: the internal event types as one shared list, the frame in the colour of the internal entries under „Darstellung“ (ADR-0038, WP-M18-01) | every internal row of the history carries a frame in the saved colour and none of those rows reaches the printout or the e-mail of the customer |
 | **19** | The assignment of the office: one technician per ticket with a status (`offered`, `accepted`, `declined`), the pool of the office as a setting, a refusal passes the ticket to the next member of the pool, the assigner is notified (ADR-0039, WP-M19-01 … WP-M19-08) | the office assigns the ticket to one member of the pool, the technician answers the assignment, a refusal passes the ticket to the next member and the assigner is notified about the answer |
 | **20** | Duty blocks of the readiness: a block spans consecutive weekdays with a daily pattern, one shift per block per week, blocks replace the day windows of a pool (ADR-0040, WP-M20-01 … WP-M20-08) | the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the technician week one shift; the coupling and the iCal feed read the pattern |
+| **21** | The normalisation of the duty plan: consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (ADR-0044, WP-M21-01 … WP-M21-04) | a pool with the plan of Monday to Friday shows one block and creates one shift per week; the plan of a pool of the older version needs no manual work |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**WP-M21-01 — the normalisation of the plan (done).** The office plan of a pool
+that was written in the older form (one entry per weekday, ADR-0035) created
+one shift per weekday and asked the technician for one confirmation per day.
+ADR-0044 normalises the plan of a pool: blocks with the same daily window on
+consecutive weekdays of the week of Monday to Sunday become one block, the
+weekdays in between must be covered by no other block, and a plan that covers a
+weekday twice with different daily windows stays as it is. The normalisation
+never changes the duty — the covered weekdays and the daily window stay the
+same. It happens where the plan is read and written (`specs/04-oncall.md`
+§4a.3.4): the answer of the pool list, the plan of the generator and the
+stored plan of a pool. WP-M21-02 adds the shared normalisation, WP-M21-03 the
+API, WP-M21-04 the hint of the administration.
 
 **WP-M14-31 — the reminder of an unconfirmed readiness (done).** `enqueueOncallReminders(database, env, now)`
 in `apps/api/src/oncall/coupling.ts` queues one `oncall.unconfirmed_reminder`
