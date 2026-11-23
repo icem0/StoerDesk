@@ -65,6 +65,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The list of the tickets is ordered the way the office wants and the switch
+  under „Darstellung“ steers the history of a ticket (**WP-M16-24 … WP-M16-24d**,
+  phase 16): the office read the switch „Neueste zuerst“ under „Darstellung“ and
+  expected the Verlauf of a ticket to follow it — not the list of the tickets.
+  The list had followed the switch and was ordered by the report time instead.
+  The list at `/tickets` has one order now: the open tickets first, then the
+  urgency descending (`critical`, `high`, `normal`, `low`), then the nearest
+  deadline, then the ticket number. The switch steers the history of a ticket,
+  its instance value is named `historySortDirection` — the key of a row of an
+  older version stays `ticketSortDirection` until the next save — and its texts
+  name the history.
 - The administration shows the localized name and the actions of a row sit behind
   one `…` button (**WP-M16-14 … WP-M16-20d**, out of band in phase 16,
   ADR-0043): the office read the lists of the administration and asked for the

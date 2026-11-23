@@ -3465,6 +3465,22 @@ order by `reportedAt` in the configured direction instead of the hard-coded
 deadline order. The direction is an instance value under „Darstellung“, not a
 per-user preference, and needs no new table or migration.
 
+**The order of the list and the direction of the history (WP-M16-24, phase 16,
+requested by the office).** The office read the switch „Neueste zuerst“ under
+„Darstellung“ and expected the **Verlauf** of a ticket to follow it — not the
+list of the tickets. The list itself was to be ordered by the urgency. The
+change splits into four packages: **WP-M16-24a** makes `order=priority` the
+order of the office — the open tickets first, then the urgency descending
+(`critical`, `high`, `normal`, `low`), then the nearest deadline, then the
+ticket number — and the default of the staff list; **WP-M16-24b** makes the list
+page ask for that order and drop the direction out of the list; **WP-M16-24c**
+renames the instance value to `historySortDirection` — in the shared contracts,
+in the branding row and in the pages — because the direction steers the history
+and not the list, and a row of an older version keeps its key `ticketSortDirection`
+until the next save; **WP-M16-24d** gives the switch the texts that name the
+history. The list keeps one order, the switch under „Darstellung“ steers the
+history of a ticket, and neither needs a new table nor a migration.
+
 **The localisation closes the notification and the shell text (WP-M16-12,
 out of band in phase 16).** The office asked to sweep the whole code for places
 where the user-facing text still bypasses the i18n mechanism. The sweep found:

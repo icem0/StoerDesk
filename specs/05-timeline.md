@@ -119,3 +119,11 @@ ticket and its history:
 row for the mini timeline. With `order=deadlineAt` the list sorts by the
 deadline in the requested direction and puts the open tickets before the
 finished ones, so the least remaining time is on top (`PLAN.md` §9, WP-M9-20).
+
+With `order=priority` the list sorts the way the office wants (WP-M16-24): the
+open tickets first, then the urgency descending (`critical`, `high`, `normal`,
+`low`), then the nearest deadline, then the ticket number. The closed and the
+cancelled tickets keep the last places. The `direction` parameter does not
+change this order — it belongs to the two orders by time. The order is the
+default of the staff list; the external list keeps the order by the report
+time.

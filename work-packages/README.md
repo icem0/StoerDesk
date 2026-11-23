@@ -1733,6 +1733,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-20d | the readiness pools carry the row menu (out of band) | done | yes |
 | WP-M16-21 | the API integration tests get the time their migration needs (out of band) | done | yes |
 | WP-M16-22 | the row menu escapes the scroll container (out of band) | done | yes |
+| WP-M16-24 | the order of the list and the direction of the history — the spec and the split | planned | yes |
+| WP-M16-24a | the API orders the list the way the office wants | planned | yes |
+| WP-M16-24b | the list page asks for the order of the office | planned | yes |
+| WP-M16-24c | the contract and the pages follow the renamed direction | planned | yes |
+| WP-M16-24d | the texts of the switch name the history | planned | yes |
 | WP-M20-01 | the duty blocks — spec, ADR-0040 and the split | done | yes |
 | WP-M20-02 | the shared blocks and the pattern | planned | yes |
 | WP-M20-03 | the API generates the blocks | planned | yes |
