@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The escalation page carries the defaults of ADR-0008 (**WP-M14-135**, out of
+  band in phase 14): before the settings answer the tab „Fristen“ shows
+  168/72/24/8 hours, and a rule without minutes shows the seeded minutes per
+  priority. Both fallbacks come from `DEADLINE_HOURS` and
+  `DEFAULT_WORKFLOW_ESCALATION_RULES` of the shared package, so they cannot drift
+  from the ADR or the seed.
 - A failing web push names its cause and the next step (**WP-M14-175**): a DNS
   failure of the push service is `push_dns_failed`, a timeout `push_timeout`, any
   other transport failure `push_unreachable`. The texts of the delivery page name

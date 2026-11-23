@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import {
+  DEADLINE_HOURS,
+  DEFAULT_WORKFLOW_ESCALATION_RULES,
   ESCALATION_REFERENCE_EVENTS,
   TICKET_PRIORITIES,
   escalationFirstStageKey,
@@ -137,7 +139,7 @@ export function EscalationPage() {
   const [removeCandidate, setRemoveCandidate] = useState<string | null>(null)
   const [savedHours, setSavedHours] = useState<DeadlineHours | null>(null)
   const [savedConfig, setSavedConfig] = useState<EscalationConfig | null>(null)
-  const hours = savedHours ?? (settingsQuery.data?.hours ?? { low: 72, normal: 72, high: 72, critical: 72 })
+  const hours = savedHours ?? (settingsQuery.data?.hours ?? DEADLINE_HOURS)
   const config = savedConfig ?? (configQuery.data ?? { stages: [], rules: [] })
 
   const saveHours = useMutation({
@@ -631,6 +633,29 @@ export function AddStageForm({
 }
 
 /**
+ * The minutes of a rule before the server answer (WP-M14-135): the seeded rule
+ * of the same key, otherwise the first seeded stage rule. The values come from
+ * the shared seed, so this fallback cannot drift from ADR-0008.
+ */
+function seededMinutesFor(ruleKey: string): EscalationMinutes {
+  const exact = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
+    (entry) => entry.key === ruleKey && entry.minutes !== null,
+  )?.minutes
+
+  if (exact !== null && exact !== undefined) {
+    return exact
+  }
+
+  for (const entry of DEFAULT_WORKFLOW_ESCALATION_RULES) {
+    if (entry.minutes !== null) {
+      return entry.minutes
+    }
+  }
+
+  throw new Error('the escalation seed carries no stage rule')
+}
+
+/**
  * The form of one rule: its key, its reference, its minutes per priority, its
  * condition and its ordered actions (WP-M13-15/16). A rule without a stage is
  * one of the two deadline rules and carries a percentage instead of a clock.
@@ -660,7 +685,7 @@ function RuleForm({
 }) {
   const { t } = useTranslation('settings')
   const [minutes, setMinutes] = useState<EscalationMinutes>(
-    rule.minutes ?? { low: 1, normal: 1, high: 1, critical: 1 },
+    rule.minutes ?? seededMinutesFor(rule.key),
   )
 
   function apply(next: EscalationRuleConfig) {

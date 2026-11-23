@@ -1,7 +1,7 @@
 # WP-M14-135: the fallbacks of the escalation page carry the values of ADR-0008
 
 format: small-model
-status: planned
+status: done
 phase: 14
 milestone: m14
 context-budget: 14k tokens
@@ -72,8 +72,12 @@ of the seed.
 
 ## Handoff
 
-- Files changed: the escalation page, the test of the fallbacks
+- Files changed: `apps/web/src/admin/escalation-page.tsx` (the `DEADLINE_HOURS`
+  fallback and `seededMinutesFor`), `apps/web/src/admin/__tests__/escalation-page-fallbacks.test.tsx`
+  (new)
 - Interfaces added: none
-- Verified: —
+- Verified: `npm run typecheck`, `npx eslint` on the changed files,
+  `npm run test:run -- apps/web/src/admin/__tests__/escalation-page-fallbacks.test.tsx`
+  (2 passed) and `npm run wp:check`
 - Follow-up WP: none
 - Open question: none
