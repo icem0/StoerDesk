@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   into that column and drops `ticket_assignees`; the ticket view shows the one
   technician instead of a list.
 
+### Changed
+- The own page loses the selection of the channels per event type (**WP-M24-06a**,
+  phase 24, ADR-0045): every event goes over the channels of the user, so the
+  seven switches are gone.
+
 ### Added
 - The own accounts of the user carry their state (**WP-M24-05**, phase 24, ADR-0045):
   `GET /api/v1/notifications/accounts` answers the accounts of the signed-in

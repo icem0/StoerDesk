@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -562,89 +562,4 @@ describe('NotificationsPage', () => {
     )
   })
 
-  it('reads the selection, marks a configured channel without an account and saves a new one', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input)
-
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
-
-      if (url.endsWith('/v1/admin/channels')) {
-        return Response.json({
-          channels: [
-            { kind: 'matrix', enabled: true, label: 'Matrix', config: {}, secretSet: false },
-            { kind: 'ntfy', enabled: true, label: 'ntfy', config: {}, secretSet: false },
-            { kind: 'email', enabled: true, label: 'Email', config: {}, secretSet: false },
-          ],
-        })
-      }
-
-      if (url.endsWith('/v1/notifications/preferences')) {
-        if (init?.method === 'PUT') {
-          const body = JSON.parse(String(init?.body ?? '{}')) as { preferences?: unknown }
-
-          return Response.json(body)
-        }
-
-        return Response.json({ preferences: [{ eventType: 'ticket.created', channel: 'ntfy' }] })
-      }
-
-      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const { container } = renderPage()
-
-    await waitFor(() => {
-      expect(screen.queryAllByText('Kein Konto verknüpft').length).toBeGreaterThan(0)
-    })
-    expect(screen.getByText('Neuer Vorgang')).toBeTruthy()
-
-    const ntfyCheckbox = container.querySelector('[id="pref-ticket.created:ntfy"]') as HTMLInputElement
-    const emailCheckbox = container.querySelector('[id="pref-ticket.created:email"]') as HTMLInputElement
-    expect(ntfyCheckbox.checked).toBe(true)
-    expect(emailCheckbox.checked).toBe(false)
-    expect(emailCheckbox.disabled).toBe(false)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Auswahl speichern' }))
-
-    await screen.findByText('Die Auswahl wurde gespeichert.')
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/notifications/preferences',
-      expect.objectContaining({
-        method: 'PUT',
-        body: JSON.stringify({ preferences: [{ eventType: 'ticket.created', channel: 'ntfy' }] }),
-      }),
-    )
-  })
-
-  it('names the way of the escalation on the row of the escalation (ADR-0037)', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input)
-
-      if (url.endsWith('/v1/admin/channels')) {
-        return Response.json({
-          channels: [{ kind: 'ntfy', enabled: true, label: 'ntfy', config: {}, secretSet: false }],
-        })
-      }
-
-      if (url.endsWith('/v1/notifications/preferences')) {
-        return Response.json({ preferences: [] })
-      }
-
-      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    renderPage()
-
-    expect(await screen.findByText('Eskaliert')).toBeTruthy()
-    expect(
-      screen.getByText('Eine Eskalation, die dich adressiert, kommt über deine Auswahl; ohne Auswahl über dein eigenes ntfy-Thema.'),
-    ).toBeTruthy()
-    expect(
-      screen.getByText(/Bei einer Eskalation entscheidet die Regel der Administration, an wen sie geht/),
-    ).toBeTruthy()
-  })
 })
