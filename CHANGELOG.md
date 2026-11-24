@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- A reassignment notifies the new technician (**WP-M23-08**, phase 23): the
+  guard against a second announcement looked at the shift alone, so a
+  reassignment after a decline announced nothing — the new technician never
+  heard of his shift. The row of the announcement carries the technician it
+  belongs to.
 - The readiness view lists the open shifts (**WP-M23-07**, phase 23): the admin
   saw the open shifts only where they happened to be — the calendar shows the
   month, the weekly plan one week. A shift that was offered and never accepted

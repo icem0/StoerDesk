@@ -296,6 +296,13 @@ channel selection of the technician (`notification_preferences`, §11.4) decides
 which channels they are notified through; without a selection the instance chain
 of §11.1 applies.
 
+One announcement per shift **and technician** (WP-M23-08): the target of the
+row carries the id of its technician (`assignedTo`), so the guard of a second
+announcement asks for the row of *this* technician. A reassignment after a
+decline therefore reaches the new technician — the announcement of the first
+assignment does not silence it. A row without the field — one written before
+this change — belongs to nobody and blocks nothing.
+
 Confirm and decline are the only offline writes of phase 8 (`PLAN.md` §9). The
 web outbox stores them under a new Dexie table row kind; claiming from the pool
 and accepting a swap stay online-only.

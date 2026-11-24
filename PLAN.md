@@ -805,6 +805,16 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M23-08 — a reassignment notifies the new technician (done).** The
+assignment of a shift announces itself: the row of the event
+`oncall.assigned` goes to the technician (`ADR-0021`, WP-M14-28). The guard
+against a second announcement looked at the shift alone, so the row of the
+first assignment was enough — a reassignment after a decline announced
+nothing, and the new technician never heard of his shift. The target of a
+readiness row now carries the id of its technician (`assignedTo`), so the
+guard asks for the row of *this* technician; a row without the field — one
+written before the change — blocks nothing.
+
 **WP-M23-07 — the list of the open shifts in the readiness view (done).** The
 admin saw the open shifts only where they happened to be: the calendar of the
 office shows the month, the weekly plan one week — a shift that was offered and

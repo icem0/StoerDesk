@@ -129,6 +129,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           ticketId: outbox.ticketId,
           eventType: outbox.eventType,
           channel: outbox.channel,
+          target: outbox.target,
         })
         .from(outbox)
         .where(eq(outbox.shiftId, shiftId))
@@ -253,6 +254,31 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const rows = await outboxRows(shiftId)
 
       expect(rows).toHaveLength(1)
+    })
+
+    it('queues the new technician when the shift is reassigned (WP-M23-08)', async () => {
+      const created = await createShift(cookies['admin'], { userId: techId })
+      const shiftId = created.json<ShiftRow>().id
+
+      const first = await outboxRows(shiftId)
+
+      expect(first).toHaveLength(1)
+
+      // the technician declines and the admin assigns another one: the new
+      // technician must hear of his shift
+      const patched = await patchShift(cookies['admin'], shiftId, { userId: otherId })
+
+      expect(patched.statusCode).toBe(200)
+
+      const rows = await outboxRows(shiftId)
+
+      expect(rows).toHaveLength(2)
+      expect(
+        rows.filter((row) => (row.target as { assignedTo?: string }).assignedTo === otherId),
+      ).toHaveLength(1)
+      expect(
+        rows.filter((row) => (row.target as { assignedTo?: string }).assignedTo === techId),
+      ).toHaveLength(1)
     })
 
     it('queues a swap request for the requester and the named target', async () => {

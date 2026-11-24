@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
@@ -114,11 +114,20 @@ async function findShift(database: Db, shiftId: string) {
 }
 
 /**
- * One `oncall.assigned` announcement per shift and technician: the allocation
- * is already queued while a row of that shift is still `PENDING` or already
- * `SENT` (`ADR-0021`, WP-M14-29).
+ * One `oncall.assigned` announcement per shift **and technician**
+ * (`ADR-0021`, WP-M14-29): the allocation is already queued while the row of
+ * that technician is still `PENDING` or already `SENT`.
+ *
+ * The target of the row names its technician (`assignedTo`, WP-M23-08): the
+ * guard of a reassignment after a decline asks for the row of the *new*
+ * technician, so the announcement reaches him. A row without the field — one
+ * written before the change — belongs to nobody and blocks nothing.
  */
-async function assignedAnnouncementQueued(executor: Pick<Db, 'select'>, shiftId: string) {
+async function assignedAnnouncementQueued(
+  executor: Pick<Db, 'select'>,
+  shiftId: string,
+  userId: string,
+) {
   const rows = await executor
     .select({ state: outbox.state })
     .from(outbox)
@@ -127,6 +136,7 @@ async function assignedAnnouncementQueued(executor: Pick<Db, 'select'>, shiftId:
         eq(outbox.shiftId, shiftId),
         eq(outbox.eventType, 'oncall.assigned'),
         inArray(outbox.state, ['PENDING', 'SENT']),
+        sql`${outbox.target}->>'assignedTo' = ${userId}`,
       ),
     )
 
@@ -191,7 +201,7 @@ export async function createShift(database: Db, input: CreateShiftInput): Promis
     if (
       userId !== undefined &&
       userId !== null &&
-      !(await assignedAnnouncementQueued(tx, created.id))
+      !(await assignedAnnouncementQueued(tx, created.id, userId))
     ) {
       await enqueueOncallOutbox(
         tx,
@@ -368,7 +378,7 @@ export async function updateShift(
     if (
       patch.userId !== undefined &&
       patch.userId !== null &&
-      !(await assignedAnnouncementQueued(tx, updated.id))
+      !(await assignedAnnouncementQueued(tx, updated.id, patch.userId))
     ) {
       await enqueueOncallOutbox(
         tx,

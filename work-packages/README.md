@@ -1763,7 +1763,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-05 | the admin deletes a shift that was never confirmed — even after it started (ADR-0047) | done | yes |
 | WP-M23-06 | the shift dialog carries the actions of the admin — assign, publish, delete | done | yes |
 | WP-M23-07 | the list of the open shifts in the readiness view | done | yes |
-| WP-M23-08 | a reassignment notifies the new technician | planned | yes |
+| WP-M23-08 | a reassignment notifies the new technician | done | yes |
 | WP-M23-09 | the repeated reminder of a shift that was not accepted — a rising urgency and the manual reminder of the admin | planned | yes |
 | WP-M23-09a | the reminder of a shift repeats — the interval `oncall.reminder_repeat_h` | planned | yes |
 | WP-M23-09b | the urgency of the reminder rises — ntfy and the push of the browser | planned | yes |

@@ -923,6 +923,10 @@ export async function enqueueOncallOutbox(
     endsAt: shift.endsAt.toISOString(),
     state: shift.state,
     shiftId: shift.id,
+    // The technician the row belongs to (WP-M23-08): the guard of a second
+    // announcement asks for the row of *this* technician, so a reassignment
+    // after a decline reaches the new one.
+    assignedTo: userId,
   }
 
   // The channels of the technician (§11.4, ADR-0045): his confirmed
@@ -939,6 +943,10 @@ export async function enqueueOncallOutbox(
           target: '',
         }))
 
+  // The rows of this technician for this shift and event that are still
+  // `PENDING` (WP-M23-08): a row of another technician does not block the
+  // announcement of this one — a reassignment after a decline must reach the
+  // new technician.
   const pending = await database
     .select({ channel: outbox.channel })
     .from(outbox)
@@ -947,6 +955,7 @@ export async function enqueueOncallOutbox(
         eq(outbox.shiftId, shift.id),
         eq(outbox.eventType, eventType),
         eq(outbox.state, 'PENDING'),
+        sql`${outbox.target}->>'assignedTo' = ${userId}`,
       ),
     )
 
