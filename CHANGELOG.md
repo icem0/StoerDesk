@@ -51,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The compliance of the users (**WP-M24-15**, phase 24, ADR-0045): the
+  administration sees for every user the state of every channel — *missing*,
+  *linked*, *ready* — the required channels he does not have set up and the
+  number of the channels he has set up. The address of a user never reaches
+  the answer.
 - The mail address of the user and the room of the user (**WP-M24-07**,
   **WP-M24-09**, phase 24, ADR-0046): the e-mail channel gets the account of
   the user — the own mail address, proven with the one-time code — and the

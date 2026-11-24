@@ -19,6 +19,8 @@ import {
   channelTestResponseSchema,
   matrixLinkingRequestSchema,
   notificationAccountSchema,
+  notificationComplianceListResponseSchema,
+  notificationComplianceSchema,
   notificationAccountListResponseSchema,
   notificationChannelKindSchema,
   notificationMessageFilterSchema,
@@ -58,6 +60,7 @@ import {
   requestNtfyVerification,
 } from './verification'
 import { deleteAccount, listAccounts, storeAccount } from './accounts'
+import { readCompliance, readUserCompliance } from './compliance'
 import {
   ConfirmationError,
   confirmChannelConfirmation,
@@ -566,6 +569,36 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           throw error
         }
       },
+    )
+
+    /**
+     * `GET /api/v1/admin/notifications/compliance` (`specs/10-notifications.md`
+     * §11.9, §11.11, WP-M24-15): the users of the instance with the state of
+     * every channel, the required channels they do not have set up and the flag
+     * of the rule. The answer never names the address of a user (§11.13).
+     */
+    app.get(
+      '/api/v1/admin/notifications/compliance',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.read) },
+      async () =>
+        notificationComplianceListResponseSchema.parse({
+          users: await readCompliance(database),
+        }),
+    )
+
+    /**
+     * `GET /api/v1/notifications/compliance` (`specs/10-notifications.md`
+     * §11.9, §11.12, WP-M24-15): the compliance of the signed-in user — the
+     * warning of the own page names the missing channels and links to the
+     * setup (§11.12).
+     */
+    app.get(
+      '/api/v1/notifications/compliance',
+      { preHandler: requireSession },
+      async (request) =>
+        notificationComplianceSchema.parse(
+          await readUserCompliance(database, request.user?.id ?? ''),
+        ),
     )
 
     /**
