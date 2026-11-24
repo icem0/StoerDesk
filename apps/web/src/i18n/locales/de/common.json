@@ -269,6 +269,18 @@
       "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
       "invalid_request": "Der Code ist ungültig, abgelaufen oder bereits verwendet – bitte einen neuen anfordern.",
       "channel_not_configured": "Der Kanal ist auf diesem Server nicht konfiguriert.",
+      "send_failed": "Der Code konnte nicht gesendet werden.",
+      "send_failed_reason": "Der Code konnte nicht gesendet werden: {{reason}}.",
+      "reasons": {
+        "http_401": "Anmeldung erforderlich (401): der Zugriffstoken des Servers fehlt oder ist falsch.",
+        "http_403": "Veröffentlichung verweigert (403): der Zugriffstoken fehlt oder ist falsch, oder das Thema ist nicht freigegeben.",
+        "http_407": "Thema bereits vergeben (407): der Server nimmt nur eigene oder noch freie Themen an.",
+        "http_429": "Zu viele Anfragen (429): später erneut versuchen.",
+        "http_timeout": "Keine Antwort rechtzeitig (Timeout): der Server hat nicht innerhalb von zehn Sekunden geantwortet.",
+        "http_unreachable": "Der Server ist nicht erreichbar — Adresse und Netzwerk prüfen.",
+        "no_token": "Der Kanal hat kein Geheimnis (Bot-Token, Zugangstoken …) — die Administration muss es zuerst speichern.",
+        "push_no_subscription": "Kein Gerät abonniert: der Code konnte nicht zugestellt werden — das Abo in der App erneuern."
+      },
       "unknown": "Ein unerwarteter Fehler ist aufgetreten."
     },
     "eventNames": {

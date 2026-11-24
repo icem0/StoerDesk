@@ -1044,6 +1044,14 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
      * one-time code over the channel of the account of the user and answers the
      * deadline of the code. The code itself travels over the channel — the API
      * never answers it.
+     *
+     * The answer names the cause of a refused send (WP-M24-21): a channel that
+     * is not configured answers `422 channel_not_configured`, a channel that
+     * refused the code answers `502 send_failed` with the machine code of the
+     * refusal in `params.reason` (`http_403`, `http_timeout`, …) — the same
+     * shape as the verification of the administration. Before, every refusal
+     * answered a flat `422 invalid_request`, so a code that never arrived was
+     * indistinguishable from a wrong code.
      */
     app.post<{ Params: { channel: string } }>(
       '/api/v1/notifications/accounts/:channel/verification',
@@ -1071,6 +1079,17 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           return notificationVerificationResponseSchema.parse(answer)
         } catch (error) {
           if (error instanceof ConfirmationError) {
+            if (error.code === 'send_failed') {
+              return reply.code(502).send({
+                code: 'send_failed',
+                params: error.causeCode === '' ? {} : { reason: error.causeCode },
+              })
+            }
+
+            if (error.code === 'channel_not_configured') {
+              return reply.code(422).send({ code: 'channel_not_configured', params: {} })
+            }
+
             return reply.code(422).send({ code: 'invalid_request', params: { fields: ['channel'] } })
           }
 

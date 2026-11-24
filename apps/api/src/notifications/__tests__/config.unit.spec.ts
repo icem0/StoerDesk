@@ -1,6 +1,11 @@
 import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
-import { channelFingerprint, readChannelConfiguration, type ChannelConfiguration } from '../config'
+import {
+  channelFingerprint,
+  readChannelConfiguration,
+  readEffectiveChannel,
+  type ChannelConfiguration,
+} from '../config'
 import { notificationChannelVerifications } from '../../db/schema'
 import { describe, expect, it } from 'vitest'
 
@@ -46,6 +51,27 @@ const row = (kind: string, values: Partial<ChannelRow> = {}): ChannelRow => ({
   secret: '',
   ...values,
 })
+
+/**
+ * The fake of the single row of `readEffectiveChannel`: the service reads the
+ * row of one kind, so the fake hands it the rows it would answer.
+ */
+function singleRowDatabase(rows: ChannelRow[]): Db {
+  return {
+    select: () => ({
+      from: () => {
+        const chain = {
+          where: () => chain,
+          limit: () => chain,
+          then: (resolve: (value: unknown) => unknown, reject: (error: unknown) => unknown) =>
+            Promise.resolve(rows).then(resolve, reject),
+        }
+
+        return chain
+      },
+    }),
+  } as unknown as Db
+}
 
 const enabledOf = (configurations: ChannelConfiguration[]): string[] =>
   configurations
@@ -261,5 +287,68 @@ describe('readChannelConfiguration (channel configuration in the database, §11.
       env,
     )
     expect(changed.find((configuration) => configuration.kind === 'ntfy')?.verified).toBe(false)
+  })
+})
+
+describe('readEffectiveChannel (the effective configuration with its secret, §11.2)', () => {
+  it('lets the row of the administration win over the environment (WP-M24-21)', async () => {
+    const env = loadEnv({
+      NTFY_URL: 'https://env.mock',
+      NTFY_TOPIC: 'env-topic',
+      NTFY_TOKEN: 'tk_env',
+    })
+
+    const effective = await readEffectiveChannel(
+      singleRowDatabase([
+        row('ntfy', {
+          config: { url: 'https://row.mock', topic: 'row-topic' },
+          secret: 'tk_row',
+        }),
+      ]),
+      env,
+      'ntfy',
+    )
+
+    expect(effective.config.url).toBe('https://row.mock')
+    expect(effective.config.topic).toBe('row-topic')
+    expect(effective.secret).toBe('tk_row')
+  })
+
+  it('falls back to the environment for a kind without a row', async () => {
+    const effective = await readEffectiveChannel(
+      singleRowDatabase([]),
+      loadEnv({ TELEGRAM_BOT_TOKEN: 'tk_env', TELEGRAM_CHAT_ID: '@env' }),
+      'telegram',
+    )
+
+    expect(effective.config.chatId).toBe('@env')
+    expect(effective.secret).toBe('tk_env')
+  })
+
+  it('lets an empty value of the row fall back to the environment', async () => {
+    const effective = await readEffectiveChannel(
+      singleRowDatabase([row('email', { config: { host: '', from: 'from@row' } })]),
+      loadEnv({ SMTP_HOST: 'smtp.env', SMTP_FROM: 'from@env' }),
+      'email',
+    )
+
+    expect(effective.config.host).toBe('smtp.env')
+    expect(effective.config.from).toBe('from@row')
+  })
+
+  it('configures WhatsApp Web only through its row (ADR-0020)', async () => {
+    const effective = await readEffectiveChannel(
+      singleRowDatabase([
+        row('whatsapp', {
+          config: { baseUrl: 'https://bridge.mock' },
+          secret: 'bridge-bearer',
+        }),
+      ]),
+      loadEnv({ WHATSAPP_BRIDGE_URL: 'https://env.mock', WHATSAPP_BRIDGE_TOKEN: 'env-bearer' }),
+      'whatsapp',
+    )
+
+    expect(effective.config.baseUrl).toBe('https://bridge.mock')
+    expect(effective.secret).toBe('bridge-bearer')
   })
 })

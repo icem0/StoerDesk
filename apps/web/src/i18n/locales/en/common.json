@@ -269,6 +269,18 @@
       "session_invalid": "The session has expired. Please sign in again.",
       "invalid_request": "The code is invalid, expired or already used – please request a new one.",
       "channel_not_configured": "The channel is not configured on this server.",
+      "send_failed": "The code could not be sent.",
+      "send_failed_reason": "The code could not be sent: {{reason}}.",
+      "reasons": {
+        "http_401": "Authentication required (401): the access token of the server is missing or wrong.",
+        "http_403": "Publication refused (403): the access token is missing or wrong, or the topic is not allowed.",
+        "http_407": "Topic already taken (407): the server only accepts own or still free topics.",
+        "http_429": "Too many requests (429): try again later.",
+        "http_timeout": "No answer in time (timeout): the server did not answer within ten seconds.",
+        "http_unreachable": "The server is not reachable — check the address and the network.",
+        "no_token": "The channel misses its secret (bot token, access token …) — the administration has to store it first.",
+        "push_no_subscription": "No device subscribed: the code could not be delivered — renew the subscription in the app."
+      },
       "unknown": "An unexpected error occurred."
     },
     "eventNames": {

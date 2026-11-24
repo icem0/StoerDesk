@@ -5,7 +5,8 @@ import { t, type ServerLocale } from '@stoerdesk/shared'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { notificationAccounts, pushSubscriptions, settings } from '../db/schema'
-import { readWebPushConfiguration } from './config'
+import { readEffectiveChannel, readWebPushConfiguration, type EffectiveChannel } from './config'
+import { effectiveNtfyConfig } from './verification'
 import { sendNtfyNotification } from './channels/ntfy'
 import { sendTelegramNotification } from './channels/telegram'
 import { sendMatrixNotification } from './channels/matrix'
@@ -41,14 +42,23 @@ export type ConfirmationErrorCode =
   | 'channel_not_configured'
   | 'send_failed'
 
-/** A refused confirmation; the route maps every code to `422 invalid_request`. */
+/**
+ * A refused confirmation. The route maps every code to `422 invalid_request` —
+ * except the codes that name a state of the installation: a channel that is
+ * not configured and a send that failed keep their own code, and the cause of
+ * the failed send (`http_403`, `http_timeout`, …) travels in `causeCode`
+ * (WP-M24-21).
+ */
 export class ConfirmationError extends Error {
   readonly code: ConfirmationErrorCode
+  /** The machine code of the adapter that refused the send (`http_401` …). */
+  readonly causeCode: string
 
-  constructor(code: ConfirmationErrorCode, message: string) {
+  constructor(code: ConfirmationErrorCode, message: string, causeCode = '') {
     super(message)
     this.name = 'ConfirmationError'
     this.code = code
+    this.causeCode = causeCode
   }
 }
 
@@ -117,10 +127,12 @@ function codeText(locale: ServerLocale | undefined, code: string): string {
 /**
  * The target of a Matrix account: the homeserver and the room of the user,
  * stored as a JSON object in the `target` of the account. A plain room id is
- * accepted as well and then uses the homeserver of the configuration.
+ * accepted as well and then uses the homeserver of the configuration — the
+ * effective one, so a homeserver that the administration configured in the
+ * administration wins over the environment (§11.2).
  */
 function matrixTargetOf(
-  env: Env,
+  effective: EffectiveChannel,
   raw: string,
 ): { homeserver: string; roomId: string } {
   if (raw.startsWith('{')) {
@@ -136,7 +148,7 @@ function matrixTargetOf(
     }
   }
 
-  return { homeserver: env.MATRIX_HOMESERVER, roomId: raw }
+  return { homeserver: effective.config.homeserver ?? '', roomId: raw }
 }
 
 /**
@@ -144,6 +156,20 @@ function matrixTargetOf(
  * §11.3a): the channel of the user receives the code over its own transport —
  * the topic, the chat, the room, the mail address, the bridge, the push. The
  * code never enters a log or an answer.
+ *
+ * The transport is the **effective configuration of the installation** — the
+ * row of `notification_channels` wins over the environment (§11.2, ADR-0022).
+ * Before, the code of the user went to the environment alone: a ntfy server
+ * that the administration configured in the administration (a self-hosted
+ * server with access control, ADR-0024) published the code to the server of
+ * the environment instead, without its access token — the code never arrived
+ * and the page said nothing about the cause (WP-M24-21).
+ *
+ * The target is the target of the **user**: the topic of his ntfy account, the
+ * chat of his account, the room of his account, his mail address, the chat of
+ * his bridge account and — for the web push — only the devices of his own
+ * account (ADR-0045, §11.13). A code of one user never reaches the device of
+ * another one.
  */
 async function sendCodeOverChannel(
   database: Db,
@@ -151,29 +177,42 @@ async function sendCodeOverChannel(
   account: StoredAccount,
   code: string,
   locale: ServerLocale | undefined,
+  userId: string,
 ): Promise<void> {
   const text = codeText(locale, code)
   const message = { title: text, body: text }
 
   switch (account.channel) {
     case 'ntfy': {
-      await sendNtfyNotification(
-        {
-          url: env.NTFY_URL,
-          topic: env.NTFY_TOPIC,
-          token: env.NTFY_TOKEN,
-          userTopic: account.externalId,
-        },
-        message,
-        '',
-      )
+      // The target of the installation: the row wins over the environment, the
+      // access token of the row travels in the `Authorization` header. The code
+      // goes to the topic of the user, not to the topic of the instance.
+      const target = await effectiveNtfyConfig(database, env, { requireVerified: false })
+
+      if (target === null) {
+        throw new ConfirmationError(
+          'channel_not_configured',
+          'ntfy has no usable configuration',
+        )
+      }
+
+      await sendNtfyNotification({ ...target, userTopic: account.externalId }, message, '')
 
       return
     }
 
     case 'telegram': {
+      const effective = await readEffectiveChannel(database, env, 'telegram')
+
+      if (effective.secret === '') {
+        throw new ConfirmationError(
+          'channel_not_configured',
+          'telegram has no bot token',
+        )
+      }
+
       await sendTelegramNotification(
-        { token: env.TELEGRAM_BOT_TOKEN, chatId: account.externalId },
+        { token: effective.secret, chatId: account.externalId },
         message,
         '',
       )
@@ -182,13 +221,14 @@ async function sendCodeOverChannel(
     }
 
     case 'matrix': {
-      const target = matrixTargetOf(env, account.target)
+      const effective = await readEffectiveChannel(database, env, 'matrix')
+      const target = matrixTargetOf(effective, account.target)
 
       await sendMatrixNotification(
         {
           homeserver: target.homeserver,
           roomId: target.roomId,
-          accessToken: account.secret,
+          accessToken: account.secret === '' ? effective.secret : account.secret,
         },
         message,
         '',
@@ -198,15 +238,26 @@ async function sendCodeOverChannel(
     }
 
     case 'email': {
+      const effective = await readEffectiveChannel(database, env, 'email')
+      const from = effective.config.from ?? ''
+      const port = Number(effective.config.port ?? '')
+
+      if (from === '') {
+        throw new ConfirmationError(
+          'channel_not_configured',
+          'email has no sender address',
+        )
+      }
+
       await sendEmailNotification(
         {
           to: [account.externalId],
-          host: env.SMTP_HOST,
-          port: env.SMTP_PORT,
-          secure: env.SMTP_SECURE,
-          user: env.SMTP_USER,
-          password: env.SMTP_PASSWORD,
-          from: env.SMTP_FROM,
+          host: effective.config.host ?? '',
+          port: Number.isFinite(port) ? port : 587,
+          secure: (effective.config.secure ?? 'false') === 'true',
+          user: effective.config.user ?? '',
+          password: effective.secret,
+          from,
         },
         message,
         '',
@@ -216,11 +267,22 @@ async function sendCodeOverChannel(
     }
 
     case 'whatsapp': {
+      // WhatsApp Web exists only through its row (ADR-0020).
+      const effective = await readEffectiveChannel(database, env, 'whatsapp')
+      const baseUrl = effective.config.baseUrl ?? ''
+
+      if (baseUrl === '' || effective.secret === '') {
+        throw new ConfirmationError(
+          'channel_not_configured',
+          'whatsapp has no bridge',
+        )
+      }
+
       await sendWhatsAppNotification(
         {
-          baseUrl: env.WHATSAPP_BRIDGE_URL,
+          baseUrl,
           chatId: account.externalId,
-          token: env.WHATSAPP_BRIDGE_TOKEN,
+          token: effective.secret,
         },
         message,
         '',
@@ -232,6 +294,8 @@ async function sendCodeOverChannel(
     case 'webpush': {
       const configuration = await readWebPushConfiguration(database, env)
 
+      // Only the devices of the user: a code of one user never reaches the
+      // device of another one (ADR-0045, §11.13).
       const subscriptions = await database
         .select({
           endpoint: pushSubscriptions.endpoint,
@@ -239,6 +303,15 @@ async function sendCodeOverChannel(
           auth: pushSubscriptions.auth,
         })
         .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.userId, userId))
+
+      if (subscriptions.length === 0) {
+        throw new ConfirmationError(
+          'send_failed',
+          'The user has no device',
+          'push_no_subscription',
+        )
+      }
 
       await sendWebPushNotification(
         {
@@ -264,6 +337,11 @@ async function sendCodeOverChannel(
  * Sends the one-time code over the channel of the account of the user
  * (`specs/10-notifications.md` §11.3a, WP-M24-08) and answers the deadline of
  * the code — the code itself travels over the channel, never over the API.
+ *
+ * A channel that refuses the code keeps the machine code of the refusal
+ * (`http_403`, `http_timeout`, `no_token`, …) as the cause of the failure, so
+ * the page of the user can name the cause instead of a bare "invalid request"
+ * (WP-M24-21).
  */
 export async function requestChannelConfirmation(
   database: Db,
@@ -282,18 +360,39 @@ export async function requestChannelConfirmation(
   const expiresAt = new Date(Date.now() + CODE_TTL_MS).toISOString()
 
   try {
-    await sendCodeOverChannel(database, env, account, code, locale)
+    await sendCodeOverChannel(database, env, account, code, locale, userId)
   } catch (error) {
     if (error instanceof ConfirmationError) {
       throw error
     }
 
-    throw new ConfirmationError('send_failed', 'The channel did not take the code')
+    throw new ConfirmationError(
+      'send_failed',
+      'The channel did not take the code',
+      failureCodeOf(error),
+    )
   }
 
   await writePending(database, userId, channel, { code, expiresAt })
 
   return { expiresAt }
+}
+
+/**
+ * The machine-readable code of a refused send — the code of the adapter
+ * (`http_401`, `no_token`, `push_unauthorized`, …) and never its message: a
+ * message of an adapter can carry an address or a path (§11.13).
+ */
+function failureCodeOf(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = (error as { code?: unknown }).code
+
+    if (typeof code === 'string' && code !== '') {
+      return code
+    }
+  }
+
+  return ''
 }
 
 /** Writes the pending code of a user and a channel. */

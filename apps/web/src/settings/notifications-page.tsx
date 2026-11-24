@@ -60,6 +60,7 @@ const handledErrorCodes = [
   'session_invalid',
   'invalid_request',
   'channel_not_configured',
+  'send_failed',
   'unknown',
 ] as const
 
@@ -94,6 +95,32 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
   return (handledErrorCodes as readonly string[]).includes(code)
     ? t(`notifications.errors.${code}`)
     : t('notifications.errors.unknown')
+}
+
+/**
+ * The text of a refused send (WP-M24-21): the machine code of the refusal of
+ * the channel travels in `params.reason` (`http_403`, `http_timeout`, …) and
+ * has its own text; a reason without a text is named by its code. Before,
+ * every refusal of the send answered a flat `invalid_request`, so a code that
+ * never arrived looked like a wrong code.
+ */
+function sendErrorMessage(t: TFunction<'common'>, error: unknown): string {
+  if (errorCode(error) !== 'send_failed') {
+    return errorMessage(t, error)
+  }
+
+  const raw = error instanceof ApiError ? error.params?.reason : undefined
+  const reason = typeof raw === 'string' ? raw : ''
+  const key = `notifications.errors.reasons.${reason}`
+  const translated = reason === '' ? '' : t(key)
+
+  if (translated !== '' && translated !== key) {
+    return translated
+  }
+
+  return reason === ''
+    ? t('notifications.errors.send_failed')
+    : t('notifications.errors.send_failed_reason', { reason })
 }
 
 /**
@@ -504,7 +531,7 @@ const testReason = (code: string): string => {
 
         {sendCode.isError ? (
           <p className="text-sm text-rose-400" role="alert">
-            {errorMessage(t, sendCode.error)}
+            {sendErrorMessage(t, sendCode.error)}
           </p>
         ) : null}
 

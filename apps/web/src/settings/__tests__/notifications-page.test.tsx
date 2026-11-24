@@ -601,3 +601,64 @@ describe('NotificationsPage', () => {
   })
 
 })
+
+describe('NotificationsPage — the code of a channel (WP-M24-21)', () => {
+  it('names the reason of a refused code instead of a bare error', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/accounts') && init?.method === undefined) {
+        return Response.json({
+          accounts: [
+            {
+              channel: 'ntfy',
+              externalId: 'stoerdesk-admin',
+              label: '',
+              secretSet: false,
+              target: '',
+              verifiedAt: null,
+              state: 'linked',
+            },
+          ],
+        })
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/ntfy/verification')) {
+        return Response.json(
+          { code: 'send_failed', params: { reason: 'http_403' } },
+          { status: 502 },
+        )
+      }
+
+      if (url.endsWith('/v1/notifications/accounts/ntfy')) {
+        return Response.json({
+          publicUrl: 'https://ntfy.sh',
+          topic: 'stoerdesk-admin',
+          subscriptionUrl: 'https://ntfy.sh/stoerdesk-admin',
+          deepLink: 'ntfy://stoerdesk-admin',
+        })
+      }
+
+      if (url.endsWith('/v1/notifications/compliance')) {
+        return Response.json({
+          userId: '11111111-1111-4111-8111-111111111111',
+          name: 'Nora Reich',
+          channels: [{ channel: 'ntfy', state: 'linked' }],
+          missing: [],
+          channelCount: 1,
+          compliant: true,
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    await screen.findByText('In der ntfy-App abonnieren')
+    fireEvent.click(screen.getByRole('button', { name: 'Code senden' }))
+
+    expect(await screen.findByText(/Veröffentlichung verweigert \(403\)/)).toBeTruthy()
+  })
+})

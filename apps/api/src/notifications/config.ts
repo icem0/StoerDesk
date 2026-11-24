@@ -14,7 +14,7 @@ type Db = Database['database']
 const kinds = NOTIFICATION_CHANNEL_KINDS
 
 /** The machine key of a channel kind. */
-type ChannelKind = typeof kinds[number]
+export type ChannelKind = typeof kinds[number]
 
 /** What a channel needs to be configured: §11.1/§11.6 and the phase-7 rules. */
 interface KindRule {
@@ -200,6 +200,71 @@ export async function readWebPushConfiguration(
     enabled: row?.enabled ?? true,
     usable: trio.publicKey !== '' && trio.privateKey !== '' && trio.subject !== '',
   }
+}
+
+/**
+ * The effective configuration of one kind with its secret: the row of the
+ * administration wins over the environment (§11.2, ADR-0022) — the same rule
+ * the effective VAPID trio and the ntfy token follow. The secret stays inside
+ * the server: it never enters an answer, a log or an event (§11.13, ADR-0005).
+ *
+ * An **empty** value of the row does not override the environment: a field that
+ * was cleared in the administration falls back to the environment instead of
+ * becoming an empty address — a send to an empty host fails with an error the
+ * user cannot explain.
+ *
+ * WhatsApp Web has no environment keys at all (ADR-0020): its bridge exists
+ * only through its row.
+ */
+export interface EffectiveChannel {
+  /** The public settings of the kind — the row wins over the environment. */
+  config: Record<string, string>
+  /** The write-only secret of the kind — the row wins over the environment. */
+  secret: string
+}
+
+export async function readEffectiveChannel(
+  database: Db,
+  env: Env,
+  kind: ChannelKind,
+): Promise<EffectiveChannel> {
+  const [row] = await database
+    .select({
+      config: notificationChannels.config,
+      secret: notificationChannels.secret,
+    })
+    .from(notificationChannels)
+    .where(eq(notificationChannels.kind, kind))
+    .limit(1)
+
+  const fallback = environmentSettings(env)[kind]
+  const config: Record<string, string> = { ...fallback.config }
+
+  for (const [key, value] of Object.entries(row === undefined ? {} : publicSettings(row.config))) {
+    if (value !== '') {
+      config[key] = value
+    }
+  }
+
+  let secret = row === undefined || row.secret === '' ? fallback.secret : row.secret
+
+  // The VAPID trio is one value: the row of the administration wins over the
+  // environment as a whole (WP-M14-158) — the same rule as in
+  // `readWebPushConfiguration`.
+  if (kind === 'webpush') {
+    const trio = webPushTrio(
+      row === undefined
+        ? undefined
+        : { config: publicSettings(row.config), secret: row.secret },
+      env,
+    )
+
+    config.publicKey = trio.publicKey
+    config.subject = trio.subject
+    secret = trio.privateKey
+  }
+
+  return { config, secret }
 }
 
 /** Narrows a stored kind to one of the seven kinds of §11.1. */

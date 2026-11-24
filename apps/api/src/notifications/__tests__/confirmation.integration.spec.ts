@@ -1,7 +1,7 @@
 import http from 'node:http'
 import { randomUUID } from 'node:crypto'
 
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -18,7 +18,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped confirmation integration: ${testDatabase.reason}\n`)
 }
 
-const { notificationAccounts, users } = schema
+const { notificationAccounts, notificationChannels, pushSubscriptions, users } = schema
 
 describe.skipIf(testDatabase.status === 'unavailable')(
   'the confirmation of a channel of a user (WP-M24-08, §11.3a)',
@@ -28,6 +28,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     const db = drizzle(client, { schema })
 
     const bodies: Array<Record<string, unknown>> = []
+    const authorizations: string[] = []
+    let status = 200
     let server: http.Server | undefined
     let port = 0
     let userId = ''
@@ -43,7 +45,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
         request.on('end', () => {
           bodies.push(JSON.parse(data || '{}'))
-          reply.writeHead(200)
+          authorizations.push(String(request.headers.authorization ?? ''))
+          reply.writeHead(status)
           reply.end('ok')
         })
       })
@@ -190,6 +193,125 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         expect(response.statusCode).toBe(422)
       } finally {
         await app.close()
+      }
+    })
+
+    it('sends the code to the ntfy server of the administration, not to the environment (WP-M24-21)', async () => {
+      await db.insert(notificationChannels).values({
+        name: 'ntfy',
+        kind: 'ntfy',
+        enabled: true,
+        config: { url: `http://127.0.0.1:${port}/`, topic: 'saved-topic' },
+        secret: 'tk_saved',
+      })
+
+      // The environment points at a server that does not exist: the code must
+      // not be published there.
+      process.env.NTFY_URL = 'http://127.0.0.1:1/'
+      process.env.NTFY_TOPIC = 'environment-topic'
+      process.env.NTFY_TOKEN = ''
+
+      const app = await build()
+
+      try {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/v1/notifications/accounts/ntfy/verification',
+          headers: { cookie },
+        })
+
+        expect(response.statusCode).toBe(200)
+
+        // The row of the administration wins over the environment (§11.2) and
+        // its access token travels in the `Authorization` header (ADR-0022).
+        const published = bodies.at(-1) as { topic?: string }
+
+        expect(published.topic).toMatch(/^stoerdesk-/)
+        expect(authorizations.at(-1)).toBe('Bearer tk_saved')
+      } finally {
+        await app.close()
+        await db.delete(notificationChannels).where(eq(notificationChannels.kind, 'ntfy'))
+        process.env.NTFY_URL = `http://127.0.0.1:${port}/`
+        process.env.NTFY_TOPIC = 'stoerdesk-instance'
+      }
+    })
+
+    it('names the cause of a refused send (WP-M24-21)', async () => {
+      status = 403
+
+      const app = await build()
+
+      try {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/v1/notifications/accounts/ntfy/verification',
+          headers: { cookie },
+        })
+
+        expect(response.statusCode).toBe(502)
+        expect(response.json<{ code: string; params: { reason?: string } }>().code).toBe(
+          'send_failed',
+        )
+        expect(
+          response.json<{ code: string; params: { reason?: string } }>().params.reason,
+        ).toBe('http_403')
+      } finally {
+        status = 200
+        await app.close()
+      }
+    })
+
+    it('sends the web push code only to the devices of the user (WP-M24-21)', async () => {
+      const [other] = await db
+        .insert(users)
+        .values({
+          email: `other-${randomUUID().slice(0, 8)}@example.invalid`,
+          passwordHash: 'not-a-real-hash',
+        })
+        .returning({ id: users.id })
+
+      await db.insert(notificationAccounts).values({
+        userId,
+        channel: 'webpush',
+        externalId: '',
+      })
+
+      await db.insert(pushSubscriptions).values({
+        userId: other?.id ?? '',
+        endpoint: 'https://push.example.invalid/other',
+        p256dh: 'p256dh',
+        auth: 'auth',
+      })
+
+      const app = await build()
+
+      try {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/v1/notifications/accounts/webpush/verification',
+          headers: { cookie },
+        })
+
+        // The user has no device: the code reaches nobody, and the answer names
+        // the cause instead of pretending that the code is on its way.
+        expect(response.statusCode).toBe(502)
+        expect(response.json<{ code: string; params: { reason?: string } }>().code).toBe(
+          'send_failed',
+        )
+        expect(
+          response.json<{ code: string; params: { reason?: string } }>().params.reason,
+        ).toBe('push_no_subscription')
+      } finally {
+        await app.close()
+        await db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, other?.id ?? ''))
+        await db
+          .delete(notificationAccounts)
+          .where(
+            and(
+              eq(notificationAccounts.userId, userId),
+              eq(notificationAccounts.channel, 'webpush'),
+            ),
+          )
       }
     })
   },
