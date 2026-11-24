@@ -210,3 +210,161 @@ export function ChartLegend(props: { series: ChartSeries[] }) {
     </ul>
   )
 }
+
+/**
+ * A diagram of the count of the tickets per bucket.
+ *
+ * The y-axis carries the scale (`0` and the round maximum), the x-axis the
+ * date of every n-th bucket, and every bar the number of the tickets in its
+ * tooltip. The bars share the width of the plot; a bucket without a ticket
+ * draws no bar.
+ */
+export function BarChart(props: {
+  /** The label of every bucket on the x-axis. */
+  labels: string[]
+  /** The number of the tickets per bucket. */
+  values: number[]
+  /** The name of the diagram for a screen reader. */
+  ariaLabel: string
+  /** The value of a bar as text. */
+  formatValue: (value: number) => string
+}) {
+  const { labels, values, ariaLabel, formatValue } = props
+  const count = labels.length
+  const ceiling = niceCeiling(Math.max(1, ...values))
+  const step = Math.max(1, Math.ceil(count / 6))
+  const slot = PLOT_WIDTH / Math.max(1, count)
+
+  return (
+    <svg
+      aria-label={ariaLabel}
+      className="h-48 w-full"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+    >
+      {Array.from({ length: GRID_LINES }, (_, line) => {
+        const value = (ceiling / (GRID_LINES - 1)) * line
+        const y = yAt(value, ceiling)
+
+        return (
+          <g key={`grid-${line}`}>
+            <line
+              className="stroke-slate-700"
+              strokeWidth="1"
+              x1={PADDING.left}
+              x2={WIDTH - PADDING.right}
+              y1={y}
+              y2={y}
+            />
+            <text
+              className="fill-slate-500 text-[10px]"
+              textAnchor="end"
+              x={PADDING.left - 6}
+              y={y + 3}
+            >
+              {formatValue(Math.round(value))}
+            </text>
+          </g>
+        )
+      })}
+
+      {values.map((value, index) => {
+        const height = (value / ceiling) * PLOT_HEIGHT
+
+        return (
+          <rect
+            className="fill-sky-500"
+            height={Math.max(value > 0 ? 2 : 0, height)}
+            key={`bar-${index}`}
+            width={Math.max(1, slot - 4)}
+            x={PADDING.left + index * slot + 2}
+            y={PADDING.top + PLOT_HEIGHT - height}
+          >
+            <title>{`${labels[index] ?? ''}: ${formatValue(value)}`}</title>
+          </rect>
+        )
+      })}
+
+      {labels.map((label, index) =>
+        index % step === 0 || index === count - 1 ? (
+          <text
+            className="fill-slate-500 text-[10px]"
+            key={`x-${index}`}
+            textAnchor="middle"
+            x={PADDING.left + index * slot + slot / 2}
+            y={HEIGHT - 10}
+          >
+            {label}
+          </text>
+        ) : null,
+      )}
+    </svg>
+  )
+}
+
+/**
+ * A ranking of rows: the name of the row, a bar of its value and the value
+ * itself at the end of the bar. The rows are sorted by the caller — the
+ * browser never aggregates the answer (`PLAN.md` §13).
+ */
+export function HorizontalBars(props: {
+  rows: { key: string; label: string; value: number; title?: string }[]
+  /** The name of the diagram for a screen reader. */
+  ariaLabel: string
+  /** The value of a row as text. */
+  formatValue: (value: number) => string
+}) {
+  const { rows, ariaLabel, formatValue } = props
+  const height = Math.max(40, rows.length * 24 + 10)
+  const labelWidth = 140
+  const valueWidth = 48
+  const track = WIDTH - labelWidth - valueWidth
+  const max = Math.max(1, ...rows.map((row) => row.value))
+
+  return (
+    <svg
+      aria-label={ariaLabel}
+      className="w-full"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      viewBox={`0 0 ${WIDTH} ${height}`}
+    >
+      {rows.map((row, index) => {
+        const y = index * 24 + 6
+        const width = (row.value / max) * track
+
+        return (
+          <g key={row.key}>
+            <text
+              className="fill-slate-300 text-[11px]"
+              textAnchor="start"
+              x="0"
+              y={y + 10}
+            >
+              {row.label}
+            </text>
+            <rect
+              className="fill-sky-600"
+              height="12"
+              rx="2"
+              width={Math.max(row.value > 0 ? 2 : 0, width)}
+              x={labelWidth}
+              y={y}
+            >
+              <title>{`${row.title ?? row.label}: ${formatValue(row.value)}`}</title>
+            </rect>
+            <text
+              className="fill-slate-400 text-[11px]"
+              textAnchor="end"
+              x={WIDTH}
+              y={y + 10}
+            >
+              {formatValue(row.value)}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}

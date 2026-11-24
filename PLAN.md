@@ -846,6 +846,17 @@ web draws the answer as an inline SVG with a scale, a legend and the value of
 every point in the tooltip — no chart dependency (ADR-0012 decision 6) and no
 aggregation in the browser. The CSV export writes the section `trends`.
 
+**WP-M26-05 — the diagrams carry an axis and the objects a ranking (done).** The
+diagram of the count was a row of bars without an axis, without a scale and
+without a value, and the conspicuous objects were a table without a picture of
+the ranking. The diagram of the count now carries the y-axis with zero and the
+round maximum, the date of every n-th bucket on the x-axis and the number of
+the tickets in the tooltip of every bar; the summary of the range names the
+total, the average per bucket and the maximum. The conspicuous objects get the
+ranking of the ten first objects above the table — the name of the object in
+the tooltip, the number at the end of the bar. The values come from the answer
+of the API; the browser draws them and never aggregates them.
+
 **WP-M26-01 — the statistics know only phases with data (done).** The phase
 `firstResponse` of the statistics measured the column `tickets.first_response_at`,
 and no workflow event ever writes that column — the phase answered a count of

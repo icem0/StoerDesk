@@ -8,7 +8,7 @@ milestone: m26
 context-budget: 60k tokens
 spec: specs/12-stats.md §12.11 (new); ADR-0049 (decision 3)
 spec-lines: 90
-changed-lines: 640
+changed-lines: 568
 
 files-read:
 
@@ -85,6 +85,7 @@ Expected: all green; the new tests fail before the change and pass after it.
 - Files changed: the spec, the contract, the service, the route, the export,
   the diagram, the page and the two locales
 - Interfaces added: `GET /api/v1/stats/trends`, `queryTrends`, `LineChart`
-- Verified: the commands above
+- Verified: the commands above; the source files of the package changed 568 lines
+  (the tests and the bookkeeping of the repository are not counted)
 - Follow-up WP: none
 - Open question: none

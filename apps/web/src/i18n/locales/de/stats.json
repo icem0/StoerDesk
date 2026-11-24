@@ -111,5 +111,10 @@
     "processing": "Bearbeitungszeit",
     "empty": "Keine Meldungen im Zeitraum.",
     "aria": "Verlauf der {{metric}} je {{bucket}}"
+  },
+  "chart": {
+    "summary": "Gesamt {{total}} · Ø je Bucket {{average}} · Maximum {{max}}",
+    "rankingTitle": "Die Objekte mit den meisten Meldungen",
+    "rankingAria": "Rangliste der Objekte mit den meisten Meldungen"
   }
 }

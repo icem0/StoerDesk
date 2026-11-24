@@ -1,7 +1,7 @@
 # WP-M26-05: the diagrams carry an axis and the objects a ranking
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M26-04
 phase: 26
 milestone: m26

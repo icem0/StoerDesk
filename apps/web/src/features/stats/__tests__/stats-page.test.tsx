@@ -125,6 +125,18 @@ describe('the statistics page', () => {
     expect(diagram).toBeTruthy()
   })
 
+  it('shows the scale of the count and the ranking of the objects', async () => {
+    renderStats()
+
+    expect(await screen.findByText('Gesamt 3 · Ø je Bucket 3.0 · Maximum 3')).toBeTruthy()
+    expect(screen.getByText('Die Objekte mit den meisten Meldungen')).toBeTruthy()
+
+    const ranking = screen.getByRole('img', {
+      name: 'Rangliste der Objekte mit den meisten Meldungen',
+    })
+    expect(ranking).toBeTruthy()
+  })
+
   it('names the two phases of the reaction times', async () => {
     renderStats()
 

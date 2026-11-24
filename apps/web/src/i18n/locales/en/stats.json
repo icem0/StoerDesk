@@ -111,5 +111,10 @@
     "processing": "Processing time",
     "empty": "No tickets in the period.",
     "aria": "The {{metric}} over the {{bucket}}"
+  },
+  "chart": {
+    "summary": "Total {{total}} · average per bucket {{average}} · maximum {{max}}",
+    "rankingTitle": "The objects with the most tickets",
+    "rankingAria": "The ranking of the objects with the most tickets"
   }
 }

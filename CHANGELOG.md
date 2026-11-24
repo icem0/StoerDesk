@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The diagrams of the statistics carry an axis (**WP-M26-05**, phase 26, ADR-0049):
+  the diagram of the count shows the scale, the date of every n-th bucket and
+  the number of the tickets in the tooltip, the summary of the range names the
+  total, the average per bucket and the maximum, and the conspicuous objects
+  get the ranking of the ten first objects.
 - The statistics show the trends (**WP-M26-04**, phase 26, ADR-0049): the new
   route `GET /api/v1/stats/trends` answers one point per bucket with the number
   of the reported tickets, the average minutes of the review phase, of the

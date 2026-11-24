@@ -13,7 +13,7 @@ import type {
 import { useMe, usePermission } from '../../auth/usePermission'
 import { apiBaseUrl, apiFetch, type ApiError } from '../../lib/api'
 import { formatHours, isHourValue } from '../../lib/duration'
-import { ChartLegend, LineChart, type ChartSeries } from './charts'
+import { ChartLegend, BarChart, HorizontalBars, LineChart, type ChartSeries } from './charts'
 
 /**
  * Statistics page at `/stats` (`specs/12-stats.md` §12.1–§12.5, §12.9, WP-M9-15).
@@ -65,6 +65,20 @@ function presetRange(range: RangeKey): { from: string; to: string } {
 
 function percent(rate: number | null): string {
   return rate === null ? '—' : `${(rate * 100).toFixed(1)} %`
+}
+
+/**
+ * The label of a bucket on the x-axis of a diagram: the day for the buckets of
+ * a day and a week, the month for the buckets of a month.
+ */
+function bucketLabelOf(instant: string, bucket: string, locale: string): string {
+  const date = new Date(instant)
+
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: bucket === 'month' ? 'short' : '2-digit',
+    ...(bucket === 'month' ? { year: '2-digit' } : {}),
+  }).format(date)
 }
 
 function useSection<T>(path: string, query: string) {
@@ -129,38 +143,27 @@ function GroupTable(props: {
 function FrequencyChart(props: {
   series: FrequencyResponse['series']
   ariaLabel: string
+  bucket: string
 }) {
-  const { series, ariaLabel } = props
-  const max = Math.max(1, ...series.map((point) => point.total))
-  const width = Math.max(240, series.length * 20)
-  const height = 120
-  const slot = width / Math.max(1, series.length)
+  const { t, i18n } = useTranslation('stats')
+  const { series, ariaLabel, bucket } = props
+  const labels = series.map((point) => bucketLabelOf(point.bucketStart, bucket, i18n.language))
+  const values = series.map((point) => point.total)
+  const total = values.reduce((sum, value) => sum + value, 0)
+  const max = Math.max(0, ...values)
+  const average = values.length > 0 ? total / values.length : 0
 
   return (
-    <svg
-      aria-label={ariaLabel}
-      className="h-40 w-full"
-      preserveAspectRatio="none"
-      role="img"
-      viewBox={`0 0 ${width} ${height}`}
-    >
-      {series.map((point, index) => {
-        const barHeight = (point.total / max) * (height - 8)
-
-        return (
-          <rect
-            className="fill-sky-500"
-            height={barHeight}
-            key={point.bucketStart}
-            width={Math.max(1, slot - 4)}
-            x={index * slot + 2}
-            y={height - barHeight}
-          >
-            <title>{`${point.bucketStart}: ${point.total}`}</title>
-          </rect>
-        )
-      })}
-    </svg>
+    <>
+      <BarChart ariaLabel={ariaLabel} formatValue={(value) => String(value)} labels={labels} values={values} />
+      <p className="mt-1 text-sm text-slate-400">
+        {t('chart.summary', {
+          total,
+          average: average.toFixed(1),
+          max,
+        })}
+      </p>
+    </>
   )
 }
 
@@ -252,15 +255,7 @@ export function StatsPage() {
    * The label of a bucket on the x-axis of a diagram: the day for the buckets
    * of a day and a week, the month for the buckets of a month.
    */
-  const bucketLabel = (instant: string): string => {
-    const date = new Date(instant)
-
-    return new Intl.DateTimeFormat(i18n.language, {
-      day: '2-digit',
-      month: bucket === 'month' ? 'short' : '2-digit',
-      ...(bucket === 'month' ? { year: '2-digit' } : {}),
-    }).format(date)
-  }
+  const bucketLabel = (instant: string): string => bucketLabelOf(instant, bucket, i18n.language)
 
   /** A duration of the axis and of the tooltip. */
   const trendValue = (minutes: number): string =>
@@ -550,6 +545,7 @@ export function StatsPage() {
         ) : (
           <FrequencyChart
             ariaLabel={t('frequency.seriesAria', { bucket: t(`bucket.${bucket}`) })}
+            bucket={bucket}
             series={frequency.data.series}
           />
         )}
@@ -616,7 +612,19 @@ export function StatsPage() {
         ) : objects.data.topObjects.length === 0 ? (
           <p className="mt-2 text-sm text-slate-500">{t('objects.empty')}</p>
         ) : (
-          <table className="mt-3 w-full border-collapse text-sm">
+          <>
+            <h3 className="mt-3 text-sm font-medium text-slate-300">{t('chart.rankingTitle')}</h3>
+            <HorizontalBars
+              ariaLabel={t('chart.rankingAria')}
+              formatValue={(value) => String(value)}
+              rows={objects.data.topObjects.slice(0, 10).map((object) => ({
+                key: object.objectNo,
+                label: object.objectNo,
+                title: object.objectName,
+                value: object.count,
+              }))}
+            />
+            <table className="mt-3 w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="py-1 pr-2 font-medium" scope="col">
@@ -660,6 +668,7 @@ export function StatsPage() {
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
 
