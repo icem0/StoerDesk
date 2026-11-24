@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The assertions of the migrations read the schema of the database
+  (**WP-M28-04**, phase 28): the file `migrations.spec.ts` searched the **text**
+  of the migration files for fragments of SQL —
+  `expect(sql).toContain('CREATE TABLE "tickets"')`. Such an assertion says
+  nothing about the database: it breaks when a migration is written differently
+  and it passes when the migration was never run. The new file
+  `schema.integration.spec.ts` proves the schema against the database instead:
+  the table exists, the constraint refuses the row that breaks it, the trigger
+  protects the row. What really is about the files stays in the file of the
+  journal — the files, their order and their timestamps.
 - The static gates of the check run in parallel (**WP-M28-03**, phase 28):
   `npm run check` calls `scripts/check.mjs`, which runs the typecheck, the
   lint, the i18n check and the check of the work packages beside each other —
