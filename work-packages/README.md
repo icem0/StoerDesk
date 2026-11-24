@@ -1768,7 +1768,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-09a | the setting of the repeated reminder — `oncall.reminder_repeat_h` | done | yes |
 | WP-M23-09b | the reminder of a shift repeats — the sweep counts and sends again | done | yes |
 | WP-M23-09c | the administration sets the interval of the reminder | done | yes |
-| WP-M23-09d | the urgency of the reminder rises — ntfy and the push of the browser | planned | yes |
+| WP-M23-09d | the urgency of the reminder rises — ntfy and the push of the browser | done | yes |
 | WP-M23-09e | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | planned | yes |
 | WP-M23-09f | the button „Erinnern" in the list of the open shifts | planned | yes |
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |

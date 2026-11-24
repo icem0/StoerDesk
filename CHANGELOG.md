@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   sets it (**WP-M23-09c**).
 
 ### Changed
+- The urgency of the reminder rises (**WP-M23-09d**, phase 23): the message of
+  a readiness row carried no priority, so the reminder of a shift that was not
+  accepted arrived like any other message. The second reminder and every
+  further one arrive louder — ntfy over its own level, the push of the browser
+  over the urgency `high`.
 - The reminder of a shift that was not accepted repeats (**WP-M23-09b**, phase
   23): the sweep sent one reminder per shift and never again — a sent row stays
   in the table, so the shift was skipped for ever. The sweep counts the

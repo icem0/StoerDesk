@@ -158,4 +158,44 @@ describe('messageOf (the content of a notification message, §11.5)', () => {
     expect(message.priority).toBe('normal')
     expect(message.body).toBe('normal · Rathaus')
   })
+
+  it('sends the first reminder of a shift without an urgency (WP-M23-09d)', () => {
+    const message = messageOf({
+      shiftId: '22222222-2222-4222-8222-222222222222',
+      poolName: 'Bereitschaft',
+      state: 'PLANNED',
+      startsAt: '2026-11-30T08:00:00.000Z',
+      endsAt: '2026-11-30T16:00:00.000Z',
+      reminderNumber: 1,
+    })
+
+    expect(message.urgency).toBeUndefined()
+    expect(message.ntfyPriority).toBeUndefined()
+  })
+
+  it('raises the urgency of every further reminder of a shift (WP-M23-09d)', () => {
+    const second = messageOf({
+      shiftId: '22222222-2222-4222-8222-222222222222',
+      poolName: 'Bereitschaft',
+      state: 'PLANNED',
+      startsAt: '2026-11-30T08:00:00.000Z',
+      endsAt: '2026-11-30T16:00:00.000Z',
+      reminderNumber: 2,
+    })
+
+    expect(second.urgency).toBe('high')
+    expect(second.ntfyPriority).toBe(4)
+
+    const third = messageOf({
+      shiftId: '22222222-2222-4222-8222-222222222222',
+      poolName: 'Bereitschaft',
+      state: 'PLANNED',
+      startsAt: '2026-11-30T08:00:00.000Z',
+      endsAt: '2026-11-30T16:00:00.000Z',
+      reminderNumber: 3,
+    })
+
+    expect(third.urgency).toBe('high')
+    expect(third.ntfyPriority).toBe(5)
+  })
 })

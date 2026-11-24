@@ -226,6 +226,15 @@ action uses the JSON field `url` and is omitted when there is no deep link.
 Telegram, Matrix, WhatsApp Web and Signal receive the same text; the deep link
 is labelled with the text of the interface of the recipient.
 
+**The urgency of a repeated reminder (WP-M23-09d).** A readiness message
+carries the number of the reminder (WP-M23-09b). The first reminder arrives
+like every other message; the second and every further one arrive louder: ntfy
+receives the level `4` (high) for the second reminder and `5` (max, the
+`urgent` level) for every further one, and the push of the browser carries the
+urgency `high` — the push service delivers the message at once. The fallback
+chain of §11.7 stays as it is: every channel of the chain receives the same
+message.
+
 **The e-mail is HTML** (ADR-0046). The body of every mail is HTML with the
 deep link as a clickable link — a plain text mail is never sent. The text of
 the mail comes from the template of the kind of the message (§11.5a); the

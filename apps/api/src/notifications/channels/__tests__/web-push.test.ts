@@ -51,6 +51,26 @@ describe('sendWebPushNotification', () => {
     expect(options.vapidDetails).toEqual(vapidKeys)
   })
 
+  it('asks for an urgent delivery when the message is urgent (WP-M23-09d)', async () => {
+    const sendMock = vi.fn(async () => ({ statusCode: 201, body: '', headers: {} }))
+
+    await sendWebPushNotification(
+      vapidKeys,
+      { ...message, urgency: 'high' },
+      'https://stoerdesk.local/pwa',
+      [subscription],
+      sendMock as unknown as typeof webPush.sendNotification,
+    )
+
+    const [, , options] = sendMock.mock.calls[0] as unknown as [
+      Record<string, unknown>,
+      string,
+      { urgency?: string },
+    ]
+
+    expect(options.urgency).toBe('high')
+  })
+
   it('labels the deep link in the configured locale (WP-M7-04b)', async () => {
     const cases: { locale: 'de' | 'en'; label: string }[] = [
       { locale: 'de', label: 'Öffnen' },

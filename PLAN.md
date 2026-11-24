@@ -846,6 +846,13 @@ and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
 copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
+**WP-M23-09d — the urgency of the reminder rises (done).** The message of a
+readiness row carried no priority, so the reminder of a shift that was not
+accepted arrived like any other message. The row carries the number of the
+reminder (WP-M23-09b): the second reminder and every further one arrive
+louder — ntfy over the level `4` and then `5`, the push of the browser over
+the urgency `high`. The fallback chain stays as it is.
+
 **WP-M23-09c — the administration sets the interval of the reminder (done).**
 The form of the settings of the readiness carries the keys of §4a.1; the new key
 `oncall.reminder_repeat_h` joins it — the number of hours between two reminders

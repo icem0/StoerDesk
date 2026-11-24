@@ -347,16 +347,34 @@ const ticketMessageOf = (target: Record<string, unknown>): MessagePriority => ({
 })
 
 /** The readiness message of §11.5 (machine values only). */
-const readinessMessageOf = (target: Record<string, unknown>): MessagePriority => ({
-  title: param(target.poolName),
-  body: [
-    param(target.state),
-    `${berlinTime(target.startsAt)} – ${berlinTime(target.endsAt)}`,
-  ]
-    .filter((value) => value !== '')
-    .join(' · '),
-  priority: '',
-})
+const readinessMessageOf = (target: Record<string, unknown>): MessagePriority => {
+  // The number of the reminder (WP-M23-09d): the second reminder and every
+  // further one arrive louder than the first — ntfy over its own level, the
+  // push of the browser over the urgency `high`.
+  const reminderNumber =
+    typeof target.reminderNumber === 'number' && target.reminderNumber >= 2
+      ? target.reminderNumber
+      : 0
+
+  return {
+    title: param(target.poolName),
+    body: [
+      param(target.state),
+      `${berlinTime(target.startsAt)} – ${berlinTime(target.endsAt)}`,
+    ]
+      .filter((value) => value !== '')
+      .join(' · '),
+    priority: '',
+    ...(reminderNumber === 0
+      ? {}
+      : {
+          urgency: 'high' as const,
+          // the level of ntfy: the first further reminder is `high`, every
+          // further one the highest level
+          ntfyPriority: reminderNumber === 2 ? 4 : 5,
+        }),
+  }
+}
 
 /**
  * The name of the addressee of a personal message (`specs/10-notifications.md`

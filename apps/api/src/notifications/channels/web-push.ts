@@ -35,6 +35,11 @@ export interface WebPushConfig {
 export interface NotificationMessage {
   title: string
   body: string
+  /**
+   * The urgency of the message (WP-M23-09d): `high` asks the push service to
+   * deliver the message at once. A message without the field is `normal`.
+   */
+  urgency?: 'normal' | 'high'
 }
 
 export interface WebPushSubscription {
@@ -199,6 +204,9 @@ export async function sendWebPushNotification(
             privateKey: config.privateKey,
           },
           timeout: WEB_PUSH_TIMEOUT_MS,
+          // The urgency of the message (WP-M23-09d): `high` asks the push
+          // service to deliver the message at once.
+          ...(message.urgency === 'high' ? { urgency: 'high' as const } : {}),
         },
       )
 

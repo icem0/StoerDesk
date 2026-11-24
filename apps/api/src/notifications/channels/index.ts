@@ -16,6 +16,11 @@ export interface NotificationMessage {
   kind?: string
   /** The machine-readable values of the message (§11.5). */
   params?: Record<string, unknown>
+  /**
+   * The urgency of the message (WP-M23-09d): `high` asks the push service to
+   * deliver the message at once. A message without the field is `normal`.
+   */
+  urgency?: 'normal' | 'high'
 }
 
 /**
