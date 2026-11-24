@@ -18,10 +18,8 @@ files-read:
 files-write:
 
 - apps/web/src/settings/__tests__/readiness-selection.test.tsx
-- apps/web/src/i18n/locales/de/common.json
-- apps/web/src/i18n/locales/en/common.json
-- apps/web/src/features/notifications/inbox-page.tsx
-- apps/web/src/admin/delivery-page.tsx
+- apps/web/src/i18n/locales/de/common.json, apps/web/src/i18n/locales/en/common.json
+- apps/web/src/features/notifications/inbox-page.tsx, apps/web/src/admin/delivery-page.tsx
 
 interfaces:
 
