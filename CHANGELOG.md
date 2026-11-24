@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The administration of the sticker template (**WP-M27-03**, phase 27, ADR-0050):
+  the page `/admin/sticker-template` edits the sheet of the catalog, the sheet
+  format, the grid, the size of the label, the margins, the distances between
+  the labels, the error correction and the size of the QR and the lines that
+  are printed. A grid that does not fit on its sheet is refused before the
+  write, and the 112 notice has no switch — it stays on every sticker.
 - The sticker is a template (**WP-M27-02**, phase 27, ADR-0050): the shared
   contracts name the geometry of the sheet (format, grid, label size, margins,
   the distance between the labels) and the appearance of the label (error

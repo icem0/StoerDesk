@@ -112,7 +112,8 @@
       "escalation": "Escalation",
       "notifications": "Notifications",
       "statuses": "Statuses",
-      "defaults": "Default values"
+      "defaults": "Default values",
+      "stickerTemplate": "Template of the stickers"
     },
     "errors": {
       "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",
@@ -431,5 +432,65 @@
     "missing": "Missing: {{channels}}. {{count}} channels are set up.",
     "link": "To the setup of the channels",
     "icon": "⚠️"
+  },
+  "stickerTemplate": {
+    "title": "The template of the QR stickers",
+    "hint": "The sheet, the grid and the look of the sticker. Every printer of the office prints the same label; the 112 notice stays on every sticker.",
+    "back": "Back to the settings",
+    "saved": "The template is saved.",
+    "save": "Save the template",
+    "section": {
+      "sheet": "Sheet and grid",
+      "look": "The look of the sticker"
+    },
+    "field": {
+      "preset": "Template",
+      "page": "Sheet format",
+      "columns": "Columns",
+      "rows": "Rows",
+      "labelWidthMm": "Width of the label (mm)",
+      "labelHeightMm": "Height of the label (mm)",
+      "marginTopMm": "Margin at the top (mm)",
+      "marginRightMm": "Margin at the right (mm)",
+      "marginBottomMm": "Margin at the bottom (mm)",
+      "marginLeftMm": "Margin at the left (mm)",
+      "gapXMm": "Distance horizontal (mm)",
+      "gapYMm": "Distance vertical (mm)",
+      "qrLevel": "Error correction of the QR code",
+      "qrSizeAutomatic": "Size of the QR code automatic",
+      "qrSizeMm": "Size of the QR code (mm)",
+      "showName": "Print the name of the object",
+      "showObjectNo": "Print the object number",
+      "showCallText": "Print the line „Report a malfunction“"
+    },
+    "hintPreset": "The measures of the presets are a proposal for the label roll of the office. A measure of its own goes into the free grid.",
+    "hintQrLevel": "L is the most robust, H the smallest. The higher the error correction, the bigger the QR code has to be.",
+    "hintEmergencyNotice": "The 112 notice stands on every sticker and cannot be switched off.",
+    "preset": {
+      "a6": "A6 — one label per A6 sheet",
+      "a4-2x2": "A4 — four A6 labels",
+      "a4-21": "A4 — 21 labels (63.5 × 38.1 mm)",
+      "a4-52": "A4 — 52 labels (38.1 × 21.2 mm)",
+      "a4-104": "A4 — 104 labels (25.7 × 20.7 mm)",
+      "custom": "Free grid"
+    },
+    "page": {
+      "a4": "A4 (210 × 297 mm)",
+      "a6": "A6 (105 × 148 mm)"
+    },
+    "qrLevel": {
+      "L": "L — robust",
+      "M": "M — normal",
+      "Q": "Q — safe",
+      "H": "H — very safe"
+    },
+    "errors": {
+      "session_invalid": "The session has expired. Please sign in again.",
+      "forbidden": "The permission for this change is missing.",
+      "invalid_request": "The input is incomplete or not allowed.",
+      "doesNotFit": "The grid does not fit on the sheet. Fewer columns, fewer rows or smaller labels.",
+      "unknown": "The template could not be saved."
+    },
+    "hintQrSize": "Without a size of its own the QR code follows the height of the label."
   }
 }

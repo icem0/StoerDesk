@@ -16,6 +16,7 @@ import { DashboardSettingsPage } from '../admin/dashboard-settings-page'
 import { MySettingsPage } from '../settings/my-settings-page'
 import { NotificationsPage } from '../settings/notifications-page'
 import { SettingsPage } from '../settings/settings-page'
+import { StickerTemplatePage } from '../settings/sticker-template-page'
 import { NotFoundPage } from '../components/not-found-page'
 import { RolesPage } from '../admin/roles-page'
 import { RoleCreatePage } from '../admin/role-create-page'
@@ -325,6 +326,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <BrandingPage />
+          </RequireSession>
+        ),
+      },
+      {
+        path: '/admin/sticker-template',
+        element: (
+          <RequireSession>
+            <StickerTemplatePage />
           </RequireSession>
         ),
       },

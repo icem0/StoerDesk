@@ -38,6 +38,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m24](m24/) | Phase 24: the user owns the channels — the selection per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the mail is HTML with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01) | 21  |
 | [m26](m26/) | Phase 26: the statistics read themselves — a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01, ADR-0049) | 5   |
 | [m27](m27/) | Phase 27: the sticker is a template — the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and the free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01, ADR-0050) | 6   |
+| [m28](m28/) | Phase 28: the gate answers in a minute — the tests of the web share one environment per worker, the integration tests of the API share one migrated template database, the static gates of the check run in parallel and the assertions of the migrations read the schema of the database instead of the text of the files (WP-M28-01) | 4   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1790,10 +1791,14 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M26-06   | the axis of the diagrams shows round numbers — the scale of the axis and the unit of the values | done                    | yes     |
 | WP-M27-01   | the spec of the sticker template and ADR-0050 — the geometry, the appearance, the catalog of the sheets and the print in blocks | done | yes     |
 | WP-M27-02   | the contracts of the sticker template and the route `GET|PUT /api/v1/settings/sticker-template` | done | yes      |
-| WP-M27-03   | the administration of the sticker template at `/admin/sticker-template` — the geometry of the sheet and the look of the label | planned | no      |
+| WP-M27-03   | the administration of the sticker template at `/admin/sticker-template` — the geometry of the sheet and the look of the label | done | yes      |
 | WP-M27-04   | the sheet prints from the geometry — the blocks of the grid, the sizes of the label and the catalog of the sheets | planned | no      |
 | WP-M27-05   | the filter of the list of the stickers — search, active and city on the server, select all and select none | planned | no      |
 | WP-M27-06   | the criterion of the phase — every sheet of the catalog prints in its own grid | planned | no      |
+| WP-M28-01   | the tests of the web share one environment per worker — the pool `vmThreads` of the web project | done | yes     |
+| WP-M28-02   | the integration tests of the API share one migrated template database — the pool of the test databases, the lock of the file and the cleanup between the files | planned | no      |
+| WP-M28-03   | the static gates of the check run in parallel — typecheck, lint, i18n and wp beside each other | planned | no      |
+| WP-M28-04   | the assertions of the migrations read the schema of the database instead of the text of the files | planned | no      |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

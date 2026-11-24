@@ -112,7 +112,8 @@
       "escalation": "Eskalation",
       "notifications": "Benachrichtigungen",
       "statuses": "Status",
-      "defaults": "Standardwerte"
+      "defaults": "Standardwerte",
+      "stickerTemplate": "Vorlage der Aufkleber"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
@@ -431,5 +432,65 @@
     "missing": "Es fehlen: {{channels}}. Eingerichtet sind {{count}} Kanäle.",
     "link": "Zur Einrichtung der Kanäle",
     "icon": "⚠️"
+  },
+  "stickerTemplate": {
+    "title": "Vorlage der QR-Aufkleber",
+    "hint": "Das Blatt, das Raster und das Aussehen des Aufklebers. Alle Drucker der Firma drucken dasselbe Etikett; die 112-Hinweiszeile bleibt auf jedem Aufkleber.",
+    "back": "Zurück zu den Einstellungen",
+    "saved": "Die Vorlage ist gespeichert.",
+    "save": "Vorlage speichern",
+    "section": {
+      "sheet": "Blatt und Raster",
+      "look": "Aussehen des Aufklebers"
+    },
+    "field": {
+      "preset": "Vorlage",
+      "page": "Blattformat",
+      "columns": "Spalten",
+      "rows": "Zeilen",
+      "labelWidthMm": "Breite des Etiketts (mm)",
+      "labelHeightMm": "Höhe des Etiketts (mm)",
+      "marginTopMm": "Rand oben (mm)",
+      "marginRightMm": "Rand rechts (mm)",
+      "marginBottomMm": "Rand unten (mm)",
+      "marginLeftMm": "Rand links (mm)",
+      "gapXMm": "Abstand horizontal (mm)",
+      "gapYMm": "Abstand vertikal (mm)",
+      "qrLevel": "Fehlerkorrektur des QR-Codes",
+      "qrSizeAutomatic": "Größe des QR-Codes automatisch",
+      "qrSizeMm": "Größe des QR-Codes (mm)",
+      "showName": "Name des Objekts drucken",
+      "showObjectNo": "Objektnummer drucken",
+      "showCallText": "Zeile „Störung melden“ drucken"
+    },
+    "hintPreset": "Die Maße der Vorlagen sind ein Vorschlag für die Etikettenrolle der Firma. Ein eigenes Maß kommt in das freie Raster.",
+    "hintQrLevel": "L ist am robustesten, H am kleinsten. Je höher die Fehlerkorrektur, desto größer muss der QR-Code sein.",
+    "hintEmergencyNotice": "Die 112-Hinweiszeile steht auf jedem Aufkleber und lässt sich nicht abschalten.",
+    "preset": {
+      "a6": "A6 — ein Etikett je A6-Blatt",
+      "a4-2x2": "A4 — vier A6-Etiketten",
+      "a4-21": "A4 — 21 Etiketten (63,5 × 38,1 mm)",
+      "a4-52": "A4 — 52 Etiketten (38,1 × 21,2 mm)",
+      "a4-104": "A4 — 104 Etiketten (25,7 × 20,7 mm)",
+      "custom": "Freies Raster"
+    },
+    "page": {
+      "a4": "A4 (210 × 297 mm)",
+      "a6": "A6 (105 × 148 mm)"
+    },
+    "qrLevel": {
+      "L": "L — robust",
+      "M": "M — normal",
+      "Q": "Q — sicher",
+      "H": "H — sehr sicher"
+    },
+    "errors": {
+      "session_invalid": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+      "forbidden": "Für diese Änderung fehlt die Berechtigung.",
+      "invalid_request": "Die Eingabe ist unvollständig oder unzulässig.",
+      "doesNotFit": "Das Raster passt nicht auf das Blatt. Weniger Spalten, weniger Zeilen oder kleinere Etiketten.",
+      "unknown": "Die Vorlage konnte nicht gespeichert werden."
+    },
+    "hintQrSize": "Ohne eigene Größe richtet sich der QR-Code nach der Höhe des Etiketts."
   }
 }

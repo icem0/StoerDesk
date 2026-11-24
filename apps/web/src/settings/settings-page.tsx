@@ -62,6 +62,7 @@ const SETTINGS_SECTIONS = [
     items: [
       { key: 'objects', path: '/objects' },
       { key: 'stickers', path: '/objects/stickers' },
+      { key: 'stickerTemplate', path: '/admin/sticker-template' },
     ],
   },
   {
