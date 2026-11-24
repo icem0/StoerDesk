@@ -804,6 +804,15 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M24-06d — the readiness selection leaves the web (done).** The check run
+failed in `apps/web/src/settings/__tests__/readiness-selection.test.tsx`: the
+test waited for the checkboxes of the readiness block on the own page, and
+WP-M24-06a removed that block with the selection per event type (ADR-0045 —
+every event goes over the channels of the user). The test is a proof of a UI
+that no longer exists and is deleted with it; the labels of the block in the
+`settings` namespace (`de` and `en`) go with it. The API route of the
+preferences leaves with its own package.
+
 **WP-M23-01 — the readiness view plans the shifts (done).** The section
 „Kalender-URL“ of the readiness view was a block of its own below the calendar;
 the frame of the calendar now carries the share button in its upper right

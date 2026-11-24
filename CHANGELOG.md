@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   mailbox of the instance is administered in `/admin/email`.
 
 ### Removed
+- The readiness selection of the user leaves the web (**WP-M24-06d**, phase 24,
+  ADR-0045): the test of the readiness block on the own page is gone — the
+  block itself left the page with WP-M24-06a — and the labels of the block in
+  `de` and `en` go with it.
 - The table of the technicians of a ticket is retired (**WP-M19-08**, phase 19,
   ADR-0039): a ticket is handled by **one** person, and the technician of the
   ticket is `tickets.assigned_user_id` beside the status of the assignment.
@@ -29,6 +33,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The own page loses the selection of the channels per event type (**WP-M24-06a**,
   phase 24, ADR-0045): every event goes over the channels of the user, so the
   seven switches are gone.
+
+### Changed
+- The delivery goes over the channels of the user (**WP-M24-06c**, phase 24,
+  ADR-0045): the confirmed channels of the recipient carry the assignment, the
+  answer of the assignment, the escalation that names him and the readiness of
+  his shift — the target of the user travels in the row, the write-only secret
+  of his account (the Matrix token) is read at the moment of the send. A user
+  without a confirmed channel is notified over the chain of the installation:
+  a message never stays in the queue because a user has no channel of his own.
+  The selection per event type and the mandatory channels of the critical
+  tickets are gone.
 
 ### Added
 - The channels send to the target of the user (**WP-M24-06b**, phase 24, ADR-0045):
