@@ -242,7 +242,6 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
     // the closed ST-2026-0006 — not the test ticket, not the cancelled one.
     expect(evaluations.tickets).toBe(4)
     expect(evaluations.averageReviewMinutes).toBe(60)
-    expect(evaluations.averageFirstResponseMinutes).toBe(90)
     expect(evaluations.averageAcknowledgeMinutes).toBe(90)
     expect(evaluations.averageProcessingMinutes).toBe(360)
   })
@@ -365,7 +364,6 @@ describe.skipIf(testDatabase.status === 'unavailable')('dashboard snapshot servi
       windowDays: 30,
       tickets: 4,
       averageReviewMinutes: 60,
-      averageFirstResponseMinutes: 90,
       averageAcknowledgeMinutes: 90,
       averageProcessingMinutes: 360,
     })

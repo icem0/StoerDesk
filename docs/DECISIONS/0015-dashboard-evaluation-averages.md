@@ -18,10 +18,13 @@ contract (§11.2) carries no duration at all today, and `specs/12-stats.md`
 
 1. **The snapshot gains an `evaluations` block** (`specs/11-dashboard.md` §11.2,
    §11.4): `windowDays`, the `tickets` count of the qualifying set inside the
-   window and four nullable whole-minute averages — `averageReviewMinutes`,
-   `averageFirstResponseMinutes`, `averageAcknowledgeMinutes` (the three phases
-   of §12.2 measured from `reported_at`) and `averageProcessingMinutes`
-   (`closed_at` minus `reported_at`, the bearbeitung time of a ticket).
+   window and three nullable whole-minute averages — `averageReviewMinutes`,
+   `averageAcknowledgeMinutes` (the two phases of §12.2 measured from
+   `reported_at`) and `averageProcessingMinutes` (`closed_at` minus
+   `reported_at`, the bearbeitung time of a ticket). The fourth average of the
+   first version — `averageFirstResponseMinutes` — is gone: the column
+   `tickets.first_response_at` has no writer, so the average was always empty
+   (ADR-0049 decision 1).
 2. **Averages only.** No median, no p90 and no max, in the contract and in the
    SQL: the worst reaction time stays out — it is never calculated and never
    displayed on the dashboard. Percentile aggregates remain a statistics-page

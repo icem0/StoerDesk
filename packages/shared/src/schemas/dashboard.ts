@@ -86,7 +86,6 @@ const dashboardEvaluationsSchema = z.object({
   windowDays: z.number().int().positive(),
   tickets: z.number().int().nonnegative(),
   averageReviewMinutes: z.number().int().nonnegative().nullable(),
-  averageFirstResponseMinutes: z.number().int().nonnegative().nullable(),
   averageAcknowledgeMinutes: z.number().int().nonnegative().nullable(),
   averageProcessingMinutes: z.number().int().nonnegative().nullable(),
 })

@@ -817,6 +817,12 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M26-02 — the dashboard knows the phase neither (done).** The block of
+the evaluations showed the average of the phase that never had data as „Ø Zeit bis
+Rückmeldung"; ADR-0049 decision 1 takes it away: the block carries three
+averages (review, acknowledge, processing), the SQL loses the column
+`first_response_at` and the row leaves the display. ADR-0015 is amended.
+
 **WP-M26-01 — the statistics know only phases with data (done).** The phase
 `firstResponse` of the statistics measured the column `tickets.first_response_at`,
 and no workflow event ever writes that column — the phase answered a count of

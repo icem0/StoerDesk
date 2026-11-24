@@ -1,7 +1,7 @@
 # WP-M26-02: the dashboard knows the phase neither
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M26-01
 phase: 26
 milestone: m26

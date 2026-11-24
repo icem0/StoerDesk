@@ -44,7 +44,6 @@ type DashboardSnapshot = {
     windowDays: number                  // fixed 30
     tickets: number
     averageReviewMinutes: number | null
-    averageFirstResponseMinutes: number | null
     averageAcknowledgeMinutes: number | null
     averageProcessingMinutes: number | null
   }
@@ -123,9 +122,8 @@ The snapshot carries one evaluation block next to the tiles: the average
 durations of the last 30 days over the qualifying set of the counter
 (`is_test = false`, `suspected_spam = false`, `status <> 'CANCELLED'`,
 `reported_at` in the window) read from `stats_tickets` —
-`averageReviewMinutes`, `averageFirstResponseMinutes` and
-`averageAcknowledgeMinutes` (the three phases of `specs/12-stats.md` §12.2,
-measured from `reported_at`) and `averageProcessingMinutes` (`closed_at` minus
+`averageReviewMinutes` and `averageAcknowledgeMinutes` (the two phases of
+`specs/12-stats.md` §12.2, measured from `reported_at`) and `averageProcessingMinutes` (`closed_at` minus
 `reported_at`). Rows without the end column or with a negative duration are
 excluded; an average without any sample is `null`. **Averages only:** no
 median, no p90 and no max — the worst reaction time is neither calculated nor

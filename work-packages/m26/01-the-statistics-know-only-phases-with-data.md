@@ -1,7 +1,7 @@
 # WP-M26-01: the statistics know only phases with data
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: —
 phase: 26
 milestone: m26

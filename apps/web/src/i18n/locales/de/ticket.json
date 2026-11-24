@@ -18,7 +18,6 @@
     "evaluations": {
       "title": "Auswertungen ({{count}} Meldungen, 30 Tage)",
       "review": "Ø Zeit bis Prüfung",
-      "firstResponse": "Ø Zeit bis Rückmeldung",
       "acknowledge": "Ø Zeit bis Bestätigung",
       "processing": "Ø Bearbeitungszeit",
       "minutes": "{{count}} min",

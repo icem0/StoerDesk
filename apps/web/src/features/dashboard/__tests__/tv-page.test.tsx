@@ -19,7 +19,6 @@ const snapshot: DashboardSnapshot = {
     windowDays: 30,
     tickets: 4,
     averageReviewMinutes: 60,
-    averageFirstResponseMinutes: null,
     averageAcknowledgeMinutes: 90,
     averageProcessingMinutes: 360,
   },
@@ -146,7 +145,10 @@ describe('TvPage wall display', () => {
     expect(screen.getByText('1 h')).toBeTruthy()
     expect(screen.getByText('1,5 h')).toBeTruthy()
     expect(screen.getByText('6 h')).toBeTruthy()
-    expect(screen.getByText('keine Daten')).toBeTruthy()
+    // The three averages of the block: review, acknowledge, processing.
+    expect(screen.getByText('Ø Zeit bis Prüfung')).toBeTruthy()
+    expect(screen.getByText('Ø Zeit bis Bestätigung')).toBeTruthy()
+    expect(screen.getByText('Ø Bearbeitungszeit')).toBeTruthy()
 
     const heading = screen.getByRole('heading', { name: 'Letzte Meldungen' })
     expect(heading).toBeTruthy()

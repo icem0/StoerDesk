@@ -18,7 +18,6 @@
     "evaluations": {
       "title": "Evaluations ({{count}} tickets, 30 days)",
       "review": "Avg time to review",
-      "firstResponse": "Avg time to first response",
       "acknowledge": "Avg time to acknowledge",
       "processing": "Avg processing time",
       "minutes": "{{count}} min",
@@ -62,8 +61,7 @@
   "report": {
     "title": "Report a malfunction",
     "loading": "Loading the object …",
-    "object": {
-    },
+    "object": {},
     "faults": {
       "label": "Type of fault",
       "hint": "Multiple selections allowed — in addition to or instead of the description."
@@ -136,7 +134,7 @@
       "duplicate_parent_invalid": "The open report could not be assigned. Please try again.",
       "unknown": "The report could not be sent right now. Please try again later."
     },
-  "done": {
+    "done": {
       "title": "Report received",
       "lead": "The report is in the malfunction log and will be processed by the responsible company.",
       "ticketNo": "Reference number: {{ticketNo}}",
@@ -354,27 +352,27 @@
       "acceptance": "Acceptance required",
       "empty": "No technicians available. Please maintain the pool of the office in the escalation settings."
     },
-      "errors": {
-        "notFound": "Ticket not found.",
-        "assign_target_empty": "The chosen target has no active technician. Please choose another target.",
-        "actionFailed": "The action could not be performed.",
-        "invalid_request": "The submitted data was rejected. Please check the input.",
-        "invalid_transition": "This step is not possible in the status “{{status}}”.",
-        "invalid_event": "Unknown event.",
-        "ticket_not_found": "The ticket does not exist (any more).",
-        "session_invalid": "The session has expired. Please sign in again.",
-        "forbidden": "This action needs a permission that is missing.",
-        "dismiss": "Dismiss notice",
-        "deleteFailed": "The ticket could not be deleted.",
-        "fieldRequired": "Please complete the required fields first.",
-        "deleteConfirmMismatch": "To confirm the deletion, type the ticket number again.",
-        "ticket_not_cancelled": "This report is not cancelled and cannot be deleted. Cancel it first.",
-        "ticket_delete_audit_trigger": "The database blocks deletion (audit trigger). Please migrate the database (migration 0017).",
-        "ticket_delete_missing_table": "The database is not up to date: a required table is missing. Please apply pending migrations (0012 and 0017).",
-        "ticket_delete_fk_violation": "The report cannot be deleted because dependent records exist.",
-        "ticket_delete_permission_denied": "The database refuses deletion (insufficient privilege).",
-        "ticket_delete_failed": "The report could not be deleted (database error {{sqlState}})."
-      },
+    "errors": {
+      "notFound": "Ticket not found.",
+      "assign_target_empty": "The chosen target has no active technician. Please choose another target.",
+      "actionFailed": "The action could not be performed.",
+      "invalid_request": "The submitted data was rejected. Please check the input.",
+      "invalid_transition": "This step is not possible in the status “{{status}}”.",
+      "invalid_event": "Unknown event.",
+      "ticket_not_found": "The ticket does not exist (any more).",
+      "session_invalid": "The session has expired. Please sign in again.",
+      "forbidden": "This action needs a permission that is missing.",
+      "dismiss": "Dismiss notice",
+      "deleteFailed": "The ticket could not be deleted.",
+      "fieldRequired": "Please complete the required fields first.",
+      "deleteConfirmMismatch": "To confirm the deletion, type the ticket number again.",
+      "ticket_not_cancelled": "This report is not cancelled and cannot be deleted. Cancel it first.",
+      "ticket_delete_audit_trigger": "The database blocks deletion (audit trigger). Please migrate the database (migration 0017).",
+      "ticket_delete_missing_table": "The database is not up to date: a required table is missing. Please apply pending migrations (0012 and 0017).",
+      "ticket_delete_fk_violation": "The report cannot be deleted because dependent records exist.",
+      "ticket_delete_permission_denied": "The database refuses deletion (insufficient privilege).",
+      "ticket_delete_failed": "The report could not be deleted (database error {{sqlState}})."
+    },
     "offlineQueued": "Not sent – will be sent automatically when you are back online ({{count}} pending).",
     "offlineTitle": "Unsent actions",
     "offlineAction": {
@@ -528,10 +526,10 @@
       "deleteConfirm": "Permanently delete this ticket? All photos and the history are removed irrevocably.",
       "acknowledgeResult": "Choose the result…",
       "acknowledgeNote": "Note (optional):",
-        "commentText": "Comment text:",
-        "closeComment": "Comment on close (optional):",
-        "detectedErrors": "Detected errors (optional, multiple):",
-        "deleteConfirmNumber": "Ticket number to confirm:"
+      "commentText": "Comment text:",
+      "closeComment": "Comment on close (optional):",
+      "detectedErrors": "Detected errors (optional, multiple):",
+      "deleteConfirmNumber": "Ticket number to confirm:"
     },
     "acknowledgeResult": {
       "fixed": "Fixed",

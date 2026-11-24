@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The dashboard knows the phase neither (**WP-M26-02**, phase 26, ADR-0049):
+  the block of the evaluations carries three averages — review, acknowledge and
+  processing — and the row „Ø Zeit bis Rückmeldung“ is gone. It showed the
+  average of a column that no workflow ever wrote.
 - The statistics know only phases with data (**WP-M26-01**, phase 26,
   ADR-0049): the phase `firstResponse` is gone from the answer of
   `GET /api/v1/stats/reaction-times`, from the CSV export and from the page —

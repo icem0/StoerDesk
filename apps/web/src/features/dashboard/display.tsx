@@ -160,10 +160,6 @@ export function DashboardDisplay(props: { snapshot: DashboardSnapshot }) {
                 value={durationLabel(t, evaluations.averageReviewMinutes, locale)}
               />
               <EvaluationRow
-                label={t('dashboard.evaluations.firstResponse')}
-                value={durationLabel(t, evaluations.averageFirstResponseMinutes, locale)}
-              />
-              <EvaluationRow
                 label={t('dashboard.evaluations.acknowledge')}
                 value={durationLabel(t, evaluations.averageAcknowledgeMinutes, locale)}
               />

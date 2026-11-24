@@ -121,9 +121,6 @@ export async function resolveDashboardEvaluations(
       ROUND(AVG(EXTRACT(EPOCH FROM ("review_started_at" - "reported_at")) / 60.0)
         FILTER (WHERE "review_started_at" IS NOT NULL
           AND "review_started_at" >= "reported_at"))::text AS review_minutes,
-      ROUND(AVG(EXTRACT(EPOCH FROM ("first_response_at" - "reported_at")) / 60.0)
-        FILTER (WHERE "first_response_at" IS NOT NULL
-          AND "first_response_at" >= "reported_at"))::text AS first_response_minutes,
       ROUND(AVG(EXTRACT(EPOCH FROM ("acknowledged_at" - "reported_at")) / 60.0)
         FILTER (WHERE "acknowledged_at" IS NOT NULL
           AND "acknowledged_at" >= "reported_at"))::text AS acknowledge_minutes,
@@ -139,7 +136,6 @@ export async function resolveDashboardEvaluations(
   `)) as {
     tickets: string
     review_minutes: string | null
-    first_response_minutes: string | null
     acknowledge_minutes: string | null
     processing_minutes: string | null
   }[]
@@ -153,7 +149,6 @@ export async function resolveDashboardEvaluations(
     windowDays: EVALUATION_WINDOW_DAYS,
     tickets: Number(row?.tickets ?? 0),
     averageReviewMinutes: minutes(row?.review_minutes),
-    averageFirstResponseMinutes: minutes(row?.first_response_minutes),
     averageAcknowledgeMinutes: minutes(row?.acknowledge_minutes),
     averageProcessingMinutes: minutes(row?.processing_minutes),
   }
