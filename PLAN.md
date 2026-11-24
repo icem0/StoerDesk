@@ -857,6 +857,19 @@ ranking of the ten first objects above the table — the name of the object in
 the tooltip, the number at the end of the bar. The values come from the answer
 of the API; the browser draws them and never aggregates them.
 
+**The check run of the version v1.2.132 failed — the typecheck of the web (fixed).**
+The run of **WP-M26-03** ended after 26 seconds with the typecheck of the web in
+red: the new test of the statistics page reads the path of a request with
+`url.split("?")[0].replace(...)`, and the index of a split is `string | undefined` under
+`noUncheckedIndexedAccess`. The development container did not see the error,
+because the incremental cache of the typecheck (`*.tsbuildinfo`) still held the
+file as unchanged and skipped it; the checkout of the run has no such cache and
+reads the file. The error is fixed in **WP-M26-04** (the fallback `?? ""`).
+The lesson for the work: before a change is declared green, the typecheck runs
+without the incremental cache of the container — `find . -name "*.tsbuildinfo"
+-not -path "./node_modules/*" -delete` — and a fresh checkout of the commit in a
+second directory proves it (the run of v1.2.133 and of v1.2.134 are green).
+
 **WP-M26-01 — the statistics know only phases with data (done).** The phase
 `firstResponse` of the statistics measured the column `tickets.first_response_at`,
 and no workflow event ever writes that column — the phase answered a count of

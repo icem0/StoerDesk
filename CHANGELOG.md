@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- The typecheck of the web in the check run of the version v1.2.132
+  (**WP-M26-03**, phase 26): the new test of the statistics page read the path
+  of a request with `url.split("?")[0].replace(...)` — the index of a split is
+  `string | undefined` under `noUncheckedIndexedAccess`. The error was hidden by
+  the incremental cache of the typecheck in the development container and fixed
+  in **WP-M26-04**.
+
 ### Added
 - The diagrams of the statistics carry an axis (**WP-M26-05**, phase 26, ADR-0049):
   the diagram of the count shows the scale, the date of every n-th bucket and

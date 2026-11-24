@@ -83,6 +83,8 @@ passes after it.
 - Files changed: the spec, the contract, the service, the export, the page and
   the two locales
 - Interfaces added: the fields `labelDe` and `labelEn` of a grouping
-- Verified: the commands above
+- Verified: the commands above — the check run of the version v1.2.132 failed in
+  the typecheck of the web (the incremental cache of the container hid the
+  error); the fix came with **WP-M26-04**, the run of v1.2.133 is green
 - Follow-up WP: none
 - Open question: none
