@@ -848,6 +848,14 @@ every half minute, an optional alarm tone of this browser sounds when the unread
 count rises, and a pushed alarm stays visible until the user acts on it
 (`specs/10-notifications.md` §11.12).
 
+**WP-M14-178 — the alarm tone of the browser has a test (done).** The module of
+the commit had no unit test of its own: `apps/web/src/lib/__tests__/alarm-tone.test.ts`
+proves the contract of `apps/web/src/lib/alarm-tone.ts` (off in a fresh browser,
+the choice survives a reload, a browser that refuses the storage stays silent,
+the listener reports the change and the unsubscribe stops it, and the tone never
+throws without Web Audio), and the test of the bell proves that the tone sounds
+only when the unread count rises and the tone is switched on for this browser.
+
 **WP-M21-01 — the normalisation of the plan (done).** The office plan of a pool
 that was written in the older form (one entry per weekday, ADR-0035) created
 one shift per weekday and asked the technician for one confirmation per day.

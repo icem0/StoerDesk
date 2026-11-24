@@ -188,6 +188,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The alarm tone of this browser has a test (**WP-M14-178**, out of band in
+  phase 14): the module `apps/web/src/lib/alarm-tone.ts` of the inbox worked
+  without a unit test of its own — the choice of the tone, the change of the
+  choice and the silence without Web Audio were untested, and so was the bell
+  that sounds the tone. The test proves the contract of the module (off in a
+  fresh browser, the choice survives a reload, a browser that refuses the
+  storage stays silent, the listener reports the change, the tone never throws)
+  and proves that the bell sounds the tone only when the unread count rises and
+  the tone is switched on for this browser.
 - The readiness view plans the shifts (**WP-M23-01**, phase 23): the section
   „Kalender-URL“ is gone — the frame of the readiness calendar carries the share
   button in its upper right corner, which copies the URL of the personal iCal

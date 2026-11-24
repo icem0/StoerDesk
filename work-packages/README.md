@@ -1691,7 +1691,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-175 | the web push failure names its cause and the next step (out of band) | done | yes |
 | WP-M14-176 | the web push sends through the library of the built API (out of band) | done | yes |
 | WP-M14-177 | the inbox works as an alarm — the retroactive record of commit `d8d2d0e6` (out of band) | done | yes |
-| WP-M14-178 | the alarm tone of the browser has a test (out of band) | planned | yes |
+| WP-M14-178 | the alarm tone of the browser has a test (out of band) | done | yes |
 | WP-M0-01 | local startability with Compose | done | yes |
 | WP-M0-02 | resilient start order | done | yes |
 | WP-M0-03 | binding plan anchor | done | yes |
