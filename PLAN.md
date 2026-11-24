@@ -870,6 +870,16 @@ without the incremental cache of the container — `find . -name "*.tsbuildinfo"
 -not -path "./node_modules/*" -delete` — and a fresh checkout of the commit in a
 second directory proves it (the run of v1.2.133 and of v1.2.134 are green).
 
+**WP-M26-06 — the axis of the diagrams shows round numbers (done).** The axis of
+the diagrams carried the rounded gridlines of a fixed number of steps: a value
+of five produced the scale 0, 2, 3, 5, and a duration of five hours produced
+0 min, 1,7 h, 3,3 h, 5 h — numbers that no reader can compare at a glance. The
+step of the axis is a round number, the number of the steps varies (three, four
+or five), and the scale with the smallest headroom wins: the axis of a value of
+five runs from 0 to 5 in steps of one. From an hour on the values of the
+diagrams are hours, so the axis shows 0 h, 2 h, 4 h. A diagram without any value
+shows the text of the empty period instead of an empty frame.
+
 **WP-M26-01 — the statistics know only phases with data (done).** The phase
 `firstResponse` of the statistics measured the column `tickets.first_response_at`,
 and no workflow event ever writes that column — the phase answered a count of

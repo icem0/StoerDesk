@@ -1786,6 +1786,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M26-03   | the statistics name the readable text — the groupings carry the labels of the fault types and the detected errors | done                    | yes     |
 | WP-M26-04   | the statistics show the trends — the averages of the reaction times and of the processing time per bucket | done                    | yes     |
 | WP-M26-05   | the diagrams carry an axis and the objects a ranking | done                    | yes     |
+| WP-M26-06   | the axis of the diagrams shows round numbers — the scale of the axis and the unit of the values | done                    | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

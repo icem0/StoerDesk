@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the incremental cache of the typecheck in the development container and fixed
   in **WP-M26-04**.
 
+### Fixed
+- The axis of the diagrams of the statistics shows round numbers
+  (**WP-M26-06**, phase 26, ADR-0049): the scale of the axis had the rounded
+  gridlines of a fixed number of steps (0, 2, 3, 5) and the durations of more
+  than an hour were shown as 1,7 h and 3,3 h. The step of the axis is a round
+  number, the number of the steps varies, and from an hour on the values are
+  hours.
+
 ### Added
 - The diagrams of the statistics carry an axis (**WP-M26-05**, phase 26, ADR-0049):
   the diagram of the count shows the scale, the date of every n-th bucket and

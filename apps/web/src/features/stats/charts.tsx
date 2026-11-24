@@ -31,23 +31,57 @@ const PADDING = { top: 10, right: 10, bottom: 30, left: 46 }
 const PLOT_WIDTH = WIDTH - PADDING.left - PADDING.right
 const PLOT_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom
 
-/** The number of the gridlines of the y-axis (including the zero line). */
-const GRID_LINES = 4
-
 /**
- * A round upper bound for the axis: the value is rounded up to the next
- * 1, 2 or 5 times a power of ten, so the axis carries readable numbers.
+ * The step of the y-axis: the smallest round step (1, 2, 2.5 or 5 times a
+ * power of ten) that carries the value in the given number of steps. The axis
+ * therefore shows round numbers only — 0, 2, 4, 6 and not 0, 2, 3, 5.
  */
-function niceCeiling(value: number): number {
+function niceStep(value: number): number {
   if (value <= 0) {
     return 1
   }
 
   const magnitude = 10 ** Math.floor(Math.log10(value))
   const normalized = value / magnitude
-  const factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
 
-  return factor * magnitude
+  for (const factor of [1, 2, 2.5, 5, 10]) {
+    if (normalized <= factor) {
+      return factor * magnitude
+    }
+  }
+
+  return 10 * magnitude
+}
+
+/**
+ * The scale of the y-axis: the round step of the gridlines and the upper
+ * bound of the axis.
+ *
+ * The number of the steps varies — three, four or five — and the scale with
+ * the smallest headroom wins: the axis of a value of five runs from 0 to 5 in
+ * steps of one, the axis of a value of ninety from 0 to 90 in steps of thirty.
+ */
+function axisScale(maxValue: number): { ceiling: number; step: number; lines: number } {
+  let best: { ceiling: number; step: number; lines: number } | null = null
+
+  for (const divisions of [3, 4, 5]) {
+    const step = niceStep(maxValue / divisions)
+    const ceiling = step * divisions
+
+    if (ceiling < maxValue) {
+      continue
+    }
+
+    if (
+      best === null ||
+      ceiling - maxValue < best.ceiling - maxValue ||
+      (ceiling === best.ceiling && divisions > best.lines - 1)
+    ) {
+      best = { ceiling, step, lines: divisions + 1 }
+    }
+  }
+
+  return best ?? { ceiling: 1, step: 1, lines: 4 }
 }
 
 /** The x position of a point; the points are spread over the whole width. */
@@ -112,7 +146,7 @@ export function LineChart(props: {
   const count = labels.length
 
   const values = series.flatMap((entry) => entry.values.filter((value) => value !== null))
-  const ceiling = niceCeiling(Math.max(1, ...values))
+  const { ceiling, step: axisStep, lines: axisLines } = axisScale(Math.max(1, ...values))
   const step = Math.max(1, Math.ceil(count / 6))
 
   return (
@@ -123,8 +157,8 @@ export function LineChart(props: {
       role="img"
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
     >
-      {Array.from({ length: GRID_LINES }, (_, line) => {
-        const value = (ceiling / (GRID_LINES - 1)) * line
+      {Array.from({ length: axisLines }, (_, line) => {
+        const value = axisStep * line
         const y = yAt(value, ceiling)
 
         return (
@@ -231,7 +265,7 @@ export function BarChart(props: {
 }) {
   const { labels, values, ariaLabel, formatValue } = props
   const count = labels.length
-  const ceiling = niceCeiling(Math.max(1, ...values))
+  const { ceiling, step: axisStep, lines: axisLines } = axisScale(Math.max(1, ...values))
   const step = Math.max(1, Math.ceil(count / 6))
   const slot = PLOT_WIDTH / Math.max(1, count)
 
@@ -243,8 +277,8 @@ export function BarChart(props: {
       role="img"
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
     >
-      {Array.from({ length: GRID_LINES }, (_, line) => {
-        const value = (ceiling / (GRID_LINES - 1)) * line
+      {Array.from({ length: axisLines }, (_, line) => {
+        const value = axisStep * line
         const y = yAt(value, ceiling)
 
         return (

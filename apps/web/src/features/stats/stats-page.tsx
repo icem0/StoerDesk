@@ -257,25 +257,49 @@ export function StatsPage() {
    */
   const bucketLabel = (instant: string): string => bucketLabelOf(instant, bucket, i18n.language)
 
-  /** A duration of the axis and of the tooltip. */
-  const trendValue = (minutes: number): string =>
-    isHourValue(minutes)
-      ? t('reaction.hours', { value: formatHours(minutes, i18n.language) })
-      : t('reaction.minutes', { value: minutes })
-
   const trendPoints = trends.data?.points ?? []
+  const hasReactionValues = trendPoints.some(
+    (point) => point.reviewMinutes !== null || point.acknowledgeMinutes !== null,
+  )
+  const hasProcessingValues = trendPoints.some((point) => point.processingMinutes !== null)
+
+  /**
+   * The unit of the diagrams: from an hour on the values are hours, so that
+   * the axis shows round numbers (0 h, 2 h, 4 h) and not 0 min, 1,7 h, 3,3 h.
+   */
+  const trendMaxMinutes = Math.max(
+    0,
+    ...trendPoints.flatMap((point) =>
+      [point.reviewMinutes, point.acknowledgeMinutes, point.processingMinutes].filter(
+        (value): value is number => value !== null,
+      ),
+    ),
+  )
+  const trendInHours = trendMaxMinutes >= 60
+
+  /** The value of a point in the unit of the diagrams. */
+  const toTrendUnit = (minutes: number | null): number | null =>
+    minutes === null ? null : trendInHours ? minutes / 60 : minutes
+
+  /** A duration of the axis and of the tooltip. */
+  const trendValue = (value: number): string =>
+    trendInHours
+      ? t('reaction.hours', {
+          value: new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 }).format(value),
+        })
+      : t('reaction.minutes', { value })
   const trendLabels = trendPoints.map((point) => bucketLabel(point.bucketStart))
   const reactionSeries: ChartSeries[] = [
     {
       label: t('reaction.phase.review'),
-      values: trendPoints.map((point) => point.reviewMinutes),
+      values: trendPoints.map((point) => toTrendUnit(point.reviewMinutes)),
       stroke: 'stroke-sky-400',
       fill: 'fill-sky-400',
       swatch: 'bg-sky-400',
     },
     {
       label: t('reaction.phase.acknowledge'),
-      values: trendPoints.map((point) => point.acknowledgeMinutes),
+      values: trendPoints.map((point) => toTrendUnit(point.acknowledgeMinutes)),
       stroke: 'stroke-emerald-400',
       fill: 'fill-emerald-400',
       swatch: 'bg-emerald-400',
@@ -284,7 +308,7 @@ export function StatsPage() {
   const processingSeries: ChartSeries[] = [
     {
       label: t('trend.processing'),
-      values: trendPoints.map((point) => point.processingMinutes),
+      values: trendPoints.map((point) => toTrendUnit(point.processingMinutes)),
       stroke: 'stroke-violet-400',
       fill: 'fill-violet-400',
       swatch: 'bg-violet-400',
@@ -518,7 +542,7 @@ export function StatsPage() {
 
         <h3 className="mt-5 text-sm font-medium text-slate-300">{t('trend.reactionTitle')}</h3>
         <p className="text-sm text-slate-400">{t('trend.hint', { bucket: t(`bucket.${bucket}`) })}</p>
-        {trendPoints.length === 0 ? (
+        {!hasReactionValues ? (
           <p className="mt-2 text-sm text-slate-500">{t('trend.empty')}</p>
         ) : (
           <>
@@ -586,7 +610,7 @@ export function StatsPage() {
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
         <h2 className="text-lg font-semibold">{t('trend.processingTitle')}</h2>
         <p className="text-sm text-slate-400">{t('trend.hint', { bucket: t(`bucket.${bucket}`) })}</p>
-        {trendPoints.length === 0 ? (
+        {!hasProcessingValues ? (
           <p className="mt-2 text-sm text-slate-500">{t('trend.empty')}</p>
         ) : (
           <>
