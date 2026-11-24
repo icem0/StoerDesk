@@ -26,7 +26,7 @@ import { oncallPools, oncallShifts, users } from '../db/schema'
 import { createShift, deleteShift, generateShifts, updateShift } from './service'
 import { confirmShift, declineShift } from './confirm'
 import { readShiftHistory } from './events'
-import { resolveDefaultPool } from './coupling'
+import { enqueueOncallReminder, resolveDefaultPool } from './coupling'
 import { resolvePoolMemberIds } from './members'
 import { serializeIcal, verifyIcalToken, icalTokenFor } from './ical'
 import { readOncallSettings, writeOncallSettings } from './settings'
@@ -592,6 +592,42 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           const full = await requireShift(database, result.shift.id)
 
           return reply.send(oncallShiftSchema.parse(full))
+        } catch (error) {
+          const err = error as {
+            statusCode?: number
+            code?: string
+            params?: Record<string, unknown>
+          }
+
+          if (err.statusCode !== undefined) {
+            return reply.code(err.statusCode).send({ code: err.code, params: err.params })
+          }
+
+          throw error
+        }
+      },
+    )
+
+    // The reminder of one shift, sent by hand (WP-M23-09e): the admin of the
+    // readiness asks the technician again, without waiting for the interval of
+    // the sweep.
+    app.post<{ Params: { id: string } }>(
+      '/api/v1/oncall/shifts/:id/remind',
+      { preHandler: requirePermission(database, PERMISSIONS.oncall.admin) },
+      async (request, reply) => {
+        const shiftId = parseUuidParam(request.params.id)
+
+        if (shiftId === null) {
+          return reply.code(400).send(invalidRequest(['id']))
+        }
+
+        try {
+          const result = await enqueueOncallReminder(database, loadEnv(), shiftId)
+
+          return reply.send({
+            remindersQueued: result.remindersQueued,
+            reminderNumber: result.reminderNumber,
+          })
         } catch (error) {
           const err = error as {
             statusCode?: number

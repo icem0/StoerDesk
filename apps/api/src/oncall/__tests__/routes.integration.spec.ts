@@ -151,6 +151,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function postRemind(cookie: string, id: string) {
+      return app.inject({
+        method: 'POST',
+        url: `/api/v1/oncall/shifts/${id}/remind`,
+        headers: { cookie },
+      })
+    }
+
     function getSettings(cookie?: string) {
       return app.inject({
         method: 'GET',
@@ -311,6 +319,66 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(response.statusCode).toBe(422)
       expect(response.json<ErrorResponseBody>().code).toBe('oncall_range_too_large')
+    })
+
+    it('reminds the technician of a shift by hand (WP-M23-09e)', async () => {
+      const created = await postShift(cookies['admin'], {
+        poolId,
+        userId: oncallId,
+        publish: true,
+      })
+      const shiftId = created.json<ShiftRow>().id
+
+      const response = await postRemind(cookies['admin'], shiftId)
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<{ reminderNumber: number }>().reminderNumber).toBe(1)
+
+      // the second reminder of the same shift carries the number two
+      const again = await postRemind(cookies['admin'], shiftId)
+
+      expect(again.statusCode).toBe(200)
+      expect(again.json<{ reminderNumber: number }>().reminderNumber).toBe(2)
+    })
+
+    it('refuses the manual reminder without oncall.admin (WP-M23-09e)', async () => {
+      const created = await postShift(cookies['admin'], {
+        poolId,
+        userId: oncallId,
+        publish: true,
+      })
+      const shiftId = created.json<ShiftRow>().id
+
+      const response = await postRemind(cookies['oncall'], shiftId)
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json<ErrorResponseBody>().code).toBe('forbidden')
+    })
+
+    it('refuses the manual reminder of a shift that started (WP-M23-09e)', async () => {
+      const created = await postShift(cookies['admin'], {
+        poolId,
+        userId: oncallId,
+        publish: true,
+        startsAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      })
+      const shiftId = created.json<ShiftRow>().id
+
+      const response = await postRemind(cookies['admin'], shiftId)
+
+      expect(response.statusCode).toBe(409)
+      expect(response.json<ErrorResponseBody>().code).toBe('oncall_shift_started')
+    })
+
+    it('refuses the manual reminder of a shift without a technician (WP-M23-09e)', async () => {
+      const created = await postShift(cookies['admin'], { poolId })
+      const shiftId = created.json<ShiftRow>().id
+
+      const response = await postRemind(cookies['admin'], shiftId)
+
+      expect(response.statusCode).toBe(409)
+      expect(response.json<ErrorResponseBody>().code).toBe('oncall_invalid_shift_state')
     })
 
     it('creates an UNFILLED shift as admin', async () => {

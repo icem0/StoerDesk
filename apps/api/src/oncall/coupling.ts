@@ -412,6 +412,94 @@ const REMINDER_STATES = ['DRAFT', 'PLANNED'] as const
 /** The readiness event the per-minute escalation scan queues (ADR-0021, §11.7). */
 const REMINDER_EVENT_TYPE: NotificationEventType = 'oncall.unconfirmed_reminder'
 
+/** The refusal of a manual reminder (WP-M23-09e) — the route answers it. */
+export class OncallReminderError extends Error {
+  readonly statusCode: number
+  readonly code: string
+  readonly params: Record<string, unknown>
+
+  constructor(statusCode: number, code: string, params: Record<string, unknown> = {}) {
+    super(code)
+    this.name = 'OncallReminderError'
+    this.statusCode = statusCode
+    this.code = code
+    this.params = params
+  }
+}
+
+/**
+ * The reminder of one shift, sent by hand (`specs/04-oncall.md` §4a.4,
+ * WP-M23-09e): the admin of the readiness asks the technician of a shift again
+ * without waiting for the interval of the sweep.
+ *
+ * The row carries the number of the next reminder, so the urgency of the
+ * message (WP-M23-09d) rises like the urgency of the sweep. The route refuses
+ * a shift that started and a shift without a technician — the shift has nobody
+ * to ask.
+ */
+export async function enqueueOncallReminder(
+  database: Db,
+  env: Env,
+  shiftId: string,
+  now: Date = new Date(),
+): Promise<{ remindersQueued: number; reminderNumber: number }> {
+  const [shift] = await database
+    .select({
+      id: oncallShifts.id,
+      poolId: oncallShifts.poolId,
+      userId: oncallShifts.userId,
+      state: oncallShifts.state,
+      startsAt: oncallShifts.startsAt,
+      endsAt: oncallShifts.endsAt,
+    })
+    .from(oncallShifts)
+    .where(eq(oncallShifts.id, shiftId))
+    .limit(1)
+
+  if (shift === undefined) {
+    throw new OncallReminderError(404, 'oncall_shift_not_found', { fields: ['id'] })
+  }
+
+  if (shift.userId === null) {
+    throw new OncallReminderError(409, 'oncall_invalid_shift_state', {
+      shiftId,
+      reason: 'no_technician',
+    })
+  }
+
+  if (shift.startsAt <= now) {
+    throw new OncallReminderError(409, 'oncall_shift_started', { shiftId })
+  }
+
+  const announced = await database
+    .select({ id: outbox.id })
+    .from(outbox)
+    .where(and(eq(outbox.shiftId, shiftId), eq(outbox.eventType, REMINDER_EVENT_TYPE)))
+
+  const reminderNumber = announced.length + 1
+
+  const remindersQueued = await database.transaction(async (tx) =>
+    enqueueOncallOutbox(
+      tx,
+      {
+        shift: {
+          id: shift.id,
+          poolId: shift.poolId,
+          state: shift.state,
+          startsAt: shift.startsAt,
+          endsAt: shift.endsAt,
+        },
+        eventType: REMINDER_EVENT_TYPE,
+        userId: shift.userId ?? '',
+        reminderNumber,
+      },
+      env,
+    ),
+  )
+
+  return { remindersQueued, reminderNumber }
+}
+
 export type EnqueueOncallRemindersResult = {
   remindersQueued: number
 }

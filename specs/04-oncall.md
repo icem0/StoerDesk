@@ -414,7 +414,8 @@ calendar app.
 | `POST /api/v1/oncall/shifts` | `oncall.plan` | create one shift |
 | `POST /api/v1/oncall/shifts/generate` | `oncall.plan` | idempotent weekly generation |
 | `PATCH /api/v1/oncall/shifts/:id` | `oncall.admin` | assign, publish, reassign |
-| `DELETE /api/v1/oncall/shifts/:id` | `oncall.admin` | delete a not-started slot |
+| `DELETE /api/v1/oncall/shifts/:id` | `oncall.admin` | delete a shift that was never confirmed (ADR-0047) |
+| `POST /api/v1/oncall/shifts/:id/remind` | `oncall.admin` | remind the technician of one shift by hand |
 | `POST /api/v1/oncall/shifts/:id/confirm` | `oncall.confirm` | technician confirms |
 | `POST /api/v1/oncall/shifts/:id/decline` | `oncall.confirm` | technician declines with reason |
 | `POST /api/v1/oncall/shifts/:id/swap` | `oncall.swap` | request a swap |

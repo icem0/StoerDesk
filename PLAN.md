@@ -846,6 +846,14 @@ and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
 copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
+**WP-M23-09e — the admin reminds a shift by hand (done).** The route
+`POST /api/v1/oncall/shifts/:id/remind` (guard `oncall.admin`) writes the
+reminder of one shift: the technician of the shift is asked again, outside the
+sweep and without the wait of the interval. The row carries the number of the
+next reminder, so the urgency rises like the urgency of the sweep. The route
+refuses a shift that started (`409 oncall_shift_started`) and a shift without a
+technician (`409 oncall_invalid_shift_state`).
+
 **WP-M23-09d — the urgency of the reminder rises (done).** The message of a
 readiness row carried no priority, so the reminder of a shift that was not
 accepted arrived like any other message. The row carries the number of the
