@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import type {
   ChannelConfigurationListResponse,
   ChannelTestResponse,
+  NotificationDeliveryListResponse,
 } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../lib/api'
 import { usePermission } from '../auth/usePermission'
@@ -86,6 +87,15 @@ export function EmailPage() {
     queryFn: () => apiFetch<ChannelConfigurationListResponse>('/v1/admin/channels'),
     retry: false,
     enabled: mayRead,
+  })
+
+  /** The log of the last deliveries of the mailbox (ADR-0046, §11.8). */
+  const deliveries = useQuery({
+    queryKey: ['mailDeliveries'],
+    queryFn: () =>
+      apiFetch<NotificationDeliveryListResponse>('/v1/admin/notifications/deliveries?channel=email'),
+    enabled: mayRead,
+    retry: false,
   })
 
   const [values, setValues] = useState<MailConfig | null>(null)
@@ -326,6 +336,33 @@ export function EmailPage() {
                 {sendTest.error instanceof ApiError ? sendTest.error.code : 'unknown'}
               </p>
             ) : null}
+          </section>
+
+          <section className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+            <h2 className="text-lg font-semibold">{st('admin.email.log')}</h2>
+
+            {(deliveries.data?.deliveries ?? []).length === 0 ? (
+              <p className="text-sm text-slate-400">{st('admin.email.logEmpty')}</p>
+            ) : (
+              <ul className="flex flex-col gap-1 text-sm">
+                {(deliveries.data?.deliveries ?? []).map((delivery) => (
+                  <li className="flex flex-wrap items-center gap-3" key={delivery.id}>
+                    <span className="text-slate-400">
+                      {new Date(delivery.sentAt).toLocaleString('de-DE')}
+                    </span>
+                    <span>{delivery.eventType}</span>
+                    <span className="text-slate-400">{delivery.recipient}</span>
+                    <span
+                      className={
+                        delivery.state === 'SENT' ? 'text-emerald-400' : 'text-rose-400'
+                      }
+                    >
+                      {delivery.state}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <div className="flex items-center gap-3">

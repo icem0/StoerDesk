@@ -391,6 +391,38 @@ export const notificationComplianceListResponseSchema = z.object({
   users: z.array(notificationComplianceSchema),
 })
 
+/**
+ * One delivery of a channel (`specs/10-notifications.md` §11.8, ADR-0046): the
+ * log of the mailbox of the instance shows the time, the recipient and the
+ * result of the last deliveries. A mail address is masked — the log of the
+ * administration never carries a contact value in full (§11.13).
+ */
+export const notificationDeliverySchema = z.object({
+  id: z.uuid(),
+  channel: z.string(),
+  eventType: z.string(),
+  state: z.string(),
+  /** The masked recipient of the delivery — the address of a user never in full. */
+  recipient: z.string(),
+  /** The time of the delivery. */
+  sentAt: z.iso.datetime(),
+})
+
+export const notificationDeliveryListResponseSchema = z.object({
+  deliveries: z.array(notificationDeliverySchema),
+})
+
+/** The query of the log of the deliveries: the channel and the number of rows. */
+export const deliveryLogQuerySchema = z.object({
+  channel: notificationChannelKindSchema.default('email'),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+})
+
+export type NotificationDelivery = z.infer<typeof notificationDeliverySchema>
+export type NotificationDeliveryListResponse = z.infer<
+  typeof notificationDeliveryListResponseSchema
+>
+
 export type NotificationCompliance = z.infer<typeof notificationComplianceSchema>
 export type NotificationComplianceListResponse = z.infer<
   typeof notificationComplianceListResponseSchema

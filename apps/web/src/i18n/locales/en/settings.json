@@ -795,7 +795,9 @@
       "testAddress": "The recipient of the test mail",
       "save": "Save the mailbox",
       "saved": "The mailbox is saved.",
-      "saveFailed": "The mailbox was not saved."
+      "saveFailed": "The mailbox was not saved.",
+      "log": "The last deliveries",
+      "logEmpty": "No delivery yet."
     }
   },
   "apiKeys": {

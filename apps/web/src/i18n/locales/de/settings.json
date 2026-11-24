@@ -795,7 +795,9 @@
       "testAddress": "Empfänger der Testnachricht",
       "save": "Postfach speichern",
       "saved": "Das Postfach ist gespeichert.",
-      "saveFailed": "Das Postfach wurde nicht gespeichert."
+      "saveFailed": "Das Postfach wurde nicht gespeichert.",
+      "log": "Die letzten Zustellungen",
+      "logEmpty": "Noch keine Zustellung."
     }
   },
   "apiKeys": {

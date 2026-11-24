@@ -28,6 +28,8 @@ import {
   notificationMessageReadResponseSchema,
   notificationUnreadCountResponseSchema,
   notificationVerificationResponseSchema,
+  notificationDeliveryListResponseSchema,
+  deliveryLogQuerySchema,
   redeemTelegramLinkCodeRequestSchema,
   telegramLinkCodeResponseSchema,
   type ChannelConfiguration,
@@ -48,6 +50,7 @@ import {
   notificationChannels,
   notificationAccounts,
   notificationMessages,
+  outbox,
   pushSubscriptions,
 } from '../db/schema'
 import { configuredChannels, type NotificationChannel } from './channels'
@@ -211,6 +214,27 @@ function failureCode(error: unknown): string {
  * message reach the inbox of the user, so they come from `notification.test_*`
  * in `server.{de,en}.json` and not from a literal.
  */
+/**
+ * The recipient of a delivery in the log of the administration (§11.8,
+ * ADR-0046): the address of a user is masked — the log of the mailbox never
+ * carries a contact value in full (§11.13).
+ */
+const maskRecipient = (target: Record<string, unknown>): string => {
+  const recipient = typeof target.recipientTarget === 'string' ? target.recipientTarget : ''
+
+  if (recipient === '') {
+    return '—'
+  }
+
+  const at = recipient.indexOf('@')
+
+  if (at < 1) {
+    return `${recipient.slice(0, 2)}…`
+  }
+
+  return `${recipient.slice(0, 1)}…${recipient.slice(at)}`
+}
+
 export async function sendTestMessage(
   channels: readonly NotificationChannel[],
   kind: string,
@@ -610,6 +634,49 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         notificationComplianceSchema.parse(
           await readUserCompliance(database, request.user?.id ?? ''),
         ),
+    )
+
+    /**
+     * `GET /api/v1/admin/notifications/deliveries` (`specs/10-notifications.md`
+     * §11.8, ADR-0046, WP-M24-20): the log of the last deliveries of a channel —
+     * the mailbox of the instance shows the time, the recipient and the result.
+     * A mail address is masked: the log never carries a contact value in full
+     * (§11.13).
+     */
+    app.get(
+      '/api/v1/admin/notifications/deliveries',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.read) },
+      async (request) => {
+        const query = deliveryLogQuerySchema.safeParse(request.query ?? {})
+
+        if (!query.success) {
+          return notificationDeliveryListResponseSchema.parse({ deliveries: [] })
+        }
+
+        const rows = await database
+          .select({
+            id: outbox.id,
+            channel: outbox.channel,
+            eventType: outbox.eventType,
+            state: outbox.state,
+            target: outbox.target,
+            updatedAt: outbox.updatedAt,
+          })
+          .from(outbox)
+          .where(eq(outbox.channel, query.data.channel))
+          .limit(query.data.limit)
+
+        return notificationDeliveryListResponseSchema.parse({
+          deliveries: rows.map((row) => ({
+            id: row.id,
+            channel: row.channel,
+            eventType: row.eventType,
+            state: row.state,
+            recipient: maskRecipient(row.target as Record<string, unknown>),
+            sentAt: row.updatedAt.toISOString(),
+          })),
+        })
+      },
     )
 
     /**
