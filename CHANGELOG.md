@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the 88 test files built its own jsdom and evaluated the module graph of the
   app again (288 modules, 2399 times, 111 s of the tracked time); the web
   project needs 13 s instead of 36 s.
+- The integration tests of the API share one migrated template database
+  (**WP-M28-02**, phase 28): every one of the 128 integration files built its
+  own database, applied all 63 migrations into it and dropped it again — the
+  drop alone cost about 440 ms and hardly runs in parallel. The global setup
+  builds one template with the migrations and clones it into one database per
+  worker; a file claims one of them with an advisory lock, empties it with a
+  delete in the order of the foreign keys and gives it back. The rows the
+  migrations wrote — the status catalog, the reserved object without an object,
+  the counter of the ticket numbers — are restored after the cleanup, and the
+  databases of the runs that died are removed.
 
 ### Added
 - The list of the stickers is filtered on the server (**WP-M27-05**, phase 27,

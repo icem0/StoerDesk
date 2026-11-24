@@ -1,10 +1,15 @@
-import { fileURLToPath } from 'node:url'
+import { inject } from 'vitest'
 
 import postgres from 'postgres'
 
-import { databaseConnectionUrl, loadDotEnvFile, loadEnv } from '../../../config/env'
+import {
+  claimTestDatabase,
+  resolveTestDatabaseUrl,
+  TEST_DATABASE_POOL_KEY,
+  type TestDatabasePool,
+} from './testDatabasePool'
 
-export const migrationsFolder = fileURLToPath(new URL('../../migrations', import.meta.url))
+export { migrationsFolder } from './testDatabasePool'
 
 const testDatabasePrefix = 'stoerdesk_test_'
 
@@ -28,28 +33,43 @@ function adminUrlOf(url: string): string {
   return withDatabase(url, 'postgres')
 }
 
-async function probe(url: string) {
-  const client = postgres(url, { max: 1, connect_timeout: 3, idle_timeout: 1 })
-
+/**
+ * The pool of the global setup — `undefined` when the tests run outside of a
+ * Vitest run with a global setup.
+ */
+function readPool(): TestDatabasePool | undefined {
   try {
-    await client`select 1`
-  } finally {
-    await client.end({ timeout: 1 })
+    return inject(TEST_DATABASE_POOL_KEY)
+  } catch {
+    return undefined
   }
 }
 
 /**
  * Opens a Postgres connection string for integration tests.
  *
- * `TEST_DATABASE_URL` (fallback: `DATABASE_URL`) is probed first. When the
- * account may create databases, a throwaway database is created so that
- * migrations always run against an empty database; otherwise the given
- * database is reused. Without a reachable database the tests are skipped.
+ * The pool of the global setup (WP-M28-02) hands out a database that is already
+ * migrated and empty; the file holds an advisory lock on it and gives it back
+ * when it is done. Without a pool — a test file that runs outside of Vitest or
+ * a database that the global setup did not reach — the file falls back to the
+ * old path: it creates a throwaway database, migrates it and drops it again.
+ * Without a reachable database the tests are skipped.
  */
 export async function openTestDatabase(): Promise<TestDatabaseHandle> {
-  loadDotEnvFile()
-  const env = loadEnv()
-  const baseUrl = env.TEST_DATABASE_URL === '' ? databaseConnectionUrl(env) : env.TEST_DATABASE_URL
+  const pool = readPool()
+
+  if (pool?.status === 'available') {
+    const claim = await claimTestDatabase(pool)
+
+    return {
+      status: 'available',
+      url: claim.url,
+      createdDatabase: undefined,
+      close: claim.release,
+    }
+  }
+
+  const baseUrl = resolveTestDatabaseUrl()
 
   try {
     await probe(baseUrl)
@@ -89,5 +109,15 @@ export async function openTestDatabase(): Promise<TestDatabaseHandle> {
     url: withDatabase(baseUrl, createdDatabase),
     createdDatabase,
     close,
+  }
+}
+
+async function probe(url: string) {
+  const client = postgres(url, { max: 1, connect_timeout: 3, idle_timeout: 1 })
+
+  try {
+    await client`select 1`
+  } finally {
+    await client.end({ timeout: 1 })
   }
 }

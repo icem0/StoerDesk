@@ -1,7 +1,7 @@
 # WP-M28-01: the tests of the web share one environment per worker
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: —
 phase: 28
 milestone: m28
