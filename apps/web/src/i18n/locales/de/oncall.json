@@ -47,6 +47,11 @@
       "delete": "Löschen",
       "deleteHint": "Ein Pool mit Schichten kann nicht gelöscht werden."
     },
+    "openShifts": {
+      "title": "Offene Schichten",
+      "hint": "Schichten, die auf eine Entscheidung warten: niemand zugewiesen, nicht veröffentlicht, nicht bestätigt oder abgelehnt. Ein Klick öffnet die Schicht mit den Aktionen der Bereitschaftsleitung.",
+      "none": "Keine offene Schicht."
+    },
     "grid": {
       "title": "Wochenplan",
       "hint": "Schichten erzeugen, Technik zuweisen, veröffentlichen oder löschen. Jede Aktion lädt den Plan neu.",

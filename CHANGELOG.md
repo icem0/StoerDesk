@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The readiness view lists the open shifts (**WP-M23-07**, phase 23): the admin
+  saw the open shifts only where they happened to be — the calendar shows the
+  month, the weekly plan one week. A shift that was offered and never accepted
+  in the week of last Tuesday was in neither of them. The readiness view now
+  lists every shift that waits for a decision — nobody assigned, not
+  published, not confirmed or declined — and a click opens the shift with the
+  actions of the admin.
 - The shift dialog carries the actions of the admin (**WP-M23-06**, phase 23): the
   dialog of a shift showed the state, the pool, the period and the history — and
   no action at all, so the admin who opens a shift nobody accepted found

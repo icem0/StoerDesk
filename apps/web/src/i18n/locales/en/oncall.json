@@ -47,6 +47,11 @@
       "delete": "Delete",
       "deleteHint": "A pool with shifts cannot be deleted."
     },
+    "openShifts": {
+      "title": "Open shifts",
+      "hint": "Shifts that wait for a decision: nobody assigned, not published, not confirmed or declined. A click opens the shift with the actions of the readiness office.",
+      "none": "No open shift."
+    },
     "grid": {
       "title": "Weekly plan",
       "hint": "Generate shifts, assign a technician, publish or delete. Every action reloads the plan.",

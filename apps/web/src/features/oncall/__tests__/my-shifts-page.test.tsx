@@ -334,6 +334,20 @@ describe('MyShiftsPage', () => {
     expect(screen.queryByText('Wochenplan')).toBeNull()
   })
 
+  it('shows the open shifts to an admin of the readiness', async () => {
+    renderPage(['oncall.read', 'oncall.admin', 'oncall.plan'])
+
+    await waitForText('Offene Schichten')
+    await waitForText('Wochenplan')
+  })
+
+  it('hides the open shifts for a role without oncall.admin', async () => {
+    renderPage(['oncall.read'])
+
+    await waitForText('Bereitschaftskalender')
+    expect(screen.queryByText('Offene Schichten')).toBeNull()
+  })
+
   it('copies the iCal URL with the share button of the calendar', async () => {
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', {

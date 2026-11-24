@@ -805,6 +805,16 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M23-07 — the list of the open shifts in the readiness view (done).** The
+admin saw the open shifts only where they happened to be: the calendar of the
+office shows the month, the weekly plan one week — a shift that was offered and
+never accepted in the week of last Tuesday was in neither of them. The
+readiness view now lists every shift that waits for a decision (`UNFILLED`,
+`DRAFT`, `PLANNED`, `DECLINED`) inside a horizon of four weeks back and
+fourteen weeks ahead. The list is fed by the shifts the view loads anyway, so
+no new route was needed, and a click opens the dialog of the shift with the
+actions of the admin.
+
 **WP-M23-06 — the shift dialog carries the actions of the admin (done).** The
 dialog of a shift showed the state, the pool, the period and the history — and
 no action at all, so the admin who opens a shift nobody accepted found nothing

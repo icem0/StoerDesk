@@ -12,6 +12,7 @@ import { useMe, usePermission } from '../../auth/usePermission'
 import { useShiftActions } from './use-shift-actions'
 import { ReadinessCalendar } from './readiness-calendar'
 import { PlanningSection } from './planning-section'
+import { OpenShiftsSection } from './open-shifts-section'
 import { ShiftDetailDialog } from './shift-detail-dialog'
 
 /**
@@ -205,6 +206,14 @@ function MyShiftsPageContent({
         shifts={shiftsQuery.data?.shifts ?? []}
         showNames={mayShowNames}
       />
+
+      {mayAdmin ? (
+        <OpenShiftsSection
+          pools={pools}
+          showNames={mayShowNames}
+          shifts={shiftsQuery.data?.shifts ?? []}
+        />
+      ) : null}
 
       {mayAdmin || mayPlan ? (
         <PlanningSection

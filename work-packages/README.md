@@ -1762,7 +1762,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-04 | the iCal URL is complete and visible — the address of the feed with host and scheme, named in a panel of the frame | done | yes |
 | WP-M23-05 | the admin deletes a shift that was never confirmed — even after it started (ADR-0047) | done | yes |
 | WP-M23-06 | the shift dialog carries the actions of the admin — assign, publish, delete | done | yes |
-| WP-M23-07 | the list of the open shifts in the readiness view | planned | yes |
+| WP-M23-07 | the list of the open shifts in the readiness view | done | yes |
 | WP-M23-08 | a reassignment notifies the new technician | planned | yes |
 | WP-M23-09 | the repeated reminder of a shift that was not accepted — a rising urgency and the manual reminder of the admin | planned | yes |
 | WP-M23-09a | the reminder of a shift repeats — the interval `oncall.reminder_repeat_h` | planned | yes |
