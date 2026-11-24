@@ -732,6 +732,7 @@ function SettingsSection({
           'oncall.swap_requires_admin_approval': body.swapRequiresAdminApproval,
           'oncall.escalate_to_group_after_min': body.escalateToGroupAfterMin,
           'oncall.reminder_unconfirmed_h': body.reminderUnconfirmedH,
+          'oncall.reminder_repeat_h': body.reminderRepeatH,
           'oncall.unfilled_warning_days': body.unfilledWarningDays,
           'oncall.default_pool_id': body.defaultPoolId,
         }),
@@ -839,6 +840,24 @@ function SettingsSection({
               setValues({
                 ...values,
                 reminderUnconfirmedH: number(event.target.value, values.reminderUnconfirmedH),
+              })
+            }
+            disabled={!canWrite}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          {t('admin.settings.reminderRepeatHours')}
+          <input
+            className="rounded bg-slate-950 p-2 text-slate-100"
+            type="number"
+            min={1}
+            max={72}
+            required
+            value={values.reminderRepeatH}
+            onChange={(event) =>
+              setValues({
+                ...values,
+                reminderRepeatH: number(event.target.value, values.reminderRepeatH),
               })
             }
             disabled={!canWrite}

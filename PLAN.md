@@ -846,6 +846,11 @@ and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
 copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
+**WP-M23-09c — the administration sets the interval of the reminder (done).**
+The form of the settings of the readiness carries the keys of §4a.1; the new key
+`oncall.reminder_repeat_h` joins it — the number of hours between two reminders
+of a shift that was not accepted.
+
 **WP-M23-09b — the reminder of a shift repeats (done).** The sweep of the
 reminders sent one reminder per shift and never again: a sent row stays in the
 table, so the shift was skipped for ever. The sweep counts the reminders now

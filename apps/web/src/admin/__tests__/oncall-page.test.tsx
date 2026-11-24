@@ -23,6 +23,7 @@ const settings = {
   swapRequiresAdminApproval: true,
   escalateToGroupAfterMin: 10,
   reminderUnconfirmedH: 24,
+  reminderRepeatH: 4,
   unfilledWarningDays: 14,
   defaultPoolId: null,
 }
@@ -233,6 +234,28 @@ describe('OncallPage', () => {
 
     expect(duration.disabled).toBe(false)
     expect(screen.getByText(/nutzt seine eigenen Dienstblöcke/)).toBeTruthy()
+  })
+
+  it('writes the interval of the repeated reminder (WP-M23-09c)', async () => {
+    const calls: { method: string; body: unknown }[] = []
+    stubRoutes(calls)
+
+    renderPage()
+
+    const interval = (await screen.findByLabelText(
+      'Wiederholte Erinnerung nach (Stunden)',
+    )) as HTMLInputElement
+
+    expect(interval.value).toBe('4')
+
+    fireEvent.change(interval, { target: { value: '6' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Einstellungen speichern' }))
+
+    await waitFor(() => {
+      const put = calls.find((call) => call.method === 'PUT')
+
+      expect((put?.body as Record<string, unknown>)['oncall.reminder_repeat_h']).toBe(6)
+    })
   })
 
   it('shows the name of the pool and carries its actions in the menu', async () => {

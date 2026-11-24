@@ -103,6 +103,7 @@
       "durationDays": "Dauer in Tagen",
       "escalateAfter": "Weiterleitung an Gruppe nach (Minuten)",
       "reminderHours": "Erinnerung unbestätigt nach (Stunden)",
+      "reminderRepeatHours": "Wiederholte Erinnerung nach (Stunden)",
       "unfilledDays": "Warnfenster unbesetzt (Tage)",
       "defaultPool": "Standard-Pool für Ticket-Angebote",
       "noDefaultPool": "Kein Standard-Pool",

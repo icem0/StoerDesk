@@ -103,6 +103,7 @@
       "durationDays": "Duration in days",
       "escalateAfter": "Escalate to group after (minutes)",
       "reminderHours": "Remind unconfirmed after (hours)",
+      "reminderRepeatHours": "Repeat the reminder after (hours)",
       "unfilledDays": "Unstaffed warning window (days)",
       "defaultPool": "Default pool for ticket offers",
       "noDefaultPool": "No default pool",
