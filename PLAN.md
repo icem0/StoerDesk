@@ -846,14 +846,19 @@ the static gates of the check run in parallel (**WP-M28-03**), and the assertion
 that read the text of the migration files become assertions of the schema of the
 real database (**WP-M28-04**, **WP-M28-04b**). The goal is a gate that answers in
 a minute; no case of the suite is dropped and no assertion is weakened.
-
 **Phase 28 is closed (WP-M28-01 … WP-M28-04b).** Measured on the same machine
 before and after: the web project needs 13 s instead of 36 s (the pool
-`vmThreads`), the API project 92 s instead of 110 s (the pool of the databases),
-the whole `npm run check` 170 s instead of 208 s. The exit criterion holds: the
-gate answers in less than three minutes, and every case of the suite proves the
-behaviour of the code against the real database — the 48 cases that searched the
-**text** of the migration files are 44 cases that read the schema itself.
+`vmThreads`), the API project 92 s instead of 110 s (the pool of the
+databases), the whole `npm run check` 170 s instead of 208 s.
+
+The CI runner has few cores, and there the effect is much bigger: the two
+runs `v1.2.143` (the pool of the web) and `v1.2.144` (the pool of the
+databases) carry the same code otherwise — the step „Quality gates" needs
+**181 s instead of 306 s**, the test suite 112 s instead of 211 s, the API
+project 96 s instead of 190 s. The exit criterion holds: the gate answers in
+less than three minutes, and every case of the suite proves the behaviour of the
+code against the real database — the 48 cases that searched the **text** of the
+migration files are 44 cases that read the schema itself.
 
 The remaining lever is the module graph of the API: 79 % of its 80 s are the
 imports, because the pool of the forks evaluates the graph of the app again for
@@ -863,6 +868,7 @@ valid source of a module of a VM, and the driver of the database hangs in that
 context. `isolate: false` would be faster still (42 s), but the files would
 share the module state with each other: the rate limit of the login leaked
 between them. A later phase may solve it.
+
 
 **Phase 27 has started (WP-M27-01).** The office labels its objects with the
 stickers of a label roll and asked for three things: the sheet formats of an A4
