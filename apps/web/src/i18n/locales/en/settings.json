@@ -47,7 +47,8 @@
         "active": "Active",
         "roles": "Roles",
         "groups": "Groups",
-        "actions": "Actions"
+        "actions": "Actions",
+        "channels": "Channels"
       },
       "active": "active",
       "inactive": "inactive",
@@ -609,13 +610,6 @@
         "http_timeout": "No answer in time (timeout): the ntfy server never answered within ten seconds — check the address and the network; the row stays retryable.",
         "channel_error": "The channel answered with the code {{code}}: the cause stands in the log of the API and on the page of the delivery problems."
       },
-      "minimum": {
-        "title": "Mandatory minimum channels for critical tickets",
-        "hint": "These channels are notified for every critical ticket in addition to the user's own selection — only configured channels may be selected.",
-        "label": "Minimum channels",
-        "saving": "Saving …",
-        "save": "Save"
-      },
       "failing": {
         "title": "Failing channels",
         "failed": "{{count}} failed rows",
@@ -624,7 +618,19 @@
       "curlTokenHint": "The command carries $NTFY_TOKEN: the stored key is never shown — export a variable of that name in your shell.",
       "ntfyTokenHint": "No key stored yet: a self-hosted ntfy server needs its access token in the secret field — without it every publish is refused.",
       "webpushIncompleteTrio": "The row of this card is incomplete: one part of the VAPID trio is stored without the others — the values of the .env still apply beside it and the push service rejects every send. Generate one key pair and save the public key, the private key and the subject together, or delete the row.",
-      "webpushGuide": "Guide: set up web push (VAPID)"
+      "webpushGuide": "Guide: set up web push (VAPID)",
+      "policy": {
+        "title": "The rule of the administration",
+        "hint": "These channels every user must have set up, and this many channels he must have set up in total. The rule warns — it blocks nothing.",
+        "countLabel": "Minimum number of set-up channels"
+      },
+      "compliance": {
+        "title": "The channels of the users",
+        "hint": "Which user has set up which channel. The address of the user is not here.",
+        "empty": "No user yet.",
+        "compliant": "fulfils the rule",
+        "missing": "missing {{channels}} — {{count}} are set up"
+      }
     },
     "delivery": {
       "title": "Delivery problems",

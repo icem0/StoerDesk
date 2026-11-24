@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type {
   GroupListResponse,
+  NotificationComplianceListResponse,
   GroupMemberListResponse,
   ResetPasswordResponse,
   UserListResponse,
@@ -257,6 +258,7 @@ export function UsersPage() {
   const me = useMe()
   const canRead = usePermission('user.read')
   const canWrite = usePermission('user.write')
+  const mayReadNotifications = usePermission('notification.read')
   const queryClient = useQueryClient()
   const [editingUser, setEditingUser] = useState<UserSummary | null>(null)
   const [temporaryPassword, setTemporaryPassword] = useState<{
@@ -267,6 +269,19 @@ export function UsersPage() {
   const users = useUsers()
   const memberships = useMemberships()
   const roles = useRoles(canWrite)
+
+  /** The channels of the users (§11.9) — the state, never the address. */
+  const compliance = useQuery({
+    queryKey: ['notificationCompliance'],
+    queryFn: () =>
+      apiFetch<NotificationComplianceListResponse>('/v1/admin/notifications/compliance'),
+    enabled: mayReadNotifications,
+    retry: false,
+  })
+
+  const complianceByUser = new Map(
+    (compliance.data?.users ?? []).map((entry) => [entry.userId, entry]),
+  )
 
   const resetPassword = useMutation({
     mutationFn: (user: UserSummary) =>
@@ -347,6 +362,7 @@ export function UsersPage() {
             <th>{t('admin.users.table.active')}</th>
             <th>{t('admin.users.table.roles')}</th>
             <th>{t('admin.users.table.groups')}</th>
+            {mayReadNotifications ? <th>{t('admin.users.table.channels')}</th> : null}
             {canWrite ? <th>{t('admin.users.table.actions')}</th> : null}
           </tr>
         </thead>
@@ -368,6 +384,26 @@ export function UsersPage() {
               <td>{user.active ? t('admin.users.active') : t('admin.users.inactive')}</td>
               <td>{user.roleKeys.join(', ')}</td>
               <td>{(memberships.data?.[user.id] ?? []).join(', ')}</td>
+              {mayReadNotifications ? (
+                <td>
+                  {(() => {
+                    const entry = complianceByUser.get(user.id)
+
+                    if (entry === undefined) {
+                      return <span className="text-slate-500">—</span>
+                    }
+
+                    return (
+                      <span
+                        className={entry.compliant ? 'text-emerald-400' : 'text-amber-400'}
+                        title={entry.missing.join(', ')}
+                      >
+                        {entry.compliant ? '✓' : '●'} {entry.channelCount}
+                      </span>
+                    )
+                  })()}
+                </td>
+              ) : null}
               {canWrite ? (
                 <td>
                   <RowMenu

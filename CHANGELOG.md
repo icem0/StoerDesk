@@ -51,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The rule and the channels of the users in the administration
+  (**WP-M24-18**, phase 24, ADR-0045): the channel page names the required
+  channels and the minimum number of set-up channels and lists the channels of
+  every user; the user page carries a column with the state of the channels of
+  the user. The section of the mandatory channels of the critical tickets is
+  gone — the rule applies to every user and every event.
 - The mailbox of the instance lives in `/admin/email` (**WP-M24-17**, phase 24,
   ADR-0046): the SMTP connection, the sender with its display name, the
   templates of the messages per kind and the test mail to an address. The body

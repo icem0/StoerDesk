@@ -7,7 +7,8 @@ import {
   type ChannelConfigurationListResponse,
   type ChannelStatusListResponse,
   type ChannelTestResponse,
-  type MinimumChannelsResponse,
+  type ChannelPolicyResponse,
+  type NotificationComplianceListResponse,
   type NotificationChannelKind,
   type UpdateChannelConfigurationRequest,
 } from '@stoerdesk/shared'
@@ -525,10 +526,17 @@ export function ChannelsPage() {
     enabled: mayRead,
     retry: false,
   })
-  const minimumQuery = useQuery({
-    queryKey: ['minimumChannels'],
-    queryFn: () => apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels'),
+  const policyQuery = useQuery({
+    queryKey: ['channelPolicy'],
+    queryFn: () => apiFetch<ChannelPolicyResponse>('/v1/settings/notifications/channel-policy'),
     enabled: mayReadSettings,
+    retry: false,
+  })
+  const complianceQuery = useQuery({
+    queryKey: ['notificationCompliance'],
+    queryFn: () =>
+      apiFetch<NotificationComplianceListResponse>('/v1/admin/notifications/compliance'),
+    enabled: mayRead,
     retry: false,
   })
   const statusQuery = useQuery({
@@ -538,15 +546,16 @@ export function ChannelsPage() {
     retry: false,
   })
   const queryClient = useQueryClient()
-  const saveMinimum = useMutation({
-    mutationFn: (body: { channels: string[] }) =>
-      apiFetch<MinimumChannelsResponse>('/v1/settings/notifications/minimum-channels', {
+  const savePolicy = useMutation({
+    mutationFn: (body: { requiredChannels: string[]; minimumChannelCount: number }) =>
+      apiFetch<ChannelPolicyResponse>('/v1/settings/notifications/channel-policy', {
         method: 'PUT',
         headers: jsonHeaders,
         body: JSON.stringify(body),
       }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['minimumChannels'] })
+      void queryClient.invalidateQueries({ queryKey: ['channelPolicy'] })
+      void queryClient.invalidateQueries({ queryKey: ['notificationCompliance'] })
     },
   })
 
@@ -619,47 +628,108 @@ export function ChannelsPage() {
       {mayReadSettings ? (
         <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
           <div>
-            <h2 className="text-lg font-semibold">{t('admin.channels.minimum.title')}</h2>
-            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.minimum.hint')}</p>
+            <h2 className="text-lg font-semibold">{t('admin.channels.policy.title')}</h2>
+            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.policy.hint')}</p>
           </div>
 
-          {!minimumQuery.isLoading && !minimumQuery.isError ? (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-4">
-              <label className="flex flex-col gap-1 text-sm">
-                {t('admin.channels.minimum.label')}
+          {!policyQuery.isLoading && !policyQuery.isError ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-end gap-4">
+                {(query.data?.channels ?? [])
+                  .filter((channel) => channel.kind !== 'signal')
+                  .map((channel) => {
+                    const selected = (
+                      policyQuery.data?.requiredChannels ?? []
+                    ).includes(channel.kind)
+
+                    return (
+                      <label
+                        className="flex items-center gap-2 text-sm whitespace-nowrap"
+                        key={channel.kind}
+                      >
+                        <input
+                          checked={selected}
+                          disabled={!mayWriteSettings}
+                          onChange={(event) => {
+                            const current = policyQuery.data?.requiredChannels ?? []
+                            const next = event.target.checked
+                              ? [...current, channel.kind]
+                              : current.filter((kind) => kind !== channel.kind)
+
+                            savePolicy.mutate({
+                              requiredChannels: next,
+                              minimumChannelCount: policyQuery.data?.minimumChannelCount ?? 0,
+                            })
+                          }}
+                          type="checkbox"
+                        />
+                        {t(`admin.channels.kinds.${channel.kind}`)}
+                      </label>
+                    )
+                  })}
+              </div>
+
+              <label className="flex flex-col gap-1 text-sm sm:max-w-xs">
+                {t('admin.channels.policy.countLabel')}
+                <input
+                  className="rounded bg-slate-950 p-2"
+                  disabled={!mayWriteSettings}
+                  min={0}
+                  onChange={(event) =>
+                    savePolicy.mutate({
+                      requiredChannels: policyQuery.data?.requiredChannels ?? [],
+                      minimumChannelCount: Number(event.target.value) || 0,
+                    })
+                  }
+                  type="number"
+                  value={policyQuery.data?.minimumChannelCount ?? 0}
+                />
               </label>
-              {(query.data?.channels ?? []).map((channel) => {
-                const selected = (minimumQuery.data?.channels ?? []).includes(channel.kind)
 
-                return (
-                  <label
-                    className="flex items-center gap-2 text-sm whitespace-nowrap"
-                    key={channel.kind}
-                  >
-                    <input
-                      checked={selected}
-                      disabled={!mayWriteSettings}
-                      onChange={(event) => {
-                        const current = minimumQuery.data?.channels ?? []
-                        const next = event.target.checked
-                          ? [...current, channel.kind]
-                          : current.filter((kind) => kind !== channel.kind)
-
-                        saveMinimum.mutate({ channels: next })
-                      }}
-                      type="checkbox"
-                    />
-                    {t(`admin.channels.kinds.${channel.kind}`)}
-                  </label>
-                )
-              })}
-              {saveMinimum.isError ? (
+              {savePolicy.isError ? (
                 <p className="text-sm text-rose-400" role="alert">
-                  {t(`admin.channels.errors.${errorCode(saveMinimum.error)}`)}
+                  {t(`admin.channels.errors.${errorCode(savePolicy.error)}`)}
                 </p>
               ) : null}
             </div>
           ) : null}
+        </section>
+      ) : null}
+
+      {mayRead ? (
+        <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div>
+            <h2 className="text-lg font-semibold">{t('admin.channels.compliance.title')}</h2>
+            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.compliance.hint')}</p>
+          </div>
+
+          {(complianceQuery.data?.users ?? []).length === 0 ? (
+            <p className="text-sm text-slate-400">{t('admin.channels.compliance.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {(complianceQuery.data?.users ?? []).map((user) => (
+                <li className="flex flex-wrap items-center gap-2 text-sm" key={user.userId}>
+                  <span className="min-w-40 font-medium">{user.name}</span>
+                  <span
+                    aria-hidden="true"
+                    className={user.compliant ? 'text-emerald-400' : 'text-amber-400'}
+                  >
+                    {user.compliant ? '✓' : '●'}
+                  </span>
+                  <span className="text-slate-400">
+                    {user.compliant
+                      ? t('admin.channels.compliance.compliant')
+                      : t('admin.channels.compliance.missing', {
+                          channels: user.missing
+                            .map((kind) => t(`admin.channels.kinds.${kind}`))
+                            .join(', '),
+                          count: user.channelCount,
+                        })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
     </section>

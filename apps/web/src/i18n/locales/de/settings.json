@@ -47,7 +47,8 @@
         "active": "Aktiv",
         "roles": "Rollen",
         "groups": "Gruppen",
-        "actions": "Aktionen"
+        "actions": "Aktionen",
+        "channels": "Kanäle"
       },
       "active": "aktiv",
       "inactive": "inaktiv",
@@ -613,17 +614,22 @@
         "http_timeout": "Keine Antwort rechtzeitig (Timeout): der ntfy-Server hat innerhalb von zehn Sekunden nicht geantwortet — Adresse und Netzwerk prüfen; der Versand bleibt wiederholbar.",
         "channel_error": "Der Kanal has answered with the error code {{code}}: The reason waits in the log of the API and on the page of the delivery problems."
       },
-      "minimum": {
-        "title": "Pflichtkanäle für kritische Meldungen",
-        "hint": "Diese Kanäle werden bei jeder kritischen Meldung zusätzlich benachrichtigt – unabhängig von der eigenen Auswahl. Nur konfigurierte Kanäle dürfen ausgewählt werden.",
-        "label": "Pflichtkanäle",
-        "saving": "Speichern …",
-        "save": "Speichern"
-      },
       "failing": {
         "title": "Zustellung gestört",
         "failed": "{{count}} fehlgeschlagen",
         "lastFailure": "at {{time}}"
+      },
+      "policy": {
+        "title": "Die Vorgabe der Administration",
+        "hint": "Diese Kanäle muss jeder Nutzer eingerichtet haben, und so viele Kanäle muss er insgesamt eingerichtet haben. Die Vorgabe warnt — sie sperrt nichts.",
+        "countLabel": "Mindestanzahl eingerichteter Kanäle"
+      },
+      "compliance": {
+        "title": "Die Kanäle der Nutzer",
+        "hint": "Welcher Nutzer hat welchen Kanal eingerichtet. Die Adresse des Nutzers steht hier nicht.",
+        "empty": "Noch kein Nutzer vorhanden.",
+        "compliant": "erfüllt die Vorgabe",
+        "missing": "es fehlen {{channels}} — eingerichtet sind {{count}}"
       }
     },
     "delivery": {
