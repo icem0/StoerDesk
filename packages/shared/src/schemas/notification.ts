@@ -286,24 +286,6 @@ export const notificationEventTypeSchema = z.enum(NOTIFICATION_EVENT_TYPES)
 export type NotificationEventType = z.infer<typeof notificationEventTypeSchema>
 
 /**
- * One row of the selection of a user (`specs/10-notifications.md` §11.4,
- * WP-M14-16): one row per event type and channel of `notification_preferences`.
- */
-export const notificationPreferenceSchema = z.object({
-  eventType: notificationEventTypeSchema,
-  channel: notificationChannelKindSchema,
-})
-
-export const notificationPreferencesListResponseSchema = z.object({
-  preferences: z.array(notificationPreferenceSchema),
-})
-
-export const updateNotificationPreferencesRequestSchema = z.object({
-  /** The complete selection; it replaces the rows of the user. */
-  preferences: z.array(notificationPreferenceSchema).max(100),
-})
-
-/**
  * The Telegram linking of a user (`specs/10-notifications.md` §11.3, §11.11,
  * WP-M14-09). The code is bound to the requesting user, valid for ten minutes
  * and used once; the answer carries the code and its deadline only — the
@@ -457,13 +439,6 @@ export type WebPushSubscriptionCheckResponse = z.infer<
 >
 export type WebPushConfigResponse = z.infer<typeof webPushConfigResponseSchema>
 export type WebPushSubscriptionResponse = z.infer<typeof webPushSubscriptionResponseSchema>
-export type NotificationPreferenceEntry = z.infer<typeof notificationPreferenceSchema>
-export type NotificationPreferencesListResponse = z.infer<
-  typeof notificationPreferencesListResponseSchema
->
-export type UpdateNotificationPreferencesRequest = z.infer<
-  typeof updateNotificationPreferencesRequestSchema
->
 
 /**
  * One message of a user's notification inbox (`specs/10-notifications.md` §11.8,

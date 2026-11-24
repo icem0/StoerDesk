@@ -428,6 +428,13 @@
       "when": 1795831200001,
       "tag": "0060_notification_account_target_and_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1795917600001,
+      "tag": "0061_drop_notification_preferences",
+      "breakpoints": true
     }
   ]
 }

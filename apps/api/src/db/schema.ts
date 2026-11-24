@@ -873,42 +873,6 @@ export const notificationAccounts = pgTable(
   ],
 )
 
-/**
- * The selection of the channels per event type (`specs/10-notifications.md`
- * §11.4, WP-M14-04, ADR-0019): one row per user, event type and channel. A
- * user without a row for an event type is notified through the channels of the
- * instance (the chain of §11.1).
- */
-export const notificationPreferences = pgTable(
-  'notification_preferences',
-  {
-    id: uuid('id').primaryKey().default(uuidDefault),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    eventType: text('event_type').notNull(),
-    channel: text('channel').notNull(),
-    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex('notification_preferences_user_event_channel_key').on(
-      table.userId,
-      table.eventType,
-      table.channel,
-    ),
-    index('notification_preferences_created_at_idx').on(table.createdAt),
-    check(
-      'notification_preferences_event_type_check',
-      sql`${table.eventType} IN (${checkList(NOTIFICATION_EVENT_TYPES)})`,
-    ),
-    check(
-      'notification_preferences_channel_check',
-      sql`${table.channel} IN (${checkList(NOTIFICATION_CHANNEL_KINDS)})`,
-    ),
-  ],
-)
-
 /** Delivery state of an outbox row (`PLAN.md` §12, WP-M7-04). */
 export const OUTBOX_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
 
@@ -1532,8 +1496,6 @@ export type EscalationFiring = typeof escalationFirings.$inferSelect
 export type NewEscalationFiring = typeof escalationFirings.$inferInsert
 export type NotificationAccount = typeof notificationAccounts.$inferSelect
 export type NewNotificationAccount = typeof notificationAccounts.$inferInsert
-export type NotificationPreference = typeof notificationPreferences.$inferSelect
-export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
 export type TicketStatusRow = typeof ticketStatuses.$inferSelect
 export type NewTicketStatusRow = typeof ticketStatuses.$inferInsert
 

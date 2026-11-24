@@ -498,3 +498,16 @@ describe('migration 0060 the target and the confirmation of the accounts', () =>
     expect(sql).not.toContain('UPDATE')
   })
 })
+
+describe('migration 0061 the end of the selection per event type', () => {
+  const sql = readMigration('0061_drop_notification_preferences')
+
+  it('drops the table of the selection', () => {
+    expect(sql).toContain('DROP TABLE IF EXISTS "notification_preferences"')
+  })
+
+  it('touches the accounts of the users not', () => {
+    expect(sql).not.toContain('notification_accounts')
+    expect(sql).not.toContain('UPDATE')
+  })
+})

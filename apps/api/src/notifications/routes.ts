@@ -20,7 +20,6 @@ import {
   notificationAccountListResponseSchema,
   notificationChannelKindSchema,
   notificationMessageFilterSchema,
-  notificationPreferencesListResponseSchema,
   notificationMessageListResponseSchema,
   notificationMessageReadResponseSchema,
   notificationUnreadCountResponseSchema,
@@ -29,7 +28,6 @@ import {
   type ChannelConfiguration,
   type UpdateChannelConfigurationRequest,
   updateChannelConfigurationRequestSchema,
-  updateNotificationPreferencesRequestSchema,
   webPushConfigResponseSchema,
   webPushSubscriptionCheckRequestSchema,
   webPushSubscriptionCheckResponseSchema,
@@ -65,7 +63,6 @@ import {
   readWebPushPublicKey,
   storeWebPushSubscription,
 } from './web-push-subscriptions'
-import { readPreferences, writePreferences } from './preferences'
 import { readMessages, readRecipients, type MessageScope } from './messages'
 import {
   storeMatrixAccount,
@@ -997,32 +994,6 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         return channelTestResponseSchema.parse(
           await sendTestMessage(testRegistry, 'ntfy', topic, request.user?.locale),
         )
-      },
-    )
-
-    app.get('/api/v1/notifications/preferences', { preHandler: requireSession }, async (request) =>
-      notificationPreferencesListResponseSchema.parse({
-        preferences: await readPreferences(database, request.user?.id ?? ''),
-      }),
-    )
-
-    app.put(
-      '/api/v1/notifications/preferences',
-      { preHandler: requireSession },
-      async (request, reply) => {
-        const body = updateNotificationPreferencesRequestSchema.safeParse(request.body)
-
-        if (!body.success) {
-          return reply
-            .code(422)
-            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
-        }
-
-        await writePreferences(database, request.user?.id ?? '', body.data.preferences)
-
-        return notificationPreferencesListResponseSchema.parse({
-          preferences: await readPreferences(database, request.user?.id ?? ''),
-        })
       },
     )
 

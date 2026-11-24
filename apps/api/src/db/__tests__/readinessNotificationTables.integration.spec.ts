@@ -131,16 +131,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
     })
 
-    it('accepts a readiness event type in the notification preferences', async () => {
+    it('accepts a confirmed account of a user for the readiness events', async () => {
       await client`
-        insert into "notification_preferences" ("user_id", "event_type", "channel")
-        values (${userId}, 'oncall.assigned', 'ntfy')`
+        insert into "notification_accounts" ("user_id", "channel", "external_id", "verified_at")
+        values (${userId}, 'ntfy', 'stoerdesk-readiness', now())`
 
-      const [row] = await client<{ event_type: string }[]>`
-        select "event_type" from "notification_preferences"
+      const [row] = await client<{ verified_at: Date }[]>`
+        select "verified_at" from "notification_accounts"
         where "user_id" = ${userId} and "channel" = 'ntfy'`
 
-      expect(row?.event_type).toBe('oncall.assigned')
+      expect(row?.verified_at).toBeTruthy()
     })
   },
 )
