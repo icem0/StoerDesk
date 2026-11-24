@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The statistics know only phases with data (**WP-M26-01**, phase 26,
+  ADR-0049): the phase `firstResponse` is gone from the answer of
+  `GET /api/v1/stats/reaction-times`, from the CSV export and from the page —
+  the column `tickets.first_response_at` was never written by a workflow, so
+  the phase always answered a count of zero. The column stays in the database
+  as an unused legacy column.
 - Phase 24 and phase 25 are closed (**WP-M24-19**, **WP-M25-07**): the check runs
   of the versions v1.2.84 … v1.2.128 and their publish runs are green.
 

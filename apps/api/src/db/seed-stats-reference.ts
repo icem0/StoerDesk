@@ -88,8 +88,6 @@ async function ensureTicket(database: Db, objectId: string, ticket: ReferenceTic
   const reportedAt = at(ticket.day, 0)
   const reviewStartedAt =
     ticket.reviewMinutes === null ? null : new Date(reportedAt.getTime() + ticket.reviewMinutes * MINUTE)
-  const firstResponseAt =
-    ticket.reviewMinutes === null ? null : new Date(reportedAt.getTime() + ticket.reviewMinutes * MINUTE)
   const acknowledgedAt =
     ticket.reviewMinutes === null ? null : new Date(reportedAt.getTime() + (ticket.reviewMinutes + 5) * MINUTE)
 
@@ -103,7 +101,6 @@ async function ensureTicket(database: Db, objectId: string, ticket: ReferenceTic
     receivedAt: reportedAt,
     deadlineAt: new Date(reportedAt.getTime() + 60 * MINUTE),
     reviewStartedAt,
-    firstResponseAt,
     acknowledgedAt,
     isTest: ticket.isTest,
   })

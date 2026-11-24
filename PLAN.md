@@ -673,10 +673,14 @@ Statistics:
 
 - filters: week, month, quarter, year, custom range; object, system type,
   priority, technician,
-- reaction times: report → review, report → first response, report → acknowledge;
-  median, average, p90, count; pauses reported separately,
+- reaction times: report → review, report → acknowledge; median, average, p90,
+  count; pauses reported separately; a phase without a data source is no phase
+  (ADR-0049),
 - frequency: tickets per day/week/month, by system type, by standard text, by
-  source,
+  source, by detected error — the groupings name the readable text, not the
+  machine key (ADR-0049),
+- trends: the average reaction time and the average processing time per bucket
+  over the chosen range, drawn as inline SVG with an axis (ADR-0049),
 - top objects by ticket count, drilldown, "conspicuous" flag above a configurable
   90-day threshold (default 3),
 - deadline compliance, decline rate and top decline reasons,
@@ -806,11 +810,28 @@ explanation. Offline is a core feature and appears early.
 | **23** | The readiness view plans the shifts: the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08), and the reminder of a shift that was not accepted repeats with a rising urgency (WP-M23-09) | the office plans the week where the calendar shows the shifts, the share button copies the complete iCal URL, the admin assigns and deletes a shift that nobody accepted, and a shift that was not accepted is reminded again louder |
 | **25** | The alarm of the instance: the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band that cannot be dismissed (WP-M25-01 … WP-M25-09, ADR-0048) | the sound repeats in the interval of the installation while messages are unhandled, the silence of the user stops the sound for an hour and the warning of the setup stands on every page |
 | **24** | The user owns the channels: the selection of the channels per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the e-mail is an HTML mail with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01 … WP-M24-19, ADR-0045, ADR-0046) | the message of a user goes over his confirmed channels, a user without a confirmed channel gets the chain of the installation, the code over the channel confirms the account and the rule of the administration names the missing channels |
+| **26** | The statistics read themselves: a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01 … WP-M26-05, ADR-0049) | the statistics page names the system type, the fault type and the detected error in words, the trend of the reaction times over the months is readable, and no column of the page is empty without a reason |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**WP-M26-01 — the statistics know only phases with data (done).** The phase
+`firstResponse` of the statistics measured the column `tickets.first_response_at`,
+and no workflow event ever writes that column — the phase answered a count of
+zero and empty durations, and the dashboard showed the same empty average as
+„Ø Zeit bis Rückmeldung". ADR-0049 decides that a column without a writer is
+not a phase: the phase is gone from the answer of
+`GET /api/v1/stats/reaction-times`, from the CSV export and from the page, and
+the column stays in the database as an unused legacy column. The phase keeps two
+measurements — `review` (`review_started_at`) and `acknowledge`
+(`acknowledged_at`) — and the reference seed of the phase-9 criterion writes no
+`first_response_at` any more. The same ADR decides the two other decisions of
+the phase: the groupings of the frequency name the readable text instead of the
+machine key (**WP-M26-03**), and the trends of the reaction time and of the
+processing time are answered by the API and drawn as inline SVG (**WP-M26-04**,
+**WP-M26-05**).
 
 **The work packages know two profiles now (§17).** A package names its profile
 in the header: `format: ctx-128k` for a narrow slice and `format: ctx-256k` for

@@ -42,7 +42,6 @@
     "hint": "In Minuten, ab 60 Minuten in Stunden; Pausen werden separat ausgewiesen.",
     "phase": {
       "review": "Prüfung",
-      "firstResponse": "Erste Rückmeldung",
       "acknowledge": "Bestätigung"
     },
     "count": "Anzahl",

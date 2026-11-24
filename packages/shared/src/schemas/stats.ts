@@ -73,7 +73,6 @@ const reactionTimePhaseSchema = z.object({
 
 export const reactionTimesResponseSchema = z.object({
   review: reactionTimePhaseSchema,
-  firstResponse: reactionTimePhaseSchema,
   acknowledge: reactionTimePhaseSchema,
   pausedTickets: z.number().int().nonnegative(),
   pauseMinutes: z.number().nonnegative(),

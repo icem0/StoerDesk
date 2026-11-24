@@ -42,7 +42,6 @@
     "hint": "In minutes, from 60 minutes on in hours; pauses are reported separately.",
     "phase": {
       "review": "Review",
-      "firstResponse": "First response",
       "acknowledge": "Acknowledge"
     },
     "count": "Count",

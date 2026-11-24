@@ -52,7 +52,6 @@ export function* toStatisticsCsv(
 
   const phases: [string, ReactionTimes['review']][] = [
     ['review', sections.reactionTimes.review],
-    ['firstResponse', sections.reactionTimes.firstResponse],
     ['acknowledge', sections.reactionTimes.acknowledge],
   ]
 

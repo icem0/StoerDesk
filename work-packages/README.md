@@ -36,6 +36,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m23](m23/) | Phase 23: the readiness view plans the shifts — the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08) and the reminder of a shift that was not accepted repeats with a higher urgency (WP-M23-09) | 8   |
 | [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 9   |
 | [m24](m24/) | Phase 24: the user owns the channels — the selection per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the mail is HTML with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01) | 21  |
+| [m26](m26/) | Phase 26: the statistics read themselves — a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01, ADR-0049) | 5   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1779,7 +1780,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |
 | WP-M24-06f | the exit criterion names a channel the instance has — the rule of the administration is refused for a channel the instance does not have | done | yes |
 | WP-M24-06g | the accent test waits for the colour of the instance — the acceptance test reads the painted colour after the answer of the branding | done | yes |
-| WP-M25-07 | the warning of the setup as a large band of the shell and the exit criterion of the phase (profile `ctx-256k`) | planned | yes |
+| WP-M25-07 | the warning of the setup as a large band of the shell and the exit criterion of the phase (profile `ctx-256k`) | done | yes |
+| WP-M26-01   | the statistics know only phases with data — the phase `firstResponse` is gone (ADR-0049) | done                    | yes     |
+| WP-M26-02   | the dashboard knows the phase neither — the block of the evaluations carries three averages | planned                 | yes     |
+| WP-M26-03   | the statistics name the readable text — the groupings carry the labels of the fault types and the detected errors | planned                 | yes     |
+| WP-M26-04   | the statistics show the trends — the averages of the reaction times and of the processing time per bucket | planned                 | yes     |
+| WP-M26-05   | the diagrams carry an axis and the objects a ranking | planned                 | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

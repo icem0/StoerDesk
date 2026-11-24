@@ -9,7 +9,6 @@ type Db = Database['database']
 /** The phase aggregates of `specs/12-stats.md` §12.2. */
 export type ReactionTimes = {
   review: { count: number; medianMinutes: number; averageMinutes: number; p90Minutes: number }
-  firstResponse: { count: number; medianMinutes: number; averageMinutes: number; p90Minutes: number }
   acknowledge: { count: number; medianMinutes: number; averageMinutes: number; p90Minutes: number }
   pausedTickets: number
   pauseMinutes: number
@@ -23,7 +22,7 @@ type PhaseRow = {
 }
 
 /** The end column of one phase; the durations are measured from `reported_at`. */
-type Phase = 'review_started_at' | 'first_response_at' | 'acknowledged_at'
+type Phase = 'review_started_at' | 'acknowledged_at'
 
 /**
  * The reaction times of the filtered tickets (`specs/12-stats.md` §12.2).
@@ -45,9 +44,8 @@ export async function queryReactionTimes(
 ): Promise<ReactionTimes> {
   const { where } = buildStatsFilter(filter, now)
 
-  const [review, firstResponse, acknowledge] = await Promise.all([
+  const [review, acknowledge] = await Promise.all([
     runPhase(database, 'review_started_at', where),
-    runPhase(database, 'first_response_at', where),
     runPhase(database, 'acknowledged_at', where),
   ])
 
@@ -63,7 +61,6 @@ export async function queryReactionTimes(
 
   return {
     review,
-    firstResponse,
     acknowledge,
     pausedTickets: Number(pause?.paused_tickets ?? 0),
     pauseMinutes: Math.round(Number(pause?.pause_seconds ?? 0) / 60),

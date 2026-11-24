@@ -34,12 +34,11 @@ weekday, in `Europe/Berlin` (§15, all server times UTC).
 
 ## 12.2 Reaction times
 
-Three phases are measured from `reported_at`:
+Two phases are measured from `reported_at`:
 
 | Phase | End |
 | --- | --- |
 | `review` | `review_started_at` |
-| `firstResponse` | `first_response_at` |
 | `acknowledge` | `acknowledged_at` |
 
 Only rows with a non-null end inside the range are counted. Per phase the answer
@@ -47,6 +46,12 @@ carries `count`, `medianMinutes`, `averageMinutes` and `p90Minutes`, computed in
 SQL with `percentile_cont` — never in the client and never from a materialized
 snapshot. Negative durations are impossible for a valid workflow and are
 ignored if a legacy row violates the order.
+
+A column that no workflow writes is not a phase (ADR-0049 decision 1): the
+column `tickets.first_response_at` exists since migration `0006`, but no
+workflow event writes it, so it was never a measurement. The column stays in
+the database as an unused legacy column and is not read anywhere; the phase
+`firstResponse` is gone from the answer, from the export and from the page.
 
 Pauses are reported separately, never subtracted from a phase: the response
 carries `pausedTickets` and `pauseMinutes` (the summed pause length of the
@@ -173,3 +178,5 @@ read-only statistics viewer cannot.
 - No object-type deadline analysis (`PLAN.md` §19 leaves it undecided).
 - No materialized view and no refresh job in phase 9 (ADR-0012).
 - No chart dependency; the web draws the series as inline SVG.
+- No phase without a data source (ADR-0049 decision 1) and no machine key in
+  the place of a readable name (ADR-0049 decision 2).

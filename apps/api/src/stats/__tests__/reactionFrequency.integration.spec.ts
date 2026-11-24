@@ -59,8 +59,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .returning({ id: objects.id })
       objectId = onlyRow(object, 'the inserted object').id
 
-      // Three real tickets with known reaction times: review 10/30/20,
-      // first response 20/60/40 and acknowledge 50/120/80 minutes.
+      // Three real tickets with known reaction times: review 10/30/20 and
+      // acknowledge 50/120/80 minutes.
       const [ticketOne] = await db
         .insert(tickets)
         .values({
@@ -74,7 +74,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           deadlineAt: after(500),
           faultTemplateKeys: ['ELECTRICAL', 'WATER'],
           reviewStartedAt: after(10),
-          firstResponseAt: after(20),
           acknowledgedAt: after(50),
         })
         .returning({ id: tickets.id })
@@ -93,7 +92,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           deadlineAt: after(500),
           faultTemplateKeys: ['ELECTRICAL'],
           reviewStartedAt: after(30),
-          firstResponseAt: after(60),
           acknowledgedAt: after(120),
         })
         .returning({ id: tickets.id })
@@ -110,7 +108,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         deadlineAt: after(500),
         faultTemplateKeys: ['ELECTRICAL', 'WATER'],
         reviewStartedAt: after(20),
-        firstResponseAt: after(40),
         acknowledgedAt: after(80),
       })
 
@@ -127,7 +124,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         isTest: true,
         faultTemplateKeys: ['ELECTRICAL'],
         reviewStartedAt: after(5),
-        firstResponseAt: after(10),
         acknowledgedAt: after(15),
       })
 
@@ -143,7 +139,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         suspectedSpam: true,
         faultTemplateKeys: ['WATER'],
         reviewStartedAt: after(50),
-        firstResponseAt: after(100),
         acknowledgedAt: after(200),
       })
 
@@ -185,13 +180,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         p90Minutes: 28,
       })
 
-      // First response: 20, 60 and 40 minutes → median 40, average 40, p90 56.
-      expect(result.firstResponse).toEqual({
-        count: 3,
-        medianMinutes: 40,
-        averageMinutes: 40,
-        p90Minutes: 56,
-      })
 
       // Acknowledge: 50, 120 and 80 minutes → median 80, average 83, p90 112.
       expect(result.acknowledge).toEqual({

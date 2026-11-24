@@ -206,7 +206,6 @@ export function StatsPage() {
 
   const phases = [
     { key: 'review', data: reaction.data?.review },
-    { key: 'firstResponse', data: reaction.data?.firstResponse },
     { key: 'acknowledge', data: reaction.data?.acknowledge },
   ] as const
 

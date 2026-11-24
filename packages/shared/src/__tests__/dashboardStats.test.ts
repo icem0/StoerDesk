@@ -233,14 +233,12 @@ describe('statistics response schemas', () => {
     expect(
       reactionTimesResponseSchema.parse({
         review: { count: 4, medianMinutes: 23, averageMinutes: 30, p90Minutes: 55 },
-        firstResponse: { count: 3, medianMinutes: 40, averageMinutes: 45, p90Minutes: 80 },
         acknowledge: { count: 2, medianMinutes: 500, averageMinutes: 520, p90Minutes: 600 },
         pausedTickets: 1,
         pauseMinutes: 90,
       }),
     ).toEqual({
       review: { count: 4, medianMinutes: 23, averageMinutes: 30, p90Minutes: 55 },
-      firstResponse: { count: 3, medianMinutes: 40, averageMinutes: 45, p90Minutes: 80 },
       acknowledge: { count: 2, medianMinutes: 500, averageMinutes: 520, p90Minutes: 600 },
       pausedTickets: 1,
       pauseMinutes: 90,
