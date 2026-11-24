@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createTransport } from 'nodemailer'
-import { sendEmailNotification } from '../email'
+import { renderHtmlBody, sendEmailNotification } from '../email'
 
 describe('sendEmailNotification', () => {
   const message = { title: 'T-2026-0007', body: 'urgent · Lift 2' }
@@ -163,5 +163,60 @@ describe('sendEmailNotification', () => {
     }
 
     expect('the send unexpectedly succeeded').toBe('a failing send is required')
+  })
+})
+
+describe('the HTML body of the mail (ADR-0046, §11.5)', () => {
+  it('renders the template of the kind with the escaped values and the link', () => {
+    const html = renderHtmlBody(
+      {
+        to: ['office@example.org'],
+        host: 'mail.example.org',
+        port: 587,
+        secure: false,
+        user: '',
+        password: '',
+        from: 'stoerdesk@example.org',
+        templates: {
+          ticket: 'Meldung {ticket_no} — {object}\n\n{text}\n\n{url}',
+        },
+      },
+      {
+        title: 'ST-2026-0007',
+        body: 'ignored',
+        kind: 'ticket',
+        params: {
+          ticketNo: 'ST-2026-0007',
+          objectName: 'Rathaus',
+          shortText: '<script>alert(1)</script>',
+        },
+      },
+      'https://stoerdesk.local/tickets/ST-2026-0007',
+    )
+
+    expect(html).toContain('<p>')
+    expect(html).toContain('Meldung ST-2026-0007 — Rathaus')
+    expect(html).toContain('&lt;script&gt;')
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('<a href="https://stoerdesk.local/tickets/ST-2026-0007">')
+  })
+
+  it('uses the built-in text without a template', () => {
+    const html = renderHtmlBody(
+      {
+        to: ['office@example.org'],
+        host: 'mail.example.org',
+        port: 587,
+        secure: false,
+        user: '',
+        password: '',
+        from: 'stoerdesk@example.org',
+      },
+      { title: 'ST-2026-0007', body: 'critical · Lift 2', kind: 'ticket' },
+      '',
+    )
+
+    expect(html).toContain('critical · Lift 2')
+    expect(html).not.toContain('<a href')
   })
 })

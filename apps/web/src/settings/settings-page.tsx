@@ -74,6 +74,7 @@ const SETTINGS_SECTIONS = [
       { key: 'bmaSync', path: '/admin/bma-sync' },
       { key: 'apiKeys', path: '/admin/api-keys' },
       { key: 'channels', path: '/admin/channels' },
+      { key: 'email', path: '/admin/email' },
       { key: 'delivery', path: '/admin/delivery' },
       { key: 'statuses', path: '/admin/statuses' },
       { key: 'webhooks', path: '/admin/webhooks' },

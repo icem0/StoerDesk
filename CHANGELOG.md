@@ -51,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The mailbox of the instance lives in `/admin/email` (**WP-M24-17**, phase 24,
+  ADR-0046): the SMTP connection, the sender with its display name, the
+  templates of the messages per kind and the test mail to an address. The body
+  of every mail is HTML with the ticket link — the values of the template are
+  escaped, so a report of a customer can never carry markup into the mail of
+  the office.
 - The own page names the channels of the user (**WP-M24-16**, phase 24,
   ADR-0045): every channel carries its state and a symbol — *eingerichtet*
   (green), *verknüpft, nicht bestätigt* (amber), *nicht eingerichtet* (red). The

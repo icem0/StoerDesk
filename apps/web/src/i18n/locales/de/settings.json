@@ -771,6 +771,25 @@
         "invalid_request": "Die Priorität ist ungültig.",
         "unknown": "Speichern fehlgeschlagen."
       }
+    },
+    "email": {
+      "title": "E-Mail-Postfach",
+      "hint": "Die Verwaltung des E-Mail-Kanals: die SMTP-Verbindung, der Absender, die Vorlagen der Nachrichten und die Testnachricht. Die Meldungen tragen den Ticket-Link — der Text ist HTML.",
+      "channelsLink": "Zur Kanal-Administration",
+      "forbidden": "Für die Verwaltung des Postfachs fehlt dir die Berechtigung.",
+      "connection": "SMTP-Verbindung",
+      "sender": "Absender",
+      "displayName": "Anzeigename des Absenders",
+      "templates": "Vorlagen der Nachrichten",
+      "templatesHint": "Je Nachrichtenart ein Text mit Platzhaltern wie {ticket_no}, {priority}, {object}, {text} und {url}. Ohne Vorlage gilt der eingebaute Text.",
+      "templateTicket": "Meldung",
+      "templateReadiness": "Bereitschaft",
+      "templateTest": "Testnachricht",
+      "test": "Testnachricht",
+      "testAddress": "Empfänger der Testnachricht",
+      "save": "Postfach speichern",
+      "saved": "Das Postfach ist gespeichert.",
+      "saveFailed": "Das Postfach wurde nicht gespeichert."
     }
   },
   "apiKeys": {

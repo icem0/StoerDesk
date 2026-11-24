@@ -9,6 +9,13 @@ import { readWebPushConfiguration } from '../config'
 export interface NotificationMessage {
   title: string
   body: string
+  /**
+   * The kind of the message — `ticket`, `readiness` or `test` — it names
+   * the template of the e-mail (§11.5a).
+   */
+  kind?: string
+  /** The machine-readable values of the message (§11.5). */
+  params?: Record<string, unknown>
 }
 
 /**
@@ -179,31 +186,60 @@ const instanceMailRecipients = async (env: Env): Promise<string[]> => {
   }
 }
 
+/**
+ * The mailbox of the instance (ADR-0046): the row of the channel wins over the
+ * environment as a whole — the SMTP connection, the sender with its display
+ * name and the templates live in the row of `notification_channels`. The
+ * templates of §11.5a render the body of the mail as HTML: the empty lines
+ * become paragraphs, the values are escaped and the deep link becomes a link.
+ */
 const emailChannel = async (
   env: Env,
   message: NotificationMessage,
   options?: MessageOptions,
 ): Promise<void> => {
   const { sendEmailNotification } = await import('./email.js')
+  const { client, database } = createDatabase(databaseConnectionUrl(env))
 
-  const to =
-    options?.recipientTarget === undefined
-      ? await instanceMailRecipients(env)
-      : [options.recipientTarget]
+  try {
+    const [row] = await database
+      .select({
+        config: notificationChannels.config,
+        secret: notificationChannels.secret,
+      })
+      .from(notificationChannels)
+      .where(eq(notificationChannels.kind, 'email'))
 
-  await sendEmailNotification(
-    {
-      to,
-      host: env.SMTP_HOST,
-      port: env.SMTP_PORT,
-      secure: env.SMTP_SECURE,
-      user: env.SMTP_USER,
-      password: env.SMTP_PASSWORD,
-      from: env.SMTP_FROM,
-    },
-    message,
-    messageLink(env, options),
-  )
+    const settings = row === undefined ? {} : bridgeSettings(row.config)
+    const password = row === undefined || row.secret === '' ? env.SMTP_PASSWORD : row.secret
+
+    const to =
+      options?.recipientTarget === undefined
+        ? await instanceMailRecipients(env)
+        : [options.recipientTarget]
+
+    await sendEmailNotification(
+      {
+        to,
+        host: settings.host ?? env.SMTP_HOST,
+        port: Number(settings.port ?? env.SMTP_PORT),
+        secure: (settings.secure ?? String(env.SMTP_SECURE)) === 'true',
+        user: settings.user ?? env.SMTP_USER,
+        password,
+        from: settings.from ?? env.SMTP_FROM,
+        displayName: settings.displayName ?? '',
+        templates: {
+          ticket: settings.templateTicket ?? '',
+          readiness: settings.templateReadiness ?? '',
+          test: settings.templateTest ?? '',
+        },
+      },
+      message,
+      messageLink(env, options),
+    )
+  } finally {
+    await client.end({ timeout: 5 })
+  }
 }
 
 const telegramChannel = async (

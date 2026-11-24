@@ -53,6 +53,12 @@ export const updateChannelConfigurationRequestSchema = z.object({
 export const channelTestRequestSchema = z.object({
   /** Optional target for the test message, for example an ntfy test topic. */
   topic: z.string().trim().min(1).max(500).optional(),
+  /**
+   * The recipient of a test mail (`specs/10-notifications.md` §11.12, ADR-0046):
+   * the address the test message goes to. Without it the test reaches the mail
+   * addresses of the users of the instance.
+   */
+  address: z.string().trim().min(3).max(320).optional(),
 })
 
 export const channelTestResponseSchema = z.object({

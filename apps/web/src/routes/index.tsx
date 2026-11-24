@@ -4,6 +4,7 @@ import { App } from '../App'
 import { ApiKeysPage } from '../admin/api-keys-page'
 import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
+import { EmailPage } from '../admin/email-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { StatusCreatePage } from '../admin/status-create-page'
@@ -149,6 +150,16 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <ApiKeyCreatePage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The mailbox of the instance (ADR-0046): the SMTP connection, the
+        // sender, the templates of the messages and the test mail.
+        path: '/admin/email',
+        element: (
+          <RequireSession>
+            <EmailPage />
           </RequireSession>
         ),
       },

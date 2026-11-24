@@ -216,6 +216,7 @@ export async function sendTestMessage(
   kind: string,
   testTopic?: string,
   locale?: string,
+  testAddress?: string,
 ): Promise<{ delivered: boolean; code?: string }> {
   const channel = channels.find((candidate) => candidate.name === kind)
 
@@ -228,7 +229,11 @@ export async function sendTestMessage(
   try {
     await channel.send(
       { title: t(lng, 'notification.test_title'), body: t(lng, 'notification.test_body') },
-      testTopic ? { topic: testTopic } : undefined,
+      testTopic || testAddress === undefined
+        ? testTopic === undefined
+          ? undefined
+          : { topic: testTopic }
+        : { recipientTarget: testAddress },
     )
 
     return { delivered: true }
@@ -510,7 +515,13 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           }
         }
 
-        const result = await sendTestMessage(testRegistry, kind.data, body.data.topic, request.user?.locale)
+        const result = await sendTestMessage(
+          testRegistry,
+          kind.data,
+          body.data.topic,
+          request.user?.locale,
+          body.data.address,
+        )
 
         return channelTestResponseSchema.parse(result)
       },

@@ -771,6 +771,25 @@
         "invalid_request": "The priority is invalid.",
         "unknown": "Saving failed."
       }
+    },
+    "email": {
+      "title": "E-mail mailbox",
+      "hint": "The administration of the e-mail channel: the SMTP connection, the sender, the templates of the messages and the test mail. The messages carry the ticket link — the body is HTML.",
+      "channelsLink": "To the channel administration",
+      "forbidden": "You lack the permission to administer the mailbox.",
+      "connection": "SMTP connection",
+      "sender": "Sender",
+      "displayName": "Display name of the sender",
+      "templates": "The templates of the messages",
+      "templatesHint": "One text per kind of message with the placeholders {ticket_no}, {priority}, {object}, {text} and {url}. Without a template the built-in text applies.",
+      "templateTicket": "Ticket message",
+      "templateReadiness": "Readiness message",
+      "templateTest": "Test message",
+      "test": "Test mail",
+      "testAddress": "The recipient of the test mail",
+      "save": "Save the mailbox",
+      "saved": "The mailbox is saved.",
+      "saveFailed": "The mailbox was not saved."
     }
   },
   "apiKeys": {

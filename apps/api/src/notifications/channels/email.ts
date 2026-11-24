@@ -8,6 +8,17 @@ export interface EmailConfig {
    * without a recipient is refused — a mail nobody receives is not a delivery.
    */
   to: string[]
+  /** The display name of the sender — the name beside the address. */
+  displayName?: string
+  /**
+   * The templates of the messages per kind (§11.5a): a plain text with the
+   * placeholders of §11.5a. A kind without a template uses the built-in text.
+   */
+  templates?: {
+    ticket?: string
+    readiness?: string
+    test?: string
+  }
   /** Host of an existing mail server, e.g. mail.example.org — the channel is off while it is empty */
   host: string
   /** Port of the mail server, e.g. 587 (STARTTLS) or 465 (TLS) */
@@ -31,6 +42,17 @@ export interface EmailConfig {
 export interface NotificationMessage {
   title: string
   body: string
+  /**
+   * The kind of the message — `ticket`, `readiness` or `test` — it names
+   * the template of §11.5a.
+   */
+  kind?: string
+  /**
+   * The machine-readable values of the message (§11.5): the placeholders of
+   * the template are filled with them. The values are escaped before they
+   * enter the HTML.
+   */
+  params?: Record<string, unknown>
 }
 
 export class EmailError extends Error {
@@ -61,6 +83,86 @@ const actionLabel = (config: EmailConfig): string =>
  * factory: a test hands it the JSON transport of nodemailer, the product path
  * hands it the SMTP transport of the environment.
  */
+/**
+ * The placeholders of the templates of §11.5a and the values that fill them.
+ * The values come from the machine-readable params of the message (§11.5) and
+ * are escaped before they enter the HTML — a report of a customer can never
+ * carry markup into the mail of the office.
+ */
+const placeholderValues = (
+  message: NotificationMessage,
+  pwaUrl: string,
+): Record<string, string> => {
+  const params = message.params ?? {}
+
+  return {
+    ticket_no: String(params.ticketNo ?? ''),
+    priority: String(params.priority ?? ''),
+    object: String(params.objectName ?? ''),
+    location: String(params.objectLocation ?? ''),
+    system_type: String(params.systemType ?? ''),
+    text: String(params.shortText ?? ''),
+    aa_sa: String(params.workOrderNo ?? ''),
+    pool: String(params.poolName ?? ''),
+    starts_at: String(params.startsAt ?? ''),
+    ends_at: String(params.endsAt ?? ''),
+    state: String(params.state ?? ''),
+    url: pwaUrl,
+  }
+}
+
+/** Escapes the characters that carry meaning in HTML. */
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+/** Replaces the placeholders of a template with the escaped values. */
+const fillTemplate = (template: string, values: Record<string, string>): string =>
+  template.replace(/\{([a-z_]+)\}/g, (match, name: string) => {
+    const value = values[name]
+
+    return value === undefined ? match : escapeHtml(value)
+  })
+
+/**
+ * The body of the mail as HTML (§11.5, ADR-0046): the template of the kind of
+ * the message, or the built-in text. The empty lines become paragraphs, the
+ * deep link becomes a link and the text of the message is escaped.
+ */
+export const renderHtmlBody = (
+  config: EmailConfig,
+  message: NotificationMessage,
+  pwaUrl: string,
+): string => {
+  const values = placeholderValues(message, pwaUrl)
+  const template =
+    message.kind === 'readiness'
+      ? (config.templates?.readiness ?? '')
+      : message.kind === 'test'
+        ? (config.templates?.test ?? '')
+        : (config.templates?.ticket ?? '')
+
+  // The values of a template are escaped while they are filled in; the built-in
+  // text is escaped here — every value is escaped exactly once.
+  const text = template === '' ? escapeHtml(message.body) : fillTemplate(template, values)
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph !== '')
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br />')}</p>`)
+    .join('')
+
+  const link =
+    pwaUrl === ''
+      ? ''
+      : `<p><a href="${escapeHtml(pwaUrl)}">${escapeHtml(actionLabel(config))}</a></p>`
+
+  return `<html><body>${paragraphs}${link}</body></html>`
+}
+
 export async function sendEmailNotification(
   config: EmailConfig,
   message: NotificationMessage,
@@ -85,13 +187,19 @@ export async function sendEmailNotification(
   })
 
   const text = pwaUrl === '' ? message.body : `${message.body}\n\n${actionLabel(config)}: ${pwaUrl}`
+  const html = renderHtmlBody(config, message, pwaUrl)
+  const from =
+    config.displayName === undefined || config.displayName === ''
+      ? config.from
+      : `${config.displayName} <${config.from}>`
 
   try {
     await transporter.sendMail({
-      from: config.from,
+      from,
       to: recipients,
       subject: message.title,
       text,
+      html,
     })
   } catch (error) {
     // Message and code only: a nodemailer connection error carries the address of

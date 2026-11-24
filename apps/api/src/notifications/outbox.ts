@@ -296,6 +296,22 @@ export const messageOf = (target: Record<string, unknown>, eventType = ''): Mess
 }
 
 /**
+ * The kind of a message (§11.5a): the template of the e-mail is chosen by it —
+ * a ticket message, a readiness message or a test message. The machine values
+ * of the message travel with it, so the template can fill its placeholders.
+ */
+export const messageKindOf = (
+  target: Record<string, unknown>,
+  eventType = '',
+): 'ticket' | 'readiness' | 'test' => {
+  if (eventType === 'channel_health_warning') {
+    return 'test'
+  }
+
+  return target.shiftId !== undefined && target.shiftId !== null ? 'readiness' : 'ticket'
+}
+
+/**
  * The `Europe/Berlin` rendering of a stored UTC instant for a readiness
  * message. `de-DE` keeps the machine-readable short form consistent with the
  * web UI (`WP-M14-28`, §11.5).
@@ -623,7 +639,10 @@ export async function drainOutbox(
         }
       }
 
-      await channel.send(messageOf(row.target, row.eventType), options)
+      await channel.send(
+        { ...messageOf(row.target, row.eventType), kind: messageKindOf(row.target, row.eventType), params: row.target },
+        options,
+      )
       await finishRow(database, row, 'SENT', 'notification_sent')
 
       await finishMessage(database, row, 'SENT')
