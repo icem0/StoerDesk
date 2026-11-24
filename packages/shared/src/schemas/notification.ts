@@ -423,6 +423,35 @@ export type NotificationDeliveryListResponse = z.infer<
   typeof notificationDeliveryListResponseSchema
 >
 
+/**
+ * The alarm of the instance (`specs/10-notifications.md` §11.17, ADR-0048):
+ * whether the installation alarms with a sound at all and how often the sound
+ * comes again while unhandled messages exist. The interval governs the **sound
+ * only** — the visual alarm is a state, not a repetition.
+ */
+export const alarmSettingsSchema = z.object({
+  /** Whether the installation plays the alarm tone at all. */
+  toneEnabled: z.boolean(),
+  /** The interval of the repetition of the sound in seconds (15 … 600). */
+  repeatSeconds: z.number().int().min(15).max(600),
+})
+
+export const updateAlarmSettingsRequestSchema = alarmSettingsSchema
+
+/**
+ * The silence of a user (`specs/10-notifications.md` §11.17, ADR-0048): the end
+ * of the silence of one hour, or `null` while the user hears the alarm. The
+ * silence follows the user, not the device.
+ */
+export const notificationMuteSchema = z.object({
+  /** The end of the silence; null while the alarm is audible. */
+  mutedUntil: z.iso.datetime().nullable(),
+})
+
+export type AlarmSettings = z.infer<typeof alarmSettingsSchema>
+export type UpdateAlarmSettingsRequest = z.infer<typeof updateAlarmSettingsRequestSchema>
+export type NotificationMute = z.infer<typeof notificationMuteSchema>
+
 export type NotificationCompliance = z.infer<typeof notificationComplianceSchema>
 export type NotificationComplianceListResponse = z.infer<
   typeof notificationComplianceListResponseSchema

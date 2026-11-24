@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  alarmSettingsSchema,
   channelPolicySchema,
   confirmNotificationVerificationRequestSchema,
   notificationAccountSchema,
   notificationComplianceSchema,
   notificationMessageFilterSchema,
+  notificationMuteSchema,
   notificationMessageListResponseSchema,
   notificationMessageRecipientSchema,
   notificationRecipientSummarySchema,
@@ -187,5 +189,37 @@ describe('the confirmation of a channel', () => {
 
   it('refuses an empty code', () => {
     expect(confirmNotificationVerificationRequestSchema.safeParse({ code: '  ' }).success).toBe(false)
+  })
+})
+
+/**
+ * The contracts of the alarm of the instance (`specs/10-notifications.md`
+ * §11.17, ADR-0048).
+ */
+describe('the alarm of the instance', () => {
+  it('accepts the sound and the interval of its repetition', () => {
+    const settings = alarmSettingsSchema.parse({ toneEnabled: true, repeatSeconds: 60 })
+
+    expect(settings.toneEnabled).toBe(true)
+    expect(settings.repeatSeconds).toBe(60)
+  })
+
+  it('refuses an interval below 15 seconds, above 600 seconds and a broken number', () => {
+    expect(alarmSettingsSchema.safeParse({ toneEnabled: true, repeatSeconds: 5 }).success).toBe(
+      false,
+    )
+    expect(alarmSettingsSchema.safeParse({ toneEnabled: true, repeatSeconds: 900 }).success).toBe(
+      false,
+    )
+    expect(alarmSettingsSchema.safeParse({ toneEnabled: true, repeatSeconds: 60.5 }).success).toBe(
+      false,
+    )
+  })
+
+  it('accepts the end of the silence and the empty silence', () => {
+    expect(notificationMuteSchema.parse({ mutedUntil: '2026-11-24T12:00:00.000Z' }).mutedUntil).toBe(
+      '2026-11-24T12:00:00.000Z',
+    )
+    expect(notificationMuteSchema.parse({ mutedUntil: null }).mutedUntil).toBeNull()
   })
 })
