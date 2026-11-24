@@ -824,11 +824,28 @@ explanation. Offline is a core feature and appears early.
 | **24** | The user owns the channels: the selection of the channels per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the e-mail is an HTML mail with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01 … WP-M24-19, ADR-0045, ADR-0046) | the message of a user goes over his confirmed channels, a user without a confirmed channel gets the chain of the installation, the code over the channel confirms the account and the rule of the administration names the missing channels |
 | **26** | The statistics read themselves: a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01 … WP-M26-05, ADR-0049) | the statistics page names the system type, the fault type and the detected error in words, the trend of the reaction times over the months is readable, and no column of the page is empty without a reason |
 | **27** | The sticker is a template: the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and a free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | every sheet of the catalog prints in its own grid, every label carries the 112 notice, and the administration decides the geometry and the look of the sticker of the installation |
+| **28** | The gate answers in a minute: the tests of the web share one environment per worker, the integration tests of the API share one migrated template database instead of building one per file, the static gates of the check run in parallel, and the assertions of the migrations read the schema of the database instead of the text of the migration files (WP-M28-01 … WP-M28-04) | the check run needs less than three minutes on a machine with four cores, and every case of the suite proves the behaviour of the code against the real database |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 28 has started (WP-M28-01).** The check run of the repository needs
+253 s in CI (the step „Quality gates" of the run `v1.2.129`), and 139 s of them
+are the tests of the three projects. The tests are not slow because there are
+too many of them — 1871 cases prove 1871 behaviours — but because every case
+pays for its surroundings twice: the web project builds a jsdom environment and
+evaluates the whole module graph of the app again for every one of its 88 test
+files, and every one of the 128 integration files of the API builds its own
+disposable database, applies all 63 migrations into it and drops it again. The
+phase removes both overheads: the web project shares one environment per worker
+(**WP-M28-01**), the integration tests share one migrated template database that
+is cloned per file and cleaned with a delete instead of a drop (**WP-M28-02**),
+the static gates of the check run in parallel (**WP-M28-03**), and the assertions
+that read the text of the migration files become assertions of the schema of the
+real database (**WP-M28-04**). The goal is a gate that answers in a minute; no
+case of the suite is dropped and no assertion is weakened.
 
 **Phase 27 has started (WP-M27-01).** The office labels its objects with the
 stickers of a label roll and asked for three things: the sheet formats of an A4

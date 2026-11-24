@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The tests of the web share one environment per worker (**WP-M28-01**, phase 28):
+  the web project runs in a VM thread (`pool: 'vmThreads'`) — every test file
+  keeps its own module registry and its own mocks, but the jsdom environment and
+  the transformed modules are shared inside a worker. Without it, every one of
+  the 88 test files built its own jsdom and evaluated the module graph of the
+  app again (288 modules, 2399 times, 111 s of the tracked time); the web
+  project needs 13 s instead of 36 s.
+
 ### Added
 - The list of the stickers is filtered on the server (**WP-M27-05**, phase 27,
   ADR-0050): the search, the place and the activity ask the object list API,
@@ -52,6 +61,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   than an hour were shown as 1,7 h and 3,3 h. The step of the axis is a round
   number, the number of the steps varies, and from an hour on the values are
   hours.
+
+### Fixed
+- The code of a user reaches the channel of the installation
+  (**WP-M24-21**, phase 24, ADR-0022): the one-time code of the own page went
+  to the environment alone — a ntfy server that the administration configured in
+  the administration (a self-hosted server with access control) never received
+  the code, and the page answered a flat `invalid_request` instead of the
+  cause. The code travels over the effective configuration of the installation
+  now (the row wins over the environment, the access token of the server rides
+  in the `Authorization` header) and reaches only the target of the user — the
+  web push reaches only the devices of the user. A refused send names its
+  cause (`502 send_failed` with `params.reason`), and the page explains it.
 
 ### Added
 - The diagrams of the statistics carry an axis (**WP-M26-05**, phase 26, ADR-0049):
