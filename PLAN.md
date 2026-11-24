@@ -21,8 +21,9 @@ Rules:
 - Implementation happens only inside a work package (WP).
 - One WP = one model run = one commit.
 - A WP reads only the files and spec sections named in the WP.
-- If a WP needs more than 4 source files or more than 30k tokens of context,
-  stop and split it before writing code.
+- If a WP exceeds the limits of its profile (§17) — more than 4 source files
+  and 30k tokens of context for `ctx-128k`, more than 10 source files and 100k
+  tokens of context for `ctx-256k` — stop and split it before writing code.
 - If the plan is ambiguous, add an ADR or ask; do not invent requirements.
 
 ## 1. Product scope
@@ -810,6 +811,16 @@ Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**The work packages know two profiles now (§17).** A package names its profile
+in the header: `format: ctx-128k` for a narrow slice and `format: ctx-256k` for
+one vertical slice of a feature — the database, the service, the route and the
+user interface of one feature in one commit. The name says the context window
+the package is written for, not the size of the model. `format: small-model` is
+the former name of `ctx-128k` and stays valid, so the 767 packages written
+before keep their place without a rewrite; `npm run wp:check` holds the limits
+of every profile. The template of the vertical slice is
+`docs/WP-TEMPLATE-256k.md`.
 
 **WP-M23-08 — a reassignment notifies the new technician (done).** The
 assignment of a shift announces itself: the row of the event
@@ -3941,7 +3952,7 @@ and the rows of an older version — keeps covering its whole span. The phase
 was split further than planned (WP-M20-02 … WP-M20-08), because the contract of
 the pool and the administration that reads it belong to one commit.
 
-## 17. Work package rules for small models
+## 17. Work package rules
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The
 office asked for three things on the ticket detail page: a saved comment must be
 visible at once, the save must warn that the comment can no longer be corrected,
@@ -3960,20 +3971,38 @@ and `spellCheck`, so it works offline and ships no extra download.
 
 
 
-Target: a 64k–128k context model such as Qwen can finish one WP without losing
-the thread.
+Two profiles exist. The profile is named in the header of the work package
+(`format: ctx-128k` or `format: ctx-256k`) and decides the limits. The name
+says the context window the package is written for, not the size of the model.
 
-Hard limits:
+**`ctx-128k` — a 64k–128k context window.** The package is a narrow slice; the
+model must finish it without losing the thread.
 
-- one WP = one commit = one model run,
 - max. 3–4 changed source files (tests and fixtures excluded),
 - max. about 300 changed lines,
 - max. 6 source files read,
 - WP document max. 120 lines,
 - spec excerpt max. 200 lines,
 - context target 12–20k tokens, hard limit 30k for 64k models; 25–40k target and
-  60k hard limit for 128k models,
-- if a WP exceeds a limit, split it before writing code.
+  60k hard limit for 128k models.
+
+**`ctx-256k` — a 256k context window.** The package is one vertical slice: the
+database, the service, the route and the user interface of one feature in one
+commit. The context of such a model holds it, and one commit per feature keeps
+the history, the CI runs and the version tags readable.
+
+- max. 10 changed source files (tests and fixtures excluded),
+- max. 800 changed lines (the header names the number in `changed-lines`),
+- max. 12 source files read,
+- WP document max. 200 lines,
+- spec excerpt max. 600 lines,
+- context target 40–60k tokens, hard limit 100k.
+
+Both profiles share the rules that do not depend on the size of the context
+window:
+
+- one WP = one commit = one model run,
+- if a WP exceeds the limits of its profile, split it before writing code.
 
 Every WP contains:
 
@@ -3989,8 +4018,12 @@ Every WP contains:
 - `acceptance` with exact commands
 - `handoff`
 
-Template: `docs/WP-TEMPLATE.md`. Validation: `scripts/wp-check.mjs` (added in
-Phase 0).
+A `ctx-256k` package names its `changed-lines` in the header as well.
+
+Template: `docs/WP-TEMPLATE.md` (narrow slice) and `docs/WP-TEMPLATE-256k.md`
+(vertical slice). Validation: `scripts/wp-check.mjs` (added in Phase 0); it
+holds the limits of every profile, accepts `small-model` as the former name of
+`ctx-128k` and skips a package without a known `format`.
 
 Layer order:
 
@@ -4000,8 +4033,10 @@ Layer order:
 4. UI and i18n,
 5. tests and docs.
 
-Do not mix unrelated layers in one WP. A vertical slice is allowed only when it
-stays within the file and line limits.
+The layers of one feature belong together. A `ctx-256k` package may hold the
+layers 1 to 5 of one feature in one commit; the order inside the package stays
+as written above. A `ctx-128k` package takes one layer at a time. Do not mix
+unrelated features in one WP.
 
 ## 18. Quality gates
 

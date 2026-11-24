@@ -1,6 +1,6 @@
 # WP-XX-YY: Short imperative title
 
-format: small-model
+format: ctx-128k
 status: planned
 depends-on: —
 phase: 0
@@ -25,7 +25,7 @@ interfaces:
 
 ## Task
 
-Describe one vertical slice in 3–6 numbered steps. Name the exact files and the
+Describe one narrow slice in 3–6 numbered steps. Name the exact files and the
 expected behaviour. Do not describe unrelated refactors.
 
 1. Add the schema and migration.

@@ -30,8 +30,8 @@ in bulk.
 2. Collect the announced follow-ups of the running phase with
    `git grep -n "Follow-up WP:\|Open question:" -- work-packages/<phase>/` and
    report them, so nothing announced stays unnoticed.
-3. Check the WP against the limits of `PLAN.md` §17 and split it **before** writing
-   code if it does not fit.
+3. Check the WP against the limits of its profile in `PLAN.md` §17 and split it
+   **before** writing code if it does not fit.
 4. Open a todo list (see _Todo list (mandatory)_).
 
 ## Work package discipline
@@ -39,17 +39,24 @@ in bulk.
 - One WP = one commit = one model run.
 - Respect the file, line and context limits and the required WP metadata of
   `PLAN.md` §17; validate with `npm run wp:check`.
+- Two profiles exist: `ctx-128k` (a narrow slice) and `ctx-256k` (one vertical
+  slice of a feature). The profile stands in the header of the WP; the limits
+  of each profile are in `PLAN.md` §17.
 - Stay inside the WP's `files-write`. Repository bookkeeping outside it
   (`CHANGELOG.md`, `docs/REPO-MAP.md`, `PLAN.md` §16, `work-packages/README.md`) is
   part of the same commit; it is never a reason to widen a WP.
-- Layer order and the "do not mix layers" rule: `PLAN.md` §17.
+- Layer order and the layer rule: `PLAN.md` §17. A `ctx-256k` WP may hold the
+  layers of one feature (database, service, route, UI) in one commit; a
+  `ctx-128k` WP takes one layer at a time. Unrelated features never share a WP.
 
 ## Open follow-ups (mandatory closure)
 
 - **A split creates files, not sentences.** When a WP is split, the child WP
   documents (`work-packages/<phase>/<nr><suffix>-<slug>.md`) are created **in the
   same commit** as the parent rewrite. A `Follow-up WP:` line without a WP file is a
-  defect, not a backlog entry.
+  defect, not a backlog entry. A `ctx-256k` WP announces a follow-up as a WP file
+  only when the follow-up is work of its own; a remark that belongs to the same
+  feature stays a line in the `## Handoff` of the WP.
 - **Collect before starting.** Run the `git grep` of _Before you start a work
   package_ and report the open items.
 - **Numeric order, same phase.** The open items of the running phase are implemented

@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   sets it (**WP-M23-09c**).
 
 ### Changed
+- The work packages know two profiles now (**PLAN.md** §17): `ctx-128k` for a
+  narrow slice and `ctx-256k` for one vertical slice of a feature — the
+  database, the service, the route and the user interface in one commit. The
+  name says the context window the package is written for. `small-model` is the
+  former name of `ctx-128k` and stays valid, so the packages written before
+  keep their place. `npm run wp:check` holds the limits of every profile.
 - The urgency of the reminder rises (**WP-M23-09d**, phase 23): the message of
   a readiness row carried no priority, so the reminder of a shift that was not
   accepted arrived like any other message. The second reminder and every
