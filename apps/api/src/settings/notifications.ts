@@ -4,8 +4,10 @@ import { z } from 'zod'
 
 import {
   PERMISSIONS,
+  channelPolicySchema,
   minimumChannelsResponseSchema,
   notificationChannelKindSchema,
+  type ChannelPolicy,
   type NotificationChannelKind,
 } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
@@ -14,27 +16,94 @@ import type { Database } from '../db/client'
 import { settings } from '../db/schema'
 import { configuredChannels } from '../notifications/channels'
 
-/** The settings row that holds the mandatory minimum channels of critical tickets. */
+/**
+ * The rule of the administration (`specs/10-notifications.md` §11.9, ADR-0045):
+ * the settings rows `notifications.required_channels` and
+ * `notifications.minimum_channel_count`.
+ *
+ * `GET` — `settings.read`, answers the required channels and the minimum
+ * number of channels.
+ * `PUT` — `settings.write`, replaces them. Every named channel must be
+ * configured (`configuredChannels(env)`) and may not be `signal` — a channel
+ * without an address of the user is a requirement no user could ever fulfil,
+ * so it is refused with `422 invalid_request`.
+ *
+ * The former setting `notifications.minimum_channels` (the mandatory channels
+ * of the critical tickets) leaves the product with WP-M24-18 — its route stays
+ * until the administration page reads the new rule.
+ */
+
+/** The settings row that holds the required channels of every user. */
+export const REQUIRED_CHANNELS_KEY = 'notifications.required_channels'
+
+/** The settings row that holds the minimum number of channels of a user. */
+export const MINIMUM_CHANNEL_COUNT_KEY = 'notifications.minimum_channel_count'
+
+/** The settings row that holds the mandatory channels of the critical tickets. */
 const MINIMUM_CHANNELS_KEY = 'notifications.minimum_channels'
 
 type Db = Database['database']
 type DbSelect = Pick<Db, 'select'>
+/** The writer of a settings row — the database itself or its transaction. */
+type DbWriter = Pick<Db, 'insert'>
 
 const minimumChannelsSchema = z.object({
   channels: z.array(notificationChannelKindSchema).max(100),
 })
 
-export type MinimumChannels = { channels: NotificationChannelKind[] }
-
-/** The channel kinds every critical ticket is notified through. Empty when unset. */
-export async function readMinimumChannels(database: DbSelect): Promise<string[]> {
+/** Reads the value of a settings row; a missing row is `undefined`. */
+async function readSetting(database: DbSelect, key: string): Promise<unknown> {
   const rows = await database
     .select({ value: settings.value })
     .from(settings)
-    .where(eq(settings.key, MINIMUM_CHANNELS_KEY))
+    .where(eq(settings.key, key))
     .limit(1)
 
-  const value = rows[0]?.value
+  return rows[0]?.value
+}
+
+/** Writes the value of a settings row. */
+async function writeSetting(database: DbWriter, key: string, value: unknown): Promise<void> {
+  await database
+    .insert(settings)
+    .values({ key, value })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: { value, updatedAt: new Date() },
+    })
+}
+
+/**
+ * The rule of the administration: the channels every user must have set up and
+ * the number of channels a user must have set up in total. Both are empty resp.
+ * `0` by default — the rule is off until the admin decides.
+ */
+export async function readChannelPolicy(database: DbSelect): Promise<ChannelPolicy> {
+  const [channels, count] = await Promise.all([
+    readSetting(database, REQUIRED_CHANNELS_KEY),
+    readSetting(database, MINIMUM_CHANNEL_COUNT_KEY),
+  ])
+
+  return {
+    requiredChannels: (Array.isArray(channels)
+      ? channels.filter((item): item is string => typeof item === 'string')
+      : []) as NotificationChannelKind[],
+    minimumChannelCount:
+      typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : 0,
+  }
+}
+
+/** Replaces the rule of the administration. */
+export async function storeChannelPolicy(database: Db, policy: ChannelPolicy): Promise<void> {
+  await database.transaction(async (tx) => {
+    await writeSetting(tx, REQUIRED_CHANNELS_KEY, policy.requiredChannels)
+    await writeSetting(tx, MINIMUM_CHANNEL_COUNT_KEY, policy.minimumChannelCount)
+  })
+}
+
+/** The channel kinds every critical ticket is notified through. */
+export async function readMinimumChannels(database: DbSelect): Promise<string[]> {
+  const value = await readSetting(database, MINIMUM_CHANNELS_KEY)
 
   if (!Array.isArray(value)) {
     return []
@@ -44,32 +113,59 @@ export async function readMinimumChannels(database: DbSelect): Promise<string[]>
 }
 
 /** Replaces the mandatory minimum channels of critical tickets. */
-export async function storeMinimumChannels(
-  database: Db,
-  channels: string[],
-): Promise<void> {
-  await database
-    .insert(settings)
-    .values({ key: MINIMUM_CHANNELS_KEY, value: channels })
-    .onConflictDoUpdate({
-      target: settings.key,
-      set: { value: channels, updatedAt: new Date() },
-    })
+export async function storeMinimumChannels(database: Db, channels: string[]): Promise<void> {
+  await writeSetting(database, MINIMUM_CHANNELS_KEY, channels)
 }
 
 /**
- * `GET/PUT /api/v1/settings/notifications/minimum-channels` (`specs/10-notifications.md`
- * §11.4, §11.9, PLAN.md §12, WP-M14-18).
- *
- * `GET` — `settings.read`, answers the channel kinds of `notifications.minimum_channels`.
- * `PUT` — `settings.write`, replaces them. Every named channel must be configured
- * (`configuredChannels(env)`), otherwise the request is refused with
- * `422 invalid_request` so the setting never promises a delivery that cannot happen.
+ * `GET/PUT /api/v1/settings/notifications/channel-policy` (`specs/10-notifications.md`
+ * §11.9, §11.11, WP-M24-04).
  */
 export const settingsNotificationsRoutes = fp<{ database: Db; env: Env }>(
   async (app, { database, env }) => {
     const configured = new Set(
       (await configuredChannels(env)).map((channel) => channel.name),
+    )
+
+    app.get(
+      '/api/v1/settings/notifications/channel-policy',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
+      async () => channelPolicySchema.parse(await readChannelPolicy(database)),
+    )
+
+    app.put(
+      '/api/v1/settings/notifications/channel-policy',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.write) },
+      async (request, reply) => {
+        const parsed = channelPolicySchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          const fields = [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))]
+
+          return reply.code(400).send({ code: 'invalid_request', params: { fields } })
+        }
+
+        const unknown = parsed.data.requiredChannels.filter(
+          (channel) => !configured.has(channel),
+        )
+
+        // `signal` has no address of the user — a requirement no user could
+        // ever fulfil is a lie in the administration (ADR-0045).
+        const instanceOnly = parsed.data.requiredChannels.filter(
+          (channel: NotificationChannelKind) => channel === 'signal',
+        )
+
+        if (unknown.length > 0 || instanceOnly.length > 0) {
+          return reply.code(422).send({
+            code: 'invalid_request',
+            params: { fields: ['requiredChannels'] },
+          })
+        }
+
+        await storeChannelPolicy(database, parsed.data)
+
+        return channelPolicySchema.parse(await readChannelPolicy(database))
+      },
     )
 
     app.get(

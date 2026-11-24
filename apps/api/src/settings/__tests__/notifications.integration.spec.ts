@@ -21,6 +21,7 @@ const { users, roles, userRoles, settings } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 type MinimumChannelsBody = { channels: string[] }
+type ChannelPolicyBody = { requiredChannels: string[]; minimumChannelCount: number }
 
 const ntfyUrl = process.env.NTFY_URL
 const ntfyTopic = process.env.NTFY_TOPIC
@@ -83,6 +84,23 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return app.inject({
         method: 'PUT',
         url: '/api/v1/settings/notifications/minimum-channels',
+        headers: { cookie },
+        payload: payload as Record<string, unknown>,
+      })
+    }
+
+    function getPolicy(cookie?: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/settings/notifications/channel-policy',
+        headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
+    function putPolicy(cookie: string, payload: unknown) {
+      return app.inject({
+        method: 'PUT',
+        url: '/api/v1/settings/notifications/channel-policy',
         headers: { cookie },
         payload: payload as Record<string, unknown>,
       })
@@ -201,5 +219,89 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.statusCode).toBe(403)
       expect(response.json<ErrorResponseBody>()).toEqual({ code: 'forbidden', params: {} })
     })
+
+    it('answers the empty rule of the administration before the admin decides', async () => {
+      const response = await getPolicy(cookies['admin'])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<ChannelPolicyBody>()).toEqual({
+        requiredChannels: [],
+        minimumChannelCount: 0,
+      })
+    })
+
+    it('stores the required channels and the minimum number and reads them back', async () => {
+      const put = await putPolicy(cookies['admin'], {
+        requiredChannels: ['ntfy'],
+        minimumChannelCount: 2,
+      })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<ChannelPolicyBody>()).toEqual({
+        requiredChannels: ['ntfy'],
+        minimumChannelCount: 2,
+      })
+
+      expect((await getPolicy(cookies['admin'])).json<ChannelPolicyBody>()).toEqual({
+        requiredChannels: ['ntfy'],
+        minimumChannelCount: 2,
+      })
+
+      const stored = await db
+        .select({ key: settings.key, value: settings.value })
+        .from(settings)
+        .where(like(settings.key, 'notifications.%'))
+
+      expect(stored.find((row) => row.key === 'notifications.required_channels')?.value).toEqual([
+        'ntfy',
+      ])
+      expect(
+        stored.find((row) => row.key === 'notifications.minimum_channel_count')?.value,
+      ).toBe(2)
+    })
+
+    it('refuses an unconfigured channel with 422 invalid_request and keeps the stored rule', async () => {
+      const response = await putPolicy(cookies['admin'], {
+        requiredChannels: ['matrix'],
+        minimumChannelCount: 1,
+      })
+
+      expect(response.statusCode).toBe(422)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'invalid_request',
+        params: { fields: ['requiredChannels'] },
+      })
+      expect((await getPolicy(cookies['admin'])).json<ChannelPolicyBody>()).toEqual({
+        requiredChannels: ['ntfy'],
+        minimumChannelCount: 2,
+      })
+    })
+
+    it('refuses the channel without an address of the user', async () => {
+      const response = await putPolicy(cookies['admin'], {
+        requiredChannels: ['signal'],
+        minimumChannelCount: 1,
+      })
+
+      expect(response.statusCode).toBe(422)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'invalid_request',
+        params: { fields: ['requiredChannels'] },
+      })
+    })
+
+    it('refuses a negative minimum number', async () => {
+      const response = await putPolicy(cookies['admin'], {
+        requiredChannels: [],
+        minimumChannelCount: -1,
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json<ErrorResponseBody>()).toEqual({
+        code: 'invalid_request',
+        params: { fields: ['minimumChannelCount'] },
+      })
+    })
   },
 )
+

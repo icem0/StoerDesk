@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The rule of the administration is a route (**WP-M24-04**, phase 24, ADR-0045):
+  `GET`/`PUT /api/v1/settings/notifications/channel-policy` holds the channels
+  every user must have set up and the number of channels a user must have set
+  up in total. A channel that is not configured and `signal` — the channel
+  without an address of the user — are refused: a requirement no user could
+  ever fulfil is a lie.
 - The accounts of the users carry their target and their confirmation
   (**WP-M24-02**, **WP-M24-03**, phase 24, ADR-0045): the account of a user
   knows the target of the user at the channel (the room of the user for
