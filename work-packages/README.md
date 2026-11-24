@@ -1690,6 +1690,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-173 | the operator guide names the diagnosis of the web push (out of band) | done | yes |
 | WP-M14-175 | the web push failure names its cause and the next step (out of band) | done | yes |
 | WP-M14-176 | the web push sends through the library of the built API (out of band) | done | yes |
+| WP-M14-177 | the inbox works as an alarm — the retroactive record of commit `d8d2d0e6` (out of band) | done | yes |
+| WP-M14-178 | the alarm tone of the browser has a test (out of band) | planned | yes |
 | WP-M0-01 | local startability with Compose | done | yes |
 | WP-M0-02 | resilient start order | done | yes |
 | WP-M0-03 | binding plan anchor | done | yes |
@@ -1736,7 +1738,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M16-20d | the readiness pools carry the row menu (out of band) | done | yes |
 | WP-M16-21 | the API integration tests get the time their migration needs (out of band) | done | yes |
 | WP-M16-22 | the row menu escapes the scroll container (out of band) | done | yes |
-| WP-M16-24 | the order of the list and the direction of the history — the spec and the split | planned | yes |
+| WP-M16-24 | the order of the list and the direction of the history — the spec and the split | done | yes |
 | WP-M16-24a | the API orders the list the way the office wants | done | yes |
 | WP-M16-24b | the list page asks for the order of the office | done | yes |
 | WP-M16-24c | the contract and the pages follow the renamed direction | done | yes |

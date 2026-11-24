@@ -836,6 +836,18 @@ start of the app (`registration.update()`) and serves the shell with
 `Cache-Control: no-cache`, so a copy from the HTTP cache cannot hide the
 manifest link either.
 
+**WP-M14-177 — the inbox works as an alarm (done, retroactive record).** The
+commit `d8d2d0e6` landed on 2026-11-24 without a work package and without a WP id
+in its subject; the record names what it did, so that no commit is left without a
+work package (`AGENTS.md`, _Open follow-ups (mandatory closure)_). The inbox of
+the internal notification layer became the fastest way from an alarm to the work:
+the ticket number of a ticket message links straight into the ticket, every
+unread message carries its own quittature button with its own pending state, the
+unread-only filter is available to every session, the list and the bell ask again
+every half minute, an optional alarm tone of this browser sounds when the unread
+count rises, and a pushed alarm stays visible until the user acts on it
+(`specs/10-notifications.md` §11.12).
+
 **WP-M21-01 — the normalisation of the plan (done).** The office plan of a pool
 that was written in the older form (one entry per weekday, ADR-0035) created
 one shift per weekday and asked the technician for one confirmation per day.
