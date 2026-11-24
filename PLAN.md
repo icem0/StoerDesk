@@ -786,11 +786,39 @@ explanation. Offline is a core feature and appears early.
 | **20** | Duty blocks of the readiness: a block spans consecutive weekdays with a daily pattern, one shift per block per week, blocks replace the day windows of a pool (ADR-0040, WP-M20-01 … WP-M20-08) | the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the technician week one shift; the coupling and the iCal feed read the pattern |
 | **21** | The normalisation of the duty plan: consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (ADR-0044, WP-M21-01 … WP-M21-04) | a pool with the plan of Monday to Friday shows one block and creates one shift per week; the plan of a pool of the older version needs no manual work |
 | **22** | The installability of the web app: a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | the browser offers the install of the app (no "Page has no manifest `<link>` URL"), the installed app holds the subscription of the web push |
+| **23** | The readiness view plans the shifts: the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), and the reminder of a shift that was not accepted repeats with a rising urgency (WP-M23-02) | the office plans the week where the calendar shows the shifts, the share button copies the iCal URL, and a shift that was not accepted is reminded again louder |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**WP-M23-01 — the readiness view plans the shifts (done).** The section
+„Kalender-URL“ of the readiness view was a block of its own below the calendar;
+the frame of the calendar now carries the share button in its upper right
+corner, which copies the URL of the personal iCal feed into the clipboard and
+names the result. The weekly plan — generating the slots of a week, assigning
+or reassigning a technician, publishing a draft and deleting a slot that did
+not start — stood in the administration at `/admin/oncall`, away from the
+calendar that shows the shifts; it now lives in the readiness view at `/oncall`
+as the section `PlanningSection`, where the office sees the week and the
+shifts at the same time. The candidates of the assignment come from
+`GET /api/v1/oncall/pools/:id/members`, so the plan needs no right beyond the
+readiness itself; the section is shown with `oncall.plan` or `oncall.admin`,
+the generation needs `oncall.plan`, the assignment, the publication and the
+deletion need `oncall.admin`. A declined shift is marked in the table and
+carries the hint that another technician is due. The administration keeps the
+configuration — the pools, the duty blocks, the warnings, the swaps and the
+`oncall.*` settings — and links to the planning.
+
+**WP-M23-02 — the repeated reminder of a shift that was not accepted (planned).**
+The sweep of `enqueueOncallReminders` queues today one
+`oncall.unconfirmed_reminder` per shift and skips the shift while such a row is
+`PENDING` or `SENT`; a shift that nobody accepted is therefore reminded once
+and then forgotten. WP-M23-02 repeats the reminder, raises the urgency of the
+notification with every further reminder, reminds a declined shift as well and
+gives the admin of the readiness a button in the weekly plan that sends the
+reminder of one shift by hand (`POST /api/v1/oncall/shifts/:id/remind`).
 
 **WP-M22-01 — the service worker takes over at once (done).** The browser
 offered no install of the app: the Firefox dialog of the install answered

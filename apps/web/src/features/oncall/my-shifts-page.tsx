@@ -11,6 +11,7 @@ import { apiFetch, ApiError } from '../../lib/api'
 import { useMe, usePermission } from '../../auth/usePermission'
 import { useShiftActions } from './use-shift-actions'
 import { ReadinessCalendar } from './readiness-calendar'
+import { PlanningSection } from './planning-section'
 import { ShiftDetailDialog } from './shift-detail-dialog'
 
 /**
@@ -80,13 +81,15 @@ function MyShiftsPageContent({
   mayConfirm,
   maySwap,
   mayAdmin,
+  mayPlan,
   mayShowNames,
 }: {
   meUserId: string
-  pools: { id: string; name: string }[]
+  pools: { id: string; name: string; active?: boolean; groupId?: string | null }[]
   mayConfirm: boolean
   maySwap: boolean
   mayAdmin: boolean
+  mayPlan: boolean
   mayShowNames: boolean
 }) {
   const { t } = useTranslation('oncall')
@@ -167,16 +170,6 @@ function MyShiftsPageContent({
     [],
   )
 
-  const copyIcal = useCallback(async () => {
-    const url = ical.data?.url
-    if (!url) return
-    try {
-      await navigator.clipboard.writeText(url)
-    } catch {
-      // clipboard access can be blocked; the URL remains visible and selectable
-    }
-  }, [ical.data?.url])
-
   const shiftError = shiftsQuery.error
 
   if (shiftsQuery.isPending || ical.isPending) {
@@ -207,36 +200,23 @@ function MyShiftsPageContent({
       </div>
 
       <ReadinessCalendar
+        icalUrl={ical.data?.url}
         pools={pools}
         shifts={shiftsQuery.data?.shifts ?? []}
         showNames={mayShowNames}
       />
 
+      {mayAdmin || mayPlan ? (
+        <PlanningSection
+          defaultPoolId={null}
+          mayAdmin={mayAdmin}
+          mayPlan={mayPlan}
+          pools={pools}
+        />
+      ) : null}
+
       <h2 className="mt-8 text-xl font-semibold">{t('admin.myShifts.title')}</h2>
       <p className="mt-1 text-sm text-slate-400">{t('admin.myShifts.hint')}</p>
-
-      {ical.data ? (
-        <section className="mt-6 rounded border border-slate-700 bg-slate-900 p-4">
-          <h2 className="text-lg font-semibold">{t('admin.myShifts.icalTitle')}</h2>
-          <p className="mt-1 text-sm text-slate-400">{t('admin.myShifts.icalHint')}</p>
-          <div className="mt-3 flex gap-2">
-            <input
-              className="flex-1 rounded bg-slate-950 p-2 text-slate-100 text-sm truncate"
-              readOnly
-              value={ical.data.url}
-            />
-            <button
-              className="rounded bg-accent-700 px-4 py-2 font-medium text-white"
-              onClick={copyIcal}
-            >
-              {t('admin.myShifts.copy')}
-            </button>
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            {t('admin.myShifts.icalSubscribe')}
-          </p>
-        </section>
-      ) : null}
 
       <section className="mt-6">
         <h2 className="text-lg font-semibold">{t('admin.myShifts.upcoming')}</h2>
@@ -752,13 +732,17 @@ function MyShiftsPage() {
   const mayConfirm = usePermission('oncall.confirm')
   const maySwap = usePermission('oncall.swap')
   const mayAdmin = usePermission('oncall.admin')
+  const mayPlan = usePermission('oncall.plan')
   // The names of the technicians of the readiness are a right of their own
   // (`oncall.read_names`, WP-M14-131): a role without it reads the calendar
   // without the names (WP-M14-132).
   const mayShowNames = usePermission('oncall.read_names')
   const pools = useQuery({
     queryKey: ['oncall', 'pools'],
-    queryFn: () => apiFetch<{ pools: { id: string; name: string }[] }>('/v1/oncall/pools'),
+    queryFn: () =>
+      apiFetch<{ pools: { id: string; name: string; active?: boolean; groupId?: string | null }[] }>(
+        '/v1/oncall/pools',
+      ),
     retry: false,
   })
 
@@ -791,6 +775,7 @@ function MyShiftsPage() {
       mayConfirm={mayConfirm}
       maySwap={maySwap}
       mayAdmin={mayAdmin}
+      mayPlan={mayPlan}
       mayShowNames={mayShowNames}
     />
   )

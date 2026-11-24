@@ -153,6 +153,19 @@ function stubRoutes(permissions: string[]) {
         return Response.json({ url: '/api/v1/oncall/ical/token.ics' })
       }
 
+      if (url.includes('/v1/settings/oncall')) {
+        return Response.json({
+          weekStartWeekday: 1,
+          startTime: '07:00',
+          durationDays: 7,
+          swapRequiresAdminApproval: true,
+          escalateToGroupAfterMin: 10,
+          reminderUnconfirmedH: 24,
+          unfilledWarningDays: 14,
+          defaultPoolId: null,
+        })
+      }
+
       if (url.includes('/confirm') || url.includes('/decline') || url.includes('/swap') || url.includes('/cancel')) {
         if (url.includes('/decline')) {
           const body = await (input as Request).clone().text()
@@ -305,11 +318,41 @@ describe('MyShiftsPage', () => {
     expect(link.getAttribute('href')).toBe('/admin/oncall')
   })
 
-  it('shows the iCal URL with a copy button', async () => {
+  it('shows the weekly plan to an admin of the readiness', async () => {
+    renderPage(['oncall.read', 'oncall.admin', 'oncall.plan'])
+
+    await waitForText('Wochenplan')
+    await waitForText('Schichten erzeugen')
+    // the technician of a shift is chosen from the members of the pool
+    await waitForText('Technik')
+  })
+
+  it('hides the weekly plan for a role without oncall.admin and oncall.plan', async () => {
+    renderPage(['oncall.read'])
+
+    await waitForText('Bereitschaftskalender')
+    expect(screen.queryByText('Wochenplan')).toBeNull()
+  })
+
+  it('copies the iCal URL with the share button of the calendar', async () => {    const writeText = vi.fn(async () => undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+
     renderPage(['oncall.read', 'oncall.confirm', 'oncall.swap'])
 
-    await waitForText('Kalender-URL')
-    await waitForText('Kopieren')
-    expect(screen.getByDisplayValue('/api/v1/oncall/ical/token.ics')).toBeDefined()
+    await waitForText('Bereitschaftskalender')
+
+    // the section with the URL is gone — the frame of the calendar carries the
+    // share button
+    expect(screen.queryByText('Kalender-URL')).toBeNull()
+
+    const button = screen.getByRole('button', { name: 'Kalender-URL teilen' })
+
+    fireEvent.click(button)
+
+    await waitForText('Kalender-URL kopiert')
+    expect(writeText).toHaveBeenCalledWith('/api/v1/oncall/ical/token.ics')
   })
 })

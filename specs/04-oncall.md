@@ -107,6 +107,15 @@ a shift after it started (`PLAN.md` §8). A reassign of a `SWAP_REQUESTED` shift
 cancels the open swap and writes `swap_cancelled`. A shift that is `CONFIRMED`
 or `SWAP_REQUESTED` cannot be deleted (`409 oncall_shift_locked`).
 
+The weekly plan — generating the slots of a week, assigning or reassigning a
+technician, publishing a draft and deleting a slot that did not start — belongs
+to the readiness view, not to the administration: the admin works on the plan
+where the calendar already shows who is on duty. The view shows the plan only
+with `oncall.plan` or `oncall.admin`; every action of the plan is guarded by
+the server as before (`oncall.plan` for the generation, `oncall.admin` for the
+assignment, the publication and the deletion). A role without those keys reads
+the same calendar without the plan.
+
 The calendar range `GET /api/v1/oncall/shifts` answers the **technician** next to
 the shift (ADR-0032, WP-M14-151): the row of a shift carries `technician` with
 the display data of `user_id` (`{ id, givenName, familyName, email }`, the shape
@@ -360,8 +369,10 @@ come from the server locale of the user.
 
 The token is `<userId>.<base64url(HMAC-SHA256(userId, SESSION_SECRET))>`, stable
 per user and never stored. The route verifies the signature with a timing-safe
-comparison and answers `404 ical_not_found` on any mismatch. The token is shown
-on the "my on-call" page so the user can subscribe in a calendar app.
+comparison and answers `404 ical_not_found` on any mismatch. The URL is offered
+on the "my on-call" page by the share button of the readiness calendar: the
+button copies the URL into the clipboard, so the user can subscribe in a
+calendar app.
 
 ## 4a.8 API summary
 

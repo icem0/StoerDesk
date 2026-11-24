@@ -171,11 +171,30 @@ export function ReadinessCalendar(props: {
   pools: Pool[]
   /** False for a role without `oncall.read_names` (WP-M14-132). */
   showNames?: boolean
+  /** The personal iCal feed copied by the share button of the frame. */
+  icalUrl?: string
 }) {
   const { t, i18n } = useTranslation('oncall')
   const [windowStart, setWindowStart] = useState(() => monthStartIso(new Date()))
   const [selectedShift, setSelectedShift] = useState<OnCallShift | null>(null)
+  const [copied, setCopied] = useState(false)
   const showNames = props.showNames ?? true
+
+  const share = async () => {
+    const url = props.icalUrl
+
+    if (!url) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard access can be blocked; the button stays without feedback
+    }
+  }
 
   // The marker of the current day: the Berlin calendar date of now (WP-M14-156).
   const todayIso = localIsoDate(new Date())
@@ -263,6 +282,32 @@ export function ReadinessCalendar(props: {
           <p className="text-sm text-slate-400">{t('readiness.hint')}</p>
         </div>
         <div className="flex items-center gap-2">
+          {props.icalUrl ? (
+            <button
+              aria-label={t('readiness.share')}
+              className="flex min-h-11 items-center gap-2 rounded bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+              onClick={() => void share()}
+              title={t('readiness.share')}
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+              </svg>
+              {copied ? t('readiness.copied') : t('readiness.share')}
+            </button>
+          ) : null}
           <button
             className="min-h-11 rounded bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700"
             onClick={() => setWindowStart(addMonthsToIso(windowStart, -1))}

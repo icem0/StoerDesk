@@ -16,13 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
-- The inbox works as an alarm (`specs/10-notifications.md` §11.12): the ticket
-  number of a ticket message links straight into the ticket, every unread
-  message has its own quittature button (a slow receipt never blocks the next),
-  the unread-only filter is available without the admin permission, the list and
-  the bell refresh every half minute, an optional alarm tone of this browser
-  sounds on a new message, and a pushed alarm stays visible until the user acts
-  on it.
+- The inbox works as an alarm (**WP-M14-177**, `specs/10-notifications.md` §11.12):
+  the ticket number of a ticket message links straight into the ticket, every
+  unread message has its own quittature button (a slow receipt never blocks the
+  next), the unread-only filter is available without the admin permission, the
+  list and the bell refresh every half minute, an optional alarm tone of this
+  browser sounds on a new message, and a pushed alarm stays visible until the
+  user acts on it.
 - The administration names the normalisation of the plan (**WP-M21-04**, phase 21,
   ADR-0044): the plan of a pool names that consecutive days with the same duty
   times form one duty block — the week then holds one shift instead of one
@@ -188,6 +188,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the CommonJS package differently and could not see the defect.
 
 ### Changed
+- The readiness view plans the shifts (**WP-M23-01**, phase 23): the section
+  „Kalender-URL“ is gone — the frame of the readiness calendar carries the share
+  button in its upper right corner, which copies the URL of the personal iCal
+  feed into the clipboard. The weekly plan — generating the slots of a week,
+  assigning or reassigning a technician, publishing a draft and deleting a slot
+  that did not start — moved from the administration at `/admin/oncall` into the
+  readiness view at `/oncall`, where the calendar already shows the shifts: the
+  candidates of the assignment come from the members of the pool, a declined
+  shift is marked and carries the hint that another technician is due, and the
+  week carries a short overview of its shifts. The plan is shown with
+  `oncall.plan` or `oncall.admin`; the administration keeps the configuration
+  and links to the planning.
 - The switch under „Darstellung“ names the history of a ticket
   (**WP-M16-24d**, phase 16): the texts of the switch were „Neueste zuerst“ and
   a hint that spoke of the newest message — the switch steers the events of the

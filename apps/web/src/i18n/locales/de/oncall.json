@@ -11,12 +11,14 @@
     "pageTitle": "Bereitschaft",
     "pageHint": "Der Kalender zeigt, wer die Bereitschaft hat. Darunter stehen deine eigenen Schichten.",
     "pageHintWithoutNames": "Der Kalender zeigt die Schichten der Bereitschaft. Darunter stehen deine eigenen Schichten.",
-    "adminSettings": "Einstellungen der Bereitschaft"
+    "adminSettings": "Einstellungen der Bereitschaft",
+    "share": "Kalender-URL teilen",
+    "copied": "Kalender-URL kopiert"
   },
   "admin": {
     "back": "Zurück zu den Einstellungen",
     "title": "Bereitschaftsplan",
-    "hint": "Pools, Wochenplan, Warnungen, Schichttausch und Einstellungen pflegen. Die Zeiten gelten in Europe/Berlin.",
+    "hint": "Pools, Dienstzeiten, Warnungen, Schichttausch und Einstellungen pflegen. Die Wochenplanung liegt in der Bereitschaftsansicht. Die Zeiten gelten in Europe/Berlin.",
     "loading": "Bereitschaftsplan wird geladen …",
     "sessionNotice": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
     "forbiddenNotice": "Für den Bereitschaftsplan fehlt die Berechtigung oncall.read.",
@@ -62,7 +64,10 @@
       "unassigned": "Nicht zugewiesen",
       "publish": "Veröffentlichen",
       "delete": "Löschen",
-      "locked": "Gestartete oder bestätigte Schichten können nicht gelöscht werden."
+      "locked": "Gestartete oder bestätigte Schichten können nicht gelöscht werden.",
+      "summary": "{{total}} Schichten in dieser Woche, davon {{declined}} abgelehnt und {{unfilled}} unbesetzt.",
+      "reassignHint": "Die Schicht wurde abgelehnt — eine andere Technik zuweisen.",
+      "planningLink": "Zur Schichtplanung"
     },
     "warnings": {
       "title": "Warnungen",
@@ -150,11 +155,6 @@
       "cancel": "Zurückziehen",
       "openSwap": "Offener Tauschwunsch",
       "swapSent": "Tauschwunsch gesendet",
-      "icalTitle": "Kalender-URL",
-      "icalHint": "Abonniere deine Schichten in einer Kalender-App.",
-      "icalSubscribe": "Die URL in die Kalender-App eintragen, um die Schichten zu abonnieren.",
-      "copy": "Kopieren",
-      "copied": "Kopiert.",
       "errors": {
         "reasonTooShort": "Bitte einen Grund von mindestens 5 Zeichen angeben."
       },

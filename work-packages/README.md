@@ -33,6 +33,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m20](m20/) | Phase 20: duty blocks of the readiness — a block spans consecutive weekdays with a daily pattern, one shift per block per week (the spec and ADR-0040, the shared blocks, the API stores the pattern, the pool carries the blocks, the administration edits the blocks, the coupling and the iCal feed read the pattern, the exit criterion)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 8   |
 | [m21](m21/) | Phase 21: the normalisation of the duty plan — consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (the spec and ADR-0044, the shared normalisation, the API, the administration) | 4   |
 | [m22](m22/) | Phase 22: the installability of the web app — a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | 1   |
+| [m23](m23/) | Phase 23: the readiness view plans the shifts — the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), and the reminder of a shift that was not accepted repeats with a higher urgency (WP-M23-02) | 2   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1753,6 +1754,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M21-03 | the API reads and writes the normalised plan | done | yes |
 | WP-M21-04 | the administration names the normalisation | done | yes |
 | WP-M22-01 | the service worker takes over at once — the install of the app and the shell without a stale cache | done | yes |
+| WP-M23-01 | the readiness view plans the shifts — the share button of the calendar and the weekly plan in the readiness view | done | yes |
+| WP-M23-02 | the repeated reminder of a shift that was not accepted — a rising urgency and the manual reminder of the admin | planned | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

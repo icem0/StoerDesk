@@ -257,6 +257,16 @@ describe('OncallPage', () => {
     expect(screen.getByLabelText('Gruppe')).toBeTruthy()
   })
 
+  it('links the admin to the weekly plan in the readiness view', async () => {
+    stubRoutes()
+
+    renderPage()
+
+    const link = (await screen.findByRole('link', { name: 'Zur Schichtplanung' })) as HTMLAnchorElement
+
+    expect(link.getAttribute('href')).toBe('/oncall')
+  })
+
   it('keeps the delete of a pool with shifts blocked and names the reason', async () => {
     stubRoutes(undefined, [], 2)
 
