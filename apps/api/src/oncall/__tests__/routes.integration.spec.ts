@@ -229,6 +229,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       process.env.NODE_ENV = 'test'
       process.env.API_LOG_LEVEL = 'silent'
       process.env.RATE_LIMIT_MAX = '10000'
+      // The chain of the instance carries the reminder (the reminder of a
+      // shift counts the reminders that went out, WP-M23-09e): without a
+      // configured channel no row is written and the number of the reminder
+      // never rises. The test configures the chain itself, so it does not
+      // depend on the environment of the machine — the `.env` of a developer
+      // knows ntfy, the runner of CI knows none.
+      process.env.NTFY_URL = 'https://ntfy.example.invalid/'
+      process.env.NTFY_TOPIC = 'route-reminder-topic'
 
       app = await buildServer()
     })
@@ -332,6 +340,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const response = await postRemind(cookies['admin'], shiftId)
 
       expect(response.statusCode).toBe(200)
+      // the reminder really goes out — the number counts the reminders that
+      // went out, so the row of the outbox is the reason for the next number
+      expect(response.json<{ remindersQueued: number }>().remindersQueued).toBe(1)
       expect(response.json<{ reminderNumber: number }>().reminderNumber).toBe(1)
 
       // the second reminder of the same shift carries the number two

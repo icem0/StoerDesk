@@ -105,6 +105,35 @@ export function AlarmBanner() {
     }
   }, [visible, toneEnabled, muted, toneUnlocked, repeatSeconds])
 
+  /**
+   * The pushed alarm asks the page for the sound (§11.17, ADR-0048): a service
+   * worker has no Web Audio, only a page may play a tone. The page decides —
+   * the sound of the installation, the silence of the user, a gesture given.
+   */
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+      return
+    }
+
+    const listener = (event: MessageEvent) => {
+      if (event.data?.type !== 'PLAY_ALARM_TONE') {
+        return
+      }
+
+      if (!toneEnabled || muted || !toneUnlocked) {
+        return
+      }
+
+      playAlarmTone()
+    }
+
+    navigator.serviceWorker.addEventListener('message', listener)
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', listener)
+    }
+  }, [toneEnabled, muted, toneUnlocked])
+
   /** The remaining minutes of the silence — the button names them. */
   const remainingMinutes = useMemo(() => {
     if (mutedUntil === null) {

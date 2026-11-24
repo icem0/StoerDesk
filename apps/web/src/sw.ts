@@ -226,6 +226,8 @@ export function notificationFromPayload(payload: string): PushNotification {
 interface PushClient {
   url: string
   focus(): Promise<unknown>
+  /** Asks the page for the sound of the alarm (§11.17, ADR-0048). */
+  postMessage(message: { type: string }): void
 }
 
 /** The one part of `ServiceWorkerGlobalScope` the push handlers use. */
@@ -268,6 +270,20 @@ export async function focusOrOpen(clients: PushScope['clients'], url: string): P
   await clients.openWindow(target)
 }
 
+/**
+ * Asks the open pages for the sound of the alarm (`specs/10-notifications.md`
+ * §11.17, ADR-0048): a service worker has no Web Audio, only a page may play
+ * a tone. The page decides — the sound of the installation, no silence of the
+ * user, a gesture given (`components/alarm-banner.tsx`).
+ */
+export async function requestAlarmTone(clients: PushScope['clients']): Promise<void> {
+  const open = await clients.matchAll({ type: 'window', includeUncontrolled: true })
+
+  for (const client of open) {
+    client.postMessage({ type: 'PLAY_ALARM_TONE' })
+  }
+}
+
 self.addEventListener('push', (event: Event) => {
   const push = event as Event & {
     data?: { text(): string }
@@ -277,16 +293,20 @@ self.addEventListener('push', (event: Event) => {
   const scope = self as unknown as PushScope
 
   push.waitUntil(
-    scope.registration.showNotification(title, {
-      body,
-      icon: '/logo.png',
-      data: { url },
-      // StörDesk is an alarm system: a pushed alarm must not vanish after a few
-      // seconds while nobody looked. The notification stays until the user
-      // closes it or opens the ticket, and a phone vibrates the same pattern.
-      requireInteraction: true,
-      vibrate: [200, 100, 200],
-    }),
+    (async () => {
+      await scope.registration.showNotification(title, {
+        body,
+        icon: '/logo.png',
+        data: { url },
+        // StörDesk is an alarm system: a pushed alarm must not vanish after a few
+        // seconds while nobody looked. The notification stays until the user
+        // closes it or opens the ticket, and a phone vibrates the same pattern.
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+      })
+
+      await requestAlarmTone(scope.clients)
+    })(),
   )
 })
 
