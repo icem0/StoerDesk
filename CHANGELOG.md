@@ -51,6 +51,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The own page names the channels of the user (**WP-M24-16**, phase 24,
+  ADR-0045): every channel carries its state and a symbol — *eingerichtet*
+  (green), *verknüpft, nicht bestätigt* (amber), *nicht eingerichtet* (red). The
+  button "Code senden" sends the one-time code over the channel itself and the
+  field below takes the code the user copied. A user who does not fulfil the
+  rule of the administration sees a permanent warning that names the missing
+  channels and links to the setup. The e-mail section stores the own mail
+  address.
 - The compliance of the users (**WP-M24-15**, phase 24, ADR-0045): the
   administration sees for every user the state of every channel — *missing*,
   *linked*, *ready* — the required channels he does not have set up and the

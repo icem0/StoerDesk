@@ -45,6 +45,23 @@ test('the accent colour of the instance paints the header menu', async ({ page }
     'page',
   )
 
+  // The shell writes the saved colour into `--brand-accent` when the branding
+  // request has answered (ADR-0036, WP-M16-03) — a slow runner must not read
+  // the default colour of the stylesheet instead of the saved one.
+  await expect
+    .poll(
+      async () =>
+        await page.evaluate(() => {
+          const shell = document.querySelector('[class*="theme-"]') as HTMLElement | null
+
+          return shell === null
+            ? null
+            : getComputedStyle(shell).getPropertyValue('--brand-accent').trim()
+        }),
+      { timeout: 15000 },
+    )
+    .toBe('#ff0000')
+
   const painted = await page.evaluate(() => {
     const shell = document.querySelector('[class*="theme-"]') as HTMLElement | null
     const active = document.querySelector('nav a[aria-current="page"]') as HTMLElement | null

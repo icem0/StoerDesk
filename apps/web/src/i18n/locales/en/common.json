@@ -190,10 +190,13 @@
       "whatsapp": "WhatsApp Web"
     },
     "state": {
-      "linked": "Connected",
+      "linked": "Connected, not confirmed",
       "notLinked": "Not connected yet",
       "none": "No account needed",
-      "later": "Follows in a later package"
+      "later": "Follows in a later package",
+      "ready": "Set up",
+      "missing": "Not set up",
+      "instance": "Channel of the installation"
     },
     "telegram": {
       "guidance": "Send the code shown below as a message to the StörDesk Telegram bot.",
@@ -276,6 +279,29 @@
       "oncall.assigned": "Readiness assigned",
       "oncall.swap_requested": "Swap requested",
       "oncall.unconfirmed_reminder": "Unconfirmed readiness"
+    },
+    "compliance": {
+      "warning": "Your notifications do not fulfil the rule of the administration.",
+      "missing": "Missing: {{channels}}. {{count}} channels are set up.",
+      "link": "To the setup of the channels"
+    },
+    "verification": {
+      "heading": "Confirm the channels",
+      "hint": "A channel counts only after you entered the code the server sent over that very channel.",
+      "send": "Send the code",
+      "codeLabel": "Code",
+      "confirm": "Enter the code",
+      "noAccount": "No account connected yet — set the channel up below.",
+      "sent": "The code is on its way."
+    },
+    "email": {
+      "heading": "E-mail",
+      "guidance": "Enter the address you want to be notified at. The server sends you a code to this address.",
+      "addressLabel": "E-mail address",
+      "save": "Save the address",
+      "saved": "The address is saved.",
+      "remove": "Remove the address",
+      "removed": "The address was removed."
     }
   },
   "my": {

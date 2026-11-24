@@ -190,10 +190,13 @@
       "whatsapp": "WhatsApp Web"
     },
     "state": {
-      "linked": "Verknüpft",
+      "linked": "Verknüpft, nicht bestätigt",
       "notLinked": "Noch nicht verknüpft",
       "none": "Kein Konto nötig",
-      "later": "Folgt in einem späteren Paket"
+      "later": "Folgt in einem späteren Paket",
+      "ready": "Eingerichtet",
+      "missing": "Nicht eingerichtet",
+      "instance": "Kanal der Installation"
     },
     "telegram": {
       "guidance": "Sende den unten gezeigten Code als Nachricht an den StörDesk Telegram-Bot.",
@@ -276,6 +279,29 @@
       "oncall.assigned": "Bereitschaft zugewiesen",
       "oncall.swap_requested": "Tausch angefragt",
       "oncall.unconfirmed_reminder": "Nicht bestätigte Bereitschaft"
+    },
+    "compliance": {
+      "warning": "Deine Benachrichtigungen erfüllen die Vorgabe der Administration nicht.",
+      "missing": "Es fehlen: {{channels}}. Eingerichtet sind {{count}} Kanäle.",
+      "link": "Zur Einrichtung der Kanäle"
+    },
+    "verification": {
+      "heading": "Kanäle bestätigen",
+      "hint": "Ein Kanal zählt erst, wenn du den Code eingegeben hast, den der Server über genau diesen Kanal geschickt hat.",
+      "send": "Code senden",
+      "codeLabel": "Code",
+      "confirm": "Code eingeben",
+      "noAccount": "Noch kein Konto verknüpft — richte den Kanal unten ein.",
+      "sent": "Der Code ist unterwegs."
+    },
+    "email": {
+      "heading": "E-Mail",
+      "guidance": "Trage die Adresse ein, über die du benachrichtigt werden willst. Der Server schickt dir einen Code an diese Adresse.",
+      "addressLabel": "E-Mail-Adresse",
+      "save": "Adresse speichern",
+      "saved": "Die Adresse ist gespeichert.",
+      "remove": "Adresse entfernen",
+      "removed": "Die Adresse wurde entfernt."
     }
   },
   "my": {

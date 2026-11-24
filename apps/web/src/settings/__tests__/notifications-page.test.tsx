@@ -24,8 +24,42 @@ function renderPage() {
 }
 
 function stubTelegramFlow() {
-  return vi.fn(async (input: RequestInfo | URL, options?: { body?: string }) => {
+  return vi.fn(async (input: RequestInfo | URL, options?: { body?: string; method?: string }) => {
     const url = String(input)
+
+    if (url.endsWith('/v1/notifications/accounts') && options?.method === undefined) {
+      return Response.json({
+        accounts: [
+          {
+            channel: 'telegram',
+            externalId: '4711',
+            label: 'Depression Team',
+            secretSet: false,
+            target: '',
+            verifiedAt: null,
+            state: 'linked',
+          },
+        ],
+      })
+    }
+
+    if (url.endsWith('/v1/notifications/compliance')) {
+      return Response.json({
+        userId: '11111111-1111-4111-8111-111111111111',
+        name: 'Nora Reich',
+        channels: [
+          { channel: 'ntfy', state: 'missing' },
+          { channel: 'telegram', state: 'missing' },
+          { channel: 'matrix', state: 'missing' },
+          { channel: 'email', state: 'missing' },
+          { channel: 'webpush', state: 'missing' },
+          { channel: 'whatsapp', state: 'missing' },
+        ],
+        missing: [],
+        channelCount: 0,
+        compliant: true,
+      })
+    }
 
     if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
       return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
@@ -63,9 +97,13 @@ describe('NotificationsPage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Deine Kanäle' })).toBeTruthy()
     expect(await screen.findByRole('heading', { level: 2, name: 'Telegram' })).toBeTruthy()
 
-    expect(screen.getAllByText('Noch nicht verknüpft')).toHaveLength(1)
-    expect(screen.getAllByText('Kein Konto nötig')).toHaveLength(2)
-    expect(screen.getAllByText('Folgt in einem späteren Paket')).toHaveLength(4)
+    // The state of every channel comes from the server (§11.3a, WP-M24-16).
+    expect(screen.getAllByText('Nicht eingerichtet').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Kanal der Installation')).toHaveLength(1)
+    expect(screen.getAllByText('Verknüpft, nicht bestätigt').length).toBeGreaterThan(0)
+
+    // The button that sends the code over the channel of the account (§11.3a).
+    expect(screen.getAllByRole('button', { name: 'Code senden' }).length).toBeGreaterThan(0)
 
     expect(screen.getByText(/Sende den unten gezeigten Code/i)).toBeTruthy()
     expect(await screen.findByText('AB2C3D')).toBeTruthy()
