@@ -846,6 +846,14 @@ and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
 copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
+**WP-M23-09b — the reminder of a shift repeats (done).** The sweep of the
+reminders sent one reminder per shift and never again: a sent row stays in the
+table, so the shift was skipped for ever. The sweep counts the reminders now
+and reminds again after `oncall.reminder_repeat_h` hours, as long as the shift
+waits for a decision; the row carries the number of the reminder, so the
+office sees how often it asked. A row that is still on its way holds the next
+reminder back — one at a time.
+
 **WP-M23-09 — the repeated reminder of a shift that was not accepted (planned).**
 The package is split into six children: **WP-M23-09a** adds the setting
 `oncall.reminder_repeat_h` (the hours between two reminders; the default is

@@ -900,10 +900,13 @@ export async function enqueueOutbox(
  */
 export async function enqueueOncallOutbox(
   database: DbLike,
-  { shift, eventType, userId }: {
+  { shift, eventType, userId, reminderNumber }: {
     shift: OutboxShift
     eventType: NotificationEventType
     userId: string
+    /** How often the office asked already (WP-M23-09b) — the urgency of the
+     * message follows the number. */
+    reminderNumber?: number
   },
   env: Env,
 ): Promise<number> {
@@ -927,6 +930,9 @@ export async function enqueueOncallOutbox(
     // announcement asks for the row of *this* technician, so a reassignment
     // after a decline reaches the new one.
     assignedTo: userId,
+    // How often the office asked already (WP-M23-09b): the urgency of the
+    // message follows the number.
+    ...(reminderNumber === undefined ? {} : { reminderNumber }),
   }
 
   // The channels of the technician (§11.4, ADR-0045): his confirmed

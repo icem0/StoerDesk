@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNotNull, lte, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, inArray, isNotNull, lte, sql } from 'drizzle-orm'
 
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
@@ -418,13 +418,16 @@ export type EnqueueOncallRemindersResult = {
 
 /**
  * Queues the reminder of an unconfirmed readiness (`specs/04-oncall.md` §4a.4,
- * `specs/10-notifications.md` §11.7, ADR-0021, WP-M14-31): a `DRAFT` or `PLANNED`
- * shift that has a technician, has not started and starts within
- * `oncall.reminder_unconfirmed_h`. A shift that already has an
- * `oncall.unconfirmed_reminder` row for itself (`PENDING` or `SENT`) is skipped,
- * so the per-minute scan writes at most one reminder per shift. Every row goes
- * through `enqueueOncallOutbox` of WP-M14-28 — one transaction per shift, never
- * a channel call (§11.7).
+ * `specs/10-notifications.md` §11.7, ADR-0021, WP-M14-31, WP-M23-09b): a
+ * `DRAFT` or `PLANNED` shift that has a technician, has not started and starts
+ * within `oncall.reminder_unconfirmed_h`.
+ *
+ * The sweep repeats the reminder: it counts the reminders of the shift and
+ * sends a further one after `oncall.reminder_repeat_h` hours, as long as the
+ * shift is still waiting for a decision. A row that is still `PENDING` holds
+ * the next reminder back — one at a time. Every row goes through
+ * `enqueueOncallOutbox` of WP-M14-28 — one transaction per shift, never a
+ * channel call (§11.7).
  */
 export async function enqueueOncallReminders(
   database: Db,
@@ -460,19 +463,35 @@ export async function enqueueOncallReminders(
       continue
     }
 
+    // The reminders of the shift: how often the office asked already, and when
+    // the last one went out.
     const announced = await database
-      .select({ state: outbox.state })
+      .select({ state: outbox.state, createdAt: outbox.createdAt })
       .from(outbox)
       .where(
         and(
           eq(outbox.shiftId, candidate.id),
           eq(outbox.eventType, REMINDER_EVENT_TYPE),
-          inArray(outbox.state, ['PENDING', 'SENT']),
         ),
       )
+      .orderBy(desc(outbox.createdAt))
 
-    if (announced.length > 0) {
+    // A row that is still on its way holds the next reminder back: one at a
+    // time, so the technician is not flooded.
+    if (announced.some((row) => row.state === 'PENDING')) {
       continue
+    }
+
+    const reminderNumber = announced.length + 1
+    const lastReminder = announced[0]
+
+    if (lastReminder !== undefined) {
+      const ageMs = now.getTime() - lastReminder.createdAt.getTime()
+      const intervalMs = settings.reminderRepeatH * 60 * 60 * 1000
+
+      if (ageMs < intervalMs) {
+        continue
+      }
     }
 
     const userId = candidate.userId ?? ''
@@ -490,6 +509,7 @@ export async function enqueueOncallReminders(
           },
           eventType: REMINDER_EVENT_TYPE,
           userId,
+          reminderNumber,
         },
         env,
       )

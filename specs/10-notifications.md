@@ -289,7 +289,11 @@ carries `shift_id` instead of `ticket_id` (ADR-0021): exactly one of the two is
 set, and the worker builds the readiness message of §11.5 for it. The
 `oncall.unconfirmed_reminder` rows are written by the per-minute escalation scan
 for a `PLANNED` or `DRAFT` shift that starts within
-`oncall.reminder_unconfirmed_h` and has no such row yet — one reminder per shift.
+`oncall.reminder_unconfirmed_h`. The scan counts the reminders of the shift
+and reminds again after `oncall.reminder_repeat_h` hours (WP-M23-09b): the
+row carries the number of the reminder in its target, so the office sees how
+often it asked. A row that is still `PENDING` holds the next reminder back —
+one at a time.
 
 **The delivery of a message of a user** goes over the set-up channels of that
 user (§11.4): one outbox row per confirmed channel, each row carrying the

@@ -179,6 +179,38 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(await reminderRows(shiftId)).toEqual([])
     })
 
+    it('reminds again after the interval of the setting (WP-M23-09b)', async () => {
+      const shiftId = await insertShift({ state: 'DRAFT', userId: firstTechId, startOffsetHours: 20 })
+
+      const first = await enqueueOncallReminders(db, env, now)
+
+      expect(first.remindersQueued).toBeGreaterThanOrEqual(1)
+      expect(await reminderRows(shiftId)).toHaveLength(1)
+
+      // the row of the first reminder went out — the sweep may ask again.
+      // The row carries the moment of the sweep, so the test sets it to the
+      // clock of the test.
+      await db
+        .update(outbox)
+        .set({ state: 'SENT', createdAt: now })
+        .where(eq(outbox.shiftId, shiftId))
+
+      // too early: the interval of four hours has not passed
+      await enqueueOncallReminders(db, env, new Date(now.getTime() + HOUR))
+
+      expect(await reminderRows(shiftId)).toHaveLength(1)
+
+      await enqueueOncallReminders(db, env, new Date(now.getTime() + 5 * HOUR))
+
+      const rows = await reminderRows(shiftId)
+
+      expect(rows).toHaveLength(2)
+      // the number of the reminder travels in the target of the row
+      expect(
+        rows.map((row) => (row.target as { reminderNumber?: number }).reminderNumber),
+      ).toEqual(expect.arrayContaining([1, 2]))
+    })
+
     it('reports the counter for every unconfirmed readiness of the scan', async () => {
       const firstId = await insertShift({ state: 'DRAFT', userId: firstTechId, startOffsetHours: 5 })
       const secondId = await insertShift({ state: 'PLANNED', userId: secondTechId, startOffsetHours: 6 })

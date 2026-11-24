@@ -382,6 +382,14 @@ inside `oncall.unfilled_warning_days` and the `PLANNED` shifts that start within
 `oncall.reminder_unconfirmed_h`, plus the resolved default pool. The phase-9
 dashboard tile reads `resolveOnCallPerson`; it is not part of phase 8.
 
+**The reminder of a shift that was not accepted (WP-M23-09b).** The minute
+escalation scan reminds the technician of a `DRAFT` or `PLANNED` shift that
+starts inside `oncall.reminder_unconfirmed_h`. The scan counts the reminders of
+the shift and reminds again after `oncall.reminder_repeat_h` hours, as long as
+the shift waits for a decision; the row carries the number of the reminder, so
+the office sees how often it asked. A row that is still on its way holds the
+next reminder back — one at a time.
+
 ## 4a.7 Personal iCal feed
 
 `GET /api/v1/oncall/ical/:token.ics` is public (no session) and answers the

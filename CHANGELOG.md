@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   a shift that was not accepted; the default is four hours.
 
 ### Changed
+- The reminder of a shift that was not accepted repeats (**WP-M23-09b**, phase
+  23): the sweep sent one reminder per shift and never again — a sent row stays
+  in the table, so the shift was skipped for ever. The sweep counts the
+  reminders now and reminds again after the interval of the setting; the row
+  carries the number of the reminder.
 - A reassignment notifies the new technician (**WP-M23-08**, phase 23): the
   guard against a second announcement looked at the shift alone, so a
   reassignment after a decline announced nothing — the new technician never
