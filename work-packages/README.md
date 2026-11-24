@@ -34,12 +34,15 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m21](m21/) | Phase 21: the normalisation of the duty plan — consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (the spec and ADR-0044, the shared normalisation, the API, the administration) | 4   |
 | [m22](m22/) | Phase 22: the installability of the web app — a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | 1   |
 | [m23](m23/) | Phase 23: the readiness view plans the shifts — the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08) and the reminder of a shift that was not accepted repeats with a higher urgency (WP-M23-09) | 8   |
-| [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 3   |
+| [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 4   |
 | [m24](m24/) | Phase 24: the user owns the channels — the selection per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the mail is HTML with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01) | 24  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
-as legacy and skips them. A package that was rewritten from a legacy plan and split is
+as legacy and skips them. `small-model` is the former name of the profile `ctx-128k` and
+stays valid. A new work package for a 256k context window carries
+`format: ctx-256k` and holds one feature from the database to the user interface in one
+commit (`PLAN.md` §17); its template is `docs/WP-TEMPLATE-256k.md`. A package that was rewritten from a legacy plan and split is
 recognisable by its children: `WP-M1-07` → `WP-M1-07b`, `WP-M1-09` → `WP-M1-09b` …
 `WP-M1-09e`, `WP-M1-10` → `WP-M1-10b` … `WP-M1-10e`, `WP-M2-02` → `WP-M2-02b`,
 `WP-M2-04` → `WP-M2-04b`/`WP-M2-04c`, `WP-M2-05` → `WP-M2-05b`/`WP-M2-05c`, `WP-M2-06` →
@@ -2218,7 +2221,16 @@ download.
 npm run wp:check
 ```
 
-The check enforces the small-model limits for WPs with `format: small-model`:
-max. 120 lines, max. 4 written source files, max. 6 read source files, context
-budget max. 30k tokens, required metadata and sections. Legacy WPs are reported
-and skipped until they are migrated.
+The check enforces the limits of the profile of every work package
+(`PLAN.md` §17):
+
+| Profile        | Document | Write files | Read files | Context | Spec excerpt | Changed lines |
+| -------------- | -------- | ----------- | ---------- | ------- | ------------ | ------------- |
+| `ctx-128k`     | 120 lines | 4           | 6          | 30k     | 200 lines    | about 300    |
+| `ctx-256k`     | 200 lines | 10          | 12         | 100k    | 600 lines    | 800          |
+
+`format: small-model` is the former name of `ctx-128k` and stays valid, so the
+work packages written before keep their place without a rewrite. Legacy WPs
+without a `format` are reported and skipped until they are migrated. A
+`ctx-256k` package names its number of changed lines in the header
+(`changed-lines:`).

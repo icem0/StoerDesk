@@ -29,6 +29,7 @@ import {
   notificationUnreadCountResponseSchema,
   notificationVerificationResponseSchema,
   notificationDeliveryListResponseSchema,
+  notificationMuteSchema,
   deliveryLogQuerySchema,
   redeemTelegramLinkCodeRequestSchema,
   telegramLinkCodeResponseSchema,
@@ -64,6 +65,7 @@ import {
 } from './verification'
 import { deleteAccount, listAccounts, storeAccount } from './accounts'
 import { readCompliance, readUserCompliance } from './compliance'
+import { muteForOneHour, readMuteUntil } from './mute'
 import {
   ConfirmationError,
   confirmChannelConfirmation,
@@ -634,6 +636,35 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         notificationComplianceSchema.parse(
           await readUserCompliance(database, request.user?.id ?? ''),
         ),
+    )
+
+    /**
+     * `GET /api/v1/notifications/mute` (`specs/10-notifications.md` §11.17,
+     * ADR-0048): the end of the silence of the signed-in user. The silence
+     * follows the user and not the device — the row lives on the server.
+     */
+    app.get(
+      '/api/v1/notifications/mute',
+      { preHandler: requireSession },
+      async (request) =>
+        notificationMuteSchema.parse({
+          mutedUntil: await readMuteUntil(database, request.user?.id ?? ''),
+        }),
+    )
+
+    /**
+     * `POST /api/v1/notifications/mute` (`specs/10-notifications.md` §11.17,
+     * ADR-0048): the user is silent for **one hour**. The silence silences the
+     * sound only — the band and the bell keep shining.
+     */
+    app.post(
+      '/api/v1/notifications/mute',
+      { preHandler: requireSession },
+      async (request) => {
+        const mutedUntil = await muteForOneHour(database, request.user?.id ?? '')
+
+        return notificationMuteSchema.parse({ mutedUntil })
+      },
     )
 
     /**
