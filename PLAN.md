@@ -820,6 +820,13 @@ notification with every further reminder, reminds a declined shift as well and
 gives the admin of the readiness a button in the weekly plan that sends the
 reminder of one shift by hand (`POST /api/v1/oncall/shifts/:id/remind`).
 
+**WP-M23-03 — the swap race waits for both acceptances (done).** The check run
+of WP-M23-01 failed in the test „accepts a pending swap atomically — exactly one
+of two concurrent acceptances wins“: the assertion read a `null` winner. The
+race was in the test and not in the service — `Promise.all` rejects with the
+first loser, so the catch ran before the winner had written its answer.
+`Promise.allSettled` waits for both acceptances; the rule of the test stays.
+
 **WP-M22-01 — the service worker takes over at once (done).** The browser
 offered no install of the app: the Firefox dialog of the install answered
 "Page has no manifest `<link>` URL", although the deployed document carries the

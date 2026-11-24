@@ -273,20 +273,21 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       let winner: { swap: { status: string; acceptedByUserId: string | null } } | null = null
       let loser: unknown = null
 
-      await Promise.all([
-        acceptSwap(db, { swapId: first.swap.id, actorUserId: techBId }).then(
-          (value) => {
-            winner = value
-          },
-        ),
-        acceptSwap(db, { swapId: first.swap.id, actorUserId: techCId }).then(
-          (value) => {
-            winner = value
-          },
-        ),
-      ]).catch((error) => {
-        loser = error
-      })
+      // `Promise.allSettled` waits for both acceptances: `Promise.all` rejects
+      // with the first loser, so the catch ran before the winner had written
+      // its answer and the test failed by a race of the test itself.
+      const outcomes = await Promise.allSettled([
+        acceptSwap(db, { swapId: first.swap.id, actorUserId: techBId }),
+        acceptSwap(db, { swapId: first.swap.id, actorUserId: techCId }),
+      ])
+
+      for (const outcome of outcomes) {
+        if (outcome.status === 'fulfilled') {
+          winner = outcome.value
+        } else {
+          loser = outcome.reason
+        }
+      }
 
       expect(winner).not.toBeNull()
       expect(winner!.swap.status).toBe('ACCEPTED')
