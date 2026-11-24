@@ -193,35 +193,40 @@ body:has(.theme-light) {
 }
 
 /*
- * Printable QR sticker sheets (WP-M2-03, specs/08-objects-api.md §9.3): A6 cards of
- * 105 × 148 mm, one per A6 page or four per A4 page. The sheet format writes its own
- * `@page` rule from the component, so the grid stays gapless and the dashed border is
- * the cut line.
+ * Printable QR sticker sheets (WP-M2-03, ADR-0050, specs/08-objects-api.md §9.3):
+ * the sheet knows no format of its own — the geometry of the template writes its
+ * measures into the custom properties of the sheet, the sheet format writes its
+ * own `@page` rule from the component, and the dashed border of a label is the
+ * cut line. The sheet is written in blocks of `columns × rows` labels, one block
+ * per page of the sheet.
  */
 .sticker-sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.sticker-page {
+  box-sizing: border-box;
   display: grid;
-  gap: 0;
-  justify-content: center;
+  grid-template-columns: repeat(var(--sticker-columns), var(--sticker-label-width));
+  grid-auto-rows: var(--sticker-label-height);
+  gap: var(--sticker-gap-y) var(--sticker-gap-x);
+  width: var(--sticker-sheet-width);
+  padding: var(--sticker-margin-top) var(--sticker-margin-right) var(--sticker-margin-bottom)
+    var(--sticker-margin-left);
 }
 
-.sticker-sheet--a6 {
-  grid-template-columns: 105mm;
-}
-
-.sticker-sheet--a4 {
-  grid-template-columns: repeat(2, 105mm);
-}
-
-.sticker-card {
+.sticker-label {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 3mm;
-  width: 105mm;
-  height: 148mm;
-  padding: 6mm;
+  gap: 1mm;
+  width: var(--sticker-label-width);
+  height: var(--sticker-label-height);
+  padding: var(--sticker-label-padding);
   border: 0.3mm dashed #94a3b8;
   background-color: #ffffff;
   color: #020617;
@@ -230,33 +235,33 @@ body:has(.theme-light) {
   text-align: center;
 }
 
-.sticker-card__qr {
-  width: 55mm;
-  height: 55mm;
+.sticker-label__qr {
+  width: var(--sticker-qr-size);
+  height: var(--sticker-qr-size);
 }
 
-.sticker-card__name {
-  font-size: 6mm;
+.sticker-label__name {
+  font-size: var(--sticker-font-name);
   font-weight: 600;
 }
 
-.sticker-card__object-no {
-  font-size: 4mm;
+.sticker-label__object-no {
+  font-size: var(--sticker-font-object-no);
   letter-spacing: 0.08em;
 }
 
-.sticker-card__call {
-  font-size: 5mm;
+.sticker-label__call {
+  font-size: var(--sticker-font-call);
   font-weight: 600;
 }
 
-.sticker-card__notice {
-  font-size: 3.4mm;
+.sticker-label__notice {
+  font-size: var(--sticker-font-notice);
   font-weight: 600;
 }
 
-.sticker-card__no-token {
-  font-size: 3.5mm;
+.sticker-label__no-token {
+  font-size: var(--sticker-font-call);
   font-style: italic;
 }
 
@@ -265,17 +270,27 @@ body:has(.theme-light) {
     background-color: #ffffff;
   }
 
-  .sticker-card {
+  .sticker-page {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .sticker-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .sticker-label {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
   /*
-   * One A6 card per A6 page: a card of exactly 148 mm can overflow the page box by a
-   * fraction of a pixel and add an empty page, so the printed card stays one millimetre
-   * shorter than the page.
+   * A label of exactly the height of the page (the A6 sheet of one label) can
+   * overflow the page box by a fraction of a pixel and add an empty page, so the
+   * printed label stays half a millimetre shorter than the sheet.
    */
-  .sticker-sheet--a6 .sticker-card {
-    height: 147mm;
+  .sticker-label {
+    height: calc(var(--sticker-label-height) - 0.5mm);
   }
 }

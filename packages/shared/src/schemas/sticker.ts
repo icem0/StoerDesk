@@ -220,6 +220,31 @@ export const STICKER_TEMPLATE_PRESETS: readonly StickerPreset[] = [
 /** The key of the free grid: a geometry that no preset describes. */
 export const STICKER_CUSTOM_TEMPLATE_KEY = 'custom'
 
+/** The share of the height of the label that the automatic QR takes. */
+const STICKER_AUTOMATIC_QR_SHARE = 0.45
+
+/** The millimetres that the automatic QR keeps free on the width of the label. */
+const STICKER_AUTOMATIC_QR_BORDER_MM = 4
+
+/**
+ * The side of the QR in millimetres: the stored size, or — when the template
+ * says „automatisch" — the smaller of the free width of the label and the share
+ * of its height.
+ */
+export function stickerQrSizeMm(
+  geometry: StickerGeometry,
+  appearance: StickerAppearance,
+): number {
+  if (appearance.qrSizeMm !== null) {
+    return appearance.qrSizeMm
+  }
+
+  return Math.min(
+    geometry.labelWidthMm - STICKER_AUTOMATIC_QR_BORDER_MM,
+    geometry.labelHeightMm * STICKER_AUTOMATIC_QR_SHARE,
+  )
+}
+
 /** The preset of a geometry: its key, or `custom` when no preset matches. */
 export function stickerPresetKeyOf(geometry: StickerGeometry): string {
   const same = (candidate: StickerGeometry): boolean =>

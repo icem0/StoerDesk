@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The sheet of the stickers prints from the geometry (**WP-M27-04a**, phase 27,
+  ADR-0050): the sheet knows no format of its own — the geometry of the
+  template writes its measures into the sheet, the labels are written in blocks
+  of `columns × rows` labels per page, the size of the QR follows the label when
+  the template says „automatisch“, and the 112 notice stands on every label.
 - The administration of the sticker template (**WP-M27-03**, phase 27, ADR-0050):
   the page `/admin/sticker-template` edits the sheet of the catalog, the sheet
   format, the grid, the size of the label, the margins, the distances between
