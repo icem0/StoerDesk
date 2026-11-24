@@ -420,5 +420,11 @@
       "muted": "Stumm für noch {{minutes}} Minute(n). Der Alarm leuchtet weiter.",
       "silent": "Die Instanz spielt keinen Alarmton."
     }
+  },
+  "setupWarning": {
+    "heading": "Deine Benachrichtigungen erfüllen die Vorgabe der Administration nicht.",
+    "missing": "Es fehlen: {{channels}}. Eingerichtet sind {{count}} Kanäle.",
+    "link": "Zur Einrichtung der Kanäle",
+    "icon": "⚠️"
   }
 }

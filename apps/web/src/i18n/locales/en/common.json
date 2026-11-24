@@ -420,5 +420,11 @@
       "muted": "Muted for another {{minutes}} minute(s). The alarm keeps shining.",
       "silent": "The instance plays no alarm tone."
     }
+  },
+  "setupWarning": {
+    "heading": "Your notifications do not fulfil the rule of the administration.",
+    "missing": "Missing: {{channels}}. {{count}} channels are set up.",
+    "link": "To the setup of the channels",
+    "icon": "⚠️"
   }
 }

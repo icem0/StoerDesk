@@ -1,7 +1,7 @@
 # WP-M25-07: the warning of the setup and the exit criterion of the phase
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M25-06
 phase: 25
 milestone: m25
@@ -101,5 +101,5 @@ missing and no unused key.
 - Interfaces added: `SetupWarningBand` — the large band of the shell for a
   user who does not fulfil the rule of the administration
 - Verified: the commands above
-- Follow-up WP: none
+- Follow-up WP: none — phase 25 is closed
 - Open question: none

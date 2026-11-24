@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The alarm of the instance (**WP-M25-01** … **WP-M25-08**, phase 25, ADR-0048):
+  the sound and the interval of its repetition are settings of the installation,
+  the silence of one hour is the decision of the user and silences the sound
+  only, the band of the alarm stands on every internal page while messages are
+  unhandled (the bell shines and moves in the same rhythm), and the warning of
+  an unfulfilled setup is a large band that cannot be dismissed.
 - The alarm of the instance (**WP-M25-01**, phase 25, ADR-0048): whether a
   sound is played and how often it repeats are settings of the installation,
   the silence of one hour is the decision of the user and silences the sound

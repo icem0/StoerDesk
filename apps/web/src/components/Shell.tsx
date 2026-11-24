@@ -8,6 +8,7 @@ import { LoginForm } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { AlarmBanner } from './alarm-banner'
+import { SetupWarningBand } from './setup-warning-band'
 import { AppVersion } from './app-version'
 import { NotificationBell } from './notification-bell'
 
@@ -195,6 +196,7 @@ export function Shell() {
         </div>
       </header>
 
+      {me.data ? <SetupWarningBand /> : null}
       {me.data ? <AlarmBanner /> : null}
 
       <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 pb-[env(safe-area-inset-bottom)] sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">
