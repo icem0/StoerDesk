@@ -419,6 +419,11 @@
       "mute": "1 Stunde stumm",
       "muted": "Stumm für noch {{minutes}} Minute(n). Der Alarm leuchtet weiter.",
       "silent": "Die Instanz spielt keinen Alarmton."
+    },
+    "settings": {
+      "heading": "Der Alarmton",
+      "hint": "Ein Browser spielt einen Ton erst, wenn du es ihm erlaubt hast. Die Verwaltung entscheidet, ob die Instanz überhaupt einen Alarmton spielt — dieser Knopf erlaubt es diesem Browser.",
+      "activate": "Ton aktivieren"
     }
   },
   "setupWarning": {

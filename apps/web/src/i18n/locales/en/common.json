@@ -419,6 +419,11 @@
       "mute": "Mute for one hour",
       "muted": "Muted for another {{minutes}} minute(s). The alarm keeps shining.",
       "silent": "The instance plays no alarm tone."
+    },
+    "settings": {
+      "heading": "The alarm tone",
+      "hint": "A browser plays a tone only after you allowed it. The administration decides whether the instance plays an alarm tone at all — this button allows it to this browser.",
+      "activate": "Activate the tone"
     }
   },
   "setupWarning": {

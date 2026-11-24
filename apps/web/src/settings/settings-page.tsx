@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import type { AlarmSettings } from '@stoerdesk/shared'
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
 import { LogoutButton } from '../auth/login-form'
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
+import { isAlarmToneEnabled, playAlarmTone, setAlarmToneEnabled } from '../lib/alarm-tone'
 import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
 
 /**
@@ -84,8 +88,20 @@ const SETTINGS_SECTIONS = [
 
 export function SettingsPage() {
   const { t } = useTranslation('common')
+  const [toneUnlocked, setToneUnlocked] = useState(isAlarmToneEnabled)
   const me = useMe()
   const mayReadChannels = usePermission('notification.read')
+  /**
+   * The alarm of the installation (§11.17, ADR-0048): the settings page tells
+   * the user that a browser only plays a tone after a gesture of the user — the
+   * button below is that gesture.
+   */
+  const alarmQuery = useQuery({
+    queryKey: ['notification-alarm'],
+    queryFn: () => apiFetch<AlarmSettings>('/v1/notifications/alarm'),
+    retry: false,
+  })
+
   const deliveryQuery = useQuery({
     queryKey: ['deliveryProblems'],
     queryFn: () => apiFetch<DeliveryProblemsResponse>('/v1/notifications/delivery'),
@@ -140,6 +156,24 @@ export function SettingsPage() {
           </ul>
         </section>
       ))}
+
+      {alarmQuery.isSuccess && alarmQuery.data.toneEnabled && !toneUnlocked ? (
+        <section className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <h2 className="text-sm font-semibold">{t('alarm.settings.heading')}</h2>
+          <p className="text-sm text-slate-400">{t('alarm.settings.hint')}</p>
+          <button
+            className="min-h-11 w-fit rounded bg-sky-700 px-4 text-sm font-medium text-white"
+            onClick={() => {
+              setAlarmToneEnabled(true)
+              setToneUnlocked(true)
+              playAlarmTone()
+            }}
+            type="button"
+          >
+            {t('alarm.settings.activate')}
+          </button>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-1">
         <h2 className="text-xs font-medium uppercase tracking-wide text-slate-500">
