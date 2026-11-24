@@ -17,6 +17,7 @@ import {
   channelTestResponseSchema,
   matrixLinkingRequestSchema,
   notificationAccountSchema,
+  notificationAccountListResponseSchema,
   notificationChannelKindSchema,
   notificationMessageFilterSchema,
   notificationPreferencesListResponseSchema,
@@ -55,7 +56,7 @@ import {
   effectiveNtfyConfig,
   requestNtfyVerification,
 } from './verification'
-import { deleteAccount, storeAccount } from './accounts'
+import { deleteAccount, listAccounts, storeAccount } from './accounts'
 import { acknowledgeDeliveryProblems, readDeliveryProblems } from './delivery'
 import {
   countWebPushSubscriptions,
@@ -855,6 +856,24 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
 
         return reply.code(204).send()
       },
+    )
+
+    /**
+     * `GET /api/v1/notifications/accounts` (`specs/10-notifications.md` §11.3,
+     * §11.11, WP-M24-05): the own accounts of the user with the state of every
+     * channel — `ready` when the user confirmed the address with a code,
+     * `linked` while the address was never confirmed. The address itself never
+     * leaves the instance, and a channel without an account is simply missing
+     * from the answer — the page reads the missing ones from the list of the
+     * kinds (§11.12).
+     */
+    app.get(
+      '/api/v1/notifications/accounts',
+      { preHandler: requireSession },
+      async (request) =>
+        notificationAccountListResponseSchema.parse({
+          accounts: await listAccounts(database, request.user?.id ?? ''),
+        }),
     )
 
     app.delete<{ Params: { channel: string } }>(

@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The own accounts of the user carry their state (**WP-M24-05**, phase 24, ADR-0045):
+  `GET /api/v1/notifications/accounts` answers the accounts of the signed-in
+  user with the state of every channel — *ready* when a code over the channel
+  confirmed the address, *linked* while it was never confirmed. The interface
+  stops guessing the state of a channel.
 - The rule of the administration is a route (**WP-M24-04**, phase 24, ADR-0045):
   `GET`/`PUT /api/v1/settings/notifications/channel-policy` holds the channels
   every user must have set up and the number of channels a user must have set

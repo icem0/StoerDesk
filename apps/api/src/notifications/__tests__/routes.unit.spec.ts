@@ -45,6 +45,8 @@ function fakeDatabase(
   const accountsQuery = {
     where: (_: unknown) => ({
       limit: async (count: number) => accounts.filter((row) => row.channel === 'ntfy').slice(0, count),
+      /** The list of the own accounts (WP-M24-05). */
+      orderBy: async () => accounts,
     }),
   }
 
@@ -529,6 +531,78 @@ describe('channel configuration routes — test send (WP-M14-05)', () => {
 
     expect(response.json()).toEqual({ delivered: true })
     expect(seen).toEqual(['Bearer tk_row'])
+  })
+})
+
+describe('the own accounts of the user (WP-M24-05, §11.3)', () => {
+  it('answers 401 without a session', async () => {
+    const app = await buildApp({ held: [], store: [] })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts',
+    })
+
+    expect(response.statusCode).toBe(401)
+  })
+
+  it('answers the accounts with the state of every channel', async () => {
+    const app = await buildApp({
+      held: [],
+      store: [],
+      accounts: [
+        {
+          userId: 'admin-1',
+          channel: 'matrix',
+          externalId: '@alice:example.org',
+          label: '',
+          secret: 'token',
+          target: '!room:example.org',
+          verifiedAt: new Date('2026-11-24T10:00:00.000Z'),
+          updatedAt: new Date(),
+        },
+        {
+          userId: 'admin-1',
+          channel: 'telegram',
+          externalId: '-555111222333',
+          label: '',
+          secret: '',
+          target: '',
+          verifiedAt: null,
+          updatedAt: new Date(),
+        },
+      ],
+    })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/notifications/accounts',
+      headers: { 'x-test-user': 'admin-1' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      accounts: [
+        {
+          channel: 'matrix',
+          externalId: '@alice:example.org',
+          label: '',
+          secretSet: true,
+          target: '!room:example.org',
+          verifiedAt: '2026-11-24T10:00:00.000Z',
+          state: 'ready',
+        },
+        {
+          channel: 'telegram',
+          externalId: '-555111222333',
+          label: '',
+          secretSet: false,
+          target: '',
+          verifiedAt: null,
+          state: 'linked',
+        },
+      ],
+    })
   })
 })
 

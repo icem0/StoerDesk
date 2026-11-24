@@ -1,7 +1,7 @@
 # WP-M24-05: the own accounts of the user carry their state
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M24-04
 phase: 24
 milestone: m24
@@ -13,27 +13,27 @@ files-read:
 
 - apps/api/src/notifications/routes.ts (the routes of the accounts)
 - apps/api/src/notifications/accounts.ts (the accounts of the user)
-- apps/api/src/notifications/web-push-subscriptions.ts (the devices of the browser)
+- apps/api/src/notifications/__tests__/routes.unit.spec.ts (the test of the routes)
 
 files-write:
 
 - apps/api/src/notifications/routes.ts
-- apps/api/src/notifications/accounts.ts
-- apps/api/src/notifications/__tests__/accounts.integration.spec.ts
+- apps/api/src/notifications/__tests__/routes.unit.spec.ts
 
 interfaces:
 
 - `GET /api/v1/notifications/accounts` — the own accounts with the state `missing | linked | ready`
-- `notificationAccountListResponseSchema` — the answer with the accounts and the devices
+- `notificationAccountListResponseSchema` — the answer with the accounts of the user
 
 ## Task
 
 1. Implement the route `GET /api/v1/notifications/accounts` that §11.11 has
-   promised since phase 14: the own accounts of the user with their state
-   (`missing`, `linked`, `ready`) and the count of the web-push devices.
-2. Extend the service so the answer of an account carries the target, the time
-   of the confirmation and the state.
-3. Write the test of the route.
+   promised since phase 14: the own accounts of the user with their state —
+   `ready` when the user confirmed the address with a code, `linked` while the
+   address was never confirmed. A channel without an account is missing from
+   the answer; the page reads the missing ones from the list of the kinds.
+2. Write the test of the route: the guard of the session and the answer with
+   the state of every account.
 
 The state of a channel in the interface stops being a guess of the page: it is
 the answer of the server.
@@ -58,8 +58,8 @@ confirmed one.
 
 ## Handoff
 
-- Files changed: the routes, the accounts, the test
+- Files changed: the routes, the test of the routes
 - Interfaces added: the route of the own accounts
 - Verified: the commands above
-- Follow-up WP: WP-M24-08 — the code over the channel confirms the account
+- Follow-up WP: WP-M24-06 — the delivery goes over the channels of the user
 - Open question: none
