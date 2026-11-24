@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The static gates of the check run in parallel (**WP-M28-03**, phase 28):
+  `npm run check` calls `scripts/check.mjs`, which runs the typecheck, the
+  lint, the i18n check and the check of the work packages beside each other —
+  they read the sources and need neither the database nor the ports of the
+  machine. The tests and the E2E wait for them and run one after the other.
+  The first failure ends the gate with the exit code of the gate that failed;
+  no gate is skipped and none is weakened.
 - The tests of the web share one environment per worker (**WP-M28-01**, phase 28):
   the web project runs in a VM thread (`pool: 'vmThreads'`) — every test file
   keeps its own module registry and its own mocks, but the jsdom environment and
@@ -27,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   databases of the runs that died are removed.
 
 ### Added
+- The criterion of the phase of the stickers (**WP-M27-06**, phase 27, ADR-0050):
+  the Playwright probe measures the label of the sheet in the browser and reads
+  the 112 notice from every label of the sheet.
 - The list of the stickers is filtered on the server (**WP-M27-05**, phase 27,
   ADR-0050): the search, the place and the activity ask the object list API,
   the places come from the new route `GET /api/v1/objects/cities`, and the

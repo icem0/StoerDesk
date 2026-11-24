@@ -868,6 +868,21 @@ contracts and the route), **WP-M27-03** (the administration of the template),
 **WP-M27-04** (the sheet from the geometry), **WP-M27-05** (the filter of the
 list) and **WP-M27-06** (the criterion of the phase).
 
+**Phase 27 is complete (WP-M27-01 … WP-M27-06).** The sticker of the
+installation is a template: the administration at `/admin/sticker-template` decides
+the geometry of the sheet (sheet format, columns, rows, size of the label, margins,
+the distances between the labels) and the look of the label (error correction and
+size of the QR, the lines that are printed); the catalog of the sheets holds A6, A4
+with four A6 labels, A4 with 21, 52 or 104 labels of a label roll and the free grid
+for every other measure, and every geometry must fit on its sheet. The print view at
+`/objects/stickers` chooses the sheet of the job, prints the labels in blocks of
+`columns × rows` labels per page — so the grid of the roll survives the print dialog
+— and filters the list on the server (search, place, activity). The 112 notice
+stands on every label and is not part of the appearance. The criterion of the phase
+is proved by the Playwright probe `apps/web/e2e/sticker-print.spec.ts`: it measures
+the label of the sheet in the browser (25,7 × 20,7 mm for the sheet with 104 labels)
+and reads the notice from every label.
+
 **WP-M26-02 — the dashboard knows the phase neither (done).** The block of
 the evaluations showed the average of the phase that never had data as „Ø Zeit bis
 Rückmeldung"; ADR-0049 decision 1 takes it away: the block carries three
@@ -4206,6 +4221,15 @@ npm run build
    (`WP-M1-12`); without a reachable database or a startable browser it prints one
    notice and stays green locally, but in CI (`CI=true`) a missing prerequisite is
    an error.
+
+**The order of the gates (WP-M28-03).** `npm run check` calls
+`scripts/check.mjs`, which runs the four static gates — the typecheck, the
+lint, the i18n check and the check of the work packages — **beside each
+other**: they read the sources and need neither the database nor the ports of
+the machine. The tests and the E2E wait for them and run one after the other,
+because the tests need the database and the E2E needs the ports (3174 and
+5174) and a browser. The first failure ends the gate with the exit code of the
+gate that failed; no gate is skipped and none is weakened.
 
 The Chromium of that gate is installed in the `check` job with
 `npx playwright install --with-deps chromium`, whose `--with-deps` part downloads the
