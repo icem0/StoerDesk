@@ -1,7 +1,15 @@
 # WP-M24-06: the delivery goes over the channels of the user
 
+**This package was split** into its children — the plan of this file was too
+big for the limits of §17: **WP-M24-06a** (the own page loses the selection
+per event type), **WP-M24-06b** (the channels send to the target of the user),
+**WP-M24-06c** (the delivery goes over the channels of the user),
+**WP-M24-06d** (the readiness selection leaves the web) and **WP-M24-06e** (the
+routes of the selection leave the API). The file records the plan; the children
+carry the implementation.
+
 format: small-model
-status: planned
+status: done (split into WP-M24-06a … WP-M24-06e)
 depends-on: WP-M24-05
 phase: 24
 milestone: m24

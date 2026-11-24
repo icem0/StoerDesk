@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Phase 24 and phase 25 are closed (**WP-M24-19**, **WP-M25-07**): the check runs
+  of the versions v1.2.84 … v1.2.128 and their publish runs are green.
+
 ### Added
 - The alarm of the instance (**WP-M25-01** … **WP-M25-08**, phase 25, ADR-0048):
   the sound and the interval of its repetition are settings of the installation,
