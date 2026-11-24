@@ -846,6 +846,14 @@ and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
 copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
+**WP-M23-09f — the button „Erinnern" in the actions of the admin (done).** The
+actions of the admin for one shift carry the button „Erinnern": the click
+sends `POST /api/v1/oncall/shifts/:id/remind` and the plan is read again. The
+list of the open shifts (WP-M23-07) opens the dialog of the shift, so the
+button is at hand for every open shift. The button is disabled for a shift
+that started and for a shift without a technician, with the reason in the
+tooltip.
+
 **WP-M23-09e — the admin reminds a shift by hand (done).** The route
 `POST /api/v1/oncall/shifts/:id/remind` (guard `oncall.admin`) writes the
 reminder of one shift: the technician of the shift is asked again, outside the

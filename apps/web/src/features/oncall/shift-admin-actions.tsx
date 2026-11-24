@@ -64,6 +64,9 @@ export function ShiftAdminActions(props: {
   const [technicianId, setTechnicianId] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The clock of the view, read once: the state of the buttons must not move
+  // while the admin reads them.
+  const [now] = useState(() => Date.now())
 
   // Every action reads the plan again: the calendar, the weekly plan and the
   // own shifts of the page all live under the key `oncall`.
@@ -129,14 +132,33 @@ export function ShiftAdminActions(props: {
     },
   })
 
+  const remind = useMutation({
+    mutationFn: () =>
+      apiFetch<{ remindersQueued: number; reminderNumber: number }>(
+        `/v1/oncall/shifts/${props.shift.id}/remind`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => {
+      setError(null)
+      refresh()
+    },
+    onError: (cause) => {
+      setError(errorText(cause))
+    },
+  })
+
   if (!mayAdmin) {
     return null
   }
 
   const candidates = members.data?.members ?? []
-  const busy = assign.isPending || publish.isPending || remove.isPending
+  const busy =
+    assign.isPending || publish.isPending || remove.isPending || remind.isPending
   // A confirmed or swapped shift is locked for the delete, always.
   const locked = props.shift.state === 'CONFIRMED' || props.shift.state === 'SWAP_REQUESTED'
+  // The reminder needs a technician and a shift that did not start yet.
+  const remindable =
+    props.shift.userId !== null && new Date(props.shift.startsAt).getTime() > now
 
   return (
     <div className="mt-4 rounded border border-slate-700 bg-slate-950/40 p-3">
@@ -180,6 +202,15 @@ export function ShiftAdminActions(props: {
             {t('admin.grid.publish')}
           </button>
         ) : null}
+        <button
+          className="rounded border border-slate-600 px-3 py-1 text-slate-200 hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
+          disabled={busy || !remindable}
+          title={remindable ? undefined : t('admin.shiftDetail.remindLocked')}
+          onClick={() => remind.mutate()}
+          type="button"
+        >
+          {t('admin.shiftDetail.remind')}
+        </button>
         {confirmingDelete ? (
           <span className="flex items-center gap-2">
             <button
@@ -237,6 +268,14 @@ export function ShiftAdminActions(props: {
 
     if (cause instanceof ApiError && cause.code === 'oncall_shift_invalid_transition') {
       return t('admin.shiftDetail.lockedTransition')
+    }
+
+    if (cause instanceof ApiError && cause.code === 'oncall_invalid_shift_state') {
+      return t('admin.errors.oncall_invalid_shift_state')
+    }
+
+    if (cause instanceof ApiError && cause.code === 'oncall_shift_started') {
+      return t('admin.errors.oncall_shift_started')
     }
 
     return t('admin.errors.unknown')

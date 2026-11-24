@@ -1770,7 +1770,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-09c | the administration sets the interval of the reminder | done | yes |
 | WP-M23-09d | the urgency of the reminder rises — ntfy and the push of the browser | done | yes |
 | WP-M23-09e | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | done | yes |
-| WP-M23-09f | the button „Erinnern" in the list of the open shifts | planned | yes |
+| WP-M23-09f | the button „Erinnern" in the actions of the admin | done | yes |
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |
 | WP-M24-06f | the exit criterion names a channel the instance has — the rule of the administration is refused for a channel the instance does not have | done | yes |
 | WP-M24-06g | the accent test waits for the colour of the instance — the acceptance test reads the painted colour after the answer of the branding | done | yes |

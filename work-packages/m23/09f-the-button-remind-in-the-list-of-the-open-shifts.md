@@ -11,14 +11,14 @@ spec-lines: 30
 
 files-read:
 
-- apps/web/src/features/oncall/open-shifts-section.tsx (the list of the open shifts)
 - apps/web/src/features/oncall/shift-admin-actions.tsx (the actions of the admin)
-- apps/web/src/features/oncall/__tests__/open-shifts-section.test.tsx (the test of the list)
+- apps/web/src/features/oncall/open-shifts-section.tsx (the list of the open shifts)
+- apps/web/src/features/oncall/__tests__/shift-admin-actions.test.tsx (the test of the actions)
 - apps/web/src/i18n/locales/de/oncall.json (the texts of the readiness)
 
 files-write:
 
-- apps/web/src/features/oncall/shift-admin-actions.tsx, apps/web/src/features/oncall/open-shifts-section.tsx
+- apps/web/src/features/oncall/shift-admin-actions.tsx
 - apps/web/src/i18n/locales/de/oncall.json, apps/web/src/i18n/locales/en/oncall.json
 - apps/web/src/features/oncall/__tests__/shift-admin-actions.test.tsx
 - specs/04-oncall.md
@@ -32,7 +32,8 @@ interfaces:
 
 1. The actions of the admin for one shift carry the button „Erinnern": the
    click sends `POST /api/v1/oncall/shifts/:id/remind` (WP-M23-09e) and the
-   plan is read again.
+   plan is read again. The list of the open shifts (WP-M23-07) opens the
+   dialog of the shift, so the button is at hand for every open shift.
 2. The button is visible only with `oncall.admin` — the right of the route. It
    is disabled for a shift that started and for a shift without a technician,
    with the reason in the tooltip.

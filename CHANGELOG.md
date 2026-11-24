@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The button „Erinnern" in the actions of the admin (**WP-M23-09f**, phase 23):
+  the admin asks the technician of a shift again without waiting for the
+  interval of the sweep.
 - The admin reminds a shift by hand (**WP-M23-09e**, phase 23): the route
   `POST /api/v1/oncall/shifts/:id/remind` (`oncall.admin`) asks the technician
   of one shift again, without waiting for the interval of the sweep.

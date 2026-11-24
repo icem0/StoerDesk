@@ -84,13 +84,16 @@ function stubRoutes(
   )
 }
 
-function renderActions(state: OnCallShift['state'] = 'DECLINED') {
+function renderActions(
+  state: OnCallShift['state'] = 'DECLINED',
+  startsAt: Date = new Date('2026-11-30T08:00:00.000Z'),
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
-        <ShiftAdminActions shift={{ ...shift, state }} />
+        <ShiftAdminActions shift={{ ...shift, state, startsAt }} />
       </I18nextProvider>
     </QueryClientProvider>,
   )
@@ -171,6 +174,40 @@ describe('ShiftAdminActions', () => {
         screen.getByText('Die Schicht hat die Bereitschaft gehalten und bleibt im Verlauf.'),
       ).toBeDefined()
     })
+  })
+
+  it('reminds the technician of the shift by hand (WP-M23-09f)', async () => {
+    const calls: { method: string; url: string; body: unknown }[] = []
+    stubRoutes(['oncall.admin'], calls)
+    renderActions()
+
+    await waitFor(() => {
+      expect(screen.getByText('Aktionen der Bereitschaftsleitung')).toBeDefined()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Erinnern' }))
+
+    await waitFor(() => {
+      const call = calls.find((entry) => entry.url.includes('/remind'))
+
+      expect(call?.method).toBe('POST')
+    })
+  })
+
+  it('locks the reminder of a shift that started (WP-M23-09f)', async () => {
+    stubRoutes(['oncall.admin'])
+    renderActions('PLANNED', new Date('2020-01-01T08:00:00.000Z'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Aktionen der Bereitschaftsleitung')).toBeDefined()
+    })
+
+    const button = screen.getByRole('button', { name: 'Erinnern' }) as HTMLButtonElement
+
+    expect(button.disabled).toBe(true)
+    expect(button.getAttribute('title')).toBe(
+      'Die Schicht hat schon begonnen oder hat keinen Techniker.',
+    )
   })
 
   it('locks the delete of a confirmed shift', async () => {
