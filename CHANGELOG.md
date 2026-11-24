@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The code over the channel confirms the account (**WP-M24-08**, phase 24,
+  ADR-0045): the button of a channel sends a one-time code over that very
+  channel — the topic, the chat, the room, the mail address, the bridge, the
+  push — and the user enters the code he copied. Only then the channel counts
+  as a channel of the user.
 - The channels send to the target of the user (**WP-M24-06b**, phase 24, ADR-0045):
   the chat of the user for Telegram and WhatsApp Web, the room and the
   homeserver of the user for Matrix, the address of the user for the e-mail —

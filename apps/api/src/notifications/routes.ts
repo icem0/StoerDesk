@@ -12,6 +12,7 @@ import {
   deliveryProblemsResponseSchema,
   channelVerificationResponseSchema,
   confirmChannelVerificationRequestSchema,
+  confirmNotificationVerificationRequestSchema,
   confirmChannelVerificationResponseSchema,
   channelTestRequestSchema,
   channelTestResponseSchema,
@@ -23,6 +24,7 @@ import {
   notificationMessageListResponseSchema,
   notificationMessageReadResponseSchema,
   notificationUnreadCountResponseSchema,
+  notificationVerificationResponseSchema,
   redeemTelegramLinkCodeRequestSchema,
   telegramLinkCodeResponseSchema,
   type ChannelConfiguration,
@@ -55,6 +57,11 @@ import {
   requestNtfyVerification,
 } from './verification'
 import { deleteAccount, listAccounts, storeAccount } from './accounts'
+import {
+  ConfirmationError,
+  confirmChannelConfirmation,
+  requestChannelConfirmation,
+} from './confirmation'
 import { acknowledgeDeliveryProblems, readDeliveryProblems } from './delivery'
 import {
   countWebPushSubscriptions,
@@ -871,6 +878,90 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         notificationAccountListResponseSchema.parse({
           accounts: await listAccounts(database, request.user?.id ?? ''),
         }),
+    )
+
+    /**
+     * `POST /api/v1/notifications/accounts/:channel/verification`
+     * (`specs/10-notifications.md` §11.3a, §11.11, WP-M24-08): sends the
+     * one-time code over the channel of the account of the user and answers the
+     * deadline of the code. The code itself travels over the channel — the API
+     * never answers it.
+     */
+    app.post<{ Params: { channel: string } }>(
+      '/api/v1/notifications/accounts/:channel/verification',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const channel = notificationChannelKindSchema.safeParse(request.params.channel)
+
+        if (!channel.success) {
+          return reply
+            .code(404)
+            .send({ code: 'account_not_found', params: { fields: ['channel'] } })
+        }
+
+        try {
+          const answer = await requestChannelConfirmation(
+            database,
+            env,
+            request.user?.id ?? '',
+            channel.data,
+            request.user?.locale === 'de' || request.user?.locale === 'en'
+              ? request.user.locale
+              : undefined,
+          )
+
+          return notificationVerificationResponseSchema.parse(answer)
+        } catch (error) {
+          if (error instanceof ConfirmationError) {
+            return reply.code(422).send({ code: 'invalid_request', params: { fields: ['channel'] } })
+          }
+
+          throw error
+        }
+      },
+    )
+
+    /**
+     * `POST /api/v1/notifications/accounts/:channel/verification/confirm`
+     * (`specs/10-notifications.md` §11.3a, §11.11, WP-M24-08): the code the
+     * user copied is checked; a correct code confirms the account, so the
+     * channel counts as a channel of the user (§11.3a, ADR-0045).
+     */
+    app.post<{ Params: { channel: string } }>(
+      '/api/v1/notifications/accounts/:channel/verification/confirm',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const channel = notificationChannelKindSchema.safeParse(request.params.channel)
+
+        if (!channel.success) {
+          return reply
+            .code(404)
+            .send({ code: 'account_not_found', params: { fields: ['channel'] } })
+        }
+
+        const body = confirmNotificationVerificationRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply.code(422).send({ code: 'invalid_request', params: { fields: ['code'] } })
+        }
+
+        try {
+          const answer = await confirmChannelConfirmation(
+            database,
+            request.user?.id ?? '',
+            channel.data,
+            body.data.code,
+          )
+
+          return { confirmedAt: answer.confirmedAt }
+        } catch (error) {
+          if (error instanceof ConfirmationError) {
+            return reply.code(422).send({ code: 'invalid_request', params: { fields: ['code'] } })
+          }
+
+          throw error
+        }
+      },
     )
 
     app.delete<{ Params: { channel: string } }>(
