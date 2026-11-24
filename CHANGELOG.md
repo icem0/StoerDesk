@@ -203,6 +203,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   row is backfilled.
 
 ### Fixed
+- The acceptance test of the accent colour waits for the colour of the
+  instance (**WP-M24-06g**, phase 24, ADR-0036): the shell writes the saved
+  colour into `--brand-accent` when its branding request has answered — the
+  test read the painted colour right after the navigation and saw the default
+  colour of the stylesheet on a slow runner. It polls the colour now and
+  asserts the same values as before.
 - The VAPID keys of a test no longer leak into the next test file
   (**WP-M20-08**, phase 20): the integration test of the web push set them in
   the environment of the worker without restoring them, and the unit test of

@@ -1762,6 +1762,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-03 | the swap race waits for both acceptances — the test of the race no longer loses the winner | done | yes |
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |
 | WP-M24-06f | the exit criterion names a channel the instance has — the rule of the administration is refused for a channel the instance does not have | done | yes |
+| WP-M24-06g | the accent test waits for the colour of the instance — the acceptance test reads the painted colour after the answer of the branding | done | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

@@ -804,6 +804,14 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M24-06g — the accent test waits for the colour of the instance (done).**
+The check run of WP-M24-06f failed in the acceptance test of the accent
+colour: the test read the painted colour right after the navigation to
+`/tickets`, and the shell writes the saved colour into `--brand-accent` when
+its branding request has answered (ADR-0036, WP-M16-03) — on a loaded runner
+the test read the default colour of the stylesheet. The test polls the colour
+now and asserts the same values as before.
+
 **WP-M24-06f — the exit criterion names a channel the instance has (done).**
 The check run of WP-M24-06c failed in the probe „the rule of the
 administration does not decide the way of a message“: the probe wrote the rule
