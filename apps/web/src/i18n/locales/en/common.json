@@ -195,29 +195,6 @@
       "none": "No account needed",
       "later": "Follows in a later package"
     },
-    "selection": {
-      "heading": "Selected channels per event",
-      "hint": "Your selection decides over which way a notification reaches you. For an escalation the rule of the admin decides to whom it goes — you decide over which channel it arrives. The mandatory minimum channels of a critical ticket are added to every event.",
-      "escalatedHint": "An escalation that addresses you arrives over your selection; without a selection over your own ntfy topic.",
-      "save": "Save the selection",
-      "saved": "The selection was saved.",
-      "noAccount": "No account connected",
-      "events": {
-        "ticket.created": "New ticket",
-        "ticket.assigned": "Assigned or offered",
-        "ticket.assignment_answered": "Assignment answered",
-        "ticket.escalated": "Escalated",
-        "ticket.resolved": "Resolved",
-        "oncall.assigned": "Readiness assigned",
-        "oncall.swap_requested": "Swap requested",
-        "oncall.unconfirmed_reminder": "Unconfirmed readiness"
-      },
-      "errors": {
-        "session_invalid": "The session has expired – please sign in again.",
-        "invalid_request": "The selection could not be loaded or saved – please try again.",
-        "unknown": "An unexpected error occurred."
-      }
-    },
     "telegram": {
       "guidance": "Send the code shown below as a message to the StörDesk Telegram bot.",
       "expiresHint": "The code is valid for ten minutes only and is used once.",

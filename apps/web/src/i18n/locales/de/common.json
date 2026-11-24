@@ -195,29 +195,6 @@
       "none": "Kein Konto nötig",
       "later": "Folgt in einem späteren Paket"
     },
-    "selection": {
-      "heading": "Ausgewählte Kanäle pro Ereignis",
-      "hint": "Deine Auswahl entscheidet, über welchen Weg eine Nachricht bei dir ankommt. Bei einer Eskalation entscheidet die Regel der Administration, an wen sie geht — du entscheidest, über welchen Kanal sie ankommt. Die Pflichtkanäle einer kritischen Meldung werden jedem Ereignis hinzugefügt.",
-      "escalatedHint": "Eine Eskalation, die dich adressiert, kommt über deine Auswahl; ohne Auswahl über dein eigenes ntfy-Thema.",
-      "save": "Auswahl speichern",
-      "saved": "Die Auswahl wurde gespeichert.",
-      "noAccount": "Kein Konto verknüpft",
-      "events": {
-        "ticket.created": "Neuer Vorgang",
-        "ticket.assigned": "Zugewiesen oder angeboten",
-        "ticket.assignment_answered": "Zuweisung beantwortet",
-        "ticket.escalated": "Eskaliert",
-        "ticket.resolved": "Erledigt",
-        "oncall.assigned": "Bereitschaft zugewiesen",
-        "oncall.swap_requested": "Tausch angefragt",
-        "oncall.unconfirmed_reminder": "Nicht bestätigte Bereitschaft"
-      },
-      "errors": {
-        "session_invalid": "Die Sitzung ist abgelaufen – bitte erneut anmelden.",
-        "invalid_request": "Die Auswahl konnte nicht geladen oder gespeichert werden – bitte erneut versuchen.",
-        "unknown": "Ein unerwarteter Fehler ist aufgetreten."
-      }
-    },
     "telegram": {
       "guidance": "Sende den unten gezeigten Code als Nachricht an den StörDesk Telegram-Bot.",
       "expiresHint": "Der Code ist nur zehn Minuten gültig und kann nur einmal verwendet werden.",
