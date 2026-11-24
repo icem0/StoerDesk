@@ -22,6 +22,7 @@ const { users, roles, userRoles, settings } = schema
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 type MinimumChannelsBody = { channels: string[] }
 type ChannelPolicyBody = { requiredChannels: string[]; minimumChannelCount: number }
+type AlarmBody = { toneEnabled: boolean; repeatSeconds: number }
 
 const ntfyUrl = process.env.NTFY_URL
 const ntfyTopic = process.env.NTFY_TOPIC
@@ -77,6 +78,23 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'GET',
         url: '/api/v1/settings/notifications/minimum-channels',
         headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
+    function getAlarm(cookie?: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/settings/notifications/alarm',
+        headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
+    function putAlarm(cookie: string, payload: unknown) {
+      return app.inject({
+        method: 'PUT',
+        url: '/api/v1/settings/notifications/alarm',
+        headers: { cookie },
+        payload: payload as Record<string, unknown>,
       })
     }
 
@@ -288,6 +306,40 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         code: 'invalid_request',
         params: { fields: ['requiredChannels'] },
       })
+    })
+
+    it('answers the sound of the installation and the interval of its repetition', async () => {
+      const response = await getAlarm(cookies['admin'])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<AlarmBody>()).toEqual({
+        toneEnabled: true,
+        repeatSeconds: 60,
+      })
+    })
+
+    it('replaces the sound and the interval of the installation', async () => {
+      const put = await putAlarm(cookies['admin'], { toneEnabled: false, repeatSeconds: 30 })
+
+      expect(put.statusCode).toBe(200)
+      expect(put.json<AlarmBody>()).toEqual({ toneEnabled: false, repeatSeconds: 30 })
+
+      expect((await getAlarm(cookies['admin'])).json<AlarmBody>()).toEqual({
+        toneEnabled: false,
+        repeatSeconds: 30,
+      })
+    })
+
+    it('refuses an interval below 15 seconds and above 600 seconds', async () => {
+      const tooSmall = await putAlarm(cookies['admin'], { toneEnabled: true, repeatSeconds: 5 })
+      const tooBig = await putAlarm(cookies['admin'], { toneEnabled: true, repeatSeconds: 900 })
+
+      expect(tooSmall.statusCode).toBe(400)
+      expect(tooSmall.json<ErrorResponseBody>()).toEqual({
+        code: 'invalid_request',
+        params: { fields: ['repeatSeconds'] },
+      })
+      expect(tooBig.statusCode).toBe(400)
     })
 
     it('refuses a negative minimum number', async () => {

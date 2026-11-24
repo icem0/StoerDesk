@@ -4,9 +4,11 @@ import { z } from 'zod'
 
 import {
   PERMISSIONS,
+  alarmSettingsSchema,
   channelPolicySchema,
   minimumChannelsResponseSchema,
   notificationChannelKindSchema,
+  type AlarmSettings,
   type ChannelPolicy,
   type NotificationChannelKind,
 } from '@stoerdesk/shared'
@@ -41,6 +43,18 @@ export const MINIMUM_CHANNEL_COUNT_KEY = 'notifications.minimum_channel_count'
 
 /** The settings row that holds the mandatory channels of the critical tickets. */
 const MINIMUM_CHANNELS_KEY = 'notifications.minimum_channels'
+
+/** The settings row that holds the sound of the installation (§11.17). */
+export const ALARM_TONE_ENABLED_KEY = 'notifications.alarm_tone_enabled'
+
+/** The settings row that holds the interval of the repetition of the sound. */
+export const ALARM_REPEAT_SECONDS_KEY = 'notifications.alarm_repeat_seconds'
+
+/** The sound of the installation is on by default — the office alarms. */
+const DEFAULT_ALARM_TONE_ENABLED = true
+
+/** The interval of the repetition of the sound: one minute by default. */
+const DEFAULT_ALARM_REPEAT_SECONDS = 60
 
 type Db = Database['database']
 type DbSelect = Pick<Db, 'select'>
@@ -98,6 +112,39 @@ export async function storeChannelPolicy(database: Db, policy: ChannelPolicy): P
   await database.transaction(async (tx) => {
     await writeSetting(tx, REQUIRED_CHANNELS_KEY, policy.requiredChannels)
     await writeSetting(tx, MINIMUM_CHANNEL_COUNT_KEY, policy.minimumChannelCount)
+  })
+}
+
+/**
+ * The alarm of the installation (`specs/10-notifications.md` §11.17, ADR-0048):
+ * whether it alarms with a sound and how often the sound comes again while
+ * unhandled messages exist. Both rows have a default, so an installation
+ * without them alarms anyway.
+ */
+export async function readAlarmSettings(database: DbSelect): Promise<AlarmSettings> {
+  const [tone, repeat] = await Promise.all([
+    readSetting(database, ALARM_TONE_ENABLED_KEY),
+    readSetting(database, ALARM_REPEAT_SECONDS_KEY),
+  ])
+
+  return {
+    toneEnabled:
+      typeof tone === 'boolean' ? tone : DEFAULT_ALARM_TONE_ENABLED,
+    repeatSeconds:
+      typeof repeat === 'number' && Number.isInteger(repeat) && repeat >= 15 && repeat <= 600
+        ? repeat
+        : DEFAULT_ALARM_REPEAT_SECONDS,
+  }
+}
+
+/** Replaces the alarm of the installation. */
+export async function storeAlarmSettings(
+  database: Db,
+  alarm: AlarmSettings,
+): Promise<void> {
+  await database.transaction(async (tx) => {
+    await writeSetting(tx, ALARM_TONE_ENABLED_KEY, alarm.toneEnabled)
+    await writeSetting(tx, ALARM_REPEAT_SECONDS_KEY, alarm.repeatSeconds)
   })
 }
 
@@ -165,6 +212,36 @@ export const settingsNotificationsRoutes = fp<{ database: Db; env: Env }>(
         await storeChannelPolicy(database, parsed.data)
 
         return channelPolicySchema.parse(await readChannelPolicy(database))
+      },
+    )
+
+    /**
+     * `GET/PUT /api/v1/settings/notifications/alarm` (`specs/10-notifications.md`
+     * §11.17, ADR-0048): the sound of the installation and the interval of its
+     * repetition. The interval governs the **sound only** — the visual alarm
+     * is a state, not a repetition.
+     */
+    app.get(
+      '/api/v1/settings/notifications/alarm',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
+      async () => alarmSettingsSchema.parse(await readAlarmSettings(database)),
+    )
+
+    app.put(
+      '/api/v1/settings/notifications/alarm',
+      { preHandler: requirePermission(database, PERMISSIONS.settings.write) },
+      async (request, reply) => {
+        const parsed = alarmSettingsSchema.safeParse(request.body)
+
+        if (!parsed.success) {
+          const fields = [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))]
+
+          return reply.code(400).send({ code: 'invalid_request', params: { fields } })
+        }
+
+        await storeAlarmSettings(database, parsed.data)
+
+        return alarmSettingsSchema.parse(await readAlarmSettings(database))
       },
     )
 
