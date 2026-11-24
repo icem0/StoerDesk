@@ -51,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The exit criterion of phase 24 (**WP-M24-19**, phase 24, ADR-0045): the
+  message of a user goes over his confirmed channels, a user without a
+  confirmed channel is notified over the chain of the installation, the code
+  over the channel confirms the account and the rule of the administration
+  names the missing channels.
 - The rule and the channels of the users in the administration
   (**WP-M24-18**, phase 24, ADR-0045): the channel page names the required
   channels and the minimum number of set-up channels and lists the channels of

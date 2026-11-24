@@ -1,7 +1,7 @@
 # WP-M24-19: the exit criterion of the phase
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M24-18
 phase: 24
 milestone: m24
@@ -18,7 +18,7 @@ files-read:
 files-write:
 
 - apps/api/src/notifications/__tests__/phase24-exit.integration.spec.ts
-- work-packages/README.md, PLAN.md
+- docs/REPO-MAP.md, PLAN.md, work-packages/README.md
 
 interfaces:
 
@@ -30,8 +30,8 @@ interfaces:
    channels of the recipient, a user without a confirmed channel gets the chain
    of the installation, the code over the channel confirms the account and the
    rule of the administration names the missing channels.
-2. Update the status of the phase in `PLAN.md` and the backlog table of
-   `work-packages/README.md`.
+2. Update the roadmap of `PLAN.md`, the module map of `docs/REPO-MAP.md` and the
+   backlog table of `work-packages/README.md`.
 
 ## Non-goals
 
@@ -51,8 +51,8 @@ Expected: all green; the criterion proves the rules of the phase.
 
 ## Handoff
 
-- Files changed: the criterion, the plan, the backlog
+- Files changed: the criterion, the plan, the module map, the backlog
 - Interfaces added: none
 - Verified: the commands above
-- Follow-up WP: none
+- Follow-up WP: none — phase 24 is closed
 - Open question: none
