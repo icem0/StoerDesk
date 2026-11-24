@@ -82,6 +82,13 @@ and passes after it.
 - Verified: `npm run check` green (typecheck, lint, the tests of the web and the
   API, i18n, wp-check and the Playwright suite with the new probe: 15 cases,
   among them the sheet of the stickers in German and English)
+- Note: the files of this package (the probe, this document, the row of the
+  backlog and the entries of the changelog, the plan and the module map) landed
+  in the commit `dbf4d42b` of **WP-M28-03** and not in a commit of their own: a
+  second session committed the shared index at the same moment, so the two
+  packages shared one commit. The content is complete and the check run of the
+  version v1.2.147 proves it; the record says it here so the history stays
+  readable.
 - Follow-up WP: none — the label roll of the office decides the numbers of the
   presets, and the free grid takes every other measure over without a new
   version of the app
