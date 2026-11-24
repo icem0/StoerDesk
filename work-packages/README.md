@@ -1765,10 +1765,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-07 | the list of the open shifts in the readiness view | done | yes |
 | WP-M23-08 | a reassignment notifies the new technician | done | yes |
 | WP-M23-09 | the repeated reminder of a shift that was not accepted — a rising urgency and the manual reminder of the admin | planned | yes |
-| WP-M23-09a | the reminder of a shift repeats — the interval `oncall.reminder_repeat_h` | planned | yes |
-| WP-M23-09b | the urgency of the reminder rises — ntfy and the push of the browser | planned | yes |
-| WP-M23-09c | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | planned | yes |
-| WP-M23-09d | the button „Erinnern" in the list of the open shifts | planned | yes |
+| WP-M23-09a | the setting of the repeated reminder — `oncall.reminder_repeat_h` | done | yes |
+| WP-M23-09b | the reminder of a shift repeats — the sweep counts and sends again | planned | yes |
+| WP-M23-09c | the administration sets the interval of the reminder | planned | yes |
+| WP-M23-09d | the urgency of the reminder rises — ntfy and the push of the browser | planned | yes |
+| WP-M23-09e | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | planned | yes |
+| WP-M23-09f | the button „Erinnern" in the list of the open shifts | planned | yes |
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |
 | WP-M24-06f | the exit criterion names a channel the instance has — the rule of the administration is refused for a channel the instance does not have | done | yes |
 | WP-M24-06g | the accent test waits for the colour of the instance — the acceptance test reads the painted colour after the answer of the branding | done | yes |

@@ -24,6 +24,7 @@ needed for them.
 | `oncall.swap_requires_admin_approval` | `true` | boolean |
 | `oncall.escalate_to_group_after_min` | `10` | positive integer, max. 1440 |
 | `oncall.reminder_unconfirmed_h` | `24` | positive integer, max. 720 |
+| `oncall.reminder_repeat_h` | `4` | positive integer, max. 72 |
 | `oncall.unfilled_warning_days` | `14` | positive integer, max. 365 |
 | `oncall.default_pool_id` | — | UUID of an active pool for ticket offers and the dashboard tile |
 

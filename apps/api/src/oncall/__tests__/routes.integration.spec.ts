@@ -45,6 +45,7 @@ type SettingsBody = {
   swapRequiresAdminApproval: boolean
   escalateToGroupAfterMin: number
   reminderUnconfirmedH: number
+  reminderRepeatH: number
   unfilledWarningDays: number
   defaultPoolId: string | null
 }
@@ -537,7 +538,21 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.weekStartWeekday).toBe(1)
       expect(body.startTime).toBe('07:00')
       expect(body.durationDays).toBe(7)
+      expect(body.reminderRepeatH).toBe(4)
       expect(body.defaultPoolId).toBeNull()
+    })
+
+    it('updates the interval of the repeated reminder (WP-M23-09a)', async () => {
+      const response = await putSettings(cookies['admin'], {
+        'oncall.reminder_repeat_h': 6,
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<SettingsBody>().reminderRepeatH).toBe(6)
+
+      const back = await getSettings(cookies['oncall'])
+
+      expect(back.json<SettingsBody>().reminderRepeatH).toBe(6)
     })
 
     it('updates on-call settings and reads them back', async () => {

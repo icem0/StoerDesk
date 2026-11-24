@@ -106,6 +106,14 @@ describe('resolveOncallSettings', () => {
   })
 
   it.each([
+    ['reminderRepeatH', 0],
+    ['reminderRepeatH', 73],
+  ])('falls back to the default reminder interval for %s = %j', (key, value) => {
+    const settings = resolveOncallSettings({ [key]: value } as Record<string, unknown>)
+    expect(settings.reminderRepeatH).toBe(ONCALL_SETTINGS_DEFAULTS.reminderRepeatH)
+  })
+
+  it.each([
     ['unfilledWarningDays', 0],
     ['unfilledWarningDays', 366],
   ])('falls back to the default warning days for %s = %j', (key, value) => {

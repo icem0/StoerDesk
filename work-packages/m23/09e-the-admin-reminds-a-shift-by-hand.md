@@ -1,8 +1,8 @@
-# WP-M23-09c: the admin reminds a shift by hand
+# WP-M23-09e: the admin reminds a shift by hand
 
 format: small-model
 status: planned
-depends-on: WP-M23-09a
+depends-on: WP-M23-09b
 phase: 23
 milestone: m23
 context-budget: 18k tokens
@@ -34,20 +34,20 @@ interfaces:
 
 1. The route `POST /api/v1/oncall/shifts/:id/remind` (guard `oncall.admin`)
    writes the reminder of one shift: the technician of the shift is asked again,
-   outside the sweep of WP-M23-09a and without the wait of the interval.
+   outside the sweep of WP-M23-09b and without the wait of the interval.
 2. The route refuses a shift that started (the reminder of a shift in the past
    is pointless) and a shift without a technician — the shift has nobody to
    ask. The answers name the cause: `409 oncall_shift_started` and
    `409 oncall_invalid_shift_state`.
 3. The reminder of the route carries the number of the next reminder, so the
-   urgency of the message of WP-M23-09b rises like the urgency of the sweep.
+   urgency of the message of WP-M23-09d rises like the urgency of the sweep.
 4. The route joins the table of the API in `specs/04-oncall.md` §4a.8.
 
 ## Non-goals
 
-- No change of the confirmation and the decline.
+- No change of the confirmation and of the decline.
 - No new permission key — `oncall.admin` stays as it is.
-- No UI in this package — WP-M23-09d carries the button.
+- No UI in this package — WP-M23-09f carries the button.
 
 ## Acceptance
 
@@ -67,5 +67,5 @@ Expected: all green; the new tests fail before the change and pass after it.
   test of the routes and the spec
 - Interfaces added: `POST /api/v1/oncall/shifts/:id/remind`
 - Verified: the commands above
-- Follow-up WP: WP-M23-09d
+- Follow-up WP: WP-M23-09f
 - Open question: none

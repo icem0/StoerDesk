@@ -13,6 +13,7 @@ const ONCALL_KEYS = [
   'oncall.swap_requires_admin_approval',
   'oncall.escalate_to_group_after_min',
   'oncall.reminder_unconfirmed_h',
+  'oncall.reminder_repeat_h',
   'oncall.unfilled_warning_days',
   'oncall.default_pool_id',
 ] as const
@@ -26,6 +27,7 @@ const SETTING_KEY_TO_CAMEL: Record<OncallSettingKey, keyof OncallSettings> = {
   'oncall.swap_requires_admin_approval': 'swapRequiresAdminApproval',
   'oncall.escalate_to_group_after_min': 'escalateToGroupAfterMin',
   'oncall.reminder_unconfirmed_h': 'reminderUnconfirmedH',
+  'oncall.reminder_repeat_h': 'reminderRepeatH',
   'oncall.unfilled_warning_days': 'unfilledWarningDays',
   'oncall.default_pool_id': 'defaultPoolId',
 }
@@ -93,6 +95,7 @@ export async function writeOncallSettings(
     swapRequiresAdminApproval: before.swapRequiresAdminApproval,
     escalateToGroupAfterMin: before.escalateToGroupAfterMin,
     reminderUnconfirmedH: before.reminderUnconfirmedH,
+    reminderRepeatH: before.reminderRepeatH,
     unfilledWarningDays: before.unfilledWarningDays,
   }
 

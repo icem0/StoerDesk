@@ -63,6 +63,7 @@ export type OncallSettings = {
   swapRequiresAdminApproval: boolean
   escalateToGroupAfterMin: number // 1–1440 (minutes)
   reminderUnconfirmedH: number // 1–720 (hours)
+  reminderRepeatH: number // 1–72 (hours)
   unfilledWarningDays: number // 1–365 (days)
   defaultPoolId: string | undefined // UUID of an active pool
 }
@@ -74,6 +75,7 @@ export const ONCALL_SETTINGS_DEFAULTS: OncallSettings = {
   swapRequiresAdminApproval: true,
   escalateToGroupAfterMin: 10,
   reminderUnconfirmedH: 24,
+  reminderRepeatH: 4,
   unfilledWarningDays: 14,
   defaultPoolId: undefined,
 }
@@ -372,6 +374,13 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
       ? values.reminderUnconfirmedH
       : ONCALL_SETTINGS_DEFAULTS.reminderUnconfirmedH
 
+  const reminderRepeatH =
+    isInteger(values.reminderRepeatH) &&
+    values.reminderRepeatH >= 1 &&
+    values.reminderRepeatH <= 72
+      ? values.reminderRepeatH
+      : ONCALL_SETTINGS_DEFAULTS.reminderRepeatH
+
   const unfilledWarningDays =
     isInteger(values.unfilledWarningDays) &&
     values.unfilledWarningDays >= 1 &&
@@ -391,6 +400,7 @@ export function resolveOncallSettings(values: Record<string, unknown>): OncallSe
     swapRequiresAdminApproval,
     escalateToGroupAfterMin,
     reminderUnconfirmedH,
+    reminderRepeatH,
     unfilledWarningDays,
     defaultPoolId,
   }

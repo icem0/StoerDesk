@@ -1,8 +1,8 @@
-# WP-M23-09b: the urgency of the reminder rises
+# WP-M23-09d: the urgency of the reminder rises
 
 format: small-model
 status: planned
-depends-on: WP-M23-09a
+depends-on: WP-M23-09b
 phase: 23
 milestone: m23
 context-budget: 20k tokens
@@ -27,7 +27,7 @@ interfaces:
 
 - `MessageOptions.urgency` — the urgency of one message: `normal` or `high`
 - `readinessMessageOf(target)` — the message of a readiness row carries the
-  priority of the row; a further reminder of a shift that was not accepted
+  number of the reminder; a further reminder of a shift that was not accepted
   arrives with the higher urgency
 
 ## Task
@@ -35,7 +35,7 @@ interfaces:
 1. The message of a readiness row carries no priority today
    (`readinessMessageOf` in `apps/api/src/notifications/outbox.ts`), so the
    reminder of a shift that was not accepted arrives like any other message.
-   The row of the sweep carries the number of the reminder (WP-M23-09a): the
+   The row of the sweep carries the number of the reminder (WP-M23-09b): the
    second reminder and every further one carry the higher urgency.
 2. The urgency reaches the channels: `MessageOptions` gains the field
    `urgency`, the push of the browser sends it as `urgency: 'high'` to the push
@@ -71,5 +71,5 @@ Expected: all green; the new tests fail before the change and pass after it.
   the browser, the test of the push, the two specs
 - Interfaces added: `MessageOptions.urgency`
 - Verified: the commands above
-- Follow-up WP: WP-M23-09c, WP-M23-09d
+- Follow-up WP: WP-M23-09e, WP-M23-09f
 - Open question: none

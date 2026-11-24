@@ -472,6 +472,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           swapRequiresAdminApproval: settingsResolved.swapRequiresAdminApproval,
           escalateToGroupAfterMin: settingsResolved.escalateToGroupAfterMin,
           reminderUnconfirmedH: settingsResolved.reminderUnconfirmedH,
+          reminderRepeatH: settingsResolved.reminderRepeatH,
           unfilledWarningDays: settingsResolved.unfilledWarningDays,
           defaultPoolId: settingsResolved.defaultPoolId ?? null,
         })
@@ -503,6 +504,7 @@ export const oncallRoutes = fp<OncallRoutesOptions>(
           swapRequiresAdminApproval: written.swapRequiresAdminApproval,
           escalateToGroupAfterMin: written.escalateToGroupAfterMin,
           reminderUnconfirmedH: written.reminderUnconfirmedH,
+          reminderRepeatH: written.reminderRepeatH,
           unfilledWarningDays: written.unfilledWarningDays,
           defaultPoolId: written.defaultPoolId ?? null,
         })

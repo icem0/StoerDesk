@@ -264,6 +264,7 @@ export const oncallSettingsResponseSchema = z.object({
   swapRequiresAdminApproval: z.boolean(),
   escalateToGroupAfterMin: z.number().int().min(1).max(1440),
   reminderUnconfirmedH: z.number().int().min(1).max(720),
+  reminderRepeatH: z.number().int().min(1).max(72),
   unfilledWarningDays: z.number().int().min(1).max(365),
   defaultPoolId: z.string().uuid().nullable(),
 })
@@ -279,6 +280,7 @@ export const updateOncallSettingsRequestSchema = z
     'oncall.swap_requires_admin_approval': z.boolean().optional(),
     'oncall.escalate_to_group_after_min': z.number().int().min(1).max(1440).optional(),
     'oncall.reminder_unconfirmed_h': z.number().int().min(1).max(720).optional(),
+    'oncall.reminder_repeat_h': z.number().int().min(1).max(72).optional(),
     'oncall.unfilled_warning_days': z.number().int().min(1).max(365).optional(),
     'oncall.default_pool_id': z.string().uuid().nullable().optional(),
   })

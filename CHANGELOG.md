@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The interval of the repeated reminder (**WP-M23-09a**, phase 23): the setting
+  `oncall.reminder_repeat_h` says how many hours pass between two reminders of
+  a shift that was not accepted; the default is four hours.
+
 ### Changed
 - A reassignment notifies the new technician (**WP-M23-08**, phase 23): the
   guard against a second announcement looked at the shift alone, so a

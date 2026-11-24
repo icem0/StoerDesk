@@ -847,15 +847,17 @@ copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
 **WP-M23-09 — the repeated reminder of a shift that was not accepted (planned).**
-The package is split into four children: **WP-M23-09a** repeats the reminder
-(the sweep of `enqueueOncallReminders` sends today one reminder per shift and
-never again, because a sent row stays in the table; the new rule counts the
-reminders and sends a further one after the new setting
-`oncall.reminder_repeat_h`), **WP-M23-09b** lets the urgency rise (the message
-of a readiness row carries no priority today, so the reminder arrives like any
-other message; ntfy and the push of the browser learn the level),
-**WP-M23-09c** gives the admin the route `POST
-/api/v1/oncall/shifts/:id/remind` and **WP-M23-09d** the button „Erinnern" in
+The package is split into six children: **WP-M23-09a** adds the setting
+`oncall.reminder_repeat_h` (the hours between two reminders; the default is
+`4`), **WP-M23-09b** repeats the reminder (the sweep of
+`enqueueOncallReminders` sends today one reminder per shift and never again,
+because a sent row stays in the table; the new rule counts the reminders and
+sends a further one after the interval of the setting), **WP-M23-09c** lets
+the administration set the interval, **WP-M23-09d** lets the urgency rise
+(the message of a readiness row carries no priority today, so the reminder
+arrives like any other message; ntfy and the push of the browser learn the
+level), **WP-M23-09e** gives the admin the route `POST
+/api/v1/oncall/shifts/:id/remind` and **WP-M23-09f** the button „Erinnern" in
 the list of the open shifts.
 
 **WP-M23-05 — the admin deletes a shift that was never confirmed (done).** The

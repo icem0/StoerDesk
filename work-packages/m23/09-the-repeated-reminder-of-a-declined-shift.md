@@ -33,23 +33,21 @@ interfaces:
 
 ## Task
 
-The package is split into four children — every child is a commit of its own:
+The package is split into six children — every child is a commit of its own:
 
-1. **WP-M23-09a** — the sweep repeats the reminder of a shift that was not
-   accepted: today it queues one `oncall.unconfirmed_reminder` per shift and
-   skips the shift while such a row is `PENDING` or `SENT`. The new rule counts
-   the reminders of a shift and sends a further one after the configured
-   interval; the row of the sweep carries the number of the reminder, so the
-   history of the shift shows how often the office was asked.
-2. **WP-M23-09b** — the urgency of the notification rises with every further
-   reminder: the channel selection of `specs/10-notifications.md` §11.4 reads
-   the urgency of the event, so a shift that was not accepted for a long time
-   arrives louder than the first reminder. The rules of the channels and the
-   fallback chain stay as they are.
-3. **WP-M23-09c** — the admin of the readiness sends the reminder of one shift
-   by hand: `POST /api/v1/oncall/shifts/:id/remind` (`oncall.admin`).
-4. **WP-M23-09d** — the button „Erinnern" in the list of the open shifts of
-   the readiness view.
+1. **WP-M23-09a** — the setting `oncall.reminder_repeat_h` joins the keys of
+   the readiness: the shared contract, the keys of the database and the route
+   of the settings.
+2. **WP-M23-09b** — the sweep repeats the reminder: it counts the reminders of
+   the shift and sends a further one after the interval of the setting; the row
+   of the sweep carries the number of the reminder.
+3. **WP-M23-09c** — the administration sets the interval.
+4. **WP-M23-09d** — the urgency of the message rises with every further
+   reminder: the message of a readiness row carries the level, ntfy and the
+   push of the browser learn it.
+5. **WP-M23-09e** — the admin sends the reminder of one shift by hand:
+   `POST /api/v1/oncall/shifts/:id/remind` (`oncall.admin`).
+6. **WP-M23-09f** — the button „Erinnern" in the list of the open shifts.
 
 ## Non-goals
 
