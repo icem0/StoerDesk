@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - The settings menu is single-column with a symbol and a description per entry
+  (**WP-M29-03**, phase 29, ADR-0051): a shared `settings-menu.tsx` component
+  renders the groups „Mein Bereich“, „Darstellung“, „Objekte“, „Verwaltung“
+  (as topic pages) and „Konto“; a search field filters label and description and
+  the sections are collapsible. The work surfaces leave the menu (they live in
+  the header menu). The menu texts moved from `auth.links.*` to `app.settings.*`.
+- The settings menu is single-column with a symbol and a description per entry
   (**WP-M29-01**, phase 29, ADR-0051): the specification (§14.10/§14.11) names the
   groups „Mein Bereich“, „Darstellung“, „Objekte“, „Verwaltung“ (as topic pages)
   and „Konto“; the administration splits into the overview pages Benutzer &

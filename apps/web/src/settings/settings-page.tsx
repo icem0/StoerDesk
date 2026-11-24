@@ -9,17 +9,20 @@ import { LogoutButton } from '../auth/login-form'
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { isAlarmToneEnabled, playAlarmTone, setAlarmToneEnabled } from '../lib/alarm-tone'
+import { SettingsMenu } from './settings-menu'
 import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
 
 /**
  * Settings overview (WP-M12-07): every settings and administration surface in
- * one place, grouped by topic. The gear in the shell header links here instead
- * of opening a dropdown, so a page never hides its destinations behind a menu.
- * The administration home is gone (WP-M14-01): the administration group lists
- * every module of the administration directly. A channel with failed rows in the
- * outbox is visible here as well (WP-M14-19, §11.8): a badge in the header names
- * the number of the failing channels until every channel works again — the
- * warning is not only the list on the channel page and the tile of the dashboard.
+ * one place, grouped by topic — single-column (WP-M29-03). The gear in the
+ * shell header links here instead of opening a dropdown, so a page never hides
+ * its destinations behind a menu. The administration home is gone
+ * (WP-M14-01): the administration group links to four topic pages
+ * (Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand) whose
+ * links open the modules. A channel with failed rows in the outbox is visible
+ * here as well (WP-M14-19, §11.8): a badge in the header names the number of
+ * the failing channels until every channel works again — the warning is not
+ * only the list on the channel page and the tile of the dashboard.
  *
  * Since WP-M14-161c the badge is the **link** to the page of the delivery
  * problems (`/admin/delivery`): there the admin sees the problem and quits it.
@@ -31,58 +34,44 @@ import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
  * (ADR-0036): the menu of the presentation follows the colour the
  * administration saved under „Darstellung“, so a branded instance paints its
  * frame everywhere the shell and the settings menu are.
+ *
+ * The daily work surfaces (Meldungen, Statistik, „Neue Störung melden“) live in
+ * the header menu, so they do not stand in this menu a second time; „Meine
+ * Bereitschaft“ opens the same `/oncall` as the header entry and moves onto the
+ * readiness topic page.
  */
 
 const SETTINGS_SECTIONS = [
   {
     key: 'personal',
     items: [
-      { key: 'mySettings', path: '/settings/me' },
-      { key: 'notifications', path: '/settings/notifications' },
-      { key: 'myShifts', path: '/oncall' },
+      { key: 'mySettings', path: '/settings/me', icon: 'user' },
+      { key: 'notifications', path: '/settings/notifications', icon: 'bell' },
     ],
   },
   {
     key: 'appearance',
     items: [
-      { key: 'branding', path: '/admin/branding' },
-      { key: 'dashboardSettings', path: '/admin/dashboard' },
-    ],
-  },
-  {
-    key: 'operations',
-    items: [
-      { key: 'tickets', path: '/tickets' },
-      { key: 'ticketCreate', path: '/tickets/create' },
-      { key: 'stats', path: '/stats' },
+      { key: 'branding', path: '/admin/branding', icon: 'palette' },
+      { key: 'dashboardSettings', path: '/admin/dashboard', icon: 'monitor' },
     ],
   },
   {
     key: 'objects',
     items: [
-      { key: 'objects', path: '/objects' },
-      { key: 'stickers', path: '/objects/stickers' },
-      { key: 'stickerTemplate', path: '/admin/sticker-template' },
+      { key: 'objects', path: '/objects', icon: 'package' },
+      { key: 'stickers', path: '/objects/stickers', icon: 'qr-code' },
+      { key: 'stickerTemplate', path: '/admin/sticker-template', icon: 'palette' },
     ],
   },
   {
     key: 'administration',
+    collapsible: true,
     items: [
-      { key: 'users', path: '/admin/users' },
-      { key: 'roles', path: '/admin/roles' },
-      { key: 'groups', path: '/admin/groups' },
-      { key: 'standardTexts', path: '/admin/text-templates' },
-      { key: 'detectedErrors', path: '/admin/detected-errors' },
-      { key: 'escalation', path: '/admin/escalation' },
-      { key: 'defaults', path: '/admin/defaults' },
-      { key: 'oncall', path: '/admin/oncall' },
-      { key: 'bmaSync', path: '/admin/bma-sync' },
-      { key: 'apiKeys', path: '/admin/api-keys' },
-      { key: 'channels', path: '/admin/channels' },
-      { key: 'email', path: '/admin/email' },
-      { key: 'delivery', path: '/admin/delivery' },
-      { key: 'statuses', path: '/admin/statuses' },
-      { key: 'webhooks', path: '/admin/webhooks' },
+      { key: 'access', path: '/admin/access', icon: 'users' },
+      { key: 'workflow', path: '/admin/workflow', icon: 'sliders' },
+      { key: 'readiness', path: '/admin/readiness', icon: 'calendar' },
+      { key: 'messaging', path: '/admin/messaging', icon: 'radio' },
     ],
   },
 ] as const
@@ -114,7 +103,7 @@ export function SettingsPage() {
   return (
     <section className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold">{t('app.settings')}</h1>
+        <h1 className="text-xl font-semibold">{t('app.settings.title')}</h1>
         <p className="text-sm text-slate-400">{t('app.settingsHint')}</p>
         {me.data ? (
           <p className="mt-1 text-sm text-slate-400">
@@ -132,31 +121,19 @@ export function SettingsPage() {
         ) : null}
       </div>
 
-      {SETTINGS_SECTIONS.map((section) => (
-        <section className="flex flex-col gap-1" key={section.key}>
-          <h2 className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t(`app.settingsGroups.${section.key}`)}
-          </h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {section.items.map((item) => (
-              <li key={item.key}>
-                <NavLink
-                  className={({ isActive }) =>
-                    `flex min-h-11 items-center rounded-xl border px-4 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
-                      isActive
-                        ? 'border-accent-500/40 bg-accent-600/10 text-accent-300'
-                        : 'border-slate-700 bg-slate-900/60 text-slate-200 hover:border-slate-600 hover:bg-slate-800/60'
-                    }`
-                  }
-                  to={item.path}
-                >
-                  {t(`auth.links.${item.key}`)}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <SettingsMenu
+        sections={SETTINGS_SECTIONS.map((section) => ({
+          ...section,
+          label: t(`app.settingsGroups.${section.key}`),
+          items: section.items.map((item) => ({
+            ...item,
+            label: t(`app.settingsItems.${item.key}`),
+            description: t(`app.settingsItemDescriptions.${item.key}`, {
+              defaultValue: '',
+            }),
+          })),
+        }))}
+      />
 
       {alarmQuery.isSuccess && alarmQuery.data.toneEnabled && !toneUnlocked ? (
         <section className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">

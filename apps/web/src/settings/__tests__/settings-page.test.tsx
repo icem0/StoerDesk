@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -28,7 +28,7 @@ afterEach(() => {
 })
 
 describe('SettingsPage', () => {
-  it('groups every settings destination by topic', async () => {
+  it('groups every settings destination by topic in one column', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -48,47 +48,91 @@ describe('SettingsPage', () => {
     expect(await screen.findByText('Angemeldet als admin@example.com')).toBeTruthy()
 
     for (const heading of [
-      'Persönlich',
+      'Mein Bereich',
       'Darstellung',
-      'Meldungen',
       'Objekte',
-      'Verwaltung',
       'Konto',
     ]) {
       expect(screen.getByRole('heading', { level: 2, name: heading })).toBeTruthy()
     }
 
-    expect(screen.getByRole('link', { name: 'Meine Einstellungen' }).getAttribute('href')).toBe(
-      '/settings/me',
-    )
-    expect(screen.getByRole('link', { name: 'Darstellung' }).getAttribute('href')).toBe(
-      '/admin/branding',
-    )
-    expect(screen.getByRole('link', { name: 'Eskalation' }).getAttribute('href')).toBe(
-      '/admin/escalation',
-    )
-    expect(screen.getByRole('link', { name: 'Standardwerte' }).getAttribute('href')).toBe(
-      '/admin/defaults',
-    )
-    expect(screen.getByRole('link', { name: 'QR-Aufkleber' }).getAttribute('href')).toBe(
-      '/objects/stickers',
-    )
+    // „Verwaltung“ ist ein aufklappbarer Abschnitt: seine Überschrift steht im
+    // summary-Element, nicht als h2.
+    expect(screen.getByText('Verwaltung')).toBeTruthy()
 
-    // The administration home is gone (WP-M14-01): every administration module
-    // is a link of the settings menu, there is no second entry point.
+    // Den aufklappbaren Verwaltungs-Abschnitt öffnen, damit seine Links sichtbar werden.
+    fireEvent.click(screen.getByText('Verwaltung'))
+    await waitFor(() => expect(screen.getByText('Meldungsablauf')).toBeTruthy())
+
+    const linkOf = (href: string) =>
+      screen.getAllByRole('link').find((link) => link.getAttribute('href') === href)
+
+    expect(linkOf('/settings/me')?.textContent).toContain('Meine Einstellungen')
+    expect(linkOf('/admin/branding')?.textContent).toContain('Darstellung & Logo')
+    expect(linkOf('/admin/workflow')?.textContent).toContain('Meldungsablauf')
+    expect(linkOf('/admin/readiness')?.textContent).toContain('Bereitschaft')
+    expect(linkOf('/admin/messaging')?.textContent).toContain('Kanäle & Versand')
+    expect(linkOf('/objects/stickers')?.textContent).toContain('QR-Aufkleber')
+
+    // The work surfaces live in the header menu and do not stand here a second time,
+    // and „Meine Bereitschaft“ opens the same /oncall as the header entry.
+    for (const href of ['/tickets', '/tickets/create', '/stats', '/oncall']) {
+      expect(document.querySelector(`a[href="${href}"]`)).toBeNull()
+    }
+
+    // Every entry carries its symbol (the delivery badge above the groups is
+    // not a menu entry and has no list item).
+    for (const link of screen.getAllByRole('link')) {
+      const row = link.closest('li')
+      if (!row) {
+        continue
+      }
+      expect(row.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    }
+
+    // The administration home is gone: there is no link to /admin itself, the
+    // modules are behind the four topic pages of the „Verwaltung“ section.
     const administrationLinks = screen
       .getAllByRole('link')
       .filter((link) => link.getAttribute('href')?.startsWith('/admin'))
       .map((link) => link.getAttribute('href'))
 
-    expect(administrationLinks).toContain('/admin/users')
+    expect(administrationLinks).toContain('/admin/access')
+    expect(administrationLinks).toContain('/admin/workflow')
+    expect(administrationLinks).toContain('/admin/readiness')
+    expect(administrationLinks).toContain('/admin/messaging')
     expect(administrationLinks).not.toContain('/admin')
 
     expect(screen.getByRole('button', { name: 'Abmelden' })).toBeTruthy()
+    expect(screen.getByLabelText('Einstellungen suchen')).toBeTruthy()
 
     // No channel may fail for an account without `notification.read`: the badge
     // is not rendered and the status route is never called (WP-M14-19).
     expect(screen.queryByText(/\(\d+\)$/)).toBeNull()
+  })
+
+  it('finds entries through the search field', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input).endsWith('/v1/me')) {
+          return Response.json({
+            user: { email: 'admin@example.com', roles: ['admin'], permissions: [] },
+          })
+        }
+
+        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+      }),
+    )
+
+    renderPage()
+
+    const input = screen.getByLabelText('Einstellungen suchen')
+    input.focus()
+    fireEvent.input(input, { target: { value: 'Logo' } })
+
+    expect(screen.getByText('Darstellung & Logo')).toBeTruthy()
+    expect(screen.queryByText('Meine Einstellungen')).toBeNull()
   })
 
   it('shows the badge of the open delivery problems as a link to the problems', async () => {
@@ -169,7 +213,23 @@ describe('SettingsPage', () => {
         }
 
         if (url.includes('/v1/notifications/delivery')) {
-          return Response.json({ problems: [], failures: [] })
+          return Response.json({
+            problems: [
+              {
+                channel: 'signal',
+                failed: 2,
+                unacknowledged: 2,
+                lastSentAt: '2026-11-13T08:00:00.000Z',
+                lastFailedAt: '2026-11-13T09:30:00.000Z',
+                lastSuccessAt: '2026-11-13T08:00:00.000Z',
+                lastError: 'send_failed',
+                acknowledgedAt: null,
+                acknowledgedBy: null,
+                open: true,
+              },
+            ],
+            failures: [],
+          })
         }
 
         return Response.json({ code: 'not_found', params: {} }, { status: 404 })
@@ -178,9 +238,10 @@ describe('SettingsPage', () => {
 
     renderPage()
 
-    const link = await screen.findByRole('link', { name: 'Zustellungsprobleme' })
-
-    expect(link.getAttribute('href')).toBe('/admin/delivery')
-    expect(screen.queryByText(/\(\d+\)$/)).toBeNull()
+    // Das Abzeichen rendert asynchron, nachdem die Zustellung abgefragt wurde.
+    const badge = await screen.findByText(/Zustellung gestört \(\d+\)/)
+    const link = badge.closest('a')
+    expect(link).not.toBeNull()
+    expect(link?.getAttribute('href')).toBe('/admin/delivery')
   })
 })

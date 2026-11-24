@@ -4,7 +4,12 @@
     "title": "StörDesk",
     "setupNotice": "Environment is set up. Implementation follows after specification approval.",
     "version": "Version",
-    "settings": "Settings",
+    "settings": {
+      "title": "Settings",
+      "searchLabel": "Search settings",
+      "searchPlaceholder": "Search …",
+      "empty": "No settings found."
+    },
     "settingsHint": "All settings and areas in one place, grouped by topic.",
     "channelWarning": {
       "badge": "Failing channels ({{count}})"
@@ -20,10 +25,35 @@
     "settingsGroups": {
       "personal": "Personal",
       "appearance": "Appearance",
-      "operations": "Operations",
       "objects": "Objects",
       "administration": "Administration",
       "account": "Account"
+    },
+    "settingsItems": {
+      "mySettings": "My settings",
+      "notifications": "Notifications",
+      "branding": "Appearance & logo",
+      "dashboardSettings": "Dashboard & TV",
+      "objects": "Objects",
+      "stickers": "QR stickers",
+      "stickerTemplate": "Sticker template",
+      "access": "Users & rights",
+      "workflow": "Message flow",
+      "readiness": "Readiness",
+      "messaging": "Channels & delivery"
+    },
+    "settingsItemDescriptions": {
+      "mySettings": "Name, language, theme and password of your account",
+      "notifications": "The channels the system reaches you on",
+      "branding": "Company name, logo and colours of the interface",
+      "dashboardSettings": "Tiles and the wall display",
+      "objects": "Master data of the objects and systems",
+      "stickers": "Print sheets for reports on site",
+      "stickerTemplate": "Geometry and appearance of the sticker sheets",
+      "access": "Users, roles and groups",
+      "workflow": "Statuses, fault types, escalation and default values",
+      "readiness": "Readiness plan and your own readiness",
+      "messaging": "Channels, delivery, mailbox, webhooks and API keys"
     },
     "notFound": {
       "title": "Page not found",
@@ -87,33 +117,6 @@
     "fields": {
       "email": "E-mail",
       "password": "Password"
-    },
-    "links": {
-      "tickets": "Tickets",
-      "ticketCreate": "Report a malfunction",
-      "objects": "Objects",
-      "users": "User administration",
-      "roles": "Role administration",
-      "groups": "Groups",
-      "bmaSync": "BMAcloud sync",
-      "oncall": "On-call plan",
-      "myShifts": "My on-call shifts",
-      "mySettings": "My settings",
-      "standardTexts": "Fault types",
-      "detectedErrors": "Detected errors",
-      "stickers": "QR stickers",
-      "stats": "Statistics",
-      "dashboardSettings": "Dashboard and statistics",
-      "apiKeys": "API keys",
-      "channels": "Channels",
-      "delivery": "Delivery problems",
-      "webhooks": "Webhooks",
-      "branding": "Appearance",
-      "escalation": "Escalation",
-      "notifications": "Notifications",
-      "statuses": "Statuses",
-      "defaults": "Default values",
-      "stickerTemplate": "Template of the stickers"
     },
     "errors": {
       "invalid_credentials": "Sign-in failed. E-mail or password is wrong.",

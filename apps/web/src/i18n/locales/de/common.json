@@ -4,7 +4,12 @@
     "title": "StörDesk",
     "setupNotice": "Umgebung ist eingerichtet. Die Umsetzung erfolgt nach Freigabe der Spezifikation.",
     "version": "Version",
-    "settings": "Einstellungen",
+    "settings": {
+      "title": "Einstellungen",
+      "searchLabel": "Einstellungen suchen",
+      "searchPlaceholder": "Suche …",
+      "empty": "Keine Einstellung gefunden."
+    },
     "settingsHint": "Alle Einstellungen und Bereiche an einem Ort, nach Themen gruppiert.",
     "channelWarning": {
       "badge": "Zustellung gestört ({{count}})"
@@ -18,12 +23,37 @@
     },
     "titleWithCompany": "{{company}} @ {{product}}",
     "settingsGroups": {
-      "personal": "Persönlich",
+      "personal": "Mein Bereich",
       "appearance": "Darstellung",
-      "operations": "Meldungen",
       "objects": "Objekte",
       "administration": "Verwaltung",
       "account": "Konto"
+    },
+    "settingsItems": {
+      "mySettings": "Meine Einstellungen",
+      "notifications": "Benachrichtigungen",
+      "branding": "Darstellung & Logo",
+      "dashboardSettings": "Dashboard & TV",
+      "objects": "Objekte",
+      "stickers": "QR-Aufkleber",
+      "stickerTemplate": "Sticker-Vorlage",
+      "access": "Benutzer & Rechte",
+      "workflow": "Meldungsablauf",
+      "readiness": "Bereitschaft",
+      "messaging": "Kanäle & Versand"
+    },
+    "settingsItemDescriptions": {
+      "mySettings": "Name, Sprache, Thema und Passwort des eigenen Kontos",
+      "notifications": "Kanäle, über die das System dich erreicht",
+      "branding": "Firmenname, Logo und Farben der Oberfläche",
+      "dashboardSettings": "Kacheln und die Fernsehanzeige",
+      "objects": "Stammdaten der Anlagen und Systeme",
+      "stickers": "Druckbogen für die Meldung vor Ort",
+      "stickerTemplate": "Geometrie und Aussehen der Aufkleberbögen",
+      "access": "Benutzer, Rollen und Gruppen",
+      "workflow": "Status, Störungsarten, Eskalation und Standardwerte",
+      "readiness": "Bereitschaftsplan und die eigene Bereitschaft",
+      "messaging": "Kanäle, Zustellung, Mailbox, Webhooks und API-Schlüssel"
     },
     "notFound": {
       "title": "Seite nicht gefunden",
@@ -87,33 +117,6 @@
     "fields": {
       "email": "E-Mail",
       "password": "Passwort"
-    },
-    "links": {
-      "tickets": "Meldungen",
-      "ticketCreate": "Neue Störung melden",
-      "objects": "Objekte",
-      "users": "Benutzerverwaltung",
-      "roles": "Rollenverwaltung",
-      "groups": "Gruppen",
-      "bmaSync": "BMAcloud-Abgleich",
-      "oncall": "Bereitschaftsplan",
-      "myShifts": "Meine Bereitschaft",
-      "mySettings": "Meine Einstellungen",
-      "standardTexts": "Störungsarten",
-      "detectedErrors": "Festgestellte Fehler",
-      "stickers": "QR-Aufkleber",
-      "stats": "Statistik",
-      "dashboardSettings": "Dashboard und Statistik",
-      "apiKeys": "API-Schlüssel",
-      "channels": "Kanäle",
-      "delivery": "Zustellungsprobleme",
-      "webhooks": "Webhooks",
-      "branding": "Darstellung",
-      "escalation": "Eskalation",
-      "notifications": "Benachrichtigungen",
-      "statuses": "Status",
-      "defaults": "Standardwerte",
-      "stickerTemplate": "Vorlage der Aufkleber"
     },
     "errors": {
       "invalid_credentials": "Anmeldung fehlgeschlagen. E-Mail oder Passwort ist falsch.",
