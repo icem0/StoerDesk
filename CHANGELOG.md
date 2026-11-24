@@ -51,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The log of the mailbox (**WP-M24-20**, phase 24, ADR-0046): the page
+   shows the last deliveries with the time, the event, the
+  masked recipient and the result — the mail path is the only channel whose
+  failure was invisible otherwise.
 - The exit criterion of phase 24 (**WP-M24-19**, phase 24, ADR-0045): the
   message of a user goes over his confirmed channels, a user without a
   confirmed channel is notified over the chain of the installation, the code
