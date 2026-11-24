@@ -23,6 +23,11 @@ export interface MatrixLinkingConfig {
   matrixId: string
   /** The access token of the user — write-only, never answered */
   accessToken: string
+  /**
+   * The room of the user — the target of the messages (§11.3a): a room id or a
+   * room alias, which the server resolves with the token of the user.
+   */
+  room?: string
 }
 
 /** The machine-readable code of a refused linking. */
@@ -118,10 +123,49 @@ export async function storeMatrixAccount(
   fetchImpl: typeof fetch = fetch,
 ): Promise<NotificationAccount> {
   const verified = await verifyMatrixAccount(config, fetchImpl)
+  const room = await resolveRoom(config, fetchImpl)
 
   return storeAccount(database, userId, {
     channel: 'matrix',
     externalId: verified.matrixId,
     secret: config.accessToken,
+    ...(room === '' ? {} : { target: room }),
   })
+}
+
+/**
+ * The room of the user (`specs/10-notifications.md` §11.3a): a room id stays
+ * as it is, a room alias (`#office:example.org`) is resolved with the token of
+ * the user over `GET /_matrix/client/v3/directory/room/{alias}`. Without a room
+ * the target of the account stays empty — the account is linked, not set up.
+ */
+async function resolveRoom(
+  config: MatrixLinkingConfig,
+  fetchImpl: typeof fetch,
+): Promise<string> {
+  const room = (config.room ?? '').trim()
+
+  if (room === '' || !room.startsWith('#')) {
+    return room
+  }
+
+  const base = config.homeserver.trim().replace(/\/+$/, '')
+
+  try {
+    const response = await fetchImpl(
+      `${base}/_matrix/client/v3/directory/room/${encodeURIComponent(room)}`,
+      { headers: { authorization: `Bearer ${config.accessToken}` } },
+    )
+
+    if (!response.ok) {
+      return room
+    }
+
+    const answer = (await response.json()) as { room_id?: unknown }
+    const roomId = answer.room_id
+
+    return typeof roomId === 'string' && roomId !== '' ? roomId : room
+  } catch {
+    return room
+  }
 }

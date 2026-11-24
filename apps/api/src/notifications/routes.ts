@@ -10,6 +10,7 @@ import {
   channelConfigurationSchema,
   channelStatusListResponseSchema,
   deliveryProblemsResponseSchema,
+  emailAccountRequestSchema,
   channelVerificationResponseSchema,
   confirmChannelVerificationRequestSchema,
   confirmNotificationVerificationRequestSchema,
@@ -961,6 +962,34 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
 
           throw error
         }
+      },
+    )
+
+    /**
+     * `POST /api/v1/notifications/accounts/email` (`specs/10-notifications.md`
+     * §11.3, §11.11, WP-M24-09, ADR-0046): the own mail address becomes the
+     * account of the e-mail channel. The address is the target of the messages
+     * of the user; the user proves it with the one-time code of §11.3a.
+     */
+    app.post(
+      '/api/v1/notifications/accounts/email',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const body = emailAccountRequestSchema.safeParse(request.body)
+
+        if (!body.success) {
+          return reply
+            .code(422)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(body.error) } })
+        }
+
+        const account = await storeAccount(database, request.user?.id ?? '', {
+          channel: 'email',
+          externalId: body.data.address,
+          label: body.data.address,
+        })
+
+        return notificationAccountSchema.parse(account)
       },
     )
 

@@ -1,8 +1,8 @@
 # WP-M24-07: the broadcast of the installation goes to the mail addresses of the users
 
 format: small-model
-status: planned
-depends-on: WP-M24-06
+status: done
+depends-on: WP-M24-06c
 phase: 24
 milestone: m24
 context-budget: 12k tokens
@@ -11,32 +11,30 @@ spec-lines: 20
 
 files-read:
 
-- apps/api/src/escalation/actions.ts (the broadcast of a notify action)
-- apps/api/src/notifications/channels/email.ts (the mail without a recipient)
-- apps/api/src/users/ (the addresses of the users)
+- apps/api/src/notifications/channels/index.ts (the registry and the chain)
+- apps/api/src/notifications/channels/email.ts (the mail with its recipients)
+- apps/api/src/db/schema.ts (the users of the instance)
 
 files-write:
 
-- apps/api/src/notifications/channels/email.ts
-- apps/api/src/escalation/actions.ts
-- apps/api/src/notifications/__tests__/email.integration.spec.ts
+- apps/api/src/notifications/channels/index.ts
+- work-packages/m24/07-the-broadcast-goes-to-the-users.md
 
 interfaces:
 
-- `sendEmailNotification(config, message, pwaUrl, recipients)` — the mail names its recipients
-- `instanceMailRecipients(database)` — the mail addresses of the users of the instance
+- `instanceMailRecipients(env)` — the mail addresses of the active users of the instance
 
 ## Task
 
-1. Give the e-mail adapter the recipients it never had: a broadcast names the
-   mail addresses of the users of the instance, a personal message the address
-   of the user.
-2. Make the broadcast of a `notify` action without a target reach the users
-   over their mail address.
+1. Give the broadcast of the e-mail its recipients: the mail addresses of the
+   active users of the instance — the office is the list (ADR-0046). A personal
+   message goes to the address of the user alone.
+2. The addresses are read over the short-lived pool of the channel, the same
+   shape the web push and the WhatsApp bridge use.
 
 ## Non-goals
 
-- No HTML body — WP-M24-09.
+- No HTML body — WP-M24-10.
 - No change of the other channels.
 - No UI.
 
@@ -49,13 +47,12 @@ npm run test:run
 npm run wp:check
 ```
 
-Expected: all green; the test proves that the broadcast names the addresses of
-the users.
+Expected: all green.
 
 ## Handoff
 
-- Files changed: the adapter of the e-mail, the actions of the escalation, the test
-- Interfaces added: the recipients of the mail
+- Files changed: the registry of the channels
+- Interfaces added: the recipients of the broadcast
 - Verified: the commands above
-- Follow-up WP: WP-M24-09 — the e-mail channel with the recipient and the HTML body
+- Follow-up WP: WP-M24-09 — the mail address of the user and the room of the user
 - Open question: none

@@ -126,16 +126,19 @@ export async function storeAccount(
     account.channel === 'ntfy' && account.externalId === ''
       ? newNtfyTopic()
       : account.externalId
+  const target = account.target ?? ''
   const values: typeof notificationAccounts.$inferInsert = {
     userId,
     channel: account.channel,
     externalId,
     label: account.label ?? '',
+    target,
     updatedAt,
   }
   const set: Partial<typeof notificationAccounts.$inferInsert> = {
     externalId,
     label: account.label ?? '',
+    target,
     updatedAt,
   }
 

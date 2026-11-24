@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   seven switches are gone.
 
 ### Changed
+- The exit criterion of phase 14 names a channel the instance has
+  (**WP-M24-06f**, phase 24): the rule of the administration is refused with
+  `422` when it names a channel the instance does not have (§11.9) — the probe
+  names `matrix`, the channel of its environment, and its message still goes
+  over `ntfy`.
 - The delivery goes over the channels of the user (**WP-M24-06c**, phase 24,
   ADR-0045): the confirmed channels of the recipient carry the assignment, the
   answer of the assignment, the escalation that names him and the readiness of
@@ -46,6 +51,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tickets are gone.
 
 ### Added
+- The mail address of the user and the room of the user (**WP-M24-07**,
+  **WP-M24-09**, phase 24, ADR-0046): the e-mail channel gets the account of
+  the user — the own mail address, proven with the one-time code — and the
+  Matrix account gets its target, the room of the user (a room id or a room
+  alias, which the server resolves with the token of the user). The broadcast
+  of the e-mail reaches the mail addresses of the active users of the
+  instance: the office is the list.
 - The code over the channel confirms the account (**WP-M24-08**, phase 24,
   ADR-0045): the button of a channel sends a one-time code over that very
   channel — the topic, the chat, the room, the mail address, the bridge, the

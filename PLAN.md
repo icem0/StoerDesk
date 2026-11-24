@@ -804,6 +804,16 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M24-06f — the exit criterion names a channel the instance has (done).**
+The check run of WP-M24-06c failed in the probe „the rule of the
+administration does not decide the way of a message“: the probe wrote the rule
+of the administration with `requiredChannels: ['ntfy']` and got `422` instead
+of `200`. The route refuses a required channel that the instance does not have
+(§11.9, WP-M24-04) — and the instance of the check run has no `ntfy`. The
+probe names `matrix`, the channel its environment configures, and its message
+keeps its `ntfy`: the rule names a channel and the message goes over another
+one, which is what the probe proves.
+
 **WP-M24-06d — the readiness selection leaves the web (done).** The check run
 failed in `apps/web/src/settings/__tests__/readiness-selection.test.tsx`: the
 test waited for the checkboxes of the readiness block on the own page, and

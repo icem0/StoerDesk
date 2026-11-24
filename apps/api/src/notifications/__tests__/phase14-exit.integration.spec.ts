@@ -360,7 +360,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'PUT',
         url: '/api/v1/settings/notifications/channel-policy',
         headers: { cookie: sessionCookie },
-        payload: { requiredChannels: ['ntfy'], minimumChannelCount: 2 },
+        // A required channel must be a channel the instance has (§11.9): the
+        // route refuses the rest with `422`. `matrix` is configured in this
+        // environment — the message below goes over `ntfy`, and the rule must
+        // not change that.
+        payload: { requiredChannels: ['matrix'], minimumChannelCount: 2 },
       })
 
       expect(put.statusCode).toBe(200)

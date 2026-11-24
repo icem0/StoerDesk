@@ -213,6 +213,8 @@ export const storeNotificationAccountRequestSchema = z.object({
   label: z.string().trim().max(200).optional(),
   /** A non-empty value replaces the stored secret; empty or missing leaves it untouched. */
   secret: z.string().max(4096).optional(),
+  /** The target of the user at the channel — the room of the user for Matrix. */
+  target: z.string().trim().max(1000).optional(),
 })
 
 /**
@@ -311,11 +313,27 @@ export const matrixLinkingRequestSchema = z.object({
   homeserver: z.string().trim().min(1).max(500),
   matrixId: z.string().trim().min(1).max(500),
   accessToken: z.string().trim().min(1).max(4096),
+  /**
+   * The room of the user — the target of the messages (§11.3a): a room id
+   * (`!abc:example.org`) or a room alias (`#office:example.org`), which the
+   * server resolves with the token of the user.
+   */
+  room: z.string().trim().min(1).max(500).optional(),
+})
+
+/**
+ * The mail address of a user (`specs/10-notifications.md` §11.3, ADR-0046):
+ * the address is the account of the e-mail channel of the user. The user
+ * proves the address with the one-time code of §11.3a.
+ */
+export const emailAccountRequestSchema = z.object({
+  address: z.string().trim().min(3).max(320),
 })
 
 export type TelegramLinkCodeResponse = z.infer<typeof telegramLinkCodeResponseSchema>
 export type RedeemTelegramLinkCodeRequest = z.infer<typeof redeemTelegramLinkCodeRequestSchema>
 export type MatrixLinkingRequest = z.infer<typeof matrixLinkingRequestSchema>
+export type EmailAccountRequest = z.infer<typeof emailAccountRequestSchema>
 
 /**
  * The rule of the administration (`specs/10-notifications.md` §11.9, ADR-0045):

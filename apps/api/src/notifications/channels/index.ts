@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import type { Env } from '../../config/env'
 import { databaseConnectionUrl } from '../../config/env'
 import { createDatabase } from '../../db/client'
-import { notificationChannels, pushSubscriptions } from '../../db/schema'
+import { notificationChannels, pushSubscriptions, users } from '../../db/schema'
 import { readWebPushConfiguration } from '../config'
 
 export interface NotificationMessage {
@@ -157,6 +157,28 @@ const ntfyChannel = async (
   )
 }
 
+/**
+ * The recipients of the broadcast of the e-mail (ADR-0046): the mail addresses
+ * of the users of the instance — the office is the list. A personal message
+ * goes to the address of the user alone; a row without a recipient reads the
+ * addresses of the users over its own short-lived pool, the same shape the
+ * web-push and the WhatsApp closures use.
+ */
+const instanceMailRecipients = async (env: Env): Promise<string[]> => {
+  const { client, database } = createDatabase(databaseConnectionUrl(env))
+
+  try {
+    const rows = await database
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.active, true))
+
+    return rows.map((row) => row.email).filter((address) => address !== '')
+  } finally {
+    await client.end({ timeout: 5 })
+  }
+}
+
 const emailChannel = async (
   env: Env,
   message: NotificationMessage,
@@ -164,9 +186,14 @@ const emailChannel = async (
 ): Promise<void> => {
   const { sendEmailNotification } = await import('./email.js')
 
+  const to =
+    options?.recipientTarget === undefined
+      ? await instanceMailRecipients(env)
+      : [options.recipientTarget]
+
   await sendEmailNotification(
     {
-      to: options?.recipientTarget === undefined ? [] : [options.recipientTarget],
+      to,
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_SECURE,
