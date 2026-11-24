@@ -8,7 +8,7 @@ milestone: m28
 context-budget: 60k tokens
 spec: PLAN.md §18.2 (the database of the integration tests)
 spec-lines: 30
-changed-lines: 782
+changed-lines: 781
 
 files-read:
 

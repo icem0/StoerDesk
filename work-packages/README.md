@@ -1801,7 +1801,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M28-02   | the integration tests of the API share one migrated template database — the pool of the test databases, the lock of the file and the cleanup between the files | done | yes     |
 | WP-M28-03   | the static gates of the check run in parallel — typecheck, lint, i18n and wp beside each other | done | yes     |
 | WP-M28-04   | the assertions of the migrations read the schema of the database instead of the text of the files | done | yes     |
-| WP-M28-04b  | the assertions of the migrations read the schema — the second part: the on-call tables, the notifications, the users, the administration, the webhooks and the configuration | planned | no      |
+| WP-M28-04b  | the assertions of the migrations read the schema — the second part: the on-call tables, the notifications, the users, the administration, the webhooks and the configuration | done | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

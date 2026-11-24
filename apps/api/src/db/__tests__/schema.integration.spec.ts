@@ -301,5 +301,333 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     })
 
+    describe('the tables of the on-call', () => {
+      it('creates the tables of the on-call migration', async () => {
+        const names = await tables()
+
+        expect(names).toEqual(
+          expect.arrayContaining([
+            'oncall_pools',
+            'oncall_shifts',
+            'oncall_swap_requests',
+            'oncall_events',
+          ]),
+        )
+      })
+
+      it('refuses a pool name that is empty', async () => {
+        await expectPgError('23514', () =>
+          client`insert into "oncall_pools" ("name") values ('  ')`,
+        )
+      })
+
+      it('refuses a state of a shift that the instance does not know', async () => {
+        const [pool] = await client`
+          insert into "oncall_pools" ("name") values (${`pool-${randomUUID()}`}) returning id
+        `
+
+        await expectPgError('23514', () =>
+          client`
+            insert into "oncall_shifts" ("pool_id", "starts_at", "ends_at", "state")
+            values (
+              ${pool?.id},
+              ${'2026-03-02T08:00:00.000Z'}::timestamptz,
+              ${'2026-03-02T12:00:00.000Z'}::timestamptz,
+              'MAYBE'
+            )
+          `,
+        )
+      })
+
+      it('refuses a second shift of a pool that starts at the same time', async () => {
+        const [pool] = await client`
+          insert into "oncall_pools" ("name") values (${`pool-${randomUUID()}`}) returning id
+        `
+        const starts = '2026-03-02T08:00:00.000Z'
+        const ends = '2026-03-02T12:00:00.000Z'
+
+        await client`
+          insert into "oncall_shifts" ("pool_id", "starts_at", "ends_at", "state")
+          values (
+            ${pool?.id},
+            ${starts}::timestamptz,
+            ${ends}::timestamptz,
+            'PLANNED'
+          )
+        `
+
+        await expectPgError('23505', () =>
+          client`
+            insert into "oncall_shifts" ("pool_id", "starts_at", "ends_at", "state")
+            values (
+              ${pool?.id},
+              ${starts}::timestamptz,
+              ${ends}::timestamptz,
+              'PLANNED'
+            )
+          `,
+        )
+      })
+
+      it('takes the shifts of a pool with the pool', async () => {
+        const [pool] = await client`
+          insert into "oncall_pools" ("name") values (${`pool-${randomUUID()}`}) returning id
+        `
+        const [shift] = await client`
+          insert into "oncall_shifts" ("pool_id", "starts_at", "ends_at", "state")
+          values (
+            ${pool?.id},
+            ${'2026-03-03T08:00:00.000Z'}::timestamptz,
+            ${'2026-03-03T12:00:00.000Z'}::timestamptz,
+            'PLANNED'
+          )
+          returning id
+        `
+
+        await client`delete from "oncall_pools" where id = ${pool?.id}`
+
+        const rows = await client`select 1 from "oncall_shifts" where id = ${shift?.id}`
+
+        expect(rows).toHaveLength(0)
+      })
+
+      it('protects the history of a shift against a change', async () => {
+        const [pool] = await client`
+          insert into "oncall_pools" ("name") values (${`pool-${randomUUID()}`}) returning id
+        `
+        const [shift] = await client`
+          insert into "oncall_shifts" ("pool_id", "starts_at", "ends_at", "state")
+          values (
+            ${pool?.id},
+            ${'2026-03-04T08:00:00.000Z'}::timestamptz,
+            ${'2026-03-04T12:00:00.000Z'}::timestamptz,
+            'PLANNED'
+          )
+          returning id
+        `
+        const [event] = await client`
+          insert into "oncall_events" ("shift_id", "actor_kind", "payload")
+          values (${shift?.id}, 'system', '{}') returning id
+        `
+
+        await expectPgError('P0001', () =>
+          client`update "oncall_events" set "payload" = '{}' where id = ${event?.id}`,
+        )
+      })
+    })
+
+    describe('the tables of the notifications', () => {
+      it('creates the tables of the outbox', async () => {
+        const names = await tables()
+
+        expect(names).toEqual(
+          expect.arrayContaining(['notification_channels', 'push_subscriptions', 'outbox']),
+        )
+      })
+
+      it('queues a row of the outbox as pending without an attempt', async () => {
+        const objectId = await newObject()
+        const ticketId = await newTicket(objectId)
+        const [row] = await client`
+          insert into "outbox" ("ticket_id", "channel", "event_type")
+          values (${ticketId}, 'ntfy', 'ticket.created') returning state, attempts
+        `
+
+        expect(row?.state).toBe('PENDING')
+        expect(row?.attempts).toBe(0)
+      })
+
+      it('refuses a state of the outbox that the instance does not know', async () => {
+        const objectId = await newObject()
+        const ticketId = await newTicket(objectId)
+
+        await expectPgError('23514', () =>
+          client`
+            insert into "outbox" ("ticket_id", "channel", "event_type", "state")
+            values (${ticketId}, 'ntfy', 'ticket.created', 'SENDING')
+          `,
+        )
+      })
+
+      it('refuses a second channel of the same kind', async () => {
+        await client`
+          insert into "notification_channels" ("kind", "name") values ('ntfy', ${`n-${randomUUID()}`})
+        `
+
+        await expectPgError('23505', () =>
+          client`
+            insert into "notification_channels" ("kind", "name") values ('ntfy', ${`n-${randomUUID()}`})
+          `,
+        )
+      })
+
+      it('knows the target and the confirmation of an account', async () => {
+        const columns = await columnsOf('notification_accounts')
+
+        expect(columns).toEqual(expect.arrayContaining(['target', 'verified_at']))
+      })
+
+      it('has no table of the selection per event type any more', async () => {
+        expect(await tables()).not.toContain('notification_preferences')
+      })
+    })
+
+    describe('the columns of the users', () => {
+      it('gives a new account the theme auto and no open password change', async () => {
+        const [row] = await client`
+          insert into "users" ("email", "password_hash") values (
+            ${`theme-${randomUUID()}@example.invalid`}, 'hash'
+          ) returning theme, "must_change_password"
+        `
+
+        expect(row?.theme).toBe('auto')
+        expect(row?.must_change_password).toBe(false)
+      })
+
+      it('refuses a theme that the instance does not know', async () => {
+        await expectPgError('23514', () =>
+          client`
+            insert into "users" ("email", "password_hash", "theme")
+            values (${`theme-${randomUUID()}@example.invalid`}, 'hash', 'neon')
+          `,
+        )
+      })
+
+      it('derives the family name of a user from the mail address', async () => {
+        const [row] = await client`select derive_user_family_name('jane.doe@example.invalid') as name`
+
+        expect(String(row?.name)).toBe('Janedoe')
+      })
+
+      it('refuses a name that is longer than 64 characters', async () => {
+        await expectPgError('23514', () =>
+          client`
+            insert into "users" ("email", "password_hash", "family_name")
+            values (${`long-${randomUUID()}@example.invalid`}, 'hash', ${'x'.repeat(65)})
+          `,
+        )
+      })
+    })
+
+    describe('the tables of the administration', () => {
+      it('keeps only the hash of the token of an api key', async () => {
+        const columns = await columnsOf('api_keys')
+
+        expect(columns).toEqual(expect.arrayContaining(['token_hash']))
+        expect(columns).not.toContain('token')
+      })
+
+      it('refuses a scope that the instance does not know', async () => {
+        await expectPgError('23514', () =>
+          client`
+            insert into "api_keys" ("name", "prefix", "token_hash", "scopes")
+            values (${`k-${randomUUID()}`}, 'abcd', 'hash', '{everything}')
+          `,
+        )
+      })
+
+      it('names the channel and the kind of the reporter of a ticket', async () => {
+        const columns = await columnsOf('tickets')
+
+        expect(columns).toEqual(
+          expect.arrayContaining(['reporter_channel', 'reporter_kind', 'reported_by_user_id']),
+        )
+      })
+
+      it('refuses a channel of the reporter that the instance does not know', async () => {
+        const objectId = await newObject()
+
+        await expectPgError('23514', () =>
+          client`
+            insert into "tickets" (
+              "object_id", "source", "reported_at", "deadline_at", "reporter_channel"
+            ) values (${objectId}, 'INTERNAL', now(), now() + interval '1 hour', 'carrier-pigeon')
+          `,
+        )
+      })
+
+      it('knows the detail of a failed update run', async () => {
+        const columns = await columnsOf('update_runs')
+
+        expect(columns).toEqual(expect.arrayContaining(['error_detail']))
+      })
+    })
+
+    describe('the tables of the webhooks and of the purges', () => {
+      it('creates the tables of the webhooks', async () => {
+        const names = await tables()
+
+        expect(names).toEqual(expect.arrayContaining(['webhook_endpoints', 'webhook_deliveries']))
+      })
+
+      it('refuses an event of a webhook that the instance does not know', async () => {
+        await expectPgError('23514', () =>
+          client`
+            insert into "webhook_endpoints" ("url", "secret", "events")
+            values ('https://example.invalid/hook', 'secret', '{ticket.deleted}')
+          `,
+        )
+      })
+
+      it('refuses a state of a delivery that the instance does not know', async () => {
+        const [endpoint] = await client`
+          insert into "webhook_endpoints" ("url", "secret", "events")
+          values ('https://example.invalid/hook', 'secret', '{ticket.created}') returning id
+        `
+
+        await expectPgError('23514', () =>
+          client`
+            insert into "webhook_deliveries" ("endpoint_id", "event_id", "event_type", "status")
+            values (${endpoint?.id}, ${randomUUID()}, 'ticket.created', 'QUEUED')
+          `,
+        )
+      })
+
+      it('protects the log of the purges against a change', async () => {
+        const userId = await newUser()
+        const [purge] = await client`
+          insert into "ticket_purges" (
+            "actor_user_id", "ticket_no", "object_no", "deleted_events_count", "deleted_photos_count", "reason"
+          ) values (${userId}, 'ST-0001', 'OBJ-01', 0, 0, 'test') returning id
+        `
+
+        await expectPgError('P0001', () =>
+          client`update "ticket_purges" set "reason" = 'other' where id = ${purge?.id}`,
+        )
+      })
+
+      it('refuses a reason of a purge that is longer than 1000 characters', async () => {
+        const userId = await newUser()
+
+        await expectPgError('23514', () =>
+          client`
+            insert into "ticket_purges" (
+              "actor_user_id", "ticket_no", "object_no", "deleted_events_count", "deleted_photos_count", "reason"
+            ) values (${userId}, 'ST-0002', 'OBJ-02', 0, 0, ${'x'.repeat(1001)})
+          `,
+        )
+      })
+    })
+
+    describe('the configuration of the instance', () => {
+      it('knows the statuses of the workflow', async () => {
+        const rows = await client<{ key: string }[]>`select "key" from "ticket_statuses" order by "key"`
+
+        expect(rows.map((row) => row.key)).toEqual(
+          expect.arrayContaining(['NEW', 'IN_REVIEW', 'WORK_ORDER_CREATED', 'ASSIGNED', 'CLOSED']),
+        )
+      })
+
+      it('knows the reserved object without an object', async () => {
+        const rows = await client<{ object_no: string; priority: string }[]>`
+          select o."object_no", p."priority"
+          from "objects" o
+          join "object_priority_overrides" p on p."object_id" = o."id"
+          where o."object_no" = 'OHNE-OBJEKT'
+        `
+
+        expect(rows).toEqual([{ object_no: 'OHNE-OBJEKT', priority: 'low' }])
+      })
+    })
   },
 )

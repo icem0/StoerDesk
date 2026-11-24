@@ -1,7 +1,7 @@
 # WP-M28-04b: the assertions of the migrations read the schema of the database — the second part
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M28-04
 phase: 28
 milestone: m28
