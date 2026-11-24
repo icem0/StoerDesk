@@ -1,7 +1,7 @@
 # WP-M27-04b: the page prints the chosen sheet
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M27-04a
 phase: 27
 milestone: m27
@@ -84,6 +84,11 @@ after it.
 - Files changed: the five files above
 - Interfaces added: the select of the sheet and the preview of the administration
 - Verified: `npm run check` green
+- Verified: `npm run check` green (typecheck, lint, the tests of the web and
+  the API, i18n, wp-check, the Playwright smoke on a throwaway database); the test
+  of the page shows the labels of the sheet of the installation, the select of
+  the sheet changes the geometry, the look of the installation is printed and
+  the checklist still filters and deselects
 - Follow-up WP: WP-M27-05 (the filter of the list) and WP-M27-06 (the criterion
   of the phase)
 - Open question: none

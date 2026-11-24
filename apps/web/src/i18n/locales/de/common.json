@@ -441,7 +441,8 @@
     "save": "Vorlage speichern",
     "section": {
       "sheet": "Blatt und Raster",
-      "look": "Aussehen des Aufklebers"
+      "look": "Aussehen des Aufklebers",
+      "preview": "Vorschau des Rasters"
     },
     "field": {
       "preset": "Vorlage",
@@ -491,6 +492,7 @@
       "doesNotFit": "Das Raster passt nicht auf das Blatt. Weniger Spalten, weniger Zeilen oder kleinere Etiketten.",
       "unknown": "Die Vorlage konnte nicht gespeichert werden."
     },
-    "hintQrSize": "Ohne eigene Größe richtet sich der QR-Code nach der Höhe des Etiketts."
+    "hintQrSize": "Ohne eigene Größe richtet sich der QR-Code nach der Höhe des Etiketts.",
+    "previewLabel": "Das Raster der Vorlage"
   }
 }

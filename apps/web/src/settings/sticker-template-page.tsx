@@ -9,6 +9,7 @@ import { ApiError, apiFetch } from '../lib/api'
 
 import {
   DEFAULT_STICKER_TEMPLATE,
+  STICKER_SHEET_SIZE_MM,
   STICKER_TEMPLATE_PRESETS,
   stickerGeometryOverflow,
   type StickerAppearance,
@@ -65,6 +66,54 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
       : 'unknown'
 
   return t(`stickerTemplate.errors.${code}`)
+}
+
+/**
+ * The preview of the grid: the labels of the sheet of the current form, drawn
+ * in the measures of the geometry. The printer sees the grid of the label roll
+ * before he prints it.
+ */
+function StickerPreview({
+  geometry,
+  label,
+}: {
+  geometry: StickerGeometry
+  label: string
+}) {
+  const sheet = STICKER_SHEET_SIZE_MM[geometry.page]
+  const labels: { x: number; y: number }[] = []
+
+  for (let row = 0; row < geometry.rows; row += 1) {
+    for (let column = 0; column < geometry.columns; column += 1) {
+      labels.push({
+        x: geometry.marginLeftMm + column * (geometry.labelWidthMm + geometry.gapXMm),
+        y: geometry.marginTopMm + row * (geometry.labelHeightMm + geometry.gapYMm),
+      })
+    }
+  }
+
+  return (
+    <svg
+      viewBox={`0 0 ${sheet.width} ${sheet.height}`}
+      className="w-full max-w-lg rounded border border-slate-700 bg-white"
+      role="img"
+      aria-label={label}
+    >
+      {labels.map((position) => (
+        <rect
+          key={`${position.x}-${position.y}`}
+          x={position.x}
+          y={position.y}
+          width={geometry.labelWidthMm}
+          height={geometry.labelHeightMm}
+          fill="none"
+          stroke="#94a3b8"
+          strokeWidth={0.3}
+          strokeDasharray="1.5 1.5"
+        />
+      ))}
+    </svg>
+  )
 }
 
 export function StickerTemplatePage() {
@@ -235,6 +284,12 @@ export function StickerTemplatePage() {
               {t('stickerTemplate.errors.doesNotFit')}
             </p>
           ) : null}
+
+          <p className="text-xs text-slate-400">{t('stickerTemplate.section.preview')}</p>
+          <StickerPreview
+            geometry={template.geometry}
+            label={t('stickerTemplate.previewLabel')}
+          />
         </fieldset>
 
         <fieldset className="flex flex-col gap-2 rounded border border-slate-700 bg-slate-900 p-4">

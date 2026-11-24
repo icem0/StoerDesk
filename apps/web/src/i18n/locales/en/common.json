@@ -441,7 +441,8 @@
     "save": "Save the template",
     "section": {
       "sheet": "Sheet and grid",
-      "look": "The look of the sticker"
+      "look": "The look of the sticker",
+      "preview": "Preview of the grid"
     },
     "field": {
       "preset": "Template",
@@ -491,6 +492,7 @@
       "doesNotFit": "The grid does not fit on the sheet. Fewer columns, fewer rows or smaller labels.",
       "unknown": "The template could not be saved."
     },
-    "hintQrSize": "Without a size of its own the QR code follows the height of the label."
+    "hintQrSize": "Without a size of its own the QR code follows the height of the label.",
+    "previewLabel": "The grid of the template"
   }
 }

@@ -1,33 +1,40 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { QRCodeSVG } from 'qrcode.react'
-import type { ObjectListResponse, ObjectSummary } from '@stoerdesk/shared'
+import type { ObjectListResponse, ObjectSummary, StickerTemplate } from '@stoerdesk/shared'
+import {
+  DEFAULT_STICKER_TEMPLATE,
+  STICKER_TEMPLATE_PRESETS,
+} from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
+import { StickerSheet } from './sticker-sheet'
 
 /**
- * Printable QR sticker sheets (`specs/08-objects-api.md` §9.3, WP-M2-03).
+ * The printable QR stickers (`specs/08-objects-api.md` §9.3, ADR-0050).
  *
- * The browser print dialog is the primary path (`PLAN.md` §4/§11): the page renders
- * A6 cards, one per selected object, and writes a single `@page` rule for the chosen
- * sheet format. Every card carries the 112 notice of `PLAN.md` §2.
+ * The page lists the objects of the list API as a checklist and prints them on
+ * the sheet of the chosen format. The **look** of the sticker is the setting of
+ * the installation (`GET /api/v1/settings/sticker-template`): the print job
+ * chooses the sheet, not the look. The sheet of the print is built from the
+ * geometry of the template (WP-M27-04a).
+ *
+ * Every label carries the 112 notice of `PLAN.md` §2.
  */
-
-type StickerFormat = 'a6' | 'a4'
-
-const PAGE_RULES: Record<StickerFormat, string> = {
-  a6: '@page { size: 105mm 148mm; margin: 0; }',
-  a4: '@page { size: A4; margin: 0; }',
-}
-
-const QR_MARGIN_MODULES = 2
-const QR_SIZE_PX = 256
 
 function useActiveObjects() {
   return useQuery({
     queryKey: ['objects', 'stickers'],
     queryFn: () => apiFetch<ObjectListResponse>('/v1/objects?active=true'),
+    retry: false,
+  })
+}
+
+function useStickerTemplate() {
+  return useQuery({
+    queryKey: ['sticker-template'],
+    queryFn: () => apiFetch<{ template: StickerTemplate }>('/v1/settings/sticker-template'),
     retry: false,
   })
 }
@@ -44,42 +51,21 @@ function matchesSearch(object: ObjectSummary, search: string): boolean {
   )
 }
 
-function stickerTarget(token: string): string {
-  // The QR carries only the public URL with the token, never the object number (§9.2).
-  return `${window.location.origin}/m/${token}`
-}
-
-function StickerCard({ object }: { object: ObjectSummary }) {
-  const { t } = useTranslation('object')
-
-  return (
-    <article className="sticker-card">
-      {object.qrToken !== null ? (
-        <QRCodeSVG
-          className="sticker-card__qr"
-          value={stickerTarget(object.qrToken)}
-          level="M"
-          marginSize={QR_MARGIN_MODULES}
-          size={QR_SIZE_PX}
-          title={object.objectNo}
-        />
-      ) : (
-        <p className="sticker-card__no-token">{t('sticker.noToken')}</p>
-      )}
-      <p className="sticker-card__name">{object.name}</p>
-      <p className="sticker-card__object-no">{object.objectNo}</p>
-      <p className="sticker-card__call">{t('sticker.reportCall')}</p>
-      <p className="sticker-card__notice">{t('sticker.emergencyNotice')}</p>
-    </article>
-  )
-}
-
 export function StickerPage() {
   const { t } = useTranslation('object')
   const objects = useActiveObjects()
+  const template = useStickerTemplate()
   const [search, setSearch] = useState('')
   const [deselected, setDeselected] = useState<string[]>([])
-  const [format, setFormat] = useState<StickerFormat>('a4')
+  const [sheetKey, setSheetKey] = useState<string | null>(null)
+
+  const stored = template.data?.template ?? DEFAULT_STICKER_TEMPLATE
+  const chosenKey = sheetKey ?? stored.templateKey
+  const preset = STICKER_TEMPLATE_PRESETS.find((candidate) => candidate.key === chosenKey)
+  const sheetTemplate = useMemo<StickerTemplate>(
+    () => (preset === undefined ? stored : { ...stored, templateKey: preset.key, geometry: preset.geometry }),
+    [preset, stored],
+  )
 
   const visible = useMemo(
     () =>
@@ -114,14 +100,18 @@ export function StickerPage() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          {t('sticker.format')}
+          {t('sticker.sheet')}
           <select
             className="rounded bg-slate-900 p-2 text-slate-100"
-            value={format}
-            onChange={(event) => setFormat(event.target.value as StickerFormat)}
+            value={chosenKey}
+            onChange={(event) => setSheetKey(event.target.value)}
           >
-            <option value="a6">{t('sticker.formatA6')}</option>
-            <option value="a4">{t('sticker.formatA4')}</option>
+            {STICKER_TEMPLATE_PRESETS.map((candidate) => (
+              <option key={candidate.key} value={candidate.key}>
+                {t(`common:stickerTemplate.preset.${candidate.key}`)}
+              </option>
+            ))}
+            <option value="custom">{t('common:stickerTemplate.preset.custom')}</option>
           </select>
         </label>
         <button
@@ -133,6 +123,13 @@ export function StickerPage() {
           {t('sticker.print')}
         </button>
       </div>
+
+      <p className="text-sm text-slate-400 print:hidden">
+        {t('sticker.lookHint')}{' '}
+        <Link className="underline" to="/admin/sticker-template">
+          {t('sticker.lookLink')}
+        </Link>
+      </p>
 
       {objects.isPending ? <p className="text-slate-400">{t('sticker.loading')}</p> : null}
       {objects.isError ? (
@@ -165,14 +162,7 @@ export function StickerPage() {
       {selected.length === 0 ? (
         <p className="text-slate-400">{t('sticker.empty')}</p>
       ) : (
-        <>
-          <style>{PAGE_RULES[format]}</style>
-          <div className={`sticker-sheet sticker-sheet--${format}`}>
-            {selected.map((object) => (
-              <StickerCard key={object.objectNo} object={object} />
-            ))}
-          </div>
-        </>
+        <StickerSheet template={sheetTemplate} objects={selected} />
       )}
     </section>
   )

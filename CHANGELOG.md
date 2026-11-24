@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The page of the stickers prints the chosen sheet (**WP-M27-04b**, phase 27,
+  ADR-0050): the select of the toolbar offers the sheets of the catalog and the
+  free grid of the installation, the look of the sticker (size of the QR, error
+  correction, printed lines) is the template of the installation, and the
+  administration shows the grid of the template as a preview.
 - The sheet of the stickers prints from the geometry (**WP-M27-04a**, phase 27,
   ADR-0050): the sheet knows no format of its own — the geometry of the
   template writes its measures into the sheet, the labels are written in blocks

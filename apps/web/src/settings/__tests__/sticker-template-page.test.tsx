@@ -118,7 +118,9 @@ describe('StickerTemplatePage', () => {
 
     renderPage()
 
-    const preset = (await screen.findByLabelText(/Vorlage$|Template$/i)) as HTMLSelectElement
+    const preset = (await screen.findByRole('combobox', {
+      name: /Vorlage|Template/i,
+    })) as HTMLSelectElement
     fireEvent.change(preset, { target: { value: 'a4-104' } })
 
     const columns = (await screen.findByLabelText(/Spalten|Columns/i)) as HTMLInputElement
