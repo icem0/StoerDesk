@@ -149,19 +149,77 @@ ignores expired rows. The demo seed of WP-M2-02b gives every demo object it inse
 generated token and backfills a `NULL` token, so a demo installation is scannable without
 a manual regeneration.
 
-### 9.3 Printable QR stickers (WP-M2-03)
+### 9.3 Printable QR stickers (WP-M2-03, WP-M27-01 … WP-M27-06)
 
 Stickers are printed from the browser: the web app renders an HTML print view with
 `@media print` and mm page sizes **(plan, §4, §11)**. A real PDF download stays
-optional and only gets its own work package if a deployment needs one — this package
-adds **no API route**; the view reads the object list API of §9.1.
+optional and only gets its own work package if a deployment needs one.
 
 **Route and data.** `/objects/stickers` is a child of the guarded route
-(`RequireSession`, cosmetic next to the server guard). It lists
-`GET /api/v1/objects?active=true` as a checklist, every object selected by default,
-and filters the checklist by a client-side `search` over object number, name and city.
-Inactive (soft-deleted) objects are not printable — their token only serves the
-30-day redirect of §9.2.
+(`RequireSession`, cosmetic next to the server guard). It lists the objects of the
+list API of §9.1 as a checklist, every object selected by default, and filters the
+list **on the server** with the query of §9.1 (`search`, `active`, `city`); the
+checklist can be selected completely or not at all. Inactive (soft-deleted) objects
+are not printable — their token only serves the 30-day redirect of §9.2.
+
+**The template (ADR-0050).** A sticker is a **template of the installation**: a
+*geometry* and an *appearance*. Both live in the settings row `sticker.template`
+and are edited in the administration at `/admin/sticker-template`.
+
+*Geometry* — the sheet and the grid:
+
+| Field                | Meaning                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `page`               | the sheet format: `a4` (210 × 297 mm) or `a6` (105 × 148 mm)  |
+| `columns`, `rows`    | the grid of the sheet                                         |
+| `labelWidthMm`       | the width of one label                                        |
+| `labelHeightMm`      | the height of one label                                       |
+| `marginTopMm`, `marginRightMm`, `marginBottomMm`, `marginLeftMm` | the margins of the sheet |
+| `gapXMm`, `gapYMm`   | the distance between two labels                               |
+
+*Appearance* — the look of one label:
+
+| Field                              | Meaning                                                 |
+| ---------------------------------- | ------------------------------------------------------- |
+| `qrLevel`                          | the error correction of the QR: `L`, `M`, `Q` or `H`     |
+| `qrSizeMm`                         | the side of the QR in mm; `null` = automatic              |
+| `showName`, `showObjectNo`, `showCallText` | which lines the label prints                     |
+
+`qrSizeMm: null` means automatic: the side of the QR is the smaller of the label
+width less 4 mm and 45 % of the label height. The **112 notice is not part of the
+appearance** — it stays visible on every sticker and cannot be switched off
+(`PLAN.md` §2).
+
+**The catalog.** The presets are data, not a branch in the code:
+
+| Key        | Sheet | Grid  | Label size   | Labels per sheet |
+| ---------- | ----- | ----- | ------------ | ---------------- |
+| `a6`       | A6    | 1 × 1 | 105 × 148 mm | 1                |
+| `a4-2x2`   | A4    | 2 × 2 | 105 × 148 mm | 4                |
+| `a4-21`    | A4    | 3 × 7 | 63,5 × 38,1 mm | 21             |
+| `a4-52`    | A4    | 4 × 13 | 38,1 × 21,2 mm | 52            |
+| `a4-104`   | A4    | 8 × 13 | 25,7 × 20,7 mm | 104           |
+| `custom`   | A4/A6 | free | free         | free            |
+
+The numbers of the presets are proposals for the label roll of the office; the
+administration may take a preset over into the free grid and adjust it, and a
+template whose numbers no longer match a preset carries the key `custom`. Every
+geometry must fit on its sheet: `columns * labelWidthMm + (columns - 1) * gapXMm +
+marginLeftMm + marginRightMm` may not exceed the width of the sheet (210 mm or
+105 mm), the rows the same way with the height (297 mm or 148 mm). A geometry that
+does not fit answers `400 invalid_request` with the field path.
+
+**The API.**
+
+| Method | Path                                   | Permission      | Result          |
+| ------ | -------------------------------------- | --------------- | --------------- |
+| GET    | `/api/v1/settings/sticker-template`    | `object.read`   | `200 { template }` |
+| PUT    | `/api/v1/settings/sticker-template`    | `settings.write` | `200 { template }` |
+
+The body of the `PUT` is the template; a field that is absent keeps the stored
+value. A missing or malformed row answers the default template (`a4-2x2` with the
+error correction `M` and every line printed). The QR of the sticker is not part
+of the template — the tokens belong to the objects (§9.2).
 
 **Sticker content**, in this order:
 
@@ -173,16 +231,18 @@ Inactive (soft-deleted) objects are not printable — their token only serves th
 5. the 112 notice `object:sticker.emergencyNotice` from `PLAN.md` §2 — multilingual,
    never hard-coded, and it must stay visible on every printed sticker.
 
-The QR encodes only the public URL `<origin>/m/<qr_token>`, never the object number
-(§9.2). An object whose `qr_token` is still `NULL` prints without a QR and shows
-`object:sticker.noToken` instead of a broken code.
+The lines 2 to 4 follow the appearance of the template; the notice of line 5
+always stands. The QR encodes only the public URL `<origin>/m/<qr_token>`, never
+the object number (§9.2). An object whose `qr_token` is still `NULL` prints
+without a QR and shows `object:sticker.noToken` instead of a broken code.
 
-**Formats.** A6 (105 × 148 mm) — one sticker per page; A4 (210 × 297 mm) — four A6
-stickers per page in a 2 × 2 grid. The selected format writes one `@page` rule
-(`size` and `margin`); the sheet grid sizes the cards, every card is
-`break-inside: avoid`, and screen preview and print use the same millimetre sizes.
-The app chrome (header, navigation, toolbar) is `print:hidden`; print colours are
-black on white. No print-dialog automation and no PDF endpoint.
+**The print.** The sheet is written in blocks of `columns × rows` labels per page;
+a block has the exact height of the sheet and ends with a page break, so the grid
+of the label roll is kept. The sheet format writes one `@page` rule (`size` and
+`margin`); every label is `break-inside: avoid`, and screen preview and print use
+the same millimetre sizes. The app chrome (header, navigation, toolbar) is
+`print:hidden`; print colours are black on white. No print-dialog automation and
+no PDF endpoint.
 
 ### 9.4 CSV import (WP-M10-12 … WP-M10-14)
 

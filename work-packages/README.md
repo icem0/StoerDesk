@@ -37,6 +37,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 9   |
 | [m24](m24/) | Phase 24: the user owns the channels — the selection per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the mail is HTML with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01) | 21  |
 | [m26](m26/) | Phase 26: the statistics read themselves — a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01, ADR-0049) | 5   |
+| [m27](m27/) | Phase 27: the sticker is a template — the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and the free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01, ADR-0050) | 6   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1787,6 +1788,12 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M26-04   | the statistics show the trends — the averages of the reaction times and of the processing time per bucket | done                    | yes     |
 | WP-M26-05   | the diagrams carry an axis and the objects a ranking | done                    | yes     |
 | WP-M26-06   | the axis of the diagrams shows round numbers — the scale of the axis and the unit of the values | done                    | yes     |
+| WP-M27-01   | the spec of the sticker template and ADR-0050 — the geometry, the appearance, the catalog of the sheets and the print in blocks | in progress | yes     |
+| WP-M27-02   | the contracts of the sticker template and the route `GET|PUT /api/v1/settings/sticker-template` | planned                  | no      |
+| WP-M27-03   | the administration of the sticker template at `/admin/sticker-template` — the geometry of the sheet and the look of the label | planned | no      |
+| WP-M27-04   | the sheet prints from the geometry — the blocks of the grid, the sizes of the label and the catalog of the sheets | planned | no      |
+| WP-M27-05   | the filter of the list of the stickers — search, active and city on the server, select all and select none | planned | no      |
+| WP-M27-06   | the criterion of the phase — every sheet of the catalog prints in its own grid | planned | no      |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

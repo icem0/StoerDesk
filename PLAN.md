@@ -550,8 +550,20 @@ QR rules:
 Printable stickers:
 
 - HTML print view for A6 and A4 sheets.
+- The sticker is a **template of the installation** (ADR-0050): a geometry (sheet,
+  grid, label size, margins, distance between the labels) and an appearance (error
+  correction and size of the QR, the lines that are printed). The template is the
+  settings row `sticker.template` and is edited in the administration next to the
+  stickers.
+- The catalog of the sheet formats is data: A6, A4 with four A6 labels, A4 with
+  21, 52 or 104 labels of a label roll, and a free grid for every other measure.
+  Every geometry must fit on its sheet.
+- The sheet is printed in blocks of `columns × rows` labels per page.
 - Contains QR code, object name, object number, "Störung melden: QR-Code scannen"
-  and the 112 notice.
+  and the 112 notice. The 112 notice is not configurable and stays visible on
+  every sticker.
+- The list of the objects to print is filtered on the server (search, active,
+  city).
 - Browser print is the primary path. PDF download is optional and only added
   with a separate WP if needed.
 
@@ -811,11 +823,33 @@ explanation. Offline is a core feature and appears early.
 | **25** | The alarm of the instance: the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band that cannot be dismissed (WP-M25-01 … WP-M25-09, ADR-0048) | the sound repeats in the interval of the installation while messages are unhandled, the silence of the user stops the sound for an hour and the warning of the setup stands on every page |
 | **24** | The user owns the channels: the selection of the channels per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the e-mail is an HTML mail with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01 … WP-M24-19, ADR-0045, ADR-0046) | the message of a user goes over his confirmed channels, a user without a confirmed channel gets the chain of the installation, the code over the channel confirms the account and the rule of the administration names the missing channels |
 | **26** | The statistics read themselves: a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01 … WP-M26-05, ADR-0049) | the statistics page names the system type, the fault type and the detected error in words, the trend of the reaction times over the months is readable, and no column of the page is empty without a reason |
+| **27** | The sticker is a template: the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and a free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | every sheet of the catalog prints in its own grid, every label carries the 112 notice, and the administration decides the geometry and the look of the sticker of the installation |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 27 has started (WP-M27-01).** The office labels its objects with the
+stickers of a label roll and asked for three things: the sheet formats of an A4
+label sheet shall be available, the look of the sticker shall be a setting, and
+the list of the objects to print shall be filtered properly. The sticker of today
+(WP-M2-03) knows two formats — A6 and A4 with four A6 cards — and draws the QR
+with hard-coded parameters (error correction `M`, a 55 mm square in a card of
+105 × 148 mm); a label of 25,7 × 20,7 mm has no place for such a card.
+**ADR-0050** decides the model: the sticker is a **template of the installation**,
+a geometry (sheet format, columns, rows, label size, margins, distance between
+the labels) and an appearance (error correction and size of the QR, the lines that
+are printed). The template is the settings row `sticker.template`, the catalog of
+the sheets is data (A6, A4 with four A6 labels, A4 with 21, 52 or 104 labels of a
+label roll, and the free grid for every other measure), and every geometry must
+fit on its sheet. The sheet is printed in blocks of `columns × rows` labels per
+page, so the grid of the roll survives the print dialog. The 112 notice stays
+visible on every sticker and is not part of the appearance (`PLAN.md` §2). The
+phase is split into **WP-M27-01** (the spec and ADR-0050), **WP-M27-02** (the
+contracts and the route), **WP-M27-03** (the administration of the template),
+**WP-M27-04** (the sheet from the geometry), **WP-M27-05** (the filter of the
+list) and **WP-M27-06** (the criterion of the phase).
 
 **WP-M26-02 — the dashboard knows the phase neither (done).** The block of
 the evaluations showed the average of the phase that never had data as „Ø Zeit bis
