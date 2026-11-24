@@ -191,18 +191,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(row.target).not.toHaveProperty('objectName')
     })
 
-    it('drains a selection of one channel once through that channel', async () => {
+    it('drains the confirmed channel of the technician once through that channel', async () => {
       const shiftId = await insertShift('PLANNED')
-      const userId = await insertUser('selection')
+      const userId = await insertUser('confirmed')
       const topic = `custom-topic-${crypto.randomUUID().slice(2, 8)}`
 
       await client`
-        insert into "notification_preferences" ("user_id", "event_type", "channel")
-        values (${userId}, 'oncall.assigned', 'ntfy')
-      `
-      await client`
-        insert into "notification_accounts" ("user_id", "channel", "external_id", "label", "secret")
-        values (${userId}, 'ntfy', ${topic}, 'custom', 'secret')
+        insert into "notification_accounts" ("user_id", "channel", "external_id", "label", "secret", "verified_at")
+        values (${userId}, 'ntfy', ${topic}, 'custom', 'secret', now())
       `
 
       const count = await enqueueOncallOutbox(
@@ -238,7 +234,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(drained.attempts).toBe(1)
     })
 
-    it('uses the instance chain when the technician has no selection', async () => {
+    it('uses the instance chain when the technician has no confirmed channel', async () => {
       const shiftId = await insertShift('DRAFT')
       const userId = await insertUser('chain')
 
@@ -268,12 +264,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const userId = await insertUser('deeplink')
 
       await client`
-        insert into "notification_preferences" ("user_id", "event_type", "channel")
-        values (${userId}, 'oncall.assigned', 'ntfy')
-      `
-      await client`
-        insert into "notification_accounts" ("user_id", "channel", "external_id", "label", "secret")
-        values (${userId}, 'ntfy', ${`topic-${crypto.randomUUID().slice(2, 8)}`}, 'custom', 'secret')
+        insert into "notification_accounts" ("user_id", "channel", "external_id", "label", "secret", "verified_at")
+        values (${userId}, 'ntfy', ${`topic-${crypto.randomUUID().slice(2, 8)}`}, 'custom', 'secret', now())
       `
 
       await enqueueOncallOutbox(
@@ -293,11 +285,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('is a no-op for a second enqueue while the readiness row is still PENDING', async () => {
       const shiftId = await insertShift('PLANNED')
       const userId = await insertUser('idempotent')
-
-      await client`
-        insert into "notification_preferences" ("user_id", "event_type", "channel")
-        values (${userId}, 'oncall.assigned', 'ntfy')
-      `
 
       const first = await enqueueOncallOutbox(
         db,
@@ -321,13 +308,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(rows).toHaveLength(1)
     })
 
-    it('fails a readiness row on an unconfigured selected channel', async () => {
+    it('fails a readiness row on a confirmed channel that is not configured', async () => {
       const shiftId = await insertShift('PLANNED')
       const userId = await insertUser('unconfigured')
 
       await client`
-        insert into "notification_preferences" ("user_id", "event_type", "channel")
-        values (${userId}, 'oncall.assigned', 'signal')
+        insert into "notification_accounts" ("user_id", "channel", "external_id", "label", "secret", "verified_at")
+        values (${userId}, 'matrix', '@alice:example.org', 'Matrix', 'token', now())
       `
 
       const count = await enqueueOncallOutbox(

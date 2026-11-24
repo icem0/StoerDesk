@@ -21,7 +21,7 @@ if (testDatabase.status === 'unavailable') {
 }
 
 const { objects, tickets, ticketEvents, outbox, webhookEndpoints, webhookDeliveries } = schema
-const { notificationAccounts, notificationPreferences, users } = schema
+const { notificationAccounts, users } = schema
 const MINUTE = 60 * 1000
 
 /** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
@@ -246,11 +246,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         userId: user.id,
         channel: 'ntfy',
         externalId: topic,
-      })
-      await db.insert(notificationPreferences).values({
-        userId: user.id,
-        eventType: 'ticket.escalated',
-        channel: 'ntfy',
+        verifiedAt: new Date(),
       })
       await db.insert(schema.escalationActions).values({
         key: 'user_notify',
@@ -290,18 +286,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         throw new Error('user insert failed')
       }
 
-      // The ntfy account exists, but the recipient chose telegram for the
-      // escalation — the choice of the recipient is the way (ADR-0037).
-      await db.insert(notificationAccounts).values({
-        userId: user.id,
-        channel: 'ntfy',
-        externalId: topic,
-      })
-      await db.insert(notificationPreferences).values({
-        userId: user.id,
-        eventType: 'ticket.escalated',
-        channel: 'telegram',
-      })
+      // The ntfy account exists but was never confirmed; the confirmed telegram
+      // account is the way of the recipient (ADR-0037, ADR-0045).
+      await db.insert(notificationAccounts).values([
+        { userId: user.id, channel: 'ntfy', externalId: topic },
+        {
+          userId: user.id,
+          channel: 'telegram',
+          externalId: '-555111222333',
+          verifiedAt: new Date(),
+        },
+      ])
       await db.insert(schema.escalationActions).values({
         key: 'telegram_notify',
         ruleKey: seededRuleKey('review'),
@@ -338,11 +333,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         throw new Error('user insert failed')
       }
 
-      // No selection row: the recipient keeps their own ntfy topic.
+      // The confirmed ntfy account of the recipient is his way (ADR-0045).
       await db.insert(notificationAccounts).values({
         userId: user.id,
         channel: 'ntfy',
         externalId: topic,
+        verifiedAt: new Date(),
       })
       await db.insert(schema.escalationActions).values({
         key: 'fallback_notify',
@@ -417,11 +413,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         userId: user.id,
         channel: 'ntfy',
         externalId: topic,
-      })
-      await db.insert(notificationPreferences).values({
-        userId: user.id,
-        eventType: 'ticket.escalated',
-        channel: 'ntfy',
+        verifiedAt: new Date(),
       })
 
       const ticket = await createTicket('critical')

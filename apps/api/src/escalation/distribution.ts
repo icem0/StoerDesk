@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm'
 import type { Database } from '../db/client'
 import { objects, ticketEvents, tickets, users } from '../db/schema'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
-import { escalationRecipients } from '../notifications/receivers'
+import { personalRecipients } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
 import { readOncallSettings } from '../oncall/settings'
@@ -279,7 +279,7 @@ async function notifyTechnicians(
     stageKey: string | null
   },
 ): Promise<number> {
-  const recipients = await escalationRecipients(database, input.eventType, input.technicians)
+  const recipients = await personalRecipients(database, input.technicians)
 
   if (recipients.length === 0) {
     return 0
@@ -321,7 +321,10 @@ async function notifyTechnicians(
           objectName: ticket.objectName,
           escalationRule: input.ruleKey,
           escalationStage: input.stageKey,
-          ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
+          ...(recipient.target === '' ? {} : { recipientTarget: recipient.target }),
+          ...(recipient.channel === 'ntfy' && recipient.target !== ''
+            ? { ntfyTopic: recipient.target }
+            : {}),
         },
       })),
     )

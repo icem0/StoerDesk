@@ -266,6 +266,16 @@
       "invalid_request": "Der Code ist ungültig, abgelaufen oder bereits verwendet – bitte einen neuen anfordern.",
       "channel_not_configured": "Der Kanal ist auf diesem Server nicht konfiguriert.",
       "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+    },
+    "eventNames": {
+      "ticket.created": "Neuer Vorgang",
+      "ticket.assigned": "Zugewiesen oder angeboten",
+      "ticket.assignment_answered": "Zuweisung beantwortet",
+      "ticket.escalated": "Eskaliert",
+      "ticket.resolved": "Erledigt",
+      "oncall.assigned": "Bereitschaft zugewiesen",
+      "oncall.swap_requested": "Tausch angefragt",
+      "oncall.unconfirmed_reminder": "Nicht bestätigte Bereitschaft"
     }
   },
   "my": {

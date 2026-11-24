@@ -25,7 +25,7 @@ import {
   webhookDeliveries,
   webhookEndpoints,
 } from '../db/schema'
-import { escalationRecipients } from '../notifications/receivers'
+import { personalRecipients } from '../notifications/receivers'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { resolveOnDutyUserIds } from '../oncall/coupling'
 import { firstAssignee, resolveAssigneePool } from './assignee-pool'
@@ -260,7 +260,7 @@ export async function dispatchEscalationActions(
             : notifyTarget.data.kind === 'pool'
               ? await resolveOnDutyUserIds(database, notifyTarget.data.id, at)
               : await resolveAssignmentTarget(database, firing.ticketId, notifyTarget.data.kind)
-        const recipients = await escalationRecipients(database, 'ticket.escalated', userIds)
+        const recipients = await personalRecipients(database, userIds)
 
         if (recipients.length === 0) {
           continue
@@ -289,7 +289,10 @@ export async function dispatchEscalationActions(
             ticketId: firing.ticketId,
             target: {
               ...rowTarget,
-              ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
+              ...(recipient.target === '' ? {} : { recipientTarget: recipient.target }),
+              ...(recipient.channel === 'ntfy' && recipient.target !== ''
+                ? { ntfyTopic: recipient.target }
+                : {}),
             },
           })),
         )

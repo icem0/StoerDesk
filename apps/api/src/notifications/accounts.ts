@@ -18,6 +18,7 @@ import { notificationAccounts } from '../db/schema'
  */
 
 type Db = Database['database']
+type DbSelect = Pick<Db, 'select'>
 
 /** 128 random bits of the topic (ADR-0024 point 6). */
 const NTFY_TOPIC_RANDOM_BYTES = 16
@@ -75,7 +76,7 @@ function toAccount(row: AccountRow): NotificationAccount {
 
 /** Reads the stored row of one user and channel, or `undefined`. */
 async function readAccount(
-  database: Db,
+  database: DbSelect,
   userId: string,
   channel: string,
 ): Promise<AccountRow | undefined> {
@@ -158,6 +159,22 @@ export async function storeAccount(
   }
 
   return toAccount(row)
+}
+
+/**
+ * The write-only secret of the account of a user for a channel (the Matrix
+ * access token): the drain reads it at the moment of the send, so the secret
+ * never enters a row of the outbox, a log or an answer (§11.13, ADR-0045).
+ * An account without a secret answers an empty string.
+ */
+export async function readAccountSecret(
+  database: DbSelect,
+  userId: string,
+  channel: string,
+): Promise<string> {
+  const row = await readAccount(database, userId, channel)
+
+  return row?.secret ?? ''
 }
 
 /**

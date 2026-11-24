@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 
 import type { TicketAssignmentStatus } from '@stoerdesk/shared'
 
+import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { tickets, users } from '../db/schema'
 import { nextAssignee, resolveAssigneePool } from '../escalation/assignee-pool'
@@ -92,6 +93,7 @@ async function assertActiveUser(database: Db, userId: string): Promise<void> {
 export async function assignTicket(
   database: Db,
   input: AssignTicketInput,
+  env?: Env,
 ): Promise<AssignResult> {
   await assertActiveUser(database, input.userId)
 
@@ -113,12 +115,16 @@ export async function assignTicket(
 
   // The technician is notified (§7.14, decision 5 of ADR-0039): the way is the
   // one he chose for `ticket.assigned` (§11.4, ADR-0037).
-  await notifyAssignee(database, {
-    ticketId: input.ticketId,
-    userId: input.userId,
-    ruleKey: input.rule?.ruleKey ?? null,
-    stageKey: input.rule?.stageKey ?? null,
-  })
+  await notifyAssignee(
+    database,
+    {
+      ticketId: input.ticketId,
+      userId: input.userId,
+      ruleKey: input.rule?.ruleKey ?? null,
+      stageKey: input.rule?.stageKey ?? null,
+    },
+    env,
+  )
 
   return {
     changed: true,
@@ -131,6 +137,7 @@ export async function assignTicket(
 export async function answerAssignment(
   database: Db,
   input: AnswerAssignmentInput,
+  env?: Env,
 ): Promise<AssignResult> {
   const [row] = await database
     .select({
@@ -183,23 +190,31 @@ export async function answerAssignment(
     if (successor !== null) {
       // The assigner is notified about the refusal before the ticket passes to
       // the next member of the pool.
-      await notifyAssignerOfAnswer(database, {
-        ticketId: input.ticketId,
-        assignedBy: current.assignedByUserId,
-        answer: input.answer,
-        assigneeUserId: input.actorUserId,
-      })
+      await notifyAssignerOfAnswer(
+        database,
+        {
+          ticketId: input.ticketId,
+          assignedBy: current.assignedByUserId,
+          answer: input.answer,
+          assigneeUserId: input.actorUserId,
+        },
+        env,
+      )
 
       return successor
     }
   }
 
-  await notifyAssignerOfAnswer(database, {
-    ticketId: input.ticketId,
-    assignedBy: current.assignedByUserId,
-    answer: input.answer,
-    assigneeUserId: input.actorUserId,
-  })
+  await notifyAssignerOfAnswer(
+    database,
+    {
+      ticketId: input.ticketId,
+      assignedBy: current.assignedByUserId,
+      answer: input.answer,
+      assigneeUserId: input.actorUserId,
+    },
+    env,
+  )
 
   return {
     changed: true,
@@ -223,6 +238,7 @@ async function notifyAssignerOfAnswer(
     answer: 'accepted' | 'declined'
     assigneeUserId: string
   },
+  env?: Env,
 ): Promise<void> {
   if (input.assignedBy === null) {
     return
@@ -236,12 +252,16 @@ async function notifyAssignerOfAnswer(
 
   const name = `${assignee?.givenName ?? ''} ${assignee?.familyName ?? ''}`.trim()
 
-  await notifyAssigner(database, {
-    ticketId: input.ticketId,
-    userId: input.assignedBy,
-    answer: input.answer,
-    assigneeName: name,
-  })
+  await notifyAssigner(
+    database,
+    {
+      ticketId: input.ticketId,
+      userId: input.assignedBy,
+      answer: input.answer,
+      assigneeName: name,
+    },
+    env,
+  )
 }
 
 /**

@@ -25,7 +25,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped assignment integration: ${testDatabase.reason}\n`)
 }
 
-const { notificationAccounts, notificationPreferences, objects, outbox, tickets, users } = schema
+const { notificationAccounts, objects, outbox, tickets, users } = schema
 
 function onlyRow<T>(rows: T[], what: string): T {
   const [row] = rows
@@ -251,11 +251,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
       userId: officeUserId,
       channel: 'ntfy',
       externalId: `office-topic-${randomUUID().slice(0, 6)}`,
-    })
-    await db.insert(notificationPreferences).values({
-      userId: officeUserId,
-      eventType: 'ticket.assignment_answered',
-      channel: 'ntfy',
+      verifiedAt: new Date(),
     })
 
     const ticketId = await openWorkOrderTicket()

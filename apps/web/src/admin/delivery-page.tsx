@@ -94,7 +94,7 @@ function makeEventName(t: unknown) {
   const translate = t as (key: string, opts?: unknown) => string
 
   return (eventType: string): string => {
-    const selected = translate(`common:notifications.selection.events.${eventType}`, {
+    const selected = translate(`common:notifications.eventNames.${eventType}`, {
       defaultValue: '',
     })
 

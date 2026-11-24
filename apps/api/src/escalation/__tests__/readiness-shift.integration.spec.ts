@@ -22,7 +22,6 @@ const {
   escalationRules,
   groups,
   notificationAccounts,
-  notificationPreferences,
   objects,
   oncallPools,
   oncallShifts,
@@ -120,12 +119,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
 
       await db.insert(notificationAccounts).values([
-        { userId: onDuty.id, channel: 'ntfy', externalId: onDutyTopic },
-        { userId: offDuty.id, channel: 'ntfy', externalId: offDutyTopic },
-      ])
-      await db.insert(notificationPreferences).values([
-        { userId: onDuty.id, eventType: 'ticket.escalated', channel: 'ntfy' },
-        { userId: offDuty.id, eventType: 'ticket.escalated', channel: 'ntfy' },
+        { userId: onDuty.id, channel: 'ntfy', externalId: onDutyTopic, verifiedAt: new Date() },
+        { userId: offDuty.id, channel: 'ntfy', externalId: offDutyTopic, verifiedAt: new Date() },
       ])
 
       const [group] = await db

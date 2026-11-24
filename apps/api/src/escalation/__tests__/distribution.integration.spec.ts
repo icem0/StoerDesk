@@ -30,7 +30,6 @@ const {
   escalationActions,
   groups,
   notificationAccounts,
-  notificationPreferences,
   objects,
   oncallPools,
   oncallShifts,
@@ -226,11 +225,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           userId,
           channel: 'ntfy',
           externalId: `topic-${index}`,
-        })
-        await db.insert(notificationPreferences).values({
-          userId,
-          eventType: 'ticket.assigned',
-          channel: 'ntfy',
+          verifiedAt: new Date(),
         })
       }
 
@@ -323,9 +318,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('offers the ticket to the technicians of a readiness pool', async () => {
-      await action('offer', { kind: 'pool', id: poolId }, 'offer_pool', seededRuleKey('acceptance', 'offered'))
-
       const onCallUserId = technicianIds[0] ?? ''
+
+      await action('offer', { kind: 'pool', id: poolId }, 'offer_pool', seededRuleKey('acceptance', 'offered'))
 
       await db.insert(oncallShifts).values({
         poolId,
@@ -371,14 +366,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .returning({ id: oncallPools.id })
 
       await action('offer', { kind: 'pool', id: nightPool?.id ?? '' }, 'offer_night', seededRuleKey('acceptance', 'assigned'))
-
-      const onCallUserId = technicianIds[0] ?? ''
-
-      await db.insert(notificationPreferences).values({
-        userId: onCallUserId,
-        eventType: 'ticket.escalated',
-        channel: 'ntfy',
-      })
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 

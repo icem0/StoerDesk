@@ -3,7 +3,7 @@ import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
 import { notificationMessages } from '../../db/schema'
 import { enqueueOutbox, messageOf, type OutboxRow } from '../outbox'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 type Db = Database['database']
 
@@ -19,36 +19,6 @@ const ticket = {
   systemType: 'BMA',
   shortText: 'Melder im Treppenhaus piept',
   workOrderNo: 'AA-4711',
-}
-
-/** The mandatory minimum channels the fake settings row returns. */
-let minimumChannels: string[] = []
-
-/** The joined preference/account rows the fake recipient query returns. */
-let recipients: Array<{ userId: string; externalId: string | null }> = []
-
-function setMinimumChannels(channels: string[]): void {
-  minimumChannels = channels
-}
-
-function setRecipients(rows: Array<{ userId: string; externalId: string | null }>): void {
-  recipients = rows
-}
-
-beforeEach(() => {
-  minimumChannels = []
-  recipients = []
-})
-
-/**
- * The fake select chain is awaitable and also has `.limit()`: the settings read
- * of `readMinimumChannels` ends in `.limit(1)`, the recipient read of
- * `ntfyRecipients` is awaited after `.where()`.
- */
-function awaitable<T>(value: T): Promise<T> & { limit: (count?: number) => Promise<T> } {
-  const promise = Promise.resolve(value)
-
-  return Object.assign(promise, { limit: () => promise })
 }
 
 /**
@@ -93,15 +63,6 @@ async function enqueueInto(env: Env): Promise<{
         return undefined
       },
     }),
-    select: (columns: Record<string, unknown>) => ({
-      from: () => ({
-        where: () =>
-          awaitable('value' in columns ? [{ value: minimumChannels }] : []),
-        leftJoin: () => ({
-          where: () => awaitable('userId' in columns ? recipients : []),
-        }),
-      }),
-    }),
   } as unknown as DbLike
 
   const count = await enqueueOutbox(fakeDatabase, ticket, env)
@@ -134,39 +95,6 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
     expect(Object.keys(row?.target ?? {})).not.toContain('email')
   })
 
-  it('writes one ntfy row per user who selected ntfy for ticket.created', async () => {
-    setRecipients([
-      { userId: 'user-1', externalId: 'stoerdesk-user-1' },
-      { userId: 'user-2', externalId: 'custom-topic' },
-    ])
-
-    const { count, rows } = await enqueueInto(
-      loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' }),
-    )
-
-    expect(count).toBe(2)
-    expect(rows.map((row) => row.channel)).toEqual(['ntfy', 'ntfy'])
-    expect(rows.map((row) => row.target.ntfyTopic)).toEqual([
-      'stoerdesk-user-1',
-      'custom-topic',
-    ])
-    expect(rows.every((row) => row.target.ticketNo === 'ST-2026-0001')).toBe(true)
-    expect(rows.some((row) => row.target.ntfyTopic === 'stoerdesk')).toBe(false)
-  })
-
-  it('does not duplicate a per-user ntfy row with the minimum channels of a critical ticket', async () => {
-    setMinimumChannels(['ntfy'])
-    setRecipients([{ userId: 'user-1', externalId: 'stoerdesk-user-1' }])
-
-    const { count, rows } = await enqueueInto(
-      loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' }),
-    )
-
-    expect(count).toBe(1)
-    expect(rows).toHaveLength(1)
-    expect(rows[0]?.target.ntfyTopic).toBe('stoerdesk-user-1')
-  })
-
   it('writes no row for an unconfigured environment', async () => {
     const { count, rows } = await enqueueInto(loadEnv({}))
 
@@ -174,23 +102,25 @@ describe('enqueueOutbox (notification outbox rows in the create transaction)', (
     expect(rows).toHaveLength(0)
   })
 
-  it('adds the mandatory minimum channels to a critical ticket without duplicating', async () => {
-    setMinimumChannels([])
-    const configured = loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' })
+  it('writes one row per configured channel of the installation and no personal row', async () => {
+    const { count, rows, messages } = await enqueueInto(
+      loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' }),
+    )
 
-    setMinimumChannels(['ntfy'])
-    const first = await enqueueInto(configured)
+    // The new ticket goes to the channels of the installation (ADR-0045); the
+    // messages that name a user go over the channels of that user.
+    expect(count).toBe(1)
+    expect(rows.map((row) => row.channel)).toEqual(['ntfy'])
+    expect(messages).toHaveLength(0)
+  })
 
-    expect(first.count).toBe(1)
-    expect(first.rows.map((row) => row.channel)).toEqual(['ntfy'])
+  it('writes no personal row for a critical ticket — the rule of the administration does not decide the way', async () => {
+    const { count, rows } = await enqueueInto(
+      loadEnv({ NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: 'stoerdesk' }),
+    )
 
-    setMinimumChannels(['matrix'])
-    const second = await enqueueInto(configured)
-
-    expect(second.count).toBe(2)
-    expect(second.rows.map((row) => row.channel)).toEqual(['ntfy', 'matrix'])
-
-    setMinimumChannels([])
+    expect(count).toBe(1)
+    expect(rows.map((row) => row.channel)).toEqual(['ntfy'])
   })
 })
 

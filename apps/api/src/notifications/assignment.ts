@@ -1,9 +1,10 @@
 import { eq } from 'drizzle-orm'
 
+import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { objects, tickets } from '../db/schema'
 import { enqueuePersonalDeliveries } from './outbox'
-import { escalationRecipients } from './receivers'
+import { personalRecipients } from './receivers'
 
 /**
  * The notices of an assignment (`specs/07-escalation.md` §7.14, ADR-0039,
@@ -69,8 +70,9 @@ export async function notifyAssignee(
     ruleKey?: string | null
     stageKey?: string | null
   },
+  env?: Env,
 ): Promise<number> {
-  const recipients = await escalationRecipients(database, 'ticket.assigned', [input.userId])
+  const recipients = await personalRecipients(database, [input.userId], env)
 
   if (recipients.length === 0) {
     return 0
@@ -103,7 +105,10 @@ export async function notifyAssignee(
         ...(input.stageKey === undefined || input.stageKey === null
           ? {}
           : { escalationStage: input.stageKey }),
-        ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
+        ...(recipient.target === '' ? {} : { recipientTarget: recipient.target }),
+        ...(recipient.channel === 'ntfy' && recipient.target !== ''
+          ? { ntfyTopic: recipient.target }
+          : {}),
       },
     })),
   )
@@ -125,10 +130,9 @@ export async function notifyAssigner(
     /** The name of the technician who answered — the display name, no contact value. */
     assigneeName: string
   },
+  env?: Env,
 ): Promise<number> {
-  const recipients = await escalationRecipients(database, 'ticket.assignment_answered', [
-    input.userId,
-  ])
+  const recipients = await personalRecipients(database, [input.userId], env)
 
   if (recipients.length === 0) {
     return 0
@@ -157,7 +161,10 @@ export async function notifyAssigner(
         objectName: ticket.objectName,
         answer: input.answer,
         assigneeName: input.assigneeName,
-        ...(recipient.topic === '' ? {} : { ntfyTopic: recipient.topic }),
+        ...(recipient.target === '' ? {} : { recipientTarget: recipient.target }),
+        ...(recipient.channel === 'ntfy' && recipient.target !== ''
+          ? { ntfyTopic: recipient.target }
+          : {}),
       },
     })),
   )

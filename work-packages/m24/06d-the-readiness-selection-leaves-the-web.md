@@ -20,6 +20,8 @@ files-write:
 - apps/web/src/settings/__tests__/readiness-selection.test.tsx
 - apps/web/src/i18n/locales/de/common.json
 - apps/web/src/i18n/locales/en/common.json
+- apps/web/src/features/notifications/inbox-page.tsx
+- apps/web/src/admin/delivery-page.tsx
 
 interfaces:
 
@@ -34,8 +36,10 @@ interfaces:
    run.
 2. Remove the labels of the selection per event type from the `common`
    namespace in `de` and `en`: the whole `notifications.selection.*` object is
-   orphaned by WP-M24-06a. The labels of the readiness block are already gone
-   with the block.
+   orphaned by WP-M24-06a. The names of the events move to
+   `notifications.eventNames.*` — the inbox and the page of the delivery
+   problems show them. The labels of the readiness block are already gone with
+   the block.
 
 ## Non-goals
 

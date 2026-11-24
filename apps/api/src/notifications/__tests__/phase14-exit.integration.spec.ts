@@ -18,7 +18,7 @@ import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
 import { enqueueOutbox, drainOutbox, type OutboxTicket } from '../outbox'
 import { storeAccount } from '../accounts'
-import { writePreferences } from '../preferences'
+import { notifyAssignee } from '../assignment'
 
 const testDatabase = await openTestDatabase()
 
@@ -109,7 +109,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let userBId = ''
     let userCId = ''
     let objectId = ''
-    let bStoredTopic = ''
 
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
@@ -168,19 +167,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         label: 'B topic',
       })
 
-      bStoredTopic = onlyRow(
-        await db
-          .select({ externalId: notificationAccounts.externalId })
-          .from(notificationAccounts)
-          .where(eq(notificationAccounts.userId, userBId))
-          .limit(1),
-        'stored b topic',
-      ).externalId
-
-      // The selection of the user (§11.4): A and B select ntfy for `ticket.created`,
-      // C selects nothing.
-      await writePreferences(db, userAId, [{ eventType: 'ticket.created', channel: 'ntfy' }])
-      await writePreferences(db, userBId, [{ eventType: 'ticket.created', channel: 'ntfy' }])
+      // The accounts of A and B are confirmed (§11.3a, ADR-0045): a code over
+      // the channel proved that the address works. C has no account at all.
+      await db.execute(
+        `update "notification_accounts" set "verified_at" = now() where "user_id" in ('${userAId}', '${userBId}')`,
+      )
 
       process.env.DATABASE_URL = url
       process.env.API_LOG_LEVEL = 'silent'
@@ -280,8 +271,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return { port, requests, close: () => server.close() }
     }
 
-    it('the selection of the user decides the channels and the account of the user is used', async () => {
-      const ticket = onlyRow(await createTicket('normal'), 'selection ticket')
+    it('the confirmed channels of the user carry the message to his own address', async () => {
+      const ticket = onlyRow(await createTicket('normal'), 'assignment ticket')
 
       await db.insert(ticketEvents).values({
         ticketId: ticket.id,
@@ -293,104 +284,112 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const mock = openMockServer()
 
       try {
-        const queued = await enqueueOutbox(
-          db,
-          { id: ticket.id, ticketNo: ticket.ticketNo, priority: 'normal', objectName: 'Exit probe' } satisfies OutboxTicket,
-          envOf({ NTFY_URL: `http://127.0.0.1:${mock.port}/`, NTFY_TOPIC: instanceTopic, NTFY_TOKEN: ntfyToken }),
-        )
+        // The assignment names the technician — the recipient decides the way:
+        // the message goes over his confirmed channels, to his own address
+        // (ADR-0045).
+        const queued = await notifyAssignee(db, { ticketId: ticket.id, userId: userAId })
+
+        expect(queued).toBe(1)
 
         const result = await drainOutbox(
           db,
           envOf({ NTFY_URL: `http://127.0.0.1:${mock.port}/`, NTFY_TOPIC: instanceTopic, NTFY_TOKEN: ntfyToken }),
         )
 
-        expect(queued).toBe(2)
-        expect(result).toEqual({ sent: 2, failed: 0, fallback: 0, attempts: 2 })
+        expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
 
         const topics = (await rowsFor(ticket.id)).map(
           (row) => (row.target as Record<string, unknown>).ntfyTopic,
         )
 
-        // The selection of A and B replaced the instance topic with one row each;
-        // both send to the stored topic of the account of the user (WP-M14-72:
-        // a user without an account receives no ntfy row), and C — without
-        // a selection — never receives a row.
-        expect(new Set(topics)).toEqual(new Set([accountTopic, bStoredTopic]))
+        expect(topics).toEqual([accountTopic])
         expect(topics).not.toContain(instanceTopic)
-        expect(topics).not.toContain(`stoerdesk-${userAId}`)
-        expect(bStoredTopic).toMatch(/^stoerdesk-[0-9a-f]{32}$/)
 
-        // The send really published to the two per-user topics of the account.
-        const published = mock.requests.flatMap((request) => request.bodies.map((body) => (body as { topic?: string }).topic))
-        expect(new Set(published)).toEqual(new Set([accountTopic, bStoredTopic]))
-        expect(mock.requests).toHaveLength(2)
+        // The send really published to the topic of the account of the user.
+        const published = mock.requests.flatMap((request) =>
+          request.bodies.map((body) => (body as { topic?: string }).topic),
+        )
+
+        expect(new Set(published)).toEqual(new Set([accountTopic]))
+        expect(mock.requests).toHaveLength(1)
       } finally {
         mock.close()
       }
     })
 
-    it('the mandatory minimum channels of a critical ticket are queued whatever the selection says', async () => {
-      const put = await app!.inject({
-        method: 'PUT',
-        url: '/api/v1/settings/notifications/minimum-channels',
-        headers: { cookie: sessionCookie },
-        payload: { channels: ['matrix'] },
+    it('a user without a confirmed channel is notified over the chain of the installation', async () => {
+      const ticket = onlyRow(await createTicket('normal'), 'fallback ticket of the chain')
+
+      await db.insert(ticketEvents).values({
+        ticketId: ticket.id,
+        type: 'created',
+        actorKind: 'public',
+        payload: {},
       })
-
-      expect(put.statusCode).toBe(200)
-
-      const normalTicket = onlyRow(await createTicket('normal'), 'normal ticket')
-      const criticalTicket = onlyRow(await createTicket('critical'), 'critical ticket')
-
-      const ntfyOnly = envOf({
-        NTFY_URL: `http://127.0.0.1:1/`,
-        NTFY_TOPIC: instanceTopic,
-        NTFY_TOKEN: ntfyToken,
-      })
-
-      const normalQueued = await enqueueOutbox(
-        db,
-        { id: normalTicket.id, ticketNo: normalTicket.ticketNo, priority: 'normal', objectName: 'Exit probe' } satisfies OutboxTicket,
-        ntfyOnly,
-      )
-
-      const criticalQueued = await enqueueOutbox(
-        db,
-        { id: criticalTicket.id, ticketNo: criticalTicket.ticketNo, priority: 'critical', objectName: 'Exit probe' } satisfies OutboxTicket,
-        ntfyOnly,
-      )
-
-      const normalChannels = (await rowsFor(normalTicket.id)).map((row) => row.channel)
-      const criticalChannels = (await rowsFor(criticalTicket.id)).map((row) => row.channel)
-
-      expect(normalQueued).toBe(2)
-      expect(criticalQueued).toBe(3)
-
-      // A normal ticket keeps only the selection of the user (ntfy, the per-user
-      // rows); the critical ticket additionally carries the mandatory minimum
-      // channel — once, never a duplicate — whatever the selection says.
-      expect(normalChannels.filter((channel) => channel === 'matrix')).toHaveLength(0)
-      expect(criticalChannels.filter((channel) => channel === 'matrix')).toHaveLength(1)
 
       const mock = openMockServer()
 
       try {
-        const drainEnv = envOf({
-          NTFY_URL: `http://127.0.0.1:${mock.port}/`,
-          NTFY_TOPIC: instanceTopic,
-          NTFY_TOKEN: ntfyToken,
-          MATRIX_HOMESERVER: `http://127.0.0.1:${mock.port}`,
-          MATRIX_ROOM_ID: '!exit:mock',
-          MATRIX_ACCESS_TOKEN: matrixToken,
-        })
+        const queued = await notifyAssignee(
+          db,
+          { ticketId: ticket.id, userId: userCId },
+          envOf({ NTFY_URL: `http://127.0.0.1:${mock.port}/`, NTFY_TOPIC: instanceTopic, NTFY_TOKEN: ntfyToken }),
+        )
 
-        await drainOutbox(db, drainEnv)
+        expect(queued).toBe(1)
 
-        expect((await rowsFor(normalTicket.id)).every((row) => row.state === 'SENT')).toBe(true)
-        expect((await rowsFor(criticalTicket.id)).every((row) => row.state === 'SENT')).toBe(true)
+        const result = await drainOutbox(
+          db,
+          envOf({ NTFY_URL: `http://127.0.0.1:${mock.port}/`, NTFY_TOPIC: instanceTopic, NTFY_TOKEN: ntfyToken }),
+        )
+
+        expect(result).toEqual({ sent: 1, failed: 0, fallback: 0, attempts: 1 })
+
+        const published = mock.requests.flatMap((request) =>
+          request.bodies.map((body) => (body as { topic?: string }).topic),
+        )
+
+        expect(new Set(published)).toEqual(new Set([instanceTopic]))
       } finally {
         mock.close()
       }
+    })
+
+    it('the rule of the administration does not decide the way of a message', async () => {
+      const put = await app!.inject({
+        method: 'PUT',
+        url: '/api/v1/settings/notifications/channel-policy',
+        headers: { cookie: sessionCookie },
+        payload: { requiredChannels: ['ntfy'], minimumChannelCount: 2 },
+      })
+
+      expect(put.statusCode).toBe(200)
+
+      const ticket = onlyRow(await createTicket('critical'), 'policy ticket')
+
+      await db.insert(ticketEvents).values({
+        ticketId: ticket.id,
+        type: 'created',
+        actorKind: 'public',
+        payload: {},
+      })
+
+      const queued = await enqueueOutbox(
+        db,
+        { id: ticket.id, ticketNo: ticket.ticketNo, priority: 'critical', objectName: 'Exit probe' } satisfies OutboxTicket,
+        envOf({ NTFY_URL: 'http://127.0.0.1:1/', NTFY_TOPIC: instanceTopic, NTFY_TOKEN: ntfyToken }),
+      )
+
+      // The rule says what a user must have set up (§11.9); it never adds a
+      // channel to a message.
+      expect(queued).toBe(1)
+
+      const channels = (await rowsFor(ticket.id)).map((row) => row.channel)
+
+      expect(channels).toEqual(['ntfy'])
+
+      // The row of this probe must not disturb the drains of the other probes.
+      await db.delete(outbox).where(eq(outbox.ticketId, ticket.id))
     })
 
     it('a failed channel is visible in the status and the chain continues with the next channel', async () => {

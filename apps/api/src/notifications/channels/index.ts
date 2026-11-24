@@ -25,7 +25,7 @@ export interface NotificationMessage {
  * the target of the installation — the room of the configuration, the chat of
  * the configuration, the addresses of the instance.
  */
-type MessageOptions = {
+export type MessageOptions = {
   topic?: string
   deepLink?: string
   /** The address of the user at the channel — the chat, the room, the mail address. */
@@ -228,13 +228,21 @@ const webPushChannel = async (
   try {
     const configuration = await readWebPushConfiguration(database, env)
 
-    const subscriptions = await database
+    const devices = await database
       .select({
+        userId: pushSubscriptions.userId,
         endpoint: pushSubscriptions.endpoint,
         p256dh: pushSubscriptions.p256dh,
         auth: pushSubscriptions.auth,
       })
       .from(pushSubscriptions)
+
+    // A personal delivery reaches only the devices of its user (ADR-0045); the
+    // instance delivery reaches every device of the instance.
+    const subscriptions =
+      options?.userId === undefined
+        ? devices
+        : devices.filter((device) => device.userId === options.userId)
 
     const result = await sendWebPushNotification(
       {

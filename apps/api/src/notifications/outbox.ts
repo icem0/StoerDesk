@@ -4,8 +4,6 @@ import { and, eq, sql, type SQL } from 'drizzle-orm'
 import type { Env } from '../config/env'
 import { createDatabase, type Database } from '../db/client'
 import {
-  notificationAccounts,
-  notificationPreferences,
   notificationMessages,
   oncallPools,
   outbox,
@@ -13,15 +11,16 @@ import {
   users,
 } from '../db/schema'
 import { ONCALL_TIMEZONE, t } from '@stoerdesk/shared'
-import type { NotificationEventType } from '@stoerdesk/shared'
+import type { NotificationChannelKind, NotificationEventType } from '@stoerdesk/shared'
 import {
   configuredChannels,
+  type MessageOptions,
   type NotificationChannel,
   type NotificationMessage,
 } from './channels/index'
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
-import { readMinimumChannels } from '../settings/notifications'
-import { ntfyRecipients, userTopic } from './receivers'
+import { readAccountSecret } from './accounts'
+import { personalRecipients } from './receivers'
 import { effectiveNtfyConfig } from './verification'
 import { CHANNEL_HEALTH_WARNING_EVENT, enqueueChannelHealthWarnings } from './health'
 import type { NtfyConfig } from './channels/ntfy'
@@ -381,6 +380,25 @@ async function recipientNameOf(
 }
 
 /**
+ * The user of a personal message (`specs/10-notifications.md` §11.4, ADR-0045):
+ * the drain needs him to read the write-only secret of his account (the Matrix
+ * token) and to send the web push only to his devices. A row without a message
+ * is a row of the installation and has no user.
+ */
+async function messageUserId(database: DbLike, messageId: string | null): Promise<string | null> {
+  if (messageId === null) {
+    return null
+  }
+
+  const [message] = await database
+    .select({ userId: notificationMessages.userId })
+    .from(notificationMessages)
+    .where(eq(notificationMessages.id, messageId))
+
+  return message?.userId ?? null
+}
+
+/**
  * Marks one row `SENT` or `FAILED` and appends exactly one
  * `notification_sent`/`notification_failed` event to the ticket history, both
  * in the same transaction. With a `fallbackChannel` the exhausted row
@@ -564,11 +582,18 @@ export async function drainOutbox(
       // link into the on-call calendar (WP-M14-28). Every channel of the chain
       // gets the link of the row it sends, so a fallback row keeps the same
       // ticket link. An older row without `ticketNo` keeps the PWA root.
-      const topic = typeof row.target.ntfyTopic === 'string' ? row.target.ntfyTopic : ''
+      const recipientTarget =
+        typeof row.target.recipientTarget === 'string' ? row.target.recipientTarget : ''
+      const topic =
+        typeof row.target.ntfyTopic === 'string' && row.target.ntfyTopic !== ''
+          ? row.target.ntfyTopic
+          : row.channel === 'ntfy'
+            ? recipientTarget
+            : ''
       const deepLink = isShiftRow
         ? oncallDeepLink(env.PWA_URL)
         : ticketDeepLink(env.PWA_URL, ticketNo)
-      const options: { topic?: string; deepLink?: string } = {}
+      const options: MessageOptions = {}
 
       if (topic !== '') {
         options.topic = topic
@@ -576,6 +601,26 @@ export async function drainOutbox(
 
       if (deepLink !== '') {
         options.deepLink = deepLink
+      }
+
+      // The target of the user (ADR-0045): the row of a personal delivery names
+      // the address of the user, the drain reads the write-only secret of his
+      // account (the Matrix token) from the account itself — the secret never
+      // enters the row of the outbox (§11.13).
+      if (recipientTarget !== '') {
+        options.recipientTarget = recipientTarget
+      }
+
+      const userId = await messageUserId(database, row.notificationMessageId)
+
+      if (userId !== null) {
+        options.userId = userId
+
+        const secret = await readAccountSecret(database, userId, row.channel)
+
+        if (secret !== '') {
+          options.recipientSecret = secret
+        }
       }
 
       await channel.send(messageOf(row.target, row.eventType), options)
@@ -798,83 +843,31 @@ export async function enqueuePersonalDeliveries(
  * HTTP call, so a channel failure can never lose the ticket event (`PLAN.md` §12).
  * Returns the number of rows written; an unconfigured environment writes none.
  *
- * The ntfy target of `ticket.created` follows the selection of §11.4: a user
- * who selected `ntfy` for the event receives the row on the own topic
- * (`stoerdesk-<userId>` or the stored account topic, WP-M14-45) instead of the
- * instance topic. Without a selection the configured chain is written as before.
- *
- * A critical ticket additionally queues its mandatory minimum channels
- * (`notifications.minimum_channels`, WP-M14-18) on top of the user's selection;
- * a channel that is already queued for the ticket is not queued twice.
+ * The rows of the new ticket go to the **channels of the installation** — the
+ * chain of §11.1 — the way the office is reached (ADR-0045). The channels of a
+ * *user* carry the messages that name him: the assignment, the answer of the
+ * assignment, the escalation that addresses him and the readiness of his shift
+ * (`enqueuePersonalDeliveries`). The former selection per event type and the
+ * mandatory channels of the critical tickets are gone: the rule of the
+ * administration says what a user must have set up (§11.9), it does not decide
+ * the way of a message.
  */
 export async function enqueueOutbox(
   database: DbLike,
   ticket: OutboxTicket,
   env: Env,
-  eventType: string = 'ticket.created',
+  _eventType: string = 'ticket.created',
   ntfy?: NtfyConfig | null,
 ): Promise<number> {
-  const ntfyConfigured =
-    ntfy === undefined
-      ? env.NTFY_URL !== '' && env.NTFY_TOPIC !== ''
-      : ntfy !== null
-  const recipients = ntfyConfigured ? await ntfyRecipients(database, eventType) : []
+  const rows = outboxRows(ticket, env, ntfy)
 
-  const rows = outboxRows(ticket, env, ntfy).filter(
-    (row) => row.channel !== 'ntfy' || recipients.length === 0,
-  )
-
-  // Personal deliveries for the users that selected ntfy for the event
-  // (§11.4): each of them gets a message row next to the outbox row, so the
-  // inbox of the user shows the message and its state (WP-M14-120b).
-  const deliveries: PersonalDelivery[] = recipients.map((recipient) => {
-    const message = ticketMessageOf({
-      ...messageParams(ticket),
-      ntfyTopic: recipient.topic,
-    })
-
-    return {
-      userId: recipient.userId,
-      channel: 'ntfy',
-      eventType,
-      title: message.title,
-      body: message.body,
-      ticketId: ticket.id,
-      target: { ...messageParams(ticket), ntfyTopic: recipient.topic },
-    }
-  })
-
-  if (ticket.priority === 'critical') {
-    for (const channel of await readMinimumChannels(database)) {
-      if (ntfy === null && channel === 'ntfy') {
-        continue
-      }
-
-      // A personal delivery of the channel already satisfies the mandatory
-      // minimum — the user is notified through it (§11.9).
-      if (rows.some((row) => row.channel === channel)) {
-        continue
-      }
-
-      if (deliveries.some((delivery) => delivery.channel === channel)) {
-        continue
-      }
-
-      rows.push({ ticketId: ticket.id, channel, target: messageParams(ticket) })
-    }
-  }
-
-  if (rows.length === 0 && deliveries.length === 0) {
+  if (rows.length === 0) {
     return 0
   }
 
-  if (rows.length > 0) {
-    await database.insert(outbox).values(rows)
-  }
+  await database.insert(outbox).values(rows)
 
-  await enqueuePersonalDeliveries(database, deliveries)
-
-  return rows.length + deliveries.length
+  return rows.length
 }
 
 /**
@@ -913,19 +906,19 @@ export async function enqueueOncallOutbox(
     shiftId: shift.id,
   }
 
-  const selected = await database
-    .select({ channel: notificationPreferences.channel })
-    .from(notificationPreferences)
-    .where(
-      and(
-        eq(notificationPreferences.userId, userId),
-        eq(notificationPreferences.eventType, eventType),
-      ),
-    )
-
-  const channels = selected.length > 0
-    ? selected.map((row) => row.channel)
-    : configuredChannels(env).map((channel) => channel.name)
+  // The channels of the technician (§11.4, ADR-0045): his confirmed
+  // accounts and his web-push devices. Without a confirmed channel the message
+  // goes over the chain of the installation — the fallback of §11.7: a message
+  // never stays in the queue because a user has no channel of his own.
+  const personal = await personalRecipients(database, [userId])
+  const channels =
+    personal.length > 0
+      ? personal
+      : configuredChannels(env).map((channel) => ({
+          userId,
+          channel: channel.name as NotificationChannelKind,
+          target: '',
+        }))
 
   const pending = await database
     .select({ channel: outbox.channel })
@@ -940,39 +933,29 @@ export async function enqueueOncallOutbox(
 
   const pendingChannels = new Set(pending.map((row) => row.channel))
 
-  const ntfyAccounts = await database
-    .select({ externalId: notificationAccounts.externalId })
-    .from(notificationAccounts)
-    .where(
-      and(
-        eq(notificationAccounts.userId, userId),
-        eq(notificationAccounts.channel, 'ntfy'),
-      ),
-    )
-
-  const hasSelection = selected.length > 0
-  const firstNtfyAccount = ntfyAccounts[0]
-  const ntfyTopic = firstNtfyAccount?.externalId ?? userTopic(userId)
-
   // Personal deliveries for the readiness of the technician (WP-M14-120b): each
   // channel gets a message row next to the outbox row, so the inbox of the
   // technician shows the message and its state.
   const deliveries: PersonalDelivery[] = []
 
   for (const channel of channels) {
-    if (pendingChannels.has(channel)) {
+    if (pendingChannels.has(channel.channel)) {
       continue
     }
 
     const rowTarget: Record<string, unknown> = { ...target }
 
-    if (channel === 'ntfy' && hasSelection) {
-      rowTarget.ntfyTopic = ntfyTopic
+    if (channel.target !== '') {
+      rowTarget.recipientTarget = channel.target
+    }
+
+    if (channel.channel === 'ntfy' && channel.target !== '') {
+      rowTarget.ntfyTopic = channel.target
     }
 
     deliveries.push({
       userId,
-      channel,
+      channel: channel.channel,
       eventType,
       title: String(target.poolName ?? ''),
       body: [

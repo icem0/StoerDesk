@@ -342,7 +342,7 @@ export function InboxPage() {
               <option value="">{t('inbox.filter.eventAll')}</option>
               {NOTIFICATION_EVENTS.map((event) => (
                 <option key={event} value={event}>
-                  {t(`notifications.selection.events.${event}`)}
+                  {t(`notifications.eventNames.${event}`)}
                 </option>
               ))}
             </select>

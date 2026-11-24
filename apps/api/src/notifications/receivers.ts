@@ -1,16 +1,26 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull } from 'drizzle-orm'
 
+import type { NotificationChannelKind } from '@stoerdesk/shared'
+
+import type { Env } from '../config/env'
 import type { Database } from '../db/client'
-import { notificationAccounts, notificationPreferences } from '../db/schema'
+import { notificationAccounts, pushSubscriptions } from '../db/schema'
+import { configuredChannels } from './channels'
 
 /**
- * The recipients of an event per user (`specs/10-notifications.md` §11.3,
- * §11.4, §11.5, WP-M14-45): a user who selected a channel for an event type
- * receives the event at the address of the own account. The ntfy topic of a
- * user is the stored `external_id` of the account — a random secret of the
- * server (ADR-0024 point 6, WP-M14-72); a user without an ntfy account gets no
- * ntfy topic. Only machine keys and the topic of a user leave this module —
- * never a secret and never contact data (§11.13).
+ * The channels of the users (`specs/10-notifications.md` §11.3, §11.4, ADR-0045):
+ * a user has channels, not a selection per event type. The channels of a user
+ * are his **confirmed** accounts — the account whose address the user proved
+ * with a one-time code (§11.3a) — and his web-push devices.
+ *
+ * A channel that is only linked does not take part: an address that was never
+ * confirmed is an address that may not work, and a message to it would be lost
+ * without a trace. The target of the user travels with the channel — the topic
+ * of the user, the chat of the user, the room of the user, the address of the
+ * user — and the drain hands it to the adapter (WP-M24-06b).
+ *
+ * Only machine keys and the target of the user leave this module — never a
+ * secret and never contact data (§11.13).
  */
 
 type DbSelect = Pick<Database['database'], 'select'>
@@ -24,166 +34,133 @@ export function userTopic(userId: string): string {
   return `stoerdesk-${userId}`
 }
 
-/**
- * The ntfy recipients of an event per user (`specs/10-notifications.md` §11.3,
- * §11.4, §11.5, WP-M14-45): a user who selected a channel for an event type
- * receives the event at the address of the own account. Returns one entry per
- * user with a stored ntfy topic, deduplicated by topic — a repeated selection
- * never delivers twice; an empty answer keeps the instance chain of §11.1.
- */
-export interface NtfyRecipient {
+/** One channel of a user with the target of the user at that channel. */
+export interface UserChannel {
+  /** The owner of the channel. */
   userId: string
-  topic: string
+  /** The kind of the channel. */
+  channel: NotificationChannelKind
+  /**
+   * The address of the user at the channel: the topic of the ntfy, the chat id
+   * of Telegram, the room of Matrix, the address of the e-mail, the chat id of
+   * the bridge. Empty for the web push — its target is the device of the user.
+   */
+  target: string
 }
 
-export async function ntfyRecipients(
+/**
+ * The confirmed channels of one user (`specs/10-notifications.md` §11.3a,
+ * ADR-0045): one entry per confirmed account and one for the web push while
+ * the user has a device. An account without a confirmation is not a channel of
+ * the user.
+ */
+export async function userChannels(
   database: DbSelect,
-  eventType: string,
-): Promise<NtfyRecipient[]> {
-  const rows = await database
+  userId: string,
+): Promise<UserChannel[]> {
+  const accounts = await database
     .select({
-      userId: notificationPreferences.userId,
+      channel: notificationAccounts.channel,
       externalId: notificationAccounts.externalId,
+      target: notificationAccounts.target,
     })
-    .from(notificationPreferences)
-    .leftJoin(
-      notificationAccounts,
-      and(
-        eq(notificationAccounts.userId, notificationPreferences.userId),
-        eq(notificationAccounts.channel, 'ntfy'),
-      ),
-    )
+    .from(notificationAccounts)
     .where(
       and(
-        eq(notificationPreferences.eventType, eventType),
-        eq(notificationPreferences.channel, 'ntfy'),
+        eq(notificationAccounts.userId, userId),
+        isNotNull(notificationAccounts.verifiedAt),
       ),
     )
 
-  const recipients: NtfyRecipient[] = []
-  const seen = new Set<string>()
+  const channels: UserChannel[] = accounts.map((account) => ({
+    userId,
+    channel: account.channel as NotificationChannelKind,
+    target: account.target !== '' ? account.target : account.externalId,
+  }))
 
-  for (const row of rows) {
-    if (row.externalId === '' || row.externalId === null || seen.has(row.externalId)) {
-      continue
-    }
+  const devices = await database
+    .select({ endpoint: pushSubscriptions.endpoint })
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.userId, userId))
+    .limit(1)
 
-    seen.add(row.externalId)
-    recipients.push({ userId: row.userId, topic: row.externalId })
+  if (devices.length > 0) {
+    channels.push({ userId, channel: 'webpush', target: '' })
   }
 
-  return recipients
+  return channels
 }
 
 /**
- * One recipient of an escalation with the way the message takes
- * (`specs/07-escalation.md` §7.5, `specs/10-notifications.md` §11.4, ADR-0037).
- */
-export interface EscalationRecipient {
-  /** The addressee of the message. */
-  userId: string
-  /** The channel the recipient chose for the event type. */
-  channel: string
-  /** The own ntfy topic of the recipient — empty for every other channel. */
-  topic: string
-}
-
-/**
- * The recipients of an escalation with their way (`specs/07-escalation.md`
- * §7.5, `specs/10-notifications.md` §11.4, ADR-0037): the target of the action
- * names the recipient, the recipient names the way. Every recipient gets one
- * entry per channel they selected for the event type
- * (`notification_preferences`); a recipient **without** a selection keeps the
- * personal fallback of ADR-0037 — their own ntfy topic
- * (`notification_accounts`) — and a recipient without an ntfy account contributes
- * nothing. The action never becomes a broadcast: a target addresses people.
+ * The recipients of a personal message with the way the message takes
+ * (`specs/10-notifications.md` §11.4, ADR-0037, ADR-0045): the target of the
+ * action names the recipient, the channels of the recipient decide the way.
+ * Every confirmed channel of every recipient is one entry — a recipient
+ * without a confirmed channel contributes nothing, and the message then goes
+ * over the chain of the installation (the fallback of §11.7).
  *
- * Only machine keys and the topic of a user leave this module — never a secret
- * and never contact data (§11.13).
+ * Only machine keys and the target of the user leave this module — never a
+ * secret and never contact data (§11.13).
  */
-export async function escalationRecipients(
+export async function personalRecipients(
   database: DbSelect,
-  eventType: string,
   userIds: readonly string[],
-): Promise<EscalationRecipient[]> {
+  env?: Env,
+): Promise<UserChannel[]> {
   if (userIds.length === 0) {
     return []
   }
 
-  const [selections, accounts] = await Promise.all([
-    database
-      .select({
-        userId: notificationPreferences.userId,
-        channel: notificationPreferences.channel,
-      })
-      .from(notificationPreferences)
-      .where(
-        and(
-          eq(notificationPreferences.eventType, eventType),
-          inArray(notificationPreferences.userId, userIds),
-        ),
+  const accounts = await database
+    .select({
+      userId: notificationAccounts.userId,
+      channel: notificationAccounts.channel,
+      externalId: notificationAccounts.externalId,
+      target: notificationAccounts.target,
+    })
+    .from(notificationAccounts)
+    .where(
+      and(
+        inArray(notificationAccounts.userId, userIds),
+        isNotNull(notificationAccounts.verifiedAt),
       ),
-    database
-      .select({
-        userId: notificationAccounts.userId,
-        externalId: notificationAccounts.externalId,
-      })
-      .from(notificationAccounts)
-      .where(
-        and(
-          eq(notificationAccounts.channel, 'ntfy'),
-          inArray(notificationAccounts.userId, userIds),
-        ),
-      ),
-  ])
+    )
 
-  const topicByUser = new Map<string, string>()
+  const recipients: UserChannel[] = accounts.map((account) => ({
+    userId: account.userId,
+    channel: account.channel as NotificationChannelKind,
+    target: account.target !== '' ? account.target : account.externalId,
+  }))
 
-  for (const account of accounts) {
-    if (account.externalId !== '' && !topicByUser.has(account.userId)) {
-      topicByUser.set(account.userId, account.externalId)
-    }
+  const devices = await database
+    .select({ userId: pushSubscriptions.userId })
+    .from(pushSubscriptions)
+    .where(inArray(pushSubscriptions.userId, userIds))
+
+  const withDevice = new Set(devices.map((device) => device.userId))
+
+  for (const userId of withDevice) {
+    recipients.push({ userId, channel: 'webpush', target: '' })
   }
 
-  const channelsByUser = new Map<string, string[]>()
+  // The fallback of the delivery (§11.7, ADR-0045): a user without a confirmed
+  // channel is notified over the chain of the installation — a message never
+  // stays in the queue because a user has no channel of his own.
+  if (env !== undefined) {
+    const chain = configuredChannels(env)
 
-  for (const selection of selections) {
-    const channels = channelsByUser.get(selection.userId) ?? []
-
-    if (!channels.includes(selection.channel)) {
-      channels.push(selection.channel)
-    }
-
-    channelsByUser.set(selection.userId, channels)
-  }
-
-  const recipients: EscalationRecipient[] = []
-  const seen = new Set<string>()
-
-  for (const userId of userIds) {
-    const channels = channelsByUser.get(userId) ?? []
-    const topic = topicByUser.get(userId) ?? ''
-
-    if (channels.length === 0) {
-      // Without a selection the recipient keeps their own ntfy topic
-      // (ADR-0037); without an ntfy account there is no personal way left.
-      if (topic === '') {
+    for (const userId of userIds) {
+      if (recipients.some((recipient) => recipient.userId === userId)) {
         continue
       }
 
-      recipients.push({ userId, channel: 'ntfy', topic })
-      continue
-    }
-
-    for (const channel of channels) {
-      const key = `${userId}:${channel}`
-
-      if (seen.has(key)) {
-        continue
+      for (const channel of chain) {
+        recipients.push({
+          userId,
+          channel: channel.name as NotificationChannelKind,
+          target: '',
+        })
       }
-
-      seen.add(key)
-      recipients.push({ userId, channel, topic: channel === 'ntfy' ? topic : '' })
     }
   }
 

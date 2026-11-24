@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createSession } from '../../auth/session'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
-import { notificationPreferences, oncallPools, outbox } from '../../db/schema'
+import { notificationAccounts, oncallPools, outbox } from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { buildServer } from '../../index'
 
@@ -75,10 +75,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       return `session=${session.token}`
     }
 
-    async function selectPreferences(userId: string, eventType: string, channel: string) {
+    /**
+     * The account of a technician is confirmed (§11.3a, ADR-0045): a code over
+     * the channel proved that the address works. The account is the way of the
+     * technician — there is no selection per event type any more.
+     */
+    async function confirmAccount(userId: string, channel: string, externalId: string) {
       await db
-        .insert(notificationPreferences)
-        .values({ userId, eventType, channel })
+        .insert(notificationAccounts)
+        .values({ userId, channel, externalId, verifiedAt: new Date() })
         .onConflictDoNothing()
     }
 
@@ -191,7 +196,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     it('queues the selected channel of a technician who selected one', async () => {
-      await selectPreferences(otherId, 'oncall.assigned', 'telegram')
+      await confirmAccount(otherId, 'telegram', '-555111222333')
 
       const created = await createShift(cookies['admin'], { userId: otherId, publish: true })
 
@@ -254,7 +259,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const created = await createShift(cookies['admin'], { userId: techId, publish: true })
       const shiftId = created.json<ShiftRow>().id
 
-      await selectPreferences(otherId, 'oncall.swap_requested', 'telegram')
+      await confirmAccount(otherId, 'telegram', '-555111222333')
 
       const confirmed = await postConfirm(cookies['tech'], shiftId)
 
