@@ -5,7 +5,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 
 import * as schema from '../../db/schema'
-import { objects, ticketPauses, tickets } from '../../db/schema'
+import { objects, ticketPauses, textTemplateTranslations, textTemplates, tickets } from '../../db/schema'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import type { StatsFilter } from '@stoerdesk/shared'
 import { buildStatsFilter } from '../filters'
@@ -58,6 +58,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         })
         .returning({ id: objects.id })
       objectId = onlyRow(object, 'the inserted object').id
+
+      // The catalog of the fault types carries the readable text of the keys
+      // (ADR-0049 decision 2); the statistics answer it beside the key.
+      const [template] = await db
+        .insert(textTemplates)
+        .values({ key: 'ELECTRICAL' })
+        .returning({ id: textTemplates.id })
+      await db.insert(textTemplateTranslations).values([
+        { templateId: onlyRow(template, 'the template').id, locale: 'de', text: 'Störung Strom' },
+        { templateId: onlyRow(template, 'the template').id, locale: 'en', text: 'Power fault' },
+      ])
 
       // Three real tickets with known reaction times: review 10/30/20 and
       // acknowledge 50/120/80 minutes.
@@ -225,8 +236,20 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(onlyRow(result.series[1], 'the second bucket').total).toBe(0)
 
       expect(result.bySystemType).toEqual([{ key: 'BMA', count: 3 }])
-      expect(result.byFaultTemplate).toContainEqual({ key: 'ELECTRICAL', count: 3 })
-      expect(result.byFaultTemplate).toContainEqual({ key: 'WATER', count: 2 })
+      // The row carries the readable text of the catalog beside the key; a key
+      // that no catalog knows answers an empty label.
+      expect(result.byFaultTemplate).toContainEqual({
+        key: 'ELECTRICAL',
+        labelDe: 'Störung Strom',
+        labelEn: 'Power fault',
+        count: 3,
+      })
+      expect(result.byFaultTemplate).toContainEqual({
+        key: 'WATER',
+        labelDe: '',
+        labelEn: '',
+        count: 2,
+      })
       expect(result.bySource).toEqual([{ key: 'QR', count: 3 }])
     })
 

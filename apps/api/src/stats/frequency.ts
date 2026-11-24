@@ -10,14 +10,14 @@ type Db = Database['database']
 export type Frequency = {
   series: { bucketStart: string; total: number }[]
   bySystemType: { key: string; count: number }[]
-  byFaultTemplate: { key: string; count: number }[]
+  byFaultTemplate: { key: string; labelDe?: string; labelEn?: string; count: number }[]
   bySource: { key: string; count: number }[]
-  byDetectedError: { key: string; count: number }[]
+  byDetectedError: { key: string; labelDe?: string; labelEn?: string; count: number }[]
 }
 
 type SeriesRow = { bucket_start: Date | string; total: string }
 type GroupRow = { key: string; count: string }
-type DetectedErrorRow = { key: string; count: string }
+type LabelRow = { key: string; label_de: string | null; label_en: string | null; count: string }
 
 /** Coerces a database timestamp value (Date or string) to a valid Date. */
 function asDate(value: Date | string): Date {
@@ -92,12 +92,24 @@ export async function queryFrequency(
     ORDER BY COUNT(*) DESC, key
   `)) as GroupRow[]
   const byFaultTemplate = (await database.execute(sql`
-    SELECT "fault_template_key" AS key, COUNT(*)::text AS count
-    FROM "stats_ticket_faults"
+    -- The readable text of the fault template travels with the key
+    -- (ADR-0049 decision 2): the catalog of the report form carries the
+    -- translation of every key, an archived template included.
+    SELECT
+      f."fault_template_key" AS key,
+      COALESCE(MAX(t_de."text"), '') AS label_de,
+      COALESCE(MAX(t_en."text"), '') AS label_en,
+      COUNT(*)::text AS count
+    FROM "stats_ticket_faults" f
+    LEFT JOIN "text_templates" tt ON tt."key" = f."fault_template_key"
+    LEFT JOIN "text_template_translations" t_de
+      ON t_de."template_id" = tt."id" AND t_de."locale" = 'de'
+    LEFT JOIN "text_template_translations" t_en
+      ON t_en."template_id" = tt."id" AND t_en."locale" = 'en'
     WHERE ${where}
-    GROUP BY "fault_template_key"
+    GROUP BY f."fault_template_key"
     ORDER BY COUNT(*) DESC, key
-  `)) as GroupRow[]
+  `)) as LabelRow[]
 
   const bySource = (await database.execute(sql`
     SELECT "source" AS key, COUNT(*)::text AS count
@@ -108,12 +120,19 @@ export async function queryFrequency(
   `)) as GroupRow[]
 
   const byDetectedError = (await database.execute(sql`
-    SELECT "detected_error_key" AS key, COUNT(*)::text AS count
-    FROM "stats_ticket_detected_errors"
+    -- The label of the detected error travels with the key
+    -- (ADR-0049 decision 2); an archived entry keeps its label.
+    SELECT
+      f."detected_error_key" AS key,
+      COALESCE(MAX(d."label_de"), '') AS label_de,
+      COALESCE(MAX(d."label_en"), '') AS label_en,
+      COUNT(*)::text AS count
+    FROM "stats_ticket_detected_errors" f
+    LEFT JOIN "detected_errors" d ON d."key" = f."detected_error_key"
     WHERE ${where}
-    GROUP BY "detected_error_key"
+    GROUP BY f."detected_error_key"
     ORDER BY COUNT(*) DESC, key
-  `)) as DetectedErrorRow[]
+  `)) as LabelRow[]
 
   return {
     series: series.map((row) => ({
@@ -121,8 +140,18 @@ export async function queryFrequency(
       total: Number(row.total),
     })),
     bySystemType: bySystemType.map((row) => ({ key: row.key, count: Number(row.count) })),
-    byFaultTemplate: byFaultTemplate.map((row) => ({ key: row.key, count: Number(row.count) })),
+    byFaultTemplate: byFaultTemplate.map((row) => ({
+      key: row.key,
+      labelDe: row.label_de,
+      labelEn: row.label_en,
+      count: Number(row.count),
+    })),
     bySource: bySource.map((row) => ({ key: row.key, count: Number(row.count) })),
-    byDetectedError: byDetectedError.map((row) => ({ key: row.key, count: Number(row.count) })),
+    byDetectedError: byDetectedError.map((row) => ({
+      key: row.key,
+      labelDe: row.label_de,
+      labelEn: row.label_en,
+      count: Number(row.count),
+    })),
   }
 }

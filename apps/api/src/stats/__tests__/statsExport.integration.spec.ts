@@ -18,7 +18,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped statistics CSV export: ${testDatabase.reason}\n`)
 }
 
-const { objects, roles, tickets, userRoles, users } = schema
+const { detectedErrors, objects, roles, textTemplateTranslations, textTemplates, tickets, userRoles, users } = schema
 
 type WithCookieHeaders = { headers: IncomingHttpHeaders | OutgoingHttpHeaders }
 
@@ -123,6 +123,23 @@ describe.skipIf(testDatabase.status === 'unavailable')('statistics CSV export (i
       receivedAt: now,
       deadlineAt: new Date(now.getTime() + 60 * 60 * 1000),
       acknowledgedAt: new Date(now.getTime() + 30 * 60 * 1000),
+      faultTemplateKeys: ['EXPORT_FAULT'],
+      detectedErrorKeys: ['export_error'],
+    })
+
+    // The catalogs carry the readable text of the keys (ADR-0049 decision 2).
+    const templateId = onlyRow(
+      await db.insert(textTemplates).values({ key: 'EXPORT_FAULT' }).returning({ id: textTemplates.id }),
+      'the inserted template',
+    ).id
+    await db.insert(textTemplateTranslations).values([
+      { templateId, locale: 'de', text: 'Störung Export' },
+      { templateId, locale: 'en', text: 'Export fault' },
+    ])
+    await db.insert(detectedErrors).values({
+      key: 'export_error',
+      labelDe: 'Fehler Export',
+      labelEn: 'Export error',
     })
 
     process.env.DATABASE_URL = url
@@ -163,6 +180,10 @@ describe.skipIf(testDatabase.status === 'unavailable')('statistics CSV export (i
     expect(body).toContain('objects;')
     expect(body).toContain('compliance;')
     expect(body).toContain('declines;')
+    // The labels of the groupings travel with the export (ADR-0049 decision 2).
+    expect(body).toContain('frequency;byFaultTemplateLabelDe;day;EXPORT_FAULT;Störung Export')
+    expect(body).toContain('frequency;byFaultTemplateLabelEn;day;EXPORT_FAULT;Export fault')
+    expect(body).toContain('frequency;byDetectedErrorLabelDe;day;export_error;Fehler Export')
     expect(body).toContain('"Feuer;Wache"')
   })
 

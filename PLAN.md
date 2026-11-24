@@ -823,6 +823,18 @@ Rückmeldung"; ADR-0049 decision 1 takes it away: the block carries three
 averages (review, acknowledge, processing), the SQL loses the column
 `first_response_at` and the row leaves the display. ADR-0015 is amended.
 
+**WP-M26-03 — the statistics name the readable text (done).** The four groupings
+of the frequency answered the machine key and the heading of the column called
+it „Schlüssel“. ADR-0049 decision 2 puts the readable text beside the key: the
+answer of `GET /api/v1/stats/frequency` carries `labelDe` and `labelEn` for the fault
+templates and the detected errors, and the page shows the text — the system type
+from the fixed list of the administration, the source from its own list, the
+fault type and the detected error from the catalog of the answer. A key that no
+catalog knows stays visible as it is. The CSV export writes the labels as their
+own metric rows, and the metrics of the reaction times explain themselves: the
+median, the average and the p90 carry a hint, the p90 says that 90 % of the
+tickets were faster.
+
 **WP-M26-01 — the statistics know only phases with data (done).** The phase
 `firstResponse` of the statistics measured the column `tickets.first_response_at`,
 and no workflow event ever writes that column — the phase answered a count of

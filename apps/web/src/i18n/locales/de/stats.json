@@ -39,20 +39,23 @@
   },
   "reaction": {
     "title": "Reaktionszeiten",
-    "hint": "In Minuten, ab 60 Minuten in Stunden; Pausen werden separat ausgewiesen.",
+    "hint": "Je Phase die Zeit von der Meldung bis zum Schritt; in Minuten, ab 60 Minuten in Stunden. Pausen werden separat ausgewiesen.",
     "phase": {
-      "review": "Prüfung",
-      "acknowledge": "Bestätigung"
+      "review": "Beginn der Prüfung",
+      "acknowledge": "Bestätigung an den Melder"
     },
     "count": "Anzahl",
     "median": "Median",
-    "average": "Mittelwert",
+    "average": "Ø (Durchschnitt)",
     "p90": "P90",
     "minutes": "{{value}} min",
     "hours": "{{value}} h",
     "pausedTickets": "{{count}} Meldungen mit Pause",
     "pauseMinutes": "{{count}} Pausenminuten",
-    "pauseHours": "{{value}} Pausenstunden"
+    "pauseHours": "{{value}} Pausenstunden",
+    "medianHint": "Die Hälfte der Meldungen war schneller, die andere Hälfte langsamer.",
+    "averageHint": "Die Zeiten aller Meldungen werden addiert und durch die Anzahl geteilt.",
+    "p90Hint": "90 % der Meldungen waren schneller, 10 % waren langsamer."
   },
   "frequency": {
     "title": "Häufigkeit",
@@ -62,7 +65,7 @@
     "byFaultTemplate": "Nach Störungsart",
     "bySource": "Nach Quelle",
     "byDetectedError": "Nach festgestelltem Fehler",
-    "key": "Schlüssel",
+    "key": "Art",
     "count": "Anzahl",
     "source": {
       "QR": "QR-Code",

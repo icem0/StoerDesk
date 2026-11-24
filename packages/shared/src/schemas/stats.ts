@@ -85,8 +85,18 @@ const frequencySeriesPointSchema = z.object({
   total: z.number().int().nonnegative(),
 })
 
+/**
+ * One row of a grouping (`specs/12-stats.md` §12.3, ADR-0049 decision 2).
+ *
+ * The key stays the machine key of the row — the drilldown and the export use
+ * it. The labels carry the readable text of the row in both languages of the
+ * installation; a group without a catalog entry (a free-text system type, an
+ * unknown key) answers no label, and the web falls back to the key.
+ */
 const frequencyGroupSchema = z.object({
   key: z.string(),
+  labelDe: z.string().optional(),
+  labelEn: z.string().optional(),
   count: z.number().int().nonnegative(),
 })
 

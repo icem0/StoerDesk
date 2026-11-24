@@ -1,7 +1,7 @@
 # WP-M26-03: the statistics name the readable text
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M26-02
 phase: 26
 milestone: m26

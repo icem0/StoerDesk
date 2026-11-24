@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The statistics name the readable text (**WP-M26-03**, phase 26, ADR-0049):
+  the groupings of the frequency answer the label of the fault type and of the
+  detected error beside the key, and the page shows the readable text — the
+  system type, the source, the fault type and the detected error. The heading
+  of the column reads „Art“ and not „Schlüssel“; the median, the average and
+  the p90 carry a hint, and the p90 says that 90 % of the tickets were faster.
 - The dashboard knows the phase neither (**WP-M26-02**, phase 26, ADR-0049):
   the block of the evaluations carries three averages — review, acknowledge and
   processing — and the row „Ø Zeit bis Rückmeldung“ is gone. It showed the

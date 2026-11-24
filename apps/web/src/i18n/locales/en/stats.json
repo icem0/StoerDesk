@@ -39,20 +39,23 @@
   },
   "reaction": {
     "title": "Reaction times",
-    "hint": "In minutes, from 60 minutes on in hours; pauses are reported separately.",
+    "hint": "Per phase the time from the report to the step; in minutes, from 60 minutes on in hours. Pauses are reported separately.",
     "phase": {
-      "review": "Review",
-      "acknowledge": "Acknowledge"
+      "review": "Start of the review",
+      "acknowledge": "Acknowledgement to the reporter"
     },
     "count": "Count",
     "median": "Median",
-    "average": "Average",
+    "average": "Ø (average)",
     "p90": "P90",
     "minutes": "{{value}} min",
     "hours": "{{value}} h",
     "pausedTickets": "{{count}} tickets with a pause",
     "pauseMinutes": "{{count}} pause minutes",
-    "pauseHours": "{{value}} pause hours"
+    "pauseHours": "{{value}} pause hours",
+    "medianHint": "Half of the tickets were faster, the other half slower.",
+    "averageHint": "The times of all tickets are added and divided by the number of tickets.",
+    "p90Hint": "90 % of the tickets were faster, 10 % were slower."
   },
   "frequency": {
     "title": "Frequency",
@@ -62,7 +65,7 @@
     "byFaultTemplate": "By fault type",
     "bySource": "By source",
     "byDetectedError": "By detected error",
-    "key": "Key",
+    "key": "Type",
     "count": "Count",
     "source": {
       "QR": "QR code",

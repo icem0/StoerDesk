@@ -73,12 +73,21 @@ function useSection<T>(path: string, query: string) {
   })
 }
 
+/** One row of a grouping (`specs/12-stats.md` §12.3, ADR-0049 decision 2). */
+type GroupRow = {
+  key: string
+  count: number
+  labelDe?: string
+  labelEn?: string
+}
+
 function GroupTable(props: {
   caption: string
-  rows: Array<{ key: string; count: number }>
+  rows: GroupRow[]
   keyLabel: string
   countLabel: string
-  translateKey?: (key: string) => string
+  /** The readable text of the row; the key is the fallback (ADR-0049). */
+  labelOf?: (row: GroupRow) => string
 }) {
   return (
     <table className="w-full border-collapse text-sm">
@@ -104,7 +113,7 @@ function GroupTable(props: {
           props.rows.map((row) => (
             <tr className="border-b border-slate-800" key={row.key}>
               <td className="py-1 pr-2 text-slate-200">
-                {props.translateKey ? props.translateKey(row.key) : row.key}
+                {props.labelOf ? props.labelOf(row) : row.key}
               </td>
               <td className="py-1 text-right tabular-nums text-slate-300">{row.count}</td>
             </tr>
@@ -214,6 +223,27 @@ export function StatsPage() {
     isHourValue(minutes)
       ? t('reaction.hours', { value: formatHours(minutes, i18n.language) })
       : t('reaction.minutes', { value: minutes })
+
+  const locale = i18n.language === 'en' ? 'en' : 'de'
+
+  /**
+   * The readable text of a row of a grouping (ADR-0049 decision 2): the label
+   * of the catalog in the language of the interface, the key as the fallback
+   * for a value that no catalog knows.
+   */
+  const catalogLabel = (row: GroupRow): string => {
+    const label = locale === 'en' ? row.labelEn : row.labelDe
+
+    return label !== undefined && label !== '' ? label : row.key
+  }
+
+  /** The system type is a free text; the known types come from the settings. */
+  const systemTypeLabel = (row: GroupRow): string =>
+    t(`settings:admin.escalation.condition.values.systemType.${row.key}`, { defaultValue: row.key })
+
+  /** The source of the report is a fixed list of three values. */
+  const sourceLabel = (row: GroupRow): string =>
+    t(`frequency.source.${row.key}`, { defaultValue: row.key })
 
   return (
     <section className="flex flex-col gap-6">
@@ -406,15 +436,21 @@ export function StatsPage() {
                 <dl className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
                   <dt className="text-slate-500">{t('reaction.count')}</dt>
                   <dd className="text-right tabular-nums text-slate-200">{phase.data.count}</dd>
-                  <dt className="text-slate-500">{t('reaction.median')}</dt>
+                  <dt className="text-slate-500" title={t('reaction.medianHint')}>
+                    {t('reaction.median')}
+                  </dt>
                   <dd className="text-right tabular-nums text-slate-200">
                     {duration(phase.data.medianMinutes)}
                   </dd>
-                  <dt className="text-slate-500">{t('reaction.average')}</dt>
+                  <dt className="text-slate-500" title={t('reaction.averageHint')}>
+                    {t('reaction.average')}
+                  </dt>
                   <dd className="text-right tabular-nums text-slate-200">
                     {duration(phase.data.averageMinutes)}
                   </dd>
-                  <dt className="text-slate-500">{t('reaction.p90')}</dt>
+                  <dt className="text-slate-500" title={t('reaction.p90Hint')}>
+                    {t('reaction.p90')}
+                  </dt>
                   <dd className="text-right tabular-nums text-slate-200">
                     {duration(phase.data.p90Minutes)}
                   </dd>
@@ -453,25 +489,28 @@ export function StatsPage() {
               caption={t('frequency.bySystemType')}
               countLabel={t('frequency.count')}
               keyLabel={t('frequency.key')}
+              labelOf={(row) => systemTypeLabel(row)}
               rows={frequency.data.bySystemType}
             />
             <GroupTable
               caption={t('frequency.byFaultTemplate')}
               countLabel={t('frequency.count')}
               keyLabel={t('frequency.key')}
+              labelOf={(row) => catalogLabel(row)}
               rows={frequency.data.byFaultTemplate}
             />
             <GroupTable
               caption={t('frequency.bySource')}
               countLabel={t('frequency.count')}
               keyLabel={t('frequency.key')}
+              labelOf={(row) => sourceLabel(row)}
               rows={frequency.data.bySource}
-              translateKey={(key) => t(`frequency.source.${key}`, { defaultValue: key })}
             />
             <GroupTable
               caption={t('frequency.byDetectedError')}
               countLabel={t('frequency.count')}
               keyLabel={t('frequency.key')}
+              labelOf={(row) => catalogLabel(row)}
               rows={frequency.data.byDetectedError}
             />
           </div>

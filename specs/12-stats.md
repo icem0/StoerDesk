@@ -60,15 +60,24 @@ reaction time next to the pause burden of the same period.
 
 ## 12.3 Frequency
 
-Three groupings over the same filtered set:
+Four groupings over the same filtered set:
 
 - `series`: one point per bucket, `bucket` being `day`, `week` or `month`,
   answering `{ bucketStart, total }`;
 - `bySystemType`: `[{ key, count }]` from `objects.external_type`;
-- `byFaultTemplate`: `[{ key, count }]`, one row per distinct
-  `tickets.fault_template_keys` entry, keyed by the language-neutral template
-  key;
-- `bySource`: `[{ key, count }]` over `QR`, `INTERNAL`, `API`.
+- `byFaultTemplate`: one row per distinct `tickets.fault_template_keys` entry,
+  keyed by the language-neutral template key;
+- `bySource`: `[{ key, count }]` over `QR`, `INTERNAL`, `API`;
+- `byDetectedError`: one row per distinct `tickets.detected_error_keys` entry,
+  keyed by the language-neutral key of the detected error.
+
+A row of a grouping carries the readable text of the row beside the key
+(ADR-0049 decision 2): `byFaultTemplate` and `byDetectedError` answer
+`labelDe` and `labelEn` — the text of the fault template of the report form
+and the label of the detected error, an archived entry included. A key that no
+catalog knows answers no label. `bySystemType` and `bySource` carry the key
+alone: the system type is a free text (`objects.external_type`), the source is
+a fixed list of three values, and the web translates both.
 
 The bucket is derived from `reported_at` converted to `Europe/Berlin`; a week
 starts on Monday. The series has no gaps: an empty bucket is answered with

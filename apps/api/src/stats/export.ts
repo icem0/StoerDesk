@@ -75,6 +75,8 @@ export function* toStatisticsCsv(
 
   for (const entry of sections.frequency.byFaultTemplate) {
     yield `${row('frequency', 'byFaultTemplate', bucket, entry.key, String(entry.count))}\n`
+    yield `${row('frequency', 'byFaultTemplateLabelDe', bucket, entry.key, entry.labelDe ?? '')}\n`
+    yield `${row('frequency', 'byFaultTemplateLabelEn', bucket, entry.key, entry.labelEn ?? '')}\n`
   }
 
   for (const entry of sections.frequency.bySource) {
@@ -83,6 +85,8 @@ export function* toStatisticsCsv(
 
   for (const entry of sections.frequency.byDetectedError) {
     yield `${row('frequency', 'byDetectedError', bucket, entry.key, String(entry.count))}\n`
+    yield `${row('frequency', 'byDetectedErrorLabelDe', bucket, entry.key, entry.labelDe ?? '')}\n`
+    yield `${row('frequency', 'byDetectedErrorLabelEn', bucket, entry.key, entry.labelEn ?? '')}\n`
   }
 
   for (const object of sections.objects) {
