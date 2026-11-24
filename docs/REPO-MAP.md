@@ -13,7 +13,7 @@ apps/
 │   │   ├── components/          Shell, AppVersion, NotFoundPage, RouteErrorPage — layout shell with centred header menu (mobile tab strip), version badge, not found page
 │   │   ├── features/            dashboard/display.tsx, dashboard/recent-tickets.tsx, dashboard/tv-page.tsx (WP-M9-16/31/36); objects/sticker-page.tsx (WP-M2-03), objects/object-import-page.tsx (WP-M10-14); tickets/report-form-page.tsx, image-compress.ts, photo-upload.tsx (WP-M2-05/05b), status-page.tsx (WP-M2-06b), ticket-detail-page.tsx (WP-M2-18b/19d/M4-05/M4-06/91/07/M12-06/M14-153), ticket-send-page.tsx (WP-M14-22), offline-action-banner.tsx, use-internal-actions.ts (WP-M5-05/06), ticket-timeline.tsx (WP-M6-11); settings/NtfySubscription.tsx (WP-M7-03); oncall/my-shifts-page.tsx (WP-M8-14, WP-M10-34), oncall/use-shift-actions.ts (WP-M8-15), oncall/readiness-calendar.tsx (WP-M10-33, WP-M10-41, WP-M14-87/132/151/156), oncall/shift-detail-dialog.tsx (WP-M14-154b), stats/stats-page.tsx (WP-M9-15)
 │   │   ├── i18n/                i18next setup + locales/{de,en}/<ns>.json
-│   │   ├── lib/                 apiFetch client (credentials, ApiError), build version, service-worker route predicates (sw-routes.ts) and the precache/background-sync/stale-while-revalidate routes (sw.ts)
+│   │   ├── lib/                 apiFetch client (credentials, ApiError), build version, service-worker route predicates (sw-routes.ts) and the precache/background-sync/stale-while-revalidate routes (sw.ts), the optional alarm tone of the inbox (alarm-tone.ts)
 │   │   ├── routes/              react-router route table
 │   │   ├── App.tsx, main.tsx    shell and React root
 │   │   └── styles.css           Tailwind entry, light theme palette (WP-M2-92d), the accent ramp of the instance (WP-M16-03)

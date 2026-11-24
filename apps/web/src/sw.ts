@@ -233,7 +233,15 @@ interface PushScope {
   registration: {
     showNotification(
       title: string,
-      options: { body: string; icon: string; data: { url: string } },
+      options: {
+        body: string
+        icon: string
+        data: { url: string }
+        /** An alarm of StörDesk stays visible until the user acts on it. */
+        requireInteraction: boolean
+        /** A short pattern for the phones that can vibrate. */
+        vibrate: number[]
+      },
     ): Promise<void>
   }
   clients: {
@@ -273,6 +281,11 @@ self.addEventListener('push', (event: Event) => {
       body,
       icon: '/logo.png',
       data: { url },
+      // StörDesk is an alarm system: a pushed alarm must not vanish after a few
+      // seconds while nobody looked. The notification stays until the user
+      // closes it or opens the ticket, and a phone vibrates the same pattern.
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
     }),
   )
 })

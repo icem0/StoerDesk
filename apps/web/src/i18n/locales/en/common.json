@@ -325,6 +325,10 @@
     "empty": "No message yet.",
     "error": "The messages could not be loaded.",
     "unread": "New",
+    "acknowledge": "Acknowledge",
+    "acknowledgeError": "The message could not be acknowledged. Please try again.",
+    "alarmTone": "Alarm tone",
+    "alarmToneHint": "Plays a short tone on a new message — in this browser only.",
     "state": {
       "pending": "Sending",
       "sent": "Delivered",

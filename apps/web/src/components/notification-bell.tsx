@@ -1,8 +1,10 @@
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { apiFetch } from '../lib/api'
+import { isAlarmToneEnabled, onAlarmToneChange, playAlarmTone } from '../lib/alarm-tone'
 
 /**
  * The bell of the header menu (WP-M14-120e, WP-M14-122, WP-M14-127, WP-M16-04):
@@ -16,18 +18,40 @@ import { apiFetch } from '../lib/api'
  * only.
  *
  * The count comes from `GET /api/v1/notifications/messages/unread-count` and is
- * refetched when the window regains the focus, so a message that arrives while
- * the application is open shows up on the badge without a reload.
+ * refetched when the window regains the focus and every half minute, so a
+ * message that arrives while the application is open shows up on the badge
+ * without a reload. When the alarm tone is switched on for this browser
+ * (`specs/10-notifications.md` §11.12) the bell sounds it as soon as the count
+ * rises — the alarm is heard even while the inbox page is closed.
  */
 export function NotificationBell() {
   const { t } = useTranslation('common')
+  const [alarmTone, setAlarmTone] = useState(isAlarmToneEnabled)
+  const previousCount = useRef<number | null>(null)
 
   const unread = useQuery({
     queryKey: ['notification-unread-count'],
     queryFn: () => apiFetch<{ count: number }>('/v1/notifications/messages/unread-count'),
     refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
     retry: false,
   })
+
+  useEffect(() => onAlarmToneChange(setAlarmTone), [])
+
+  useEffect(() => {
+    if (unread.data === undefined) {
+      return
+    }
+
+    const next = unread.data.count
+
+    if (previousCount.current !== null && next > previousCount.current && alarmTone) {
+      playAlarmTone()
+    }
+
+    previousCount.current = next
+  }, [unread.data, alarmTone])
 
   const count = unread.data?.count ?? 0
 

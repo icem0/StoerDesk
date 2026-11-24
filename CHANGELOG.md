@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The inbox works as an alarm (`specs/10-notifications.md` §11.12): the ticket
+  number of a ticket message links straight into the ticket, every unread
+  message has its own quittature button (a slow receipt never blocks the next),
+  the unread-only filter is available without the admin permission, the list and
+  the bell refresh every half minute, an optional alarm tone of this browser
+  sounds on a new message, and a pushed alarm stays visible until the user acts
+  on it.
 - The administration names the normalisation of the plan (**WP-M21-04**, phase 21,
   ADR-0044): the plan of a pool names that consecutive days with the same duty
   times form one duty block — the week then holds one shift instead of one

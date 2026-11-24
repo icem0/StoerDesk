@@ -356,6 +356,26 @@ subscription and a browser that does not answer are four different states, and
 the UI names the state it found instead of a general claim: a statement about
 the browser that was never checked is a lie (WP-M14-142).
 
+**The inbox is an alarm.** The inbox is built for the fastest way from an alarm
+to the work:
+
+- The title of a ticket message is its ticket number and a link into
+  `/tickets/:ticketNo`; a readiness message names a pool and stays plain text
+  (§11.5).
+- Every unread message of the own inbox carries its own quittature button with
+  its own pending state. A slow receipt for one message never blocks the next,
+  and a refused quittature is named on the page instead of failing silently.
+- The unread-only filter is available to every session; the addressee filter
+  stays the right of `notification.read_all` (§11.16).
+- The list and the bell of the shell ask again every half minute and when the
+  window regains the focus, so an alarm appears without a reload.
+- The alarm tone is a choice **of this browser** and starts off. It is built
+  from the Web Audio oscillators (no audio file), sounds when the unread count
+  rises and never blocks the inbox when the browser has no audio output.
+- A pushed alarm does not disappear after a few seconds: the service worker
+  shows it with `requireInteraction` and a vibration pattern, so it stays until
+  the user acts on it or closes it.
+
 ## 11.13 The security
 
 - The secrets of the channels and of the accounts are write-only: never

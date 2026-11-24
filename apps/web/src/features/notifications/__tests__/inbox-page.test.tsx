@@ -159,19 +159,60 @@ describe('InboxPage', () => {
     expect(screen.getAllByText('ntfy')).toHaveLength(2)
   })
 
-  it('marks an unread message as read when it is clicked', async () => {
+  it('links the ticket number of a ticket message to the ticket', async () => {
+    stub()
+
+    renderPage()
+
+    const link = await screen.findByRole('link', { name: 'ST-2026-0001' })
+
+    expect(link.getAttribute('href')).toBe('/tickets/ST-2026-0001')
+  })
+
+  it('keeps a readiness message without a ticket link', async () => {
+    stub([{ ...message, eventType: 'oncall.assigned', title: 'Bereitschaft Nord' }])
+
+    renderPage()
+
+    expect(await screen.findByText('Bereitschaft Nord')).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Bereitschaft Nord' })).toBeNull()
+  })
+
+  it('acknowledges an unread message with its own button', async () => {
     const readReceipts = stub()
 
     renderPage()
 
-    const entry = await screen.findByText('ST-2026-0001')
-
-    fireEvent.click(entry)
+    fireEvent.click(await screen.findByRole('button', { name: 'Quittieren' }))
 
     await vi.waitFor(() => {
       expect(readReceipts).toHaveLength(1)
     })
     expect(readReceipts[0]).toContain(message.id)
+  })
+
+  it('offers a quittature for every unread message of the own inbox', async () => {
+    const readReceipts = stub([
+      message,
+      {
+        ...message,
+        id: '22222222-2222-4222-8222-222222222222',
+        title: 'ST-2026-0002',
+      },
+    ])
+
+    renderPage()
+
+    const buttons = await screen.findAllByRole('button', { name: 'Quittieren' })
+
+    expect(buttons).toHaveLength(2)
+
+    fireEvent.click(buttons[1] as HTMLElement)
+
+    await vi.waitFor(() => {
+      expect(readReceipts).toHaveLength(1)
+    })
+    expect(readReceipts[0]).toContain('22222222-2222-4222-8222-222222222222')
   })
 
   it('requests the chosen number of messages', async () => {
@@ -307,6 +348,49 @@ describe('InboxPage', () => {
     expect(await screen.findByText('ST-2026-0001')).toBeTruthy()
     expect(screen.queryByText('Empfänger')).toBeNull()
     expect(screen.queryByText('Alle Kanäle')).toBeNull()
+  })
+
+  it('offers the unread filter to a user without the admin permission', async () => {
+    const urls: string[] = []
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        urls.push(url)
+
+        if (url.includes('/v1/me')) {
+          return Response.json({
+            user: {
+              id: ownUserId,
+              email: 'own@example.org',
+              givenName: 'Ola',
+              familyName: 'Owner',
+              locale: 'de',
+              theme: 'auto',
+              roles: [],
+              permissions: [],
+            },
+          })
+        }
+
+        if (url.includes('/accounts/')) {
+          return Response.json({ publicKey: '', subscribed: false, subscriptions: 0 })
+        }
+
+        return Response.json({ messages: [message], recipients: [] })
+      }),
+    )
+
+    renderPage()
+
+    fireEvent.click(await screen.findByLabelText('Nur ungelesene'))
+
+    await waitFor(() => {
+      expect(
+        urls.some((url) => url.includes('/v1/notifications/messages') && url.includes('unread=true')),
+      ).toBe(true)
+    })
   })
 
   it('shows the filter with the permission and names the addressee of a row', async () => {

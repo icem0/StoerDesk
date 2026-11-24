@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -11,6 +11,12 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../../auth/usePermission'
+import {
+  isAlarmToneEnabled,
+  onAlarmToneChange,
+  playAlarmTone,
+  setAlarmToneEnabled,
+} from '../../lib/alarm-tone'
 import { apiFetch } from '../../lib/api'
 import { type BrowserPush, useBrowserPush } from '../../lib/web-push'
 
@@ -106,6 +112,10 @@ export function InboxPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [limit, setLimit] = useState(50)
+  const [alarmTone, setAlarmToneState] = useState(isAlarmToneEnabled)
+  const [acknowledging, setAcknowledging] = useState<ReadonlySet<string>>(new Set())
+
+  useEffect(() => onAlarmToneChange(setAlarmToneState), [])
 
   const me = useMe()
   const canReadAll = usePermission('notification.read_all')
@@ -131,30 +141,34 @@ export function InboxPage() {
     setSearchParams(next)
   }
 
+  // The addressee is the one filter of the admin; the other filters of §11.16
+  // narrow the own inbox and are allowed for every session.
+  const filterUserId = canReadAll ? userId : ''
   const query = new URLSearchParams({ limit: String(limit) })
 
-  if (canReadAll) {
-    if (userId !== '') query.set('userId', userId)
-    if (channel !== '') query.set('channel', channel)
-    if (eventType !== '') query.set('eventType', eventType)
-    if (state !== '') query.set('state', state)
-    if (unread) query.set('unread', 'true')
-  }
+  if (filterUserId !== '') query.set('userId', filterUserId)
+  if (channel !== '') query.set('channel', channel)
+  if (eventType !== '') query.set('eventType', eventType)
+  if (state !== '') query.set('state', state)
+  if (unread) query.set('unread', 'true')
 
   const messages = useQuery({
     queryKey: [
       'notification-messages',
       limit,
-      canReadAll ? userId : '',
-      canReadAll ? channel : '',
-      canReadAll ? eventType : '',
-      canReadAll ? state : '',
-      canReadAll && unread,
+      filterUserId,
+      channel,
+      eventType,
+      state,
+      unread,
     ],
     queryFn: () =>
       apiFetch<NotificationMessageListResponse>(
         `/v1/notifications/messages?${query.toString()}`,
       ),
+    // An alarm must appear without a reload: the inbox asks again every half
+    // minute, like the bell of the shell.
+    refetchInterval: 30_000,
     retry: false,
   })
 
@@ -163,9 +177,22 @@ export function InboxPage() {
       apiFetch<{ id: string; readAt: string | null }>(`/v1/notifications/messages/${id}/read`, {
         method: 'PATCH',
       }),
+    // Every row keeps its own pending state, so a slow receipt for one message
+    // never blocks the quittature of the next one — an alarm is quit quickly.
+    onMutate: (id: string) => {
+      setAcknowledging((previous) => new Set(previous).add(id))
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['notification-messages'] })
       void queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] })
+    },
+    onSettled: (_data, _error, id: string) => {
+      setAcknowledging((previous) => {
+        const next = new Set(previous)
+        next.delete(id)
+
+        return next
+      })
     },
   })
 
@@ -260,6 +287,17 @@ export function InboxPage() {
         </p>
       ) : null}
 
+      {canReadAll ? null : (
+        <label className="mt-4 flex w-fit items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm">
+          <input
+            checked={unread}
+            onChange={(event) => updateFilter('unread', 'true', event.target.checked)}
+            type="checkbox"
+          />
+          {t('inbox.filter.unreadOnly')}
+        </label>
+      )}
+
       {canReadAll ? (
         <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-700 p-3 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="flex flex-col gap-1 text-sm">
@@ -345,20 +383,48 @@ export function InboxPage() {
         </div>
       ) : null}
 
-      <div className="mt-4 flex items-center gap-2">
-        <span className="text-sm text-slate-400">{t('inbox.limitLabel')}</span>
-        <select
-          value={limit}
-          onChange={(event) => setLimit(Number(event.target.value))}
-          className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-        >
-          {[10, 50, 100].map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="flex items-center gap-2">
+          <span className="text-sm text-slate-400">{t('inbox.limitLabel')}</span>
+          <select
+            value={limit}
+            onChange={(event) => setLimit(Number(event.target.value))}
+            className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          >
+            {[10, 50, 100].map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </span>
+
+        <label className="flex items-center gap-2 text-sm" title={t('inbox.alarmToneHint')}>
+          <input
+            checked={alarmTone}
+            onChange={(event) => {
+              const next = event.target.checked
+
+              setAlarmToneState(next)
+              setAlarmToneEnabled(next)
+
+              // The click is the gesture a browser needs to allow the sound —
+              // it confirms the choice with the tone itself.
+              if (next) {
+                playAlarmTone()
+              }
+            }}
+            type="checkbox"
+          />
+          {t('inbox.alarmTone')}
+        </label>
       </div>
+
+      {markRead.isError ? (
+        <p className="mt-4 text-sm text-rose-400" role="alert">
+          {t('inbox.acknowledgeError')}
+        </p>
+      ) : null}
 
       {messages.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
 
@@ -375,10 +441,28 @@ export function InboxPage() {
       {messages.isSuccess && messages.data.messages.length > 0 ? (
         <ul className="mt-4 flex flex-col gap-2">
           {messages.data.messages.map((message) => {
+            // The title of a ticket event is the ticket number — the inbox turns
+            // it into the own deep link, so an alarm is one click from the
+            // ticket. A readiness message names a pool and stays plain text.
+            const ticketLink = message.eventType.startsWith('ticket.')
+              ? `/tickets/${encodeURIComponent(message.title)}`
+              : null
+            const own = isOwn(message)
+            const pending = acknowledging.has(message.id)
+
             const body = (
               <>
                 <span className="flex flex-wrap items-baseline gap-2">
-                  <span className="font-medium text-slate-100">{message.title}</span>
+                  {ticketLink === null ? (
+                    <span className="font-medium text-slate-100">{message.title}</span>
+                  ) : (
+                    <Link
+                      className="font-medium text-sky-300 underline decoration-sky-500/50 underline-offset-2 hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                      to={ticketLink}
+                    >
+                      {message.title}
+                    </Link>
+                  )}
                   {message.recipient === null ? null : (
                     <span className="text-xs text-slate-400">
                       {t('inbox.recipient')}: {message.recipient.name}
@@ -405,35 +489,27 @@ export function InboxPage() {
               </>
             )
 
-            const rowClass = `flex w-full flex-col gap-1 rounded-xl border p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+            const rowClass = `flex w-full flex-col gap-1 rounded-xl border p-3 text-left transition-colors ${
               message.state === 'FAILED'
                 ? 'border-rose-800 bg-rose-950/30'
                 : 'border-slate-700 bg-slate-900/60'
             } ${message.readAt === null ? 'ring-1 ring-sky-500/30' : ''}`
 
-            // A message of another user carries no read receipt for the admin.
-            if (!isOwn(message)) {
-              return (
-                <li key={message.id}>
-                  <div className={rowClass}>{body}</div>
-                </li>
-              )
-            }
-
             return (
-              <li key={message.id}>
-                <button
-                  className={rowClass}
-                  disabled={markRead.isPending}
-                  onClick={() => {
-                    if (message.readAt === null) {
-                      markRead.mutate(message.id)
-                    }
-                  }}
-                  type="button"
-                >
-                  {body}
-                </button>
+              <li className={rowClass} key={message.id}>
+                {body}
+
+                {/* A message of another user carries no read receipt for the admin. */}
+                {own && message.readAt === null ? (
+                  <button
+                    className="mt-1 inline-flex min-h-11 items-center self-start rounded-lg border border-sky-600/60 px-3 text-sm text-sky-200 hover:bg-sky-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-progress disabled:opacity-60"
+                    disabled={pending}
+                    onClick={() => markRead.mutate(message.id)}
+                    type="button"
+                  >
+                    {t('inbox.acknowledge')}
+                  </button>
+                ) : null}
               </li>
             )
           })}

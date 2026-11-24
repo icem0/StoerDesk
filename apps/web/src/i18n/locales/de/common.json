@@ -325,6 +325,10 @@
     "empty": "Noch keine Nachricht.",
     "error": "Die Nachrichten konnten nicht geladen werden.",
     "unread": "Neu",
+    "acknowledge": "Quittieren",
+    "acknowledgeError": "Die Nachricht konnte nicht quittiert werden. Bitte erneut versuchen.",
+    "alarmTone": "Alarmton",
+    "alarmToneHint": "Spielt bei einer neuen Nachricht einen kurzen Ton – nur in diesem Browser.",
     "state": {
       "pending": "Wird gesendet",
       "sent": "Zugestellt",
