@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   seven switches are gone.
 
 ### Added
+- The channels send to the target of the user (**WP-M24-06b**, phase 24, ADR-0045):
+  the chat of the user for Telegram and WhatsApp Web, the room and the
+  homeserver of the user for Matrix, the address of the user for the e-mail —
+  without the target of the user the message goes to the target of the
+  installation. The e-mail adapter gets the recipients it never had: a mail
+  without a recipient is refused.
 - The own accounts of the user carry their state (**WP-M24-05**, phase 24, ADR-0045):
   `GET /api/v1/notifications/accounts` answers the accounts of the signed-in
   user with the state of every channel — *ready* when a code over the channel

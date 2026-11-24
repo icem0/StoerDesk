@@ -2,6 +2,12 @@ import { t, type ServerLocale } from '@stoerdesk/shared'
 import { createTransport } from 'nodemailer'
 
 export interface EmailConfig {
+  /**
+   * The recipients of the mail: the address of the user for a personal message,
+   * the mail addresses of the instance for a broadcast (ADR-0046). A mail
+   * without a recipient is refused — a mail nobody receives is not a delivery.
+   */
+  to: string[]
   /** Host of an existing mail server, e.g. mail.example.org — the channel is off while it is empty */
   host: string
   /** Port of the mail server, e.g. 587 (STARTTLS) or 465 (TLS) */
@@ -65,6 +71,12 @@ export async function sendEmailNotification(
     throw new EmailError('no_sender', 'No sender address configured')
   }
 
+  const recipients = (config.to ?? []).map((address) => address.trim()).filter((address) => address !== '')
+
+  if (recipients.length === 0) {
+    throw new EmailError('no_recipient', 'No recipient address configured')
+  }
+
   const transporter = createTransportImpl({
     host: config.host,
     port: config.port,
@@ -77,6 +89,7 @@ export async function sendEmailNotification(
   try {
     await transporter.sendMail({
       from: config.from,
+      to: recipients,
       subject: message.title,
       text,
     })

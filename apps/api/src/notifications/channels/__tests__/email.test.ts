@@ -7,6 +7,7 @@ describe('sendEmailNotification', () => {
   const message = { title: 'T-2026-0007', body: 'urgent · Lift 2' }
 
   const mailServer = {
+    to: ['office@example.org'],
     host: 'mail.example.org',
     port: 587,
     secure: false,
@@ -38,8 +39,23 @@ describe('sendEmailNotification', () => {
 
     const [mail] = sendMail.mock.calls[0] as unknown as [Record<string, string>]
     expect(mail.from).toBe('stoerdesk@example.org')
+    expect(mail.to).toEqual(['office@example.org'])
     expect(mail.subject).toBe('T-2026-0007')
     expect(mail.text).toBe('urgent · Lift 2\n\nÖffnen: https://stoerdesk.local/pwa')
+  })
+
+  it('refuses a mail without a recipient', async () => {
+    const factory = vi.fn(() => ({ sendMail: vi.fn(async () => ({})) }))
+
+    await expect(
+      sendEmailNotification(
+        { ...mailServer, to: [] },
+        message,
+        '',
+        factory as unknown as typeof createTransport,
+      ),
+    ).rejects.toThrow(expect.objectContaining({ code: 'no_recipient' }))
+    expect(factory).not.toHaveBeenCalled()
   })
 
   it('opens a TLS connection when the environment asks for it', async () => {

@@ -16,8 +16,25 @@ export interface NotificationMessage {
  * test topic of WP-M14-13), `deepLink` is the link of this message — the deep
  * link into the ticket of §11.5 which the drain of
  * `apps/api/src/notifications/outbox.ts` hands over (WP-M14-68).
+ *
+ * `recipientTarget`, `recipientSecret` and `userId` carry the **target of the
+ * user** (ADR-0045): the chat of the user, the room of the user, the address
+ * of the user — and the write-only secret of his account (the Matrix token),
+ * which the drain reads from the account at the moment of the send and never
+ * writes into the row of the outbox (§11.13). Without them the send goes to
+ * the target of the installation — the room of the configuration, the chat of
+ * the configuration, the addresses of the instance.
  */
-type MessageOptions = { topic?: string; deepLink?: string }
+type MessageOptions = {
+  topic?: string
+  deepLink?: string
+  /** The address of the user at the channel — the chat, the room, the mail address. */
+  recipientTarget?: string
+  /** The write-only secret of the account of the user — the Matrix token. */
+  recipientSecret?: string
+  /** The id of the user — the web push sends only to his devices. */
+  userId?: string
+}
 
 export interface NotificationChannel {
   readonly name: string
@@ -54,6 +71,53 @@ const signalChannel = async (
   )
 }
 
+/**
+ * The target of a Matrix message (ADR-0045): the room of the user, his
+ * homeserver and his access token. The target of the user is stored as a JSON
+ * object in the `target` of the account — `{"homeserver":…,"roomId":…}` — while
+ * a plain room id is accepted as well and then uses the homeserver of the
+ * configuration. Without a target of the user the message goes to the room of
+ * the installation.
+ */
+const matrixTargetOf = (
+  env: Env,
+  options?: MessageOptions,
+): { homeserver: string; roomId: string; accessToken: string } => {
+  const installation = {
+    homeserver: env.MATRIX_HOMESERVER,
+    roomId: env.MATRIX_ROOM_ID,
+    accessToken: env.MATRIX_ACCESS_TOKEN,
+  }
+  const raw = options?.recipientTarget ?? ''
+
+  if (raw === '') {
+    return installation
+  }
+
+  if (raw.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw) as { homeserver?: unknown; roomId?: unknown }
+
+      return {
+        homeserver:
+          typeof parsed.homeserver === 'string' && parsed.homeserver !== ''
+            ? parsed.homeserver
+            : installation.homeserver,
+        roomId: typeof parsed.roomId === 'string' && parsed.roomId !== '' ? parsed.roomId : '',
+        accessToken: options?.recipientSecret ?? installation.accessToken,
+      }
+    } catch {
+      return { ...installation, accessToken: options?.recipientSecret ?? installation.accessToken }
+    }
+  }
+
+  return {
+    ...installation,
+    roomId: raw,
+    accessToken: options?.recipientSecret ?? installation.accessToken,
+  }
+}
+
 const matrixChannel = async (
   env: Env,
   message: NotificationMessage,
@@ -61,11 +125,13 @@ const matrixChannel = async (
 ): Promise<void> => {
   const { sendMatrixNotification } = await import('./matrix.js')
 
+  const target = matrixTargetOf(env, options)
+
   await sendMatrixNotification(
     {
-      homeserver: env.MATRIX_HOMESERVER,
-      roomId: env.MATRIX_ROOM_ID,
-      accessToken: env.MATRIX_ACCESS_TOKEN,
+      homeserver: target.homeserver,
+      roomId: target.roomId,
+      accessToken: target.accessToken,
     },
     message,
     messageLink(env, options),
@@ -100,6 +166,7 @@ const emailChannel = async (
 
   await sendEmailNotification(
     {
+      to: options?.recipientTarget === undefined ? [] : [options.recipientTarget],
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_SECURE,
@@ -122,7 +189,7 @@ const telegramChannel = async (
   await sendTelegramNotification(
     {
       token: env.TELEGRAM_BOT_TOKEN,
-      chatId: env.TELEGRAM_CHAT_ID,
+      chatId: options?.recipientTarget ?? env.TELEGRAM_CHAT_ID,
     },
     message,
     messageLink(env, options),
@@ -238,7 +305,7 @@ const whatsappChannel = async (
     await sendWhatsAppNotification(
       {
         baseUrl: settings.baseUrl ?? env.WHATSAPP_BRIDGE_URL,
-        chatId: settings.chatId ?? '',
+        chatId: options?.recipientTarget ?? settings.chatId ?? '',
         token,
       },
       message,
