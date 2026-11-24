@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The settings menu is single-column with a symbol and a description per entry
+  (**WP-M29-01**, phase 29, ADR-0051): the specification (§14.10/§14.11) names the
+  groups „Mein Bereich“, „Darstellung“, „Objekte“, „Verwaltung“ (as topic pages)
+  and „Konto“; the administration splits into the overview pages Benutzer &
+  Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand, and every channel gets
+  its own page behind one link. Every settings and administration page renders
+  exactly one `<main>` landmark inside the shell.
 - The assertions of the migrations read the schema of the database
   (**WP-M28-04**, **WP-M28-04b**, phase 28): the file `migrations.spec.ts` searched the **text**
   of the migration files for fragments of SQL —

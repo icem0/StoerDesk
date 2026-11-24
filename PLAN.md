@@ -734,7 +734,16 @@ Requirements:
 - every list of the administration that names an entry shows the name of the
   set language only; the actions of the row sit behind one `…` button and the
   edit shows the key and every translation (ADR-0043),
-- all text through i18n.
+- all text through i18n,
+- the menu of the settings is single-column: every entry carries a symbol and a
+  short description, a search field filters name and description, the sections are
+  collapsible; work surfaces live in the header menu and do not stand in the
+  settings menu a second time (WP-M29-02 … WP-M29-03, ADR-0051),
+- every settings and administration page renders exactly one `<main>` landmark
+  inside the shell, one heading and a back link to the settings (WP-M29-06 … WP-M29-08),
+- every channel of the administration gets its own page
+  (`/admin/channels/:kind`), reachable by one link from the channels overview
+  (WP-M29-05).
 
 ## 15. Non-functional requirements
 
@@ -825,6 +834,7 @@ explanation. Offline is a core feature and appears early.
 | **26** | The statistics read themselves: a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01 … WP-M26-05, ADR-0049) | the statistics page names the system type, the fault type and the detected error in words, the trend of the reaction times over the months is readable, and no column of the page is empty without a reason |
 | **27** | The sticker is a template: the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and a free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | every sheet of the catalog prints in its own grid, every label carries the 112 notice, and the administration decides the geometry and the look of the sticker of the installation |
 | **28** | The gate answers in a minute: the tests of the web share one environment per worker, the integration tests of the API share one migrated template database instead of building one per file, the static gates of the check run in parallel, and the assertions of the migrations read the schema of the database instead of the text of the migration files (WP-M28-01 … WP-M28-04) | the check run needs less than three minutes on a machine with four cores, and every case of the suite proves the behaviour of the code against the real database |
+| **29** | The settings are operable: the settings menu is single-column with a symbol and a description per entry, a search field and collapsible sections; the administration splits into topic pages and every channel gets its own page; every page renders exactly one `<main>` landmark (WP-M29-01 … WP-M29-09, ADR-0051) | every entry of the settings menu has a symbol and a description, the Matrix server sits on its own page behind one link, and no internal page renders more than one `<main>` |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
@@ -4124,6 +4134,19 @@ recurring entry per block (`RRULE:FREQ=WEEKLY;BYDAY=…`) in the zone of
 and the rows of an older version — keeps covering its whole span. The phase
 was split further than planned (WP-M20-02 … WP-M20-08), because the contract of
 the pool and the administration that reads it belong to one commit.
+
+**The settings are operable (WP-M29-01 … WP-M29-09, ADR-0051).** The settings menu
+is single-column: every entry carries a symbol and a short description, a search
+field filters name and description and the sections are collapsible. The daily
+work surfaces leave the menu (they live in the header menu), and the fifteen
+entries of the administration move onto four topic pages — Benutzer & Rechte,
+Meldungsablauf, Bereitschaft, Kanäle & Versand — whose links open the modules.
+Every channel gets its own page (`/admin/channels/:kind`, e. g. Matrix with
+homeserver and room), and every settings and administration page renders exactly
+one `<main>` landmark inside the shell, one heading and a back link. The phase
+starts with the specification and an ADR that consciously reverses the decision of
+WP-M14-01 (the administration home is gone): a flat list of 30 entries under one
+another is not operable.
 
 ## 17. Work package rules
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

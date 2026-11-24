@@ -34,7 +34,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m21](m21/) | Phase 21: the normalisation of the duty plan — consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (the spec and ADR-0044, the shared normalisation, the API, the administration) | 4   |
 | [m22](m22/) | Phase 22: the installability of the web app — a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | 1   |
 | [m23](m23/) | Phase 23: the readiness view plans the shifts — the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08) and the reminder of a shift that was not accepted repeats with a higher urgency (WP-M23-09) | 8   |
-| [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 9   |
+| [m25](m25/)   | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 9   |
+| [m29](m29/)   | Phase 29: the settings are operable — the settings menu is single-column with a symbol and a description per entry, a search field and collapsible sections; the administration splits into topic pages and every channel gets its own page; every page renders exactly one `<main>` landmark (WP-M29-01 … WP-M29-09, ADR-0051) | 9   |
 | [m24](m24/) | Phase 24: the user owns the channels — the selection per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the mail is HTML with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01) | 22  |
 | [m26](m26/) | Phase 26: the statistics read themselves — a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01, ADR-0049) | 5   |
 | [m27](m27/) | Phase 27: the sticker is a template — the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and the free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | 7   |
@@ -1802,6 +1803,15 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M28-03   | the static gates of the check run in parallel — typecheck, lint, i18n and wp beside each other | done | yes     |
 | WP-M28-04   | the assertions of the migrations read the schema of the database instead of the text of the files | done | yes     |
 | WP-M28-04b  | the assertions of the migrations read the schema — the second part: the on-call tables, the notifications, the users, the administration, the webhooks and the configuration | done | yes     |
+| WP-M29-01   | the specification of the menu and the administration pages — §14.10/§14.11, ADR-0051, PLAN.md §14/§16, phase table | planned | yes     |
+| WP-M29-02   | the symbols of the surface — the shared `Icon` component and the symbols of the header menu | planned | yes     |
+| WP-M29-03   | the settings menu is single-column — symbols, descriptions, search, collapsible sections, work surfaces leave the menu | planned | yes     |
+| WP-M29-04   | the overview pages of the administration — Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand | planned | yes     |
+| WP-M29-05   | every channel its own page — `/admin/channels/:kind` with Matrix as the first channel page | planned | yes     |
+| WP-M29-06   | one shell for the administration — the `admin-layout.tsx` hull and the first batch of pages | planned | yes     |
+| WP-M29-07   | one shell for the administration — the second batch of pages | planned | yes     |
+| WP-M29-08   | one shell for the administration — the third batch of pages | planned | yes     |
+| WP-M29-09   | the exit criterion of the phase — one `<main>` per page, symbols and descriptions in the menu, `i18n:check` green | planned | yes     |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
