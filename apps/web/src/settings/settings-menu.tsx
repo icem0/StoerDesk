@@ -98,7 +98,7 @@ export function SettingsMenu({ sections }: SettingsMenuProps) {
             {section.icon && (
               <Icon name={section.icon} className="h-5 w-5 shrink-0" />
             )}
-            {t(`app.settingsGroups.${section.key}`)}
+            {section.label}
           </>
         )
 

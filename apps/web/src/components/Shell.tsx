@@ -76,7 +76,7 @@ function SettingsLink() {
 
   return (
     <NavLink
-      aria-label={t('app.settings')}
+      aria-label={t('app.settings.title')}
       className={({ isActive }) =>
         `flex h-11 w-11 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
           isActive
@@ -84,7 +84,7 @@ function SettingsLink() {
             : 'border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100'
         }`
       }
-      title={t('app.settings')}
+      title={t('app.settings.title')}
       to="/settings"
     >
       <Icon name="settings" className="h-5 w-5" />

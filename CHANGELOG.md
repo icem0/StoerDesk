@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The administration splits into four topic pages (**WP-M29-04**, phase 29): Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand. Each page lists its modules with a symbol and a short description, reusing the settings menu component. The menu entries link to the topic pages instead of the individual modules.
 - The settings menu is single-column with a symbol and a description per entry
   (**WP-M29-03**, phase 29, ADR-0051): a shared `settings-menu.tsx` component
   renders the groups „Mein Bereich“, „Darstellung“, „Objekte“, „Verwaltung“
