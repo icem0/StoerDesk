@@ -410,5 +410,15 @@
       "settingsLink": "Benachrichtigungseinstellungen öffnen",
       "inboxLink": "Zurück zu den Benachrichtigungen"
     }
+  },
+  "alarm": {
+    "banner": {
+      "heading": "{{count}} ungelesene Meldung(en) — der Alarm läuft.",
+      "inbox": "Zum Postfach",
+      "activate": "Ton aktivieren",
+      "mute": "1 Stunde stumm",
+      "muted": "Stumm für noch {{minutes}} Minute(n). Der Alarm leuchtet weiter.",
+      "silent": "Die Instanz spielt keinen Alarmton."
+    }
   }
 }

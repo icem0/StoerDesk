@@ -1,7 +1,7 @@
 # WP-M23-09a: the setting of the repeated reminder
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M23-09
 phase: 23
 milestone: m23

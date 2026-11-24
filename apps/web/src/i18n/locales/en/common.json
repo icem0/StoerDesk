@@ -410,5 +410,15 @@
       "settingsLink": "Open the notification settings",
       "inboxLink": "Back to the notifications"
     }
+  },
+  "alarm": {
+    "banner": {
+      "heading": "{{count}} unread message(s) — the alarm is running.",
+      "inbox": "To the inbox",
+      "activate": "Activate the tone",
+      "mute": "Mute for one hour",
+      "muted": "Muted for another {{minutes}} minute(s). The alarm keeps shining.",
+      "silent": "The instance plays no alarm tone."
+    }
   }
 }

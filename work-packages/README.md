@@ -34,7 +34,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m21](m21/) | Phase 21: the normalisation of the duty plan — consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (the spec and ADR-0044, the shared normalisation, the API, the administration) | 4   |
 | [m22](m22/) | Phase 22: the installability of the web app — a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | 1   |
 | [m23](m23/) | Phase 23: the readiness view plans the shifts — the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08) and the reminder of a shift that was not accepted repeats with a higher urgency (WP-M23-09) | 8   |
-| [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 5   |
+| [m25](m25/) | Phase 25: the alarm of the instance — the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band (WP-M25-01) | 6   |
 | [m24](m24/) | Phase 24: the user owns the channels — the selection per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the mail is HTML with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01) | 24  |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
@@ -1768,16 +1768,18 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-06 | the shift dialog carries the actions of the admin — assign, publish, delete | done | yes |
 | WP-M23-07 | the list of the open shifts in the readiness view | done | yes |
 | WP-M23-08 | a reassignment notifies the new technician | done | yes |
-| WP-M23-09 | the repeated reminder of a shift that was not accepted — a rising urgency and the manual reminder of the admin | planned | yes |
+| WP-M23-09 | the repeated reminder of a shift that was not accepted — a rising urgency and the manual reminder of the admin | done | yes |
 | WP-M23-09a | the setting of the repeated reminder — `oncall.reminder_repeat_h` | done | yes |
 | WP-M23-09b | the reminder of a shift repeats — the sweep counts and sends again | done | yes |
 | WP-M23-09c | the administration sets the interval of the reminder | done | yes |
 | WP-M23-09d | the urgency of the reminder rises — ntfy and the push of the browser | done | yes |
 | WP-M23-09e | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | done | yes |
 | WP-M23-09f | the button „Erinnern" in the actions of the admin | done | yes |
+| WP-M23-09g | the test of the manual reminder configures its own chain | done | yes |
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |
 | WP-M24-06f | the exit criterion names a channel the instance has — the rule of the administration is refused for a channel the instance does not have | done | yes |
 | WP-M24-06g | the accent test waits for the colour of the instance — the acceptance test reads the painted colour after the answer of the branding | done | yes |
+| WP-M25-07 | the warning of the setup as a large band of the shell and the exit criterion of the phase (profile `ctx-256k`) | planned | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

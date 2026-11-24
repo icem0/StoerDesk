@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -11,12 +11,6 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../../auth/usePermission'
-import {
-  isAlarmToneEnabled,
-  onAlarmToneChange,
-  playAlarmTone,
-  setAlarmToneEnabled,
-} from '../../lib/alarm-tone'
 import { apiFetch } from '../../lib/api'
 import { type BrowserPush, useBrowserPush } from '../../lib/web-push'
 
@@ -112,10 +106,8 @@ export function InboxPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [limit, setLimit] = useState(50)
-  const [alarmTone, setAlarmToneState] = useState(isAlarmToneEnabled)
   const [acknowledging, setAcknowledging] = useState<ReadonlySet<string>>(new Set())
 
-  useEffect(() => onAlarmToneChange(setAlarmToneState), [])
 
   const me = useMe()
   const canReadAll = usePermission('notification.read_all')
@@ -399,25 +391,6 @@ export function InboxPage() {
           </select>
         </span>
 
-        <label className="flex items-center gap-2 text-sm" title={t('inbox.alarmToneHint')}>
-          <input
-            checked={alarmTone}
-            onChange={(event) => {
-              const next = event.target.checked
-
-              setAlarmToneState(next)
-              setAlarmToneEnabled(next)
-
-              // The click is the gesture a browser needs to allow the sound —
-              // it confirms the choice with the tone itself.
-              if (next) {
-                playAlarmTone()
-              }
-            }}
-            type="checkbox"
-          />
-          {t('inbox.alarmTone')}
-        </label>
       </div>
 
       {markRead.isError ? (

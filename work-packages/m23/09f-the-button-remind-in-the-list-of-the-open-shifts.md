@@ -1,7 +1,7 @@
 # WP-M23-09f: the button „Erinnern" in the list of the open shifts
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M23-09e
 phase: 23
 milestone: m23

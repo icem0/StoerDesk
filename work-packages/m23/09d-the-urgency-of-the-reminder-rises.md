@@ -1,7 +1,7 @@
 # WP-M23-09d: the urgency of the reminder rises
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M23-09b
 phase: 23
 milestone: m23

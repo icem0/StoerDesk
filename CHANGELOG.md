@@ -30,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   database, the service, the route and the user interface in one commit. The
   name says the context window the package is written for. `small-model` is the
   former name of `ctx-128k` and stays valid, so the packages written before
-  keep their place. `npm run wp:check` holds the limits of every profile.
+  keep their place. `npm run wp:check` holds the limits of every profile. A new
+  work package carries `format: ctx-256k` — one feature from the database to
+  the user interface in one commit.
 - The urgency of the reminder rises (**WP-M23-09d**, phase 23): the message of
   a readiness row carried no priority, so the reminder of a shift that was not
   accepted arrived like any other message. The second reminder and every

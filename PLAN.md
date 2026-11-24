@@ -4004,6 +4004,12 @@ window:
 - one WP = one commit = one model run,
 - if a WP exceeds the limits of its profile, split it before writing code.
 
+A new work package carries `format: ctx-256k`: the model of this repository
+works with a context window of 256k and holds one feature from the database to
+the user interface in one run. `ctx-128k` is the fallback for a feature that
+does not fit into ten source files or 800 changed lines — and a feature that
+does not fit is split, not shrunk to a layer.
+
 Every WP contains:
 
 - `depends-on`

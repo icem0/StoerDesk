@@ -7,6 +7,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { LoginForm } from '../auth/login-form'
 import { useMe } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
+import { AlarmBanner } from './alarm-banner'
 import { AppVersion } from './app-version'
 import { NotificationBell } from './notification-bell'
 
@@ -193,6 +194,8 @@ export function Shell() {
           </nav>
         </div>
       </header>
+
+      {me.data ? <AlarmBanner /> : null}
 
       <main className="shell-main mx-auto w-full max-w-5xl flex-1 px-3 py-4 pb-[env(safe-area-inset-bottom)] sm:px-6 sm:py-6 lg:py-8 print:max-w-none print:p-0">
         {me.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}

@@ -1,5 +1,7 @@
 # WP-XX-YY: Short imperative title
 
+<!-- The template of the vertical profile — the default for a new work package. -->
+
 format: ctx-256k
 status: planned
 depends-on: —

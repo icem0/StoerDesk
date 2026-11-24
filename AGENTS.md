@@ -42,6 +42,11 @@ in bulk.
 - Two profiles exist: `ctx-128k` (a narrow slice) and `ctx-256k` (one vertical
   slice of a feature). The profile stands in the header of the WP; the limits
   of each profile are in `PLAN.md` §17.
+- **A new work package carries `format: ctx-256k`.** The model of this
+  repository works with a context window of 256k and holds one feature from the
+  database to the user interface in one run. `ctx-128k` is the fallback for a
+  feature that does not fit into ten source files or 800 changed lines — and a
+  feature that does not fit is split, not shrunk to a layer.
 - Stay inside the WP's `files-write`. Repository bookkeeping outside it
   (`CHANGELOG.md`, `docs/REPO-MAP.md`, `PLAN.md` §16, `work-packages/README.md`) is
   part of the same commit; it is never a reason to widen a WP.

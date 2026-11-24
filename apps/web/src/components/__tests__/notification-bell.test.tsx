@@ -123,26 +123,21 @@ describe('NotificationBell', () => {
     expect(screen.queryByText('Zugestellt')).toBeNull()
   })
 
-  it('sounds the tone when the unread count rises (WP-M14-178)', async () => {
-    tone.enabled = true
-    const counter = stub(1)
+  it('shines and moves while messages are unhandled (ADR-0048)', async () => {
+    stub(2)
 
-    const { client } = renderBell()
+    renderBell()
 
-    await waitFor(() => expect(screen.getByTestId('unread-count')).toBeTruthy())
+    await screen.findByTestId('unread-count')
 
-    // The first answer is no rise — the tone stays silent.
-    expect(playAlarmTone).not.toHaveBeenCalled()
+    const bell = screen.getByTestId('notification-bell')
+    const icon = bell.querySelector('svg')
 
-    counter.raise(4)
-
-    await client.invalidateQueries({ queryKey: ['notification-unread-count'] })
-
-    await waitFor(() => expect(playAlarmTone).toHaveBeenCalledTimes(1))
+    expect(icon?.getAttribute('class')).toContain('animate-bounce')
   })
 
-  it('stays silent when the tone is switched off for this browser (WP-M14-178)', async () => {
-    tone.enabled = false
+  it('never sounds the tone itself — the band of the alarm owns the sound (ADR-0048)', async () => {
+    tone.enabled = true
     const counter = stub(1)
 
     const { client } = renderBell()

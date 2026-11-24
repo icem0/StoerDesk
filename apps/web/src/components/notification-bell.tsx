@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { apiFetch } from '../lib/api'
-import { isAlarmToneEnabled, onAlarmToneChange, playAlarmTone } from '../lib/alarm-tone'
 
 /**
  * The bell of the header menu (WP-M14-120e, WP-M14-122, WP-M14-127, WP-M16-04):
@@ -20,14 +18,16 @@ import { isAlarmToneEnabled, onAlarmToneChange, playAlarmTone } from '../lib/ala
  * The count comes from `GET /api/v1/notifications/messages/unread-count` and is
  * refetched when the window regains the focus and every half minute, so a
  * message that arrives while the application is open shows up on the badge
- * without a reload. When the alarm tone is switched on for this browser
- * (`specs/10-notifications.md` §11.12) the bell sounds it as soon as the count
- * rises — the alarm is heard even while the inbox page is closed.
+ * without a reload.
+ *
+ * Since WP-M25-06 (ADR-0048) the bell **shines and moves** while messages are
+ * unhandled, and the **sound belongs to the band of the alarm**
+ * (`components/alarm-banner.tsx`): the sound is a decision of the
+ * installation, not of a browser, and the band repeats it in the interval of
+ * the installation.
  */
 export function NotificationBell() {
   const { t } = useTranslation('common')
-  const [alarmTone, setAlarmTone] = useState(isAlarmToneEnabled)
-  const previousCount = useRef<number | null>(null)
 
   const unread = useQuery({
     queryKey: ['notification-unread-count'],
@@ -36,22 +36,6 @@ export function NotificationBell() {
     refetchInterval: 30_000,
     retry: false,
   })
-
-  useEffect(() => onAlarmToneChange(setAlarmTone), [])
-
-  useEffect(() => {
-    if (unread.data === undefined) {
-      return
-    }
-
-    const next = unread.data.count
-
-    if (previousCount.current !== null && next > previousCount.current && alarmTone) {
-      playAlarmTone()
-    }
-
-    previousCount.current = next
-  }, [unread.data, alarmTone])
 
   const count = unread.data?.count ?? 0
 
@@ -63,12 +47,13 @@ export function NotificationBell() {
           ? 'bg-accent-600/10 text-accent-300'
           : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
       }`}
+      data-testid="notification-bell"
       title={t('app.inbox')}
       to="/notifications"
     >
       <svg
         aria-hidden="true"
-        className="h-5 w-5 shrink-0"
+        className={`h-5 w-5 shrink-0 ${count > 0 ? 'animate-bounce text-accent-300' : ''}`}
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"

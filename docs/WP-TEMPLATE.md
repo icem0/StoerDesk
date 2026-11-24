@@ -1,5 +1,8 @@
 # WP-XX-YY: Short imperative title
 
+<!-- The template of the narrow profile. A new work package uses
+     docs/WP-TEMPLATE-256k.md (format: ctx-256k). -->
+
 format: ctx-128k
 status: planned
 depends-on: —

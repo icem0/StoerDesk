@@ -1,7 +1,7 @@
 # WP-M23-09: the repeated reminder of a shift that was not accepted
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M23-01
 phase: 23
 milestone: m23

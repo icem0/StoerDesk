@@ -1,7 +1,7 @@
 # WP-M23-09c: the administration sets the interval of the reminder
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M23-09a
 phase: 23
 milestone: m23

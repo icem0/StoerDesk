@@ -1,7 +1,7 @@
 # WP-M23-09b: the reminder of a shift repeats
 
 format: small-model
-status: planned
+status: done
 depends-on: WP-M23-09a
 phase: 23
 milestone: m23

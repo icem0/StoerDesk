@@ -29,6 +29,7 @@ import {
   notificationUnreadCountResponseSchema,
   notificationVerificationResponseSchema,
   notificationDeliveryListResponseSchema,
+  alarmSettingsSchema,
   notificationMuteSchema,
   deliveryLogQuerySchema,
   redeemTelegramLinkCodeRequestSchema,
@@ -65,6 +66,7 @@ import {
 } from './verification'
 import { deleteAccount, listAccounts, storeAccount } from './accounts'
 import { readCompliance, readUserCompliance } from './compliance'
+import { readAlarmSettings } from '../settings/notifications'
 import { muteForOneHour, readMuteUntil } from './mute'
 import {
   ConfirmationError,
@@ -636,6 +638,19 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         notificationComplianceSchema.parse(
           await readUserCompliance(database, request.user?.id ?? ''),
         ),
+    )
+
+    /**
+     * `GET /api/v1/notifications/alarm` (`specs/10-notifications.md` §11.17,
+     * ADR-0048): whether the installation alarms with a sound and how often the
+     * sound comes again. Every signed-in user must know it — the band of the
+     * alarm reads it — while the administration writes it behind
+     * `settings.write` (WP-M25-05).
+     */
+    app.get(
+      '/api/v1/notifications/alarm',
+      { preHandler: requireSession },
+      async () => alarmSettingsSchema.parse(await readAlarmSettings(database)),
     )
 
     /**
