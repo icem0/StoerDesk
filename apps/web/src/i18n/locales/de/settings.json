@@ -630,6 +630,13 @@
         "empty": "Noch kein Nutzer vorhanden.",
         "compliant": "erfüllt die Vorgabe",
         "missing": "es fehlen {{channels}} — eingerichtet sind {{count}}"
+      },
+      "alarm": {
+        "title": "Der Alarm der Instanz",
+        "hint": "Ob die Installation überhaupt einen Ton spielt und wie oft der Ton wiederkommt, solange Meldungen unbeachtet sind. Der Ton gehört der Installation, nicht dem Browser.",
+        "tone": "Die Instanz spielt den Alarmton",
+        "repeat": "Der Ton kommt wieder (Sekunden)",
+        "repeatHint": "Der Takt gilt nur für den Ton. Die sichtbare Alarmmeldung bleibt stehen, bis die Meldungen gelesen sind."
       }
     },
     "delivery": {

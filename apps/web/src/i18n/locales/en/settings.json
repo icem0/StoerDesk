@@ -630,6 +630,13 @@
         "empty": "No user yet.",
         "compliant": "fulfils the rule",
         "missing": "missing {{channels}} — {{count}} are set up"
+      },
+      "alarm": {
+        "title": "The alarm of the instance",
+        "hint": "Whether the installation plays a tone at all and how often the tone comes again while messages are unhandled. The tone belongs to the installation, not to the browser.",
+        "tone": "The instance plays the alarm tone",
+        "repeat": "The tone comes again (seconds)",
+        "repeatHint": "The rhythm applies to the sound only. The visible alarm stays until the messages are read."
       }
     },
     "delivery": {

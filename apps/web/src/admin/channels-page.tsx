@@ -7,6 +7,7 @@ import {
   type ChannelConfigurationListResponse,
   type ChannelStatusListResponse,
   type ChannelTestResponse,
+  type AlarmSettings,
   type ChannelPolicyResponse,
   type NotificationComplianceListResponse,
   type NotificationChannelKind,
@@ -532,6 +533,14 @@ export function ChannelsPage() {
     enabled: mayReadSettings,
     retry: false,
   })
+  /** The alarm of the installation (§11.17, ADR-0048). */
+  const alarmQuery = useQuery({
+    queryKey: ['alarmSettings'],
+    queryFn: () => apiFetch<AlarmSettings>('/v1/settings/notifications/alarm'),
+    enabled: mayReadSettings,
+    retry: false,
+  })
+
   const complianceQuery = useQuery({
     queryKey: ['notificationCompliance'],
     queryFn: () =>
@@ -546,6 +555,18 @@ export function ChannelsPage() {
     retry: false,
   })
   const queryClient = useQueryClient()
+  const saveAlarm = useMutation({
+    mutationFn: (body: { toneEnabled: boolean; repeatSeconds: number }) =>
+      apiFetch<AlarmSettings>('/v1/settings/notifications/alarm', {
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['alarmSettings'] })
+    },
+  })
+
   const savePolicy = useMutation({
     mutationFn: (body: { requiredChannels: string[]; minimumChannelCount: number }) =>
       apiFetch<ChannelPolicyResponse>('/v1/settings/notifications/channel-policy', {
@@ -689,6 +710,60 @@ export function ChannelsPage() {
               {savePolicy.isError ? (
                 <p className="text-sm text-rose-400" role="alert">
                   {t(`admin.channels.errors.${errorCode(savePolicy.error)}`)}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {mayReadSettings ? (
+        <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div>
+            <h2 className="text-lg font-semibold">{t('admin.channels.alarm.title')}</h2>
+            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.alarm.hint')}</p>
+          </div>
+
+          {!alarmQuery.isLoading && !alarmQuery.isError ? (
+            <div className="flex flex-col gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  checked={alarmQuery.data?.toneEnabled ?? true}
+                  disabled={!mayWriteSettings}
+                  onChange={(event) =>
+                    saveAlarm.mutate({
+                      toneEnabled: event.target.checked,
+                      repeatSeconds: alarmQuery.data?.repeatSeconds ?? 60,
+                    })
+                  }
+                  type="checkbox"
+                />
+                {t('admin.channels.alarm.tone')}
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm sm:max-w-xs">
+                {t('admin.channels.alarm.repeat')}
+                <input
+                  className="rounded bg-slate-950 p-2"
+                  disabled={!mayWriteSettings}
+                  min={15}
+                  max={600}
+                  onChange={(event) =>
+                    saveAlarm.mutate({
+                      toneEnabled: alarmQuery.data?.toneEnabled ?? true,
+                      repeatSeconds: Number(event.target.value) || 60,
+                    })
+                  }
+                  type="number"
+                  value={alarmQuery.data?.repeatSeconds ?? 60}
+                />
+              </label>
+
+              <p className="text-sm text-slate-400">{t('admin.channels.alarm.repeatHint')}</p>
+
+              {saveAlarm.isError ? (
+                <p className="text-sm text-rose-400" role="alert">
+                  {t(`admin.channels.errors.${errorCode(saveAlarm.error)}`)}
                 </p>
               ) : null}
             </div>
