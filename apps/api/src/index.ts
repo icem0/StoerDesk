@@ -19,6 +19,7 @@ import { settingsBrandingRoutes } from './settings/branding'
 import { settingsDashboardRoutes } from './settings/dashboard'
 import { settingsDeadlineRoutes } from './settings/deadlines'
 import { settingsNotificationsRoutes } from './settings/notifications'
+import { settingsStickerTemplateRoutes } from './settings/sticker-template'
 import { escalationRoutes } from './escalation/routes'
 import { settingsTextTemplateRoutes } from './settings/text-templates'
 import { settingsTicketDefaultsRoutes } from './settings/ticket-defaults'
@@ -148,6 +149,7 @@ export async function buildServer() {
   await app.register(settingsDeadlineRoutes, { database })
   await app.register(settingsTicketDefaultsRoutes, { database })
   await app.register(settingsNotificationsRoutes, { database, env })
+  await app.register(settingsStickerTemplateRoutes, { database })
   await app.register(escalationRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
   await app.register(detectedErrorsRoutes, { database })

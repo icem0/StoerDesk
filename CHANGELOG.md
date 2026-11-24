@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The sticker is a template (**WP-M27-02**, phase 27, ADR-0050): the shared
+  contracts name the geometry of the sheet (format, grid, label size, margins,
+  the distance between the labels) and the appearance of the label (error
+  correction and size of the QR, the lines that are printed), the catalog of
+  the sheets holds `a6`, `a4-2x2`, `a4-21`, `a4-52` and `a4-104`, every
+  geometry must fit on its sheet, and the route
+  `GET|PUT /api/v1/settings/sticker-template` stores the template of the
+  installation in the settings row `sticker.template`.
+
 ### Fixed
 - The typecheck of the web in the check run of the version v1.2.132
   (**WP-M26-03**, phase 26): the new test of the statistics page read the path

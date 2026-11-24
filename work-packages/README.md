@@ -1788,8 +1788,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M26-04   | the statistics show the trends — the averages of the reaction times and of the processing time per bucket | done                    | yes     |
 | WP-M26-05   | the diagrams carry an axis and the objects a ranking | done                    | yes     |
 | WP-M26-06   | the axis of the diagrams shows round numbers — the scale of the axis and the unit of the values | done                    | yes     |
-| WP-M27-01   | the spec of the sticker template and ADR-0050 — the geometry, the appearance, the catalog of the sheets and the print in blocks | in progress | yes     |
-| WP-M27-02   | the contracts of the sticker template and the route `GET|PUT /api/v1/settings/sticker-template` | planned                  | no      |
+| WP-M27-01   | the spec of the sticker template and ADR-0050 — the geometry, the appearance, the catalog of the sheets and the print in blocks | done | yes     |
+| WP-M27-02   | the contracts of the sticker template and the route `GET|PUT /api/v1/settings/sticker-template` | done | yes      |
 | WP-M27-03   | the administration of the sticker template at `/admin/sticker-template` — the geometry of the sheet and the look of the label | planned | no      |
 | WP-M27-04   | the sheet prints from the geometry — the blocks of the grid, the sizes of the label and the catalog of the sheets | planned | no      |
 | WP-M27-05   | the filter of the list of the stickers — search, active and city on the server, select all and select none | planned | no      |
