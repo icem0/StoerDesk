@@ -110,6 +110,29 @@ export const frequencyResponseSchema = z.object({
 
 export type FrequencyResponse = z.infer<typeof frequencyResponseSchema>
 
+/**
+ * One point of the trend (`specs/12-stats.md` §12.11, ADR-0049 decision 3).
+ *
+ * The averages are the average of the tickets that were reported in the
+ * bucket; a bucket without a sample answers `null` and the line has a gap
+ * there. The bucket of a ticket is the bucket of its report.
+ */
+const trendPointSchema = z.object({
+  bucketStart: z.iso.datetime(),
+  tickets: z.number().int().nonnegative(),
+  reviewMinutes: z.number().nonnegative().nullable(),
+  acknowledgeMinutes: z.number().nonnegative().nullable(),
+  processingMinutes: z.number().nonnegative().nullable(),
+  closed: z.number().int().nonnegative(),
+})
+
+export const trendsResponseSchema = z.object({
+  points: z.array(trendPointSchema),
+})
+
+export type TrendsResponse = z.infer<typeof trendsResponseSchema>
+
+
 export const topObjectSchema = z.object({
   objectNo: z.string(),
   objectName: z.string(),

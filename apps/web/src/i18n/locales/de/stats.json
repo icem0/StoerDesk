@@ -103,5 +103,13 @@
   },
   "export": {
     "button": "CSV herunterladen"
+  },
+  "trend": {
+    "reactionTitle": "Reaktionszeit im Verlauf",
+    "processingTitle": "Bearbeitungszeit im Verlauf",
+    "hint": "Je {{bucket}} der Durchschnitt der Meldungen, die in diesem Zeitraum gemeldet wurden.",
+    "processing": "Bearbeitungszeit",
+    "empty": "Keine Meldungen im Zeitraum.",
+    "aria": "Verlauf der {{metric}} je {{bucket}}"
   }
 }

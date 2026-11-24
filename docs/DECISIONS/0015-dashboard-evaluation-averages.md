@@ -12,7 +12,7 @@ explicitly leaves one value out: the worst ("largest") reaction time must
 neither be calculated nor displayed. `specs/12-stats.md` §12.2 already answers
 median, average and p90 per phase for the statistics page; the dashboard
 contract (§11.2) carries no duration at all today, and `specs/12-stats.md`
-§12.10 forbids statistics tiles on the dashboard beyond §11.4.
+§12.11 forbids statistics tiles on the dashboard beyond §11.4.
 
 ## Decision
 

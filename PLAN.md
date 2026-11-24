@@ -835,6 +835,17 @@ own metric rows, and the metrics of the reaction times explain themselves: the
 median, the average and the p90 carry a hint, the p90 says that 90 % of the
 tickets were faster.
 
+**WP-M26-04 — the statistics show the trends (done).** The page could not show
+a trend: the reaction times and the processing time were a number over the whole
+range, and only the count of the tickets had a series. ADR-0049 decision 3 adds
+the route `GET /api/v1/stats/trends` — one point per bucket with the number of the
+reported tickets, the average minutes of the review phase, of the acknowledge
+phase and of the processing time. The bucket of a ticket is the bucket of its
+report, an average without a sample is `null` and the line has a gap there. The
+web draws the answer as an inline SVG with a scale, a legend and the value of
+every point in the tooltip — no chart dependency (ADR-0012 decision 6) and no
+aggregation in the browser. The CSV export writes the section `trends`.
+
 **WP-M26-01 — the statistics know only phases with data (done).** The phase
 `firstResponse` of the statistics measured the column `tickets.first_response_at`,
 and no workflow event ever writes that column — the phase answered a count of
@@ -2341,7 +2352,7 @@ calculated nor displayed there. WP-M10-19 adds the `evaluations` block of
 `stats_tickets` for the last 30 days of the counter's qualifying set — the three §12.2
 phases and `averageProcessingMinutes` (`closed_at - reported_at`) as nullable whole-minute
 averages; the query contains no median, p90 or max. The statistics API and statistics page
-keep their p90 columns; `specs/12-stats.md` §12.10 names the block as the only allowed
+keep their p90 columns; `specs/12-stats.md` §12.11 names the block as the only allowed
 addition. Its follow-up WP-M10-19b renders the block on the start page below the tiles
 (one labelled line per average, `keine Daten` for a `null` average, no max/p90/median line)
 with the labels under `dashboard.evaluations.*` in `de` and `en`.

@@ -11,6 +11,7 @@ import {
   declinesResponseSchema,
   frequencyResponseSchema,
   reactionTimesResponseSchema,
+  trendsResponseSchema,
   statsFilterSchema,
   statsRangeInvalidCode,
   topObjectsResponseSchema,
@@ -242,6 +243,34 @@ describe('statistics response schemas', () => {
       acknowledge: { count: 2, medianMinutes: 500, averageMinutes: 520, p90Minutes: 600 },
       pausedTickets: 1,
       pauseMinutes: 90,
+    })
+  })
+
+  it('parses the trend of the reaction times', () => {
+    expect(
+      trendsResponseSchema.parse({
+        points: [
+          {
+            bucketStart: '2026-01-05T00:00:00Z',
+            tickets: 4,
+            reviewMinutes: 15,
+            acknowledgeMinutes: null,
+            processingMinutes: 120,
+            closed: 2,
+          },
+        ],
+      }),
+    ).toEqual({
+      points: [
+        {
+          bucketStart: '2026-01-05T00:00:00Z',
+          tickets: 4,
+          reviewMinutes: 15,
+          acknowledgeMinutes: null,
+          processingMinutes: 120,
+          closed: 2,
+        },
+      ],
     })
   })
 

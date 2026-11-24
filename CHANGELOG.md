@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The statistics show the trends (**WP-M26-04**, phase 26, ADR-0049): the new
+  route `GET /api/v1/stats/trends` answers one point per bucket with the number
+  of the reported tickets, the average minutes of the review phase, of the
+  acknowledge phase and of the processing time. The page draws the reaction
+  times and the processing time as inline SVG with a scale, a legend and the
+  value of every point in the tooltip — no chart dependency. The CSV export
+  writes the section `trends`.
+
 ### Changed
 - The statistics name the readable text (**WP-M26-03**, phase 26, ADR-0049):
   the groupings of the frequency answer the label of the fault type and of the

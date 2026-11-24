@@ -142,15 +142,15 @@ export async function queryFrequency(
     bySystemType: bySystemType.map((row) => ({ key: row.key, count: Number(row.count) })),
     byFaultTemplate: byFaultTemplate.map((row) => ({
       key: row.key,
-      labelDe: row.label_de,
-      labelEn: row.label_en,
+      labelDe: row.label_de ?? undefined,
+      labelEn: row.label_en ?? undefined,
       count: Number(row.count),
     })),
     bySource: bySource.map((row) => ({ key: row.key, count: Number(row.count) })),
     byDetectedError: byDetectedError.map((row) => ({
       key: row.key,
-      labelDe: row.label_de,
-      labelEn: row.label_en,
+      labelDe: row.label_de ?? undefined,
+      labelEn: row.label_en ?? undefined,
       count: Number(row.count),
     })),
   }

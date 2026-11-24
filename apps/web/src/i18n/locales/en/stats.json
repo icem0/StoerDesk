@@ -103,5 +103,13 @@
   },
   "export": {
     "button": "Download CSV"
+  },
+  "trend": {
+    "reactionTitle": "Reaction times over the time",
+    "processingTitle": "Processing time over the time",
+    "hint": "Per {{bucket}} the average of the tickets that were reported in this period.",
+    "processing": "Processing time",
+    "empty": "No tickets in the period.",
+    "aria": "The {{metric}} over the {{bucket}}"
   }
 }

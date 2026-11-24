@@ -2,11 +2,13 @@ import type { Compliance, Declines } from './compliance'
 import type { Frequency } from './frequency'
 import type { TopObject } from './objects'
 import type { ReactionTimes } from './reaction-times'
+import type { Trends } from './trends'
 
 /** The five result sections of the statistics export (`specs/12-stats.md` §12.9). */
 export type StatisticsSections = {
   reactionTimes: ReactionTimes
   frequency: Frequency
+  trends: Trends
   objects: TopObject[]
   compliance: Compliance
   declines: Declines
@@ -67,6 +69,35 @@ export function* toStatisticsCsv(
 
   for (const point of sections.frequency.series) {
     yield `${row('frequency', 'series', bucket, point.bucketStart, String(point.total))}\n`
+  }
+
+  // The trend of the reaction times and of the processing time
+  // (specs/12-stats.md §12.11): the bucket of the point is the bucket of the
+  // report, an average without a sample is empty.
+  for (const point of sections.trends.points) {
+    yield `${row('trends', 'tickets', bucket, point.bucketStart, String(point.tickets))}\n`
+    yield `${row(
+      'trends',
+      'reviewMinutes',
+      bucket,
+      point.bucketStart,
+      point.reviewMinutes === null ? '' : String(point.reviewMinutes),
+    )}\n`
+    yield `${row(
+      'trends',
+      'acknowledgeMinutes',
+      bucket,
+      point.bucketStart,
+      point.acknowledgeMinutes === null ? '' : String(point.acknowledgeMinutes),
+    )}\n`
+    yield `${row(
+      'trends',
+      'processingMinutes',
+      bucket,
+      point.bucketStart,
+      point.processingMinutes === null ? '' : String(point.processingMinutes),
+    )}\n`
+    yield `${row('trends', 'closed', bucket, point.bucketStart, String(point.closed))}\n`
   }
 
   for (const entry of sections.frequency.bySystemType) {

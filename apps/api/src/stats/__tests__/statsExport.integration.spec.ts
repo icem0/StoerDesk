@@ -180,6 +180,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('statistics CSV export (i
     expect(body).toContain('objects;')
     expect(body).toContain('compliance;')
     expect(body).toContain('declines;')
+    expect(body).toContain('trends;')
     // The labels of the groupings travel with the export (ADR-0049 decision 2).
     expect(body).toContain('frequency;byFaultTemplateLabelDe;day;EXPORT_FAULT;Störung Export')
     expect(body).toContain('frequency;byFaultTemplateLabelEn;day;EXPORT_FAULT;Export fault')

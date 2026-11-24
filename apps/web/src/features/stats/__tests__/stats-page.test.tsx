@@ -12,7 +12,7 @@ import { StatsPage } from '../stats-page'
  * machine key (ADR-0049 decision 2): the fault template and the detected error
  * carry their label in the answer, the system type is translated by the web.
  */
-const ANSWERS: Record<string, unknown> = {
+const ANSWERS: Record<string, Record<string, unknown>> = {
   '/v1/me': {
     user: { id: '11111111-1111-4111-8111-111111111111', permissions: ['stats.read'] },
   },
@@ -33,6 +33,26 @@ const ANSWERS: Record<string, unknown> = {
       { key: 'kabel', labelDe: 'Kabelbruch', labelEn: 'Cable break', count: 2 },
     ],
   },
+  '/v1/stats/trends': {
+    points: [
+      {
+        bucketStart: '2026-03-10T00:00:00.000Z',
+        tickets: 3,
+        reviewMinutes: 15,
+        acknowledgeMinutes: 70,
+        processingMinutes: 120,
+        closed: 2,
+      },
+      {
+        bucketStart: '2026-03-11T00:00:00.000Z',
+        tickets: 0,
+        reviewMinutes: null,
+        acknowledgeMinutes: null,
+        processingMinutes: null,
+        closed: 0,
+      },
+    ],
+  },
   '/v1/stats/objects': {
     topObjects: [{ objectNo: 'OBJ-1', objectName: 'Objekt Eins', count: 3, conspicuous: false }],
   },
@@ -49,7 +69,7 @@ const ANSWERS: Record<string, unknown> = {
 function renderStats() {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
-    const path = url.split('?')[0].replace(/^\/api/, '')
+    const path = (url.split('?')[0] ?? '').replace(/^\/api/, '')
     const answer = ANSWERS[path]
 
     if (answer === undefined) {
@@ -94,11 +114,23 @@ describe('the statistics page', () => {
     expect(screen.queryByText('BMA')).toBeNull()
   })
 
+  it('draws the trend of the reaction times and of the processing time', async () => {
+    renderStats()
+
+    expect(await screen.findByText('Reaktionszeit im Verlauf')).toBeTruthy()
+    expect(screen.getByText('Bearbeitungszeit im Verlauf')).toBeTruthy()
+
+    // The diagram names itself for a screen reader.
+    const diagram = screen.getByRole('img', { name: /Reaktionszeit im Verlauf/ })
+    expect(diagram).toBeTruthy()
+  })
+
   it('names the two phases of the reaction times', async () => {
     renderStats()
 
-    expect(await screen.findByText('Beginn der Prüfung')).toBeTruthy()
-    expect(screen.getByText('Bestätigung an den Melder')).toBeTruthy()
+    // The name of a phase stands in the card and in the legend of the diagram.
+    expect(await screen.findAllByText('Beginn der Prüfung')).toHaveLength(2)
+    expect(screen.getAllByText('Bestätigung an den Melder')).toHaveLength(2)
     expect(screen.queryByText('Erste Rückmeldung')).toBeNull()
   })
 })

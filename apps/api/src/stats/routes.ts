@@ -11,6 +11,7 @@ import {
   reactionTimesResponseSchema,
   statsFilterSchema,
   topObjectsResponseSchema,
+  trendsResponseSchema,
   type StatsFilter,
 } from '@stoerdesk/shared'
 import { requirePermission } from '../auth/requirePermission'
@@ -21,6 +22,7 @@ import { toStatisticsCsv } from './export'
 import { resolveStatsRange } from './filters'
 import { queryFrequency } from './frequency'
 import { queryTopObjects } from './objects'
+import { queryTrends } from './trends'
 import { queryReactionTimes } from './reaction-times'
 
 type Db = Database['database']
@@ -165,6 +167,27 @@ export const statsRoutes = fp<StatsRoutesOptions>(
     )
 
     app.get(
+      '/api/v1/stats/trends',
+      { preHandler: guard },
+      async (request, reply) => {
+        const parsed = parseFilter(request.query)
+
+        if (!parsed.ok) {
+          return reply
+            .code(422)
+            .send({ code: parsed.code, params: parsed.fields ? { fields: parsed.fields } : {} })
+        }
+
+        if (parsed.filter.bucket === undefined) {
+          return reply.code(422).send({ code: 'invalid_request', params: { fields: ['bucket'] } })
+        }
+
+        const result = await queryTrends(database, parsed.filter)
+        return reply.code(200).send(trendsResponseSchema.parse(result))
+      },
+    )
+
+    app.get(
       '/api/v1/stats/objects',
       { preHandler: guard },
       async (request, reply) => {
@@ -236,9 +259,10 @@ export const statsRoutes = fp<StatsRoutesOptions>(
         const bucket = parsed.filter.bucket ?? 'day'
         const settings = await readDashboardSettings(database)
 
-        const [reactionTimes, frequency, objects, compliance, declines] = await Promise.all([
+        const [reactionTimes, frequency, trends, objects, compliance, declines] = await Promise.all([
           queryReactionTimes(database, parsed.filter, now),
           queryFrequency(database, parsed.filter, now),
+          queryTrends(database, parsed.filter, now),
           queryTopObjects(
             database,
             parsed.filter,
@@ -257,7 +281,7 @@ export const statsRoutes = fp<StatsRoutesOptions>(
 
         return reply.send(
           Readable.from(
-            toStatisticsCsv({ reactionTimes, frequency, objects, compliance, declines }, bucket),
+            toStatisticsCsv({ reactionTimes, frequency, trends, objects, compliance, declines }, bucket),
           ),
         )
       },

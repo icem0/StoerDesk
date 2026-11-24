@@ -7,11 +7,13 @@ import type {
   FrequencyResponse,
   ReactionTimesResponse,
   TopObjectsResponse,
+  TrendsResponse,
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../../auth/usePermission'
 import { apiBaseUrl, apiFetch, type ApiError } from '../../lib/api'
 import { formatHours, isHourValue } from '../../lib/duration'
+import { ChartLegend, LineChart, type ChartSeries } from './charts'
 
 /**
  * Statistics page at `/stats` (`specs/12-stats.md` §12.1–§12.5, §12.9, WP-M9-15).
@@ -199,6 +201,7 @@ export function StatsPage() {
 
   const reaction = useSection<ReactionTimesResponse>('reaction-times', query)
   const frequency = useSection<FrequencyResponse>('frequency', frequencyQuery)
+  const trends = useSection<TrendsResponse>('trends', frequencyQuery)
   const objects = useSection<TopObjectsResponse>('objects', query)
   const compliance = useSection<ComplianceResponse>('compliance', query)
   const declines = useSection<DeclinesResponse>('declines', query)
@@ -207,7 +210,7 @@ export function StatsPage() {
     return <p className="p-6 text-sm text-slate-400">{t('loading')}</p>
   }
 
-  const error = (reaction.error ?? frequency.error ?? objects.error) as ApiError | null
+  const error = (reaction.error ?? frequency.error ?? trends.error ?? objects.error) as ApiError | null
 
   if (!mayRead) {
     return <p className="p-6 text-sm text-rose-400">{t('forbidden')}</p>
@@ -244,6 +247,54 @@ export function StatsPage() {
   /** The source of the report is a fixed list of three values. */
   const sourceLabel = (row: GroupRow): string =>
     t(`frequency.source.${row.key}`, { defaultValue: row.key })
+
+  /**
+   * The label of a bucket on the x-axis of a diagram: the day for the buckets
+   * of a day and a week, the month for the buckets of a month.
+   */
+  const bucketLabel = (instant: string): string => {
+    const date = new Date(instant)
+
+    return new Intl.DateTimeFormat(i18n.language, {
+      day: '2-digit',
+      month: bucket === 'month' ? 'short' : '2-digit',
+      ...(bucket === 'month' ? { year: '2-digit' } : {}),
+    }).format(date)
+  }
+
+  /** A duration of the axis and of the tooltip. */
+  const trendValue = (minutes: number): string =>
+    isHourValue(minutes)
+      ? t('reaction.hours', { value: formatHours(minutes, i18n.language) })
+      : t('reaction.minutes', { value: minutes })
+
+  const trendPoints = trends.data?.points ?? []
+  const trendLabels = trendPoints.map((point) => bucketLabel(point.bucketStart))
+  const reactionSeries: ChartSeries[] = [
+    {
+      label: t('reaction.phase.review'),
+      values: trendPoints.map((point) => point.reviewMinutes),
+      stroke: 'stroke-sky-400',
+      fill: 'fill-sky-400',
+      swatch: 'bg-sky-400',
+    },
+    {
+      label: t('reaction.phase.acknowledge'),
+      values: trendPoints.map((point) => point.acknowledgeMinutes),
+      stroke: 'stroke-emerald-400',
+      fill: 'fill-emerald-400',
+      swatch: 'bg-emerald-400',
+    },
+  ]
+  const processingSeries: ChartSeries[] = [
+    {
+      label: t('trend.processing'),
+      values: trendPoints.map((point) => point.processingMinutes),
+      stroke: 'stroke-violet-400',
+      fill: 'fill-violet-400',
+      swatch: 'bg-violet-400',
+    },
+  ]
 
   return (
     <section className="flex flex-col gap-6">
@@ -469,6 +520,25 @@ export function StatsPage() {
               : t('reaction.pauseMinutes', { count: reaction.data.pauseMinutes })}
           </p>
         ) : null}
+
+        <h3 className="mt-5 text-sm font-medium text-slate-300">{t('trend.reactionTitle')}</h3>
+        <p className="text-sm text-slate-400">{t('trend.hint', { bucket: t(`bucket.${bucket}`) })}</p>
+        {trendPoints.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">{t('trend.empty')}</p>
+        ) : (
+          <>
+            <LineChart
+              ariaLabel={t('trend.aria', {
+                metric: t('trend.reactionTitle'),
+                bucket: t(`bucket.${bucket}`),
+              })}
+              formatValue={trendValue}
+              labels={trendLabels}
+              series={reactionSeries}
+            />
+            <ChartLegend series={reactionSeries} />
+          </>
+        )}
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -515,6 +585,27 @@ export function StatsPage() {
             />
           </div>
         ) : null}
+      </div>
+
+      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <h2 className="text-lg font-semibold">{t('trend.processingTitle')}</h2>
+        <p className="text-sm text-slate-400">{t('trend.hint', { bucket: t(`bucket.${bucket}`) })}</p>
+        {trendPoints.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">{t('trend.empty')}</p>
+        ) : (
+          <>
+            <LineChart
+              ariaLabel={t('trend.aria', {
+                metric: t('trend.processingTitle'),
+                bucket: t(`bucket.${bucket}`),
+              })}
+              formatValue={trendValue}
+              labels={trendLabels}
+              series={processingSeries}
+            />
+            <ChartLegend series={processingSeries} />
+          </>
+        )}
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">

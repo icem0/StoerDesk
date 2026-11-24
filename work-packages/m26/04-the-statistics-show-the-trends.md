@@ -1,7 +1,7 @@
 # WP-M26-04: the statistics show the trends
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M26-03
 phase: 26
 milestone: m26

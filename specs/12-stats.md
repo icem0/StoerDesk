@@ -157,11 +157,12 @@ into the browser (`PLAN.md` §13). The views inherit the indexes of `tickets`,
 | --- | --- | --- |
 | `GET /api/v1/stats/reaction-times` | `stats.read` | §12.2 |
 | `GET /api/v1/stats/frequency?bucket=day\|week\|month` | `stats.read` | §12.3 |
+| `GET /api/v1/stats/trends?bucket=day\|week\|month` | `stats.read` | §12.10 |
 | `GET /api/v1/stats/objects` | `stats.read` | §12.4 |
 | `GET /api/v1/stats/compliance` | `stats.read` | §12.5 |
 | `GET /api/v1/stats/export.csv` | `stats.export` | all sections as CSV |
 
-The four JSON routes share the filter schema of §12.1. A malformed filter is
+The five JSON routes share the filter schema of §12.1. A malformed filter is
 `422 invalid_request` with field errors; an impossible range is
 `422 stats_range_invalid`. The routes are read-only.
 
@@ -170,14 +171,38 @@ The four JSON routes share the filter schema of §12.1. A malformed filter is
 `GET /api/v1/stats/export.csv` applies the same filters and writes a
 semicolon-separated UTF-8 file with the fixed header
 `section;metric;bucket;key;value`. The sections are `reactionTimes`,
-`frequency`, `objects`, `compliance` and `declines`; `bucket` is empty outside
-`frequency`. The response carries
+`frequency`, `trends`, `objects`, `compliance` and `declines`; `bucket` names the
+bucket unit in the sections `frequency` and `trends` and is empty outside them. The response carries
 `content-disposition: attachment; filename="stoerdesk-statistik-<from>-<to>.csv"`
 and is streamed from the database cursor, never built as one large string in
 memory. The export requires `stats.export`, so a `manager` can export while a
 read-only statistics viewer cannot.
 
-## 12.10 Boundaries
+## 12.10 Trends
+
+`GET /api/v1/stats/trends?bucket=day|week|month` answers the trend of the
+reaction times and of the processing time over the filtered range
+(ADR-0049 decision 3). The answer carries one point per bucket:
+
+| Field | Meaning |
+| --- | --- |
+| `bucketStart` | the bucket of the point as a UTC instant |
+| `tickets` | the number of the tickets that were reported in the bucket |
+| `reviewMinutes` | the average minutes from the report to the start of the review |
+| `acknowledgeMinutes` | the average minutes from the report to the acknowledgement |
+| `processingMinutes` | the average minutes from the report to the closing (`closed_at` minus `reported_at`) |
+| `closed` | the number of the closed tickets of the bucket |
+
+The bucket of a ticket is the bucket of its `reported_at`: every measure
+runs from the report, so the ticket belongs to the bucket of its report. An
+average without a sample is `null` — the line has a gap there and the
+diagram does not draw a value it does not have. The buckets have no gaps: an
+empty bucket answers `tickets: 0` and `null` for every average.
+
+The averages are calculated in SQL like every other aggregate of this spec;
+the browser draws the answer and never aggregates it.
+
+## 12.11 Boundaries
 
 - No statistics tile on the dashboard beyond the tiles of
   `specs/11-dashboard.md` §11.4 and the evaluations block of §11.4a
