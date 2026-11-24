@@ -26,6 +26,7 @@ the UI is never the enforcement point.
 | Method | Path                     | Permission      | Result |
 | ------ | ------------------------ | --------------- | ------ |
 | GET    | `/api/v1/objects`        | `object.read`   | `200 { objects }` |
+| GET    | `/api/v1/objects/cities` | `object.read`   | `200 { cities }` |
 | GET    | `/api/v1/objects/:objectNo` | `object.read` | `200` object summary |
 | POST   | `/api/v1/objects`        | `object.write`  | `201` object summary |
 | PATCH  | `/api/v1/objects/:objectNo` | `object.write` | `200` object summary |
@@ -159,8 +160,11 @@ optional and only gets its own work package if a deployment needs one.
 (`RequireSession`, cosmetic next to the server guard). It lists the objects of the
 list API of §9.1 as a checklist, every object selected by default, and filters the
 list **on the server** with the query of §9.1 (`search`, `active`, `city`); the
-checklist can be selected completely or not at all. Inactive (soft-deleted) objects
-are not printable — their token only serves the 30-day redirect of §9.2.
+place of the filter is a list of the places of the active objects
+(`GET /api/v1/objects/cities`), the checklist can be selected completely or not
+at all. A new filter shows a new list — the selection of the old one does not
+follow it. Inactive (soft-deleted) objects are not printable — their token only
+serves the 30-day redirect of §9.2.
 
 **The template (ADR-0050).** A sticker is a **template of the installation**: a
 *geometry* and an *appearance*. Both live in the settings row `sticker.template`

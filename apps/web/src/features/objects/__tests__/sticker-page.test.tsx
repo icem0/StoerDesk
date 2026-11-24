@@ -10,7 +10,12 @@ import type { ObjectListResponse, ObjectSummary } from '@stoerdesk/shared'
 
 const NOTICE = 'Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.'
 
-function object(objectNo: string, name: string, qrToken: string | null): ObjectSummary {
+function object(
+  objectNo: string,
+  name: string,
+  qrToken: string | null,
+  city = 'Beispielstadt',
+): ObjectSummary {
   return {
     id: '11111111-1111-4111-8111-111111111111',
     objectNo,
@@ -18,7 +23,7 @@ function object(objectNo: string, name: string, qrToken: string | null): ObjectS
     street: 'Bahnhofstrasse',
     houseNumber: '12',
     postalCode: '12345',
-    city: 'Beispielstadt',
+    city,
     contactName: null,
     contactPhone: null,
     contactEmail: null,
@@ -36,7 +41,7 @@ function object(objectNo: string, name: string, qrToken: string | null): ObjectS
 const LIST: ObjectListResponse = {
   objects: [
     object('12345_01', 'Rathaus', 'Zx8Q_-3vLm2pQ7tYw4KdBe'),
-    object('B-2', 'Klinik Nord', 'Ab3dEf6gHij2pQr7tYw4Kd'),
+    object('B-2', 'Klinik Nord', 'Ab3dEf6gHij2pQr7tYw4Kd', 'Nordstadt'),
     object('C-3', 'Alte Werkskasse', null),
   ],
 }
@@ -66,22 +71,40 @@ const TEMPLATE = {
 }
 
 function stubRequests(template: unknown = TEMPLATE) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input)
+  const mock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), 'http://localhost')
 
-      if (url.includes('/v1/objects')) {
-        return Response.json(LIST)
+      if (url.pathname.endsWith('/v1/objects/cities')) {
+        return Response.json({ cities: ['Beispielstadt', 'Nordstadt'] })
       }
 
-      if (url.includes('/v1/settings/sticker-template')) {
+      if (url.pathname.endsWith('/v1/objects')) {
+        const needle = (url.searchParams.get('search') ?? '').toLowerCase()
+        const city = url.searchParams.get('city')
+        const objects = LIST.objects.filter((object) => {
+          const matchesSearch =
+            needle === '' ||
+            [object.objectNo, object.name, object.city ?? ''].some((value) =>
+              value.toLowerCase().includes(needle),
+            )
+          const matchesCity = city === null || city === '' || object.city === city
+
+          return matchesSearch && matchesCity
+        })
+
+        return Response.json({ objects })
+      }
+
+      if (url.pathname.endsWith('/v1/settings/sticker-template')) {
         return Response.json({ template })
       }
 
       return Response.json({ code: 'not_found', params: {} }, { status: 404 })
-    }),
-  )
+  })
+
+  vi.stubGlobal('fetch', mock)
+
+  return mock
 }
 
 function renderPage() {
@@ -134,7 +157,7 @@ describe('StickerPage', () => {
     expect(container.querySelectorAll('.sticker-label__no-token')).toHaveLength(1)
   })
 
-  it('filters and deselects objects before printing', async () => {
+  it('filters the list on the server and deselects the objects', async () => {
     stubRequests()
     const { container } = renderPage()
 
@@ -142,7 +165,9 @@ describe('StickerPage', () => {
 
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'klinik' } })
 
-    expect(await screen.findByText('1 von 1 Objekten ausgewählt')).toBeTruthy()
+    expect(
+      await screen.findByText('1 von 1 Objekten ausgewählt', {}, { timeout: 3000 }),
+    ).toBeTruthy()
     expect(container.querySelectorAll('.sticker-label')).toHaveLength(1)
     expect(container.querySelector('.sticker-label')?.textContent).toContain('Klinik Nord')
 
@@ -151,6 +176,43 @@ describe('StickerPage', () => {
     expect(await screen.findByText('0 von 1 Objekten ausgewählt')).toBeTruthy()
     expect(container.querySelectorAll('.sticker-label')).toHaveLength(0)
     expect(screen.getByText('Kein Objekt ausgewählt — es wird nichts gedruckt.')).toBeTruthy()
+  })
+
+  it('asks the server for the places and the activity', async () => {
+    const fetchMock = stubRequests()
+    renderPage()
+
+    await screen.findAllByText('Störung melden: QR-Code scannen')
+
+    const city = screen.getByRole('combobox', { name: /Ort|City/i }) as HTMLSelectElement
+    fireEvent.change(city, { target: { value: 'Nordstadt' } })
+
+    const activity = screen.getByRole('combobox', { name: /Aktivität|Activity/i }) as HTMLSelectElement
+    fireEvent.change(activity, { target: { value: 'all' } })
+
+    await screen.findAllByText('Störung melden: QR-Code scannen')
+
+    const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+
+    expect(urls.some((url) => url.includes('city=Nordstadt'))).toBe(true)
+    expect(urls.some((url) => url.includes('active=all'))).toBe(true)
+  })
+
+  it('selects all objects and none of them', async () => {
+    stubRequests()
+    const { container } = renderPage()
+
+    await screen.findAllByText('Störung melden: QR-Code scannen')
+
+    fireEvent.click(screen.getByRole('button', { name: /Keine auswählen|Select none/i }))
+
+    expect(await screen.findByText('0 von 3 Objekten ausgewählt')).toBeTruthy()
+    expect(container.querySelectorAll('.sticker-label')).toHaveLength(0)
+
+    fireEvent.click(screen.getByRole('button', { name: /Alle auswählen|Select all/i }))
+
+    expect(await screen.findByText('3 von 3 Objekten ausgewählt')).toBeTruthy()
+    expect(container.querySelectorAll('.sticker-label')).toHaveLength(3)
   })
 
   it('prints the sheet of the template of the installation', async () => {
@@ -173,7 +235,9 @@ describe('StickerPage', () => {
 
     await screen.findAllByText('Störung melden: QR-Code scannen')
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'a4-104' } })
+    fireEvent.change(screen.getByRole('combobox', { name: /Blatt|Sheet/i }), {
+      target: { value: 'a4-104' },
+    })
 
     await screen.findAllByText('Störung melden: QR-Code scannen')
 

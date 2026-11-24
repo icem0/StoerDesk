@@ -4,6 +4,7 @@ import { z } from 'zod'
 import {
   escapeLikePattern,
   createObjectRequestSchema,
+  objectCityListResponseSchema,
   objectListQuerySchema,
   objectListResponseSchema,
   objectNoSchema,
@@ -333,6 +334,25 @@ export const objectRoutes = fp<ObjectRouteOptions>(
             : parsed.data
 
         return objectListResponseSchema.parse({ objects: await listObjects(database, query) })
+      },
+    )
+
+    app.get(
+      '/api/v1/objects/cities',
+      { preHandler: requireScopeOrPermission(database, 'objects:read', PERMISSIONS.object.read) },
+      async () => {
+        const rows = await database
+          .selectDistinct({ city: objects.city })
+          .from(objects)
+          .where(eq(objects.active, true))
+          .orderBy(objects.city)
+
+        const cities = rows
+          .map((row) => row.city)
+          .filter((city): city is string => city !== null)
+          .sort((left, right) => left.localeCompare(right, 'de'))
+
+        return objectCityListResponseSchema.parse({ cities })
       },
     )
 

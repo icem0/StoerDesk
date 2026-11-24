@@ -69,6 +69,11 @@ export const objectListResponseSchema = z.object({
   objects: z.array(objectSummarySchema),
 })
 
+/** The places of the active objects — the filter of the list of the stickers (WP-M27-05). */
+export const objectCityListResponseSchema = z.object({
+  cities: z.array(z.string()),
+})
+
 export const objectListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
   active: z.enum(['true', 'false', 'all']).default('true'),
@@ -141,6 +146,7 @@ export const updateObjectRequestSchema = z.object({
 
 export type ObjectSummary = z.infer<typeof objectSummarySchema>
 export type ObjectListResponse = z.infer<typeof objectListResponseSchema>
+export type ObjectCityListResponse = z.infer<typeof objectCityListResponseSchema>
 export type ObjectListQuery = z.infer<typeof objectListQuerySchema>
 export type CreateObjectRequest = z.infer<typeof createObjectRequestSchema>
 export type UpdateObjectRequest = z.infer<typeof updateObjectRequestSchema>

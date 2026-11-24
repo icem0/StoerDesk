@@ -84,6 +84,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
+    function getCities(cookie?: string) {
+      return app.inject({
+        method: 'GET',
+        url: '/api/v1/objects/cities',
+        headers: cookie === undefined ? {} : { cookie },
+      })
+    }
+
     function getObject(cookie: string, objectNo: string) {
       return app.inject({ method: 'GET', url: `/api/v1/objects/${objectNo}`, headers: { cookie } })
     }
@@ -244,6 +252,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(foreign.statusCode).toBe(200)
       expect(foreign.json<ObjectBody>().externalType).toBeNull()
+    })
+
+    it('answers the places of the active objects', async () => {
+      await createAsAdmin('CITY_01', { name: 'Rathaus', city: 'Nordstadt' })
+      await createAsAdmin('CITY_02', { name: 'Werkhalle', city: 'Suedstadt' })
+
+      const anonymous = await getCities()
+      const response = await getCities(cookies["office"])
+
+      expect(anonymous.statusCode).toBe(401)
+      expect(response.statusCode).toBe(200)
+
+      const body = response.json<{ cities: string[] }>()
+
+      expect(body.cities).toContain('Nordstadt')
+      expect(body.cities).toContain('Suedstadt')
     })
 
     it('rejects a duplicate object number case-insensitively', async () => {

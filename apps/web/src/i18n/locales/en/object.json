@@ -13,7 +13,15 @@
     "emergencyNotice": "For fire or danger: emergency call 112. This form is never an emergency call.",
     "sheet": "Sheet",
     "lookHint": "The look of the sticker (size of the QR, error correction, printed lines) is decided by the administration:",
-    "lookLink": "Template of the stickers"
+    "lookLink": "Template of the stickers",
+    "city": "City",
+    "allCities": "all cities",
+    "active": "Activity",
+    "activeTrue": "active",
+    "activeFalse": "inactive",
+    "activeAll": "all",
+    "selectAll": "Select all",
+    "selectNone": "Select none"
   },
   "list": {
     "title": "Objects",

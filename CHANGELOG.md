@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The list of the stickers is filtered on the server (**WP-M27-05**, phase 27,
+  ADR-0050): the search, the place and the activity ask the object list API,
+  the places come from the new route `GET /api/v1/objects/cities`, and the
+  checklist can be selected completely or not at all.
 - The page of the stickers prints the chosen sheet (**WP-M27-04b**, phase 27,
   ADR-0050): the select of the toolbar offers the sheets of the catalog and the
   free grid of the installation, the look of the sticker (size of the QR, error

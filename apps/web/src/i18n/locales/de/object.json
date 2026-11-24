@@ -13,7 +13,15 @@
     "emergencyNotice": "Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.",
     "sheet": "Blatt",
     "lookHint": "Das Aussehen des Aufklebers (QR-Größe, Fehlerkorrektur, gedruckte Zeilen) legt die Verwaltung fest:",
-    "lookLink": "Vorlage der Aufkleber"
+    "lookLink": "Vorlage der Aufkleber",
+    "city": "Ort",
+    "allCities": "alle Orte",
+    "active": "Aktivität",
+    "activeTrue": "aktiv",
+    "activeFalse": "inaktiv",
+    "activeAll": "alle",
+    "selectAll": "Alle auswählen",
+    "selectNone": "Keine auswählen"
   },
   "list": {
     "title": "Objekte",

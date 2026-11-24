@@ -1794,7 +1794,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M27-03   | the administration of the sticker template at `/admin/sticker-template` — the geometry of the sheet and the look of the label | done | yes      |
 | WP-M27-04a  | the sheet from the geometry — the blocks of the grid, the measures of the label and the print classes | done | yes      |
 | WP-M27-04b  | the page prints the chosen sheet — the select of the sheet, the look of the installation and the preview of the administration | done | yes      |
-| WP-M27-05   | the filter of the list of the stickers — search, active and city on the server, select all and select none | planned | no      |
+| WP-M27-05   | the filter of the list of the stickers — search, place and activity on the server, select all and select none | done | yes      |
 | WP-M27-06   | the criterion of the phase — every sheet of the catalog prints in its own grid | planned | no      |
 | WP-M28-01   | the tests of the web share one environment per worker — the pool `vmThreads` of the web project | done | yes     |
 | WP-M28-02   | the integration tests of the API share one migrated template database — the pool of the test databases, the lock of the file and the cleanup between the files | planned | no      |
