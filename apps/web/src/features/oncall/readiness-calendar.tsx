@@ -177,7 +177,7 @@ export function ReadinessCalendar(props: {
 }) {
   const { t, i18n } = useTranslation('oncall')
   const [windowStart, setWindowStart] = useState(() => monthStartIso(new Date()))
-  const [selectedShift, setSelectedShift] = useState<OnCallShift | null>(null)
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   const showNames = props.showNames ?? true
@@ -227,6 +227,14 @@ export function ReadinessCalendar(props: {
         new Date(shift.startsAt).getTime() < to && new Date(shift.endsAt).getTime() > from,
     )
   }, [props.shifts, fromIso, toIso])
+
+  // The dialog shows the shift of the current data, so an action of the admin
+  // (the assignment of a technician, the delete of the shift) is visible in it
+  // at once — and the dialog closes when the shift is gone (WP-M23-06).
+  const selectedShift = useMemo(
+    () => props.shifts.find((shift) => shift.id === selectedShiftId) ?? null,
+    [props.shifts, selectedShiftId],
+  )
 
   const poolNames = useMemo(
     () => new Map(props.pools.map((pool) => [pool.id, pool.name])),
@@ -429,7 +437,7 @@ export function ReadinessCalendar(props: {
                               const first = rows[0]
 
                               if (first) {
-                                setSelectedShift(first)
+                                setSelectedShiftId(first.id)
                               }
                             }}
                           >
@@ -463,7 +471,7 @@ export function ReadinessCalendar(props: {
                                           className="flex flex-1 w-full h-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-[10px] leading-tight text-slate-300"
                                           onClick={(event) => {
                                             event.stopPropagation()
-                                            setSelectedShift(shift)
+                                            setSelectedShiftId(shift.id)
                                           }}
                                           title={`${stateLabel} – ${poolName} – ${holder}`}
                                           type="button"
@@ -496,7 +504,7 @@ export function ReadinessCalendar(props: {
 
       {selectedShift !== null ? (
         <ShiftDetailDialog
-          onClose={() => setSelectedShift(null)}
+          onClose={() => setSelectedShiftId(null)}
           poolName={poolNames.get(selectedShift.poolId) ?? null}
           shift={selectedShift}
           showNames={showNames}

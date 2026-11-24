@@ -226,6 +226,15 @@ export function PlanningSection({
   const mutationError = generate.error ?? update.error ?? remove.error
   const rows = shifts.data?.shifts ?? []
   const locked = (shift: OnCallShift) => new Date(shift.startsAt) <= new Date()
+  /**
+   * The delete of a shift (ADR-0047): a shift that held the duty stays in the
+   * plan — a confirmed or swapped shift, and a published shift that started.
+   * A shift that nobody ever confirmed may be deleted, also when it started.
+   */
+  const deletable = (shift: OnCallShift) =>
+    shift.state !== 'CONFIRMED' &&
+    shift.state !== 'SWAP_REQUESTED' &&
+    !(shift.state === 'PLANNED' && locked(shift))
   const candidates = members.data?.members ?? []
   const declined = rows.filter((shift) => shift.state === 'DECLINED').length
   const unfilled = rows.filter((shift) => shift.state === 'UNFILLED').length
@@ -391,13 +400,13 @@ export function PlanningSection({
                           <button
                             className="rounded border border-rose-800 px-3 py-1 text-rose-300 disabled:opacity-50"
                             type="button"
-                            title={locked(shift) ? t('admin.grid.locked') : undefined}
+                            title={
+                              deletable(shift) ? undefined : t('admin.grid.locked')
+                            }
                             disabled={
                               !mayAdmin ||
                               remove.isPending ||
-                              locked(shift) ||
-                              shift.state === 'CONFIRMED' ||
-                              shift.state === 'SWAP_REQUESTED'
+                              !deletable(shift)
                             }
                             onClick={() => remove.mutate(shift.id)}
                           >

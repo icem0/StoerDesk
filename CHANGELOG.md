@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The shift dialog carries the actions of the admin (**WP-M23-06**, phase 23): the
+  dialog of a shift showed the state, the pool, the period and the history — and
+  no action at all, so the admin who opens a shift nobody accepted found
+  nothing to do there. The dialog now assigns a technician of the pool again,
+  publishes a draft and deletes the shift (with a confirmation); the refusal of
+  the delete names its reason. The actions are visible only with `oncall.admin`.
 - The admin deletes a shift that nobody ever confirmed (**WP-M23-05**, phase 23,
   ADR-0047): a shift that held the duty keeps its place — a confirmed or
   swapped shift, and every shift that was confirmed at some moment — while a

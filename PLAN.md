@@ -805,6 +805,17 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**WP-M23-06 — the shift dialog carries the actions of the admin (done).** The
+dialog of a shift showed the state, the pool, the period and the history — and
+no action at all, so the admin who opens a shift nobody accepted found nothing
+to do there. The new component `ShiftAdminActions` carries the three actions of
+the plan: „Neu zuweisen" (a technician of the pool, the shift is published
+again), „Veröffentlichen" (a draft) and „Löschen" (with a confirmation). The
+candidates come from the members of the pool, so the admin needs no right
+beyond the readiness itself; the component renders nothing without
+`oncall.admin`. The refusal of the delete names its reason now — `state`,
+`confirmed` or `started` in the params of `409 oncall_shift_locked`.
+
 **WP-M23-04 — the iCal URL is complete and visible (done).** The API answers
 the personal feed as a path (`/api/v1/oncall/ical/<token>.ics`,
 `packages/shared/src/schemas/oncall.ts:303`) — the contract of WP-M8-14b, which

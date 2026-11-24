@@ -9,6 +9,7 @@ import type {
 import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
+import { ShiftAdminActions } from './shift-admin-actions'
 
 /**
  * The details of one shift with its append-only history
@@ -60,6 +61,8 @@ export function ShiftDetailDialog(props: {
   poolName: string | null
   showNames: boolean
   onClose: () => void
+  /** Called after an action of the admin, so the page reads the plan again. */
+  onChanged?: () => void
 }) {
   const { t, i18n } = useTranslation('oncall')
   const titleId = `shift-detail-title-${props.shift.id}`
@@ -141,6 +144,8 @@ export function ShiftDetailDialog(props: {
           <dt className="text-slate-400">{t('admin.shiftDetail.technician')}</dt>
           <dd>{technician}</dd>
         </dl>
+
+        <ShiftAdminActions onChanged={props.onChanged} shift={props.shift} />
 
         <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-slate-300">
           {t('admin.shiftDetail.history')}

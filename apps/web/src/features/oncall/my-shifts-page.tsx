@@ -272,6 +272,7 @@ function MyShiftsPageContent({
 
       {detailShift !== null ? (
         <ShiftDetailDialog
+          onChanged={() => void invalidate()}
           onClose={() => setDetailShift(null)}
           poolName={poolNames[detailShift.poolId] ?? null}
           shift={detailShift}
