@@ -847,6 +847,19 @@ export const notificationAccounts = pgTable(
     label: text('label').notNull().default(''),
     /** Write-only secret of the account — never answered, never logged. */
     secret: text('secret').notNull().default(''),
+    /**
+     * The target of the user at the channel — the room of the user for
+     * Matrix, empty for every other kind (`specs/10-notifications.md` §11.1,
+     * ADR-0045).
+     */
+    target: text('target').notNull().default(''),
+    /**
+     * The time of the confirmation of the account: the user proved that the
+     * address works with a one-time code over the channel itself
+     * (`specs/10-notifications.md` §11.3a, ADR-0045). Null while the account is
+     * only linked.
+     */
+    verifiedAt: timestamp('verified_at', timestampOptions),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },

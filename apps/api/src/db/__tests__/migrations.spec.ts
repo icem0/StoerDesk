@@ -479,3 +479,22 @@ describe('migration 0051 the open password change', () => {
     expect(sql).not.toContain('UPDATE')
   })
 })
+
+describe('migration 0060 the target and the confirmation of the accounts', () => {
+  const sql = readMigration('0060_notification_account_target_and_verification')
+
+  it('adds the target of the user with the empty default', () => {
+    expect(sql).toContain(`ALTER TABLE "notification_accounts" ADD COLUMN "target" text DEFAULT '';`)
+  })
+
+  it('adds the confirmation of the account as a nullable time', () => {
+    expect(sql).toContain(
+      `ALTER TABLE "notification_accounts" ADD COLUMN "verified_at" timestamp;`,
+    )
+  })
+
+  it('touches the accounts only and fills no row', () => {
+    expect(sql).not.toContain('notification_preferences')
+    expect(sql).not.toContain('UPDATE')
+  })
+})

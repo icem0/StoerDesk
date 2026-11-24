@@ -421,6 +421,13 @@
       "when": 1795744800001,
       "tag": "0059_oncall_shift_pattern",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1795831200001,
+      "tag": "0060_notification_account_target_and_verification",
+      "breakpoints": true
     }
   ]
 }
