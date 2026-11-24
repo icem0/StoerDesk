@@ -5,6 +5,7 @@ import type { OnCallShift } from '@stoerdesk/shared'
 import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
 import { ShiftDetailDialog } from './shift-detail-dialog'
+import { absoluteApiUrl } from '../../lib/api'
 
 /**
  * The readiness calendar of the office (`specs/04-oncall.md` §4a.2, §4a.3;
@@ -178,21 +179,26 @@ export function ReadinessCalendar(props: {
   const [windowStart, setWindowStart] = useState(() => monthStartIso(new Date()))
   const [selectedShift, setSelectedShift] = useState<OnCallShift | null>(null)
   const [copied, setCopied] = useState(false)
+  const [panelOpen, setPanelOpen] = useState(false)
   const showNames = props.showNames ?? true
 
-  const share = async () => {
-    const url = props.icalUrl
+  // The complete address of the personal feed (WP-M23-04): the API answers a
+  // path, a calendar app needs host and scheme.
+  const icalUrl = props.icalUrl === undefined ? undefined : absoluteApiUrl(props.icalUrl)
 
-    if (!url) {
+  const share = async () => {
+    if (!icalUrl) {
       return
     }
 
+    setPanelOpen(true)
+
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(icalUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // clipboard access can be blocked; the button stays without feedback
+      // clipboard access can be blocked; the panel shows the address anyway
     }
   }
 
@@ -282,9 +288,10 @@ export function ReadinessCalendar(props: {
           <p className="text-sm text-slate-400">{t('readiness.hint')}</p>
         </div>
         <div className="flex items-center gap-2">
-          {props.icalUrl ? (
+          {icalUrl ? (
             <button
               aria-label={t('readiness.share')}
+              aria-expanded={panelOpen}
               className="flex min-h-11 items-center gap-2 rounded bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void share()}
               title={t('readiness.share')}
@@ -324,6 +331,31 @@ export function ReadinessCalendar(props: {
           </button>
         </div>
       </div>
+
+      {panelOpen && icalUrl ? (
+        <div className="mt-3 rounded border border-slate-700 bg-slate-950/60 p-3">
+          <h3 className="text-sm font-semibold text-slate-200">
+            {t('readiness.icalTitle')}
+          </h3>
+          <p className="mt-1 text-xs text-slate-400">{t('readiness.icalHint')}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              aria-label={t('readiness.icalTitle')}
+              className="min-w-0 flex-1 truncate rounded bg-slate-900 p-2 text-xs text-slate-100"
+              readOnly
+              value={icalUrl}
+            />
+            <button
+              className="rounded bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+              onClick={() => void share()}
+              type="button"
+            >
+              {copied ? t('readiness.copied') : t('readiness.copy')}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">{t('readiness.icalSubscribe')}</p>
+        </div>
+      ) : null}
 
       <ul className="mt-3 flex flex-wrap gap-3 text-xs text-slate-400">
         {STATE_ORDER.map((state) => (

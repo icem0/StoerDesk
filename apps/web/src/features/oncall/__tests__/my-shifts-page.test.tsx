@@ -334,7 +334,8 @@ describe('MyShiftsPage', () => {
     expect(screen.queryByText('Wochenplan')).toBeNull()
   })
 
-  it('copies the iCal URL with the share button of the calendar', async () => {    const writeText = vi.fn(async () => undefined)
+  it('copies the iCal URL with the share button of the calendar', async () => {
+    const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText },
@@ -353,6 +354,17 @@ describe('MyShiftsPage', () => {
     fireEvent.click(button)
 
     await waitForText('Kalender-URL kopiert')
-    expect(writeText).toHaveBeenCalledWith('/api/v1/oncall/ical/token.ics')
+
+    // the complete address, not the path of the API (WP-M23-04)
+    expect(writeText).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/oncall/ical/token.ics',
+    )
+
+    // the panel names the address, so the link can be read and copied by hand
+    await waitForText('Die Adresse deines persönlichen Kalender-Feeds.')
+
+    const field = screen.getByLabelText('Kalender-URL') as HTMLInputElement
+
+    expect(field.value).toBe('http://localhost:3000/api/v1/oncall/ical/token.ics')
   })
 })

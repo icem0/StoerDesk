@@ -13,7 +13,11 @@
     "pageHintWithoutNames": "The calendar shows the readiness shifts. Below it you find your own shifts.",
     "adminSettings": "Readiness settings",
     "share": "Share calendar URL",
-    "copied": "Calendar URL copied"
+    "copied": "Calendar URL copied",
+    "copy": "Copy",
+    "icalTitle": "Calendar URL",
+    "icalHint": "The address of your personal calendar feed.",
+    "icalSubscribe": "Enter the address in your calendar app to subscribe to the shifts."
   },
   "admin": {
     "back": "Back to settings",

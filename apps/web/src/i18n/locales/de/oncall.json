@@ -13,7 +13,11 @@
     "pageHintWithoutNames": "Der Kalender zeigt die Schichten der Bereitschaft. Darunter stehen deine eigenen Schichten.",
     "adminSettings": "Einstellungen der Bereitschaft",
     "share": "Kalender-URL teilen",
-    "copied": "Kalender-URL kopiert"
+    "copied": "Kalender-URL kopiert",
+    "copy": "Kopieren",
+    "icalTitle": "Kalender-URL",
+    "icalHint": "Die Adresse deines persönlichen Kalender-Feeds.",
+    "icalSubscribe": "Die Adresse in die Kalender-App eintragen, um die Schichten zu abonnieren."
   },
   "admin": {
     "back": "Zurück zu den Einstellungen",

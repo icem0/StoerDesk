@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The iCal URL of the readiness is complete and visible (**WP-M23-04**, phase 23):
+  the API answers the personal feed as a path, the web app resolves it against
+  the origin of the API — the share button of the calendar copies the address
+  with host and scheme instead of a path, which was worthless in a calendar
+  app, and the frame opens a panel that names the address, so the link is
+  readable and can be copied by hand.
 - The user owns the channels and the administration names the reach (**WP-M24-01**,
   phase 24, ADR-0045, ADR-0046): the selection of the channels per event type
   ends — every event goes over the channels of the recipient; a channel counts

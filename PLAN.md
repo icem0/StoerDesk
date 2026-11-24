@@ -797,13 +797,48 @@ explanation. Offline is a core feature and appears early.
 | **20** | Duty blocks of the readiness: a block spans consecutive weekdays with a daily pattern, one shift per block per week, blocks replace the day windows of a pool (ADR-0040, WP-M20-01 … WP-M20-08) | the office week holds two shifts (Mo–Do 07:00–17:00, Fr 07:00–12:00), the technician week one shift; the coupling and the iCal feed read the pattern |
 | **21** | The normalisation of the duty plan: consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (ADR-0044, WP-M21-01 … WP-M21-04) | a pool with the plan of Monday to Friday shows one block and creates one shift per week; the plan of a pool of the older version needs no manual work |
 | **22** | The installability of the web app: a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | the browser offers the install of the app (no "Page has no manifest `<link>` URL"), the installed app holds the subscription of the web push |
-| **23** | The readiness view plans the shifts: the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), and the reminder of a shift that was not accepted repeats with a rising urgency (WP-M23-02) | the office plans the week where the calendar shows the shifts, the share button copies the iCal URL, and a shift that was not accepted is reminded again louder |
+| **23** | The readiness view plans the shifts: the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08), and the reminder of a shift that was not accepted repeats with a rising urgency (WP-M23-09) | the office plans the week where the calendar shows the shifts, the share button copies the complete iCal URL, the admin assigns and deletes a shift that nobody accepted, and a shift that was not accepted is reminded again louder |
 | **24** | The user owns the channels: the selection of the channels per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the e-mail is an HTML mail with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01 … WP-M24-19, ADR-0045, ADR-0046) | the message of a user goes over his confirmed channels, a user without a confirmed channel gets the chain of the installation, the code over the channel confirms the account and the rule of the administration names the missing channels |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**WP-M23-04 — the iCal URL is complete and visible (done).** The API answers
+the personal feed as a path (`/api/v1/oncall/ical/<token>.ics`,
+`packages/shared/src/schemas/oncall.ts:303`) — the contract of WP-M8-14b, which
+says that the caller resolves the path against its own origin. The web app
+never resolved it: the share button of the calendar copied a path without host
+and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
+`apps/web/src/lib/api.ts` adds the origin of the API, the frame of the calendar
+copies the complete address and opens a panel that names it — the link is
+readable and can be copied by hand.
+
+**WP-M23-09 — the repeated reminder of a shift that was not accepted (planned).**
+The package is split into four children: **WP-M23-09a** repeats the reminder
+(the sweep of `enqueueOncallReminders` sends today one reminder per shift and
+never again, because a sent row stays in the table; the new rule counts the
+reminders and sends a further one after the new setting
+`oncall.reminder_repeat_h`), **WP-M23-09b** lets the urgency rise (the message
+of a readiness row carries no priority today, so the reminder arrives like any
+other message; ntfy and the push of the browser learn the level),
+**WP-M23-09c** gives the admin the route `POST
+/api/v1/oncall/shifts/:id/remind` and **WP-M23-09d** the button „Erinnern" in
+the list of the open shifts.
+
+**WP-M23-05 … WP-M23-08 — the admin and the shifts that were not accepted
+(planned).** The rights exist already: `PATCH` and `DELETE
+/api/v1/oncall/shifts/:id` are guarded by `oncall.admin`, `oncall.plan` alone
+allows the generation. What was missing is the surface: the shift dialog of the
+calendar had no action at all, the list of the warnings in the administration
+was a pure display, and a shift that started could not be deleted even when
+nobody ever confirmed it. WP-M23-05 lets the admin delete a shift that was
+never confirmed — the rule of `specs/04-oncall.md` §4a.3 changes and an ADR
+names it; WP-M23-06 gives the dialog the actions (assign, publish, delete),
+WP-M23-07 the list of the open shifts and WP-M23-08 the notification of the
+new technician: the assignment skips the message when a row of the shift
+exists, so a reassignment reached nobody.
 
 **WP-M24-06g — the accent test waits for the colour of the instance (done).**
 The check run of WP-M24-06f failed in the acceptance test of the accent

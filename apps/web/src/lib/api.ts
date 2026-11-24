@@ -2,6 +2,26 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 export const apiBaseUrl = baseUrl
 
+/**
+ * The complete address of a path of the API (WP-M23-04).
+ *
+ * The API answers paths like `/api/v1/oncall/ical/<token>.ics` — the path
+ * carries the public prefix `/api/`, so only the origin is missing. The
+ * origin is the origin of `VITE_API_BASE_URL`, or the origin of the page when
+ * the base is relative (the reverse proxy of the deployment serves both under
+ * one host). A calendar app needs the complete address: a path alone is
+ * worthless there.
+ */
+export function absoluteApiUrl(path: string): string {
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) {
+    return path
+  }
+
+  const base = new URL(baseUrl, window.location.origin)
+
+  return new URL(path, base.origin).toString()
+}
+
 export interface ApiErrorOptions {
   status: number
   code?: string

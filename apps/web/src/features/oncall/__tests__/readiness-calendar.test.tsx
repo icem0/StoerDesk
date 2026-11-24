@@ -43,6 +43,7 @@ function monthName(offset: number): string {
 function renderCalendar(
   shifts: Parameters<typeof ReadinessCalendar>[0]['shifts'] = [],
   showNames?: boolean,
+  icalUrl?: string,
 ) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
@@ -50,6 +51,7 @@ function renderCalendar(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
         <ReadinessCalendar
+          icalUrl={icalUrl}
           pools={[{ id: poolId, name: 'Bereitschaft, Nord' }]}
           shifts={shifts}
           showNames={showNames}
@@ -362,5 +364,38 @@ describe('ReadinessCalendar', () => {
       expect(screen.getByRole('dialog')).toBeDefined()
     })
     expect(screen.getByText('Verlauf')).toBeDefined()
+  })
+
+  it('copies the complete calendar URL and names it in the panel (WP-M23-04)', async () => {
+    const writeText = vi.fn(async () => undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+
+    renderCalendar([], true, '/api/v1/oncall/ical/token.ics')
+
+    // the panel is closed before the share button was pressed
+    expect(screen.queryByText('Die Adresse deines persönlichen Kalender-Feeds.')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kalender-URL teilen' }))
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(
+        'http://localhost:3000/api/v1/oncall/ical/token.ics',
+      )
+    })
+
+    // the address is visible, so the link can be read and copied by hand
+    const field = screen.getByLabelText('Kalender-URL') as HTMLInputElement
+
+    expect(field.value).toBe('http://localhost:3000/api/v1/oncall/ical/token.ics')
+    expect(screen.getByText('Die Adresse deines persönlichen Kalender-Feeds.')).toBeDefined()
+  })
+
+  it('shows no share button without a calendar URL', () => {
+    renderCalendar()
+
+    expect(screen.queryByRole('button', { name: 'Kalender-URL teilen' })).toBeNull()
   })
 });
