@@ -389,8 +389,9 @@ address of the user, so no user could ever fulfil it.
 
 The rule **warns, it never blocks** (ADR-0045):
 
-- the own page of a user who does not fulfil the rule shows a permanent
-  warning that names the missing channels and links to the setup,
+- **every internal page** of a user who does not fulfil the rule carries a
+  large band that names the missing channels and links to the setup — a
+  warning that can be clicked away is no warning (§11.17, ADR-0048),
 - the administration sees the users who do not fulfil the rule with their
   channels and the count of their set-up channels,
 - nothing is blocked — no login, no assignment, no delivery.
@@ -417,6 +418,10 @@ every user and every event (ADR-0045).
 | `PATCH /api/v1/admin/channels/:kind` | `notification.write` | the configuration of a channel; a secret is write-only |
 | `POST /api/v1/admin/channels/:kind/test` | `notification.write` | sends a test message and answers `{ delivered }`; an optional body `{ topic }` overrides the test target (for example an ntfy test topic) |
 | `GET /api/v1/settings/notifications/channel-policy` | `settings.read` | the required channels and the minimum number of channels (§11.9) |
+| `GET /api/v1/settings/notifications/alarm` | `settings.read` | the sound of the installation and the interval of its repetition (§11.17) |
+| `PUT /api/v1/settings/notifications/alarm` | `settings.write` | replaces them; the interval is a whole number of seconds between 15 and 600 |
+| `GET /api/v1/notifications/mute` | session | the end of the silence of the signed-in user (§11.17) |
+| `POST /api/v1/notifications/mute` | session | the user is silent for one hour; the sound only (§11.17) |
 | `PUT /api/v1/settings/notifications/channel-policy` | `settings.write` | replaces them; a channel that is not configured is refused with `422 invalid_request` |
 | `GET /api/v1/admin/notifications/compliance` | `notification.read` | the users with their channels, the missing required channels and the count of their set-up channels (§11.9) |
 | `GET /api/v1/notifications/status` | `notification.read` | the status of every channel (§11.8) |
@@ -453,9 +458,13 @@ every user and every event (ADR-0045).
   or **missing** (red) — the button that sends the confirmation code, the field
   for the code and the button that removes the account. There is **no selection
   per event type** any more: every event goes over these channels (§11.4,
-  ADR-0045). A user who does not fulfil the rule of the administration
-  (§11.9) sees a permanent warning above the channels that names the missing
-  ones and links to this page.
+  ADR-0045). The warning of the rule of the administration (§11.9) stands in
+  the shell on **every** page — this page holds the setup it links to.
+- The **alarm band** of the shell (§11.17): it appears while unhandled
+  messages exist, shines and moves, and carries the button „1 Stunde stumm“
+  with the remaining time and the button „Ton aktivieren“. The sound of the
+  installation is decided by the administration, the silence by the user — the
+  inbox page carries no switch for the tone any more (ADR-0048).
 - Both pages are entries of the settings menu (§14 of `PLAN.md`). Each page links
   to the other exactly once: the administration names the own page
   (`admin.channels.verification.personalLink`, WP-M14-48) and the own page names
@@ -644,3 +653,64 @@ The read receipt stays a right of the own messages: a message of another user
 cannot be marked as read (the route answers `404 message_not_found`). The bell
 and the unread count stay personal — the admin view never changes what a user
 sees in the bell.
+
+## 11.17 The alarm of the instance (ADR-0048)
+
+The alarm of StörDesk has three parts: the **sound**, the **visual band** and
+the **setup warning**. The first two belong to the layer, the third belongs to
+the rule of the administration (§11.9).
+
+### The settings of the installation
+
+| Setting | Meaning |
+| --- | --- |
+| `notifications.alarm_tone_enabled` | whether the installation alarms with a sound at all (`true` by default) |
+| `notifications.alarm_repeat_seconds` | how often the sound comes again while unhandled messages exist (60 by default, 15 … 600) |
+
+Both rows are read and written by
+`GET`/`PUT /api/v1/settings/notifications/alarm` behind `settings.read` and
+`settings.write`. The administration edits them with the other notification
+settings (§11.12). There is no per-channel and no per-user switch for the
+sound: the office either alarms with a tone or it does not.
+
+### The mute of a user
+
+The silence is the decision of a user and lasts **one hour**. The row
+`notifications.mute.<userId>` of the settings table holds the end of the
+silence; `POST /api/v1/notifications/mute` writes it, `GET
+/api/v1/notifications/mute` reads it — both behind the session of the user, so
+the silence follows the user and not the device.
+
+The mute silences the **sound only**. The band and the bell keep shining and
+keep moving while unhandled messages exist.
+
+### The band of the alarm
+
+The band lives in the shell and therefore on every internal page. It appears
+while unhandled messages exist, shines and moves, and carries:
+
+- the button **„1 Stunde stumm“** with the remaining time of the silence,
+- the button **„Ton aktivieren“** — a browser plays a sound only after a
+  gesture of the user; without the gesture the sound stays silent and the
+  button asks for it.
+
+The **interval governs the sound only**: the sound comes at once when the
+messages arrive and again every `alarm_repeat_seconds` while they are
+unhandled. The band itself does not repeat in that rhythm — it is a state, not
+a repetition.
+
+The bell of the menu moves in the same rhythm while unhandled messages exist.
+
+### The pushed alarm
+
+A service worker has no Web Audio: only a page may play a tone. The service
+worker therefore asks the open pages for the sound after a push
+(`postMessage` with the type `PLAY_ALARM_TONE`); the page plays it with the
+same rules — the sound of the installation, no mute, a gesture given.
+
+### The warning of the setup
+
+The warning of §11.9 is **not** a small box on the own notifications page any
+more: it is a large band at the top of the shell, it names the channels the
+user does not have set up, it links to the setup and it cannot be dismissed.
+A warning that can be clicked away is no warning.

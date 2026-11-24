@@ -642,6 +642,11 @@ Rules:
 - the **e-mail is HTML** with a template per kind of message; the mailbox of
   the instance (SMTP, sender, templates, test mail, delivery log) is
   administered in `/admin/email` (ADR-0046),
+- the **alarm of the instance** (ADR-0048): whether a sound is played and how
+  often it repeats are settings of the installation (`/admin/channels`); the
+  **silence of one hour** is the decision of the user and silences the sound
+  only; the alarm band and the warning of an unfulfilled setup stand on every
+  internal page (§11.17),
 - dashboard tile with channel status and last successful delivery,
 - admin warning on channel failure.
 
@@ -798,6 +803,7 @@ explanation. Offline is a core feature and appears early.
 | **21** | The normalisation of the duty plan: consecutive days with the same duty window form one block; the plan of a pool is normalised where it is read and written (ADR-0044, WP-M21-01 … WP-M21-04) | a pool with the plan of Monday to Friday shows one block and creates one shift per week; the plan of a pool of the older version needs no manual work |
 | **22** | The installability of the web app: a new service worker takes over at once, the shell of the app never comes from a stale cache (WP-M22-01) | the browser offers the install of the app (no "Page has no manifest `<link>` URL"), the installed app holds the subscription of the web push |
 | **23** | The readiness view plans the shifts: the share button of the calendar replaces the section of the iCal URL, the weekly plan moves from the administration into the readiness view (WP-M23-01), the iCal URL is complete and visible (WP-M23-04), the admin assigns and deletes the shifts that were not accepted (WP-M23-05 … WP-M23-08), and the reminder of a shift that was not accepted repeats with a rising urgency (WP-M23-09) | the office plans the week where the calendar shows the shifts, the share button copies the complete iCal URL, the admin assigns and deletes a shift that nobody accepted, and a shift that was not accepted is reminded again louder |
+| **25** | The alarm of the instance: the sound and its interval are settings of the installation, the silence of one hour is the decision of the user, the alarm band shines on every page and the warning of an unfulfilled setup is a large band that cannot be dismissed (WP-M25-01 … WP-M25-09, ADR-0048) | the sound repeats in the interval of the installation while messages are unhandled, the silence of the user stops the sound for an hour and the warning of the setup stands on every page |
 | **24** | The user owns the channels: the selection of the channels per event type ends, a channel counts only when a code over the channel confirmed it, the administration names the required channels and the minimum number, the e-mail is an HTML mail with a template per kind of message and the mailbox of the instance is administered in `/admin/email` (WP-M24-01 … WP-M24-19, ADR-0045, ADR-0046) | the message of a user goes over his confirmed channels, a user without a confirmed channel gets the chain of the installation, the code over the channel confirms the account and the rule of the administration names the missing channels |
 
 Each phase is split into small WPs before implementation. A phase is done only
