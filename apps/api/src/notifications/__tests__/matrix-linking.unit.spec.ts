@@ -267,6 +267,9 @@ describe('the Matrix account linking (WP-M14-11)', () => {
       externalId: MATRIX_ID,
       label: '',
       secretSet: true,
+      target: '',
+      verifiedAt: null,
+      state: 'linked',
     })
     expect(linked.body).not.toContain(ACCESS_TOKEN)
     expect(store).toEqual([
@@ -315,7 +318,7 @@ describe('the Matrix account linking (WP-M14-11)', () => {
       homeserverAnswer(MATRIX_ID),
     )
 
-    expect(account).toEqual({ channel: 'matrix', externalId: MATRIX_ID, label: '', secretSet: true })
+    expect(account).toEqual({ channel: 'matrix', externalId: MATRIX_ID, label: '', secretSet: true, target: '', verifiedAt: null, state: 'linked' })
     expect(JSON.stringify(account)).not.toContain(ACCESS_TOKEN)
     expect(store).toEqual([
       {

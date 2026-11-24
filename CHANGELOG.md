@@ -26,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   technician instead of a list.
 
 ### Added
+- The accounts of the users carry their target and their confirmation
+  (**WP-M24-02**, **WP-M24-03**, phase 24, ADR-0045): the account of a user
+  knows the target of the user at the channel (the room of the user for
+  Matrix) and the time of its confirmation, so the interface can tell a
+  channel that is *linked* from one that is *set up*. The shared contracts of
+  the rule of the administration, of the state of a channel and of the
+  compliance of a user come with it.
 - The inbox works as an alarm (**WP-M14-177**, `specs/10-notifications.md` §11.12):
   the ticket number of a ticket message links straight into the ticket, every
   unread message has its own quittature button (a slow receipt never blocks the

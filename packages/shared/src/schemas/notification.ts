@@ -176,7 +176,18 @@ export type AcknowledgeDeliveryResponse = z.infer<typeof acknowledgeDeliveryResp
  * The account of a user at one channel (`specs/10-notifications.md` §11.3,
  * WP-M14-08). The secret is write-only: a request may carry it, an answer never
  * does — it only reports `secretSet` (ADR-0005 rule, §11.13).
+ *
+ * The state of the account is the answer of the question „is the user really
+ * reachable over this channel“ (ADR-0045): `missing` — there is no account,
+ * `linked` — the account is there but the address was never confirmed,
+ * `ready` — the user proved the address with a one-time code (§11.3a).
  */
+export const NOTIFICATION_CHANNEL_STATES = ['missing', 'linked', 'ready'] as const
+
+export const notificationChannelStateSchema = z.enum(NOTIFICATION_CHANNEL_STATES)
+
+export type NotificationChannelState = z.infer<typeof notificationChannelStateSchema>
+
 export const notificationAccountSchema = z.object({
   channel: notificationChannelKindSchema,
   /** The address at the channel (chat id, matrix id, topic, bridge chat id). */
@@ -184,6 +195,12 @@ export const notificationAccountSchema = z.object({
   label: z.string(),
   /** Whether a secret is stored — the secret itself is never answered. */
   secretSet: z.boolean(),
+  /** The target of the user at the channel — the room of the user for Matrix. */
+  target: z.string(),
+  /** The time of the confirmation of the account; null while it is only linked. */
+  verifiedAt: z.string().nullable(),
+  /** The state of the channel of this user: missing, linked or ready. */
+  state: notificationChannelStateSchema,
 })
 
 export const notificationAccountListResponseSchema = z.object({
@@ -317,6 +334,83 @@ export const matrixLinkingRequestSchema = z.object({
 export type TelegramLinkCodeResponse = z.infer<typeof telegramLinkCodeResponseSchema>
 export type RedeemTelegramLinkCodeRequest = z.infer<typeof redeemTelegramLinkCodeRequestSchema>
 export type MatrixLinkingRequest = z.infer<typeof matrixLinkingRequestSchema>
+
+/**
+ * The rule of the administration (`specs/10-notifications.md` §11.9, ADR-0045):
+ * the channels every user must have set up and the number of channels a user
+ * must have set up in total. A user fulfils the rule when every required
+ * channel is *ready* and the number of the ready channels reaches the minimum.
+ */
+export const channelPolicySchema = z.object({
+  /** The channel kinds every user must have set up. */
+  requiredChannels: z.array(notificationChannelKindSchema).max(100),
+  /** How many channels a user must have set up in total. */
+  minimumChannelCount: z.number().int().nonnegative().max(100),
+})
+
+export const channelPolicyResponseSchema = channelPolicySchema
+
+export const updateChannelPolicyRequestSchema = channelPolicySchema
+
+export type ChannelPolicy = z.infer<typeof channelPolicySchema>
+export type ChannelPolicyResponse = z.infer<typeof channelPolicyResponseSchema>
+export type UpdateChannelPolicyRequest = z.infer<typeof updateChannelPolicyRequestSchema>
+
+/**
+ * The channels of one user for the administration (`specs/10-notifications.md`
+ * §11.9, §11.13): the state of every channel of the user — never the address
+ * of the user. A channel of a user that is not confirmed is `linked`, a
+ * channel without an account is `missing`.
+ */
+export const notificationComplianceSchema = z.object({
+  userId: z.uuid(),
+  /** The display name of the user — the name, never the mail address. */
+  name: z.string(),
+  /** The state of every channel of the user. */
+  channels: z.array(
+    z.object({
+      channel: notificationChannelKindSchema,
+      state: notificationChannelStateSchema,
+    }),
+  ),
+  /** The required channels the user does not have set up. */
+  missing: z.array(notificationChannelKindSchema),
+  /** How many channels the user has set up. */
+  channelCount: z.number().int().nonnegative(),
+  /** Whether the user fulfils the rule. */
+  compliant: z.boolean(),
+})
+
+export const notificationComplianceListResponseSchema = z.object({
+  users: z.array(notificationComplianceSchema),
+})
+
+export type NotificationCompliance = z.infer<typeof notificationComplianceSchema>
+export type NotificationComplianceListResponse = z.infer<
+  typeof notificationComplianceListResponseSchema
+>
+
+/**
+ * The confirmation of a channel of a user (`specs/10-notifications.md` §11.3a,
+ * ADR-0045): the server sends a one-time code over the channel and the user
+ * enters it. The answer carries the deadline of the code — the code itself
+ * travels to the user over the channel, never over the API.
+ */
+export const notificationVerificationResponseSchema = z.object({
+  /** The deadline of the pending code. */
+  expiresAt: z.iso.datetime(),
+})
+
+export const confirmNotificationVerificationRequestSchema = z.object({
+  code: z.string().trim().min(1).max(20),
+})
+
+export type NotificationVerificationResponse = z.infer<
+  typeof notificationVerificationResponseSchema
+>
+export type ConfirmNotificationVerificationRequest = z.infer<
+  typeof confirmNotificationVerificationRequestSchema
+>
 
 /**
  * The machine-readable parameters of a readiness message (`specs/10-notifications.md`

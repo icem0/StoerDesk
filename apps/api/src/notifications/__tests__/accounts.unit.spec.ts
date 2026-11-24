@@ -174,6 +174,9 @@ describe('the accounts of the users (WP-M14-08)', () => {
       externalId: '@user-a',
       label: 'Telegram',
       secretSet: true,
+      target: '',
+      verifiedAt: null,
+      state: 'linked',
     })
     expect('secret' in stored).toBe(false)
     expect(JSON.stringify(stored)).not.toContain('token-a')
@@ -201,8 +204,8 @@ describe('the accounts of the users (WP-M14-08)', () => {
     const accounts = await listAccounts(database, 'user-a')
 
     expect(accounts).toEqual([
-      { channel: 'matrix', externalId: '@a:matrix.mock', label: '', secretSet: true },
-      { channel: 'telegram', externalId: '@user-a', label: '', secretSet: true },
+      { channel: 'matrix', externalId: '@a:matrix.mock', label: '', secretSet: true, target: '', verifiedAt: null, state: 'linked' },
+      { channel: 'telegram', externalId: '@user-a', label: '', secretSet: true, target: '', verifiedAt: null, state: 'linked' },
     ])
     expect(JSON.stringify(accounts)).not.toContain('token-')
   })
@@ -232,6 +235,9 @@ describe('the accounts of the users (WP-M14-08)', () => {
       externalId: '@user-a-new',
       label: 'New label',
       secretSet: true,
+      target: '',
+      verifiedAt: null,
+      state: 'linked',
     })
 
     const withoutSecret = await storeAccount(database, 'user-a', {

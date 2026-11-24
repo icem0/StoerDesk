@@ -318,6 +318,9 @@ describe('storeWhatsAppAccount over the account service (WP-M14-15)', () => {
       externalId: 'chat-1',
       label: 'Depression Team',
       secretSet: false,
+      target: '',
+      verifiedAt: null,
+      state: 'linked',
     })
     expect(JSON.stringify(account)).not.toContain(BRIDGE_TOKEN)
     expect(accounts).toEqual([
@@ -440,6 +443,9 @@ describe('the WhatsApp Web routes (WP-M14-15)', () => {
       externalId: 'chat-2',
       label: 'Office Chat',
       secretSet: false,
+      target: '',
+      verifiedAt: null,
+      state: 'linked',
     })
     expect(response.body).not.toContain(BRIDGE_TOKEN)
     expect(accounts).toEqual([

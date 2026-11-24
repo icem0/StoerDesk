@@ -38,6 +38,8 @@ interface AccountRow {
   externalId: string
   label: string
   secret: string
+  target: string
+  verifiedAt: Date | null
 }
 
 /** The columns the service reads; the secret never leaves `toAccount`. */
@@ -46,15 +48,28 @@ const accountColumns = {
   externalId: notificationAccounts.externalId,
   label: notificationAccounts.label,
   secret: notificationAccounts.secret,
+  target: notificationAccounts.target,
+  verifiedAt: notificationAccounts.verifiedAt,
 }
 
-/** Maps a stored row to the public answer without the write-only secret. */
+/**
+ * Maps a stored row to the public answer without the write-only secret. The
+ * state of the channel of the user is the answer of the question „is the user
+ * reachable over this channel“ (`specs/10-notifications.md` §11.3a, ADR-0045):
+ * `ready` when the user confirmed the address, `linked` while it is not
+ * confirmed.
+ */
 function toAccount(row: AccountRow): NotificationAccount {
+  const verifiedAt = row.verifiedAt instanceof Date ? row.verifiedAt : null
+
   return {
     channel: row.channel as NotificationChannelKind,
     externalId: row.externalId,
     label: row.label,
     secretSet: row.secret !== '',
+    target: row.target ?? '',
+    verifiedAt: verifiedAt === null ? null : verifiedAt.toISOString(),
+    state: verifiedAt === null ? 'linked' : 'ready',
   }
 }
 

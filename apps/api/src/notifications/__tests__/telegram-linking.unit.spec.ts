@@ -223,6 +223,9 @@ describe('the Telegram account linking (WP-M14-09)', () => {
       externalId: '-5551112223334445',
       label: 'Alice',
       secretSet: false,
+      target: '',
+      verifiedAt: null,
+      state: 'linked',
     })
     expect(redeemed.body).not.toContain(BOT_TOKEN)
     expect(accountsStore).toEqual([
