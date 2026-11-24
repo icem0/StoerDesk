@@ -621,16 +621,27 @@ Rules:
   `notification_accounts`; both secrets are write-only (ADR-0019),
 - the event types are `ticket.created`, `ticket.assigned`, `ticket.escalated`
   and `ticket.resolved` plus the readiness types `oncall.assigned`,
-  `oncall.swap_requested` and `oncall.unconfirmed_reminder` (ADR-0021); users
-  choose the channels per event type, the admin defines the mandatory minimum
-  channels for `critical` and the escalation rule decides the recipient of an
-  escalation — the recipient decides the way (ADR-0037),
+  `oncall.swap_requested` and `oncall.unconfirmed_reminder` (ADR-0021);
+- **a user has channels, not a selection per event type** (ADR-0045): the
+  channels of a user are his linked and **confirmed** accounts (a one-time code
+  over the channel proves that the address works) and his web-push devices;
+  every event goes over these channels, the channels of the installation are
+  the fallback,
+- the **administration names the reach**: `notifications.required_channels` and
+  `notifications.minimum_channel_count` say what a user must have set up; the
+  rule warns the user (with a link to his setup) and the administration (who
+  does not fulfil it) and blocks nothing (ADR-0045),
+- the escalation rule decides the recipient of an escalation — the recipient's
+  channels decide the way (ADR-0037),
 - 3 retries with backoff, then the next channel in the escalation chain,
 - `notification_sent` and `notification_failed` events in the ticket history,
 - message content: ticket number, priority, object name/location, system type,
   short text, AA/SA number if present, the deep link into the ticket (WP-M14-68); a readiness message names pool,
   start and end in `Europe/Berlin`, state and the link to `/oncall` (ADR-0021);
   no photos,
+- the **e-mail is HTML** with a template per kind of message; the mailbox of
+  the instance (SMTP, sender, templates, test mail, delivery log) is
+  administered in `/admin/email` (ADR-0046),
 - dashboard tile with channel status and last successful delivery,
 - admin warning on channel failure.
 

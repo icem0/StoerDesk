@@ -3,25 +3,27 @@
 **Chapter:** 11 (notifications)
 **Scope:** ~190 lines
 **Status:** reviewed for phase 14 (WP-M14-03), amended for the readiness rules of
-WP-M14-26 (ADR-0021) and for the way of the escalation (WP-M17-00, ADR-0037)
+WP-M14-26 (ADR-0021) and for the way of the escalation (WP-M17-00, ADR-0037),
+rewritten for phase 24 (WP-M24-01, ADR-0045, ADR-0046)
 
 The binding summary is `PLAN.md` §12. This slice defines the channels of the
-outbox, where their configuration lives, how a user links an account, which
-channels are notified for which event, what a message contains and how a failed
-channel becomes visible. The adapters of phase 7 stay; phase 14 gives them a
-configuration, a target and a rule.
+outbox, where their configuration lives, how a user links an account, how he
+confirms it, which channels carry a message, what a message contains and how a
+failed channel becomes visible. The adapters of phase 7 stay; phase 14 gives them
+a configuration, a target and a rule; phase 24 gives the user the channels and
+the administration the rule of the reach.
 
 ## 11.1 The channels
 
 | Kind | Transport | Target | Linked account |
 | --- | --- | --- | --- |
 | `signal` | external `signal-cli` bridge (HTTP RPC) | the recipients of the instance | no |
-| `matrix` | external homeserver (client-server API) | the room of the configuration | yes — a token per user |
-| `ntfy` | external ntfy server | the topic of the configuration or the topic of the user | yes — a topic per user |
-| `email` | external SMTP server | the recipients of the instance | no |
-| `telegram` | Telegram Bot API | the chat of the configuration or the chat of the user | yes — a one-time code |
+| `matrix` | external homeserver (client-server API) | the room of the user or the room of the configuration | yes — a token and a room per user |
+| `ntfy` | external ntfy server | the topic of the user or the topic of the configuration | yes — a topic per user |
+| `email` | external SMTP server | the address of the user or the mail addresses of the instance | yes — an address per user |
+| `telegram` | Telegram Bot API | the chat of the user or the chat of the configuration | yes — a one-time code |
 | `webpush` | Web Push (VAPID) | the subscriptions of the users | yes — a subscription per user |
-| `whatsapp` | external WhatsApp bridge (ADR-0020) | the chat of the configuration or the chat of the user | yes — a chat id |
+| `whatsapp` | external WhatsApp bridge (ADR-0020) | the chat of the user or the chat of the configuration | yes — a chat id |
 
 A channel is **configured** when it has a usable configuration **and** its
 target was confirmed. For `ntfy`, the confirmation is a one-time code that the
@@ -31,6 +33,17 @@ verification step yet and count as confirmed when usable. A channel that is not
 configured never appears in the chain and never produces an outbox row. The
 order of the table is the order of the fallback chain: the first channel that is
 configured is the first one that is tried.
+
+**Two levels of a channel.** Every kind has a target of the *installation* (the
+room of the configuration, the chat of the configuration, the topic of the
+configuration, the mail addresses of the instance) and a target of the *user*
+(the room of the user, the chat of the user, the topic of the user, the address
+of the user, the devices of the user). The target of the user belongs to the
+account of the user (§11.3), the target of the installation belongs to the
+configuration of the channel (§11.2). A message to a user goes over the target
+of the user; the target of the installation is the fallback of the chain
+(ADR-0045). `signal` has no target of the user — it is a channel of the
+installation only and may never be named as a required channel (§11.9).
 
 ## 11.2 Where the configuration lives
 
@@ -99,11 +112,38 @@ proof is *unverified*, never *configured*.
 | --- | --- |
 | `user_id` | the user of StörDesk |
 | `channel` | the kind of the channel |
-| `external_id` | the address at the channel (chat id, matrix id, topic, chat id of the bridge) |
+| `external_id` | the address at the channel (chat id, matrix id, topic, chat id of the bridge, mail address) |
 | `label` | the name the user gave the account |
 | `secret` | the write-only secret of the account (the Matrix access token) |
+| `target` | the target of the user at the channel — the room of the user for Matrix, empty for every other kind |
+| `verified_at` | the time of the confirmation of the account (§11.3a); null while the account is only linked |
 
 A user has at most one account per channel (`unique (user_id, channel)`).
+
+## 11.3a The confirmation of an account
+
+A linked account is **linked**; it is **set up** only when the user proved that
+the address works (ADR-0045). The proof is the same for every kind: the server
+sends a one-time code (six characters, ten minutes) over the very channel of
+the account and the user enters the code in the own page.
+
+- `POST /api/v1/notifications/accounts/:channel/verification` sends the code
+  over the target of the account and answers the deadline of the code — never
+  the code itself. The code travels to the user over the channel, not over the
+  API.
+- `POST /api/v1/notifications/accounts/:channel/verification/confirm` takes
+  the code the user copied. A correct code sets `verified_at`; a wrong code,
+  an expired code and a code of another user are refused with
+  `422 invalid_request`.
+- A code is used once. A new code replaces the pending one.
+- The address of the account is never answered in full: the own page names the
+  kind of the address (a chat, a room, a topic, a mail address) and its last
+  two characters are enough to recognise it.
+
+A channel of a user that is linked but not confirmed is **not** used for the
+delivery and does not count for the rule of §11.9. It is shown with the symbol
+„linked, not confirmed“ — the difference between a channel that is there and a
+channel that works.
 
 - **Telegram:** the settings page asks the API for a one-time code (six
   characters, ten minutes). The user sends the code to the bot; the API reads
@@ -133,7 +173,7 @@ A user has at most one account per channel (`unique (user_id, channel)`).
   with the key of the server: the device is named and registered again, in the
   browser and on the server (WP-M14-172).
 
-## 11.4 The event types and the selection of the channels
+## 11.4 The event types and the channels of the user
 
 The event types of the notification are fixed:
 
@@ -147,27 +187,28 @@ The event types of the notification are fixed:
 | `oncall.swap_requested` | a swap is requested on the own confirmed shift |
 | `oncall.unconfirmed_reminder` | a shift still waits for a decision within `oncall.reminder_unconfirmed_h` |
 
-`notification_preferences` holds the selection of a user: one row per
-`(user_id, event_type, channel)`. A user without a row for an event type is
-notified through the channels of the instance (the chain of §11.1) — the
-exception is an escalation that names the user as its recipient: it arrives on
-their own ntfy topic (ADR-0037). Migration
-`0034` widens the event check of that table to the seven types (ADR-0021).
+**Every event goes over the channels of the recipient** (ADR-0045). The
+channels of a user are the accounts he linked and confirmed (§11.3, §11.3a)
+and the devices he registered for the web push. There is no selection per event
+type any more: `notification_preferences` and its routes are removed, and the
+question „which way for which event“ does not exist.
 
 The precedence of the rules is fixed:
 
 1. The **escalation rule** of the admin decides **whether** and **to whom** a
    `ticket.escalated` notification goes — the target of the action. It does not
-   decide the way: a target names the recipient, the recipient decides the
-   channel (§11.4 rule 2, ADR-0037). Only a `notify` action **without** a
+   decide the way: a target names the recipient, the recipient's channels are
+   the way (§11.4 rule 2, ADR-0037). Only a `notify` action **without** a
    target takes the channels of the installation — that action is the broadcast.
-2. The **selection of the user** decides the channels of `ticket.created`,
-   `ticket.assigned` and `ticket.resolved` as well as the three readiness
-   events — and the channels of a `ticket.escalated` that names the user as its
-   recipient (ADR-0037). A user without a row for that event type is notified
-   over their own ntfy topic.
-3. The **mandatory minimum channels** of the admin (§11.9) are added to every
-   event of a critical ticket. They cannot be switched off by a user.
+2. The **channels of the user** decide the way of `ticket.created`,
+   `ticket.assigned` and `ticket.resolved` as well as of the three readiness
+   events — and of a `ticket.escalated` that names the user as its recipient
+   (ADR-0037). Only confirmed channels take part; a user without a confirmed
+   channel is notified over the chain of the installation (the fallback of the
+   delivery, §11.7).
+3. The **rule of the administration** (§11.9) never decides the way of a
+   message. It decides what a user must have set up — a rule the user sees as
+   a warning, not as a switch of a channel (ADR-0045).
 
 ## 11.5 The content of a message
 
@@ -182,9 +223,40 @@ ntfy receives the priority of the ticket through the JSON publish API
 (`POST /` with the topic in the body) as the numeric value `5` (max, the
 `urgent` level) for a critical ticket and `3` (default) otherwise; the `view`
 action uses the JSON field `url` and is omitted when there is no deep link.
-Telegram, Matrix, WhatsApp Web, Signal and e-mail
-receive the same text; the deep link is labelled with the text of the interface
-of the recipient.
+Telegram, Matrix, WhatsApp Web and Signal receive the same text; the deep link
+is labelled with the text of the interface of the recipient.
+
+**The e-mail is HTML** (ADR-0046). The body of every mail is HTML with the
+deep link as a clickable link — a plain text mail is never sent. The text of
+the mail comes from the template of the kind of the message (§11.5a); the
+values of the placeholders are escaped before they enter the HTML, so a report
+of a customer can never carry markup into the mail of the office.
+
+## 11.5a The templates of the e-mail
+
+The mailbox of the instance is administered in `/admin/email` (§11.12). It
+holds a template per kind of message — the ticket message, the readiness
+message and the test message. A template is a plain text with the placeholders:
+
+| Placeholder | Meaning |
+| --- | --- |
+| `{ticket_no}` | the number of the ticket |
+| `{priority}` | the priority of the ticket |
+| `{object}` | the name of the object and its location |
+| `{location}` | the location of the object |
+| `{system_type}` | the system type of the report |
+| `{text}` | the short text of the report |
+| `{aa_sa}` | the AA/SA number, empty when there is none |
+| `{url}` | the deep link into the ticket |
+| `{pool}` | the pool of a readiness message |
+| `{starts_at}` | the start of a readiness shift in `Europe/Berlin` |
+| `{ends_at}` | the end of a readiness shift in `Europe/Berlin` |
+| `{state}` | the state of a readiness shift |
+
+The server renders the template as HTML: the empty lines become paragraphs,
+the values are escaped and `{url}` becomes a link. A kind of message without a
+template uses the built-in default of the product. The templates live in the
+`config` of the row of the channel (`templates`), not in a table of their own.
 
 ## 11.6 WhatsApp Web over an external bridge
 
@@ -218,6 +290,15 @@ set, and the worker builds the readiness message of §11.5 for it. The
 `oncall.unconfirmed_reminder` rows are written by the per-minute escalation scan
 for a `PLANNED` or `DRAFT` shift that starts within
 `oncall.reminder_unconfirmed_h` and has no such row yet — one reminder per shift.
+
+**The delivery of a message of a user** goes over the set-up channels of that
+user (§11.4): one outbox row per confirmed channel, each row carrying the
+target of the user (the room, the chat, the topic, the address). A channel that
+fails follows the rule of the chain — the next channel of the installation
+answers, so a broken address never loses a message. A row without a user — the
+broadcast of an action without a target — carries the target of the
+installation (§11.1) and goes to the mail addresses of the users for the
+e-mail (ADR-0046).
 
 ## 11.8 The status and the warning on a failure
 
@@ -273,25 +354,47 @@ The time of a failure is the time the delivery failed — the `updated_at` of th
 row of the outbox — and not the time the row was queued. A delivery that was
 queued before the quittature and failed after it is a new failure.
 
-## 11.9 The mandatory minimum channels of critical tickets
+## 11.9 The required channels and the minimum number of channels
 
-The setting `notifications.minimum_channels` holds the list of the channel
-kinds that every critical ticket is notified through, whatever the selection of
-the user says. The list is empty by default — the admin decides.
+The rule of the administration answers one question: **what must a user have
+set up to be reachable** (ADR-0045). Two settings carry it:
 
-The list may only name channels that are configured. A channel of the list that
-is not configured is refused with `422 invalid_request`, so the setting never
-promises a delivery that cannot happen.
+| Setting | Meaning |
+| --- | --- |
+| `notifications.required_channels` | the channel kinds every user must have set up |
+| `notifications.minimum_channel_count` | how many channels a user must have set up in total |
+
+A user **fulfils** the rule when every required channel is set up — linked
+**and** confirmed (§11.3a) — **and** the number of the set-up channels of the
+user reaches the minimum. Both settings are empty resp. `0` by default: the
+rule is off until the admin decides.
+
+The list may only name channels that are configured; a channel of the list that
+is not configured is refused with `422 invalid_request`, so the rule never
+promises a reach that cannot happen. `signal` may never be named: it has no
+address of the user, so no user could ever fulfil it.
+
+The rule **warns, it never blocks** (ADR-0045):
+
+- the own page of a user who does not fulfil the rule shows a permanent
+  warning that names the missing channels and links to the setup,
+- the administration sees the users who do not fulfil the rule with their
+  channels and the count of their set-up channels,
+- nothing is blocked — no login, no assignment, no delivery.
+
+The former setting `notifications.minimum_channels` (the mandatory channels of
+the critical tickets) is gone: the rule of the administration now applies to
+every user and every event (ADR-0045).
 
 ## 11.10 The data model
 
 | Table | Change |
 | --- | --- |
 | `notification_channels` | the columns `kind` (unique), `enabled`, `label`, `config` (jsonb) and `secret` (write-only) |
-| `notification_accounts` | new: the accounts of the users (§11.3) |
-| `notification_preferences` | new: the selection of the channels per event type (§11.4) |
+| `notification_accounts` | the accounts of the users (§11.3) with the columns `target` (the target of the user) and `verified_at` (the confirmation, §11.3a) |
+| `notification_preferences` | **removed** — the selection per event type does not exist any more (§11.4, ADR-0045) |
 | `outbox` | the column `event_type` (check over the seven types) and the column `shift_id` (FK to `oncall_shifts`, cascade, nullable); `ticket_id` becomes nullable with the check that exactly one of the two is set (ADR-0021, migration 0034) |
-| `settings` | the row `notifications.minimum_channels` (§11.9) |
+| `settings` | the rows `notifications.required_channels` and `notifications.minimum_channel_count` (§11.9) |
 
 ## 11.11 The API
 
@@ -300,29 +403,46 @@ promises a delivery that cannot happen.
 | `GET /api/v1/admin/channels` | `notification.read` | the channels with their state, their public configuration and `secretSet` |
 | `PATCH /api/v1/admin/channels/:kind` | `notification.write` | the configuration of a channel; a secret is write-only |
 | `POST /api/v1/admin/channels/:kind/test` | `notification.write` | sends a test message and answers `{ delivered }`; an optional body `{ topic }` overrides the test target (for example an ntfy test topic) |
+| `GET /api/v1/settings/notifications/channel-policy` | `settings.read` | the required channels and the minimum number of channels (§11.9) |
+| `PUT /api/v1/settings/notifications/channel-policy` | `settings.write` | replaces them; a channel that is not configured is refused with `422 invalid_request` |
+| `GET /api/v1/admin/notifications/compliance` | `notification.read` | the users with their channels, the missing required channels and the count of their set-up channels (§11.9) |
 | `GET /api/v1/notifications/status` | `notification.read` | the status of every channel (§11.8) |
 | `GET /api/v1/notifications/delivery` | `notification.read` | the delivery problems and the lost messages (§11.8) |
 | `POST /api/v1/notifications/delivery/acknowledge` | `notification.write` | the quittature of the problems (§11.8) |
-| `GET /api/v1/notifications/accounts` | session | the own accounts |
+| `GET /api/v1/notifications/accounts` | session | the own accounts with their state — linked, set up or missing (§11.3, §11.3a) |
 | `POST /api/v1/notifications/accounts/telegram/code` | session | a one-time code for the Telegram bot |
 | `POST /api/v1/notifications/accounts/telegram` | session | the code is checked, the account is stored |
 | `POST /api/v1/notifications/accounts/matrix` | session | the homeserver, the matrix id and the token are verified and stored |
+| `POST /api/v1/notifications/accounts/email` | session | the own mail address is stored as the account of the e-mail channel |
+| `POST /api/v1/notifications/accounts/:channel/verification` | session | sends the one-time code over the channel of the account and answers the deadline (§11.3a) |
+| `POST /api/v1/notifications/accounts/:channel/verification/confirm` | session | the code the user copied is checked; a correct code confirms the account (§11.3a) |
 | `DELETE /api/v1/notifications/accounts/:channel` | session | the own account of a channel is removed |
-| `GET /api/v1/notifications/preferences` | session | the own selection of the channels |
-| `PUT /api/v1/notifications/preferences` | session | the own selection of the channels |
 
 ## 11.12 The UI
 
 - `/admin/channels` — the administration of the channels: the state of every
   channel, the configuration, the write-only secret, the test message and the
-  failing channels with the time of the last failure.
+  failing channels with the time of the last failure. The page also holds the
+  **rule of the administration** (§11.9) — the required channels and the
+  minimum number of channels — and the **channels of the users**: which user
+  has which channel set up, without the address of the user (§11.9).
+- `/admin/email` — the **mailbox of the instance** (ADR-0046): the SMTP
+  connection, the sender with its display name, the templates per kind of
+  message, the base address of the deep link, the test mail to an address and
+  the log of the last deliveries.
 - `/admin/delivery` — the delivery problems (§11.8): the failing channels with
   the time of the last failure, the machine code and the number of the
   unacknowledged failures, the messages that never arrived and the quittature
   of the problems.
 - `/settings/notifications` — the own channels: the linked accounts (Telegram,
-  Matrix, ntfy, WhatsApp Web), the subscription QR of ntfy and the selection of
-  the channels per event type, the seven event types of §11.4 (ADR-0021).
+  Matrix, ntfy, e-mail, WhatsApp Web), the subscription QR of ntfy and, per
+  channel, its state — **set up** (green), **linked but not confirmed** (amber)
+  or **missing** (red) — the button that sends the confirmation code, the field
+  for the code and the button that removes the account. There is **no selection
+  per event type** any more: every event goes over these channels (§11.4,
+  ADR-0045). A user who does not fulfil the rule of the administration
+  (§11.9) sees a permanent warning above the channels that names the missing
+  ones and links to this page.
 - Both pages are entries of the settings menu (§14 of `PLAN.md`). Each page links
   to the other exactly once: the administration names the own page
   (`admin.channels.verification.personalLink`, WP-M14-48) and the own page names
@@ -383,6 +503,12 @@ to the work:
   the ntfy server (ADR-0022) travels only in the `Authorization` header.
 - The messages carry no contact data of the reporter and no photo.
 - The Telegram code expires after ten minutes and is used once.
+- The confirmation code of a channel of a user (§11.3a) expires after ten
+  minutes and is used once; it is sent over the channel and never answered by
+  the API.
+- The address of a user (a chat id, a room, a topic, a mail address) never
+  reaches the administration: the administration sees the kind of the channel
+  and its state, never the address of the user (§11.9).
 - The bridge bearer of WhatsApp Web and the Matrix token travel only over the
   API of the instance and are never shown to a user without the right to write.
 - The bridge of WhatsApp Web is a service of the operator; the Compose stack of

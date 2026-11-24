@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The user owns the channels and the administration names the reach (**WP-M24-01**,
+  phase 24, ADR-0045, ADR-0046): the selection of the channels per event type
+  ends — every event goes over the channels of the recipient; a channel counts
+  only when a one-time code over that channel confirmed it; the administration
+  names the required channels and the minimum number of channels, and the rule
+  warns the user and the administration instead of blocking anything. The
+  e-mail becomes an HTML mail with a template per kind of message, and the
+  mailbox of the instance is administered in `/admin/email`.
+
 ### Removed
 - The table of the technicians of a ticket is retired (**WP-M19-08**, phase 19,
   ADR-0039): a ticket is handled by **one** person, and the technician of the
