@@ -217,8 +217,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(remaining).toHaveLength(0)
     })
 
-    it('refuses to delete a started shift', async () => {
-      const started = await createShift(db, { poolId, userId: techId })
+    it('refuses to delete a started shift that was published (ADR-0047)', async () => {
+      const started = await createShift(db, { poolId, userId: techId, publish: true })
 
       await db
         .update(oncallShifts)
@@ -228,6 +228,48 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       await expect(deleteShift(db, started.id, adminId)).rejects.toMatchObject({
         code: 'oncall_shift_locked',
         statusCode: 409,
+        params: { reason: 'started' },
+      })
+    })
+
+    it('deletes a started shift that nobody ever confirmed (ADR-0047)', async () => {
+      const declined = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({
+          state: 'DECLINED',
+          declinedAt: new Date(),
+          startsAt: new Date(Date.now() - 60 * 60 * 1000),
+        })
+        .where(eq(oncallShifts.id, declined.id))
+
+      await deleteShift(db, declined.id, adminId)
+
+      const remaining = await db
+        .select({ id: oncallShifts.id })
+        .from(oncallShifts)
+        .where(eq(oncallShifts.id, declined.id))
+
+      expect(remaining).toHaveLength(0)
+    })
+
+    it('refuses to delete a shift that held the duty (ADR-0047)', async () => {
+      const confirmed = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({
+          state: 'DECLINED',
+          confirmedAt: new Date(),
+          startsAt: new Date(Date.now() - 60 * 60 * 1000),
+        })
+        .where(eq(oncallShifts.id, confirmed.id))
+
+      await expect(deleteShift(db, confirmed.id, adminId)).rejects.toMatchObject({
+        code: 'oncall_shift_locked',
+        statusCode: 409,
+        params: { reason: 'confirmed' },
       })
     })
 

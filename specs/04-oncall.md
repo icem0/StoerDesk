@@ -75,7 +75,8 @@ be deactivated but not deleted while it has shifts (`409 oncall_pool_in_use`).
 
 Indexes: `oncall_shifts(pool_id, starts_at, ends_at)` as `PLAN.md` §6 requires,
 plus a unique index on `(pool_id, starts_at)` so regenerating a range is
-idempotent. A shift is never deleted after it started.
+idempotent. A shift that held the duty is never deleted after it started; a
+shift that nobody ever confirmed may be deleted (ADR-0047, §4a.3).
 
 States:
 
@@ -106,6 +107,19 @@ An admin may reassign any shift before it starts and only an admin may reassign
 a shift after it started (`PLAN.md` §8). A reassign of a `SWAP_REQUESTED` shift
 cancels the open swap and writes `swap_cancelled`. A shift that is `CONFIRMED`
 or `SWAP_REQUESTED` cannot be deleted (`409 oncall_shift_locked`).
+
+**The delete of a shift (ADR-0047).** A shift that held the duty keeps its
+place in the history: a `CONFIRMED` or `SWAP_REQUESTED` shift is locked, and so
+is every shift that was confirmed at some moment — also when the technician
+declined afterwards, the confirmation stays in the row. A shift that nobody
+ever confirmed may be deleted even after it started: the admin removes the
+slots that were offered and never accepted. The state `UNFILLED`, `DRAFT` and
+`DECLINED` are deletable that way. A `PLANNED` shift that started stays locked,
+because it counted for the ticket coupling (§4a.6) and the office may have
+offered a ticket on it. Every lock answers `409 oncall_shift_locked` with the
+reason in its params: `state` for a confirmed or swapped shift, `confirmed`
+for a shift that held the duty, `started` for a published shift that started.
+The events of a deleted shift go with it, as they do for every deleted shift.
 
 The weekly plan — generating the slots of a week, assigning or reassigning a
 technician, publishing a draft and deleting a slot that did not start — belongs
@@ -413,7 +427,8 @@ trigger of `PLAN.md` §15, like `ticket_events`.
 - The iCal feed is read-only; it never writes shifts.
 - The window plan creates new shifts next to the shifts of the continuous
   plan; it never changes a shift that exists. The admin deletes the future
-  shifts of the old plan — a shift is never deleted after it started (§4a.3).
+  shifts of the old plan — a shift that held the duty is never deleted after
+  it started (§4a.3, ADR-0047).
 - The duty blocks of §4a.3.3 replace the day windows of a pool in the plan,
   but they never touch the shifts that exist: the shifts of the day windows of
   ADR-0035 keep their times and cover their whole span, until the admin

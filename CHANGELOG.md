@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The admin deletes a shift that nobody ever confirmed (**WP-M23-05**, phase 23,
+  ADR-0047): a shift that held the duty keeps its place — a confirmed or
+  swapped shift, and every shift that was confirmed at some moment — while a
+  shift that nobody ever confirmed may be deleted even after it started. A
+  published shift that started stays locked, because it counted for the ticket
+  coupling. The refusal names its reason now.
 - The iCal URL of the readiness is complete and visible (**WP-M23-04**, phase 23):
   the API answers the personal feed as a path, the web app resolves it against
   the origin of the API — the share button of the calendar copies the address

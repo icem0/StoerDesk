@@ -827,6 +827,19 @@ other message; ntfy and the push of the browser learn the level),
 /api/v1/oncall/shifts/:id/remind` and **WP-M23-09d** the button „Erinnern" in
 the list of the open shifts.
 
+**WP-M23-05 — the admin deletes a shift that was never confirmed (done).** The
+old rule of `specs/04-oncall.md` §4a.3 refused every delete after the start of
+the shift, so the admin could not remove a slot that nobody ever took: the plan
+of a pool kept a gap that never closed. ADR-0047 splits the two cases. A shift
+that held the duty keeps its place — a confirmed or swapped shift, and every
+shift that was confirmed at some moment (`confirmed_at` is set then, also when
+the technician declined afterwards). A shift that nobody ever confirmed may be
+deleted even after it started: the states `UNFILLED`, `DRAFT` and `DECLINED`.
+A published shift that started stays locked, because it counted for the ticket
+coupling (§4a.6) and the office may have offered a ticket on it. The lock
+names its reason now — `state`, `confirmed` or `started` in the params of
+`409 oncall_shift_locked`.
+
 **WP-M23-05 … WP-M23-08 — the admin and the shifts that were not accepted
 (planned).** The rights exist already: `PATCH` and `DELETE
 /api/v1/oncall/shifts/:id` are guarded by `oncall.admin`, `oncall.plan` alone

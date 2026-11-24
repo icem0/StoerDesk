@@ -103,6 +103,7 @@ async function findShift(database: Db, shiftId: string) {
       state: oncallShifts.state,
       startsAt: oncallShifts.startsAt,
       endsAt: oncallShifts.endsAt,
+      confirmedAt: oncallShifts.confirmedAt,
       declinedAt: oncallShifts.declinedAt,
     })
     .from(oncallShifts)
@@ -391,8 +392,16 @@ export async function updateShift(
 }
 
 /**
- * Deletes a shift only while it is not `CONFIRMED`/`SWAP_REQUESTED` and has not
- * started yet. Otherwise answers `409 oncall_shift_locked`.
+ * Deletes a shift (ADR-0047, `specs/04-oncall.md` §4a.3).
+ *
+ * A shift that held the duty stays locked: a confirmed or swapped shift, and
+ * every shift that was confirmed at some moment — also when it was declined
+ * afterwards, the confirmation stays in the row. A shift that was never
+ * confirmed may be deleted even after it started: the office removes the slots
+ * that nobody accepted. A `PLANNED` shift that started stays locked, because
+ * it counted for the ticket coupling (§4a.6) and the office may have offered a
+ * ticket on it. Every other lock answers `409 oncall_shift_locked` with the
+ * reason in its params.
  */
 export async function deleteShift(
   database: Db,
@@ -406,11 +415,29 @@ export async function deleteShift(
   }
 
   if (shift.state === 'CONFIRMED' || shift.state === 'SWAP_REQUESTED') {
-    throw new OncallServiceError(409, 'oncall_shift_locked', { shiftId, state: shift.state })
+    throw new OncallServiceError(409, 'oncall_shift_locked', {
+      shiftId,
+      state: shift.state,
+      reason: 'state',
+    })
   }
 
-  if (shift.startsAt <= new Date()) {
-    throw new OncallServiceError(409, 'oncall_shift_locked', { shiftId, reason: 'started' })
+  // The duty the shift held stays part of the history — also when the
+  // technician declined afterwards (`confirmed_at` is set then).
+  if (shift.confirmedAt !== null) {
+    throw new OncallServiceError(409, 'oncall_shift_locked', {
+      shiftId,
+      state: shift.state,
+      reason: 'confirmed',
+    })
+  }
+
+  if (shift.startsAt <= new Date() && shift.state === 'PLANNED') {
+    throw new OncallServiceError(409, 'oncall_shift_locked', {
+      shiftId,
+      state: shift.state,
+      reason: 'started',
+    })
   }
 
   await database.transaction(async (tx) => {

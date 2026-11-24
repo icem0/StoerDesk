@@ -1760,7 +1760,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-01 | the readiness view plans the shifts — the share button of the calendar and the weekly plan in the readiness view | done | yes |
 | WP-M23-03 | the swap race waits for both acceptances — the test of the race no longer loses the winner | done | yes |
 | WP-M23-04 | the iCal URL is complete and visible — the address of the feed with host and scheme, named in a panel of the frame | done | yes |
-| WP-M23-05 | the admin deletes a shift that was never confirmed — even after it started | planned | yes |
+| WP-M23-05 | the admin deletes a shift that was never confirmed — even after it started (ADR-0047) | done | yes |
 | WP-M23-06 | the shift dialog carries the actions of the admin — assign, publish, delete | planned | yes |
 | WP-M23-07 | the list of the open shifts in the readiness view | planned | yes |
 | WP-M23-08 | a reassignment notifies the new technician | planned | yes |
