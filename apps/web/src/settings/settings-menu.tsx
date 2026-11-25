@@ -17,7 +17,6 @@ export interface SettingsMenuSection {
   key: string
   label: string
   icon?: IconName
-  collapsible?: boolean
   items: SettingsMenuItem[]
 }
 
@@ -28,13 +27,14 @@ interface SettingsMenuProps {
 /**
  * The one-column menu of the settings (WP-M29-03, specs/13-ui.md §14.10).
  * Every entry wears its symbol, its label and a short description; a search
- * field filters label and description; collapsible sections stay open while
- * the page stays short. The component renders nothing a search term hides.
+ * field filters label and description; **every section is always visible** —
+ * no section folds away, so every path of the administration stands there
+ * without a second click. The search field is what makes the long list
+ * manageable. The component renders nothing a search term hides.
  */
 export function SettingsMenu({ sections }: SettingsMenuProps) {
   const { t } = useTranslation('common')
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState<Set<string>>(new Set())
 
   const visible = (item: SettingsMenuItem): boolean => {
     const text = `${item.label} ${item.description ?? ''}`.toLowerCase()
@@ -46,16 +46,6 @@ export function SettingsMenu({ sections }: SettingsMenuProps) {
     items: section.items.filter(visible),
   }))
   const hasResult = visibleSections.some((section) => section.items.length > 0)
-
-  const toggle = (key: string): void => {
-    const next = new Set(open)
-    if (next.has(key)) {
-      next.delete(key)
-    } else {
-      next.add(key)
-    }
-    setOpen(next)
-  }
 
   const itemClass = (isActive: boolean): string =>
     `flex min-h-11 items-center gap-3 rounded-xl border px-4 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
@@ -101,33 +91,6 @@ export function SettingsMenu({ sections }: SettingsMenuProps) {
             {section.label}
           </>
         )
-
-        if (section.collapsible) {
-          const isOpen = open.has(section.key)
-          return (
-            <details
-              key={section.key}
-              className="flex flex-col gap-1"
-              open={isOpen}
-              onToggle={() => toggle(section.key)}
-            >
-              <summary
-                className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 list-none"
-              >
-                {heading}
-              </summary>
-              {isOpen && (
-                <ul className="grid gap-2">
-                  {items.map((item) => (
-                    <li key={item.key}>
-                      <SettingsMenuEntry item={item} itemClass={itemClass} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </details>
-          )
-        }
 
         return (
           <section key={section.key} className="flex flex-col gap-1">

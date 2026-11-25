@@ -23,7 +23,6 @@ const ui = {
     submit: 'Anmelden',
     settings: 'Einstellungen',
     signedInAs: `Angemeldet als ${adminEmail}`,
-    adminGroup: 'Verwaltung',
     usersLink: 'Benutzer',
     usersTitle: 'Benutzerverwaltung',
     active: 'aktiv',
@@ -33,7 +32,6 @@ const ui = {
     submit: 'Sign in',
     settings: 'Settings',
     signedInAs: `Signed in as ${adminEmail}`,
-    adminGroup: 'Administration',
     usersLink: 'Users',
     usersTitle: 'User management',
     active: 'active',
@@ -92,10 +90,8 @@ for (const language of ['de', 'en'] as const) {
     expect(body.user.roles).toContain('admin')
     expect(body.user.permissions).toContain('user.read')
 
-    // The navigation of the administration is a menu with a collapsible section
-    // (WP-M29-04): the section "Verwaltung" opens and names every module of the
-    // administration with its path (WP-M29-10) — the users are reached directly.
-    await page.getByText(texts.adminGroup, { exact: true }).click()
+    // The settings menu names every module of the administration with its path
+    // (WP-M29-10) and no section folds away — the users are reached directly.
     await page.getByRole('link', { name: texts.usersLink }).click()
 
     await expect(page).toHaveURL(/\/admin\/users$/)

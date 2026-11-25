@@ -57,11 +57,9 @@ describe('SettingsPage', () => {
     }
 
     // „Verwaltung“ ist ein aufklappbarer Abschnitt: seine Überschrift steht im
-    // summary-Element, nicht als h2.
+    // summary-Element, nicht als h2. Der Abschnitt ist offen — die Pfade der
+    // Verwaltung stehen ohne zweiten Klick da.
     expect(screen.getByText('Verwaltung')).toBeTruthy()
-
-    // Den aufklappbaren Verwaltungs-Abschnitt öffnen, damit seine Links sichtbar werden.
-    fireEvent.click(screen.getByText('Verwaltung'))
     await waitFor(() => expect(screen.getByText('Benutzer')).toBeTruthy())
 
     const linkOf = (href: string) =>

@@ -18,7 +18,6 @@ const sections = [
   {
     key: 'administration',
     label: 'Verwaltung',
-    collapsible: true,
     items: [
       { key: 'users', path: '/admin/users', icon: 'users', label: 'Benutzer', description: 'Benutzer, Rollen und Gruppen' },
       { key: 'channels', path: '/admin/channels', icon: 'radio', label: 'Kanäle', description: 'Kanäle, Zustellung, Mailbox' },
@@ -39,7 +38,6 @@ function renderMenu() {
 describe('SettingsMenu', () => {
   it('renders every entry with its symbol, its label and its description', async () => {
     renderMenu()
-    fireEvent.click(screen.getByText('Verwaltung'))
 
     expect(screen.getByText('Mein Bereich')).toBeTruthy()
     expect(screen.getByText('Meine Einstellungen')).toBeTruthy()
@@ -65,7 +63,6 @@ describe('SettingsMenu', () => {
 
   it('filters by label and description', async () => {
     renderMenu()
-    fireEvent.click(screen.getByText('Verwaltung'))
     await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
 
     const input = screen.getByLabelText('Einstellungen suchen')
@@ -86,16 +83,14 @@ describe('SettingsMenu', () => {
     expect(screen.getByText('Keine Einstellung gefunden.')).toBeTruthy()
   })
 
-  it('opens and closes the collapsible sections', async () => {
+  it('keeps every section visible', async () => {
     renderMenu()
 
-    // Geschlossen zum Start: die Einträge sind noch nicht im DOM.
-    expect(screen.queryByText('Benutzer')).toBeNull()
-
-    fireEvent.click(screen.getByText('Verwaltung'))
+    // Kein Abschnitt klappt zu: die Abschnitte stehen als Überschrift da und
+    // ihre Einträge stehen darunter — die Suche filtert, nicht ein Aufklappen.
+    expect(screen.getByRole('heading', { level: 2, name: 'Mein Bereich' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 2, name: 'Verwaltung' })).toBeTruthy()
     await waitFor(() => expect(screen.getByText('Benutzer')).toBeTruthy())
-
-    fireEvent.click(screen.getByText('Verwaltung'))
-    await waitFor(() => expect(screen.queryByText('Benutzer')).toBeNull())
+    await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
   })
 })

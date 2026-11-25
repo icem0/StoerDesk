@@ -48,6 +48,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`PLAN.md` §17).
 
 ### Changed
+- The task of the user exists (**WP-M30-02**, phase 30, ADR-0052): the new
+  table `notification_items` holds **one row per user and event** — the
+  migration `0064` creates the table and the column
+  `notification_messages.notification_item_id`, so every delivery attempt points
+  at its task. A personal delivery writes **one** task per recipient, no
+  matter how many confirmed channels carry the message: a technician with three
+  channels has one task and not three. The params of the task carry the
+  machine-readable params of the message — never the topic of ntfy and never
+  the target of an account (§11.13). The new routes `GET
+  /api/v1/notifications/items`, `GET /api/v1/notifications/items/unread-count`
+  and `PATCH /api/v1/notifications/items/:id/read` answer the tasks of the
+  signed-in user, count the unhandled ones and write the read receipt; a task
+  of another user answers `404 message_not_found`. The inbox of the interface
+  reads them in WP-M30-04.
 - The message is a task and the delivery attempt is the protocol
   (**WP-M30-01**, phase 30, ADR-0052): the inbox of a user shows **one task
   per user and event** — the readable text, the deep link into the ticket or

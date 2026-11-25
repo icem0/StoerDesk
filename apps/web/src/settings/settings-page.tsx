@@ -67,7 +67,6 @@ const SETTINGS_SECTIONS = [
   },
   {
     key: 'administration',
-    collapsible: true,
     items: [
       { key: 'users', path: '/admin/users', icon: 'users' },
       { key: 'roles', path: '/admin/roles', icon: 'shield' },
