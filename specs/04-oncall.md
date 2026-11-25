@@ -109,6 +109,15 @@ a shift after it started (`PLAN.md` §8). A reassign of a `SWAP_REQUESTED` shift
 cancels the open swap and writes `swap_cancelled`. A shift that is `CONFIRMED`
 or `SWAP_REQUESTED` cannot be deleted (`409 oncall_shift_locked`).
 
+**The handover of the admin (WP-M23-10).** An admin may hand a `CONFIRMED` or
+a `SWAP_REQUESTED` shift over to another technician — the handover of a duty
+that the office has to cover otherwise. The shift goes to `PLANNED` with the
+new technician: it counts for the ticket coupling (§4a.6) again, the new
+technician has to accept it, and the announcement reaches him. The handover of
+a `SWAP_REQUESTED` shift cancels the open swap and writes `swap_cancelled`, as
+the transitions above demand. The handover belongs to the admin alone: a
+request without `oncall.admin` answers `403 forbidden`.
+
 **The delete of a shift (ADR-0047).** A shift that held the duty keeps its
 place in the history: a `CONFIRMED` or `SWAP_REQUESTED` shift is locked, and so
 is every shift that was confirmed at some moment — also when the technician

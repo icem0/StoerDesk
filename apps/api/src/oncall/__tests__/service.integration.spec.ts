@@ -20,7 +20,15 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped on-call service integration: ${testDatabase.reason}\n`)
 }
 
-const { oncallPools, oncallShifts, oncallEvents, roles, userRoles, users } = schema
+const {
+  oncallPools,
+  oncallShifts,
+  oncallEvents,
+  oncallSwapRequests,
+  roles,
+  userRoles,
+  users,
+} = schema
 
 describe.skipIf(testDatabase.status === 'unavailable')(
   'on-call planning service (integration)',
@@ -138,6 +146,90 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(reassigned.state).toBe('DRAFT')
       expect(reassigned.userId).toBe(techId)
+    })
+
+    it('hands a confirmed shift over to another technician (WP-M23-10)', async () => {
+      const shift = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({ state: 'CONFIRMED', confirmedAt: new Date() })
+        .where(eq(oncallShifts.id, shift.id))
+
+      const other = await userIdFor('tech-handover@example.org')
+
+      const handed = await updateShift(
+        db,
+        shift.id,
+        { userId: other, publish: true },
+        adminId,
+      )
+
+      expect(handed.state).toBe('PLANNED')
+      expect(handed.userId).toBe(other)
+
+      const events = await db
+        .select()
+        .from(oncallEvents)
+        .where(eq(oncallEvents.shiftId, shift.id))
+
+      const types = events.map((event) => (event.payload as { type?: string })?.type)
+
+      expect(types).toContain('shift_updated')
+    })
+
+    it('refuses the handover of a confirmed shift to a technician (WP-M23-10)', async () => {
+      const shift = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({ state: 'CONFIRMED', confirmedAt: new Date() })
+        .where(eq(oncallShifts.id, shift.id))
+
+      const other = await userIdFor('tech-no-handover@example.org')
+
+      await expect(
+        updateShift(db, shift.id, { userId: other, publish: true }, techId),
+      ).rejects.toMatchObject({ code: 'forbidden', statusCode: 403 })
+    })
+
+    it('cancels the open swap when the admin hands the shift over (WP-M23-10)', async () => {
+      const shift = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({ state: 'SWAP_REQUESTED' })
+        .where(eq(oncallShifts.id, shift.id))
+
+      await db.insert(oncallSwapRequests).values({ shiftId: shift.id, status: 'PENDING' })
+
+      const other = await userIdFor('tech-handover-swap@example.org')
+
+      const handed = await updateShift(
+        db,
+        shift.id,
+        { userId: other, publish: true },
+        adminId,
+      )
+
+      expect(handed.state).toBe('PLANNED')
+      expect(handed.userId).toBe(other)
+
+      const swaps = await db
+        .select({ status: oncallSwapRequests.status })
+        .from(oncallSwapRequests)
+        .where(eq(oncallSwapRequests.shiftId, shift.id))
+
+      expect(swaps.map((swap) => swap.status)).toEqual(['CANCELLED'])
+
+      const events = await db
+        .select()
+        .from(oncallEvents)
+        .where(eq(oncallEvents.shiftId, shift.id))
+
+      const types = events.map((event) => (event.payload as { type?: string })?.type)
+
+      expect(types).toContain('swap_cancelled')
     })
 
     it('rejects update on an unknown shift with 404', async () => {

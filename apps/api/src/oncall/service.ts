@@ -1,8 +1,15 @@
 import { and, eq, inArray, sql } from 'drizzle-orm'
 
+import { loadEffectivePermissions } from '../auth/requirePermission'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { oncallPools, oncallShifts, outbox, type OnCallShiftState } from '../db/schema'
+import {
+  oncallPools,
+  oncallShifts,
+  oncallSwapRequests,
+  outbox,
+  type OnCallShiftState,
+} from '../db/schema'
 import { enqueueOncallOutbox } from '../notifications/outbox'
 import { appendOncallEvent } from './events'
 import {
@@ -298,9 +305,25 @@ export async function generateShifts(
 }
 
 /**
+ * Whether the user holds the right of the readiness office (`oncall.admin`).
+ * The handover of a confirmed shift belongs to them alone (WP-M23-10).
+ */
+async function isAdmin(database: Db, userId: string): Promise<boolean> {
+  const permissions = await loadEffectivePermissions(database, userId)
+
+  return permissions.includes('oncall.admin')
+}
+
+/**
  * Assigns, publishes or reassigns a shift following the §4a.3 transitions:
  * `UNFILLED / DRAFT / PLANNED / DECLINED → DRAFT | PLANNED` and
  * `DRAFT → PLANNED`. Clears `declined_at` on assign/reassign.
+ *
+ * The handover (WP-M23-10): an admin may reassign a `CONFIRMED` or a
+ * `SWAP_REQUESTED` shift — `PLAN.md` §8 and §4a.3 promise it. The shift goes
+ * to `PLANNED` with the new technician, so it counts for the coupling again and
+ * the new technician has to accept it. The reassign of a `SWAP_REQUESTED`
+ * shift cancels the open swap and writes `swap_cancelled` (§4a.3).
  */
 export async function updateShift(
   database: Db,
@@ -327,7 +350,25 @@ export async function updateShift(
     return toShiftResult(shift)
   }
 
-  if (!CREATABLE_STATES.has(fromState) || !UPDATABLE_TO.has(toState)) {
+  // The handover of the admin: a confirmed or swapped shift goes back to
+  // `PLANNED` with the new technician (WP-M23-10) — it counts for the coupling
+  // again and the new technician has to accept it.
+  const handover =
+    patch.userId !== undefined &&
+    (fromState === 'CONFIRMED' || fromState === 'SWAP_REQUESTED')
+
+  if (handover) {
+    // The handover belongs to the admin alone (WP-M23-10): the route is
+    // guarded by `oncall.admin`, the service checks it again so the rule holds
+    // whoever calls the function.
+    if (!(await isAdmin(database, actorUserId))) {
+      throw new OncallServiceError(403, 'forbidden', { fields: ['shiftId'] })
+    }
+
+    toState = 'PLANNED'
+  }
+
+  if (!handover && (!CREATABLE_STATES.has(fromState) || !UPDATABLE_TO.has(toState))) {
     throw new OncallServiceError(409, 'oncall_shift_invalid_transition', {
       shiftId,
       from: fromState,
@@ -374,6 +415,27 @@ export async function updateShift(
         publish: patch.publish,
       },
     })
+
+    // The handover of a swapped shift cancels the open swap (§4a.3): the swap
+    // is answered by the reassignment itself.
+    if (handover && fromState === 'SWAP_REQUESTED') {
+      await tx
+        .update(oncallSwapRequests)
+        .set({ status: 'CANCELLED', updatedAt: new Date() })
+        .where(
+          and(
+            eq(oncallSwapRequests.shiftId, updated.id),
+            inArray(oncallSwapRequests.status, ['PENDING', 'ACCEPTED']),
+          ),
+        )
+
+      await appendOncallEvent(tx, {
+        shiftId: updated.id,
+        type: 'swap_cancelled',
+        actorUserId,
+        payload: { cancelledByUserId: actorUserId },
+      })
+    }
 
     if (
       patch.userId !== undefined &&

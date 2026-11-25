@@ -1781,6 +1781,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-09d | the urgency of the reminder rises — ntfy and the push of the browser | done | yes |
 | WP-M23-09e | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | done | yes |
 | WP-M23-09f | the button „Erinnern" in the actions of the admin | done | yes |
+| WP-M23-10 | the admin hands a shift over — a confirmed or swapped shift goes to another technician | done | yes |
 | WP-M23-09g | the test of the manual reminder configures its own chain | done | yes |
 | WP-M24-01 | the user owns the channels, the administration names the reach (ADR-0045) | done | yes |
 | WP-M24-02 | the accounts carry their target and their confirmation | done | yes |

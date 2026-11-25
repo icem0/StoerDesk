@@ -159,6 +159,10 @@ export function ShiftAdminActions(props: {
   // The reminder needs a technician and a shift that did not start yet.
   const remindable =
     props.shift.userId !== null && new Date(props.shift.startsAt).getTime() > now
+  // The handover of a duty that the office has to cover otherwise: a confirmed
+  // or a swapped shift goes to another technician (WP-M23-10).
+  const handover =
+    props.shift.state === 'CONFIRMED' || props.shift.state === 'SWAP_REQUESTED'
 
   return (
     <div className="mt-4 rounded border border-slate-700 bg-slate-950/40 p-3">
@@ -168,9 +172,17 @@ export function ShiftAdminActions(props: {
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
         <label className="flex items-center gap-2">
-          <span className="text-slate-400">{t('admin.shiftDetail.assign')}</span>
+          <span className="text-slate-400">
+            {handover
+              ? t('admin.shiftDetail.handoverTechnician')
+              : t('admin.shiftDetail.assign')}
+          </span>
           <select
-            aria-label={t('admin.shiftDetail.assign')}
+            aria-label={
+              handover
+                ? t('admin.shiftDetail.handoverTechnician')
+                : t('admin.shiftDetail.assign')
+            }
             className="rounded bg-slate-900 p-1 text-slate-100"
             disabled={busy || candidates.length === 0}
             value={technicianId}
@@ -190,7 +202,9 @@ export function ShiftAdminActions(props: {
           onClick={() => assign.mutate(technicianId)}
           type="button"
         >
-          {t('admin.shiftDetail.assignAction')}
+          {handover
+            ? t('admin.shiftDetail.handoverAction')
+            : t('admin.shiftDetail.assignAction')}
         </button>
         {props.shift.state === 'DRAFT' ? (
           <button

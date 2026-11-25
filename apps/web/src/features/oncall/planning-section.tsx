@@ -367,6 +367,13 @@ export function PlanningSection({
                               id: shift.id,
                               body: {
                                 userId: event.target.value === '' ? null : event.target.value,
+                                // The handover of a confirmed or swapped shift
+                                // stays published (WP-M23-10); every other
+                                // assignment waits for the publication.
+                                ...(shift.state === 'CONFIRMED' ||
+                                shift.state === 'SWAP_REQUESTED'
+                                  ? { publish: true }
+                                  : {}),
                               },
                             })
                           }

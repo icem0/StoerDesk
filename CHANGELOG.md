@@ -248,6 +248,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   sets it (**WP-M23-09c**).
 
 ### Changed
+- The admin hands a shift over (**WP-M23-10**, phase 23): the transitions of the
+  readiness promised that an admin may reassign a shift after it started, but
+  the service refused every handover with `409 oncall_shift_invalid_transition`.
+  A confirmed or a swapped shift now goes to another technician: it stays
+  published, it counts for the ticket coupling again, the new technician has to
+  accept it, and the handover of a swapped shift cancels the open swap. The
+  handover belongs to the admin alone.
 - The work packages know two profiles now (**PLAN.md** §17): `ctx-128k` for a
   narrow slice and `ctx-256k` for one vertical slice of a feature — the
   database, the service, the route and the user interface in one commit. The

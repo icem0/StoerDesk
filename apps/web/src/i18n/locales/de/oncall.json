@@ -218,6 +218,8 @@
       "adminActions": "Aktionen der Bereitschaftsleitung",
       "assign": "Techniker",
       "assignAction": "Neu zuweisen",
+      "handoverTechnician": "Neuer Techniker",
+      "handoverAction": "Übergeben",
       "unassigned": "Nicht zugewiesen",
       "deleteConfirm": "Endgültig löschen",
       "cancel": "Abbrechen",

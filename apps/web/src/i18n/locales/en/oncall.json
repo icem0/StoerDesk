@@ -218,6 +218,8 @@
       "adminActions": "Actions of the readiness office",
       "assign": "Technician",
       "assignAction": "Assign again",
+      "handoverTechnician": "New technician",
+      "handoverAction": "Hand over",
       "unassigned": "Not assigned",
       "deleteConfirm": "Delete for good",
       "cancel": "Cancel",

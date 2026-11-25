@@ -210,6 +210,32 @@ describe('ShiftAdminActions', () => {
     )
   })
 
+  it('hands a confirmed shift over to another technician (WP-M23-10)', async () => {
+    const calls: { method: string; url: string; body: unknown }[] = []
+    stubRoutes(['oncall.admin'], calls)
+    renderActions('CONFIRMED')
+
+    await waitFor(() => {
+      expect(screen.getByText('Aktionen der Bereitschaftsleitung')).toBeDefined()
+    })
+
+    // the handover carries its own words
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Max Mustermann' })).toBeDefined()
+    })
+
+    fireEvent.change(screen.getByLabelText('Neuer Techniker'), {
+      target: { value: otherMemberId },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Übergeben' }))
+
+    await waitFor(() => {
+      const patch = calls.find((call) => call.method === 'PATCH')
+
+      expect(patch?.body).toEqual({ userId: otherMemberId, publish: true })
+    })
+  })
+
   it('locks the delete of a confirmed shift', async () => {
     stubRoutes(['oncall.admin'])
     renderActions('CONFIRMED')

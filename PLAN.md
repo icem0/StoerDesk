@@ -1104,6 +1104,17 @@ and scheme, so the link was worthless in a calendar app. `absoluteApiUrl` in
 copies the complete address and opens a panel that names it — the link is
 readable and can be copied by hand.
 
+**WP-M23-10 — the admin hands a shift over (done).** The transitions of §4a.3
+and `PLAN.md` §8 promise that an admin may reassign a shift after it started —
+the handover of a duty the office has to cover otherwise. The service refused
+it: the states of the table held no `CONFIRMED` and no `SWAP_REQUESTED`, so the
+answer was `409 oncall_shift_invalid_transition`. The admin may now hand a
+confirmed or a swapped shift over: the shift goes to `PLANNED` with the new
+technician, it counts for the coupling again, the new technician has to accept
+it, and the handover of a swapped shift cancels the open swap and writes
+`swap_cancelled`. The handover belongs to the admin alone — the service checks
+the right again, whoever calls it.
+
 **WP-M23-09f — the button „Erinnern" in the actions of the admin (done).** The
 actions of the admin for one shift carry the button „Erinnern": the click
 sends `POST /api/v1/oncall/shifts/:id/remind` and the plan is read again. The
