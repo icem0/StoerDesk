@@ -442,6 +442,13 @@
       "when": 1796004000001,
       "tag": "0062_customer_portal",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1796090400001,
+      "tag": "0063_outbox_reporter_event",
+      "breakpoints": true
     }
   ]
 }

@@ -103,7 +103,7 @@ describe('the base schema', () => {
     )
 
     expect(columnsByTable).toEqual([
-      ['id', 'email', 'givenName', 'familyName', 'passwordHash', 'locale', 'theme', 'active', 'mustChangePassword', 'createdAt', 'updatedAt'],
+      ['id', 'email', 'givenName', 'familyName', 'passwordHash', 'locale', 'theme', 'active', 'mustChangePassword', 'createdVia', 'createdAt', 'updatedAt'],
       ['id', 'userId', 'tokenHash', 'expiresAt', 'createdAt'],
       ['id', 'name', 'createdAt', 'updatedAt'],
       ['userId', 'groupId', 'createdAt'],

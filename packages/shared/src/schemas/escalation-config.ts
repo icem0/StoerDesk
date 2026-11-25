@@ -65,6 +65,12 @@ export const ESCALATION_ACTION_TYPES = [
   'status_change',
   'offer',
   'assign',
+  /**
+   * The report of the reporter (`specs/19-customer-portal.md` §19.8, ADR-0056):
+   * the action writes the ticket to the address of the reporter — but only to a
+   * ticket that carries his opt-in.
+   */
+  'notify_reporter',
 ] as const
 
 export type EscalationActionType = (typeof ESCALATION_ACTION_TYPES)[number]
@@ -101,13 +107,7 @@ export const escalationNotifyTargetSchema = z.discriminatedUnion('kind', [
 export type EscalationNotifyTarget = z.infer<typeof escalationNotifyTargetSchema>
 
 /** The ntfy priority levels selectable for a `notify` action. */
-export const ESCALATION_NOTIFY_PRIORITIES = [
-  'min',
-  'low',
-  'default',
-  'high',
-  'urgent',
-] as const
+export const ESCALATION_NOTIFY_PRIORITIES = ['min', 'low', 'default', 'high', 'urgent'] as const
 
 export type EscalationNotifyPriority = (typeof ESCALATION_NOTIFY_PRIORITIES)[number]
 
@@ -362,10 +362,7 @@ export const escalationConditionLeafSchema = z.union([
   leaf(
     'objectExternalType',
     stringOperators,
-    z.union([
-      z.string().trim().min(1).max(120),
-      z.array(z.string().trim().min(1).max(120)).min(1),
-    ]),
+    z.union([z.string().trim().min(1).max(120), z.array(z.string().trim().min(1).max(120)).min(1)]),
   ),
   leaf('assigned', booleanOperators, z.boolean()),
   leaf('paused', booleanOperators, z.boolean()),
@@ -374,10 +371,7 @@ export const escalationConditionLeafSchema = z.union([
   leaf(
     'stageReached',
     enumOperators,
-    z.union([
-      z.string().regex(keyPattern),
-      z.array(z.string().regex(keyPattern)).min(1),
-    ]),
+    z.union([z.string().regex(keyPattern), z.array(z.string().regex(keyPattern)).min(1)]),
   ),
   leaf(
     'time_of_day',
@@ -413,7 +407,8 @@ const conditionSchema: z.ZodTypeAny = z.lazy(() =>
   ]),
 )
 
-export const escalationConditionSchema = conditionSchema as unknown as z.ZodType<EscalationCondition>
+export const escalationConditionSchema =
+  conditionSchema as unknown as z.ZodType<EscalationCondition>
 
 /**
  * The number of group levels of a condition tree; the limit of §7.4 is two.
@@ -445,7 +440,9 @@ export function escalationConditionLeafCount(condition: EscalationCondition): nu
 }
 
 /** The leaves of a condition tree, in order. */
-export function escalationConditionLeaves(condition: EscalationCondition): EscalationConditionLeaf[] {
+export function escalationConditionLeaves(
+  condition: EscalationCondition,
+): EscalationConditionLeaf[] {
   if ('all' in condition) {
     return condition.all.flatMap(escalationConditionLeaves)
   }
@@ -510,6 +507,16 @@ const escalationActionUnion = z.discriminatedUnion('type', [
   }),
   z.object({
     key: z.string().regex(escalationActionKeyPattern),
+    type: z.literal('notify_reporter'),
+    /**
+     * The action writes the ticket to the address of the reporter (§19.8). The
+     * opt-in of the reporter decides whether it goes out — the action without
+     * the opt-in of the ticket is skipped.
+     */
+    condition: escalationConditionSchema,
+  }),
+  z.object({
+    key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('assign'),
     /**
      * The mode of the assignment (§7.14, ADR-0039): `pool` hands the ticket to
@@ -533,41 +540,39 @@ const escalationActionUnion = z.discriminatedUnion('type', [
  * The union carries the common shape; this rule keeps the old channel-only
  * actions valid while a new action may name a user or a readiness pool instead.
  */
-export const escalationActionConfigSchema = escalationActionUnion.superRefine(
-  (action, context) => {
-    if (
-      action.type === 'notify' &&
-      action.target === undefined &&
-      (action.channels?.length ?? 0) === 0
-    ) {
+export const escalationActionConfigSchema = escalationActionUnion.superRefine((action, context) => {
+  if (
+    action.type === 'notify' &&
+    action.target === undefined &&
+    (action.channels?.length ?? 0) === 0
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['channels'],
+      message: 'notify_needs_target_or_channel',
+    })
+  }
+
+  if (action.type === 'assign') {
+    // The mode `user` names the technician, the mode `pool` takes him from
+    // the assignee pool of the installation (§7.14, ADR-0039).
+    if (action.mode === 'user' && action.user === undefined) {
       context.addIssue({
         code: 'custom',
-        path: ['channels'],
-        message: 'notify_needs_target_or_channel',
+        path: ['user'],
+        message: 'assign_needs_user',
       })
     }
 
-    if (action.type === 'assign') {
-      // The mode `user` names the technician, the mode `pool` takes him from
-      // the assignee pool of the installation (§7.14, ADR-0039).
-      if (action.mode === 'user' && action.user === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: ['user'],
-          message: 'assign_needs_user',
-        })
-      }
-
-      if (action.mode === 'pool' && action.user !== undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: ['user'],
-          message: 'assign_pool_has_no_user',
-        })
-      }
+    if (action.mode === 'pool' && action.user !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['user'],
+        message: 'assign_pool_has_no_user',
+      })
     }
-  },
-)
+  }
+})
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
 
@@ -835,15 +840,18 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
     }
 
     case 'time_of_day': {
-      const minutes = facts.timeOfDay === undefined || facts.timeOfDay === null
-        ? minutesOfDay(new Date())
-        : wallClockMinutes(facts.timeOfDay)
+      const minutes =
+        facts.timeOfDay === undefined || facts.timeOfDay === null
+          ? minutesOfDay(new Date())
+          : wallClockMinutes(facts.timeOfDay)
 
       if (minutes === null) {
         return false
       }
 
-      const within = listValue(leaf.value).some((interval) => timeOfDayIntervalMatches(interval, minutes))
+      const within = listValue(leaf.value).some((interval) =>
+        timeOfDayIntervalMatches(interval, minutes),
+      )
 
       return leaf.operator === 'notIn' ? !within : within
     }

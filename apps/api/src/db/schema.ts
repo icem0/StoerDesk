@@ -841,7 +841,11 @@ export const NOTIFICATION_EVENT_TYPES = [
  * them. The warning of a broken channel (`specs/10-notifications.md` §11.15,
  * ADR-0028) belongs to no ticket and to no shift.
  */
-export const NOTIFICATION_INSTANCE_EVENT_TYPES = ['channel.health_warning'] as const
+export const NOTIFICATION_INSTANCE_EVENT_TYPES = [
+  'channel.health_warning',
+  /** The report of the reporter to his address (§19.8, ADR-0056). */
+  'ticket.reporter',
+] as const
 
 /** Every event type an `outbox` row may carry: the seven of §11.4 and the instance ones. */
 export const OUTBOX_EVENT_TYPES = [

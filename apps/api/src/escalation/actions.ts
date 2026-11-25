@@ -204,6 +204,8 @@ export async function dispatchEscalationActions(
       status: tickets.status,
       priority: tickets.priority,
       objectName: objects.name,
+      reporterEmail: tickets.reporterEmail,
+      customerEmailNotifications: tickets.customerEmailNotifications,
     })
     .from(tickets)
     .innerJoin(objects, eq(objects.id, tickets.objectId))
@@ -220,6 +222,38 @@ export async function dispatchEscalationActions(
     }
 
     const config = configOf(row)
+
+    if (row.type === 'notify_reporter') {
+      // §19.8 (ADR-0056): the report of the reporter. The opt-in of the
+      // reporter decides whether the mail goes out — a ticket without it is
+      // skipped, and a ticket without an address has nobody to write to.
+      if (
+        ticket === undefined ||
+        ticket.reporterEmail === null ||
+        ticket.reporterEmail === '' ||
+        !ticket.customerEmailNotifications
+      ) {
+        continue
+      }
+
+      await database.insert(outbox).values({
+        ticketId: firing.ticketId,
+        eventType: 'ticket.reporter',
+        channel: 'email',
+        target: {
+          ticketNo: ticket.ticketNo,
+          priority: ticket.priority,
+          objectName: ticket.objectName,
+          escalationRule: firing.ruleKey,
+          escalationStage: firing.stageKey,
+          recipientTarget: ticket.reporterEmail,
+          reporterMail: true,
+        },
+      })
+
+      result.notified += 1
+      continue
+    }
 
     if (row.type === 'notify') {
       if (ticket === undefined) {

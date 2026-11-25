@@ -303,9 +303,14 @@ export const messageOf = (target: Record<string, unknown>, eventType = ''): Mess
 export const messageKindOf = (
   target: Record<string, unknown>,
   eventType = '',
-): 'ticket' | 'readiness' | 'test' => {
+): 'ticket' | 'readiness' | 'test' | 'customer_ticket' => {
   if (eventType === 'channel_health_warning') {
     return 'test'
+  }
+
+  // §19.8 (ADR-0056): the mail to the reporter carries its own template.
+  if (target.reporterMail === true) {
+    return 'customer_ticket'
   }
 
   return target.shiftId !== undefined && target.shiftId !== null ? 'readiness' : 'ticket'

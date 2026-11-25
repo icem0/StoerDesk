@@ -21,6 +21,8 @@ export interface EmailConfig {
     /** The mails of the customer portal (`specs/19-customer-portal.md` §19.3). */
     registration?: string
     passwordReset?: string
+    /** The report of the reporter (§19.8, ADR-0056). */
+    customerTicket?: string
   }
   /** Host of an existing mail server, e.g. mail.example.org — the channel is off while it is empty */
   host: string
@@ -149,6 +151,8 @@ const templateFor = (config: EmailConfig, kind: string | undefined): string => {
       return config.templates?.registration ?? ''
     case 'password_reset':
       return config.templates?.passwordReset ?? ''
+    case 'customer_ticket':
+      return config.templates?.customerTicket ?? ''
     default:
       return config.templates?.ticket ?? ''
   }
