@@ -22,23 +22,29 @@ they do.
 
 The settings menu becomes single-column. Each entry carries a symbol and a short
 description; a search field filters name and description; the sections are
-collapsible. The work surfaces and the duplicate readiness entry leave the menu.
-The 15 administration entries are not listed individually any more: each topic gets
-its own overview page (`/admin/access`, `/admin/workflow`, `/admin/readiness`,
-`/admin/messaging`) whose links open the modules. The channels page loses its
+collapsible. The work surfaces leave the menu — they live in the header menu. The
+menu names **every module of the administration with its path**: users, roles,
+groups, statuses, fault types, detected errors, escalation, default values,
+readiness plan, channels, delivery problems, mailbox of the office, webhooks, API
+keys and the BMAcloud sync stand there directly. No module disappears behind a
+level of indirection; the groups only sort them. The channels page loses its
 one-page-for-all-channels layout: each channel gets its own page
 (`/admin/channels/:kind`, e. g. Matrix with homeserver and room), reachable by one
-link from the overview page. Every settings/administration page keeps exactly one
-`<main>` landmark inside the shell, a heading and a back link.
+link. Every settings/administration page keeps exactly one `<main>` landmark inside
+the shell, a heading and a back link.
 
-This reverses WP-M14-01 („the administration home is gone") deliberately: the
-administration home did not disappear, it split into four topic pages, because a flat
-list of 30 entries under one another is not operable.
+This reverses WP-M14-01 („the administration home is gone") only in its sorting: the
+administration stays a list of modules, but a sorted one — single-column, with
+symbols, with a description per entry and with a search field.
 
 ## Alternatives
 
 - Keep the flat list and add only symbols and a search field: the list stays 30
   entries long on one page; the Matrix server remains one card among many.
+- Put the modules behind four topic pages (`/admin/access`, `/admin/workflow`,
+  `/admin/readiness`, `/admin/messaging`): tried in WP-M29-04 and reversed in
+  WP-M29-06 — the paths of the settings disappear from the menu, and a second click
+  buys nothing, because the menu was sorted anyway.
 - Move everything back into a real administration home (`/admin`): that route was
   removed on purpose (WP-M14-01) and would recreate the second entry point the
   settings page replaced.
@@ -48,8 +54,8 @@ list of 30 entries under one another is not operable.
 ## Consequences
 
 - Positive: one column is scannable on phones and desktops; symbols and descriptions
-  make each entry self-explanatory; the search field tames 30+ entries; each channel
-  is configurable on its own page.
-- Negative: more clicks from the menu to a module (menu → topic page → module); the
-  decision reverses a phase-14 rule, so bookkeeping (specs, ADR, PLAN, REPO-MAP)
-  names the reversal explicitly.
+  make each entry self-explanatory; the search field tames 30+ entries; every path
+  stays one click away; each channel is configurable on its own page.
+- Negative: the menu is long again — the groups and the collapsible section of the
+  administration keep it short on the screen; the decision reverses a phase-14 rule,
+  so bookkeeping (specs, ADR, PLAN, REPO-MAP) names the reversal explicitly.

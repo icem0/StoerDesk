@@ -47,6 +47,7 @@ const SETTINGS_SECTIONS = [
     items: [
       { key: 'mySettings', path: '/settings/me', icon: 'user' },
       { key: 'notifications', path: '/settings/notifications', icon: 'bell' },
+      { key: 'myShifts', path: '/oncall', icon: 'clock' },
     ],
   },
   {
@@ -61,17 +62,28 @@ const SETTINGS_SECTIONS = [
     items: [
       { key: 'objects', path: '/objects', icon: 'package' },
       { key: 'stickers', path: '/objects/stickers', icon: 'qr-code' },
-      { key: 'stickerTemplate', path: '/admin/sticker-template', icon: 'palette' },
+      { key: 'stickerTemplate', path: '/admin/sticker-template', icon: 'printer' },
     ],
   },
   {
     key: 'administration',
     collapsible: true,
     items: [
-      { key: 'access', path: '/admin/access', icon: 'users' },
-      { key: 'workflow', path: '/admin/workflow', icon: 'sliders' },
-      { key: 'readiness', path: '/admin/readiness', icon: 'calendar' },
-      { key: 'messaging', path: '/admin/messaging', icon: 'radio' },
+      { key: 'users', path: '/admin/users', icon: 'users' },
+      { key: 'roles', path: '/admin/roles', icon: 'shield' },
+      { key: 'groups', path: '/admin/groups', icon: 'group' },
+      { key: 'statuses', path: '/admin/statuses', icon: 'tag' },
+      { key: 'standardTexts', path: '/admin/text-templates', icon: 'file-text' },
+      { key: 'detectedErrors', path: '/admin/detected-errors', icon: 'alert-triangle' },
+      { key: 'escalation', path: '/admin/escalation', icon: 'trending-up' },
+      { key: 'defaults', path: '/admin/defaults', icon: 'sliders' },
+      { key: 'oncall', path: '/admin/oncall', icon: 'calendar' },
+      { key: 'channels', path: '/admin/channels', icon: 'radio' },
+      { key: 'delivery', path: '/admin/delivery', icon: 'alert-circle' },
+      { key: 'email', path: '/admin/email', icon: 'mail' },
+      { key: 'webhooks', path: '/admin/webhooks', icon: 'link' },
+      { key: 'apiKeys', path: '/admin/api-keys', icon: 'key' },
+      { key: 'bmaSync', path: '/admin/bma-sync', icon: 'refresh-cw' },
     ],
   },
 ] as const

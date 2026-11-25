@@ -753,7 +753,9 @@ Requirements:
 - the menu of the settings is single-column: every entry carries a symbol and a
   short description, a search field filters name and description, the sections are
   collapsible; work surfaces live in the header menu and do not stand in the
-  settings menu a second time (WP-M29-02 … WP-M29-03, ADR-0051),
+  settings menu a second time; **every module of the administration keeps its
+  path in the menu** — the groups sort the entries, they do not hide them
+  (WP-M29-02 … WP-M29-03, WP-M29-06, ADR-0051),
 - every settings and administration page renders exactly one `<main>` landmark
   inside the shell, one heading and a back link to the settings (WP-M29-06 … WP-M29-08),
 - every channel of the administration gets its own page
@@ -849,7 +851,7 @@ explanation. Offline is a core feature and appears early.
 | **26** | The statistics read themselves: a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01 … WP-M26-05, ADR-0049) | the statistics page names the system type, the fault type and the detected error in words, the trend of the reaction times over the months is readable, and no column of the page is empty without a reason |
 | **27** | The sticker is a template: the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and a free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | every sheet of the catalog prints in its own grid, every label carries the 112 notice, and the administration decides the geometry and the look of the sticker of the installation |
 | **28** | The gate answers in a minute: the tests of the web share one environment per worker, the integration tests of the API share one migrated template database instead of building one per file, the static gates of the check run in parallel, and the assertions of the migrations read the schema of the database instead of the text of the migration files (WP-M28-01 … WP-M28-04) | the check run needs less than three minutes on a machine with four cores, and every case of the suite proves the behaviour of the code against the real database |
-| **29** | The settings are operable: the settings menu is single-column with a symbol and a description per entry, a search field and collapsible sections; the administration splits into topic pages and every channel gets its own page; every page renders exactly one `<main>` landmark (WP-M29-01 … WP-M29-09, ADR-0051) | every entry of the settings menu has a symbol and a description, the Matrix server sits on its own page behind one link, and no internal page renders more than one `<main>` |
+| **29** | The settings are operable: the settings menu is single-column with a symbol and a description per entry, a search field and collapsible sections; every path of the settings stays in the menu, every channel gets its own page; every page renders exactly one `<main>` landmark (WP-M29-01 … WP-M29-09, ADR-0051) | every entry of the settings menu has a symbol and a description, every module of the administration keeps its path, the Matrix server sits on its own page behind one link, and no internal page renders more than one `<main>` |
 | **30** | The message is a task and the delivery attempt is the protocol: the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on its own page, and a delivery that fails finally becomes a task of the administration (WP-M30-01 … WP-M30-06, ADR-0052) | a technician with three channels sees one task and not three, the bell and the alarm band count the tasks, the administration sees which message arrived at which user over which channel, and a message that never arrived reaches the administration |
 | **31** | The customer portal: the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his own open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | the customer registers, confirms himself over the link in the mail and sees his open tickets in the portal, the office assigns the trained person of an object, the report by QR code offers the registration and the confirmation of the trained person, and the mail to the reporter is configured in the stages of the escalation |
 
@@ -4194,15 +4196,19 @@ the pool and the administration that reads it belong to one commit.
 **The settings are operable (WP-M29-01 … WP-M29-09, ADR-0051).** The settings menu
 is single-column: every entry carries a symbol and a short description, a search
 field filters name and description and the sections are collapsible. The daily
-work surfaces leave the menu (they live in the header menu), and the fifteen
-entries of the administration move onto four topic pages — Benutzer & Rechte,
-Meldungsablauf, Bereitschaft, Kanäle & Versand — whose links open the modules.
-Every channel gets its own page (`/admin/channels/:kind`, e. g. Matrix with
-homeserver and room), and every settings and administration page renders exactly
-one `<main>` landmark inside the shell, one heading and a back link. The phase
-starts with the specification and an ADR that consciously reverses the decision of
-WP-M14-01 (the administration home is gone): a flat list of 30 entries under one
-another is not operable.
+work surfaces leave the menu (they live in the header menu). Every module of the
+administration keeps its path in the menu — users, roles, groups, statuses, fault
+types, detected errors, escalation, default values, readiness plan, channels,
+delivery problems, mailbox of the office, webhooks, API keys, BMAcloud sync — the
+groups only sort them; a first attempt with four topic pages behind them
+(WP-M29-04) was reversed in WP-M29-06, because the paths of the settings
+disappeared from the menu. Every channel gets its own page
+(`/admin/channels/:kind`, e. g. Matrix with homeserver and room), and every settings
+and administration page renders exactly one `<main>` landmark inside the shell, one
+heading and a back link. The phase starts with the specification and an ADR that
+consciously reverses the decision of WP-M14-01 (the administration home is gone):
+a flat list of 30 entries under one another is not operable — but a sorted list
+keeps every path.
 
 ## 17. Work package rules
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

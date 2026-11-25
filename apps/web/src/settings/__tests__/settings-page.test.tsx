@@ -62,21 +62,45 @@ describe('SettingsPage', () => {
 
     // Den aufklappbaren Verwaltungs-Abschnitt öffnen, damit seine Links sichtbar werden.
     fireEvent.click(screen.getByText('Verwaltung'))
-    await waitFor(() => expect(screen.getByText('Meldungsablauf')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('Benutzer')).toBeTruthy())
 
     const linkOf = (href: string) =>
       screen.getAllByRole('link').find((link) => link.getAttribute('href') === href)
 
     expect(linkOf('/settings/me')?.textContent).toContain('Meine Einstellungen')
+    expect(linkOf('/settings/notifications')?.textContent).toContain('Benachrichtigungen')
+    expect(linkOf('/oncall')?.textContent).toContain('Meine Bereitschaft')
     expect(linkOf('/admin/branding')?.textContent).toContain('Darstellung & Logo')
-    expect(linkOf('/admin/workflow')?.textContent).toContain('Meldungsablauf')
-    expect(linkOf('/admin/readiness')?.textContent).toContain('Bereitschaft')
-    expect(linkOf('/admin/messaging')?.textContent).toContain('Kanäle & Versand')
+    expect(linkOf('/admin/dashboard')?.textContent).toContain('Dashboard & TV')
+    expect(linkOf('/objects')?.textContent).toContain('Objekte')
     expect(linkOf('/objects/stickers')?.textContent).toContain('QR-Aufkleber')
+    expect(linkOf('/admin/sticker-template')?.textContent).toContain('Sticker-Vorlage')
 
-    // The work surfaces live in the header menu and do not stand here a second time,
-    // and „Meine Bereitschaft“ opens the same /oncall as the header entry.
-    for (const href of ['/tickets', '/tickets/create', '/stats', '/oncall']) {
+    // Every module of the administration keeps its path (WP-M29-06).
+    const modules: [string, string][] = [
+      ['/admin/users', 'Benutzer'],
+      ['/admin/roles', 'Rollen'],
+      ['/admin/groups', 'Gruppen'],
+      ['/admin/statuses', 'Status'],
+      ['/admin/text-templates', 'Störungsarten'],
+      ['/admin/detected-errors', 'Festgestellte Fehler'],
+      ['/admin/escalation', 'Eskalation'],
+      ['/admin/defaults', 'Standardwerte'],
+      ['/admin/oncall', 'Bereitschaftsplan'],
+      ['/admin/channels', 'Kanäle'],
+      ['/admin/delivery', 'Zustellungsprobleme'],
+      ['/admin/email', 'Mailbox des Betriebs'],
+      ['/admin/webhooks', 'Webhooks'],
+      ['/admin/api-keys', 'API-Schlüssel'],
+      ['/admin/bma-sync', 'BMAcloud-Abgleich'],
+    ]
+
+    for (const [href, label] of modules) {
+      expect(linkOf(href)?.textContent).toContain(label)
+    }
+
+    // The work surfaces live in the header menu and do not stand here a second time.
+    for (const href of ['/tickets', '/tickets/create', '/stats']) {
       expect(document.querySelector(`a[href="${href}"]`)).toBeNull()
     }
 
@@ -91,16 +115,14 @@ describe('SettingsPage', () => {
     }
 
     // The administration home is gone: there is no link to /admin itself, the
-    // modules are behind the four topic pages of the „Verwaltung“ section.
+    // modules stand in the menu of the settings.
     const administrationLinks = screen
       .getAllByRole('link')
       .filter((link) => link.getAttribute('href')?.startsWith('/admin'))
       .map((link) => link.getAttribute('href'))
 
-    expect(administrationLinks).toContain('/admin/access')
-    expect(administrationLinks).toContain('/admin/workflow')
-    expect(administrationLinks).toContain('/admin/readiness')
-    expect(administrationLinks).toContain('/admin/messaging')
+    expect(administrationLinks).toContain('/admin/users')
+    expect(administrationLinks).toContain('/admin/channels')
     expect(administrationLinks).not.toContain('/admin')
 
     expect(screen.getByRole('button', { name: 'Abmelden' })).toBeTruthy()

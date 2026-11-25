@@ -63,6 +63,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the requested channel — Matrix with its homeserver and its room, ntfy with its
   topic and its verification, and every other kind with its own fields. An
   unknown channel stays without a form and names itself as not found.
+- The settings keep every path (**WP-M29-10**, phase 29, ADR-0051): the menu
+  names every module of the administration again — users, roles, groups,
+  statuses, fault types, detected errors, escalation, default values, readiness
+  plan, channels, delivery problems, mailbox of the office, webhooks, API keys,
+  BMAcloud sync — with its symbol, its label and its description. The four topic
+  pages of WP-M29-04 are gone: they had hidden the paths of the settings behind
+  a second click. The symbol keeps its distance to the text now (`gap-3`), and
+  two symbols came with it — `clock` for the own readiness and `printer` for the
+  sticker sheets.
 - The administration splits into four topic pages (**WP-M29-04**, phase 29): Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand. Each page lists its modules with a symbol and a short description, reusing the settings menu component. The menu entries link to the topic pages instead of the individual modules.
 - The settings menu is single-column with a symbol and a description per entry
   (**WP-M29-03**, phase 29, ADR-0051): a shared `settings-menu.tsx` component

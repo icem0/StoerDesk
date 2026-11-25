@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 
 import { App } from '../App'
-import { AccessPage } from '../admin/access-page'
 import { ApiKeysPage } from '../admin/api-keys-page'
 import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
@@ -35,15 +34,12 @@ import { DetectedErrorsPage } from '../admin/detected-errors-page'
 import { DetectedErrorCreatePage } from '../admin/detected-error-create-page'
 import { OncallPage } from '../admin/oncall-page'
 import { OncallPoolCreatePage } from '../admin/oncall-pool-create-page'
-import { ReadinessPage } from '../admin/readiness-page'
 import { TextTemplatesPage } from '../admin/text-templates-page'
 import { TextTemplateCreatePage } from '../admin/text-template-create-page'
 import { UsersPage } from '../admin/users-page'
 import { UserCreatePage } from '../admin/user-create-page'
 import { RequireSession } from '../auth/require-session'
-import { MessagingPage } from '../admin/messaging-page'
 import { MyShiftsPage } from '../features/oncall/my-shifts-page'
-import { WorkflowPage } from '../admin/workflow-page'
 import { InboxPage } from '../features/notifications/inbox-page'
 import { WebPushHelpPage } from '../features/notifications/web-push-help-page'
 import { TvPage } from '../features/dashboard/tv-page'
@@ -245,41 +241,6 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <BmaSyncPage />
-          </RequireSession>
-        ),
-      },
-      {
-        // Die Übersichtsseiten der Verwaltung (WP-M29-04): statt einer flachen
-        // Liste aller Module führt das Einstellungsmenü auf die vier
-        // Themen-Seiten, die ihre Module einzeln auflisten.
-        path: '/admin/access',
-        element: (
-          <RequireSession>
-            <AccessPage />
-          </RequireSession>
-        ),
-      },
-      {
-        path: '/admin/workflow',
-        element: (
-          <RequireSession>
-            <WorkflowPage />
-          </RequireSession>
-        ),
-      },
-      {
-        path: '/admin/readiness',
-        element: (
-          <RequireSession>
-            <ReadinessPage />
-          </RequireSession>
-        ),
-      },
-      {
-        path: '/admin/messaging',
-        element: (
-          <RequireSession>
-            <MessagingPage />
           </RequireSession>
         ),
       },

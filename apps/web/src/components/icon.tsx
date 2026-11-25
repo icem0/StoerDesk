@@ -33,6 +33,8 @@ export type IconName =
   | 'log-out'
   | 'search'
   | 'chevron-down'
+  | 'clock'
+  | 'printer'
   | 'arrow-left'
   | 'settings'
   | 'home'
@@ -170,6 +172,15 @@ const ICONS: Record<IconName, ReactNode> = {
     <line x1="21" y1="21" x2="16.65" y2="16.65" key="b" />,
   ],
   'chevron-down': [<polyline points="6 9 12 15 18 9" key="a" />],
+  clock: [
+    <circle cx="12" cy="12" r="9" key="a" />,
+    <polyline points="12 7 12 12 15.5 14" key="b" />,
+  ],
+  printer: [
+    <polyline points="6 9 6 2 18 2 18 9" key="a" />,
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" key="b" />,
+    <rect x="6" y="14" width="12" height="8" key="c" />,
+  ],
   'arrow-left': [
     <line x1="19" y1="12" x2="5" y2="12" key="a" />,
     <polyline points="12 19 5 12 12 5" key="b" />,
