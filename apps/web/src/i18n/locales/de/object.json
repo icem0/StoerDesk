@@ -175,5 +175,23 @@
     "normal": "Normal",
     "high": "Hoch",
     "critical": "Kritisch"
+  },
+  "assignments": {
+    "title": "Eingewiesene Personen",
+    "hint": "Die Kunden, die für dieses Objekt eingewiesen sind. Sie sehen ihre Meldungen im Kundenportal.",
+    "loading": "Die eingewiesenen Personen werden geladen …",
+    "empty": "Für dieses Objekt ist noch niemand eingewiesen.",
+    "add": "Kunde hinzufügen",
+    "choose": "Kunde wählen …",
+    "addButton": "Hinzufügen",
+    "remove": "Entfernen",
+    "errors": {
+      "customer_not_found": "Dieser Kunde existiert nicht.",
+      "object_assignee_exists": "Dieser Kunde ist bereits eingewiesen.",
+      "object_assignment_not_found": "Diese Zuweisung gibt es nicht.",
+      "object_not_found": "Das Objekt existiert nicht.",
+      "forbidden": "Dafür fehlt dir die Berechtigung.",
+      "internal_error": "Die Zuweisung wurde nicht gespeichert."
+    }
   }
 }

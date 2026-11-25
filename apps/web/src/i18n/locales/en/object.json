@@ -175,5 +175,23 @@
     "normal": "Normal",
     "high": "High",
     "critical": "Critical"
+  },
+  "assignments": {
+    "title": "Trained people",
+    "hint": "The customers who were instructed for this object. They see their reports in the customer portal.",
+    "loading": "The trained people are loading …",
+    "empty": "Nobody was instructed for this object yet.",
+    "add": "Add a customer",
+    "choose": "Choose a customer …",
+    "addButton": "Add",
+    "remove": "Remove",
+    "errors": {
+      "customer_not_found": "This customer does not exist.",
+      "object_assignee_exists": "This customer is already a trained person.",
+      "object_assignment_not_found": "This assignment does not exist.",
+      "object_not_found": "The object does not exist.",
+      "forbidden": "You lack the permission for this.",
+      "internal_error": "The assignment was not saved."
+    }
   }
 }

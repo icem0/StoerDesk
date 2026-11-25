@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { ObjectSummary, TicketPriority } from '@stoerdesk/shared'
 import { apiFetch } from '../../lib/api'
+import { ObjectAssignments } from './object-assignments'
 
 /**
  * Object edit page (`specs/08-objects-api.md` §9.1, WP-M2-13).
@@ -60,8 +61,10 @@ export function ObjectEditPage() {
       if (postalCode !== objectQuery.data?.postalCode) payload.postalCode = postalCode || null
       if (city !== objectQuery.data?.city) payload.city = city || null
       if (contactName !== objectQuery.data?.contactName) payload.contactName = contactName || null
-      if (contactPhone !== objectQuery.data?.contactPhone) payload.contactPhone = contactPhone || null
-      if (contactEmail !== objectQuery.data?.contactEmail) payload.contactEmail = contactEmail || null
+      if (contactPhone !== objectQuery.data?.contactPhone)
+        payload.contactPhone = contactPhone || null
+      if (contactEmail !== objectQuery.data?.contactEmail)
+        payload.contactEmail = contactEmail || null
       if (externalId !== objectQuery.data?.externalId) payload.externalId = externalId || null
       if (notes !== objectQuery.data?.notes) payload.notes = notes || null
       if (priority !== (objectQuery.data?.priorityOverride ?? 'standard')) {
@@ -99,7 +102,11 @@ export function ObjectEditPage() {
   }
 
   if (objectQuery.isError) {
-    return <p className="text-rose-400 text-sm" role="alert">{t('edit.errors.objectNotFound')}</p>
+    return (
+      <p className="text-rose-400 text-sm" role="alert">
+        {t('edit.errors.objectNotFound')}
+      </p>
+    )
   }
 
   const object = objectQuery.data
@@ -126,7 +133,9 @@ export function ObjectEditPage() {
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-between sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold">{t('edit.title', { objectNo: object.objectNo })}</h1>
+          <h1 className="text-xl font-semibold">
+            {t('edit.title', { objectNo: object.objectNo })}
+          </h1>
           <p className="text-sm text-slate-400">{t('edit.hint')}</p>
         </div>
         <button
@@ -139,14 +148,14 @@ export function ObjectEditPage() {
       </div>
 
       {error !== null ? (
-        <p className="text-rose-400 text-sm" role="alert">{error}</p>
+        <p className="text-rose-400 text-sm" role="alert">
+          {error}
+        </p>
       ) : null}
 
       <form className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">
-            {t('edit.fields.objectNo')}
-          </label>
+          <label className="text-sm font-medium text-slate-200">{t('edit.fields.objectNo')}</label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100 font-mono"
             maxLength={32}
@@ -157,9 +166,7 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">
-            {t('edit.fields.name')}
-          </label>
+          <label className="text-sm font-medium text-slate-200">{t('edit.fields.name')}</label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={200}
@@ -180,7 +187,9 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.houseNumber')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('edit.fields.houseNumber')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={40}
@@ -190,7 +199,9 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.postalCode')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('edit.fields.postalCode')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={20}
@@ -210,7 +221,9 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.contactName')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('edit.fields.contactName')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={160}
@@ -220,7 +233,9 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.contactPhone')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('edit.fields.contactPhone')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={60}
@@ -230,7 +245,9 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.contactEmail')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('edit.fields.contactEmail')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={320}
@@ -241,7 +258,9 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.externalId')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('edit.fields.externalId')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={120}
@@ -286,6 +305,7 @@ export function ObjectEditPage() {
           </button>
         </div>
       </form>
+      <ObjectAssignments objectNo={object.objectNo} />
     </section>
   )
 }
