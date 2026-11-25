@@ -3,7 +3,8 @@ import { and, eq, gte, sql } from 'drizzle-orm'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { outbox } from '../db/schema'
-import { configuredChannels } from './channels'
+import { configuredChannels, emailEnvironment } from './channels'
+import { readEmailChannelConfiguration } from './config'
 import { effectiveNtfyConfig } from './verification'
 
 type Db = Database['database']
@@ -86,7 +87,11 @@ export async function warningChannelOf(
     NTFY_TOPIC: ntfy?.topic ?? '',
     NTFY_TOKEN: ntfy?.token ?? env.NTFY_TOKEN,
   }
-  const chain = configuredChannels(effective).map((channel) => channel.name)
+  // The chain carries the saved configuration of the administration: the mailbox
+  // of the office is a channel of the chain like every other configured channel
+  // (ADR-0046, WP-M41-02).
+  const email = await readEmailChannelConfiguration(database, env)
+  const chain = configuredChannels(emailEnvironment(effective, email)).map((channel) => channel.name)
 
   return chain.find((channel) => channel !== brokenChannel) ?? ''
 }

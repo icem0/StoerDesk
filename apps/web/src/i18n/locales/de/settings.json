@@ -610,7 +610,7 @@
         "http_429": "Zu viele Anfragen (429): später erneut versuchen.",
         "channel_unconfigured": "Kanal nicht konfiguriert: der ntfy-Kanal ist nicht aktiviert oder noch nicht verifiziert — zuerst konfigurieren und den Verifizierungscode eingeben.",
         "http_timeout": "Keine Antwort rechtzeitig (Timeout): der ntfy-Server hat innerhalb von zehn Sekunden nicht geantwortet — Adresse und Netzwerk prüfen; der Versand bleibt wiederholbar.",
-        "channel_error": "Der Kanal has answered with the error code {{code}}: The reason waits in the log of the API and on the page of the delivery problems."
+        "channel_error": "Der Kanal hat mit dem Fehlercode {{code}} geantwortet: der Grund steht im Log der API und auf der Seite der Zustellprobleme."
       },
       "failing": {
         "title": "Zustellung gestört",
@@ -702,7 +702,7 @@
         "push_send_failed": "Der Versand ist gescheitert, bevor eine Anfrage den Server verlassen hat (ungültiges Geräte-Abo oder fehlende Push-Bibliothek). Lösung: API-Log prüfen; das Gerät unter Einstellungen → Benachrichtigungen abmelden und neu anmelden.",
         "vapid_key_mismatch": "Der öffentliche und der private VAPID-Schlüssel gehören nicht zusammen. Lösung: neues Schlüsselpaar erzeugen und beide Werte gemeinsam auf der Kanalseite eintragen.",
         "channel_unconfigured": "Der Kanal ist nicht konfiguriert oder nicht aktiviert.",
-        "channel_not_configured": "The channel is not completely configured: the fields on the card are still missing — nothing arrives without a target.",
+        "channel_not_configured": "Der Kanal ist nicht vollständig konfiguriert: ihm fehlt das Ziel — ohne Ziel kommt keine Nachricht an.",
         "unknown": "Die Zustellung ist mit einem unbekannten Fehler fehlgeschlagen.",
         "webpush": {
           "send_failed": "Der Push-Dienst hat die Zustellung nicht angenommen."

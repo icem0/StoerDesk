@@ -54,7 +54,7 @@ describe('sendEmailNotification', () => {
         '',
         factory as unknown as typeof createTransport,
       ),
-    ).rejects.toThrow(expect.objectContaining({ code: 'no_recipient' }))
+    ).rejects.toThrow(expect.objectContaining({ code: 'no_recipients' }))
     expect(factory).not.toHaveBeenCalled()
   })
 

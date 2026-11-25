@@ -1,6 +1,7 @@
 import type { Database } from '../../db/client'
+import { loadEnv } from '../../config/env'
 import { newNtfyTopic } from '../accounts'
-import { pushSubscriptions } from '../../db/schema'
+import { notificationChannels, pushSubscriptions } from '../../db/schema'
 import { personalRecipients, userChannels } from '../receivers'
 import { describe, expect, it } from 'vitest'
 
@@ -14,6 +15,14 @@ interface AccountRow {
   verifiedAt: Date | null
 }
 
+/** One row of `notification_channels` as the select of the service reads it. */
+interface ChannelRow {
+  kind: string
+  enabled: boolean
+  config: Record<string, string>
+  secret: string
+}
+
 /**
  * No PostgreSQL is involved: the channels of a user are a select over the
  * `notification_accounts` rows with a confirmation and a select over the
@@ -21,7 +30,11 @@ interface AccountRow {
  * so the test proves which channel of a user takes part in a delivery
  * (`specs/10-notifications.md` §11.3a, ADR-0045).
  */
-function fakeSelect(accounts: AccountRow[], devices: string[] = []): DbSelect {
+function fakeSelect(
+  accounts: AccountRow[],
+  devices: string[] = [],
+  channels: ChannelRow[] = [],
+): DbSelect {
   const builder = (rows: Array<Record<string, unknown>> | AccountRow[]) => ({
     limit: async (count: number) => rows.slice(0, count),
     then: (resolve: (value: unknown) => unknown) => Promise.resolve(rows).then(resolve),
@@ -29,14 +42,22 @@ function fakeSelect(accounts: AccountRow[], devices: string[] = []): DbSelect {
 
   return {
     select: (_columns: unknown) => ({
-      from: (table: unknown) => ({
-        where: () =>
-          builder(
-            table === pushSubscriptions
-              ? devices.map((userId) => ({ userId, endpoint: `https://push/${userId}` }))
-              : accounts.filter((account) => account.verifiedAt !== null),
-          ),
-      }),
+      from: (table: unknown) => {
+        // The saved rows of the channels (§11.2): the fallback of a user
+        // without a confirmed channel reads the row of the e-mail channel.
+        if (table === notificationChannels) {
+          return channels
+        }
+
+        return {
+          where: () =>
+            builder(
+              table === pushSubscriptions
+                ? devices.map((userId) => ({ userId, endpoint: `https://push/${userId}` }))
+                : accounts.filter((account) => account.verifiedAt !== null),
+            ),
+        }
+      },
     }),
   } as unknown as DbSelect
 }
@@ -96,5 +117,22 @@ describe('the channels of a user (ADR-0045)', () => {
     )
 
     expect(channels).toEqual([])
+  })
+
+  it('falls back to the chain of the installation — the mailbox of the administration is a channel (WP-M41-02)', async () => {
+    const recipients = await personalRecipients(
+      fakeSelect([], [], [
+        {
+          kind: 'email',
+          enabled: true,
+          config: { host: 'smtp.office365.com', from: 'office@example.invalid' },
+          secret: 'app-password',
+        },
+      ]),
+      ['user-a'],
+      loadEnv({}),
+    )
+
+    expect(recipients).toEqual([{ userId: 'user-a', channel: 'email', target: '' }])
   })
 })

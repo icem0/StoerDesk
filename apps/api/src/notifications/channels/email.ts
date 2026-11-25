@@ -202,7 +202,7 @@ export async function sendEmailNotification(
   const recipients = (config.to ?? []).map((address) => address.trim()).filter((address) => address !== '')
 
   if (recipients.length === 0) {
-    throw new EmailError('no_recipient', 'No recipient address configured')
+    throw new EmailError('no_recipients', 'No recipient address configured')
   }
 
   const transporter = createTransportImpl({

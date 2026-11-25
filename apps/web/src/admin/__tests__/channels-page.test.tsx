@@ -305,7 +305,7 @@ describe('ChannelsPage', () => {
     const buttons = await screen.findAllByText('Testnachricht senden')
     fireEvent.click(buttons[0] as HTMLElement)
 
-    expect(await screen.findByText(/error code http_407/)).toBeTruthy()
+    expect(await screen.findByText(/Fehlercode http_407/)).toBeTruthy()
     expect(screen.queryByText(/bereits vergeben/)).toBeNull()
   })
 

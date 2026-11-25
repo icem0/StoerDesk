@@ -17,7 +17,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped minimum channels integration: ${testDatabase.reason}\n`)
 }
 
-const { users, roles, userRoles, settings } = schema
+const { notificationChannels, users, roles, userRoles, settings } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 type MinimumChannelsBody = { channels: string[] }
@@ -354,6 +354,27 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         params: { fields: ['minimumChannelCount'] },
       })
     })
+
+    it('names the mailbox of the administration a configured channel (WP-M41-02)', async () => {
+      await db.insert(notificationChannels).values({
+        kind: 'email',
+        name: 'email',
+        enabled: true,
+        config: { host: 'smtp.office365.com', from: 'office@example.invalid' },
+      })
+
+      const response = await putPolicy(cookies['admin'], {
+        requiredChannels: ['email'],
+        minimumChannelCount: 1,
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<ChannelPolicyBody>()).toEqual({
+        requiredChannels: ['email'],
+        minimumChannelCount: 1,
+      })
+    })
+
   },
 )
 

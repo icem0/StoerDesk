@@ -1906,8 +1906,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M38-04   | the landing page of the customer — `/portal` with the open tickets first, one open ticket opens its detail, a customer lands in his portal | planned | yes |
 | WP-M39-01   | the update starts even when the versions cannot be compared — the start refuses only the proven up-to-date state, the panel offers the button in the unknown state and names the consequence | done | yes |
 | WP-M40-01   | the double tap does not zoom the page — `touch-action: manipulation` forbids the browser zoom of a double tap and keeps the pinch zoom | done | yes |
-| WP-M41-01   | the mailbox of the administration is a configured channel — the saved SMTP configuration reaches the test send, the notifications of the tickets and the escalation chain | planned | yes |
-| WP-M41-02   | the e-mail channel is named in the lists of the channels — the rule of the administration, the stages of the escalation, the fallback of a user and the warning of a broken channel | planned | yes |
+| WP-M41-01   | the mailbox of the administration is a configured channel — the saved SMTP configuration reaches the test send, the notifications of the tickets and the escalation chain | done | yes |
+| WP-M41-02   | the e-mail channel is named in the lists of the channels — the rule of the administration, the stages of the escalation, the fallback of a user and the warning of a broken channel | done | yes |
 
 **Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
 configured the SMTP connection of Office 365 in the administration and the test
@@ -1920,7 +1920,8 @@ configuration the configuration of the channel: the reader of the effective
 configuration of the e-mail channel, the environment with those values for the
 adapters, the test send that uses them and the outbox that announces a ticket
 over the mailbox. **WP-M41-02** names the mailbox in the lists of the channels
-and translates the German text of the reason `channel_not_configured`.
+and translates the German text of the reason `channel_not_configured`. Both are
+implemented — the phase is closed.
 
 **Phase 40 is closed (WP-M40-01, out of band).** A double tap on a phone screen
 zoomed the page into the touched place: the report form and the ticket list

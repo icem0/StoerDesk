@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { loadEnv } from '../../config/env'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
-import { enqueueChannelHealthWarnings, evaluateChannelHealth } from '../health'
+import { enqueueChannelHealthWarnings, evaluateChannelHealth, warningChannelOf } from '../health'
 import { messageOf } from '../outbox'
 
 const testDatabase = await openTestDatabase()
@@ -18,7 +18,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped channel health integration: ${testDatabase.reason}\n`)
 }
 
-const { outbox } = schema
+const { notificationChannels, outbox } = schema
 
 function onlyRow<T>(rows: T[], what: string): T {
   const [row] = rows
@@ -136,6 +136,24 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(message.title).toBe('Web Push')
       expect(message.body).toContain('Web Push')
       expect(message.body).toContain('push_subscription_dead')
+    })
+
+    it('warns over the mailbox of the administration (WP-M41-02)', async () => {
+      const suffix = randomUUID().slice(0, 6)
+      const broken = `warn-mailbox-${suffix}`
+
+      await row(broken, 'FAILED', { lastError: 'send_failed' })
+
+      // The mailbox of the administration is the only channel of the instance:
+      // the environment carries no SMTP key.
+      await db.insert(notificationChannels).values({
+        kind: 'email',
+        name: 'email',
+        enabled: true,
+        config: { host: 'smtp.office365.com', from: 'office@example.invalid' },
+      })
+
+      expect(await warningChannelOf(db, loadEnv({}), broken)).toBe('email')
     })
   },
 )

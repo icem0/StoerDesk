@@ -928,7 +928,7 @@ over the mailbox. **WP-M41-02** names the mailbox in the lists of the channels
 (the rule of the administration, the stages of the escalation, the fallback of a
 user without a confirmed channel, the warning of a broken channel) and
 translates the German text of the reason `channel_not_configured` — the office
-read an English text on a German page.
+read an English text on a German page. **The phase is closed.**
 
 **Phase 40 has started and is closed (WP-M40-01, out of band).** The office asked
 to suppress the zoom of the browser that happens when a finger taps twice on a

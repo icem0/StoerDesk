@@ -5,7 +5,8 @@ import type { NotificationChannelKind } from '@stoerdesk/shared'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { notificationAccounts, pushSubscriptions } from '../db/schema'
-import { configuredChannels } from './channels'
+import { configuredChannels, emailEnvironment } from './channels'
+import { readEmailChannelConfiguration } from './config'
 
 /**
  * The channels of the users (`specs/10-notifications.md` §11.3, §11.4, ADR-0045):
@@ -145,9 +146,13 @@ export async function personalRecipients(
 
   // The fallback of the delivery (§11.7, ADR-0045): a user without a confirmed
   // channel is notified over the chain of the installation — a message never
-  // stays in the queue because a user has no channel of his own.
+  // stays in the queue because a user has no channel of his own. The chain
+  // carries the saved configuration of the administration: the mailbox of the
+  // office is a channel of the chain like every other configured channel
+  // (ADR-0046, WP-M41-02).
   if (env !== undefined) {
-    const chain = configuredChannels(env)
+    const email = await readEmailChannelConfiguration(database, env)
+    const chain = configuredChannels(emailEnvironment(env, email))
 
     for (const userId of userIds) {
       if (recipients.some((recipient) => recipient.userId === userId)) {

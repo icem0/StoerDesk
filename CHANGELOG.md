@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **The e-mail channel is named in the lists of the channels (WP-M41-02).** The
+  mailbox of the administration is a channel of the instance since WP-M41-01,
+  but the lists still knew the environment alone: the rule of the administration
+  refused the e-mail channel as unconfigured, the stages of the escalation could
+  not name it, a user without a confirmed channel did not get the message over
+  it, and the warning of a broken channel had no way out. The four lists read
+  the saved configuration now. The German text of the reason
+  `channel_not_configured` is German — the office read „The channel is not
+  completely configured“ on a German page — and the adapter of the e-mail
+  channel answers the code of the texts (`no_recipients`).
 - **The SMTP configuration of the administration is the configuration of the
   e-mail channel (WP-M41-01).** The office configured the SMTP connection of
   Office 365 in the administration and the test message answered „Testnachricht

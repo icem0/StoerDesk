@@ -22,7 +22,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped escalation config integration: ${testDatabase.reason}\n`)
 }
 
-const { groups, oncallPools, users, roles, userRoles } = schema
+const { groups, notificationChannels, oncallPools, users, roles, userRoles } = schema
 
 type ErrorResponseBody = { code?: string; params?: Record<string, unknown> }
 
@@ -177,8 +177,25 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect((await putConfig(cookies['office'], { rules: [] })).statusCode).toBe(403)
     })
 
-    it('answers the stages and the rules of the seed', async () => {
-      const response = await getConfig(cookies['admin'])
+    it('names the mailbox of the administration in the channels of the stages (WP-M41-02)', async () => {
+      await db.insert(notificationChannels).values({
+        kind: 'email',
+        name: 'email',
+        enabled: true,
+        config: { host: 'smtp.office365.com', from: 'office@example.invalid' },
+      })
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/escalation/channels',
+        headers: { cookie: cookies['admin'] },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json<{ channels: string[] }>().channels).toContain('email')
+    })
+
+    it('answers the stages and the rules of the seed', async () => {      const response = await getConfig(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
 

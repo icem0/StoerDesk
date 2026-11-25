@@ -1,7 +1,7 @@
 # WP-M41-02: The e-mail channel is named in the lists of the channels
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M41-01
 phase: 41
 milestone: m41
@@ -98,8 +98,11 @@ after it.
 - Interfaces added: none — the lists carry the e-mail channel of the
   administration
 - Verified: `npm run check:static`, `npm run i18n:check`, the cases of the
-  notifications
+  notifications, the cases of the settings and of the escalation
 - Follow-up WP: none — phase 41 is closed
 - Open question: none
 - Notes: `docs/REPO-MAP.md` carries no row of this package — the public API of
-  the four modules does not change, only the list they answer.
+  the four modules does not change, only the list they answer. The rule of the
+  administration reads its list per request: the administration saves a mailbox
+  while the server runs, and a list that was read at the start of the server
+  would refuse the channel until the next restart.

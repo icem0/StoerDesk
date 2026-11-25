@@ -16,7 +16,8 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { settings } from '../db/schema'
-import { configuredChannels } from '../notifications/channels'
+import { configuredChannels, emailEnvironment } from '../notifications/channels'
+import { readEmailChannelConfiguration } from '../notifications/config'
 
 /**
  * The rule of the administration (`specs/10-notifications.md` §11.9, ADR-0045):
@@ -26,7 +27,8 @@ import { configuredChannels } from '../notifications/channels'
  * `GET` — `settings.read`, answers the required channels and the minimum
  * number of channels.
  * `PUT` — `settings.write`, replaces them. Every named channel must be
- * configured (`configuredChannels(env)`) and may not be `signal` — a channel
+ * configured — the registry of the channels with the saved configuration of the
+ * administration (ADR-0046, WP-M41-02) — and may not be `signal` — a channel
  * without an address of the user is a requirement no user could ever fulfil,
  * so it is refused with `422 invalid_request`.
  *
@@ -170,9 +172,21 @@ export async function storeMinimumChannels(database: Db, channels: string[]): Pr
  */
 export const settingsNotificationsRoutes = fp<{ database: Db; env: Env }>(
   async (app, { database, env }) => {
-    const configured = new Set(
-      (await configuredChannels(env)).map((channel) => channel.name),
-    )
+    /**
+     * The channels of the instance that a rule of the administration may name
+     * (§11.9): the saved configuration of the administration wins over the
+     * environment, so the mailbox of the office is a channel of the instance
+     * like every other configured channel (ADR-0046, WP-M41-02). The list is
+     * read per request — the administration saves a mailbox while the server
+     * runs.
+     */
+    const configuredChannelsOf = async (): Promise<Set<string>> => {
+      const email = await readEmailChannelConfiguration(database, env)
+
+      return new Set(
+        configuredChannels(emailEnvironment(env, email)).map((channel) => channel.name),
+      )
+    }
 
     app.get(
       '/api/v1/settings/notifications/channel-policy',
@@ -192,6 +206,7 @@ export const settingsNotificationsRoutes = fp<{ database: Db; env: Env }>(
           return reply.code(400).send({ code: 'invalid_request', params: { fields } })
         }
 
+        const configured = await configuredChannelsOf()
         const unknown = parsed.data.requiredChannels.filter(
           (channel) => !configured.has(channel),
         )
@@ -266,6 +281,7 @@ export const settingsNotificationsRoutes = fp<{ database: Db; env: Env }>(
           return reply.code(400).send({ code: 'invalid_request', params: { fields } })
         }
 
+        const configured = await configuredChannelsOf()
         const unknown = parsed.data.channels.filter((channel) => !configured.has(channel))
 
         if (unknown.length > 0) {

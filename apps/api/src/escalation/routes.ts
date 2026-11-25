@@ -11,7 +11,8 @@ import {
   writeEscalationConfig,
   writeEscalationStages,
 } from './config'
-import { configuredChannels } from '../notifications/channels'
+import { configuredChannels, emailEnvironment } from '../notifications/channels'
+import { readEmailChannelConfiguration } from '../notifications/config'
 import { loadEnv } from '../config/env'
 
 /**
@@ -53,9 +54,17 @@ export const escalationRoutes = fp<EscalationRoutesOptions>(
     app.get(
       '/api/v1/escalation/channels',
       { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
-      async () => ({
-        channels: configuredChannels(loadEnv()).map((channel) => channel.name),
-      }),
+      async () => {
+        // The channels of the instance carry the saved configuration of the
+        // administration: the mailbox of the office is a channel of the
+        // instance like every other configured channel (ADR-0046, WP-M41-02).
+        const env = loadEnv()
+        const email = await readEmailChannelConfiguration(database, env)
+
+        return {
+          channels: configuredChannels(emailEnvironment(env, email)).map((channel) => channel.name),
+        }
+      },
     )
 
     app.get(
