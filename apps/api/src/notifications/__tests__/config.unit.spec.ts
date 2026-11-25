@@ -4,6 +4,7 @@ import {
   channelFingerprint,
   readChannelConfiguration,
   readEffectiveChannel,
+  readEmailChannelConfiguration,
   type ChannelConfiguration,
 } from '../config'
 import { notificationChannelVerifications } from '../../db/schema'
@@ -350,5 +351,75 @@ describe('readEffectiveChannel (the effective configuration with its secret, §1
 
     expect(effective.config.baseUrl).toBe('https://bridge.mock')
     expect(effective.secret).toBe('bridge-bearer')
+  })
+})
+
+describe('readEmailChannelConfiguration (the mailbox of the administration, §11.2, WP-M41-01)', () => {
+  it('counts a mailbox of the administration without any SMTP key of the environment', async () => {
+    const email = await readEmailChannelConfiguration(
+      fakeDatabase([
+        row('email', {
+          config: { host: 'smtp.office365.com', port: '587', from: 'office@example.invalid' },
+          secret: 'app-password',
+        }),
+      ]),
+      loadEnv({}),
+    )
+
+    expect(email.config.host).toBe('smtp.office365.com')
+    expect(email.config.from).toBe('office@example.invalid')
+    expect(email.secret).toBe('app-password')
+    expect(email.enabled).toBe(true)
+    expect(email.usable).toBe(true)
+  })
+
+  it('lets the row of the administration win over the environment', async () => {
+    const email = await readEmailChannelConfiguration(
+      fakeDatabase([
+        row('email', {
+          config: { host: 'smtp.office365.com', from: 'office@example.invalid' },
+        }),
+      ]),
+      loadEnv({ SMTP_HOST: 'smtp.env', SMTP_FROM: 'from@env' }),
+    )
+
+    expect(email.config.host).toBe('smtp.office365.com')
+    expect(email.config.from).toBe('office@example.invalid')
+  })
+
+  it('keeps the environment while the row of the administration carries no value', async () => {
+    const email = await readEmailChannelConfiguration(
+      fakeDatabase([row('email')]),
+      loadEnv({ SMTP_HOST: 'smtp.env', SMTP_FROM: 'from@env' }),
+    )
+
+    expect(email.config.host).toBe('smtp.env')
+    expect(email.config.from).toBe('from@env')
+    expect(email.enabled).toBe(true)
+  })
+
+  it('is not enabled while the administration switched the channel off', async () => {
+    const email = await readEmailChannelConfiguration(
+      fakeDatabase([
+        row('email', {
+          enabled: false,
+          config: { host: 'smtp.office365.com', from: 'office@example.invalid' },
+        }),
+      ]),
+      loadEnv({}),
+    )
+
+    expect(email.usable).toBe(true)
+    expect(email.enabled).toBe(false)
+  })
+
+  it('cannot send without a host and a sender', async () => {
+    const email = await readEmailChannelConfiguration(
+      fakeDatabase([row('email', { config: { from: 'office@example.invalid' } })]),
+      loadEnv({}),
+    )
+
+    expect(email.usable).toBe(false)
+    expect(email.enabled).toBe(false)
   })
 })

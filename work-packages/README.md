@@ -50,6 +50,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m36](m36/) | Phase 36: an explanation of a place is a help popover — one component with the info symbol opens a panel at the place, never a hover-only tooltip; the explanation exists in two tiers in the namespace `help`; the settings menu keeps a readable summary visible and puts the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a help page carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | 8   |
 | [m39](m39/) | Phase 39: the update starts without a comparison — the update menu of the administration offers the button „Update starten“ also when the versions cannot be compared; a comparison that GitHub refuses is an unknown state, not a proof that nothing is newer (WP-M39-01) — **out of band** | 1   |
 | [m40](m40/) | Phase 40: the double tap does not zoom the page — the report form and the ticket list stay at the place the finger touched, while the pinch zoom stays available (WP-M40-01) — **out of band** | 1   |
+| [m41](m41/) | Phase 41: the mailbox of the administration is a configured channel — the saved SMTP configuration wins over the environment of the installation: the test send, the notifications of the tickets and the escalation chain use it (WP-M41-01, WP-M41-02) — **out of band** | 2   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1905,6 +1906,21 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M38-04   | the landing page of the customer — `/portal` with the open tickets first, one open ticket opens its detail, a customer lands in his portal | planned | yes |
 | WP-M39-01   | the update starts even when the versions cannot be compared — the start refuses only the proven up-to-date state, the panel offers the button in the unknown state and names the consequence | done | yes |
 | WP-M40-01   | the double tap does not zoom the page — `touch-action: manipulation` forbids the browser zoom of a double tap and keeps the pinch zoom | done | yes |
+| WP-M41-01   | the mailbox of the administration is a configured channel — the saved SMTP configuration reaches the test send, the notifications of the tickets and the escalation chain | planned | yes |
+| WP-M41-02   | the e-mail channel is named in the lists of the channels — the rule of the administration, the stages of the escalation, the fallback of a user and the warning of a broken channel | planned | yes |
+
+**Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
+configured the SMTP connection of Office 365 in the administration and the test
+message answered „Testnachricht fehlgeschlagen: The channel is not completely
+configured“. The registry of the channels knew the environment alone, and the
+environment of the installation carries no SMTP key — so the mailbox of the
+administration was no channel of the instance, although §11.2 says that the row
+of the administration wins over the environment. **WP-M41-01** makes the saved
+configuration the configuration of the channel: the reader of the effective
+configuration of the e-mail channel, the environment with those values for the
+adapters, the test send that uses them and the outbox that announces a ticket
+over the mailbox. **WP-M41-02** names the mailbox in the lists of the channels
+and translates the German text of the reason `channel_not_configured`.
 
 **Phase 40 is closed (WP-M40-01, out of band).** A double tap on a phone screen
 zoomed the page into the touched place: the report form and the ticket list

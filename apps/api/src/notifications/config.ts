@@ -10,6 +10,9 @@ import {
 
 type Db = Database['database']
 
+/** The read capability — enough for the live database and a transaction node. */
+type DbSelect = Pick<Db, 'select'>
+
 /** The seven channel kinds of `specs/10-notifications.md` §11.1 (§11.10). */
 const kinds = NOTIFICATION_CHANNEL_KINDS
 
@@ -237,16 +240,7 @@ export async function readEffectiveChannel(
     .where(eq(notificationChannels.kind, kind))
     .limit(1)
 
-  const fallback = environmentSettings(env)[kind]
-  const config: Record<string, string> = { ...fallback.config }
-
-  for (const [key, value] of Object.entries(row === undefined ? {} : publicSettings(row.config))) {
-    if (value !== '') {
-      config[key] = value
-    }
-  }
-
-  let secret = row === undefined || row.secret === '' ? fallback.secret : row.secret
+  const effective = effectiveSettings(row, environmentSettings(env)[kind])
 
   // The VAPID trio is one value: the row of the administration wins over the
   // environment as a whole (WP-M14-158) — the same rule as in
@@ -259,12 +253,85 @@ export async function readEffectiveChannel(
       env,
     )
 
-    config.publicKey = trio.publicKey
-    config.subject = trio.subject
-    secret = trio.privateKey
+    effective.config.publicKey = trio.publicKey
+    effective.config.subject = trio.subject
+    effective.secret = trio.privateKey
   }
 
-  return { config, secret }
+  return effective
+}
+
+/**
+ * Merges the row of the administration over the environment of the kind: a
+ * value of the row wins, an **empty** value of the row does not override the
+ * environment (a field that was cleared in the administration falls back to
+ * the environment instead of becoming an empty address), and the write-only
+ * secret of the row wins over the secret of the environment (§11.2).
+ */
+function effectiveSettings(
+  row: { config: unknown; secret: string } | undefined,
+  fallback: EnvironmentSettings,
+): EffectiveChannel {
+  const config: Record<string, string> = { ...fallback.config }
+
+  for (const [key, value] of Object.entries(row === undefined ? {} : publicSettings(row.config))) {
+    if (value !== '') {
+      config[key] = value
+    }
+  }
+
+  return {
+    config,
+    secret: row === undefined || row.secret === '' ? fallback.secret : row.secret,
+  }
+}
+
+/**
+ * The effective configuration of the e-mail channel with its state (ADR-0046,
+ * §11.2): the row of the administration wins over the environment — the SMTP
+ * connection, the sender and the templates live in the row — and the state
+ * says whether the channel may send at all.
+ *
+ * A channel that the administration switched off is not enabled, and a channel
+ * without a host or without a sender cannot send: both leave the e-mail
+ * channel out of the registry of the channels (WP-M41-01).
+ */
+export interface EmailChannelConfiguration extends EffectiveChannel {
+  /** False while the administration switched the channel off. */
+  enabled: boolean
+  /** True while the channel can send: a host and a sender are there. */
+  usable: boolean
+}
+
+/**
+ * Reads the effective configuration of the e-mail channel (ADR-0046, §11.2):
+ * the row of the administration wins over the environment of the SMTP keys.
+ * The row is read without a filter of the database — the table holds one row
+ * per kind, so the rows are few and the answer of the query is the row of the
+ * e-mail channel.
+ */
+export async function readEmailChannelConfiguration(
+  database: DbSelect,
+  env: Env,
+): Promise<EmailChannelConfiguration> {
+  const rows = await database
+    .select({
+      kind: notificationChannels.kind,
+      enabled: notificationChannels.enabled,
+      config: notificationChannels.config,
+      secret: notificationChannels.secret,
+    })
+    .from(notificationChannels)
+
+  const row = rows.find((entry) => entry.kind === 'email')
+  const effective = effectiveSettings(row, environmentSettings(env).email)
+  const usable = effective.config.host !== '' && effective.config.from !== ''
+
+  return {
+    ...effective,
+    enabled: (row?.enabled ?? true) && usable,
+    usable,
+  }
 }
 
 /** Narrows a stored kind to one of the seven kinds of §11.1. */

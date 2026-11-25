@@ -2,7 +2,7 @@ import type { Database } from '../../db/client'
 import { loadEnv } from '../../config/env'
 import type { Env } from '../../config/env'
 import { drainOutbox, type ClaimedOutboxRow, type OutboxRow } from '../outbox'
-import { notificationMessages, outbox } from '../../db/schema'
+import { notificationChannels, notificationMessages, outbox } from '../../db/schema'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 type Db = Database['database']
@@ -131,12 +131,21 @@ function inMemoryDatabase(rows: MutableRow[]) {
       },
     }),
     select: (_columns: unknown) => ({
-      from: (_table: unknown) => ({
-        where: (_where: unknown): Array<{ channel: string }> =>
-          rows
-            .filter((row) => row.state === 'PENDING')
-            .map((row) => ({ channel: row.channel })),
-      }),
+      from: (table: unknown) => {
+        // The saved rows of the channels (§11.2): the drain reads the row of
+        // the e-mail channel, the unit test has none — the environment alone
+        // decides which channels exist.
+        if (table === notificationChannels) {
+          return [] as Array<Record<string, unknown>>
+        }
+
+        return {
+          where: (_where: unknown): Array<{ channel: string }> =>
+            rows
+              .filter((row) => row.state === 'PENDING')
+              .map((row) => ({ channel: row.channel })),
+        }
+      },
     }),
     insert: (table: unknown) => ({
       values: async (value: unknown) => {

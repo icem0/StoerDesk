@@ -39,6 +39,12 @@ async function enqueueInto(env: Env): Promise<{
   const messages: Array<{ userId: string; channel: string; title: string; body: string }> = []
 
   const fakeDatabase = {
+    /**
+     * The saved rows of the channels (§11.2): the create path reads the row of
+     * the e-mail channel, the unit test has none — the environment alone
+     * decides which channels exist.
+     */
+    select: () => ({ from: () => [] as Array<Record<string, unknown>> }),
     insert: (table: unknown) => ({
       values: (values: unknown) => {
         // The personal message of a delivery (WP-M14-120b) is written before

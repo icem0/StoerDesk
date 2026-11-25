@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **The SMTP configuration of the administration is the configuration of the
+  e-mail channel (WP-M41-01).** The office configured the SMTP connection of
+  Office 365 in the administration and the test message answered „Testnachricht
+  fehlgeschlagen: The channel is not completely configured“: the registry of the
+  channels knew the **environment** alone (`configuredChannels(env)`), and the
+  environment of the installation carries no SMTP key — so the mailbox of the
+  administration was no channel of the instance, although §11.2 says that the row
+  of the administration wins over the environment. The saved configuration is now
+  the configuration of the channel: the test send reaches the mail server of the
+  row (a refusal of the mail server answers `send_failed`, never a missing
+  configuration), a ticket of the instance is announced over the mailbox, and the
+  escalation chain knows the channel. The page of the mailbox names the reason of
+  a failing test send in words instead of the machine code.
 - **The escalation administration answers a page it may not read with „Speichern
   fehlgeschlagen.“** The page `/admin/escalation` (and the page of the new stage)
   showed the message of a failed save when the configuration could not be read:

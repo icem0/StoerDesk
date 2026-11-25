@@ -46,7 +46,10 @@ function standardText(kind: 'ticket' | 'readiness' | 'test' | 'registration' | '
   })
 }
 
-function stubRoutes(permissions: string[]) {
+function stubRoutes(
+  permissions: string[],
+  testResult: { delivered: boolean; code?: string } = { delivered: true },
+) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL) => {
@@ -62,6 +65,10 @@ function stubRoutes(permissions: string[]) {
             permissions,
           },
         })
+      }
+
+      if (url.includes('/v1/admin/channels/email/test')) {
+        return Response.json(testResult)
       }
 
       if (url.includes('/v1/admin/channels')) {
@@ -162,5 +169,23 @@ describe('EmailPage', () => {
 
     expect(await screen.findByText('Für die Verwaltung des Postfachs fehlt dir die Berechtigung.')).toBeTruthy()
     expect(screen.queryAllByRole('button', { name: 'Standard zurücksetzen' })).toHaveLength(0)
+  })
+
+  it('names the reason of a failing test send instead of the machine code (WP-M41-01)', async () => {
+    stubRoutes(['notification.read', 'notification.write'], { delivered: false, code: 'send_failed' })
+    renderPage()
+
+    const field = await screen.findByLabelText('Empfänger der Testnachricht')
+
+    fireEvent.change(field, { target: { value: 'office@example.org' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Testnachricht senden' }))
+
+    expect(
+      await screen.findByText(
+        'Testnachricht fehlgeschlagen: Der Mailserver hat die Nachricht nicht angenommen.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText(/send_failed/)).toBeNull()
   })
 })

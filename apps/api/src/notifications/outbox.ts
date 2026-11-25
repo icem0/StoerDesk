@@ -14,12 +14,14 @@ import { ONCALL_TIMEZONE, t } from '@stoerdesk/shared'
 import type { NotificationChannelKind, NotificationEventType } from '@stoerdesk/shared'
 import {
   configuredChannels,
+  emailEnvironment,
   type MessageOptions,
   type NotificationChannel,
   type NotificationMessage,
 } from './channels/index'
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 import { readAccountSecret } from './accounts'
+import { readEmailChannelConfiguration } from './config'
 import { personalRecipients } from './receivers'
 import { writeItems } from './items'
 import { effectiveNtfyConfig } from './verification'
@@ -110,15 +112,22 @@ function effectiveEnv(env: Env, ntfy: NtfyConfig | null | undefined): Env {
  * Builds one `PENDING` row per configured channel. `state`, `attempts`,
  * `created_at` and `updated_at` come from the column defaults of migration 0019
  * — the enqueue never sets them, so draining (WP-M7-04b) reads them consistently.
+ *
+ * The registry of the channels carries the saved configuration of the
+ * administration: the mailbox of the office counts as a configured channel
+ * even while the environment of the installation carries no SMTP key
+ * (ADR-0046, WP-M41-01).
  */
-function outboxRows(
+async function outboxRows(
+  database: DbLike,
   ticket: OutboxTicket,
   env: Env,
   ntfy?: NtfyConfig | null,
-): OutboxRow[] {
+): Promise<OutboxRow[]> {
   const params = messageParams(ticket)
+  const email = await readEmailChannelConfiguration(database, env)
 
-  return configuredChannels(effectiveEnv(env, ntfy)).map((channel) => ({
+  return configuredChannels(emailEnvironment(effectiveEnv(env, ntfy), email)).map((channel) => ({
     ticketId: ticket.id,
     channel: channel.name,
     target: params,
@@ -216,6 +225,10 @@ export interface OutboxDrainResult {
  * channel in the escalation chain"): the configured channel names in
  * `configuredChannels` order. A row whose channel is the last entry has no next
  * channel, so its retries end `FAILED` without a fallback.
+ *
+ * The chain carries the saved configuration of the administration: the mailbox
+ * of the office is a channel of the chain like every other configured channel
+ * (ADR-0046, WP-M41-01).
  */
 function escalationChain(env: Env): string[] {
   return configuredChannels(env).map((channel) => channel.name)
@@ -668,10 +681,16 @@ export async function drainOutbox(
   log?: QrCleanupLogger,
   ntfy?: NtfyConfig | null,
 ): Promise<OutboxDrainResult> {
+  // The registry of the channels carries the saved configuration of the
+  // administration: the mailbox of the office counts as a configured channel
+  // even while the environment of the installation carries no SMTP key
+  // (ADR-0046, WP-M41-01).
+  const email = await readEmailChannelConfiguration(database, env)
+  const effective = emailEnvironment(effectiveEnv(env, ntfy), email)
   const channelsByName = new Map<string, NotificationChannel>(
-    configuredChannels(effectiveEnv(env, ntfy)).map((channel) => [channel.name, channel]),
+    configuredChannels(effective).map((channel) => [channel.name, channel]),
   )
-  const chain = escalationChain(effectiveEnv(env, ntfy))
+  const chain = escalationChain(effective)
   const result: OutboxDrainResult = { sent: 0, failed: 0, fallback: 0, attempts: 0 }
 
   while (true) {
@@ -1029,7 +1048,7 @@ export async function enqueueOutbox(
   _eventType: string = 'ticket.created',
   ntfy?: NtfyConfig | null,
 ): Promise<number> {
-  const rows = outboxRows(ticket, env, ntfy)
+  const rows = await outboxRows(database, ticket, env, ntfy)
 
   if (rows.length === 0) {
     return 0
@@ -1101,10 +1120,11 @@ export async function enqueueOncallOutbox(
   // goes over the chain of the installation — the fallback of §11.7: a message
   // never stays in the queue because a user has no channel of his own.
   const personal = await personalRecipients(database, [userId])
+  const email = await readEmailChannelConfiguration(database, env)
   const channels =
     personal.length > 0
       ? personal
-      : configuredChannels(env).map((channel) => ({
+      : configuredChannels(emailEnvironment(env, email)).map((channel) => ({
           userId,
           channel: channel.name as NotificationChannelKind,
           target: '',

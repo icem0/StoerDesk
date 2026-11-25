@@ -4,7 +4,11 @@ import type { Env } from '../../config/env'
 import { databaseConnectionUrl } from '../../config/env'
 import { createDatabase } from '../../db/client'
 import { notificationChannels, pushSubscriptions, users } from '../../db/schema'
-import { readWebPushConfiguration } from '../config'
+import {
+  readEmailChannelConfiguration,
+  readWebPushConfiguration,
+  type EmailChannelConfiguration,
+} from '../config'
 
 export interface NotificationMessage {
   title: string
@@ -206,16 +210,7 @@ const emailChannel = async (
   const { client, database } = createDatabase(databaseConnectionUrl(env))
 
   try {
-    const [row] = await database
-      .select({
-        config: notificationChannels.config,
-        secret: notificationChannels.secret,
-      })
-      .from(notificationChannels)
-      .where(eq(notificationChannels.kind, 'email'))
-
-    const settings = row === undefined ? {} : bridgeSettings(row.config)
-    const password = row === undefined || row.secret === '' ? env.SMTP_PASSWORD : row.secret
+    const email = await readEmailChannelConfiguration(database, env)
 
     const to =
       options?.recipientTarget === undefined
@@ -225,20 +220,20 @@ const emailChannel = async (
     await sendEmailNotification(
       {
         to,
-        host: settings.host ?? env.SMTP_HOST,
-        port: Number(settings.port ?? env.SMTP_PORT),
-        secure: (settings.secure ?? String(env.SMTP_SECURE)) === 'true',
-        user: settings.user ?? env.SMTP_USER,
-        password,
-        from: settings.from ?? env.SMTP_FROM,
-        displayName: settings.displayName ?? '',
+        host: email.config.host ?? '',
+        port: emailPort(email.config.port, env),
+        secure: (email.config.secure ?? 'false') === 'true',
+        user: email.config.user ?? '',
+        password: email.secret,
+        from: email.config.from ?? '',
+        displayName: email.config.displayName ?? '',
         templates: {
-          ticket: settings.templateTicket ?? '',
-          readiness: settings.templateReadiness ?? '',
-          test: settings.templateTest ?? '',
-          registration: settings.templateRegistration ?? '',
-          passwordReset: settings.templatePasswordReset ?? '',
-          customerTicket: settings.templateCustomerTicket ?? '',
+          ticket: email.config.templateTicket ?? '',
+          readiness: email.config.templateReadiness ?? '',
+          test: email.config.templateTest ?? '',
+          registration: email.config.templateRegistration ?? '',
+          passwordReset: email.config.templatePasswordReset ?? '',
+          customerTicket: email.config.templateCustomerTicket ?? '',
         },
       },
       message,
@@ -246,6 +241,54 @@ const emailChannel = async (
     )
   } finally {
     await client.end({ timeout: 5 })
+  }
+}
+
+/**
+ * The port of the mail server: the row of the administration wins, a value that
+ * is no number falls back to the port of the environment (587 without a port
+ * of the row).
+ */
+const emailPort = (port: string | undefined, env: Env): number => {
+  const parsed = Number(port)
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : env.SMTP_PORT
+}
+
+/**
+ * The environment the adapters read with the saved configuration of the
+ * e-mail channel (ADR-0046, §11.2, WP-M41-01): the row of the administration
+ * wins over the environment of the SMTP keys, so a mailbox that the office
+ * configured in the administration counts as a configured channel — even while
+ * the environment of the installation carries no SMTP key at all.
+ *
+ * A channel that the administration switched off leaves the SMTP values empty:
+ * the e-mail channel then stays out of the registry of the channels and no
+ * message goes out over it.
+ */
+export function emailEnvironment(env: Env, email?: EmailChannelConfiguration): Env {
+  if (email === undefined) {
+    return env
+  }
+
+  if (!email.enabled) {
+    return {
+      ...env,
+      SMTP_HOST: '',
+      SMTP_USER: '',
+      SMTP_PASSWORD: '',
+      SMTP_FROM: '',
+    }
+  }
+
+  return {
+    ...env,
+    SMTP_HOST: email.config.host ?? '',
+    SMTP_PORT: emailPort(email.config.port, env),
+    SMTP_SECURE: (email.config.secure ?? 'false') === 'true',
+    SMTP_USER: email.config.user ?? '',
+    SMTP_PASSWORD: email.secret,
+    SMTP_FROM: email.config.from ?? '',
   }
 }
 

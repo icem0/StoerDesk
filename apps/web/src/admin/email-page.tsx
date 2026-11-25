@@ -11,6 +11,7 @@ import type {
 import { ApiError, apiFetch } from '../lib/api'
 import { usePermission } from '../auth/usePermission'
 import { AdminLayout } from '../components/admin-layout'
+import { makeReasonOf } from './channel-form-parts'
 
 /**
  * The mailbox of the instance (`specs/10-notifications.md` §11.5a, §11.12,
@@ -89,9 +90,23 @@ function configOf(channels: ChannelConfigurationListResponse['channels']): MailC
   }
 }
 
+/**
+ * The text of a request that never reached the mail server: the machine code of
+ * the API has a text in the settings namespace, a code without a text names
+ * itself (WP-M41-01).
+ */
+function testErrorText(error: unknown, translate: (key: string) => string): string {
+  const code = error instanceof ApiError && typeof error.code === 'string' ? error.code : 'unknown'
+  const key = `settings:admin.channels.errors.${code}`
+  const translated = translate(key)
+
+  return translated === key ? translate('settings:admin.channels.errors.unknown') : translated
+}
+
 export function EmailPage() {
   const { t } = useTranslation('common')
   const { t: st } = useTranslation('settings')
+  const reasonOf = makeReasonOf(st)
   const queryClient = useQueryClient()
   const mayRead = usePermission('notification.read')
   const mayWrite = usePermission('notification.write')
@@ -433,13 +448,15 @@ export function EmailPage() {
               >
                 {sendTest.data?.delivered
                   ? st('admin.channels.testDelivered')
-                  : st('admin.channels.testFailed', { reason: sendTest.data?.code ?? 'unknown' })}
+                  : st('admin.channels.testFailed', {
+                      reason: reasonOf(sendTest.data?.code ?? '', 'email'),
+                    })}
               </p>
             ) : null}
 
             {sendTest.isError ? (
               <p className="text-sm text-rose-400" role="alert">
-                {sendTest.error instanceof ApiError ? sendTest.error.code : 'unknown'}
+                {testErrorText(sendTest.error, st)}
               </p>
             ) : null}
           </section>

@@ -56,9 +56,9 @@ import {
   outbox,
   pushSubscriptions,
 } from '../db/schema'
-import { configuredChannels, type NotificationChannel } from './channels'
+import { configuredChannels, emailEnvironment, type NotificationChannel } from './channels'
 import { resolveChannelStatus } from '../dashboard/service'
-import { readChannelConfiguration } from './config'
+import { readChannelConfiguration, readEmailChannelConfiguration } from './config'
 import {
   ChannelVerificationError,
   confirmNtfyVerification,
@@ -514,20 +514,32 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         // environment: the admin clicks it right after saving the row. The
         // access token of the ntfy server travels the same way — the write-only
         // `secret` of the row wins over `NTFY_TOKEN` and only ever enters the
-        // `Authorization` header (ADR-0022, WP-M14-51).
+        // `Authorization` header (ADR-0022, WP-M14-51). The mailbox of the
+        // instance travels the same way: the SMTP connection of the row wins
+        // over the environment of the installation (ADR-0046, WP-M41-01).
         const effective =
           channels === undefined && kind.data === 'ntfy'
             ? await effectiveNtfyConfig(database, env, { requireVerified: false })
             : undefined
-        const testRegistry =
+        const mailbox =
+          channels === undefined && kind.data === 'email'
+            ? await readEmailChannelConfiguration(database, env)
+            : undefined
+        const savedEnv = emailEnvironment(
           effective === undefined
-            ? registry
-            : configuredChannels({
+            ? env
+            : {
                 ...env,
                 NTFY_URL: effective?.url ?? '',
                 NTFY_TOPIC: effective?.topic ?? '',
                 NTFY_TOKEN: effective?.token ?? env.NTFY_TOKEN,
-              })
+              },
+          mailbox,
+        )
+        const testRegistry =
+          effective === undefined && mailbox === undefined
+            ? registry
+            : configuredChannels(savedEnv)
 
         // A test send that reaches no device is not a success: the web push
         // delivers to the browsers of the users, and without one single

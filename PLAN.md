@@ -901,11 +901,34 @@ explanation. Offline is a core feature and appears early.
 | **36** | An explanation of a place is a help popover: one component with the info symbol opens a panel at the place — never a hover-only tooltip; the explanation exists in two tiers in the namespace `help` (a visible summary and a panel body); the entry of the settings menu keeps symbol, label and summary visible with the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a page that explains itself carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | no explanation travels in a `title=` any more; on a phone every explanation opens with a tap and is reachable by keyboard; the summary of a settings entry is readable, the detail is one click away; every guarded page has exactly one ⓘ or none where the page explains itself; the 112 notice, the report form, the action bar and the badges of the rules stay visible outside every symbol |
 | **39** | The update starts without a comparison: the update menu of the administration offers the button „Update starten“ also when the versions cannot be compared — a comparison that GitHub refuses is an unknown state, not a proof that nothing is newer (WP-M39-01, out of band) | the administration can start the update even when the installed version is not part of the upstream history; only a comparison that proves the up-to-date state refuses the start |
 | **40** | The double tap does not zoom the page: the report form and the ticket list stay at the place the finger touched, while the pinch zoom of a reader who needs a bigger type stays available (WP-M40-01) | a double tap in a phone browser does not bring the page closer; a pinch zoom still does |
+| **41** | The mailbox of the administration is a configured channel: the row of the e-mail channel wins over the environment of the SMTP keys — the test send, the notifications of the tickets and the escalation chain use the mailbox that the office saved (ADR-0046, WP-M41-01, WP-M41-02) | the test message of a saved mailbox reaches the mail server instead of naming a missing configuration; a ticket of the instance is announced over the mailbox of the administration |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
+configured the SMTP connection of Office 365 in the administration and the test
+message answered „Testnachricht fehlgeschlagen: The channel is not completely
+configured“: the registry of the channels knew the **environment** alone
+(`configuredChannels(env)`), and the environment of the installation carries no
+SMTP key — so the mailbox of the administration was no channel of the instance,
+although §11.2 says that the row of the administration wins over the
+environment. The ntfy channel had this case solved since WP-M14-51 (the
+verified target replaces the environment before the registry is built); the
+e-mail channel never got it. **WP-M41-01** makes the saved configuration the
+configuration of the channel: `readEmailChannelConfiguration` reads the row of
+the e-mail channel (a value of the row wins, an empty value of the row falls
+back to the environment, the write-only secret of the row wins over
+`SMTP_PASSWORD`), `emailEnvironment` hands the adapters an environment with
+those values, the test send of the e-mail kind builds its registry with them,
+and the outbox (the enqueue and the drain) announces a ticket of the instance
+over the mailbox. **WP-M41-02** names the mailbox in the lists of the channels
+(the rule of the administration, the stages of the escalation, the fallback of a
+user without a confirmed channel, the warning of a broken channel) and
+translates the German text of the reason `channel_not_configured` — the office
+read an English text on a German page.
 
 **Phase 40 has started and is closed (WP-M40-01, out of band).** The office asked
 to suppress the zoom of the browser that happens when a finger taps twice on a
