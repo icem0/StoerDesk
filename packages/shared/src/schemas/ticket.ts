@@ -322,6 +322,64 @@ export const publicTicketCommentResponseSchema = z.object({
 })
 
 /**
+ * The public view of an **open** ticket of an object (`specs/06-report-form.md`
+ * §7.10.3, ADR-0061): the holder of the QR code of the object sees the ticket
+ * that is open there.
+ *
+ * The answer is narrow on purpose: the number, the status, the times, the
+ * **public** events of the status and the public comments of the ticket. It
+ * never carries the description, the contact of the reporter, a photo or an
+ * internal entry (ADR-0034, ADR-0038).
+ */
+export const publicObjectTicketSchema = z.object({
+  ticketNo: z.string(),
+  status: ticketStatusSchema,
+  reportedAt: z.iso.datetime(),
+  deadlineAt: z.iso.datetime(),
+  events: z.array(publicTicketEventSchema),
+  comments: z.array(
+    z.object({
+      at: z.iso.datetime(),
+      text: z.string(),
+      faultTemplateKeys: z.array(faultTemplateKeySchema),
+    }),
+  ),
+})
+
+export type PublicObjectTicket = z.infer<typeof publicObjectTicketSchema>
+
+/**
+ * The comment of the object (`specs/06-report-form.md` §7.10.4, ADR-0061): the
+ * **QR token of the object** is the capability — the code is printed on the
+ * object, so its holder stands at the object. The `status_token` of §7.8.2 is
+ * not part of this body: that path stays the path of the reporter of the
+ * ticket (SEC-004).
+ */
+export const publicObjectCommentRequestSchema = z.object({
+  qrToken: qrTokenSchema,
+  clientUuid: z.uuid(),
+  text: trimmedText(2000),
+  faultTemplateKeys: z
+    .array(faultTemplateKeySchema)
+    .max(9)
+    .default([])
+    .refine((keys) => new Set(keys).size === keys.length),
+  contact: publicReportContactSchema.default({
+    name: undefined,
+    phone: undefined,
+    email: undefined,
+  }),
+  locale: z.enum(['de', 'en']).default('de'),
+})
+
+export const publicObjectCommentResponseSchema = z.object({
+  ticketNo: z.string(),
+  at: z.iso.datetime(),
+})
+
+export type PublicObjectComment = z.infer<typeof publicObjectCommentResponseSchema>
+
+/**
  * Internal ticket creation API (`PLAN.md` §7 rule 1, WP-M2-15).
  *
  * Authenticated endpoint for staff (`reporter_internal`, `office`, …). The
@@ -451,6 +509,7 @@ export type PublicOpenTicket = z.infer<typeof publicOpenTicketSchema>
 export type PublicOpenTickets = z.infer<typeof publicOpenTicketsResponseSchema>
 export type PublicTicketCommentRequest = z.infer<typeof publicTicketCommentRequestSchema>
 export type PublicTicketComment = z.infer<typeof publicTicketCommentResponseSchema>
+export type PublicObjectCommentRequest = z.infer<typeof publicObjectCommentRequestSchema>
 
 /**
  * Ticket list API (`PLAN.md` §6, WP-M2-17).

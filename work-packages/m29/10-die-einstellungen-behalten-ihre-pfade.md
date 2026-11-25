@@ -97,4 +97,5 @@ grün; `npm run i18n:check` meldet keinen unbenutzten Schlüssel.
 - Interfaces added: `Icon` mit `clock` und `printer`
 - Verified: the commands above
 - Follow-up WP: WP-M29-07 … WP-M29-09 (die gemeinsame Seitenhülle der Verwaltung, das Ausgangskriterium der Phase)
+- Follow-up WP: WP-M29-11 (die Abschnitte des Menüs klappen nicht zu — jeder Eintrag steht sichtbar da)
 - Open question: none

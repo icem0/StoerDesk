@@ -40,7 +40,7 @@ interfaces:
 - `GET /api/v1/notifications/items` — the tasks of the signed-in user (§11.18)
 - `GET /api/v1/notifications/items/unread-count` — the number of the unhandled tasks
 - `PATCH /api/v1/notifications/items/:id/read` — the read receipt of one own task
-- `GET /api/v1/admin/notifications/deliveries` — the protocol of the delivery (§11.16)
+- `GET /api/v1/admin/notifications/attempts` — the protocol of the delivery (§11.16)
 - the event type `notification.delivery_failed` — the instance event of a failed delivery
 
 ## Task
@@ -49,8 +49,9 @@ interfaces:
    is the **protocol**. One task per user and event (a technician with three
    confirmed channels sees one task and not three), the inbox shows the task
    with its readable text, its deep link and its read receipt — and no channel
-   and no delivery state; the protocol belongs to the administration on
-   `/admin/notifications` and is guarded by `notification.read_all`. A delivery
+   and no delivery state; the protocol belongs to the administration on the
+   page of the delivery `/admin/delivery` and is guarded by
+   `notification.read_all`. A delivery
    that fails finally becomes a task of the administration, delivered over the
    **own confirmed channels** of the recipients and throttled to one task per
    channel and machine code per hour. The decision names the state „handled“

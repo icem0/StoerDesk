@@ -225,16 +225,19 @@ export function PlanningSection({
 
   const mutationError = generate.error ?? update.error ?? remove.error
   const rows = shifts.data?.shifts ?? []
-  const locked = (shift: OnCallShift) => new Date(shift.startsAt) <= new Date()
+  const started = (shift: OnCallShift) => new Date(shift.startsAt) <= new Date()
   /**
-   * The delete of a shift (ADR-0047): a shift that held the duty stays in the
-   * plan — a confirmed or swapped shift, and a published shift that started.
-   * A shift that nobody ever confirmed may be deleted, also when it started.
+   * The delete of a shift (ADR-0047, ADR-0058): a shift that has not started
+   * is released by the delete — also a confirmed one. A shift that started
+   * keeps its place in the history: a confirmed or a swapped shift, and a
+   * published shift that started. A shift that nobody ever confirmed may be
+   * deleted, also when it started.
    */
   const deletable = (shift: OnCallShift) =>
-    shift.state !== 'CONFIRMED' &&
-    shift.state !== 'SWAP_REQUESTED' &&
-    !(shift.state === 'PLANNED' && locked(shift))
+    !started(shift) ||
+    (shift.state !== 'CONFIRMED' &&
+      shift.state !== 'SWAP_REQUESTED' &&
+      shift.state !== 'PLANNED')
   const candidates = members.data?.members ?? []
   const declined = rows.filter((shift) => shift.state === 'DECLINED').length
   const unfilled = rows.filter((shift) => shift.state === 'UNFILLED').length

@@ -1,6 +1,6 @@
 import { and, eq, isNotNull } from 'drizzle-orm'
 
-import type { NotificationChannelKind } from '@stoerdesk/shared'
+import type { ChannelPolicy, NotificationChannelKind } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
 import { notificationAccounts, pushSubscriptions, users } from '../db/schema'
@@ -134,6 +134,34 @@ export async function readUserCompliance(
   const all = await readCompliance(database)
 
   return all.find((entry) => entry.userId === userId)
+}
+
+/**
+ * The compliance of one user with the rule of the administration
+ * (`specs/10-notifications.md` §11.9, §11.19, WP-M35-01): the own page names
+ * the channels that are mandatory and the number of the channels that are
+ * needed — so the answer carries the rule itself. A user without an entry in
+ * the table of the users (a session of a user that was deleted meanwhile)
+ * answers with an empty compliance instead of a broken answer.
+ */
+export async function readUserComplianceWithPolicy(
+  database: Db,
+  userId: string,
+): Promise<UserCompliance & { policy: ChannelPolicy }> {
+  const [compliance, policy] = await Promise.all([
+    readUserCompliance(database, userId),
+    readChannelPolicy(database),
+  ])
+
+  return {
+    userId: compliance?.userId ?? userId,
+    name: compliance?.name ?? '—',
+    channels: compliance?.channels ?? [],
+    missing: compliance?.missing ?? [],
+    channelCount: compliance?.channelCount ?? 0,
+    compliant: compliance?.compliant ?? true,
+    policy,
+  }
 }
 
 /** The confirmed accounts of a user — the helper of the own page. */

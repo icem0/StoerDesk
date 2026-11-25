@@ -61,7 +61,25 @@
   "report": {
     "title": "Störung melden",
     "loading": "Objekt wird geladen …",
-    "object": {},
+    "object": {
+      "title": "Offene Meldung",
+      "back": "Zurück zum Objekt",
+      "loading": "Die Meldung wird geladen …",
+      "comments": "Ergänzungen",
+      "noComments": "Zu dieser Meldung gibt es noch keine Ergänzung.",
+      "commentTitle": "Ergänzung zur Meldung",
+      "commentSubmit": "Ergänzung senden",
+      "commentDone": "Ihre Ergänzung wurde gespeichert ({{at}}).",
+      "errors": {
+        "not_found": "Diese Meldung existiert nicht (mehr) oder ist inzwischen geschlossen.",
+        "qr_token_not_found": "Dieser QR-Code gehört zu keinem aktiven Objekt.",
+        "ticket_not_found": "Diese Meldung existiert nicht (mehr) oder ist inzwischen geschlossen.",
+        "comment_text_required": "Bitte beschreiben Sie die Störung oder wählen Sie eine Störungsart aus.",
+        "invalid_request": "Die Ergänzung konnte nicht gelesen werden. Bitte erneut versuchen.",
+        "internal_error": "Die Ergänzung konnte gerade nicht gesendet werden.",
+        "unknown": "Die Ergänzung konnte gerade nicht gesendet werden. Bitte später erneut versuchen."
+      }
+    },
     "faults": {
       "label": "Art der Störung",
       "hint": "Mehrere auswählbar — zusätzlich oder alternativ zur Beschreibung."
@@ -150,6 +168,15 @@
       "register": "Konto anlegen — ich erhalte einen Link, um mein Passwort zu setzen.",
       "emailNotifications": "Meldungen per E-Mail empfangen",
       "emailNotificationsHint": "Für die Meldungen per E-Mail wird eine E-Mail-Adresse gebraucht."
+    },
+    "landing": {
+      "title": "Offene Meldung",
+      "openHint": "Zu diesem Objekt ist bereits eine Meldung offen.",
+      "ticket": "{{ticketNo}} · gemeldet am {{reportedAt}}",
+      "open": "Meldung ansehen",
+      "newReport": "Trotzdem eine neue Meldung melden",
+      "report": "Störung melden",
+      "noOpenTicket": "Zu diesem Objekt ist keine Meldung offen."
     }
   },
   "internal": {
@@ -287,7 +314,7 @@
   },
   "list": {
     "title": "Meldungen",
-    "hint": "Alle Vorgänge mit Suche und Filter. Detailansicht folgt in einem der nächsten Pakete.",
+    "hint": "Offene Meldungen zuerst — der Knopf „Filter“ öffnet Suche, Status und Priorität sowie erledigte und überfällige Meldungen.",
     "search": "Suchen",
     "status": "Status",
     "statusAll": "alle Status",
@@ -306,7 +333,6 @@
     "priorityNormal": "Normal",
     "priorityHigh": "Hoch",
     "priorityCritical": "Kritisch",
-    "filterOpen": "nur offene",
     "filterOverdue": "nur überfällige",
     "noTickets": "Keine Meldungen gefunden.",
     "loading": "Meldungen werden geladen …",
@@ -335,7 +361,9 @@
     "technician": "Techniker",
     "actions": {
       "create": "Neue Meldung"
-    }
+    },
+    "filterButton": "Filter",
+    "filterClosed": "Erledigte anzeigen"
   },
   "detail": {
     "title": "Meldung {{ticketNo}}",

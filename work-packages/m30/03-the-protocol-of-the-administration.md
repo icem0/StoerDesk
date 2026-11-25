@@ -1,24 +1,22 @@
 # WP-M30-03: the protocol of the administration
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M30-02
 phase: 30
 milestone: m30
 context-budget: 52k tokens
-spec: specs/10-notifications.md §11.10, §11.11, §11.12, §11.16
-spec-lines: 90
-changed-lines: 600
+spec: specs/10-notifications.md §11.8, §11.11, §11.12, §11.16
+spec-lines: 110
+changed-lines: 497
 
 files-read:
 
-- specs/10-notifications.md §11.12 (the UI), §11.16 (the protocol of the delivery)
+- specs/10-notifications.md §11.8 (the problems of the channels), §11.16 (the protocol)
 - apps/api/src/notifications/messages.ts (the reading of the messages — the protocol of today)
-- apps/api/src/notifications/delivery.ts (the problems of the channels and their quittature)
+- apps/api/src/notifications/delivery.ts (the problems and their quittature)
 - apps/api/src/notifications/routes.ts (the routes of the administration)
-- apps/web/src/admin/delivery-page.tsx (the page of the problems — the model of the new page)
-- apps/web/src/admin/channels-page.tsx (the page of the channels)
-- apps/web/src/routes/index.tsx, apps/web/src/settings/settings-page.tsx (the routes and the menu)
+- apps/web/src/admin/delivery-page.tsx (the page of the delivery — the model of the block)
 - packages/shared/src/schemas/notification.ts (the contracts)
 
 files-write:
@@ -26,57 +24,65 @@ files-write:
 - apps/api/src/notifications/messages.ts
 - apps/api/src/notifications/routes.ts
 - packages/shared/src/schemas/notification.ts
-- apps/web/src/admin/notifications-page.tsx
-- apps/web/src/routes/index.tsx
-- apps/web/src/settings/settings-page.tsx
-- apps/web/src/i18n/locales/de/settings.json
-- apps/web/src/i18n/locales/en/settings.json
+- apps/web/src/admin/delivery-page.tsx
+- apps/web/src/i18n/locales/de/settings.json, apps/web/src/i18n/locales/en/settings.json
+- apps/api/src/notifications/__tests__/deliveries-routes.integration.spec.ts
+- docs/DECISIONS/0052-the-task-and-the-protocol.md, specs/10-notifications.md, PLAN.md §14
+- docs/REPO-MAP.md, CHANGELOG.md
+- work-packages/m30/03-the-protocol-of-the-administration.md, work-packages/m30/01-the-message-is-a-task-and-the-protocol.md
 
 interfaces:
 
-- `readDeliveries(database, filter)` — the attempts with their recipient, their channel, their state and their machine code
-- `GET /api/v1/admin/notifications/deliveries` — the protocol of the delivery (`notification.read_all`)
-- `NotificationsPage` — the page `/admin/notifications`
+- `readDeliveries(database, scope)` — the delivery attempts with their recipient, their channel, their state and their machine code
+- `GET /api/v1/admin/notifications/attempts` — the protocol of the delivery (`notification.read_all`)
+- the block „the attempts of the delivery“ on the page `/admin/delivery`
 
 ## Task
 
+The office asks for **one** page of the delivery, not two: „what went wrong“
+and „who got what“ are one question with two answers. The page `/admin/delivery`
+carries the problems of the channels since phase 14 (§11.8) — it gains the
+**protocol** beside them (ADR-0052 decision 3): every delivery attempt of the
+instance with its recipient, its event, its channel, its state, the machine code
+of a failure, the time and the number of the attempts.
+
 1. **The reading** `apps/api/src/notifications/messages.ts`: `readDeliveries`
-   answers the attempts of the table `notification_messages` with the filters
-   of §11.16 — the recipient, the channel, the event type and the state — and
-   with the machine code of a failure, the time and the number of the attempts.
-   The answer carries the list of the recipients with their number of
-   attempts; the list applies every filter **except** the filter of the
-   recipient.
+   answers the rows of `notification_messages` — one row per **delivery
+   attempt** — with the recipient (the name of the user, else the e-mail), the
+   event type, the channel, the state, the subject of the message (the ticket
+   number or the pool), the machine code of the failure and the number of the
+   attempts of the row of the outbox, and the time of the attempt. The filters
+   of §11.16 narrow the answer: the recipient, the channel, the event and the
+   state. The list of the recipients answers with the number of their attempts;
+   the filter of the recipient is not applied to that list, so it stays
+   complete while the filter is active.
 2. **The route** `apps/api/src/notifications/routes.ts`:
-   `GET /api/v1/admin/notifications/deliveries` behind
-   `notification.read_all` — the route answers `403 forbidden` without the
-   right, because the protocol names the users. The three routes of the
-   messages stay until WP-M30-04 removes them.
+   `GET /api/v1/admin/notifications/attempts` behind `notification.read_all`
+   — the protocol names the users, so the route answers `403 forbidden`
+   without the right. An unknown value of a filter answers
+   `400 invalid_request` with the field path.
 3. **The contracts** `packages/shared/src/schemas/notification.ts`: the schema
-   of an attempt and the answer of the list.
-4. **The page** `apps/web/src/admin/notifications-page.tsx`: the table of the
-   attempts with the columns — the recipient, the event, the channel, the
-   state, the machine code, the time and the attempts — and the filters of
-   §11.16 above the table. The page names no address of a user (§11.13) and
-   links to the page of the delivery problems for the quittature.
-5. **The route and the menu** `apps/web/src/routes/index.tsx` and
-   `apps/web/src/settings/settings-page.tsx`: the page `/admin/notifications`
-   is an entry of the settings menu next to the delivery problems.
-6. **The texts** in `de/settings.json` and `en/settings.json`: the heading, the
-   columns, the filters and the empty answer. The texts of the reasons of a
-   failure stay in the namespace of the delivery page — the two pages name the
-   same codes with the same sentences.
-7. **The tests**: the test of the page proves that the filters reach the query,
-   that a row without the right is not shown and that the machine code of a
-   failure is named; the integration test of the route proves the refusal
-   without `notification.read_all`.
+   of an attempt, the answer of the list and the filter.
+4. **The page** `apps/web/src/admin/delivery-page.tsx`: below the problems the
+   block „the attempts of the delivery“ — the table with the columns (the
+   recipient, the event, the channel, the state, the machine code, the time and
+   the attempts) and the filters of §11.16 above the table. The block appears
+   only with the right `notification.read_all`; without it the page shows the
+   problems as before. The texts of the reasons of a failure stay in the
+   namespace of the page — the two blocks name the same codes with the same
+   sentences.
+5. **The texts** in `de/settings.json` and `en/settings.json`: the heading of
+   the block, the columns, the filters and the empty answer.
+6. **The tests**: the test of the route proves the refusal without the right,
+   the filters and the answer; the test of the page proves that the block
+   appears with the right and that a row names the recipient.
 
 ## Non-goals
 
+- No page of its own — the protocol lives on `/admin/delivery` (ADR-0052
+  decision 3).
+- No change of the problems of the channels and of their quittature (§11.8).
 - No change of the inbox — the tasks reach the page in WP-M30-04.
-- No change of the problems of the channels and of their quittature
-  (`/admin/delivery`).
-- No change of the alarm of a failed delivery — WP-M30-05.
 - No new permission — the protocol is guarded by `notification.read_all`.
 
 ## Acceptance
@@ -89,15 +95,17 @@ npm run i18n:check
 npm run wp:check
 ```
 
-Expected: all green; `i18n:check` reports no missing and no unused key.
+Expected: all green; the test of the route proves the filters and the refusal
+without the right.
 
 ## Handoff
 
-- Files changed: the reading, the route, the contracts, the page, the route of
-  the web, the menu and the two locales
+- Files changed: the reading, the route, the contracts, the page of the
+  delivery, the two locales, the test of the route, the ADR (the page of the
+  protocol), the spec, the plan and the module map
 - Interfaces added: `readDeliveries`, the route
-  `GET /api/v1/admin/notifications/deliveries` and the page
-  `NotificationsPage`
-- Verified: the commands above
+  `GET /api/v1/admin/notifications/attempts` and the block of the protocol on
+  the page of the delivery
+- Verified: `npm run check` green (wp:check 823/0, eslint 0 errors, vitest 285 files / 2014 tests, Playwright 15/15); the test of the route proves the refusal without `notification.read_all`, the answer with the recipient, the channel and the state, the filters and the refusal of an unknown value; the test of the page proves the block beside the problems and its absence without the right
 - Follow-up WP: WP-M30-04 — the inbox shows the tasks
 - Open question: none

@@ -470,6 +470,20 @@
       "when": 1796349600001,
       "tag": "0066_drop_assignee_pool",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1796436000001,
+      "tag": "0067_notification_delivery_failed",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1796522800001,
+      "tag": "0068_oncall_released",
+      "breakpoints": true
     }
   ]
 }

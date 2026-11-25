@@ -7,7 +7,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **The public view of an open ticket of the object (WP-M38-02, ADR-0061).** The holder
+  of the QR code of an object stands at that object: the code is the capability
+  of a **narrow** view of a ticket that is open there
+  (`/m/<qr_token>/tickets/<ticket_no>`) and of a **comment** on it. The answer
+  carries the number, the status, the reported and the deadline time, the public
+  events of the status and the public comments — never the description, the
+  contact of the reporter, a photo or an internal entry. A closed ticket, a
+  ticket of another object and an unknown number answer the same
+  `404 ticket_not_found`, so the code of an object does not reveal the history
+  of its tickets. The comment is one append-only event with the source
+  `object_qr`, idempotent over the `client_uuid` and counted in the spam
+  limit of the report path; SEC-004 keeps its force for the path of the
+  `status_token`.
+- **Phase 38 has started (WP-M38-01 … WP-M38-04, ADR-0061, out of band).** The
+  scan of a QR code opens the **landing page** of the object: the open tickets of
+  the object come first, the report form moves to `/m/<qr_token>/neu`, and the
+  public view of an open ticket of the object
+  (`/m/<qr_token>/tickets/<ticket_no>`) shows the number, the status, the
+  deadline, the public events and the public comments — never the description,
+  the contact or the photos of another reporter. The QR token of the object is
+  the capability of a comment on an **open** ticket of that object: the code is
+  printed on the object, the comment is append-only, the ticket must be open,
+  the spam limit applies and the contact data of the author never leaves the
+  house (SEC-004 keeps its force for the path of the `status_token`). The
+  customer gets his own landing page `/portal`: the open tickets first, the
+  closed ones below, and **exactly one open ticket** opens its detail directly.
+- **Phase 36 has started (WP-M36-01 … WP-M36-08); WP-M36-01 … WP-M36-04 are
+  implemented.** An
+  explanation of a place is a **help popover**, not a hover (**ADR-0060**,
+  `specs/13-ui.md` §14.13): the office asked to pack the explanations of the
+  menu into a mouse-over, to put an info symbol with an explanation on every
+  page and to make the text bigger. A `title=` tooltip cannot answer that on a
+  mobile-first PWA — it does not exist on a touch, cannot be opened by a
+  keyboard, cannot be zoomed and closes on a timer (§14.2). One component
+  `apps/web/src/components/help-popover.tsx` answers all three requests: a real
+  button with the info symbol (the name `info` in `IconName`) that toggles a
+  panel anchored at the place, never on a timer. Every explanation exists in
+  **two tiers** in the new i18n namespace `help` — a visible one-line summary
+  and a panel body of at most three sentences. The entry of the settings menu
+  keeps symbol, label and summary visible and opens the detail behind the ⓘ of
+  the **row** (the entry was a link that wrapped everything, and a `<button>`
+  inside an `<a>` is invalid and unreachable); every guarded page carries **one**
+  page-level ⓘ in the shell, and a page that explains itself — a help page, the
+  overview of the own channels — carries none. The 27 native `title=` tooltips
+  migrate to the panel, the statistics name the values of a diagram in a legible
+  list below it, and the interface reads **one step bigger** by one rule of the
+  root font size in `styles.css`, with the meta text of the menu and of the hints
+  raising its contrast at the same time (AA is a requirement, §14.2). The 112
+  notice, the report form, the action bar, the bands, the mandatory badges and the
+  reason of a blocked action never move behind a symbol (§2, §14.2, §14.10).
+- The overview of the **own channels** names the rule of the administration
+  (**WP-M37-01**, phase 37, §11.19): `GET /api/v1/notifications/compliance`
+  carries the rule — the required channels and the minimum number of channels
+  — beside the compliance of the user, so the page `/settings/notifications`
+  marks the **mandatory channels** with a badge, names **how many** channels
+  are set up against the minimum and says whether the user fulfils the rule
+  or what is still missing. A rule that is off says so instead of counting
+  against nothing.
+- The templates of the e-mail carry a **standard text** (**WP-M33-01**, phase 33,
+  ADR-0046): the mailbox at `/admin/email` offers a **localized standard text**
+  per kind of message — the ticket message, the readiness message, the test
+  message, the registration, the new password and the report to the reporter —
+  as plain texts with the placeholders of §11.5a that name only the machine
+  values the message of that kind carries. A **reset-to-standard button** sits
+  above every template field (`Standard zurücksetzen`); it fills the standard
+  text of that field in the language of the interface. An **empty field still
+  falls back to the built-in text** — the fallback and the send path stay
+  untouched.
+
 ### Changed
+- The criterion of the phase (**WP-M30-06**, phase 30, ADR-0052): the
+  integration test `phase30-exit.integration.spec.ts` names every acceptance
+  item of the phase and proves it against the real database — one message over
+  three channels is **one** task and three attempts, the inbox answers the tasks
+  of the signed-in user and names neither a channel nor a delivery state, the
+  protocol answers the attempts of every user and refuses itself without
+  `notification.read_all`, and a message that never arrived becomes a task of
+  the administration — throttled to one task per channel and machine code per
+  hour, and never alarming itself.
+- The ticket overview **opens on the open tickets** (**WP-M35-03**, phase 35,
+  ADR-0059, out of band at the request of the office): the list at `/tickets`
+  asks the API with `open=true` without a filter, the option „nur offene“ is
+  **gone** and the checkbox **„Erledigte anzeigen“** takes the completed
+  tickets in. The filters — the search, the status, the priority, the
+  completed and the overdue ones — live in a **menu behind the Filter button**
+  beside „Neue Meldung“; the button pulls the menu down below the header.
+  The API is untouched: `open` keeps its three states, and the choice of the
+  page lives in the URL as `closed=true`.
+- A message that never arrived becomes a task of the administration
+  (**WP-M30-05**, phase 30, ADR-0052): the event type
+  `notification.delivery_failed` writes a task for every user with
+  `notification.read_all` — the way is the **confirmed channel of the
+  recipient**, so the administration is reached the way every other user is
+  reached and a recipient who does not fulfil the rule of the administration
+  gets nothing. The alarm is throttled to **one task per channel and machine
+  code per hour**, so a broken channel does not flood the inbox, and it never
+  alarms itself: a failure of the alarm or of the warning of a broken channel
+  writes no new task. The text of the task names the channel and the machine
+  code — no address of a user (§11.13).
+- The page of the **own channels** is a list and not a column of forms
+  (**WP-M37-02**, **WP-M37-03**, phase 37, §11.19): every channel of the
+  overview carries a button that opens **its own** setup — the topic of ntfy
+  with its QR code, the code of the Telegram bot, the form of Matrix, the
+  address of the e-mail, the card of the web push and the chats of the
+  WhatsApp bridge. The **data of a channel is read while its channel is
+  open**, so a page view never burns a one-time code nobody uses.
+- The admin **releases a shift that has not started** (**WP-M34-01**, phase 34,
+  ADR-0058): a shift of the coming week is deleted in every state — also a
+  **confirmed** one. The duty of a shift of the future was never held: nobody
+  was on duty, no ticket was coupled to it, and the history of the office has
+  nothing to record about it. The plan of a pool belongs to the admin, so a
+  confirmed shift of the future no longer stays locked for ever. A shift that
+  **started** keeps the rule of ADR-0047 — a confirmed, a swapped or a
+  published shift stays in the history, and the interface keeps naming the
+  reason of the refusal.
+- The technician **learns that his duty is gone** (**WP-M34-02a**,
+  **WP-M34-02b**, phase 34, ADR-0058): the delete of a shift and the handover
+  of a shift to another technician write the event `oncall.released` for the
+  technician who had the shift. The message names the pool, the period and the
+  cause — „Deine Bereitschaft Bereitschaft Nord wurde gelöscht." — and the
+  inbox of the technician shows it as a task like every other message of
+  StörDesk. The row of the message points at **no shift**: the shift of a
+  deleted shift is gone, and the message has to survive its delete.
+- The inbox of a user shows the messages and not the log of the deliveries
+  (**WP-M30-04**, phase 30, ADR-0052): the page `/notifications` lists **one
+  entry per task** — the readable text of the event („Meldung ST-0001 ist dir
+  zugewiesen.“), the link into the ticket or into the readiness, the time of
+  the task and the read receipt. The channel and the delivery state leave the
+  page: they describe the way a message travelled, and the way belongs to the
+  protocol of the administration on `/admin/delivery`. A user with three
+  confirmed channels sees **one** entry and not three, and the bell and the
+  alarm band count the tasks. The routes of the messages leave the API —
+  `GET /api/v1/notifications/items`,
+  `GET /api/v1/notifications/items/unread-count` and
+  `PATCH /api/v1/notifications/items/:id/read` answer them.
+- The protocol of the delivery is read on the page of the delivery
+  (**WP-M30-03**, phase 30, ADR-0052): `GET /api/v1/admin/notifications/attempts`
+  answers every **delivery attempt** with its recipient, its event, its
+  channel, its state, the machine code of a failure and the number of the
+  attempts; the filters of §11.16 — the recipient, the channel, the event, the
+  state — live in the URL of the page. The office asked for **one** page of the
+  delivery and not two: „what went wrong“ and „who got what“ are one question
+  with two answers, so the block of the protocol stands beside the problems of
+  the channels on `/admin/delivery` instead of on a page of its own. The block
+  needs the right `notification.read_all` — the protocol names the users, the
+  problems do not; without the right the page shows the problems as before.
 - The assignment of a ticket names a **target of the installation**
   (**WP-M32-02**, phase 32, ADR-0057): a **readiness pool**, a **user group**
   or **one technician** — the pools the installation already knows, no third
@@ -4698,3 +4844,27 @@ database …`. Without that variable the runner prints its skip notice and `npm 
   the auth HTTP layer, the permission guard, the admin users and roles APIs with their
   UI, the CI chain and the Playwright smoke test) are
   implemented.
+
+### Fixed
+- The click on a pushed alarm opens the ticket in the app that is already
+  running (**WP-M14-179**, phase 14): the service worker compared the whole
+  url of an open window with the target of the click. The app is a
+  **single-page application**, so the url of an open window is the url of the
+  document that was loaded and never changes while the user navigates inside
+  the app — and the target of a payload without a deep link is the **relative**
+  path `/` while the url of a window is always absolute. The comparison could
+  therefore never match, and every click opened **another** window: on Windows a
+  new top-level window of the installed app with a process of its own, while the
+  running app stayed on the old page. The window of the app is now found by its
+  **origin** and navigated to the deep link (`client.navigate`), so the ticket
+  opens in the running app and the browser keeps one window.
+
+### Fixed
+- The band of the alarm asks the API without a second prefix (**WP-M25-10**,
+  phase 25, ADR-0048): the three queries of the band wrote their path with the
+  prefix of the base already — `/api/v1/notifications/…` — while `apiFetch`
+  puts the base in front of the path. The request went to
+  `/api/api/v1/notifications/…` and the API answered `404`: the band never
+  stood, the tone of the browser never played and the silence of the user was
+  never read. The paths of the band carry no prefix any more — the bell of the
+  shell asked the same number without one and worked.

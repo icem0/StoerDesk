@@ -50,7 +50,7 @@
   },
   "portal": {
     "title": "My reports",
-    "hint": "Your open reports.",
+    "hint": "Your open tickets first, the closed ones below them.",
     "empty": "You have no open report at the moment.",
     "loading": "Your reports are loading …",
     "objects": "My installations",
@@ -65,6 +65,8 @@
       "back": "Back to my reports",
       "emailNotifications": "Receive messages about this report by e-mail"
     },
-    "addressHint": "This list also holds the reports that were made with your e-mail address."
+    "addressHint": "This list also holds the reports that were made with your e-mail address.",
+    "open": "Open tickets",
+    "closed": "Closed tickets"
   }
 }

@@ -272,13 +272,15 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const rows = await outboxRows(shiftId)
 
-      expect(rows).toHaveLength(2)
+      // The technician who had the shift learns that his duty is gone
+      // (ADR-0058, WP-M34-02a): the release is a row of its own.
+      expect(rows).toHaveLength(3)
       expect(
         rows.filter((row) => (row.target as { assignedTo?: string }).assignedTo === otherId),
       ).toHaveLength(1)
       expect(
         rows.filter((row) => (row.target as { assignedTo?: string }).assignedTo === techId),
-      ).toHaveLength(1)
+      ).toHaveLength(2)
     })
 
     it('queues a swap request for the requester and the named target', async () => {

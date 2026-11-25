@@ -54,6 +54,8 @@ import { TicketListPage } from '../features/tickets/ticket-list-page'
 import { TicketDetailPage } from '../features/tickets/ticket-detail-page'
 import { TicketSendPage } from '../features/tickets/ticket-send-page'
 import { ReportFormPage } from '../features/tickets/report-form-page'
+import { ObjectTicketPage } from '../features/tickets/object-ticket-page'
+import { QrLandingPage } from '../features/tickets/qr-landing-page'
 import { StatusPage } from '../features/tickets/status-page'
 
 /**
@@ -76,7 +78,9 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     children: [
       {
-        // The dashboard page is gone: the start page is the ticket list.
+        // The dashboard page is gone: the start page is the ticket list. A
+        // customer with the role `customer` never reaches it: the frame of the
+        // app sends him into his portal (ADR-0061).
         path: '/',
         element: <Navigate replace to="/tickets" />,
       },
@@ -512,9 +516,22 @@ export const routes: RouteObject[] = [
   },
   // A QR reporter has no session: `/m/:token` is deliberately outside the `App` shell, so
   // it never renders the login form of `Shell` (WP-M2-05, specs/06-report-form.md §7.2).
+  // The scan of a code opens the **landing page** of the object (WP-M38-03, ADR-0061):
+  // the open tickets of the object come first, the report form is one tap away.
   {
     path: '/m/:token',
+    element: <QrLandingPage />,
+  },
+  {
+    path: '/m/:token/neu',
     element: <ReportFormPage />,
+  },
+  // The public view of an open ticket of the object (WP-M38-02, ADR-0061): the
+  // QR code of the object is the capability — it lies outside the shell like
+  // the report form, because a reporter never sees the login form.
+  {
+    path: '/m/:token/tickets/:ticketNo',
+    element: <ObjectTicketPage />,
   },
   // The status link of the confirmation page is public as well: a reporter has no
   // session, so `/s/:token` stays outside the `Shell` (WP-M2-06b, PLAN §10).
@@ -533,6 +550,9 @@ export const routes: RouteObject[] = [
   // outside the shell, like the report form — a customer never sees the menu of
   // the office.
   { path: '/portal/auth', element: <PortalAuthPage /> },
+  // The landing page of the customer (ADR-0061): the open tickets first, the
+  // closed ones below — and exactly one open ticket opens its detail.
+  { path: '/portal', element: <PortalTicketsPage /> },
   { path: '/portal/activate/:token', element: <PortalActivatePage /> },
   { path: '/portal/tickets', element: <PortalTicketsPage /> },
   { path: '/portal/tickets/:ticketNo', element: <PortalTicketPage /> },

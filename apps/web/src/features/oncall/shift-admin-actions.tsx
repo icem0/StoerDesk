@@ -154,8 +154,11 @@ export function ShiftAdminActions(props: {
   const candidates = members.data?.members ?? []
   const busy =
     assign.isPending || publish.isPending || remove.isPending || remind.isPending
-  // A confirmed or swapped shift is locked for the delete, always.
-  const locked = props.shift.state === 'CONFIRMED' || props.shift.state === 'SWAP_REQUESTED'
+  // A confirmed or swapped shift that started stays locked for the delete
+  // (ADR-0058): a shift that has not started is released by the delete.
+  const started = new Date(props.shift.startsAt).getTime() <= now
+  const locked =
+    started && (props.shift.state === 'CONFIRMED' || props.shift.state === 'SWAP_REQUESTED')
   // The reminder needs a technician and a shift that did not start yet.
   const remindable =
     props.shift.userId !== null && new Date(props.shift.startsAt).getTime() > now

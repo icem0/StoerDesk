@@ -24,6 +24,7 @@ import { personalRecipients } from './receivers'
 import { writeItems } from './items'
 import { effectiveNtfyConfig } from './verification'
 import { CHANNEL_HEALTH_WARNING_EVENT, enqueueChannelHealthWarnings } from './health'
+import { DELIVERY_FAILURE_EVENT, deliveryFailureDeliveries } from './alarm'
 import type { NtfyConfig } from './channels/ntfy'
 
 /** The insert capability — enough for both the live database and a transaction node. */
@@ -274,6 +275,48 @@ const healthWarningMessageOf = (target: Record<string, unknown>): MessagePriorit
 }
 
 /**
+ * The message of the alarm of a failed delivery (`specs/10-notifications.md`
+ * §11.18, ADR-0052): the title names the channel that failed, the body the
+ * machine code and the message that never arrived. It is translated like the
+ * warning of a broken channel — it announces the state of a delivery and not
+ * the state of a ticket — and it carries no emergency number
+ * (`PLAN.md` §2).
+ */
+const deliveryFailureMessageOf = (target: Record<string, unknown>): MessagePriority => {
+  const channel = param(target.channel)
+  const code = param(target.code)
+  const ticket = param(target.ticketNo)
+
+  return {
+    title: t('de', 'notification.delivery_failure_title', {
+      channel: t('de', `notification.channels.${channel}`),
+    }),
+    body: t('de', 'notification.delivery_failure_body', { code, ticket }),
+  }
+}
+
+/**
+ * The message of the release of a shift (`specs/04-oncall.md` §4a.3,
+ * ADR-0058): the technician who had the shift learns that his duty is gone —
+ * the shift was deleted or handed over to another technician. It is translated
+ * like the warning of a broken channel: it announces the state of a duty and
+ * not the state of a ticket. The machine values stay in the params.
+ */
+const releaseMessageOf = (target: Record<string, unknown>): MessagePriority => {
+  const pool = param(target.poolName)
+  const cause =
+    param(target.release) === 'reassigned'
+      ? t('de', 'notification.oncall_release_reassigned')
+      : t('de', 'notification.oncall_release_deleted')
+  const period = `${berlinTime(target.startsAt)} – ${berlinTime(target.endsAt)}`
+
+  return {
+    title: t('de', 'notification.oncall_released_title', { pool }),
+    body: t('de', 'notification.oncall_released_body', { pool, period, cause }),
+  }
+}
+
+/**
  * Builds the channel message from the machine-readable row params — ticket
  * number, priority, object name and location, system type, short text and the
  * AA/SA work order number — no photo, no contact data, no translated UI text
@@ -282,15 +325,25 @@ const healthWarningMessageOf = (target: Record<string, unknown>): MessagePriorit
  * A readiness row (`shift_id`) carries the pool name, the start and end in
  * `Europe/Berlin` formatted from the stored UTC values and the shift state;
  * it never touches the ticket fields of §11.5. A warning of a broken channel
- * (`channel_health_warning`) carries the translated sentence of §11.15.
+ * (`channel_health_warning`) carries the translated sentence of §11.15. The
+ * release of a shift (`oncall.released`) carries the translated sentence of
+ * §4a.3: the duty of the technician is gone.
  */
 export const messageOf = (target: Record<string, unknown>, eventType = ''): MessagePriority => {
+  if (eventType === 'oncall.released') {
+    return releaseMessageOf(target)
+  }
+
   if (target.shiftId !== undefined && target.shiftId !== null) {
     return readinessMessageOf(target)
   }
 
   if (eventType === CHANNEL_HEALTH_WARNING_EVENT) {
     return healthWarningMessageOf(target)
+  }
+
+  if (eventType === DELIVERY_FAILURE_EVENT) {
+    return deliveryFailureMessageOf(target)
   }
 
   return ticketMessageOf(target)
@@ -571,6 +624,44 @@ const sleep = (ms: number): Promise<void> =>
  * loop claims it in the same run — the chain length bounds the run.
  * A row whose channel name is no longer configured ends `FAILED`.
  */
+/**
+ * The alarm of a failed delivery (`specs/10-notifications.md` §11.18,
+ * ADR-0052): a message that never arrived becomes a **task of the
+ * administration** — the users with `notification.read_all`, delivered over
+ * their own confirmed channels.
+ *
+ * The alarm **never alarms itself**: the warning of a broken channel and the
+ * alarm of a failed delivery write no new task, and the throttle of the alarm
+ * (one task per channel and machine code per hour) keeps a broken channel from
+ * flooding the inbox.
+ */
+async function alarmOfFailedDelivery(
+  database: DbLike,
+  row: ClaimedOutboxRow,
+  errorCode: string,
+  ticketNo: string,
+): Promise<void> {
+  if (
+    row.eventType === CHANNEL_HEALTH_WARNING_EVENT ||
+    row.eventType === DELIVERY_FAILURE_EVENT
+  ) {
+    return
+  }
+
+  const deliveries = await deliveryFailureDeliveries(database, {
+    channel: row.channel,
+    errorCode,
+    eventType: row.eventType,
+    ticketNo: ticketNo === '' ? null : ticketNo,
+  })
+
+  if (deliveries.length === 0) {
+    return
+  }
+
+  await enqueuePersonalDeliveries(database, deliveries)
+}
+
 export async function drainOutbox(
   database: Db,
   env: Env,
@@ -600,6 +691,8 @@ export async function drainOutbox(
       await finishRow(database, row, 'FAILED', 'notification_failed', undefined, 'channel_unconfigured')
 
       await finishMessage(database, row, 'FAILED')
+
+      await alarmOfFailedDelivery(database, row, 'channel_unconfigured', ticketNo)
 
       log?.warn(
         {
@@ -727,6 +820,10 @@ export async function drainOutbox(
           result.fallback += 1
         } else {
           result.failed += 1
+
+          // The message never arrived (§11.18, ADR-0052): it becomes a task of
+          // the administration.
+          await alarmOfFailedDelivery(database, row, errorCode, ticketNo)
         }
       } else {
         // The row stays `PENDING`; the next loop iteration claims it again.
@@ -831,6 +928,13 @@ export interface PersonalDelivery {
   /** Exactly one of the two: the ticket of the row or the readiness shift. */
   ticketId?: string | null
   shiftId?: string | null
+  /**
+   * The shift the **outbox row** points at — null for a row that has to
+   * survive the delete of its shift (the release of a deleted shift,
+   * `ADR-0058`). Without the field the row points at the shift of the
+   * delivery, and the foreign key of the row deletes it with the shift.
+   */
+  outboxShiftId?: string | null
   /** The machine-readable params of the row (§11.5). */
   target: Record<string, unknown>
 }
@@ -886,7 +990,13 @@ export async function enqueuePersonalDeliveries(
   await database.insert(outbox).values(
     deliveries.map((delivery, index) => ({
       ticketId: delivery.ticketId ?? null,
-      shiftId: delivery.shiftId ?? null,
+      // The row of a released shift must survive the delete of its shift
+      // (`ADR-0058`): the delivery names the shift, the row points at no
+      // shift.
+      shiftId:
+        delivery.outboxShiftId === undefined
+          ? (delivery.shiftId ?? null)
+          : delivery.outboxShiftId,
       eventType: delivery.eventType,
       channel: delivery.channel,
       target: delivery.target,
@@ -941,13 +1051,20 @@ export async function enqueueOutbox(
  */
 export async function enqueueOncallOutbox(
   database: DbLike,
-  { shift, eventType, userId, reminderNumber }: {
+  { shift, eventType, userId, reminderNumber, release, standalone }: {
     shift: OutboxShift
     eventType: NotificationEventType
     userId: string
     /** How often the office asked already (WP-M23-09b) — the urgency of the
      * message follows the number. */
     reminderNumber?: number
+    /** The cause of the release of the shift (`ADR-0058`): the technician
+     * learns that his duty is gone. */
+    release?: 'deleted' | 'reassigned'
+    /** The shift of the row is deleted with the row — the release of a
+     * **deleted** shift writes a row that points at no shift, so the row
+     * survives the delete (`ADR-0058`). */
+    standalone?: boolean
   },
   env: Env,
 ): Promise<number> {
@@ -974,6 +1091,9 @@ export async function enqueueOncallOutbox(
     // How often the office asked already (WP-M23-09b): the urgency of the
     // message follows the number.
     ...(reminderNumber === undefined ? {} : { reminderNumber }),
+    // The cause of the release of the shift (`ADR-0058`): `deleted` or
+    // `reassigned`. The message names it in words.
+    ...(release === undefined ? {} : { release }),
   }
 
   // The channels of the technician (§11.4, ADR-0045): his confirmed
@@ -1034,6 +1154,7 @@ export async function enqueueOncallOutbox(
       eventType,
       title: String(target.poolName ?? ''),
       body: [
+        ...(release === undefined ? [] : [release]),
         String(target.state ?? ''),
         String(target.startsAt ?? ''),
         String(target.endsAt ?? ''),
@@ -1041,6 +1162,10 @@ export async function enqueueOncallOutbox(
         .filter((value) => value !== '')
         .join(' · '),
       shiftId: shift.id,
+      // The row of a released shift that is deleted points at no shift: the
+      // foreign key of the row would delete the message with the shift
+      // (`ADR-0058`).
+      ...(standalone === true ? { outboxShiftId: null } : {}),
       target: rowTarget,
     })
   }

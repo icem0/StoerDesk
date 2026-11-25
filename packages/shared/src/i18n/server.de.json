@@ -9,6 +9,12 @@
     "test_body": "This ist a test notification.",
     "verification_code": "StörDesk-Einrichtungscode: {{code}}",
     "channel_health_warning": "Die Benachrichtigung über {{channel}} ist gestört (Fehlercode {{code}}).",
+    "delivery_failure_title": "Zustellung fehlgeschlagen ({{channel}})",
+    "delivery_failure_body": "Eine Meldung ist nicht angekommen (Fehlercode {{code}}).",
+    "oncall_released_title": "Bereitschaft entzogen: {{pool}}",
+    "oncall_released_body": "Deine Bereitschaft im Pool {{pool}} ({{period}}) wurde {{cause}}.",
+    "oncall_release_deleted": "gelöscht",
+    "oncall_release_reassigned": "an einen anderen Techniker übergeben",
     "channels": {
       "signal": "Signal",
       "matrix": "Matrix",

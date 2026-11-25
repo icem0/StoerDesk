@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { MeResponse } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
@@ -18,6 +18,11 @@ import { ApiError, apiFetch } from '../../lib/api'
 
 type Tab = 'login' | 'register' | 'reset'
 
+/** The tab of the link — the default is the sign in. */
+function tabOf(value: string | null): Tab {
+  return value === 'register' || value === 'reset' ? value : 'login'
+}
+
 const jsonHeaders = { 'content-type': 'application/json' }
 
 interface Availability {
@@ -28,7 +33,10 @@ export function PortalAuthPage() {
   const { t } = useTranslation('customer')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [tab, setTab] = useState<Tab>('login')
+  const [searchParams] = useSearchParams()
+  // The link of the login page of the homepage opens the registration
+  // directly (§19.3): `/portal/auth?tab=register`.
+  const [tab, setTab] = useState<Tab>(tabOf(searchParams.get('tab')))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [givenName, setGivenName] = useState('')
@@ -52,7 +60,7 @@ export function PortalAuthPage() {
     onSuccess: (me) => {
       queryClient.setQueryData(['me'], me)
       void queryClient.invalidateQueries({ queryKey: ['me'] })
-      navigate('/portal/tickets')
+      navigate('/portal')
     },
     onError: (known: unknown) => {
       setError(known instanceof ApiError ? (known.code ?? 'internal_error') : 'internal_error')

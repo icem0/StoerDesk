@@ -1,36 +1,19 @@
-import { and, count, desc, eq, isNull, not } from 'drizzle-orm'
+import { and, count, desc, eq, sql } from 'drizzle-orm'
 import {
-  type NotificationMessageFilter,
-  type NotificationMessageItem,
+  type NotificationDeliveryAttempt,
+  type NotificationDeliveryAttemptFilter,
   type NotificationRecipientSummary,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { notificationMessages, users } from '../db/schema'
+import { notificationMessages, outbox, users } from '../db/schema'
 
 type Db = Database['database']
 
 /**
- * The scope of the message list (`specs/10-notifications.md` §11.16, WP-M14-141b):
- * whose messages the answer holds and whether the answer may name the
- * addressee.
- *
- * `userId` is `null` for the messages of **every** user — only the permission
- * `notification.read_all` asks for that scope. `withRecipient` decides whether
- * the answer names the addressee of a row; without the permission the
- * addressee stays `null`, so the inbox of a user never names another user.
+ * The name of a user: the given and the family name, else the e-mail. The
+ * protocol of §11.16 names the addressees of the delivery attempts.
  */
-export type MessageScope = {
-  /** The user whose messages the answer holds; `null` means every user. */
-  userId: string | null
-  /** The filters of the answer without the filter of the addressee. */
-  filter: NotificationMessageFilter
-  limit: number
-  offset: number
-  withRecipient: boolean
-}
-
-/** The name of a user: the given and the family name, else the e-mail. */
 function displayName(givenName: string, familyName: string, email: string): string {
   const name = `${givenName} ${familyName}`.trim()
 
@@ -38,13 +21,23 @@ function displayName(givenName: string, familyName: string, email: string): stri
 }
 
 /**
- * The conditions of the filter (§11.16). The filter of the addressee is not
- * part of them: the scope carries it, and the list of the addressees applies
- * every other filter but not the addressee, so the list stays complete while
- * the filter of the addressee is active.
+ * The scope of the protocol (`specs/10-notifications.md` §11.16, ADR-0052):
+ * the delivery attempts of the answer and their filters.
  */
-function filterConditions(filter: NotificationMessageFilter) {
+export type DeliveryScope = {
+  /** The filters of the answer. */
+  filter: NotificationDeliveryAttemptFilter
+  limit: number
+  offset: number
+}
+
+/** The conditions of the filter of the protocol (§11.16). */
+function deliveryConditions(filter: NotificationDeliveryAttemptFilter) {
   const conditions = []
+
+  if (filter.userId !== undefined) {
+    conditions.push(eq(notificationMessages.userId, filter.userId))
+  }
 
   if (filter.channel !== undefined) {
     conditions.push(eq(notificationMessages.channel, filter.channel))
@@ -58,48 +51,44 @@ function filterConditions(filter: NotificationMessageFilter) {
     conditions.push(eq(notificationMessages.state, filter.state))
   }
 
-  if (filter.unread === true) {
-    conditions.push(isNull(notificationMessages.readAt))
-  }
-
-  if (filter.unread === false) {
-    conditions.push(not(isNull(notificationMessages.readAt)))
-  }
-
   return conditions
 }
 
 /**
- * The messages of the scope, the newest first. Every row carries its addressee
- * — the route drops it without the permission `notification.read_all`.
+ * The delivery attempts of the instance (`specs/10-notifications.md` §11.16,
+ * ADR-0052): one row per user and channel with the state of the delivery, the
+ * machine code of a failure and the number of the attempts. The protocol names
+ * the users — the right `notification.read_all` guards the route.
+ *
+ * The error code and the number of the attempts live in the row of the
+ * outbox: the row of the message carries the state, the row of the outbox the
+ * outcome of the send.
  */
-export async function readMessages(
+export async function readDeliveries(
   database: Db,
-  scope: MessageScope,
-): Promise<NotificationMessageItem[]> {
-  const conditions = filterConditions(scope.filter)
-
-  if (scope.userId !== null) {
-    conditions.unshift(eq(notificationMessages.userId, scope.userId))
-  }
+  scope: DeliveryScope,
+): Promise<NotificationDeliveryAttempt[]> {
+  const conditions = deliveryConditions(scope.filter)
 
   const rows = await database
     .select({
       id: notificationMessages.id,
-      channel: notificationMessages.channel,
-      eventType: notificationMessages.eventType,
-      state: notificationMessages.state,
-      title: notificationMessages.title,
-      body: notificationMessages.body,
-      createdAt: notificationMessages.createdAt,
-      readAt: notificationMessages.readAt,
       userId: notificationMessages.userId,
       givenName: users.givenName,
       familyName: users.familyName,
       email: users.email,
+      eventType: notificationMessages.eventType,
+      channel: notificationMessages.channel,
+      state: notificationMessages.state,
+      title: notificationMessages.title,
+      createdAt: notificationMessages.createdAt,
+      errorCode: sql<string | null>`${outbox.target}->>'lastError'`,
+      attempts: outbox.attempts,
+      updatedAt: outbox.updatedAt,
     })
     .from(notificationMessages)
     .innerJoin(users, eq(users.id, notificationMessages.userId))
+    .leftJoin(outbox, eq(outbox.notificationMessageId, notificationMessages.id))
     .where(conditions.length === 0 ? undefined : and(...conditions))
     .orderBy(desc(notificationMessages.createdAt))
     .limit(scope.limit)
@@ -107,38 +96,31 @@ export async function readMessages(
 
   return rows.map((row) => ({
     id: row.id,
-    channel: row.channel,
+    recipient: {
+      userId: row.userId,
+      name: displayName(row.givenName, row.familyName, row.email),
+    },
     eventType: row.eventType,
-    state: row.state as NotificationMessageItem['state'],
+    channel: row.channel,
+    state: row.state as NotificationDeliveryAttempt['state'],
     title: row.title,
-    body: row.body,
+    errorCode: row.errorCode ?? null,
+    attempts: Number(row.attempts ?? 0),
     createdAt: row.createdAt.toISOString(),
-    readAt: row.readAt?.toISOString() ?? null,
-    recipient: scope.withRecipient
-      ? {
-          userId: row.userId,
-          name: displayName(row.givenName, row.familyName, row.email),
-        }
-      : null,
+    updatedAt: (row.updatedAt ?? row.createdAt).toISOString(),
   }))
 }
 
 /**
- * The addressees of the filter with the number of their messages — the answer
- * to the question of the office: which messages arrived at which user. The
- * filter of the addressee is not applied here, so the list holds every
- * addressee of the other filters and stays complete while that filter is
- * active.
+ * The recipients of the protocol (`specs/10-notifications.md` §11.16): the
+ * addressees with the number of their attempts. The filter of the recipient is
+ * not applied here, so the list stays complete while that filter is active.
  */
-export async function readRecipients(
+export async function readDeliveryRecipients(
   database: Db,
-  scope: MessageScope,
+  filter: NotificationDeliveryAttemptFilter,
 ): Promise<NotificationRecipientSummary[]> {
-  if (!scope.withRecipient) {
-    return []
-  }
-
-  const conditions = filterConditions(scope.filter)
+  const conditions = deliveryConditions({ ...filter, userId: undefined })
 
   const rows = await database
     .select({
@@ -146,7 +128,7 @@ export async function readRecipients(
       givenName: users.givenName,
       familyName: users.familyName,
       email: users.email,
-      messages: count(),
+      attempts: count(),
     })
     .from(notificationMessages)
     .innerJoin(users, eq(users.id, notificationMessages.userId))
@@ -157,6 +139,6 @@ export async function readRecipients(
   return rows.map((row) => ({
     userId: row.userId,
     name: displayName(row.givenName, row.familyName, row.email),
-    count: Number(row.messages),
+    count: Number(row.attempts),
   }))
 }

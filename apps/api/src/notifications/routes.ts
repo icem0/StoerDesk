@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin'
-import { and, count, eq, isNull } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   PERMISSIONS,
@@ -19,16 +19,15 @@ import {
   channelTestResponseSchema,
   matrixLinkingRequestSchema,
   notificationAccountSchema,
+  notificationDeliveryAttemptFilterSchema,
+  notificationDeliveryAttemptListResponseSchema,
   notificationComplianceListResponseSchema,
-  notificationComplianceSchema,
+  notificationUserComplianceSchema,
   notificationAccountListResponseSchema,
   notificationChannelKindSchema,
-  notificationMessageFilterSchema,
   notificationItemFilterSchema,
   notificationItemListResponseSchema,
   notificationItemReadResponseSchema,
-  notificationMessageListResponseSchema,
-  notificationMessageReadResponseSchema,
   notificationUnreadCountResponseSchema,
   notificationVerificationResponseSchema,
   notificationDeliveryListResponseSchema,
@@ -47,14 +46,13 @@ import {
   webPushSubscriptionResponseSchema,
   webPushUnsubscribeRequestSchema,
 } from '@stoerdesk/shared'
-import { effectivePermissions, requirePermission } from '../auth/requirePermission'
+import { requirePermission } from '../auth/requirePermission'
 import type { preHandlerHookHandler } from 'fastify'
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import {
   notificationChannels,
   notificationAccounts,
-  notificationMessages,
   outbox,
   pushSubscriptions,
 } from '../db/schema'
@@ -68,7 +66,7 @@ import {
   requestNtfyVerification,
 } from './verification'
 import { deleteAccount, listAccounts, storeAccount } from './accounts'
-import { readCompliance, readUserCompliance } from './compliance'
+import { readCompliance, readUserComplianceWithPolicy } from './compliance'
 import { readAlarmSettings } from '../settings/notifications'
 import { muteForOneHour, readMuteUntil } from './mute'
 import {
@@ -84,7 +82,10 @@ import {
   readWebPushPublicKey,
   storeWebPushSubscription,
 } from './web-push-subscriptions'
-import { readMessages, readRecipients, type MessageScope } from './messages'
+import {
+  readDeliveries,
+  readDeliveryRecipients,
+} from './messages'
 import { countUnreadItems, markItemRead, readItems } from './items'
 import {
   storeMatrixAccount,
@@ -630,17 +631,68 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
     )
 
     /**
+     * `GET /api/v1/admin/notifications/attempts` (`specs/10-notifications.md`
+     * §11.11, §11.16, ADR-0052): the **protocol** of the delivery — every
+     * delivery attempt of the instance with its recipient, its event, its
+     * channel, its state, the machine code of a failure and the number of the
+     * attempts. The page of the delivery `/admin/delivery` reads it beside the
+     * problems of the channels.
+     *
+     * The protocol names the users, so the right `notification.read_all`
+     * guards it: without the right the route answers `403 forbidden`. The
+     * filters of §11.16 — the recipient, the channel, the event, the state —
+     * narrow the answer; an unknown value answers `400 invalid_request` with
+     * the field path.
+     */
+    app.get(
+      '/api/v1/admin/notifications/attempts',
+      { preHandler: requirePermission(database, PERMISSIONS.notification.readAll) },
+      async (request, reply) => {
+        const query = request.query as Record<string, string | undefined>
+        const limit = boundedNumber(query.limit, 50, 1, 200)
+        const offset = boundedNumber(query.offset, 0, 0, 100_000)
+
+        const parsed = notificationDeliveryAttemptFilterSchema.safeParse({
+          ...(query.userId === undefined || query.userId === '' ? {} : { userId: query.userId }),
+          ...(query.channel === undefined || query.channel === '' ? {} : { channel: query.channel }),
+          ...(query.eventType === undefined || query.eventType === ''
+            ? {}
+            : { eventType: query.eventType }),
+          ...(query.state === undefined || query.state === '' ? {} : { state: query.state }),
+        })
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        return notificationDeliveryAttemptListResponseSchema.parse({
+          attempts: await readDeliveries(database, {
+            filter: parsed.data,
+            limit,
+            offset,
+          }),
+          recipients: await readDeliveryRecipients(database, parsed.data),
+        })
+      },
+    )
+
+    /**
      * `GET /api/v1/notifications/compliance` (`specs/10-notifications.md`
      * §11.9, §11.12, WP-M24-15): the compliance of the signed-in user — the
      * warning of the own page names the missing channels and links to the
-     * setup (§11.12).
+     * setup (§11.12). The answer carries the rule of the administration
+     * itself (§11.19, WP-M35-01): the required channels and the minimum
+     * number of channels, so the overview of the own page can name what is
+     * mandatory without a second request.
      */
     app.get(
       '/api/v1/notifications/compliance',
       { preHandler: requireSession },
       async (request) =>
-        notificationComplianceSchema.parse(
-          await readUserCompliance(database, request.user?.id ?? ''),
+        notificationUserComplianceSchema.parse(
+          await readUserComplianceWithPolicy(database, request.user?.id ?? ''),
         ),
     )
 
@@ -1294,136 +1346,6 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
         return channelTestResponseSchema.parse(
           await sendTestMessage(testRegistry, 'ntfy', topic, request.user?.locale),
         )
-      },
-    )
-
-    /**
-     * `GET /api/v1/notifications/messages` (WP-M14-120c): the own messages of
-     * the session user — which channel a message went to, whether it arrived
-     * and when. The newest message comes first. Paginated with `limit` (default
-     * 50, max 200) and `offset`; a value that is not a number falls back to the
-     * default.
-     *
-     * The filters of §11.16 (WP-M14-141b) narrow the answer: the addressee,
-     * the channel, the event, the state of the delivery and the unread
-     * messages. The inbox of a user stays personal: without the permission
-     * `notification.read_all` the answer holds the own messages, the addressee
-     * of a row is `null` and the addressee of another user answers
-     * `403 forbidden`.
-     */
-    app.get(
-      '/api/v1/notifications/messages',
-      { preHandler: requireSession },
-      async (request, reply) => {
-        const userId = request.user?.id ?? ''
-        const query = request.query as Record<string, string | undefined>
-        const limit = boundedNumber(query.limit, 50, 1, 200)
-        const offset = boundedNumber(query.offset, 0, 0, 100_000)
-
-        const parsed = notificationMessageFilterSchema.safeParse({
-          ...(query.userId === undefined || query.userId === '' ? {} : { userId: query.userId }),
-          ...(query.channel === undefined || query.channel === '' ? {} : { channel: query.channel }),
-          ...(query.eventType === undefined || query.eventType === ''
-            ? {}
-            : { eventType: query.eventType }),
-          ...(query.state === undefined || query.state === '' ? {} : { state: query.state }),
-          ...(query.unread === undefined || query.unread === ''
-            ? {}
-            : { unread: query.unread === 'true' ? true : query.unread === 'false' ? false : query.unread }),
-        })
-
-        if (!parsed.success) {
-          return reply
-            .code(400)
-            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
-        }
-
-        const filter = parsed.data
-        const held = await effectivePermissions(request, database)
-        const mayReadAll = held.includes(PERMISSIONS.notification.readAll)
-
-        if (!mayReadAll && filter.userId !== undefined && filter.userId !== userId) {
-          request.log.debug({ code: 'forbidden', required: PERMISSIONS.notification.readAll })
-
-          return reply.code(403).send({ code: 'forbidden', params: {} })
-        }
-
-        const scope: MessageScope = {
-          userId: mayReadAll ? (filter.userId ?? null) : userId,
-          filter: {
-            ...(filter.channel === undefined ? {} : { channel: filter.channel }),
-            ...(filter.eventType === undefined ? {} : { eventType: filter.eventType }),
-            ...(filter.state === undefined ? {} : { state: filter.state }),
-            ...(filter.unread === undefined ? {} : { unread: filter.unread }),
-          },
-          limit,
-          offset,
-          withRecipient: mayReadAll,
-        }
-
-        return notificationMessageListResponseSchema.parse({
-          messages: await readMessages(database, scope),
-          recipients: await readRecipients(database, scope),
-        })
-      },
-    )
-
-    /**
-     * `GET /api/v1/notifications/messages/unread-count` (WP-M14-120c): the
-     * number of the messages of the session user without a read receipt — the
-     * badge of the bell of the shell.
-     */
-    app.get(
-      '/api/v1/notifications/messages/unread-count',
-      { preHandler: requireSession },
-      async (request) => {
-        const userId = request.user?.id ?? ''
-
-        const [row] = await database
-          .select({ count: count() })
-          .from(notificationMessages)
-          .where(
-            and(
-              eq(notificationMessages.userId, userId),
-              isNull(notificationMessages.readAt),
-            ),
-          )
-
-        return notificationUnreadCountResponseSchema.parse({ count: Number(row?.count ?? 0) })
-      },
-    )
-
-    /**
-     * `PATCH /api/v1/notifications/messages/:id/read` (WP-M14-120c): marks one
-     * of the own messages as read. A message of another user or an unknown id
-     * answers `404 message_not_found` — the code is bound to the session.
-     */
-    app.patch<{ Params: { id: string } }>(
-      '/api/v1/notifications/messages/:id/read',
-      { preHandler: requireSession },
-      async (request, reply) => {
-        const userId = request.user?.id ?? ''
-        const { id } = request.params
-
-        const [row] = await database
-          .update(notificationMessages)
-          .set({ readAt: new Date() })
-          .where(
-            and(
-              eq(notificationMessages.id, id),
-              eq(notificationMessages.userId, userId),
-            ),
-          )
-          .returning({ id: notificationMessages.id, readAt: notificationMessages.readAt })
-
-        if (row === undefined) {
-          return reply.code(404).send({ code: 'message_not_found', params: {} })
-        }
-
-        return notificationMessageReadResponseSchema.parse({
-          id: row.id,
-          readAt: row.readAt?.toISOString() ?? null,
-        })
       },
     )
 

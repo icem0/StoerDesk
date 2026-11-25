@@ -54,31 +54,6 @@
       "apiKeys": "API keys",
       "bmaSync": "BMAcloud sync"
     },
-    "settingsItemDescriptions": {
-      "mySettings": "Name, language, theme and password of your account",
-      "notifications": "The channels the system reaches you on",
-      "branding": "Company name, logo and colours of the interface",
-      "dashboardSettings": "Tiles and the wall display",
-      "objects": "Master data of the objects and systems",
-      "stickers": "Print sheets for reports on site",
-      "stickerTemplate": "Geometry and appearance of the sticker sheets",
-      "users": "Create and edit users",
-      "roles": "Roles and their permissions",
-      "groups": "Groups and their memberships",
-      "statuses": "Ticket statuses and their colors",
-      "standardTexts": "Fault types and their texts",
-      "detectedErrors": "Errors detected on reports",
-      "escalation": "Escalation stages and their actions",
-      "defaults": "Default values for new reports",
-      "oncall": "Pools, duty blocks and shifts",
-      "myShifts": "Your own shifts and stand-bys",
-      "channels": "Configure and test notification channels",
-      "delivery": "Deliveries that did not go through",
-      "email": "E-mail dispatch of the office",
-      "webhooks": "Report events to other systems",
-      "apiKeys": "API keys of the office",
-      "bmaSync": "Synchronization with BMAcloud"
-    },
     "notFound": {
       "title": "Page not found",
       "hint": "This address does not exist (any more). Maybe the page was renamed or removed.",
@@ -191,7 +166,8 @@
         "password_wrong": "The current password is not correct.",
         "unknown": "The password could not be saved. Please try again later."
       }
-    }
+    },
+    "customerPortal": "Are you a customer? Register or reset your password"
   },
   "ntfy": {
     "subscribe": "Subscribe in the ntfy app",
@@ -318,11 +294,11 @@
       "ticket.resolved": "Resolved",
       "oncall.assigned": "Readiness assigned",
       "oncall.swap_requested": "Swap requested",
-      "oncall.unconfirmed_reminder": "Unconfirmed readiness"
+      "oncall.unconfirmed_reminder": "Unconfirmed readiness",
+      "oncall.released": "Duty withdrawn"
     },
     "compliance": {
       "warning": "Your notifications do not fulfil the rule of the administration.",
-      "missing": "Missing: {{channels}}. {{count}} channels are set up.",
       "link": "To the setup of the channels"
     },
     "verification": {
@@ -331,7 +307,7 @@
       "send": "Send the code",
       "codeLabel": "Code",
       "confirm": "Enter the code",
-      "noAccount": "No account connected yet — set the channel up below.",
+      "noAccount": "No account connected yet — set the channel up above.",
       "sent": "The code is on its way."
     },
     "email": {
@@ -342,6 +318,17 @@
       "saved": "The address is saved.",
       "remove": "Remove the address",
       "removed": "The address was removed."
+    },
+    "overview": {
+      "heading": "Overview of the channels",
+      "hint": "The overview names every channel with its state. You open the setup yourself: a click on “Configure” shows that one channel only.",
+      "count": "{{count}} of {{minimum}} channels set up",
+      "fulfilled": "You fulfil the rule of the administration.",
+      "missing": "Still missing: {{channels}}.",
+      "ruleOff": "The administration made no rule — every channel is voluntary.",
+      "required": "Required",
+      "configure": "Configure",
+      "close": "Close"
     }
   },
   "my": {
@@ -372,10 +359,35 @@
     }
   },
   "inbox": {
+    "task": {
+      "assigned": "Ticket {{ticket}} is assigned to you.",
+      "answered": "Ticket {{ticket}}: {{who}} has {{answer}} it.",
+      "accepted": "accepted",
+      "declined": "declined",
+      "escalated": "Ticket {{ticket}} has been escalated.",
+      "resolved": "Ticket {{ticket}} is done.",
+      "oncallAssigned": "Duty {{pool}} is assigned to you.",
+      "swapRequested": "A swap has been requested for duty {{pool}}.",
+      "unconfirmed": "Duty {{pool}} is not confirmed yet.",
+      "unknown": "Ticket {{ticket}}",
+      "deliveryFailed": "A message did not arrive ({{channel}}, error code {{code}}).",
+      "oncallReleased": "Your duty {{pool}} was {{cause}}.",
+      "releasedDeleted": "deleted",
+      "releasedReassigned": "handed over to another technician"
+    },
+    "channels": {
+      "ntfy": "ntfy",
+      "telegram": "Telegram",
+      "matrix": "Matrix",
+      "signal": "Signal",
+      "email": "E-Mail",
+      "webpush": "Web Push",
+      "whatsapp": "WhatsApp Web"
+    },
     "title": "Notifications",
-    "hint": "Every message StörDesk sent to you, with its channel and its delivery state.",
+    "hint": "What StörDesk gives you to do — a message with the link to the place where you can act.",
     "limitLabel": "Messages per page",
-    "empty": "No message yet.",
+    "empty": "Nothing to do: StörDesk has given you nothing.",
     "error": "The messages could not be loaded.",
     "unread": "New",
     "acknowledge": "Acknowledge",

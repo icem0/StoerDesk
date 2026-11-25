@@ -41,6 +41,7 @@ export type IconName =
   | 'plus'
   | 'ticket'
   | 'bar-chart'
+  | 'info'
 
 const ICONS: Record<IconName, ReactNode> = {
   user: [
@@ -203,6 +204,11 @@ const ICONS: Record<IconName, ReactNode> = {
     <line x1="18" y1="20" x2="18" y2="10" key="a" />,
     <line x1="12" y1="20" x2="12" y2="4" key="b" />,
     <line x1="6" y1="20" x2="6" y2="14" key="c" />,
+  ],
+  info: [
+    <circle cx="12" cy="12" r="9" key="a" />,
+    <line x1="12" y1="11" x2="12" y2="16.5" key="b" />,
+    <line x1="12" y1="7.5" x2="12.01" y2="7.5" key="c" />,
   ],
 }
 

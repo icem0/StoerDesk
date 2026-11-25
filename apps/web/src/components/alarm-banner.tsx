@@ -48,7 +48,7 @@ export function AlarmBanner() {
   /** The unhandled messages — the same query the bell of the menu reads. */
   const unread = useQuery({
     queryKey: ['notification-unread-count'],
-    queryFn: () => apiFetch<{ count: number }>('/api/v1/notifications/messages/unread-count'),
+    queryFn: () => apiFetch<{ count: number }>('/v1/notifications/items/unread-count'),
     refetchOnWindowFocus: true,
     refetchInterval: 30_000,
     retry: false,
@@ -57,14 +57,14 @@ export function AlarmBanner() {
   /** The alarm of the installation: the sound and the interval of its repetition. */
   const alarm = useQuery({
     queryKey: ['notification-alarm'],
-    queryFn: () => apiFetch<AlarmSettings>('/api/v1/notifications/alarm'),
+    queryFn: () => apiFetch<AlarmSettings>('/v1/notifications/alarm'),
     retry: false,
   })
 
   /** The silence of the user — the end of it, or `null` while the alarm is audible. */
   const mute = useQuery({
     queryKey: ['notification-mute'],
-    queryFn: () => apiFetch<NotificationMute>('/api/v1/notifications/mute'),
+    queryFn: () => apiFetch<NotificationMute>('/v1/notifications/mute'),
     retry: false,
   })
 

@@ -139,9 +139,12 @@ export function SettingsPage() {
           items: section.items.map((item) => ({
             ...item,
             label: t(`app.settingsItems.${item.key}`),
-            description: t(`app.settingsItemDescriptions.${item.key}`, {
-              defaultValue: '',
-            }),
+            // The two tiers of the explanation (`specs/13-ui.md` §14.13,
+            // ADR-0060): the summary stays visible under the label, the full
+            // text opens in the panel of the ⓘ of the entry. Both live in the
+            // namespace `help`.
+            summary: t(`help:settingsMenu.${item.key}`),
+            helpText: t(`help:settingsMenu.${item.key}More`),
           })),
         }))}
       />

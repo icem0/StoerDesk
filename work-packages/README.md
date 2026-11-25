@@ -40,9 +40,14 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m26](m26/) | Phase 26: the statistics read themselves — a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01, ADR-0049) | 5   |
 | [m27](m27/) | Phase 27: the sticker is a template — the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and the free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | 7   |
 | [m28](m28/) | Phase 28: the gate answers in a minute — the tests of the web share one environment per worker, the integration tests of the API share one migrated template database, the static gates of the check run in parallel and the assertions of the migrations read the schema of the database instead of the text of the files (WP-M28-01 … WP-M28-04b) | 5   |
-| [m30](m30/) | Phase 30: the message is a task and the delivery attempt is the protocol — the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on `/admin/notifications`, and a delivery that fails finally becomes a task of the administration over its own confirmed channels (WP-M30-01 … WP-M30-06, ADR-0052) | 6   |
+| [m30](m30/) | Phase 30: the message is a task and the delivery attempt is the protocol — the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on `/admin/delivery`, and a delivery that fails finally becomes a task of the administration over its own confirmed channels (WP-M30-01 … WP-M30-06, ADR-0052) | 6   |
 | [m31](m31/) | Phase 31: the customer portal — the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | 11   |
 | [m32](m32/) | Phase 32: the assignment uses the pools of the installation — the assignment names a readiness pool, a user group or one technician (ADR-0057); the members of the target are the chain of the refusal; the setting `escalation.assignee_pool` and the tab _Pool der Office_ are gone (WP-M32-01 … WP-M32-05) | 5   |
+| [m33](m33/) | Phase 33: the templates of the e-mail carry a standard text — the mailbox offers a localized standard text per kind of message and a reset-to-standard button above every template field (WP-M33-01) | 1   |
+| [m34](m34/) | Phase 34: the release of a shift — a shift that has not started is deleted in every state, and the technician who had the shift is informed (ADR-0058, WP-M34-01 … WP-M34-02b) | 3   |
+| [m37](m37/) | Phase 37: the overview of the own channels — the page `/settings/notifications` names every channel with its state, marks the mandatory channels of the rule of the administration, names the number of the channels that are set up and what is still missing, and the setup of a channel opens only when its own button is clicked (WP-M37-01 … WP-M37-03); out of band: the ticket overview opens open and its filters sit in a menu (WP-M35-03, ADR-0059) | 3   |
+| [m38](m38/) | Phase 38: the way of the code and the landing page of the customer — the scan of a QR code opens the landing page of the object (the open tickets first, the report form at `/m/<qr_token>/neu`), the public view of an open ticket of the object shows the number, the status, the deadline, the public events and the public comments, the QR token of the object is the capability of a comment on such a ticket, and the customer gets the landing page `/portal` with his open tickets first and the closed ones below (ADR-0061, WP-M38-01 … WP-M38-04) — **out of band**, the phase 36 stays open | 4   |
+| [m36](m36/) | Phase 36: an explanation of a place is a help popover — one component with the info symbol opens a panel at the place, never a hover-only tooltip; the explanation exists in two tiers in the namespace `help`; the settings menu keeps a readable summary visible and puts the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a help page carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | 8   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1704,6 +1709,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M14-176 | the web push sends through the library of the built API (out of band) | done | yes |
 | WP-M14-177 | the inbox works as an alarm — the retroactive record of commit `d8d2d0e6` (out of band) | done | yes |
 | WP-M14-178 | the alarm tone of the browser has a test (out of band) | done | yes |
+| WP-M14-179 | the click on the pushed alarm opens the ticket in the app that is already running | done | yes |
 | WP-M0-01 | local startability with Compose | done | yes |
 | WP-M0-02 | resilient start order | done | yes |
 | WP-M0-03 | binding plan anchor | done | yes |
@@ -1816,6 +1822,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M25-07 | the warning of the setup as a large band of the shell and the exit criterion of the phase (profile `ctx-256k`) | done | yes |
 | WP-M25-08 | the pushed alarm asks the page for the sound | done | yes |
 | WP-M25-09 | the settings page frees the tone of this browser | done | yes |
+| WP-M25-10 | the alarm band asks the API without a second prefix — the band stands again and the tone of the browser plays | done | yes |
 | WP-M26-01   | the statistics know only phases with data — the phase `firstResponse` is gone (ADR-0049) | done                    | yes     |
 | WP-M26-02   | the dashboard knows the phase neither — the block of the evaluations carries three averages | done                    | yes     |
 | WP-M26-03   | the statistics name the readable text — the groupings carry the labels of the fault types and the detected errors | done                    | yes     |
@@ -1844,13 +1851,14 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M29-08   | one shell for the administration — the third batch of pages | planned | yes     |
 | WP-M29-09   | the exit criterion of the phase — one `<main>` per page, symbols and descriptions in the menu, `i18n:check` green | planned | yes     |
 | WP-M29-10   | the settings keep every path — the menu names every module of the administration again, the symbol gets room beside the text, the four topic pages of WP-M29-04 are gone | planned | yes     |
-| WP-M29-11   | the sections of the menu never fold away — every entry of the settings stands visible, the search field filters | planned | yes     |
+| WP-M29-11   | the sections of the menu never fold away — every entry of the settings stands visible, the search field filters | done | yes     |
 | WP-M30-01   | the message is a task and the delivery attempt is the protocol — the spec and ADR-0052 | planned | yes |
 | WP-M30-02   | the task of the user — the table `notification_items`, the write rule and the API of the tasks | planned | yes |
 | WP-M30-03   | the protocol of the administration — `/admin/notifications` with the attempts of the delivery | planned | yes |
 | WP-M30-04   | the inbox shows the tasks — the readable text, the deep link, the read receipt and the count | planned | yes |
 | WP-M30-05   | the alarm of a failed delivery — the task of the administration, throttled | planned | yes |
-| WP-M30-06   | the criterion of the phase — one task per user and event, the protocol and the alarm of a failure | planned | yes |
+| WP-M30-06   | the criterion of the phase — one task per user and event, the protocol and the alarm of a failure | done | yes |
+| WP-M30-07   | the record of the alarm of the failed delivery — the commit `d15fc267` carried the work of WP-M30-05 under the subject of the parallel session (profile `ctx-128k`) | done | yes |
 | WP-M31-01   | the decisions of the customer portal — ADR-0053 … ADR-0056 | done | yes |
 | WP-M31-02   | the specification of the customer portal — the slice §19 and the amendment of the RBAC chapter | done | yes |
 | WP-M31-03   | the role `customer` and the contracts of the portal — the permissions, the system role and the Zod contracts | done | yes |
@@ -1871,7 +1879,38 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
 | WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | done | yes |
 | WP-M32-04   | the interface assigns a target — the administration loses the tab _Pool der Office_, the picker names the pools and the groups | done | yes |
-| WP-M32-05   | the pool of the office is gone — the setting, the former fields of the contract and the stored actions | done | yes |
+| WP-M32-05   | the pool of the office is gone — the setting, the former fields of the contract and the stored actions | done | yes     |
+| WP-M33-01   | the templates of the e-mail carry a standard text — a localized standard text per kind of message and a reset-to-standard button per template field | done | yes |
+| WP-M34-01   | the shift that has not started is released by the admin — every state is deletable while `starts_at` lies in the future; a shift that started keeps the rule of ADR-0047 (ADR-0058) | done | yes |
+| WP-M34-02a   | the API tells the technician that his duty is gone — the event `oncall.released` for the delete of a shift and for the handover to another technician | done | yes |
+| WP-M34-02b   | the inbox names the release of the shift — the readable text of the task and the name of the event in the protocol | done | yes |
+| WP-M37-01   | the overview names the rule of the administration — the answer of the compliance carries the required channels and the minimum number of channels; the page marks the mandatory channels and names the count and what is missing | done | yes |
+| WP-M37-02   | the ntfy setup and the code confirmation open with their channel — the topic of the user with its QR code, the test of the own topic and the confirmation of the code appear when the channel is opened | done | yes |
+| WP-M37-03   | the remaining channels open with their button — Telegram, Matrix, the e-mail, the web push and WhatsApp Web show their setup only while their channel is open; the data of a channel is read when its channel is open | done | yes |
+| WP-M35-03   | the ticket overview opens open — the option „nur offene“ is gone, the checkbox „Erledigte anzeigen“ takes the completed tickets in, and the filters sit in a menu behind the Filter button (ADR-0059, out of band) | done | yes |
+| WP-M36-01   | an explanation of a place is a help popover — the scope, `specs/13-ui.md` §14.13, ADR-0060 and the plan of the phase | done | yes |
+| WP-M36-02   | the help popover and the info symbol exist once — `help-popover.tsx`, the name `info` in `IconName`, the namespace `help` | done | yes |
+| WP-M36-03   | an entry of the settings menu keeps its summary visible — the entry becomes a row (a `<button>` inside the link of the entry was invalid), the detail opens behind the ⓘ, the search matches the panel body | done | yes |
+| WP-M36-04   | every guarded page names itself with one info symbol — the shell renders one page-level ⓘ beside the version, a page that explains itself renders none | done | yes |
+| WP-M36-05   | the administration names its keys and its blocks in a panel — the `title=` of the statuses, the detected errors, the text templates, the readiness page, the users, the channel form and the row menu move to the panel | planned | yes |
+| WP-M36-06   | the readiness and the tickets name their marks in a panel — the readiness cell, the shift actions, the deadline of a row and the milestones of the timeline | planned | yes |
+| WP-M36-07   | the statistics, the objects and the notification cards name their marks in a panel — the glossary of the statistics, the values of a diagram outside the hover, the sticker sheet, the web push card and the ntfy card | planned | yes |
+| WP-M36-08   | the interface reads itself one step bigger — the root font size of `styles.css`, the 11 hard `text-[Npx]` classes to rem, the meta text to `text-slate-300` | planned | yes |
+| WP-M38-01   | the way of the code and the landing page of the customer — the ADR-0061, §7.10 of the report form and the landing page of the customer in §19.5 | done | yes |
+| WP-M38-02   | the public view of an open ticket of the object — the contract, the API and the page with the comment of the object | planned | yes |
+| WP-M38-03   | the scan opens the landing page of the object — `/m/:token` names the open tickets of the object, the form moves to `/m/:token/neu` | planned | yes |
+| WP-M38-04   | the landing page of the customer — `/portal` with the open tickets first, one open ticket opens its detail, a customer lands in his portal | planned | yes |
+
+**Phase 33 is closed (WP-M33-01).** The mailbox at `/admin/email` had offered
+six empty template fields — an instance had to write every text itself and had
+no readable default. The mailbox now carries a **standard text** per kind of
+message (ticket, readiness, test, registration, new password, report to the
+reporter) and a **reset-to-standard button** above every template field, filled
+in the language of the interface (`admin.email.standard.*`, `admin.email.standardReset`).
+The texts are plain texts with the placeholders of §11.5a and name only the
+machine values the message of that kind actually carries (§11.5, §19.8). An
+empty field still falls back to the built-in text — the fallback and the send
+path stay untouched (ADR-0046).
 
 **Phase 32 is closed (WP-M32-01 … WP-M32-05).** The assignment of the office
 knows no third pool any more. The pool of the office — the setting

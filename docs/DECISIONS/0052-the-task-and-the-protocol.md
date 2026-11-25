@@ -58,10 +58,13 @@ workflow.
 3. **The protocol belongs to the administration.** The rows of
    `notification_messages` stay and become the **protocol**: one row per
    delivery attempt with its channel, its state, its machine code and its
-   time. The new page `/admin/notifications` shows them with the filters of
-   §11.16 — the recipient, the channel, the event, the state — and is guarded
-   by `notification.read_all`. The admin filter leaves the inbox page;
-   `/admin/delivery` keeps the problems of the channels and their quittature.
+   time. The page of the delivery `/admin/delivery` shows them with the filters
+   of §11.16 — the recipient, the channel, the event, the state — beside the
+   problems of the channels and their quittature; the block of the protocol
+   needs the right `notification.read_all`, because it names the users. The
+   admin filter leaves the inbox page. The office asked for **one** page of
+   the delivery, not two: a page that answers „what went wrong“ and a page
+   that answers „who got what“ are one question with two answers.
 4. **A delivery that fails finally becomes a task of the administration.** The
    new event type `notification.delivery_failed` writes a task for every user
    with `notification.read_all`. The way is the **confirmed channels of the
@@ -115,7 +118,7 @@ workflow.
 - The routes of the phase: `GET /api/v1/notifications/items`,
   `GET /api/v1/notifications/items/unread-count`,
   `PATCH /api/v1/notifications/items/:id/read` and
-  `GET /api/v1/admin/notifications/deliveries`. The three routes of the
+  `GET /api/v1/admin/notifications/attempts`. The three routes of the
   messages leave the API.
 - The bell of the shell and the alarm band read the **same** count — the count
   of the unhandled tasks. One route, two consumers.
@@ -123,3 +126,7 @@ workflow.
   and the params, never a translated text.
 - The protocol names the users; the inbox names the tasks. Neither page mixes
   the two.
+- The protocol has no page of its own: the page of the delivery
+  `/admin/delivery` carries the problems **and** the attempts. The block of the
+  attempts appears only with the right `notification.read_all`; the problems
+  stay with `notification.read` (§11.8).

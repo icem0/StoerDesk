@@ -459,21 +459,53 @@ export async function updateShift(
       )
     }
 
+    // The technician who had the shift learns that his duty is gone
+    // (`ADR-0058`): the shift goes to another technician. A shift that the
+    // technician declined himself is no duty of his — the decline is his own
+    // act.
+    if (
+      patch.userId !== undefined &&
+      shift.userId !== null &&
+      patch.userId !== shift.userId &&
+      fromState !== 'DECLINED'
+    ) {
+      await enqueueOncallOutbox(
+        tx,
+        {
+          shift: {
+            id: updated.id,
+            poolId: updated.poolId,
+            state: updated.state,
+            startsAt: updated.startsAt,
+            endsAt: updated.endsAt,
+          },
+          eventType: 'oncall.released',
+          userId: shift.userId,
+          release: 'reassigned',
+        },
+        loadEnv(),
+      )
+    }
+
     return toShiftResult(updated)
   })
 }
 
 /**
- * Deletes a shift (ADR-0047, `specs/04-oncall.md` §4a.3).
+ * Deletes a shift (ADR-0047, ADR-0058, `specs/04-oncall.md` §4a.3).
  *
- * A shift that held the duty stays locked: a confirmed or swapped shift, and
- * every shift that was confirmed at some moment — also when it was declined
- * afterwards, the confirmation stays in the row. A shift that was never
- * confirmed may be deleted even after it started: the office removes the slots
- * that nobody accepted. A `PLANNED` shift that started stays locked, because
- * it counted for the ticket coupling (§4a.6) and the office may have offered a
- * ticket on it. Every other lock answers `409 oncall_shift_locked` with the
- * reason in its params.
+ * A shift that **has not started** is released by the delete: the duty of a
+ * shift of the future was never held, so every state is deletable — also a
+ * confirmed one.
+ *
+ * A shift that started keeps its place in the history: a confirmed or swapped
+ * shift, and every shift that was confirmed at some moment — also when it was
+ * declined afterwards, the confirmation stays in the row. A shift that was
+ * never confirmed may be deleted even after it started: the office removes the
+ * slots that nobody accepted. A `PLANNED` shift that started stays locked,
+ * because it counted for the ticket coupling (§4a.6) and the office may have
+ * offered a ticket on it. Every other lock answers `409 oncall_shift_locked`
+ * with the reason in its params.
  */
 export async function deleteShift(
   database: Db,
@@ -486,30 +518,34 @@ export async function deleteShift(
     throw new OncallServiceError(404, 'oncall_shift_not_found', { fields: ['id'] })
   }
 
-  if (shift.state === 'CONFIRMED' || shift.state === 'SWAP_REQUESTED') {
-    throw new OncallServiceError(409, 'oncall_shift_locked', {
-      shiftId,
-      state: shift.state,
-      reason: 'state',
-    })
-  }
+  const started = shift.startsAt <= new Date()
 
-  // The duty the shift held stays part of the history — also when the
-  // technician declined afterwards (`confirmed_at` is set then).
-  if (shift.confirmedAt !== null) {
-    throw new OncallServiceError(409, 'oncall_shift_locked', {
-      shiftId,
-      state: shift.state,
-      reason: 'confirmed',
-    })
-  }
+  if (started) {
+    if (shift.state === 'CONFIRMED' || shift.state === 'SWAP_REQUESTED') {
+      throw new OncallServiceError(409, 'oncall_shift_locked', {
+        shiftId,
+        state: shift.state,
+        reason: 'state',
+      })
+    }
 
-  if (shift.startsAt <= new Date() && shift.state === 'PLANNED') {
-    throw new OncallServiceError(409, 'oncall_shift_locked', {
-      shiftId,
-      state: shift.state,
-      reason: 'started',
-    })
+    // The duty the shift held stays part of the history — also when the
+    // technician declined afterwards (`confirmed_at` is set then).
+    if (shift.confirmedAt !== null) {
+      throw new OncallServiceError(409, 'oncall_shift_locked', {
+        shiftId,
+        state: shift.state,
+        reason: 'confirmed',
+      })
+    }
+
+    if (shift.state === 'PLANNED') {
+      throw new OncallServiceError(409, 'oncall_shift_locked', {
+        shiftId,
+        state: shift.state,
+        reason: 'started',
+      })
+    }
   }
 
   await database.transaction(async (tx) => {
@@ -519,6 +555,29 @@ export async function deleteShift(
       actorUserId,
       payload: { state: shift.state },
     })
+
+    // The technician who had the shift learns that his duty is gone
+    // (`ADR-0058`): the message is written before the delete and points at no
+    // shift, so it survives the delete of the shift.
+    if (shift.userId !== null) {
+      await enqueueOncallOutbox(
+        tx,
+        {
+          shift: {
+            id: shift.id,
+            poolId: shift.poolId,
+            state: shift.state,
+            startsAt: shift.startsAt,
+            endsAt: shift.endsAt,
+          },
+          eventType: 'oncall.released',
+          userId: shift.userId,
+          release: 'deleted',
+          standalone: true,
+        },
+        loadEnv(),
+      )
+    }
 
     const deleted = await tx
       .delete(oncallShifts)

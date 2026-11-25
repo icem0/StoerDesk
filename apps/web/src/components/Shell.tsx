@@ -12,6 +12,7 @@ import { SetupWarningBand } from './setup-warning-band'
 import { AppVersion } from './app-version'
 import { Icon, type IconName } from './icon'
 import { NotificationBell } from './notification-bell'
+import { PageHelp } from './page-help'
 
 import type { BrandingResponse } from '@stoerdesk/shared'
 import { DEFAULT_ACCENT_COLOR } from '@stoerdesk/shared'
@@ -84,7 +85,6 @@ function SettingsLink() {
             : 'border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100'
         }`
       }
-      title={t('app.settings.title')}
       to="/settings"
     >
       <Icon name="settings" className="h-5 w-5" />
@@ -143,10 +143,12 @@ export function Shell() {
             </span>
           </span>
 
-          {/* Right: version and settings. The bell is not here any more — since
-               WP-M16-04 it is an entry of the menu below (specs/13-ui.md §14.5). */}
+          {/* Right: version, the explanation of the page and the settings. The
+               bell is not here any more — since WP-M16-04 it is an entry of the
+               menu below (specs/13-ui.md §14.5). */}
           <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
             <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
+            {me.data ? <PageHelp /> : null}
             {me.data ? <SettingsLink /> : null}
           </div>
 

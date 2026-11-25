@@ -846,6 +846,8 @@ export const NOTIFICATION_EVENT_TYPES = [
   'oncall.assigned',
   'oncall.swap_requested',
   'oncall.unconfirmed_reminder',
+  /** The release of a shift (§4a.3, ADR-0058) — the duty of the technician is gone. */
+  'oncall.released',
 ] as const
 
 /**
@@ -855,6 +857,8 @@ export const NOTIFICATION_EVENT_TYPES = [
  */
 export const NOTIFICATION_INSTANCE_EVENT_TYPES = [
   'channel.health_warning',
+  /** The task of a failed delivery (§11.18, ADR-0052) — no ticket, no shift. */
+  'notification.delivery_failed',
   /** The report of the reporter to his address (§19.8, ADR-0056). */
   'ticket.reporter',
 ] as const
@@ -1104,7 +1108,7 @@ export const outbox = pgTable(
     check('outbox_event_type_check', sql`${table.eventType} IN (${checkList(OUTBOX_EVENT_TYPES)})`),
     check(
       'outbox_ticket_or_shift_check',
-      sql`(${table.ticketId} IS NOT NULL) <> (${table.shiftId} IS NOT NULL) OR (${table.eventType} = 'channel.health_warning' AND ${table.ticketId} IS NULL AND ${table.shiftId} IS NULL)`,
+      sql`(${table.ticketId} IS NOT NULL) <> (${table.shiftId} IS NOT NULL) OR (${table.eventType} IN ('channel.health_warning', 'notification.delivery_failed', 'oncall.released') AND ${table.ticketId} IS NULL AND ${table.shiftId} IS NULL)`,
     ),
   ],
 )
