@@ -858,6 +858,17 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
+**Phase 31 has started (WP-M31-01).** The customer of an installation has no
+account: the reporter of a fault is free text on the ticket, the trained
+person of an object exists nowhere, and the office cannot show the customer
+the state of his reports. The phase gives the customer an account with the
+role `customer` (ADR-0053), lets him register himself over a link in the mail
+— the registration exists only with a configured e-mail channel (ADR-0054) —
+gives the office the assignment of the trained person of an object, lets the
+report by QR code register the reporter with the confirmation of the trained
+person (DIN 14675), and makes the report of the reporter an action of the
+escalation (ADR-0056). The slice is `specs/19-customer-portal.md`.
+
 **Phase 30 has started (WP-M30-01).** The page `/notifications` answers two
 questions at once and answers both of them wrong. Its rows are the delivery
 attempts of the table `notification_messages` — one row per user **and

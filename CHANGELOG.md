@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The customer portal (**WP-M31-01 … WP-M31-13**, phase 31, ADR-0053 … ADR-0056):
+  the customer of an installation is a **user with the role `customer`** and
+  the trained person of an object is the **assignment** of the object to that
+  customer; the **administration assigns the object** in its edit page, and the
+  customer sees his **own open tickets** and their history in the portal —
+  the ticket of somebody else does not exist for him, and the internal entries
+  of the house stay in the office. The customer **registers himself over a
+  link in the mail**; the registration exists **only with a configured e-mail
+  channel**, the token lives as its SHA-256 hash for 24 hours and is consumed
+  by its first use, and the answer of the route never names an address. The
+  report by QR code carries **three checkboxes**: the confirmation that the
+  reporter is the trained person named by the operator (**DIN 14675**) is
+  always mandatory, the registration makes the address mandatory, and the
+  opt-in for the messages is greyed out while the address is empty. The report
+  of the reporter leaves the installation as the **action `notify_reporter`**
+  of the escalation: the office decides per stage and rule, the opt-in of the
+  reporter decides whether it goes out.
+
 ### Changed
 - The message is a task and the delivery attempt is the protocol
   (**WP-M30-01**, phase 30, ADR-0052): the inbox of a user shows **one task
