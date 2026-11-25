@@ -51,7 +51,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         })
         .returning({ qrToken: objects.qrToken })
 
-      qrToken = object!.qrToken
+      qrToken = object!.qrToken ?? ''
     })
 
     afterAll(async () => {
