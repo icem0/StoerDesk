@@ -7,6 +7,12 @@ import { type ReactNode } from 'react'
  * padding, the colour and the width of the frame; the page brings its heading,
  * its back link and its content.
  */
-export function AdminLayout({ children }: { children: ReactNode }): ReactNode {
-  return <div className="flex flex-col">{children}</div>
+export function AdminLayout({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}): ReactNode {
+  return <div className={`flex flex-col ${className ?? ''}`}>{children}</div>
 }

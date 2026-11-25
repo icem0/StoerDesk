@@ -27,6 +27,14 @@ const PAGES = [
   'apps/web/src/admin/oncall-page.tsx',
   'apps/web/src/admin/oncall-pool-create-page.tsx',
   'apps/web/src/admin/bma-sync-page.tsx',
+  'apps/web/src/admin/email-page.tsx',
+  'apps/web/src/settings/branding-page.tsx',
+  'apps/web/src/settings/my-settings-page.tsx',
+  'apps/web/src/settings/notifications-page.tsx',
+  'apps/web/src/settings/sticker-template-page.tsx',
+  'apps/web/src/features/oncall/my-shifts-page.tsx',
+  'apps/web/src/features/notifications/inbox-page.tsx',
+  'apps/web/src/features/notifications/web-push-help-page.tsx',
 ]
 
 describe('AdminLayout', () => {
@@ -50,7 +58,7 @@ describe('AdminLayout', () => {
   it.each(PAGES)('%s brings no landmark of its own', (page) => {
     const source = readFileSync(resolve(process.cwd(), page), 'utf8')
 
-    expect(source).toContain('<AdminLayout>')
+    expect(source).toContain('<AdminLayout')
     expect(source).not.toContain('<main')
   })
 })

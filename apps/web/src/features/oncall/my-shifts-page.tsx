@@ -14,6 +14,7 @@ import { ReadinessCalendar } from './readiness-calendar'
 import { PlanningSection } from './planning-section'
 import { OpenShiftsSection } from './open-shifts-section'
 import { ShiftDetailDialog } from './shift-detail-dialog'
+import { AdminLayout } from '../../components/admin-layout'
 
 /**
  * My on-call shifts (`specs/04-oncall.md` §4a.4, §4a.5, §4a.7; WP-M8-14).
@@ -182,7 +183,7 @@ function MyShiftsPageContent({
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{t('readiness.pageTitle')}</h1>
@@ -288,7 +289,7 @@ function MyShiftsPageContent({
           showNames={mayShowNames}
         />
       ) : null}
-    </main>
+    </AdminLayout>
   )
 }
 

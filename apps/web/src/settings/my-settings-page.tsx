@@ -6,6 +6,7 @@ import type { TFunction } from 'i18next'
 
 import { ApiError, apiFetch } from '../lib/api'
 import { PasswordChangeDialog } from '../auth/password-change-dialog'
+import { AdminLayout } from '../components/admin-layout'
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
@@ -98,7 +99,7 @@ export function MySettingsPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
+    <AdminLayout>
       <Link
         className="mt-6 inline-block rounded bg-slate-800 px-3 py-2 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
@@ -200,6 +201,6 @@ export function MySettingsPage() {
           void me.refetch()
         }}
       />
-    </main>
+    </AdminLayout>
   )
 }

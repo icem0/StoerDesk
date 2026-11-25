@@ -17,6 +17,7 @@ import {
 import { ApiError, apiFetch } from '../lib/api'
 import { NtfySubscription } from '../features/settings/NtfySubscription'
 import { WebPushSubscription } from '../features/settings/WebPushSubscription'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The own channels page (`specs/10-notifications.md` §11.1, §11.3, §11.12,
@@ -423,7 +424,7 @@ const testReason = (code: string): string => {
   })
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
+    <AdminLayout>
       <Link
         className="mt-6 inline-block rounded bg-slate-800 px-3 py-2 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
         to="/settings"
@@ -1036,6 +1037,6 @@ const testReason = (code: string): string => {
           ) : null}
         </section>
       ) : null}
-    </main>
+    </AdminLayout>
   )
 }

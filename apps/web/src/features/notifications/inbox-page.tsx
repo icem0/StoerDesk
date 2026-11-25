@@ -13,6 +13,7 @@ import type {
 
 import { apiFetch } from '../../lib/api'
 import { type BrowserPush, useBrowserPush } from '../../lib/web-push'
+import { AdminLayout } from '../../components/admin-layout'
 
 /** The cause of the hint of the web push; `none` means: no hint. */
 type WebPushHint =
@@ -263,7 +264,7 @@ export function InboxPage() {
   const tasks = items.data?.items ?? []
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-6">
+    <AdminLayout className="mx-auto w-full max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-semibold">{t('inbox.title')}</h1>
@@ -390,6 +391,6 @@ export function InboxPage() {
           })}
         </ul>
       ) : null}
-    </main>
+    </AdminLayout>
   )
 }

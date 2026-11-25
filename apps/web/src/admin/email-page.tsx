@@ -10,6 +10,7 @@ import type {
 } from '@stoerdesk/shared'
 import { ApiError, apiFetch } from '../lib/api'
 import { usePermission } from '../auth/usePermission'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The mailbox of the instance (`specs/10-notifications.md` §11.5a, §11.12,
@@ -165,7 +166,7 @@ export function EmailPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 sm:p-8 text-slate-100">
+    <AdminLayout>
       <Link
         className="mt-6 inline-block rounded bg-slate-800 px-3 py-2 text-sm transition-colors hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
         to="/settings"
@@ -490,6 +491,6 @@ export function EmailPage() {
           </div>
         </div>
       )}
-    </main>
+    </AdminLayout>
   )
 }

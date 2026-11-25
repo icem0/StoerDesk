@@ -1848,7 +1848,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M29-05   | every channel its own page — `/admin/channels/:kind` with Matrix as the first channel page | done | yes     |
 | WP-M29-06   | one shell for the administration — the `admin-layout.tsx` hull and the first batch of pages | done | yes     |
 | WP-M29-07   | one shell for the administration — the second batch of pages | done | yes     |
-| WP-M29-08   | one shell for the administration — the third batch of pages | planned | yes     |
+| WP-M29-08   | one shell for the administration — the third batch of pages | done | yes     |
 | WP-M29-09   | the exit criterion of the phase — one `<main>` per page, symbols and descriptions in the menu, `i18n:check` green | planned | yes     |
 | WP-M29-10   | the settings keep every path — the menu names every module of the administration again, the symbol gets room beside the text, the four topic pages of WP-M29-04 are gone | planned | yes     |
 | WP-M29-11   | the sections of the menu never fold away — every entry of the settings stands visible, the search field filters | done | yes     |

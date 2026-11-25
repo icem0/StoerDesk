@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { AdminLayout } from '../../components/admin-layout'
 
 /**
  * The setup guide for Web Push (VAPID) at `/help/web-push`. The inbox names a
@@ -48,7 +49,7 @@ export function WebPushHelpPage() {
   ]
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-6">
+    <AdminLayout className="mx-auto w-full max-w-3xl">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">{t('help.webpush.title')}</h1>
         <p className="mt-1 text-sm text-slate-400">{t('help.webpush.hint')}</p>
@@ -120,6 +121,6 @@ export function WebPushHelpPage() {
           {t('help.webpush.inboxLink')}
         </Link>
       </div>
-    </main>
+    </AdminLayout>
   )
 }
