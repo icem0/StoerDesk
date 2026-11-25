@@ -1862,8 +1862,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-12   | the administration of the action and of the templates of the portal | done | yes |
 | WP-M31-13   | the criterion and the documentation of the phase — the acceptance test, the module map, the plan and the changelog | done | yes |
 | WP-M31-14   | the customer decides about the messages of his ticket — the switch in the portal | planned | yes |
-| WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | planned | no |
-| WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | planned | no |
+| WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
+| WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

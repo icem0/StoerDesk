@@ -68,9 +68,10 @@ export function RoleCheckboxes({
       {roleKeys.map((key) => (
         <label key={key} className="flex items-center gap-1 text-sm">
           <input type="checkbox" checked={selected.includes(key)} onChange={() => onToggle(key)} />
-          {key}
+          {t(`admin.roles.keys.${key}`, { defaultValue: key })}
         </label>
       ))}
+      <p className="mt-2 text-xs text-slate-500">{t('admin.users.fields.customerHint')}</p>
     </fieldset>
   )
 }

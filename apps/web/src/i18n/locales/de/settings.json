@@ -66,7 +66,8 @@
         "locale": "Sprache",
         "theme": "Design",
         "activeLabel": "Aktiv",
-        "rolesLabel": "Rollen"
+        "rolesLabel": "Rollen",
+        "customerHint": "Ein Benutzer mit der Rolle „Kunde“ meldet seine Störungen im Kundenportal und sieht dort seine offenen Meldungen. Seine Anlagen weist die Büro in der Bearbeitung des Objekts zu."
       },
       "themeValues": {
         "auto": "Automatik (System)",
@@ -134,6 +135,14 @@
         "role_in_use": "Die Rolle wird noch von Benutzern verwendet.",
         "unknown_permission_key": "Unbekannte Berechtigung in der Auswahl.",
         "unknown": "Speichern fehlgeschlagen."
+      },
+      "keys": {
+        "reporter_internal": "Meldender Mitarbeiter",
+        "office": "Büro",
+        "oncall": "Bereitschaft",
+        "manager": "Leitung",
+        "admin": "Administration",
+        "customer": "Kunde"
       }
     },
     "groups": {
