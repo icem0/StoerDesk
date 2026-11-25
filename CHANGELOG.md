@@ -244,6 +244,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tasks at all and when a task is closed belong to the settings of the
   workflow and are not decided here. The spec decides the model; the packages
   WP-M30-02 … WP-M30-06 build it.
+- The phase 29 is closed (**WP-M29-09**): the settings menu is
+  single-column with a symbol and a description per entry, a search field and
+  sections that never fold away; every path of the settings stays in the menu;
+  every channel has its own page; and every internal page carries exactly one
+  landmark, one padding and one frame — the pages render into the `<main>` of
+  the shell through the hull `AdminLayout`, and the public pages outside the
+  shell keep their own.
 - One shell for the administration — the third batch (**WP-M29-08**, phase 29):
   the pages of the settings, the mailbox, the inbox, the help of the web push and the own
   shifts render into the hull as well. The hull takes a `className` now, so the

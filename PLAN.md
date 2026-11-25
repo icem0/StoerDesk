@@ -4364,23 +4364,23 @@ and the rows of an older version — keeps covering its whole span. The phase
 was split further than planned (WP-M20-02 … WP-M20-08), because the contract of
 the pool and the administration that reads it belong to one commit.
 
-**The settings are operable (WP-M29-01 … WP-M29-09, ADR-0051).** The settings menu
+**The settings are operable (WP-M29-01 … WP-M29-11, ADR-0051).** The settings menu
 is single-column: every entry carries a symbol and a short description, a search
 field filters name and description and the sections never fold away — every entry
-stands visible. The daily
-work surfaces leave the menu (they live in the header menu). Every module of the
-administration keeps its path in the menu — users, roles, groups, statuses, fault
-types, detected errors, escalation, default values, readiness plan, channels,
-delivery problems, mailbox of the office, webhooks, API keys, BMAcloud sync — the
-groups only sort them; a first attempt with four topic pages behind them
-(WP-M29-04) was reversed in WP-M29-06, because the paths of the settings
-disappeared from the menu. Every channel gets its own page
-(`/admin/channels/:kind`, e. g. Matrix with homeserver and room), and every settings
-and administration page renders exactly one `<main>` landmark inside the shell, one
-heading and a back link. The phase starts with the specification and an ADR that
-consciously reverses the decision of WP-M14-01 (the administration home is gone):
-a flat list of 30 entries under one another is not operable — but a sorted list
-keeps every path.
+stands visible. The daily work surfaces leave the menu (they live in the header
+menu). Every module of the administration keeps its path in the menu — users,
+roles, groups, statuses, fault types, detected errors, escalation, default values,
+readiness plan, channels, delivery problems, mailbox of the office, webhooks, API
+keys, BMAcloud sync — the groups only sort them; a first attempt with four topic
+pages behind them (WP-M29-04) was reversed in WP-M29-10, because the paths of the
+settings disappeared from the menu. Every channel gets its own page
+(`/admin/channels/:kind`, e. g. Matrix with homeserver and room). Every internal
+page renders into the `<main>` of the shell through the hull `AdminLayout`
+(WP-M29-06 … WP-M29-08): one landmark, one padding, one frame — the public pages
+outside the shell keep their own `<main>`. The phase starts with the specification
+and an ADR that consciously reverses the decision of WP-M14-01 (the administration
+home is gone): a flat list of 30 entries under one another is not operable — but a
+sorted list keeps every path.
 
 ## 17. Work package rules
 **The comment of the office (WP-M5-17, WP-M5-18, out of band in phase 5).** The

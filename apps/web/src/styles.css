@@ -139,15 +139,12 @@ body:has(.theme-light) {
 }
 
 /*
- * The admin pages still render their own <main> with page padding and a page
- * background (WP-M1-09c/09d). The shell already provides that frame, so inside
- * the shell only the content remains (WP-M1-17).
+ * The internal pages render into the `<main>` of the shell through the hull
+ * `AdminLayout` (WP-M29-06 … WP-M29-08), so the frame of the app is the same
+ * everywhere: one landmark, one padding, one background. The public pages
+ * (report form, status page, portal, wall display) lie outside the shell and
+ * bring their own frame.
  */
-.shell-main > main {
-  min-height: 0;
-  padding: 0;
-  background-color: transparent;
-}
 
 /*
  * On phones the admin tables scroll horizontally with momentum instead of

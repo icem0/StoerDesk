@@ -81,4 +81,17 @@ describe('route table', () => {
       expect(screen.getByText('Einstellungen')).toBeTruthy()
     })
   })
+
+  it.each(['/settings', '/admin/users', '/admin/roles', '/admin/channels'])(
+    'renders %s with exactly one landmark',
+    async (path) => {
+      stubRoutes()
+
+      const { container } = renderRoute(path)
+
+      await waitFor(() => {
+        expect(container.querySelectorAll('main').length).toBe(1)
+      })
+    },
+  )
 })
