@@ -1,6 +1,7 @@
 import { and, desc, eq, notInArray } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import {
+  customerNotificationsRequestSchema,
   customerObjectSchema,
   customerTicketDetailSchema,
   customerTicketSummarySchema,
@@ -67,6 +68,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
           status: tickets.status,
           reportedAt: tickets.reportedAt,
           updatedAt: tickets.updatedAt,
+          emailNotifications: tickets.customerEmailNotifications,
         })
         .from(tickets)
         .innerJoin(objects, eq(objects.id, tickets.objectId))
@@ -111,6 +113,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
           status: tickets.status,
           reportedAt: tickets.reportedAt,
           updatedAt: tickets.updatedAt,
+          emailNotifications: tickets.customerEmailNotifications,
         })
         .from(tickets)
         .innerJoin(objects, eq(objects.id, tickets.objectId))
@@ -144,6 +147,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
         status: row.status,
         reportedAt: row.reportedAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
+        emailNotifications: row.emailNotifications,
         events: events
           .filter((event) => !INTERNAL_EVENT_TYPES.includes(event.type))
           .map((event) => ({
@@ -152,6 +156,51 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
             text: textOf(event.payload, event.type),
           })),
       })
+    },
+  )
+
+  app.patch<{ Params: { ticketNo: string } }>(
+    '/api/v1/customer/tickets/:ticketNo/notifications',
+    { preHandler: requirePermission(database, PERMISSIONS.ticket.customerRead) },
+    async (request, reply) => {
+      const parsedTicketNo = ticketNoSchema.safeParse(request.params.ticketNo)
+
+      if (!parsedTicketNo.success) {
+        return reply.code(400).send({ code: 'invalid_request', params: { fields: ['ticketNo'] } })
+      }
+
+      const parsed = customerNotificationsRequestSchema.safeParse(request.body)
+
+      if (!parsed.success) {
+        return reply.code(400).send({
+          code: 'invalid_request',
+          params: { fields: ['emailNotifications'] },
+        })
+      }
+
+      // §19.6: the decision belongs to the reporter — only his own ticket is
+      // changed, and a ticket of somebody else does not exist for him.
+      const updated = await database
+        .update(tickets)
+        .set({ customerEmailNotifications: parsed.data.emailNotifications })
+        .where(
+          and(
+            eq(tickets.ticketNo, parsedTicketNo.data),
+            eq(tickets.customerUserId, customerIdOf(request)),
+          ),
+        )
+        .returning({ ticketNo: tickets.ticketNo })
+
+      if (updated.length === 0) {
+        throw new CustomerRouteError(404, 'ticket_not_found', {
+          ticketNo: parsedTicketNo.data,
+        })
+      }
+
+      return {
+        ticketNo: updated[0]?.ticketNo,
+        emailNotifications: parsed.data.emailNotifications,
+      }
     },
   )
 

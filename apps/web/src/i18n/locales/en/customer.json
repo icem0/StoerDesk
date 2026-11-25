@@ -62,7 +62,8 @@
       "reportedAt": "Reported at",
       "description": "Description",
       "history": "History",
-      "back": "Back to my reports"
+      "back": "Back to my reports",
+      "emailNotifications": "Receive messages about this report by e-mail"
     }
   }
 }

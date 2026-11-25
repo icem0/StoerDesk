@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import type { CustomerObject, CustomerTicketDetail, CustomerTicketSummary } from '@stoerdesk/shared'
@@ -96,6 +96,7 @@ export function PortalTicketsPage() {
 export function PortalTicketPage() {
   const { t, i18n } = useTranslation('customer')
   const { ticketNo } = useParams()
+  const queryClient = useQueryClient()
 
   const ticketQuery = useQuery({
     queryKey: ['customer', 'ticket', ticketNo],
@@ -105,6 +106,20 @@ export function PortalTicketPage() {
   })
 
   const ticket = ticketQuery.data
+
+  // §19.6: the customer decides himself about the messages about his ticket.
+  const notifications = useMutation({
+    mutationFn: (emailNotifications: boolean) =>
+      apiFetch<unknown>(`/v1/customer/tickets/${ticketNo ?? ''}/notifications`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ emailNotifications }),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'ticket', ticketNo] })
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'tickets'] })
+    },
+  })
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-4 p-6">
@@ -138,6 +153,17 @@ export function PortalTicketPage() {
           </dl>
 
           {ticket.description !== null ? <p className="text-sm">{ticket.description}</p> : null}
+
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={ticket.emailNotifications}
+              disabled={notifications.isPending}
+              onChange={(event) => notifications.mutate(event.target.checked)}
+            />
+            <span>{t('portal.ticket.emailNotifications')}</span>
+          </label>
 
           <section className="flex flex-col gap-2">
             <h2 className="text-base font-semibold">{t('portal.ticket.history')}</h2>

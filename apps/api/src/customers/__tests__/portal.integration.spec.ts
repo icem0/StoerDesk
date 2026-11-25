@@ -157,6 +157,45 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.events?.some((event) => event.text.includes('Nur für das Büro'))).toBe(false)
     })
 
+    it('lets the customer decide about the messages of his ticket', async () => {
+      const answer = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/customer/tickets/${ticketNo}/notifications`,
+        headers: { cookie: customerCookie, 'content-type': 'application/json' },
+        payload: { emailNotifications: true },
+      })
+
+      expect(answer.statusCode).toBe(200)
+
+      const [row] = await db.select().from(tickets).where(eq(tickets.ticketNo, ticketNo))
+
+      expect(row?.customerEmailNotifications).toBe(true)
+
+      const back = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/customer/tickets/${ticketNo}/notifications`,
+        headers: { cookie: customerCookie, 'content-type': 'application/json' },
+        payload: { emailNotifications: false },
+      })
+
+      expect(back.statusCode).toBe(200)
+
+      const [after] = await db.select().from(tickets).where(eq(tickets.ticketNo, ticketNo))
+
+      expect(after?.customerEmailNotifications).toBe(false)
+    })
+
+    it('does not let the customer change the ticket of somebody else', async () => {
+      const answer = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/customer/tickets/${ticketNo}/notifications`,
+        headers: { cookie: otherCookie, 'content-type': 'application/json' },
+        payload: { emailNotifications: true },
+      })
+
+      expect(answer.statusCode).toBe(404)
+    })
+
     it('shows the own objects', async () => {
       const answer = await app.inject({
         method: 'GET',

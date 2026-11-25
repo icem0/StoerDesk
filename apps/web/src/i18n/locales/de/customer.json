@@ -62,7 +62,8 @@
       "reportedAt": "Gemeldet am",
       "description": "Beschreibung",
       "history": "Verlauf",
-      "back": "Zurück zu meinen Meldungen"
+      "back": "Zurück zu meinen Meldungen",
+      "emailNotifications": "Meldungen über E-Mail zu dieser Meldung empfangen"
     }
   }
 }

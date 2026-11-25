@@ -93,6 +93,17 @@ export const customerSetPasswordRequestSchema = z.object({
 export type CustomerSetPasswordRequest = z.infer<typeof customerSetPasswordRequestSchema>
 
 /**
+ * `PATCH /api/v1/customer/tickets/:ticketNo/notifications` — the decision of the
+ * customer about the messages about his ticket (§19.6, ADR-0056): the opt-in
+ * belongs to the reporter, so he may change it himself.
+ */
+export const customerNotificationsRequestSchema = z.object({
+  emailNotifications: z.boolean(),
+})
+
+export type CustomerNotificationsRequest = z.infer<typeof customerNotificationsRequestSchema>
+
+/**
  * `POST /api/v1/objects/:objectNo/assignments` — the trained person of the
  * object (`specs/19-customer-portal.md` §19.2). The customer is a user of the
  * role `customer`.
@@ -128,6 +139,11 @@ export const customerTicketSummarySchema = z.object({
   status: z.string(),
   reportedAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  /**
+   * The decision of the customer about the messages about his ticket
+   * (§19.6): the opt-in belongs to the reporter.
+   */
+  emailNotifications: z.boolean(),
 })
 
 export type CustomerTicketSummary = z.infer<typeof customerTicketSummarySchema>
