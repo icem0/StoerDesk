@@ -185,7 +185,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const rows = await outboxRowsOf('oncall.released')
       const row = onlyRow(
-        rows.filter((entry) => (entry.target as Record<string, unknown>)['assignedTo'] === techId),
+        rows.filter(
+          (entry) =>
+            (entry.target as Record<string, unknown>)['assignedTo'] === techId &&
+            (entry.target as Record<string, unknown>)['release'] === 'deleted',
+        ),
         'release row',
       )
 
@@ -220,7 +224,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const rows = await outboxRowsOf('oncall.released')
       const row = onlyRow(
-        rows.filter((entry) => (entry.target as Record<string, unknown>)['assignedTo'] === techId),
+        rows.filter(
+          (entry) =>
+            (entry.target as Record<string, unknown>)['assignedTo'] === techId &&
+            (entry.target as Record<string, unknown>)['release'] === 'reassigned',
+        ),
         'release row of the handover',
       )
 
