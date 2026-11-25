@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { EscalationConfig, EscalationStageConfig } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
-import { apiFetch } from '../lib/api'
+import { ApiError, apiFetch } from '../lib/api'
 import { AddStageForm } from './escalation-page'
 import { AdminLayout } from '../components/admin-layout'
 
@@ -13,12 +14,31 @@ import { AdminLayout } from '../components/admin-layout'
  * lie below the list of the stages of the chain any more, the list offers a
  * button that opens this page. The server keeps the chain as a whole, so the
  * page reads the chain and writes it back with the new stage.
+ *
+ * A page the user may not read answers with the notice of the missing
+ * permission and a chain that cannot be read with the code of the answer — a
+ * load that failed is never shown as a failed save.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
+const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
+
+/** The message of a failed answer of the server (the codes of the escalation page). */
+function errorMessage(t: TFunction<'settings'>, error: unknown): string {
+  const code =
+    error instanceof ApiError &&
+    error.code !== undefined &&
+    (handledErrorCodes as readonly string[]).includes(error.code)
+      ? error.code
+      : 'unknown'
+
+  return t(`admin.escalation.errors.${code}`)
+}
+
 export function EscalationStageCreatePage() {
   const { t } = useTranslation('settings')
+  const canRead = usePermission('settings.read')
   const canWrite = usePermission('settings.write')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -42,6 +62,14 @@ export function EscalationStageCreatePage() {
     },
   })
 
+  if (!canRead) {
+    return (
+      <p role="alert" className="text-sm text-amber-300">
+        {t('admin.escalation.forbiddenNotice')}
+      </p>
+    )
+  }
+
   if (!canWrite) {
     return (
       <p role="alert" className="text-sm text-amber-300">
@@ -57,7 +85,7 @@ export function EscalationStageCreatePage() {
   if (config.isError) {
     return (
       <p role="alert" className="text-sm text-rose-400">
-        {t('admin.escalation.errors.unknown')}
+        {errorMessage(t, config.error)}
       </p>
     )
   }

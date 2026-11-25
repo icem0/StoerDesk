@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **The escalation administration answers a page it may not read with „Speichern
+  fehlgeschlagen.“** The page `/admin/escalation` (and the page of the new stage)
+  showed the message of a failed save when the configuration could not be read:
+  a user without `settings.read` and an expired session both saw „Speichern
+  fehlgeschlagen.“ and nothing else — a load that failed was reported as a save
+  that failed. The page answers a missing read permission with „Keine
+  Berechtigung für die Eskalation.“, an expired session with „Die Eskalation
+  benötigt eine gültige Anmeldung.“ and an unreadable configuration with the code
+  of the answer (the notice of the failed save is kept for a save that failed).
 - **The double tap does not zoom the page (WP-M40-01).** A double tap on the
   screen of a phone zoomed the browser into the touched place, so the report form
   and the ticket list jumped away from the finger that touched them. The fix is

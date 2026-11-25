@@ -21,7 +21,7 @@ import {
   type UserListResponse,
 } from '@stoerdesk/shared'
 
-import { usePermission } from '../auth/usePermission'
+import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
 import { languagesOf, localizedName } from '../lib/localized-name'
@@ -39,7 +39,10 @@ import { EscalationActionEditor } from './escalation-action-editor'
  * administration saves the rules with one request
  * (`PUT /api/v1/escalation/config`) and the stage names with
  * `PUT /api/v1/escalation/stages`. Without `settings.write` the editors stay
- * read-only; the server enforces the permission again.
+ * read-only; the server enforces the permission again. Without `settings.read`
+ * the page names the missing permission, an expired session names itself and a
+ * configuration that cannot be read answers with the code of the answer — a
+ * load that failed is never shown as a failed save.
  *
  * Since WP-M16-19 the stage list follows the rule of `specs/13-ui.md` §14.8
  * (ADR-0043): a stage shows **one** name — the name of the language of the
@@ -141,6 +144,8 @@ export function EscalationPage() {
   const poolsQuery = usePoolTargets()
   const groupsQuery = useGroupTargets()
   const usersQuery = useUserTargets()
+  const me = useMe()
+  const canRead = usePermission('settings.read')
   const canWrite = usePermission('settings.write')
 
   const [tab, setTab] = useState('fristen')
@@ -182,12 +187,36 @@ export function EscalationPage() {
       setSavedConfig({ ...config, stages: (saved as EscalationConfig).stages }),
   })
 
+  if (me.isPending) {
+    return <p className="text-slate-400">{t('admin.escalation.loading')}</p>
+  }
+
+  if (me.isError) {
+    return (
+      <p role="alert" className="text-sm text-amber-300">
+        {t('admin.escalation.sessionNotice')}
+      </p>
+    )
+  }
+
+  if (!canRead) {
+    return (
+      <p role="alert" className="text-sm text-amber-300">
+        {t('admin.escalation.forbiddenNotice')}
+      </p>
+    )
+  }
+
   if (configQuery.isPending) {
     return <p className="text-slate-400">{t('admin.escalation.loading')}</p>
   }
 
   if (configQuery.isError) {
-    return <p className="text-rose-400 text-sm" role="alert">{t('admin.escalation.errors.unknown')}</p>
+    return (
+      <p role="alert" className="text-rose-400 text-sm">
+        {errorMessage(t, configQuery.error)}
+      </p>
+    )
   }
 
   const stageNames = new Map<string, Record<string, string>>(
