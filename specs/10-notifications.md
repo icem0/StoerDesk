@@ -187,6 +187,7 @@ The event types of the notification are fixed:
 | `oncall.assigned` | a readiness shift is allocated to a technician |
 | `oncall.swap_requested` | a swap is requested on the own confirmed shift |
 | `oncall.unconfirmed_reminder` | a shift still waits for a decision within `oncall.reminder_unconfirmed_h` |
+| `oncall.released` | a shift of the technician is deleted or handed over to another technician (`specs/04-oncall.md` §4a.3, ADR-0058) |
 
 Two event types belong to **no user**: the warning of a broken channel
 (§11.15) and the task of a failed delivery (§11.18). They are instance events
@@ -246,6 +247,17 @@ deep link as a clickable link — a plain text mail is never sent. The text of
 the mail comes from the template of the kind of the message (§11.5a); the
 values of the placeholders are escaped before they enter the HTML, so a report
 of a customer can never carry markup into the mail of the office.
+
+**The message of a released shift (ADR-0058).** The event `oncall.released`
+tells the technician that his duty is gone: the shift was deleted or handed
+over to another technician (`specs/04-oncall.md` §4a.3). Its title names the
+pool and the cause, its body the pool, the period of the shift and the cause
+in words — the release is translated like the warning of a broken channel
+(§11.15), because it announces the state of a duty and not the state of a
+ticket. The row of the message points at **no shift**: the shift of a deleted
+shift is gone, and the message has to survive its delete. The kind of the
+message stays the readiness message, so the e-mail carries the template of the
+readiness with its placeholders.
 
 ## 11.5a The templates of the e-mail
 
@@ -442,13 +454,14 @@ every user and every event (ADR-0045).
 | `POST /api/v1/notifications/mute` | session | the user is silent for one hour; the sound only (§11.17) |
 | `PUT /api/v1/settings/notifications/channel-policy` | `settings.write` | replaces them; a channel that is not configured is refused with `422 invalid_request` |
 | `GET /api/v1/admin/notifications/compliance` | `notification.read` | the users with their channels, the missing required channels and the count of their set-up channels (§11.9) |
+| `GET /api/v1/notifications/compliance` | session | the compliance of the signed-in user with **the rule of the administration itself** — the required channels and the minimum number of channels (§11.9, §11.19) |
 | `GET /api/v1/notifications/status` | `notification.read` | the status of every channel (§11.8) |
 | `GET /api/v1/notifications/delivery` | `notification.read` | the delivery problems and the lost messages (§11.8) |
 | `POST /api/v1/notifications/delivery/acknowledge` | `notification.write` | the quittature of the problems (§11.8) |
 | `GET /api/v1/notifications/items` | session | the tasks of the signed-in user (§11.18) |
 | `GET /api/v1/notifications/items/unread-count` | session | the number of the unhandled tasks — the badge of the bell and the alarm band (§11.18) |
 | `PATCH /api/v1/notifications/items/:id/read` | session | the read receipt of one own task (§11.18) |
-| `GET /api/v1/admin/notifications/deliveries` | `notification.read_all` | the delivery attempts of the instance — the protocol (§11.16) |
+| `GET /api/v1/admin/notifications/attempts` | `notification.read_all` | the delivery attempts of the instance — the protocol (§11.16) |
 | `GET /api/v1/notifications/accounts` | session | the own accounts with their state — linked, set up or missing (§11.3, §11.3a) |
 | `POST /api/v1/notifications/accounts/telegram/code` | session | a one-time code for the Telegram bot |
 | `POST /api/v1/notifications/accounts/telegram` | session | the code is checked, the account is stored |
@@ -485,12 +498,13 @@ routes of the tasks. The rows they read stay — they are the protocol of §11.1
   into the readiness and the read receipt. The page carries **no channel and no
   delivery state** — the way of a message belongs to the protocol (§11.16). The
   bell of the shell and the alarm band count the same tasks (§11.17).
-- `/admin/notifications` — the **protocol of the delivery** (§11.16): every
-  delivery attempt of the instance with its recipient, its event, its channel,
-  its state, the machine code of a failure, the time and the number of the
-  attempts, with the filters of §11.16. The page names the users; the inbox of
-  a user names the tasks. The page is an entry of the settings menu next to the
-  delivery problems and links to them.
+- The **delivery page** `/admin/delivery` carries the **protocol** (§11.16)
+  beside the problems of the channels: every delivery attempt of the
+  instance with its recipient, its event, its channel, its state, the
+  machine code of a failure, the time and the number of the attempts,
+  with the filters of §11.16. The block of the protocol needs the right
+  `notification.read_all` — it names the users; the problems of the
+  channels stay with `notification.read`.
 - `/settings/notifications` — the own channels: the linked accounts (Telegram,
   Matrix, ntfy, e-mail, WhatsApp Web), the subscription QR of ntfy and, per
   channel, its state — **set up** (green), **linked but not confirmed** (amber)
@@ -498,7 +512,10 @@ routes of the tasks. The rows they read stay — they are the protocol of §11.1
   for the code and the button that removes the account. There is **no selection
   per event type** any more: every event goes over these channels (§11.4,
   ADR-0045). The warning of the rule of the administration (§11.9) stands in
-  the shell on **every** page — this page holds the setup it links to.
+  the shell on **every** page — this page holds the setup it links to. The page
+  is an **overview** of the channels: every channel stands in the list with its
+  state, the mandatory channels carry their badge, and the setup of a channel
+  opens only when its own button is clicked (§11.19).
 - The **alarm band** of the shell (§11.17): it appears while unhandled
   messages exist, shines and moves, and carries the button „1 Stunde stumm“
   with the remaining time and the button „Ton aktivieren“. The sound of the
@@ -556,6 +573,11 @@ to the work:
 - A pushed alarm does not disappear after a few seconds: the service worker
   shows it with `requireInteraction` and a vibration pattern, so it stays until
   the user acts on it or closes it.
+- A click on a pushed alarm brings the **running app** to the front and opens
+  the ticket in it: the app is a single-page application, so the window of the
+  browser is navigated to the deep link and not replaced by a new one. Only an
+  app that is not open at all gets a new window — a click never opens a second
+  window of an app that is already running.
 
 ## 11.13 The security
 
@@ -652,8 +674,9 @@ The **protocol** answers the question of the office „are all messages there?�
 which message arrived at which user, over which channel, with which machine
 code and at which time. It is the reading of the table `notification_messages`
 — one row per **delivery attempt** — and it belongs to the administration. The
-page `/admin/notifications` shows it; the inbox of a user (§11.18) shows the
-other half of the truth: the tasks.
+page of the delivery `/admin/delivery` shows it beside the problems of the
+channels (§11.8); the inbox of a user (§11.18) shows the other half of the
+truth: the tasks.
 
 The right to the protocol is a permission of its own:
 
@@ -668,7 +691,7 @@ names the users, and a user without the key may read his own tasks only.
 
 ### The filters
 
-`GET /api/v1/admin/notifications/deliveries` reads the filters of the query:
+`GET /api/v1/admin/notifications/attempts` reads the filters of the query:
 
 | Filter | Meaning |
 | --- | --- |
@@ -822,3 +845,37 @@ The row of the alarm belongs to no ticket and to no shift: it carries the event
 type `notification.delivery_failed`, no ticket, no shift, and the params of the
 failure (the channel, the machine code, the ticket number of the message that
 never arrived). The checks of the `outbox` table know that shape (§11.15).
+
+## 11.19 The overview of the own channels
+
+The page `/settings/notifications` is a **list of the channels**, not a column
+of forms. Two rules shape it (WP-M35-01, WP-M35-02):
+
+- **The overview stays.** Every channel of §11.1 stands in the list — the ones
+  that are set up and the ones that are not — with its state (§11.12). The
+  user sees at a glance what is there and what is not.
+- **The setup opens.** Every channel carries a button that opens **its own**
+  setup; only the channel that is open shows its form, its topic, its QR code
+  and the confirmation of its code (§11.3a). The page is never a long column
+  of things a user does not need.
+
+Only one channel is open at a time: the button of the open channel closes it
+again. `signal` is a channel of the installation and has no setup of the user
+— its row carries no button.
+
+**The rule of the administration is visible in the overview** (§11.9). The
+answer of `GET /api/v1/notifications/compliance` carries the rule itself — the
+required channels and the minimum number of channels — beside the compliance
+of the user, so the page names
+
+- which channels are **mandatory** (a badge on the row of the channel),
+- how many channels are set up and how many are needed,
+- whether the user **fulfils** the rule and what is still missing.
+
+The rule warns, it never blocks (§11.9): the overview names the missing
+channels, the band of the shell warns about it on every page (§11.17).
+
+The data of a channel is only read when its setup is open: the topic of the
+user at ntfy, the one-time code of the Telegram bot and the chats of the
+WhatsApp bridge are asked for when the channel opens. A page view never burns
+a one-time code that nobody uses.

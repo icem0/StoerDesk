@@ -657,6 +657,30 @@
       "events": {
         "channel.health_warning": "Kanalanzeige"
       },
+      "protocol": {
+        "title": "Zustellprotokoll",
+        "hint": "Hier steht, welche Nachricht wann über welchen Kanal an wen gegangen ist — ein Eintrag je Zustellversuch. Wer die Zustellung nicht prüfen darf, sieht diesen Block nicht.",
+        "empty": "Kein Zustellversuch.",
+        "attempts": "{{count}} Versuche",
+        "attempts_one": "{{count}} Versuch",
+        "attempts_other": "{{count}} Versuche",
+        "state": {
+          "pending": "wird gesendet",
+          "sent": "zugestellt",
+          "failed": "fehlgeschlagen"
+        },
+        "filter": {
+          "recipient": "Empfänger",
+          "recipientAll": "Alle Empfänger",
+          "channel": "Kanal",
+          "channelAll": "Alle Kanäle",
+          "event": "Ereignis",
+          "eventAll": "Alle Ereignisse",
+          "state": "Zustand",
+          "stateAll": "Alle Zustände",
+          "reset": "Filter zurücksetzen"
+        }
+      },
       "reasons": {
         "send_failed": "Die Zustellung ist fehlgeschlagen: der Kanal nimmt die Nachricht nicht an.",
         "http_error": "Der Dienst des Kanals hat mit einem Fehler geantwortet.",
@@ -803,7 +827,14 @@
       "logEmpty": "Noch keine Zustellung.",
       "templateRegistration": "Registrierung",
       "templatePasswordReset": "Neues Passwort",
-      "templateCustomerTicket": "Meldung an den Melder"
+      "templateCustomerTicket": "Meldung an den Melder",
+      "standardReset": "Standard zurücksetzen",
+      "standardTicket": "Ticket {ticket_no}: {priority}\n\nObject: {object} ({location})\nSystem: {system_type}\nReport: {text}\nAA/SA: {aa_sa}",
+      "standardReadiness": "Bereitschaft {pool}\n\n{starts_at} – {ends_at}\nStatus: {state}",
+      "standardTest": "StörDesk Test\n\nThis Mail tests the SMTP configuration of the Postfach. When it arrives here, the Channel is working.",
+      "standardRegistration": "Welcome to the customer portal of the Installation.\n\nYour account is created. Please set your password over this link:\n{link}\n\nThe link is valid for 24 hours.",
+      "standardPasswordReset": "A new password has been requested for your account.\n\nPlease set a new password over this link:\n{link}\n\nThe link is valid for 24 hours. If this was not you, you can ignore this Mail.",
+      "standardCustomerTicket": "Your report has been received.\n\nTicket {ticket_no}: {priority} — {object}\n\nYou can follow the progress in the customer portal."
     }
   },
   "apiKeys": {

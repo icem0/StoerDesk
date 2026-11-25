@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
+import { MemoryRouter } from 'react-router-dom'
 
 import { i18n } from '../../i18n'
 import { LoginForm, LogoutButton } from '../login-form'
@@ -63,7 +64,10 @@ function renderWithProviders(element: ReactElement) {
 
   return render(
     <QueryClientProvider client={client}>
-      <I18nextProvider i18n={i18n}>{element}</I18nextProvider>
+      <I18nextProvider i18n={i18n}>
+        {/* The form of the customer navigates to his portal (§19.3). */}
+        <MemoryRouter>{element}</MemoryRouter>
+      </I18nextProvider>
     </QueryClientProvider>,
   )
 }

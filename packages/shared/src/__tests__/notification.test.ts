@@ -6,93 +6,101 @@ import {
   confirmNotificationVerificationRequestSchema,
   notificationAccountSchema,
   notificationComplianceSchema,
-  notificationMessageFilterSchema,
+  notificationDeliveryAttemptFilterSchema,
+  notificationDeliveryAttemptListResponseSchema,
+  notificationItemFilterSchema,
+  notificationItemListResponseSchema,
   notificationMuteSchema,
-  notificationMessageListResponseSchema,
-  notificationMessageRecipientSchema,
   notificationRecipientSummarySchema,
   notificationVerificationResponseSchema,
 } from '../schemas/notification.js'
 
 /**
- * The contracts of the inbox of the notifications (`specs/10-notifications.md`
- * §11.16, WP-M14-141a): the filter of the message list and the answer with the
- * addressee of every row.
+ * The contracts of the **task** of a user and of the **protocol** of the
+ * delivery (`specs/10-notifications.md` §11.16, §11.18, ADR-0052).
  */
-describe('the filter of the message list', () => {
-  it('accepts an empty filter', () => {
-    expect(notificationMessageFilterSchema.parse({})).toEqual({})
-  })
+describe('the task of a user', () => {
+  it('accepts an empty filter and the event type with the unread filter', () => {
+    expect(notificationItemFilterSchema.parse({})).toEqual({})
 
-  it('accepts the addressee, the channel, the event, the state and the unread filter', () => {
-    const filter = notificationMessageFilterSchema.parse({
-      userId: '11111111-1111-4111-8111-111111111111',
-      channel: 'ntfy',
-      eventType: 'ticket.created',
-      state: 'FAILED',
+    const filter = notificationItemFilterSchema.parse({
+      eventType: 'ticket.assigned',
       unread: true,
     })
 
-    expect(filter.channel).toBe('ntfy')
-    expect(filter.eventType).toBe('ticket.created')
-    expect(filter.state).toBe('FAILED')
+    expect(filter.eventType).toBe('ticket.assigned')
     expect(filter.unread).toBe(true)
   })
 
-  it('rejects an unknown channel, an unknown event and a malformed addressee', () => {
-    expect(notificationMessageFilterSchema.safeParse({ channel: 'carrier-pigeon' }).success).toBe(
-      false,
-    )
-    expect(notificationMessageFilterSchema.safeParse({ eventType: 'ticket.nonsense' }).success).toBe(
-      false,
-    )
-    expect(notificationMessageFilterSchema.safeParse({ userId: 'not-a-uuid' }).success).toBe(false)
+  it('refuses an empty event type', () => {
+    expect(notificationItemFilterSchema.safeParse({ eventType: '' }).success).toBe(false)
   })
-})
 
-describe('the answer of the message list', () => {
-  it('fills the recipient of a row and the addressees when they are missing', () => {
-    const answer = notificationMessageListResponseSchema.parse({
-      messages: [
+  it('carries the params of the task and the receipt of the user', () => {
+    const answer = notificationItemListResponseSchema.parse({
+      items: [
         {
-          id: '22222222-2222-4222-8222-222222222222',
-          channel: 'ntfy',
-          eventType: 'ticket.created',
-          state: 'SENT',
-          title: 'ST-0001',
-          body: 'normal',
-          createdAt: '2026-11-18T09:30:00.000Z',
+          id: '55555555-5555-4555-8555-555555555555',
+          eventType: 'ticket.assigned',
+          params: { ticketNo: 'ST-0001', priority: 'normal' },
+          ticketNo: 'ST-0001',
+          shiftId: null,
+          createdAt: '2026-11-25T09:00:00.000Z',
           readAt: null,
         },
       ],
     })
 
-    expect(answer.messages[0]?.recipient).toBeNull()
-    expect(answer.recipients).toEqual([])
+    expect(answer.items[0]?.params).toEqual({ ticketNo: 'ST-0001', priority: 'normal' })
+    expect(answer.items[0]?.ticketNo).toBe('ST-0001')
+    expect(answer.items[0]?.readAt).toBeNull()
+  })
+})
+
+describe('the protocol of the delivery', () => {
+  it('accepts the recipient, the channel, the event and the state', () => {
+    const filter = notificationDeliveryAttemptFilterSchema.parse({
+      userId: '11111111-1111-4111-8111-111111111111',
+      channel: 'ntfy',
+      eventType: 'ticket.created',
+      state: 'FAILED',
+    })
+
+    expect(filter.channel).toBe('ntfy')
+    expect(filter.state).toBe('FAILED')
   })
 
-  it('carries the addressee of a row and the list of the addressees', () => {
+  it('refuses an unknown channel and an unknown state', () => {
+    expect(
+      notificationDeliveryAttemptFilterSchema.safeParse({ channel: 'carrier-pigeon' }).success,
+    ).toBe(false)
+    expect(notificationDeliveryAttemptFilterSchema.safeParse({ state: 'SENDING' }).success).toBe(
+      false,
+    )
+  })
+
+  it('carries the addressee of an attempt and the list of the addressees', () => {
     const recipient = { userId: '33333333-3333-4333-8333-333333333333', name: 'Erika Muster' }
-    const answer = notificationMessageListResponseSchema.parse({
-      messages: [
+    const answer = notificationDeliveryAttemptListResponseSchema.parse({
+      attempts: [
         {
           id: '44444444-4444-4444-8444-444444444444',
-          channel: 'email',
+          recipient,
           eventType: 'ticket.escalated',
+          channel: 'email',
           state: 'SENT',
           title: 'ST-0002',
-          body: 'high',
-          createdAt: '2026-11-18T09:31:00.000Z',
-          readAt: '2026-11-18T10:00:00.000Z',
-          recipient,
+          errorCode: null,
+          attempts: 1,
+          createdAt: '2026-11-25T09:31:00.000Z',
+          updatedAt: '2026-11-25T09:31:01.000Z',
         },
       ],
       recipients: [{ ...recipient, count: 3 }],
     })
 
-    expect(answer.messages[0]?.recipient).toEqual(recipient)
+    expect(answer.attempts[0]?.recipient).toEqual(recipient)
     expect(answer.recipients[0]?.count).toBe(3)
-    expect(notificationMessageRecipientSchema.parse(recipient)).toEqual(recipient)
     expect(notificationRecipientSummarySchema.parse({ ...recipient, count: 0 }).count).toBe(0)
   })
 })

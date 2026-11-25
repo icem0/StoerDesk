@@ -236,9 +236,9 @@ describe('ShiftAdminActions', () => {
     })
   })
 
-  it('locks the delete of a confirmed shift', async () => {
+  it('locks the delete of a confirmed shift that started (ADR-0058)', async () => {
     stubRoutes(['oncall.admin'])
-    renderActions('CONFIRMED')
+    renderActions('CONFIRMED', new Date('2020-01-01T08:00:00.000Z'))
 
     await waitFor(() => {
       expect(screen.getByText('Aktionen der Bereitschaftsleitung')).toBeDefined()
@@ -248,7 +248,28 @@ describe('ShiftAdminActions', () => {
 
     expect(button.disabled).toBe(true)
     expect(button.getAttribute('title')).toBe(
-      'Die Schicht ist bestätigt oder im Tausch und bleibt im Verlauf.',
+      'Die Schicht hat schon begonnen und bleibt im Verlauf.',
     )
+  })
+
+  it('deletes a confirmed shift that has not started (ADR-0058)', async () => {
+    const calls: { method: string; url: string; body: unknown }[] = []
+    stubRoutes(['oncall.admin'], calls)
+    renderActions('CONFIRMED')
+
+    await waitFor(() => {
+      expect(screen.getByText('Aktionen der Bereitschaftsleitung')).toBeDefined()
+    })
+
+    const button = screen.getByRole('button', { name: 'Löschen' }) as HTMLButtonElement
+
+    expect(button.disabled).toBe(false)
+
+    fireEvent.click(button)
+    fireEvent.click(screen.getByRole('button', { name: 'Endgültig löschen' }))
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(true)
+    })
   })
 })

@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n } from '../../i18n'
+import { apiBaseUrl } from '../../lib/api'
 import { AlarmBanner } from '../alarm-banner'
 
 /**
@@ -31,7 +32,7 @@ function stubApi(options: { count: number; toneEnabled: boolean; mutedUntil?: st
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
 
-    if (url.endsWith('/v1/notifications/messages/unread-count')) {
+    if (url.endsWith('/v1/notifications/items/unread-count')) {
       return Response.json({ count: options.count })
     }
 
@@ -105,5 +106,30 @@ describe('AlarmBanner', () => {
 
     expect(await screen.findByText('Die Instanz spielt keinen Alarmton.')).toBeTruthy()
     expect(screen.queryByRole('button', { name: '1 Stunde stumm' })).toBeNull()
+  })
+
+  /**
+   * The paths of the band carry **no** prefix of the base: `apiFetch` puts the
+   * base of the API in front of them. A second prefix would send the request
+   * to `/api/api/v1/…` — the API answers `404`, the band never stands and the
+   * tone never plays. The stub of the test matched the path with `endsWith`, and
+   * a doubled prefix ends with the same path — so the address is asserted
+   * exactly here (WP-M25-10).
+   */
+  it('asks the API without a second prefix', async () => {
+    const fetchMock = stubApi({ count: 1, toneEnabled: true })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderBanner()
+
+    await screen.findByTestId('alarm-banner')
+
+    const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+
+    expect(urls).toContain(`${apiBaseUrl}/v1/notifications/items/unread-count`)
+    expect(urls).toContain(`${apiBaseUrl}/v1/notifications/alarm`)
+    expect(urls).toContain(`${apiBaseUrl}/v1/notifications/mute`)
+    expect(urls.some((url) => url.includes(`${apiBaseUrl}${apiBaseUrl}`))).toBe(false)
   })
 })

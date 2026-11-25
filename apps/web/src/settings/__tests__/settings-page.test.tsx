@@ -211,9 +211,9 @@ describe('SettingsPage', () => {
 
     // The badge counts the **open** problems: the quit one stays silent
     // (WP-M14-161c).
-    const badge = await screen.findByRole('link', { name: /Zustellung gestört \(1\)/ })
+    const badge = await screen.findByText(/Zustellung gestört \(1\)/)
 
-    expect(badge.getAttribute('href')).toBe('/admin/delivery')
+    expect(badge.closest('a')?.getAttribute('href')).toBe('/admin/delivery')
   })
 
   it('offers the page of the delivery problems in the menu', async () => {

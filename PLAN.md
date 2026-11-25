@@ -382,6 +382,11 @@ Ticket coupling:
   in `/settings/notifications` (the rules of §12 apply), the message names the
   pool, the start and end in `Europe/Berlin`, the state and the link to
   `/oncall`.
+- The **release of a shift (ADR-0058, WP-M34-01)**: a shift that has not
+  started is deleted in every state — also a confirmed one. The duty of a shift
+  of the future was never held, so the plan belongs to the admin; a shift that
+  started keeps the rule of ADR-0047 and stays in the history. The technician
+  who had the shift learns that his duty is gone (WP-M34-02a, WP-M34-02b).
 - The readiness has its own page `/oncall` (WP-M10-33, WP-M10-34): the
   readiness calendar shows every shift of the week, the own readiness (own
   shifts, iCal feed, confirm, decline, swap) is below it and an admin reaches
@@ -514,7 +519,14 @@ Behaviour:
 - spam protection: honeypot, rate limit per IP and per QR token, Altcha only
   when suspicious; suspicious reports are still stored with `suspected_spam`,
 - duplicate hint for an open ticket on the same object/system with "create
-  anyway" and "add to existing".
+  anyway" and "add to existing",
+- the scan of a code opens the **landing page** of the object (`/m/<qr_token>`):
+  the open tickets of the object come first, the report form is one tap away
+  (`/m/<qr_token>/neu`), and the public view of an open ticket of the object
+  (`/m/<qr_token>/tickets/<ticket_no>`) shows the number, the status, the
+  deadline, the public events and the public comments — never the description,
+  the contact or the photos of another reporter. The QR token of the object is
+  the capability of a comment on an open ticket of that object (ADR-0061).
 
 Offline architecture:
 
@@ -666,7 +678,7 @@ Rules:
   the inbox `/notifications` shows **one task per user and event** — the
   readable text, the deep link into the ticket or into the readiness and the
   read receipt — and no channel and no delivery state; the protocol of the
-  attempts belongs to the administration and is read on `/admin/notifications`
+  attempts belongs to the administration and is read on `/admin/delivery` beside the problems of the channels
   (`notification.read_all`); the bell and the alarm band count the tasks, not
   the attempts,
 - **a delivery that fails finally becomes a task of the administration**
@@ -727,8 +739,9 @@ Internal:
 - object list,
 - statistics,
 - the inbox of the tasks of the signed-in user `/notifications` (ADR-0052),
-- the protocol of the delivery `/admin/notifications` — the attempts of the
-  messages of every user (ADR-0052),
+- the delivery page `/admin/delivery` — the problems of the channels and
+  the protocol of the attempts, the answers to „what went wrong“ and to
+  „who got what“ (ADR-0052),
 - settings (users, groups, standard texts, deadlines, on-call grid, channels,
   API keys).
 
@@ -760,7 +773,29 @@ Requirements:
   inside the shell, one heading and a back link to the settings (WP-M29-06 … WP-M29-08),
 - every channel of the administration gets its own page
   (`/admin/channels/:kind`), reachable by one link from the channels overview
-  (WP-M29-05).
+  (WP-M29-05),
+- the page of the own channels `/settings/notifications` is an **overview**:
+  every channel stands in the list with its state, the mandatory channels of
+  the rule of the administration carry their badge, the page names the number
+  of the channels that are set up and what is still missing, and the setup of a
+  channel opens only when its own button is clicked (WP-M37-01 … WP-M37-03),
+- the ticket overview at `/tickets` opens **open only**: without a filter the
+  page asks the API with `open=true`, the option „nur offene“ is gone and the
+  checkbox „Erledigte anzeigen“ takes the completed tickets in; the filters
+  live in a menu behind the Filter button beside „Neue Meldung“
+  (ADR-0059, `specs/13-ui.md` §14.12, WP-M35-03).
+- every explanation of a place stands in **one mechanism** (`specs/13-ui.md`
+  §14.13, ADR-0060, WP-M36-01 … WP-M36-08): an info symbol that opens a
+  **panel at the place** — never a hover-only `title=`; an explanation exists
+  in two tiers in the namespace `help` (a visible one-line summary and the
+  panel body); the entry of the settings menu keeps symbol, label and summary
+  visible with the detail behind the ⓘ of the row, every guarded page carries
+  **one** page-level ⓘ in the shell whose panel explains the page, and a page
+  that explains itself carries none; `title=` is no content carrier any more;
+  the interface reads one step bigger (`styles.css` root font size, `text-slate-300`
+  for the meta text) — and the 112 notice, the report form, the action bar, the
+  bands, the mandatory badges, the reason of a blocked action and the settings
+  sections that never fold away never move behind a symbol.
 
 ## 15. Non-functional requirements
 
@@ -855,11 +890,101 @@ explanation. Offline is a core feature and appears early.
 | **30** | The message is a task and the delivery attempt is the protocol: the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on its own page, and a delivery that fails finally becomes a task of the administration (WP-M30-01 … WP-M30-06, ADR-0052) | a technician with three channels sees one task and not three, the bell and the alarm band count the tasks, the administration sees which message arrived at which user over which channel, and a message that never arrived reaches the administration |
 | **31** | The customer portal: the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his own open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | the customer registers, confirms himself over the link in the mail and sees his open tickets in the portal, the office assigns the trained person of an object, the report by QR code offers the registration and the confirmation of the trained person, and the mail to the reporter is configured in the stages of the escalation |
 | **32** | The assignment uses the pools of the installation: the assignment names a readiness pool, a user group or one technician (ADR-0057); the members of the target are the chain of the refusal; the setting `escalation.assignee_pool` and the tab _Pool der Office_ are gone (WP-M32-01 … WP-M32-05) | the office assigns a ticket to a pool or a group of the installation, a refusal passes the ticket to the next member of that list, and the administration knows no third pool of technicians |
+| **33** | The templates of the e-mail carry a standard text: the mailbox offers a localized standard text per kind of message and a reset-to-standard button above every template field (WP-M33-01) | a reset fills the standard text of the field in the language of the interface; an empty field still uses the built-in text |
+| **34** | The release of a shift: a shift that has not started is deleted in every state, and the technician who had the shift is informed (ADR-0058, WP-M34-01 … WP-M34-02b) | the admin deletes a confirmed shift of the coming week; the technician who confirmed it learns that his duty is gone |
+| **37** | The overview of the own channels: the page `/settings/notifications` names every channel with its state, marks the mandatory channels of the rule of the administration, names the number of the channels that are set up and what is still missing, and the setup of a channel opens only when its own button is clicked (WP-M37-01 … WP-M37-03) | the page shows the list of the channels and not a column of forms; the mandatory channels carry their badge; the topic of a channel appears only when the channel is opened |
+| **38** | The way of the code and the landing page of the customer: the scan of a QR code opens the landing page of the object — the open tickets of the object come first, the report form is one tap away (`/m/<qr_token>/neu`) — the public view of an open ticket of the object shows the number, the status, the deadline, the public events and the public comments, and the QR token of the object is the capability of a comment on such a ticket; the portal of the customer gets its landing page `/portal` with the open tickets first and the closed ones below, and exactly one open ticket opens its detail directly (WP-M38-01 … WP-M38-04, ADR-0061) — **out of band**, the phase 36 (the help popover) stays open | a second scan of a code shows the ticket that is open instead of a form; a customer lands in his portal and sees his one open ticket without a click |
+| **36** | An explanation of a place is a help popover: one component with the info symbol opens a panel at the place — never a hover-only tooltip; the explanation exists in two tiers in the namespace `help` (a visible summary and a panel body); the entry of the settings menu keeps symbol, label and summary visible with the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a page that explains itself carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | no explanation travels in a `title=` any more; on a phone every explanation opens with a tap and is reachable by keyboard; the summary of a settings entry is readable, the detail is one click away; every guarded page has exactly one ⓘ or none where the page explains itself; the 112 notice, the report form, the action bar and the badges of the rules stay visible outside every symbol |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 38 has started (WP-M38-01 … WP-M38-04, ADR-0061, out of band); WP-M38-01 and WP-M38-02 are implemented.** The office asked for two things: „beim einscannen eines qr codes sollte man falls es ein offenes ticket gibt direkt zu diesem kommen, mit der moeglichkeit ein weiteres zu oeffnen — aber in erster linie soll man das aktuelle ticket sehen“ and „wenn man ein registrierter kunde ist soll man natuerlich seine landingpage sehen — die landingpage der kunden soll als erstes die offenen tickets anzeigen, wenn es nur eines gibt dann dessen detailansicht“. The scan of a code opens the **landing page** of the object: the open tickets of the object come first, the report form moves to `/m/<qr_token>/neu`. The public view of an open ticket of the object (`/m/<qr_token>/tickets/<ticket_no>`) shows the number, the status, the deadline, the public events and the public comments — never the description, the contact or the photos of another reporter. **ADR-0061** decides that the QR token of the object is the capability of a comment on an open ticket of that object: the code is printed on the object, the comment is append-only, the ticket must be open, the spam limit applies and the contact data of the author never leaves the house. SEC-004 keeps its force for the path of the `status_token`. The portal of the customer gets its landing page `/portal` with the open tickets first and the closed ones below; exactly one open ticket opens its detail directly, and a customer who signs in lands in his portal instead of in the internal application of the office. The phase runs **out of band**: the phase 36 (the help popover) stays open with WP-M36-02 … WP-M36-08.
+
+**Phase 36 is planned (WP-M36-01 … WP-M36-08); WP-M36-01 … WP-M36-04 are
+implemented.** The
+office asked for the explanations of the interface: „die Erklárungen sollen alle
+in ein Mouseover gepackt werden falls sie im Menü sind“, „bei Erklárungen auf
+einer Seite ohne einen link … soll ein Info-Symbol sein … auf jeder Seite
+eigentlich“, „lieber den text etwas grösser weil lesbarer“ — with the exception
+of a page that is an info or help page per se. **ADR-0060** answers the three
+requests with **one mechanism** instead of a hover: a help popover — a real
+button with the info symbol that toggles a panel at the place. A `title=` does
+not exist on a touch, cannot be opened by a keyboard, cannot be zoomed and closes
+on a timer, so hover-only would break §14.2 (mobile-first, AA contrast, 44 px
+targets). The explanation exists in two tiers in the new namespace `help`, the
+settings menu keeps a readable summary visible and puts the detail behind the ⓘ
+of the row, every guarded page carries one page-level ⓘ in the shell (a help
+page carries none), the 27 native `title=` tooltips migrate to the panel, and the
+type scale rises one step in one rule of `styles.css`. **WP-M36-01** wrote the
+decision, `specs/13-ui.md` §14.13 and the eight work packages of the phase;
+**WP-M36-02** brought the mechanism (`help-popover.tsx`, the name `info` in
+`IconName`, the namespace `help`); **WP-M36-03** made the entry of the settings
+menu a **row** — symbol, label and summary visible, the detail behind the ⓘ, the
+search over label, summary and panel; **WP-M36-04** gave every guarded page one
+page-level ⓘ in the shell (31 explanations, none on a page that explains
+itself). **The phases before it are closed**: WP-M34-02a and WP-M34-02b (the
+technician who had the shift learns that his duty is gone) and WP-M35-03 (the
+ticket overview opens open) are implemented, so the phase can go on with
+WP-M36-05 … WP-M36-08.
+
+**The overview of the ticket list (WP-M35-03, out of band in phase 35,
+requested by the office).** The list at `/tickets` showed every ticket of the
+instance — the open work and the finished work in one table — and the finished
+ones had to be pushed away with the switch „nur offene“. The office asked: „in
+der ticketübersicht sollen in der grundeinstellung nur die offenen zu sehen
+sein und die option nur offene muss weg und eine checkbox erledigte anzeigen“
+and „der filter soll ein pulldown menü werden neben dem button neue meldung
+soll ein button mit filter“. **WP-M35-03** gives the overview the **open
+default**: without a filter the page asks the API with `open=true`, the option
+„nur offene“ is gone and the checkbox „Erledigte anzeigen“ takes the completed
+tickets in (ADR-0059, `specs/13-ui.md` §14.12). The filters — the search, the
+status, the priority, the completed and the overdue ones — live in a **menu
+behind the Filter button** beside „Neue Meldung“; the button pulls the menu
+down below the header. The API is untouched: `open` keeps its three states and
+the choice of the page lives in the URL as `closed=true`.
+
+**Phase 37 is closed (WP-M37-01 … WP-M37-03).** The page
+`/settings/notifications` was a long column: the setup of every channel stood
+at once, and the list of the channels above it never said **which** of them
+are mandatory and **how many** the user needs. **WP-M37-01** makes the
+overview speak: the answer of `GET /api/v1/notifications/compliance` carries
+the rule of the administration (§11.9) beside the compliance of the user, so
+the page marks the mandatory channels with a badge, names the number of the
+channels that are set up against the minimum, and says whether the rule is
+fulfilled or what is still missing. **WP-M37-02** and **WP-M37-03** fold the
+setup away: every channel carries a button that opens **its own** setup — the
+topic of ntfy with its QR code, the code of the Telegram bot, the form of
+Matrix, the address of the e-mail, the card of the web push and the chats of
+the WhatsApp bridge — and the data of a channel is only read when its channel
+is open, so a page view never burns a one-time code nobody uses.
+
+**Phase 34 is closed (WP-M34-01 … WP-M34-02b).** The plan of a readiness pool is owned by
+the admin, but a shift of the coming week that a technician had confirmed
+stayed locked for ever: the delete answered `409 oncall_shift_locked` with
+the reason `state` and the admin stood in front of a plan that carried a duty
+nobody could cancel. **WP-M34-01** releases the shift: a shift that **has not
+started** is deleted in every state — `UNFILLED`, `DRAFT`, `PLANNED`,
+`DECLINED`, `CONFIRMED`, `SWAP_REQUESTED`. The duty of a shift of the future
+was never held, so no history is lost; a shift that started keeps the rule of
+ADR-0047 and stays in the history (ADR-0058). **WP-M34-02a** tells the
+technician who had the shift that his duty is gone: the delete of a confirmed
+shift and the handover of a confirmed shift enqueue the event
+`oncall.released` for him.
+
+**Phase 33 is closed (WP-M33-01).** The mailbox at `/admin/email` showed six
+empty template fields: an instance could not start from a readable default and
+had to write every text itself. The mailbox now offers a **standard text** per
+kind of message — the ticket message, the readiness message, the test message,
+the registration, the new password and the report to the reporter — and a
+**reset-to-standard button** above every template field, filled in the language
+of the interface (`admin.email.standard.*`, `admin.email.standardReset`). The
+texts are plain texts with the placeholders of §11.5a; only the machine values
+the message of that kind actually carries are used. An empty field still falls
+back to the built-in text of the product — the fallback and the send path are
+untouched.
 
 **Phase 32 is closed (WP-M32-01 … WP-M32-05).** The assignment of the office
 knows no **third** pool any more: the setting `escalation.assignee_pool` with its
@@ -892,7 +1017,7 @@ registration belongs to him too. The administration knows the customer
 (WP-M31-16): the field of the roles shows a readable name and the role
 `customer` carries a hint.
 
-**Phase 30 has started (WP-M30-01).** The page `/notifications` answers two
+**Phase 30 is closed (WP-M30-01 … WP-M30-06).** The page `/notifications` answers two
 questions at once and answers both of them wrong. Its rows are the delivery
 attempts of the table `notification_messages` — one row per user **and
 channel** — so a technician with three confirmed channels (ADR-0045) sees the
@@ -908,7 +1033,7 @@ broken channel goes out once per channel and per day (§11.15).
 **ADR-0052** separates the two: the **message is a task** — one row per user
 and event in the new table `notification_items`, with the readable text, the
 deep link and the read receipt — and the **delivery attempt is the protocol**,
-read by the administration on `/admin/notifications`. A delivery that fails
+read by the administration on `/admin/delivery` beside the problems of the channels. A delivery that fails
 finally becomes a task of the administration (the event type
 `notification.delivery_failed`) and reaches it over its **own confirmed
 channels**, throttled to one task per channel and machine code per hour; the
@@ -919,6 +1044,20 @@ The phase is split into **WP-M30-01** (the spec and ADR-0052), **WP-M30-02**
 (the protocol of the administration), **WP-M30-04** (the inbox shows the
 tasks), **WP-M30-05** (the alarm of a failed delivery) and **WP-M30-06** (the
 criterion of the phase).
+
+**The phase delivers what the office asked for.** The inbox `/notifications`
+shows one entry per task — the readable text of the event, the link into the
+ticket or into the readiness, the time and the read receipt — and names
+neither a channel nor a delivery state; a technician with three channels sees
+**one** entry and not three. The protocol of the attempts — who got what, over
+which channel, with which machine code and at which time — stands on the page
+of the delivery `/admin/delivery` beside the problems of the channels, behind
+the right `notification.read_all`; the office asked for **one** page of the
+delivery and not two. A message that never arrived becomes a task of the
+administration, delivered over the confirmed channels of its recipients and
+throttled to one task per channel and machine code per hour. The state
+„handled“ and the question which events are tasks at all stay open: they
+belong to the settings of the workflow.
 
 **Phase 28 has started (WP-M28-01).** The check run of the repository needs
 253 s in CI (the step „Quality gates" of the run `v1.2.129`), and 139 s of them

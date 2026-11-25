@@ -226,6 +226,8 @@ export function notificationFromPayload(payload: string): PushNotification {
 interface PushClient {
   url: string
   focus(): Promise<unknown>
+  /** Navigates the window to a url of its own origin. */
+  navigate(url: string): Promise<unknown>
   /** Asks the page for the sound of the alarm (§11.17, ADR-0048). */
   postMessage(message: { type: string }): void
 }
@@ -250,21 +252,73 @@ interface PushScope {
     matchAll(options: { type: string; includeUncontrolled: boolean }): Promise<PushClient[]>
     openWindow(url: string): Promise<unknown>
   }
+  /** The origin of the service worker — the base of a relative deep link. */
+  location: { origin: string }
+}
+
+/** The origin of a url, or an empty string for a url that cannot be read. */
+function originOf(url: string): string {
+  try {
+    return new URL(url).origin
+  } catch {
+    return ''
+  }
+}
+
+/** The path of a url, or an empty string for a url that cannot be read. */
+function pathOf(url: string): string {
+  try {
+    return new URL(url).pathname
+  } catch {
+    return ''
+  }
 }
 
 /**
- * Opens the deep link of a clicked notification: an already open window of the
- * app is focused, otherwise a new one is opened. A payload without a url opens
- * the app root.
+ * Opens the deep link of a clicked notification: the **running app** is brought
+ * to the front and navigated to the link; a window opens it only when the app
+ * is not open at all.
+ *
+ * The app is a single-page application: the url of an open window is the url of
+ * the document that was loaded and never changes while the user navigates
+ * inside the app (MDN: "this technique is not suitable for SPAs"). A comparison
+ * of the whole url would therefore never match, and every click would open
+ * **another** window — on Windows a new top-level window of the installed app
+ * with a process of its own, while the running app stayed on the old page. The
+ * window of the app is found by its **origin** and navigated to the deep link
+ * (`client.navigate`), so the ticket opens in the app that is already running
+ * and the browser keeps one window.
+ *
+ * A deep link of another origin (the `PWA_URL` of the installation points
+ * somewhere else) is opened as a window: a window of this origin cannot be
+ * navigated to a foreign url.
  */
-export async function focusOrOpen(clients: PushScope['clients'], url: string): Promise<void> {
-  const target = url === '' ? '/' : url
+export async function focusOrOpen(
+  clients: PushScope['clients'],
+  url: string,
+  origin: string,
+): Promise<void> {
+  const target = new URL(url === '' ? '/' : url, origin).href
   const open = await clients.matchAll({ type: 'window', includeUncontrolled: true })
-  const existing = open.find((client) => client.url === target)
 
-  if (existing !== undefined) {
-    await existing.focus()
-    return
+  if (originOf(target) === origin) {
+    const sameOrigin = open.filter((client) => originOf(client.url) === origin)
+    const exact = sameOrigin.find((client) => pathOf(client.url) === pathOf(target))
+    const chosen = exact ?? sameOrigin[0]
+
+    if (chosen !== undefined) {
+      try {
+        await chosen.focus()
+
+        if (exact === undefined) {
+          await chosen.navigate(target)
+        }
+
+        return
+      } catch {
+        // The window refused the focus — the link is opened as a window below.
+      }
+    }
   }
 
   await clients.openWindow(target)
@@ -318,5 +372,7 @@ self.addEventListener('notificationclick', (event: Event) => {
   const scope = self as unknown as PushScope
 
   click.notification?.close()
-  click.waitUntil(focusOrOpen(scope.clients, click.notification?.data?.url ?? '/'))
+  click.waitUntil(
+    focusOrOpen(scope.clients, click.notification?.data?.url ?? '', scope.location.origin),
+  )
 })

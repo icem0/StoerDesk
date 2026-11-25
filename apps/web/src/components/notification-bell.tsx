@@ -15,7 +15,7 @@ import { apiFetch } from '../lib/api'
  * header is gone, so a message is marked as read on the inbox page of WP-M14-120d
  * only.
  *
- * The count comes from `GET /api/v1/notifications/messages/unread-count` and is
+ * The count comes from `GET /api/v1/notifications/items/unread-count` and is
  * refetched when the window regains the focus and every half minute, so a
  * message that arrives while the application is open shows up on the badge
  * without a reload.
@@ -31,7 +31,7 @@ export function NotificationBell() {
 
   const unread = useQuery({
     queryKey: ['notification-unread-count'],
-    queryFn: () => apiFetch<{ count: number }>('/v1/notifications/messages/unread-count'),
+    queryFn: () => apiFetch<{ count: number }>('/v1/notifications/items/unread-count'),
     refetchOnWindowFocus: true,
     refetchInterval: 30_000,
     retry: false,
@@ -48,7 +48,6 @@ export function NotificationBell() {
           : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
       }`}
       data-testid="notification-bell"
-      title={t('app.inbox')}
       to="/notifications"
     >
       <svg

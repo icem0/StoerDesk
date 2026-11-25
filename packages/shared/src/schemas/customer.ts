@@ -140,6 +140,12 @@ export const customerTicketSummarySchema = z.object({
   reportedAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   /**
+   * `true` while the ticket is open — its status is neither `CLOSED` nor
+   * `CANCELLED` (ADR-0061). The landing page of the customer shows the
+   * open tickets first and opens the detail of the one open ticket directly.
+   */
+  open: z.boolean(),
+  /**
    * The decision of the customer about the messages about his ticket
    * (§19.6): the opt-in belongs to the reporter.
    */

@@ -1,40 +1,18 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import type {
-  NotificationMessageItem,
-  NotificationMessageListResponse,
+  NotificationItem,
+  NotificationItemListResponse,
   WebPushConfigResponse,
   WebPushSubscriptionCheckResponse,
 } from '@stoerdesk/shared'
 
-import { useMe, usePermission } from '../../auth/usePermission'
 import { apiFetch } from '../../lib/api'
 import { type BrowserPush, useBrowserPush } from '../../lib/web-push'
-
-const NOTIFICATION_CHANNELS = [
-  'ntfy',
-  'telegram',
-  'matrix',
-  'signal',
-  'email',
-  'webpush',
-  'whatsapp',
-] as const
-
-const NOTIFICATION_EVENTS = [
-  'ticket.created',
-  'ticket.assigned',
-  'ticket.escalated',
-  'ticket.resolved',
-  'oncall.assigned',
-  'oncall.swap_requested',
-  'oncall.unconfirmed_reminder',
-] as const
-
-const NOTIFICATION_STATES = ['PENDING', 'SENT', 'FAILED'] as const
 
 /** The cause of the hint of the web push; `none` means: no hint. */
 type WebPushHint =
@@ -77,48 +55,97 @@ function webPushHint(
 }
 
 /**
- * The inbox of the signed-in user (`specs/10-notifications.md` §11.8, §11.12,
- * WP-M14-120d): the messages that the internal layer recorded for the user
- * before they left to the external channels — which channel took a message,
- * whether it arrived and when. The newest message comes first; a click on a
- * message marks it as read.
+ * The **readable text** of a task (`specs/10-notifications.md` §11.18,
+ * ADR-0052): the interface composes it from the event type and the params of
+ * the task — the API stores no translated text (§3.1). A task of a ticket names
+ * the ticket, a task of the readiness the pool and the time.
+ *
+ * The text says what happened — nothing about the way the message travelled:
+ * the channel and the delivery state belong to the protocol of the
+ * administration (§11.16).
+ */
+function taskText(t: TFunction<'common'>, item: NotificationItem): string {
+  const params = item.params
+  const ticket = item.ticketNo ?? ''
+  const object = typeof params.objectName === 'string' ? params.objectName : ''
+  const pool = typeof params.poolName === 'string' ? params.poolName : ''
+
+  switch (item.eventType) {
+    case 'ticket.assigned':
+      return t('inbox.task.assigned', { ticket, object })
+    case 'ticket.assignment_answered': {
+      const answer =
+        params.answer === 'accepted' ? t('inbox.task.accepted') : t('inbox.task.declined')
+      const who = typeof params.assigneeName === 'string' ? params.assigneeName : ''
+
+      return t('inbox.task.answered', { ticket, who, answer })
+    }
+    case 'ticket.escalated':
+      return t('inbox.task.escalated', { ticket, object })
+    case 'ticket.resolved':
+      return t('inbox.task.resolved', { ticket, object })
+    case 'oncall.assigned':
+      return t('inbox.task.oncallAssigned', { pool })
+    case 'oncall.swap_requested':
+      return t('inbox.task.swapRequested', { pool })
+    case 'oncall.unconfirmed_reminder':
+      return t('inbox.task.unconfirmed', { pool })
+    case 'oncall.released': {
+      // The release of a shift (`ADR-0058`): the duty of the technician is
+      // gone — the shift was deleted or handed over to another technician.
+      const cause =
+        params.release === 'reassigned'
+          ? t('inbox.task.releasedReassigned')
+          : t('inbox.task.releasedDeleted')
+
+      return t('inbox.task.oncallReleased', { pool, cause })
+    }
+    case 'notification.delivery_failed': {
+      const channel = typeof params.channel === 'string' ? params.channel : ''
+      const code = typeof params.code === 'string' ? params.code : ''
+
+      return t('inbox.task.deliveryFailed', {
+        channel: t(`inbox.channels.${channel}`),
+        code,
+      })
+    }
+    default:
+      return t('inbox.task.unknown', { ticket })
+  }
+}
+
+/**
+ * The inbox of the user (`specs/10-notifications.md` §11.18, ADR-0052): the
+ * **tasks** of StörDesk to him — one entry per task, with the readable text of
+ * the event, the link into the ticket or into the readiness and the time of
+ * the task.
+ *
+ * The page names no channel and no delivery state: the way a message travelled
+ * belongs to the protocol of the administration (§11.16), and the page of the
+ * delivery carries it. A user with three confirmed channels sees **one** entry
+ * and not three — the task is one thing to do, not three deliveries.
  *
  * The page never shows a contact of a reporter and never a photo (§11.5): the
- * title is the ticket number or the name of the pool, the body carries the
- * machine-readable params of the message. While this browser receives no push
- * message the page names the cause and the setup page of the settings menu
- *  (WP-M14-128, WP-M14-143) — it only links there, registering this browser
- *  stays the card of WP-M14-126a. The hint sits at the top of the page, right
- *  under the heading, so a channel problem is never below the fold; a server
- *  without VAPID keys names its message itself as the link to the setup guide
- *  at `/help/web-push` (the guide carries the VAPID key generation, the
- *  `.env` entry and the restart of the API).
+ * title of a task is the ticket number or the name of the pool, the text names
+ * the event.
  *
- * The inbox of a user stays personal: the list shows the own messages only.
- * A role with the permission `notification.read_all` (WP-M14-141c) gets the
- * filter of §11.16 above the list — the addressee, the channel, the event, the
- * state of the delivery and the unread messages — and every row names its
- * addressee. The read receipt stays a right of the own messages.
+ * While this browser receives no push message the page names the cause and
+ * the setup page of the settings menu (WP-M14-128, WP-M14-143) — it only links
+ * there, registering this browser stays the card of WP-M14-126a. The hint sits
+ * at the top of the page, right under the heading, so a channel problem is
+ * never below the fold; a server without VAPID keys names its message itself
+ * as the link to the setup guide at `/help/web-push`.
  */
 export function InboxPage() {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [limit, setLimit] = useState(50)
   const [acknowledging, setAcknowledging] = useState<ReadonlySet<string>>(new Set())
 
-
-  const me = useMe()
-  const canReadAll = usePermission('notification.read_all')
-  const ownUserId = me.data?.user?.id ?? ''
-
-  // The URL is the source of the filter, so a filtered view can be shared
-  // (§11.16).
-  const userId = searchParams.get('userId') ?? ''
-  const channel = searchParams.get('channel') ?? ''
-  const eventType = searchParams.get('eventType') ?? ''
-  const state = searchParams.get('state') ?? ''
+  // The filter of the own inbox: only the unhandled tasks. The URL is the
+  // source of the filter, so a filtered view can be shared.
   const unread = searchParams.get('unread') === 'true'
 
   function updateFilter(key: string, value: string, active: boolean) {
@@ -133,31 +160,14 @@ export function InboxPage() {
     setSearchParams(next)
   }
 
-  // The addressee is the one filter of the admin; the other filters of §11.16
-  // narrow the own inbox and are allowed for every session.
-  const filterUserId = canReadAll ? userId : ''
   const query = new URLSearchParams({ limit: String(limit) })
 
-  if (filterUserId !== '') query.set('userId', filterUserId)
-  if (channel !== '') query.set('channel', channel)
-  if (eventType !== '') query.set('eventType', eventType)
-  if (state !== '') query.set('state', state)
   if (unread) query.set('unread', 'true')
 
-  const messages = useQuery({
-    queryKey: [
-      'notification-messages',
-      limit,
-      filterUserId,
-      channel,
-      eventType,
-      state,
-      unread,
-    ],
+  const items = useQuery({
+    queryKey: ['notification-items', limit, unread],
     queryFn: () =>
-      apiFetch<NotificationMessageListResponse>(
-        `/v1/notifications/messages?${query.toString()}`,
-      ),
+      apiFetch<NotificationItemListResponse>(`/v1/notifications/items?${query.toString()}`),
     // An alarm must appear without a reload: the inbox asks again every half
     // minute, like the bell of the shell.
     refetchInterval: 30_000,
@@ -166,16 +176,16 @@ export function InboxPage() {
 
   const markRead = useMutation({
     mutationFn: (id: string) =>
-      apiFetch<{ id: string; readAt: string | null }>(`/v1/notifications/messages/${id}/read`, {
+      apiFetch<{ id: string; readAt: string | null }>(`/v1/notifications/items/${id}/read`, {
         method: 'PATCH',
       }),
-    // Every row keeps its own pending state, so a slow receipt for one message
+    // Every row keeps its own pending state, so a slow receipt for one task
     // never blocks the quittature of the next one — an alarm is quit quickly.
     onMutate: (id: string) => {
       setAcknowledging((previous) => new Set(previous).add(id))
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['notification-messages'] })
+      void queryClient.invalidateQueries({ queryKey: ['notification-items'] })
       void queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] })
     },
     onSettled: (_data, _error, id: string) => {
@@ -233,15 +243,24 @@ export function InboxPage() {
     not_registered: t('inbox.webpush.notRegistered'),
   }
 
-  const stateOf = (message: NotificationMessageItem) =>
-    t(`inbox.state.${message.state.toLowerCase()}`)
+  /** The time of the task in the language of the interface, not the browser. */
+  const timeOf = (value: string): string =>
+    new Date(value).toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' })
 
-  // The read receipt belongs to the own messages: a message of another user is
-  // read by that user.
-  const isOwn = (message: NotificationMessageItem) =>
-    message.recipient === null || message.recipient.userId === ownUserId
+  /** The link of the task: into the ticket or into the readiness. */
+  const linkOf = (item: NotificationItem): string | null => {
+    if (item.ticketNo !== null && item.ticketNo !== '') {
+      return `/tickets/${encodeURIComponent(item.ticketNo)}`
+    }
 
-  const recipients = messages.data?.recipients ?? []
+    if (item.shiftId !== null && item.shiftId !== '') {
+      return '/oncall'
+    }
+
+    return null
+  }
+
+  const tasks = items.data?.items ?? []
 
   return (
     <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-6">
@@ -279,8 +298,8 @@ export function InboxPage() {
         </p>
       ) : null}
 
-      {canReadAll ? null : (
-        <label className="mt-4 flex w-fit items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm">
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <label className="flex w-fit items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm">
           <input
             checked={unread}
             onChange={(event) => updateFilter('unread', 'true', event.target.checked)}
@@ -288,100 +307,13 @@ export function InboxPage() {
           />
           {t('inbox.filter.unreadOnly')}
         </label>
-      )}
 
-      {canReadAll ? (
-        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-700 p-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <label className="flex flex-col gap-1 text-sm">
-            {t('inbox.filter.recipient')}
-            <select
-              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-              value={userId}
-              onChange={(event) => updateFilter('userId', event.target.value, true)}
-            >
-              <option value="">{t('inbox.filter.recipientAll')}</option>
-              {recipients.map((recipient) => (
-                <option key={recipient.userId} value={recipient.userId}>
-                  {recipient.name} ({recipient.count})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            {t('inbox.filter.channel')}
-            <select
-              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-              value={channel}
-              onChange={(event) => updateFilter('channel', event.target.value, true)}
-            >
-              <option value="">{t('inbox.filter.channelAll')}</option>
-              {NOTIFICATION_CHANNELS.map((kind) => (
-                <option key={kind} value={kind}>
-                  {t(`inbox.channel.${kind}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            {t('inbox.filter.event')}
-            <select
-              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-              value={eventType}
-              onChange={(event) => updateFilter('eventType', event.target.value, true)}
-            >
-              <option value="">{t('inbox.filter.eventAll')}</option>
-              {NOTIFICATION_EVENTS.map((event) => (
-                <option key={event} value={event}>
-                  {t(`notifications.eventNames.${event}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            {t('inbox.filter.state')}
-            <select
-              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-              value={state}
-              onChange={(event) => updateFilter('state', event.target.value, true)}
-            >
-              <option value="">{t('inbox.filter.stateAll')}</option>
-              {NOTIFICATION_STATES.map((value) => (
-                <option key={value} value={value}>
-                  {t(`inbox.state.${value.toLowerCase()}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              checked={unread}
-              onChange={(event) => updateFilter('unread', 'true', event.target.checked)}
-              type="checkbox"
-            />
-            {t('inbox.filter.unreadOnly')}
-          </label>
-
-          <button
-            className="min-h-11 rounded bg-slate-800 px-3 text-sm hover:bg-slate-700"
-            onClick={() => setSearchParams(new URLSearchParams())}
-            type="button"
-          >
-            {t('inbox.filter.reset')}
-          </button>
-        </div>
-      ) : null}
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="flex items-center gap-2">
           <span className="text-sm text-slate-400">{t('inbox.limitLabel')}</span>
           <select
             value={limit}
             onChange={(event) => setLimit(Number(event.target.value))}
-            className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
           >
             {[10, 50, 100].map((value) => (
               <option key={value} value={value}>
@@ -390,7 +322,6 @@ export function InboxPage() {
             ))}
           </select>
         </span>
-
       </div>
 
       {markRead.isError ? (
@@ -399,85 +330,56 @@ export function InboxPage() {
         </p>
       ) : null}
 
-      {messages.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
+      {items.isPending ? <p className="mt-4 text-slate-400">{t('auth.loading')}</p> : null}
 
-      {messages.isError ? (
+      {items.isError ? (
         <p className="mt-4 text-sm text-rose-400" role="alert">
           {t('inbox.error')}
         </p>
       ) : null}
 
-      {messages.isSuccess && messages.data.messages.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">{t('inbox.empty')}</p>
+      {items.isSuccess && tasks.length === 0 ? (
+        <p className="mt-4 text-slate-400">{t('inbox.empty')}</p>
       ) : null}
 
-      {messages.isSuccess && messages.data.messages.length > 0 ? (
+      {items.isSuccess && tasks.length > 0 ? (
         <ul className="mt-4 flex flex-col gap-2">
-          {messages.data.messages.map((message) => {
-            // The title of a ticket event is the ticket number — the inbox turns
-            // it into the own deep link, so an alarm is one click from the
-            // ticket. A readiness message names a pool and stays plain text.
-            const ticketLink = message.eventType.startsWith('ticket.')
-              ? `/tickets/${encodeURIComponent(message.title)}`
-              : null
-            const own = isOwn(message)
-            const pending = acknowledging.has(message.id)
+          {tasks.map((item) => {
+            const link = linkOf(item)
+            const pending = acknowledging.has(item.id)
+            const text = taskText(t, item)
 
-            const body = (
-              <>
+            return (
+              <li
+                className={`flex flex-col gap-1 rounded-xl border p-3 text-left transition-colors ${
+                  item.readAt === null
+                    ? 'border-slate-700 bg-slate-900/60 ring-1 ring-sky-500/30'
+                    : 'border-slate-800 bg-slate-900/30'
+                }`}
+                key={item.id}
+              >
                 <span className="flex flex-wrap items-baseline gap-2">
-                  {ticketLink === null ? (
-                    <span className="font-medium text-slate-100">{message.title}</span>
+                  {link === null ? (
+                    <span className="font-medium text-slate-100">{text}</span>
                   ) : (
                     <Link
                       className="font-medium text-sky-300 underline decoration-sky-500/50 underline-offset-2 hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                      to={ticketLink}
+                      to={link}
                     >
-                      {message.title}
+                      {text}
                     </Link>
                   )}
-                  {message.recipient === null ? null : (
-                    <span className="text-xs text-slate-400">
-                      {t('inbox.recipient')}: {message.recipient.name}
-                    </span>
-                  )}
-                  <span className="text-xs text-slate-400">
-                    {t(`inbox.channel.${message.channel}`)}
-                  </span>
-                  <span
-                    className={`text-xs ${
-                      message.state === 'FAILED' ? 'text-rose-300' : 'text-emerald-300'
-                    }`}
-                  >
-                    {stateOf(message)}
-                  </span>
-                  {message.readAt === null ? (
+                  <span className="text-xs text-slate-400">{timeOf(item.createdAt)}</span>
+                  {item.readAt === null ? (
                     <span className="text-xs text-sky-300">{t('inbox.unread')}</span>
                   ) : null}
                 </span>
-                <span className="text-xs text-slate-400">{message.body}</span>
-                <span className="text-xs text-slate-500">
-                  {new Date(message.createdAt).toLocaleString()}
-                </span>
-              </>
-            )
 
-            const rowClass = `flex w-full flex-col gap-1 rounded-xl border p-3 text-left transition-colors ${
-              message.state === 'FAILED'
-                ? 'border-rose-800 bg-rose-950/30'
-                : 'border-slate-700 bg-slate-900/60'
-            } ${message.readAt === null ? 'ring-1 ring-sky-500/30' : ''}`
-
-            return (
-              <li className={rowClass} key={message.id}>
-                {body}
-
-                {/* A message of another user carries no read receipt for the admin. */}
-                {own && message.readAt === null ? (
+                {item.readAt === null ? (
                   <button
                     className="mt-1 inline-flex min-h-11 items-center self-start rounded-lg border border-sky-600/60 px-3 text-sm text-sky-200 hover:bg-sky-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-progress disabled:opacity-60"
                     disabled={pending}
-                    onClick={() => markRead.mutate(message.id)}
+                    onClick={() => markRead.mutate(item.id)}
                     type="button"
                   >
                     {t('inbox.acknowledge')}

@@ -1,4 +1,4 @@
-import { and, desc, eq, notInArray, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, or, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import {
   customerNotificationsRequestSchema,
@@ -85,8 +85,13 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
         })
         .from(tickets)
         .innerJoin(objects, eq(objects.id, tickets.objectId))
-        .where(and(ownTickets(request), notInArray(tickets.status, TERMINAL_STATUSES)))
-        .orderBy(desc(tickets.reportedAt))
+        .where(ownTickets(request))
+        // The open tickets of the customer come first, the closed ones below
+        // them (ADR-0061) — inside a group the newest ticket is first.
+        .orderBy(
+          asc(sql`${tickets.status} in ('CLOSED', 'CANCELLED')`),
+          desc(tickets.reportedAt),
+        )
 
       return {
         tickets: rows.map((row) =>
@@ -94,6 +99,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
             ...row,
             reportedAt: row.reportedAt.toISOString(),
             updatedAt: row.updatedAt.toISOString(),
+            open: !TERMINAL_STATUSES.includes(row.status),
           }),
         ),
       }
@@ -153,6 +159,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
         status: row.status,
         reportedAt: row.reportedAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
+        open: !TERMINAL_STATUSES.includes(row.status),
         emailNotifications: row.emailNotifications,
         events: events
           .filter((event) => !INTERNAL_EVENT_TYPES.includes(event.type))

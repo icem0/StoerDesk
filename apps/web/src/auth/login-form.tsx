@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { loginRequestSchema } from '@stoerdesk/shared'
 import type { LoginRequest, MeResponse } from '@stoerdesk/shared'
@@ -40,8 +41,17 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
 export function LoginForm() {
   const { t } = useTranslation('common')
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [values, setValues] = useState<LoginRequest>({ email: '', password: '' })
   const [fieldsInvalid, setFieldsInvalid] = useState(false)
+
+  // §19.3: the registration of a customer belongs to the login page of the
+  // homepage — the customer arrives there and registers himself.
+  const registration = useQuery({
+    queryKey: ['customer', 'registration'],
+    queryFn: () => apiFetch<{ available: boolean }>('/v1/public/auth/registration'),
+    retry: false,
+  })
 
   const mutation = useMutation({
     mutationFn: (body: LoginRequest) =>
@@ -54,6 +64,12 @@ export function LoginForm() {
       queryClient.setQueryData(['me'], me)
       void queryClient.invalidateQueries({ queryKey: ['me'] })
       setValues({ email: '', password: '' })
+
+      // A customer signs in at the portal — the office pages are not his
+      // (§19.1, ADR-0053).
+      if (me.user.roles.includes('customer')) {
+        navigate('/portal/tickets')
+      }
     },
   })
 
@@ -125,6 +141,14 @@ export function LoginForm() {
         >
           {t('auth.submit')}
         </button>
+        {registration.data?.available === true ? (
+          <Link
+            className="text-center text-sm text-sky-300 underline"
+            to="/portal/auth?tab=register"
+          >
+            {t('auth.customerPortal')}
+          </Link>
+        ) : null}
       </form>
     </div>
   )
@@ -156,9 +180,7 @@ export function LogoutButton() {
       onClick={() => {
         if (navigator.serviceWorker) {
           void navigator.serviceWorker.ready
-            .then((registration) =>
-              registration.active?.postMessage({ type: 'CLEAR_USER_CACHE' }),
-            )
+            .then((registration) => registration.active?.postMessage({ type: 'CLEAR_USER_CACHE' }))
             .catch(() => undefined)
         }
         mutation.mutate()

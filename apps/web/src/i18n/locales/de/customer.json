@@ -50,7 +50,7 @@
   },
   "portal": {
     "title": "Meine Meldungen",
-    "hint": "Ihre offenen Meldungen.",
+    "hint": "Ihre offenen Meldungen zuerst, darunter die abgeschlossenen.",
     "empty": "Sie haben zurzeit keine offene Meldung.",
     "loading": "Ihre Meldungen werden geladen …",
     "objects": "Meine Anlagen",
@@ -65,6 +65,8 @@
       "back": "Zurück zu meinen Meldungen",
       "emailNotifications": "Meldungen über E-Mail zu dieser Meldung empfangen"
     },
-    "addressHint": "Hier stehen auch die Meldungen, die mit Ihrer E-Mail-Adresse gemeldet wurden."
+    "addressHint": "Hier stehen auch die Meldungen, die mit Ihrer E-Mail-Adresse gemeldet wurden.",
+    "open": "Offene Meldungen",
+    "closed": "Abgeschlossene Meldungen"
   }
 }

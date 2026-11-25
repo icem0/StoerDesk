@@ -280,6 +280,15 @@ export function EmailPage() {
             <h2 className="text-lg font-semibold">{st('admin.email.templates')}</h2>
             <p className="text-sm text-slate-300">{st('admin.email.templatesHint')}</p>
 
+            <button
+              className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
+              disabled={!mayWrite}
+              onClick={() => updateTemplate('ticket', st('admin.email.standardTicket'))}
+              type="button"
+            >
+              {st('admin.email.standardReset')}
+            </button>
+
             <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-ticket">
               {st('admin.email.templateTicket')}
               <textarea
@@ -290,6 +299,15 @@ export function EmailPage() {
                 value={config.templates.ticket}
               />
             </label>
+
+            <button
+              className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
+              disabled={!mayWrite}
+              onClick={() => updateTemplate('readiness', st('admin.email.standardReadiness'))}
+              type="button"
+            >
+              {st('admin.email.standardReset')}
+            </button>
 
             <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-readiness">
               {st('admin.email.templateReadiness')}
@@ -302,6 +320,15 @@ export function EmailPage() {
               />
             </label>
 
+            <button
+              className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
+              disabled={!mayWrite}
+              onClick={() => updateTemplate('test', st('admin.email.standardTest'))}
+              type="button"
+            >
+              {st('admin.email.standardReset')}
+            </button>
+
             <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-test">
               {st('admin.email.templateTest')}
               <textarea
@@ -312,6 +339,15 @@ export function EmailPage() {
                 value={config.templates.test}
               />
             </label>
+
+            <button
+              className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
+              disabled={!mayWrite}
+              onClick={() => updateTemplate('registration', st('admin.email.standardRegistration'))}
+              type="button"
+            >
+              {st('admin.email.standardReset')}
+            </button>
 
             <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-registration">
               {st('admin.email.templateRegistration')}
@@ -324,6 +360,15 @@ export function EmailPage() {
               />
             </label>
 
+            <button
+              className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
+              disabled={!mayWrite}
+              onClick={() => updateTemplate('passwordReset', st('admin.email.standardPasswordReset'))}
+              type="button"
+            >
+              {st('admin.email.standardReset')}
+            </button>
+
             <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-password-reset">
               {st('admin.email.templatePasswordReset')}
               <textarea
@@ -334,6 +379,15 @@ export function EmailPage() {
                 value={config.templates.passwordReset}
               />
             </label>
+
+            <button
+              className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"
+              disabled={!mayWrite}
+              onClick={() => updateTemplate('customerTicket', st('admin.email.standardCustomerTicket'))}
+              type="button"
+            >
+              {st('admin.email.standardReset')}
+            </button>
 
             <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-customer-ticket">
               {st('admin.email.templateCustomerTicket')}

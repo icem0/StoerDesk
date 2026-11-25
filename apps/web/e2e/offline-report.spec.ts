@@ -127,7 +127,7 @@ for (const language of ['de', 'en'] as const) {
       throw new Error('the created object carries no QR token')
     }
 
-    await page.goto(`/m/${token}`)
+    await page.goto(`/m/${token}/neu`)
 
     await expect(page.getByRole('heading', { level: 1, name: objectName })).toBeVisible()
     await expect(page.getByText(objectNo)).toBeVisible()
