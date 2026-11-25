@@ -80,7 +80,7 @@ of the product text.
 ### 3.1 i18n mechanics
 
 - Web namespaces: `common`, `errors`, `validation`, `ticket`, `object`, `oncall`,
-  `stats`, `settings`.
+  `stats`, `settings`, `customer`.
 - `de` is the default and the reference locale, `en` must be complete.
 - No literal strings in JSX: the ESLint rule `i18next/no-literal-string` is active.
 - A new namespace file must be registered in `apps/web/src/i18n/index.ts`,
@@ -835,6 +835,7 @@ explanation. Offline is a core feature and appears early.
 | **27** | The sticker is a template: the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and a free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | every sheet of the catalog prints in its own grid, every label carries the 112 notice, and the administration decides the geometry and the look of the sticker of the installation |
 | **28** | The gate answers in a minute: the tests of the web share one environment per worker, the integration tests of the API share one migrated template database instead of building one per file, the static gates of the check run in parallel, and the assertions of the migrations read the schema of the database instead of the text of the migration files (WP-M28-01 … WP-M28-04) | the check run needs less than three minutes on a machine with four cores, and every case of the suite proves the behaviour of the code against the real database |
 | **29** | The settings are operable: the settings menu is single-column with a symbol and a description per entry, a search field and collapsible sections; the administration splits into topic pages and every channel gets its own page; every page renders exactly one `<main>` landmark (WP-M29-01 … WP-M29-09, ADR-0051) | every entry of the settings menu has a symbol and a description, the Matrix server sits on its own page behind one link, and no internal page renders more than one `<main>` |
+| **31** | The customer portal: the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his own open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | the customer registers, confirms himself over the link in the mail and sees his open tickets in the portal, the office assigns the trained person of an object, the report by QR code offers the registration and the confirmation of the trained person, and the mail to the reporter is configured in the stages of the escalation |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
