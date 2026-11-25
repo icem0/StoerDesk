@@ -14,7 +14,7 @@
 ### 3.1 Roles
 
 `reporter_anon` is **not** a database role; it is the public capability of the
-report form (`/m/<qr_token>`). Authenticated users hold exactly one of five roles:
+report form (`/m/<qr_token>`). Authenticated users hold exactly one of six roles:
 
 | Role                | Purpose                                                              |
 | ------------------- | -------------------------------------------------------------------- |
@@ -23,8 +23,9 @@ report form (`/m/<qr_token>`). Authenticated users hold exactly one of five role
 | `oncall`            | Accepts, declines and acknowledges assigned or offered tickets       |
 | `manager`           | Read access to everything, statistics, export, escalation oversight  |
 | `admin`             | Users, roles, groups, settings, on-call planning, channels, API keys |
+| `customer`          | The customer of an installation: his own tickets and his own objects (`specs/19-customer-portal.md` §19.1, ADR-0053) |
 
-All five are **system roles** (`roles.is_system = true`). They are created by the
+All six are **system roles** (`roles.is_system = true`). They are created by the
 seed from `packages/shared/src/permissions.ts`, cannot be deleted, and their
 permission set is rewritten on every seed run. Custom (non-system) roles are never
 created or changed by the seed; they arrive through the role API (§3.8). **(plan)**
@@ -47,10 +48,11 @@ created or changed by the seed; they arrive through the role API (§3.8). **(pla
 ### 3.3 Role–permission matrix
 
 Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
-`mg` = `manager`, `ad` = `admin`. `ad` holds **every** permission.
+`mg` = `manager`, `ad` = `admin`, `cu` = `customer`. `ad` holds **every**
+permission.
 
-| Key                    | ri  | of  | oc  | mg  | ad  |
-| ---------------------- | --- | --- | --- | --- | --- |
+| Key                    | ri  | of  | oc  | mg  | ad  | cu  |
+| ---------------------- | --- | --- | --- | --- | --- | --- |
 | `ticket.read`          | x   | x   | x   | x   | x   |
 | `ticket.create`        | x   | x   |     |     | x   |
 | `ticket.review`        |     | x   |     |     | x   |
@@ -68,11 +70,14 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `ticket.comment.internal` |  |     |     |     | x   |
 | `ticket.photo.read`    | x   | x   | x   | x   | x   |
 | `ticket.photo.write`   | x   | x   | x   |     | x   |
+| `ticket.customer.read` |     |     |     |     | x   | x   |
 | `object.read`          | x   | x   | x   | x   | x   |
 | `object.write`         |     | x   |     |     | x   |
 | `object.import`        |     | x   |     |     | x   |
 | `object.delete`        |     |     |     |     | x   |
 | `object.regenerate_qr` |     |     |     |     | x   |
+| `object.customer.read` |     |     |     |     | x   | x   |
+| `object.assign`        |     |     |     |     | x   |
 | `oncall.read`          |     | x   | x   | x   | x   |
 | `oncall.confirm`       |     |     | x   |     | x   |
 | `oncall.swap`          |     |     | x   |     | x   |
@@ -94,7 +99,7 @@ Short names: `ri` = `reporter_internal`, `of` = `office`, `oc` = `oncall`,
 | `notification.read_all` |    |     |     |     | x   |
 | `system.update`        |     |     |     |     | x   |
 
-Totals: 42 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 42.
+Totals: 45 keys — `ri` 8, `of` 19, `oc` 15, `mg` 12, `ad` 45, `cu` 2.
 
 Assignments beyond the wording of `PLAN.md` §5, decided in this review **(plan)**:
 
@@ -141,8 +146,9 @@ the key (multi-word keys use `snake_case`, for example `object.regenerate_qr`):
 ticket.read, ticket.create, ticket.review, ticket.assign, ticket.offer,
 ticket.claim, ticket.accept, ticket.decline, ticket.acknowledge, ticket.close,
 ticket.reopen, ticket.cancel, ticket.delete, ticket.comment, ticket.photo.read,
-ticket.photo.write, ticket.comment.internal
-object.read, object.write, object.delete, object.regenerate_qr, object.import
+ticket.photo.write, ticket.comment.internal, ticket.customer.read
+object.read, object.write, object.delete, object.regenerate_qr, object.import,
+object.customer.read, object.assign
 oncall.read, oncall.plan, oncall.confirm, oncall.swap, oncall.admin,
 oncall.read_names
 user.read, user.write
@@ -155,7 +161,7 @@ system.update
 ```
 
 This catalog is the only place where keys are added. `DEFAULT_ROLES` in the same
-file assigns the permissions to the five system roles, so the database seed, the
+file assigns the permissions to the six system roles, so the database seed, the
 API guard and the UI all read the **same** source.
 
 ### 3.5 Seed and protection
@@ -209,7 +215,7 @@ Reviewed for WP-M1-08, taken from §3.2 and `PLAN.md` §5.
 
 Reviewed for WP-M1-09b, taken from §3.1, §3.4, §3.5 and `PLAN.md` §16. The role API
 is the only runtime path that creates or changes roles; the seed stays the authority
-for the five system roles (§3.1, §3.5).
+for the six system roles (§3.1, §3.5).
 
 | Concern                             | Decision                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -254,7 +260,7 @@ composite keys.
 
 | Table              | Columns                                                       | Notes                                     |
 | ------------------ | ------------------------------------------------------------- | ----------------------------------------- |
-| `roles`            | `id`, `key` (unique), `is_system`, `created_at`, `updated_at` | five system roles from the seed           |
+| `roles`            | `id`, `key` (unique), `is_system`, `created_at`, `updated_at` | six system roles from the seed            |
 | `permissions`      | `id`, `key` (unique), `created_at`                            | catalog, 40 rows                          |
 | `role_permissions` | `role_id`, `permission_id`, `created_at`                      | composite PK, FK `cascade`                |
 | `user_roles`       | `user_id`, `role_id`, `created_at`                            | composite PK, index on `role_id`          |

@@ -40,6 +40,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m26](m26/) | Phase 26: the statistics read themselves — a phase without a data source is no phase, the groupings name the readable text instead of the machine key, the page shows the trends of the reaction time and of the processing time and the diagrams carry an axis (WP-M26-01, ADR-0049) | 5   |
 | [m27](m27/) | Phase 27: the sticker is a template — the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and the free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | 7   |
 | [m28](m28/) | Phase 28: the gate answers in a minute — the tests of the web share one environment per worker, the integration tests of the API share one migrated template database, the static gates of the check run in parallel and the assertions of the migrations read the schema of the database instead of the text of the files (WP-M28-01 … WP-M28-04b) | 5   |
+| [m30](m30/) | Phase 30: the message is a task and the delivery attempt is the protocol — the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on `/admin/notifications`, and a delivery that fails finally becomes a task of the administration over its own confirmed channels (WP-M30-01 … WP-M30-06, ADR-0052) | 6   |
+| [m31](m31/) | Phase 31: the customer portal — the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | 11   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1780,11 +1782,38 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M23-09e | the admin reminds a shift by hand — `POST /api/v1/oncall/shifts/:id/remind` | done | yes |
 | WP-M23-09f | the button „Erinnern" in the actions of the admin | done | yes |
 | WP-M23-09g | the test of the manual reminder configures its own chain | done | yes |
+| WP-M24-01 | the user owns the channels, the administration names the reach (ADR-0045) | done | yes |
+| WP-M24-02 | the accounts carry their target and their confirmation | done | yes |
+| WP-M24-03 | the shared contracts of the channels, the rule and the compliance | done | yes |
+| WP-M24-04 | the route of the rule of the administration | done | yes |
+| WP-M24-05 | the own accounts of the user carry their state | done | yes |
+| WP-M24-06 | the delivery goes over the channels of the user — split into WP-M24-06a … WP-M24-06g | done | yes |
+| WP-M24-06a | the own page loses the selection per event type | done | yes |
+| WP-M24-06b | the channels send to the target of the user | done | yes |
+| WP-M24-06c | the delivery goes over the channels of the user | done | yes |
 | WP-M24-06d | the readiness selection leaves the web — the stale test of the removed block and its labels | done | yes |
+| WP-M24-06e | the routes of the selection leave the API | done | yes |
 | WP-M24-06f | the exit criterion names a channel the instance has — the rule of the administration is refused for a channel the instance does not have | done | yes |
 | WP-M24-06g | the accent test waits for the colour of the instance — the acceptance test reads the painted colour after the answer of the branding | done | yes |
+| WP-M24-07 | the broadcast of the installation goes to the mail addresses of the users | done | yes |
+| WP-M24-08 | the code over the channel confirms the account | done | yes |
+| WP-M24-09 | the mail address of the user and the room of the user | done | yes |
+| WP-M24-15 | the compliance of the users | done | yes |
+| WP-M24-16 | the own page names the channels of the user — the retroactive record of the commit `f58d1450` | done | yes |
+| WP-M24-17 | the mailbox of the instance in `/admin/email` | done | yes |
+| WP-M24-18 | the rule and the channels of the users in the administration | done | yes |
+| WP-M24-19 | the exit criterion of the phase | done | yes |
+| WP-M24-20 | the log of the mailbox | done | yes |
 | WP-M24-21 | the code of a user reaches the channel of the installation — the effective configuration of the administration (the row wins over the environment) and the cause of a refused send (out of band) | done | yes |
+| WP-M25-01 | the alarm of the instance (ADR-0048) | done | yes |
+| WP-M25-02 | the shared contracts of the alarm and of the mute | done | yes |
+| WP-M25-03 | the route of the alarm of the installation | done | yes |
+| WP-M25-04 | the silence of one hour | done | yes |
+| WP-M25-05 | the administration of the alarm | done | yes |
+| WP-M25-06 | the band of the alarm in the shell | done | yes |
 | WP-M25-07 | the warning of the setup as a large band of the shell and the exit criterion of the phase (profile `ctx-256k`) | done | yes |
+| WP-M25-08 | the pushed alarm asks the page for the sound | done | yes |
+| WP-M25-09 | the settings page frees the tone of this browser | done | yes |
 | WP-M26-01   | the statistics know only phases with data — the phase `firstResponse` is gone (ADR-0049) | done                    | yes     |
 | WP-M26-02   | the dashboard knows the phase neither — the block of the evaluations carries three averages | done                    | yes     |
 | WP-M26-03   | the statistics name the readable text — the groupings carry the labels of the fault types and the detected errors | done                    | yes     |
@@ -1812,6 +1841,23 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M29-07   | one shell for the administration — the second batch of pages | planned | yes     |
 | WP-M29-08   | one shell for the administration — the third batch of pages | planned | yes     |
 | WP-M29-09   | the exit criterion of the phase — one `<main>` per page, symbols and descriptions in the menu, `i18n:check` green | planned | yes     |
+| WP-M30-01   | the message is a task and the delivery attempt is the protocol — the spec and ADR-0052 | planned | yes |
+| WP-M30-02   | the task of the user — the table `notification_items`, the write rule and the API of the tasks | planned | yes |
+| WP-M30-03   | the protocol of the administration — `/admin/notifications` with the attempts of the delivery | planned | yes |
+| WP-M30-04   | the inbox shows the tasks — the readable text, the deep link, the read receipt and the count | planned | yes |
+| WP-M30-05   | the alarm of a failed delivery — the task of the administration, throttled | planned | yes |
+| WP-M30-06   | the criterion of the phase — one task per user and event, the protocol and the alarm of a failure | planned | yes |
+| WP-M31-01   | the decisions of the customer portal — ADR-0053 … ADR-0056 | done | yes |
+| WP-M31-02   | the specification of the customer portal — the slice §19 and the amendment of the RBAC chapter | planned | yes |
+| WP-M31-03   | the role `customer` and the contracts of the portal — the permissions, the system role and the Zod contracts | planned | no |
+| WP-M31-04   | the data model of the phase — the migration `0062` with `account_tokens` and `object_assignments` | planned | no |
+| WP-M31-05   | the object carries its trained people — the assignments in the API and in the edit page of the object | planned | no |
+| WP-M31-06   | the registration of the customer — the token, the mail and the public routes | planned | no |
+| WP-M31-07   | the pages of the portal — the sign in, the registration, the activation and the own tickets | planned | no |
+| WP-M31-08   | the report by QR code registers the customer — the three checkboxes of the form and the transaction of the report | planned | no |
+| WP-M31-09   | the ticket carries the customer — the field of the internal creation and the list of the office | planned | no |
+| WP-M31-10   | the action `notify_reporter` — the mail to the reporter as an action of the escalation | planned | no |
+| WP-M31-11   | the criterion and the documentation of the phase — the acceptance test, the module map, the plan and the changelog | planned | no |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

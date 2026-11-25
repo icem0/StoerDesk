@@ -30,7 +30,8 @@ directly from a placeholder slice.
 | [15-work-packages.md](15-work-packages.md)     | Ch. 17 + 17a          | ~200 lines |
 | [16-acceptance.md](16-acceptance.md)           | Ch. 18 + 19           | ~180 lines |
 | [17-bmacloud-sync.md](17-bmacloud-sync.md)     | Ch. 11 sync addendum  | ~120 lines |
-| [18-self-update.md](18-self-update.md)         | Self-update (ADR-0004)| ~110 lines |
+| [18-self-update.md](18-self-update.md)       | Self-update (ADR-0004)| ~110 lines |
+| [19-customer-portal.md](19-customer-portal.md) | Ch. 19: the customer portal — the role `customer`, the assignments of the object, the registration, the portal and the action `notify_reporter` | ~330 lines |
 
 ## Rules
 
