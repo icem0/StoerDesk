@@ -861,15 +861,17 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
-**Phase 32 has started (WP-M32-01).** The assignment of the office knows a
-**third** pool: the setting `escalation.assignee_pool` with its own ordered
-list of technicians and its tab _Pool der Office_ in the administration. The
-installation already knows the readiness pools (`oncall_pools`) and the user
-groups (`groups`) — both answer their members, and the `offer` action already
-names them as its target. The office asked for the removal of the pool of the
-office: the assignment names a **target of the installation** — a readiness
-pool, a user group or one technician (ADR-0057) — and the members of that
-target are the chain of the refusal. The setting and the tab are gone.
+**Phase 32 is closed (WP-M32-01 … WP-M32-05).** The assignment of the office
+knows no **third** pool any more: the setting `escalation.assignee_pool` with its
+own ordered list of technicians and its tab _Pool der Office_ in the
+administration are gone. The assignment names a **target of the installation** —
+a readiness pool, a user group or one technician (ADR-0057) — and the members
+of that target are the chain of the refusal: the first member gets the ticket,
+a refusal passes it to the next member of the same target. The ticket carries
+the target of its assignment, the action `assign` of the escalation names it
+as well, and the interface offers the pools, the groups and the technicians of
+the installation. The stored rules that assigned from the pool of the office
+lose that action — the office sets a target in the administration.
 
 **Phase 31 has started (WP-M31-01).** The customer of an installation has no
 account: the reporter of a fault is free text on the ticket, the trained

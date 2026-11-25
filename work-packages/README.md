@@ -1867,11 +1867,24 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-14   | the customer decides about the messages of his ticket — the switch in the portal | done | yes |
 | WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
-| WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | planned | yes |
+| WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | done | yes |
 | WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
 | WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | done | yes |
 | WP-M32-04   | the interface assigns a target — the administration loses the tab _Pool der Office_, the picker names the pools and the groups | done | yes |
 | WP-M32-05   | the pool of the office is gone — the setting, the former fields of the contract and the stored actions | done | yes |
+
+**Phase 32 is closed (WP-M32-01 … WP-M32-05).** The assignment of the office
+knows no third pool any more. The pool of the office — the setting
+`escalation.assignee_pool` with its own ordered list of technicians and its tab
+_Pool der Office_ in the administration — is gone: the assignment names a
+**target of the installation** (ADR-0057) — a readiness pool, a user group or
+one technician — and the members of that target are the chain of the refusal.
+The ticket carries the target of its assignment (`assignment_target_kind` and
+`assignment_target_id`), the route of the assignment takes it, the action
+`assign` of the escalation names it as well, and the interface offers the
+pools, the groups and the technicians of the installation. The stored rules
+that assigned from the pool of the office lose that action — the office sets a
+target in the administration.
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —
