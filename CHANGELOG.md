@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   of the escalation: the office decides per stage and rule, the opt-in of the
   reporter decides whether it goes out.
 
-### Changed
+### Fixed
 - The local hooks run the same quality gate as CI (phase 31, tooling): the
   `pre-commit` hook calls `npm run check:static` (typecheck, lint, i18n, wp)
   instead of `lint` alone, and the `pre-push` hook calls `npm run check:push`
@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the same `scripts/check.mjs` as `npm run check`, so a type error can no longer
   be committed locally and fail the GitHub typecheck — the recurring red CI runs
   came from a typecheck that only ever ran in CI.
+- The gates stop failing on stale and flaky cases (phase 31, tooling): the roles
+  integration test counts the grants of the catalog instead of a hard-coded
+  number, the admin E2E follows the menu of WP-M29-04 to the users, the E2E
+  writes its traces to the temporary directory instead of the working tree, and
+  the work-package check does not count test files against the file limit
+  (`PLAN.md` §17).
+
+### Changed
 - The message is a task and the delivery attempt is the protocol
   (**WP-M30-01**, phase 30, ADR-0052): the inbox of a user shows **one task
   per user and event** — the readable text, the deep link into the ticket or
