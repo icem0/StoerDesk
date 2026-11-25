@@ -16,7 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ticket to the next member of the same target**. The ticket carries the
   target of its assignment, the route `POST /api/v1/tickets/:ticketNo/assign`
   takes the target, and the route `GET /api/v1/ticket-assign-targets` answers
-  the readiness pools and the user groups with their members. The setting
+  the readiness pools and the user groups with their members. The **action
+  `assign` of the escalation** names its target as well (**WP-M32-03**) and
+  hands the ticket to the first member of it. The setting
   `escalation.assignee_pool` and the tab _Pool der Office_ are gone with
   **WP-M32-05**.
 

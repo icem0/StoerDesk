@@ -90,8 +90,14 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
       return { target: { kind: action.target.kind, id: action.target.id } }
     case 'assign':
       return {
-        mode: action.mode,
-        ...(action.user === undefined ? {} : { user: action.user }),
+        ...(action.target === undefined
+          ? {
+              // The former shape (ADR-0039, decision 3): the mode and the
+              // technician of the mode `user` — until WP-M32-05 removes it.
+              mode: action.mode ?? 'pool',
+              ...(action.user === undefined ? {} : { user: action.user }),
+            }
+          : { target: { kind: action.target.kind, id: action.target.id } }),
         acceptance: action.acceptance,
       }
     default:
@@ -100,21 +106,29 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
 }
 
 /**
- * The configuration of an `assign` action (§7.14, ADR-0039): the mode, the
- * technician of the mode `user` and the flag _Annahme erforderlich_. An
- * installation that was written before the mode names its target in the former
- * shape — a user target becomes the mode `user` with that technician, every
- * other target becomes the mode `pool`.
+ * The configuration of an `assign` action (§7.14, ADR-0039, ADR-0057): the
+ * target of the assignment — a readiness pool, a user group or one technician
+ * — and the flag _Annahme erforderlich_. An installation that was written
+ * before the target names its mode in the former shape — the mode `user` with
+ * its technician, the mode `pool` with the pool of the office.
  */
 function assignActionConfig(config: Record<string, unknown>): Record<string, unknown> {
+  const target = config.target as { kind?: string; id?: string } | undefined
+
+  if (
+    target !== undefined &&
+    (target.kind === 'pool' || target.kind === 'group' || target.kind === 'user') &&
+    typeof target.id === 'string'
+  ) {
+    return { target: { kind: target.kind, id: target.id }, acceptance: config.acceptance !== false }
+  }
+
   if (config.mode === 'pool' || config.mode === 'user') {
     return config
   }
 
-  const target = config.target as { kind?: string; id?: string } | undefined
-
-  if (target?.kind === 'user' && typeof target.id === 'string') {
-    return { mode: 'user', user: target.id, acceptance: true }
+  if (typeof config.user === 'string') {
+    return { mode: 'user', user: config.user, acceptance: true }
   }
 
   return { mode: 'pool', acceptance: true }
@@ -349,8 +363,25 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
       }
 
       if (action.type === 'assign') {
-        // The technician of the mode `user` must exist (§7.14, ADR-0039); the
-        // mode `pool` names no row — the pool is a setting.
+        // The target of the assignment names a row of `oncall_pools` (kind
+        // `pool`), of `groups` (kind `group`) or of `users` (kind `user`,
+        // ADR-0057) — the rule of the target of an `offer` action above. The
+        // former shape names a technician in `user`.
+        if (action.target !== undefined) {
+          const known =
+            action.target.kind === 'pool'
+              ? poolIds
+              : action.target.kind === 'user'
+                ? userIds
+                : groupIds
+
+          if (!known.has(action.target.id)) {
+            unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)
+          }
+
+          continue
+        }
+
         if (action.mode === 'user' && action.user !== undefined && !userIds.has(action.user)) {
           unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.user`)
         }

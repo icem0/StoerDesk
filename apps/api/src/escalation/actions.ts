@@ -10,6 +10,7 @@ import {
   type EscalationFacts,
   type EscalationNotifyPriority,
   type EscalationNotifyTarget,
+  type EscalationTarget,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -162,6 +163,26 @@ async function resolveAssignmentTarget(
   }
 
   return [userId]
+}
+
+/**
+ * The target of an `assign` action (§7.14, ADR-0057): a readiness pool, a
+ * user group or one technician. A stored action of the former shape carries
+ * the mode and the technician instead — it stays readable until WP-M32-05
+ * removes it.
+ */
+function assignTargetOf(config: Record<string, unknown>): EscalationTarget | null {
+  const target = config.target as { kind?: string; id?: string } | undefined
+
+  if (
+    target !== undefined &&
+    (target.kind === 'pool' || target.kind === 'group' || target.kind === 'user') &&
+    typeof target.id === 'string'
+  ) {
+    return { kind: target.kind, id: target.id }
+  }
+
+  return null
 }
 
 /**
@@ -467,12 +488,36 @@ export async function dispatchEscalationActions(
     }
 
     if (row.type === 'assign') {
-      // The assignment hands the ticket to **one** technician (§7.14, ADR-0039):
-      // the first active member of the assignee pool or the technician the
-      // rule names.
-      const mode = config.mode === 'user' ? 'user' : 'pool'
+      // The assignment hands the ticket to **one** technician (§7.14, ADR-0039,
+      // ADR-0057): the first member of the target — a readiness pool, a user
+      // group or one technician.
       const acceptance = config.acceptance !== false
+      const target = assignTargetOf(config)
 
+      if (target !== null) {
+        if (ticket === undefined) {
+          continue
+        }
+
+        const outcome = await assignTicketByEscalation(database, {
+          ticketId: firing.ticketId,
+          target,
+          acceptance,
+          ruleKey: firing.ruleKey,
+          stageKey: firing.stageKey,
+        })
+
+        if (outcome.changed) {
+          result.assigned += 1
+        }
+
+        continue
+      }
+
+      // The former shape (ADR-0039, decision 3): the mode `user` names the
+      // technician, the mode `pool` takes the first member of the pool of the
+      // office — until WP-M32-05 removes it.
+      const mode = config.mode === 'user' ? 'user' : 'pool'
       let userId: string | null = null
 
       if (mode === 'user') {

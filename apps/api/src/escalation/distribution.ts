@@ -8,9 +8,8 @@ import { personalRecipients } from '../notifications/receivers'
 import { resolveOnCallPerson } from '../oncall/coupling'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
 import { readOncallSettings } from '../oncall/settings'
-import { assignTicket, type AssignResult } from '../tickets/assignment'
+import { assignTicket, resolveTargetMembers, type AssignResult } from '../tickets/assignment'
 import { TicketTransitionError, transitionTicket } from '../tickets/workflow'
-import { firstAssignee, resolveAssigneePool } from './assignee-pool'
 
 /**
  * The distribution of a ticket by the escalation (`specs/07-escalation.md`
@@ -102,26 +101,18 @@ async function offerPayload(
 }
 
 /**
-  * The technician of an assignment (`specs/07-escalation.md` §7.14, ADR-0039,
-  * decision 3): a user target names that technician; a pool or a group target
-  * takes the head of the assignee pool — the list the office maintains. A
-  * deactivated account is nobody, so a target without a technician changes
-  * nothing.
-  */
+ * The technician of an assignment (`specs/07-escalation.md` §7.14, ADR-0039,
+ * ADR-0057): the first member of the target — a readiness pool, a user group
+ * or one technician. The members are ordered by name; a deactivated account
+ * is nobody, so a target without a technician changes nothing.
+ */
 export async function resolveAssignee(
   database: Db,
   target: EscalationTarget,
 ): Promise<string | null> {
-  if (target.kind === 'user') {
-    const rows = await database
-      .select({ id: users.id })
-      .from(users)
-      .where(and(eq(users.id, target.id), eq(users.active, true)))
+  const members = await resolveTargetMembers(database, target)
 
-    return rows[0]?.id ?? null
-  }
-
-  return firstAssignee(await resolveAssigneePool(database))
+  return members[0] ?? null
 }
 
 /**
@@ -155,7 +146,7 @@ export async function distributeTicket(
 
     return assignTicketByEscalation(database, {
       ticketId: input.ticketId,
-      userId: technician,
+      target: input.target,
       acceptance: true,
       ruleKey: input.ruleKey,
       stageKey: input.stageKey,
@@ -211,16 +202,20 @@ export async function distributeTicket(
 }
 
 /**
- * The assignment of the escalation (`specs/07-escalation.md` §7.14, ADR-0039):
- * the ticket goes to one technician, the assignment waits for the technician
- * (`offered`) and the technician is notified. The rule of the escalation is
- * recorded in the history beside the step of the workflow.
+ * The assignment of the escalation (`specs/07-escalation.md` §7.14, ADR-0039,
+ * ADR-0057): the ticket goes to the first member of the target, the
+ * assignment waits for the technician (`offered`) and the technician is
+ * notified. The rule of the escalation is recorded in the history beside the
+ * step of the workflow.
  */
 export async function assignTicketByEscalation(
   database: Db,
   input: {
     ticketId: string
-    userId: string
+    /** The target of the assignment — a readiness pool, a user group or one technician. */
+    target?: EscalationTarget
+    /** The technician — the former shape (ADR-0039), until WP-M32-05 removes it. */
+    userId?: string
     acceptance: boolean
     ruleKey: string
     stageKey: string | null
@@ -231,7 +226,7 @@ export async function assignTicketByEscalation(
   try {
     result = await assignTicket(database, {
       ticketId: input.ticketId,
-      userId: input.userId,
+      ...(input.target === undefined ? { userId: input.userId } : { target: input.target }),
       acceptance: input.acceptance,
       assignedBy: null,
       // The notice of the assignment names the rule of the escalation.
@@ -257,7 +252,7 @@ export async function assignTicketByEscalation(
     payload: {
       rule: input.ruleKey,
       stage: input.stageKey,
-      assignee: input.userId,
+      assignee: result.assignedUserId,
     },
   })
 

@@ -1869,7 +1869,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
 | WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | planned | yes |
 | WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
-| WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | planned | yes |
+| WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | done | yes |
 | WP-M32-04   | the interface assigns a target — the administration loses the tab _Pool der Office_, the picker names the pools and the groups | planned | yes |
 | WP-M32-05   | the pool of the office is gone — the setting, the former fields of the contract and the stored actions | planned | yes |
 

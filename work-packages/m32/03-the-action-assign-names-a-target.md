@@ -1,7 +1,7 @@
 # WP-M32-03: the action assign names a target
 
 format: ctx-256k
-status: planned
+status: done
 phase: 32
 milestone: m32
 context-budget: 45k tokens
@@ -64,8 +64,9 @@ a target is written and read, and that an unknown target is refused.
 - Files changed: the three files of `files-write`, the tests of the
   configuration and of the distribution, CHANGELOG.md
 - Interfaces added: the target in the action `assign` of the escalation
-- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
-  `npm run test:run`
+- Verified: `npm run check` green (typecheck, lint, i18n, wp, the tests of the API and
+  the web, the E2E of the browser) — the test of the configuration proves that an
+  action with a target is written and read and that an unknown target is refused
 - Follow-up WP: WP-M32-04 (the interface), WP-M32-05 (the purge of the rest)
 - Open question: none
 - Notes: the dispatcher resolves the members of the target over the shared

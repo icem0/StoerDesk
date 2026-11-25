@@ -28,6 +28,7 @@ if (testDatabase.status === 'unavailable') {
 
 const {
   escalationActions,
+  escalationRules,
   groups,
   notificationAccounts,
   objects,
@@ -142,6 +143,25 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         ruleKey,
         type: 'assign',
         config: { mode, acceptance, ...(user === undefined ? {} : { user }) },
+        condition: { all: [] },
+        position: 0,
+        active: true,
+      })
+    }
+
+
+    /** The `assign` action with a target (§7.14, ADR-0057). */
+    async function assignTargetAction(
+      target: { kind: string; id: string },
+      acceptance: boolean,
+      key: string,
+      ruleKey: string,
+    ) {
+      await db.insert(escalationActions).values({
+        key,
+        ruleKey,
+        type: 'assign',
+        config: { target, acceptance },
         condition: { all: [] },
         position: 0,
         active: true,
@@ -315,6 +335,46 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(moved?.assignedUserId).toBe(technicianIds[0])
       // Without the acceptance the assignment is accepted at once.
       expect(moved?.assignmentStatus).toBe('accepted')
+    })
+
+
+    it('assigns the ticket to the first member of the target', async () => {
+      const ruleKey = `assign_target_${randomUUID().slice(0, 6)}`
+
+      await db.insert(escalationRules).values({
+        key: ruleKey,
+        stageKey: null,
+        reference: null,
+        minutes: null,
+        percent: 50,
+        condition: { all: [] },
+        position: 900,
+        active: true,
+      })
+      await assignTargetAction({ kind: 'group', id: groupId }, true, 'assign_target_group', ruleKey)
+
+      const ticket = await createTicket('WORK_ORDER_CREATED')
+
+      const result = await fire(ticket.id, ruleKey, null, 'e-target')
+
+      expect(result.assigned).toBe(1)
+
+      const [moved] = await db
+        .select({
+          assignedUserId: tickets.assignedUserId,
+          assignmentStatus: tickets.assignmentStatus,
+          assignmentTargetKind: tickets.assignmentTargetKind,
+          assignmentTargetId: tickets.assignmentTargetId,
+        })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .limit(1)
+
+      // The members of the group are ordered by name — Alpha before Beta.
+      expect(moved?.assignedUserId).toBe(technicianIds[0])
+      expect(moved?.assignmentStatus).toBe('offered')
+      expect(moved?.assignmentTargetKind).toBe('group')
+      expect(moved?.assignmentTargetId).toBe(groupId)
     })
 
     it('offers the ticket to the technicians of a readiness pool', async () => {

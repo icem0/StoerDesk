@@ -442,6 +442,77 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ])
     })
 
+
+    it('writes and reads an assign action with a target and refuses an unknown target', async () => {
+      const suffix = Date.now().toString(36)
+
+      const [pool] = await db
+        .insert(oncallPools)
+        .values({ name: `Zielfpool ${suffix}` })
+        .returning({ id: oncallPools.id })
+      const poolId = pool?.id ?? ''
+
+      const written = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'assignment',
+            stageKey: 'assignment',
+            reference: 'work_order_set',
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                key: 'assign_the_pool',
+                type: 'assign',
+                target: { kind: 'pool', id: poolId },
+                acceptance: true,
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      })
+
+      expect(written.statusCode).toBe(200)
+
+      const body = written.json<ConfigBody>()
+
+      expect(body.rules[0]?.actions[0]?.target).toEqual({ kind: 'pool', id: poolId })
+      expect(body.rules[0]?.actions[0]?.acceptance).toBe(true)
+
+      const refused = await putConfig(cookies['admin'], {
+        rules: [
+          {
+            key: 'assignment',
+            stageKey: 'assignment',
+            reference: 'work_order_set',
+            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
+            percent: null,
+            condition: { all: [] },
+            actions: [
+              {
+                key: 'assign_the_ghost',
+                type: 'assign',
+                target: { kind: 'pool', id: '33333333-3333-4333-8333-333333333333' },
+                acceptance: true,
+                condition: { all: [] },
+              },
+            ],
+            active: true,
+          },
+        ],
+      })
+
+      expect(refused.statusCode).toBe(400)
+
+      const refusedBody = refused.json<ErrorResponseBody>()
+
+      expect(refusedBody.code).toBe('invalid_target')
+      expect(refusedBody.params?.fields).toEqual(['rules.0.actions.0.target.id'])
+    })
+
     it('keeps a condition that names a readiness pool and refuses an unknown one', async () => {
       const suffix = Date.now().toString(36)
 
