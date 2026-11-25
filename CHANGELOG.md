@@ -244,6 +244,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tasks at all and when a task is closed belong to the settings of the
   workflow and are not decided here. The spec decides the model; the packages
   WP-M30-02 … WP-M30-06 build it.
+- One shell for the administration — the second batch (**WP-M29-07**, phase 29):
+  the pages of the fault types, the detected errors, the escalation stages, the
+  readiness and the BMAcloud sync render into the hull `AdminLayout` as well, so
+  every page of the administration carries exactly one landmark.
+- One shell for the administration (**WP-M29-06**, phase 29): the pages of the
+  administration no longer bring a `<main>` of their own — they render into the
+  `<main>` of the shell through the new hull `AdminLayout`, so every internal
+  page carries exactly one landmark and the frame of the app is the same
+  everywhere. The first batch: users, roles, groups and the ticket statuses with
+  their own pages.
 - Every channel gets its own page (**WP-M29-05**, phase 29): the form of a
   channel leaves the overview page and lives in `channel-form-parts.tsx` as the
   component `ChannelCard`; the page `/admin/channels/:kind` renders the form of

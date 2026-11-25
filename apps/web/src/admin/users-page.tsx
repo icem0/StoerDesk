@@ -23,6 +23,7 @@ import {
   type UserLocale,
   type UserTheme,
 } from './user-form-parts'
+import { AdminLayout } from '../components/admin-layout'
 
 function useUsers() {
   return useQuery({
@@ -320,7 +321,7 @@ export function UsersPage() {
   const roleKeys = roles.data?.roles.map((role) => role.key) ?? []
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
@@ -438,6 +439,6 @@ export function UsersPage() {
         </tbody>
       </table>
       {canWrite && editingUser ? <EditUserForm user={editingUser} roleKeys={roleKeys} /> : null}
-    </main>
+    </AdminLayout>
   )
 }

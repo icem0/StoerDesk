@@ -11,6 +11,7 @@ import type {
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { TranslationFields, errorMessage, jsonHeaders } from './text-template-form-parts'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The own page of the new fault type (WP-M14-162): the form does not lie
@@ -60,7 +61,7 @@ export function TextTemplateCreatePage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/admin/text-templates"
@@ -99,6 +100,6 @@ export function TextTemplateCreatePage() {
           {t('admin.textTemplates.create')}
         </button>
       </form>
-    </main>
+    </AdminLayout>
   )
 }

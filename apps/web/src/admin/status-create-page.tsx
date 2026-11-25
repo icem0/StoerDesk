@@ -10,6 +10,7 @@ import type {
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { StatusForm } from './status-form'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The own page of the new status (WP-M14-166): the form does not lie below
@@ -62,7 +63,7 @@ export function StatusCreatePage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/admin/statuses"
@@ -71,6 +72,6 @@ export function StatusCreatePage() {
       </Link>
       {saved ? <p className="mt-2 text-sm text-emerald-300">{t('admin.status.saved')}</p> : null}
       <StatusForm status={null} canWrite onSave={(body) => void mutation.mutate(body as TicketStatusCreateRequest)} />
-    </main>
+    </AdminLayout>
   )
 }

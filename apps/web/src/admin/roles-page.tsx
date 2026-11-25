@@ -17,6 +17,7 @@ import {
   jsonHeaders,
   toggleKey,
 } from './role-form-parts'
+import { AdminLayout } from '../components/admin-layout'
 
 function useRoles() {
   return useQuery({
@@ -120,7 +121,7 @@ export function RolesPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
@@ -184,6 +185,6 @@ export function RolesPage() {
       {canWrite && editingRole && editingRole.key !== 'admin' ? (
         <EditRoleForm key={editingRole.key} role={editingRole} />
       ) : null}
-    </main>
+    </AdminLayout>
   )
 }

@@ -6,6 +6,7 @@ import type { EscalationConfig, EscalationStageConfig } from '@stoerdesk/shared'
 import { usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { AddStageForm } from './escalation-page'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The own page of the new escalation stage (WP-M14-169): the form does not
@@ -64,7 +65,7 @@ export function EscalationStageCreatePage() {
   const stages = config.data?.stages ?? []
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/admin/escalation"
@@ -77,6 +78,6 @@ export function EscalationStageCreatePage() {
         </p>
       ) : null}
       <AddStageForm stages={stages} onAdd={(stage) => void save.mutate([...stages, stage])} />
-    </main>
+    </AdminLayout>
   )
 }

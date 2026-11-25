@@ -1846,8 +1846,8 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M29-03   | the settings menu is single-column — symbols, descriptions, search, collapsible sections, work surfaces leave the menu | planned | yes     |
 | WP-M29-04   | the overview pages of the administration — Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand | superseded by WP-M29-10 | yes     |
 | WP-M29-05   | every channel its own page — `/admin/channels/:kind` with Matrix as the first channel page | done | yes     |
-| WP-M29-06   | one shell for the administration — the `admin-layout.tsx` hull and the first batch of pages | planned | yes     |
-| WP-M29-07   | one shell for the administration — the second batch of pages | planned | yes     |
+| WP-M29-06   | one shell for the administration — the `admin-layout.tsx` hull and the first batch of pages | done | yes     |
+| WP-M29-07   | one shell for the administration — the second batch of pages | done | yes     |
 | WP-M29-08   | one shell for the administration — the third batch of pages | planned | yes     |
 | WP-M29-09   | the exit criterion of the phase — one `<main>` per page, symbols and descriptions in the menu, `i18n:check` green | planned | yes     |
 | WP-M29-10   | the settings keep every path — the menu names every module of the administration again, the symbol gets room beside the text, the four topic pages of WP-M29-04 are gone | planned | yes     |
@@ -1875,6 +1875,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-14   | the customer decides about the messages of his ticket — the switch in the portal | done | yes |
 | WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
+| WP-M31-17   | the customer finds the registration at the login of the homepage — the link, the tab of the URL and the way into the portal | planned | yes |
 | WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | done | yes |
 | WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
 | WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | done | yes |

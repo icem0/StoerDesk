@@ -17,6 +17,7 @@ import {
 import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * On-call administration (`specs/04-oncall.md` §4a.2–§4a.6, §4a.8, WP-M8-13).
@@ -979,7 +980,7 @@ export function OncallPage() {
   const dataError = pools.error ?? users.error ?? warnings.error ?? settings.error
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
@@ -1025,6 +1026,6 @@ export function OncallPage() {
           canWrite={maySettingsWrite}
         />
       ) : null}
-    </main>
+    </AdminLayout>
   )
 }

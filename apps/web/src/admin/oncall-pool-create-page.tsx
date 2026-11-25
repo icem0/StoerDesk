@@ -6,6 +6,7 @@ import type { GroupListResponse, OnCallPool } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The own page of the new readiness pool (WP-M14-168): the form does not lie
@@ -66,7 +67,7 @@ export function OncallPoolCreatePage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/admin/oncall"
@@ -114,6 +115,6 @@ export function OncallPoolCreatePage() {
           {t('admin.pools.create')}
         </button>
       </form>
-    </main>
+    </AdminLayout>
   )
 }

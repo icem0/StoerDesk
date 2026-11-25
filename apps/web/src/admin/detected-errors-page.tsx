@@ -13,6 +13,7 @@ import { RowMenu } from '../components/row-menu'
 import { apiFetch } from '../lib/api'
 import { languageRecord, localizedName } from '../lib/localized-name'
 import { errorMessage, jsonHeaders } from './detected-error-form-parts'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * Festgestellte Fehler — Admin-Katalog (`specs/13-detected-errors.md` §13.5,
@@ -180,7 +181,7 @@ export function DetectedErrorsPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
@@ -281,6 +282,6 @@ export function DetectedErrorsPage() {
           </tbody>
         </table>
       </div>
-    </main>
+    </AdminLayout>
   )
 }

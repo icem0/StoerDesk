@@ -7,6 +7,7 @@ import type { DetectedErrorCreateRequest, DetectedErrorResponse } from '@stoerde
 import { useMe, usePermission } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { errorMessage, jsonHeaders } from './detected-error-form-parts'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * The own page of the new detected error (WP-M14-163): the form does not lie
@@ -57,7 +58,7 @@ export function DetectedErrorCreatePage() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/admin/detected-errors"
@@ -113,6 +114,6 @@ export function DetectedErrorCreatePage() {
           {t('detectedErrors.create')}
         </button>
       </form>
-    </main>
+    </AdminLayout>
   )
 }

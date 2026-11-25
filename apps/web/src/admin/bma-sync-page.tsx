@@ -14,6 +14,7 @@ import {
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
+import { AdminLayout } from '../components/admin-layout'
 
 /**
  * BMAcloud sync page (`specs/17-bmacloud-sync.md` §17.5, WP-M2-37, WP-M2-47).
@@ -402,7 +403,7 @@ export function BmaSyncPage() {
   const newestRuns = runs.data?.runs ?? []
 
   return (
-    <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">
+    <AdminLayout>
       <Link
         className="text-sm text-accent-300 underline-offset-2 hover:text-accent-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
         to="/settings"
@@ -457,6 +458,6 @@ export function BmaSyncPage() {
           <ConflictTable conflicts={newestRuns[0]?.conflicts ?? []} />
         </>
       )}
-    </main>
+    </AdminLayout>
   )
 }
