@@ -61,7 +61,25 @@
   "report": {
     "title": "Report a malfunction",
     "loading": "Loading the object …",
-    "object": {},
+    "object": {
+      "title": "Open malfunction",
+      "back": "Back to the object",
+      "loading": "Loading the ticket …",
+      "comments": "Comments",
+      "noComments": "Nobody has added anything to this ticket yet.",
+      "commentTitle": "Add to the ticket",
+      "commentSubmit": "Send the comment",
+      "commentDone": "Your comment was saved ({{at}}).",
+      "errors": {
+        "not_found": "This ticket does not exist (any more) or has been closed in the meantime.",
+        "qr_token_not_found": "This QR code does not belong to an active object.",
+        "ticket_not_found": "This ticket does not exist (any more) or has been closed in the meantime.",
+        "comment_text_required": "Please describe the fault or choose a fault type.",
+        "invalid_request": "The comment could not be read. Please try again.",
+        "internal_error": "The comment could not be sent right now.",
+        "unknown": "The comment could not be sent right now. Please try again later."
+      }
+    },
     "faults": {
       "label": "Type of fault",
       "hint": "Multiple selections allowed — in addition to or instead of the description."
@@ -150,6 +168,15 @@
       "register": "Create an account — I receive a link to set my password.",
       "emailNotifications": "Receive reports by e-mail",
       "emailNotificationsHint": "Receiving reports by e-mail needs an e-mail address."
+    },
+    "landing": {
+      "title": "Open malfunction",
+      "openHint": "A malfunction is already open for this object.",
+      "ticket": "{{ticketNo}} · reported at {{reportedAt}}",
+      "open": "Open the ticket",
+      "newReport": "Report a new malfunction anyway",
+      "report": "Report the fault",
+      "noOpenTicket": "No malfunction is open for this object."
     }
   },
   "internal": {
@@ -287,7 +314,7 @@
   },
   "list": {
     "title": "Tickets",
-    "hint": "All reports with search and filters. Detail view follows in upcoming packages.",
+    "hint": "Open tickets first — the Filter button opens search, status and priority as well as closed and overdue tickets.",
     "search": "Search",
     "status": "Status",
     "statusAll": "all statuses",
@@ -306,7 +333,6 @@
     "priorityNormal": "Normal",
     "priorityHigh": "High",
     "priorityCritical": "Critical",
-    "filterOpen": "open only",
     "filterOverdue": "overdue only",
     "noTickets": "No tickets found.",
     "loading": "Loading tickets …",
@@ -335,7 +361,9 @@
     "technician": "Technician",
     "actions": {
       "create": "New report"
-    }
+    },
+    "filterButton": "Filter",
+    "filterClosed": "Show closed"
   },
   "detail": {
     "title": "Ticket {{ticketNo}}",

@@ -309,6 +309,47 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(remaining).toHaveLength(0)
     })
 
+    it('deletes a confirmed shift that has not started (ADR-0058)', async () => {
+      const confirmed = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({
+          state: 'CONFIRMED',
+          confirmedAt: new Date(),
+          startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        })
+        .where(eq(oncallShifts.id, confirmed.id))
+
+      await deleteShift(db, confirmed.id, adminId)
+
+      const remaining = await db
+        .select({ id: oncallShifts.id })
+        .from(oncallShifts)
+        .where(eq(oncallShifts.id, confirmed.id))
+
+      expect(remaining).toHaveLength(0)
+    })
+
+    it('refuses to delete a confirmed shift that started (ADR-0058)', async () => {
+      const confirmed = await createShift(db, { poolId, userId: techId, publish: true })
+
+      await db
+        .update(oncallShifts)
+        .set({
+          state: 'CONFIRMED',
+          confirmedAt: new Date(),
+          startsAt: new Date(Date.now() - 60 * 60 * 1000),
+        })
+        .where(eq(oncallShifts.id, confirmed.id))
+
+      await expect(deleteShift(db, confirmed.id, adminId)).rejects.toMatchObject({
+        code: 'oncall_shift_locked',
+        statusCode: 409,
+        params: { reason: 'state' },
+      })
+    })
+
     it('refuses to delete a started shift that was published (ADR-0047)', async () => {
       const started = await createShift(db, { poolId, userId: techId, publish: true })
 

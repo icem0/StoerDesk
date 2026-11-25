@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { CustomerObject, CustomerTicketDetail, CustomerTicketSummary } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
+import { useMe } from '../../auth/usePermission'
 
 /**
  * The portal of the customer (`specs/19-customer-portal.md` §19.5, ADR-0053):
@@ -29,6 +31,7 @@ function formatDate(value: string, locale: string): string {
 
 export function PortalTicketsPage() {
   const { t, i18n } = useTranslation('customer')
+  const me = useMe()
 
   const ticketsQuery = useQuery({
     queryKey: ['customer', 'tickets'],
@@ -44,6 +47,28 @@ export function PortalTicketsPage() {
 
   const tickets = ticketsQuery.data?.tickets ?? []
   const objects = objectsQuery.data?.objects ?? []
+  const navigate = useNavigate()
+
+  // Without a session the portal has nothing to show — the customer signs in
+  // at the portal (§19.3).
+  useEffect(() => {
+    if (me.isError) {
+      navigate('/portal/auth', { replace: true })
+    }
+  }, [me.isError, navigate])
+
+  // ADR-0061: the open tickets come first, the closed ones below them. Exactly
+  // one open ticket opens its detail directly — the customer does not have to
+  // click his way to the one thing that is open.
+  const openTickets = tickets.filter((ticket) => ticket.open)
+  const closedTickets = tickets.filter((ticket) => !ticket.open)
+  const singleOpen = openTickets.length === 1 ? openTickets[0] : undefined
+
+  useEffect(() => {
+    if (singleOpen !== undefined) {
+      navigate(`/portal/tickets/${singleOpen.ticketNo}`, { replace: true })
+    }
+  }, [singleOpen, navigate])
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 p-6">
@@ -59,28 +84,51 @@ export function PortalTicketsPage() {
         </p>
       ) : null}
 
-      <section className="flex flex-col gap-2">
-        {ticketsQuery.isPending ? <p className="text-sm">{t('portal.loading')}</p> : null}
+      {ticketsQuery.isPending ? <p className="text-sm">{t('portal.loading')}</p> : null}
 
-        {tickets.map((ticket) => (
-          <Link
-            key={ticket.ticketNo}
-            to={`/portal/tickets/${ticket.ticketNo}`}
-            className="flex flex-col gap-1 rounded border border-slate-200 p-3"
-          >
-            <span className="text-sm font-medium">
-              {`${ticket.ticketNo} — ${ticket.objectName}`}
-            </span>
-            <span className="text-xs text-slate-600">
-              {`${ticket.status} · ${formatDate(ticket.reportedAt, i18n.language)}`}
-            </span>
-          </Link>
-        ))}
+      {openTickets.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-base font-semibold">{t('portal.open')}</h2>
+          {openTickets.map((ticket) => (
+            <Link
+              key={ticket.ticketNo}
+              to={`/portal/tickets/${ticket.ticketNo}`}
+              className="flex flex-col gap-1 rounded border border-slate-200 p-3"
+            >
+              <span className="text-sm font-medium">
+                {`${ticket.ticketNo} — ${ticket.objectName}`}
+              </span>
+              <span className="text-xs text-slate-600">
+                {`${ticket.status} · ${formatDate(ticket.reportedAt, i18n.language)}`}
+              </span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
 
-        {!ticketsQuery.isPending && tickets.length === 0 ? (
-          <p className="text-sm text-slate-600">{t('portal.empty')}</p>
-        ) : null}
-      </section>
+      {closedTickets.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-base font-semibold">{t('portal.closed')}</h2>
+          {closedTickets.map((ticket) => (
+            <Link
+              key={ticket.ticketNo}
+              to={`/portal/tickets/${ticket.ticketNo}`}
+              className="flex flex-col gap-1 rounded border border-slate-200 p-3"
+            >
+              <span className="text-sm font-medium">
+                {`${ticket.ticketNo} — ${ticket.objectName}`}
+              </span>
+              <span className="text-xs text-slate-600">
+                {`${ticket.status} · ${formatDate(ticket.reportedAt, i18n.language)}`}
+              </span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
+
+      {!ticketsQuery.isPending && tickets.length === 0 ? (
+        <p className="text-sm text-slate-600">{t('portal.empty')}</p>
+      ) : null}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-base font-semibold">{t('portal.objects')}</h2>
@@ -97,6 +145,14 @@ export function PortalTicketsPage() {
 export function PortalTicketPage() {
   const { t, i18n } = useTranslation('customer')
   const { ticketNo } = useParams()
+  const navigate = useNavigate()
+  const me = useMe()
+
+  useEffect(() => {
+    if (me.isError) {
+      navigate('/portal/auth', { replace: true })
+    }
+  }, [me.isError, navigate])
   const queryClient = useQueryClient()
 
   const ticketQuery = useQuery({
@@ -124,7 +180,7 @@ export function PortalTicketPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-4 p-6">
-      <Link to="/portal/tickets" className="text-sm text-slate-600">
+      <Link to="/portal" className="text-sm text-slate-600">
         {t('portal.ticket.back')}
       </Link>
 

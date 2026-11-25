@@ -657,6 +657,30 @@
       "events": {
         "channel.health_warning": "Channel notice"
       },
+      "protocol": {
+        "title": "Delivery protocol",
+        "hint": "Here stands which message went when over which channel to whom — one entry per delivery attempt. The block stays hidden for everyone who may not check the delivery.",
+        "empty": "No delivery attempt.",
+        "attempts": "{{count}} attempts",
+        "attempts_one": "{{count}} attempt",
+        "attempts_other": "{{count}} attempts",
+        "state": {
+          "pending": "being sent",
+          "sent": "delivered",
+          "failed": "failed"
+        },
+        "filter": {
+          "recipient": "Recipient",
+          "recipientAll": "All recipients",
+          "channel": "Channel",
+          "channelAll": "All channels",
+          "event": "Event",
+          "eventAll": "All events",
+          "state": "State",
+          "stateAll": "All states",
+          "reset": "Reset the filters"
+        }
+      },
       "reasons": {
         "send_failed": "The delivery failed: the channel does not accept the message.",
         "http_error": "The service of the channel answered with an error.",
@@ -803,7 +827,14 @@
       "logEmpty": "No delivery yet.",
       "templateRegistration": "Registration",
       "templatePasswordReset": "New password",
-      "templateCustomerTicket": "Report to the reporter"
+      "templateCustomerTicket": "Report to the reporter",
+      "standardReset": "Reset to standard",
+      "standardTicket": "Ticket {ticket_no}: {priority}\n\nObject: {object} ({location})\nSystem: {system_type}\nReport: {text}\nAA/SA: {aa_sa}",
+      "standardReadiness": "Readiness {pool}\n\n{starts_at} – {ends_at}\nState: {state}",
+      "standardTest": "StörDesk test\n\nThis mail tests the SMTP configuration of the mailbox. The mail channel works when it arrives.",
+      "standardRegistration": "Welcome to the customer portal of the installation.\n\nYour account is created. Please set your password over this link:\n{link}\n\nThe link is valid for 24 hours.",
+      "standardPasswordReset": "A new password was requested for your account.\n\nPlease set a new password over this link:\n{link}\n\nThe link is valid for 24 hours. If this was not you, you can ignore this mail.",
+      "standardCustomerTicket": "Your report was received.\n\nTicket {ticket_no}: {priority} — {object}\n\nYou can follow the progress in the customer portal."
     }
   },
   "apiKeys": {

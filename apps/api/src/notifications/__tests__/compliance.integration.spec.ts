@@ -171,5 +171,33 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(list.statusCode).toBe(200)
       expect(list.json<{ users: Array<{ userId: string }> }>().users.length).toBeGreaterThan(0)
     })
+
+    it('carries the rule of the administration in the answer of the user (WP-M35-01)', async () => {
+      const put = await app!.inject({
+        method: 'PUT',
+        url: '/api/v1/settings/notifications/channel-policy',
+        headers: { cookie: adminCookie },
+        payload: { requiredChannels: ['ntfy'], minimumChannelCount: 2 },
+      })
+
+      expect(put.statusCode).toBe(200)
+
+      const response = await app!.inject({
+        method: 'GET',
+        url: '/api/v1/notifications/compliance',
+        headers: { cookie: userCookie },
+      })
+
+      expect(response.statusCode).toBe(200)
+
+      // The own page names the mandatory channels and the number of the
+      // channels that are needed — the rule travels with the answer (§11.19).
+      const answer = response.json<{
+        policy: { requiredChannels: string[]; minimumChannelCount: number }
+      }>()
+
+      expect(answer.policy.requiredChannels).toEqual(['ntfy'])
+      expect(answer.policy.minimumChannelCount).toBe(2)
+    })
   },
 )

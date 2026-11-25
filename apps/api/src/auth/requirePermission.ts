@@ -81,6 +81,61 @@ export function effectivePermissions(
 }
 
 /**
+ * The users with a right (`specs/01-rbac.md` §3.2): the union of the rights of
+ * their roles and the explicit allows, minus the explicit denials — the same
+ * resolution as `loadEffectivePermissions`, but for a group of users instead of
+ * one.
+ *
+ * The group of the alarm of a failed delivery (§11.18, ADR-0052) is the group
+ * of the users with `notification.read_all`: they are the ones who may read the
+ * messages of the other users — the administration of the reach.
+ */
+export async function usersWithPermission(
+  database: Pick<PermissionDatabase, 'select'>,
+  key: PermissionKey,
+): Promise<string[]> {
+  const [permission] = await database
+    .select({ id: permissions.id })
+    .from(permissions)
+    .where(eq(permissions.key, key))
+
+  if (permission === undefined) {
+    return []
+  }
+
+  const viaRole = await database
+    .select({ userId: userRoles.userId })
+    .from(userRoles)
+    .innerJoin(rolePermissions, eq(rolePermissions.roleId, userRoles.roleId))
+    .where(eq(rolePermissions.permissionId, permission.id))
+    .groupBy(userRoles.userId)
+
+  const overrides = await database
+    .select({ userId: userPermissions.userId, effect: userPermissions.effect })
+    .from(userPermissions)
+    .where(eq(userPermissions.permissionId, permission.id))
+
+  const denied = new Set(
+    overrides.filter((row) => row.effect === 'deny').map((row) => row.userId),
+  )
+  const allowed = new Set(
+    overrides.filter((row) => row.effect === 'allow').map((row) => row.userId),
+  )
+
+  const users = new Set<string>()
+
+  for (const row of viaRole) {
+    users.add(row.userId)
+  }
+
+  for (const userId of allowed) {
+    users.add(userId)
+  }
+
+  return [...users].filter((userId) => denied.has(userId) === false)
+}
+
+/**
  * The check behind every guard: `401` without a session (authentication before
  * authorization), `403 { code: 'forbidden' }` without a matching key. Keys are
  * OR-linked, an unknown key is never held.

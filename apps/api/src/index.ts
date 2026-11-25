@@ -52,6 +52,7 @@ import { publicAltchaRoutes } from './tickets/altcha'
 import { deleteRoutes } from './tickets/delete-routes'
 import { externalTicketRoutes } from './tickets/external'
 import { publicDuplicateRoutes } from './tickets/duplicates'
+import { publicObjectTicketRoutes } from './tickets/object-ticket'
 import { internalTicketRoutes } from './tickets/internal'
 import { ticketListRoutes } from './tickets/list'
 import { ticketDetailRoutes } from './tickets/detail'
@@ -178,6 +179,7 @@ export async function buildServer() {
   })
   await app.register(publicStatusRoutes, { database })
   await app.register(publicDuplicateRoutes, { database })
+  await app.register(publicObjectTicketRoutes, { database })
   await app.register(tvRoutes, { database })
   await app.register(internalTicketRoutes, {
     database,

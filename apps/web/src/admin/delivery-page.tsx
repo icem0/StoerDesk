@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type {
   AcknowledgeDeliveryResponse,
   DeliveryProblemsResponse,
+  NotificationDeliveryAttemptListResponse,
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
@@ -25,9 +26,43 @@ import { ApiError, apiFetch } from '../lib/api'
  * administration belong to the ntfy channel and name its topic — and the
  * machine code stands next to the reason, because §11.8 asks the admin to see
  * it.
+ *
+ * Since phase 30 (ADR-0052) the page carries the **protocol** beside the
+ * problems: every delivery attempt of the instance with its recipient, its
+ * event, its channel, its state, the machine code of a failure and the number
+ * of the attempts (§11.16). The office asked for one page of the delivery,
+ * not two. The block needs the right `notification.read_all` — the protocol
+ * names the users; the problems stay with `notification.read`.
  */
 
 const jsonHeaders = { 'content-type': 'application/json' }
+
+/** The channels of the protocol (§11.16) — the kinds of the channels. */
+const PROTOCOL_CHANNELS = [
+  'ntfy',
+  'telegram',
+  'matrix',
+  'signal',
+  'email',
+  'webpush',
+  'whatsapp',
+] as const
+
+/** The event types of the protocol (§11.4, §11.18). */
+const PROTOCOL_EVENTS = [
+  'ticket.created',
+  'ticket.assigned',
+  'ticket.assignment_answered',
+  'ticket.escalated',
+  'ticket.resolved',
+  'oncall.assigned',
+  'oncall.swap_requested',
+  'oncall.unconfirmed_reminder',
+  'oncall.released',
+] as const
+
+/** The states of a delivery attempt (§11.16). */
+const PROTOCOL_STATES = ['PENDING', 'SENT', 'FAILED'] as const
 
 /** The time format of the page: the language of the interface, not the browser. */
 const timeFormat: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'short' }
@@ -114,7 +149,47 @@ export function DeliveryPage() {
   const eventName = makeEventName(t)
   const mayRead = usePermission('notification.read')
   const mayWrite = usePermission('notification.write')
+  const mayReadAll = usePermission('notification.read_all')
   const queryClient = useQueryClient()
+
+  // The filters of the protocol live in the URL, so a filtered view can be
+  // shared (§11.16).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filterUserId = searchParams.get('userId') ?? ''
+  const filterChannel = searchParams.get('channel') ?? ''
+  const filterEventType = searchParams.get('eventType') ?? ''
+  const filterState = searchParams.get('state') ?? ''
+
+  function updateFilter(key: string, value: string) {
+    const next = new URLSearchParams(searchParams)
+
+    if (value === '') {
+      next.delete(key)
+    } else {
+      next.set(key, value)
+    }
+
+    setSearchParams(next)
+  }
+
+  const protocol = useQuery({
+    queryKey: ['deliveryProtocol', filterUserId, filterChannel, filterEventType, filterState],
+    queryFn: () => {
+      const query = new URLSearchParams()
+
+      if (filterUserId !== '') query.set('userId', filterUserId)
+      if (filterChannel !== '') query.set('channel', filterChannel)
+      if (filterEventType !== '') query.set('eventType', filterEventType)
+      if (filterState !== '') query.set('state', filterState)
+
+      return apiFetch<NotificationDeliveryAttemptListResponse>(
+        `/v1/admin/notifications/attempts?${query.toString()}`,
+      )
+    },
+    enabled: mayRead && mayReadAll,
+    retry: false,
+  })
+
   const query = useQuery({
     queryKey: ['deliveryProblems'],
     queryFn: () => apiFetch<DeliveryProblemsResponse>('/v1/notifications/delivery'),
@@ -310,6 +385,133 @@ export function DeliveryPage() {
         <p className="text-sm text-rose-400" role="alert">
           {t(`admin.channels.errors.${errorCode(acknowledge.error)}`)}
         </p>
+      ) : null}
+
+      {mayReadAll ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">{t('admin.delivery.protocol.title')}</h2>
+          <p className="text-sm text-slate-400">{t('admin.delivery.protocol.hint')}</p>
+
+          <div className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-700 p-3">
+            <label className="flex flex-col gap-1 text-sm">
+              {t('admin.delivery.protocol.filter.recipient')}
+              <select
+                className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+                value={filterUserId}
+                onChange={(event) => updateFilter('userId', event.target.value)}
+              >
+                <option value="">{t('admin.delivery.protocol.filter.recipientAll')}</option>
+                {(protocol.data?.recipients ?? []).map((recipient) => (
+                  <option key={recipient.userId} value={recipient.userId}>
+                    {recipient.name} ({recipient.count})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              {t('admin.delivery.protocol.filter.channel')}
+              <select
+                className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+                value={filterChannel}
+                onChange={(event) => updateFilter('channel', event.target.value)}
+              >
+                <option value="">{t('admin.delivery.protocol.filter.channelAll')}</option>
+                {PROTOCOL_CHANNELS.map((kind) => (
+                  <option key={kind} value={kind}>
+                    {t(`admin.channels.kinds.${kind}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              {t('admin.delivery.protocol.filter.event')}
+              <select
+                className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+                value={filterEventType}
+                onChange={(event) => updateFilter('eventType', event.target.value)}
+              >
+                <option value="">{t('admin.delivery.protocol.filter.eventAll')}</option>
+                {PROTOCOL_EVENTS.map((eventType) => (
+                  <option key={eventType} value={eventType}>
+                    {eventName(eventType)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              {t('admin.delivery.protocol.filter.state')}
+              <select
+                className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+                value={filterState}
+                onChange={(event) => updateFilter('state', event.target.value)}
+              >
+                <option value="">{t('admin.delivery.protocol.filter.stateAll')}</option>
+                {PROTOCOL_STATES.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`admin.delivery.protocol.state.${value.toLowerCase()}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              className="min-h-11 rounded bg-slate-800 px-3 text-sm hover:bg-slate-700"
+              onClick={() => setSearchParams(new URLSearchParams())}
+              type="button"
+            >
+              {t('admin.delivery.protocol.filter.reset')}
+            </button>
+          </div>
+
+          {protocol.isError ? (
+            <p className="text-sm text-rose-400" role="alert">
+              {t(`admin.channels.errors.${errorCode(protocol.error)}`)}
+            </p>
+          ) : protocol.isPending ? (
+            <p className="text-sm text-slate-400">{t('admin.delivery.loading')}</p>
+          ) : (protocol.data?.attempts ?? []).length === 0 ? (
+            <p className="text-sm text-slate-400">{t('admin.delivery.protocol.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {(protocol.data?.attempts ?? []).map((attempt) => (
+                <li
+                  className="flex flex-col gap-1 rounded-xl border border-slate-700 bg-slate-900/40 p-3"
+                  key={attempt.id}
+                >
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="font-medium text-slate-100">{attempt.recipient.name}</span>
+                    <span className="text-slate-300">{eventName(attempt.eventType)}</span>
+                    <span className="text-xs text-slate-400">
+                      {t(`admin.channels.kinds.${attempt.channel}`)}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        attempt.state === 'FAILED' ? 'text-rose-300' : 'text-emerald-300'
+                      }`}
+                    >
+                      {t(`admin.delivery.protocol.state.${attempt.state.toLowerCase()}`)}
+                    </span>
+                    <span className="text-xs text-slate-400">{timeOf(attempt.createdAt)}</span>
+                  </div>
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-slate-400">
+                    <span>{attempt.title}</span>
+                    <span>
+                      {t('admin.delivery.protocol.attempts', { count: attempt.attempts })}
+                    </span>
+                    {attempt.errorCode !== null && attempt.errorCode !== '' ? (
+                      <span className="text-rose-300">
+                        {t('admin.delivery.code', { code: attempt.errorCode })}
+                      </span>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       ) : null}
 
       <Link className="text-sm text-accent-300 underline" to="/admin/channels">

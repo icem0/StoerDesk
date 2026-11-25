@@ -191,7 +191,7 @@ describe('Shell settings access', () => {
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input)
 
-        if (url.includes('/v1/notifications/messages/unread-count')) {
+        if (url.includes('/v1/notifications/items/unread-count')) {
           return Response.json({ count: 3 })
         }
 
@@ -218,7 +218,7 @@ describe('Shell settings access', () => {
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input)
 
-        if (url.includes('/v1/notifications/messages/unread-count')) {
+        if (url.includes('/v1/notifications/items/unread-count')) {
           return Response.json({ count: 0 })
         }
 
@@ -244,7 +244,7 @@ describe('Shell settings access', () => {
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input)
 
-        if (url.includes('/v1/notifications/messages/unread-count')) {
+        if (url.includes('/v1/notifications/items/unread-count')) {
           return Response.json({ count: 3 })
         }
 

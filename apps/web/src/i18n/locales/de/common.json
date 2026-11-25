@@ -54,31 +54,6 @@
       "apiKeys": "API-Schlüssel",
       "bmaSync": "BMAcloud-Abgleich"
     },
-    "settingsItemDescriptions": {
-      "mySettings": "Name, Sprache, Thema und Passwort des eigenen Kontos",
-      "notifications": "Kanäle, über die das System dich erreicht",
-      "branding": "Firmenname, Logo und Farben der Oberfläche",
-      "dashboardSettings": "Kacheln und die Fernsehanzeige",
-      "objects": "Stammdaten der Anlagen und Systeme",
-      "stickers": "Druckbogen für die Meldung vor Ort",
-      "stickerTemplate": "Geometrie und Aussehen der Aufkleberbögen",
-      "users": "Benutzer anlegen und bearbeiten",
-      "roles": "Rollen und ihre Berechtigungen",
-      "groups": "Gruppen und ihre Mitgliedschaften",
-      "statuses": "Ticket-Status und ihre Farben",
-      "standardTexts": "Störungsarten und ihre Texte",
-      "detectedErrors": "Fehler, die bei Meldungen festgestellt wurden",
-      "escalation": "Eskalationsstufen und ihre Aktionen",
-      "defaults": "Standardwerte für neue Meldungen",
-      "oncall": "Pools, Dienstblöcke und Schichten",
-      "myShifts": "Die eigenen Schichten und Bereitschaften",
-      "channels": "Meldekanäle konfigurieren und testen",
-      "delivery": "Zustellungen, die nicht durchgelaufen sind",
-      "email": "E-Mail-Versand der Instanz",
-      "webhooks": "Ereignisse an andere Systeme melden",
-      "apiKeys": "Schlüssel für die API der Instanz",
-      "bmaSync": "Abgleich mit BMAcloud"
-    },
     "notFound": {
       "title": "Seite nicht gefunden",
       "hint": "Diese Adresse gibt es nicht (mehr). Vielleicht wurde die Seite umbenannt oder entfernt.",
@@ -191,7 +166,8 @@
         "password_wrong": "Das aktuelle Passwort ist nicht richtig.",
         "unknown": "Das Passwort konnte nicht gespeichert werden. Bitte später erneut versuchen."
       }
-    }
+    },
+    "customerPortal": "Sie sind Kunde? Registrieren oder Passwort vergessen"
   },
   "ntfy": {
     "subscribe": "In der ntfy-App abonnieren",
@@ -318,11 +294,11 @@
       "ticket.resolved": "Erledigt",
       "oncall.assigned": "Bereitschaft zugewiesen",
       "oncall.swap_requested": "Tausch angefragt",
-      "oncall.unconfirmed_reminder": "Nicht bestätigte Bereitschaft"
+      "oncall.unconfirmed_reminder": "Nicht bestätigte Bereitschaft",
+      "oncall.released": "Bereitschaft entzogen"
     },
     "compliance": {
       "warning": "Deine Benachrichtigungen erfüllen die Vorgabe der Administration nicht.",
-      "missing": "Es fehlen: {{channels}}. Eingerichtet sind {{count}} Kanäle.",
       "link": "Zur Einrichtung der Kanäle"
     },
     "verification": {
@@ -331,7 +307,7 @@
       "send": "Code senden",
       "codeLabel": "Code",
       "confirm": "Code eingeben",
-      "noAccount": "Noch kein Konto verknüpft — richte den Kanal unten ein.",
+      "noAccount": "Noch kein Konto verknüpft — richte den Kanal oben ein.",
       "sent": "Der Code ist unterwegs."
     },
     "email": {
@@ -342,6 +318,17 @@
       "saved": "Die Adresse ist gespeichert.",
       "remove": "Adresse entfernen",
       "removed": "Die Adresse wurde entfernt."
+    },
+    "overview": {
+      "heading": "Übersicht der Kanäle",
+      "hint": "Die Übersicht nennt jeden Kanal mit seinem Zustand. Die Einrichtung öffnest du selbst: ein Klick auf „Konfigurieren“ zeigt nur diesen einen Kanal.",
+      "count": "{{count}} von {{minimum}} Kanälen eingerichtet",
+      "fulfilled": "Du erfüllst die Vorgaben der Administration.",
+      "missing": "Es fehlen noch: {{channels}}.",
+      "ruleOff": "Die Administration hat keine Vorgabe gemacht — jeder Kanal ist freiwillig.",
+      "required": "Pflicht",
+      "configure": "Konfigurieren",
+      "close": "Schließen"
     }
   },
   "my": {
@@ -372,14 +359,39 @@
     }
   },
   "inbox": {
+    "task": {
+      "assigned": "Meldung {{ticket}} ist dir zugewiesen.",
+      "answered": "Meldung {{ticket}}: {{who}} hat {{answer}}.",
+      "accepted": "angenommen",
+      "declined": "abgelehnt",
+      "escalated": "Meldung {{ticket}} ist eskaliert.",
+      "resolved": "Meldung {{ticket}} ist erledigt.",
+      "oncallAssigned": "Bereitschaft {{pool}} ist dir zugeteilt.",
+      "swapRequested": "Für die Bereitschaft {{pool}} ist ein Tausch angefragt.",
+      "unconfirmed": "Die Bereitschaft {{pool}} ist noch nicht bestätigt.",
+      "unknown": "Meldung {{ticket}}",
+      "deliveryFailed": "Eine Meldung ist nicht angekommen ({{channel}}, Fehlercode {{code}}).",
+      "oncallReleased": "Deine Bereitschaft {{pool}} wurde {{cause}}.",
+      "releasedDeleted": "gelöscht",
+      "releasedReassigned": "an einen anderen Techniker übergeben"
+    },
+    "channels": {
+      "ntfy": "ntfy",
+      "telegram": "Telegram",
+      "matrix": "Matrix",
+      "signal": "Signal",
+      "email": "E-Mail",
+      "webpush": "Web Push",
+      "whatsapp": "WhatsApp Web"
+    },
     "title": "Benachrichtigungen",
-    "hint": "Jede Nachricht, die StörDesk für dich verschickt hat, mit Kanal und Zustellstatus.",
-    "limitLabel": "Nachrichten pro Seite",
-    "empty": "Noch keine Nachricht.",
-    "error": "Die Nachrichten konnten nicht geladen werden.",
+    "hint": "Was StörDesk dir zu tun gibt — eine Meldung mit dem Link dorthin, wo du handeln kannst.",
+    "limitLabel": "Meldungen pro Seite",
+    "empty": "Nichts zu tun: StörDesk hat dir nichts zu tun gegeben.",
+    "error": "Die Meldungen konnten nicht geladen werden.",
     "unread": "Neu",
     "acknowledge": "Quittieren",
-    "acknowledgeError": "Die Nachricht konnte nicht quittiert werden. Bitte erneut versuchen.",
+    "acknowledgeError": "Die Meldung konnte nicht quittiert werden. Bitte erneut versuchen.",
     "alarmTone": "Alarmton",
     "alarmToneHint": "Spielt bei einer neuen Nachricht einen kurzen Ton – nur in diesem Browser.",
     "state": {

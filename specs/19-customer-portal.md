@@ -101,13 +101,19 @@ and no other emergency number enters the product text.
 ## §19.5 The portal of the customer
 
 - The portal is the area of the customer: the public routes `/portal/auth`,
-  `/portal/activate/:token` and the signed routes `/portal/tickets` and
-  `/portal/tickets/:ticketNo`.
+  `/portal/activate/:token` and the signed routes `/portal` (the landing page
+  of the customer, ADR-0061), `/portal/tickets` and `/portal/tickets/:ticketNo`.
+- The landing page of the customer is `/portal`: the **open** tickets of the
+  customer come first, the closed ones below them. **Exactly one open ticket**
+  opens its detail directly — the customer does not have to click his way to
+  the one thing that is open. The sign in of the portal lands there, and a
+  customer who signs in through the ordinary login of the office is sent to
+  his portal instead of into the internal application.
 - The list of the portal shows the **open** tickets of the customer — the
   tickets whose `customer_user_id` is the signed-in user and whose status is
   not a terminal one. Every row names the number of the ticket, the title,
   the object, the priority and the state (the localized name of the status,
-  §6.2).
+  §6.2). The closed tickets of the customer follow below them.
 - The detail of a ticket of the portal shows the ticket number, the title, the
   object, the priority, the state, the reported time and the **customer
   visible** history of the ticket: the events of the workflow and the comments
@@ -247,6 +253,7 @@ so the form needs nothing else from the token.
 | ----------------------------------- | --------------------------- | --------------------------------------------------------- |
 | the sign in of the customer         | `/portal/auth`              | the tabs „Anmelden“, „Registrieren“, „Passwort vergessen“ |
 | the activation of the account       | `/portal/activate/:token`   | the new password of the account                           |
+| the landing page of the customer    | `/portal`                   | the own open tickets first, the closed ones below          |
 | the tickets of the customer         | `/portal/tickets`           | the own open tickets                                      |
 | the ticket of the customer          | `/portal/tickets/:ticketNo` | the detail with the visible history                       |
 | the trained people of the object    | `/objects/:objectNo/edit`   | the assignments of the object                             |

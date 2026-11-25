@@ -273,10 +273,11 @@ export const webPushSubscriptionResponseSchema = z.object({
 
 /**
  * The event types a user selects channels for (`specs/10-notifications.md`
- * §11.4, WP-M14-16, ADR-0021): the five ticket events and the three readiness
+ * §11.4, WP-M14-16, ADR-0021): the five ticket events and the readiness
  * events. Migration `0039` of WP-M14-27 widens the check of
  * `notification_preferences` to these seven; migration `0057` of WP-M19-07 adds
- * the answer of an assignment.
+ * the answer of an assignment; migration `0068` of WP-M34-02 adds the release
+ * of a shift.
  */
 export const NOTIFICATION_EVENT_TYPES = [
   'ticket.created',
@@ -287,6 +288,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   'oncall.assigned',
   'oncall.swap_requested',
   'oncall.unconfirmed_reminder',
+  'oncall.released',
 ] as const
 
 export const notificationEventTypeSchema = z.enum(NOTIFICATION_EVENT_TYPES)
@@ -390,6 +392,21 @@ export const notificationComplianceSchema = z.object({
 export const notificationComplianceListResponseSchema = z.object({
   users: z.array(notificationComplianceSchema),
 })
+
+/**
+ * The compliance of the **signed-in** user with the rule of the administration
+ * (`specs/10-notifications.md` §11.9, §11.19, WP-M35-01): the answer of
+ * `GET /api/v1/notifications/compliance` carries the rule itself — the
+ * required channels and the minimum number of channels — so the own page can
+ * name what is mandatory and how many channels are needed without a second
+ * request and without the right of the administration.
+ */
+export const notificationUserComplianceSchema = notificationComplianceSchema.extend({
+  /** The rule of the administration (§11.9). */
+  policy: channelPolicySchema,
+})
+
+export type NotificationUserCompliance = z.infer<typeof notificationUserComplianceSchema>
 
 /**
  * One delivery of a channel (`specs/10-notifications.md` §11.8, ADR-0046): the
@@ -525,20 +542,6 @@ export type WebPushSubscriptionCheckResponse = z.infer<
 export type WebPushConfigResponse = z.infer<typeof webPushConfigResponseSchema>
 export type WebPushSubscriptionResponse = z.infer<typeof webPushSubscriptionResponseSchema>
 
-/**
- * One message of a user's notification inbox (`specs/10-notifications.md` §11.8,
- * WP-M14-120a): which channel a message was sent to, whether it arrived, and
- * when. No contact data, no photo, no translated UI text — the UI translates
- * the channel and event-type keys itself.
- *
- * The recipient (WP-M14-141a) is the addressee of the message. It is `null`
- * without the permission `notification.read_all`: the inbox of a user stays
- * personal and never names another user.
- */
-export const notificationMessageRecipientSchema = z.object({
-  userId: z.uuid(),
-  name: z.string(),
-})
 
 /**
  * One addressee of the answer of the inbox (WP-M14-141a): the user and the
@@ -550,47 +553,11 @@ export const notificationRecipientSummarySchema = z.object({
   count: z.number().int().nonnegative(),
 })
 
-export const notificationMessageItemSchema = z.object({
-  id: z.uuid(),
-  channel: z.string(),
-  eventType: z.string(),
-  state: z.enum(['PENDING', 'SENT', 'FAILED']),
-  title: z.string(),
-  body: z.string(),
-  createdAt: z.iso.datetime(),
-  readAt: z.iso.datetime().nullable(),
-  recipient: notificationMessageRecipientSchema.nullable().default(null),
-})
-
-export const notificationMessageListResponseSchema = z.object({
-  messages: z.array(notificationMessageItemSchema),
-  /** The addressees of the filter; empty without the permission. */
-  recipients: z.array(notificationRecipientSummarySchema).default([]),
-})
-
 /**
- * The filter of the message list (`specs/10-notifications.md` §11.16,
- * WP-M14-141a): the addressee, the channel, the event type, the state of the
- * delivery and the unread messages. The filter of the addressee needs the
- * permission `notification.read_all` for another user; the other filters
- * narrow the own inbox.
+ * One addressee of the protocol (`specs/10-notifications.md` §11.16): the user
+ * and the number of his delivery attempts.
  */
-export const notificationMessageFilterSchema = z.object({
-  userId: z.uuid().optional(),
-  channel: notificationChannelKindSchema.optional(),
-  eventType: notificationEventTypeSchema.optional(),
-  state: z.enum(['PENDING', 'SENT', 'FAILED']).optional(),
-  unread: z.boolean().optional(),
-})
-
-/**
- * The answer of the read receipt of one message (WP-M14-120c): the id of the
- * message and the moment it was marked as read.
- */
-export const notificationMessageReadResponseSchema = z.object({
-  id: z.uuid(),
-  readAt: z.iso.datetime().nullable(),
-})
+export type NotificationRecipientSummary = z.infer<typeof notificationRecipientSummarySchema>
 
 /**
  * The number of the unread messages of the user (WP-M14-120c) — the badge of
@@ -600,16 +567,6 @@ export const notificationUnreadCountResponseSchema = z.object({
   count: z.number().int().nonnegative(),
 })
 
-export type NotificationMessageItem = z.infer<typeof notificationMessageItemSchema>
-export type NotificationMessageListResponse = z.infer<
-  typeof notificationMessageListResponseSchema
->
-export type NotificationMessageRecipient = z.infer<typeof notificationMessageRecipientSchema>
-export type NotificationRecipientSummary = z.infer<typeof notificationRecipientSummarySchema>
-export type NotificationMessageFilter = z.infer<typeof notificationMessageFilterSchema>
-export type NotificationMessageReadResponse = z.infer<
-  typeof notificationMessageReadResponseSchema
->
 export type NotificationUnreadCountResponse = z.infer<
   typeof notificationUnreadCountResponseSchema
 >
@@ -669,3 +626,62 @@ export type NotificationItem = z.infer<typeof notificationItemSchema>
 export type NotificationItemListResponse = z.infer<typeof notificationItemListResponseSchema>
 export type NotificationItemFilter = z.infer<typeof notificationItemFilterSchema>
 export type NotificationItemReadResponse = z.infer<typeof notificationItemReadResponseSchema>
+
+/**
+ * One **delivery attempt** of the protocol (`specs/10-notifications.md` §11.16,
+ * ADR-0052): the message of StörDesk to a user over one channel, with the
+ * state of the delivery and the machine code of a failure.
+ *
+ * The row names the recipient — the protocol belongs to the administration,
+ * and the right `notification.read_all` guards it. It never names an address
+ * of a user (§11.13).
+ */
+export const notificationDeliveryAttemptSchema = z.object({
+  id: z.uuid(),
+  recipient: z.object({
+    userId: z.uuid(),
+    /** The name of the user — the e-mail only as the fallback. */
+    name: z.string(),
+  }),
+  eventType: z.string().trim().min(1).max(64),
+  channel: z.string(),
+  state: z.enum(['PENDING', 'SENT', 'FAILED']),
+  /** The subject of the message — the ticket number or the name of the pool. */
+  title: z.string(),
+  /** The machine code of the failure, empty while the delivery works. */
+  errorCode: z.string().nullable(),
+  /** The number of the attempts of the send. */
+  attempts: z.number().int().nonnegative(),
+  /** The time of the attempt. */
+  createdAt: z.iso.datetime(),
+  /** The time of the outcome — the last attempt of the send. */
+  updatedAt: z.iso.datetime(),
+})
+
+/**
+ * The answer of the protocol (`specs/10-notifications.md` §11.16): the
+ * delivery attempts and the recipients with their number of attempts.
+ */
+export const notificationDeliveryAttemptListResponseSchema = z.object({
+  attempts: z.array(notificationDeliveryAttemptSchema),
+  recipients: z.array(notificationRecipientSummarySchema).default([]),
+})
+
+/**
+ * The filter of the protocol (`specs/10-notifications.md` §11.16): the
+ * recipient, the channel, the event type and the state of the delivery.
+ */
+export const notificationDeliveryAttemptFilterSchema = z.object({
+  userId: z.uuid().optional(),
+  channel: notificationChannelKindSchema.optional(),
+  eventType: z.string().trim().min(1).max(64).optional(),
+  state: z.enum(['PENDING', 'SENT', 'FAILED']).optional(),
+})
+
+export type NotificationDeliveryAttempt = z.infer<typeof notificationDeliveryAttemptSchema>
+export type NotificationDeliveryAttemptListResponse = z.infer<
+  typeof notificationDeliveryAttemptListResponseSchema
+>
+export type NotificationDeliveryAttemptFilter = z.infer<
+  typeof notificationDeliveryAttemptFilterSchema
+>

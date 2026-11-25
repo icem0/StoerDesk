@@ -169,38 +169,70 @@ describe('notificationFromPayload', () => {
 })
 
 describe('focusOrOpen', () => {
+  const origin = 'https://app.example'
+
   it('focuses an open window of the target', async () => {
     const focus = vi.fn().mockResolvedValue(undefined)
+    const navigate = vi.fn().mockResolvedValue(undefined)
     const openWindow = vi.fn().mockResolvedValue(undefined)
     const clients = {
-      matchAll: vi.fn().mockResolvedValue([{ url: 'https://app.example/inbox', focus }]),
+      matchAll: vi.fn().mockResolvedValue([{ url: 'https://app.example/inbox', focus, navigate }]),
       openWindow,
     }
 
-    await focusOrOpen(clients, 'https://app.example/inbox')
+    await focusOrOpen(clients, 'https://app.example/inbox', origin)
 
     expect(focus).toHaveBeenCalledTimes(1)
+    expect(navigate).not.toHaveBeenCalled()
     expect(openWindow).not.toHaveBeenCalled()
   })
 
-  it('opens a window when the target is not open', async () => {
+  it('navigates the open window of the app instead of opening a second one', async () => {
+    const focus = vi.fn().mockResolvedValue(undefined)
+    const navigate = vi.fn().mockResolvedValue(undefined)
     const openWindow = vi.fn().mockResolvedValue(undefined)
     const clients = {
-      matchAll: vi.fn().mockResolvedValue([{ url: 'https://app.example/', focus: vi.fn() }]),
+      matchAll: vi.fn().mockResolvedValue([{ url: 'https://app.example/', focus, navigate }]),
       openWindow,
     }
 
-    await focusOrOpen(clients, 'https://app.example/inbox')
+    await focusOrOpen(clients, 'https://app.example/tickets/ST-2026-0001', origin)
 
-    expect(openWindow).toHaveBeenCalledWith('https://app.example/inbox')
+    expect(focus).toHaveBeenCalledTimes(1)
+    expect(navigate).toHaveBeenCalledWith('https://app.example/tickets/ST-2026-0001')
+    expect(openWindow).not.toHaveBeenCalled()
+  })
+
+  it('opens a window when the app is not open', async () => {
+    const openWindow = vi.fn().mockResolvedValue(undefined)
+    const clients = { matchAll: vi.fn().mockResolvedValue([]), openWindow }
+
+    await focusOrOpen(clients, 'https://app.example/tickets/ST-2026-0001', origin)
+
+    expect(openWindow).toHaveBeenCalledWith('https://app.example/tickets/ST-2026-0001')
+  })
+
+  it('opens a link of another origin in a window', async () => {
+    const focus = vi.fn().mockResolvedValue(undefined)
+    const navigate = vi.fn().mockResolvedValue(undefined)
+    const openWindow = vi.fn().mockResolvedValue(undefined)
+    const clients = {
+      matchAll: vi.fn().mockResolvedValue([{ url: 'https://app.example/', focus, navigate }]),
+      openWindow,
+    }
+
+    await focusOrOpen(clients, 'https://other.example/tickets/ST-2026-0001', origin)
+
+    expect(openWindow).toHaveBeenCalledWith('https://other.example/tickets/ST-2026-0001')
+    expect(navigate).not.toHaveBeenCalled()
   })
 
   it('opens the app root for an empty url', async () => {
     const openWindow = vi.fn().mockResolvedValue(undefined)
     const clients = { matchAll: vi.fn().mockResolvedValue([]), openWindow }
 
-    await focusOrOpen(clients, '')
+    await focusOrOpen(clients, '', origin)
 
-    expect(openWindow).toHaveBeenCalledWith('/')
+    expect(openWindow).toHaveBeenCalledWith('https://app.example/')
   })
 })

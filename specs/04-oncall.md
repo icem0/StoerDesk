@@ -76,8 +76,9 @@ be deactivated but not deleted while it has shifts (`409 oncall_pool_in_use`).
 
 Indexes: `oncall_shifts(pool_id, starts_at, ends_at)` as `PLAN.md` §6 requires,
 plus a unique index on `(pool_id, starts_at)` so regenerating a range is
-idempotent. A shift that held the duty is never deleted after it started; a
-shift that nobody ever confirmed may be deleted (ADR-0047, §4a.3).
+idempotent. A shift that has not started is released by the delete; a shift
+that held the duty is never deleted after it started; a shift that nobody ever
+confirmed may be deleted (ADR-0047, ADR-0058, §4a.3).
 
 States:
 
@@ -107,7 +108,8 @@ SWAP_REQUESTED --swap rejected/withdrawn--> CONFIRMED (original technician)
 An admin may reassign any shift before it starts and only an admin may reassign
 a shift after it started (`PLAN.md` §8). A reassign of a `SWAP_REQUESTED` shift
 cancels the open swap and writes `swap_cancelled`. A shift that is `CONFIRMED`
-or `SWAP_REQUESTED` cannot be deleted (`409 oncall_shift_locked`).
+or `SWAP_REQUESTED` and that **started** cannot be deleted
+(`409 oncall_shift_locked`).
 
 **The handover of the admin (WP-M23-10).** An admin may hand a `CONFIRMED` or
 a `SWAP_REQUESTED` shift over to another technician — the handover of a duty
@@ -118,8 +120,15 @@ a `SWAP_REQUESTED` shift cancels the open swap and writes `swap_cancelled`, as
 the transitions above demand. The handover belongs to the admin alone: a
 request without `oncall.admin` answers `403 forbidden`.
 
-**The delete of a shift (ADR-0047).** A shift that held the duty keeps its
-place in the history: a `CONFIRMED` or `SWAP_REQUESTED` shift is locked, and so
+**The delete of a shift (ADR-0047, ADR-0058).** A shift that **has not started**
+is released by the delete: every state is deletable while `starts_at` lies in
+the future — `UNFILLED`, `DRAFT`, `PLANNED`, `DECLINED`, `CONFIRMED` and
+`SWAP_REQUESTED`. The duty of a shift of the future was never held: nobody was
+on duty, no ticket was coupled to it, and the history of the office has nothing
+to record about it.
+
+A shift that **started** keeps its place in the history: a `CONFIRMED` or
+`SWAP_REQUESTED` shift is locked, and so
 is every shift that was confirmed at some moment — also when the technician
 declined afterwards, the confirmation stays in the row. A shift that nobody
 ever confirmed may be deleted even after it started: the admin removes the
@@ -127,9 +136,16 @@ slots that were offered and never accepted. The state `UNFILLED`, `DRAFT` and
 `DECLINED` are deletable that way. A `PLANNED` shift that started stays locked,
 because it counted for the ticket coupling (§4a.6) and the office may have
 offered a ticket on it. Every lock answers `409 oncall_shift_locked` with the
-reason in its params: `state` for a confirmed or swapped shift, `confirmed`
+reason in its params: `state` for a confirmed or swapped shift that started,
+`confirmed`
 for a shift that held the duty, `started` for a published shift that started.
 The events of a deleted shift go with it, as they do for every deleted shift.
+
+**The release of a shift tells the technician (ADR-0058, WP-M34-02a).** A
+technician who confirmed a shift learns that his duty is gone: the delete of a
+confirmed shift and the handover of a confirmed shift to another technician
+enqueue the event `oncall.released` for him. The message names the pool, the
+period and the cause of the release.
 
 The weekly plan — generating the slots of a week, assigning or reassigning a
 technician, publishing a draft and deleting a slot that did not start — belongs
@@ -423,7 +439,7 @@ calendar app.
 | `POST /api/v1/oncall/shifts` | `oncall.plan` | create one shift |
 | `POST /api/v1/oncall/shifts/generate` | `oncall.plan` | idempotent weekly generation |
 | `PATCH /api/v1/oncall/shifts/:id` | `oncall.admin` | assign, publish, reassign |
-| `DELETE /api/v1/oncall/shifts/:id` | `oncall.admin` | delete a shift that was never confirmed (ADR-0047) |
+| `DELETE /api/v1/oncall/shifts/:id` | `oncall.admin` | delete a shift that has not started and a shift that was never confirmed (ADR-0047, ADR-0058) |
 | `POST /api/v1/oncall/shifts/:id/remind` | `oncall.admin` | remind the technician of one shift by hand |
 | `POST /api/v1/oncall/shifts/:id/confirm` | `oncall.confirm` | technician confirms |
 | `POST /api/v1/oncall/shifts/:id/decline` | `oncall.confirm` | technician declines with reason |
@@ -453,8 +469,9 @@ trigger of `PLAN.md` §15, like `ticket_events`.
 - The iCal feed is read-only; it never writes shifts.
 - The window plan creates new shifts next to the shifts of the continuous
   plan; it never changes a shift that exists. The admin deletes the future
-  shifts of the old plan — a shift that held the duty is never deleted after
-  it started (§4a.3, ADR-0047).
+  shifts of the old plan — a shift that has not started is released by the
+  delete, and a shift that held the duty is never deleted after it started
+  (§4a.3, ADR-0047, ADR-0058).
 - The duty blocks of §4a.3.3 replace the day windows of a pool in the plan,
   but they never touch the shifts that exist: the shifts of the day windows of
   ADR-0035 keep their times and cover their whole span, until the admin

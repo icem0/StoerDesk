@@ -247,3 +247,83 @@ The create path keeps accepting a stale key: an offline report queued before an
 archive must still land. Archived and unknown keys never appear in the catalog,
 and the ticket detail resolves them from the administration list so historical
 tickets keep their label. An unknown key falls back to the raw key.
+
+## 7.10 The way of the code (WP-M38-01 … WP-M38-04, ADR-0061)
+
+The scan of a code opens the **landing page of the object**, not the form. The
+open ticket of the object is the first thing on the screen; the report form is
+one tap away. §7.8 (the duplicate hint) stays inside the form — the landing
+page does not repeat it.
+
+### 7.10.1 The addresses
+
+| Address                     | Content                                                      |
+| --------------------------- | ------------------------------------------------------------ |
+| `/m/:token`                 | the landing page of the object (WP-M38-03)                    |
+| `/m/:token/neu`             | the report form (the page of `/m/:token` before WP-M38-03)    |
+| `/m/:token/tickets/:ticketNo` | the public view of an open ticket of the object (WP-M38-02)  |
+
+The sticker keeps its address (`/m/<token>`), so a code on the wall needs no
+new print.
+
+### 7.10.2 The landing page
+
+The page resolves the token (`GET /api/v1/public/qr/:token`, §7.3) and reads
+the open tickets of the object (`GET /api/v1/public/tickets/open?qrToken=`,
+§7.8.1).
+
+- **An open ticket exists** → the page names the object and shows its open
+  tickets, the **newest** one first. Every row carries the number, the status
+  and the time; the row of the newest ticket is the main card. The page
+  offers „Ticket öffnen“ (`/m/:token/tickets/:ticketNo`) and „Neue Meldung“
+  (`/m/:token/neu`).
+- **No open ticket exists** → the page names the object and offers the report
+  directly (`/m/:token/neu`).
+
+The page never shows the description, the contact or the photos of a ticket of
+another reporter.
+
+### 7.10.3 The public view of a ticket of the object
+
+`GET /api/v1/public/objects/:token/tickets/:ticketNo` — **no authentication**.
+The token resolves the object exactly as in §7.3; the ticket must belong to
+that object and must still be **open** (every status except `CLOSED` and
+`CANCELLED`, §7.8). A ticket of another object, a closed ticket and an unknown
+number answer `404 ticket_not_found` — the page must not tell a caller that a
+closed ticket of the object exists.
+
+`200` — `{ ticketNo, status, reportedAt, deadlineAt, events, comments }`:
+
+- `events` — the public events of the status (`PUBLIC_TICKET_EVENT_TYPES`),
+  oldest first: `created`, `work_order_set`, `accepted`, `acknowledged`,
+  `closed`. No payload, no actor, no internal entry (ADR-0034, ADR-0038).
+- `comments` — the public comments of the ticket, oldest first: `{ at, text }`.
+  The **contact data of the author never leaves the house**.
+
+### 7.10.4 The comment of the object
+
+`POST /api/v1/public/objects/:token/tickets/:ticketNo/comments` — **no
+authentication**. The **capability is the QR token of the object** (ADR-0061):
+the code is printed on the object, so its holder stands at the object. The
+ticket must belong to the object of the token and must still be open.
+
+The body: `qrToken` (required), `clientUuid` (the idempotency key of the
+offline replay), `text` (trimmed, max. 2000, optional), `faultTemplateKeys`
+(array of `text_templates.key`, max. 9, optional), `contact` (`name`, `phone`,
+`email` — all optional), `locale` (`de` | `en`, default `de`). At least one of
+`text` and `faultTemplateKeys` is required.
+
+`201` — `{ ticketNo, at }`. The server writes **one** append-only
+`ticket_events` row: `type = 'comment'`, `actor_kind = 'public'`,
+`actor_user_id = NULL`, `payload = { source: 'object_qr', locale, text,
+faultTemplateKeys, contact }`. The office sees the source of the comment; the
+public view of the ticket shows the text without the contact.
+
+The rules of §7.6 apply: the spam limit of the report path, the honeypot of
+the form and the idempotency over the `client_uuid`. SEC-004 keeps its force
+for §7.8.2 — the `status_token` of a foreign ticket is still never enough for
+a comment on a ticket of another object.
+
+Errors: `400 invalid_request`, `404 qr_token_not_found`, `404 ticket_not_found`
+(unknown number, a ticket of another object, a closed ticket), `422
+comment_text_required` (neither text nor a fault key).

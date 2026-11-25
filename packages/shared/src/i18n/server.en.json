@@ -9,6 +9,12 @@
     "test_body": "This is a test notification.",
     "verification_code": "StörDesk setup code: {{code}}",
     "channel_health_warning": "The notification over {{channel}} is broken (error code {{code}}).",
+    "delivery_failure_title": "Delivery failed ({{channel}})",
+    "delivery_failure_body": "A message did not arrive (error code {{code}}).",
+    "oncall_released_title": "Duty withdrawn: {{pool}}",
+    "oncall_released_body": "Your duty in the pool {{pool}} ({{period}}) was {{cause}}.",
+    "oncall_release_deleted": "deleted",
+    "oncall_release_reassigned": "handed over to another technician",
     "channels": {
       "signal": "Signal",
       "matrix": "Matrix",

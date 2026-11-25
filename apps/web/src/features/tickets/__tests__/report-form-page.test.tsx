@@ -147,9 +147,9 @@ function renderForm(token: string = SCANNED_TOKEN) {
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
-        <MemoryRouter initialEntries={[`/m/${token}`]}>
+        <MemoryRouter initialEntries={[`/m/${token}/neu`]}>
           <Routes>
-            <Route path="/m/:token" element={<ReportFormPage />} />
+            <Route path="/m/:token/neu" element={<ReportFormPage />} />
           </Routes>
         </MemoryRouter>
       </I18nextProvider>

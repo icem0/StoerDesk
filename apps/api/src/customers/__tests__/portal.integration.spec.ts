@@ -19,7 +19,7 @@ if (testDatabase.status === 'unavailable') {
 
 const { objectAssignments, objects, roles, ticketEvents, tickets, userRoles, users } = schema
 
-type TicketSummary = { ticketNo: string; objectName: string }
+type TicketSummary = { ticketNo: string; objectName: string; open?: boolean }
 type TicketListAnswer = { tickets?: TicketSummary[] }
 type ErrorBody = { code?: string }
 
@@ -147,6 +147,45 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       // the ticket of the other customer.
       expect(numbers).toContain(ticketNo)
       expect(numbers).not.toContain(otherTicketNo)
+    })
+
+    it('puts the closed tickets below the open ones and names the state', async () => {
+      // A closed ticket of the customer (ADR-0061): the landing page shows the
+      // open tickets first and the closed ones below them.
+      const [own] = await db
+        .select({ objectId: tickets.objectId })
+        .from(tickets)
+        .where(eq(tickets.ticketNo, ticketNo))
+
+      await db.insert(tickets).values({
+        objectId: own!.objectId,
+        customerUserId: customerId,
+        title: 'Der Rauchmelder war still',
+        status: 'CLOSED',
+        reportedAt: new Date(),
+        deadlineAt: new Date(Date.now() + 3_600_000),
+      })
+
+      const answer = await app.inject({
+        method: 'GET',
+        url: '/api/v1/customer/tickets',
+        headers: { cookie: customerCookie },
+      })
+
+      expect(answer.statusCode).toBe(200)
+
+      const body = answer.json() as TicketListAnswer
+      const rows = body.tickets ?? []
+      const openRows = rows.filter((row) => row.open === true)
+      const closedRows = rows.filter((row) => row.open === false)
+
+      expect(closedRows.length).toBeGreaterThan(0)
+      expect(openRows.length).toBeGreaterThan(0)
+      // The open tickets come first: the last open row stands before the
+      // first closed one.
+      expect(rows.findIndex((row) => row.open === false)).toBeGreaterThan(
+        rows.map((row) => row.open === true).lastIndexOf(true),
+      )
     })
 
     it('does not answer the ticket of another customer', async () => {

@@ -63,9 +63,33 @@ function meResponse(permissions: string[]) {
   }
 }
 
+/**
+ * The protocol of the delivery (`specs/10-notifications.md` §11.16, ADR-0052):
+ * one entry per delivery attempt with its recipient, its event, its channel and
+ * its state.
+ */
+const attempts = {
+  attempts: [
+    {
+      id: '33333333-3333-4333-8333-333333333333',
+      recipient: { userId: '44444444-4444-4444-8444-444444444444', name: 'Rita Receiver' },
+      eventType: 'ticket.assigned',
+      channel: 'ntfy',
+      state: 'SENT',
+      title: 'ST-0007',
+      errorCode: null,
+      attempts: 1,
+      createdAt: '2026-11-19T09:00:00.000Z',
+      updatedAt: '2026-11-19T09:00:01.000Z',
+    },
+  ],
+  recipients: [{ userId: '44444444-4444-4444-8444-444444444444', name: 'Rita Receiver', count: 1 }],
+}
+
 function stub(options: {
   me: unknown
   delivery?: unknown
+  attempts?: unknown
   acknowledge?: { status: number; body: unknown }
 }) {
   const calls: Array<{ url: string; body: string }> = []
@@ -88,6 +112,10 @@ function stub(options: {
           acknowledgedAt: '2026-11-19T10:00:00.000Z',
           channels: ['ntfy'],
         })
+      }
+
+      if (url.includes('/v1/admin/notifications/attempts')) {
+        return Response.json(options.attempts ?? attempts)
       }
 
       if (url.includes('/v1/notifications/delivery')) {
@@ -187,5 +215,29 @@ describe('DeliveryPage', () => {
     expect(
       await screen.findByText('Keine gestörte Zustellung: alle Kanäle liefern.'),
     ).toBeTruthy()
+  })
+
+  it('shows the protocol of the delivery beside the problems', async () => {
+    stub({
+      me: meResponse(['notification.read', 'notification.write', 'notification.read_all']),
+    })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Zustellprotokoll' })).toBeTruthy()
+    expect(await screen.findByText('Rita Receiver')).toBeTruthy()
+    expect(screen.getByText('ST-0007')).toBeTruthy()
+    expect(screen.getAllByText('zugestellt').length).toBeGreaterThan(0)
+    expect(screen.getByRole('combobox', { name: 'Empfänger' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: 'Kanal' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: 'Ereignis' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: 'Zustand' })).toBeTruthy()
+  })
+
+  it('hides the protocol without the right to read the messages of other users', async () => {
+    stub({ me: meResponse(['notification.read', 'notification.write']) })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Gestörte Zustellungen' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Zustellprotokoll' })).toBeNull()
   })
 })

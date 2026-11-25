@@ -2,23 +2,25 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import type {
-  TicketListItem,
-  TicketListResponse,
-  TimelineState,
-} from '@stoerdesk/shared'
+import type { TicketListItem, TicketListResponse, TimelineState } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
 /**
- * Ticket list page (`PLAN.md` §13, §14, WP-M2-17b, WP-M9-21).
+ * Ticket list page (`PLAN.md` §13, §14, WP-M2-17b, WP-M9-21, WP-M35-03).
  *
- * Paginated ticket list with search and filters (status, priority). Every
- * ticket is one line: the ticket number and the object on the left, the mini
- * timeline (WP-M6-12) in the middle, the status, the priority and the times
- * on the right. The whole line is one link to the ticket detail, and the rows
- * come in the order of the office (WP-M16-24b): the open tickets first, then
- * the urgency descending, then the nearest deadline.
+ * Paginated ticket list that **opens on the open tickets** (ADR-0059):
+ * without a filter the page asks the API with `open=true`, and the checkbox
+ * „Erledigte anzeigen“ lets the completed ones in. The filters (search,
+ * status, priority, completed, overdue) live in a **filter menu** behind the
+ * Filter button beside „Neue Meldung“ (`specs/13-ui.md` §14.12): the button
+ * pulls the menu down below the header, the URL stays the single source of
+ * truth.
+ * Every ticket is one line: the ticket number and the object on the left,
+ * the mini timeline (WP-M6-12) in the middle, the status, the priority and
+ * the times on the right. The whole line is one link to the ticket detail,
+ * and the rows come in the order of the office (WP-M16-24b): the open
+ * tickets first, then the urgency descending, then the nearest deadline.
  */
 
 const STATUS_COLORS: Record<string, string> = {
@@ -169,13 +171,20 @@ export function TicketListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // The URL is the single source of truth, so the dashboard tiles open the list
-  // with the matching filter (WP-M2-22, WP-M2-23).
+  // with the matching filter (WP-M2-22, WP-M2-23). Since WP-M35-03 (ADR-0059)
+  // the page opens **open only**: the filter of the completed tickets is the
+  // URL parameter `closed=true`, and without it the page asks the API for
+  // `open=true`. The parameter `open` stays a filter of the API — the page
+  // itself offers „Erledigte anzeigen“ now, never „nur offene“.
   const search = searchParams.get('search') ?? ''
   const status = searchParams.get('status') ?? ''
   const priority = searchParams.get('priority') ?? ''
-  const open = searchParams.get('open') === 'true'
+  const closed = searchParams.get('closed') === 'true'
   const overdue = searchParams.get('overdue') === 'true'
   const offset = Number(searchParams.get('offset') ?? '0')
+
+  /** The filter menu (ADR-0059): closed by default, the Filter button opens it. */
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   function updateFilter(key: string, value: string, active: boolean) {
     const next = new URLSearchParams(searchParams)
@@ -194,7 +203,7 @@ export function TicketListPage() {
     search,
     status,
     priority,
-    open: open ? 'true' : undefined,
+    open: closed ? undefined : 'true',
     overdue: overdue ? 'true' : undefined,
     limit: 25,
     offset,
@@ -220,80 +229,94 @@ export function TicketListPage() {
           <h1 className="text-xl font-semibold">{t('list.title')}</h1>
           <p className="text-sm text-slate-400">{t('list.hint')}</p>
         </div>
-        <button
-          className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700"
-          type="button"
-          onClick={() => navigate('/tickets/create')}
-        >
-          {t('list.actions.create')}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700"
+            onClick={() => navigate('/tickets/create')}
+            type="button"
+          >
+            {t('list.actions.create')}
+          </button>
+          <button
+            aria-expanded={filtersOpen}
+            className="min-h-11 rounded border border-slate-600 bg-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+            onClick={() => setFiltersOpen((value) => !value)}
+            type="button"
+          >
+            {t('list.filterButton')}
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="flex flex-col gap-1 text-sm">
-          {t('list.search')}
-          <input
-            className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-            type="search"
-            value={search}
-            onChange={(event) => updateFilter('search', event.target.value, true)}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t('list.status')}
-          <select
-            className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-            value={status}
-            onChange={(event) => updateFilter('status', event.target.value, true)}
-          >
-            <option value="">{t('list.statusAll')}</option>
-            <option value="NEW">{t('list.statusNew')}</option>
-            <option value="IN_REVIEW">{t('list.statusInReview')}</option>
-            <option value="WORK_ORDER_CREATED">{t('list.statusWorkOrder')}</option>
-            <option value="OFFERED">{t('list.statusOffered')}</option>
-            <option value="ASSIGNED">{t('list.statusAssigned')}</option>
-            <option value="ACCEPTED">{t('list.statusAccepted')}</option>
-            <option value="ACKNOWLEDGED">{t('list.statusAcknowledged')}</option>
-            <option value="CLOSED">{t('list.statusClosed')}</option>
-            <option value="CANCELLED">{t('list.statusCancelled')}</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t('list.priority')}
-          <select
-            className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
-            value={priority}
-            onChange={(event) => updateFilter('priority', event.target.value, true)}
-          >
-            <option value="">{t('list.priorityAll')}</option>
-            <option value="low">{t('list.priorityLow')}</option>
-            <option value="normal">{t('list.priorityNormal')}</option>
-            <option value="high">{t('list.priorityHigh')}</option>
-            <option value="critical">{t('list.priorityCritical')}</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            checked={open}
-            onChange={(event) => updateFilter('open', 'true', event.target.checked)}
-            type="checkbox"
-          />
-          {t('list.filterOpen')}
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            checked={overdue}
-            onChange={(event) => updateFilter('overdue', 'true', event.target.checked)}
-            type="checkbox"
-          />
-          {t('list.filterOverdue')}
-        </label>
-      </div>
+      {filtersOpen ? (
+        <div className="flex flex-col gap-3 rounded border border-slate-700 bg-slate-900/60 px-3 py-3 sm:flex-row sm:items-end">
+          <label className="flex flex-col gap-1 text-sm">
+            {t('list.search')}
+            <input
+              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+              onChange={(event) => updateFilter('search', event.target.value, true)}
+              type="search"
+              value={search}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('list.status')}
+            <select
+              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+              onChange={(event) => updateFilter('status', event.target.value, true)}
+              value={status}
+            >
+              <option value="">{t('list.statusAll')}</option>
+              <option value="NEW">{t('list.statusNew')}</option>
+              <option value="IN_REVIEW">{t('list.statusInReview')}</option>
+              <option value="WORK_ORDER_CREATED">{t('list.statusWorkOrder')}</option>
+              <option value="OFFERED">{t('list.statusOffered')}</option>
+              <option value="ASSIGNED">{t('list.statusAssigned')}</option>
+              <option value="ACCEPTED">{t('list.statusAccepted')}</option>
+              <option value="ACKNOWLEDGED">{t('list.statusAcknowledged')}</option>
+              <option value="CLOSED">{t('list.statusClosed')}</option>
+              <option value="CANCELLED">{t('list.statusCancelled')}</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t('list.priority')}
+            <select
+              className="min-h-11 rounded bg-slate-900 p-2 text-slate-100"
+              onChange={(event) => updateFilter('priority', event.target.value, true)}
+              value={priority}
+            >
+              <option value="">{t('list.priorityAll')}</option>
+              <option value="low">{t('list.priorityLow')}</option>
+              <option value="normal">{t('list.priorityNormal')}</option>
+              <option value="high">{t('list.priorityHigh')}</option>
+              <option value="critical">{t('list.priorityCritical')}</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              checked={closed}
+              onChange={(event) => updateFilter('closed', 'true', event.target.checked)}
+              type="checkbox"
+            />
+            {t('list.filterClosed')}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              checked={overdue}
+              onChange={(event) => updateFilter('overdue', 'true', event.target.checked)}
+              type="checkbox"
+            />
+            {t('list.filterOverdue')}
+          </label>
+        </div>
+      ) : null}
 
       {tickets.isPending ? (
         <p className="text-slate-400">{t('list.loading')}</p>
       ) : tickets.isError ? (
-        <p className="text-rose-400" role="alert">{t('list.loadError')}</p>
+        <p className="text-rose-400" role="alert">
+          {t('list.loadError')}
+        </p>
       ) : filtered.length === 0 ? (
         <p className="text-slate-400">{t('list.noTickets')}</p>
       ) : (
@@ -306,7 +329,13 @@ export function TicketListPage() {
 
       {tickets.data !== undefined && (
         <div className="flex gap-3 text-sm text-slate-400">
-          <span>{t('list.range', { from: offset + 1, to: Math.min(offset + filtered.length, tickets.data.total), total: tickets.data.total })}</span>
+          <span>
+            {t('list.range', {
+              from: offset + 1,
+              to: Math.min(offset + filtered.length, tickets.data.total),
+              total: tickets.data.total,
+            })}
+          </span>
           {offset > 0 && (
             <button
               className="min-h-11 rounded bg-slate-700 px-2 py-1 text-slate-200 hover:bg-slate-600"

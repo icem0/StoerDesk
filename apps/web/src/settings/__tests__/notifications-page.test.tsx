@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -21,6 +21,33 @@ function renderPage() {
       </I18nextProvider>
     </QueryClientProvider>,
   )
+}
+
+/**
+ * The row of a channel in the overview (`specs/10-notifications.md` §11.19,
+ * WP-M35-02): the page shows the overview of every channel, the setup of a
+ * channel opens only when its own button is clicked.
+ */
+async function channelRow(name: string): Promise<HTMLElement> {
+  const label = (await screen.findAllByText(name))[0]
+
+  if (label === undefined) {
+    throw new Error(`the row of the channel ${name} is missing`)
+  }
+
+  const row = label.closest('li')
+
+  if (row === null) {
+    throw new Error(`the row of the channel ${name} is missing`)
+  }
+
+  return row
+}
+
+async function openChannel(name: string) {
+  const row = await channelRow(name)
+
+  fireEvent.click(within(row).getByRole('button', { name: 'Konfigurieren' }))
 }
 
 function stubTelegramFlow() {
@@ -58,6 +85,7 @@ function stubTelegramFlow() {
         missing: [],
         channelCount: 0,
         compliant: true,
+        policy: { requiredChannels: [], minimumChannelCount: 0 },
       })
     }
 
@@ -89,30 +117,104 @@ afterEach(() => {
 })
 
 describe('NotificationsPage', () => {
-  it('lists the channels with their state and renders the Telegram section with the code', async () => {
+  it('lists every channel with its state', async () => {
     vi.stubGlobal('fetch', stubTelegramFlow())
 
     renderPage()
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Deine Kanäle' })).toBeTruthy()
-    expect(await screen.findByRole('heading', { level: 2, name: 'Telegram' })).toBeTruthy()
 
     // The state of every channel comes from the server (§11.3a, WP-M24-16).
-    expect(screen.getAllByText('Nicht eingerichtet').length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('Nicht eingerichtet')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Kanal der Installation')).toHaveLength(1)
-    expect(screen.getAllByText('Verknüpft, nicht bestätigt').length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('Verknüpft, nicht bestätigt')).length).toBeGreaterThan(0)
+  })
 
-    // The button that sends the code over the channel of the account (§11.3a).
-    expect(screen.getAllByRole('button', { name: 'Code senden' }).length).toBeGreaterThan(0)
+  it('opens the setup of a channel only when its button is clicked', async () => {
+    vi.stubGlobal('fetch', stubTelegramFlow())
 
-    expect(screen.getByText(/Sende den unten gezeigten Code/i)).toBeTruthy()
+    renderPage()
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Deine Kanäle' })).toBeTruthy()
+
+    // The setup of a channel stays hidden until its own button is clicked
+    // (§11.19, WP-M35-02) — no long column of forms nobody needs.
+    expect(screen.queryByRole('heading', { level: 2, name: 'Telegram' })).toBeNull()
+    expect(screen.queryAllByRole('button', { name: 'Code senden' })).toHaveLength(0)
+
+    await openChannel('Telegram')
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Telegram' })).toBeTruthy()
+    expect(await screen.findByText(/Sende den unten gezeigten Code/i)).toBeTruthy()
     expect(await screen.findByText('AB2C3D')).toBeTruthy()
 
     expect(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' })).toBeTruthy()
     expect(screen.getByText(/Das Entfernen eines verknüpften Kontos/i)).toBeTruthy()
   })
 
-  it('names the channel administration under the header and in the ntfy fallback', async () => {
+  it('closes the setup of a channel when its button is clicked again', async () => {
+    vi.stubGlobal('fetch', stubTelegramFlow())
+
+    renderPage()
+
+    await openChannel('Telegram')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Telegram' })).toBeTruthy()
+
+    const row = await channelRow('Telegram')
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Schließen' }))
+
+    expect(screen.queryByRole('heading', { level: 2, name: 'Telegram' })).toBeNull()
+  })
+
+  it('names the rule of the administration in the overview', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/v1/notifications/compliance')) {
+        return Response.json({
+          userId: '11111111-1111-4111-8111-111111111111',
+          name: 'Nora Reich',
+          channels: [
+            { channel: 'ntfy', state: 'missing' },
+            { channel: 'telegram', state: 'ready' },
+            { channel: 'matrix', state: 'missing' },
+            { channel: 'email', state: 'missing' },
+            { channel: 'webpush', state: 'missing' },
+            { channel: 'whatsapp', state: 'missing' },
+          ],
+          missing: ['ntfy'],
+          channelCount: 1,
+          compliant: false,
+          policy: { requiredChannels: ['ntfy', 'telegram'], minimumChannelCount: 2 },
+        })
+      }
+
+      return Response.json({ code: 'not_found', params: {} }, { status: 404 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderPage()
+
+    // The mandatory channels carry their badge (§11.19, WP-M35-01).
+    expect(await screen.findAllByText('Pflicht')).toHaveLength(2)
+
+    // The number of the channels and what is still missing.
+    expect(screen.getByText('1 von 2 Kanälen eingerichtet')).toBeTruthy()
+    expect(screen.getByText('Es fehlen noch: ntfy.')).toBeTruthy()
+  })
+
+  it('names that the administration made no rule', async () => {
+    vi.stubGlobal('fetch', stubTelegramFlow())
+
+    renderPage()
+
+    expect(
+      await screen.findByText('Die Administration hat keine Vorgabe gemacht — jeder Kanal ist freiwillig.'),
+    ).toBeTruthy()
+  })
+
+  it('names the channel administration under the header and in the overview', async () => {
     vi.stubGlobal('fetch', stubTelegramFlow())
 
     renderPage()
@@ -139,6 +241,7 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
+    await openChannel('Telegram')
     await screen.findByText('AB2C3D')
     fireEvent.click(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' }))
 
@@ -176,6 +279,7 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
+    await openChannel('Telegram')
     await screen.findByText('ZZ9YY8')
     fireEvent.click(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' }))
 
@@ -187,10 +291,6 @@ describe('NotificationsPage', () => {
   it('stores a valid Matrix account and clears the token field after the save', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
 
       if (url.endsWith('/v1/notifications/accounts/matrix')) {
         if (init?.method === 'DELETE') {
@@ -210,6 +310,8 @@ describe('NotificationsPage', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderPage()
+
+    await openChannel('Matrix')
 
     const homeserverInput = await screen.findByLabelText('Homeserver', {
       selector: '#matrix-homeserver',
@@ -247,10 +349,6 @@ describe('NotificationsPage', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
 
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
-
       if (url.endsWith('/v1/notifications/accounts/matrix')) {
         if (init?.method === 'DELETE') {
           return Response.json({ code: 'account_not_found', params: { fields: ['channel'] } }, { status: 404 })
@@ -264,6 +362,8 @@ describe('NotificationsPage', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderPage()
+
+    await openChannel('Matrix')
 
     fireEvent.change(screen.getByLabelText('Homeserver', { selector: '#matrix-homeserver' }), {
       target: { value: 'https://matrix.example.org' },
@@ -286,10 +386,6 @@ describe('NotificationsPage', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
 
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
-
       if (url.endsWith('/v1/notifications/accounts/matrix')) {
         if (init?.method === 'DELETE') {
           return new Response(null, { status: 204 })
@@ -308,6 +404,8 @@ describe('NotificationsPage', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderPage()
+
+    await openChannel('Matrix')
 
     fireEvent.change(screen.getByLabelText('Homeserver', { selector: '#matrix-homeserver' }), {
       target: { value: 'https://matrix.example.org' },
@@ -335,10 +433,6 @@ describe('NotificationsPage', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
 
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
-
       if (url.endsWith('/v1/notifications/accounts/ntfy')) {
         return Response.json({
           publicUrl: 'https://ntfy.sh',
@@ -354,6 +448,11 @@ describe('NotificationsPage', () => {
 
     const { container } = renderPage()
 
+    // The topic of the user only appears when the channel is opened (§11.19).
+    expect(screen.queryByText('In der ntfy-App abonnieren')).toBeNull()
+
+    await openChannel('ntfy')
+
     expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
     expect(screen.getByText('mit dem Handy scannen')).toBeTruthy()
     expect(container.querySelectorAll('svg')).toHaveLength(1)
@@ -367,10 +466,6 @@ describe('NotificationsPage', () => {
   it('tests the own ntfy topic and shows the result', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
-
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
 
       if (url.endsWith('/v1/notifications/accounts/ntfy')) {
         return Response.json({
@@ -391,6 +486,8 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
+    await openChannel('ntfy')
+
     await screen.findByText('In der ntfy-App abonnieren')
     fireEvent.click(screen.getByRole('button', { name: 'Eigenes Thema testen' }))
 
@@ -408,10 +505,6 @@ describe('NotificationsPage', () => {
   it('shows the failure reason when the own ntfy test fails', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
-
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
 
       if (url.endsWith('/v1/notifications/accounts/ntfy')) {
         return Response.json({
@@ -432,10 +525,12 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
+    await openChannel('ntfy')
+
     await screen.findByText('In der ntfy-App abonnieren')
     fireEvent.click(screen.getByRole('button', { name: 'Eigenes Thema testen' }))
 
-    expect(await screen.findByText(/Anmeldung erforderlich \(401\)/))
+    expect(await screen.findByText(/Anmeldung erforderlich \(401\)/)).toBeTruthy()
   })
 
   it('keeps the ntfy subscription visible when Telegram is not configured', async () => {
@@ -461,21 +556,19 @@ describe('NotificationsPage', () => {
 
     const { container } = renderPage()
 
+    await openChannel('ntfy')
+
     expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
     expect(screen.getByText('https://ntfy.sh/stoerdesk-admin')).toBeTruthy()
     expect(container.querySelectorAll('svg')).toHaveLength(1)
     expect(
-      await screen.findByText(/nicht konfiguriert|not configured/i),
+      await screen.findByText(/ntfy (ist auf diesem Server nicht eingerichtet|is not configured)/i),
     ).toBeTruthy()
   })
 
   it('lists the chats of a connected bridge and connects the chat the user picks', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
 
       if (url.endsWith('/v1/notifications/accounts/whatsapp/status')) {
         return Response.json({
@@ -511,7 +604,9 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
-    await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })
+    await openChannel('WhatsApp Web')
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })).toBeTruthy()
     expect(await screen.findByText('Office Chat')).toBeTruthy()
     expect(screen.getByText('Depression Team')).toBeTruthy()
 
@@ -534,10 +629,6 @@ describe('NotificationsPage', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
 
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
-
       if (url.endsWith('/v1/notifications/accounts/whatsapp/status')) {
         return Response.json({ connected: false, chats: [] })
       }
@@ -548,6 +639,8 @@ describe('NotificationsPage', () => {
 
     renderPage()
 
+    await openChannel('WhatsApp Web')
+
     expect(await screen.findByRole('heading', { level: 2, name: 'WhatsApp Web' })).toBeTruthy()
     expect(await screen.findByText(/Die WhatsApp Web Brücke ist nicht verbunden/i)).toBeTruthy()
     expect(screen.queryAllByText('Depression Team')).toHaveLength(0)
@@ -556,10 +649,6 @@ describe('NotificationsPage', () => {
   it('removes the connected WhatsApp Web account', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-
-      if (url.endsWith('/v1/notifications/accounts/telegram/code')) {
-        return Response.json({ code: 'AB2C3D', expiresAt: '2030-01-01T00:00:00.000Z' })
-      }
 
       if (url.endsWith('/v1/notifications/accounts/whatsapp/status')) {
         return Response.json({
@@ -586,6 +675,8 @@ describe('NotificationsPage', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderPage()
+
+    await openChannel('WhatsApp Web')
 
     const connectButton = await screen.findByRole('button', { name: /Depression Team/ })
     fireEvent.click(connectButton)
@@ -647,6 +738,7 @@ describe('NotificationsPage — the code of a channel (WP-M24-21)', () => {
           missing: [],
           channelCount: 1,
           compliant: true,
+          policy: { requiredChannels: [], minimumChannelCount: 0 },
         })
       }
 
@@ -655,6 +747,8 @@ describe('NotificationsPage — the code of a channel (WP-M24-21)', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     renderPage()
+
+    await openChannel('ntfy')
 
     await screen.findByText('In der ntfy-App abonnieren')
     fireEvent.click(screen.getByRole('button', { name: 'Code senden' }))

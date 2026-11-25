@@ -1,7 +1,7 @@
 # WP-M30-06: the criterion of the phase
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M30-05
 phase: 30
 milestone: m30
@@ -84,7 +84,7 @@ the phase and passes after them.
 - Files changed: the criterion, the test of the inbox, the module map, the
   changelog and the status of the phase
 - Interfaces added: none
-- Verified: the commands above
+- Verified: `npm run check` green (wp:check 844/0, eslint 0 errors, typecheck grün, i18n 2182/2182, vitest 286 files / 2030 tests, Playwright 15/15); the criterion names every acceptance item of the phase — one task for three channels, the inbox without a channel and without a delivery state, the protocol behind `notification.read_all`, the alarm of a failed delivery with its throttle and its silence
 - Follow-up WP: none — phase 30 is closed
 - Open question: the state „handled“ of a task and the question, which events
   are tasks at all, belong to the settings of the workflow — a later phase
