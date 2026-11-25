@@ -27,6 +27,12 @@ export const PERMISSIONS = {
     internalComment: 'ticket.comment.internal',
     photoRead: 'ticket.photo.read',
     photoWrite: 'ticket.photo.write',
+    /**
+     * The own tickets of the customer (`specs/19-customer-portal.md` §19.1,
+     * ADR-0053): the tickets whose customer is the signed-in user. The key
+     * belongs to the role `customer` only.
+     */
+    customerRead: 'ticket.customer.read',
   },
   object: {
     read: 'object.read',
@@ -34,6 +40,16 @@ export const PERMISSIONS = {
     delete: 'object.delete',
     regenerateQr: 'object.regenerate_qr',
     import: 'object.import',
+    /**
+     * The own objects of the customer (`specs/19-customer-portal.md` §19.1,
+     * ADR-0053) — the objects of his assignments.
+     */
+    customerRead: 'object.customer.read',
+    /**
+     * The assignment of a trained person to an object
+     * (`specs/19-customer-portal.md` §19.2, ADR-0053).
+     */
+    assign: 'object.assign',
   },
   oncall: {
     read: 'oncall.read',
@@ -98,11 +114,14 @@ export const PERMISSION_KEYS: PermissionKey[] = [
   PERMISSIONS.ticket.internalComment,
   PERMISSIONS.ticket.photoRead,
   PERMISSIONS.ticket.photoWrite,
+  PERMISSIONS.ticket.customerRead,
   PERMISSIONS.object.read,
   PERMISSIONS.object.write,
   PERMISSIONS.object.delete,
   PERMISSIONS.object.regenerateQr,
   PERMISSIONS.object.import,
+  PERMISSIONS.object.customerRead,
+  PERMISSIONS.object.assign,
   PERMISSIONS.oncall.read,
   PERMISSIONS.oncall.plan,
   PERMISSIONS.oncall.confirm,
@@ -131,6 +150,11 @@ export const SYSTEM_ROLE_KEYS = [
   'oncall',
   'manager',
   'admin',
+  /**
+   * The customer of an installation (`specs/19-customer-portal.md` §19.1,
+   * ADR-0053): he sees his own tickets and his own objects and nothing else.
+   */
+  'customer',
 ] as const
 
 export type SystemRoleKey = (typeof SYSTEM_ROLE_KEYS)[number]
@@ -200,6 +224,12 @@ export const DEFAULT_ROLES: Record<SystemRoleKey, PermissionKey[]> = {
     PERMISSIONS.notification.write,
   ],
   admin: [...PERMISSION_KEYS],
+  /**
+   * The customer of an installation (`specs/19-customer-portal.md` §19.1,
+   * ADR-0053): his own tickets and his own objects — nothing else. The
+   * internal routes of the office answer `403 forbidden` for him.
+   */
+  customer: [PERMISSIONS.ticket.customerRead, PERMISSIONS.object.customerRead],
 }
 
 export function isPermissionKey(value: string): value is PermissionKey {

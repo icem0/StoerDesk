@@ -44,7 +44,7 @@ describe('permission catalog', () => {
 })
 
 describe('default roles', () => {
-  it('covers exactly the five system roles', () => {
+  it('covers exactly the six system roles', () => {
     expect(Object.keys(DEFAULT_ROLES).sort()).toEqual([...SYSTEM_ROLE_KEYS].sort())
   })
 
@@ -55,6 +55,7 @@ describe('default roles', () => {
       oncall: 15,
       manager: 12,
       admin: PERMISSION_KEYS.length,
+      customer: 2,
     }
 
     for (const roleKey of SYSTEM_ROLE_KEYS) {
@@ -66,6 +67,21 @@ describe('default roles', () => {
     }
 
     expect([...DEFAULT_ROLES.admin].sort()).toEqual([...PERMISSION_KEYS].sort())
+  })
+
+  it('gives the customer his own tickets and his own objects and nothing else', () => {
+    expect(DEFAULT_ROLES.customer).toEqual([
+      PERMISSIONS.ticket.customerRead,
+      PERMISSIONS.object.customerRead,
+    ])
+
+    for (const key of DEFAULT_ROLES.customer) {
+      expect(DEFAULT_ROLES.reporter_internal).not.toContain(key)
+    }
+
+    expect(DEFAULT_ROLES.customer).not.toContain(PERMISSIONS.ticket.read)
+    expect(DEFAULT_ROLES.customer).not.toContain(PERMISSIONS.object.read)
+    expect(DEFAULT_ROLES.customer).not.toContain(PERMISSIONS.object.assign)
   })
 
   it('keeps the role matrix free of unknown keys', () => {

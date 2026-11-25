@@ -129,6 +129,33 @@ export const publicReportRequestSchema = z.object({
    * stores it in `tickets.parent_ticket_id`.
    */
   parentTicketId: z.uuid().optional(),
+  /**
+   * The confirmation of the reporter that he is the trained person of the
+   * installation (`specs/19-customer-portal.md` §19.6, ADR-0055): the report
+   * is only accepted with this confirmation, the server refuses it with
+   * `400 trained_person_confirmation_required`. Absent means "not confirmed".
+   */
+  trainedPersonConfirmed: z.boolean().optional(),
+  /**
+   * The registration of the reporter in the same step
+   * (`specs/19-customer-portal.md` §19.6, ADR-0054): the address is mandatory
+   * with this field, the server refuses the report without it with
+   * `400 registration_needs_email`.
+   */
+  register: z
+    .object({
+      email: z.string().trim().toLowerCase().pipe(z.email()),
+      givenName: trimmedText(80),
+      familyName: trimmedText(80),
+    })
+    .optional(),
+  /**
+   * The opt-in of the reporter for the messages about his ticket
+   * (`specs/19-customer-portal.md` §19.6, ADR-0056): the action
+   * `notify_reporter` sends only to a ticket that carries this flag. Absent
+   * means "no messages".
+   */
+  emailNotifications: z.boolean().optional(),
 })
 
 export const publicReportResponseSchema = z.object({
@@ -335,6 +362,11 @@ export const internalCreateTicketRequestSchema = z.object({
   reporterKind: z.enum(TICKET_REPORTER_KINDS).optional(),
   /** Der interne Benutzer, der die Meldung an den Erfasser gegeben hat. */
   reportedByUserId: z.uuid().optional(),
+  /**
+   * Der Kunde der Meldung (`specs/19-customer-portal.md` §19.7, ADR-0055):
+   * die eingewiesene Person des Objekts, die der Büro-Mitarbeiter auswählt.
+   */
+  customerUserId: z.uuid().optional(),
   /** Meldezeitpunkt mit Offset; der Server verhindert nur die Zukunft. */
   reportedAt: z.iso.datetime({ offset: true, local: true }).optional(),
 })

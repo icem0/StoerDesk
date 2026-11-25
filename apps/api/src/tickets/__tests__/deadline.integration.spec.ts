@@ -88,6 +88,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('ticket deadlines', () =>
         contact: { name: undefined, phone: '000' },
         locale: 'de',
         photos: [],
+        trainedPersonConfirmed: true,
+        emailNotifications: false,
       },
       new Date('2026-11-05T08:00:00.000Z'),
     )
