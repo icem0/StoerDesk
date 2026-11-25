@@ -22,8 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (**WP-M32-04**): the administration of the escalation loses the tab _Pool der
   Office_, the editor of the action `assign` names its target, and the picker of
   the assignment offers the readiness pools, the user groups and the technicians
-  of the installation. The setting `escalation.assignee_pool` is gone with
-  **WP-M32-05**.
+  of the installation. The **pool of the office is gone** (**WP-M32-05**):
+  the setting `escalation.assignee_pool` is dropped, the stored rules that
+  assigned from it lose that action, and the former fields of the contract
+  (`mode`, `user`, `userId`) are removed — the assignment names its
+  target and nothing else.
 
 ### Added
 - The customer portal (**WP-M31-01 … WP-M31-13**, phase 31, ADR-0053 … ADR-0056):

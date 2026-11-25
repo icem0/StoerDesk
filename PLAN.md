@@ -4192,11 +4192,11 @@ while the page scrolls.
 handled by **one** person (ADR-0039). The ticket carries the technician
 (`tickets.assigned_user_id`), the state of the assignment (`offered`,
 `accepted`, `declined`) and the user who made it. The office chooses the
-technician in the ticket view — a member of the **pool of the office**, an
-ordered list under the escalation settings, with every active user as the
-fallback of an empty pool — and states _Annahme erforderlich_. The technician
-answers the assignment; a refusal passes the ticket to the next member of the
-pool, without a next member the ticket keeps the status `declined`. The
+target of the assignment in the ticket view — a **readiness pool**, a **user
+group** or one technician of the installation (ADR-0057) — and states
+_Annahme erforderlich_. The technician answers the assignment; a refusal passes
+the ticket to the next member of the target, without a next member the ticket
+keeps the status `declined`. The
 assigned technician is notified, and the user who made the assignment is
 notified about the answer — the event `ticket.assignment_answered` and the
 target `assigner` of a notification action. The `assign` action of a rule

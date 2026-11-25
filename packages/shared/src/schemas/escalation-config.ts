@@ -523,15 +523,7 @@ const escalationActionUnion = z.discriminatedUnion('type', [
      * user group or one technician. The first member of the target gets the
      * ticket; a refusal passes it to the next member.
      */
-    target: escalationTargetSchema.optional(),
-    /**
-     * The mode of the assignment — the former shape (ADR-0039, decision 3),
-     * superseded by ADR-0057. The contract keeps it readable until the
-     * interface has moved (WP-M32-03).
-     */
-    mode: z.enum(['pool', 'user']).optional(),
-    /** The technician of the former mode `user`. */
-    user: z.uuid().optional(),
+    target: escalationTargetSchema,
     /**
      * `true` — the technician has to answer the assignment (`offered`);
      * `false` — the assignment is accepted at once.
@@ -559,39 +551,6 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
     })
   }
 
-  if (action.type === 'assign') {
-    if (action.target !== undefined) {
-      // The target names the technician or the list of the assignment
-      // (§7.14, ADR-0057); the former mode does not belong to it.
-      if (action.user !== undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: ['user'],
-          message: 'assign_has_no_user',
-        })
-      }
-
-      return
-    }
-
-    // The former shape (ADR-0039, decision 3): the mode `user` names the
-    // technician, the mode `pool` takes him from the pool of the office.
-    if (action.mode === 'user' && action.user === undefined) {
-      context.addIssue({
-        code: 'custom',
-        path: ['user'],
-        message: 'assign_needs_user',
-      })
-    }
-
-    if (action.mode === 'pool' && action.user !== undefined) {
-      context.addIssue({
-        code: 'custom',
-        path: ['user'],
-        message: 'assign_pool_has_no_user',
-      })
-    }
-  }
 })
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
@@ -642,24 +601,10 @@ export const escalationRuleConfigSchema = z
 
 export type EscalationRuleConfig = z.infer<typeof escalationRuleConfigSchema>
 
-/**
- * One member of the assignee pool (`specs/07-escalation.md` §7.14, ADR-0039,
- * WP-M19-03): the id of the user and the display name. The pool is the ordered
- * list the office assigns a ticket to — no contact value.
- */
-export const escalationAssigneePoolMemberSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-})
-
-export type EscalationAssigneePoolMember = z.infer<typeof escalationAssigneePoolMemberSchema>
-
 export const escalationConfigSchema = z
   .object({
     stages: z.array(escalationStageConfigSchema).max(20),
     rules: z.array(escalationRuleConfigSchema).max(50),
-    /** The assignee pool of the installation (§7.14, ADR-0039). */
-    assigneePool: z.array(escalationAssigneePoolMemberSchema).max(50).default([]),
   })
   .superRefine((config, context) => {
     const stageKeys = new Set<string>()

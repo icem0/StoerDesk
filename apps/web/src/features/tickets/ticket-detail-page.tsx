@@ -283,9 +283,9 @@ export function TicketDetailPage() {
   const labels = Object.fromEntries(catalog.map((entry) => [entry.key, entry.text]))
 
   /**
-   * The assigned technician answers the assignment (§7.14, ADR-0039): the
-   * acceptance or the refusal — a refusal passes the ticket to the next member
-   * of the pool of the office.
+   * The assigned technician answers the assignment (§7.14, ADR-0039,
+   * ADR-0057): the acceptance or the refusal — a refusal passes the ticket to
+   * the next member of the target of the assignment.
    */
   async function handleAssignmentAnswer(answer: 'accepted' | 'declined'): Promise<boolean> {
     if (ticketNo === undefined) return false

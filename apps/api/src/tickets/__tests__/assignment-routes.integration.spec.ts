@@ -139,7 +139,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'POST',
         url: `/api/v1/tickets/${ticketNo}/assign`,
         headers: { cookie: officeCookie },
-        payload: { userId: technicianId, acceptance: true },
+        payload: { target: { kind: 'user', id: technicianId }, acceptance: true },
       })
 
       expect(response.statusCode).toBe(200)
@@ -159,18 +159,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(row?.assignedByUserId).toBe(officeUserId)
     })
 
-    it('refuses an unknown technician with 400', async () => {
+    it('refuses an unknown target with 400', async () => {
       const ticketNo = await openWorkOrderTicket()
 
       const response = await app.inject({
         method: 'POST',
         url: `/api/v1/tickets/${ticketNo}/assign`,
         headers: { cookie: officeCookie },
-        payload: { userId: randomUUID(), acceptance: true },
+        payload: { target: { kind: 'user', id: randomUUID() }, acceptance: true },
       })
 
       expect(response.statusCode).toBe(400)
-      expect(response.json<{ code: string }>().code).toBe('invalid_request')
+      expect(response.json<{ code: string }>().code).toBe('invalid_target')
     })
 
     it('refuses the answer of a foreign technician with 403', async () => {
@@ -180,7 +180,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'POST',
         url: `/api/v1/tickets/${ticketNo}/assign`,
         headers: { cookie: officeCookie },
-        payload: { userId: technicianId, acceptance: true },
+        payload: { target: { kind: 'user', id: technicianId }, acceptance: true },
       })
 
       const foreignSession = await createSession(db, foreignTechnicianId, 1)
@@ -203,7 +203,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'POST',
         url: `/api/v1/tickets/${ticketNo}/assign`,
         headers: { cookie: officeCookie },
-        payload: { userId: technicianId, acceptance: true },
+        payload: { target: { kind: 'user', id: technicianId }, acceptance: true },
       })
 
       const session = await createSession(db, technicianId, 1)

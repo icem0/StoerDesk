@@ -5,7 +5,6 @@ import type { EscalationTarget, TicketAssignmentStatus } from '@stoerdesk/shared
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { groups, oncallPools, tickets, users } from '../db/schema'
-import { nextAssignee, resolveAssigneePool } from '../escalation/assignee-pool'
 import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
 import { notifyAssignee, notifyAssigner } from '../notifications/assignment'
 import { TicketTransitionError, transitionTicket } from './workflow'
@@ -56,13 +55,12 @@ export type AssignTicketInput = {
    * The target of the assignment (§7.14, ADR-0057): a readiness pool, a user
    * group or one technician. The first member of the target gets the ticket.
    */
-  target?: EscalationTarget
+  target: EscalationTarget
   /**
-   * The technician of the assignment — the first member of the target, when
-   * the target names one. The technician alone is the former way (ADR-0039);
-   * it stays until WP-M32-05 removes it.
+   * The member of the target that gets the ticket — the successor of a
+   * refusal. Without it the first member of the target gets it.
    */
-  userId?: string
+  memberUserId?: string
   /** `true` — the technician has to answer; `false` — the assignment is accepted at once. */
   acceptance: boolean
   /** The user who made the assignment; null when a rule of the system made it. */
@@ -139,23 +137,14 @@ export async function assignTicket(
   input: AssignTicketInput,
   env?: Env,
 ): Promise<AssignResult> {
-  const target = input.target
-  let userId = input.userId ?? null
-
-  if (userId === null && target !== undefined) {
-    const members = await resolveTargetMembers(database, target)
-
-    userId = members[0] ?? null
-
-    if (userId === null) {
-      // A target without a member is nobody — the assignment changes nothing
-      // (§7.14, ADR-0057).
-      throw new TicketTransitionError(422, 'assign_target_empty', { kind: target.kind })
-    }
-  }
+  const { target } = input
+  const members = await resolveTargetMembers(database, target)
+  const userId = input.memberUserId ?? members[0] ?? null
 
   if (userId === null) {
-    throw new TicketTransitionError(422, 'assign_user_unknown', { userId: null })
+    // A target without a member is nobody — the assignment changes nothing
+    // (§7.14, ADR-0057).
+    throw new TicketTransitionError(422, 'assign_target_empty', { kind: target.kind })
   }
 
   await assertActiveUser(database, userId)
@@ -173,11 +162,9 @@ export async function assignTicket(
       assignedUserId: userId,
       assignmentStatus,
       assignedByUserId: assignedBy,
-      // The target is the list the refusal walks (§7.14, ADR-0057); an
-      // assignment without a target clears the former one.
-      ...(target === undefined
-        ? { assignmentTargetKind: null, assignmentTargetId: null }
-        : { assignmentTargetKind: target.kind, assignmentTargetId: target.id }),
+      // The target is the list the refusal walks (§7.14, ADR-0057).
+      assignmentTargetKind: target.kind,
+      assignmentTargetId: target.id,
     },
   })
 
@@ -336,9 +323,24 @@ async function notifyAssignerOfAnswer(
 }
 
 /**
+ * The member after the one who refused (§7.14, ADR-0057): the next member of
+ * the list of the target. A technician that is not a member of the list has
+ * no successor.
+ */
+function nextAssignee(members: readonly string[], currentUserId: string): string | null {
+  const index = members.indexOf(currentUserId)
+
+  if (index < 0) {
+    return null
+  }
+
+  return members.slice(index + 1).find((id) => id !== currentUserId) ?? null
+}
+
+/**
  * The target of the assignment of a ticket (§7.14, ADR-0057): the two columns
  * of the ticket, if they carry a target. An assignment of the former shape has
- * no target — its chain walks the pool of the office (until WP-M32-05).
+ * no target — such a ticket has no successor in the chain.
  */
 function assignmentTargetOf(row: {
   assignmentTargetKind: string | null
@@ -371,33 +373,19 @@ export async function continueAssignmentChain(
     ticketId: string
     currentUserId: string
     assignedBy?: string | null
-    /** The target of the assignment — the list the refusal walks. */
-    target?: EscalationTarget | null
+    /**
+     * The target of the assignment — the list the refusal walks. A ticket
+     * without a target (an assignment of the former shape) has no successor.
+     */
+    target: EscalationTarget | null
   },
 ): Promise<AssignResult | null> {
-  const target = input.target ?? null
-
-  if (target !== null) {
-    const members = await resolveTargetMembers(database, target)
-    const successor = nextAssignee(members, input.currentUserId)
-
-    if (successor === null) {
-      return null
-    }
-
-    return assignTicket(database, {
-      ticketId: input.ticketId,
-      target,
-      userId: successor,
-      acceptance: true,
-      assignedBy: input.assignedBy ?? null,
-    })
+  if (input.target === null) {
+    return null
   }
 
-  // The former chain (ADR-0039, decision 4): the pool of the office, until
-  // WP-M32-05 removes it.
-  const pool = await resolveAssigneePool(database)
-  const successor = nextAssignee(pool, input.currentUserId)
+  const members = await resolveTargetMembers(database, input.target)
+  const successor = nextAssignee(members, input.currentUserId)
 
   if (successor === null) {
     return null
@@ -405,7 +393,8 @@ export async function continueAssignmentChain(
 
   return assignTicket(database, {
     ticketId: input.ticketId,
-    userId: successor,
+    target: input.target,
+    memberUserId: successor,
     acceptance: true,
     assignedBy: input.assignedBy ?? null,
   })

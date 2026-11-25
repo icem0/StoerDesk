@@ -8,7 +8,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '../../db/schema'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
-import { writeAssigneePool } from '../../escalation/assignee-pool'
 import { answerAssignment, assignTicket } from '../assignment'
 import { transitionTicket } from '../workflow'
 
@@ -16,7 +15,7 @@ import { transitionTicket } from '../workflow'
  * The assignment of a ticket (`specs/07-escalation.md` §7.14, ADR-0039,
  * WP-M19-04): one technician, a status (`offered`, `accepted`, `declined`) and
  * the refusal chain — a refusal passes the ticket to the next member of the
- * assignee pool.
+ * target of the assignment (ADR-0057).
  */
 
 const testDatabase = await openTestDatabase()
@@ -25,7 +24,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped assignment integration: ${testDatabase.reason}\n`)
 }
 
-const { notificationAccounts, objects, outbox, tickets, users } = schema
+const { groups, notificationAccounts, objects, outbox, tickets, userGroups, users } = schema
 
 function onlyRow<T>(rows: T[], what: string): T {
   const [row] = rows
@@ -46,6 +45,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
   let firstTechnicianId = ''
   let secondTechnicianId = ''
   let foreignUserId = ''
+  let groupId = ''
 
   beforeAll(async () => {
     await migrate(db, { migrationsFolder })
@@ -85,7 +85,17 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     secondTechnicianId = onlyRow(inserted.slice(2, 3), 'second technician').id
     foreignUserId = onlyRow(inserted.slice(3, 4), 'foreign technician').id
 
-    await writeAssigneePool(db, [firstTechnicianId, secondTechnicianId])
+    const [group] = await db
+      .insert(groups)
+      .values({ name: `Assignment group ${randomUUID().slice(0, 6)}` })
+      .returning({ id: groups.id })
+
+    groupId = group?.id ?? ''
+
+    await db.insert(userGroups).values([
+      { userId: firstTechnicianId, groupId },
+      { userId: secondTechnicianId, groupId },
+    ])
   })
 
   afterAll(async () => {
@@ -145,7 +155,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
 
     const result = await assignTicket(db, {
       ticketId,
-      userId: firstTechnicianId,
+      target: { kind: 'user', id: firstTechnicianId },
       acceptance: true,
       assignedBy: officeUserId,
     })
@@ -165,7 +175,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     const ticketId = await openWorkOrderTicket()
     await assignTicket(db, {
       ticketId,
-      userId: firstTechnicianId,
+      target: { kind: 'user', id: firstTechnicianId },
       acceptance: true,
       assignedBy: officeUserId,
     })
@@ -187,7 +197,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     const ticketId = await openWorkOrderTicket()
     await assignTicket(db, {
       ticketId,
-      userId: firstTechnicianId,
+      target: { kind: 'user', id: firstTechnicianId },
       acceptance: true,
       assignedBy: officeUserId,
     })
@@ -200,11 +210,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     expect(state?.assignmentStatus).toBe('offered')
   })
 
-  it('passes a refusal to the next member of the pool', async () => {
+  it('passes a refusal to the next member of the target', async () => {
     const ticketId = await openWorkOrderTicket()
     await assignTicket(db, {
       ticketId,
-      userId: firstTechnicianId,
+      target: { kind: 'group', id: groupId },
       acceptance: true,
       assignedBy: officeUserId,
     })
@@ -224,11 +234,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     expect(state?.assignedByUserId).toBe(officeUserId)
   })
 
-  it('keeps the refusal when the pool has no further member', async () => {
+  it('keeps the refusal when the target has no further member', async () => {
     const ticketId = await openWorkOrderTicket()
     await assignTicket(db, {
       ticketId,
-      userId: secondTechnicianId,
+      target: { kind: 'user', id: secondTechnicianId },
       acceptance: true,
       assignedBy: officeUserId,
     })
@@ -257,7 +267,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     const ticketId = await openWorkOrderTicket()
     await assignTicket(db, {
       ticketId,
-      userId: firstTechnicianId,
+      target: { kind: 'user', id: firstTechnicianId },
       acceptance: true,
       assignedBy: officeUserId,
     })
@@ -279,7 +289,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     const systemTicketId = await openWorkOrderTicket()
     await assignTicket(db, {
       ticketId: systemTicketId,
-      userId: firstTechnicianId,
+      target: { kind: 'user', id: firstTechnicianId },
       acceptance: true,
       assignedBy: null,
     })
@@ -308,11 +318,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('the assignment (integrat
     await expect(
       assignTicket(db, {
         ticketId,
-        userId: foreignUserId,
+        target: { kind: 'user', id: foreignUserId },
         acceptance: true,
         assignedBy: officeUserId,
       }),
-    ).rejects.toMatchObject({ code: 'assign_user_inactive' })
+    ).rejects.toMatchObject({ code: 'assign_target_empty' })
 
     await db.update(users).set({ active: true }).where(eq(users.id, foreignUserId))
   })

@@ -1,7 +1,7 @@
 # WP-M32-05: the pool of the office is gone
 
 format: ctx-256k
-status: planned
+status: done
 phase: 32
 milestone: m32
 context-budget: 45k tokens
@@ -77,8 +77,11 @@ office.
   configuration, CHANGELOG.md, docs/REPO-MAP.md
 - Interfaces removed: the setting `escalation.assignee_pool`, the fields
   `mode`, `user` and `assigneePool`
-- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
-  `npm run test:run`
+- Verified: `npm run check` green (typecheck, lint, i18n, wp, the tests of the API and
+  the web, the E2E of the browser) — the migration drops the setting and the
+  test of the configuration proves that the configuration answers without a
+  pool of the office; the security audit of the diff is written in
+  `docs/SECURITY-PLAN.md` (the pass *assignment-target*)
 - Follow-up WP: none — the phase is closed
 - Open question: none
 - Notes: a stored rule of the escalation that assigned from the pool of the

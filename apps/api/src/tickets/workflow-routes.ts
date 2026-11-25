@@ -14,8 +14,7 @@ import {
 
 import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
-import { ticketEvents, tickets, users } from '../db/schema'
-import { readAssigneePool } from '../escalation/assignee-pool'
+import { ticketEvents, tickets } from '../db/schema'
 import { offerTicket } from '../oncall/coupling'
 import { answerAssignment, assignTicket, readAssignTargets, targetExists } from './assignment'
 import { transitionTicket } from './workflow'
@@ -182,11 +181,6 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
         }
 
         const target = parsed.data.target
-        const technicianId = parsed.data.userId
-
-        if (target === undefined && technicianId === undefined) {
-          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['target'] } })
-        }
 
         const [row] = await database
           .select({ id: tickets.id })
@@ -198,32 +192,18 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
           return reply.code(404).send({ code: 'ticket_not_found', params: { ticketNo: request.params.ticketNo } })
         }
 
-        if (target !== undefined) {
-          // The target must name a row of the installation — a readiness pool,
-          // a user group or a technician (§7.14, ADR-0057).
-          const known = await targetExists(database, target)
+        // The target must name a row of the installation — a readiness pool,
+        // a user group or a technician (§7.14, ADR-0057).
+        const known = await targetExists(database, target)
 
-          if (!known) {
-            return reply.code(400).send({ code: 'invalid_target', params: { fields: ['target.id'] } })
-          }
-        } else {
-          // The technician must be an active account — a deactivated account is
-          // nobody (§7.14, ADR-0039).
-          const [technician] = await database
-            .select({ id: users.id, active: users.active })
-            .from(users)
-            .where(eq(users.id, technicianId as string))
-            .limit(1)
-
-          if (technician === undefined || !technician.active) {
-            return reply.code(400).send({ code: 'invalid_request', params: { fields: ['userId'] } })
-          }
+        if (!known) {
+          return reply.code(400).send({ code: 'invalid_target', params: { fields: ['target.id'] } })
         }
 
         try {
           const result = await assignTicket(database, {
             ticketId: row.id,
-            ...(target === undefined ? { userId: technicianId } : { target }),
+            target,
             acceptance: parsed.data.acceptance,
             assignedBy: actor.id,
           })
@@ -239,9 +219,9 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       },
     )
 
-    // The technician answers the assignment (§7.14, ADR-0039): only the
-    // assigned technician may answer. A refusal passes the ticket to the next
-    // member of the assignee pool.
+    // The technician answers the assignment (§7.14, ADR-0039, ADR-0057): only
+    // the assigned technician may answer. A refusal passes the ticket to the
+    // next member of the target of the assignment.
     app.post<{ Params: { ticketNo: string } }>(
       '/api/v1/tickets/:ticketNo/assignment-answer',
       { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.read)) },
@@ -296,12 +276,7 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
     app.get(
       '/api/v1/ticket-assign-targets',
       { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
-      async () => ({
-        ...(await readAssignTargets(database)),
-        // The pool of the office — the former answer, until WP-M32-05 removes
-        // it.
-        assigneePool: await readAssigneePool(database),
-      }),
+      async () => readAssignTargets(database),
     )
 
     // Close accepts an optional body: `comment` is written as a `comment`

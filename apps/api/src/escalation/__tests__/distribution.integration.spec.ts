@@ -11,7 +11,6 @@ import { DEFAULT_WORKFLOW_ESCALATION_RULES, type EscalationFacts } from '@stoerd
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
 import { seedEscalation } from '../../db/seed-escalation'
-import { writeAssigneePool } from '../assignee-pool'
 import { dispatchEscalationActions } from '../actions'
 
 /**
@@ -130,25 +129,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
     }
 
-    /** The `assign` action in its new shape (§7.14, ADR-0039): the mode. */
-    async function assignAction(
-      mode: 'pool' | 'user',
-      user: string | undefined,
-      acceptance: boolean,
-      key: string,
-      ruleKey: string,
-    ) {
-      await db.insert(escalationActions).values({
-        key,
-        ruleKey,
-        type: 'assign',
-        config: { mode, acceptance, ...(user === undefined ? {} : { user }) },
-        condition: { all: [] },
-        position: 0,
-        active: true,
-      })
-    }
-
 
     /** The `assign` action with a target (§7.14, ADR-0057). */
     async function assignTargetAction(
@@ -232,7 +212,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
     })
 
-    it('assigns the ticket to the head of the assignee pool', async () => {
+    it('assigns the ticket to the first member of the group', async () => {
       await action(
         'assign',
         { kind: 'group', id: groupId },
@@ -248,9 +228,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           verifiedAt: new Date(),
         })
       }
-
-      // The pool of the office decides who gets the ticket (§7.14, ADR-0039).
-      await writeAssigneePool(db, [technicianIds[0] ?? ''])
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
@@ -291,9 +268,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .toStrictEqual(['topic-0'])
     })
 
-    it('assigns the ticket to the head of the pool in the mode pool', async () => {
-      await writeAssigneePool(db, [technicianIds[1] ?? '', technicianIds[0] ?? ''])
-      await assignAction('pool', undefined, true, 'assign_mode_pool', seededRuleKey('review'))
+    it('assigns the ticket to the first member of the readiness pool', async () => {
+      await assignTargetAction(
+        { kind: 'pool', id: poolId },
+        true,
+        'assign_target_pool',
+        seededRuleKey('review'),
+      )
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
@@ -310,12 +291,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .where(eq(tickets.id, ticket.id))
         .limit(1)
 
-      expect(moved?.assignedUserId).toBe(technicianIds[1])
+      expect(moved?.assignedUserId).toBe(technicianIds[0])
       expect(moved?.assignmentStatus).toBe('offered')
     })
 
-    it('assigns the ticket to the named technician in the mode user', async () => {
-      await assignAction('user', technicianIds[0] ?? '', false, 'assign_mode_user', seededRuleKey('work_order'))
+    it('assigns the ticket to the named technician', async () => {
+      await assignTargetAction(
+        { kind: 'user', id: technicianIds[0] ?? '' },
+        false,
+        'assign_target_user',
+        seededRuleKey('work_order'),
+      )
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
@@ -462,7 +448,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     it('assigns the ticket to one named technician', async () => {
       const technicianId = technicianIds[0] ?? ''
 
-      await assignAction('user', technicianId, true, 'assign_user', seededRuleKey('new'))
+      await assignTargetAction(
+        { kind: 'user', id: technicianId },
+        true,
+        'assign_target_named',
+        seededRuleKey('new'),
+      )
 
       const ticket = await createTicket('WORK_ORDER_CREATED')
 
@@ -530,9 +521,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .values({ name: `Leer ${randomUUID().slice(0, 6)}` })
         .returning({ id: groups.id })
 
-      // An empty pool of the office has nobody (§7.14, ADR-0039).
-      await writeAssigneePool(db, [])
-
+      // An empty group has nobody (§7.14, ADR-0057).
       await action('assign', { kind: 'group', id: emptyGroup?.id ?? '' }, 'assign_empty', seededPercentRuleKey(100))
 
       const ticket = await createTicket('WORK_ORDER_CREATED')

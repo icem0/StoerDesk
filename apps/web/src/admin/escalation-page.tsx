@@ -147,7 +147,7 @@ export function EscalationPage() {
   const [removeCandidate, setRemoveCandidate] = useState<string | null>(null)
   const [editingStageKey, setEditingStageKey] = useState<string | null>(null)
   const [savedHours, setSavedHours] = useState<DeadlineHours | null>(null)
-  const [savedConfig, setSavedConfig] = useState<EscalationConfigView | null>(null)
+  const [savedConfig, setSavedConfig] = useState<EscalationConfig | null>(null)
   const hours = savedHours ?? (settingsQuery.data?.hours ?? DEADLINE_HOURS)
   const config = savedConfig ?? (configQuery.data ?? { stages: [], rules: [] })
 
@@ -506,13 +506,6 @@ export function EscalationPage() {
     </section>
   )
 }
-
-/**
- * The configuration of the escalation as the administration reads it: the pool
- * of the office is gone (ADR-0057) — the contract keeps the field until
- * WP-M32-05 removes it.
- */
-type EscalationConfigView = Omit<EscalationConfig, 'assigneePool'>
 
 const stageKeyPattern = /^[a-z][a-z0-9_]{0,39}$/
 

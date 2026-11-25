@@ -100,7 +100,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('assign target (integrati
 
     const result = await assignTicket(db, {
       ticketId: ticket.id,
-      userId: memberUserId,
+      target: { kind: 'user', id: memberUserId },
       acceptance: true,
       assignedBy: actorUserId,
     })
@@ -111,7 +111,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('assign target (integrati
     expect(result.assignedByUserId).toBe(actorUserId)
   })
 
-  it('refuses a deactivated technician and keeps the status', async () => {
+  it('refuses a target without an active member and keeps the status', async () => {
     await db.update(users).set({ active: false }).where(eq(users.id, memberUserId))
 
     const ticket = await openWorkOrderTicket()
@@ -119,11 +119,11 @@ describe.skipIf(testDatabase.status === 'unavailable')('assign target (integrati
     await expect(
       assignTicket(db, {
         ticketId: ticket.id,
-        userId: memberUserId,
+        target: { kind: 'user', id: memberUserId },
         acceptance: true,
         assignedBy: actorUserId,
       }),
-    ).rejects.toMatchObject({ code: 'assign_user_inactive' })
+    ).rejects.toMatchObject({ code: 'assign_target_empty' })
 
     const [row] = await db
       .select({ status: tickets.status })

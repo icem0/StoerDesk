@@ -29,7 +29,6 @@ import {
 import { personalRecipients } from '../notifications/receivers'
 import { enqueuePersonalDeliveries } from '../notifications/outbox'
 import { resolveOnDutyUserIds } from '../oncall/coupling'
-import { firstAssignee, resolveAssigneePool } from './assignee-pool'
 import { assignTicketByEscalation, distributeTicket } from './distribution'
 
 /**
@@ -514,34 +513,8 @@ export async function dispatchEscalationActions(
         continue
       }
 
-      // The former shape (ADR-0039, decision 3): the mode `user` names the
-      // technician, the mode `pool` takes the first member of the pool of the
-      // office — until WP-M32-05 removes it.
-      const mode = config.mode === 'user' ? 'user' : 'pool'
-      let userId: string | null = null
-
-      if (mode === 'user') {
-        userId = typeof config.user === 'string' ? config.user : null
-      } else {
-        userId = firstAssignee(await resolveAssigneePool(database))
-      }
-
-      if (userId === null || ticket === undefined) {
-        continue
-      }
-
-      const outcome = await assignTicketByEscalation(database, {
-        ticketId: firing.ticketId,
-        userId,
-        acceptance,
-        ruleKey: firing.ruleKey,
-        stageKey: firing.stageKey,
-      })
-
-      if (outcome.changed) {
-        result.assigned += 1
-      }
-
+      // A stored action of the former shape (ADR-0039, decision 3) carries no
+      // target — the migration of WP-M32-05 removes those actions.
       continue
     }
   }

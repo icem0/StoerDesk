@@ -52,12 +52,7 @@ export const assignBodySchema = z.object({
    * The target of the assignment (§7.14, ADR-0057): a readiness pool, a user
    * group or one technician. The first member of the target gets the ticket.
    */
-  target: escalationTargetSchema.optional(),
-  /**
-   * The technician — the former body (ADR-0039), kept readable until the
-   * interface has moved (WP-M32-03).
-   */
-  userId: z.uuid().optional(),
+  target: escalationTargetSchema,
   /** `true` — the status is `offered` and waits for the answer of the technician. */
   acceptance: z.boolean().default(true),
 })

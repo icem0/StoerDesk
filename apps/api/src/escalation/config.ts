@@ -18,12 +18,6 @@ import {
 import type { Database } from '../db/client'
 import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses, users } from '../db/schema'
 import { WORKFLOW_EVENT_STATUS } from '../tickets/workflow'
-import {
-  AssigneePoolError,
-  readAssigneePool,
-  validateAssigneePool,
-  writeAssigneePool,
-} from './assignee-pool'
 
 /**
  * The configuration of the escalation (`specs/07-escalation.md` §7.9,
@@ -57,13 +51,12 @@ function fieldPaths(error: z.ZodError): string[] {
 }
 
 /**
- * The body of `PUT /api/v1/escalation/config`: the rules with their actions and
- * — optionally — the assignee pool (§7.14, ADR-0039, WP-M19-03). A body
- * without `assigneePool` leaves the pool untouched.
+ * The body of `PUT /api/v1/escalation/config`: the rules with their actions
+ * (§7.14, ADR-0057). The pool of the office is gone — the assignment names a
+ * target of the installation.
  */
 export const escalationRulesBodySchema = z.object({
   rules: z.array(escalationRuleConfigSchema).max(50),
-  assigneePool: z.array(z.uuid()).max(50).optional(),
 })
 
 function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
@@ -90,48 +83,12 @@ function actionConfig(action: EscalationActionConfig): Record<string, unknown> {
       return { target: { kind: action.target.kind, id: action.target.id } }
     case 'assign':
       return {
-        ...(action.target === undefined
-          ? {
-              // The former shape (ADR-0039, decision 3): the mode and the
-              // technician of the mode `user` — until WP-M32-05 removes it.
-              mode: action.mode ?? 'pool',
-              ...(action.user === undefined ? {} : { user: action.user }),
-            }
-          : { target: { kind: action.target.kind, id: action.target.id } }),
+        target: { kind: action.target.kind, id: action.target.id },
         acceptance: action.acceptance,
       }
     default:
       return {}
   }
-}
-
-/**
- * The configuration of an `assign` action (§7.14, ADR-0039, ADR-0057): the
- * target of the assignment — a readiness pool, a user group or one technician
- * — and the flag _Annahme erforderlich_. An installation that was written
- * before the target names its mode in the former shape — the mode `user` with
- * its technician, the mode `pool` with the pool of the office.
- */
-function assignActionConfig(config: Record<string, unknown>): Record<string, unknown> {
-  const target = config.target as { kind?: string; id?: string } | undefined
-
-  if (
-    target !== undefined &&
-    (target.kind === 'pool' || target.kind === 'group' || target.kind === 'user') &&
-    typeof target.id === 'string'
-  ) {
-    return { target: { kind: target.kind, id: target.id }, acceptance: config.acceptance !== false }
-  }
-
-  if (config.mode === 'pool' || config.mode === 'user') {
-    return config
-  }
-
-  if (typeof config.user === 'string') {
-    return { mode: 'user', user: config.user, acceptance: true }
-  }
-
-  return { mode: 'pool', acceptance: true }
 }
 
 /** Reads the stage chain with its names, ordered by the positions. */
@@ -209,7 +166,7 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
       key: row.key,
       type: row.type,
       condition: row.condition,
-      ...(row.type === 'assign' ? assignActionConfig(config) : config),
+      ...config,
     }
 
     const list = actionsByRule.get(row.ruleKey) ?? []
@@ -237,11 +194,7 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
     active: row.active,
   }))
 
-  return escalationConfigSchema.parse({
-    stages,
-    rules,
-    assigneePool: await readAssigneePool(database),
-  })
+  return escalationConfigSchema.parse({ stages, rules })
 }
 
 /**
@@ -254,23 +207,6 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
 
   if (!parsed.success) {
     throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
-  }
-
-  // The assignee pool (§7.14, ADR-0039) names active users only: an unknown or
-  // a deactivated user is refused with `400 invalid_assignee` before anything
-  // is written.
-  let assigneePool: string[] | undefined
-
-  if (parsed.data.assigneePool !== undefined) {
-    try {
-      assigneePool = await validateAssigneePool(database, parsed.data.assigneePool)
-    } catch (error) {
-      if (error instanceof AssigneePoolError) {
-        throw new EscalationConfigError(error.statusCode, error.code, error.params)
-      }
-
-      throw error
-    }
   }
 
   const stageRows = await database
@@ -365,25 +301,16 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
       if (action.type === 'assign') {
         // The target of the assignment names a row of `oncall_pools` (kind
         // `pool`), of `groups` (kind `group`) or of `users` (kind `user`,
-        // ADR-0057) — the rule of the target of an `offer` action above. The
-        // former shape names a technician in `user`.
-        if (action.target !== undefined) {
-          const known =
-            action.target.kind === 'pool'
-              ? poolIds
-              : action.target.kind === 'user'
-                ? userIds
-                : groupIds
+        // ADR-0057) — the rule of the target of an `offer` action above.
+        const known =
+          action.target.kind === 'pool'
+            ? poolIds
+            : action.target.kind === 'user'
+              ? userIds
+              : groupIds
 
-          if (!known.has(action.target.id)) {
-            unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)
-          }
-
-          continue
-        }
-
-        if (action.mode === 'user' && action.user !== undefined && !userIds.has(action.user)) {
-          unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.user`)
+        if (!known.has(action.target.id)) {
+          unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)
         }
 
         continue
@@ -484,10 +411,6 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
       }
     }
   })
-
-  if (assigneePool !== undefined) {
-    await writeAssigneePool(database, assigneePool)
-  }
 
   return readEscalationConfig(database)
 }

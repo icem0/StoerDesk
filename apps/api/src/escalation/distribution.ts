@@ -213,9 +213,7 @@ export async function assignTicketByEscalation(
   input: {
     ticketId: string
     /** The target of the assignment — a readiness pool, a user group or one technician. */
-    target?: EscalationTarget
-    /** The technician — the former shape (ADR-0039), until WP-M32-05 removes it. */
-    userId?: string
+    target: EscalationTarget
     acceptance: boolean
     ruleKey: string
     stageKey: string | null
@@ -226,7 +224,7 @@ export async function assignTicketByEscalation(
   try {
     result = await assignTicket(database, {
       ticketId: input.ticketId,
-      ...(input.target === undefined ? { userId: input.userId } : { target: input.target }),
+      target: input.target,
       acceptance: input.acceptance,
       assignedBy: null,
       // The notice of the assignment names the rule of the escalation.
