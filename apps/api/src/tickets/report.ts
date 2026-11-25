@@ -12,9 +12,11 @@ import {
   type TicketPriority,
 } from '@stoerdesk/shared'
 
+import { createPendingCustomer, findCustomerByEmail } from '../customers/registration'
+import { readMailbox, sendRegistrationMail } from '../customers/mail'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
+import { objectAssignments, objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
 import { effectiveNtfyConfig } from '../notifications/verification'
 import { readObjectPriority } from '../objects/priority'
@@ -164,6 +166,21 @@ export async function createPublicReport(
     })
   }
 
+  // §19.6: the reporter confirms that he is the trained person of the
+  // installation (ADR-0055) — the report is only accepted with it.
+  if (input.trainedPersonConfirmed !== true) {
+    throw new ReportRouteError(400, 'trained_person_confirmation_required', {
+      fields: ['trainedPersonConfirmed'],
+    })
+  }
+
+  // §19.6: the opt-in for the messages needs an address to reach the reporter.
+  if (input.emailNotifications === true && input.contact.email === undefined) {
+    throw new ReportRouteError(422, 'email_notifications_need_email', {
+      fields: ['contact.email'],
+    })
+  }
+
   // §7.8.3: the duplicate hint of WP-M2-08. An unknown or foreign parent is a
   // client error; a parent of the same object that was closed in the meantime is
   // ignored — the report is still created, a race is not the reporter's fault.
@@ -275,11 +292,56 @@ export async function createPublicReport(
     }
   }
 
+  // The registration of the reporter (§19.6): the account, the assignment of
+  // the object and the token are written in the transaction of the report, so
+  // the ticket belongs to the customer from the first moment.
+  const registration: { email: string; token: string }[] = []
+
   try {
     created = await database.transaction(async (tx) => {
+      let customerUserId: string | null = null
+
+      if (input.register !== undefined) {
+        const existing = await findCustomerByEmail(tx, input.register.email)
+
+        if (existing === null) {
+          const customer = await createPendingCustomer(tx, {
+            email: input.register.email,
+            givenName: input.register.givenName,
+            familyName: input.register.familyName,
+            createdVia: 'qr_registration',
+          })
+
+          customerUserId = customer.userId
+          registration.push({ email: input.register.email, token: customer.token })
+
+          await tx.insert(objectAssignments).values({
+            objectId: object.id,
+            userId: customer.userId,
+            createdByUserId: null,
+          })
+        } else if (existing.isCustomer) {
+          customerUserId = existing.userId
+
+          await tx
+            .insert(objectAssignments)
+            .values({
+              objectId: object.id,
+              userId: existing.userId,
+              createdByUserId: null,
+            })
+            .onConflictDoNothing()
+        }
+      }
+
       const [row] = await tx
         .insert(tickets)
-        .values(insertValues)
+        .values({
+          ...insertValues,
+          customerUserId,
+          customerEmailNotifications: input.emailNotifications === true,
+          trainedPersonConfirmed: true,
+        })
         .onConflictDoNothing({ target: tickets.clientUuid })
         .returning()
 
@@ -333,13 +395,35 @@ export async function createPublicReport(
   }
 
   if (created === undefined) {
-    const [existing] = await database.select().from(tickets).where(eq(tickets.clientUuid, input.clientUuid)).limit(1)
+    const [existing] = await database
+      .select()
+      .from(tickets)
+      .where(eq(tickets.clientUuid, input.clientUuid))
+      .limit(1)
 
     if (existing === undefined) {
       throw new ReportRouteError(409, 'ticket_not_found', { fields: ['clientUuid'] })
     }
 
     return { report: await reportOf(database, existing), replayed: true }
+  }
+
+  // The confirmation of the registration (§19.6): the link leaves the
+  // installation after the report is written. A mail that fails does not undo
+  // the report — the customer can ask for a new link.
+  if (registration.length > 0) {
+    const mailbox = await readMailbox(database, env)
+    const entry = registration[0]
+
+    if (mailbox.available && entry !== undefined) {
+      const link = `${env.PWA_URL.replace(/\/$/, '')}/portal/activate/${entry.token}`
+
+      try {
+        await sendRegistrationMail(mailbox, entry.email, link, input.locale)
+      } catch {
+        // The mail server is never named in the log.
+      }
+    }
   }
 
   // The first stage of the escalation chain is due at creation (WP-M14-91).
@@ -365,26 +449,22 @@ export const publicReportRoutes = fp<PublicReportRouteOptions>(
     const photoBodyLimit = Math.ceil(MAX_REPORT_PHOTOS * maxPhotoBytes * 1.4)
     const { ALTCHA_SECRET } = loadEnv()
 
-    app.post(
-      '/api/v1/public/tickets',
-      { bodyLimit: photoBodyLimit },
-      async (request, reply) => {
-        const parsed = publicReportRequestSchema.safeParse(request.body)
+    app.post('/api/v1/public/tickets', { bodyLimit: photoBodyLimit }, async (request, reply) => {
+      const parsed = publicReportRequestSchema.safeParse(request.body)
 
-        if (!parsed.success) {
-          return reply.code(400).send(invalidRequest(fieldPaths(parsed.error)))
-        }
+      if (!parsed.success) {
+        return reply.code(400).send(invalidRequest(fieldPaths(parsed.error)))
+      }
 
-        const { report, replayed } = await createPublicReport(
-          database,
-          parsed.data,
-          { uploadDir, maxPhotoBytes },
-          { ip: request.ip, altchaSecret: ALTCHA_SECRET },
-        )
+      const { report, replayed } = await createPublicReport(
+        database,
+        parsed.data,
+        { uploadDir, maxPhotoBytes },
+        { ip: request.ip, altchaSecret: ALTCHA_SECRET },
+      )
 
-        return reply.code(replayed ? 200 : 201).send(report)
-      },
-    )
+      return reply.code(replayed ? 200 : 201).send(report)
+    })
   },
   { name: 'public-report-routes' },
 )

@@ -1253,6 +1253,7 @@ async function item8(shared) {
     json: {
       qrToken: object.data().qrToken,
       clientUuid: '22222222-2222-4222-8222-222222222201',
+      trainedPersonConfirmed: true,
       text: 'Acceptance counter reset report',
       contact: { phone: '0000000' },
       locale: 'de',

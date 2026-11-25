@@ -140,6 +140,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'POST',
         url: '/api/v1/public/tickets',
         payload: {
+          trainedPersonConfirmed: true,
           qrToken,
           clientUuid,
           text: 'Die RWA springt nicht an.',
@@ -176,6 +177,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         method: 'POST',
         url: '/api/v1/public/tickets',
         payload: {
+          trainedPersonConfirmed: true,
           qrToken: plain.qrToken,
           clientUuid,
           text: 'Die Tür klemmt.',

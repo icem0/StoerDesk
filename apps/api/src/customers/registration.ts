@@ -17,6 +17,10 @@ import { accountTokens, roles, userRoles, users } from '../db/schema'
  */
 
 type Db = Database['database']
+type Tx = Parameters<Parameters<Db['transaction']>[0]>[0]
+
+/** The database or the transaction of a ticket — the customer is written in both. */
+export type CustomerExecutor = Db | Tx
 
 export const ACCOUNT_TOKEN_TTL_HOURS = 24
 
@@ -49,7 +53,7 @@ export function hashAccountToken(token: string): string {
 /** The role key of the customer (`specs/19-customer-portal.md` §19.1). */
 export const CUSTOMER_ROLE_KEY = 'customer'
 
-async function customerRoleId(database: Db): Promise<string> {
+async function customerRoleId(database: CustomerExecutor): Promise<string> {
   const rows = await database
     .select({ id: roles.id })
     .from(roles)
@@ -70,7 +74,7 @@ async function customerRoleId(database: Db): Promise<string> {
  * nobody knows — the customer sets his own password over the link.
  */
 export async function createPendingCustomer(
-  database: Db,
+  database: CustomerExecutor,
   values: {
     email: string
     givenName?: string
@@ -137,8 +141,35 @@ export async function createPasswordResetToken(database: Db, userId: string): Pr
   return token
 }
 
+/** The account of an address — the colleague of the office is no customer. */
+export async function findCustomerByEmail(
+  database: CustomerExecutor,
+  email: string,
+): Promise<{ userId: string; isCustomer: boolean } | null> {
+  const rows = await database
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
+
+  const [row] = rows
+
+  if (row === undefined) {
+    return null
+  }
+
+  const customerRows = await database
+    .select({ userId: userRoles.userId })
+    .from(userRoles)
+    .innerJoin(roles, eq(roles.id, userRoles.roleId))
+    .where(and(eq(userRoles.userId, row.id), eq(roles.key, CUSTOMER_ROLE_KEY)))
+    .limit(1)
+
+  return { userId: row.id, isCustomer: customerRows.length > 0 }
+}
+
 /** The account of an address — for the forgotten password. */
-export async function userIdByEmail(database: Db, email: string): Promise<string | null> {
+export async function userIdByEmail(database: CustomerExecutor, email: string): Promise<string | null> {
   const rows = await database
     .select({ id: users.id })
     .from(users)

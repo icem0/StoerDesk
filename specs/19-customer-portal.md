@@ -236,9 +236,10 @@ a single act.
 | `DELETE /api/v1/objects/:objectNo/assignments/:userId` | the removal of an assignment |
 
 The report form keeps its route `POST /api/v1/public/tickets`; the request
-carries the three new fields of §19.6. The route of the QR token
-(`GET /api/v1/public/qr/:token`) answers additionally
-`registrationAvailable` and `trainedPersonAssigned`.
+carries the three new fields of §19.6. The route of the QR token stays as it
+is: the form asks `GET /api/v1/public/auth/registration` for the availability of
+the registration — the confirmation of the trained person is always mandatory,
+so the form needs nothing else from the token.
 
 ## §19.11 The pages
 

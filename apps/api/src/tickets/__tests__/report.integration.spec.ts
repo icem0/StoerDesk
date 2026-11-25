@@ -117,7 +117,14 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let app: FastifyInstance
 
     const submit = (payload: Record<string, unknown>, remoteAddress = nextTestIp()) =>
-      app.inject({ method: 'POST', url: '/api/v1/public/tickets', payload, remoteAddress })
+      app.inject({
+        method: 'POST',
+        url: '/api/v1/public/tickets',
+        // §19.6: the report is only accepted with the confirmation of the
+        // trained person.
+        payload: { trainedPersonConfirmed: true, ...payload },
+        remoteAddress,
+      })
 
     async function createObject(objectNo: string, active = true) {
       const inserted = await db

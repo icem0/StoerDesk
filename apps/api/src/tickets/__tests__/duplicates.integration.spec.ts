@@ -70,7 +70,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       app.inject({
         method: 'POST',
         url: '/api/v1/public/tickets',
-        payload,
+        // §19.6: the report is only accepted with the confirmation of the
+        // trained person.
+        payload: { trainedPersonConfirmed: true, ...payload },
         remoteAddress: nextTestIp(),
       })
 

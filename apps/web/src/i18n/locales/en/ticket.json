@@ -114,7 +114,9 @@
       "faultOrText": "Please select a fault type or describe the fault.",
       "contactRequired": "Please provide a phone number or an e-mail address.",
       "email": "That e-mail address is not valid.",
-      "photoLimit": "At most six photos are possible."
+      "photoLimit": "At most six photos are possible.",
+      "trainedPersonRequired": "Please confirm that you are the trained person.",
+      "registrationNeedsEmail": "The account needs an e-mail address."
     },
     "errors": {
       "qrTokenInvalid": "This QR code is invalid. Please scan the sticker of the object.",
@@ -142,6 +144,12 @@
       "clockSkewed": "The device clock differs from the server clock — the report time was aligned to the server clock.",
       "photoCount": "Photos: {{count}}",
       "statusLink": "View the status of this report"
+    },
+    "trainedPerson": {
+      "confirmation": "I hereby confirm that I am the trained person named by the operator (DIN 14675).",
+      "register": "Create an account — I receive a link to set my password.",
+      "emailNotifications": "Receive reports by e-mail",
+      "emailNotificationsHint": "Receiving reports by e-mail needs an e-mail address."
     }
   },
   "internal": {

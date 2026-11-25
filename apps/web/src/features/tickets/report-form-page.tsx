@@ -23,12 +23,7 @@ import type {
 import type {} from 'altcha/types/react'
 
 import { ApiError, apiFetch } from '../../lib/api'
-import {
-  enqueueReport,
-  outboxAvailable,
-  queuedReports,
-  replayOutbox,
-} from '../../lib/outbox'
+import { enqueueReport, outboxAvailable, queuedReports, replayOutbox } from '../../lib/outbox'
 import { PhotoUpload } from './photo-upload'
 import { usePublicFaultCatalog, type FaultCatalogEntry } from './use-fault-catalog'
 
@@ -528,10 +523,26 @@ function CommentConfirmation({
     >
       <h1 className="text-xl font-semibold">{t('report.duplicate.addedTitle')}</h1>
       <p className="text-sm text-slate-300">{t('report.duplicate.addedLead')}</p>
-      <p className="text-lg font-medium">{t('report.duplicate.added', { ticketNo: comment.ticketNo })}</p>
+      <p className="text-lg font-medium">
+        {t('report.duplicate.added', { ticketNo: comment.ticketNo })}
+      </p>
       <p className="text-sm text-slate-400">{t('report.duplicate.addedAt', { at })}</p>
     </section>
   )
+}
+
+/**
+ * Whether the instance can register a customer (§19.3): the registration needs a
+ * mailbox of the instance. Without one the box „Registrieren“ stays away.
+ */
+function useRegistrationAvailable(): boolean {
+  const query = useQuery({
+    queryKey: ['customer', 'registration'],
+    queryFn: () => apiFetch<{ available: boolean }>('/v1/public/auth/registration'),
+    retry: false,
+  })
+
+  return query.data?.available === true
 }
 
 export function ReportFormPage() {
@@ -583,6 +594,14 @@ export function ReportFormPage() {
 
   const [faultKeys, setFaultKeys] = useState<string[]>([])
   const [text, setText] = useState('')
+  /** §19.6: the confirmation of the reporter that he is the trained person. */
+  const [trainedPersonConfirmed, setTrainedPersonConfirmed] = useState(false)
+  /** §19.6: the registration of the reporter in the same step. */
+  const [register, setRegister] = useState(false)
+  /** §19.6: the opt-in of the reporter for the messages about his ticket. */
+  const [emailNotifications, setEmailNotifications] = useState(false)
+  /** The registration exists only with a mailbox of the instance (§19.3). */
+  const registrationAvailable = useRegistrationAvailable()
   /** The optional short title of WP-M2-90c — only rendered when `titleEnabled`. */
   const [title, setTitle] = useState('')
 
@@ -612,8 +631,17 @@ export function ReportFormPage() {
       found.push('report.validation.faultOrText')
     }
 
-    const hasContact =
-      (contact.phone ?? '').trim() !== '' || (contact.email ?? '').trim() !== ''
+    // §19.6: the confirmation of the trained person is always mandatory.
+    if (!trainedPersonConfirmed) {
+      found.push('report.validation.trainedPersonRequired')
+    }
+
+    // §19.6: the registration needs the address of the customer.
+    if (register && (contact.email ?? '').trim() === '') {
+      found.push('report.validation.registrationNeedsEmail')
+    }
+
+    const hasContact = (contact.phone ?? '').trim() !== '' || (contact.email ?? '').trim() !== ''
 
     if (contactRequired && !hasContact) {
       found.push('report.validation.contactRequired')
@@ -648,6 +676,14 @@ export function ReportFormPage() {
         verification: proof,
         // §7.8.3: a new report of an object with an open ticket points at it.
         parentTicketId: duplicateParentId,
+        // §19.6: the confirmation of the trained person, the opt-in for the
+        // messages and the registration in the same step.
+        trainedPersonConfirmed,
+        emailNotifications: emailNotifications && (contact.email ?? '').trim() !== '',
+        register:
+          register && (contact.email ?? '').trim() !== ''
+            ? { email: (contact.email ?? '').trim().toLowerCase(), givenName: undefined, familyName: undefined }
+            : undefined,
       }
 
       setProblems([])
@@ -713,6 +749,9 @@ export function ReportFormPage() {
       text,
       title,
       website,
+      trainedPersonConfirmed,
+      emailNotifications,
+      register,
     ],
   )
 
@@ -890,6 +929,49 @@ export function ReportFormPage() {
                 }
               />
               <ContactFields contact={contact} onChange={setContact} />
+
+              {/* §19.6: the three answers of the reporter — the confirmation of
+                  the trained person is always mandatory, the registration needs
+                  the address and the opt-in for the messages is greyed out
+                  while the address is empty. */}
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={trainedPersonConfirmed}
+                  onChange={(event) => setTrainedPersonConfirmed(event.target.checked)}
+                />
+                <span>{t('report.trainedPerson.confirmation')}</span>
+              </label>
+
+              {registrationAvailable ? (
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={register}
+                    onChange={(event) => setRegister(event.target.checked)}
+                  />
+                  <span>{t('report.trainedPerson.register')}</span>
+                </label>
+              ) : null}
+
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={emailNotifications}
+                  disabled={(contact.email ?? '').trim() === ''}
+                  onChange={(event) => setEmailNotifications(event.target.checked)}
+                />
+                <span>{t('report.trainedPerson.emailNotifications')}</span>
+              </label>
+
+              {(contact.email ?? '').trim() === '' ? (
+                <p className="text-xs text-slate-500">
+                  {t('report.trainedPerson.emailNotificationsHint')}
+                </p>
+              ) : null}
 
               {/* §7.6: the honeypot is invisible for a human — no label, no tab stop. */}
               <input

@@ -114,7 +114,9 @@
       "faultOrText": "Bitte eine Störungsart auswählen oder die Störung beschreiben.",
       "contactRequired": "Bitte eine Telefonnummer oder eine E-Mail-Adresse angeben.",
       "email": "Die E-Mail-Adresse ist nicht gültig.",
-      "photoLimit": "Es sind höchstens sechs Fotos möglich."
+      "photoLimit": "Es sind höchstens sechs Fotos möglich.",
+      "trainedPersonRequired": "Bitte bestätigen Sie, dass Sie die eingewiesene Person sind.",
+      "registrationNeedsEmail": "Für das Konto wird eine E-Mail-Adresse gebraucht."
     },
     "errors": {
       "qrTokenInvalid": "Dieser QR-Code ist ungültig. Bitte den Aufkleber des Objekts scannen.",
@@ -142,6 +144,12 @@
       "clockSkewed": "Die Uhr des Geräts weicht von der Serveruhr ab — die Meldezeit wurde an der Serveruhr ausgerichtet.",
       "photoCount": "Fotos: {{count}}",
       "statusLink": "Status dieser Meldung ansehen"
+    },
+    "trainedPerson": {
+      "confirmation": "Hiermit bestätige ich, dass ich die vom Betreiber benannte eingewiesene Person bin (DIN 14675).",
+      "register": "Konto anlegen — ich erhalte einen Link, um mein Passwort zu setzen.",
+      "emailNotifications": "Meldungen per E-Mail empfangen",
+      "emailNotificationsHint": "Für die Meldungen per E-Mail wird eine E-Mail-Adresse gebraucht."
     }
   },
   "internal": {
