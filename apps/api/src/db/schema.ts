@@ -982,11 +982,55 @@ export const OUTBOX_STATUSES = ['PENDING', 'SENT', 'FAILED'] as const
  * row announces and a row carries exactly one of `ticket_id` and `shift_id`.
  */
 /**
+ * The state of a delivery attempt (`specs/10-notifications.md` §11.16): the
+ * row is pending, sent or failed.
+ */
+export const NOTIFICATION_MESSAGE_STATES = ['PENDING', 'SENT', 'FAILED'] as const
+
+/**
+ * The task of a user (`specs/10-notifications.md` §11.18, ADR-0052): one row
+ * per user and event — the message of StörDesk to a user. The **delivery
+ * attempt** stays in `notification_messages` (the protocol of §11.16) and points
+ * at the task with `notification_item_id`.
+ *
+ * The task carries the machine-readable params of the message (§11.5) — never
+ * the topic of a user, never a secret (§11.13). The shift is a plain uuid and
+ * no foreign key: a deleted shift must not delete the task.
+ */
+export const notificationItems = pgTable(
+  'notification_items',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventType: text('event_type').notNull(),
+    /** The machine-readable params of the message (§11.5). */
+    params: jsonb('params').notNull().default({}),
+    /** The ticket of the task — empty for a task of the readiness. */
+    ticketNo: text('ticket_no'),
+    /** The shift of the task — empty for a task of a ticket. */
+    shiftId: uuid('shift_id'),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+    /** The read receipt of the user — the task knows „unread“ and „read“ only. */
+    readAt: timestamp('read_at', timestampOptions),
+  },
+  (table) => [
+    index('notification_items_user_id_read_at_idx').on(table.userId, table.readAt),
+    index('notification_items_user_id_created_at_idx').on(table.userId, table.createdAt),
+  ],
+)
+
+/**
  * Personal notification messages for users (WP-M14-120a, PLAN.md §12, §6).
  * The internal layer between the application and the external channels: one
  * row per notification that is enqueued for a specific user, so every user
  * sees which message went to which channel and whether it arrived. The outbox
  * row of that delivery points at the message (`notification_message_id`).
+ *
+ * Since phase 30 (ADR-0052) the row is the **delivery attempt** — the
+ * protocol of the administration (§11.16). The task of the user is the row of
+ * `notification_items`; the attempt points at it.
  */
 export const notificationMessages = pgTable(
   'notification_messages',
@@ -1002,16 +1046,22 @@ export const notificationMessages = pgTable(
     body: text('body').notNull(),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     readAt: timestamp('read_at', timestampOptions),
+    /** The task of the attempt (§11.18) — null for a row of the older phase. */
+    notificationItemId: uuid('notification_item_id').references(() => notificationItems.id, {
+      onDelete: 'set null',
+    }),
   },
   (table) => [
     index('notification_messages_user_id_state_idx').on(table.userId, table.state),
     index('notification_messages_user_id_created_at_idx').on(table.userId, table.createdAt),
+    index('notification_messages_notification_item_id_idx').on(table.notificationItemId),
     check(
       'notification_messages_state_check',
-      sql`${table.state} IN ('PENDING', 'SENT', 'FAILED')`,
+      sql`${table.state} IN (${checkList(NOTIFICATION_MESSAGE_STATES)})`,
     ),
   ],
 )
+
 
 export const outbox = pgTable(
   'outbox',

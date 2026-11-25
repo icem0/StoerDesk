@@ -613,3 +613,59 @@ export type NotificationMessageReadResponse = z.infer<
 export type NotificationUnreadCountResponse = z.infer<
   typeof notificationUnreadCountResponseSchema
 >
+
+/**
+ * The task of a user (`specs/10-notifications.md` §11.18, ADR-0052): one row
+ * per user and event — the message of StörDesk to a user, not the delivery of
+ * it.
+ *
+ * The **text** of the task is not part of the answer: the interface composes it
+ * from the event type and the params in the language of the user (§3.1). The
+ * params carry no address of a user and no secret (§11.13).
+ */
+export const notificationItemSchema = z.object({
+  id: z.uuid(),
+  eventType: z.string().trim().min(1).max(64),
+  /** The machine-readable params of the message (§11.5). */
+  params: z.record(z.string(), z.unknown()),
+  /** The ticket of the task — null for a task of the readiness. */
+  ticketNo: z.string().nullable(),
+  /** The shift of the task — null for a task of a ticket. */
+  shiftId: z.uuid().nullable(),
+  createdAt: z.iso.datetime(),
+  /** The read receipt of the user; null while the task is unread. */
+  readAt: z.iso.datetime().nullable(),
+})
+
+/**
+ * The answer of the list of the tasks (`specs/10-notifications.md` §11.18): the
+ * tasks of the signed-in user, the newest first.
+ */
+export const notificationItemListResponseSchema = z.object({
+  items: z.array(notificationItemSchema),
+})
+
+/**
+ * The filter of the list of the tasks (`specs/10-notifications.md` §11.18): the
+ * event type and the unread tasks. The event type is a free text — the tasks
+ * carry the event types of §11.4 and the instance events (§11.15, §11.18), and
+ * a type that no task carries answers an empty list.
+ */
+export const notificationItemFilterSchema = z.object({
+  eventType: z.string().trim().min(1).max(64).optional(),
+  unread: z.boolean().optional(),
+})
+
+/**
+ * The answer of the read receipt of one task (`specs/10-notifications.md`
+ * §11.18): the id of the task and the moment it was marked as read.
+ */
+export const notificationItemReadResponseSchema = z.object({
+  id: z.uuid(),
+  readAt: z.iso.datetime().nullable(),
+})
+
+export type NotificationItem = z.infer<typeof notificationItemSchema>
+export type NotificationItemListResponse = z.infer<typeof notificationItemListResponseSchema>
+export type NotificationItemFilter = z.infer<typeof notificationItemFilterSchema>
+export type NotificationItemReadResponse = z.infer<typeof notificationItemReadResponseSchema>

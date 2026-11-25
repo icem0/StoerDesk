@@ -21,6 +21,7 @@ import {
 import type { QrCleanupLogger } from '../jobs/qr-cleanup'
 import { readAccountSecret } from './accounts'
 import { personalRecipients } from './receivers'
+import { writeItems } from './items'
 import { effectiveNtfyConfig } from './verification'
 import { CHANNEL_HEALTH_WARNING_EVENT, enqueueChannelHealthWarnings } from './health'
 import type { NtfyConfig } from './channels/ntfy'
@@ -841,6 +842,12 @@ export interface PersonalDelivery {
  * instance-chain row (a delivery without a single addressee) is written by the
  * caller and carries no message.
  *
+ * Since phase 30 (ADR-0052) the row of the message is the **delivery attempt**
+ * — the protocol of the administration (§11.16). The **task** of the user is
+ * written next to it: one task per user and event, no matter how many channels
+ * carry the message (§11.18). Every attempt points at its task, so the
+ * administration reads the attempts under the task.
+ *
  * Returns the number of the written outbox rows.
  */
 export async function enqueuePersonalDeliveries(
@@ -850,6 +857,16 @@ export async function enqueuePersonalDeliveries(
   if (deliveries.length === 0) {
     return 0
   }
+
+  const items = await writeItems(
+    database,
+    deliveries.map((delivery) => ({
+      userId: delivery.userId,
+      eventType: delivery.eventType,
+      target: delivery.target,
+      shiftId: delivery.shiftId ?? null,
+    })),
+  )
 
   const messages = await database
     .insert(notificationMessages)
@@ -861,6 +878,7 @@ export async function enqueuePersonalDeliveries(
         state: 'PENDING',
         title: delivery.title,
         body: delivery.body,
+        notificationItemId: items.get(`${delivery.userId}:${delivery.eventType}`) ?? null,
       })),
     )
     .returning({ id: notificationMessages.id })

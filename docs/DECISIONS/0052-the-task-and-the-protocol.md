@@ -109,7 +109,7 @@ workflow.
 
 ## Consequences
 
-- The migration `0063` adds the table `notification_items` and the column
+- The migration `0064` adds the table `notification_items` and the column
   `notification_messages.notification_item_id` (the rows of the old phase stay
   readable without a task).
 - The routes of the phase: `GET /api/v1/notifications/items`,

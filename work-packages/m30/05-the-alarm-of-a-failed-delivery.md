@@ -22,7 +22,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/db/migrations/0064_notification_delivery_failed.sql
+- apps/api/src/db/migrations/0065_notification_delivery_failed.sql
 - apps/api/src/db/schema.ts
 - packages/shared/src/schemas/notification.ts
 - apps/api/src/notifications/alarm.ts
@@ -39,7 +39,7 @@ interfaces:
 
 ## Task
 
-1. **The migration** `0064_notification_delivery_failed.sql`: the event type
+1. **The migration** `0065_notification_delivery_failed.sql`: the event type
    `notification.delivery_failed` joins the instance event types of the check
    of the `outbox` table, and the check `outbox_ticket_or_shift_check` learns
    the shape of the instance row — no ticket and no shift, as the row of the

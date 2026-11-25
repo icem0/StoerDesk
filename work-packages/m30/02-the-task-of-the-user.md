@@ -1,14 +1,14 @@
 # WP-M30-02: the task of the user — the table, the write rule and the API
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M30-01
 phase: 30
 milestone: m30
 context-budget: 52k tokens
 spec: specs/10-notifications.md §11.10, §11.11, §11.18
 spec-lines: 120
-changed-lines: 520
+changed-lines: 466
 
 files-read:
 
@@ -22,12 +22,16 @@ files-read:
 
 files-write:
 
-- apps/api/src/db/migrations/0063_notification_items.sql
+- apps/api/src/db/migrations/0064_notification_items.sql, apps/api/src/db/migrations/meta/_journal.json
 - apps/api/src/db/schema.ts
 - packages/shared/src/schemas/notification.ts
 - apps/api/src/notifications/items.ts
 - apps/api/src/notifications/outbox.ts
 - apps/api/src/notifications/routes.ts
+- apps/api/src/notifications/__tests__/items-routes.integration.spec.ts, apps/api/src/db/__tests__/schema.integration.spec.ts
+- docs/DECISIONS/0052-the-task-and-the-protocol.md (the number of the migration)
+- docs/REPO-MAP.md, CHANGELOG.md (the module map and the record)
+- work-packages/m30/02-the-task-of-the-user.md, work-packages/m30/05-the-alarm-of-a-failed-delivery.md (this package and the number of its migration)
 
 interfaces:
 
@@ -43,7 +47,7 @@ interfaces:
 
 ## Task
 
-1. **The migration** `0063_notification_items.sql`: the table `notification_items`
+1. **The migration** `0064_notification_items.sql`: the table `notification_items`
    with the columns of §11.18 (`user_id` with the cascade to the users,
    `event_type`, `params` jsonb, `ticket_no`, `shift_id`, `created_at`,
    `read_at`) and the indexes over `(user_id, read_at)` and
@@ -98,10 +102,22 @@ refusal of a foreign task.
 
 ## Handoff
 
-- Files changed: the migration, the schema, the contracts, the service, the
-  write path and the routes
+- Files changed: the migration `0064` with the journal, the schema, the
+  contracts, the service `items.ts`, the write path of the outbox, the three
+  routes, the test of the routes, the case of the schema test, the ADR (the
+  number of the migration), the module map and the changelog
 - Interfaces added: the table `notification_items`, the column
-  `notification_messages.notification_item_id` and the three routes of the tasks
-- Verified: the commands above
+  `notification_messages.notification_item_id`, the module
+  `apps/api/src/notifications/items.ts` with `writeItems`, `readItems`,
+  `countUnreadItems`, `markItemRead` and `taskParams`, and the three routes of
+  the tasks
+- Verified: `npm run check` green (wp:check 823/0, eslint 0 errors,
+  vitest 285 files / 2014 tests, Playwright 15/15); the test of the routes
+  proves one task for three channels of the same user, three attempts that
+  point at it, the params without the target of the user, the count of the
+  unhandled tasks and the refusal of the receipt of a foreign task
+- Size: 466 changed lines of the source (the profile counts the source files
+  without the tests); the tests add 284 lines, the documentation and the
+  bookkeeping 129
 - Follow-up WP: WP-M30-03 — the protocol of the administration
 - Open question: none

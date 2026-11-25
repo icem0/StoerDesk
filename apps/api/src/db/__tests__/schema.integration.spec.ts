@@ -470,6 +470,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       it('has no table of the selection per event type any more', async () => {
         expect(await tables()).not.toContain('notification_preferences')
       })
+
+      it('creates the table of the tasks of the users', async () => {
+        expect(await tables()).toContain('notification_items')
+      })
+
+      it('gives the attempt the task it belongs to', async () => {
+        const columns = await columnsOf('notification_messages')
+
+        expect(columns).toEqual(expect.arrayContaining(['notification_item_id']))
+      })
     })
 
     describe('the columns of the users', () => {

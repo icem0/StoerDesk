@@ -24,6 +24,9 @@ import {
   notificationAccountListResponseSchema,
   notificationChannelKindSchema,
   notificationMessageFilterSchema,
+  notificationItemFilterSchema,
+  notificationItemListResponseSchema,
+  notificationItemReadResponseSchema,
   notificationMessageListResponseSchema,
   notificationMessageReadResponseSchema,
   notificationUnreadCountResponseSchema,
@@ -82,6 +85,7 @@ import {
   storeWebPushSubscription,
 } from './web-push-subscriptions'
 import { readMessages, readRecipients, type MessageScope } from './messages'
+import { countUnreadItems, markItemRead, readItems } from './items'
 import {
   storeMatrixAccount,
   MatrixLinkingError,
@@ -1420,6 +1424,89 @@ export const notificationChannelRoutes = fp<NotificationChannelRoutesOptions>(
           id: row.id,
           readAt: row.readAt?.toISOString() ?? null,
         })
+      },
+    )
+
+    /**
+     * `GET /api/v1/notifications/items` (`specs/10-notifications.md` §11.18,
+     * ADR-0052): the **tasks** of the session user — one row per user and
+     * event, the newest first. The inbox of a user is personal: the answer
+     * never names another user and never names a channel or a delivery state
+     * (the protocol of the administration is §11.16).
+     *
+     * Paginated with `limit` (default 50, max 200) and `offset`. The filters
+     * are the event type and the unread tasks; an unknown value of the filter
+     * answers `400 invalid_request` with the field path.
+     */
+    app.get(
+      '/api/v1/notifications/items',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const userId = request.user?.id ?? ''
+        const query = request.query as Record<string, string | undefined>
+        const limit = boundedNumber(query.limit, 50, 1, 200)
+        const offset = boundedNumber(query.offset, 0, 0, 100_000)
+
+        const parsed = notificationItemFilterSchema.safeParse({
+          ...(query.eventType === undefined || query.eventType === ''
+            ? {}
+            : { eventType: query.eventType }),
+          ...(query.unread === undefined || query.unread === ''
+            ? {}
+            : { unread: query.unread === 'true' ? true : query.unread === 'false' ? false : query.unread }),
+        })
+
+        if (!parsed.success) {
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+        }
+
+        return notificationItemListResponseSchema.parse({
+          items: await readItems(database, {
+            userId,
+            ...(parsed.data.eventType === undefined ? {} : { eventType: parsed.data.eventType }),
+            ...(parsed.data.unread === undefined ? {} : { unread: parsed.data.unread }),
+            limit,
+            offset,
+          }),
+        })
+      },
+    )
+
+    /**
+     * `GET /api/v1/notifications/items/unread-count` (`specs/10-notifications.md`
+     * §11.18, ADR-0052): the number of the unhandled tasks of the session user
+     * — the badge of the bell of the shell and the band of the alarm count the
+     * tasks, not the delivery attempts (§11.17).
+     */
+    app.get(
+      '/api/v1/notifications/items/unread-count',
+      { preHandler: requireSession },
+      async (request) => {
+        const count = await countUnreadItems(database, request.user?.id ?? '')
+
+        return notificationUnreadCountResponseSchema.parse({ count })
+      },
+    )
+
+    /**
+     * `PATCH /api/v1/notifications/items/:id/read` (`specs/10-notifications.md`
+     * §11.18, ADR-0052): marks one of the own tasks as read. A task of another
+     * user or an unknown id answers `404 message_not_found` — the receipt is
+     * bound to the session.
+     */
+    app.patch<{ Params: { id: string } }>(
+      '/api/v1/notifications/items/:id/read',
+      { preHandler: requireSession },
+      async (request, reply) => {
+        const receipt = await markItemRead(database, request.params.id, request.user?.id ?? '')
+
+        if (receipt === null) {
+          return reply.code(404).send({ code: 'message_not_found', params: {} })
+        }
+
+        return notificationItemReadResponseSchema.parse(receipt)
       },
     )
   },
