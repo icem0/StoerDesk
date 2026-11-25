@@ -301,8 +301,7 @@
       "saved": "Saved.",
       "tabs": {
         "fristen": "Deadlines",
-        "stages": "Stages & rules",
-        "pool": "Pool of the office"
+        "stages": "Stages & rules"
       },
       "hours": {
         "low": "Low",
@@ -424,15 +423,6 @@
           "false": "No"
         }
       },
-      "pool": {
-        "hint": "The pool of the office: the technicians a ticket may be assigned to. The order is the order of the refusal chain — a technician who declines passes the ticket to the next one in the list.",
-        "up": "Up",
-        "down": "Down",
-        "remove": "Remove",
-        "add": "Add a technician",
-        "choose": "Choose a technician …",
-        "empty": "The pool is empty — the picker of the assignment then offers every active user."
-      },
       "action": {
         "type": "Type",
         "types": {
@@ -479,12 +469,6 @@
           "urgent": "Urgent"
         },
         "notifyHint": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic.",
-        "assignMode": "Assignment mode",
-        "assignModes": {
-          "pool": "From the pool of the office",
-          "user": "Fixed technician"
-        },
-        "assignUser": "Technician",
         "assignAcceptance": "Acceptance required",
         "add": "Add action",
         "remove": "Remove action #{{number}}"

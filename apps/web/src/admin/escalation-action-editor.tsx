@@ -37,10 +37,6 @@ type ActionShape = {
   toStatus?: string
   targetKind?: 'user' | 'pool' | 'group' | 'assigned' | 'assigner'
   targetId?: string
-  /** The mode of an `assign` action (`pool` or `user`, ADR-0039). */
-  mode?: 'pool' | 'user'
-  /** The technician of the mode `user`. */
-  user?: string
   /** The flag _Annahme erforderlich_ of an `assign` action. */
   acceptance?: boolean
   priority?: string
@@ -67,8 +63,6 @@ function selectionOf(event: { target: unknown }): string[] {
 }
 
 function shapeOf(action: EscalationActionConfig): ActionShape {
-  const mode = 'mode' in action && action.mode === 'user' ? 'user' : 'pool'
-
   return {
     key: 'key' in action && typeof action.key === 'string' ? action.key : '',
     type: action.type,
@@ -86,8 +80,6 @@ function shapeOf(action: EscalationActionConfig): ActionShape {
       'target' in action && action.target !== undefined && 'id' in action.target
         ? action.target.id
         : '',
-    mode,
-    user: 'user' in action && typeof action.user === 'string' ? action.user : '',
     acceptance: 'acceptance' in action ? action.acceptance !== false : true,
     priority: 'priority' in action ? action.priority : '',
     condition: action.condition,
@@ -145,15 +137,13 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
   }
 
   if (shape.type === 'assign') {
-    // The assignment names one technician (§7.14, ADR-0039): the first member
-    // of the pool of the office or a fixed technician.
-    const mode = shape.mode ?? 'pool'
-
+    // The assignment names a target of the installation (§7.14, ADR-0057): a
+    // readiness pool, a user group or one technician. The first member of the
+    // target gets the ticket.
     return {
       key: shape.key,
       type: shape.type,
-      mode,
-      ...(mode === 'user' ? { user: shape.user ?? '' } : {}),
+      target: { kind: shape.targetKind ?? 'pool', id: shape.targetId ?? '' },
       acceptance: shape.acceptance !== false,
       condition,
     } as unknown as EscalationActionConfig
@@ -578,54 +568,60 @@ export function EscalationActionEditor({
               {action.type === 'assign' ? (
                 <>
                   <label className="text-xs text-slate-400">
-                    {t('admin.escalation.action.assignMode')}
+                    {t('admin.escalation.action.targetKind')}
                     <select
-                      data-testid="escalation-assign-mode"
-                      className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      data-testid="escalation-assign-target-kind"
+                      className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
                       disabled={!canWrite}
-                      value={action.mode ?? 'pool'}
+                      value={action.targetKind ?? 'pool'}
                       onChange={(event) => {
-                        const mode = event.target.value === 'user' ? 'user' : 'pool'
+                        const kind =
+                          event.target.value === 'group'
+                            ? 'group'
+                            : event.target.value === 'user'
+                              ? 'user'
+                              : 'pool'
 
                         publish(
                           actions.map((entry, position) =>
-                            position === index ? { ...entry, mode, user: '' } : entry,
+                            position === index ? { ...entry, targetKind: kind, targetId: '' } : entry,
                           ),
                         )
                       }}
                     >
-                      <option value="pool">{t('admin.escalation.action.assignModes.pool')}</option>
-                      <option value="user">{t('admin.escalation.action.assignModes.user')}</option>
+                      <option value="pool">{t('admin.escalation.action.targetKinds.pool')}</option>
+                      <option value="group">
+                        {t('admin.escalation.action.targetKinds.group')}
+                      </option>
+                      <option value="user">{t('admin.escalation.action.targetKinds.user')}</option>
                     </select>
                   </label>
 
-                  {(action.mode ?? 'pool') === 'user' ? (
-                    <label className="text-xs text-slate-400">
-                      {t('admin.escalation.action.assignUser')}
-                      <select
-                        data-testid="escalation-assign-user"
-                        className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                        disabled={!canWrite}
-                        value={action.user ?? ''}
-                        onChange={(event) => {
-                          const user = event.target.value
+                  <label className="text-xs text-slate-400">
+                    {t('admin.escalation.action.target')}
+                    <select
+                      data-testid="escalation-assign-target"
+                      className="w-56 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                      disabled={!canWrite}
+                      value={action.targetId ?? ''}
+                      onChange={(event) => {
+                        const targetId = event.target.value
 
-                          publish(
-                            actions.map((entry, position) =>
-                              position === index ? { ...entry, user } : entry,
-                            ),
-                          )
-                        }}
-                      >
-                        <option value="">{t('admin.escalation.action.targetEmpty')}</option>
-                        {users.map((user) => (
-                          <option key={user.id} value={user.id}>
-                            {user.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
+                        publish(
+                          actions.map((entry, position) =>
+                            position === index ? { ...entry, targetId } : entry,
+                          ),
+                        )
+                      }}
+                    >
+                      <option value="">{t('admin.escalation.action.targetEmpty')}</option>
+                      {targetsOf(action).map((target) => (
+                        <option key={target.id} value={target.id}>
+                          {target.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
                   <label className="flex items-center gap-2 text-xs text-slate-400">
                     <input

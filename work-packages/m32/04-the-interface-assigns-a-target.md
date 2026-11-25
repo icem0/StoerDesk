@@ -1,7 +1,7 @@
 # WP-M32-04: the interface assigns a target
 
 format: ctx-256k
-status: planned
+status: done
 phase: 32
 milestone: m32
 context-budget: 45k tokens
@@ -74,8 +74,9 @@ the test of the action editor writes the target of the action `assign`.
   and of the action editor, CHANGELOG.md, docs/REPO-MAP.md
 - Interfaces added: the picker of the target in the ticket view, the target in
   the action editor
-- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
-  `npm run test:run`
+- Verified: `npm run check` green (typecheck, lint, i18n, wp, the tests of the API and
+  the web, the E2E of the browser) — the test of the ticket view assigns a pool
+  and the test of the action editor writes the target of the action
 - Follow-up WP: WP-M32-05 (the purge of the rest)
 - Open question: none
 - Notes: the web sends the target and no longer reads the pool of the office —

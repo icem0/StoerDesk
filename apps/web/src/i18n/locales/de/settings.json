@@ -301,8 +301,7 @@
       "saved": "Gespeichert.",
       "tabs": {
         "fristen": "Fristen",
-        "stages": "Stufen & Regeln",
-        "pool": "Pool der Office"
+        "stages": "Stufen & Regeln"
       },
       "hours": {
         "low": "Niedrig",
@@ -424,15 +423,6 @@
           "false": "Nein"
         }
       },
-      "pool": {
-        "hint": "Der Pool der Office: die Techniker, denen ein Ticket zugewiesen werden kann. Die Reihenfolge ist die Reihenfolge der Ablehnungskette — wer ablehnt, übergibt das Ticket an den nächsten in der Liste.",
-        "up": "Nach oben",
-        "down": "Nach unten",
-        "remove": "Entfernen",
-        "add": "Techniker hinzufügen",
-        "choose": "Techniker wählen …",
-        "empty": "Der Pool ist leer — die Auswahl der Zuweisung bietet dann jeden aktiven Benutzer an."
-      },
       "action": {
         "type": "Typ",
         "types": {
@@ -479,12 +469,6 @@
           "urgent": "Dringend"
         },
         "notifyHint": "Das Ziel erhält die Nachricht über die Kanäle, die es selbst ausgewählt hat — ohne Auswahl über sein eigenes ntfy-Thema.",
-        "assignMode": "Zuweisungsart",
-        "assignModes": {
-          "pool": "Aus dem Pool der Office",
-          "user": "Fester Techniker"
-        },
-        "assignUser": "Techniker",
         "assignAcceptance": "Annahme erforderlich",
         "add": "Aktion hinzufügen",
         "remove": "Aktion #{{number}} entfernen"

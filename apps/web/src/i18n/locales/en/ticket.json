@@ -360,7 +360,10 @@
       "label": "Assign to",
       "placeholder": "Choose a target …",
       "acceptance": "Acceptance required",
-      "empty": "No technicians available. Please maintain the pool of the office in the escalation settings."
+      "pools": "Readiness pools",
+      "groups": "User groups",
+      "users": "Technicians",
+      "empty": "No targets available. Please create a readiness pool, a user group or a technician."
     },
     "errors": {
       "notFound": "Ticket not found.",

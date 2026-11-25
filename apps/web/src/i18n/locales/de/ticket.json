@@ -360,7 +360,10 @@
       "label": "Zuweisen an",
       "placeholder": "Ziel wählen …",
       "acceptance": "Annahme erforderlich",
-      "empty": "Keine Techniker vorhanden. Bitte den Pool der Office in den Eskalationseinstellungen pflegen."
+      "pools": "Bereitschaftspools",
+      "groups": "Benutzergruppen",
+      "users": "Techniker",
+      "empty": "Keine Ziele vorhanden. Bitte einen Bereitschaftspool, eine Benutzergruppe oder einen Techniker anlegen."
     },
     "errors": {
       "notFound": "Meldung nicht gefunden.",

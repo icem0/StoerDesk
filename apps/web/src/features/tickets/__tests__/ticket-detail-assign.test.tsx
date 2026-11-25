@@ -76,11 +76,28 @@ function fixture(status: string) {
   }
 }
 
+const POOL_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+const GROUP_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
+const USER_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+
 const TARGETS = {
-  assigneePool: [{ id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', name: 'Erika Techniker' }],
+  pools: [
+    {
+      id: POOL_ID,
+      name: 'Bereitschaft Früh',
+      members: [{ id: USER_ID, name: 'Frank Techniker' }],
+    },
+  ],
+  groups: [
+    {
+      id: GROUP_ID,
+      name: 'Technikerteam',
+      members: [{ id: USER_ID, name: 'Frank Techniker' }],
+    },
+  ],
   users: [
-    { id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', name: 'Erika Techniker' },
-    { id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', name: 'Frank Techniker' },
+    { id: USER_ID, name: 'Frank Techniker' },
+    { id: 'ffffffff-ffff-4fff-8fff-ffffffffffff', name: 'Gina Techniker' },
   ],
 }
 
@@ -150,7 +167,7 @@ afterEach(() => {
 })
 
 describe('TicketDetailPage assignment target', () => {
-  it('offers the pool of the office as the target of the assignment', async () => {
+  it('offers the pools, the groups and the technicians of the installation', async () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByTestId('ticket-stage-assigned')).toBeTruthy())
@@ -159,10 +176,16 @@ describe('TicketDetailPage assignment target', () => {
     const select = (await waitFor(() =>
       document.querySelector('select[name="assignTarget"]'),
     )) as HTMLSelectElement
-    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(2))
+    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(5))
 
     const values = Array.from(select.querySelectorAll('option')).map((option) => option.value)
-    expect(values).toStrictEqual(['', TARGETS.assigneePool[0]?.id ?? ''])
+    expect(values).toStrictEqual([
+      '',
+      `pool:${POOL_ID}`,
+      `group:${GROUP_ID}`,
+      `user:${USER_ID}`,
+      'user:ffffffff-ffff-4fff-8fff-ffffffffffff',
+    ])
   })
 
   it('confirms only with a chosen target and posts it to the assign route', async () => {
@@ -174,19 +197,19 @@ describe('TicketDetailPage assignment target', () => {
     const select = (await waitFor(() =>
       document.querySelector('select[name="assignTarget"]'),
     )) as HTMLSelectElement
-    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(2))
+    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(5))
 
     const confirm = screen.getByRole('button', { name: 'Bestätigen' }) as HTMLButtonElement
     expect(confirm.disabled).toBe(true)
 
-    fireEvent.change(select, { target: { value: TARGETS.assigneePool[0]?.id ?? '' } })
+    fireEvent.change(select, { target: { value: `pool:${POOL_ID}` } })
     expect(confirm.disabled).toBe(false)
     fireEvent.click(confirm)
 
     await waitFor(() => expect(writes).toHaveLength(1))
     expect(writes[0]).toBe('assign')
     expect(bodies[0]).toStrictEqual({
-      userId: TARGETS.assigneePool[0]?.id ?? '',
+      target: { kind: 'pool', id: POOL_ID },
       acceptance: true,
     })
   })

@@ -18,8 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   takes the target, and the route `GET /api/v1/ticket-assign-targets` answers
   the readiness pools and the user groups with their members. The **action
   `assign` of the escalation** names its target as well (**WP-M32-03**) and
-  hands the ticket to the first member of it. The setting
-  `escalation.assignee_pool` and the tab _Pool der Office_ are gone with
+  hands the ticket to the first member of it. The **interface follows**
+  (**WP-M32-04**): the administration of the escalation loses the tab _Pool der
+  Office_, the editor of the action `assign` names its target, and the picker of
+  the assignment offers the readiness pools, the user groups and the technicians
+  of the installation. The setting `escalation.assignee_pool` is gone with
   **WP-M32-05**.
 
 ### Added

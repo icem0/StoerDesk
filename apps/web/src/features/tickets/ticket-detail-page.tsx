@@ -126,12 +126,35 @@ const ACKNOWLEDGE_RESULTS = [
 
 /**
  * The targets of the manual assignment (`GET /api/v1/ticket-assign-targets`,
- * §7.14, ADR-0039): the members of the pool of the office in the order of the
- * chain and every active user of the installation. An empty pool offers every
- * active user.
+ * §7.14, ADR-0057): the readiness pools and the user groups of the
+ * installation with their members, and every active user of the installation.
+ * The first member of a pool or of a group gets the ticket; a refusal passes
+ * it to the next member of the same target.
  */
+/**
+ * The target of the assignment in the value of the picker (§7.14, ADR-0057):
+ * `pool:<id>`, `group:<id>` or `user:<id>`.
+ */
+function parseAssignTarget(value: string): { kind: 'pool' | 'group' | 'user'; id: string } | null {
+  const separator = value.indexOf(':')
+
+  if (separator <= 0) {
+    return null
+  }
+
+  const kind = value.slice(0, separator)
+  const id = value.slice(separator + 1)
+
+  if (kind !== 'pool' && kind !== 'group' && kind !== 'user') {
+    return null
+  }
+
+  return { kind, id }
+}
+
 type AssignTargetsResponse = {
-  assigneePool: { id: string; name: string }[]
+  pools: { id: string; name: string; members: { id: string; name: string }[] }[]
+  groups: { id: string; name: string; members: { id: string; name: string }[] }[]
   users: { id: string; name: string }[]
 }
 
@@ -1013,11 +1036,14 @@ export function TicketDetailPage() {
         const value = req('assignTarget')
         const missing = value === ''
         const targets = assignTargets.data
-        // The pool of the office decides who may be assigned (§7.14, ADR-0039);
-        // an empty pool offers every active user.
-        const pool = targets?.assigneePool ?? []
-        const candidates = pool.length > 0 ? pool : (targets?.users ?? [])
-        const noTargets = targets !== undefined && candidates.length === 0
+        // The targets of the installation (§7.14, ADR-0057): the readiness
+        // pools, the user groups and the technicians. The first member of a
+        // pool or of a group gets the ticket.
+        const pools = targets?.pools ?? []
+        const groups = targets?.groups ?? []
+        const users = targets?.users ?? []
+        const noTargets = targets !== undefined && pools.length + groups.length + users.length === 0
+        const target = parseAssignTarget(value)
         return (
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-2 items-end">
@@ -1032,11 +1058,33 @@ export function TicketDetailPage() {
                   onChange={(event) => setFields({ ...fields, assignTarget: event.target.value })}
                 >
                   <option value="">{t('detail.assignTarget.placeholder')}</option>
-                  {candidates.map((entry) => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.name}
-                    </option>
-                  ))}
+                  {pools.length > 0 ? (
+                    <optgroup label={t('detail.assignTarget.pools')}>
+                      {pools.map((entry) => (
+                        <option key={entry.id} value={`pool:${entry.id}`}>
+                          {entry.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                  {groups.length > 0 ? (
+                    <optgroup label={t('detail.assignTarget.groups')}>
+                      {groups.map((entry) => (
+                        <option key={entry.id} value={`group:${entry.id}`}>
+                          {entry.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                  {users.length > 0 ? (
+                    <optgroup label={t('detail.assignTarget.users')}>
+                      {users.map((entry) => (
+                        <option key={entry.id} value={`user:${entry.id}`}>
+                          {entry.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
                 </select>
               </label>
               <label className="flex items-center gap-2 text-xs text-slate-400 min-h-11">
@@ -1059,7 +1107,7 @@ export function TicketDetailPage() {
                     return
                   }
                   void handleAction('assigned', {
-                    userId: value,
+                    target: target ?? { kind: 'user', id: value },
                     acceptance: assignAcceptance,
                   })
                 }}
