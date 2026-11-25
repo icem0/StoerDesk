@@ -35,6 +35,7 @@ const ui = {
     phoneLabel: 'Telefon',
     emergencyNotice: 'Bei Brand oder Gefahr: Notruf 112. Dieses Formular ersetzt keinen Notruf.',
     submit: 'Störung melden',
+    trainedPerson: 'Hiermit bestätige ich, dass ich die vom Betreiber benannte eingewiesene Person bin (DIN 14675).',
     doneTitle: 'Meldung eingegangen',
     ticketNoPrefix: 'Vorgangsnummer:',
     statusLink: 'Status dieser Meldung ansehen',
@@ -56,6 +57,7 @@ const ui = {
     phoneLabel: 'Phone',
     emergencyNotice: 'For fire or danger: emergency call 112. This form is never an emergency call.',
     submit: 'Report malfunction',
+    trainedPerson: 'I hereby confirm that I am the trained person named by the operator (DIN 14675).',
     doneTitle: 'Report received',
     ticketNoPrefix: 'Reference number:',
     statusLink: 'View the status of this report',
@@ -143,6 +145,10 @@ for (const language of ['de', 'en'] as const) {
     await page.getByRole('button', { name: texts.faultChip }).click()
     await page.locator('textarea[name="text"]').fill('E2E smoke test report')
     await page.locator('input[name="contactPhone"]').fill('0000000')
+
+    // §19.6: the reporter confirms that he is the trained person — the report is
+    // only valid with this answer.
+    await page.getByRole('checkbox', { name: texts.trainedPerson }).check()
 
     await page.getByRole('button', { name: texts.submit }).click()
 
