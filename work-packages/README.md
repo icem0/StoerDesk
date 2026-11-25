@@ -49,6 +49,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m38](m38/) | Phase 38: the way of the code and the landing page of the customer — the scan of a QR code opens the landing page of the object (the open tickets first, the report form at `/m/<qr_token>/neu`), the public view of an open ticket of the object shows the number, the status, the deadline, the public events and the public comments, the QR token of the object is the capability of a comment on such a ticket, and the customer gets the landing page `/portal` with his open tickets first and the closed ones below (ADR-0061, WP-M38-01 … WP-M38-04) — **out of band**, the phase 36 stays open | 4   |
 | [m36](m36/) | Phase 36: an explanation of a place is a help popover — one component with the info symbol opens a panel at the place, never a hover-only tooltip; the explanation exists in two tiers in the namespace `help`; the settings menu keeps a readable summary visible and puts the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a help page carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | 8   |
 | [m39](m39/) | Phase 39: the update starts without a comparison — the update menu of the administration offers the button „Update starten“ also when the versions cannot be compared; a comparison that GitHub refuses is an unknown state, not a proof that nothing is newer (WP-M39-01) — **out of band** | 1   |
+| [m40](m40/) | Phase 40: the double tap does not zoom the page — the report form and the ticket list stay at the place the finger touched, while the pinch zoom stays available (WP-M40-01) — **out of band** | 1   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1903,6 +1904,15 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M38-03   | the scan opens the landing page of the object — `/m/:token` names the open tickets of the object, the form moves to `/m/:token/neu` | planned | yes |
 | WP-M38-04   | the landing page of the customer — `/portal` with the open tickets first, one open ticket opens its detail, a customer lands in his portal | planned | yes |
 | WP-M39-01   | the update starts even when the versions cannot be compared — the start refuses only the proven up-to-date state, the panel offers the button in the unknown state and names the consequence | done | yes |
+| WP-M40-01   | the double tap does not zoom the page — `touch-action: manipulation` forbids the browser zoom of a double tap and keeps the pinch zoom | done | yes |
+
+**Phase 40 is closed (WP-M40-01, out of band).** A double tap on a phone screen
+zoomed the page into the touched place: the report form and the ticket list
+jumped away from the finger that touched them. The page is not allowed to switch
+the zoom off (§14.2, WCAG 1.4.4) — pinch zoom has to stay available for a reader
+who needs a bigger type. **WP-M40-01** forbids only the double-tap zoom with
+`touch-action: manipulation` on `html` and `body` in `styles.css`; the viewport
+keeps its pinch zoom.
 
 **Phase 39 is closed (WP-M39-01, out of band).** The update menu of the
 administration said „Die Versionen lassen sich nicht vergleichen.“ and offered no

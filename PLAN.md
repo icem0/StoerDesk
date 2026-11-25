@@ -753,6 +753,8 @@ Requirements:
 - photo gallery with fullscreen and download,
 - accessibility: AA contrast, touch targets at least 44 px, status not conveyed
   by color alone,
+- a double tap on the screen of a phone does not zoom the page; the pinch zoom
+  stays available (`touch-action: manipulation`) (WP-M40-01),
 - dark mode via `prefers-color-scheme`, plus a theme per user (`auto`, `light`,
   `dark`) that the user management sets (WP-M2-92),
 - one accent colour for the whole interface, configured by the administration
@@ -896,11 +898,21 @@ explanation. Offline is a core feature and appears early.
 | **38** | The way of the code and the landing page of the customer: the scan of a QR code opens the landing page of the object — the open tickets of the object come first, the report form is one tap away (`/m/<qr_token>/neu`) — the public view of an open ticket of the object shows the number, the status, the deadline, the public events and the public comments, and the QR token of the object is the capability of a comment on such a ticket; the portal of the customer gets its landing page `/portal` with the open tickets first and the closed ones below, and exactly one open ticket opens its detail directly (WP-M38-01 … WP-M38-04, ADR-0061) — **out of band**, the phase 36 (the help popover) stays open | a second scan of a code shows the ticket that is open instead of a form; a customer lands in his portal and sees his one open ticket without a click |
 | **36** | An explanation of a place is a help popover: one component with the info symbol opens a panel at the place — never a hover-only tooltip; the explanation exists in two tiers in the namespace `help` (a visible summary and a panel body); the entry of the settings menu keeps symbol, label and summary visible with the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a page that explains itself carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | no explanation travels in a `title=` any more; on a phone every explanation opens with a tap and is reachable by keyboard; the summary of a settings entry is readable, the detail is one click away; every guarded page has exactly one ⓘ or none where the page explains itself; the 112 notice, the report form, the action bar and the badges of the rules stay visible outside every symbol |
 | **39** | The update starts without a comparison: the update menu of the administration offers the button „Update starten“ also when the versions cannot be compared — a comparison that GitHub refuses is an unknown state, not a proof that nothing is newer (WP-M39-01, out of band) | the administration can start the update even when the installed version is not part of the upstream history; only a comparison that proves the up-to-date state refuses the start |
+| **40** | The double tap does not zoom the page: the report form and the ticket list stay at the place the finger touched, while the pinch zoom of a reader who needs a bigger type stays available (WP-M40-01) | a double tap in a phone browser does not bring the page closer; a pinch zoom still does |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 40 has started and is closed (WP-M40-01, out of band).** The office asked
+to suppress the zoom of the browser that happens when a finger taps twice on a
+phone screen: a double tap in Safari brings the page closer into the touched
+place, so the report form and the ticket list jump away from the finger that
+touched them. The fix is **not** to switch the zoom of the page off: pinch zoom
+must stay available for a reader who needs a bigger type (§14.2, WCAG 1.4.4).
+**WP-M40-01** adds `touch-action: manipulation` to `html` and `body`, which
+forbids the double-tap zoom and keeps panning plus pinch zoom.
 
 **Phase 39 has started (WP-M39-01, out of band).** The office reported: the update
 menu of the administration says „Die Versionen lassen sich nicht vergleichen.“ and

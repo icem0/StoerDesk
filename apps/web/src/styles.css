@@ -139,6 +139,19 @@ body:has(.theme-light) {
 }
 
 /*
+ * A double tap on the screen of a phone zooms the page into the touched
+ * place: the report form and the ticket list jump away from the finger that
+ * touched them, and the reader loses the line he wanted to read.
+ * `touch-action: manipulation` forbids that double-tap zoom — the pinch zoom
+ * stays available, so a reader who needs a bigger type can still zoom the
+ * page (§14.2, WCAG 1.4.4 — the zoom of the page is never switched off).
+ */
+html,
+body {
+  touch-action: manipulation;
+}
+
+/*
  * The internal pages render into the `<main>` of the shell through the hull
  * `AdminLayout` (WP-M29-06 … WP-M29-08), so the frame of the app is the same
  * everywhere: one landmark, one padding, one background. The public pages

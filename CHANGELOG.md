@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **The double tap does not zoom the page (WP-M40-01).** A double tap on the
+  screen of a phone zoomed the browser into the touched place, so the report form
+  and the ticket list jumped away from the finger that touched them. The fix is
+  not to switch the zoom off: pinch zoom must stay available for a reader who
+  needs a bigger type (§14.2, WCAG 1.4.4). `styles.css` now sets
+  `touch-action: manipulation` on `html` and `body`, which forbids the double-tap
+  zoom while panning and pinch zoom remain available; the viewport does not carry
+  `user-scalable=no` or a `maximum-scale` below 1.
 - **The update starts even when the versions cannot be compared (WP-M39-01).**
   The update menu of the administration said „Die Versionen lassen sich nicht
   vergleichen.“ and offered no update: the panel showed the message instead of
