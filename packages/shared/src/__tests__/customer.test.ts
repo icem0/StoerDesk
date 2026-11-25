@@ -91,9 +91,11 @@ describe('the contracts of the customer portal', () => {
       status: 'IN_REVIEW',
       reportedAt: '2026-11-25T08:00:00.000Z',
       updatedAt: '2026-11-25T09:00:00.000Z',
+      emailNotifications: true,
     })
 
     expect(summary.ticketNo).toBe('ST-0001')
+    expect(summary.emailNotifications).toBe(true)
     expect(Object.keys(summary)).not.toContain('assignedUserId')
     expect(Object.keys(summary)).not.toContain('reporterEmail')
 
