@@ -37,6 +37,13 @@ export const users = pgTable(
     theme: text('theme').notNull().default('auto'),
     active: boolean('active').notNull().default(true),
     mustChangePassword: boolean('must_change_password').notNull().default(false),
+    /**
+     * How the account came into existence (`specs/19-customer-portal.md`
+     * §19.9, ADR-0053): `admin` is an account of the administration, a
+     * `registration` came from the registration form of the portal and a
+     * `qr_registration` from the report form of the QR code.
+     */
+    createdVia: text('created_via').notNull().default('admin'),
     createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', timestampOptions).notNull().defaultNow(),
   },
@@ -45,6 +52,10 @@ export const users = pgTable(
     index('users_name_idx').on(sql`lower(${table.familyName})`, sql`lower(${table.givenName})`),
     check('users_locale_check', sql`${table.locale} IN ('de', 'en')`),
     check('users_theme_check', sql`${table.theme} IN ('auto', 'light', 'dark')`),
+    check(
+      'users_created_via_check',
+      sql`${table.createdVia} IN ('admin', 'registration', 'qr_registration')`,
+    ),
     check('users_given_name_length_check', sql`LENGTH(${table.givenName}) <= 64`),
     check('users_family_name_length_check', sql`LENGTH(${table.familyName}) <= 64`),
     check(
@@ -69,6 +80,37 @@ export const sessions = pgTable(
     uniqueIndex('sessions_token_hash_key').on(table.tokenHash),
     index('sessions_user_id_idx').on(table.userId),
     index('sessions_expires_at_idx').on(table.expiresAt),
+  ],
+)
+
+/**
+ * The one-time links of the customer portal (`specs/19-customer-portal.md`
+ * §19.3, §19.9, ADR-0054): the registration of a customer and the forgotten
+ * password of an account. Only the SHA-256 hash of the token is stored — the
+ * plain text exists once, in the mail. A consumed token stays as the proof
+ * that it was used; the expiry is checked by the service.
+ */
+export const accountTokens = pgTable(
+  'account_tokens',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    purpose: text('purpose').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', timestampOptions).notNull(),
+    consumedAt: timestamp('consumed_at', timestampOptions),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('account_tokens_token_hash_key').on(table.tokenHash),
+    index('account_tokens_user_id_idx').on(table.userId),
+    index('account_tokens_expires_at_idx').on(table.expiresAt),
+    check(
+      'account_tokens_purpose_check',
+      sql`${table.purpose} IN ('registration', 'password_reset')`,
+    ),
   ],
 )
 
@@ -331,6 +373,33 @@ export const objects = pgTable(
 )
 
 /**
+ * The trained person of an object (`specs/19-customer-portal.md` §19.2, §19.9,
+ * ADR-0053): the pair of the object and the customer. An object may have
+ * several trained people, a customer may be trained for several objects. The
+ * pair is unique.
+ */
+export const objectAssignments = pgTable(
+  'object_assignments',
+  {
+    id: uuid('id').primaryKey().default(uuidDefault),
+    objectId: uuid('object_id')
+      .notNull()
+      .references(() => objects.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdByUserId: uuid('created_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', timestampOptions).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('object_assignments_object_id_user_id_key').on(table.objectId, table.userId),
+    index('object_assignments_user_id_idx').on(table.userId),
+  ],
+)
+
+/**
  * Retired QR tokens (`specs/02-data-model.md` §4.7, WP-M2-02). A regenerated
  * object token keeps redirecting through this table until `expires_at`; the
  * daily pg-boss job of WP-M2-02b deletes expired rows.
@@ -507,6 +576,26 @@ export const tickets = pgTable(
     reportedByUserId: uuid('reported_by_user_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+    /**
+     * Der Kunde der Meldung (`specs/19-customer-portal.md` §19.7, ADR-0055):
+     * die eingewiesene Person des Objekts. Die Referenz ist `ON DELETE SET
+     * NULL` — ein gelöschter Kunde lässt seine Meldungen mit der Historie
+     * stehen.
+     */
+    customerUserId: uuid('customer_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    /**
+     * Die Einwilligung des Melders für die Nachrichten über seine Meldung
+     * (`specs/19-customer-portal.md` §19.6, ADR-0056): die Aktion
+     * `notify_reporter` sendet nur bei dieser Zustimmung.
+     */
+    customerEmailNotifications: boolean('customer_email_notifications').notNull().default(false),
+    /**
+     * Die Bestätigung des Melders, die vom Betreiber benannte eingewiesene
+     * Person zu sein (`specs/19-customer-portal.md` §19.6, ADR-0055).
+     */
+    trainedPersonConfirmed: boolean('trained_person_confirmed').notNull().default(false),
     /** Idempotency key of the offline outbox replay — unique over all tickets. */
     clientUuid: uuid('client_uuid'),
     statusToken: text('status_token'),
@@ -571,6 +660,7 @@ export const tickets = pgTable(
     index('tickets_status_idx').on(table.status),
     index('tickets_parent_ticket_id_idx').on(table.parentTicketId),
     index('tickets_reported_by_user_id_idx').on(table.reportedByUserId),
+    index('tickets_customer_user_id_idx').on(table.customerUserId),
     index('tickets_assigned_user_id_status_idx').on(table.assignedUserId, table.status),
     index('tickets_assigned_by_user_id_idx').on(table.assignedByUserId),
     index('tickets_is_test_reported_at_idx')

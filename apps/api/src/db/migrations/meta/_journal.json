@@ -435,6 +435,13 @@
       "when": 1795917600001,
       "tag": "0061_drop_notification_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1796004000001,
+      "tag": "0062_customer_portal",
+      "breakpoints": true
     }
   ]
 }
