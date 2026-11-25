@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The message is a task and the delivery attempt is the protocol
+  (**WP-M30-01**, phase 30, ADR-0052): the inbox of a user shows **one task
+  per user and event** — the readable text, the deep link into the ticket or
+  into the readiness and the read receipt — and no channel and no delivery
+  state any more; the attempts of the delivery are the **protocol** and belong
+  to the administration, which reads them on `/admin/notifications`
+  (`notification.read_all`). A delivery that fails finally becomes a **task of
+  the administration**: the event type `notification.delivery_failed` reaches
+  the users with the right over their **own confirmed channels**, throttled to
+  one task per channel and machine code per hour; the alarm never alarms
+  itself. The bell and the alarm band count the tasks, not the attempts — a
+  technician with three channels sees one task and not three. Which events are
+  tasks at all and when a task is closed belong to the settings of the
+  workflow and are not decided here. The spec decides the model; the packages
+  WP-M30-02 … WP-M30-06 build it.
 - The administration splits into four topic pages (**WP-M29-04**, phase 29): Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand. Each page lists its modules with a symbol and a short description, reusing the settings menu component. The menu entries link to the topic pages instead of the individual modules.
 - The settings menu is single-column with a symbol and a description per entry
   (**WP-M29-03**, phase 29, ADR-0051): a shared `settings-menu.tsx` component

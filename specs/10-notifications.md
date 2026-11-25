@@ -4,7 +4,8 @@
 **Scope:** ~190 lines
 **Status:** reviewed for phase 14 (WP-M14-03), amended for the readiness rules of
 WP-M14-26 (ADR-0021) and for the way of the escalation (WP-M17-00, ADR-0037),
-rewritten for phase 24 (WP-M24-01, ADR-0045, ADR-0046)
+rewritten for phase 24 (WP-M24-01, ADR-0045, ADR-0046), amended for the task
+and the protocol (WP-M30-01, ADR-0052)
 
 The binding summary is `PLAN.md` §12. This slice defines the channels of the
 outbox, where their configuration lives, how a user links an account, how he
@@ -187,6 +188,11 @@ The event types of the notification are fixed:
 | `oncall.swap_requested` | a swap is requested on the own confirmed shift |
 | `oncall.unconfirmed_reminder` | a shift still waits for a decision within `oncall.reminder_unconfirmed_h` |
 
+Two event types belong to **no user**: the warning of a broken channel
+(§11.15) and the task of a failed delivery (§11.18). They are instance events
+— no user selects a channel for them, and they are written to the
+administration alone.
+
 **Every event goes over the channels of the recipient** (ADR-0045). The
 channels of a user are the accounts he linked and confirmed (§11.3, §11.3a)
 and the devices he registered for the web push. There is no selection per event
@@ -313,6 +319,16 @@ broadcast of an action without a target — carries the target of the
 installation (§11.1) and goes to the mail addresses of the users for the
 e-mail (ADR-0046).
 
+**A delivery that fails finally becomes a task of the administration**
+(§11.18, ADR-0052). A row that ends as `FAILED` **and** leaves no fallback
+open — no further channel of the chain answers for it — is a message that never
+arrived. Such a row writes the event type `notification.delivery_failed` for
+every user with `notification.read_all`; the way is the confirmed channel of
+the recipient (§11.4), so the administration is reached the way every other
+user is reached. The alarm of a failed delivery is throttled: one task per
+channel and machine code per hour, and a failure of the channel that carries
+the alarm writes no new task.
+
 ## 11.8 The status and the warning on a failure
 
 The status of a channel is the number of pending rows, the number of failed
@@ -407,7 +423,9 @@ every user and every event (ADR-0045).
 | `notification_channels` | the columns `kind` (unique), `enabled`, `label`, `config` (jsonb) and `secret` (write-only) |
 | `notification_accounts` | the accounts of the users (§11.3) with the columns `target` (the target of the user) and `verified_at` (the confirmation, §11.3a) |
 | `notification_preferences` | **removed** — the selection per event type does not exist any more (§11.4, ADR-0045) |
-| `outbox` | the column `event_type` (check over the seven types) and the column `shift_id` (FK to `oncall_shifts`, cascade, nullable); `ticket_id` becomes nullable with the check that exactly one of the two is set (ADR-0021, migration 0034) |
+| `notification_items` | **new** — the task of a user (§11.18, ADR-0052): one row per user and event with the event type, the machine-readable params of the message, the ticket number or the shift and the read receipt |
+| `notification_messages` | the delivery attempt of a message (§11.16, ADR-0052): the row per user and channel with its state, plus the column `notification_item_id` (FK to `notification_items`, `ON DELETE SET NULL`) — the task of the attempt |
+| `outbox` | the column `event_type` (check over the seven types and the instance types of §11.18) and the column `shift_id` (FK to `oncall_shifts`, cascade, nullable); `ticket_id` becomes nullable with the check that exactly one of the two is set (ADR-0021, migration 0034) |
 | `settings` | the rows `notifications.required_channels` and `notifications.minimum_channel_count` (§11.9) |
 
 ## 11.11 The API
@@ -427,6 +445,10 @@ every user and every event (ADR-0045).
 | `GET /api/v1/notifications/status` | `notification.read` | the status of every channel (§11.8) |
 | `GET /api/v1/notifications/delivery` | `notification.read` | the delivery problems and the lost messages (§11.8) |
 | `POST /api/v1/notifications/delivery/acknowledge` | `notification.write` | the quittature of the problems (§11.8) |
+| `GET /api/v1/notifications/items` | session | the tasks of the signed-in user (§11.18) |
+| `GET /api/v1/notifications/items/unread-count` | session | the number of the unhandled tasks — the badge of the bell and the alarm band (§11.18) |
+| `PATCH /api/v1/notifications/items/:id/read` | session | the read receipt of one own task (§11.18) |
+| `GET /api/v1/admin/notifications/deliveries` | `notification.read_all` | the delivery attempts of the instance — the protocol (§11.16) |
 | `GET /api/v1/notifications/accounts` | session | the own accounts with their state — linked, set up or missing (§11.3, §11.3a) |
 | `POST /api/v1/notifications/accounts/telegram/code` | session | a one-time code for the Telegram bot |
 | `POST /api/v1/notifications/accounts/telegram` | session | the code is checked, the account is stored |
@@ -435,6 +457,12 @@ every user and every event (ADR-0045).
 | `POST /api/v1/notifications/accounts/:channel/verification` | session | sends the one-time code over the channel of the account and answers the deadline (§11.3a) |
 | `POST /api/v1/notifications/accounts/:channel/verification/confirm` | session | the code the user copied is checked; a correct code confirms the account (§11.3a) |
 | `DELETE /api/v1/notifications/accounts/:channel` | session | the own account of a channel is removed |
+
+The routes of the **messages** leave the API with phase 30 (§11.18,
+ADR-0052): `GET /api/v1/notifications/messages`,
+`GET /api/v1/notifications/messages/unread-count` and
+`PATCH /api/v1/notifications/messages/:id/read` are replaced by the three
+routes of the tasks. The rows they read stay — they are the protocol of §11.16.
 
 ## 11.12 The UI
 
@@ -452,6 +480,17 @@ every user and every event (ADR-0045).
   the time of the last failure, the machine code and the number of the
   unacknowledged failures, the messages that never arrived and the quittature
   of the problems.
+- `/notifications` — the **tasks of the signed-in user** (§11.18): one entry per
+  task, with the readable text of the event, the deep link into the ticket or
+  into the readiness and the read receipt. The page carries **no channel and no
+  delivery state** — the way of a message belongs to the protocol (§11.16). The
+  bell of the shell and the alarm band count the same tasks (§11.17).
+- `/admin/notifications` — the **protocol of the delivery** (§11.16): every
+  delivery attempt of the instance with its recipient, its event, its channel,
+  its state, the machine code of a failure, the time and the number of the
+  attempts, with the filters of §11.16. The page names the users; the inbox of
+  a user names the tasks. The page is an entry of the settings menu next to the
+  delivery problems and links to them.
 - `/settings/notifications` — the own channels: the linked accounts (Telegram,
   Matrix, ntfy, e-mail, WhatsApp Web), the subscription QR of ntfy and, per
   channel, its state — **set up** (green), **linked but not confirmed** (amber)
@@ -607,14 +646,16 @@ per day; a channel that works again is silent.
 carries the event type `channel.health_warning`, no ticket, no shift and no
 personal message. The checks of the `outbox` table know that shape.
 
-## 11.16 The admin view of the inbox
+## 11.16 The protocol of the delivery (ADR-0052)
 
-The inbox of a user is **personal**: the page `/notifications` and the bell of
-the shell show and count only the messages of the signed-in user. That is the
-promise of the inbox — a user reads what StörDesk sent to them.
+The **protocol** answers the question of the office „are all messages there?“:
+which message arrived at which user, over which channel, with which machine
+code and at which time. It is the reading of the table `notification_messages`
+— one row per **delivery attempt** — and it belongs to the administration. The
+page `/admin/notifications` shows it; the inbox of a user (§11.18) shows the
+other half of the truth: the tasks.
 
-The office asks for a second view on the same page: a filter that shows **which
-message arrived at which user**. The right to it is a permission of its own:
+The right to the protocol is a permission of its own:
 
 | Permission | Meaning |
 | --- | --- |
@@ -622,37 +663,35 @@ message arrived at which user**. The right to it is a permission of its own:
 
 The key belongs to no default role — the administration assigns it to a role
 over the role API (`specs/01-rbac.md` §3.8), `admin` holds it through the
-catalogue. Without the key the answer of the API stays the own messages, the
-addressee of a row is `null` and the list of the addressees is empty; a request
-for the messages of another user answers `403 forbidden`.
+catalogue. Without the key the route answers `403 forbidden`: the protocol
+names the users, and a user without the key may read his own tasks only.
 
 ### The filters
 
-`GET /api/v1/notifications/messages` reads the filters of the query:
+`GET /api/v1/admin/notifications/deliveries` reads the filters of the query:
 
 | Filter | Meaning |
 | --- | --- |
-| `userId` | the addressee of the message; a foreign id without the permission answers `403 forbidden` |
-| `channel` | the channel of the message |
-| `eventType` | the event type of the message (§11.4) |
+| `userId` | the addressee of the attempt |
+| `channel` | the channel of the attempt |
+| `eventType` | the event type of the attempt (§11.4) |
 | `state` | the state of the delivery (`PENDING`, `SENT`, `FAILED`) |
-| `unread` | `true` answers the messages without a read receipt |
 
-The filters `channel`, `eventType`, `state` and `unread` narrow the own inbox
-and are allowed for every session; only the filter of the addressee needs the
-permission. An unknown value answers `400 invalid_request` with the field path.
+An unknown value answers `400 invalid_request` with the field path. The read
+receipt of a task is not a right of the protocol: the read receipt belongs to
+the task of the user (§11.18) and never to the attempt.
 
 ### The answer
 
 Every row carries its addressee (`{ userId, name }` — the name of the user,
-else the e-mail) and the answer carries the list of the addressees with the
-number of their messages. The list applies every filter **except** the filter of
-the addressee, so it stays complete while a filter is active.
+else the e-mail), the event type, the channel, the state, the machine code of a
+failure, the time of the attempt and the number of the attempts. The answer
+carries the list of the addressees with the number of their attempts; the list
+applies every filter **except** the filter of the addressee, so it stays
+complete while a filter is active.
 
-The read receipt stays a right of the own messages: a message of another user
-cannot be marked as read (the route answers `404 message_not_found`). The bell
-and the unread count stay personal — the admin view never changes what a user
-sees in the bell.
+The protocol never carries the address of a user — no topic, no chat id, no
+mail address (§11.13) — and never a secret.
 
 ## 11.17 The alarm of the instance (ADR-0048)
 
@@ -714,3 +753,72 @@ The warning of §11.9 is **not** a small box on the own notifications page any
 more: it is a large band at the top of the shell, it names the channels the
 user does not have set up, it links to the setup and it cannot be dismissed.
 A warning that can be clicked away is no warning.
+
+## 11.18 The task of the user (ADR-0052)
+
+The **task** is the message of StörDesk to a user: one thing that happened and
+one place where the user acts on it. The task is not the delivery — the
+delivery is the way the task travels and is read in the protocol (§11.16).
+
+### The data model
+
+The table `notification_items` holds **one row per user and event**:
+
+| Column | Meaning |
+| --- | --- |
+| `user_id` | the addressee of the task |
+| `event_type` | the event that produced it (§11.4) |
+| `params` (jsonb) | the machine-readable params of the message (§11.5) — never the topic of a user, never a secret |
+| `ticket_no` | the ticket of the task, empty for a task of the readiness |
+| `shift_id` | the shift of the task, empty for a task of a ticket |
+| `created_at` | the time of the task |
+| `read_at` | the read receipt of the user |
+
+The delivery attempts of the task stay in `notification_messages` and point at
+the task with the column `notification_item_id` — the protocol reads the task
+under its attempts, the inbox reads the task alone.
+
+### The write rule
+
+A personal delivery writes **one** task per recipient, no matter how many
+channels carry it (§11.4): a technician with three confirmed channels sees one
+task and not three. The rows of the protocol are written as before — one per
+channel — and the task is written in the same transaction, so a task exists
+exactly when the message was queued.
+
+The **text** of a task is not stored. The API keeps the event type and the
+params; the interface composes the readable text from them in the language of
+the user (`PLAN.md` §3.1). A task of a ticket carries the deep link into the
+ticket, a task of the readiness the deep link into the calendar (§11.5).
+
+The task knows two states: **unread** and **read**. There is no state
+„handled“: which events are tasks at all and when a task is closed belong to
+the settings of the workflow, not to the notification layer.
+
+### The count and the alarm
+
+The bell of the shell and the alarm band of the instance (§11.17) read the
+**same** number: the count of the unhandled tasks of the user. The number is
+the number of things to do — not the number of attempts, not the number of
+channels. The alarm therefore sounds once for a task that travels over three
+channels.
+
+### The task of a failed delivery
+
+A delivery that fails finally (§11.7) is a message that never arrived and
+belongs to the administration: the event type `notification.delivery_failed`
+writes a task for every user with `notification.read_all` (§11.16). The way is
+the confirmed channel of the recipient (§11.4) — the administration is reached
+the way every other user is reached, and a recipient who does not fulfil the
+rule of the administration (§11.9) gets nothing; the failure stays visible in
+the protocol.
+
+The alarm is throttled: **one task per channel and machine code per hour**, so
+a channel that is broken for a day does not flood the inbox of the
+administration. A failure of the channel that carries the alarm writes no new
+task — the alarm never alarms itself.
+
+The row of the alarm belongs to no ticket and to no shift: it carries the event
+type `notification.delivery_failed`, no ticket, no shift, and the params of the
+failure (the channel, the machine code, the ticket number of the message that
+never arrived). The checks of the `outbox` table know that shape (§11.15).

@@ -661,9 +661,21 @@ Rules:
   only; the alarm band and the warning of an unfulfilled setup stand on every
   internal page (§11.17),
 - dashboard tile with channel status and last successful delivery,
-- admin warning on channel failure.
+- admin warning on channel failure,
+- **a message is a task, the delivery attempt is the protocol** (ADR-0052):
+  the inbox `/notifications` shows **one task per user and event** — the
+  readable text, the deep link into the ticket or into the readiness and the
+  read receipt — and no channel and no delivery state; the protocol of the
+  attempts belongs to the administration and is read on `/admin/notifications`
+  (`notification.read_all`); the bell and the alarm band count the tasks, not
+  the attempts,
+- **a delivery that fails finally becomes a task of the administration**
+  (ADR-0052): the event type `notification.delivery_failed` reaches the users
+  with `notification.read_all` over their **own confirmed channels**, throttled
+  to one task per channel and machine code per hour; the alarm never alarms
+  itself.
 
-The contract of the channels is `specs/10-notifications.md` §11.1–§11.14. No
+The contract of the channels is `specs/10-notifications.md` §11.1–§11.18. No
 notification server is part of the Compose stack.
 
 ## 13. Dashboard and statistics
@@ -714,6 +726,9 @@ Internal:
 - on-call calendar,
 - object list,
 - statistics,
+- the inbox of the tasks of the signed-in user `/notifications` (ADR-0052),
+- the protocol of the delivery `/admin/notifications` — the attempts of the
+  messages of every user (ADR-0052),
 - settings (users, groups, standard texts, deadlines, on-call grid, channels,
   API keys).
 
@@ -835,12 +850,41 @@ explanation. Offline is a core feature and appears early.
 | **27** | The sticker is a template: the sticker carries the geometry of the sheet and the look of the label as a setting of the installation, the label sheets of an A4 (21, 52 or 104 labels) and a free grid replace the two formats of today, the sheet is printed in blocks of the grid and the list of the objects to print is filtered on the server (WP-M27-01 … WP-M27-06, ADR-0050) | every sheet of the catalog prints in its own grid, every label carries the 112 notice, and the administration decides the geometry and the look of the sticker of the installation |
 | **28** | The gate answers in a minute: the tests of the web share one environment per worker, the integration tests of the API share one migrated template database instead of building one per file, the static gates of the check run in parallel, and the assertions of the migrations read the schema of the database instead of the text of the migration files (WP-M28-01 … WP-M28-04) | the check run needs less than three minutes on a machine with four cores, and every case of the suite proves the behaviour of the code against the real database |
 | **29** | The settings are operable: the settings menu is single-column with a symbol and a description per entry, a search field and collapsible sections; the administration splits into topic pages and every channel gets its own page; every page renders exactly one `<main>` landmark (WP-M29-01 … WP-M29-09, ADR-0051) | every entry of the settings menu has a symbol and a description, the Matrix server sits on its own page behind one link, and no internal page renders more than one `<main>` |
+| **30** | The message is a task and the delivery attempt is the protocol: the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on its own page, and a delivery that fails finally becomes a task of the administration (WP-M30-01 … WP-M30-06, ADR-0052) | a technician with three channels sees one task and not three, the bell and the alarm band count the tasks, the administration sees which message arrived at which user over which channel, and a message that never arrived reaches the administration |
 | **31** | The customer portal: the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his own open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | the customer registers, confirms himself over the link in the mail and sees his open tickets in the portal, the office assigns the trained person of an object, the report by QR code offers the registration and the confirmation of the trained person, and the mail to the reporter is configured in the stages of the escalation |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 30 has started (WP-M30-01).** The page `/notifications` answers two
+questions at once and answers both of them wrong. Its rows are the delivery
+attempts of the table `notification_messages` — one row per user **and
+channel** — so a technician with three confirmed channels (ADR-0045) sees the
+same event three times, and the alarm band of the instance (ADR-0048) counts
+three unhandled messages where there is one thing to do. The content of a row
+is the machine-readable params of the message (§11.5), not a text that a
+reader can read. The second view on the same page — the filter that shows
+*which message arrived at which user*, guarded by `notification.read_all` — is
+the arrival proof of the office, and it belongs to the administration, not to
+the inbox of a user. A **single** message that never arrived reaches nobody:
+the failing channels are visible on `/admin/delivery`, and the warning of a
+broken channel goes out once per channel and per day (§11.15).
+**ADR-0052** separates the two: the **message is a task** — one row per user
+and event in the new table `notification_items`, with the readable text, the
+deep link and the read receipt — and the **delivery attempt is the protocol**,
+read by the administration on `/admin/notifications`. A delivery that fails
+finally becomes a task of the administration (the event type
+`notification.delivery_failed`) and reaches it over its **own confirmed
+channels**, throttled to one task per channel and machine code per hour; the
+alarm never alarms itself. Which events are tasks at all and when a task is
+closed belong to the settings of the workflow and are **not** decided here.
+The phase is split into **WP-M30-01** (the spec and ADR-0052), **WP-M30-02**
+(the task of the user: the table, the write rule and the API), **WP-M30-03**
+(the protocol of the administration), **WP-M30-04** (the inbox shows the
+tasks), **WP-M30-05** (the alarm of a failed delivery) and **WP-M30-06** (the
+criterion of the phase).
 
 **Phase 28 has started (WP-M28-01).** The check run of the repository needs
 253 s in CI (the step „Quality gates" of the run `v1.2.129`), and 139 s of them
