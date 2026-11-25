@@ -18,6 +18,9 @@ export interface EmailConfig {
     ticket?: string
     readiness?: string
     test?: string
+    /** The mails of the customer portal (`specs/19-customer-portal.md` §19.3). */
+    registration?: string
+    passwordReset?: string
   }
   /** Host of an existing mail server, e.g. mail.example.org — the channel is off while it is empty */
   host: string
@@ -108,6 +111,9 @@ const placeholderValues = (
     ends_at: String(params.endsAt ?? ''),
     state: String(params.state ?? ''),
     url: pwaUrl,
+    /** The link of the customer portal — the link of the registration. */
+    link: String(params.link ?? pwaUrl),
+    email: String(params.email ?? ''),
   }
 }
 
@@ -128,6 +134,27 @@ const fillTemplate = (template: string, values: Record<string, string>): string 
   })
 
 /**
+ * The template of a kind of the message. The kinds of the customer portal —
+ * `registration` and `password_reset` — carry their own template
+ * (`specs/19-customer-portal.md` §19.3); every other kind uses the template of
+ * the ticket.
+ */
+const templateFor = (config: EmailConfig, kind: string | undefined): string => {
+  switch (kind) {
+    case 'readiness':
+      return config.templates?.readiness ?? ''
+    case 'test':
+      return config.templates?.test ?? ''
+    case 'registration':
+      return config.templates?.registration ?? ''
+    case 'password_reset':
+      return config.templates?.passwordReset ?? ''
+    default:
+      return config.templates?.ticket ?? ''
+  }
+}
+
+/**
  * The body of the mail as HTML (§11.5, ADR-0046): the template of the kind of
  * the message, or the built-in text. The empty lines become paragraphs, the
  * deep link becomes a link and the text of the message is escaped.
@@ -138,12 +165,7 @@ export const renderHtmlBody = (
   pwaUrl: string,
 ): string => {
   const values = placeholderValues(message, pwaUrl)
-  const template =
-    message.kind === 'readiness'
-      ? (config.templates?.readiness ?? '')
-      : message.kind === 'test'
-        ? (config.templates?.test ?? '')
-        : (config.templates?.ticket ?? '')
+  const template = templateFor(config, message.kind)
 
   // The values of a template are escaped while they are filled in; the built-in
   // text is escaped here — every value is escaped exactly once.

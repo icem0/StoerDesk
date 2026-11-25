@@ -31,6 +31,7 @@ import { externalObjectRoutes } from './objects/external'
 import { objectImportRoutes } from './objects/import-routes'
 import { objectRoutes } from './objects/service'
 import { objectAssignmentRoutes } from './objects/assignments'
+import { customerPublicRoutes } from './customers/public-routes'
 import { openApiPlugin } from './openapi'
 import { oncallPoolsRoutes } from './oncall/pools'
 import { oncallRoutes } from './oncall/routes'
@@ -157,6 +158,7 @@ export async function buildServer() {
   await app.register(ticketStatusRoutes, { database })
   await app.register(objectRoutes, { database })
   await app.register(objectAssignmentRoutes, { database })
+  await app.register(customerPublicRoutes, { database, env })
   await app.register(externalObjectRoutes, { database })
   await app.register(objectImportRoutes, { database })
   await app.register(oncallPoolsRoutes, { database })
