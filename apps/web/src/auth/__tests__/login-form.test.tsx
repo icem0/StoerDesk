@@ -83,6 +83,34 @@ afterEach(() => {
 })
 
 describe('LoginForm', () => {
+  it('offers the registration of the customer when the instance has a mailbox', async () => {
+    stubRoutes({
+      '/v1/public/auth/registration': { available: true },
+    })
+    renderWithProviders(<LoginForm />)
+
+    const link = await screen.findByRole('link', {
+      name: 'Sie sind Kunde? Registrieren oder Passwort vergessen',
+    })
+
+    expect(link.getAttribute('href')).toBe('/portal/auth?tab=register')
+  })
+
+  it('offers no registration without a mailbox', async () => {
+    stubRoutes({
+      '/v1/public/auth/registration': { available: false },
+    })
+    renderWithProviders(<LoginForm />)
+
+    await screen.findByLabelText('E-Mail')
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Sie sind Kunde? Registrieren oder Passwort vergessen',
+      }),
+    ).toBeNull()
+  })
+
   it('shows the shared credentials notice for a 401 invalid_credentials', async () => {
     stubRoutes({
       '/v1/auth/login': Response.json({ code: 'invalid_credentials', params: {} }, { status: 401 }),

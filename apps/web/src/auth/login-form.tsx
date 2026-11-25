@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import { loginRequestSchema } from '@stoerdesk/shared'
 import type { LoginRequest, MeResponse } from '@stoerdesk/shared'
@@ -41,7 +41,6 @@ function errorMessage(t: TFunction<'common'>, error: unknown): string {
 export function LoginForm() {
   const { t } = useTranslation('common')
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const [values, setValues] = useState<LoginRequest>({ email: '', password: '' })
   const [fieldsInvalid, setFieldsInvalid] = useState(false)
 
@@ -64,12 +63,6 @@ export function LoginForm() {
       queryClient.setQueryData(['me'], me)
       void queryClient.invalidateQueries({ queryKey: ['me'] })
       setValues({ email: '', password: '' })
-
-      // A customer signs in at the portal — the office pages are not his
-      // (§19.1, ADR-0053).
-      if (me.user.roles.includes('customer')) {
-        navigate('/portal/tickets')
-      }
     },
   })
 

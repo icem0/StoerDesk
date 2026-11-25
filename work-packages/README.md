@@ -1876,7 +1876,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-14   | the customer decides about the messages of his ticket — the switch in the portal | done | yes |
 | WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
-| WP-M31-17   | the customer finds the registration at the login of the homepage — the link, the tab of the URL and the way into the portal | planned | yes |
+| WP-M31-17   | the customer finds the registration at the login of the homepage — the link, the tab of the URL and the way into the portal | done | yes |
 | WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | done | yes |
 | WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
 | WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | done | yes |

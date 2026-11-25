@@ -47,10 +47,40 @@ function renderRoute(path: string) {
   )
 }
 
+/** The customer of an installation signs in and lands in his portal
+ *  (ADR-0061, WP-M31-17) — the frame of the app owns the way, not the form. */
+function renderRouteOfCustomer() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const router = createMemoryRouter(routes, { initialEntries: ['/tickets'] })
+
+  render(
+    <QueryClientProvider client={client}>
+      <I18nextProvider i18n={i18n}>
+        <RouterProvider router={router} />
+      </I18nextProvider>
+    </QueryClientProvider>,
+  )
+
+  return router
+}
+
 afterEach(() => {
   vi.unstubAllGlobals()
   fetchCalls.length = 0
 })
+
+/** The answer of `/v1/me` for the customer of an installation (ADR-0061). */
+function customerMe() {
+  return Response.json({
+    user: {
+      id: '33333333-3333-4333-8333-333333333333',
+      email: 'kunde@example.com',
+      locale: 'de',
+      roles: ['customer'],
+      permissions: [],
+    },
+  })
+}
 
 describe('route table', () => {
   it('shows the not found page for an unknown address', async () => {
@@ -79,6 +109,21 @@ describe('route table', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Einstellungen')).toBeTruthy()
+    })
+  })
+
+  it('leads the customer of an installation into his portal', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) =>
+        String(input).includes('/v1/me') ? customerMe() : Response.json({ code: 'not_found' }, { status: 404 }),
+      ),
+    )
+
+    const router = renderRouteOfCustomer()
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/portal')
     })
   })
 

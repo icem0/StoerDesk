@@ -223,6 +223,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (**WP-M31-15**) — a report he made before his registration belongs to him as
   well. The administration knows the customer (**WP-M31-16**): the field of the
   roles shows a readable name and the role `customer` carries a hint.
+  The **customer finds the registration at the login of the homepage**
+  (**WP-M31-17**): the entry appears only when the instance has a mailbox (only
+  then a registration is possible), it opens the registration directly
+  (`/portal/auth?tab=register`), the portal asks for the sign in, and the
+  **frame** of the app owns the way of the customer after the sign in — every
+  internal address sends him into his portal (ADR-0061), so the login form
+  writes the session and navigates nowhere.
 
 ### Fixed
 - The local hooks run the same quality gate as CI (phase 31, tooling): the
