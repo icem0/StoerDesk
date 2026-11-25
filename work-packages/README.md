@@ -1862,7 +1862,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-11   | the action `notify_reporter` — the mail to the reporter as an action of the escalation | done | yes |
 | WP-M31-12   | the administration of the action and of the templates of the portal | done | yes |
 | WP-M31-13   | the criterion and the documentation of the phase — the acceptance test, the module map, the plan and the changelog | done | yes |
-| WP-M31-14   | the customer decides about the messages of his ticket — the switch in the portal | planned | yes |
+| WP-M31-14   | the customer decides about the messages of his ticket — the switch in the portal | done | yes |
 | WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
 

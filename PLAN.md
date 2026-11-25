@@ -871,6 +871,14 @@ report by QR code register the reporter with the confirmation of the trained
 person (DIN 14675), and makes the report of the reporter an action of the
 escalation (ADR-0056). The slice is `specs/19-customer-portal.md`.
 
+**Phase 31 is closed (WP-M31-01 … WP-M31-16).** The customer decides himself
+about the messages about his ticket (WP-M31-14) — the opt-in belongs to the
+reporter, and the portal carries the switch. The portal holds the reports
+that carry his address as well (WP-M31-15): a report he made before his
+registration belongs to him too. The administration knows the customer
+(WP-M31-16): the field of the roles shows a readable name and the role
+`customer` carries a hint.
+
 **Phase 30 has started (WP-M30-01).** The page `/notifications` answers two
 questions at once and answers both of them wrong. Its rows are the delivery
 attempts of the table `notification_messages` — one row per user **and
