@@ -147,7 +147,7 @@ the night.
 | `history`       | `text` (optional, 1–500 characters), no key in the administration                                                                                                                                 | one normal `comment` event in the ticket history with `{ text }` and `actor_kind = 'system'`; the server assigns the action key                                                                                                                                                                                                         |
 | `status_change` | `toStatus` (the key of a row of `ticket_statuses`)                                                                                                                                                | the dispatcher sets the ticket status to that target directly (§7.13, ADR-0041); one append-only `escalation_note` event records the change with `{ rule, stage, from, to }`                                                                                  |
 | `offer`         | `target` (a readiness pool, a user group or one technician, §7.14)                                                                                                                                | the dispatcher runs the `offered` step of `ticket_transitions`; a pool target names the on-call person of the pool in `offered_to_user_id` and sets the offer timeout, a group target notifies the whole group at once, a user target names that technician in `offered_to_user_id`; every technician of the target is notified (§7.14) |
-| `assign`        | `mode` (`pool`: one employee chosen from the assignee pool of §7.14; `user`: one fixed technician), `user` (the technician, mode `user`), `acceptance` (boolean, _Annahme erforderlich_)          | the dispatcher runs the `assigned` step of `ticket_transitions` for one technician, sets `assigned_user_id`, `assignment_status` (`offered` or `accepted`) and `assigned_by_user_id` (NULL for the system); the technician is notified (§7.14, ADR-0039)                                                                                |
+| `assign`        | `target` (a readiness pool, a user group or one technician, §7.14), `acceptance` (boolean, _Annahme erforderlich_)                                                                                                                | the dispatcher runs the `assigned` step of `ticket_transitions` for the first member of the target, sets `assigned_user_id`, `assignment_status` (`offered` or `accepted`), `assigned_by_user_id` (NULL for the system) and the target of the assignment (`assignment_target_kind`, `assignment_target_id`); the technician is notified (§7.14, ADR-0039, ADR-0057)                                                                                |
 
 A `notify` action with a `target` replaces the channel broadcast of the action:
 the selected user, the technicians who have a shift in the selected readiness
@@ -359,12 +359,13 @@ renamed and deactivated in the administration. The table `ticket_transitions`
 of the earlier design (ADR-0025, migrations `0041`/`0042`) is removed by migration
 `0053`; its administration page and its API are gone.
 
-## 7.14 The offer and the assign action (ADR-0026, ADR-0033, ADR-0039)
+## 7.14 The offer and the assign action (ADR-0026, ADR-0033, ADR-0039, ADR-0057)
 
 Two actions distribute a ticket. `offer` (ADR-0026) hands it to the on-call person
 of a pool with the offer timeout chain; that behaviour is unchanged. `assign`
-(ADR-0039) gives the ticket to **one** technician, who answers the assignment. The
-assignment is the same step in the escalation and in the ticket view.
+(ADR-0039, ADR-0057) gives the ticket to **one** technician, who answers the
+assignment. The assignment is the same step in the escalation and in the ticket
+view.
 
 ### The offer target (unchanged)
 
@@ -374,39 +375,49 @@ pool in `offered_to_user_id` and sets the offer timeout
 (`oncall.escalate_to_group_after_min`); a group target notifies the whole group at
 once. A target without a technician changes nothing.
 
-### The assignee pool
+### The target of the assignment
 
-The **assignee pool** is a setting `escalation.assignee_pool`: an ordered list of
-user ids, maintained under `/settings/escalation`. It is the list the office
-chooses from. Inactive users are skipped; an empty pool offers every active user
-in the picker of the ticket view.
+The assignment names a **target of the installation** (ADR-0057): a readiness
+pool (`kind: pool`, a row of `oncall_pools`), a user group (`kind: group`, a
+row of `groups`) or one technician (`kind: user`). The shape is the target of
+the `offer` action — the installation knows no third pool for the assignment.
+
+The **members of the target** are the list of the assignment: the members of the
+group of the pool or the members of the group itself, ordered by name
+(`specs/04-oncall.md` §4a.5); a pool without a group has every active user with
+the role `oncall`; a target of the kind `user` is that technician, if the
+account is active. The **first** member of the list gets the ticket. The
+installation stores no further order — the name order is the order of the
+chain.
+
+In the ticket view the workflow action _Zuweisen_ offers the same target: the
+readiness pools, the user groups and the technicians of the installation. The
+office chooses the target and states _Annahme erforderlich_ for this
+assignment. The picker names the person who made the assignment: the actor of
+the event is stored as `assigned_by_user_id`.
 
 ### The assign action
 
 | Field        | Meaning                                                                                                                                                                                                   |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`       | `pool` — the escalation offers the ticket to the first active member of the assignee pool; on a refusal to the next one (decision 4 of ADR-0039). `user` — the escalation names one technician in `user`. |
-| `user`       | the UUID of one user, only with `mode = user`                                                                                                                                                             |
+| `target`     | the target of the assignment: a readiness pool, a user group or one technician (ADR-0057)                                                                                                                 |
 | `acceptance` | `true`: the status is `offered` and waits for the technician's answer; `false`: the status is `accepted` at once                                                                                          |
-
-In the ticket view the workflow action _Zuweisen_ offers the same picker: the
-office chooses one member of the assignee pool (or any active user when the pool
-is empty) and states _Annahme erforderlich_ for this assignment. The picker names
-the person who made the assignment: the actor of the event is stored as
-`assigned_by_user_id`.
 
 ### The state of an assignment
 
 The ticket carries the assignment in three columns (ADR-0039, decision 2):
 `assigned_user_id` (the technician), `assignment_status` and
 `assigned_by_user_id` (the user who made the assignment, NULL for the system).
+It carries the **target** of the assignment in two more columns
+(ADR-0057): `assignment_target_kind` (`pool`, `group` or `user`) and
+`assignment_target_id`. The target is the list the refusal walks.
 
 | From                     | Event                                 | To `assignment_status`  | Notification                                                                                                       |
 | ------------------------ | ------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | none                     | `assign`, acceptance on               | `offered`               | the technician (`ticket.assigned`)                                                                                 |
 | none                     | `assign`, acceptance off              | `accepted`              | the technician (`ticket.assigned`)                                                                                 |
 | `offered`                | technician accepts (`accepted` step)  | `accepted`              | the assigner (`ticket.assignment_answered`)                                                                        |
-| `offered`                | technician declines (`declined` step) | `declined`              | the assigner (`ticket.assignment_answered`); the escalation offers the next pool member (`offered`), if one exists |
+| `offered`                | technician declines (`declined` step) | `declined`              | the assigner (`ticket.assignment_answered`); the escalation offers the next member of the target (`offered`), if one exists |
 | `declined` or `accepted` | `assign` again                        | `offered` or `accepted` | the new technician                                                                                                 |
 
 Every change writes one `ticket_events` row of the step it performs, so the
@@ -439,3 +450,12 @@ before, so it is unaffected. The table and its read in the ticket detail are
 retired with the migration `0058` (WP-M19-08): the technician of the latest row
 moves into `tickets.assigned_user_id`, and the ticket detail answers the one
 `assignee` of the ticket instead of a list.
+
+The **assignee pool** — the setting `escalation.assignee_pool` with its own
+ordered list of technicians and its tab _Pool der Office_ in the administration
+(ADR-0039, decision 3) — is retired with ADR-0057: the assignment names a
+target of the installation (§7.14), and the readiness pools and the user groups
+of the installation are the lists of the assignment. The setting is dropped
+with the migration `0066`; the stored rules of the escalation that assigned
+from the pool of the office lose that action — the office sets a target in the
+administration.

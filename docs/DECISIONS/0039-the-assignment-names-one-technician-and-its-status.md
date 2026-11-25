@@ -1,6 +1,6 @@
 # ADR-0039: The assignment names one technician and its status
 
-- Status: accepted
+- Status: accepted — decision 3 superseded by ADR-0057
 - Date: 2026-11-20
 - Stakeholders: office, on-call technicians, administration
 
@@ -43,6 +43,9 @@ assignment.
    of active users under the escalation settings (`escalation.assignee_pool`,
    maintained in the administration). The action `offer` stays unchanged for the
    on-call pools (ADR-0026, timeout chain).
+   **Superseded by ADR-0057:** the assignment names a target of the
+   installation — a readiness pool, a user group or one technician — and the
+   setting `escalation.assignee_pool` is gone.
 4. **Acceptance and refusal.** `assign` with the option _Annahme erforderlich_
    sets `assignment_status = offered`; without it, the status is `accepted` at
    once. The technician answers through the workflow: `accepted` sets the status
