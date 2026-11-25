@@ -1,17 +1,18 @@
-import { and, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 
-import type { TicketAssignmentStatus } from '@stoerdesk/shared'
+import type { EscalationTarget, TicketAssignmentStatus } from '@stoerdesk/shared'
 
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
-import { tickets, users } from '../db/schema'
+import { groups, oncallPools, tickets, users } from '../db/schema'
 import { nextAssignee, resolveAssigneePool } from '../escalation/assignee-pool'
+import { resolveGroupMemberIds, resolvePoolMemberIds } from '../oncall/members'
 import { notifyAssignee, notifyAssigner } from '../notifications/assignment'
 import { TicketTransitionError, transitionTicket } from './workflow'
 
 /**
  * The assignment of a ticket (`specs/07-escalation.md` §7.14, ADR-0039,
- * WP-M19-04).
+ * ADR-0057, WP-M32-02).
  *
  * A ticket is handled by **one** person. The assignment names that technician
  * in `tickets.assigned_user_id` and carries the state of the assignment in
@@ -19,11 +20,15 @@ import { TicketTransitionError, transitionTicket } from './workflow'
  * user who made it in `tickets.assigned_by_user_id` — the _Sachbearbeiter_ the
  * acceptance notice reaches.
  *
+ * The assignment names a **target of the installation** (ADR-0057): a
+ * readiness pool, a user group or one technician. The members of that target
+ * are the list of the assignment — the first member gets the ticket, and a
+ * refusal passes the ticket to the **next member of the same target**.
+ *
  * The technician answers the assignment: `accepted` or `declined`. A refusal
- * passes the ticket to the **next member of the assignee pool** with the
- * status `offered` (decision 4 of ADR-0039); without a next member the ticket
- * keeps the status `declined` and the rule of the escalation decides what
- * happens next.
+ * passes the ticket to the next member of the target with the status
+ * `offered`; without a next member the ticket keeps the status `declined` and
+ * the rule of the escalation decides what happens next.
  *
  * Every change writes one `ticket_events` row of the step it performs, so the
  * history of the assignments stays in the event log.
@@ -47,8 +52,17 @@ export type AssignResult = {
 
 export type AssignTicketInput = {
   ticketId: string
-  /** The technician the ticket is assigned to. */
-  userId: string
+  /**
+   * The target of the assignment (§7.14, ADR-0057): a readiness pool, a user
+   * group or one technician. The first member of the target gets the ticket.
+   */
+  target?: EscalationTarget
+  /**
+   * The technician of the assignment — the first member of the target, when
+   * the target names one. The technician alone is the former way (ADR-0039);
+   * it stays until WP-M32-05 removes it.
+   */
+  userId?: string
   /** `true` — the technician has to answer; `false` — the assignment is accepted at once. */
   acceptance: boolean
   /** The user who made the assignment; null when a rule of the system made it. */
@@ -62,6 +76,34 @@ export type AnswerAssignmentInput = {
   /** The technician who answers — only the assigned technician may answer. */
   actorUserId: string
   answer: AssignmentAnswer
+}
+
+/**
+ * The members of the target of an assignment (`specs/07-escalation.md` §7.14,
+ * ADR-0057): the members of a readiness pool or of a user group, ordered by
+ * name (`specs/04-oncall.md` §4a.5); a target of the kind `user` is that
+ * technician, if the account is active. An unknown pool, an unknown group and
+ * a deactivated account have no member — a target without a member changes
+ * nothing.
+ */
+export async function resolveTargetMembers(
+  database: Db,
+  target: EscalationTarget,
+): Promise<string[]> {
+  if (target.kind === 'user') {
+    const rows = await database
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, target.id), eq(users.active, true)))
+
+    return rows.map((row) => row.id)
+  }
+
+  if (target.kind === 'group') {
+    return resolveGroupMemberIds(database, target.id)
+  }
+
+  return resolvePoolMemberIds(database, target.id)
 }
 
 /**
@@ -86,16 +128,37 @@ async function assertActiveUser(database: Db, userId: string): Promise<void> {
 
 /**
  * Assigns the ticket to one technician (`specs/07-escalation.md` §7.14): the
- * step `assigned` of the workflow, the status of the assignment and the user
- * who made it. With `acceptance` the status is `offered` and waits for the
- * technician, without it the assignment is `accepted` at once.
+ * step `assigned` of the workflow, the status of the assignment, the user
+ * who made it and the target of the assignment. With a target the first
+ * member of that target gets the ticket (§7.14, ADR-0057); with `acceptance`
+ * the status is `offered` and waits for the technician, without it the
+ * assignment is `accepted` at once.
  */
 export async function assignTicket(
   database: Db,
   input: AssignTicketInput,
   env?: Env,
 ): Promise<AssignResult> {
-  await assertActiveUser(database, input.userId)
+  const target = input.target
+  let userId = input.userId ?? null
+
+  if (userId === null && target !== undefined) {
+    const members = await resolveTargetMembers(database, target)
+
+    userId = members[0] ?? null
+
+    if (userId === null) {
+      // A target without a member is nobody — the assignment changes nothing
+      // (§7.14, ADR-0057).
+      throw new TicketTransitionError(422, 'assign_target_empty', { kind: target.kind })
+    }
+  }
+
+  if (userId === null) {
+    throw new TicketTransitionError(422, 'assign_user_unknown', { userId: null })
+  }
+
+  await assertActiveUser(database, userId)
 
   const assignedBy = input.assignedBy ?? null
   const assignmentStatus: TicketAssignmentStatus = input.acceptance ? 'offered' : 'accepted'
@@ -107,9 +170,14 @@ export async function assignTicket(
     actorKind: assignedBy === null ? 'system' : 'user',
     ...(assignedBy === null ? {} : { actorUserId: assignedBy }),
     payload: {
-      assignedUserId: input.userId,
+      assignedUserId: userId,
       assignmentStatus,
       assignedByUserId: assignedBy,
+      // The target is the list the refusal walks (§7.14, ADR-0057); an
+      // assignment without a target clears the former one.
+      ...(target === undefined
+        ? { assignmentTargetKind: null, assignmentTargetId: null }
+        : { assignmentTargetKind: target.kind, assignmentTargetId: target.id }),
     },
   })
 
@@ -119,7 +187,7 @@ export async function assignTicket(
     database,
     {
       ticketId: input.ticketId,
-      userId: input.userId,
+      userId,
       ruleKey: input.rule?.ruleKey ?? null,
       stageKey: input.rule?.stageKey ?? null,
     },
@@ -145,6 +213,8 @@ export async function answerAssignment(
       assignedUserId: tickets.assignedUserId,
       assignmentStatus: tickets.assignmentStatus,
       assignedByUserId: tickets.assignedByUserId,
+      assignmentTargetKind: tickets.assignmentTargetKind,
+      assignmentTargetId: tickets.assignmentTargetId,
     })
     .from(tickets)
     .where(eq(tickets.id, input.ticketId))
@@ -178,13 +248,14 @@ export async function answerAssignment(
   })
 
   if (input.answer === 'declined') {
-    // The refusal chain (§7.14, decision 4 of ADR-0039): the ticket passes to
-    // the next member of the assignee pool. Without a next member the ticket
+    // The refusal chain (§7.14, ADR-0057): the ticket passes to the next
+    // member of the target of the assignment. Without a next member the ticket
     // keeps the status `declined`.
     const successor = await continueAssignmentChain(database, {
       ticketId: input.ticketId,
       currentUserId: input.actorUserId,
       assignedBy: current.assignedByUserId,
+      target: assignmentTargetOf(current),
     })
 
     if (successor !== null) {
@@ -265,16 +336,66 @@ async function notifyAssignerOfAnswer(
 }
 
 /**
- * The refusal chain (`specs/07-escalation.md` §7.14, decision 4 of ADR-0039):
- * a refusal passes the ticket to the next member of the assignee pool with the
- * status `offered`. A technician that is not a member of the pool has no
- * successor and a pool without a further member leaves the ticket at
+ * The target of the assignment of a ticket (§7.14, ADR-0057): the two columns
+ * of the ticket, if they carry a target. An assignment of the former shape has
+ * no target — its chain walks the pool of the office (until WP-M32-05).
+ */
+function assignmentTargetOf(row: {
+  assignmentTargetKind: string | null
+  assignmentTargetId: string | null
+}): EscalationTarget | null {
+  const kind = row.assignmentTargetKind
+  const id = row.assignmentTargetId
+
+  if (id === null) {
+    return null
+  }
+
+  if (kind === 'pool' || kind === 'group' || kind === 'user') {
+    return { kind, id }
+  }
+
+  return null
+}
+
+/**
+ * The refusal chain (`specs/07-escalation.md` §7.14, ADR-0057): a refusal
+ * passes the ticket to the next member of the target of the assignment with
+ * the status `offered`. A technician that is not a member of the target has no
+ * successor, and a target without a further member leaves the ticket at
  * `declined`.
  */
 export async function continueAssignmentChain(
   database: Db,
-  input: { ticketId: string; currentUserId: string; assignedBy?: string | null },
+  input: {
+    ticketId: string
+    currentUserId: string
+    assignedBy?: string | null
+    /** The target of the assignment — the list the refusal walks. */
+    target?: EscalationTarget | null
+  },
 ): Promise<AssignResult | null> {
+  const target = input.target ?? null
+
+  if (target !== null) {
+    const members = await resolveTargetMembers(database, target)
+    const successor = nextAssignee(members, input.currentUserId)
+
+    if (successor === null) {
+      return null
+    }
+
+    return assignTicket(database, {
+      ticketId: input.ticketId,
+      target,
+      userId: successor,
+      acceptance: true,
+      assignedBy: input.assignedBy ?? null,
+    })
+  }
+
+  // The former chain (ADR-0039, decision 4): the pool of the office, until
+  // WP-M32-05 removes it.
   const pool = await resolveAssigneePool(database)
   const successor = nextAssignee(pool, input.currentUserId)
 
@@ -321,8 +442,8 @@ export async function readAssignment(
 
 /**
  * The users of the installation that may be assigned — the active accounts.
- * The picker of the ticket view offers the pool of the office and, with an
- * empty pool, every active user (`specs/07-escalation.md` §7.14).
+ * The picker of the ticket view offers the targets of the installation (§7.14,
+ * ADR-0057) and, for a single technician, every active user.
  */
 export async function readAssignableUsers(
   database: Db,
@@ -342,4 +463,87 @@ export async function readAssignableUsers(
 
     return { id: row.id, name: name === '' ? row.email : name }
   })
+}
+
+/**
+ * The target must name a row of the installation (§7.14, ADR-0057): a
+ * readiness pool, a user group or a technician.
+ */
+export async function targetExists(database: Db, target: EscalationTarget): Promise<boolean> {
+  if (target.kind === 'user') {
+    const rows = await database
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, target.id))
+      .limit(1)
+
+    return rows.length > 0
+  }
+
+  if (target.kind === 'group') {
+    const rows = await database
+      .select({ id: groups.id })
+      .from(groups)
+      .where(eq(groups.id, target.id))
+      .limit(1)
+
+    return rows.length > 0
+  }
+
+  const rows = await database
+    .select({ id: oncallPools.id })
+    .from(oncallPools)
+    .where(eq(oncallPools.id, target.id))
+    .limit(1)
+
+  return rows.length > 0
+}
+
+/** One target of the assignment with its members (§7.14, ADR-0057). */
+export type AssignTarget = {
+  id: string
+  name: string
+  members: { id: string; name: string }[]
+}
+
+/**
+ * The targets of the assignment (`specs/07-escalation.md` §7.14, ADR-0057):
+ * the readiness pools and the user groups of the installation with their
+ * members, and the technicians of the installation. The picker of the ticket
+ * view offers them; the first member of a pool or of a group gets the ticket.
+ */
+export async function readAssignTargets(database: Db): Promise<{
+  pools: AssignTarget[]
+  groups: AssignTarget[]
+  users: { id: string; name: string }[]
+}> {
+  const people = await readAssignableUsers(database)
+  const nameById = new Map(people.map((person) => [person.id, person.name]))
+
+  const membersOf = (ids: string[]) =>
+    ids.map((id) => ({ id, name: nameById.get(id) ?? '' })).filter((member) => member.name !== '')
+
+  const poolRows = await database
+    .select({ id: oncallPools.id, name: oncallPools.name })
+    .from(oncallPools)
+    .orderBy(asc(oncallPools.name))
+
+  const groupRows = await database
+    .select({ id: groups.id, name: groups.name })
+    .from(groups)
+    .orderBy(asc(groups.name))
+
+  const pools: AssignTarget[] = []
+
+  for (const pool of poolRows) {
+    pools.push({ ...pool, members: membersOf(await resolvePoolMemberIds(database, pool.id)) })
+  }
+
+  const groupTargets: AssignTarget[] = []
+
+  for (const group of groupRows) {
+    groupTargets.push({ ...group, members: membersOf(await resolveGroupMemberIds(database, group.id)) })
+  }
+
+  return { pools, groups: groupTargets, users: people }
 }

@@ -76,4 +76,4 @@ are enough, and the assignment shall use them.
 - Supersedes ADR-0039, decision 3 (the pool of the office as a setting). The
   other decisions of ADR-0039 (one assignee per ticket, the status of the
   assignment, the acceptance and the refusal, the notifications) stay in force.
-- Follow-up WPs: `WP-M32-01` … `WP-M32-04` (see `work-packages/m32/`).
+- Follow-up WPs: `WP-M32-01` … `WP-M32-05` (see `work-packages/m32/`).

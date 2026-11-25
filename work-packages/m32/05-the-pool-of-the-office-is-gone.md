@@ -1,11 +1,11 @@
-# WP-M32-04: the pool of the office is gone
+# WP-M32-05: the pool of the office is gone
 
 format: ctx-256k
 status: planned
 phase: 32
 milestone: m32
 context-budget: 45k tokens
-depends-on: WP-M32-03
+depends-on: WP-M32-04
 spec: specs/07-escalation.md §7.14 (the retired model); docs/DECISIONS/0057-the-assignment-names-a-target-of-the-installation.md
 spec-lines: 40
 changed-lines: 380
@@ -42,7 +42,8 @@ interfaces:
    and of the body of the assignment.
 2. The API: the configuration reads and writes the target; the assignment
    takes the target; the route takes the target. The module of the pool of the
-   office is removed with its setting.
+   office is removed with its setting, and the former chain of the refusal is
+   gone — the chain walks the target of the ticket.
 3. The migration `0066` drops the setting `escalation.assignee_pool` and the
    stored actions of the escalation that assigned from that pool — they cannot
    be mapped onto a target. A stored action with a technician becomes a target
@@ -53,7 +54,7 @@ interfaces:
 ## Non-goals
 
 - No change of the interface — the interface knows the target since
-  WP-M32-03.
+  WP-M32-04.
 - No change of the offer action and of its timeout chain.
 - No data of the office that is not the pool of the office.
 

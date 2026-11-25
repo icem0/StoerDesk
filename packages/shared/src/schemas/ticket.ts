@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { objectNoSchema, qrTokenSchema } from './object.js'
+import { escalationTargetSchema } from './target.js'
 import { textTemplateKeySchema } from './text-template.js'
 
 /**
@@ -43,12 +44,20 @@ export type TicketAssignmentStatus = (typeof TICKET_ASSIGNMENT_STATUSES)[number]
 
 /**
  * The body of the assignment of the ticket view (`specs/07-escalation.md`
- * §7.14, ADR-0039): the technician the ticket goes to and whether the
+ * §7.14, ADR-0039, ADR-0057): the target of the assignment and whether the
  * technician has to answer.
  */
 export const assignBodySchema = z.object({
-  /** The technician — a member of the assignee pool or any active user. */
-  userId: z.uuid(),
+  /**
+   * The target of the assignment (§7.14, ADR-0057): a readiness pool, a user
+   * group or one technician. The first member of the target gets the ticket.
+   */
+  target: escalationTargetSchema.optional(),
+  /**
+   * The technician — the former body (ADR-0039), kept readable until the
+   * interface has moved (WP-M32-03).
+   */
+  userId: z.uuid().optional(),
   /** `true` — the status is `offered` and waits for the answer of the technician. */
   acceptance: z.boolean().default(true),
 })

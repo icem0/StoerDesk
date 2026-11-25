@@ -93,6 +93,24 @@ function assignmentColumnsOf(
     columns.assignedByUserId = payload.assignedByUserId
   }
 
+  // The target of the assignment (§7.14, ADR-0057): the list the refusal
+  // walks. An assignment without a target clears the former one.
+  if (
+    payload.assignmentTargetKind === 'pool' ||
+    payload.assignmentTargetKind === 'group' ||
+    payload.assignmentTargetKind === 'user'
+  ) {
+    columns.assignmentTargetKind = payload.assignmentTargetKind
+  } else if (payload.assignmentTargetKind === null) {
+    columns.assignmentTargetKind = null
+  }
+
+  if (typeof payload.assignmentTargetId === 'string') {
+    columns.assignmentTargetId = payload.assignmentTargetId
+  } else if (payload.assignmentTargetId === null) {
+    columns.assignmentTargetId = null
+  }
+
   return columns
 }
 

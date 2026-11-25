@@ -634,6 +634,18 @@ export const tickets = pgTable(
     assignedByUserId: uuid('assigned_by_user_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+    /**
+     * The kind of the target of the assignment (`specs/07-escalation.md` §7.14,
+     * ADR-0057): `pool`, `group` or `user`. The target is the list the refusal
+     * walks; NULL when the assignment carries no target.
+     */
+    assignmentTargetKind: text('assignment_target_kind'),
+    /**
+     * The id of the target of the assignment — a row of `oncall_pools`, of
+     * `groups` or of `users` (ADR-0057). The jsonb of the target carries no
+     * foreign key, so the column keeps no reference either.
+     */
+    assignmentTargetId: uuid('assignment_target_id'),
     reviewedByUserId: uuid('reviewed_by_user_id').references(() => users.id, {
       onDelete: 'set null',
     }),

@@ -17,7 +17,7 @@ import type { Database } from '../db/client'
 import { ticketEvents, tickets, users } from '../db/schema'
 import { readAssigneePool } from '../escalation/assignee-pool'
 import { offerTicket } from '../oncall/coupling'
-import { answerAssignment, assignTicket, readAssignableUsers } from './assignment'
+import { answerAssignment, assignTicket, readAssignTargets, targetExists } from './assignment'
 import { transitionTicket } from './workflow'
 import { applyInternalAction } from './internal-actions'
 
@@ -157,10 +157,11 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       )
     }
 
-    // The manual assignment names one technician (§7.14, ADR-0039): a member
-    // of the assignee pool or any active user. The status of the assignment is
-    // `offered` when the technician has to answer, `accepted` at once
-    // otherwise. The user who made the assignment is stored with the ticket.
+    // The manual assignment names a target of the installation (§7.14,
+    // ADR-0057): a readiness pool, a user group or one technician. The status
+    // of the assignment is `offered` when the technician has to answer,
+    // `accepted` at once otherwise. The user who made the assignment is stored
+    // with the ticket.
     app.post<{ Params: { ticketNo: string } }>(
       '/api/v1/tickets/:ticketNo/assign',
       { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
@@ -180,6 +181,13 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
           return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
 
+        const target = parsed.data.target
+        const technicianId = parsed.data.userId
+
+        if (target === undefined && technicianId === undefined) {
+          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['target'] } })
+        }
+
         const [row] = await database
           .select({ id: tickets.id })
           .from(tickets)
@@ -190,22 +198,32 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
           return reply.code(404).send({ code: 'ticket_not_found', params: { ticketNo: request.params.ticketNo } })
         }
 
-        // The technician must be an active account — a deactivated account is
-        // nobody (§7.14, ADR-0039).
-        const [technician] = await database
-          .select({ id: users.id, active: users.active })
-          .from(users)
-          .where(eq(users.id, parsed.data.userId))
-          .limit(1)
+        if (target !== undefined) {
+          // The target must name a row of the installation — a readiness pool,
+          // a user group or a technician (§7.14, ADR-0057).
+          const known = await targetExists(database, target)
 
-        if (technician === undefined || !technician.active) {
-          return reply.code(400).send({ code: 'invalid_request', params: { fields: ['userId'] } })
+          if (!known) {
+            return reply.code(400).send({ code: 'invalid_target', params: { fields: ['target.id'] } })
+          }
+        } else {
+          // The technician must be an active account — a deactivated account is
+          // nobody (§7.14, ADR-0039).
+          const [technician] = await database
+            .select({ id: users.id, active: users.active })
+            .from(users)
+            .where(eq(users.id, technicianId as string))
+            .limit(1)
+
+          if (technician === undefined || !technician.active) {
+            return reply.code(400).send({ code: 'invalid_request', params: { fields: ['userId'] } })
+          }
         }
 
         try {
           const result = await assignTicket(database, {
             ticketId: row.id,
-            userId: parsed.data.userId,
+            ...(target === undefined ? { userId: technicianId } : { target }),
             acceptance: parsed.data.acceptance,
             assignedBy: actor.id,
           })
@@ -271,15 +289,18 @@ export const workflowRoutes = fp<WorkflowRoutesOptions>(
       },
     )
 
-    // The targets the office can choose in the assignment: the members of the
-    // assignee pool and the active technicians (§7.14, ADR-0039). Permission:
+    // The targets the office can choose in the assignment (§7.14, ADR-0057):
+    // the readiness pools and the user groups of the installation with their
+    // members, and the technicians of the installation. Permission:
     // ticket.assign.
     app.get(
       '/api/v1/ticket-assign-targets',
       { preHandler: requirePermission(database, PERM(PERMISSIONS.ticket.assign)) },
       async () => ({
+        ...(await readAssignTargets(database)),
+        // The pool of the office — the former answer, until WP-M32-05 removes
+        // it.
         assigneePool: await readAssigneePool(database),
-        users: await readAssignableUsers(database),
       }),
     )
 

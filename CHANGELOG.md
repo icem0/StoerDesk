@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The assignment of a ticket names a **target of the installation**
+  (**WP-M32-02**, phase 32, ADR-0057): a **readiness pool**, a **user group**
+  or **one technician** — the pools the installation already knows, no third
+  list of technicians. The **members of that target** are the list of the
+  assignment: the first member gets the ticket, and a **refusal passes the
+  ticket to the next member of the same target**. The ticket carries the
+  target of its assignment, the route `POST /api/v1/tickets/:ticketNo/assign`
+  takes the target, and the route `GET /api/v1/ticket-assign-targets` answers
+  the readiness pools and the user groups with their members. The setting
+  `escalation.assignee_pool` and the tab _Pool der Office_ are gone with
+  **WP-M32-05**.
+
 ### Added
 - The customer portal (**WP-M31-01 … WP-M31-13**, phase 31, ADR-0053 … ADR-0056):
   the customer of an installation is a **user with the role `customer`** and

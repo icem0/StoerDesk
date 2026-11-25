@@ -42,7 +42,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m28](m28/) | Phase 28: the gate answers in a minute — the tests of the web share one environment per worker, the integration tests of the API share one migrated template database, the static gates of the check run in parallel and the assertions of the migrations read the schema of the database instead of the text of the files (WP-M28-01 … WP-M28-04b) | 5   |
 | [m30](m30/) | Phase 30: the message is a task and the delivery attempt is the protocol — the inbox of a user shows one task per user and event with its readable text and its deep link, the administration reads the attempts of the delivery on `/admin/notifications`, and a delivery that fails finally becomes a task of the administration over its own confirmed channels (WP-M30-01 … WP-M30-06, ADR-0052) | 6   |
 | [m31](m31/) | Phase 31: the customer portal — the customer is a user with the role `customer`, the office assigns the trained person of an object, the customer registers himself over a link in the mail, the portal shows his open tickets, the report by QR code registers him and confirms the trained person, and the mail to the reporter is an action of the escalation (WP-M31-01 … WP-M31-11, ADR-0053 … ADR-0056) | 11   |
-| [m32](m32/) | Phase 32: the assignment uses the pools of the installation — the assignment names a readiness pool, a user group or one technician (ADR-0057); the members of the target are the chain of the refusal; the setting `escalation.assignee_pool` and the tab _Pool der Office_ are gone (WP-M32-01 … WP-M32-04) | 4   |
+| [m32](m32/) | Phase 32: the assignment uses the pools of the installation — the assignment names a readiness pool, a user group or one technician (ADR-0057); the members of the target are the chain of the refusal; the setting `escalation.assignee_pool` and the tab _Pool der Office_ are gone (WP-M32-01 … WP-M32-05) | 5   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
 foundation scope documents `WP-M1-01` … `WP-M1-04`; `npm run wp:check` reports those four
@@ -1868,9 +1868,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
 | WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | planned | yes |
-| WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service, the routes and the escalation | planned | yes |
-| WP-M32-03   | the interface assigns a target — the administration loses the tab _Pool der Office_, the picker names the pools and the groups | planned | yes |
-| WP-M32-04   | the pool of the office is gone — the setting, the former fields of the contract and the stored actions | planned | yes |
+| WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
+| WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | planned | yes |
+| WP-M32-04   | the interface assigns a target — the administration loses the tab _Pool der Office_, the picker names the pools and the groups | planned | yes |
+| WP-M32-05   | the pool of the office is gone — the setting, the former fields of the contract and the stored actions | planned | yes |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

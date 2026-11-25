@@ -8,6 +8,7 @@ import {
   wallClockMinutes,
 } from '../escalation.js'
 import { TICKET_STATUS_VALUES, ticketStatusKeySchema } from './ticket.js'
+import { escalationTargetSchema } from './target.js'
 
 /**
  * Contracts of the escalation configuration (`specs/07-escalation.md`
@@ -76,18 +77,17 @@ export const ESCALATION_ACTION_TYPES = [
 export type EscalationActionType = (typeof ESCALATION_ACTION_TYPES)[number]
 
 /**
- * The target of an `offer` or an `assign` action (§7.14, ADR-0026, ADR-0033): a
- * readiness pool of the on-call calendar (`pool`), a user group of the
+ * The target of an `offer` or an `assign` action (§7.14, ADR-0026, ADR-0033):
+ * a readiness pool of the on-call calendar (`pool`), a user group of the
  * administration (`group`) or one technician of the installation (`user`). The
  * jsonb of the action carries no foreign key, so the configuration service
  * checks the id against those rows.
+ *
+ * The schema lives in `schemas/target.ts` — the contract of the ticket names
+ * the target as well (`schemas/ticket.ts`).
  */
-export const escalationTargetSchema = z.object({
-  kind: z.enum(['pool', 'group', 'user']),
-  id: z.uuid(),
-})
-
-export type EscalationTarget = z.infer<typeof escalationTargetSchema>
+export { escalationTargetSchema } from './target.js'
+export type { EscalationTarget } from './target.js'
 
 /**
  * The target of a `notify` action: one user, a readiness pool whose
@@ -519,12 +519,18 @@ const escalationActionUnion = z.discriminatedUnion('type', [
     key: z.string().regex(escalationActionKeyPattern),
     type: z.literal('assign'),
     /**
-     * The mode of the assignment (§7.14, ADR-0039): `pool` hands the ticket to
-     * the first active member of the assignee pool, `user` names the technician
-     * in `user`.
+     * The target of the assignment (§7.14, ADR-0057): a readiness pool, a
+     * user group or one technician. The first member of the target gets the
+     * ticket; a refusal passes it to the next member.
      */
-    mode: z.enum(['pool', 'user']).default('pool'),
-    /** The technician of the assignment — only with the mode `user`. */
+    target: escalationTargetSchema.optional(),
+    /**
+     * The mode of the assignment — the former shape (ADR-0039, decision 3),
+     * superseded by ADR-0057. The contract keeps it readable until the
+     * interface has moved (WP-M32-03).
+     */
+    mode: z.enum(['pool', 'user']).optional(),
+    /** The technician of the former mode `user`. */
     user: z.uuid().optional(),
     /**
      * `true` — the technician has to answer the assignment (`offered`);
@@ -554,8 +560,22 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
   }
 
   if (action.type === 'assign') {
-    // The mode `user` names the technician, the mode `pool` takes him from
-    // the assignee pool of the installation (§7.14, ADR-0039).
+    if (action.target !== undefined) {
+      // The target names the technician or the list of the assignment
+      // (§7.14, ADR-0057); the former mode does not belong to it.
+      if (action.user !== undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['user'],
+          message: 'assign_has_no_user',
+        })
+      }
+
+      return
+    }
+
+    // The former shape (ADR-0039, decision 3): the mode `user` names the
+    // technician, the mode `pool` takes him from the pool of the office.
     if (action.mode === 'user' && action.user === undefined) {
       context.addIssue({
         code: 'custom',

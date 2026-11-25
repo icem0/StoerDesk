@@ -1,11 +1,11 @@
-# WP-M32-03: the interface assigns a target
+# WP-M32-04: the interface assigns a target
 
 format: ctx-256k
 status: planned
 phase: 32
 milestone: m32
 context-budget: 45k tokens
-depends-on: WP-M32-02
+depends-on: WP-M32-03
 spec: specs/07-escalation.md §7.14; docs/DECISIONS/0057-the-assignment-names-a-target-of-the-installation.md
 spec-lines: 60
 changed-lines: 420
@@ -53,7 +53,7 @@ interfaces:
 ## Non-goals
 
 - No change of the offer action and of its picker.
-- No removal of the setting `escalation.assignee_pool` — WP-M32-04 drops it.
+- No removal of the setting `escalation.assignee_pool` — WP-M32-05 drops it.
 - No new order for the members of a pool or of a group.
 
 ## Acceptance
@@ -71,12 +71,12 @@ the test of the action editor writes the target of the action `assign`.
 ## Handoff
 
 - Files changed: the eight files of `files-write`, the tests of the ticket view
-  and of the action editor, CHANGELOG.md
+  and of the action editor, CHANGELOG.md, docs/REPO-MAP.md
 - Interfaces added: the picker of the target in the ticket view, the target in
   the action editor
 - Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
   `npm run test:run`
-- Follow-up WP: WP-M32-04 (the purge of the rest)
+- Follow-up WP: WP-M32-05 (the purge of the rest)
 - Open question: none
 - Notes: the web sends the target and no longer reads the pool of the office —
-  the contract keeps the former fields readable until WP-M32-04 removes them.
+  the contract keeps the former fields readable until WP-M32-05 removes them.
