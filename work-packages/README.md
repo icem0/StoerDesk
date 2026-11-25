@@ -1848,16 +1848,17 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M30-05   | the alarm of a failed delivery — the task of the administration, throttled | planned | yes |
 | WP-M30-06   | the criterion of the phase — one task per user and event, the protocol and the alarm of a failure | planned | yes |
 | WP-M31-01   | the decisions of the customer portal — ADR-0053 … ADR-0056 | done | yes |
-| WP-M31-02   | the specification of the customer portal — the slice §19 and the amendment of the RBAC chapter | planned | yes |
-| WP-M31-03   | the role `customer` and the contracts of the portal — the permissions, the system role and the Zod contracts | planned | no |
-| WP-M31-04   | the data model of the phase — the migration `0062` with `account_tokens` and `object_assignments` | planned | no |
-| WP-M31-05   | the object carries its trained people — the assignments in the API and in the edit page of the object | planned | no |
-| WP-M31-06   | the registration of the customer — the token, the mail and the public routes | planned | no |
-| WP-M31-07   | the pages of the portal — the sign in, the registration, the activation and the own tickets | planned | no |
-| WP-M31-08   | the report by QR code registers the customer — the three checkboxes of the form and the transaction of the report | planned | no |
-| WP-M31-09   | the ticket carries the customer — the field of the internal creation and the list of the office | planned | no |
-| WP-M31-10   | the action `notify_reporter` — the mail to the reporter as an action of the escalation | planned | no |
-| WP-M31-11   | the criterion and the documentation of the phase — the acceptance test, the module map, the plan and the changelog | planned | no |
+| WP-M31-02   | the specification of the customer portal — the slice §19 and the amendment of the RBAC chapter | done | yes |
+| WP-M31-03   | the role `customer` and the contracts of the portal — the permissions, the system role and the Zod contracts | done | yes |
+| WP-M31-04   | the data model of the phase — the migration `0062` with `account_tokens` and `object_assignments` | done | yes |
+| WP-M31-05   | the object carries its trained people — the assignments in the API and in the edit page of the object | done | yes |
+| WP-M31-06   | the registration of the customer — the token, the mail and the public routes | done | yes |
+| WP-M31-07   | the pages of the portal — the sign in, the registration and the activation (profile `ctx-256k`) | planned | yes |
+| WP-M31-08   | the portal of the customer — his own open tickets and their history | planned | no |
+| WP-M31-09   | the report by QR code registers the customer — the three checkboxes of the form and the transaction of the report | planned | no |
+| WP-M31-10   | the ticket carries the customer — the field of the internal creation and the list of the office | planned | no |
+| WP-M31-11   | the action `notify_reporter` — the mail to the reporter as an action of the escalation | planned | no |
+| WP-M31-12   | the criterion and the documentation of the phase — the acceptance test, the module map, the plan and the changelog | planned | no |
 
 `WP-M1-23` … `WP-M1-27` close the last phase 1 record gaps: seven commits landed in
 phase 1 without a work package and without a WP id in the commit subject —

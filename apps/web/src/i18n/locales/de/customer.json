@@ -1,0 +1,68 @@
+{
+  "auth": {
+    "title": "Kundenportal",
+    "hint": "Anmelden oder Konto anlegen.",
+    "tabs": {
+      "login": "Anmelden",
+      "register": "Registrieren",
+      "reset": "Passwort vergessen"
+    },
+    "fields": {
+      "email": "E-Mail",
+      "password": "Passwort",
+      "newPassword": "Neues Passwort",
+      "givenName": "Vorname",
+      "familyName": "Nachname"
+    },
+    "login": {
+      "submit": "Anmelden",
+      "submitting": "Wird angemeldet …"
+    },
+    "register": {
+      "submit": "Konto anlegen",
+      "submitting": "Wird angelegt …",
+      "sent": "Wir haben Ihnen einen Link zum Bestätigen an {{email}} geschickt.",
+      "unavailable": "Die Registrierung ist in dieser Installation nicht möglich.",
+      "hint": "Sie erhalten einen Link, mit dem Sie Ihr Passwort setzen. Der Link ist 24 Stunden gültig."
+    },
+    "reset": {
+      "submit": "Neues Passwort anfordern",
+      "submitting": "Wird angefordert …",
+      "sent": "Wenn es ein Konto zu dieser Adresse gibt, haben wir Ihnen einen Link geschickt."
+    },
+    "activate": {
+      "title": "Passwort setzen",
+      "hint": "Mit diesem Link setzen Sie Ihr Passwort.",
+      "submit": "Passwort speichern",
+      "submitting": "Wird gespeichert …",
+      "done": "Ihr Passwort ist gespeichert. Sie können sich jetzt anmelden.",
+      "forbidden": "Dieser Link ist nicht mehr gültig. Bitte fordern Sie einen neuen an."
+    },
+    "errors": {
+      "invalid_credentials": "E-Mail oder Passwort stimmen nicht.",
+      "rate_limited": "Zu viele Versuche. Bitte warten Sie eine Minute.",
+      "invalid_request": "Die Eingaben sind unvollständig.",
+      "registration_unavailable": "Die Registrierung ist in dieser Installation nicht möglich.",
+      "token_unknown": "Dieser Link ist nicht mehr gültig.",
+      "token_expired": "Dieser Link ist abgelaufen. Bitte fordern Sie einen neuen an.",
+      "internal_error": "Die Anfrage ist fehlgeschlagen."
+    }
+  },
+  "portal": {
+    "title": "Meine Meldungen",
+    "hint": "Ihre offenen Meldungen.",
+    "empty": "Sie haben zurzeit keine offene Meldung.",
+    "loading": "Ihre Meldungen werden geladen …",
+    "objects": "Meine Anlagen",
+    "ticket": {
+      "number": "Meldungsnummer",
+      "object": "Anlage",
+      "priority": "Priorität",
+      "status": "Status",
+      "reportedAt": "Gemeldet am",
+      "description": "Beschreibung",
+      "history": "Verlauf",
+      "back": "Zurück zu meinen Meldungen"
+    }
+  }
+}

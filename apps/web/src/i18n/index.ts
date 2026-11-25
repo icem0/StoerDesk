@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next'
 
 import commonDe from './locales/de/common.json'
 import commonEn from './locales/en/common.json'
+import customerDe from './locales/de/customer.json'
+import customerEn from './locales/en/customer.json'
 import errorsDe from './locales/de/errors.json'
 import errorsEn from './locales/en/errors.json'
 import objectDe from './locales/de/object.json'
@@ -27,6 +29,7 @@ export const namespaces = [
   'oncall',
   'stats',
   'settings',
+  'customer',
 ] as const
 
 export type Namespace = (typeof namespaces)[number]
@@ -65,6 +68,7 @@ void i18n.use(initReactI18next).init({
       oncall: oncallDe,
       stats: statsDe,
       settings: settingsDe,
+      customer: customerDe,
     },
     en: {
       common: commonEn,
@@ -75,6 +79,7 @@ void i18n.use(initReactI18next).init({
       oncall: oncallEn,
       stats: statsEn,
       settings: settingsEn,
+      customer: customerEn,
     },
   },
   lng: initialLanguage(),

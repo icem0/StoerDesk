@@ -8,6 +8,8 @@ import { ChannelsPage } from '../admin/channels-page'
 import { EmailPage } from '../admin/email-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
+import { PortalActivatePage } from '../features/customer/portal-activate-page'
+import { PortalAuthPage } from '../features/customer/portal-auth-page'
 import { StatusCreatePage } from '../admin/status-create-page'
 import { WebhooksPage } from '../admin/webhooks-page'
 import { WebhookCreatePage } from '../admin/webhook-create-page'
@@ -552,6 +554,12 @@ export const routes: RouteObject[] = [
     path: '/tv/:token',
     element: <TvPage />,
   },
+
+  // The portal of the customer (`specs/19-customer-portal.md` §19.3): its pages lie
+  // outside the shell, like the report form — a customer never sees the menu of
+  // the office.
+  { path: '/portal/auth', element: <PortalAuthPage /> },
+  { path: '/portal/activate/:token', element: <PortalActivatePage /> },
 ]
 
 export const router = createBrowserRouter(routes)

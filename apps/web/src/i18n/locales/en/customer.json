@@ -1,0 +1,68 @@
+{
+  "auth": {
+    "title": "Customer portal",
+    "hint": "Sign in or create an account.",
+    "tabs": {
+      "login": "Sign in",
+      "register": "Register",
+      "reset": "Forgot password"
+    },
+    "fields": {
+      "email": "E-mail",
+      "password": "Password",
+      "newPassword": "New password",
+      "givenName": "First name",
+      "familyName": "Last name"
+    },
+    "login": {
+      "submit": "Sign in",
+      "submitting": "Signing in …"
+    },
+    "register": {
+      "submit": "Create account",
+      "submitting": "Creating …",
+      "sent": "We sent you a link to confirm to {{email}}.",
+      "unavailable": "Registration is not possible in this installation.",
+      "hint": "You receive a link that sets your password. The link is valid for 24 hours."
+    },
+    "reset": {
+      "submit": "Request a new password",
+      "submitting": "Requesting …",
+      "sent": "If there is an account with this address, we sent you a link."
+    },
+    "activate": {
+      "title": "Set the password",
+      "hint": "This link sets your password.",
+      "submit": "Save the password",
+      "submitting": "Saving …",
+      "done": "Your password is saved. You can sign in now.",
+      "forbidden": "This link is not valid any more. Please request a new one."
+    },
+    "errors": {
+      "invalid_credentials": "E-mail or password do not match.",
+      "rate_limited": "Too many attempts. Please wait a minute.",
+      "invalid_request": "The input is incomplete.",
+      "registration_unavailable": "Registration is not possible in this installation.",
+      "token_unknown": "This link is not valid any more.",
+      "token_expired": "This link has expired. Please request a new one.",
+      "internal_error": "The request failed."
+    }
+  },
+  "portal": {
+    "title": "My reports",
+    "hint": "Your open reports.",
+    "empty": "You have no open report at the moment.",
+    "loading": "Your reports are loading …",
+    "objects": "My installations",
+    "ticket": {
+      "number": "Report number",
+      "object": "Installation",
+      "priority": "Priority",
+      "status": "Status",
+      "reportedAt": "Reported at",
+      "description": "Description",
+      "history": "History",
+      "back": "Back to my reports"
+    }
+  }
+}
