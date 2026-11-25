@@ -432,7 +432,8 @@
           "history": "Notiz",
           "status_change": "Status change",
           "offer": "Ticket anbieten",
-          "assign": "Ticket zuweisen"
+          "assign": "Ticket zuweisen",
+          "notify_reporter": "Meldung an den Melder"
         },
         "number": "Aktion #{{number}}",
         "channels": "Kanäle",
@@ -517,6 +518,8 @@
         "webpush": "Web Push",
         "whatsapp": "WhatsApp"
       },
+      "channelNotFound": "Kanal nicht gefunden",
+      "channelNotFoundHint": "Der Kanal ist nicht bekannt oder existiert nicht mehr.",
       "fields": {
         "label": "Bezeichnung",
         "enabled": "Kanal aktiv",
@@ -804,7 +807,10 @@
       "saved": "Das Postfach ist gespeichert.",
       "saveFailed": "Das Postfach wurde nicht gespeichert.",
       "log": "Die letzten Zustellungen",
-      "logEmpty": "Noch keine Zustellung."
+      "logEmpty": "Noch keine Zustellung.",
+      "templateRegistration": "Registrierung",
+      "templatePasswordReset": "Neues Passwort",
+      "templateCustomerTicket": "Meldung an den Melder"
     }
   },
   "apiKeys": {

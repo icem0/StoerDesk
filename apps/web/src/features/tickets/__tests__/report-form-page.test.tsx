@@ -115,6 +115,12 @@ function stubPublicApi(
         return Response.json({ tickets: openTickets })
       }
 
+      // §19.6: the availability of the registration — the box „Registrieren"
+      // appears only with a mailbox of the instance.
+      if (path.includes('/public/auth/registration')) {
+        return Response.json({ available: true })
+      }
+
       if (path.includes('/public/tickets')) {
         bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
 
@@ -157,6 +163,8 @@ async function openForm(token?: string) {
 }
 
 function fillReport(faultLabel: string, description: string, phone: string) {
+  // §19.6: the confirmation of the trained person is mandatory.
+  fireEvent.click(screen.getByRole('checkbox', { name: /eingewiesene Person/ }))
   fireEvent.click(screen.getByRole('button', { name: faultLabel }))
   fireEvent.change(screen.getByRole('textbox', { name: 'Was ist zu sehen?' }), {
     target: { value: description },
@@ -234,11 +242,7 @@ describe('ReportFormPage', () => {
     const bodies = stubPublicApi()
     await openForm()
 
-    fillReport(
-      'Störung Melder',
-      'Rauchmelder im 2. Obergeschoss blinkt.',
-      '030 123456',
-    )
+    fillReport('Störung Melder', 'Rauchmelder im 2. Obergeschoss blinkt.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Störung melden' }))
 
     const body = await waitFor(() => {
@@ -461,11 +465,7 @@ describe('ReportFormPage', () => {
     // The hint is a notice — the send button of the form stays the way to report.
     expect(screen.getByRole('button', { name: 'Störung melden' })).toBeTruthy()
 
-    fillReport(
-      'Störung Melder',
-      'Die Störung besteht weiterhin.',
-      '030 123456',
-    )
+    fillReport('Störung Melder', 'Die Störung besteht weiterhin.', '030 123456')
     fireEvent.click(screen.getByRole('button', { name: 'Ergänzen' }))
 
     await waitFor(() => expect(comments).toHaveLength(1))

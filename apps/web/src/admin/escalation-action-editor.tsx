@@ -59,7 +59,10 @@ function selectionOf(event: { target: unknown }): string[] {
   }
 
   return typeof target.value === 'string'
-    ? target.value.split(',').map((entry) => entry.trim()).filter((entry) => entry !== '')
+    ? target.value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter((entry) => entry !== '')
     : []
 }
 
@@ -117,6 +120,17 @@ function actionOf(shape: ActionShape): EscalationActionConfig {
       key: shape.key,
       type: 'status_change',
       toStatus: shape.toStatus ?? '',
+      condition,
+    } as unknown as EscalationActionConfig
+  }
+
+  if (shape.type === 'notify_reporter') {
+    // §19.8 (ADR-0056): the report of the reporter. The action carries no
+    // configuration — the recipient is the address of the reporter and his
+    // opt-in decides whether the mail goes out.
+    return {
+      key: shape.key,
+      type: shape.type,
       condition,
     } as unknown as EscalationActionConfig
   }
@@ -313,12 +327,8 @@ export function EscalationActionEditor({
                         )
                       }}
                     >
-                      <option value="user">
-                        {t('admin.escalation.action.targetKinds.user')}
-                      </option>
-                      <option value="pool">
-                        {t('admin.escalation.action.targetKinds.pool')}
-                      </option>
+                      <option value="user">{t('admin.escalation.action.targetKinds.user')}</option>
+                      <option value="pool">{t('admin.escalation.action.targetKinds.pool')}</option>
                       <option value="assigned">
                         {t('admin.escalation.action.targetKinds.assigned')}
                       </option>
@@ -350,9 +360,7 @@ export function EscalationActionEditor({
                           )
                         }
                       >
-                        <option value="">
-                          {t('admin.escalation.action.targetChannels')}
-                        </option>
+                        <option value="">{t('admin.escalation.action.targetChannels')}</option>
                         {targetsOf(action).map((target) => (
                           <option key={target.id} value={target.id}>
                             {target.name}
@@ -372,9 +380,7 @@ export function EscalationActionEditor({
                       onChange={(event) =>
                         publish(
                           actions.map((entry, position) =>
-                            position === index
-                              ? { ...entry, priority: event.target.value }
-                              : entry,
+                            position === index ? { ...entry, priority: event.target.value } : entry,
                           ),
                         )
                       }
@@ -418,7 +424,9 @@ export function EscalationActionEditor({
                       >
                         {channels.map((channel) => (
                           <option key={channel} value={channel}>
-                            {t(`admin.escalation.action.channelLabels.${channel}`, { defaultValue: channel })}
+                            {t(`admin.escalation.action.channelLabels.${channel}`, {
+                              defaultValue: channel,
+                            })}
                           </option>
                         ))}
                       </select>
@@ -532,7 +540,9 @@ export function EscalationActionEditor({
                       }}
                     >
                       <option value="pool">{t('admin.escalation.action.targetKinds.pool')}</option>
-                      <option value="group">{t('admin.escalation.action.targetKinds.group')}</option>
+                      <option value="group">
+                        {t('admin.escalation.action.targetKinds.group')}
+                      </option>
                       <option value="user">{t('admin.escalation.action.targetKinds.user')}</option>
                     </select>
                   </label>
@@ -642,9 +652,7 @@ export function EscalationActionEditor({
               {canWrite ? (
                 <button
                   className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-                  onClick={() =>
-                    publish(actions.filter((_, position) => position !== index))
-                  }
+                  onClick={() => publish(actions.filter((_, position) => position !== index))}
                   type="button"
                 >
                   {t('admin.escalation.action.remove', { number: index + 1 })}
@@ -673,7 +681,18 @@ export function EscalationActionEditor({
           <button
             className="rounded bg-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
             onClick={() =>
-              publish([...actions, { key: `action_${actions.length + 1}`, type: 'notify', channels: [], targetKind: 'user', targetId: '', priority: '', condition: { all: [] } }])
+              publish([
+                ...actions,
+                {
+                  key: `action_${actions.length + 1}`,
+                  type: 'notify',
+                  channels: [],
+                  targetKind: 'user',
+                  targetId: '',
+                  priority: '',
+                  condition: { all: [] },
+                },
+              ])
             }
             type="button"
           >

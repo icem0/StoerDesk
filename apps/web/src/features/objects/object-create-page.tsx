@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import {
-  type CreateObjectRequest,
-  type TicketPriority,
-} from '@stoerdesk/shared'
+import { type CreateObjectRequest, type TicketPriority } from '@stoerdesk/shared'
 
 import { apiFetch } from '../../lib/api'
 
@@ -100,7 +97,9 @@ export function ObjectCreatePage() {
       </div>
 
       {error !== null ? (
-        <p className="text-rose-400 text-sm" role="alert">{error}</p>
+        <p className="text-rose-400 text-sm" role="alert">
+          {error}
+        </p>
       ) : null}
 
       <form className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit}>
@@ -115,15 +114,11 @@ export function ObjectCreatePage() {
             onChange={(event) => setObjectNo(event.target.value.toUpperCase())}
             placeholder="12345_01"
           />
-          <p className="text-xs text-slate-500">
-            {t('create.hints.objectNo')}
-          </p>
+          <p className="text-xs text-slate-500">{t('create.hints.objectNo')}</p>
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">
-            {t('create.fields.name')}
-          </label>
+          <label className="text-sm font-medium text-slate-200">{t('create.fields.name')}</label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={200}
@@ -144,7 +139,9 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.houseNumber')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('create.fields.houseNumber')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={40}
@@ -154,7 +151,9 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.postalCode')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('create.fields.postalCode')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={20}
@@ -174,7 +173,9 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.contactName')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('create.fields.contactName')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={160}
@@ -184,7 +185,9 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.contactPhone')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('create.fields.contactPhone')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={60}
@@ -194,7 +197,9 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.contactEmail')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('create.fields.contactEmail')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={320}
@@ -205,7 +210,9 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2 col-span-full">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.externalId')}</label>
+          <label className="text-sm font-medium text-slate-200">
+            {t('create.fields.externalId')}
+          </label>
           <input
             className="rounded bg-slate-900 p-2 text-slate-100"
             maxLength={120}
@@ -226,8 +233,11 @@ export function ObjectCreatePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('create.fields.priority')}</label>
+          <label className="text-sm font-medium text-slate-200" htmlFor="object-create-priority">
+            {t('create.fields.priority')}
+          </label>
           <select
+            id="object-create-priority"
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
             onChange={(event) => setPriority(event.target.value as TicketPriority | 'standard')}

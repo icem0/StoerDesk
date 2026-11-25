@@ -58,8 +58,7 @@ export interface NotificationChannel {
  * `apps/api/src/notifications/outbox.ts`), otherwise the PWA root — an empty
  * PWA url means no link and the adapters omit it (WP-M14-68, §11.5).
  */
-const messageLink = (env: Env, options?: MessageOptions): string =>
-  options?.deepLink ?? env.PWA_URL
+const messageLink = (env: Env, options?: MessageOptions): string => options?.deepLink ?? env.PWA_URL
 
 const signalChannel = async (
   env: Env,
@@ -237,6 +236,9 @@ const emailChannel = async (
           ticket: settings.templateTicket ?? '',
           readiness: settings.templateReadiness ?? '',
           test: settings.templateTest ?? '',
+          registration: settings.templateRegistration ?? '',
+          passwordReset: settings.templatePasswordReset ?? '',
+          customerTicket: settings.templateCustomerTicket ?? '',
         },
       },
       message,
@@ -436,11 +438,7 @@ export function configuredChannels(env: Env): NotificationChannel[] {
     })
   }
 
-  if (
-    env.VAPID_PUBLIC_KEY !== '' &&
-    env.VAPID_PRIVATE_KEY !== '' &&
-    env.VAPID_SUBJECT !== ''
-  ) {
+  if (env.VAPID_PUBLIC_KEY !== '' && env.VAPID_PRIVATE_KEY !== '' && env.VAPID_SUBJECT !== '') {
     channels.push({
       name: 'webpush',
       send: (message, options) => webPushChannel(env, message, options),

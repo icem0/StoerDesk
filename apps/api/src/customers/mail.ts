@@ -70,6 +70,7 @@ export async function readMailbox(database: Db, env: Env): Promise<Mailbox> {
       test: settings.templateTest ?? '',
       registration: settings.templateRegistration ?? '',
       passwordReset: settings.templatePasswordReset ?? '',
+      customerTicket: settings.templateCustomerTicket ?? '',
     },
   }
 

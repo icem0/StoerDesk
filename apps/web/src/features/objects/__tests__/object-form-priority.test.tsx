@@ -59,7 +59,9 @@ function renderEdit(priorityOverride: string | null) {
 }
 
 function prioritySelect(): HTMLSelectElement {
-  return screen.getByRole('combobox') as HTMLSelectElement
+  // The page carries a second select — the customer of the trained people of
+  // the object (WP-M31-05) — so the priority is named.
+  return screen.getByRole('combobox', { name: 'Priorität' }) as HTMLSelectElement
 }
 
 /** The input below the label — the labels of the form carry no `for`. */
@@ -103,7 +105,10 @@ describe('ObjectCreatePage', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string, init?: RequestInit) => {
-        calls.push({ url, body: init?.body === undefined ? undefined : JSON.parse(String(init.body)) })
+        calls.push({
+          url,
+          body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+        })
 
         return Response.json({})
       }),
@@ -129,7 +134,11 @@ describe('ObjectCreatePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Speichern' }))
 
     await waitFor(() => expect(calls.length).toBe(1))
-    expect(calls[0]?.body).toMatchObject({ objectNo: 'EXT-2', name: 'Werk Süd', priority: 'critical' })
+    expect(calls[0]?.body).toMatchObject({
+      objectNo: 'EXT-2',
+      name: 'Werk Süd',
+      priority: 'critical',
+    })
   })
 
   it('writes no deviation for a new object that follows the standard', async () => {
@@ -138,7 +147,10 @@ describe('ObjectCreatePage', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string, init?: RequestInit) => {
-        calls.push({ url, body: init?.body === undefined ? undefined : JSON.parse(String(init.body)) })
+        calls.push({
+          url,
+          body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+        })
 
         return Response.json({})
       }),

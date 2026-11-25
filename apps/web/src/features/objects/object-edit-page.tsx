@@ -281,8 +281,11 @@ export function ObjectEditPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200">{t('edit.fields.priority')}</label>
+          <label className="text-sm font-medium text-slate-200" htmlFor="object-priority">
+            {t('edit.fields.priority')}
+          </label>
           <select
+            id="object-priority"
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
             onChange={(event) => setPriority(event.target.value as TicketPriority | 'standard')}

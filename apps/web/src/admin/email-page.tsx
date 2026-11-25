@@ -38,6 +38,9 @@ interface MailConfig {
     ticket: string
     readiness: string
     test: string
+    registration: string
+    passwordReset: string
+    customerTicket: string
   }
 }
 
@@ -49,7 +52,14 @@ const emptyConfig: MailConfig = {
   user: '',
   from: '',
   displayName: '',
-  templates: { ticket: '', readiness: '', test: '' },
+  templates: {
+    ticket: '',
+    readiness: '',
+    test: '',
+    registration: '',
+    passwordReset: '',
+    customerTicket: '',
+  },
 }
 
 /** The configuration of the e-mail channel out of the answer of the channels. */
@@ -71,6 +81,9 @@ function configOf(channels: ChannelConfigurationListResponse['channels']): MailC
       ticket: channel.config.templateTicket ?? '',
       readiness: channel.config.templateReadiness ?? '',
       test: channel.config.templateTest ?? '',
+      registration: channel.config.templateRegistration ?? '',
+      passwordReset: channel.config.templatePasswordReset ?? '',
+      customerTicket: channel.config.templateCustomerTicket ?? '',
     },
   }
 }
@@ -93,7 +106,9 @@ export function EmailPage() {
   const deliveries = useQuery({
     queryKey: ['mailDeliveries'],
     queryFn: () =>
-      apiFetch<NotificationDeliveryListResponse>('/v1/admin/notifications/deliveries?channel=email'),
+      apiFetch<NotificationDeliveryListResponse>(
+        '/v1/admin/notifications/deliveries?channel=email',
+      ),
     enabled: mayRead,
     retry: false,
   })
@@ -120,6 +135,9 @@ export function EmailPage() {
             templateTicket: config.templates.ticket,
             templateReadiness: config.templates.readiness,
             templateTest: config.templates.test,
+            templateRegistration: config.templates.registration,
+            templatePasswordReset: config.templates.passwordReset,
+            templateCustomerTicket: config.templates.customerTicket,
           },
         }),
       }),
@@ -294,6 +312,39 @@ export function EmailPage() {
                 value={config.templates.test}
               />
             </label>
+
+            <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-registration">
+              {st('admin.email.templateRegistration')}
+              <textarea
+                className="min-h-24 rounded bg-slate-950 p-2 font-mono text-xs"
+                disabled={!mayWrite}
+                id="email-template-registration"
+                onChange={(event) => updateTemplate('registration', event.target.value)}
+                value={config.templates.registration}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-password-reset">
+              {st('admin.email.templatePasswordReset')}
+              <textarea
+                className="min-h-24 rounded bg-slate-950 p-2 font-mono text-xs"
+                disabled={!mayWrite}
+                id="email-template-password-reset"
+                onChange={(event) => updateTemplate('passwordReset', event.target.value)}
+                value={config.templates.passwordReset}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm" htmlFor="email-template-customer-ticket">
+              {st('admin.email.templateCustomerTicket')}
+              <textarea
+                className="min-h-24 rounded bg-slate-950 p-2 font-mono text-xs"
+                disabled={!mayWrite}
+                id="email-template-customer-ticket"
+                onChange={(event) => updateTemplate('customerTicket', event.target.value)}
+                value={config.templates.customerTicket}
+              />
+            </label>
           </section>
 
           <section className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -353,9 +404,7 @@ export function EmailPage() {
                     <span>{delivery.eventType}</span>
                     <span className="text-slate-400">{delivery.recipient}</span>
                     <span
-                      className={
-                        delivery.state === 'SENT' ? 'text-emerald-400' : 'text-rose-400'
-                      }
+                      className={delivery.state === 'SENT' ? 'text-emerald-400' : 'text-rose-400'}
                     >
                       {delivery.state}
                     </span>

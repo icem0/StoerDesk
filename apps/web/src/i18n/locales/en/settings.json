@@ -432,7 +432,8 @@
           "history": "Note",
           "status_change": "Status change",
           "offer": "Offer ticket",
-          "assign": "Assign ticket"
+          "assign": "Assign ticket",
+          "notify_reporter": "Report to the reporter"
         },
         "number": "Action #{{number}}",
         "channels": "Channels",
@@ -517,6 +518,8 @@
         "webpush": "Web Push",
         "whatsapp": "WhatsApp"
       },
+      "channelNotFound": "Channel not found",
+      "channelNotFoundHint": "The channel is not known or does not exist anymore.",
       "fields": {
         "label": "Label",
         "enabled": "Channel active",
@@ -804,7 +807,10 @@
       "saved": "The mailbox is saved.",
       "saveFailed": "The mailbox was not saved.",
       "log": "The last deliveries",
-      "logEmpty": "No delivery yet."
+      "logEmpty": "No delivery yet.",
+      "templateRegistration": "Registration",
+      "templatePasswordReset": "New password",
+      "templateCustomerTicket": "Report to the reporter"
     }
   },
   "apiKeys": {
