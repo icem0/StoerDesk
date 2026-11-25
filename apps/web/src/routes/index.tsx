@@ -9,6 +9,7 @@ import { EmailPage } from '../admin/email-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
 import { PortalActivatePage } from '../features/customer/portal-activate-page'
+import { PortalTicketPage, PortalTicketsPage } from '../features/customer/portal-tickets-page'
 import { PortalAuthPage } from '../features/customer/portal-auth-page'
 import { StatusCreatePage } from '../admin/status-create-page'
 import { WebhooksPage } from '../admin/webhooks-page'
@@ -560,6 +561,8 @@ export const routes: RouteObject[] = [
   // the office.
   { path: '/portal/auth', element: <PortalAuthPage /> },
   { path: '/portal/activate/:token', element: <PortalActivatePage /> },
+  { path: '/portal/tickets', element: <PortalTicketsPage /> },
+  { path: '/portal/tickets/:ticketNo', element: <PortalTicketPage /> },
 ]
 
 export const router = createBrowserRouter(routes)

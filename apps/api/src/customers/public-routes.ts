@@ -94,17 +94,17 @@ export const customerPublicRoutes = fp<CustomerPublicRouteOptions>(
 
           try {
             await sendRegistrationMail(mailbox, parsed.data.email, link, locale)
-          } catch (error) {
+          } catch {
             // A mail that fails does not undo the registration: the customer can
             // ask for a new link. The mail server is never named in the log.
             request.log.warn({ code: 'registration_mail_failed' }, 'registration mail failed')
           }
-        } catch (error) {
+        } catch (failure) {
           // An address that is already in use is not an error for the caller —
           // the answer stays the same, so the route does not name the addresses
           // of the installation.
-          if (!(error instanceof CustomerServiceError) || error.code !== 'email_taken') {
-            throw error
+          if (!(failure instanceof CustomerServiceError) || failure.code !== 'email_taken') {
+            throw failure
           }
         }
 
@@ -136,7 +136,7 @@ export const customerPublicRoutes = fp<CustomerPublicRouteOptions>(
 
           try {
             await sendPasswordResetMail(mailbox, parsed.data.email, link, 'de')
-          } catch (error) {
+          } catch {
             request.log.warn({ code: 'password_reset_mail_failed' }, 'password reset mail failed')
           }
         }
