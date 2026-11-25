@@ -4,6 +4,18 @@
 - Date: 2026-11-25
 - Stakeholders: office, technician, administration
 
+## Amendment (2026-11-25)
+
+The office reviewed the first build of the settings menu and corrected the
+decisions 2 and 3: the entry of the menu shows **the name alone** — the
+description under the name is gone, and the whole explanation opens in the
+panel of the ⓘ. „die info soll in einem mouseover stehen … und nicht
+zusätzliche infos“. Because the line is short now, the name of the entry is
+bigger than the text of the rest of the interface.
+
+The two tiers stay the rule for the surfaces that **need** a visible line — a
+hint the user must know before he clicks a field. The menu needs none.
+
 ## Context
 
 The interface explains itself in four unrelated ways: ~135 hint keys rendered
@@ -41,17 +53,22 @@ Three constraints make the literal request unsafe:
    on a click outside. It never closes on a timer. It hangs in the body of
    the document (`position: fixed`, the pattern of `row-menu.tsx`), so no
    scroll container and no sticky header clips it.
-2. **Two tiers of text.** An explanation exists in two lengths in the new
-   i18n namespace `help` (`apps/web/src/i18n/locales/<lng>/help.json`,
-   registered in `apps/web/src/i18n/index.ts`): `help.<surface>.<item>` is
-   the one-line **summary** that stays visible, `help.<surface>.<item>More`
-   is the **panel body** of at most three sentences.
+2. **Two tiers of text — only where a line must stay visible.** An explanation
+   exists in two lengths in the new i18n namespace `help`
+   (`apps/web/src/i18n/locales/<lng>/help.json`, registered in
+   `apps/web/src/i18n/index.ts`): `help.<surface>.<item>` is the one-line
+   **summary**, `help.<surface>.<item>More` is the **panel body** of at most
+   three sentences. A summary is **not** a second text beside every name — it
+   is used where the user must know something **before** he clicks (a field, a
+   rule). The menu of the settings needs none: it shows the name alone.
 3. **Three surfaces consume it, no other place writes prose.**
-   - the settings menu entry: symbol, label and summary stay visible; the
-     panel behind the ⓘ of the entry holds the detail. The entry becomes a
-     **row** — the label carries the link, the ⓘ sits beside it as a sibling.
-     A `<button>` inside an `<a>` is invalid HTML and unreachable by a
-     screen reader. The search matches label, summary **and** panel body.
+   - the settings menu entry: **the name alone** — symbol and name, no
+     description under it. The panel behind the ⓘ of the entry holds the whole
+     explanation. The entry becomes a **row** — the name carries the link, the
+     ⓘ sits beside it as a sibling. A `<button>` inside an `<a>` is invalid
+     HTML and unreachable by a screen reader. Because the line is short now,
+     the name is bigger than the text of the rest of the interface. The search
+     matches the name **and** the panel body.
    - the header menu: labels stay visible, no ⓘ — four entries in one row
      are named by their labels already.
    - every guarded page: the shell renders one page-level ⓘ next to the

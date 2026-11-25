@@ -789,11 +789,13 @@ Requirements:
 - every explanation of a place stands in **one mechanism** (`specs/13-ui.md`
   §14.13, ADR-0060, WP-M36-01 … WP-M36-08): an info symbol that opens a
   **panel at the place** — never a hover-only `title=`; an explanation exists
-  in two tiers in the namespace `help` (a visible one-line summary and the
-  panel body); the entry of the settings menu keeps symbol, label and summary
-  visible with the detail behind the ⓘ of the row, every guarded page carries
-  **one** page-level ⓘ in the shell whose panel explains the page, and a page
-  that explains itself carries none; `title=` is no content carrier any more;
+  in two tiers in the namespace `help` (a summary where a line must stay
+  visible, the panel body); the entry of the settings menu shows **the name
+  alone** — no description under it, the whole explanation opens behind the ⓘ
+  of the row, and the name is bigger because the line is short now; every
+  guarded page carries **one** page-level ⓘ in the shell whose panel explains
+  the page, and a page that explains itself carries none; `title=` is no
+  content carrier any more;
   the interface reads one step bigger (`styles.css` root font size, `text-slate-300`
   for the meta text) — and the 112 notice, the report form, the action bar, the
   bands, the mandatory badges, the reason of a blocked action and the settings
@@ -951,9 +953,10 @@ type scale rises one step in one rule of `styles.css`. **WP-M36-01** wrote the
 decision, `specs/13-ui.md` §14.13 and the eight work packages of the phase;
 **WP-M36-02** brought the mechanism (`help-popover.tsx`, the name `info` in
 `IconName`, the namespace `help`); **WP-M36-03** made the entry of the settings
-menu a **row** — symbol, label and summary visible, the detail behind the ⓘ, the
-search over label, summary and panel; **WP-M36-04** gave every guarded page one
-page-level ⓘ in the shell (31 explanations, none on a page that explains
+menu a **row** — symbol and **name only**, no description under the name, the
+whole explanation behind the ⓘ, the search over name and panel text, and the
+name bigger because the line is short now; **WP-M36-04** gave every guarded page
+one page-level ⓘ in the shell (33 explanations, none on a page that explains
 itself). **The phases before it are closed**: WP-M34-02a and WP-M34-02b (the
 technician who had the shift learns that his duty is gone) and WP-M35-03 (the
 ticket overview opens open) are implemented, so the phase can go on with

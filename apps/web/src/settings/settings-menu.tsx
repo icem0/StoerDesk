@@ -10,9 +10,7 @@ export interface SettingsMenuItem {
   path?: string
   icon?: IconName
   label: string
-  /** The one line that stays visible under the label. */
-  summary?: string
-  /** The full explanation — it opens in the panel of the ⓘ of the entry. */
+  /** The explanation — it opens in the panel of the ⓘ of the entry. */
   helpText?: string
   onClick?: () => void
 }
@@ -30,25 +28,26 @@ interface SettingsMenuProps {
 
 /**
  * The one-column menu of the settings (WP-M29-03, specs/13-ui.md §14.10).
- * Every entry wears its symbol, its label and a short summary; a search
- * field filters label, summary and the explanation of the entry; **every
- * section is always visible** — no section folds away, so every path of the
- * administration stands there without a second click. The search field is
- * what makes the long list manageable. The component renders nothing a
- * search term hides.
+ * Every entry wears its symbol and **its name** — nothing else; a search
+ * field filters the name and the explanation of the entry; **every section is
+ * always visible** — no section folds away, so every path of the administration
+ * stands there without a second click. The search field is what makes the long
+ * list manageable. The component renders nothing a search term hides.
  *
  * The explanation of an entry opens in the **panel of its ⓘ**
  * (`specs/13-ui.md` §14.13, ADR-0060): the entry is a **row**, not a link
  * that wraps the button — a `<button>` inside an `<a>` is invalid markup and
- * unreachable for a screen reader. The search matches the text of the panel
- * too: an explanation the user cannot see is no explanation for the search.
+ * unreachable for a screen reader. The menu shows **only the name**: the
+ * description under the name is gone, so the name can be bigger and the list
+ * stays scannable. The search still matches the text of the panel — an
+ * explanation the user cannot see is no explanation for the search.
  */
 export function SettingsMenu({ sections }: SettingsMenuProps) {
   const { t } = useTranslation('common')
   const [query, setQuery] = useState('')
 
   const visible = (item: SettingsMenuItem): boolean => {
-    const text = `${item.label} ${item.summary ?? ''} ${item.helpText ?? ''}`.toLowerCase()
+    const text = `${item.label} ${item.helpText ?? ''}`.toLowerCase()
     return text.includes(query.toLowerCase())
   }
 
@@ -128,26 +127,28 @@ interface SettingsMenuEntryProps {
 }
 
 /**
- * The entry of the menu is a **row**: the label carries the link and the ⓘ
+ * The entry of the menu is a **row**: the name carries the link and the ⓘ
  * sits beside it as a sibling (`specs/13-ui.md` §14.13, ADR-0060). The button
  * of the panel may not live inside the link — a `<button>` inside an `<a>` is
  * invalid markup and a screen reader never reaches it.
+ *
+ * The entry shows **the name only** — the office asked for prägnante Namen
+ * („keine zusätzlichen Infos“). Because the line is short now, the name is
+ * bigger than the text of the rest of the interface.
  */
 function SettingsMenuEntry({ item, itemClass }: SettingsMenuEntryProps): ReactElement {
   const location = useLocation()
+  const { t } = useTranslation('common')
   const active = item.path !== undefined && location.pathname.startsWith(item.path)
 
-  const linkClass = `flex min-h-11 flex-1 items-center gap-3 rounded-lg px-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
-    active ? 'text-accent-300' : 'text-slate-200'
+  const linkClass = `flex min-h-11 flex-1 items-center gap-3 rounded-lg px-2 text-base transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
+    active ? 'text-accent-300' : 'text-slate-100'
   }`
 
   const content = (
     <>
-      {item.icon && <Icon name={item.icon} className="h-5 w-5 shrink-0" />}
-      <div className="min-w-0">
-        <p className="leading-none truncate">{item.label}</p>
-        {item.summary && <p className="mt-1 text-sm leading-snug text-slate-300">{item.summary}</p>}
-      </div>
+      {item.icon && <Icon name={item.icon} className="h-6 w-6 shrink-0" />}
+      <span className="leading-tight truncate">{item.label}</span>
     </>
   )
 
@@ -165,6 +166,7 @@ function SettingsMenuEntry({ item, itemClass }: SettingsMenuEntryProps): ReactEl
       {item.helpText ? (
         <HelpPopover
           className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+          label={t('help:triggerFor', { name: item.label })}
           text={item.helpText}
         />
       ) : null}

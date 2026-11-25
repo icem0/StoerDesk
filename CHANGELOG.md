@@ -75,11 +75,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   keyboard, cannot be zoomed and closes on a timer (§14.2). One component
   `apps/web/src/components/help-popover.tsx` answers all three requests: a real
   button with the info symbol (the name `info` in `IconName`) that toggles a
-  panel anchored at the place, never on a timer. Every explanation exists in
-  **two tiers** in the new i18n namespace `help` — a visible one-line summary
-  and a panel body of at most three sentences. The entry of the settings menu
-  keeps symbol, label and summary visible and opens the detail behind the ⓘ of
-  the **row** (the entry was a link that wrapped everything, and a `<button>`
+  panel anchored at the place, never on a timer. Every explanation lives in the
+  new i18n namespace `help` — a summary where a line must stay visible and a
+  panel body of at most three sentences. The entry of the settings menu shows
+  **the name alone**: no description under it, the whole explanation opens in
+  the panel of the ⓘ of the **row**, and the name is bigger because the line
+  is short now (the entry was a link that wrapped everything, and a `<button>`
   inside an `<a>` is invalid and unreachable); every guarded page carries **one**
   page-level ⓘ in the shell, and a page that explains itself — a help page, the
   overview of the own channels — carries none. The 27 native `title=` tooltips

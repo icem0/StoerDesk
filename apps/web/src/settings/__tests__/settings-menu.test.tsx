@@ -16,7 +16,6 @@ const sections = [
         path: '/settings/me',
         icon: 'user',
         label: 'Meine Einstellungen',
-        summary: 'Name, Sprache, Thema und Passwort',
         helpText: 'Dein eigener Name, die Sprache der Oberfläche und dein Passwort.',
       },
       {
@@ -24,7 +23,6 @@ const sections = [
         path: '/settings/notifications',
         icon: 'bell',
         label: 'Benachrichtigungen',
-        summary: 'Kanäle, die dich erreichen',
         helpText: 'Hier stehen die Kanäle, über die das System dich erreicht.',
       },
     ],
@@ -38,7 +36,6 @@ const sections = [
         path: '/admin/users',
         icon: 'users',
         label: 'Benutzer',
-        summary: 'Benutzer, Rollen und Gruppen',
         helpText: 'Die Benutzer der Installation mit ihren Rollen und Gruppen.',
       },
       {
@@ -46,7 +43,6 @@ const sections = [
         path: '/admin/channels',
         icon: 'radio',
         label: 'Kanäle',
-        summary: 'Kanäle, Zustellung, Mailbox',
         helpText: 'Die Meldekanäle der Installation mit ihren Zugangsdaten.',
       },
     ],
@@ -63,7 +59,7 @@ function renderMenu() {
   )
 }
 
-/** The ⓘ of the entry with that label — it sits beside the link of the entry. */
+/** The ⓘ of the entry with that name — it sits beside the link of the entry. */
 function triggerOf(label: string): HTMLElement {
   const card = screen.getByText(label).closest('a')?.parentElement
   const trigger = card?.querySelector('button')
@@ -76,12 +72,11 @@ function triggerOf(label: string): HTMLElement {
 }
 
 describe('SettingsMenu', () => {
-  it('renders every entry with its symbol, its label and its summary', async () => {
+  it('renders every entry with its symbol and its name', async () => {
     renderMenu()
 
     expect(screen.getByText('Mein Bereich')).toBeTruthy()
     expect(screen.getByText('Meine Einstellungen')).toBeTruthy()
-    expect(screen.getByText('Name, Sprache, Thema und Passwort')).toBeTruthy()
     expect(screen.getByText('Verwaltung')).toBeTruthy()
     await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
 
@@ -91,7 +86,7 @@ describe('SettingsMenu', () => {
       expect(row).not.toBeNull()
       expect(row?.getAttribute('aria-hidden')).toBe('true')
       // The symbol keeps its distance to the text (WP-M29-10).
-      expect(row?.getAttribute('class')).toContain('h-5')
+      expect(row?.getAttribute('class')).toContain('h-6')
       expect(entry.closest('a')?.getAttribute('class')).toContain('gap-3')
     }
 
@@ -101,19 +96,43 @@ describe('SettingsMenu', () => {
     )
   })
 
+  it('shows the name alone — no description under it', async () => {
+    renderMenu()
+    await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
+
+    // The office asked for prägnante Namen: the description under the name is
+    // gone, the explanation opens in the panel of the ⓘ.
+    expect(screen.queryByText('Kanäle, Zustellung, Mailbox')).toBeNull()
+    expect(screen.queryByText('Dein eigener Name, die Sprache der Oberfläche und dein Passwort.')).toBeNull()
+  })
+
+  it('makes the name bigger than the text of the rest of the interface', async () => {
+    renderMenu()
+    await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
+
+    expect(screen.getByText('Kanäle').closest('a')?.getAttribute('class')).toContain('text-base')
+  })
+
   it('opens the explanation of an entry in the panel of its ⓘ', async () => {
     renderMenu()
     await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
 
     expect(screen.queryByRole('note')).toBeNull()
 
-    expect(screen.getAllByRole('button', { name: 'Erklärung anzeigen' }).length).toBe(4)
-
     fireEvent.click(triggerOf('Kanäle'))
 
     expect(screen.getByRole('note').textContent).toContain(
       'Die Meldekanäle der Installation mit ihren Zugangsdaten.',
     )
+  })
+
+  it('names the ⓘ after the entry, so the list of them is readable', async () => {
+    renderMenu()
+    await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
+
+    expect(
+      screen.getByRole('button', { name: 'Erklärung zu Kanäle' }),
+    ).toBeTruthy()
   })
 
   it('keeps the button of the panel beside the link, never inside it', async () => {
@@ -123,7 +142,7 @@ describe('SettingsMenu', () => {
     expect(triggerOf('Kanäle').closest('a')).toBeNull()
   })
 
-  it('filters by label, summary and the explanation of the entry', async () => {
+  it('filters by the name and by the explanation of the entry', async () => {
     renderMenu()
     await waitFor(() => expect(screen.getByText('Kanäle')).toBeTruthy())
 
@@ -132,7 +151,7 @@ describe('SettingsMenu', () => {
 
     expect(screen.getByText('Kanäle')).toBeTruthy()
     expect(screen.queryByText('Meine Einstellungen')).toBeNull()
-    // „Benachrichtigungen“ passt selbst über seine Beschreibung auf „Kanäle“,
+    // „Benachrichtigungen“ passt selbst über seine Erklärung auf „Kanäle“,
     // deshalb bleibt der Abschnitt sichtbar.
     expect(screen.getByText('Mein Bereich')).toBeTruthy()
 

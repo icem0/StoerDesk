@@ -31,7 +31,7 @@ files-write:
 - docs/DECISIONS/0060-an-explanation-of-a-place-is-a-help-popover.md
 - work-packages/m36/01-an-explanation-of-a-place-is-a-help-popover.md (this document)
 - work-packages/m36/02-the-help-popover-and-the-info-symbol-exist-once.md
-- work-packages/m36/03-an-entry-of-the-settings-menu-keeps-its-summary-visible.md
+- work-packages/m36/03-an-entry-of-the-settings-menu-shows-its-name-alone.md
 - work-packages/m36/04-every-guarded-page-names-itself-with-one-info-symbol.md
 - work-packages/m36/05-the-administration-names-its-keys-and-its-blocks-in-a-panel.md
 - work-packages/m36/06-the-readiness-and-the-tickets-name-their-marks-in-a-panel.md

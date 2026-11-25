@@ -1893,7 +1893,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M35-03   | the ticket overview opens open — the option „nur offene“ is gone, the checkbox „Erledigte anzeigen“ takes the completed tickets in, and the filters sit in a menu behind the Filter button (ADR-0059, out of band) | done | yes |
 | WP-M36-01   | an explanation of a place is a help popover — the scope, `specs/13-ui.md` §14.13, ADR-0060 and the plan of the phase | done | yes |
 | WP-M36-02   | the help popover and the info symbol exist once — `help-popover.tsx`, the name `info` in `IconName`, the namespace `help` | done | yes |
-| WP-M36-03   | an entry of the settings menu keeps its summary visible — the entry becomes a row (a `<button>` inside the link of the entry was invalid), the detail opens behind the ⓘ, the search matches the panel body | done | yes |
+| WP-M36-03   | an entry of the settings menu shows its name alone — no description under the name, the whole explanation opens behind the ⓘ of the row, the name is bigger, the search matches the panel text | done | yes |
 | WP-M36-04   | every guarded page names itself with one info symbol — the shell renders one page-level ⓘ beside the version, a page that explains itself renders none | done | yes |
 | WP-M36-05   | the administration names its keys and its blocks in a panel — the `title=` of the statuses, the detected errors, the text templates, the readiness page, the users, the channel form and the row menu move to the panel | planned | yes |
 | WP-M36-06   | the readiness and the tickets name their marks in a panel — the readiness cell, the shift actions, the deadline of a row and the milestones of the timeline | planned | yes |
