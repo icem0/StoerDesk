@@ -36,6 +36,13 @@ itself is never part of the application.
   upstream commit, whether an update is available, the number of commits behind
   and the commits themselves (sha, message, date) — plus the button that starts
   the update.
+- **The button in the unknown state.** The button appears when an update is
+  available **and** when the versions cannot be compared (`commitsBehind: null`):
+  a comparison that GitHub refuses is an unknown state, not a proof that nothing
+  is newer. The panel names the consequence above the button, the confirm step
+  uses its own text (the stack fetches the newest state of the branch in any
+  case). The button stays away when the comparison **proves** that the installed
+  version is up to date.
 - The panel reads `GET /api/v1/admin/update/check` and starts the update with
   `POST /api/v1/admin/update/start`. The button is disabled while the request
   runs and the panel states that the stack restarts itself and is briefly
@@ -85,8 +92,11 @@ itself is never part of the application.
 `POST /api/v1/admin/update/start` (guard `system.update`):
 
 - The server checks again whether an update is available (the cached answer is
-  reused while it is younger than 60 seconds). Without an available update the
-  route answers `409 update_no_update_available`.
+  reused while it is younger than 60 seconds). **Only a comparison that proves
+  the up-to-date state refuses the start** (`409 update_no_update_available`): a
+  comparison that GitHub refuses (`commitsBehind: null`) and an unknown
+  installed version (`current: null`) are unknown states — the start runs, the
+  webhook is called and the route answers `202`.
 - The server sends `POST $UPDATE_WEBHOOK_URL` with the header
   `X-Deploy-Token: $UPDATE_WEBHOOK_TOKEN` and a body it builds itself
   (`{ "version": …, "current": …, "requestedAt": … }`). **No value of the

@@ -109,6 +109,35 @@ describe('UpdatePanel', () => {
     expect(await screen.findByText('Die Versionen lassen sich nicht vergleichen.')).toBeTruthy()
   })
 
+  it('offers the update even when the versions cannot be compared', async () => {
+    stubRoutes({
+      '/v1/admin/update/check': checkPayload({
+        updateAvailable: false,
+        commitsBehind: null,
+        commits: [],
+      }),
+      '/v1/admin/update/start': { started: true },
+    })
+
+    renderPanel()
+
+    const button = await screen.findByRole('button', { name: /Update starten/ })
+
+    fireEvent.click(button)
+
+    expect(await screen.findByText(/holt den neuesten Stand des Branches/)).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Ja, Update starten/ }))
+
+    await waitFor(() => {
+      expect(
+        fetchCalls.some(
+          (call) => call.url.includes('/v1/admin/update/start') && call.method === 'POST',
+        ),
+      ).toBe(true)
+    })
+  })
+
   it('asks for a confirmation before the update starts', async () => {
     stubRoutes({
       '/v1/admin/update/check': checkPayload(),

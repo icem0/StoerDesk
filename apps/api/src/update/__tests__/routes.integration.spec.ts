@@ -325,6 +325,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(webhookCalls()).toHaveLength(0)
     })
 
+    it('starts the update even when the versions cannot be compared', async () => {
+      upstream.compareStatus = 404
+
+      const response = await postStart(adminCookie)
+
+      expect(response.statusCode).toBe(202)
+      expect(response.json()).toEqual({ started: true })
+      expect(webhookCalls()).toHaveLength(1)
+    })
+
     it('refuses the start without a configured webhook', async () => {
       process.env.UPDATE_WEBHOOK_URL = ''
 

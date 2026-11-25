@@ -168,7 +168,11 @@ export const updateRoutes = fp<UpdateRouteOptions>(
           return reply.code(503).send(envelope)
         }
 
-        if (!answer.updateAvailable) {
+        // Only a comparison that **proves** the up-to-date state refuses the
+        // start. A refused comparison (an installed version that is not part of
+        // the upstream history) is an unknown state, not a proof that nothing is
+        // newer — the operator who starts the update decides.
+        if (answer.commitsBehind === 0) {
           return reply.code(409).send({ code: 'update_no_update_available', params: {} })
         }
 

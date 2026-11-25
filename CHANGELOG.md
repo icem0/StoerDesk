@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **The update starts even when the versions cannot be compared (WP-M39-01).**
+  The update menu of the administration said „Die Versionen lassen sich nicht
+  vergleichen.“ and offered no update: the panel showed the message instead of
+  the button and `POST /api/v1/admin/update/start` refused the start with
+  `409 update_no_update_available`. The comparison is refused by GitHub whenever
+  the installed version is not part of the upstream history — a version tag that
+  was never pushed upstream. **The unknown state is not a proof that nothing is
+  newer:** the start now runs whenever the comparison is unknown
+  (`commitsBehind: null`, an unknown installed version included) and only the
+  proven up-to-date state (`commitsBehind: 0`) refuses it. The panel offers the
+  button „Update starten“ in that state, names the consequence above it and uses
+  its own text in the confirm step (`specs/18-self-update.md` §18.2, §18.4).
+
 ### Added
 - **The public view of an open ticket of the object (WP-M38-02, ADR-0061).** The holder
   of the QR code of an object stands at that object: the code is the capability
@@ -4901,4 +4915,3 @@ database …`. Without that variable the runner prints its skip notice and `npm 
   never read. The paths of the band carry no prefix any more — the bell of the
   shell asked the same number without one and worked.
 
-<!-- probe-marker -->

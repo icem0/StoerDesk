@@ -104,6 +104,10 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
 
   const data = check.data
   const started = start.isSuccess
+  // The update may be started when an update is available and when the
+  // comparison is unknown — only the proven up-to-date state blocks it.
+  const startable = data !== undefined && (data.updateAvailable || data.commitsBehind === null)
+  const notComparable = data !== undefined && data.commitsBehind === null
 
   return (
     <div className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
@@ -160,6 +164,12 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
           )
         ) : null}
 
+        {/* The versions cannot be compared: the state is unknown, not a proof
+            that nothing is newer — the operator may start the update anyway. */}
+        {data !== undefined && data.commitsBehind === null ? (
+          <p className="mt-1 text-xs text-slate-400">{t('admin.update.notComparableHint')}</p>
+        ) : null}
+
         {data !== undefined && data.commits.length > 0 ? (
           <ul className="mt-3 space-y-2">
             {data.commits.map((commit) => (
@@ -194,10 +204,10 @@ export function UpdatePanel({ onClose }: { onClose: () => void }) {
           </button>
         ) : null}
 
-        {data?.updateAvailable === true && !started ? (
+        {startable && !started ? (
           confirming ? (
             <div className="mt-3 flex flex-col gap-2">
-              <p>{t('admin.update.confirm')}</p>
+              <p>{notComparable ? t('admin.update.confirmNotComparable') : t('admin.update.confirm')}</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   className="rounded bg-accent-600 px-3 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
