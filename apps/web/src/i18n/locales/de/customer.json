@@ -64,6 +64,7 @@
       "history": "Verlauf",
       "back": "Zurück zu meinen Meldungen",
       "emailNotifications": "Meldungen über E-Mail zu dieser Meldung empfangen"
-    }
+    },
+    "addressHint": "Hier stehen auch die Meldungen, die mit Ihrer E-Mail-Adresse gemeldet wurden."
   }
 }

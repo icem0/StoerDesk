@@ -64,6 +64,7 @@
       "history": "History",
       "back": "Back to my reports",
       "emailNotifications": "Receive messages about this report by e-mail"
-    }
+    },
+    "addressHint": "This list also holds the reports that were made with your e-mail address."
   }
 }

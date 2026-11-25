@@ -1,4 +1,4 @@
-import { and, desc, eq, notInArray } from 'drizzle-orm'
+import { and, desc, eq, notInArray, or, sql } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 import {
   customerNotificationsRequestSchema,
@@ -13,6 +13,19 @@ import { requirePermission } from '../auth/requirePermission'
 import type { Database } from '../db/client'
 import { objectAssignments, objects, ticketEvents, tickets } from '../db/schema'
 
+/**
+ * The tickets of the customer: the ones whose customer he is and the ones
+ * that carry his address — a report he made before his registration belongs
+ * to him as well (§19.5).
+ */
+function ownTickets(request: { user?: { id: string; email: string } }) {
+  const email = request.user?.email ?? ''
+
+  return or(
+    eq(tickets.customerUserId, customerIdOf(request)),
+    email === '' ? undefined : sql`lower(${tickets.reporterEmail}) = lower(${email})`,
+  )
+}
 /** The id of the signed-in customer — the guard of the route needs a session. */
 function customerIdOf(request: { user?: { id: string } }): string {
   return request.user?.id ?? ''
@@ -72,12 +85,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
         })
         .from(tickets)
         .innerJoin(objects, eq(objects.id, tickets.objectId))
-        .where(
-          and(
-            eq(tickets.customerUserId, customerIdOf(request)),
-            notInArray(tickets.status, TERMINAL_STATUSES),
-          ),
-        )
+        .where(and(ownTickets(request), notInArray(tickets.status, TERMINAL_STATUSES)))
         .orderBy(desc(tickets.reportedAt))
 
       return {
@@ -117,9 +125,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
         })
         .from(tickets)
         .innerJoin(objects, eq(objects.id, tickets.objectId))
-        .where(
-          and(eq(tickets.ticketNo, parsed.data), eq(tickets.customerUserId, customerIdOf(request))),
-        )
+        .where(and(eq(tickets.ticketNo, parsed.data), ownTickets(request)))
         .limit(1)
 
       const [row] = rows

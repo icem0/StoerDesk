@@ -45,6 +45,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     let otherCookie = ''
     let customerId = ''
     let ticketNo = ''
+    let otherTicketNo = ''
 
     async function customerWithTicket(email: string): Promise<{ id: string; ticketNo: string }> {
       const [user] = await db
@@ -85,6 +86,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         payload: { text: 'Nur für das Büro' },
       })
 
+      // A report that was made before the registration: it carries his
+      // address, but no customer — the portal finds it anyway (§19.5).
+      const [older] = await db
+        .insert(tickets)
+        .values({
+          objectId,
+          reporterEmail: email,
+          title: 'Die RWA springt nicht an',
+          reportedAt: new Date(),
+          deadlineAt: new Date(Date.now() + 3_600_000),
+        })
+        .returning({ ticketNo: tickets.ticketNo })
+
       return { id, ticketNo: ticket!.ticketNo }
     }
 
@@ -104,6 +118,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       customerId = customer.id
       ticketNo = customer.ticketNo
+
+      otherTicketNo = other.ticketNo
 
       customerCookie = `session=${(await createSession(db, customer.id, 1)).token}`
       otherCookie = `session=${(await createSession(db, other.id, 1)).token}`
@@ -128,8 +144,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(answer.statusCode).toBe(200)
 
       const body = answer.json() as TicketListAnswer
+      const numbers = body.tickets?.map((ticket) => ticket.ticketNo) ?? []
 
-      expect(body.tickets?.map((ticket) => ticket.ticketNo)).toEqual([ticketNo])
+      // His own ticket and the report that carries his address — but never
+      // the ticket of the other customer.
+      expect(numbers).toContain(ticketNo)
+      expect(numbers).not.toContain(otherTicketNo)
     })
 
     it('does not answer the ticket of another customer', async () => {
@@ -194,6 +214,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       })
 
       expect(answer.statusCode).toBe(404)
+    })
+
+    it('shows the reports that carry his address', async () => {
+      const answer = await app.inject({
+        method: 'GET',
+        url: '/api/v1/customer/tickets',
+        headers: { cookie: customerCookie },
+      })
+
+      expect(answer.statusCode).toBe(200)
+
+      const body = answer.json() as TicketListAnswer
+      const numbers = body.tickets?.map((ticket) => ticket.ticketNo) ?? []
+
+      expect(numbers).toContain(ticketNo)
+      expect(numbers.length).toBeGreaterThan(1)
     })
 
     it('shows the own objects', async () => {
