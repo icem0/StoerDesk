@@ -17,4 +17,8 @@ if [ "$count" -gt 3 ]; then
   exit 1
 fi
 
-exit 0
+# The same static gates as CI plus the tests, so a push cannot carry a red
+# typecheck, lint, i18n or unit/integration test into GitHub. The browser E2E
+# stays in CI: it needs the runner's database and Chromium and is part of the
+# `check` job there (PLAN.md §18.1).
+npm run check:push || exit 1

@@ -1,2 +1,6 @@
-npm run lint
+# The static gates of `npm run check` (typecheck, lint, i18n, wp) run before
+# every commit. The commit hook used to run only `lint`, so a type error was
+# committed locally and only the CI typecheck found it. The gate is the same
+# script CI runs, so a green commit can no longer be red in GitHub (PLAN.md §18.1).
+npm run check:static
 node scripts/version-file.mjs

@@ -1836,7 +1836,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M29-02   | the symbols of the surface — the shared `Icon` component and the symbols of the header menu | planned | yes     |
 | WP-M29-03   | the settings menu is single-column — symbols, descriptions, search, collapsible sections, work surfaces leave the menu | planned | yes     |
 | WP-M29-04   | the overview pages of the administration — Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand | planned | yes     |
-| WP-M29-05   | every channel its own page — `/admin/channels/:kind` with Matrix as the first channel page | planned | yes     |
+| WP-M29-05   | every channel its own page — `/admin/channels/:kind` with Matrix as the first channel page | done | yes     |
 | WP-M29-06   | one shell for the administration — the `admin-layout.tsx` hull and the first batch of pages | planned | yes     |
 | WP-M29-07   | one shell for the administration — the second batch of pages | planned | yes     |
 | WP-M29-08   | one shell for the administration — the third batch of pages | planned | yes     |

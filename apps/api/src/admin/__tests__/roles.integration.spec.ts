@@ -172,7 +172,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const body = response.json<RolesResponseBody>()
 
       expect(response.statusCode).toBe(200)
-      expect(body.roles).toHaveLength(5)
+      expect(body.roles).toHaveLength(Object.keys(DEFAULT_ROLES).length)
 
       // The counts come from the catalog of the shared package: a hard-coded
       // number goes stale with every new permission key (WP-M14-131 added the
@@ -344,7 +344,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const list = await getRoles(cookies['admin'])
 
-      expect(list.json<RolesResponseBody>().roles).toHaveLength(5)
+      expect(list.json<RolesResponseBody>().roles).toHaveLength(Object.keys(DEFAULT_ROLES).length)
 
       const grantRows = await db
         .select({ roleId: schema.rolePermissions.roleId })

@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   reporter decides whether it goes out.
 
 ### Changed
+- The local hooks run the same quality gate as CI (phase 31, tooling): the
+  `pre-commit` hook calls `npm run check:static` (typecheck, lint, i18n, wp)
+  instead of `lint` alone, and the `pre-push` hook calls `npm run check:push`
+  (the static gates plus the tests, everything but the browser E2E). Both call
+  the same `scripts/check.mjs` as `npm run check`, so a type error can no longer
+  be committed locally and fail the GitHub typecheck — the recurring red CI runs
+  came from a typecheck that only ever ran in CI.
 - The message is a task and the delivery attempt is the protocol
   (**WP-M30-01**, phase 30, ADR-0052): the inbox of a user shows **one task
   per user and event** — the readable text, the deep link into the ticket or
@@ -42,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tasks at all and when a task is closed belong to the settings of the
   workflow and are not decided here. The spec decides the model; the packages
   WP-M30-02 … WP-M30-06 build it.
+- Every channel gets its own page (**WP-M29-05**, phase 29): the form of a
+  channel leaves the overview page and lives in `channel-form-parts.tsx` as the
+  component `ChannelCard`; the page `/admin/channels/:kind` renders the form of
+  the requested channel — Matrix with its homeserver and its room, ntfy with its
+  topic and its verification, and every other kind with its own fields. An
+  unknown channel stays without a form and names itself as not found.
 - The administration splits into four topic pages (**WP-M29-04**, phase 29): Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand. Each page lists its modules with a symbol and a short description, reusing the settings menu component. The menu entries link to the topic pages instead of the individual modules.
 - The settings menu is single-column with a symbol and a description per entry
   (**WP-M29-03**, phase 29, ADR-0051): a shared `settings-menu.tsx` component

@@ -4435,6 +4435,14 @@ goes through the optional override `docker-compose.debug.yml`.
 - **The pre-push hook enforces it.** `.husky/pre-push` counts the `refs/tags/*`
   lines on stdin and refuses a push with more than three tags. Every work package is
   pushed immediately with `git push --follow-tags`, never batched (WP-M1-28).
+- **The hooks run the same gate as CI.** `.husky/pre-commit` calls
+  `npm run check:static` (typecheck, lint, i18n, wp) before the version is written,
+  and `.husky/pre-push` calls `npm run check:push` (the static gates plus the
+  tests, everything but the browser E2E) before the refs leave the machine. Both
+  scripts call `scripts/check.mjs`, the same entry point as `npm run check`, so the
+  local gate can never be weaker than the CI gate: a red typecheck in GitHub means
+  the commit hook did not run, never that the local check was narrower. The E2E
+  needs the runner's database and Chromium and stays in the `check` job.
 - **Promotion requires a successful publish, and a deploy follows it.** The `promote`
   job runs only when `needs.publish.result == 'success'`, so a failed image build
   cannot split `latest`. The `deploy` job runs after `promote`, only for the highest

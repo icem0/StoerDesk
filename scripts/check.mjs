@@ -11,8 +11,20 @@
 //
 // Every gate writes its own log; the first failure ends the run with the exit
 // code of the gate, so a red gate is a red gate.
+//
+// The Husky hooks reuse exactly this gate, so a local check can never be weaker
+// than CI (PLAN.md §18.1):
+//
+//   node scripts/check.mjs --static   only the static gates (pre-commit)
+//   node scripts/check.mjs --no-e2e   everything but the browser E2E (pre-push)
+//
+// A red typecheck in CI means the same typecheck was never run locally; the
+// hooks exist so that cannot happen silently any more.
 
 import { spawn } from 'node:child_process'
+
+const staticOnly = process.argv.includes('--static')
+const withoutE2e = process.argv.includes('--no-e2e')
 
 /** The static gates of the check — they run beside each other. */
 const staticGates = [
@@ -48,7 +60,15 @@ async function main() {
     return failed.code
   }
 
+  if (staticOnly) {
+    return 0
+  }
+
   for (const gate of sequentialGates) {
+    if (withoutE2e && gate.name === 'e2e') {
+      continue
+    }
+
     const result = await run(gate)
 
     if (result.code !== 0) {

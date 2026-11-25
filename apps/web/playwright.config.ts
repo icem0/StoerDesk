@@ -56,6 +56,13 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
   expect: { timeout: 5_000 },
+  // The artifacts of the run (the trace of a failed test, the screenshots, the
+  // error context) go into the temporary directory of the machine and not into the
+  // working tree: the repository lives on a network filesystem in some environments,
+  // and writing the trace files there fails with ENOENT while the test itself
+  // passed — a red gate without a red test. The directory of the run is therefore
+  // disposable and outside the repository.
+  outputDir: join(tmpdir(), 'stoerdesk-e2e-results'),
   // The seeded administrator and the rate limit are shared state — one worker only.
   fullyParallel: false,
   workers: 1,

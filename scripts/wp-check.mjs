@@ -73,6 +73,25 @@ function markdownFiles(directory) {
   return files
 }
 
+/**
+ * A test or a fixture does not count as a source file (PLAN.md §17: "max. 10
+ * changed source files (tests and fixtures excluded)"). The work packages
+ * name their test directories as `__tests__` or, in the markdown of the
+ * packages, as `**tests**`.
+ */
+function isTestPath(path) {
+  return (
+    path.includes('__tests__') ||
+    path.includes('**tests**') ||
+    path.includes('/tests/') ||
+    /\.(test|spec)\.[a-z]+$/.test(path)
+  )
+}
+
+function sourcePaths(paths) {
+  return paths.filter((path) => !isTestPath(path))
+}
+
 function value(content, key) {
   const match = new RegExp(`^${key}:[ \\t]*(.*)$`, 'm').exec(content)
   return match === null ? null : match[1].trim()
@@ -138,16 +157,19 @@ function checkFile(path) {
   const write = list(content, 'files-write') ?? []
   const interfaces = list(content, 'interfaces') ?? []
 
+  const readSources = sourcePaths(read)
+  const writeSources = sourcePaths(write)
+
   if (read.length === 0) {
     errors.push('files-read needs at least one entry')
-  } else if (read.length > limits.readFiles) {
-    errors.push(`files-read has ${read.length} entries (max ${limits.readFiles})`)
+  } else if (readSources.length > limits.readFiles) {
+    errors.push(`files-read has ${readSources.length} source files (max ${limits.readFiles})`)
   }
 
   if (write.length === 0) {
     errors.push('files-write needs at least one entry')
-  } else if (write.length > limits.writeFiles) {
-    errors.push(`files-write has ${write.length} entries (max ${limits.writeFiles})`)
+  } else if (writeSources.length > limits.writeFiles) {
+    errors.push(`files-write has ${writeSources.length} source files (max ${limits.writeFiles})`)
   }
 
   if (interfaces.length === 0) {

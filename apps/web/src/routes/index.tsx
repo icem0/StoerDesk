@@ -5,6 +5,7 @@ import { AccessPage } from '../admin/access-page'
 import { ApiKeysPage } from '../admin/api-keys-page'
 import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
+import { ChannelPage } from '../admin/channel-page'
 import { EmailPage } from '../admin/email-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
@@ -176,6 +177,17 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <ChannelsPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // Jeder Kanal hat seine eigene Seite (WP-M29-05): das Formular von
+        // ChannelCard, das vorher auf der Kanalseite alle Kanäle auf einmal
+        // zeigte, rendert hier genau einen Kanal.
+        path: '/admin/channels/:kind',
+        element: (
+          <RequireSession>
+            <ChannelPage />
           </RequireSession>
         ),
       },
