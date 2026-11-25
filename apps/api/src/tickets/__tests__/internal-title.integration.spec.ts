@@ -69,18 +69,25 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal ticket creation
     )
   }
 
-  async function storedTitle() {
-    const rows = await db
+  /**
+   * Reads the title of exactly the ticket the case created. The tickets of the
+   * four cases share one object and stay in the table, so a read of "the last
+   * row of the object" without an `ORDER BY` is not the ticket of this case and
+   * made the suite flaky.
+   */
+  async function storedTitle(ticketId: string) {
+    const [row] = await db
       .select({ title: schema.tickets.title })
       .from(schema.tickets)
-      .where(eq(schema.tickets.objectId, objectId))
+      .where(eq(schema.tickets.id, ticketId))
+      .limit(1)
 
-    return rows[rows.length - 1]?.title ?? null
+    return row?.title ?? null
   }
 
   it('drops the title when the branding row is missing', async () => {
-    await createTicket('Rauchmelder 2. OG')
-    expect(await storedTitle()).toBeNull()
+    const ticket = await createTicket('Rauchmelder 2. OG')
+    expect(await storedTitle(ticket.ticketId)).toBeNull()
   })
 
   it('drops the title when titleEnabled is false', async () => {
@@ -88,8 +95,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal ticket creation
       key: 'branding',
       value: { companyName: '', titleEnabled: false, logo: '' },
     })
-    await createTicket('Rauchmelder 2. OG')
-    expect(await storedTitle()).toBeNull()
+    const ticket = await createTicket('Rauchmelder 2. OG')
+    expect(await storedTitle(ticket.ticketId)).toBeNull()
   })
 
   it('keeps the title when titleEnabled is true', async () => {
@@ -97,8 +104,8 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal ticket creation
       key: 'branding',
       value: { companyName: 'Switch GmbH', titleEnabled: true, logo: '' },
     })
-    await createTicket('Rauchmelder 2. OG')
-    expect(await storedTitle()).toBe('Rauchmelder 2. OG')
+    const ticket = await createTicket('Rauchmelder 2. OG')
+    expect(await storedTitle(ticket.ticketId)).toBe('Rauchmelder 2. OG')
   })
 
   it('drops the title when titleEnabled is malformed', async () => {
@@ -106,7 +113,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('internal ticket creation
       key: 'branding',
       value: { companyName: '', titleEnabled: 'yes', logo: '' },
     })
-    await createTicket('Rauchmelder 2. OG')
-    expect(await storedTitle()).toBeNull()
+    const ticket = await createTicket('Rauchmelder 2. OG')
+    expect(await storedTitle(ticket.ticketId)).toBeNull()
   })
 })
