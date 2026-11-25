@@ -189,7 +189,9 @@
         "channel": "Meldungskanal",
         "channelPhone": "Telefon",
         "channelEmail": "E-Mail",
-        "channelMessenger": "Messenger"
+        "channelMessenger": "Messenger",
+        "customer": "Kunde (eingewiesene Person)",
+        "customerPlaceholder": "Kein Kunde"
       },
       "priority": {
         "low": "Niedrig",

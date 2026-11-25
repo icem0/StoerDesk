@@ -189,7 +189,9 @@
         "channel": "Report channel",
         "channelPhone": "Phone",
         "channelEmail": "E‑mail",
-        "channelMessenger": "Messenger"
+        "channelMessenger": "Messenger",
+        "customer": "Customer (trained person)",
+        "customerPlaceholder": "No customer"
       },
       "priority": {
         "low": "Low",

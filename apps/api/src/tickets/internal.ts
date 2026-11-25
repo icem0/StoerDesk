@@ -15,7 +15,7 @@ import {
 import { requirePermission, requireScopeOrPermission } from '../auth/requirePermission'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
-import { objects, ticketEvents, tickets, users } from '../db/schema'
+import { objectAssignments, objects, ticketEvents, tickets, users } from '../db/schema'
 import { enqueueOutbox } from '../notifications/outbox'
 import { effectiveNtfyConfig } from '../notifications/verification'
 import { readObjectPriority } from '../objects/priority'
@@ -139,6 +139,28 @@ export async function createInternalTicket(
     reporterEmail = reporterEmail ?? reporter.email
   }
 
+  // §19.7: the customer of the ticket is one of the trained people of the object
+  // (ADR-0055). The reporter stays free text — the customer is not the
+  // reporter.
+  let customerUserId: string | null = null
+
+  if (input.customerUserId !== undefined) {
+    const [customer] = await database
+      .select({ id: users.id })
+      .from(users)
+      .innerJoin(objectAssignments, eq(objectAssignments.userId, users.id))
+      .where(and(eq(users.id, input.customerUserId), eq(objectAssignments.objectId, object.id)))
+      .limit(1)
+
+    if (customer === undefined) {
+      throw new InternalTicketRouteError(422, 'customer_not_found', {
+        fields: ['customerUserId'],
+      })
+    }
+
+    customerUserId = customer.id
+  }
+
   const env = loadEnv()
   // Only a verified ntfy target receives the event; an unconfirmed channel
   // gets no row at all (WP-M14-47).
@@ -165,6 +187,7 @@ export async function createInternalTicket(
         reporterChannel: input.reporterChannel ?? null,
         reporterKind: input.reporterKind ?? null,
         reportedByUserId,
+        customerUserId,
       })
       .returning()
 
@@ -252,14 +275,21 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
           if (!external.success) {
             return reply
               .code(400)
-              .send({ code: 'invalid_request', params: { fields: externalFieldPaths(external.error) } })
+              .send({
+                code: 'invalid_request',
+                params: { fields: externalFieldPaths(external.error) },
+              })
           }
 
           try {
             const result = await createExternalTicket(database, external.data, apiKey.id)
             return reply.code(201).send(internalCreateTicketResponseSchema.parse(result))
           } catch (error) {
-            const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+            const err = error as {
+              statusCode?: number
+              code?: string
+              params?: Record<string, unknown>
+            }
 
             if (err.statusCode !== undefined) {
               return reply.code(err.statusCode).send({ code: err.code, params: err.params })
@@ -272,7 +302,9 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
         const parsed = internalCreateTicketRequestSchema.safeParse(request.body)
 
         if (!parsed.success) {
-          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
 
         const user = request.user
@@ -333,7 +365,9 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
         const parsed = COMMENT_BODY.safeParse(request.body)
 
         if (!parsed.success) {
-          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
 
         const user = request.user
@@ -356,11 +390,19 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
             payload: { text: parsed.data.text },
           })
 
-          const body = { ticketNo: applied.ticket.ticketNo, at: applied.event.createdAt.toISOString(), replayed: applied.replayed }
+          const body = {
+            ticketNo: applied.ticket.ticketNo,
+            at: applied.event.createdAt.toISOString(),
+            replayed: applied.replayed,
+          }
 
           return reply.code(applied.replayed ? 200 : 201).send(body)
         } catch (error) {
-          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          const err = error as {
+            statusCode?: number
+            code?: string
+            params?: Record<string, unknown>
+          }
           if (err.statusCode !== undefined) {
             return reply.code(err.statusCode).send({ code: err.code, params: err.params })
           }
@@ -382,7 +424,9 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
         const parsed = COMMENT_BODY.safeParse(request.body)
 
         if (!parsed.success) {
-          return reply.code(400).send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
+          return reply
+            .code(400)
+            .send({ code: 'invalid_request', params: { fields: fieldPaths(parsed.error) } })
         }
 
         const user = request.user
@@ -405,11 +449,19 @@ export const internalTicketRoutes = fp<InternalTicketRouteOptions>(
             payload: { text: parsed.data.text },
           })
 
-          const body = { ticketNo: applied.ticket.ticketNo, at: applied.event.createdAt.toISOString(), replayed: applied.replayed }
+          const body = {
+            ticketNo: applied.ticket.ticketNo,
+            at: applied.event.createdAt.toISOString(),
+            replayed: applied.replayed,
+          }
 
           return reply.code(applied.replayed ? 200 : 201).send(body)
         } catch (error) {
-          const err = error as { statusCode?: number; code?: string; params?: Record<string, unknown> }
+          const err = error as {
+            statusCode?: number
+            code?: string
+            params?: Record<string, unknown>
+          }
           if (err.statusCode !== undefined) {
             return reply.code(err.statusCode).send({ code: err.code, params: err.params })
           }

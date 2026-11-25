@@ -7,6 +7,7 @@ import {
   type DeadlineHours,
   type InternalCreateTicketRequest,
   type InternalCreateTicketResponse,
+  type ObjectAssignment,
   type ReporterUserListResponse,
   type StandardTextLocale,
   type TicketPriority,
@@ -214,7 +215,11 @@ function ObjectPicker({
   }
 
   const noMatch =
-    search.trim() !== '' && !isLoading && !isError && regularObjects.length === 0 && pinnedObjects.length === 0
+    search.trim() !== '' &&
+    !isLoading &&
+    !isError &&
+    regularObjects.length === 0 &&
+    pinnedObjects.length === 0
   const value = open ? search : selected !== undefined ? objectLabel(selected) : ''
 
   return (
@@ -311,6 +316,8 @@ export function InternalCreatePage() {
   const navigate = useNavigate()
 
   const [selectedObjectId, setSelectedObjectId] = useState('')
+  /** §19.7: the customer of the ticket — the trained people of the object. */
+  const [customerUserId, setCustomerUserId] = useState('')
   const [pickedObject, setPickedObject] = useState<ObjectOption | undefined>(undefined)
   const [objectInfo, setObjectInfo] = useState('')
   const [title, setTitle] = useState('')
@@ -339,6 +346,19 @@ export function InternalCreatePage() {
   /** WP-M2-98c: the internal reporter picker only loads for the internal kind. */
   const reporterUsers = useReporterUsers(reporterKind === 'internal').data?.users ?? []
 
+  /** The trained people of the picked object (§19.2). */
+  const assignmentsQuery = useQuery({
+    queryKey: ['objects', 'assignments', pickedObject?.objectNo],
+    queryFn: () =>
+      apiFetch<{ assignments: ObjectAssignment[] }>(
+        `/v1/objects/${pickedObject?.objectNo ?? ''}/assignments`,
+      ),
+    enabled: pickedObject !== undefined && pickedObject.pinned !== true,
+    retry: false,
+  })
+
+  const assignments = assignmentsQuery.data?.assignments ?? []
+
   function priorityLabel(priority: 'low' | 'normal' | 'high' | 'critical', label: string): string {
     const hours = deadlineHours?.[priority]
 
@@ -356,6 +376,9 @@ export function InternalCreatePage() {
   function pickObject(object: ObjectOption) {
     setPickedObject(object)
     setSelectedObjectId(object.id)
+    // §19.7: the customer of the ticket belongs to the object — a new object
+    // starts with no customer.
+    setCustomerUserId('')
     // The priority of the object is the start of the form (ADR-0029): the user
     // may choose another one.
     setPriority(object.priority ?? 'normal')
@@ -422,6 +445,8 @@ export function InternalCreatePage() {
         objectInfo:
           pickedObject?.pinned === true && objectInfo.trim() !== '' ? objectInfo.trim() : undefined,
         faultTemplateKeys: faultKeys,
+        // §19.7: the customer of the ticket.
+        customerUserId: customerUserId === '' ? undefined : customerUserId,
         photos,
         priority,
         contact: {
@@ -504,7 +529,10 @@ export function InternalCreatePage() {
         </div>
         {pickedObject?.pinned === true ? (
           <div className="flex flex-col gap-2 col-span-full">
-            <label className="text-sm font-medium text-slate-200" htmlFor="internal-create-object-info">
+            <label
+              className="text-sm font-medium text-slate-200"
+              htmlFor="internal-create-object-info"
+            >
               {t('internal.create.fields.objectInfo')}
             </label>
             <textarea
@@ -582,9 +610,7 @@ export function InternalCreatePage() {
           <select
             className="rounded bg-slate-900 p-2 text-slate-100"
             value={priority}
-            onChange={(event) =>
-              setPriority(event.target.value as TicketPriority)
-            }
+            onChange={(event) => setPriority(event.target.value as TicketPriority)}
           >
             <option value="low">{priorityLabel('low', t('internal.create.priority.low'))}</option>
             <option value="normal">
@@ -644,6 +670,29 @@ export function InternalCreatePage() {
                 {reporterUsers.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name} · {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          {/* §19.7: the customer of the ticket — the trained people of the
+              object (ADR-0055). The reporter stays free text. */}
+          {assignments.length > 0 ? (
+            <div className="mb-3 flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-200" htmlFor="internal-customer">
+                {t('internal.create.fields.customer')}
+              </label>
+              <select
+                className="rounded bg-slate-900 p-2 text-slate-100"
+                id="internal-customer"
+                value={customerUserId}
+                onChange={(event) => setCustomerUserId(event.target.value)}
+              >
+                <option value="">{t('internal.create.fields.customerPlaceholder')}</option>
+                {assignments.map((assignment) => (
+                  <option key={assignment.userId} value={assignment.userId}>
+                    {`${assignment.familyName} ${assignment.givenName}`.trim()}
                   </option>
                 ))}
               </select>
