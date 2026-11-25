@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { type ReactElement, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 
 import { Icon, type IconName } from '../components/icon'
 
-interface SettingsMenuItem {
+export interface SettingsMenuItem {
   key: string
   path?: string
   icon?: IconName
@@ -13,7 +13,7 @@ interface SettingsMenuItem {
   onClick?: () => void
 }
 
-interface SettingsMenuSection {
+export interface SettingsMenuSection {
   key: string
   label: string
   icon?: IconName
@@ -153,8 +153,8 @@ interface SettingsMenuEntryProps {
   itemClass: (isActive: boolean) => string
 }
 
-function SettingsMenuEntry({ item, itemClass }: SettingsMenuEntryProps): JSX.Element {
-  const renderContent = (): JSX.Element => (
+function SettingsMenuEntry({ item, itemClass }: SettingsMenuEntryProps): ReactElement {
+  const renderContent = (): ReactElement => (
     <>
       {item.icon && <Icon name={item.icon} className="h-5 w-5 shrink-0" />}
       <div className="min-w-0">

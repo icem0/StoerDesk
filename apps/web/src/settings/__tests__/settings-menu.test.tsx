@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 
 import { i18n } from '../../i18n'
-import { SettingsMenu } from '../settings-menu'
+import { SettingsMenu, type SettingsMenuSection } from '../settings-menu'
 
 const sections = [
   {
@@ -24,7 +24,7 @@ const sections = [
       { key: 'messaging', path: '/admin/messaging', icon: 'radio', label: 'Kanäle & Versand', description: 'Kanäle, Zustellung, Mailbox' },
     ],
   },
-]
+] satisfies SettingsMenuSection[]
 
 function renderMenu() {
   return render(
