@@ -194,15 +194,29 @@ jobs:
           SOURCE_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          jq -cn \
+          payload=$(jq -cn \
             --arg ref "$VERSION" \
             --arg version "$VERSION" \
             --arg notes "$NOTES" \
             --arg source_run "$SOURCE_RUN" \
-            '{ref: $ref, inputs: {version: $version, notes: $notes, source_run: $source_run, mode: "check"}}' |
-            gh api --method POST \
+            '{ref: $ref, inputs: {version: $version, notes: $notes, source_run: $source_run, mode: "check"}}')
+          # GitHub answers the dispatch of a workflow run sporadically with the server
+          # error 500 ("Failed to run workflow dispatch"): on 2026-11-25 the run `v1.2.225`
+          # lost its publish run that way, although every gate of the version was green.
+          # The dispatch is therefore repeated. A double dispatch of the same version is
+          # harmless - both runs publish the same images and promote the same `latest`,
+          # and the concurrency group `publish-<version>` keeps them apart.
+          for attempt in 1 2 3; do
+            if echo "$payload" | gh api --method POST \
               "repos/${GITHUB_REPOSITORY}/actions/workflows/build.yml/dispatches" \
-              --input -
+              --input -; then
+              exit 0
+            fi
+            echo "The dispatch of the publish run failed (attempt ${attempt}/3) - GitHub answered with a server error." >&2
+            [ "$attempt" = 3 ] || sleep 20
+          done
+          echo "The publish run of ${VERSION} was not dispatched after three attempts." >&2
+          exit 1
 
       - name: Document the dispatch in the run summary
         env:

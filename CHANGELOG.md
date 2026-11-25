@@ -174,6 +174,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`mode`, `user`, `userId`) are removed — the assignment names its
   target and nothing else.
 
+### Fixed
+- The publish run is dispatched even when GitHub stumbles (no work package): the
+  run `v1.2.225` (2026-11-25) failed in the job `Dispatch publish run` with the
+  server error `500` of GitHub (`Failed to run workflow dispatch`), although
+  every gate of the version was green — the version lost its images and the run
+  stayed red. The dispatch is now repeated up to three times; a double dispatch
+  of the same version is harmless, because both runs publish the same images and
+  promote the same `latest`. After the third attempt the job fails as before and
+  the version keeps its missing images until a person dispatches the publish run
+  by hand (PLAN.md §18.3).
+
 ### Added
 - The customer portal (**WP-M31-01 … WP-M31-13**, phase 31, ADR-0053 … ADR-0056):
   the customer of an installation is a **user with the role `customer`** and
@@ -4889,3 +4900,5 @@ database …`. Without that variable the runner prints its skip notice and `npm 
   stood, the tone of the browser never played and the silence of the user was
   never read. The paths of the band carry no prefix any more — the bell of the
   shell asked the same number without one and worked.
+
+<!-- probe-marker -->

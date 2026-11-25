@@ -4582,6 +4582,14 @@ goes through the optional override `docker-compose.debug.yml`.
   (`Publish <service> image <version>`) and their job summaries (what is new,
   publisher, image names, tags, version, source SHA, source run URL) are the second
   carrier of that information.
+- The dispatch is **repeated three times**: GitHub answers the endpoint sporadically
+  with the server error `500` ("Failed to run workflow dispatch"), and the version of
+  such a run would never publish its images although every gate of it is green (the
+  run `v1.2.225` on 2026-11-25). A double dispatch of the same version is harmless —
+  both runs publish the same images and promote the same `latest`, and the concurrency
+  group `publish-<version>` keeps the runs apart. After the third attempt the job
+  fails, the run stays red and the version keeps its missing images until a person
+  dispatches the publish run by hand.
 - A publish run writes the version tags of its commit (`v0.0.NN`, `0.0.NN`,
   `sha-<sha>`) and then **promotes `latest`** to the newest version that exists in
   the registry: the promotion reads the tags, takes the highest one and points
