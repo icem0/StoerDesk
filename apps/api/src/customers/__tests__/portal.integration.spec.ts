@@ -88,16 +88,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       // A report that was made before the registration: it carries his
       // address, but no customer — the portal finds it anyway (§19.5).
-      const [older] = await db
-        .insert(tickets)
-        .values({
-          objectId,
-          reporterEmail: email,
-          title: 'Die RWA springt nicht an',
-          reportedAt: new Date(),
-          deadlineAt: new Date(Date.now() + 3_600_000),
-        })
-        .returning({ ticketNo: tickets.ticketNo })
+      await db.insert(tickets).values({
+        objectId,
+        reporterEmail: email,
+        title: 'Die RWA springt nicht an',
+        reportedAt: new Date(),
+        deadlineAt: new Date(Date.now() + 3_600_000),
+      })
 
       return { id, ticketNo: ticket!.ticketNo }
     }

@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   of the reporter leaves the installation as the **action `notify_reporter`**
   of the escalation: the office decides per stage and rule, the opt-in of the
   reporter decides whether it goes out.
+  The **customer decides himself** about the messages about his ticket
+  (**WP-M31-14**): the opt-in belongs to the reporter, and the portal carries
+  the switch. The portal also holds the **reports that carry his address**
+  (**WP-M31-15**) — a report he made before his registration belongs to him as
+  well. The administration knows the customer (**WP-M31-16**): the field of the
+  roles shows a readable name and the role `customer` carries a hint.
 
 ### Fixed
 - The local hooks run the same quality gate as CI (phase 31, tooling): the
