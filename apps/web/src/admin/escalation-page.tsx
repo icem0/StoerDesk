@@ -284,7 +284,7 @@ export function EscalationPage() {
         <h1 className="text-xl font-semibold">{t('admin.escalation.title')}</h1>
       </div>
 
-      <div className="flex flex-wrap gap-2" data-testid="escalation-tabs">
+      <div className="flex flex-wrap items-center gap-2" data-testid="escalation-tabs">
         <button
           className={`rounded px-3 py-2 text-sm ${tab === 'fristen' ? 'bg-accent-700 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
           onClick={() => setTab('fristen')}
@@ -299,6 +299,19 @@ export function EscalationPage() {
         >
           {t('admin.escalation.tabs.stages')}
         </button>
+        {tab === 'fristen' ? (
+          <HelpPopover
+            className={popoverClass}
+            label={t('help:triggerFor', { name: t('admin.escalation.tabs.fristen') })}
+            text={t('help:escalation.deadlinesMore')}
+          />
+        ) : (
+          <HelpPopover
+            className={popoverClass}
+            label={t('help:triggerFor', { name: t('admin.escalation.tabs.stages') })}
+            text={t('help:escalation.stagesMore')}
+          />
+        )}
       </div>
 
       {saveRules.isError || saveHours.isError ? (
@@ -329,11 +342,6 @@ export function EscalationPage() {
               </label>
             ))}
           </div>
-          <HelpPopover
-            className={popoverClass}
-            label={t('help:triggerFor', { name: t('admin.escalation.tabs.fristen') })}
-            text={t('help:escalation.deadlinesMore')}
-          />
           {!canWrite ? (
             <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p>
           ) : null}
@@ -351,11 +359,6 @@ export function EscalationPage() {
 
       {tab === 'stages' ? (
         <div className="flex flex-col gap-4">
-          <HelpPopover
-            className={popoverClass}
-            label={t('help:triggerFor', { name: t('admin.escalation.tabs.stages') })}
-            text={t('help:escalation.stagesMore')}
-          />
           <ol className="flex flex-col gap-4" data-testid="escalation-stage-list">
             {config.stages.map((stage) => {
               const key = stage.key
@@ -799,7 +802,14 @@ function RuleForm({
         data-testid="escalation-rule-timeline"
       >
         <legend className="px-1 text-xs font-medium text-slate-300">
-          {t('admin.escalation.rule.timeline')}
+          <span className="inline-flex items-center gap-1 align-middle">
+            {t('admin.escalation.rule.timeline')}
+            <HelpPopover
+              className={`${popoverClass} -my-3`}
+              label={t('help:triggerFor', { name: t('admin.escalation.rule.timeline') })}
+              text={t('help:escalation.timelineMore')}
+            />
+          </span>
         </legend>
         <div className="flex flex-wrap items-end gap-2">
           <label className="text-xs text-slate-400">
@@ -864,19 +874,19 @@ function RuleForm({
             </label>
           ))}
         </div>
-        <HelpPopover
-          className={popoverClass}
-          label={t('help:triggerFor', { name: t('admin.escalation.rule.timeline') })}
-          text={t('help:escalation.timelineMore')}
-        />
       </fieldset>
 
-      <div className="mt-3 flex items-center gap-2">
-        <HelpPopover
-          className={popoverClass}
-          label={t('help:triggerFor', { name: t('admin.escalation.condition.modeLabel') })}
-          text={t('help:escalation.conditionMore')}
-        />
+      <section className="mt-4 flex flex-col gap-2">
+        <header className="flex items-center gap-1">
+          <h3 className="text-xs font-medium text-slate-300">
+            {t('admin.escalation.condition.modeLabel')}
+          </h3>
+          <HelpPopover
+            className={`${popoverClass} -my-3`}
+            label={t('help:triggerFor', { name: t('admin.escalation.condition.modeLabel') })}
+            text={t('help:escalation.conditionMore')}
+          />
+        </header>
         <EscalationConditionBuilder
           initial={rule.condition}
           canWrite={canWrite}
@@ -884,14 +894,19 @@ function RuleForm({
           pools={pools}
           onCondition={(next) => apply({ ...rule, condition: next })}
         />
-      </div>
+      </section>
 
-      <div className="mt-3 flex items-center gap-2">
-        <HelpPopover
-          className={popoverClass}
-          label={t('help:triggerFor', { name: t('admin.escalation.rule.actions') })}
-          text={t('help:escalation.actionsMore')}
-        />
+      <section className="mt-4 flex flex-col gap-2">
+        <header className="flex items-center gap-1">
+          <h3 className="text-xs font-medium text-slate-300">
+            {t('admin.escalation.rule.actions')}
+          </h3>
+          <HelpPopover
+            className={`${popoverClass} -my-3`}
+            label={t('help:triggerFor', { name: t('admin.escalation.rule.actions') })}
+            text={t('help:escalation.actionsMore')}
+          />
+        </header>
         <EscalationActionEditor
           initial={rule.actions}
           channels={channels}
@@ -903,7 +918,7 @@ function RuleForm({
           canWrite={canWrite}
           onActions={(next) => apply({ ...rule, actions: next })}
         />
-      </div>
+      </section>
     </div>
   )
 }
