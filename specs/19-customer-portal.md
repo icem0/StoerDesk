@@ -280,3 +280,52 @@ and the status page: a customer never sees the menu of the office.
 - No PII of a customer enters a log line, an error message or a fixture.
 - The mail to the reporter carries the ticket and nothing of the house
   (ADR-0034, ADR-0038).
+
+## §19.13 The switch of the administration
+
+The customer portal is **switched on** (ADR-0062): the administration decides
+whether the instance has a customer portal at all and whether a customer may
+register himself. The page `/admin/customers` carries the entry „Kundenportal“
+of the settings menu.
+
+| Setting                          | Meaning                                                         |
+| -------------------------------- | --------------------------------------------------------------- |
+| `customer.portal_enabled`        | the customer may sign in and sees his reports in the portal     |
+| `customer.registration_enabled`  | the customer may register himself over the link in the mail      |
+
+Both settings are **off by default** — an installation that does not want a
+customer portal keeps none.
+
+- The **registration needs a cleanly set up mailbox**: the channel row of the
+  e-mail exists, is enabled, carries a host, carries a valid sender address
+  and a complete login (a user without a password is no login). The switch of
+  the registration is refused while the mailbox is broken
+  (`422 mail_not_ready`), and the page names the reasons.
+- The public route `GET /api/v1/public/auth/registration` answers `available`
+  only when the switch is on **and** the mailbox is ready — the entry of the
+  registration disappears from the login of the homepage and from the report
+  form of the QR code.
+- The sign in of a customer is refused while the portal is off
+  (`403 customer_portal_disabled`); the routes of the portal answer the same
+  code, and the registration in the report form of the QR code is refused with
+  `409 registration_unavailable`.
+- The read of the settings is behind `settings.read`, the write behind
+  `settings.write`.
+
+## §19.14 The mailbox of the instance
+
+The mailbox of the instance is a channel like every other channel and lives in
+`/admin/email` (ADR-0046). Its **readiness** decides over the registration:
+
+| Reason             | Meaning                                 |
+| ------------------ | --------------------------------------- |
+| `channel_missing`  | there is no row for the e-mail channel  |
+| `channel_disabled` | the e-mail channel is switched off      |
+| `host_missing`     | the SMTP server is missing              |
+| `sender_missing`   | the sender address is missing           |
+| `sender_invalid`   | the sender address is no valid address  |
+| `password_missing` | the user of the mailbox has no password |
+
+The readiness is a property of the channel, not a second switch: the
+administration repairs the mailbox under `/admin/email` and switches the
+registration on afterwards.

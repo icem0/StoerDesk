@@ -681,11 +681,13 @@ Rules:
   attempts belongs to the administration and is read on `/admin/delivery` beside the problems of the channels
   (`notification.read_all`); the bell and the alarm band count the tasks, not
   the attempts,
-- **a delivery that fails finally becomes a task of the administration**
-  (ADR-0052): the event type `notification.delivery_failed` reaches the users
-  with `notification.read_all` over their **own confirmed channels**, throttled
-  to one task per channel and machine code per hour; the alarm never alarms
-  itself.
+- **every failed delivery becomes a task of the administration** (ADR-0052,
+  ADR-0062): the event type `notification.delivery_failed` writes a task for the
+  users with `notification.read_all` **into their mailbox only** — no channel
+  carries it — also when a later channel of the chain still delivers the
+  message; throttled to one task per channel and machine code per hour, and the
+  alarm writes no outbox row and never alarms itself; the settings page carries
+  no warning badge of a failed delivery.
 
 The contract of the channels is `specs/10-notifications.md` §11.1–§11.18. No
 notification server is part of the Compose stack.
@@ -902,11 +904,19 @@ explanation. Offline is a core feature and appears early.
 | **39** | The update starts without a comparison: the update menu of the administration offers the button „Update starten“ also when the versions cannot be compared — a comparison that GitHub refuses is an unknown state, not a proof that nothing is newer (WP-M39-01, out of band) | the administration can start the update even when the installed version is not part of the upstream history; only a comparison that proves the up-to-date state refuses the start |
 | **40** | The double tap does not zoom the page: the report form and the ticket list stay at the place the finger touched, while the pinch zoom of a reader who needs a bigger type stays available (WP-M40-01) | a double tap in a phone browser does not bring the page closer; a pinch zoom still does |
 | **41** | The mailbox of the administration is a configured channel: the row of the e-mail channel wins over the environment of the SMTP keys — the test send, the notifications of the tickets and the escalation chain use the mailbox that the office saved (ADR-0046, WP-M41-01, WP-M41-02) | the test message of a saved mailbox reaches the mail server instead of naming a missing configuration; a ticket of the instance is announced over the mailbox of the administration |
+| **43** | The customer portal is switched on: the administration decides in `/admin/customers` whether the instance has a customer portal and whether a customer may register himself — both are off by default, and the registration stays locked while the mailbox of the instance is not cleanly set up (ADR-0062, WP-M43-01 … WP-M43-04) | the portal of the customer is off until the office switches it on, a customer may sign in only then, and the registration of a customer works only with a cleanly set up mailbox — a mailbox without host, sender or password keeps the registration locked |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 43 has started (WP-M43-01).** Not every installation wants customers:
+the portal of the customer and the registration of a customer are switched
+on in the administration (`/admin/customers`), and both are off by default
+(ADR-0062). The registration needs a **cleanly set up mailbox** — the channel
+of the instance with a host, a valid sender address and a complete login —
+because a mailbox that cannot deliver cannot confirm an account.
 
 **Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
 configured the SMTP connection of Office 365 in the administration and the test
