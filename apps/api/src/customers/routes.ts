@@ -10,6 +10,7 @@ import {
 } from '@stoerdesk/shared'
 
 import { requirePermission } from '../auth/requirePermission'
+import { readCustomerPortalSwitches } from '../settings/customers'
 import type { Database } from '../db/client'
 import { objectAssignments, objects, ticketEvents, tickets } from '../db/schema'
 
@@ -63,6 +64,27 @@ const TERMINAL_STATUSES = ['CLOSED', 'CANCELLED']
 /** The entries of the history that never reach the customer (ADR-0034). */
 const INTERNAL_EVENT_TYPES = ['internal_comment']
 
+/**
+ * The guard of the portal (§19.13, ADR-0062): the portal of the customer is
+ * switched off in many installations — his reports are then nobody's business.
+ *
+ * The guard is a **preHandler of the routes** and not a hook: the plugin uses
+ * `fastify-plugin` and is therefore not encapsulated — a hook would guard
+ * every route of the app.
+ */
+function requireCustomerPortal(database: Db) {
+  return async (
+    _request: unknown,
+    reply: { code: (status: number) => { send: (body: unknown) => unknown } },
+  ) => {
+    const switches = await readCustomerPortalSwitches(database)
+
+    if (!switches.portalEnabled) {
+      return reply.code(403).send({ code: 'customer_portal_disabled', params: {} })
+    }
+  }
+}
+
 export type CustomerRouteOptions = {
   database: Db
 }
@@ -70,7 +92,12 @@ export type CustomerRouteOptions = {
 export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database }) => {
   app.get(
     '/api/v1/customer/tickets',
-    { preHandler: requirePermission(database, PERMISSIONS.ticket.customerRead) },
+    {
+      preHandler: [
+        requirePermission(database, PERMISSIONS.ticket.customerRead),
+        requireCustomerPortal(database),
+      ],
+    },
     async (request) => {
       const rows = await database
         .select({
@@ -88,10 +115,7 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
         .where(ownTickets(request))
         // The open tickets of the customer come first, the closed ones below
         // them (ADR-0061) — inside a group the newest ticket is first.
-        .orderBy(
-          asc(sql`${tickets.status} in ('CLOSED', 'CANCELLED')`),
-          desc(tickets.reportedAt),
-        )
+        .orderBy(asc(sql`${tickets.status} in ('CLOSED', 'CANCELLED')`), desc(tickets.reportedAt))
 
       return {
         tickets: rows.map((row) =>
@@ -219,7 +243,12 @@ export const customerRoutes = fp<CustomerRouteOptions>(async (app, { database })
 
   app.get(
     '/api/v1/customer/objects',
-    { preHandler: requirePermission(database, PERMISSIONS.object.customerRead) },
+    {
+      preHandler: [
+        requirePermission(database, PERMISSIONS.object.customerRead),
+        requireCustomerPortal(database),
+      ],
+    },
     async (request) => {
       const rows = await database
         .select({

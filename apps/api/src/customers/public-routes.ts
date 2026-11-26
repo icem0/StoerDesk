@@ -10,6 +10,7 @@ import {
 import type { Env } from '../config/env'
 import type { Database } from '../db/client'
 import { readMailbox, sendPasswordResetMail, sendRegistrationMail } from './mail'
+import { readCustomerPortalSwitches } from '../settings/customers'
 import {
   consumeAccountToken,
   createPasswordResetToken,
@@ -57,9 +58,15 @@ function baseUrlOf(request: { protocol: string; hostname: string }, env: Env): s
 export const customerPublicRoutes = fp<CustomerPublicRouteOptions>(
   async (app, { database, env }) => {
     app.get('/api/v1/public/auth/registration', async () => {
-      const mailbox = await readMailbox(database, env)
+      // §19.13 (ADR-0062): the registration exists only when the administration
+      // has switched it on **and** the mailbox of the instance is cleanly set
+      // up — a mailbox that cannot deliver cannot confirm an account.
+      const [switches, mailbox] = await Promise.all([
+        readCustomerPortalSwitches(database),
+        readMailbox(database, env),
+      ])
 
-      return { available: mailbox.available }
+      return { available: switches.registrationEnabled && mailbox.ready }
     })
 
     app.post(
@@ -72,9 +79,12 @@ export const customerPublicRoutes = fp<CustomerPublicRouteOptions>(
           return reply.code(400).send({ code: 'invalid_request', params: { fields: ['email'] } })
         }
 
-        const mailbox = await readMailbox(database, env)
+        const [switches, mailbox] = await Promise.all([
+          readCustomerPortalSwitches(database),
+          readMailbox(database, env),
+        ])
 
-        if (!mailbox.available) {
+        if (!switches.registrationEnabled || !mailbox.ready) {
           return reply.code(409).send({ code: 'registration_unavailable', params: {} })
         }
 

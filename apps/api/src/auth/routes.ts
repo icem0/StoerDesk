@@ -9,6 +9,7 @@ import {
 } from '@stoerdesk/shared'
 
 import { roles, userRoles, users } from '../db/schema'
+import { readCustomerPortalSwitches } from '../settings/customers'
 import type { Env } from '../config/env'
 import { hashPassword, verifyPassword } from './password'
 import { effectivePermissions, loadEffectivePermissions } from './requirePermission'
@@ -92,6 +93,20 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
         return reply.code(401).send({ code: 'invalid_credentials', params: {} })
       }
 
+      const roleKeys = await loadUserRoleKeys(database, account.id)
+
+      // §19.13 (ADR-0062): the customer portal is switched off in many
+      // installations — a customer may then not sign in at all.
+      if (roleKeys.includes('customer')) {
+        const switches = await readCustomerPortalSwitches(database)
+
+        if (!switches.portalEnabled) {
+          request.log.warn({ code: 'customer_portal_disabled' })
+
+          return reply.code(403).send({ code: 'customer_portal_disabled', params: {} })
+        }
+      }
+
       const session = await createSession(database, account.id, env.SESSION_TTL_HOURS)
 
       reply.setCookie(
@@ -100,7 +115,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
         sessionCookieOptions(env, session.expiresAt),
       )
 
-      const roles = await loadUserRoleKeys(database, account.id)
+      const roles = roleKeys
       const permissions = await loadEffectivePermissions(database, account.id)
 
       return reply.code(200).send(
@@ -153,7 +168,11 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
       const permissions = await effectivePermissions(request, database)
 
       return meResponseSchema.parse({
-        user: { ...request.user, permissions, mustChangePassword: request.user?.mustChangePassword },
+        user: {
+          ...request.user,
+          permissions,
+          mustChangePassword: request.user?.mustChangePassword,
+        },
       })
     },
   )
@@ -188,8 +207,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
       }
 
       const { givenName, familyName, locale, theme, password } = parsed.data
-      const passwordHash =
-        password === undefined ? undefined : await hashPassword(password)
+      const passwordHash = password === undefined ? undefined : await hashPassword(password)
 
       const targetRows = await database
         .select({
@@ -227,9 +245,7 @@ export const authRoutes: FastifyPluginAsync<AuthPluginOptions> = async (app, { d
           locale: locale ?? target.locale,
           theme: theme ?? target.theme,
           updatedAt: new Date(),
-          ...(passwordHash === undefined
-            ? {}
-            : { passwordHash, mustChangePassword: false }),
+          ...(passwordHash === undefined ? {} : { passwordHash, mustChangePassword: false }),
         })
         .where(eq(users.id, userId))
 

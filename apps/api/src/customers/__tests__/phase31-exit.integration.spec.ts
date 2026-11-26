@@ -18,7 +18,7 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped phase 31 exit integration: ${testDatabase.reason}\n`)
 }
 
-const { objectAssignments, objects, roles, tickets, userRoles, users } = schema
+const { objectAssignments, objects, roles, tickets, userRoles, users, settings } = schema
 
 type TicketListAnswer = { tickets?: { ticketNo: string }[] }
 
@@ -36,6 +36,13 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
+
+      // §19.13 (ADR-0062): the portal of the customer is switched off by
+      // default — the tests of the portal switch it on.
+      await db.insert(settings).values([
+        { key: 'customer.portal_enabled', value: true },
+        { key: 'customer.registration_enabled', value: true },
+      ])
       await seedRbac(db)
 
       process.env.DATABASE_URL = url

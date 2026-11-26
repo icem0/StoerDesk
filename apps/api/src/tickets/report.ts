@@ -14,6 +14,7 @@ import {
 
 import { createPendingCustomer, findCustomerByEmail } from '../customers/registration'
 import { readMailbox, sendRegistrationMail } from '../customers/mail'
+import { readCustomerPortalSwitches } from '../settings/customers'
 import { loadEnv } from '../config/env'
 import type { Database } from '../db/client'
 import { objectAssignments, objects, ticketEvents, ticketPhotos, tickets } from '../db/schema'
@@ -269,6 +270,20 @@ export async function createPublicReport(
   }
 
   const env = loadEnv()
+
+  // §19.13 (ADR-0062): the registration in the report follows the switch of
+  // the administration and needs a cleanly set up mailbox.
+  if (input.register !== undefined) {
+    const [switches, mailbox] = await Promise.all([
+      readCustomerPortalSwitches(database),
+      readMailbox(database, env),
+    ])
+
+    if (!switches.registrationEnabled || !mailbox.ready) {
+      throw new ReportRouteError(409, 'registration_unavailable', {})
+    }
+  }
+
   // Only a verified ntfy target receives the event; an unconfirmed channel
   // gets no row at all (WP-M14-47).
   const ntfy = await effectiveNtfyConfig(database, env, { requireVerified: true })

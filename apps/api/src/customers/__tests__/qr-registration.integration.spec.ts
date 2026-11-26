@@ -17,7 +17,16 @@ if (testDatabase.status === 'unavailable') {
   process.stderr.write(`skipped qr registration integration: ${testDatabase.reason}\n`)
 }
 
-const { objectAssignments, objects, roles, tickets, userRoles, users } = schema
+const {
+  objectAssignments,
+  objects,
+  roles,
+  tickets,
+  userRoles,
+  users,
+  settings,
+  notificationChannels,
+} = schema
 
 type ErrorBody = { code?: string }
 
@@ -33,6 +42,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
     beforeAll(async () => {
       await migrate(db, { migrationsFolder })
+
+      // §19.13 (ADR-0062): the registration needs a cleanly set up mailbox.
+      await db.insert(notificationChannels).values({
+        name: 'E-Mail',
+        kind: 'email',
+        enabled: true,
+        label: 'SMTP',
+        config: { host: '127.0.0.1', port: '1', from: 'stoerdesk@example.org' },
+      })
+
+      // §19.13 (ADR-0062): the portal of the customer is switched off by
+      // default — the tests of the portal switch it on.
+      await db.insert(settings).values([
+        { key: 'customer.portal_enabled', value: true },
+        { key: 'customer.registration_enabled', value: true },
+      ])
       await seedRbac(db)
 
       process.env.DATABASE_URL = url
