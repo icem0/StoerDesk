@@ -294,7 +294,6 @@
     },
     "escalation": {
       "title": "Eskalation",
-      "hint": "Die Eskalationsstufen mit ihren Namen, ihren Regeln und ihren Aktionen. Die Frist einer Stufe ist die Wartezeit pro Priorität; Regeln und ihre Aktionen feuern in Listenreihenfolge. Die Reihenfolge per Drag & Drop ändern.",
       "loading": "Lädt …",
       "sessionNotice": "Die Eskalation benötigt eine gültige Anmeldung.",
       "forbiddenNotice": "Keine Berechtigung für die Eskalation.",
@@ -336,6 +335,7 @@
         "reference": "Start-Ereignis",
         "percent": "Prozent",
         "timeline": "Zeitliche Abfolge",
+        "actions": "Aktionen",
         "referenceEvents": {
           "received_at": "Meldung eingegangen",
           "review_started": "In Prüfung gesetzt",
@@ -470,19 +470,9 @@
           "high": "Hoch",
           "urgent": "Dringend"
         },
-        "notifyHint": "Das Ziel erhält die Nachricht über die Kanäle, die es selbst ausgewählt hat — ohne Auswahl über sein eigenes ntfy-Thema.",
         "assignAcceptance": "Annahme erforderlich",
         "add": "Aktion hinzufügen",
         "remove": "Aktion #{{number}} entfernen"
-      },
-      "help": {
-        "deadlines": "Die Frist ist die Wartezeit in Stunden pro Priorität. Verstreicht sie, ohne dass die Bedingung zutrifft, feuert die Regel nicht.",
-        "stages": "Eine Stufe ist ein Meilenstein des Workflows (zum Beispiel „Prüfung“). Eine Regel verbindet eine Stufe mit einer Wartezeit, einer Bedingung und den auszuführenden Aktionen.",
-        "chain": "Jede Stufe nennt ihren Vorgänger: dessen Abschluss startet die Wartezeit. Ohne Vorgänger beginnt die Wartezeit mit der Meldung. Stufen lassen sich hinzufügen und entfernen; die Regeln einer entfernten Stufe entfallen mit ihr.",
-        "reference": "Das Start-Ereignis startet die Warteuhr der Regel (zum Beispiel „Meldung eingegangen“). „Keine“ bedeutet: die Regel wartet auf nichts und feuert, sobald ihre Bedingung zutrifft.",
-        "timeline": "Die Minuten sind die Wartezeit der Stufe je Priorität. Der Prozentwert gilt nur für die Fristen-Regeln: 80 % und 100 % der Ticketfrist.",
-        "condition": "Die Bedingung entscheidet, ob eine Regel feuert. „Alle“ verlangt, dass jedes Blatt zutrifft; „eine von“ genügt, wenn mindestens eines zutrifft.",
-        "actions": "Die Aktionen laufen, wenn die Regel feuert: eine Benachrichtigung über die gewählten Kanäle, eine Webhook-Zustellung oder eine Notiz im Ticket-Verlauf."
       },
       "errors": {
         "session_invalid": "Die Anmeldung ist abgelaufen.",

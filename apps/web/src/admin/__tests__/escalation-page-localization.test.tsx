@@ -91,7 +91,19 @@ async function renderPage(language: string, tabName: string) {
 }
 
 function helpText(key: string): string {
-  return i18n.t(`admin.escalation.help.${key}`, { ns: 'settings' })
+  return i18n.t(`escalation.${key}More`, { ns: 'help' })
+}
+
+function triggerName(section: string): string {
+  return i18n.t('triggerFor', { ns: 'help', name: section })
+}
+
+function panelText(name: string): string {
+  fireEvent.click(screen.getByRole('button', { name }))
+
+  const panel = screen.getByRole('note')
+
+  return panel.textContent ?? ''
 }
 
 function optionTexts(): string[] {
@@ -105,9 +117,11 @@ describe('the escalation administration speaks the language of the interface', (
     await renderPage('de', 'Stufen & Regeln')
     await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
 
-    for (const key of ['stages', 'reference', 'condition', 'actions']) {
-      expect(screen.getByText(helpText(key))).toBeTruthy()
-    }
+    expect(screen.queryByRole('note')).toBeNull()
+
+    expect(panelText(triggerName(i18n.t('admin.escalation.tabs.stages', { ns: 'settings' })))).toContain(
+      helpText('stages'),
+    )
 
     const options = optionTexts()
 
@@ -122,20 +136,26 @@ describe('the escalation administration speaks the language of the interface', (
     }
   })
 
-  it('renders the deadline help text in German', async () => {
+  it('keeps the deadline help of the Fristen tab behind the ⓘ', async () => {
     await renderPage('de', 'Fristen')
     await waitFor(() => expect(screen.getByTestId('escalation-hours')).toBeTruthy())
 
-    expect(screen.getByText(helpText('deadlines'))).toBeTruthy()
+    expect(screen.queryByText(helpText('deadlines'))).toBeNull()
+
+    expect(panelText(triggerName(i18n.t('admin.escalation.tabs.fristen', { ns: 'settings' })))).toContain(
+      helpText('deadlines'),
+    )
   })
 
   it('labels the closed vocabularies in English', async () => {
     await renderPage('en', 'Stages & rules')
     await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
 
-    for (const key of ['stages', 'reference', 'condition', 'actions']) {
-      expect(screen.getByText(helpText(key))).toBeTruthy()
-    }
+    expect(screen.queryByRole('note')).toBeNull()
+
+    expect(panelText(triggerName(i18n.t('admin.escalation.tabs.stages', { ns: 'settings' })))).toContain(
+      helpText('stages'),
+    )
 
     const options = optionTexts()
 
@@ -150,10 +170,14 @@ describe('the escalation administration speaks the language of the interface', (
     }
   })
 
-  it('renders the deadline help text in English', async () => {
+  it('keeps the deadline help of the Deadlines tab behind the ⓘ', async () => {
     await renderPage('en', 'Deadlines')
     await waitFor(() => expect(screen.getByTestId('escalation-hours')).toBeTruthy())
 
-    expect(screen.getByText(helpText('deadlines'))).toBeTruthy()
+    expect(screen.queryByText(helpText('deadlines'))).toBeNull()
+
+    expect(panelText(triggerName(i18n.t('admin.escalation.tabs.fristen', { ns: 'settings' })))).toContain(
+      helpText('deadlines'),
+    )
   })
 })

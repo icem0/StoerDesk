@@ -10,6 +10,7 @@ import {
 } from '@stoerdesk/shared'
 
 import { EscalationConditionBuilder } from './escalation-condition-builder'
+import { HelpPopover } from '../components/help-popover'
 
 /**
  * The action editor of the escalation administration
@@ -387,9 +388,11 @@ export function EscalationActionEditor({
                   {(action.targetKind ?? 'user') === 'assigned' ||
                   (action.targetKind ?? 'user') === 'assigner' ||
                   (action.targetId ?? '') !== '' ? (
-                    <p className="text-xs text-slate-500">
-                      {t('admin.escalation.action.notifyHint')}
-                    </p>
+                    <HelpPopover
+                      className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+                      label={t('help:triggerFor', { name: t('admin.escalation.action.target') })}
+                      text={t('help:escalation.notifyMore')}
+                    />
                   ) : (
                     <label className="text-xs text-slate-400">
                       {t('admin.escalation.action.channels')}

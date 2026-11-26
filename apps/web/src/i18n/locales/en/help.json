@@ -28,6 +28,16 @@
     "bmaSyncMore": "The synchronization of the objects with BMAcloud: new assets are taken over, changes are reported and conflicts are logged.",
     "customersMore": "Here you switch the customer portal on: the customers report their faults, see their open reports and may register themselves — the registration needs a cleanly set up mailbox."
   },
+  "escalation": {
+    "deadlinesMore": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",
+    "stagesMore": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a waiting time, a condition and the actions to perform.",
+    "chainMore": "Every stage names its predecessor: its completion starts the waiting time. Without a predecessor the wait starts at the report. Stages can be added and removed; the rules of a removed stage leave with it.",
+    "referenceMore": "The start event starts the rule's waiting clock (for example 'Report received'). 'None' means: the rule waits for nothing and fires as soon as its condition matches.",
+    "timelineMore": "The minutes are the waiting time of the stage per priority. The percentage belongs to the deadline rules only: 80 % and 100 % of the ticket deadline.",
+    "conditionMore": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'any' is satisfied as soon as at least one matches.",
+    "actionsMore": "The actions run when the rule fires: a notification via the selected channels, a webhook delivery or a note in the ticket history.",
+    "notifyMore": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic."
+  },
   "page": {
     "tickets": "The tickets of the installation. The list opens with the open ones; the Filter button opens search, status and priority as well as closed and overdue tickets.",
     "ticketsCreate": "A ticket the office creates itself — for example out of a phone call.",
@@ -53,7 +63,7 @@
     "adminWebhooks": "Reports events to other systems — address, secret and the events per webhook.",
     "adminBmaSync": "The synchronization with BMAcloud: new assets are taken over, conflicts are logged.",
     "adminDeadlines": "The deadlines of the priorities — how long a ticket may lie around before it escalates.",
-    "adminEscalation": "The stages of the escalation and their actions; every stage waits a time and then triggers actions.",
+    "adminEscalation": "The stages of the escalation and their actions; every stage waits a time and then triggers actions. Rules and their actions fire in list order; change the order with drag and drop.",
     "adminDefaults": "The values a new ticket starts with: priority, deadline, type of the object and text.",
     "adminDetectedErrors": "The errors that were detected on reports; they count in the statistics.",
     "adminOncall": "The on-call pools, their duty blocks and the shifts in the plan.",

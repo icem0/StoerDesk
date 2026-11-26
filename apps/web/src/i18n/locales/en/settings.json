@@ -294,7 +294,6 @@
     },
     "escalation": {
       "title": "Escalation",
-      "hint": "The escalation stages with their names, their rules and their actions. The deadline of a stage is the waiting time per priority; rules and their actions fire in list order. Change the order with drag and drop.",
       "loading": "Loading …",
       "sessionNotice": "The escalation administration requires a valid sign-in.",
       "forbiddenNotice": "No permission for the escalation administration.",
@@ -336,6 +335,7 @@
         "reference": "Start event",
         "percent": "Percent",
         "timeline": "Time sequence",
+        "actions": "Actions",
         "referenceEvents": {
           "received_at": "Report received",
           "review_started": "Set in review",
@@ -470,19 +470,9 @@
           "high": "High",
           "urgent": "Urgent"
         },
-        "notifyHint": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic.",
         "assignAcceptance": "Acceptance required",
         "add": "Add action",
         "remove": "Remove action #{{number}}"
-      },
-      "help": {
-        "deadlines": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",
-        "stages": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a waiting time, a condition and the actions to perform.",
-        "chain": "Every stage names its predecessor: its completion starts the waiting time. Without a predecessor the wait starts at the report. Stages can be added and removed; the rules of a removed stage leave with it.",
-        "reference": "The start event starts the rule's waiting clock (for example 'Report received'). 'None' means: the rule waits for nothing and fires as soon as its condition matches.",
-        "timeline": "The minutes are the waiting time of the stage per priority. The percentage belongs to the deadline rules only: 80 % and 100 % of the ticket deadline.",
-        "condition": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'any' is satisfied as soon as at least one matches.",
-        "actions": "The actions run when the rule fires: a notification via the selected channels, a webhook delivery or a note in the ticket history."
       },
       "errors": {
         "session_invalid": "The sign-in has expired.",

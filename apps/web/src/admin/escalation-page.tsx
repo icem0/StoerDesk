@@ -23,6 +23,7 @@ import {
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
+import { HelpPopover } from '../components/help-popover'
 import { ApiError, apiFetch } from '../lib/api'
 import { languagesOf, localizedName } from '../lib/localized-name'
 import { EscalationConditionBuilder } from './escalation-condition-builder'
@@ -56,6 +57,18 @@ import { EscalationActionEditor } from './escalation-action-editor'
 const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
 const handledLoadCodes = [...handledErrorCodes, 'config_invalid'] as const
 const jsonHeaders = { 'content-type': 'application/json' }
+
+/**
+ * The trigger of an explanation (`specs/13-ui.md` §14.13, ADR-0060, WP-M44-01).
+ *
+ * The explanations of this page stand behind the ⓘ at their place — the intro
+ * of the page is the page-level ⓘ of the shell, the mechanics of the chain, of
+ * the clock, of the condition and of the actions sit beside the thing they
+ * explain. Only what belongs to a rule stays visible: the read-only notice, the
+ * reason of a blocked removal and the error texts.
+ */
+const popoverClass =
+  'flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400'
 
 function errorMessage(t: TFunction<'settings'>, error: unknown): string {
   const code =
@@ -269,7 +282,6 @@ export function EscalationPage() {
     <section className="flex flex-col gap-4">
       <div>
         <h1 className="text-xl font-semibold">{t('admin.escalation.title')}</h1>
-        <p className="text-sm text-slate-400">{t('admin.escalation.hint')}</p>
       </div>
 
       <div className="flex flex-wrap gap-2" data-testid="escalation-tabs">
@@ -317,7 +329,11 @@ export function EscalationPage() {
               </label>
             ))}
           </div>
-          <p className="text-xs text-slate-500">{t('admin.escalation.help.deadlines')}</p>
+          <HelpPopover
+            className={popoverClass}
+            label={t('help:triggerFor', { name: t('admin.escalation.tabs.fristen') })}
+            text={t('help:escalation.deadlinesMore')}
+          />
           {!canWrite ? (
             <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p>
           ) : null}
@@ -335,11 +351,11 @@ export function EscalationPage() {
 
       {tab === 'stages' ? (
         <div className="flex flex-col gap-4">
-          <p className="text-xs text-slate-500">{t('admin.escalation.help.stages')}</p>
-          <p className="text-xs text-slate-500">{t('admin.escalation.help.chain')}</p>
-          <p className="text-xs text-slate-500">{t('admin.escalation.help.reference')}</p>
-          <p className="text-xs text-slate-500">{t('admin.escalation.help.condition')}</p>
-          <p className="text-xs text-slate-500">{t('admin.escalation.help.actions')}</p>
+          <HelpPopover
+            className={popoverClass}
+            label={t('help:triggerFor', { name: t('admin.escalation.tabs.stages') })}
+            text={t('help:escalation.stagesMore')}
+          />
           <ol className="flex flex-col gap-4" data-testid="escalation-stage-list">
             {config.stages.map((stage) => {
               const key = stage.key
@@ -446,6 +462,13 @@ export function EscalationPage() {
                           ))}
                         </select>
                       </label>
+                      <HelpPopover
+                        className={popoverClass}
+                        label={
+                          t('help:triggerFor', { name: t('admin.escalation.stage.predecessor') })
+                        }
+                        text={t('help:escalation.chainMore')}
+                      />
                       <label className="text-xs text-slate-400">
                         {t('admin.escalation.stage.active')}
                         <input
@@ -801,6 +824,11 @@ function RuleForm({
               ))}
             </select>
           </label>
+          <HelpPopover
+            className={popoverClass}
+            label={t('help:triggerFor', { name: t('admin.escalation.rule.reference') })}
+            text={t('help:escalation.referenceMore')}
+          />
           <label className="text-xs text-slate-400">
             {t('admin.escalation.rule.percent')}
             <input
@@ -836,10 +864,19 @@ function RuleForm({
             </label>
           ))}
         </div>
-        <p className="mt-2 text-xs text-slate-500">{t('admin.escalation.help.timeline')}</p>
+        <HelpPopover
+          className={popoverClass}
+          label={t('help:triggerFor', { name: t('admin.escalation.rule.timeline') })}
+          text={t('help:escalation.timelineMore')}
+        />
       </fieldset>
 
-      <div className="mt-3">
+      <div className="mt-3 flex items-center gap-2">
+        <HelpPopover
+          className={popoverClass}
+          label={t('help:triggerFor', { name: t('admin.escalation.condition.modeLabel') })}
+          text={t('help:escalation.conditionMore')}
+        />
         <EscalationConditionBuilder
           initial={rule.condition}
           canWrite={canWrite}
@@ -849,7 +886,12 @@ function RuleForm({
         />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex items-center gap-2">
+        <HelpPopover
+          className={popoverClass}
+          label={t('help:triggerFor', { name: t('admin.escalation.rule.actions') })}
+          text={t('help:escalation.actionsMore')}
+        />
         <EscalationActionEditor
           initial={rule.actions}
           channels={channels}

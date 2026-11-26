@@ -21,6 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
+- **The explanations of the escalation administration stand behind the ⓘ
+  (WP-M44-01, ADR-0060).** `/admin/escalation` carried eight always-visible
+  small paragraphs (the page intro, the deadline, the stages, the chain, the
+  start event, the clock of a rule, the condition and the actions) and one hint
+  in the action editor. They now sit in the panel of an ⓘ at their place: the
+  intro is part of the panel of the page-level ⓘ of the shell, the rest open
+  beside the thing they explain (the hours grid, the stage list, the field
+  „Vorgänger“, the field „Start-Ereignis“, the frame „Zeitliche Abfolge“, the
+  condition, the actions and the recipient of a notification). The texts moved
+  into the namespace `help` (`help.escalation.*More` in `de` and `en`), the
+  keys `admin.escalation.hint` and `admin.escalation.help.*` are gone and the
+  panels name their trigger with `help:triggerFor`. What belongs to a rule stays
+  visible: the read-only notice, the reason of a blocked stage removal, the
+  error texts and the sentence that names the value „assigned“ in place of a
+  field.
 - **A failed delivery reaches the mailbox of the administration (WP-M42-01).**
   The failing deliveries were visible only as a badge on the settings page
   (`app.channelWarning.badge`). Every outbox row that ends `FAILED` now writes a

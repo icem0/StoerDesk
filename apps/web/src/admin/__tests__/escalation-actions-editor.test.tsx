@@ -433,10 +433,11 @@ describe('the action editor of the escalation page', () => {
     const target = screen.getByTestId('escalation-notify-target') as unknown as HTMLSelectElement
     fireEvent.change(target, { target: { value: USER_ID } })
 
-    // With a target the channels of the installation disappear and the hint
-    // names the way of the recipient.
+    // With a target the channels of the installation disappear and the ⓘ of the
+    // recipient names the way of the message.
     await waitFor(() => expect(list.querySelector('select[multiple]')).toBeNull())
-    expect(within(list).getByText(/die Kanäle, die es selbst ausgewählt hat/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Erklärung zu Ziel' }))
+    expect(screen.getByRole('note').textContent).toContain('die Kanäle, die es selbst ausgewählt hat')
 
     await waitFor(() => expect(saved).toHaveLength(1))
     const body = (saved[0] ?? {}) as { rules?: unknown[] }

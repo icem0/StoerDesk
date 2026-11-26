@@ -53,6 +53,8 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m41](m41/) | Phase 41: the mailbox of the administration is a configured channel — the saved SMTP configuration wins over the environment of the installation: the test send, the notifications of the tickets and the escalation chain use it (WP-M41-01, WP-M41-02) — **out of band** | 2   |
 | [m42](m42/) | Phase 42: the failed delivery reaches the mailbox (WP-M42-01) | 1   |
 | [m43](m43/) | Phase 43: the customer portal is switched on — the administration decides in `/admin/customers` whether the instance has a customer portal and whether a customer may register himself; both are off by default and the registration needs a cleanly set up mailbox (WP-M43-01 … WP-M43-04, ADR-0062) | 4   |
+| [m44](m44/) | Phase 44: the explanations of the escalation administration behind the info symbol — the always-visible explanation paragraphs of `/admin/escalation` move into the panels of the ⓘ of their place (WP-M44-01) — **out of band**, the phase 36 stays open | 1   |
+
 | [m42](m42/) | Phase 42: the failed delivery reaches the mailbox of the administration — every outbox row that ends `FAILED` writes a task for the users with `notification.read_all` into their mailbox only (no channel, no outbox row), also when a later channel of the chain still delivers, throttled to one task per channel and machine code per hour; the settings page carries no warning badge any more (WP-M42-01, ADR-0062) — **out of band** | 1   |
 
 Every `m0`, `m1`, `m2` and `m3` document carries `format: small-model` except the four first
@@ -1917,6 +1919,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M41-01   | the mailbox of the administration is a configured channel — the saved SMTP configuration reaches the test send, the notifications of the tickets and the escalation chain | done | yes |
 | WP-M41-02   | the e-mail channel is named in the lists of the channels — the rule of the administration, the stages of the escalation, the fallback of a user and the warning of a broken channel | done | yes |
 | WP-M42-01   | the failed delivery reaches the mailbox of the administration — every failed delivery writes a task for `notification.read_all` into the mailbox only, the settings page loses its warning badge | done | yes |
+| WP-M44-01   | the escalation administration names its explanations in panels — the intro of the page moves into the panel of the page-level ⓘ and the deadline, the chain, the start event, the clock, the condition, the actions and the recipient of a notification stand behind the ⓘ of their place (ADR-0060, out of band) | done | yes |
 
 **Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
 configured the SMTP connection of Office 365 in the administration and the test

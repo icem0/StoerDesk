@@ -905,11 +905,28 @@ explanation. Offline is a core feature and appears early.
 | **40** | The double tap does not zoom the page: the report form and the ticket list stay at the place the finger touched, while the pinch zoom of a reader who needs a bigger type stays available (WP-M40-01) | a double tap in a phone browser does not bring the page closer; a pinch zoom still does |
 | **41** | The mailbox of the administration is a configured channel: the row of the e-mail channel wins over the environment of the SMTP keys — the test send, the notifications of the tickets and the escalation chain use the mailbox that the office saved (ADR-0046, WP-M41-01, WP-M41-02) | the test message of a saved mailbox reaches the mail server instead of naming a missing configuration; a ticket of the instance is announced over the mailbox of the administration |
 | **43** | The customer portal is switched on: the administration decides in `/admin/customers` whether the instance has a customer portal and whether a customer may register himself — both are off by default, and the registration stays locked while the mailbox of the instance is not cleanly set up (ADR-0062, WP-M43-01 … WP-M43-04) | the portal of the customer is off until the office switches it on, a customer may sign in only then, and the registration of a customer works only with a cleanly set up mailbox — a mailbox without host, sender or password keeps the registration locked |
+| **44** | The explanations of the escalation administration stand behind the ⓘ of their place: the always-visible paragraphs of `/admin/escalation` move into the panels of the mechanism of ADR-0060, the intro into the panel of the page-level ⓘ (WP-M44-01) | no explanation paragraph of the escalation page is always visible; every one opens with a tap, a mouse and a keyboard beside the thing it explains, in a text one step bigger than the meta text of the page |
 
 Each phase is split into small WPs before implementation. A phase is done only
 when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
+
+**Phase 44 is closed (WP-M44-01, out of band).** The office looked at
+`/admin/escalation` again: „einige Erklärungen … in ein Symbol packed … für
+eine bessere übersichtlichkeit“. The page carried **eight always-visible
+paragraphs** — the intro and the seven `admin.escalation.help.*` texts — plus
+the hint of a targeted notify action. ADR-0060 already decided the mechanism
+(WP-M36-02), so **WP-M44-01** applies it to this surface: the texts move to
+`help.escalation.*More` in `de` and `en`, the intro becomes part of the panel
+of the **page-level ⓘ** of the shell and every other explanation opens behind
+the ⓘ **at its place** — the hours grid, the stage list, the field „Vorgänger“,
+the field „Start-Ereignis“, the frame „Zeitliche Abfolge“, the condition, the
+actions and the recipient of a notification. The keys
+`admin.escalation.hint` and `admin.escalation.help.*` are gone, the read-only
+notice, the reason of a blocked stage removal, the sentence about the value
+„assigned“ and the error texts stay visible. **The phase runs out of band**:
+the phases 36 (WP-M36-05 … WP-M36-08), 38 (WP-M38-02 … WP-M38-04) stay open.
 
 **Phase 43 has started (WP-M43-01).** Not every installation wants customers:
 the portal of the customer and the registration of a customer are switched
