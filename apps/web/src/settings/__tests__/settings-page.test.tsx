@@ -126,9 +126,9 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('button', { name: 'Abmelden' })).toBeTruthy()
     expect(screen.getByLabelText('Einstellungen suchen')).toBeTruthy()
 
-    // No channel may fail for an account without `notification.read`: the badge
-    // is not rendered and the status route is never called (WP-M14-19).
-    expect(screen.queryByText(/\(\d+\)$/)).toBeNull()
+    // The page carries no badge of a failed delivery (ADR-0062): the failure is
+    // a task in the mailbox of the administration, not a warning here.
+    expect(screen.queryByText(/Zustellung gestört/)).toBeNull()
   })
 
   it('finds entries through the search field', async () => {
@@ -153,115 +153,5 @@ describe('SettingsPage', () => {
 
     expect(screen.getByText('Darstellung & Logo')).toBeTruthy()
     expect(screen.queryByText('Meine Einstellungen')).toBeNull()
-  })
-
-  it('shows the badge of the open delivery problems as a link to the problems', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input)
-
-        if (url.includes('/v1/me')) {
-          return Response.json({
-            user: {
-              email: 'admin@example.com',
-              roles: ['admin'],
-              permissions: ['notification.read'],
-            },
-          })
-        }
-
-        if (url.includes('/v1/notifications/delivery')) {
-          return Response.json({
-            problems: [
-              {
-                channel: 'signal',
-                failed: 2,
-                unacknowledged: 2,
-                lastSentAt: '2026-11-13T08:00:00.000Z',
-                lastFailedAt: '2026-11-13T09:30:00.000Z',
-                lastSuccessAt: '2026-11-13T08:00:00.000Z',
-                lastError: 'send_failed',
-                acknowledgedAt: null,
-                acknowledgedBy: null,
-                open: true,
-              },
-              {
-                channel: 'matrix',
-                failed: 1,
-                unacknowledged: 0,
-                lastSentAt: null,
-                lastFailedAt: '2026-11-13T09:30:00.000Z',
-                lastSuccessAt: null,
-                lastError: 'send_failed',
-                acknowledgedAt: '2026-11-13T10:00:00.000Z',
-                acknowledgedBy: 'Muster, Max',
-                open: false,
-              },
-            ],
-            failures: [],
-          })
-        }
-
-        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
-      }),
-    )
-
-    renderPage()
-
-    // The badge counts the **open** problems: the quit one stays silent
-    // (WP-M14-161c).
-    const badge = await screen.findByText(/Zustellung gestört \(1\)/)
-
-    expect(badge.closest('a')?.getAttribute('href')).toBe('/admin/delivery')
-  })
-
-  it('offers the page of the delivery problems in the menu', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input)
-
-        if (url.includes('/v1/me')) {
-          return Response.json({
-            user: {
-              email: 'admin@example.com',
-              roles: ['admin'],
-              permissions: ['notification.read'],
-            },
-          })
-        }
-
-        if (url.includes('/v1/notifications/delivery')) {
-          return Response.json({
-            problems: [
-              {
-                channel: 'signal',
-                failed: 2,
-                unacknowledged: 2,
-                lastSentAt: '2026-11-13T08:00:00.000Z',
-                lastFailedAt: '2026-11-13T09:30:00.000Z',
-                lastSuccessAt: '2026-11-13T08:00:00.000Z',
-                lastError: 'send_failed',
-                acknowledgedAt: null,
-                acknowledgedBy: null,
-                open: true,
-              },
-            ],
-            failures: [],
-          })
-        }
-
-        return Response.json({ code: 'not_found', params: {} }, { status: 404 })
-      }),
-    )
-
-    renderPage()
-
-    // Das Abzeichen rendert asynchron, nachdem die Zustellung abgefragt wurde.
-    const badge = await screen.findByText(/Zustellung gestört \(\d+\)/)
-    const link = badge.closest('a')
-    expect(link).not.toBeNull()
-    expect(link?.getAttribute('href')).toBe('/admin/delivery')
   })
 })

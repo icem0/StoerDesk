@@ -329,8 +329,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .from(notificationItems)
         .where(eq(notificationItems.eventType, DELIVERY_FAILURE_EVENT))
 
-      // One task more — the one of the channel that failed. The alarm went to
-      // the administration over his own confirmed channel (ADR-0045).
+      // One task more — the one of the channel that failed. The alarm wrote it
+      // into the mailbox of the administration (ADR-0062).
       expect(tasks.length).toBe(before.length + 1)
       expect(tasks[tasks.length - 1]?.userId).toBe(adminId)
       expect(tasks[tasks.length - 1]?.params).toMatchObject({ channel: 'matrix' })

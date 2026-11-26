@@ -238,7 +238,7 @@ describe('InboxPage', () => {
     renderPage()
 
     expect(
-      await screen.findByText('Eine Meldung ist nicht angekommen (ntfy, Fehlercode send_failed).'),
+      await screen.findByText('Eine Zustellung ist fehlgeschlagen (ntfy, Fehlercode send_failed).'),
     ).toBeTruthy()
   })
 

@@ -331,15 +331,15 @@ broadcast of an action without a target — carries the target of the
 installation (§11.1) and goes to the mail addresses of the users for the
 e-mail (ADR-0046).
 
-**A delivery that fails finally becomes a task of the administration**
-(§11.18, ADR-0052). A row that ends as `FAILED` **and** leaves no fallback
-open — no further channel of the chain answers for it — is a message that never
-arrived. Such a row writes the event type `notification.delivery_failed` for
-every user with `notification.read_all`; the way is the confirmed channel of
-the recipient (§11.4), so the administration is reached the way every other
-user is reached. The alarm of a failed delivery is throttled: one task per
-channel and machine code per hour, and a failure of the channel that carries
-the alarm writes no new task.
+**Every failed delivery becomes a task of the administration** (§11.18,
+ADR-0052, ADR-0062). A row that ends as `FAILED` writes the event type
+`notification.delivery_failed` for every user with `notification.read_all` —
+also when a later channel of the chain still delivers the message, because the
+office learns that a channel did not deliver and not only that a message was
+lost. The task lives in the **mailbox only**: nothing is sent over a channel,
+so the alarm cannot fail over a channel of its own and an administrator without
+a confirmed channel is reached too. The alarm is throttled: one task per
+channel and machine code per hour.
 
 ## 11.8 The status and the warning on a failure
 
@@ -367,9 +367,9 @@ of „Benachrichtigung gesendet“ names nobody and nothing (WP-M14-152). The na
 are display names of the installation — no topic, no token, no address and no
 contact value ever enters the payload.
 
-A warning that only lives in a list of a page is not a warning: the failing
-channels are shown in the settings menu of the administrator as well, until the
-channel works again.
+A warning that only lives in a list of a page is not a warning: every failed
+delivery becomes a task in the mailbox of the administration (§11.18,
+ADR-0062), so the office is reached without looking for a page.
 
 ### The quittature of a delivery problem
 
@@ -377,10 +377,8 @@ A failed delivery is a **problem of the channel** until somebody has seen it.
 The administration *quits* it, and the warning is silent until the next
 failure:
 
-- the badge of the settings menu **is a link**: it leads to the page
-  `/admin/delivery`, where the admin sees which channel fails, since when,
-  with which machine code and which messages never arrived,
-- the badge counts the channels with a failure that nobody acknowledged,
+- the page `/admin/delivery` shows which channel fails, since when, with which
+  machine code and which messages never arrived,
 - the quittature stores the **time** of the acknowledgement — the `settings` row
   `notifications.delivery_acknowledged` with one entry per channel. Every
   failure after that time is a new failure and opens the problem again: a
@@ -828,23 +826,21 @@ channels.
 
 ### The task of a failed delivery
 
-A delivery that fails finally (§11.7) is a message that never arrived and
-belongs to the administration: the event type `notification.delivery_failed`
-writes a task for every user with `notification.read_all` (§11.16). The way is
-the confirmed channel of the recipient (§11.4) — the administration is reached
-the way every other user is reached, and a recipient who does not fulfil the
-rule of the administration (§11.9) gets nothing; the failure stays visible in
-the protocol.
+Every delivery that ends `FAILED` (§11.7) belongs to the administration: the
+event type `notification.delivery_failed` writes a task for every user with
+`notification.read_all` (§11.16). The task lives in the **mailbox only** — no
+channel carries it, so it cannot be lost over a broken channel and a recipient
+without a confirmed channel is reached too; the failure stays visible in the
+protocol.
 
 The alarm is throttled: **one task per channel and machine code per hour**, so
 a channel that is broken for a day does not flood the inbox of the
-administration. A failure of the channel that carries the alarm writes no new
-task — the alarm never alarms itself.
+administration. The alarm writes no outbox row and never alarms itself.
 
-The row of the alarm belongs to no ticket and to no shift: it carries the event
+The row of the task belongs to no ticket and to no shift: it carries the event
 type `notification.delivery_failed`, no ticket, no shift, and the params of the
 failure (the channel, the machine code, the ticket number of the message that
-never arrived). The checks of the `outbox` table know that shape (§11.15).
+failed).
 
 ## 11.19 The overview of the own channels
 

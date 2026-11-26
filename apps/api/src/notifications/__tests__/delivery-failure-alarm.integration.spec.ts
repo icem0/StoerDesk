@@ -7,13 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { loadEnv } from '../../config/env'
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
-import {
-  notificationAccounts,
-  notificationItems,
-  permissions,
-  userPermissions,
-  users,
-} from '../../db/schema'
+import { notificationItems, permissions, userPermissions, users } from '../../db/schema'
 import { seedRbac } from '../../db/seed-rbac'
 import { DELIVERY_FAILURE_EVENT } from '../alarm'
 import { drainOutbox, enqueuePersonalDeliveries } from '../outbox'
@@ -46,17 +40,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .returning({ id: users.id })
 
       return row!.id
-    }
-
-    /** A confirmed account of a user — the channel of the user (ADR-0045). */
-    async function confirmedAccount(userId: string, channel: string): Promise<void> {
-      await db.insert(notificationAccounts).values({
-        userId,
-        channel,
-        externalId: `topic-${userId.slice(0, 8)}`,
-        target: `target-${userId.slice(0, 8)}`,
-        verifiedAt: new Date(),
-      })
     }
 
     const tasksOf = async () =>
@@ -100,8 +83,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         .insert(userPermissions)
         .values({ userId: adminId, permissionId: permission!.id, effect: 'allow' })
 
-      await confirmedAccount(adminId, 'ntfy')
-      await confirmedAccount(otherId, 'ntfy')
     })
 
     afterAll(async () => {
@@ -112,7 +93,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       }
     })
 
-    it('writes a task of the administration when a message never arrives', async () => {
+    it('writes a task in the mailbox of the administration without a confirmed channel', async () => {
       await enqueuePersonalDeliveries(db, [
         {
           userId: otherId,
@@ -125,8 +106,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         },
       ])
 
-      // No channel is configured — the send fails and the chain has no next
-      // channel: the message never arrives.
+      // No channel is configured — the delivery ends `FAILED` and the alarm
+      // writes the task into the mailbox of the administration (ADR-0062).
       await drainOutbox(db, envOf())
 
       const tasks = await tasksOf()
@@ -159,17 +140,17 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(tasks.length).toBe(1)
     })
 
-    it('never alarms itself', async () => {
-      const before = await tasksOf()
-
-      // The alarm of the first failure was delivered over the channel of the
-      // admin — and that channel is not configured either. Its failure must not
-      // write a new task.
+    it('writes no outbox row of its own — the alarm never alarms itself', async () => {
       await drainOutbox(db, envOf())
 
-      const after = await tasksOf()
+      const rows = await db
+        .select({ id: schema.outbox.id })
+        .from(schema.outbox)
+        .where(eq(schema.outbox.eventType, DELIVERY_FAILURE_EVENT))
 
-      expect(after.length).toBe(before.length)
+      // The task lives in the mailbox only (ADR-0062): the alarm enqueues no
+      // delivery and can therefore never alarm itself.
+      expect(rows.length).toBe(0)
     })
   },
 )

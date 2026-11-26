@@ -1,6 +1,6 @@
 # ADR-0052: The message is a task, the delivery attempt is the protocol
 
-- Status: accepted
+- Status: accepted — decisions 4 and 5 amended by ADR-0062
 - Date: 2026-11-25
 - Stakeholders: office, on-call technicians, administration
 

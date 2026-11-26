@@ -26,7 +26,7 @@ import { personalRecipients } from './receivers'
 import { writeItems } from './items'
 import { effectiveNtfyConfig } from './verification'
 import { CHANNEL_HEALTH_WARNING_EVENT, enqueueChannelHealthWarnings } from './health'
-import { DELIVERY_FAILURE_EVENT, deliveryFailureDeliveries } from './alarm'
+import { DELIVERY_FAILURE_EVENT, enqueueDeliveryFailureItems } from './alarm'
 import type { NtfyConfig } from './channels/ntfy'
 
 /** The insert capability — enough for both the live database and a transaction node. */
@@ -639,14 +639,16 @@ const sleep = (ms: number): Promise<void> =>
  */
 /**
  * The alarm of a failed delivery (`specs/10-notifications.md` §11.18,
- * ADR-0052): a message that never arrived becomes a **task of the
- * administration** — the users with `notification.read_all`, delivered over
- * their own confirmed channels.
+ * ADR-0052, ADR-0062): a delivery that ends `FAILED` becomes a **task of the
+ * administration** — the users with `notification.read_all`, written into the
+ * mailbox only.
  *
- * The alarm **never alarms itself**: the warning of a broken channel and the
- * alarm of a failed delivery write no new task, and the throttle of the alarm
- * (one task per channel and machine code per hour) keeps a broken channel from
- * flooding the inbox.
+ * The alarm fires for **every** failed delivery, also when a later channel of
+ * the chain still delivers the message: the office learns that a channel did
+ * not deliver, not only that a message was lost. The alarm **never alarms
+ * itself**: the warning of a broken channel and the alarm of a failed delivery
+ * write no new task, and the throttle of the alarm (one task per channel and
+ * machine code per hour) keeps a broken channel from flooding the inbox.
  */
 async function alarmOfFailedDelivery(
   database: DbLike,
@@ -661,18 +663,12 @@ async function alarmOfFailedDelivery(
     return
   }
 
-  const deliveries = await deliveryFailureDeliveries(database, {
+  await enqueueDeliveryFailureItems(database, {
     channel: row.channel,
     errorCode,
     eventType: row.eventType,
     ticketNo: ticketNo === '' ? null : ticketNo,
   })
-
-  if (deliveries.length === 0) {
-    return
-  }
-
-  await enqueuePersonalDeliveries(database, deliveries)
 }
 
 export async function drainOutbox(
@@ -824,6 +820,11 @@ export async function drainOutbox(
 
         await finishMessage(database, row, 'FAILED')
 
+        // A delivery that ends `FAILED` becomes a task of the administration
+        // (§11.18, ADR-0052, ADR-0062) — also when a later channel of the
+        // chain still carries the message.
+        await alarmOfFailedDelivery(database, row, errorCode, ticketNo)
+
         if (fallbackQueued) {
           log?.info(
             {
@@ -839,10 +840,6 @@ export async function drainOutbox(
           result.fallback += 1
         } else {
           result.failed += 1
-
-          // The message never arrived (§11.18, ADR-0052): it becomes a task of
-          // the administration.
-          await alarmOfFailedDelivery(database, row, errorCode, ticketNo)
         }
       } else {
         // The row stays `PENDING`; the next loop iteration claims it again.
