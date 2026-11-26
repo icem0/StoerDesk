@@ -63,7 +63,7 @@
     "adminWebhooks": "Meldet Ereignisse an andere Systeme — Adresse, Geheimschlüssel und die Ereignisse je Webhook.",
     "adminBmaSync": "Der Abgleich mit BMAcloud: neue Anlagen werden übernommen, Konflikte protokolliert.",
     "adminDeadlines": "Die Fristen der Prioritäten — wie lange eine Meldung liegen darf, bis sie eskaliert.",
-    "adminEscalation": "Die Stufen der Eskalation und ihre Aktionen; jede Stufe wartet eine Zeit und löst dann Aktionen aus. Rules and their actions fire in list order; change the order by drag and drop.",
+    "adminEscalation": "Die Stufen der Eskalation und ihre Aktionen; jede Stufe wartet eine Zeit und löst dann Aktionen aus. Regeln und ihre Aktionen feuern in Listenreihenfolge. Die Reihenfolge per Drag & Drop ändern.",
     "adminDefaults": "Die Werte, die eine neue Meldung vorbelegt: Priorität, Frist, Objektart und Text.",
     "adminDetectedErrors": "Die Fehler, die bei Meldungen festgestellt wurden; sie zählen in der Statistik.",
     "adminOncall": "Die Bereitschaftspools, ihre Dienstblöcke und die Schichten im Plan.",
