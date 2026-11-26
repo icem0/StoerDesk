@@ -175,10 +175,9 @@
     "notConfigured": "ntfy is not configured on this server. An administrator has to configure the channel in the administration.",
     "selectionHint": "Enable ntfy above for the events that should reach this subscription."
   },
-  "notifications": {
-    "title": "Your channels",
-    "hint": "The channels with the state of the account connected for the signed-in user.",
-    "administration": {
+    "notifications": {
+      "title": "Your channels",
+      "administration": {
       "hint": "The configuration of the channels itself, the write-only secrets and the test message live there.",
       "link": "Channel administration (Administration → Channels)"
     },

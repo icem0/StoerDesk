@@ -175,10 +175,9 @@
     "notConfigured": "ntfy ist auf diesem Server nicht eingerichtet. Ein Administrator muss den Kanal in der Administration konfigurieren.",
     "selectionHint": "Aktiviere ntfy oben bei den Ereignissen, die an dieses Abo gehen sollen."
   },
-  "notifications": {
-    "title": "Deine Kanäle",
-    "hint": "Die Kanäle mit dem Zustand des für die angemeldete Person verknüpften Kontos.",
-    "administration": {
+    "notifications": {
+      "title": "Deine Kanäle",
+      "administration": {
       "hint": "Die Konfiguration der Kanäle selbst, die schreibgeschützten Geheimnisse und die Testnachricht leben in der Kanal-Administration.",
       "link": "Kanal-Administration (Administration → Kanäle)"
     },

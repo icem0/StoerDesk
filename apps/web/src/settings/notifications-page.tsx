@@ -18,6 +18,7 @@ import { ApiError, apiFetch } from '../lib/api'
 import { NtfySubscription } from '../features/settings/NtfySubscription'
 import { WebPushSubscription } from '../features/settings/WebPushSubscription'
 import { AdminLayout } from '../components/admin-layout'
+import { HelpPopover } from '../components/help-popover'
 
 /**
  * The own channels page (`specs/10-notifications.md` §11.1, §11.3, §11.12,
@@ -432,9 +433,13 @@ const testReason = (code: string): string => {
         {t('branding.back')}
       </Link>
 
-      <div className="mt-2 flex flex-col gap-1">
+      <div className="mt-2 flex items-center gap-2 sm:flex-row sm:gap-3">
         <h1 className="text-2xl font-semibold">{t('notifications.title')}</h1>
-        <p className="text-sm text-slate-400">{t('notifications.hint')}</p>
+        <HelpPopover
+          className="shrink-0 self-center"
+          label={t('help:triggerFor', { name: t('notifications.title') })}
+          text={t('help:notifications.pageHint')}
+        />
         <Link
           className="mt-1 inline-block text-xs text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
           to="/admin/channels"

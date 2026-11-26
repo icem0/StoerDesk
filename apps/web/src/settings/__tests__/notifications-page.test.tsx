@@ -455,7 +455,7 @@ describe('NotificationsPage', () => {
 
     expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
     expect(screen.getByText('mit dem Handy scannen')).toBeTruthy()
-    expect(container.querySelectorAll('svg')).toHaveLength(1)
+    expect(container.querySelectorAll('svg')).toHaveLength(2)
     expect(container.querySelector('svg title')?.textContent).toBe('ntfy-Abo QR-Code')
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/ntfy',
@@ -560,7 +560,7 @@ describe('NotificationsPage', () => {
 
     expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
     expect(screen.getByText('https://ntfy.sh/stoerdesk-admin')).toBeTruthy()
-    expect(container.querySelectorAll('svg')).toHaveLength(1)
+    expect(container.querySelectorAll('svg')).toHaveLength(2)
     expect(
       await screen.findByText(/ntfy (ist auf diesem Server nicht eingerichtet|is not configured)/i),
     ).toBeTruthy()

@@ -72,5 +72,8 @@
     "adminStickerTemplate": "Geometrie und Aussehen der Aufkleberbögen: Format, Größe, Schrift und QR-Feinheit.",
     "adminDashboard": "Die Kacheln der Startseite und die Fernsehanzeige für den Bildschirm im Büro.",
     "adminUpdate": "Die Aktualisierung der Installation — sichtbar nur mit dem passenden Recht."
+  },
+  "notifications": {
+    "pageHint": "Die Kanäle mit dem Zustand des für die angemeldete Person verknüpften Kontos."
   }
 }

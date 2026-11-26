@@ -72,5 +72,8 @@
     "adminStickerTemplate": "Geometry and appearance of the sticker sheets: format, size, font and the fineness of the QR code.",
     "adminDashboard": "The tiles of the start page and the wall display for the screen in the office.",
     "adminUpdate": "The update of the installation — visible only with the matching right."
+  },
+  "notifications": {
+    "pageHint": "The channels with the state of the account connected for the signed-in user."
   }
 }
