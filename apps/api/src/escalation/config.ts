@@ -16,7 +16,15 @@ import {
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
-import { escalationActions, escalationRules, escalationStages, groups, oncallPools, ticketStatuses, users } from '../db/schema'
+import {
+  escalationActions,
+  escalationRules,
+  escalationStages,
+  groups,
+  oncallPools,
+  ticketStatuses,
+  users,
+} from '../db/schema'
 import { WORKFLOW_EVENT_STATUS } from '../tickets/workflow'
 
 /**
@@ -143,12 +151,174 @@ export async function readReachableStages(
 
     const events = stage.reachedBy.filter((event) => event in WORKFLOW_EVENT_STATUS)
 
-    return events.length === 0
-      ? []
-      : [{ key: stage.key, names: stage.names, events }]
+    return events.length === 0 ? [] : [{ key: stage.key, names: stage.names, events }]
   })
 }
 
+/**
+ * The rows of an installation that was written before the current contract
+ * (`specs/07-escalation.md` §7.9, ADR-0063): the read of the administration and
+ * of the escalation scan brings them into the contract instead of losing the
+ * whole configuration —
+ *
+ * - an empty condition of a rule or of an action (`{}`, `null` or a missing key)
+ *   becomes the empty condition of §7.4 (`{ all: [] }`), the default of the rows
+ *   of `escalation_rules` and `escalation_actions`;
+ * - the `assign` action of the former shape names its mode and the technician of
+ *   the pool of the office (ADR-0039, decision 3); the technician becomes a
+ *   target of the kind `user`, an action that named the pool of the office is
+ *   dropped — the rule of the migration of WP-M32-05;
+ * - a `notify` action without a recipient (neither channels nor a target) is
+ *   dropped — it can never deliver, the rule of `notify_needs_target_or_channel`;
+ * - the flag `acceptance` of the former shape carried a text, the contract
+ *   carries a boolean;
+ * - a rule that carries both clocks keeps the clock its stage says: a stage rule
+ *   waits with its minutes, a deadline rule with its percentage (§7.2, §7.5);
+ * - the reference of a stage rule that does not match the clock of its stage
+ *   becomes `null` — the stage clock, the fallback of `writeEscalationStages`
+ *   (ADR-0023, §7.11);
+ * - a stage without a name for a required locale takes the key of the stage, the
+ *   fallback of `localizedName`; a stage with the position of `0` (the default of
+ *   the row) takes its place in the order.
+ *
+ * A row that cannot be brought into the contract stays as it is and is answered
+ * with the code `config_invalid` by the caller — never as a bare server error.
+ */
+export function normalizeEscalationRows(
+  stages: Record<string, unknown>[],
+  rules: Record<string, unknown>[],
+): { stages: Record<string, unknown>[]; rules: Record<string, unknown>[] } {
+  const normalizedStages: Record<string, unknown>[] = stages.map((stage, index) => {
+    const names = { ...((stage.names ?? {}) as Record<string, string>) }
+
+    for (const locale of ['de', 'en'] as const) {
+      if ((names[locale] ?? '').trim() === '') {
+        names[locale] = String(stage.key ?? '')
+      }
+    }
+
+    const position = Number(stage.position ?? 0)
+
+    return {
+      ...stage,
+      names,
+      position: Number.isInteger(position) && position >= 1 ? position : index + 1,
+    }
+  })
+
+  const clockRows: { key: string; predecessor: string | null; reachedBy: readonly string[] }[] =
+    normalizedStages.map((stage) => ({
+      key: String(stage.key ?? ''),
+      predecessor:
+        stage.predecessor === null || stage.predecessor === undefined
+          ? null
+          : String(stage.predecessor),
+      reachedBy: (stage.reachedBy ?? []) as unknown as readonly string[],
+    }))
+
+  const normalizedRules = rules.map((rule) => {
+    const stageKey =
+      rule.stageKey === null || rule.stageKey === undefined ? null : String(rule.stageKey)
+    const actions = ((rule.actions ?? []) as unknown as Record<string, unknown>[])
+      .map(normalizeEscalationAction)
+      .flatMap((action) => (action === undefined ? [] : [action]))
+
+    let minutes = rule.minutes
+    let percent = rule.percent
+
+    if (minutes !== null && percent !== null) {
+      if (stageKey === null) {
+        minutes = null
+      } else {
+        percent = null
+      }
+    }
+
+    let reference = rule.reference
+
+    if (stageKey !== null && reference !== null) {
+      const clock = escalationStageClockEvents(stageKey, clockRows)
+
+      if (!clock.includes(String(reference))) {
+        reference = null
+      }
+    }
+
+    return {
+      ...rule,
+      actions,
+      minutes,
+      percent,
+      reference,
+      condition: conditionOfRuleRow(rule.condition),
+    }
+  })
+
+  return { stages: normalizedStages, rules: normalizedRules }
+}
+
+/** An empty condition of a legacy row (`{}`, `null`, a missing key) is `{ all: [] }`. */
+function conditionOfRuleRow(condition: unknown): unknown {
+  if (condition === null || condition === undefined) {
+    return { all: [] as unknown[] }
+  }
+
+  if (typeof condition !== 'object' || Array.isArray(condition)) {
+    return { all: [] as unknown[] }
+  }
+
+  const tree = condition as Record<string, unknown>
+
+  return 'all' in tree || 'any' in tree || 'field' in tree ? condition : { all: [] as unknown[] }
+}
+
+/**
+ * One action of a legacy rule (ADR-0063): `undefined` means an action that is
+ * dropped — it names no recipient or the pool of the office that no longer
+ * exists.
+ */
+function normalizeEscalationAction(
+  action: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  const type = action.type
+  const normalized: Record<string, unknown> = {
+    ...action,
+    condition: conditionOfRuleRow(action.condition),
+  }
+
+  if ('acceptance' in normalized) {
+    normalized.acceptance = normalized.acceptance !== false && normalized.acceptance !== 'false'
+  }
+
+  if (type === 'assign') {
+    const target = normalized.target as { kind?: string; id?: string } | undefined
+    const knownTarget =
+      target !== undefined &&
+      (target.kind === 'pool' || target.kind === 'group' || target.kind === 'user') &&
+      typeof target.id === 'string'
+
+    if (knownTarget) {
+      return normalized
+    }
+
+    if (typeof normalized.user === 'string') {
+      return { ...normalized, target: { kind: 'user', id: normalized.user } }
+    }
+
+    return undefined
+  }
+
+  if (type === 'notify') {
+    const channels = normalized.channels
+    const hasChannels = Array.isArray(channels) && channels.length > 0
+
+    if (normalized.target === undefined && !hasChannels) {
+      return undefined
+    }
+  }
+
+  return normalized
+}
 
 /** Reads the whole configuration: the stages, the rules and their actions. */
 export async function readEscalationConfig(database: Db): Promise<EscalationConfig> {
@@ -194,7 +364,17 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
     active: row.active,
   }))
 
-  return escalationConfigSchema.parse({ stages, rules })
+  const normalized = normalizeEscalationRows(stages, rules)
+  const parsed = escalationConfigSchema.safeParse({
+    stages: normalized.stages,
+    rules: normalized.rules,
+  })
+
+  if (!parsed.success) {
+    throw new EscalationConfigError(500, 'config_invalid', { fields: fieldPaths(parsed.error) })
+  }
+
+  return parsed.data
 }
 
 /**
@@ -202,7 +382,10 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
  * stage that does not exist are rejected; the key of a rule is its identity,
  * so the firing log of the former rules stays readable.
  */
-export async function writeEscalationConfig(database: Db, body: unknown): Promise<EscalationConfig> {
+export async function writeEscalationConfig(
+  database: Db,
+  body: unknown,
+): Promise<EscalationConfig> {
   const parsed = escalationRulesBodySchema.safeParse(body)
 
   if (!parsed.success) {
@@ -249,9 +432,7 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
   // (WP-M14-40b, the service rule of WP-M14-39 on the escalation side): the jsonb
   // `config` of the action cannot carry a foreign key (WP-M14-40), so the service
   // checks it and answers `400 invalid_status_key` with the field path.
-  const statusKeyRows = await database
-    .select({ key: ticketStatuses.key })
-    .from(ticketStatuses)
+  const statusKeyRows = await database.select({ key: ticketStatuses.key }).from(ticketStatuses)
   const statusKeys = new Set(statusKeyRows.map((row) => row.key))
   const unknownStatusFields: string[] = []
 
@@ -321,11 +502,7 @@ export async function writeEscalationConfig(database: Db, body: unknown): Promis
       }
 
       const known =
-        action.target.kind === 'pool'
-          ? poolIds
-          : action.target.kind === 'user'
-            ? userIds
-            : groupIds
+        action.target.kind === 'pool' ? poolIds : action.target.kind === 'user' ? userIds : groupIds
 
       if (!known.has(action.target.id)) {
         unknownTargetFields.push(`rules.${ruleIndex}.actions.${actionIndex}.target.id`)

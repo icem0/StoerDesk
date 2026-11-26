@@ -54,6 +54,7 @@ import { EscalationActionEditor } from './escalation-action-editor'
  */
 
 const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
+const handledLoadCodes = [...handledErrorCodes, 'config_invalid'] as const
 const jsonHeaders = { 'content-type': 'application/json' }
 
 function errorMessage(t: TFunction<'settings'>, error: unknown): string {
@@ -63,6 +64,18 @@ function errorMessage(t: TFunction<'settings'>, error: unknown): string {
     (handledErrorCodes as readonly string[]).includes(error.code)
       ? error.code
       : 'unknown'
+
+  return t(`admin.escalation.errors.${code}`)
+}
+
+/** The message of a configuration that could not be read — never the text of a failed save. */
+function loadErrorMessage(t: TFunction<'settings'>, error: unknown): string {
+  const code =
+    error instanceof ApiError &&
+    error.code !== undefined &&
+    (handledLoadCodes as readonly string[]).includes(error.code)
+      ? error.code
+      : 'load'
 
   return t(`admin.escalation.errors.${code}`)
 }
@@ -153,8 +166,8 @@ export function EscalationPage() {
   const [editingStageKey, setEditingStageKey] = useState<string | null>(null)
   const [savedHours, setSavedHours] = useState<DeadlineHours | null>(null)
   const [savedConfig, setSavedConfig] = useState<EscalationConfig | null>(null)
-  const hours = savedHours ?? (settingsQuery.data?.hours ?? DEADLINE_HOURS)
-  const config = savedConfig ?? (configQuery.data ?? { stages: [], rules: [] })
+  const hours = savedHours ?? settingsQuery.data?.hours ?? DEADLINE_HOURS
+  const config = savedConfig ?? configQuery.data ?? { stages: [], rules: [] }
 
   const saveHours = useMutation({
     mutationFn: (body: DeadlineSettings) =>
@@ -183,8 +196,7 @@ export function EscalationPage() {
         headers: jsonHeaders,
         body: JSON.stringify(body),
       }),
-    onSuccess: (saved) =>
-      setSavedConfig({ ...config, stages: (saved as EscalationConfig).stages }),
+    onSuccess: (saved) => setSavedConfig({ ...config, stages: (saved as EscalationConfig).stages }),
   })
 
   if (me.isPending) {
@@ -214,7 +226,7 @@ export function EscalationPage() {
   if (configQuery.isError) {
     return (
       <p role="alert" className="text-rose-400 text-sm">
-        {errorMessage(t, configQuery.error)}
+        {loadErrorMessage(t, configQuery.error)}
       </p>
     )
   }
@@ -236,7 +248,9 @@ export function EscalationPage() {
     stageLabels[stage.key] = stageName(stage.key)
   }
 
-  const statusKeys = (statusesQuery.data?.statuses ?? []).filter((status) => status.active).map((status) => status.key)
+  const statusKeys = (statusesQuery.data?.statuses ?? [])
+    .filter((status) => status.active)
+    .map((status) => status.key)
 
   const poolTargets = (poolsQuery.data?.pools ?? [])
     .filter((pool) => pool.name.trim() !== '')
@@ -249,8 +263,7 @@ export function EscalationPage() {
     name: `${user.givenName} ${user.familyName}`.trim() || user.email,
   }))
 
-  const rulesOfStage = (key: string) =>
-    config.rules.filter((rule) => rule.stageKey === key)
+  const rulesOfStage = (key: string) => config.rules.filter((rule) => rule.stageKey === key)
 
   return (
     <section className="flex flex-col gap-4">
@@ -305,7 +318,9 @@ export function EscalationPage() {
             ))}
           </div>
           <p className="text-xs text-slate-500">{t('admin.escalation.help.deadlines')}</p>
-          {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
+          {!canWrite ? (
+            <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p>
+          ) : null}
           {canWrite ? (
             <button
               className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
@@ -461,7 +476,9 @@ export function EscalationPage() {
                       <p className="mt-1 text-xs text-rose-300">
                         {t('admin.escalation.stage.removeRules')}
                         {': '}
-                        {rulesOfStage(key).map((rule) => rule.key).join(', ') || '—'}
+                        {rulesOfStage(key)
+                          .map((rule) => rule.key)
+                          .join(', ') || '—'}
                       </p>
                       <div className="mt-2 flex gap-2">
                         <button
@@ -502,7 +519,9 @@ export function EscalationPage() {
                         stageNames={stageLabels}
                         onSave={(next) =>
                           void saveRules.mutate({
-                            rules: config.rules.map((entry) => (entry.key === rule.key ? next : entry)),
+                            rules: config.rules.map((entry) =>
+                              entry.key === rule.key ? next : entry,
+                            ),
                           })
                         }
                       />
@@ -528,10 +547,11 @@ export function EscalationPage() {
             </p>
           ) : null}
 
-          {!canWrite ? <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p> : null}
+          {!canWrite ? (
+            <p className="text-sm text-amber-300">{t('admin.escalation.readOnly')}</p>
+          ) : null}
         </div>
       ) : null}
-
     </section>
   )
 }
@@ -594,7 +614,11 @@ export function AddStageForm({
     setNameDe('')
     setNameEn('')
     setActive(true)
-    setPosition(String(Math.min(20, Math.max(0, ...stages.map((stage) => stage.position), positionValue) + 1)))
+    setPosition(
+      String(
+        Math.min(20, Math.max(0, ...stages.map((stage) => stage.position), positionValue) + 1),
+      ),
+    )
   }
 
   return (

@@ -488,6 +488,8 @@
         "session_invalid": "Die Anmeldung ist abgelaufen.",
         "forbidden": "Keine Berechtigung für diese Aktion.",
         "invalid_request": "Mindestens ein Wert ist ungültig: Fristen 1 bis 8760 Stunden.",
+        "config_invalid": "Die Eskalation ist ungültig: Stufe, Regeln oder Aktionen ist ungültig.",
+        "load": "Die Eskalation ist ungültig.",
         "stageChainInvalid": "Die Stufenkette ist ungültig: Schlüssel, Vorgänger und Position prüfen.",
         "unknown": "Speichern fehlgeschlagen."
       }

@@ -488,6 +488,8 @@
         "session_invalid": "The sign-in has expired.",
         "forbidden": "No permission for this action.",
         "invalid_request": "At least one value is invalid: a deadline must be between 1 and 8760 hours.",
+        "config_invalid": "The saved escalation configuration is not valid: a stage, a rule or an action breaks the contract.",
+        "load": "The escalation could not be read.",
         "stageChainInvalid": "The stage chain is invalid: check the keys, the predecessor and the position.",
         "unknown": "Saving failed."
       }

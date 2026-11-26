@@ -26,7 +26,9 @@ import { loadEnv } from '../config/env'
  * `PUT /api/v1/escalation/stages` — `settings.write`, replaces the whole stage
  * chain in one validated transaction (§7.11).
  *
- * A malformed body answers `400 invalid_request` with the field paths.
+ * A malformed body answers `400 invalid_request` with the field paths. A
+ * configuration of the installation that cannot be read answers `500 config_invalid`
+ * with the field paths (ADR-0063) — a failed load is never a bare server error.
  */
 
 type Db = Database['database']
@@ -70,7 +72,15 @@ export const escalationRoutes = fp<EscalationRoutesOptions>(
     app.get(
       '/api/v1/escalation/config',
       { preHandler: requirePermission(database, PERMISSIONS.settings.read) },
-      async () => readEscalationConfig(database),
+      async (_, reply) => {
+        try {
+          return await readEscalationConfig(database)
+        } catch (error) {
+          const failure = handleError(error)
+
+          return reply.code(failure.statusCode).send(failure.body)
+        }
+      },
     )
 
     app.put(

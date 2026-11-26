@@ -22,16 +22,21 @@ import { AdminLayout } from '../components/admin-layout'
 
 const jsonHeaders = { 'content-type': 'application/json' }
 
-const handledErrorCodes = ['session_invalid', 'forbidden', 'invalid_request'] as const
+const handledLoadCodes = [
+  'session_invalid',
+  'forbidden',
+  'invalid_request',
+  'config_invalid',
+] as const
 
-/** The message of a failed answer of the server (the codes of the escalation page). */
-function errorMessage(t: TFunction<'settings'>, error: unknown): string {
+/** The message of a chain that could not be read (the codes of the escalation page). */
+function loadErrorMessage(t: TFunction<'settings'>, error: unknown): string {
   const code =
     error instanceof ApiError &&
     error.code !== undefined &&
-    (handledErrorCodes as readonly string[]).includes(error.code)
+    (handledLoadCodes as readonly string[]).includes(error.code)
       ? error.code
-      : 'unknown'
+      : 'load'
 
   return t(`admin.escalation.errors.${code}`)
 }
@@ -85,7 +90,7 @@ export function EscalationStageCreatePage() {
   if (config.isError) {
     return (
       <p role="alert" className="text-sm text-rose-400">
-        {errorMessage(t, config.error)}
+        {loadErrorMessage(t, config.error)}
       </p>
     )
   }

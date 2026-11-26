@@ -139,4 +139,44 @@ describe('the access of the escalation administration', () => {
 
     expect(await screen.findByTestId('escalation-stage-list')).toBeTruthy()
   })
+
+  it('names a saved configuration of an older installation as an invalid configuration', async () => {
+    void i18n.changeLanguage('de')
+    stubApi(
+      () =>
+        Response.json(
+          { code: 'config_invalid', params: {} },
+          {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+      ['settings.read'],
+    )
+
+    renderPage()
+
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.queryByText('Speichern fehlgeschlagen.')).toBeNull()
+  })
+
+  it('names a server error of the read of the configuration', async () => {
+    void i18n.changeLanguage('de')
+    stubApi(
+      () =>
+        Response.json(
+          { statusCode: 500, error: 'Internal Server Error' },
+          {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+      ['settings.read'],
+    )
+
+    renderPage()
+
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.queryByText('Speichern fehlgeschlagen.')).toBeNull()
+  })
 })

@@ -31,6 +31,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   its query; `/admin/delivery` and its quittature stay.
 
 ### Fixed
+- **The escalation administration reads the configuration of an older
+  installation (ADR-0063).** Opening `/admin/escalation` answered only
+  „Speichern fehlgeschlagen.“ and showed nothing: the saved stages, rules and
+  actions of an installation that was edited in an older version no longer
+  parsed under the current contract, `readEscalationConfig` threw an
+  uncaught ZodError and the route answered a bare `500` — the escalation scan
+  failed the same silent way. The read brings the former shapes into the
+  contract (an empty condition `{}` or `null` becomes `{ all: [] }` of §7.4,
+  the technician of a former `assign` action becomes a target of the kind
+  `user`, an action that named the pool of the office and a `notify` action
+  without a recipient are dropped, a rule with both clocks keeps the clock
+  its stage says, a reference outside the clock of its stage falls back to
+  the stage clock, a stage without the name of a required locale takes its
+  key and a stage with the position `0` takes its place). A configuration
+  that still cannot be parsed answers `500` with the code
+  `config_invalid` and the field paths, and the page names the code of the
+  answer: the texts `admin.escalation.errors.config_invalid` and
+  `admin.escalation.errors.load` are load texts, the text of a failed save
+  stays where a save failed.
 - **The e-mail channel is named in the lists of the channels (WP-M41-02).** The
   mailbox of the administration is a channel of the instance since WP-M41-01,
   but the lists still knew the environment alone: the rule of the administration
