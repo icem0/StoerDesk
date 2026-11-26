@@ -23,6 +23,16 @@ export interface Mailbox {
   config: EmailConfig
   /** `true` when the mailbox can send a mail at all. */
   available: boolean
+  /**
+   * `true` when the mailbox is **cleanly set up** (`specs/19-customer-portal.md`
+   * §19.13, ADR-0062): the channel exists, it is enabled, the host is set, the
+   * sender is an address and the login is complete. The registration of a
+   * customer needs it — a mailbox that cannot deliver cannot confirm an
+   * account.
+   */
+  ready: boolean
+  /** The reasons why the mailbox is not ready — the administration names them. */
+  reasons: string[]
 }
 
 function stringSettings(value: unknown): Record<string, string> {
@@ -44,7 +54,11 @@ function stringSettings(value: unknown): Record<string, string> {
 /** Reads the mailbox of the instance and answers whether it can send. */
 export async function readMailbox(database: Db, env: Env): Promise<Mailbox> {
   const rows = await database
-    .select({ config: notificationChannels.config, secret: notificationChannels.secret })
+    .select({
+      config: notificationChannels.config,
+      secret: notificationChannels.secret,
+      enabled: notificationChannels.enabled,
+    })
     .from(notificationChannels)
     .where(eq(notificationChannels.kind, 'email'))
     .limit(1)
@@ -74,7 +88,37 @@ export async function readMailbox(database: Db, env: Env): Promise<Mailbox> {
     },
   }
 
-  return { config, available: host !== '' && from !== '' }
+  // §19.13 (ADR-0062): the reasons why the mailbox is not cleanly set up.
+  const reasons: string[] = []
+
+  if (row === undefined) {
+    reasons.push('channel_missing')
+  } else if (!row.enabled) {
+    reasons.push('channel_disabled')
+  }
+
+  if (host === '') {
+    reasons.push('host_missing')
+  }
+
+  if (from === '') {
+    reasons.push('sender_missing')
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from)) {
+    reasons.push('sender_invalid')
+  }
+
+  const password = row === undefined || row.secret === '' ? env.SMTP_PASSWORD : row.secret
+
+  if (config.user !== '' && password === '') {
+    reasons.push('password_missing')
+  }
+
+  return {
+    config,
+    available: host !== '' && from !== '',
+    ready: reasons.length === 0,
+    reasons,
+  }
 }
 
 /**

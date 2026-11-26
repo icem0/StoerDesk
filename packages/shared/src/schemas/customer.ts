@@ -185,3 +185,36 @@ export const customerObjectSchema = z.object({
 })
 
 export type CustomerObject = z.infer<typeof customerObjectSchema>
+
+/**
+ * The switch of the customer portal (`specs/19-customer-portal.md` §19.13):
+ * the administration decides whether the instance has a customer portal at all
+ * and whether a customer may register himself.
+ *
+ * `mailReady` says that the mailbox of the instance is **cleanly set up** — the
+ * registration needs it (ADR-0062): without a working mailbox nobody can
+ * confirm an account, and an account nobody can confirm is an account nobody
+ * can use.
+ */
+export const customerPortalSettingsSchema = z.object({
+  /** The customer may sign in and sees his reports (ADR-0062). */
+  portalEnabled: z.boolean(),
+  /** The customer may register himself over the link in the mail (ADR-0062). */
+  registrationEnabled: z.boolean(),
+  /** The mailbox of the instance is cleanly set up — the precondition of the registration. */
+  mailReady: z.boolean(),
+  /** The reasons why the mailbox is not cleanly set up — the administration names them. */
+  mailReasons: z.array(z.string()),
+})
+
+export type CustomerPortalSettings = z.infer<typeof customerPortalSettingsSchema>
+
+/** The write of the administration: both switches are optional. */
+export const updateCustomerPortalSettingsRequestSchema = z.object({
+  portalEnabled: z.boolean().optional(),
+  registrationEnabled: z.boolean().optional(),
+})
+
+export type UpdateCustomerPortalSettingsRequest = z.infer<
+  typeof updateCustomerPortalSettingsRequestSchema
+>

@@ -18,6 +18,7 @@ import { bmaSyncRoutes } from './integrations/bmacloud/routes'
 import { settingsBrandingRoutes } from './settings/branding'
 import { settingsDashboardRoutes } from './settings/dashboard'
 import { settingsDeadlineRoutes } from './settings/deadlines'
+import { settingsCustomerRoutes } from './settings/customers'
 import { settingsNotificationsRoutes } from './settings/notifications'
 import { settingsStickerTemplateRoutes } from './settings/sticker-template'
 import { escalationRoutes } from './escalation/routes'
@@ -153,6 +154,7 @@ export async function buildServer() {
   await app.register(settingsDeadlineRoutes, { database })
   await app.register(settingsTicketDefaultsRoutes, { database })
   await app.register(settingsNotificationsRoutes, { database, env })
+  await app.register(settingsCustomerRoutes, { database, env })
   await app.register(settingsStickerTemplateRoutes, { database })
   await app.register(escalationRoutes, { database })
   await app.register(settingsTextTemplateRoutes, { database })
