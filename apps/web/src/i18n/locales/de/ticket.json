@@ -314,7 +314,6 @@
   },
   "list": {
     "title": "Meldungen",
-    "hint": "Offene Meldungen zuerst — der Knopf „Filter“ öffnet Suche, Status und Priorität sowie erledigte und überfällige Meldungen.",
     "search": "Suchen",
     "status": "Status",
     "statusAll": "alle Status",

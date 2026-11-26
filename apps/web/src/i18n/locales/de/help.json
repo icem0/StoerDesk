@@ -29,7 +29,7 @@
     "customersMore": "Hier schaltest du das Kundenportal frei: die Kunden melden ihre Störungen, sehen ihre offenen Meldungen und können sich selbst registrieren — die Registrierung braucht ein sauber eingerichtetes Postfach."
   },
   "page": {
-    "tickets": "Die Meldungen der Installation. Die Liste öffnet mit den offenen Meldungen; die Filter stehen im Menü neben „Neue Meldung“.",
+    "tickets": "Die Meldungen der Installation. Die Liste öffnet mit den offenen Meldungen; der Knopf „Filter“ öffnet Suche, Status und Priorität sowie erledigte und überfällige Meldungen.",
     "ticketsCreate": "Eine Meldung, die die Office selbst anlegt — zum Beispiel aus einem Anruf.",
     "ticketSend": "Die Nachricht an den Meldenden: sie nennt den Stand der Meldung und den Weg zur Statusseite.",
     "stats": "Die Zahlen der Installation: Meldungen, Reaktionszeit und Bearbeitungszeit, nach System, Störungsart und festgestelltem Fehler.",

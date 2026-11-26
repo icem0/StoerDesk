@@ -314,7 +314,6 @@
   },
   "list": {
     "title": "Tickets",
-    "hint": "Open tickets first — the Filter button opens search, status and priority as well as closed and overdue tickets.",
     "search": "Search",
     "status": "Status",
     "statusAll": "all statuses",

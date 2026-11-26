@@ -224,19 +224,9 @@ export function TicketListPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">{t('list.title')}</h1>
-          <p className="text-sm text-slate-400">{t('list.hint')}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700"
-            onClick={() => navigate('/tickets/create')}
-            type="button"
-          >
-            {t('list.actions.create')}
-          </button>
+      <div className="flex flex-col gap-3">
+        <h1 className="text-xl font-semibold">{t('list.title')}</h1>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2">
           <button
             aria-expanded={filtersOpen}
             className="min-h-11 rounded border border-slate-600 bg-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
@@ -244,6 +234,13 @@ export function TicketListPage() {
             type="button"
           >
             {t('list.filterButton')}
+          </button>
+          <button
+            className="min-h-11 rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700"
+            onClick={() => navigate('/tickets/create')}
+            type="button"
+          >
+            {t('list.actions.create')}
           </button>
         </div>
       </div>

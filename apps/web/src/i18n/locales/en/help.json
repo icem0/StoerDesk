@@ -29,7 +29,7 @@
     "customersMore": "Here you switch the customer portal on: the customers report their faults, see their open reports and may register themselves — the registration needs a cleanly set up mailbox."
   },
   "page": {
-    "tickets": "The tickets of the installation. The list opens with the open ones; the filters sit in the menu beside „Neue Meldung“.",
+    "tickets": "The tickets of the installation. The list opens with the open ones; the Filter button opens search, status and priority as well as closed and overdue tickets.",
     "ticketsCreate": "A ticket the office creates itself — for example out of a phone call.",
     "ticketSend": "The message to the reporter: it names the state of the ticket and the way to the status page.",
     "stats": "The numbers of the installation: tickets, reaction time and processing time, by system, fault type and detected error.",
