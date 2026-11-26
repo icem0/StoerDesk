@@ -19,6 +19,7 @@ import { NtfySubscription } from '../features/settings/NtfySubscription'
 import { WebPushSubscription } from '../features/settings/WebPushSubscription'
 import { AdminLayout } from '../components/admin-layout'
 import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 
 /**
  * The own channels page (`specs/10-notifications.md` §11.1, §11.3, §11.12,
@@ -469,11 +470,16 @@ const testReason = (code: string): string => {
         className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
         aria-labelledby="overview-heading"
       >
-        <h2 id="overview-heading" className="text-lg font-semibold">
-          {t('notifications.overview.heading')}
-        </h2>
-
-        <p className="text-sm text-slate-300">{t('notifications.overview.hint')}</p>
+        <div className="flex items-center gap-1">
+          <h2 id="overview-heading" className="text-lg font-semibold">
+            {t('notifications.overview.heading')}
+          </h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('notifications.overview.heading') })}
+            text={t('notifications.overview.hint')}
+          />
+        </div>
 
         <ul className="flex flex-col gap-1 text-sm">
           <li className="text-slate-300">
@@ -501,14 +507,18 @@ const testReason = (code: string): string => {
           </li>
         </ul>
 
-        <p className="text-sm text-slate-400">
-          {t('notifications.administration.hint')}
+        <p className="flex items-center gap-1 text-sm text-slate-400">
           <Link
-            className="ml-2 text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
             to="/admin/channels"
           >
             {t('notifications.administration.link')}
           </Link>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('notifications.administration.link') })}
+            text={t('notifications.administration.hint')}
+          />
         </p>
       </section>
 
@@ -642,9 +652,16 @@ const testReason = (code: string): string => {
           id={`channel-panel-telegram`}
           aria-labelledby="telegram-heading"
         >
-          <h2 id="telegram-heading" className="text-lg font-semibold">
-            {t('notifications.kinds.telegram')}
-          </h2>
+          <div className="flex items-center gap-1">
+            <h2 id="telegram-heading" className="text-lg font-semibold">
+              {t('notifications.kinds.telegram')}
+            </h2>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('notifications.kinds.telegram') })}
+              text={t('notifications.telegram.removeHint')}
+            />
+          </div>
 
           {telegramCode.isError ? (
             <p role="alert" className="text-sm text-red-400">
@@ -698,8 +715,6 @@ const testReason = (code: string): string => {
               ) : null}
             </>
           ) : null}
-
-          <p className="mt-2 text-sm text-slate-400">{t('notifications.telegram.removeHint')}</p>
         </section>
         </>
       ) : null}
@@ -956,11 +971,16 @@ const testReason = (code: string): string => {
           className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4"
           aria-labelledby="verification-heading"
         >
-          <h2 id="verification-heading" className="text-lg font-semibold">
-            {t('notifications.verification.heading')}
-          </h2>
-
-          <p className="text-sm text-slate-300">{t('notifications.verification.hint')}</p>
+          <div className="flex items-center gap-1">
+            <h2 id="verification-heading" className="text-lg font-semibold">
+              {t('notifications.verification.heading')}
+            </h2>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('notifications.verification.heading') })}
+              text={t('notifications.verification.hint')}
+            />
+          </div>
 
           <ul className="flex flex-col gap-3">
             {NOTIFICATION_CHANNEL_KINDS.filter((kind) => kind !== 'signal').map((kind) => {

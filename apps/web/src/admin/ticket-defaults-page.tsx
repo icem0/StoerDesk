@@ -10,6 +10,8 @@ import {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { ApiError, apiFetch } from '../lib/api'
 
 /**
@@ -107,7 +109,6 @@ export function TicketDefaultsPage() {
     <section className="flex flex-col gap-4">
       <div>
         <h1 className="text-xl font-semibold">{t('admin.defaults.title')}</h1>
-        <p className="text-sm text-slate-400">{t('admin.defaults.hint')}</p>
       </div>
 
       {!canWrite ? (
@@ -155,8 +156,14 @@ export function TicketDefaultsPage() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">{t('admin.defaults.deviations')}</h2>
-        <p className="text-sm text-slate-400">{t('admin.defaults.deviationsHint')}</p>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">{t('admin.defaults.deviations')}</h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('admin.defaults.deviations') })}
+            text={t('admin.defaults.deviationsHint')}
+          />
+        </div>
 
         {overrides.length === 0 ? (
           <p className="text-sm text-slate-400">{t('admin.defaults.empty')}</p>

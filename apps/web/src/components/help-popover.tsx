@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
+import { helpTriggerClass } from './help-trigger'
 import { Icon } from './icon'
 
 /**
@@ -139,10 +140,7 @@ export function HelpPopover({ text, label, className }: HelpPopoverProps) {
         aria-controls={panelId}
         aria-expanded={open}
         aria-label={open ? t('triggerOpen') : (label ?? t('trigger'))}
-        className={
-          className ??
-          'flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-slate-700 text-slate-400 transition-colors hover:border-slate-600 hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400'
-        }
+        className={className ?? helpTriggerClass}
         id={triggerId}
         onClick={toggle}
         ref={trigger}

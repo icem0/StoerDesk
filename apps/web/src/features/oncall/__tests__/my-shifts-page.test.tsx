@@ -375,7 +375,12 @@ describe('MyShiftsPage', () => {
     )
 
     // the panel names the address, so the link can be read and copied by hand
-    await waitForText('Die Adresse deines persönlichen Kalender-Feeds.')
+    // the explanation of the address sits behind the info symbol of its heading
+    fireEvent.click(screen.getByRole('button', { name: 'Erklärung zu Kalender-URL' }))
+
+    expect(screen.getByRole('note').textContent).toBe(
+      'Die Adresse deines persönlichen Kalender-Feeds.',
+    )
 
     const field = screen.getByLabelText('Kalender-URL') as HTMLInputElement
 

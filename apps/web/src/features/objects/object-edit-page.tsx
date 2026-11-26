@@ -136,7 +136,6 @@ export function ObjectEditPage() {
           <h1 className="text-xl font-semibold">
             {t('edit.title', { objectNo: object.objectNo })}
           </h1>
-          <p className="text-sm text-slate-400">{t('edit.hint')}</p>
         </div>
         <button
           className="rounded bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-500"

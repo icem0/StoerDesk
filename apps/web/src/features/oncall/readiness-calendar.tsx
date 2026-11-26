@@ -6,6 +6,8 @@ import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
 import { ShiftDetailDialog } from './shift-detail-dialog'
 import { absoluteApiUrl } from '../../lib/api'
+import { HelpPopover } from '../../components/help-popover'
+import { helpTriggerClass } from '../../components/help-trigger'
 
 /**
  * The readiness calendar of the office (`specs/04-oncall.md` §4a.2, §4a.3;
@@ -291,9 +293,13 @@ export function ReadinessCalendar(props: {
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
+        <div className="flex items-center gap-1">
           <h2 className="text-lg font-semibold">{t('readiness.title')}</h2>
-          <p className="text-sm text-slate-400">{t('readiness.hint')}</p>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('readiness.title') })}
+            text={t('readiness.hint')}
+          />
         </div>
         <div className="flex items-center gap-2">
           {icalUrl ? (
@@ -342,10 +348,16 @@ export function ReadinessCalendar(props: {
 
       {panelOpen && icalUrl ? (
         <div className="mt-3 rounded border border-slate-700 bg-slate-950/60 p-3">
-          <h3 className="text-sm font-semibold text-slate-200">
-            {t('readiness.icalTitle')}
-          </h3>
-          <p className="mt-1 text-xs text-slate-400">{t('readiness.icalHint')}</p>
+          <div className="flex items-center gap-1">
+            <h3 className="text-sm font-semibold text-slate-200">
+              {t('readiness.icalTitle')}
+            </h3>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('readiness.icalTitle') })}
+              text={t('readiness.icalHint')}
+            />
+          </div>
           <div className="mt-2 flex flex-wrap gap-2">
             <input
               aria-label={t('readiness.icalTitle')}

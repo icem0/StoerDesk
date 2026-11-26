@@ -509,7 +509,6 @@ export function InternalCreatePage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-between sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">{t('internal.create.title')}</h1>
-          <p className="text-sm text-slate-400">{t('internal.create.hint')}</p>
         </div>
         <button
           className="rounded bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-500"

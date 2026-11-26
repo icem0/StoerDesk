@@ -11,6 +11,8 @@ import type {
 import { ApiError, apiFetch } from '../lib/api'
 import { usePermission } from '../auth/usePermission'
 import { AdminLayout } from '../components/admin-layout'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { makeReasonOf } from './channel-form-parts'
 
 /**
@@ -191,7 +193,6 @@ export function EmailPage() {
 
       <div className="mt-2 flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">{st('admin.email.title')}</h1>
-        <p className="text-sm text-slate-400">{st('admin.email.hint')}</p>
         <Link
           className="mt-1 inline-block text-xs text-sky-300 underline hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
           to="/admin/channels"
@@ -293,8 +294,14 @@ export function EmailPage() {
           </section>
 
           <section className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-            <h2 className="text-lg font-semibold">{st('admin.email.templates')}</h2>
-            <p className="text-sm text-slate-300">{st('admin.email.templatesHint')}</p>
+            <div className="flex items-center gap-1">
+              <h2 className="text-lg font-semibold">{st('admin.email.templates')}</h2>
+              <HelpPopover
+                className={helpTriggerClass}
+                label={st('help:triggerFor', { name: st('admin.email.templates') })}
+                text={st('admin.email.templatesHint')}
+              />
+            </div>
 
             <button
               className="min-h-9 self-start rounded bg-slate-800 px-2 text-xs font-medium text-slate-300 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:opacity-50"

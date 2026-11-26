@@ -9,6 +9,8 @@ import {
   type UpdateChannelConfigurationRequest,
 } from '@stoerdesk/shared'
 
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { ApiError, apiFetch } from '../lib/api'
 import { NtfySubscription } from '../features/settings/NtfySubscription'
 
@@ -366,8 +368,14 @@ export function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: bo
 
       {channel.kind === 'ntfy' ? (
         <div className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-slate-950/40 p-3 text-sm">
-          <h3 className="font-semibold">{t('admin.channels.verification.heading')}</h3>
-          <p className="text-xs text-slate-400">{t('admin.channels.verification.hint')}</p>
+          <div className="flex items-center gap-1">
+            <h3 className="font-semibold">{t('admin.channels.verification.heading')}</h3>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('admin.channels.verification.heading') })}
+              text={t('admin.channels.verification.hint')}
+            />
+          </div>
           <ol className="list-decimal space-y-1 pl-5 text-xs text-slate-300">
             <li>{t('admin.channels.verification.stepSave')}</li>
             <li>{t('admin.channels.verification.stepSubscribe')}</li>

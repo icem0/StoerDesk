@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 
 import { ApiError, apiFetch } from '../lib/api'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 
 /**
  * The form of the own password (`specs/01-rbac.md` §3.9, ADR-0031): the
@@ -87,8 +89,14 @@ export function PasswordChangeForm() {
           mutation.mutate(password)
         }}
       >
-        <h2 className="text-center text-lg font-semibold">{t('auth.passwordChange.title')}</h2>
-        <p className="text-sm text-slate-300">{t('auth.passwordChange.hint')}</p>
+        <div className="flex items-center justify-center gap-1">
+          <h2 className="text-center text-lg font-semibold">{t('auth.passwordChange.title')}</h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('auth.passwordChange.title') })}
+            text={t('auth.passwordChange.hint')}
+          />
+        </div>
         <div className="flex flex-col gap-1 text-sm">
           <label htmlFor="password-change-password">{t('auth.passwordChange.fields.password')}</label>
           <input

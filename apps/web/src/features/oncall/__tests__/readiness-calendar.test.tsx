@@ -390,7 +390,13 @@ describe('ReadinessCalendar', () => {
     const field = screen.getByLabelText('Kalender-URL') as HTMLInputElement
 
     expect(field.value).toBe('http://localhost:3000/api/v1/oncall/ical/token.ics')
-    expect(screen.getByText('Die Adresse deines persönlichen Kalender-Feeds.')).toBeDefined()
+
+    // the explanation of the address sits behind the info symbol of its heading
+    fireEvent.click(screen.getByRole('button', { name: 'Erklärung zu Kalender-URL' }))
+
+    expect(screen.getByRole('note').textContent).toBe(
+      'Die Adresse deines persönlichen Kalender-Feeds.',
+    )
   })
 
   it('shows no share button without a calendar URL', () => {

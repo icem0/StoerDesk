@@ -5,6 +5,8 @@ import type { OnCallShift } from '@stoerdesk/shared'
 import { ONCALL_TIMEZONE } from '@stoerdesk/shared'
 
 import { ShiftDetailDialog } from './shift-detail-dialog'
+import { HelpPopover } from '../../components/help-popover'
+import { helpTriggerClass } from '../../components/help-trigger'
 
 /**
  * The shifts of the readiness that wait for a decision
@@ -92,8 +94,14 @@ export function OpenShiftsSection(props: {
 
   return (
     <section className="mt-6 rounded border border-slate-700 bg-slate-900 p-4">
-      <h2 className="text-lg font-semibold">{t('admin.openShifts.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.openShifts.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.openShifts.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.openShifts.title') })}
+          text={t('admin.openShifts.hint')}
+        />
+      </div>
 
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-left text-sm">

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import type { DashboardSettings, UpdateDashboardSettingsRequest } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { ApiError, apiFetch } from '../lib/api'
 
 /**
@@ -112,8 +114,14 @@ function SettingsForm(props: { initial: DashboardSettings; mayWrite: boolean }) 
       ) : null}
 
       <section className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h2 className="text-lg font-semibold">{t('dashboardSettings.tvToken')}</h2>
-        <p className="text-sm text-slate-400">{t('dashboardSettings.tvTokenHint')}</p>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">{t('dashboardSettings.tvToken')}</h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('dashboardSettings.tvToken') })}
+            text={t('dashboardSettings.tvTokenHint')}
+          />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <code className="min-w-0 flex-1 break-all rounded bg-slate-950 p-2 text-sm text-slate-200">
             {initial.tvToken}
@@ -263,7 +271,6 @@ export function DashboardSettingsPage() {
 
       <div>
         <h1 className="text-2xl font-semibold">{t('dashboardSettings.title')}</h1>
-        <p className="mt-1 text-sm text-slate-400">{t('dashboardSettings.hint')}</p>
       </div>
 
       {!mayRead ? (

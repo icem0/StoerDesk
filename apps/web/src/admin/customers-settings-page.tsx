@@ -6,6 +6,8 @@ import { Link } from 'react-router-dom'
 import type { CustomerPortalSettings, UpdateCustomerPortalSettingsRequest } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { ApiError, apiFetch } from '../lib/api'
 
 /**
@@ -77,8 +79,14 @@ export function CustomersSettingsPage() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold">{t('admin.customers.title')}</h1>
-        <p className="text-sm text-slate-400">{t('admin.customers.hint')}</p>
+        <div className="flex items-center gap-1">
+          <h1 className="text-xl font-semibold">{t('admin.customers.title')}</h1>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('admin.customers.title') })}
+            text={t('admin.customers.hint')}
+          />
+        </div>
       </div>
 
       <Link className="text-sm text-sky-300 underline" to="/settings">

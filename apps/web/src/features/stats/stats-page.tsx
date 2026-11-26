@@ -11,6 +11,8 @@ import type {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../../auth/usePermission'
+import { HelpPopover } from '../../components/help-popover'
+import { helpTriggerClass } from '../../components/help-trigger'
 import { apiBaseUrl, apiFetch, type ApiError } from '../../lib/api'
 import { formatHours, isHourValue } from '../../lib/duration'
 import { ChartLegend, BarChart, HorizontalBars, LineChart, type ChartSeries } from './charts'
@@ -319,7 +321,6 @@ export function StatsPage() {
     <section className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <p className="mt-1 text-sm text-slate-400">{t('hint')}</p>
       </div>
 
       <form
@@ -494,8 +495,14 @@ export function StatsPage() {
       ) : null}
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h2 className="text-lg font-semibold">{t('reaction.title')}</h2>
-        <p className="text-sm text-slate-400">{t('reaction.hint')}</p>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">{t('reaction.title')}</h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('reaction.title') })}
+            text={t('reaction.hint')}
+          />
+        </div>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {phases.map((phase) => (
             <div className="rounded-lg border border-slate-800 p-3" key={phase.key}>
@@ -540,8 +547,14 @@ export function StatsPage() {
           </p>
         ) : null}
 
-        <h3 className="mt-5 text-sm font-medium text-slate-300">{t('trend.reactionTitle')}</h3>
-        <p className="text-sm text-slate-400">{t('trend.hint', { bucket: t(`bucket.${bucket}`) })}</p>
+        <div className="flex items-center gap-1">
+          <h3 className="mt-5 text-sm font-medium text-slate-300">{t('trend.reactionTitle')}</h3>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('trend.reactionTitle') })}
+            text={t('trend.hint', { bucket: t(`bucket.${bucket}`) })}
+          />
+        </div>
         {!hasReactionValues ? (
           <p className="mt-2 text-sm text-slate-500">{t('trend.empty')}</p>
         ) : (
@@ -608,8 +621,14 @@ export function StatsPage() {
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h2 className="text-lg font-semibold">{t('trend.processingTitle')}</h2>
-        <p className="text-sm text-slate-400">{t('trend.hint', { bucket: t(`bucket.${bucket}`) })}</p>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">{t('trend.processingTitle')}</h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('trend.processingTitle') })}
+            text={t('trend.hint', { bucket: t(`bucket.${bucket}`) })}
+          />
+        </div>
         {!hasProcessingValues ? (
           <p className="mt-2 text-sm text-slate-500">{t('trend.empty')}</p>
         ) : (
@@ -629,8 +648,14 @@ export function StatsPage() {
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h2 className="text-lg font-semibold">{t('objects.title')}</h2>
-        <p className="text-sm text-slate-400">{t('objects.hint')}</p>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">{t('objects.title')}</h2>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('objects.title') })}
+            text={t('objects.hint')}
+          />
+        </div>
         {objects.data === undefined ? (
           <p className="mt-2 text-sm text-slate-500">{t('loading')}</p>
         ) : objects.data.topObjects.length === 0 ? (

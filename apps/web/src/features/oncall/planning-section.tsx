@@ -6,6 +6,8 @@ import type { TFunction } from 'i18next'
 import { ONCALL_TIMEZONE, type OnCallSettingsResponse, type OnCallShift } from '@stoerdesk/shared'
 
 import { ApiError, apiFetch } from '../../lib/api'
+import { HelpPopover } from '../../components/help-popover'
+import { helpTriggerClass } from '../../components/help-trigger'
 
 /**
  * The weekly planning tool of the readiness (`specs/04-oncall.md` §4a.3,
@@ -244,8 +246,14 @@ export function PlanningSection({
 
   return (
     <section className="mt-6 rounded border border-slate-700 bg-slate-900 p-4">
-      <h2 className="text-lg font-semibold">{t('admin.grid.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.grid.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.grid.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.grid.title') })}
+          text={t('admin.grid.hint')}
+        />
+      </div>
 
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm">

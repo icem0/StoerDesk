@@ -11,6 +11,8 @@ import {
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { apiFetch } from '../lib/api'
 import { ChannelCard, errorCode, makeReasonOf } from './channel-form-parts'
 
@@ -109,7 +111,6 @@ export function ChannelsPage() {
       </Link>
       <div>
         <h1 className="text-2xl font-semibold">{t('admin.channels.title')}</h1>
-        <p className="mt-1 text-sm text-slate-400">{t('admin.channels.hint')}</p>
       </div>
 
       {!mayRead ? (
@@ -167,9 +168,13 @@ export function ChannelsPage() {
 
       {mayReadSettings ? (
         <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <div>
+          <div className="flex items-center gap-1">
             <h2 className="text-lg font-semibold">{t('admin.channels.policy.title')}</h2>
-            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.policy.hint')}</p>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('admin.channels.policy.title') })}
+              text={t('admin.channels.policy.hint')}
+            />
           </div>
 
           {!policyQuery.isLoading && !policyQuery.isError ? (
@@ -238,9 +243,13 @@ export function ChannelsPage() {
 
       {mayReadSettings ? (
         <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <div>
+          <div className="flex items-center gap-1">
             <h2 className="text-lg font-semibold">{t('admin.channels.alarm.title')}</h2>
-            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.alarm.hint')}</p>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('admin.channels.alarm.title') })}
+              text={t('admin.channels.alarm.hint')}
+            />
           </div>
 
           {!alarmQuery.isLoading && !alarmQuery.isError ? (
@@ -290,9 +299,13 @@ export function ChannelsPage() {
 
       {mayRead ? (
         <section className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-          <div>
+          <div className="flex items-center gap-1">
             <h2 className="text-lg font-semibold">{t('admin.channels.compliance.title')}</h2>
-            <p className="mt-1 text-sm text-slate-400">{t('admin.channels.compliance.hint')}</p>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('admin.channels.compliance.title') })}
+              text={t('admin.channels.compliance.hint')}
+            />
           </div>
 
           {(complianceQuery.data?.users ?? []).length === 0 ? (

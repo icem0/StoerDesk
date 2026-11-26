@@ -118,7 +118,6 @@ export function StickerPage() {
   return (
     <section className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold print:hidden">{t('sticker.title')}</h1>
-      <p className="text-sm text-slate-400 print:hidden">{t('sticker.hint')}</p>
 
       <div className="flex flex-col gap-3 print:hidden sm:flex-row sm:items-end">
         <label className="flex flex-col gap-1 text-sm">

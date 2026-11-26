@@ -15,6 +15,8 @@ import {
 } from '@stoerdesk/shared'
 
 import { useMe, usePermission } from '../auth/usePermission'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { RowMenu } from '../components/row-menu'
 import { ApiError, apiFetch } from '../lib/api'
 import { AdminLayout } from '../components/admin-layout'
@@ -178,8 +180,14 @@ function PoolSection({
 
   return (
     <section className="mt-6 rounded border border-slate-700 bg-slate-900 p-4">
-      <h2 className="text-lg font-semibold">{t('admin.pools.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.pools.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.pools.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.pools.title') })}
+          text={t('admin.pools.hint')}
+        />
+      </div>
 
       {pools.length === 0 ? (
         <p className="mt-2 text-sm text-slate-400">{t('admin.pools.noPools')}</p>
@@ -371,8 +379,14 @@ function WarningsSection({
 
   return (
     <section className="mt-6 rounded border border-amber-900/60 bg-amber-950/20 p-4">
-      <h2 className="text-lg font-semibold">{t('admin.warnings.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.warnings.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.warnings.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.warnings.title') })}
+          text={t('admin.warnings.hint')}
+        />
+      </div>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <div>
           <h3 className="text-sm font-semibold">{t('admin.warnings.unstaffed')}</h3>
@@ -421,8 +435,14 @@ function SwapsSection({
 
   return (
     <section className="mt-6 rounded border border-slate-700 bg-slate-900 p-4">
-      <h2 className="text-lg font-semibold">{t('admin.swaps.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.swaps.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.swaps.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.swaps.title') })}
+          text={t('admin.swaps.hint')}
+        />
+      </div>
 
       {decide.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
@@ -492,8 +512,14 @@ function PoolScheduleSection({ pools, canAdmin }: { pools: PoolRow[]; canAdmin: 
 
   return (
     <section className="mt-6 rounded border border-slate-700 bg-slate-900 p-4">
-      <h2 className="text-lg font-semibold">{t('admin.schedule.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.schedule.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.schedule.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.schedule.title') })}
+          text={t('admin.schedule.hint')}
+        />
+      </div>
 
       <label className="mt-3 flex flex-col gap-1 text-sm">
         {t('admin.schedule.pool')}
@@ -760,8 +786,14 @@ function SettingsSection({
         save.mutate(values)
       }}
     >
-      <h2 className="text-lg font-semibold">{t('admin.settings.title')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.settings.hint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.settings.title')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.settings.title') })}
+          text={t('admin.settings.hint')}
+        />
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm">
@@ -988,7 +1020,6 @@ export function OncallPage() {
         {t('admin.back')}
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.title')}</h1>
-      <p className="mt-2 text-sm text-slate-400">{t('admin.hint')}</p>
 
       {dataError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">

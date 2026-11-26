@@ -268,7 +268,6 @@ export function InboxPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-semibold">{t('inbox.title')}</h1>
-          <p className="mt-1 text-sm text-slate-400">{t('inbox.hint')}</p>
         </div>
         <Link
           className="inline-flex min-h-11 items-center rounded bg-slate-800 px-3 text-sm hover:bg-slate-700"

@@ -7,6 +7,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { i18n } from '../../i18n'
 import { NotificationsPage } from '../notifications-page'
 
+/** The QR codes of the page: the svg whose title names the code. */
+function qrCodes(container: HTMLElement): Element[] {
+  return Array.from(container.querySelectorAll('svg title')).filter(
+    (title) => title.textContent === 'ntfy-Abo QR-Code',
+  )
+}
+
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
@@ -149,7 +156,12 @@ describe('NotificationsPage', () => {
     expect(await screen.findByText('AB2C3D')).toBeTruthy()
 
     expect(screen.getByRole('button', { name: 'Telegram-Konto verknüpfen' })).toBeTruthy()
-    expect(screen.getByText(/Das Entfernen eines verknüpften Kontos/i)).toBeTruthy()
+
+    // The removal note sits behind the info symbol of the Telegram heading.
+    fireEvent.click(screen.getByRole('button', { name: 'Erklärung zu Telegram' }))
+    expect(
+      (await screen.findByRole('note')).textContent,
+    ).toMatch(/Das Entfernen eines verknüpften Kontos/i)
   })
 
   it('closes the setup of a channel when its button is clicked again', async () => {
@@ -228,11 +240,17 @@ describe('NotificationsPage', () => {
       expect(link.getAttribute('href')).toBe('/admin/channels')
     }
 
+    // The explanation of the administration sits behind its info symbol.
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Erklärung zu Kanal-Administration (Administration → Kanäle)',
+      }),
+    )
     expect(
-      await screen.findByText(
-        'Die Konfiguration der Kanäle selbst, die schreibgeschützten Geheimnisse und die Testnachricht leben in der Kanal-Administration.'
-      )
-    ).toBeTruthy()
+      (await screen.findByRole('note')).textContent,
+    ).toBe(
+      'Die Konfiguration der Kanäle selbst, die schreibgeschützten Geheimnisse und die Testnachricht leben in der Kanal-Administration.',
+    )
   })
 
   it('shows the linked account after the code is submitted', async () => {
@@ -455,7 +473,8 @@ describe('NotificationsPage', () => {
 
     expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
     expect(screen.getByText('mit dem Handy scannen')).toBeTruthy()
-    expect(container.querySelectorAll('svg')).toHaveLength(2)
+    // Exactly one QR code — the info symbols of the page do not count here.
+    expect(qrCodes(container)).toHaveLength(1)
     expect(container.querySelector('svg title')?.textContent).toBe('ntfy-Abo QR-Code')
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/notifications/accounts/ntfy',
@@ -560,7 +579,8 @@ describe('NotificationsPage', () => {
 
     expect(await screen.findByText('In der ntfy-App abonnieren')).toBeTruthy()
     expect(screen.getByText('https://ntfy.sh/stoerdesk-admin')).toBeTruthy()
-    expect(container.querySelectorAll('svg')).toHaveLength(2)
+    // Exactly one QR code — the info symbols of the page do not count here.
+    expect(qrCodes(container)).toHaveLength(1)
     expect(
       await screen.findByText(/ntfy (ist auf diesem Server nicht eingerichtet|is not configured)/i),
     ).toBeTruthy()

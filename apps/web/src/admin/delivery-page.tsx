@@ -8,6 +8,8 @@ import type {
 } from '@stoerdesk/shared'
 
 import { usePermission } from '../auth/usePermission'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { ApiError, apiFetch } from '../lib/api'
 
 /**
@@ -226,7 +228,6 @@ export function DeliveryPage() {
       </Link>
       <div>
         <h1 className="text-2xl font-semibold">{t('admin.delivery.title')}</h1>
-        <p className="mt-1 text-sm text-slate-400">{t('admin.delivery.hint')}</p>
       </div>
 
       {!mayRead ? (
@@ -389,8 +390,14 @@ export function DeliveryPage() {
 
       {mayReadAll ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t('admin.delivery.protocol.title')}</h2>
-          <p className="text-sm text-slate-400">{t('admin.delivery.protocol.hint')}</p>
+          <div className="flex items-center gap-1">
+            <h2 className="text-lg font-semibold">{t('admin.delivery.protocol.title')}</h2>
+            <HelpPopover
+              className={helpTriggerClass}
+              label={t('help:triggerFor', { name: t('admin.delivery.protocol.title') })}
+              text={t('admin.delivery.protocol.hint')}
+            />
+          </div>
 
           <div className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-700 p-3">
             <label className="flex flex-col gap-1 text-sm">

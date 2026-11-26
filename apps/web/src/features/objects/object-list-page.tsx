@@ -117,7 +117,6 @@ export function ObjectListPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-between sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">{t('list.title')}</h1>
-          <p className="text-sm text-slate-400">{t('list.hint')}</p>
         </div>
         <button
           className="rounded bg-accent-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"

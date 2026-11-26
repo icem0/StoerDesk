@@ -99,7 +99,6 @@ export function SettingsPage() {
     <section className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold">{t('app.settings.title')}</h1>
-        <p className="text-sm text-slate-400">{t('app.settingsHint')}</p>
         {me.data ? (
           <p className="mt-1 text-sm text-slate-400">
             {t('auth.signedInAs', { email: me.data.user.email })}

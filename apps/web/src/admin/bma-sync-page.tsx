@@ -15,6 +15,8 @@ import {
 import { useMe, usePermission } from '../auth/usePermission'
 import { ApiError, apiFetch } from '../lib/api'
 import { AdminLayout } from '../components/admin-layout'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 
 /**
  * BMAcloud sync page (`specs/17-bmacloud-sync.md` §17.5, WP-M2-37, WP-M2-47).
@@ -142,9 +144,15 @@ function CredentialsCard({
         store.mutate()
       }}
     >
-      <h2 className="text-lg font-semibold">{t('admin.bma.credentialsTitle')}</h2>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.bma.credentialsTitle')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.bma.credentialsTitle') })}
+          text={t('admin.bma.credentialsHint')}
+        />
+      </div>
       <p className="text-sm text-slate-400">{t(CREDENTIAL_SOURCE_KEYS[credentials.source])}</p>
-      <p className="text-sm text-slate-400">{t('admin.bma.credentialsHint')}</p>
       <label className="flex flex-col gap-1 text-sm">
         {t('admin.bma.credentialsLabel')}
         <input
@@ -243,8 +251,14 @@ function ScheduleForm({
         mutation.mutate(values)
       }}
     >
-      <h2 className="text-lg font-semibold">{t('admin.bma.scheduleTitle')}</h2>
-      <p className="text-sm text-slate-400">{t('admin.bma.scheduleHint')}</p>
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t('admin.bma.scheduleTitle')}</h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('admin.bma.scheduleTitle') })}
+          text={t('admin.bma.scheduleHint')}
+        />
+      </div>
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -411,7 +425,6 @@ export function BmaSyncPage() {
         {t('admin.back')}
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.bma.title')}</h1>
-      <p className="mt-2 text-sm text-slate-400">{t('admin.bma.hint')}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
