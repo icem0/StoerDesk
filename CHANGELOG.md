@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **The customer portal is switched on (WP-M43-01 … WP-M43-04, ADR-0062).**
+  Not every installation wants customers: the new page `/admin/customers`
+  (entry „Kundenportal“ in the settings menu) decides whether the instance has a
+  customer portal and whether a customer may register himself — **both are off
+  by default**. The registration needs a **cleanly set up mailbox**: the channel
+  of the instance must exist, be enabled and carry a host, a valid sender
+  address and a complete login, because a mailbox that cannot deliver cannot
+  confirm an account. While the mailbox is broken the switch of the
+  registration stays locked (`422 mail_not_ready`) and the page names the
+  reasons. A customer may sign in and read his portal only while the portal is
+  switched on (`403 customer_portal_disabled`).
+
+### Changed
+- **A failed delivery reaches the mailbox of the administration (WP-M42-01).**
+  The failing deliveries were visible only as a badge on the settings page
+  (`app.channelWarning.badge`). Every outbox row that ends `FAILED` now writes a
+  task for the users with `notification.read_all` — also when a later channel of
+  the chain still delivers the message — and the task lives in the mailbox only,
+  so an administrator without a confirmed channel is reached too and the alarm
+  cannot fail over a channel of its own. The settings page loses the badge and
+  its query; `/admin/delivery` and its quittature stay.
+
 ### Fixed
 - **The e-mail channel is named in the lists of the channels (WP-M41-02).** The
   mailbox of the administration is a channel of the instance since WP-M41-01,
