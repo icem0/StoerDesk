@@ -11,9 +11,6 @@
       "empty": "No settings found."
     },
     "settingsHint": "All settings and areas in one place, grouped by topic.",
-    "channelWarning": {
-      "badge": "Failing channels ({{count}})"
-    },
     "logoAlt": "StörDesk logo",
     "navigation": "Main navigation",
     "nav": {
@@ -52,7 +49,8 @@
       "email": "Office mailbox",
       "webhooks": "Webhooks",
       "apiKeys": "API keys",
-      "bmaSync": "BMAcloud sync"
+      "bmaSync": "BMAcloud sync",
+      "customers": "Customer portal"
     },
     "notFound": {
       "title": "Page not found",
@@ -370,7 +368,7 @@
       "swapRequested": "A swap has been requested for duty {{pool}}.",
       "unconfirmed": "Duty {{pool}} is not confirmed yet.",
       "unknown": "Ticket {{ticket}}",
-      "deliveryFailed": "A message did not arrive ({{channel}}, error code {{code}}).",
+      "deliveryFailed": "A delivery failed ({{channel}}, error code {{code}}).",
       "oncallReleased": "Your duty {{pool}} was {{cause}}.",
       "releasedDeleted": "deleted",
       "releasedReassigned": "handed over to another technician"

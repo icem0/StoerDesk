@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { CustomerObject, CustomerTicketDetail, CustomerTicketSummary } from '@stoerdesk/shared'
 
-import { apiFetch } from '../../lib/api'
+import { ApiError, apiFetch } from '../../lib/api'
 import { useMe } from '../../auth/usePermission'
 
 /**
@@ -27,6 +28,19 @@ interface ObjectListAnswer {
 
 function formatDate(value: string, locale: string): string {
   return new Date(value).toLocaleString(locale)
+}
+
+/**
+ * The portal of a switched-off installation (§19.13, ADR-0062): the customer
+ * sees a clear notice instead of an empty list.
+ */
+function portalNotice(t: TFunction<'customer'>, error: unknown): string {
+  const code =
+    error instanceof ApiError && error.code === 'customer_portal_disabled'
+      ? 'customer_portal_disabled'
+      : 'internal_error'
+
+  return t(`auth.errors.${code}`)
 }
 
 export function PortalTicketsPage() {
@@ -80,7 +94,7 @@ export function PortalTicketsPage() {
 
       {ticketsQuery.isError ? (
         <p className="text-sm text-red-700" role="alert">
-          {t('auth.errors.internal_error')}
+          {portalNotice(t, ticketsQuery.error)}
         </p>
       ) : null}
 
@@ -186,7 +200,7 @@ export function PortalTicketPage() {
 
       {ticketQuery.isError ? (
         <p className="text-sm text-red-700" role="alert">
-          {t('auth.errors.internal_error')}
+          {portalNotice(t, ticketQuery.error)}
         </p>
       ) : null}
 

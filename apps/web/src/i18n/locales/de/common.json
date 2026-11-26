@@ -11,9 +11,6 @@
       "empty": "Keine Einstellung gefunden."
     },
     "settingsHint": "Alle Einstellungen und Bereiche an einem Ort, nach Themen gruppiert.",
-    "channelWarning": {
-      "badge": "Zustellung gestört ({{count}})"
-    },
     "logoAlt": "Logo von StörDesk",
     "navigation": "Hauptnavigation",
     "nav": {
@@ -52,7 +49,8 @@
       "email": "Mailbox des Betriebs",
       "webhooks": "Webhooks",
       "apiKeys": "API-Schlüssel",
-      "bmaSync": "BMAcloud-Abgleich"
+      "bmaSync": "BMAcloud-Abgleich",
+      "customers": "Kundenportal"
     },
     "notFound": {
       "title": "Seite nicht gefunden",
@@ -370,7 +368,7 @@
       "swapRequested": "Für die Bereitschaft {{pool}} ist ein Tausch angefragt.",
       "unconfirmed": "Die Bereitschaft {{pool}} ist noch nicht bestätigt.",
       "unknown": "Meldung {{ticket}}",
-      "deliveryFailed": "Eine Meldung ist nicht angekommen ({{channel}}, Fehlercode {{code}}).",
+      "deliveryFailed": "Eine Zustellung ist fehlgeschlagen ({{channel}}, Fehlercode {{code}}).",
       "oncallReleased": "Deine Bereitschaft {{pool}} wurde {{cause}}.",
       "releasedDeleted": "gelöscht",
       "releasedReassigned": "an einen anderen Techniker übergeben"

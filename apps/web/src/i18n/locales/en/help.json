@@ -25,7 +25,8 @@
     "emailMore": "The e-mail dispatch of the installation: the sender, the texts of the messages and the mailbox in which the reports of the office arrive.",
     "webhooksMore": "Reports events to other systems, for example a ticket to a ticket system. Every webhook carries an address, a secret and the events it reports.",
     "apiKeysMore": "The keys for the API of the installation. A key can read or write and is shown in clear text only once.",
-    "bmaSyncMore": "The synchronization of the objects with BMAcloud: new assets are taken over, changes are reported and conflicts are logged."
+    "bmaSyncMore": "The synchronization of the objects with BMAcloud: new assets are taken over, changes are reported and conflicts are logged.",
+    "customersMore": "Here you switch the customer portal on: the customers report their faults, see their open reports and may register themselves — the registration needs a cleanly set up mailbox."
   },
   "page": {
     "tickets": "The tickets of the installation. The list opens with the open ones; the filters sit in the menu beside „Neue Meldung“.",

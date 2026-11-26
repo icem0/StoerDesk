@@ -45,7 +45,8 @@
       "registration_unavailable": "Die Registrierung ist in dieser Installation nicht möglich.",
       "token_unknown": "Dieser Link ist nicht mehr gültig.",
       "token_expired": "Dieser Link ist abgelaufen. Bitte fordern Sie einen neuen an.",
-      "internal_error": "Die Anfrage ist fehlgeschlagen."
+      "internal_error": "Die Anfrage ist fehlgeschlagen.",
+      "customer_portal_disabled": "Das Kundenportal ist in dieser Installation abgeschaltet."
     }
   },
   "portal": {

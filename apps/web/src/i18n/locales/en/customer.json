@@ -45,7 +45,8 @@
       "registration_unavailable": "Registration is not possible in this installation.",
       "token_unknown": "This link is not valid any more.",
       "token_expired": "This link has expired. Please request a new one.",
-      "internal_error": "The request failed."
+      "internal_error": "The request failed.",
+      "customer_portal_disabled": "The customer portal is switched off in this installation."
     }
   },
   "portal": {

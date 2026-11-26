@@ -2,15 +2,13 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { AlarmSettings } from '@stoerdesk/shared'
-import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
 import { LogoutButton } from '../auth/login-form'
-import { useMe, usePermission } from '../auth/usePermission'
+import { useMe } from '../auth/usePermission'
 import { apiFetch } from '../lib/api'
 import { isAlarmToneEnabled, playAlarmTone, setAlarmToneEnabled } from '../lib/alarm-tone'
 import { SettingsMenu } from './settings-menu'
-import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
 
 /**
  * Settings overview (WP-M12-07): every settings and administration surface in
@@ -19,16 +17,10 @@ import { type DeliveryProblemsResponse } from '@stoerdesk/shared'
  * its destinations behind a menu. The administration home is gone
  * (WP-M14-01): the administration group links to four topic pages
  * (Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand) whose
- * links open the modules. A channel with failed rows in the outbox is visible
- * here as well (WP-M14-19, §11.8): a badge in the header names the number of
- * the failing channels until every channel works again — the warning is not
- * only the list on the channel page and the tile of the dashboard.
- *
- * Since WP-M14-161c the badge is the **link** to the page of the delivery
- * problems (`/admin/delivery`): there the admin sees the problem and quits it.
- * The badge counts the **open** problems — the channels with a failure nobody
- * quit — so a quit problem is silent and a failure after the quittature brings
- * the badge back.
+ * links open the modules. The page carries **no** warning about a failed
+ * delivery (ADR-0062): a failed delivery becomes a task in the mailbox of the
+ * administration, and the problem stays listed on `/admin/delivery` — a badge
+ * here would be a second warning that nobody has to look for.
  *
  * Since WP-M16-03 the links of the menu paint the accent colour of the instance
  * (ADR-0036): the menu of the presentation follows the colour the
@@ -80,6 +72,7 @@ const SETTINGS_SECTIONS = [
       { key: 'channels', path: '/admin/channels', icon: 'radio' },
       { key: 'delivery', path: '/admin/delivery', icon: 'alert-circle' },
       { key: 'email', path: '/admin/email', icon: 'mail' },
+      { key: 'customers', path: '/admin/customers', icon: 'user' },
       { key: 'webhooks', path: '/admin/webhooks', icon: 'link' },
       { key: 'apiKeys', path: '/admin/api-keys', icon: 'key' },
       { key: 'bmaSync', path: '/admin/bma-sync', icon: 'refresh-cw' },
@@ -91,7 +84,6 @@ export function SettingsPage() {
   const { t } = useTranslation('common')
   const [toneUnlocked, setToneUnlocked] = useState(isAlarmToneEnabled)
   const me = useMe()
-  const mayReadChannels = usePermission('notification.read')
   /**
    * The alarm of the installation (§11.17, ADR-0048): the settings page tells
    * the user that a browser only plays a tone after a gesture of the user — the
@@ -103,14 +95,6 @@ export function SettingsPage() {
     retry: false,
   })
 
-  const deliveryQuery = useQuery({
-    queryKey: ['deliveryProblems'],
-    queryFn: () => apiFetch<DeliveryProblemsResponse>('/v1/notifications/delivery'),
-    enabled: mayReadChannels,
-    retry: false,
-  })
-  const openProblems = (deliveryQuery.data?.problems ?? []).filter((problem) => problem.open)
-
   return (
     <section className="flex flex-col gap-6">
       <div>
@@ -120,15 +104,6 @@ export function SettingsPage() {
           <p className="mt-1 text-sm text-slate-400">
             {t('auth.signedInAs', { email: me.data.user.email })}
           </p>
-        ) : null}
-        {deliveryQuery.isSuccess && openProblems.length > 0 ? (
-          <NavLink
-            aria-live="polite"
-            className="mt-1 w-fit rounded bg-rose-900/40 px-2 py-0.5 text-sm font-medium text-rose-300 hover:bg-rose-900/60"
-            to="/admin/delivery"
-          >
-            {t('app.channelWarning.badge', { count: openProblems.length })}
-          </NavLink>
         ) : null}
       </div>
 

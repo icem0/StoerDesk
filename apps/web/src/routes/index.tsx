@@ -5,6 +5,7 @@ import { ApiKeysPage } from '../admin/api-keys-page'
 import { ApiKeyCreatePage } from '../admin/api-key-create-page'
 import { ChannelsPage } from '../admin/channels-page'
 import { ChannelPage } from '../admin/channel-page'
+import { CustomersSettingsPage } from '../admin/customers-settings-page'
 import { EmailPage } from '../admin/email-page'
 import { DeliveryPage } from '../admin/delivery-page'
 import { StatusPage as AdminStatusPage } from '../admin/status-page'
@@ -169,6 +170,17 @@ export const routes: RouteObject[] = [
         element: (
           <RequireSession>
             <EmailPage />
+          </RequireSession>
+        ),
+      },
+      {
+        // The switch of the customer portal (§19.13, ADR-0062): the
+        // administration decides whether the instance has a customer portal and
+        // whether a customer may register himself.
+        path: '/admin/customers',
+        element: (
+          <RequireSession>
+            <CustomersSettingsPage />
           </RequireSession>
         ),
       },

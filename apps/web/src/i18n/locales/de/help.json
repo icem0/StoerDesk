@@ -25,7 +25,8 @@
     "emailMore": "Der E-Mail-Versand der Installation: der Absender, die Texte der Nachrichten und die Mailbox, in der die Meldungen der Office landen.",
     "webhooksMore": "Meldet Ereignisse an andere Systeme, etwa ein Ticket an ein Ticketsystem. Jeder Webhook trägt eine Adresse, einen Geheimschlüssel und die Ereignisse, die er meldet.",
     "apiKeysMore": "Die Schlüssel für die API der Installation. Ein Schlüssel kann lesen oder schreiben und wird nur einmal im Klartext angezeigt.",
-    "bmaSyncMore": "Der Abgleich der Objekte mit BMAcloud: neue Anlagen werden übernommen, Änderungen gemeldet und Konflikte protokolliert."
+    "bmaSyncMore": "Der Abgleich der Objekte mit BMAcloud: neue Anlagen werden übernommen, Änderungen gemeldet und Konflikte protokolliert.",
+    "customersMore": "Hier schaltest du das Kundenportal frei: die Kunden melden ihre Störungen, sehen ihre offenen Meldungen und können sich selbst registrieren — die Registrierung braucht ein sauber eingerichtetes Postfach."
   },
   "page": {
     "tickets": "Die Meldungen der Installation. Die Liste öffnet mit den offenen Meldungen; die Filter stehen im Menü neben „Neue Meldung“.",

@@ -837,6 +837,35 @@
       "standardRegistration": "Welcome to the customer portal of the Installation.\n\nYour account is created. Please set your password over this link:\n{link}\n\nThe link is valid for 24 hours.",
       "standardPasswordReset": "A new password has been requested for your account.\n\nPlease set a new password over this link:\n{link}\n\nThe link is valid for 24 hours. If this was not you, you can ignore this Mail.",
       "standardCustomerTicket": "Your report has been received.\n\nTicket {ticket_no}: {priority} — {object}\n\nYou can follow the progress in the customer portal."
+    },
+    "customers": {
+      "title": "Kundenportal",
+      "hint": "Das Kundenportal gibt den Kunden der Installation einen Zugang: Sie melden ihre Störungen, sehen ihre offenen Meldungen und können sich selbst registrieren. Beide Schalter sind aus, solange du sie nicht einschaltest.",
+      "loading": "Die Einstellungen werden geladen …",
+      "readOnly": "Nur Lesen: Ihnen fehlt die Berechtigung zum Ändern.",
+      "saved": "Gespeichert.",
+      "portalEnabled": "Kundenportal freischalten",
+      "portalEnabledHint": "Die Kunden melden ihre Störungen im QR-Code-Formular und sehen ihre offenen Meldungen im Portal. Ohne diese Freischaltung kann sich kein Kunde anmelden.",
+      "registrationEnabled": "Selbstregistrierung freischalten",
+      "registrationEnabledHint": "Ein Kunde kann sich selbst über einen Link in der E-Mail registrieren. Das geht nur mit einem sauber eingerichteten Postfach — ohne Postfach kann kein Konto bestätigt werden.",
+      "mailReady": "Das Postfach der Installation ist sauber eingerichtet: die Registrierung ist möglich.",
+      "mailNotReady": "Das Postfach der Installation ist nicht sauber eingerichtet: die Selbstregistrierung bleibt gesperrt.",
+      "mailboxLink": "Zur Mailbox des Betriebs",
+      "errors": {
+        "session_invalid": "Die Sitzung ist abgelaufen.",
+        "forbidden": "Keine Berechtigung.",
+        "invalid_request": "Bitte prüfen Sie die Eingaben.",
+        "mail_not_ready": "Das Postfach ist nicht sauber eingerichtet — richten Sie es zuerst ein.",
+        "unknown": "Speichern fehlgeschlagen."
+      },
+      "mailReasons": {
+        "channel_missing": "Es gibt keine Zeile für den E-Mail-Kanal.",
+        "channel_disabled": "Der E-Mail-Kanal ist abgeschaltet.",
+        "host_missing": "Der SMTP-Server fehlt.",
+        "sender_missing": "Die Absenderadresse fehlt.",
+        "sender_invalid": "Die Absenderadresse ist keine gültige Adresse.",
+        "password_missing": "Zum Benutzernamen des Postfachs fehlt das Passwort."
+      }
     }
   },
   "apiKeys": {

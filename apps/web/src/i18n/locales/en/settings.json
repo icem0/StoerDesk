@@ -837,6 +837,35 @@
       "standardRegistration": "Welcome to the customer portal of the installation.\n\nYour account is created. Please set your password over this link:\n{link}\n\nThe link is valid for 24 hours.",
       "standardPasswordReset": "A new password was requested for your account.\n\nPlease set a new password over this link:\n{link}\n\nThe link is valid for 24 hours. If this was not you, you can ignore this mail.",
       "standardCustomerTicket": "Your report was received.\n\nTicket {ticket_no}: {priority} — {object}\n\nYou can follow the progress in the customer portal."
+    },
+    "customers": {
+      "title": "Customer portal",
+      "hint": "The customer portal gives the customers of the installation an access: they report their faults, see their open reports and may register themselves. Both switches are off until you turn them on.",
+      "loading": "The settings are loading …",
+      "readOnly": "Read only: you lack the permission to change this.",
+      "saved": "Saved.",
+      "portalEnabled": "Switch the customer portal on",
+      "portalEnabledHint": "The customers report their faults in the QR code form and see their open reports in the portal. Without this switch no customer may sign in.",
+      "registrationEnabled": "Switch the self-registration on",
+      "registrationEnabledHint": "A customer may register himself over a link in the e-mail. That needs a cleanly set up mailbox — without a mailbox no account can be confirmed.",
+      "mailReady": "The mailbox of the installation is cleanly set up: the registration is possible.",
+      "mailNotReady": "The mailbox of the installation is not cleanly set up: the self-registration stays locked.",
+      "mailboxLink": "To the mailbox of the instance",
+      "errors": {
+        "session_invalid": "The session has expired.",
+        "forbidden": "No permission.",
+        "invalid_request": "Please check the input.",
+        "mail_not_ready": "The mailbox is not cleanly set up — set it up first.",
+        "unknown": "Saving failed."
+      },
+      "mailReasons": {
+        "channel_missing": "There is no row for the e-mail channel.",
+        "channel_disabled": "The e-mail channel is switched off.",
+        "host_missing": "The SMTP server is missing.",
+        "sender_missing": "The sender address is missing.",
+        "sender_invalid": "The sender address is not a valid address.",
+        "password_missing": "The user of the mailbox has no password."
+      }
     }
   },
   "apiKeys": {
