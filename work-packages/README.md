@@ -1861,7 +1861,7 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M30-04   | the inbox shows the tasks — the readable text, the deep link, the read receipt and the count | planned | yes |
 | WP-M30-05   | the alarm of a failed delivery — the task of the administration, throttled | planned | yes |
 | WP-M30-06   | the criterion of the phase — one task per user and event, the protocol and the alarm of a failure | done | yes |
-| WP-M30-07   | the record of the alarm of the failed delivery — the commit `d15fc267` carried the work of WP-M30-05 under the subject of the parallel session (profile `ctx-128k`) | done | yes |
+| WP-M30-07   | the record of the packages of phase 30 — the commit `cb6baaec` carried the work of WP-M30-03 … WP-M30-07 under the subject of the parallel session (profile `ctx-128k`) | done | yes |
 | WP-M31-01   | the decisions of the customer portal — ADR-0053 … ADR-0056 | done | yes |
 | WP-M31-02   | the specification of the customer portal — the slice §19 and the amendment of the RBAC chapter | done | yes |
 | WP-M31-03   | the role `customer` and the contracts of the portal — the permissions, the system role and the Zod contracts | done | yes |

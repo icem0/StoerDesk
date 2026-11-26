@@ -117,9 +117,10 @@ silence of the alarm of itself.
   `DELIVERY_FAILURE_THROTTLE_MS`
 - Verified: `npm run check` green (wp:check 838/0, eslint 0 errors, vitest 285 files /
   2024 tests, Playwright 15/15)
-- Deviation: the work landed in the commit `d15fc267` of the parallel session — the
-  commit ran while the files of this package were staged and took them with it. The
-  record of that is **WP-M30-07** (`AGENTS.md`: a commit without its package is a
-  defect, not a backlog entry)
+- Deviation: the work landed in the commit `cb6baaec` of the parallel session — the
+  session squashed its history onto `origin/main` while the packages of the phase were
+  committed, and the work of the phase went with it. The record of that is
+  **WP-M30-07** (`AGENTS.md`: a commit without its package is a defect, not a backlog
+  entry)
 - Follow-up WP: WP-M30-06 — the criterion of the phase
 - Open question: none
