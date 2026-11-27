@@ -267,6 +267,11 @@ The staff read answers the stages of the ticket view; the administration edits t
 configuration. A malformed body answers `400 invalid_request` with the field
 paths.
 
+The two writes of the configuration take one transaction-scoped advisory lock
+before they read or write, so concurrent writes run one after the other and the
+last one wins as a whole — never a `500` from two transactions that reinsert the
+same rule keys (WP-M46-01).
+
 ## 7.10 The ticket view
 
 The ticket detail carries the stages the ticket can still reach as buttons next
