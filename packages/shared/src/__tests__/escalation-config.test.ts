@@ -13,10 +13,12 @@ import {
   escalationConditionSchema,
   escalationRuleKey,
   escalationStageClockEvents,
+  escalationTimerLeaves,
   escalationTargetSchema,
   evaluateEscalationCondition,
   validateEscalationStageChain,
   type EscalationCondition,
+  type EscalationConditionLeaf,
   type EscalationFacts,
   type EscalationStageConfig,
 } from '../schemas/escalation-config.js'
@@ -720,5 +722,114 @@ describe('the readiness shift in a condition (§7.4, ADR-0030)', () => {
     expect(
       escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: 'pool' }).success,
     ).toBe(false)
+  })
+})
+
+describe('the waiting clock as a condition (ADR-0064)', () => {
+  const minutes15 = { low: 15, normal: 15, high: 15, critical: 5 }
+  const timerLeaf = (value: unknown, operator = 'expired'): EscalationConditionLeaf =>
+    ({ field: 'timer_expired', operator, value }) as unknown as EscalationConditionLeaf
+
+  it('accepts both value shapes', () => {
+    expect(
+      escalationConditionSchema.safeParse(
+        timerLeaf({ reference: 'received_at', minutes: minutes15 })
+      ).success,
+    ).toBe(true)
+    expect(
+      escalationConditionSchema.safeParse(timerLeaf({ percent: 80 })).success,
+    ).toBe(true)
+  })
+
+  it('refuses an incomplete value and a foreign operator', () => {
+    expect(
+      escalationConditionSchema.safeParse(timerLeaf({ reference: 'received_at' })).success,
+    ).toBe(false)
+    expect(
+      escalationConditionSchema.safeParse(timerLeaf({ minutes: minutes15 })).success,
+    ).toBe(false)
+    expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 0 })).success).toBe(false)
+    expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 101 })).success).toBe(false)
+    expect(
+      escalationConditionSchema.safeParse(timerLeaf(minutes15, 'gt')).success,
+    ).toBe(false)
+  })
+
+  it('evaluates the delay of the priority of the ticket', () => {
+    const withTimer: EscalationFacts = {
+      ...facts,
+      sinceEvent: { received_at: 20, offered: 5 },
+    }
+
+    expect(
+      evaluateEscalationCondition(timerLeaf({ reference: 'received_at', minutes: minutes15 }), withTimer)
+    ).toBe(true)
+    expect(
+      evaluateEscalationCondition(timerLeaf({ reference: 'offered', minutes: minutes15 }), withTimer)
+    ).toBe(false)
+    expect(
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'received_at', minutes: minutes15 }, 'notExpired'),
+        withTimer,
+      )
+    ).toBe(false)
+  })
+
+  it('never matches an anchor that never happened', () => {
+    const withTimer: EscalationFacts = {
+      ...facts,
+      sinceEvent: { received_at: 20 },
+    }
+
+    expect(
+      evaluateEscalationCondition(timerLeaf({ reference: 'accepted', minutes: minutes15 }), withTimer)
+    ).toBe(false)
+    expect(
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'accepted', minutes: minutes15 }, 'notExpired'),
+        withTimer,
+      )
+    ).toBe(true)
+  })
+
+  it('compares the percent variant against the timeline', () => {
+    expect(evaluateEscalationCondition(timerLeaf({ percent: 40 }), facts)).toBe(true)
+    expect(evaluateEscalationCondition(timerLeaf({ percent: 80 }), facts)).toBe(false)
+  })
+
+  it('answers the leaves of a condition tree', () => {
+    const condition: EscalationCondition = {
+      all: [
+        timerLeaf({ reference: 'received_at', minutes: minutes15 }),
+        { field: 'priority', operator: 'eq', value: 'high' },
+      ],
+    }
+
+    const timerLeaves = escalationTimerLeaves(condition)
+
+    expect(timerLeaves.length).toBe(1)
+    expect(timerLeaves[0]?.operator).toBe('expired')
+    expect(JSON.stringify(timerLeaves[0]?.value)).toContain('received_at')
+    expect(escalationTimerLeaves({ all: [] })).toEqual([])
+  })
+
+  it('keeps a rule without clock fields valid when its condition carries the timer', () => {
+    const result = escalationConfigSchema.safeParse({
+      stages: [...DEFAULT_WORKFLOW_ESCALATION_STAGES],
+      rules: [
+        {
+          key: 'review#1',
+          stageKey: 'review',
+          reference: null,
+          minutes: null,
+          percent: null,
+          condition: { all: [timerLeaf({ reference: 'received_at', minutes: minutes15 })] },
+          actions: [],
+          active: true,
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
   })
 })

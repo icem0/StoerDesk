@@ -337,6 +337,21 @@ function leaf<F extends string, V extends z.ZodTypeAny>(
   })
 }
 
+/**
+ * The value of a `timer_expired` leaf (ADR-0064, §7.4): a start value with the
+ * delay per priority — or a percentage of the timeline `received_at` →
+ * `deadline_at` for the deadline rules.
+ */
+export const escalationTimerValueSchema = z.union([
+  z.object({
+    reference: z.enum(ESCALATION_REFERENCE_EVENTS),
+    minutes: escalationMinutesSchema,
+  }),
+  z.object({ percent: z.number().int().min(1).max(100) }),
+])
+
+export type EscalationTimerValue = z.infer<typeof escalationTimerValueSchema>
+
 /** One leaf of a condition: a field, an operator and a value (§7.4). */
 export const escalationConditionLeafSchema = z.union([
   leaf(
@@ -386,6 +401,12 @@ export const escalationConditionLeafSchema = z.union([
    * a readiness pool, the leaf matches when the pool has a staffed shift.
    */
   leaf('shift', ['eq', 'ne'], z.uuid()),
+  /**
+   * The waiting clock as a condition (ADR-0064): the value names the start
+   * value and the delay per priority — or the percentage of the timeline for
+   * the deadline rules. `expired` matches once the clock has passed the delay.
+   */
+  leaf('timer_expired', ['expired', 'notExpired'], escalationTimerValueSchema),
 ])
 
 export type EscalationConditionLeaf = z.infer<typeof escalationConditionLeafSchema>
@@ -574,7 +595,9 @@ export const escalationRuleConfigSchema = z
     const hasMinutes = rule.minutes !== null
     const hasPercent = rule.percent !== null
 
-    if (hasMinutes === hasPercent) {
+    // A rule may carry neither any more — then its clock is a
+    // `timer_expired` leaf of its condition (ADR-0064).
+    if (hasMinutes && hasPercent) {
       context.addIssue({
         code: 'custom',
         path: ['minutes'],
@@ -722,9 +745,17 @@ export type EscalationFacts = {
    * The readiness pools that are staffed at the moment of the evaluation
    * (§7.4, ADR-0030): the ids of the pools with a shift that covers now. A
    * `shift` leaf matches a pool of this list. Without the fact the leaf never
-   * matches — a rule that asks for a shift needs the readiness of the scan.
+   * matches — a rule that asks for a staffed pool needs the readiness of the scan.
    */
   staffedPools?: readonly string[]
+  /**
+   * The minutes elapsed from every event of the ticket to now, pauses excluded
+   * (ADR-0064, §7.4): the keys are the reference events `received_at`,
+   * `review_started`, `work_order_set`, `offered`, `assigned`, `accepted`. A
+   * `timer_expired` leaf compares the delay of the priority of the ticket
+   * against this fact; without the fact the leaf never matches with `expired`.
+   */
+  sinceEvent?: Record<string, number>
 }
 
 const listValue = (value: unknown): string[] =>
@@ -835,6 +866,20 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
       return leaf.operator === 'ne' ? !equals : equals
     }
 
+    case 'timer_expired': {
+      const value = leaf.value as EscalationTimerValue
+
+      const expired =
+        'percent' in value
+          ? facts.deadlinePercent >= value.percent
+          : facts.sinceEvent !== undefined &&
+              (facts.sinceEvent[value.reference] ?? -1) >=
+                ((value.minutes as Record<string, number>)[facts.priority] ??
+                  value.minutes.normal)
+
+      return leaf.operator === 'notExpired' ? !expired : expired
+    }
+
     default:
       return false
   }
@@ -861,6 +906,28 @@ export function evaluateEscalationCondition(
   }
 
   return evaluateLeaf(condition, facts)
+}
+
+/**
+ * The `timer_expired` leaves of a condition tree, in order (ADR-0064): the
+ * engine takes the threshold of a rule from the leaves with `expired` — the
+ * largest one wins — and the start of the wait of the stage otherwise (§7.7).
+ */
+export function escalationTimerLeaves(
+  condition: EscalationCondition | null | undefined,
+): readonly { operator: 'expired' | 'notExpired'; value: EscalationTimerValue }[] {
+  if (condition === null || condition === undefined) {
+    return []
+  }
+
+  return escalationConditionLeaves(condition).flatMap((entry) =>
+    entry.field === 'timer_expired'
+      ? [{
+          operator: (entry.operator as 'expired' | 'notExpired'),
+          value: entry.value as EscalationTimerValue,
+        }]
+      : [],
+  )
 }
 
 /**
