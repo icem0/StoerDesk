@@ -932,9 +932,13 @@ UI. **ADR-0064** decides it now: the waiting clock is the leaf `timer_expired`
 in the condition, the rule fields `reference`, `minutes` and `percent` and the
 frame „Zeitliche Abfolge“ are gone, and migration `0069` converts the rules of
 installed configurations. The phase is split into WP-M45-01 (the shared
-contract and evaluator), WP-M45-02 (the migration and the seed), WP-M45-03
-(the engine) and WP-M45-04 (the administration, the condition builder and the
-texts). Every file exists in the commit of the split.
+contract and evaluator, done), WP-M45-02 (the engine and the configuration
+service read the timer — old rows are converted on read), WP-M45-03 (the
+administration, the condition builder and the texts) and WP-M45-04 (the
+migration, the seed and the removal of the columns). Every file exists in the
+commit of the split; the re-cut of 2026-11-27 put the migration last, because
+dropping the columns before the engine and the rule form read the timer would
+have left a red gate and a deployed image whose stage rules never fire.
 
 **Phase 44 is closed (WP-M44-01, out of band).** The office looked at
 `/admin/escalation` again: „einige Erklärungen … in ein Symbol packed … für

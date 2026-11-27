@@ -1,7 +1,7 @@
 # WP-M45-01: the shared contract knows the timer leaf
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-00
 phase: 45
 milestone: m45
@@ -88,8 +88,19 @@ Expected: all green; `time_of_day` and the shift conditions keep working.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: WP-M45-02, WP-M45-03, WP-M45-04 exist as files since WP-M45-00
-- Open question (if any):
+- Files changed: `packages/shared/src/schemas/escalation-config.ts`,
+  `packages/shared/src/__tests__/escalation-config.test.ts` (commit `d2c9841`)
+- Interfaces added: the leaf `timer_expired` with `escalationTimerValueSchema`
+  (`{ reference, minutes }` | `{ percent }`), `EscalationFacts.sinceEvent`, the
+  evaluation of the leaf and `escalationTimerLeaves`; the rule fields
+  `reference`/`minutes`/`percent` are nullable and a rule may carry neither
+- Verified: typecheck, lint and the shared tests of the commit
+- Deviation (recorded afterwards): `escalationTimerThreshold` was not delivered
+  and `escalation.ts` stayed untouched — the threshold moves to WP-M45-02, which
+  needs it in the engine; the commit did not update this status, the backlog row
+  or the changelog — the re-cut commit of 2026-11-27 records it
+- Follow-up WP: WP-M45-02, WP-M45-03, WP-M45-04 exist as files since WP-M45-00;
+  the re-cut of 2026-11-27 orders them engine → administration → migration, so
+  every commit stays green and deployable (dropping the columns first would have
+  broken the engine and the rule form in between)
+- Open question: none

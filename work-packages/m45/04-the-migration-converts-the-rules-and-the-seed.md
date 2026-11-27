@@ -1,8 +1,8 @@
-# WP-M45-02: the migration converts the rules and the seed carries the timers
+# WP-M45-04: the migration converts the rules and the seed carries the timers
 
 format: ctx-256k
 status: planned
-depends-on: WP-M45-01
+depends-on: WP-M45-03
 phase: 45
 milestone: m45
 context-budget: 55k tokens
@@ -12,7 +12,8 @@ changed-lines: 480
 
 files-read:
 
-- packages/shared/src/schemas/escalation-config.ts (rule schema and defaults after WP-M45-01)
+- packages/shared/src/schemas/escalation-config.ts (rule schema, defaults and `escalationRuleTimerCondition` after WP-M45-02)
+- apps/api/src/tickets/escalation.ts, apps/api/src/escalation/config.ts (the row conversion of WP-M45-02)
 - apps/api/src/db/schema.ts (`escalationRules`, the CHECK `escalation_rules_clock_check`)
 - apps/api/src/db/seed-escalation.ts (the seed of a fresh installation)
 - apps/api/src/db/migrations/0031_escalation_config.sql, 0038_escalation_rule_stage_clock.sql, 0045_escalation_rule_numbering.sql, 0046_escalation_stage_new.sql (the pattern of a conversion)
@@ -26,6 +27,8 @@ files-write:
 - apps/api/src/db/seed-escalation.ts
 - packages/shared/src/schemas/escalation-config.ts
 - packages/shared/src/**tests**/escalation-config.test.ts
+- apps/api/src/tickets/escalation.ts
+- apps/api/src/escalation/config.ts
 - apps/api/src/db/**tests**/escalation-rule-timer.integration.spec.ts
 - apps/api/src/db/**tests**/seed-escalation.integration.spec.ts
 
@@ -39,7 +42,10 @@ interfaces:
 - `DEFAULT_WORKFLOW_ESCALATION_RULES` carries the seed of ADR-0008 as
   `timer_expired` conditions — the start values of the §7.2 table, the
   deadline rules `{ percent: 80 }` and `{ percent: 100 }`
-- `EscalationRuleConfig` no longer knows `reference`, `minutes` or `percent`
+- `EscalationRuleConfig` no longer knows `reference`, `minutes` or `percent`;
+  the row conversion of WP-M45-02 in the engine and the configuration service
+  leaves with the columns (the conversion helper stays as the documented shape
+  of the migration only if a test still needs it)
 
 ## Task
 
@@ -47,8 +53,9 @@ interfaces:
    of `0045`/`0046`: for every active and inactive rule build the timer json —
    a rule with `percent` gets `{ percent }`, a rule with `minutes` gets
    `{ reference: <reference or the clock of its stage>, minutes }`; merge the
-   timer and the old condition into `{ all: [ … ] }` (an empty or `{ all: [] }`
-   condition keeps just the timer), write the merged condition and then drop
+   timer and the old condition the way `escalationRuleTimerCondition` of
+   WP-M45-02 does (the timer joins a root `all` group, any other root is
+   wrapped into `{ all: [timer, condition] }`), write the merged condition and then drop
    the three columns — drizzle-kit shape with `-->` breakpoints, the CHECK of
    0038 falls with its columns.
 2. `schema.ts`: `escalationRules` loses the three columns; the stage foreign
@@ -67,8 +74,9 @@ interfaces:
 
 ## Non-goals
 
-- No engine change (WP-M45-03 reads the timers there), no administration UI
-  (WP-M45-04).
+- No engine semantics change (WP-M45-02 already reads the timers), no
+  administration UI (WP-M45-03) — the two API files only lose the row
+  conversion of the dropped columns.
 - No change of `escalation_stages` and `escalation_actions`.
 - No new rule, no renamed rule: the keys stay (ADR-0064 changes the clock, not
   the identity).
@@ -90,5 +98,5 @@ contract of WP-M45-01 without the old fields.
 - Files changed:
 - Interfaces added:
 - Verified:
-- Follow-up WP: WP-M45-03, WP-M45-04 exist as files since WP-M45-00
+- Follow-up WP: none — the phase 45 is complete when this package is done
 - Open question (if any):

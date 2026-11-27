@@ -1,8 +1,8 @@
-# WP-M45-04: the administration puts the timer in the condition
+# WP-M45-03: the administration puts the timer in the condition
 
 format: ctx-256k
 status: planned
-depends-on: WP-M45-03
+depends-on: WP-M45-02
 phase: 45
 milestone: m45
 context-budget: 55k tokens
@@ -43,6 +43,9 @@ interfaces:
   per priority, the clock starts at the chosen start value, pauses stop it,
   and **what happens after the expiry**: the rule fires exactly once, writes
   the escalated entry, runs its actions; a reached stage never fires again
+- the form sends `reference`, `minutes` and `percent` as `null` — the clock
+  lives in the condition; the read of WP-M45-02 already answers old rows with
+  the timer leaf, so every configuration opens in the new shape
 
 ## Task
 
@@ -100,5 +103,5 @@ text exists in `de` and `en`.
 - Files changed:
 - Interfaces added:
 - Verified:
-- Follow-up WP: none — the phase 45 is complete when this package is done
+- Follow-up WP: WP-M45-04 exists as a file since WP-M45-00 (re-cut 2026-11-27)
 - Open question (if any):
