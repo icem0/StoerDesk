@@ -1,7 +1,7 @@
 # WP-M29-03: the settings menu is single-column
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M29-02
 phase: 29
 milestone: m29

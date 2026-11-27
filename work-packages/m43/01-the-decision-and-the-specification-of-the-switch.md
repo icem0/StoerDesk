@@ -1,7 +1,7 @@
 # WP-M43-01: the decision and the specification of the switch
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-17
 phase: 43
 milestone: m43

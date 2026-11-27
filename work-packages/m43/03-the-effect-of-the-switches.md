@@ -1,7 +1,7 @@
 # WP-M43-03: the effect of the switches
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M43-02
 phase: 43
 milestone: m43

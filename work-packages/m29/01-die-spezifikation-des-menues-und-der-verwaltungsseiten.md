@@ -1,7 +1,7 @@
 # WP-M29-01: die Spezifikation des Menüs und der Verwaltungsseiten
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: —
 phase: 29
 milestone: m29

@@ -926,14 +926,18 @@ actions and the recipient of a notification. The keys
 `admin.escalation.hint` and `admin.escalation.help.*` are gone, the read-only
 notice, the reason of a blocked stage removal, the sentence about the value
 „assigned“ and the error texts stay visible. **The phase runs out of band**:
-the phases 36 (WP-M36-05 … WP-M36-08), 38 (WP-M38-02 … WP-M38-04) stay open.
+the phase 36 (WP-M36-05 … WP-M36-08) stays open — phase 38 (WP-M38-02 … WP-M38-04)
+landed in the parallel-session commit `cb6baaec` and is closed with this record.
 
-**Phase 43 has started (WP-M43-01).** Not every installation wants customers:
-the portal of the customer and the registration of a customer are switched
-on in the administration (`/admin/customers`), and both are off by default
-(ADR-0062). The registration needs a **cleanly set up mailbox** — the channel
-of the instance with a host, a valid sender address and a complete login —
-because a mailbox that cannot deliver cannot confirm an account.
+**Phase 43 is closed (WP-M43-01 … WP-M43-04).** Not every installation wants
+customers: the portal of the customer and the registration of a customer are
+switched on in the administration (`/admin/customers`), and both are off by
+default (ADR-0062). The registration needs a **cleanly set up mailbox** — the
+channel of the instance with a host, a valid sender address and a complete
+login — because a mailbox that cannot deliver cannot confirm an account. The
+four packages landed in `93c01d0b`, `95fca592`, `ae860bfc` and `2a2b1202`; the
+status lines of the four WP documents and the rows of the backlog were stale
+and are completed with this record.
 
 **Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
 configured the SMTP connection of Office 365 in the administration and the test
@@ -982,9 +986,10 @@ up-to-date state (`commitsBehind: 0`); the panel offers the button in the unknow
 state, names the consequence above it and uses its own text in the confirm step
 (`specs/18-self-update.md` §18.2, §18.4).
 
-**Phase 38 has started (WP-M38-01 … WP-M38-04, ADR-0061, out of band); WP-M38-01 and WP-M38-02 are implemented.** The office asked for two things: „beim einscannen eines qr codes sollte man falls es ein offenes ticket gibt direkt zu diesem kommen, mit der moeglichkeit ein weiteres zu oeffnen — aber in erster linie soll man das aktuelle ticket sehen“ and „wenn man ein registrierter kunde ist soll man natuerlich seine landingpage sehen — die landingpage der kunden soll als erstes die offenen tickets anzeigen, wenn es nur eines gibt dann dessen detailansicht“. The scan of a code opens the **landing page** of the object: the open tickets of the object come first, the report form moves to `/m/<qr_token>/neu`. The public view of an open ticket of the object (`/m/<qr_token>/tickets/<ticket_no>`) shows the number, the status, the deadline, the public events and the public comments — never the description, the contact or the photos of another reporter. **ADR-0061** decides that the QR token of the object is the capability of a comment on an open ticket of that object: the code is printed on the object, the comment is append-only, the ticket must be open, the spam limit applies and the contact data of the author never leaves the house. SEC-004 keeps its force for the path of the `status_token`. The portal of the customer gets its landing page `/portal` with the open tickets first and the closed ones below; exactly one open ticket opens its detail directly, and a customer who signs in lands in his portal instead of in the internal application of the office. The phase runs **out of band**: the phase 36 (the help popover) stays open with WP-M36-02 … WP-M36-08.
+**Phase 38 is closed (WP-M38-01 … WP-M38-04, ADR-0061, out of band).** The office asked for two things: „beim einscannen eines qr codes sollte man falls es ein offenes ticket gibt direkt zu diesem kommen, mit der moeglichkeit ein weiteres zu oeffnen — aber in erster linie soll man das aktuelle ticket sehen“ and „wenn man ein registrierter kunde ist soll man natuerlich seine landingpage sehen — die landingpage der kunden soll als erstes die offenen tickets anzeigen, wenn es nur eines gibt dann dessen detailansicht“. The scan of a code opens the **landing page** of the object: the open tickets of the object come first, the report form moves to `/m/<qr_token>/neu`. The public view of an open ticket of the object (`/m/<qr_token>/tickets/<ticket_no>`) shows the number, the status, the deadline, the public events and the public comments — never the description, the contact or the photos of another reporter. **ADR-0061** decides that the QR token of the object is the capability of a comment on an open ticket of that object: the code is printed on the object, the comment is append-only, the ticket must be open, the spam limit applies and the contact data of the author never leaves the house. SEC-004 keeps its force for the path of the `status_token`. The portal of the customer gets its landing page `/portal` with the open tickets first and the closed ones below; exactly one open ticket opens its detail directly, and a customer who signs in lands in his portal instead of in the internal application of the office. The phase runs **out of band**: the phase 36 (the help popover) stayed open. **WP-M38-01** and **WP-M38-02** landed in their own commits; **WP-M38-02 … WP-M38-04** additionally stand in the parallel-session commit `cb6baaec` (the phases 30 … 38 in one commit) — the record of the phase is completed retroactively here, the code was verified green and the phase 38 exit criterion (a second scan shows the open ticket, a customer lands in his portal) is proven by the tests of the landing page, of the object view and of the portal.
 
-**Phase 36 is planned (WP-M36-01 … WP-M36-08); WP-M36-01 … WP-M36-04 are
+**Phase 36 is running (WP-M36-01 … WP-M36-09); WP-M36-01 … WP-M36-04 and
+WP-M36-09 are
 implemented.** The
 office asked for the explanations of the interface: „die Erklárungen sollen alle
 in ein Mouseover gepackt werden falls sie im Menü sind“, „bei Erklárungen auf

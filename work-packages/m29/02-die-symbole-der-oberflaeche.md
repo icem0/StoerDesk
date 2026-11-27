@@ -1,7 +1,7 @@
 # WP-M29-02: the symbols of the surface
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M29-01
 phase: 29
 milestone: m29

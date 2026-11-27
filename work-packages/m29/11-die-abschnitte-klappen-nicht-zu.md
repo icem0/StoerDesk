@@ -1,7 +1,7 @@
 # WP-M29-11: die Abschnitte des Menüs klappen nicht zu
 
 format: ctx-128k
-status: planned
+status: done
 depends-on: WP-M29-10
 phase: 29
 milestone: m29

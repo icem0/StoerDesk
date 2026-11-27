@@ -1,7 +1,7 @@
 # WP-M29-05: die Kanäle bekommen eigene Seiten
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M29-04
 phase: 29
 milestone: m29
@@ -63,5 +63,8 @@ Expected: all green; the new test fails before the change and passes after it; c
 - Files changed: channel-form-parts.tsx, channels-page.tsx, channel-page.tsx, channel-page.test.tsx, routes/index.tsx
 - Interfaces added: ChannelCard, ChannelPage, route GET /admin/channels/:kind
 - Verified: the commands above
-- Follow-up WP: WP-M29-05b (die Übersichtsseite der Kanäle verlinkt auf die Einzel-Seiten)
+- Follow-up WP: WP-M29-05b — **cancelled**: die Übersichtsseite keeps its ChannelCards and
+  the single pages exist since this package; WP-M29-10 put every module of the
+  administration with its path into the settings menu again and WP-M29-09 closed the
+  phase with no follow-up — no WP file was created and none is missing
 - Open question: none

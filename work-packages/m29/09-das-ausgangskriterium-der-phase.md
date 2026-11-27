@@ -1,7 +1,7 @@
 # WP-M29-09: the exit criterion of the phase
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M29-08
 phase: 29
 milestone: m29

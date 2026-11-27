@@ -1,7 +1,7 @@
 # WP-M43-04: the page of the administration and the entry of the menu
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M43-03
 phase: 43
 milestone: m43

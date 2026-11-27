@@ -1,7 +1,7 @@
 # WP-M29-04: die Übersichtsseiten der Verwaltung
 
 format: ctx-256k
-status: planned
+status: superseded by WP-M29-10
 depends-on: WP-M29-03
 phase: 29
 milestone: m29

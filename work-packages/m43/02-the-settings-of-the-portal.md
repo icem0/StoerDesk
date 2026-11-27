@@ -1,7 +1,7 @@
 # WP-M43-02: the settings of the portal and the readiness of the mailbox
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M43-01
 phase: 43
 milestone: m43

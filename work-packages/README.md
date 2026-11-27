@@ -47,7 +47,7 @@ Dependencies: header `depends-on: WP-XX-YY, ...`
 | [m34](m34/) | Phase 34: the release of a shift — a shift that has not started is deleted in every state, and the technician who had the shift is informed (ADR-0058, WP-M34-01 … WP-M34-02b) | 3   |
 | [m37](m37/) | Phase 37: the overview of the own channels — the page `/settings/notifications` names every channel with its state, marks the mandatory channels of the rule of the administration, names the number of the channels that are set up and what is still missing, and the setup of a channel opens only when its own button is clicked (WP-M37-01 … WP-M37-03); out of band: the ticket overview opens open and its filters sit in a menu (WP-M35-03, ADR-0059) | 3   |
 | [m38](m38/) | Phase 38: the way of the code and the landing page of the customer — the scan of a QR code opens the landing page of the object (the open tickets first, the report form at `/m/<qr_token>/neu`), the public view of an open ticket of the object shows the number, the status, the deadline, the public events and the public comments, the QR token of the object is the capability of a comment on such a ticket, and the customer gets the landing page `/portal` with his open tickets first and the closed ones below (ADR-0061, WP-M38-01 … WP-M38-04) — **out of band**, the phase 36 stays open | 4   |
-| [m36](m36/) | Phase 36: an explanation of a place is a help popover — one component with the info symbol opens a panel at the place, never a hover-only tooltip; the explanation exists in two tiers in the namespace `help`; the settings menu keeps a readable summary visible and puts the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a help page carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-08) | 8   |
+| [m36](m36/) | Phase 36: an explanation of a place is a help popover — one component with the info symbol opens a panel at the place, never a hover-only tooltip; the explanation exists in two tiers in the namespace `help`; the settings menu keeps a readable summary visible and puts the detail behind the ⓘ of the row; every guarded page carries one page-level ⓘ in the shell and a help page carries none; the 27 `title=` tooltips migrate; the interface reads one step bigger (ADR-0060, WP-M36-01 … WP-M36-09) | 9   |
 | [m39](m39/) | Phase 39: the update starts without a comparison — the update menu of the administration offers the button „Update starten“ also when the versions cannot be compared; a comparison that GitHub refuses is an unknown state, not a proof that nothing is newer (WP-M39-01) — **out of band** | 1   |
 | [m40](m40/) | Phase 40: the double tap does not zoom the page — the report form and the ticket list stay at the place the finger touched, while the pinch zoom stays available (WP-M40-01) — **out of band** | 1   |
 | [m41](m41/) | Phase 41: the mailbox of the administration is a configured channel — the saved SMTP configuration wins over the environment of the installation: the test send, the notifications of the tickets and the escalation chain use it (WP-M41-01, WP-M41-02) — **out of band** | 2   |
@@ -1849,22 +1849,22 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M28-03   | the static gates of the check run in parallel — typecheck, lint, i18n and wp beside each other | done | yes     |
 | WP-M28-04   | the assertions of the migrations read the schema of the database instead of the text of the files | done | yes     |
 | WP-M28-04b  | the assertions of the migrations read the schema — the second part: the on-call tables, the notifications, the users, the administration, the webhooks and the configuration | done | yes     |
-| WP-M29-01   | the specification of the menu and the administration pages — §14.10/§14.11, ADR-0051, PLAN.md §14/§16, phase table | planned | yes     |
-| WP-M29-02   | the symbols of the surface — the shared `Icon` component and the symbols of the header menu | planned | yes     |
-| WP-M29-03   | the settings menu is single-column — symbols, descriptions, search, collapsible sections, work surfaces leave the menu | planned | yes     |
+| WP-M29-01   | the specification of the menu and the administration pages — §14.10/§14.11, ADR-0051, PLAN.md §14/§16, phase table | done | yes     |
+| WP-M29-02   | the symbols of the surface — the shared `Icon` component and the symbols of the header menu | done | yes     |
+| WP-M29-03   | the settings menu is single-column — symbols, descriptions, search, collapsible sections, work surfaces leave the menu | done | yes     |
 | WP-M29-04   | the overview pages of the administration — Benutzer & Rechte, Meldungsablauf, Bereitschaft, Kanäle & Versand | superseded by WP-M29-10 | yes     |
 | WP-M29-05   | every channel its own page — `/admin/channels/:kind` with Matrix as the first channel page | done | yes     |
 | WP-M29-06   | one shell for the administration — the `admin-layout.tsx` hull and the first batch of pages | done | yes     |
 | WP-M29-07   | one shell for the administration — the second batch of pages | done | yes     |
 | WP-M29-08   | one shell for the administration — the third batch of pages | done | yes     |
 | WP-M29-09   | the exit criterion of the phase — one `<main>` per page, symbols and descriptions in the menu, `i18n:check` green | done | yes     |
-| WP-M29-10   | the settings keep every path — the menu names every module of the administration again, the symbol gets room beside the text, the four topic pages of WP-M29-04 are gone | planned | yes     |
+| WP-M29-10   | the settings keep every path — the menu names every module of the administration again, the symbol gets room beside the text, the four topic pages of WP-M29-04 are gone | done | yes     |
 | WP-M29-11   | the sections of the menu never fold away — every entry of the settings stands visible, the search field filters | done | yes     |
-| WP-M30-01   | the message is a task and the delivery attempt is the protocol — the spec and ADR-0052 | planned | yes |
-| WP-M30-02   | the task of the user — the table `notification_items`, the write rule and the API of the tasks | planned | yes |
-| WP-M30-03   | the protocol of the administration — `/admin/notifications` with the attempts of the delivery | planned | yes |
-| WP-M30-04   | the inbox shows the tasks — the readable text, the deep link, the read receipt and the count | planned | yes |
-| WP-M30-05   | the alarm of a failed delivery — the task of the administration, throttled | planned | yes |
+| WP-M30-01   | the message is a task and the delivery attempt is the protocol — the spec and ADR-0052 | done | yes |
+| WP-M30-02   | the task of the user — the table `notification_items`, the write rule and the API of the tasks | done | yes |
+| WP-M30-03   | the protocol of the administration — `/admin/notifications` with the attempts of the delivery | done | yes |
+| WP-M30-04   | the inbox shows the tasks — the readable text, the deep link, the read receipt and the count | done | yes |
+| WP-M30-05   | the alarm of a failed delivery — the task of the administration, throttled | done | yes |
 | WP-M30-06   | the criterion of the phase — one task per user and event, the protocol and the alarm of a failure | done | yes |
 | WP-M30-07   | the record of the packages of phase 30 — the commit `cb6baaec` carried the work of WP-M30-03 … WP-M30-07 under the subject of the parallel session (profile `ctx-128k`) | done | yes |
 | WP-M31-01   | the decisions of the customer portal — ADR-0053 … ADR-0056 | done | yes |
@@ -1884,11 +1884,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M31-15   | the customer sees the reports of his address — the tickets that carry his e-mail address | done | no |
 | WP-M31-16   | the administration knows the customer — the name of the role and the hint for the customer of an object | done | yes |
 | WP-M31-17   | the customer finds the registration at the login of the homepage — the link, the tab of the URL and the way into the portal | done | yes |
-| WP-M42-01   | the switch of the customer portal — ADR-0062, the two settings, the readiness of the mailbox and the page `/admin/customers` | planned | yes |
-| WP-M43-01   | the decision and the specification of the switch — ADR-0062 and the chapters §19.13/§19.14 | planned | yes |
-| WP-M43-02   | the settings of the portal and the readiness of the mailbox — `GET|PUT /api/v1/settings/customers` | planned | no |
-| WP-M43-03   | the effect of the switches — the availability, the portal, the sign in and the report form | planned | no |
-| WP-M43-04   | the page of the administration — `/admin/customers` and the entry of the settings menu | planned | no |
+| WP-M42-01   | the switch of the customer portal — ADR-0062, the two settings, the readiness of the mailbox and the page `/admin/customers` | superseded by WP-M43-01 | yes |
+| WP-M43-01   | the decision and the specification of the switch — ADR-0062 and the chapters §19.13/§19.14 | done | yes |
+| WP-M43-02   | the settings of the portal and the readiness of the mailbox — `GET|PUT /api/v1/settings/customers` | done | yes |
+| WP-M43-03   | the effect of the switches — the availability, the portal, the sign in and the report form | done | yes |
+| WP-M43-04   | the page of the administration — `/admin/customers` and the entry of the settings menu | done | yes |
 | WP-M32-01   | the assignment names a target of the installation — the spec §7.14, ADR-0057 and the plan | done | yes |
 | WP-M32-02   | the assignment carries its target — the contract, the columns of the ticket, the service and the routes | done | yes |
 | WP-M32-03   | the action `assign` names a target — the escalation assigns the first member of the target | done | yes |
@@ -1910,10 +1910,11 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M36-06   | the readiness and the tickets name their marks in a panel — the readiness cell, the shift actions, the deadline of a row and the milestones of the timeline | planned | yes |
 | WP-M36-07   | the statistics, the objects and the notification cards name their marks in a panel — the glossary of the statistics, the values of a diagram outside the hover, the sticker sheet, the web push card and the ntfy card | planned | yes |
 | WP-M36-08   | the interface reads itself one step bigger — the root font size of `styles.css`, the 11 hard `text-[Npx]` classes to rem, the meta text to `text-slate-300` | planned | yes |
+| WP-M36-09   | the notifications page hides its description behind the info symbol — the hint of the own-channels overview opens in the panel of its ⓘ | done | yes |
 | WP-M38-01   | the way of the code and the landing page of the customer — the ADR-0061, §7.10 of the report form and the landing page of the customer in §19.5 | done | yes |
-| WP-M38-02   | the public view of an open ticket of the object — the contract, the API and the page with the comment of the object | planned | yes |
-| WP-M38-03   | the scan opens the landing page of the object — `/m/:token` names the open tickets of the object, the form moves to `/m/:token/neu` | planned | yes |
-| WP-M38-04   | the landing page of the customer — `/portal` with the open tickets first, one open ticket opens its detail, a customer lands in his portal | planned | yes |
+| WP-M38-02   | the public view of an open ticket of the object — the contract, the API and the page with the comment of the object | done | yes |
+| WP-M38-03   | the scan opens the landing page of the object — `/m/:token` names the open tickets of the object, the form moves to `/m/:token/neu` | done | yes |
+| WP-M38-04   | the landing page of the customer — `/portal` with the open tickets first, one open ticket opens its detail, a customer lands in his portal | done | yes |
 | WP-M39-01   | the update starts even when the versions cannot be compared — the start refuses only the proven up-to-date state, the panel offers the button in the unknown state and names the consequence | done | yes |
 | WP-M40-01   | the double tap does not zoom the page — `touch-action: manipulation` forbids the browser zoom of a double tap and keeps the pinch zoom | done | yes |
 | WP-M41-01   | the mailbox of the administration is a configured channel — the saved SMTP configuration reaches the test send, the notifications of the tickets and the escalation chain | done | yes |

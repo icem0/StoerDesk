@@ -1,7 +1,7 @@
 # WP-M29-10: die Einstellungen behalten ihre Pfade
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M29-05
 phase: 29
 milestone: m29
