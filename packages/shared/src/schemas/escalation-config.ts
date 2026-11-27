@@ -571,7 +571,6 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
       message: 'notify_needs_target_or_channel',
     })
   }
-
 })
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
@@ -873,9 +872,8 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
         'percent' in value
           ? facts.deadlinePercent >= value.percent
           : facts.sinceEvent !== undefined &&
-              (facts.sinceEvent[value.reference] ?? -1) >=
-                ((value.minutes as Record<string, number>)[facts.priority] ??
-                  value.minutes.normal)
+            (facts.sinceEvent[value.reference] ?? -1) >=
+              ((value.minutes as Record<string, number>)[facts.priority] ?? value.minutes.normal)
 
       return leaf.operator === 'notExpired' ? !expired : expired
     }
@@ -922,12 +920,134 @@ export function escalationTimerLeaves(
 
   return escalationConditionLeaves(condition).flatMap((entry) =>
     entry.field === 'timer_expired'
-      ? [{
-          operator: (entry.operator as 'expired' | 'notExpired'),
-          value: entry.value as EscalationTimerValue,
-        }]
+      ? [
+          {
+            operator: entry.operator as 'expired' | 'notExpired',
+            value: entry.value as EscalationTimerValue,
+          },
+        ]
       : [],
   )
+}
+
+/**
+ * One `expired` timer of a condition with the delay of the priority of the
+ * ticket (ADR-0064 decision 5): the engine turns it into the moment the timer
+ * expired — the start event plus `minutes`, or the `percent` point of the
+ * timeline — and takes the latest of them as the threshold of the firing log.
+ */
+export type EscalationExpiredTimer =
+  { reference: EscalationReferenceEvent; minutes: number } | { percent: number }
+
+/**
+ * The `expired` timer leaves of a condition with the delay of `priority`
+ * (§7.7). A `notExpired` leaf names no threshold: it only gates the firing.
+ */
+export function escalationExpiredTimers(
+  condition: EscalationCondition | null | undefined,
+  priority: string,
+): EscalationExpiredTimer[] {
+  return escalationTimerLeaves(condition).flatMap((timer): EscalationExpiredTimer[] => {
+    if (timer.operator !== 'expired') {
+      return []
+    }
+
+    if ('percent' in timer.value) {
+      return [{ percent: timer.value.percent }]
+    }
+
+    const minutes =
+      (timer.value.minutes as Record<string, number>)[priority] ?? timer.value.minutes.normal
+
+    return [{ reference: timer.value.reference, minutes }]
+  })
+}
+
+/**
+ * The condition of a rule of the first stage (§7.2, §7.11): the first stage is
+ * due with the ticket itself, independent of its timer — every `timer_expired`
+ * leaf counts as met, the rest of the condition still decides. A met leaf is
+ * the empty group `{ all: [] }`, so an `any` group keeps its meaning.
+ */
+export function escalationConditionWithoutTimers(
+  condition: EscalationCondition,
+): EscalationCondition {
+  if ('all' in condition) {
+    return { all: condition.all.map(escalationConditionWithoutTimers) }
+  }
+
+  if ('any' in condition) {
+    return { any: condition.any.map(escalationConditionWithoutTimers) }
+  }
+
+  return condition.field === 'timer_expired' ? { all: [] } : condition
+}
+
+/** A `timer_expired` leaf. */
+function isTimerLeaf(condition: EscalationCondition): boolean {
+  return !('all' in condition) && !('any' in condition) && condition.field === 'timer_expired'
+}
+
+/**
+ * The clock of the former rule fields as a condition (ADR-0064 decision 8, the
+ * shape of migration `0070`): `percent` becomes `{ percent }`, `minutes` becomes
+ * `{ reference, minutes }` — a rule without its own `reference` takes
+ * `stageReference`, the start of the wait of its stage. The timer joins a root
+ * `all` group (replacing a timer that stands there already, so the fields win
+ * and a second conversion writes nothing new); any other root is wrapped into
+ * `{ all: [timer, condition] }`. A rule without minutes and percent keeps its
+ * condition.
+ */
+export function escalationRuleTimerCondition(
+  rule: {
+    reference?: EscalationReferenceEvent | null
+    minutes?: EscalationMinutes | null
+    percent?: number | null
+    condition: EscalationCondition
+  },
+  stageReference: EscalationReferenceEvent = 'received_at',
+): EscalationCondition {
+  let value: EscalationTimerValue
+
+  if (rule.percent !== null && rule.percent !== undefined) {
+    value = { percent: rule.percent }
+  } else if (rule.minutes !== null && rule.minutes !== undefined) {
+    value = { reference: rule.reference ?? stageReference, minutes: rule.minutes }
+  } else {
+    return rule.condition
+  }
+
+  const timer: EscalationConditionLeaf = { field: 'timer_expired', operator: 'expired', value }
+
+  if ('all' in rule.condition) {
+    return { all: [timer, ...rule.condition.all.filter((child) => !isTimerLeaf(child))] }
+  }
+
+  if (isTimerLeaf(rule.condition)) {
+    return { all: [timer] }
+  }
+
+  return { all: [timer, rule.condition] }
+}
+
+/**
+ * The start value of a rule without its own `reference` (§7.11): the first
+ * clock event of its stage that a timer can name, `received_at` otherwise.
+ */
+export function escalationStageTimerReference(
+  stageKey: string | null,
+  stages: readonly { key: string; predecessor: string | null; reachedBy: readonly string[] }[],
+): EscalationReferenceEvent {
+  if (stageKey === null) {
+    return 'received_at'
+  }
+
+  const events = escalationStageClockEvents(stageKey, stages)
+  const known = events.find((event): event is EscalationReferenceEvent =>
+    (ESCALATION_REFERENCE_EVENTS as readonly string[]).includes(event),
+  )
+
+  return known ?? 'received_at'
 }
 
 /**

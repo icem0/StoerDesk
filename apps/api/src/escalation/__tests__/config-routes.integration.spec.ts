@@ -195,7 +195,8 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(response.json<{ channels: string[] }>().channels).toContain('email')
     })
 
-    it('answers the stages and the rules of the seed', async () => {      const response = await getConfig(cookies['admin'])
+    it('answers the stages and the rules of the seed', async () => {
+      const response = await getConfig(cookies['admin'])
 
       expect(response.statusCode).toBe(200)
 
@@ -218,7 +219,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
             reference: 'received_at',
             minutes: { low: 20, normal: 20, high: 20, critical: 8 },
             percent: null,
-            condition: { all: [{ field: 'priority', operator: 'in', value: ['high', 'critical'] }] },
+            condition: {
+              all: [{ field: 'priority', operator: 'in', value: ['high', 'critical'] }],
+            },
             actions: [
               {
                 key: 'office_webhook',
@@ -238,7 +241,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(body.rules).toHaveLength(1)
       expect(body.rules[0]?.actions[0]?.type).toBe('webhook')
-      expect(body.rules[0]?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 8 })
+      // The clock of the former fields is written as the timer of the condition
+      // (ADR-0064); the fields answer `null`.
+      expect(body.rules[0]?.minutes).toBeNull()
+      expect(body.rules[0]?.condition).toEqual({
+        all: [
+          {
+            field: 'timer_expired',
+            operator: 'expired',
+            value: {
+              reference: 'received_at',
+              minutes: { low: 20, normal: 20, high: 20, critical: 8 },
+            },
+          },
+          { field: 'priority', operator: 'in', value: ['high', 'critical'] },
+        ],
+      })
     })
 
     it('numbers the rule and its actions', async () => {
@@ -456,7 +474,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       ])
     })
 
-
     it('writes and reads an assign action with a target and refuses an unknown target', async () => {
       const suffix = Date.now().toString(36)
 
@@ -562,7 +579,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
             minutes: { low: 10, normal: 10, high: 10, critical: 10 },
             percent: null,
             condition: {
-              all: [{ field: 'shift', operator: 'eq', value: '33333333-3333-4333-8333-333333333333' }],
+              all: [
+                { field: 'shift', operator: 'eq', value: '33333333-3333-4333-8333-333333333333' },
+              ],
             },
             actions: [],
             active: true,
@@ -658,9 +677,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       const body = response.json<ConfigBody>()
 
-      expect(body.stages.map((stage) => stage.key)).toEqual(
-        DEFAULT_CHAIN.map((stage) => stage.key),
-      )
+      expect(body.stages.map((stage) => stage.key)).toEqual(DEFAULT_CHAIN.map((stage) => stage.key))
       expect(await db.select().from(schema.escalationRules)).toHaveLength(0)
     })
 

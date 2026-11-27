@@ -67,10 +67,13 @@ asked for.
    `{ percent: 100 }` in their condition; the separate meaning of the
    percentage survives as the percent value of a timer.
 8. **Installed rules are migrated.** Migration
-   `0069_escalation_rule_timer.sql` rewrites `reference` and `minutes` of every
+   `0070_escalation_rule_timer.sql` rewrites `reference` and `minutes` of every
    stage rule and the `percent` of every deadline rule into a `timer_expired`
    leaf; an old condition that was not empty merges into an `all` group with
-   the timer. Afterwards the three columns fall. The read normalization of
+   the timer. Afterwards the three columns fall. The check that demanded one of the
+   columns falls earlier with `0069_escalation_rule_clock_optional.sql`, so the
+   engine and the administration can write a rule whose clock is its condition
+   before the conversion runs. The read normalization of
    ADR-0063 brings an old body that still sends the three fields into the new
    contract the same way.
 9. **The administration shows the timer in the condition builder.** The leaf

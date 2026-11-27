@@ -3,16 +3,23 @@ import { z } from 'zod'
 import {
   ESCALATION_DEADLINE_ROOT,
   escalationActionKey,
+  escalationConditionDepth,
+  escalationConditionLeafCount,
   escalationConditionLeaves,
   escalationConfigSchema,
   escalationFirstStageKey,
   escalationRuleConfigSchema,
   escalationRuleKey,
+  escalationRuleTimerCondition,
   escalationStageClockEvents,
+  escalationStageTimerReference,
   escalationStagesBodySchema,
   validateEscalationStageChain,
   type EscalationActionConfig,
+  type EscalationCondition,
   type EscalationConfig,
+  type EscalationMinutes,
+  type EscalationReferenceEvent,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -177,6 +184,10 @@ export async function readReachableStages(
  * - the reference of a stage rule that does not match the clock of its stage
  *   becomes `null` — the stage clock, the fallback of `writeEscalationStages`
  *   (ADR-0023, §7.11);
+ * - the clock of the former rule fields `reference`, `minutes` and `percent`
+ *   becomes the `timer_expired` leaf of the condition and the fields become
+ *   `null` (ADR-0064 decision 8, the shape of migration `0070`) — a rule without
+ *   its own reference takes the start of the wait of its stage;
  * - a stage without a name for a required locale takes the key of the stage, the
  *   fallback of `localizedName`; a stage with the position of `0` (the default of
  *   the row) takes its place in the order.
@@ -244,17 +255,49 @@ export function normalizeEscalationRows(
       }
     }
 
+    const condition = conditionOfRuleRow(rule.condition)
+
     return {
       ...rule,
       actions,
-      minutes,
-      percent,
-      reference,
-      condition: conditionOfRuleRow(rule.condition),
+      minutes: null,
+      percent: null,
+      reference: null,
+      condition: timerConditionOfRuleRow(
+        { reference, minutes, percent, condition },
+        escalationStageTimerReference(stageKey, clockRows),
+      ),
     }
   })
 
   return { stages: normalizedStages, rules: normalizedRules }
+}
+
+/**
+ * The clock fields of a row as the timer of its condition (ADR-0064). A row
+ * whose fields or condition are malformed keeps them, so the contract answers
+ * `config_invalid` with the field paths instead of a server error.
+ */
+function timerConditionOfRuleRow(
+  row: { reference: unknown; minutes: unknown; percent: unknown; condition: unknown },
+  stageReference: EscalationReferenceEvent,
+): unknown {
+  const condition = row.condition as EscalationCondition
+  const hasGroup = typeof condition === 'object' && condition !== null
+
+  if (!hasGroup) {
+    return row.condition
+  }
+
+  return escalationRuleTimerCondition(
+    {
+      reference: (row.reference ?? null) as EscalationReferenceEvent | null,
+      minutes: (row.minutes ?? null) as EscalationMinutes | null,
+      percent: (row.percent ?? null) as number | null,
+      condition,
+    },
+    stageReference,
+  )
 }
 
 /** An empty condition of a legacy row (`{}`, `null`, a missing key) is `{ all: [] }`. */
@@ -404,6 +447,17 @@ export async function writeEscalationConfig(
   const invalidFields: string[] = []
 
   for (const [index, rule] of parsed.data.rules.entries()) {
+    // The timer of the former fields joins the condition (ADR-0064); the result
+    // must still keep the limits of §7.4.
+    const timed = escalationRuleTimerCondition(
+      rule,
+      escalationStageTimerReference(rule.stageKey, stageRows),
+    )
+
+    if (escalationConditionDepth(timed) > 2 || escalationConditionLeafCount(timed) > 20) {
+      invalidFields.push(`rules.${index}.condition`)
+    }
+
     if (rule.stageKey === null) {
       continue
     }
@@ -564,13 +618,18 @@ export async function writeEscalationConfig(
 
       derivedKeys.add(ruleKey)
 
+      // The clock lives in the condition (ADR-0064): a body that still sends
+      // the former fields writes them as the timer, the columns stay empty.
       await tx.insert(escalationRules).values({
         key: ruleKey,
         stageKey: rule.stageKey,
-        reference: rule.reference,
-        minutes: rule.minutes,
-        percent: rule.percent,
-        condition: rule.condition,
+        reference: null,
+        minutes: null,
+        percent: null,
+        condition: escalationRuleTimerCondition(
+          rule,
+          escalationStageTimerReference(rule.stageKey, stageRows),
+        ),
         position,
         active: rule.active,
       })

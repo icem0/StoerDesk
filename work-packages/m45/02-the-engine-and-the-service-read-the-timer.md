@@ -1,7 +1,7 @@
 # WP-M45-02: the engine and the configuration service read the timer
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-01
 phase: 45
 milestone: m45
@@ -25,9 +25,12 @@ files-write:
 - packages/shared/src/**tests**/escalation-config.test.ts
 - apps/api/src/tickets/escalation.ts
 - apps/api/src/escalation/config.ts
+- apps/api/src/db/migrations/0069_escalation_rule_clock_optional.sql
+- apps/api/src/db/migrations/meta/\_journal.json
+- apps/api/src/db/schema.ts
 - apps/api/src/tickets/**tests**/escalation.integration.spec.ts
 - apps/api/src/escalation/**tests**/legacy-config-rows.test.ts
-- apps/api/src/escalation/**tests**/phase13-exit.integration.spec.ts
+- apps/api/src/escalation/**tests**/config-routes.integration.spec.ts
 
 interfaces:
 
@@ -36,7 +39,7 @@ interfaces:
   reference takes `stageReference`, the first clock event of the stage) or
   `percent` become one `timer_expired` leaf, merged with a non-empty condition into
   `{ all: [timer, condition] }`; the fields of the answer are `null`. The
-  migration `0069` of WP-M45-04 writes the same shape
+  migration `0070` of WP-M45-04 writes the same shape
 - `escalationExpiredTimers(condition, priority)` — the `expired` timer leaves
   of a condition with the delay of the priority of the ticket; the engine turns
   them into the threshold of the firing log (the latest expiry point, pauses
@@ -54,6 +57,10 @@ interfaces:
   = the moment the largest one expired, pauses inside); a rule **without** a
   timer is due from the start of its wait (the reached predecessor of §7.11,
   zero delay)
+- migration `0069_escalation_rule_clock_optional.sql` drops only the check
+  `escalation_rules_clock_check` of `0038`: the write path stores the clock in
+  the condition and `null` in the columns, which the check refused (found while
+  implementing — the columns themselves fall with `0070` of WP-M45-04)
 - the firing log keeps its shape: `threshold_at` from the timer, unique over
   `(ticket_id, rule_key, threshold_at)` — unchanged
 
@@ -94,8 +101,8 @@ interfaces:
 
 ## Non-goals
 
-- No UI change (WP-M45-03), no schema or migration change (WP-M45-04), no
-  action semantics.
+- No UI change (WP-M45-03), no conversion of the rows and no dropped column
+  (WP-M45-04), no action semantics.
 - No change of the readiness scan, the `shift` facts or `time_of_day`.
 
 ## Acceptance
@@ -113,8 +120,29 @@ non-matching condition keeps the rule silent.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `packages/shared/src/schemas/escalation-config.ts`,
+  `apps/api/src/tickets/escalation.ts`, `apps/api/src/escalation/config.ts`,
+  `apps/api/src/db/schema.ts`, the migration
+  `0069_escalation_rule_clock_optional.sql` with its journal entry; the tests
+  `escalation-config.test.ts` (shared), `escalation.integration.spec.ts`,
+  `legacy-config-rows.test.ts` and `config-routes.integration.spec.ts`
+- Interfaces added: `escalationExpiredTimers`, `escalationConditionWithoutTimers`,
+  `escalationRuleTimerCondition`, `escalationStageTimerReference` (shared);
+  `readEscalationRules(database, stages)` answers the timer conditions;
+  `EscalationFacts.sinceEvent` is filled by `factsFor`
+- Verified: `npm run check` with a real PostgreSQL 16 (`TEST_DATABASE_URL`):
+  302 test files, 2165 tests green; `npm run test:e2e` with the Chromium of the
+  environment (`E2E_CHROMIUM_PATH`): 15 passed
+- Deviations: the check `escalation_rules_clock_check` had to fall in this
+  package (migration `0069`), the conversion of WP-M45-04 is `0070` now; the
+  phase-13 exit test stays unchanged — it seeds the deadline rules through the
+  columns and passes through the read conversion, the timer shape of the seed
+  arrives with WP-M45-04; a converted rule without its own reference takes the
+  **first** start value of its stage clock (a stage reached by `assigned` or
+  `offered` waits from `assigned`), where the old clock took the latest of both
+  — a timer names one start value (ADR-0064 decision 1)
+- Interim of the rule form (until WP-M45-03): the frame „Zeitliche Abfolge“
+  shows the seed minutes of a rule whose fields answer `null`; a saved edit of
+  the frame replaces the timer at the top of the condition (the fields win)
 - Follow-up WP: WP-M45-03, WP-M45-04 exist as files since WP-M45-00 (re-cut 2026-11-27)
-- Open question (if any):
+- Open question: none

@@ -1491,10 +1491,8 @@ export const escalationRules = pgTable(
   (table) => [
     uniqueIndex('escalation_rules_key_key').on(table.key),
     index('escalation_rules_stage_key_idx').on(table.stageKey),
-    check(
-      'escalation_rules_clock_check',
-      sql`((${table.minutes} IS NOT NULL) OR (${table.percent} IS NOT NULL AND ${table.percent} BETWEEN 1 AND 100))`,
-    ),
+    // The clock is the `timer_expired` leaf of the condition (ADR-0064): the
+    // check of 0038 fell with migration 0069, a rule may carry neither column.
   ],
 )
 

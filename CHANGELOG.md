@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
+- **The escalation engine reads the waiting clock from the condition
+  (WP-M45-02, ADR-0064).** The clock of a rule is the `timer_expired` leaf of
+  its condition: the scan fires a rule once all its `expired` timers passed the
+  delay of the priority of the ticket (pauses excluded) and logs the moment the
+  last one expired; `notExpired` only gates. A stage rule without a timer is due
+  from the start of the wait of its stage, a rule of the first stage stays due
+  with the ticket. The former fields `reference`, `minutes` and `percent` of an
+  installed rule are read and saved as that timer, so every configuration keeps
+  its clock; the check that demanded them falls with migration `0069`.
 - **The administration names its keys and its blocked actions in a panel
   (WP-M36-05, ADR-0060).** The native `title=` tooltips of the administration
   moved to the help popover: the key of a row in the statuses, the detected

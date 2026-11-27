@@ -13,6 +13,10 @@ import {
   escalationConditionSchema,
   escalationRuleKey,
   escalationStageClockEvents,
+  escalationConditionWithoutTimers,
+  escalationExpiredTimers,
+  escalationRuleTimerCondition,
+  escalationStageTimerReference,
   escalationTimerLeaves,
   escalationTargetSchema,
   evaluateEscalationCondition,
@@ -123,12 +127,21 @@ describe('the first stage of a chain', () => {
   })
 
   it('is nothing without a stage without a predecessor', () => {
-    expect(escalationFirstStageKey([{ key: 'work_order', position: 2, predecessor: 'review' }])).toBeNull()
+    expect(
+      escalationFirstStageKey([{ key: 'work_order', position: 2, predecessor: 'review' }]),
+    ).toBeNull()
   })
 })
 
 describe('the stage chain validator', () => {
-  const events = ['review_started', 'work_order_set', 'assigned', 'offered', 'accepted', 'acknowledged']
+  const events = [
+    'review_started',
+    'work_order_set',
+    'assigned',
+    'offered',
+    'accepted',
+    'acknowledged',
+  ]
 
   function stage(
     key: string,
@@ -449,16 +462,12 @@ describe('the offer and assign actions', () => {
   })
 
   it('rejects a target without a kind and one without an id', () => {
-    expect(
-      escalationTargetSchema.safeParse({ id: poolTarget.id }).success,
-    ).toBe(false)
+    expect(escalationTargetSchema.safeParse({ id: poolTarget.id }).success).toBe(false)
     expect(escalationTargetSchema.safeParse({ kind: 'pool' }).success).toBe(false)
     expect(escalationTargetSchema.safeParse({ kind: 'team', id: poolTarget.id }).success).toBe(
       false,
     )
-    expect(escalationTargetSchema.safeParse({ kind: 'pool', id: 'not-a-uuid' }).success).toBe(
-      false,
-    )
+    expect(escalationTargetSchema.safeParse({ kind: 'pool', id: 'not-a-uuid' }).success).toBe(false)
   })
 })
 
@@ -543,7 +552,8 @@ describe('the notify action', () => {
 })
 
 describe('the condition contract', () => {
-  it('rejects a leaf with a value of the wrong type', () => {    const result = escalationConditionSchema.safeParse({
+  it('rejects a leaf with a value of the wrong type', () => {
+    const result = escalationConditionSchema.safeParse({
       field: 'priority',
       operator: 'eq',
       value: 42,
@@ -623,17 +633,20 @@ describe('the condition evaluation', () => {
   })
 
   it('compares a boolean field', () => {
-    expect(evaluateEscalationCondition({ field: 'assigned', operator: 'eq', value: false }, facts)).toBe(
-      true,
-    )
-    expect(evaluateEscalationCondition({ field: 'paused', operator: 'eq', value: true }, facts)).toBe(
-      false,
-    )
+    expect(
+      evaluateEscalationCondition({ field: 'assigned', operator: 'eq', value: false }, facts),
+    ).toBe(true)
+    expect(
+      evaluateEscalationCondition({ field: 'paused', operator: 'eq', value: true }, facts),
+    ).toBe(false)
   })
 
   it('knows the stages the ticket has reached', () => {
     expect(
-      evaluateEscalationCondition({ field: 'stageReached', operator: 'eq', value: 'review' }, facts),
+      evaluateEscalationCondition(
+        { field: 'stageReached', operator: 'eq', value: 'review' },
+        facts,
+      ),
     ).toBe(true)
     expect(
       evaluateEscalationCondition(
@@ -663,9 +676,7 @@ describe('the condition evaluation', () => {
     }
 
     expect(evaluateEscalationCondition(condition, facts)).toBe(true)
-    expect(
-      evaluateEscalationCondition(condition, { ...facts, priority: 'low' }),
-    ).toBe(false)
+    expect(evaluateEscalationCondition(condition, { ...facts, priority: 'low' })).toBe(false)
   })
 })
 
@@ -707,12 +718,12 @@ describe('the readiness shift in a condition (§7.4, ADR-0030)', () => {
   })
 
   it('never matches without the readiness of the scan', () => {
-    expect(evaluateEscalationCondition({ field: 'shift', operator: 'eq', value: pool }, facts)).toBe(
-      false,
-    )
-    expect(evaluateEscalationCondition({ field: 'shift', operator: 'ne', value: pool }, facts)).toBe(
-      false,
-    )
+    expect(
+      evaluateEscalationCondition({ field: 'shift', operator: 'eq', value: pool }, facts),
+    ).toBe(false)
+    expect(
+      evaluateEscalationCondition({ field: 'shift', operator: 'ne', value: pool }, facts),
+    ).toBe(false)
   })
 
   it('accepts the leaf in the contract and refuses a value that is no uuid', () => {
@@ -720,7 +731,8 @@ describe('the readiness shift in a condition (§7.4, ADR-0030)', () => {
       escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: pool }).success,
     ).toBe(true)
     expect(
-      escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: 'pool' }).success,
+      escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: 'pool' })
+        .success,
     ).toBe(false)
   })
 })
@@ -733,26 +745,22 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
   it('accepts both value shapes', () => {
     expect(
       escalationConditionSchema.safeParse(
-        timerLeaf({ reference: 'received_at', minutes: minutes15 })
+        timerLeaf({ reference: 'received_at', minutes: minutes15 }),
       ).success,
     ).toBe(true)
-    expect(
-      escalationConditionSchema.safeParse(timerLeaf({ percent: 80 })).success,
-    ).toBe(true)
+    expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 80 })).success).toBe(true)
   })
 
   it('refuses an incomplete value and a foreign operator', () => {
     expect(
       escalationConditionSchema.safeParse(timerLeaf({ reference: 'received_at' })).success,
     ).toBe(false)
-    expect(
-      escalationConditionSchema.safeParse(timerLeaf({ minutes: minutes15 })).success,
-    ).toBe(false)
+    expect(escalationConditionSchema.safeParse(timerLeaf({ minutes: minutes15 })).success).toBe(
+      false,
+    )
     expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 0 })).success).toBe(false)
     expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 101 })).success).toBe(false)
-    expect(
-      escalationConditionSchema.safeParse(timerLeaf(minutes15, 'gt')).success,
-    ).toBe(false)
+    expect(escalationConditionSchema.safeParse(timerLeaf(minutes15, 'gt')).success).toBe(false)
   })
 
   it('evaluates the delay of the priority of the ticket', () => {
@@ -762,16 +770,22 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
     }
 
     expect(
-      evaluateEscalationCondition(timerLeaf({ reference: 'received_at', minutes: minutes15 }), withTimer)
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'received_at', minutes: minutes15 }),
+        withTimer,
+      ),
     ).toBe(true)
     expect(
-      evaluateEscalationCondition(timerLeaf({ reference: 'offered', minutes: minutes15 }), withTimer)
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'offered', minutes: minutes15 }),
+        withTimer,
+      ),
     ).toBe(false)
     expect(
       evaluateEscalationCondition(
         timerLeaf({ reference: 'received_at', minutes: minutes15 }, 'notExpired'),
         withTimer,
-      )
+      ),
     ).toBe(false)
   })
 
@@ -782,13 +796,16 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
     }
 
     expect(
-      evaluateEscalationCondition(timerLeaf({ reference: 'accepted', minutes: minutes15 }), withTimer)
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'accepted', minutes: minutes15 }),
+        withTimer,
+      ),
     ).toBe(false)
     expect(
       evaluateEscalationCondition(
         timerLeaf({ reference: 'accepted', minutes: minutes15 }, 'notExpired'),
         withTimer,
-      )
+      ),
     ).toBe(true)
   })
 
@@ -831,5 +848,123 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
     })
 
     expect(result.success).toBe(true)
+  })
+})
+
+describe('the timer of an engine and of an old row (ADR-0064, WP-M45-02)', () => {
+  const minutes = { low: 30, normal: 20, high: 10, critical: 5 }
+  const timer = (value: unknown, operator = 'expired'): EscalationConditionLeaf =>
+    ({ field: 'timer_expired', operator, value }) as unknown as EscalationConditionLeaf
+  const priorityHigh = {
+    field: 'priority',
+    operator: 'eq',
+    value: 'high',
+  } as EscalationConditionLeaf
+
+  it('names the delay of the priority of every expired timer', () => {
+    const condition: EscalationCondition = {
+      all: [
+        timer({ reference: 'offered', minutes }),
+        timer({ percent: 80 }),
+        timer({ reference: 'assigned', minutes }, 'notExpired'),
+      ],
+    }
+
+    expect(escalationExpiredTimers(condition, 'high')).toEqual([
+      { reference: 'offered', minutes: 10 },
+      { percent: 80 },
+    ])
+    expect(escalationExpiredTimers(condition, 'unknown')).toEqual([
+      { reference: 'offered', minutes: 20 },
+      { percent: 80 },
+    ])
+    expect(escalationExpiredTimers({ all: [] }, 'high')).toEqual([])
+    expect(escalationExpiredTimers(null, 'high')).toEqual([])
+  })
+
+  it('counts every timer as met for the first stage', () => {
+    const condition: EscalationCondition = {
+      any: [timer({ reference: 'received_at', minutes }), priorityHigh],
+    }
+    const stripped = escalationConditionWithoutTimers(condition)
+
+    expect(stripped).toEqual({ any: [{ all: [] }, priorityHigh] })
+    expect(evaluateEscalationCondition(stripped, { ...facts, priority: 'low' })).toBe(true)
+    expect(
+      evaluateEscalationCondition(
+        escalationConditionWithoutTimers({
+          all: [timer({ reference: 'received_at', minutes }), priorityHigh],
+        }),
+        { ...facts, priority: 'low' },
+      ),
+    ).toBe(false)
+  })
+
+  it('converts the clock of the rule fields into the condition', () => {
+    expect(
+      escalationRuleTimerCondition({
+        reference: 'offered',
+        minutes,
+        percent: null,
+        condition: { all: [] },
+      }),
+    ).toEqual({ all: [timer({ reference: 'offered', minutes })] })
+
+    expect(
+      escalationRuleTimerCondition({ percent: 80, minutes: null, condition: { all: [] } }),
+    ).toEqual({ all: [timer({ percent: 80 })] })
+
+    expect(
+      escalationRuleTimerCondition(
+        { reference: null, minutes, percent: null, condition: priorityHigh },
+        'review_started',
+      ),
+    ).toEqual({ all: [timer({ reference: 'review_started', minutes }), priorityHigh] })
+
+    const any: EscalationCondition = { any: [priorityHigh] }
+
+    expect(
+      escalationRuleTimerCondition({ reference: 'accepted', minutes, condition: any }),
+    ).toEqual({ all: [timer({ reference: 'accepted', minutes }), any] })
+  })
+
+  it('keeps a rule without clock fields and converts a second time to the same shape', () => {
+    const plain: EscalationCondition = { all: [priorityHigh] }
+
+    expect(
+      escalationRuleTimerCondition({
+        reference: null,
+        minutes: null,
+        percent: null,
+        condition: plain,
+      }),
+    ).toBe(plain)
+
+    const once = escalationRuleTimerCondition({
+      reference: 'offered',
+      minutes,
+      condition: plain,
+    })
+    const twice = escalationRuleTimerCondition({ reference: 'offered', minutes, condition: once })
+
+    expect(twice).toEqual(once)
+    expect(escalationConditionSchema.safeParse(once).success).toBe(true)
+  })
+
+  it('takes the start value of a rule without its own reference from the stage', () => {
+    const stages = [...DEFAULT_WORKFLOW_ESCALATION_STAGES]
+
+    expect(escalationStageTimerReference('work_order', stages)).toBe('review_started')
+    expect(escalationStageTimerReference('acceptance', stages)).toBe('assigned')
+    expect(escalationStageTimerReference('review', stages)).toBe('received_at')
+    expect(escalationStageTimerReference('acknowledgement', stages)).toBe('accepted')
+    expect(escalationStageTimerReference(null, stages)).toBe('received_at')
+    // `acknowledged` is no start value of a timer: the report is the fallback.
+    expect(
+      escalationStageTimerReference('after', [
+        ...stages,
+        { key: 'after', predecessor: 'acknowledgement', reachedBy: [] },
+      ]),
+    ).toBe('received_at')
   })
 })

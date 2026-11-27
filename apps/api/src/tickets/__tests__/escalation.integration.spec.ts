@@ -216,12 +216,12 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     const fired = await evaluateTicketEscalations(db, ticket.id, now)
     const percentRules = [seededPercentRuleKey(80), seededPercentRuleKey(100)]
 
-    expect(
-      fired.map((entry) => entry.rule).filter((rule) => percentRules.includes(rule)),
-    ).toEqual(percentRules)
-    expect(
-      (await escalated(ticket.id)).filter((rule) => percentRules.includes(rule)),
-    ).toEqual(percentRules)
+    expect(fired.map((entry) => entry.rule).filter((rule) => percentRules.includes(rule))).toEqual(
+      percentRules,
+    )
+    expect((await escalated(ticket.id)).filter((rule) => percentRules.includes(rule))).toEqual(
+      percentRules,
+    )
   })
 
   it('keeps a rule silent when its condition does not match', async () => {
@@ -329,8 +329,9 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
 
     const unreached = await ticketWithWorkOrder()
 
-    expect((await evaluateTicketEscalations(db, unreached.id, now)).map((entry) => entry.rule))
-      .toEqual(expect.arrayContaining(['night_shift', 'orphan']))
+    expect(
+      (await evaluateTicketEscalations(db, unreached.id, now)).map((entry) => entry.rule),
+    ).toEqual(expect.arrayContaining(['night_shift', 'orphan']))
 
     const reached = await ticketWithWorkOrder()
 
@@ -342,7 +343,204 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       createdAt: new Date(now.getTime() - 19 * MINUTE),
     })
 
-    expect((await evaluateTicketEscalations(db, reached.id, now)).map((entry) => entry.rule))
-      .not.toContain('night_shift')
+    expect(
+      (await evaluateTicketEscalations(db, reached.id, now)).map((entry) => entry.rule),
+    ).not.toContain('night_shift')
+  })
+  describe('the waiting clock as a condition (ADR-0064, WP-M45-02)', () => {
+    const timer = (value: unknown, operator = 'expired') => ({
+      field: 'timer_expired',
+      operator,
+      value,
+    })
+
+    async function ticketWithReview(input: {
+      priority: string
+      receivedMinutesAgo: number
+      reviewMinutesAgo?: number
+    }) {
+      const ticket = await createTicket({
+        status: 'IN_REVIEW',
+        priority: input.priority,
+        reportedAt: new Date(now.getTime() - input.receivedMinutesAgo * MINUTE),
+        deadlineAt: new Date(now.getTime() + 10 * 60 * MINUTE),
+      })
+
+      if (input.reviewMinutesAgo !== undefined) {
+        await db.insert(ticketEvents).values({
+          ticketId: ticket.id,
+          type: 'review_started',
+          actorKind: 'system',
+          payload: {},
+          createdAt: new Date(now.getTime() - input.reviewMinutesAgo * MINUTE),
+        })
+      }
+
+      return ticket
+    }
+
+    const rulesOf = async (ticketId: string) =>
+      (await evaluateTicketEscalations(db, ticketId, now)).map((entry) => entry.rule)
+
+    beforeAll(async () => {
+      await db.insert(escalationRules).values([
+        {
+          key: 'timer_priority',
+          stageKey: 'work_order',
+          reference: null,
+          minutes: null,
+          percent: null,
+          condition: {
+            all: [
+              timer({
+                reference: 'review_started',
+                minutes: { low: 60, normal: 60, high: 10, critical: 10 },
+              }),
+            ],
+          },
+          position: 93,
+          active: true,
+        },
+        {
+          key: 'timer_offered',
+          stageKey: 'acknowledgement',
+          reference: null,
+          minutes: null,
+          percent: null,
+          condition: {
+            all: [
+              timer({ reference: 'offered', minutes: { low: 1, normal: 1, high: 1, critical: 1 } }),
+            ],
+          },
+          position: 94,
+          active: true,
+        },
+        {
+          key: 'timer_not_expired',
+          stageKey: 'work_order',
+          reference: null,
+          minutes: null,
+          percent: null,
+          condition: {
+            all: [
+              timer(
+                {
+                  reference: 'received_at',
+                  minutes: { low: 30, normal: 30, high: 30, critical: 30 },
+                },
+                'notExpired',
+              ),
+            ],
+          },
+          position: 95,
+          active: true,
+        },
+        {
+          key: 'timer_first',
+          stageKey: 'new',
+          reference: null,
+          minutes: null,
+          percent: null,
+          condition: {
+            all: [
+              timer({
+                reference: 'received_at',
+                minutes: { low: 600, normal: 600, high: 600, critical: 600 },
+              }),
+            ],
+          },
+          position: 96,
+          active: true,
+        },
+      ])
+    })
+
+    it('fires a timer past the delay of the priority once, at the moment it expired', async () => {
+      const high = await ticketWithReview({
+        priority: 'high',
+        receivedMinutesAgo: 30,
+        reviewMinutesAgo: 15,
+      })
+      const fired = await evaluateTicketEscalations(db, high.id, now)
+      const firing = fired.find((entry) => entry.rule === 'timer_priority')
+
+      expect(firing?.thresholdAt).toBe(new Date(now.getTime() - 5 * MINUTE).toISOString())
+      expect(await rulesOf(high.id)).not.toContain('timer_priority')
+      expect((await escalated(high.id)).filter((rule) => rule === 'timer_priority')).toHaveLength(1)
+
+      const normal = await ticketWithReview({
+        priority: 'normal',
+        receivedMinutesAgo: 30,
+        reviewMinutesAgo: 15,
+      })
+
+      expect(await rulesOf(normal.id)).not.toContain('timer_priority')
+    })
+
+    it('stops the timer during a pause', async () => {
+      const ticket = await ticketWithReview({
+        priority: 'high',
+        receivedMinutesAgo: 30,
+        reviewMinutesAgo: 15,
+      })
+
+      await db.insert(ticketPauses).values({
+        ticketId: ticket.id,
+        reason: 'waiting on the reporter',
+        startedAt: new Date(now.getTime() - 14 * MINUTE),
+        endedAt: new Date(now.getTime() - 4 * MINUTE),
+      })
+
+      expect(await rulesOf(ticket.id)).not.toContain('timer_priority')
+    })
+
+    it('keeps a timer silent while its start value never happened', async () => {
+      const ticket = await ticketWithReview({
+        priority: 'normal',
+        receivedMinutesAgo: 120,
+        reviewMinutesAgo: 110,
+      })
+
+      await db.insert(ticketEvents).values({
+        ticketId: ticket.id,
+        type: 'accepted',
+        actorKind: 'system',
+        payload: {},
+        createdAt: new Date(now.getTime() - 60 * MINUTE),
+      })
+
+      expect(await rulesOf(ticket.id)).not.toContain('timer_offered')
+    })
+
+    it('fires a rule without an expired timer with zero delay from its stage and lets notExpired gate it', async () => {
+      const fresh = await ticketWithReview({
+        priority: 'normal',
+        receivedMinutesAgo: 10,
+        reviewMinutesAgo: 5,
+      })
+      const fired = await evaluateTicketEscalations(db, fresh.id, now)
+
+      expect(fired.find((entry) => entry.rule === 'timer_not_expired')?.thresholdAt).toBe(
+        new Date(now.getTime() - 5 * MINUTE).toISOString(),
+      )
+
+      const old = await ticketWithReview({
+        priority: 'normal',
+        receivedMinutesAgo: 60,
+        reviewMinutesAgo: 5,
+      })
+
+      expect(await rulesOf(old.id)).not.toContain('timer_not_expired')
+
+      const unreviewed = await ticketWithReview({ priority: 'normal', receivedMinutesAgo: 10 })
+
+      expect(await rulesOf(unreviewed.id)).not.toContain('timer_not_expired')
+    })
+
+    it('fires a rule of the first stage with the ticket, independent of its timer', async () => {
+      const ticket = await ticketWithReview({ priority: 'normal', receivedMinutesAgo: 0 })
+
+      expect(await rulesOf(ticket.id)).toContain('timer_first')
+    })
   })
 })

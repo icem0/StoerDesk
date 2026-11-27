@@ -27,8 +27,8 @@ describe('the read of an escalation configuration of an older installation', () 
       {
         key: 'review#1',
         stageKey: 'review',
-        reference: 'received_at',
-        minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+        reference: null,
+        minutes: null,
         percent: null,
         condition: {},
         actions: [],
@@ -38,6 +38,60 @@ describe('the read of an escalation configuration of an older installation', () 
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
     expect(normalized[0]?.condition).toEqual({ all: [] })
+  })
+
+  it('answers the clock fields of an old rule as the timer of its condition (ADR-0064)', () => {
+    const minutes = { low: 15, normal: 15, high: 15, critical: 5 }
+    const priority = { field: 'priority', operator: 'eq', value: 'high' }
+    const rules = [
+      {
+        key: 'review#1',
+        stageKey: 'review',
+        reference: 'received_at',
+        minutes,
+        percent: null,
+        condition: {},
+        actions: [],
+        active: true,
+      },
+      {
+        key: 'review#2',
+        stageKey: 'review',
+        reference: null,
+        minutes,
+        percent: null,
+        condition: priority,
+        actions: [],
+        active: true,
+      },
+      {
+        key: 'deadline#1',
+        stageKey: null,
+        reference: null,
+        minutes: null,
+        percent: 80,
+        condition: { all: [priority] },
+        actions: [],
+        active: true,
+      },
+    ]
+    const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
+    const timer = (value: unknown) => ({ field: 'timer_expired', operator: 'expired', value })
+
+    expect(normalized[0]?.condition).toEqual({
+      all: [timer({ reference: 'received_at', minutes })],
+    })
+    // A rule without its own reference starts at the wait of its stage.
+    expect(normalized[1]?.condition).toEqual({
+      all: [timer({ reference: 'received_at', minutes }), priority],
+    })
+    expect(normalized[2]?.condition).toEqual({ all: [timer({ percent: 80 }), priority] })
+
+    for (const rule of normalized) {
+      expect(rule.reference).toBeNull()
+      expect(rule.minutes).toBeNull()
+      expect(rule.percent).toBeNull()
+    }
   })
 
   it('keeps an old assign action that names a technician as a target of the kind user', () => {
@@ -131,7 +185,19 @@ describe('the read of an escalation configuration of an older installation', () 
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
     expect(normalized[0]?.percent).toBeNull()
-    expect(normalized[0]?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
+    expect(normalized[0]?.minutes).toBeNull()
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
   })
 
   it('answers a configuration that follows the contract after the normalization', () => {

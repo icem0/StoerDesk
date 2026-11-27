@@ -14,7 +14,7 @@ files-read:
 
 - packages/shared/src/schemas/escalation-config.ts (rule schema, defaults and `escalationRuleTimerCondition` after WP-M45-02)
 - apps/api/src/tickets/escalation.ts, apps/api/src/escalation/config.ts (the row conversion of WP-M45-02)
-- apps/api/src/db/schema.ts (`escalationRules`, the CHECK `escalation_rules_clock_check`)
+- apps/api/src/db/schema.ts (`escalationRules`)
 - apps/api/src/db/seed-escalation.ts (the seed of a fresh installation)
 - apps/api/src/db/migrations/0031_escalation_config.sql, 0038_escalation_rule_stage_clock.sql, 0045_escalation_rule_numbering.sql, 0046_escalation_stage_new.sql (the pattern of a conversion)
 - apps/api/src/db/**tests**/seed-escalation.integration.spec.ts, escalation-rule-numbering.integration.spec.ts, escalation-stage-new.integration.spec.ts
@@ -22,7 +22,7 @@ files-read:
 
 files-write:
 
-- apps/api/src/db/migrations/0069_escalation_rule_timer.sql
+- apps/api/src/db/migrations/0070_escalation_rule_timer.sql
 - apps/api/src/db/schema.ts
 - apps/api/src/db/seed-escalation.ts
 - packages/shared/src/schemas/escalation-config.ts
@@ -34,7 +34,7 @@ files-write:
 
 interfaces:
 
-- migration `0069_escalation_rule_timer.sql` — `reference`+`minutes` of every
+- migration `0070_escalation_rule_timer.sql` — `reference`+`minutes` of every
   stage rule and the `percent` of every deadline rule become a
   `timer_expired` leaf in the `condition` jsonb; an old condition that was not
   empty merges into an `all` group with the timer; afterwards the columns
@@ -49,7 +49,7 @@ interfaces:
 
 ## Task
 
-1. Write the migration `0069_escalation_rule_timer.sql` following the pattern
+1. Write the migration `0070_escalation_rule_timer.sql` following the pattern
    of `0045`/`0046`: for every active and inactive rule build the timer json —
    a rule with `percent` gets `{ percent }`, a rule with `minutes` gets
    `{ reference: <reference or the clock of its stage>, minutes }`; merge the
@@ -65,7 +65,7 @@ interfaces:
    sit in the `timer_expired` leaf, the deadline rules in the percent variant;
    the rule of the first stage `new` keeps its timer (it still fires with the
    ticket, §7.11).
-4. Tests: the integration test of `0069` follows the pattern of the numbering
+4. Tests: the integration test of `0070` follows the pattern of the numbering
    and the stage-`new` tests — an installed configuration (seeded before the
    migration, e. g. via `0066` state) comes out of the migration with the
    timer conditions of its old fields, the merged conditions of rules that
@@ -90,7 +90,7 @@ npm run test:run
 npm run wp:check
 ```
 
-Expected: all green; a database migrated to `0069` reads its rules through the
+Expected: all green; a database migrated to `0070` reads its rules through the
 contract of WP-M45-01 without the old fields.
 
 ## Handoff
