@@ -40,9 +40,23 @@ const sequentialGates = [
   { name: 'e2e', command: 'npm', args: ['run', 'test:e2e'] },
 ]
 
+/**
+ * On Windows `npm` and `npx` are `.cmd` shims: Node finds them only through a
+ * shell and refuses to spawn a `.cmd` file without one. The commands and their
+ * arguments are the constants above, never input, so the shell sees no foreign
+ * text.
+ */
+const useShell = process.platform === 'win32'
+
 function run(gate) {
   return new Promise((done) => {
-    const child = spawn(gate.command, gate.args, { stdio: 'inherit', shell: false })
+    const child = spawn(gate.command, gate.args, { stdio: 'inherit', shell: useShell })
+
+    // A gate that cannot start is a red gate, not a crash of the check.
+    child.on('error', (error) => {
+      process.stderr.write(`check: the gate "${gate.name}" could not start: ${error.message}\n`)
+      done({ name: gate.name, code: 1 })
+    })
 
     child.on('close', (code) => {
       done({ name: gate.name, code: code ?? 1 })

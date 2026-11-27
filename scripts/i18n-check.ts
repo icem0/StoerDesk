@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { basename, join, relative } from 'node:path'
 
 const repoRoot = process.cwd()
 const webLocalesDir = join(repoRoot, 'apps/web/src/i18n/locales')
@@ -37,7 +37,8 @@ function collectWebKeys(locale: string): Map<string, string> {
   const keys = new Map<string, string>()
 
   for (const file of listJsonFiles(join(webLocalesDir, locale))) {
-    const namespace = file.split('/').pop()?.replace('.json', '') ?? ''
+    // basename, not a split on '/': Windows separates the path with a backslash.
+    const namespace = basename(file, '.json')
     for (const key of flatten(readJson(file))) {
       keys.set(`${namespace}:${key}`, relative(repoRoot, file))
     }
