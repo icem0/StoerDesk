@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -54,7 +54,12 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
     expect(result.stages).toBe(DEFAULT_WORKFLOW_ESCALATION_STAGES.length)
     expect(result.rules).toBe(DEFAULT_WORKFLOW_ESCALATION_RULES.length)
 
-    const stages = await db.select().from(escalationStages)
+    // The order of the chain is its position — a select without an order
+    // answers the heap order, which a migration may shuffle.
+    const stages = await db
+      .select()
+      .from(escalationStages)
+      .orderBy(asc(escalationStages.position))
 
     expect(stages.map((stage) => stage.key)).toEqual(
       DEFAULT_WORKFLOW_ESCALATION_STAGES.map((stage) => stage.key),
