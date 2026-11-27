@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **The waiting clock of an escalation rule is a condition (WP-M45-02 …
+  WP-M45-04, ADR-0064).** The rule form of `/admin/escalation` no longer has the
+  frame „Zeitliche Abfolge“ — not every stage has or needs a waiting time. The
+  time is the new condition „Warte-Timer“ (`timer_expired`): a start value (the
+  report, the review, the work order, the offer, the assignment, the acceptance)
+  and a delay per priority — or „Prozent der Frist“ for the deadline rules — with
+  the operators „abgelaufen“ and „noch nicht abgelaufen“. A rule fires exactly
+  once after the expiry, when the rest of its condition holds; a stage rule
+  without a timer waits with zero delay from its predecessor; a pause stops the
+  clock. **Migration `0069`** turns the clock of every installed rule into a timer
+  of its condition (an existing condition merges with it) and drops the columns
+  `reference`, `minutes` and `percent`; an older body of the configuration API
+  that still sends them is converted on the way in. Every diagram of the
+  statistics lists its values below it.
 - **The customer portal is switched on (WP-M43-01 … WP-M43-04, ADR-0062).**
   Not every installation wants customers: the new page `/admin/customers`
   (entry „Kundenportal“ in the settings menu) decides whether the instance has a
@@ -21,6 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
+- **The readiness, the tickets, the statistics and the notification cards name
+  their marks in a panel or in text (WP-M36-06, WP-M36-07, ADR-0060).** The
+  native `title=` tooltips of the readiness calendar, the shift actions, the
+  planning grid, the ticket list, the timeline and the glossary of the
+  statistics are gone: the reason of a blocked shift action stays visible beside
+  the button, the milestones of a ticket are listed below the bar, the calendar
+  and the timeline are explained in the panel of an ⓘ, and the install and
+  activation texts of the web push card moved into panels.
+- **The interface reads itself one step bigger (WP-M36-08).** The root font size
+  is 17 px, the eleven hard pixel sizes became the rem step `text-2xs`, and the
+  meta text of the shell, the settings menu and the axis labels takes
+  `text-slate-300` for contrast. The print of the sticker sheets (mm) is
+  unchanged.
 - **The administration names its keys and its blocked actions in a panel
   (WP-M36-05, ADR-0060).** The native `title=` tooltips of the administration
   moved to the help popover: the key of a row in the statuses, the detected

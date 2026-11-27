@@ -175,9 +175,9 @@
     "notConfigured": "ntfy ist auf diesem Server nicht eingerichtet. Ein Administrator muss den Kanal in der Administration konfigurieren.",
     "selectionHint": "Aktiviere ntfy oben bei den Ereignissen, die an dieses Abo gehen sollen."
   },
-    "notifications": {
-      "title": "Deine Kanäle",
-      "administration": {
+  "notifications": {
+    "title": "Deine Kanäle",
+    "administration": {
       "hint": "Die Konfiguration der Kanäle selbst, die schreibgeschützten Geheimnisse und die Testnachricht leben in der Kanal-Administration.",
       "link": "Kanal-Administration (Administration → Kanäle)"
     },
@@ -247,14 +247,10 @@
       "qrHint": "Auf dem Handy öffnen und dort anmelden:",
       "qrLabel": "QR-Code zu den Benachrichtigungs-Einstellungen",
       "install": {
-        "title": "Web-App (PWA) installieren",
-        "windows": "Windows: Öffne StörDesk in Chrome oder Edge. Klicke in der Adressleiste auf das Installations-Symbol („Diese Seite als App installieren“) oder auf „… → Apps → Diese Seite als App installieren“.",
-        "android": "Android: Öffne StörDesk in Chrome. Tippe auf „… → Zum Startbildschirm hinzufügen“ oder „App installieren“.",
-        "ios": "iPhone/iPad: Öffne StörDesk in Safari. Tippe auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. Web Push benötigt ab iOS 16.4 die installierte App."
+        "title": "Web-App (PWA) installieren"
       },
       "activate": {
-        "title": "Web Push aktivieren",
-        "hint": "Nach der Installation: Gehe zu Einstellungen → Benachrichtigungen, öffne den Bereich „Web Push“ und klicke auf „Dieses Gerät anmelden“. Erteile dem Browser die Erlaubnis für Push-Benachrichtigungen. Danach erreichen dich Push-Nachrichten hier."
+        "title": "Web Push aktivieren"
       },
       "errors": {
         "denied": "Die Erlaubnis für Benachrichtigungen wurde nicht erteilt. Bitte im Browser erlauben und erneut versuchen.",

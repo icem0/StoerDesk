@@ -14,6 +14,19 @@
  * The blues of the dashboard, the statistics and the readiness calendar are semantics
  * and stay untouched.
  */
+/*
+ * The type scale (WP-M36-08, specs/13-ui.md §14.2): the root font size is the one
+ * lever — every rem-based size and every touch target grows with it, so the 44 px
+ * targets stay at least 44 px instead of being re-proven file by file. The step
+ * `text-2xs` replaces the hard `text-[10px]` and `text-[11px]` classes: it is
+ * rem-based too, so the smallest labels grow with the rest of the scale. The print
+ * of the sticker sheets uses mm and never follows the root size (ADR-0050).
+ */
+@theme {
+  --text-2xs: 0.65rem;
+  --text-2xs--line-height: 1rem;
+}
+
 @theme inline {
   --color-accent-300: var(--accent-300);
   --color-accent-400: var(--accent-400);
@@ -23,6 +36,8 @@
 }
 
 :root {
+  /* One step above the 16 px of the browser: "lieber den Text etwas größer, weil lesbarer". */
+  font-size: 17px;
   color-scheme: dark;
   font-family:
     system-ui,

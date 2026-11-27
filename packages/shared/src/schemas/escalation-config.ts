@@ -576,51 +576,19 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
 
-export const escalationRuleConfigSchema = z
-  .object({
-    key: z.string().regex(escalationRuleKeyPattern),
-    /** The stage of the rule; the deadline rules carry no stage. */
-    stageKey: z.string().regex(keyPattern).nullable(),
-    /** The event that starts the waiting clock. */
-    reference: z.enum(ESCALATION_REFERENCE_EVENTS).nullable(),
-    /** The waiting deadline per priority. */
-    minutes: escalationMinutesSchema.nullable(),
-    /** The percentage of the timeline of a deadline rule. */
-    percent: z.number().int().min(1).max(100).nullable(),
-    condition: escalationConditionSchema,
-    actions: z.array(escalationActionConfigSchema).max(20),
-    active: z.boolean(),
-  })
-  .superRefine((rule, context) => {
-    const hasMinutes = rule.minutes !== null
-    const hasPercent = rule.percent !== null
-
-    // A rule may carry neither any more — then its clock is a
-    // `timer_expired` leaf of its condition (ADR-0064).
-    if (hasMinutes && hasPercent) {
-      context.addIssue({
-        code: 'custom',
-        path: ['minutes'],
-        message: 'a rule has either minutes or a percentage',
-      })
-    }
-
-    if (hasMinutes && rule.stageKey === null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['stageKey'],
-        message: 'a rule with minutes belongs to a stage',
-      })
-    }
-
-    if (hasPercent && rule.reference !== null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['reference'],
-        message: 'a deadline rule has no reference',
-      })
-    }
-  })
+export const escalationRuleConfigSchema = z.object({
+  key: z.string().regex(escalationRuleKeyPattern),
+  /** The stage of the rule; the deadline rules carry no stage. */
+  stageKey: z.string().regex(keyPattern).nullable(),
+  /**
+   * The condition of the rule; a `timer_expired` leaf in it is the waiting
+   * clock (ADR-0064) — the former fields `reference`, `minutes` and
+   * `percent` are gone with migration `0069`.
+   */
+  condition: escalationConditionSchema,
+  actions: z.array(escalationActionConfigSchema).max(20),
+  active: z.boolean(),
+})
 
 export type EscalationRuleConfig = z.infer<typeof escalationRuleConfigSchema>
 
@@ -675,17 +643,6 @@ export const escalationConfigSchema = z
         })
       }
 
-      if (rule.stageKey !== null && rule.reference !== null) {
-        const clockEvents = escalationStageClockEvents(rule.stageKey, config.stages)
-
-        if (!clockEvents.includes(rule.reference)) {
-          context.addIssue({
-            code: 'custom',
-            path: ['rules', index, 'reference'],
-            message: 'reference_does_not_match_stage_clock',
-          })
-        }
-      }
     })
 
     const checkCondition = (condition: EscalationCondition, path: (string | number)[]) => {
@@ -986,106 +943,155 @@ export const DEFAULT_WORKFLOW_ESCALATION_STAGES: readonly EscalationStageConfig[
   },
 ]
 
-const evenMinutes = (value: number) => ({
+const evenMinutes = (value: number): EscalationMinutes => ({
   low: value,
   normal: value,
   high: value,
   critical: value,
 })
 
+/** The condition of a default rule: its timer alone (§7.2, ADR-0064). */
+const timerCondition = (value: EscalationTimerValue): EscalationCondition => ({
+  all: [{ field: 'timer_expired', operator: 'expired', value }],
+})
+
 /**
  * The rules of a fresh installation (§7.2). The deadlines of ADR-0008 are the
- * seed; the installation changes them in the administration.
+ * seed — a `timer_expired` leaf in the condition of every rule (ADR-0064); the
+ * installation changes them in the administration.
  */
 export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] = [
   {
     key: 'new#1',
     stageKey: 'new',
-    reference: 'received_at',
-    minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({
+      reference: 'received_at',
+      minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+    }),
     actions: [],
     active: true,
   },
   {
     key: 'review#1',
     stageKey: 'review',
-    reference: 'received_at',
-    minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({
+      reference: 'received_at',
+      minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+    }),
     actions: [],
     active: true,
   },
   {
     key: 'work_order#1',
     stageKey: 'work_order',
-    reference: 'review_started',
-    minutes: evenMinutes(30),
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({ reference: 'review_started', minutes: evenMinutes(30) }),
     actions: [],
     active: true,
   },
   {
     key: 'assignment#1',
     stageKey: 'assignment',
-    reference: 'work_order_set',
-    minutes: evenMinutes(30),
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({ reference: 'work_order_set', minutes: evenMinutes(30) }),
     actions: [],
     active: true,
   },
   {
     key: 'acceptance#1',
     stageKey: 'acceptance',
-    reference: 'offered',
-    minutes: { low: 20, normal: 20, high: 20, critical: 10 },
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({
+      reference: 'offered',
+      minutes: { low: 20, normal: 20, high: 20, critical: 10 },
+    }),
     actions: [],
     active: true,
   },
   {
     key: 'acceptance#2',
     stageKey: 'acceptance',
-    reference: 'assigned',
-    minutes: evenMinutes(15),
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({ reference: 'assigned', minutes: evenMinutes(15) }),
     actions: [],
     active: true,
   },
   {
     key: 'acknowledgement#1',
     stageKey: 'acknowledgement',
-    reference: 'accepted',
-    minutes: evenMinutes(60),
-    percent: null,
-    condition: { all: [] },
+    condition: timerCondition({ reference: 'accepted', minutes: evenMinutes(60) }),
     actions: [],
     active: true,
   },
   {
     key: 'deadline#1',
     stageKey: null,
-    reference: null,
-    minutes: null,
-    percent: 80,
-    condition: { all: [] },
+    condition: timerCondition({ percent: 80 }),
     actions: [],
     active: true,
   },
   {
     key: 'deadline#2',
     stageKey: null,
-    reference: null,
-    minutes: null,
-    percent: 100,
-    condition: { all: [] },
+    condition: timerCondition({ percent: 100 }),
     actions: [],
     active: true,
   },
 ]
+
+/**
+ * The clock of a rule of an older installation as a condition (ADR-0064
+ * decision 8): the former fields `reference`/`minutes` of a stage rule and
+ * `percent` of a deadline rule become a `timer_expired` leaf, merged with the
+ * old condition into one `all` group. A rule without `reference` took the
+ * clock of its stage — the first event of `escalationStageClockEvents` that is
+ * a start value of a timer, else `received_at`. Migration `0069` does the same
+ * in SQL; the read normalization of the API applies it to an old body.
+ */
+export function escalationConditionWithLegacyClock(
+  rule: {
+    stageKey: string | null
+    reference?: unknown
+    minutes?: unknown
+    percent?: unknown
+    condition?: unknown
+  },
+  stages: readonly { key: string; predecessor: string | null; reachedBy: readonly string[] }[],
+): unknown {
+  const condition: unknown = rule.condition ?? { all: [] }
+  let timer: EscalationTimerValue | null = null
+
+  if (typeof rule.percent === 'number') {
+    timer = { percent: rule.percent }
+  } else if (rule.minutes !== null && typeof rule.minutes === 'object') {
+    const startValues: readonly string[] = ESCALATION_REFERENCE_EVENTS
+    const explicit =
+      typeof rule.reference === 'string' && startValues.includes(rule.reference)
+        ? rule.reference
+        : undefined
+    const fromStage =
+      rule.stageKey === null
+        ? undefined
+        : escalationStageClockEvents(rule.stageKey, stages).find((event) =>
+            startValues.includes(event),
+          )
+
+    timer = {
+      reference: (explicit ?? fromStage ?? 'received_at') as EscalationReferenceEvent,
+      minutes: rule.minutes as EscalationMinutes,
+    }
+  }
+
+  if (timer === null) {
+    return condition
+  }
+
+  const leaf = { field: 'timer_expired', operator: 'expired', value: timer }
+
+  if (
+    typeof condition === 'object' &&
+    condition !== null &&
+    'all' in condition &&
+    Array.isArray((condition as { all: unknown }).all)
+  ) {
+    return { all: [leaf, ...(condition as { all: unknown[] }).all] }
+  }
+
+  return { all: [leaf, condition] }
+}

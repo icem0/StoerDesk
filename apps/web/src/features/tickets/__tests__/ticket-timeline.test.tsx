@@ -45,7 +45,7 @@ describe('TicketTimeline', () => {
     expect(screen.getByText(/Noch \d+ Std\./)).toBeTruthy()
 
     const marker = rendered.container.querySelector('[data-testid="timeline-marker"]')
-    expect(marker?.getAttribute('title')).toContain('Meldung eingegangen')
+    expect(marker?.getAttribute('aria-label')).toContain('Meldung eingegangen')
   })
 
   it('shows the capture time next to the report time of a backdated report', () => {
@@ -72,7 +72,7 @@ describe('TicketTimeline', () => {
     expect(screen.getByText('Erfasst am')).toBeTruthy()
     const marker = rendered.container.querySelector('[data-testid="timeline-marker"]')
     expect(markerLeft(marker as Element)).toBeCloseTo(0, 5)
-    expect(marker?.getAttribute('title')).toContain('Meldung gemeldet')
+    expect(marker?.getAttribute('aria-label')).toContain('Meldung gemeldet')
   })
 
   it('puts the milestone markers on the bar and the report on the start point', () => {
@@ -103,14 +103,17 @@ describe('TicketTimeline', () => {
     expect(markerLeft(created)).toBeCloseTo(0, 5)
     expect(created.getAttribute('style')).toContain('translate(-50%, -50%)')
     expect(created.closest('.overflow-hidden')).toBeNull()
-    expect(created.getAttribute('title')).toContain('Meldung eingegangen')
+    expect(created.getAttribute('aria-label')).toContain('Meldung eingegangen')
 
     const accepted = markers.item(1)
     expect(markerLeft(accepted)).toBeCloseTo(50, 5)
-    expect(accepted.getAttribute('title')).toContain('Auftrag angenommen')
+    expect(accepted.getAttribute('aria-label')).toContain('Auftrag angenommen')
 
     const deadline = rendered.container.querySelector('[data-testid="timeline-deadline"]')
-    expect(deadline?.getAttribute('title')).toContain('Frist')
+    expect(deadline?.getAttribute('aria-label')).toContain('Frist')
+    // No marker carries a tooltip any more (§14.13): the milestones are listed as text.
+    expect(rendered.container.querySelector('[title]')).toBeNull()
+    expect(screen.getByTestId('timeline-marker-list').textContent).toContain('Auftrag angenommen')
   })
 
   it('marks an overdue running ticket in red with the overdue time', () => {

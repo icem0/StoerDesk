@@ -300,6 +300,11 @@ export function ReadinessCalendar(props: {
             label={t('help:triggerFor', { name: t('readiness.title') })}
             text={t('readiness.hint')}
           />
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('readiness.cellName') })}
+            text={t('help:readiness.cellMore')}
+          />
         </div>
         <div className="flex items-center gap-2">
           {icalUrl ? (
@@ -308,7 +313,6 @@ export function ReadinessCalendar(props: {
               aria-expanded={panelOpen}
               className="flex min-h-11 items-center gap-2 rounded bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void share()}
-              title={t('readiness.share')}
               type="button"
             >
               <svg
@@ -480,12 +484,12 @@ export function ReadinessCalendar(props: {
                                     return (
                                       <li className="flex flex-1" key={shift.id}>
                                         <button
-                                          className="flex flex-1 w-full h-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-[10px] leading-tight text-slate-300"
+                                          className="flex flex-1 w-full h-full flex-wrap items-center gap-x-1 gap-y-1 text-left text-2xs leading-tight text-slate-300"
                                           onClick={(event) => {
                                             event.stopPropagation()
                                             setSelectedShiftId(shift.id)
                                           }}
-                                          title={`${stateLabel} – ${poolName} – ${holder}`}
+                                          aria-label={`${stateLabel} – ${poolName} – ${holder}`}
                                           type="button"
                                         >
                                           <span

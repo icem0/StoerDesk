@@ -98,7 +98,7 @@ afterEach(() => {
 })
 
 describe('TicketListPage rows', () => {
-  it('renders an overdue row in red with the overdue time and the deadline title', async () => {
+  it('renders an overdue row in red with the overdue time and the deadline as text', async () => {
     const { overdue } = renderList()
     const row = (await screen.findByText('M-4712')).closest<HTMLElement>(
       '[data-testid="ticket-row"]',
@@ -110,14 +110,14 @@ describe('TicketListPage rows', () => {
 
     expect(within(row).getByText(/Seit \d+ Std\. überfällig/)).toBeTruthy()
     expect(row.querySelector('.bg-rose-500')).toBeTruthy()
-    expect(
-      within(row).getByTitle(
-        new Date(overdue.deadlineAt).toLocaleString(i18n.language, {
-          dateStyle: 'short',
-          timeStyle: 'short',
-        }),
-      ),
-    ).toBeTruthy()
+    // The deadline is text in the row, not a tooltip: a title does not exist on a touch (§14.13).
+    expect(row.querySelector('[title]')).toBeNull()
+    const deadlineText = new Date(overdue.deadlineAt).toLocaleString(i18n.language, {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    })
+
+    expect(within(row).getByText((content) => content.includes(deadlineText))).toBeTruthy()
   })
 
   it('renders a green running row with a partial bar and the remaining time', async () => {

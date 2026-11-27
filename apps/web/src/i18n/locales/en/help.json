@@ -32,11 +32,10 @@
     "deadlinesMore": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",
     "stagesMore": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a waiting time, a condition and the actions to perform.",
     "chainMore": "Every stage names its predecessor: its completion starts the waiting time. Without a predecessor the wait starts at the report. Stages can be added and removed; the rules of a removed stage leave with it.",
-    "referenceMore": "The start event starts the rule's waiting clock (for example 'Report received'). 'None' means: the rule waits for nothing and fires as soon as its condition matches.",
-    "timelineMore": "The minutes are the waiting time of the stage per priority. The percentage belongs to the deadline rules only: 80 % and 100 % of the ticket deadline.",
-    "conditionMore": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'any' is satisfied as soon as at least one matches.",
+    "conditionMore": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'one of' is enough when at least one matches. The waiting time of the rule is the 'Waiting timer' leaf of this condition.",
     "actionsMore": "The actions run when the rule fires: a notification via the selected channels, a webhook delivery or a note in the ticket history.",
-    "notifyMore": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic."
+    "notifyMore": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic.",
+    "timerMore": "The waiting timer is the waiting time of the rule. The clock starts at the chosen start event (for example 'Report received') and runs until the minutes of the ticket's priority are reached. A pause stops the clock. 'Percent of the deadline' measures a share of the ticket deadline instead: 80 % and 100 % are the deadline rules. After the expiry the rule fires exactly once, provided the rest of its condition holds: it writes the 'escalated' entry and runs its actions. A stage that was reached never fires again. A rule without a timer does not wait: it fires as soon as its stage waits and its condition holds."
   },
   "page": {
     "tickets": "The tickets of the installation. The list opens with the open ones; the Filter button opens search, status and priority as well as closed and overdue tickets.",
@@ -87,6 +86,19 @@
     "missingMore": "The channels {{channels}} are not set up for this user. He cannot be reached over them, so the rule of the administration is not met."
   },
   "notifications": {
-    "pageHint": "The channels with the state of the account connected for the signed-in user."
+    "pageHint": "The channels with the state of the account connected for the signed-in user.",
+    "installMore": "Windows: Open StörDesk in Chrome or Edge. Click the install icon in the address bar (“Install this site as an app”) or “… → Apps → Install this site as an app”. Android: Open StörDesk in Chrome. Tap “… → Add to Home screen” or “Install app”. iPhone/iPad: Open StörDesk in Safari. Tap the Share button and then “Add to Home Screen”. Web Push requires the installed app from iOS 16.4.",
+    "activateMore": "After installation: go to Settings → Notifications, open the “Web Push” section and click “Register this device”. Grant the browser permission to show notifications. Push messages will then reach you here."
+  },
+  "readiness": {
+    "cellMore": "Every cell is one day. A line in it is a shift and names its state as text and as a dot (not by colour alone), the person in charge and the pool. A tap on the line opens the shift with all details and the actions its state allows."
+  },
+  "tickets": {
+    "timelineMore": "The bar shows how much of the deadline is used. Every dot on the bar is a milestone of the ticket, for example 'Review started'. The list below names each milestone with its time. The red stroke at the end is the deadline of the ticket."
+  },
+  "stats": {
+    "medianMore": "Half of the tickets were faster, the other half slower.",
+    "averageMore": "The times of all tickets are added and divided by the number of tickets.",
+    "p90More": "90 % of the tickets were faster, 10 % were slower."
   }
 }

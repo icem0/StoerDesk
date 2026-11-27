@@ -9,6 +9,8 @@
  * page.
  */
 
+import { useTranslation } from 'react-i18next'
+
 /** One series of a diagram: the values of the points, a gap without a value. */
 export type ChartSeries = {
   /** The name of the series — the legend and the tooltip carry it. */
@@ -133,6 +135,31 @@ function segmentsOf(values: (number | null)[]): { index: number; value: number }
  * date of every n-th bucket, and the legend the name of every series. A
  * series without any value draws no line.
  */
+/**
+ * The values of a diagram as a readable list below it (§14.13, WP-M36-07): the
+ * `<title>` of a point belongs to the mouse, a phone has no hover. The list
+ * folds away, so a diagram of thirty buckets does not push the page down, and
+ * it opens with a tap and with the keyboard.
+ */
+function ChartValues({ items }: { items: string[] }) {
+  const { t } = useTranslation('stats')
+
+  if (items.length === 0) {
+    return null
+  }
+
+  return (
+    <details className="mt-1 text-xs text-slate-300" data-testid="chart-values">
+      <summary className="cursor-pointer text-sky-300">{t('chart.values')}</summary>
+      <ul className="mt-1 columns-1 gap-4 sm:columns-2">
+        {items.map((item, index) => (
+          <li key={`${index}-${item}`}>{item}</li>
+        ))}
+      </ul>
+    </details>
+  )
+}
+
 export function LineChart(props: {
   /** The label of every point on the x-axis. */
   labels: string[]
@@ -148,8 +175,14 @@ export function LineChart(props: {
   const values = series.flatMap((entry) => entry.values.filter((value) => value !== null))
   const { ceiling, step: axisStep, lines: axisLines } = axisScale(Math.max(1, ...values))
   const step = Math.max(1, Math.ceil(count / 6))
+  const readable = series.flatMap((entry) =>
+    entry.values.flatMap((value, index) =>
+      value === null ? [] : [`${labels[index] ?? ''}: ${entry.label} ${formatValue(value)}`],
+    ),
+  )
 
   return (
+    <div>
     <svg
       aria-label={ariaLabel}
       className="h-48 w-full"
@@ -172,7 +205,7 @@ export function LineChart(props: {
               y2={y}
             />
             <text
-              className="fill-slate-500 text-[10px]"
+              className="fill-slate-300 text-2xs"
               textAnchor="end"
               x={PADDING.left - 6}
               y={y + 3}
@@ -214,7 +247,7 @@ export function LineChart(props: {
       {labels.map((label, index) =>
         index % step === 0 || index === count - 1 ? (
           <text
-            className="fill-slate-500 text-[10px]"
+            className="fill-slate-300 text-2xs"
             key={`x-${index}`}
             textAnchor="middle"
             x={xAt(index, count)}
@@ -225,6 +258,8 @@ export function LineChart(props: {
         ) : null,
       )}
     </svg>
+    <ChartValues items={readable} />
+    </div>
   )
 }
 
@@ -268,8 +303,10 @@ export function BarChart(props: {
   const { ceiling, step: axisStep, lines: axisLines } = axisScale(Math.max(1, ...values))
   const step = Math.max(1, Math.ceil(count / 6))
   const slot = PLOT_WIDTH / Math.max(1, count)
+  const readable = values.map((value, index) => `${labels[index] ?? ''}: ${formatValue(value)}`)
 
   return (
+    <div>
     <svg
       aria-label={ariaLabel}
       className="h-48 w-full"
@@ -292,7 +329,7 @@ export function BarChart(props: {
               y2={y}
             />
             <text
-              className="fill-slate-500 text-[10px]"
+              className="fill-slate-300 text-2xs"
               textAnchor="end"
               x={PADDING.left - 6}
               y={y + 3}
@@ -323,7 +360,7 @@ export function BarChart(props: {
       {labels.map((label, index) =>
         index % step === 0 || index === count - 1 ? (
           <text
-            className="fill-slate-500 text-[10px]"
+            className="fill-slate-300 text-2xs"
             key={`x-${index}`}
             textAnchor="middle"
             x={PADDING.left + index * slot + slot / 2}
@@ -334,6 +371,8 @@ export function BarChart(props: {
         ) : null,
       )}
     </svg>
+    <ChartValues items={readable} />
+    </div>
   )
 }
 
@@ -355,8 +394,10 @@ export function HorizontalBars(props: {
   const valueWidth = 48
   const track = WIDTH - labelWidth - valueWidth
   const max = Math.max(1, ...rows.map((row) => row.value))
+  const readable = rows.map((row) => `${row.title ?? row.label}: ${formatValue(row.value)}`)
 
   return (
+    <div>
     <svg
       aria-label={ariaLabel}
       className="w-full"
@@ -371,7 +412,7 @@ export function HorizontalBars(props: {
         return (
           <g key={row.key}>
             <text
-              className="fill-slate-300 text-[11px]"
+              className="fill-slate-300 text-2xs"
               textAnchor="start"
               x="0"
               y={y + 10}
@@ -389,7 +430,7 @@ export function HorizontalBars(props: {
               <title>{`${row.title ?? row.label}: ${formatValue(row.value)}`}</title>
             </rect>
             <text
-              className="fill-slate-400 text-[11px]"
+              className="fill-slate-400 text-2xs"
               textAnchor="end"
               x={WIDTH}
               y={y + 10}
@@ -400,5 +441,7 @@ export function HorizontalBars(props: {
         )
       })}
     </svg>
+    <ChartValues items={readable} />
+    </div>
   )
 }

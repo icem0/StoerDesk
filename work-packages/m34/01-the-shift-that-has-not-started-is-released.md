@@ -1,7 +1,7 @@
 # WP-M34-01: The shift that has not started is released by the admin
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M33-01
 phase: 34
 context-budget: 52k tokens

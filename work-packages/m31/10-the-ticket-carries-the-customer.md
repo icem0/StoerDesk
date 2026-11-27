@@ -1,7 +1,7 @@
 # WP-M31-10: the ticket carries the customer
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-09
 phase: 31
 milestone: m31

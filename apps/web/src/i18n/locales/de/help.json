@@ -32,11 +32,10 @@
     "deadlinesMore": "Die Frist ist die Wartezeit in Stunden pro Priorität. Verstreicht sie, ohne dass die Bedingung zutrifft, feuert die Regel nicht.",
     "stagesMore": "Eine Stufe ist ein Meilenstein des Workflows (zum Beispiel „Prüfung“). Eine Regel verbindet eine Stufe mit einer Wartezeit, einer Bedingung und den auszuführenden Aktionen.",
     "chainMore": "Jede Stufe nennt ihren Vorgänger: dessen Abschluss startet die Wartezeit. Ohne Vorgänger beginnt die Wartezeit mit der Meldung. Stufen lassen sich hinzufügen und entfernen; die Regeln einer entfernten Stufe entfallen mit ihr.",
-    "referenceMore": "Das Start-Ereignis startet die Warteuhr der Regel (zum Beispiel „Meldung eingegangen“). „Keine“ bedeutet: die Regel wartet auf nichts und feuert, sobald ihre Bedingung zutrifft.",
-    "timelineMore": "Die Minuten sind die Wartezeit der Stufe je Priorität. Der Prozentwert gilt nur für die Fristen-Regeln: 80 % und 100 % der Ticketfrist.",
-    "conditionMore": "Die Bedingung entscheidet, ob eine Regel feuert. „Alle“ verlangt, dass jedes Blatt zutrifft; „eine von“ genügt, wenn mindestens eines zutrifft.",
+    "conditionMore": "Die Bedingung entscheidet, ob eine Regel feuert. „Alle“ verlangt, dass jedes Blatt zutrifft; „eine von“ genügt, wenn mindestens eines zutrifft. Die Wartezeit der Regel ist das Blatt „Warte-Timer“ dieser Bedingung.",
     "actionsMore": "Die Aktionen laufen, wenn die Regel feuert: eine Benachrichtigung über die gewählten Kanäle, eine Webhook-Zustellung oder eine Notiz im Ticket-Verlauf.",
-    "notifyMore": "Das Ziel erhält die Nachricht über die Kanäle, die es selbst ausgewählt hat — ohne Auswahl über sein eigenes ntfy-Thema."
+    "notifyMore": "Das Ziel erhält die Nachricht über die Kanäle, die es selbst ausgewählt hat — ohne Auswahl über sein eigenes ntfy-Thema.",
+    "timerMore": "Der Warte-Timer ist die Wartezeit der Regel. Die Uhr startet beim gewählten Start-Ereignis (zum Beispiel „Meldung eingegangen“) und läuft, bis die Minuten der Priorität des Tickets erreicht sind. Eine Pause hält die Uhr an. „Prozent der Frist“ misst stattdessen den Anteil der Ticketfrist: 80 % und 100 % sind die Fristen-Regeln. Nach dem Ablauf feuert die Regel genau einmal, wenn auch der Rest ihrer Bedingung zutrifft: Sie schreibt den Eintrag „eskaliert“ und führt ihre Aktionen aus. Eine bereits erreichte Stufe feuert nie wieder. Eine Regel ohne Timer wartet nicht: Sie feuert, sobald ihre Stufe wartet und ihre Bedingung zutrifft."
   },
   "page": {
     "tickets": "Die Meldungen der Installation. Die Liste öffnet mit den offenen Meldungen; der Knopf „Filter“ öffnet Suche, Status und Priorität sowie erledigte und überfällige Meldungen.",
@@ -87,6 +86,19 @@
     "missingMore": "Die Kanäle {{channels}} are missing — der user does not fulfills den Vorgabe der Administration."
   },
   "notifications": {
-    "pageHint": "Die Kanäle mit dem Zustand des für die angemeldete Person verknüpften Kontos."
+    "pageHint": "Die Kanäle mit dem Zustand des für die angemeldete Person verknüpften Kontos.",
+    "installMore": "Windows: Öffne StörDesk in Chrome oder Edge. Klicke in der Adressleiste auf das Installations-Symbol („Diese Seite als App installieren“) oder auf „… → Apps → Diese Seite als App installieren“. Android: Öffne StörDesk in Chrome. Tippe auf „… → Zum Startbildschirm hinzufügen“ oder „App installieren“. iPhone/iPad: Öffne StörDesk in Safari. Tippe auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. Web Push benötigt ab iOS 16.4 die installierte App.",
+    "activateMore": "Nach der Installation: Gehe zu Einstellungen → Benachrichtigungen, öffne den Bereich „Web Push“ und klicke auf „Dieses Gerät anmelden“. Erteile dem Browser die Erlaubnis für Push-Benachrichtigungen. Danach erreichen dich Push-Nachrichten hier."
+  },
+  "readiness": {
+    "cellMore": "Jede Zelle ist ein Tag. Eine Zeile darin ist eine Schicht und nennt ihren Zustand als Text und als Punkt (nicht nur als Farbe), die zuständige Person und den Pool. Ein Tipp auf die Zeile öffnet die Schicht mit allen Angaben und den Aktionen, die der Zustand erlaubt."
+  },
+  "tickets": {
+    "timelineMore": "Der Balken zeigt, wie viel der Frist verbraucht ist. Jeder Punkt auf dem Balken ist ein Meilenstein des Tickets, zum Beispiel „Prüfung begonnen“. Die Liste darunter nennt jeden Meilenstein mit seiner Uhrzeit. Der rote Strich am Ende ist die Frist des Tickets."
+  },
+  "stats": {
+    "medianMore": "Die Hälfte der Meldungen war schneller, die andere Hälfte langsamer.",
+    "averageMore": "Die Zeiten aller Meldungen werden addiert und durch die Anzahl geteilt.",
+    "p90More": "90 % der Meldungen waren schneller, 10 % waren langsamer."
   }
 }

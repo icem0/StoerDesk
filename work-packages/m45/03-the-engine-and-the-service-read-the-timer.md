@@ -1,7 +1,7 @@
 # WP-M45-03: the engine and the configuration service read the timer
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-02
 phase: 45
 milestone: m45
@@ -88,8 +88,8 @@ non-matching condition keeps the rule silent.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `tickets/escalation.ts` (`sinceEvent`, `decisionFor` from the timer leaves, `timerThreshold`), `escalation/config.ts` (the read normalization and the write path turn the old clock fields into a timer; the `reference`-against-stage-clock check and the reference fallback of `writeEscalationStages` are gone with the field), the integration and unit tests of the engine and the service. Landed together with WP-M45-02 (see there).
+- Interfaces added: `factsFor` answers `sinceEvent`; a rule is due when every `expired` timer has passed its delay of the priority (threshold = the largest one, pauses inside); a stage rule without a timer is due from the start of its wait; the first-stage rule is due with the ticket and its condition decides without the timer
+- Verified: `escalation-timer.integration.spec.ts` (fires once and a second scan is a no-op, another priority stays silent, a start value that never happened stays silent, `notExpired` gates, the percent timer at 80 and 100 percent, zero delay from the predecessor, the pause arithmetic, the largest of several timers); the phase-13 exit criterion follows the new shape; typecheck of the three workspaces, `eslint .` (0 errors), the full `vitest run` against a throwaway PostgreSQL 17 (2177 of 2178 green; the one failure `web-push-esm.spec.ts` fails the same way before the change), `npm run build`, `wp:check`; `npm run i18n:check` was run with a copy of the script that splits the paths on both separators — the script itself reports 1654 phantom keys on Windows (it splits on `/`); `npm run test:e2e` was not run here (unverified)
 - Follow-up WP: WP-M45-04 exists as a file since WP-M45-00
-- Open question (if any):
+- Open question: none

@@ -1,7 +1,7 @@
 # WP-M32-01: the assignment names a target of the installation
 
 format: ctx-256k
-status: planned
+status: done
 phase: 32
 milestone: m32
 context-budget: 40k tokens

@@ -1475,13 +1475,11 @@ export const escalationRules = pgTable(
     stageKey: text('stage_key').references(() => escalationStages.key, {
       onDelete: 'cascade',
     }),
-    /** The event that starts the waiting clock. */
-    reference: text('reference'),
-    /** The deadline per priority: `{ low, normal, high, critical }`. */
-    minutes: jsonb('minutes'),
-    /** The percentage of the timeline of a deadline rule. */
-    percent: integer('percent'),
-    /** The condition tree of the shared contract. */
+    /**
+     * The condition tree of the shared contract; a `timer_expired` leaf in it
+     * is the waiting clock (ADR-0064) — `reference`, `minutes` and
+     * `percent` fell with migration `0069`.
+     */
     condition: jsonb('condition').notNull().default({ all: [] }),
     position: integer('position').notNull().default(0),
     active: boolean('active').notNull().default(true),
@@ -1491,10 +1489,6 @@ export const escalationRules = pgTable(
   (table) => [
     uniqueIndex('escalation_rules_key_key').on(table.key),
     index('escalation_rules_stage_key_idx').on(table.stageKey),
-    check(
-      'escalation_rules_clock_check',
-      sql`((${table.minutes} IS NOT NULL) OR (${table.percent} IS NOT NULL AND ${table.percent} BETWEEN 1 AND 100))`,
-    ),
   ],
 )
 

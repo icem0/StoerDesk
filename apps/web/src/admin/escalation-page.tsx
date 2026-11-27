@@ -5,16 +5,12 @@ import { Link } from 'react-router-dom'
 import type { TFunction } from 'i18next'
 import {
   DEADLINE_HOURS,
-  DEFAULT_WORKFLOW_ESCALATION_RULES,
-  ESCALATION_REFERENCE_EVENTS,
   TICKET_PRIORITIES,
   escalationFirstStageKey,
   escalationRuleConfigSchema,
   type DeadlineHours,
   type DeadlineSettings,
   type EscalationConfig,
-  type EscalationMinutes,
-  type EscalationReferenceEvent,
   type EscalationRuleConfig,
   type EscalationStageConfig,
   type TicketStatusResponse,
@@ -734,32 +730,10 @@ export function AddStageForm({
 }
 
 /**
- * The minutes of a rule before the server answer (WP-M14-135): the seeded rule
- * of the same key, otherwise the first seeded stage rule. The values come from
- * the shared seed, so this fallback cannot drift from ADR-0008.
- */
-function seededMinutesFor(ruleKey: string): EscalationMinutes {
-  const exact = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-    (entry) => entry.key === ruleKey && entry.minutes !== null,
-  )?.minutes
-
-  if (exact !== null && exact !== undefined) {
-    return exact
-  }
-
-  for (const entry of DEFAULT_WORKFLOW_ESCALATION_RULES) {
-    if (entry.minutes !== null) {
-      return entry.minutes
-    }
-  }
-
-  throw new Error('the escalation seed carries no stage rule')
-}
-
-/**
- * The form of one rule: its key, its reference, its minutes per priority, its
- * condition and its ordered actions (WP-M13-15/16). A rule without a stage is
- * one of the two deadline rules and carries a percentage instead of a clock.
+ * The form of one rule: its condition and its ordered actions (WP-M13-15/16).
+ * The waiting clock is a `timer_expired` leaf of the condition (ADR-0064,
+ * WP-M45-04) — the rule form has no frame of its own for the time: not every
+ * stage has or needs a waiting time.
  */
 function RuleForm({
   rule,
@@ -785,10 +759,6 @@ function RuleForm({
   onSave: (next: EscalationRuleConfig) => void
 }) {
   const { t } = useTranslation('settings')
-  const [minutes, setMinutes] = useState<EscalationMinutes>(
-    rule.minutes ?? seededMinutesFor(rule.key),
-  )
-
   function apply(next: EscalationRuleConfig) {
     if (escalationRuleConfigSchema.safeParse(next).success) {
       onSave(next)
@@ -797,86 +767,7 @@ function RuleForm({
 
   return (
     <div className="rounded border p-3 border-slate-700 bg-slate-950/40">
-      <fieldset
-        className="rounded border border-slate-700 p-3"
-        data-testid="escalation-rule-timeline"
-      >
-        <legend className="px-1 text-xs font-medium text-slate-300">
-          <span className="inline-flex items-center gap-1 align-middle">
-            {t('admin.escalation.rule.timeline')}
-            <HelpPopover
-              className={`${popoverClass} -my-3`}
-              label={t('help:triggerFor', { name: t('admin.escalation.rule.timeline') })}
-              text={t('help:escalation.timelineMore')}
-            />
-          </span>
-        </legend>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="text-xs text-slate-400">
-            {t('admin.escalation.rule.reference')}
-            <select
-              className="w-40 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-              disabled={!canWrite}
-              value={rule.reference ?? ''}
-              onChange={(event) => {
-                const reference = event.target.value
-
-                if (ESCALATION_REFERENCE_EVENTS.includes(reference as EscalationReferenceEvent)) {
-                  apply({ ...rule, reference: reference as EscalationReferenceEvent })
-                }
-              }}
-            >
-              <option value="">{t('admin.escalation.rule.none')}</option>
-              {ESCALATION_REFERENCE_EVENTS.map((event) => (
-                <option key={event} value={event}>
-                  {t(`admin.escalation.rule.referenceEvents.${event}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <HelpPopover
-            className={popoverClass}
-            label={t('help:triggerFor', { name: t('admin.escalation.rule.reference') })}
-            text={t('help:escalation.referenceMore')}
-          />
-          <label className="text-xs text-slate-400">
-            {t('admin.escalation.rule.percent')}
-            <input
-              className="w-24 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-              disabled={!canWrite}
-              max={100}
-              min={1}
-              step={1}
-              type="number"
-              value={rule.percent ?? 0}
-              onChange={(event) => apply({ ...rule, percent: Number(event.target.value) })}
-            />
-          </label>
-          {TICKET_PRIORITIES.map((priority) => (
-            <label key={priority} className="text-xs text-slate-400">
-              {t(`admin.escalation.rule.minutes.${priority}`)}
-              <input
-                className="w-20 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
-                disabled={!canWrite}
-                max={10080}
-                min={1}
-                required
-                step={1}
-                type="number"
-                value={minutes[priority]}
-                onChange={(event) => {
-                  const changed = { ...minutes, [priority]: Number(event.target.value) }
-
-                  setMinutes(changed)
-                  apply({ ...rule, minutes: changed })
-                }}
-              />
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <section className="mt-4 flex flex-col gap-2">
+      <section className="flex flex-col gap-2">
         <header className="flex items-center gap-1">
           <h3 className="text-xs font-medium text-slate-300">
             {t('admin.escalation.condition.modeLabel')}

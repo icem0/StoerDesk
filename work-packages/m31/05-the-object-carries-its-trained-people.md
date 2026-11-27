@@ -1,7 +1,7 @@
 # WP-M31-05: the object carries its trained people
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-04
 phase: 31
 milestone: m31

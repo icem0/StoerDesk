@@ -7,6 +7,8 @@ import type {
   WebPushSubscriptionCheckResponse,
   WebPushSubscriptionResponse,
 } from '@stoerdesk/shared'
+import { HelpPopover } from '../../components/help-popover'
+import { helpTriggerClass } from '../../components/help-trigger'
 import { ApiError, apiFetch } from '../../lib/api'
 import { keyToBase64Url, pushSupported, useBrowserPush } from '../../lib/web-push'
 
@@ -350,23 +352,24 @@ export function WebPushSubscription() {
         </details>
       ) : null}
 
-      <details className="text-sm text-slate-400 mt-4">
-        <summary className="cursor-pointer text-sky-300">
+      <div className="mt-4 flex flex-col gap-1 text-sm text-slate-300">
+        <p className="flex items-center gap-1">
           {t('notifications.webpush.install.title')}
-        </summary>
-        <ul className="mt-2 space-y-1 list-disc list-inside text-slate-300">
-          <li>{t('notifications.webpush.install.windows')}</li>
-          <li>{t('notifications.webpush.install.android')}</li>
-          <li>{t('notifications.webpush.install.ios')}</li>
-        </ul>
-      </details>
-
-      <details className="text-sm text-slate-400 mt-2">
-        <summary className="cursor-pointer text-sky-300">
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('notifications.webpush.install.title') })}
+            text={t('help:notifications.installMore')}
+          />
+        </p>
+        <p className="flex items-center gap-1">
           {t('notifications.webpush.activate.title')}
-        </summary>
-        <p className="mt-1 text-slate-300">{t('notifications.webpush.activate.hint')}</p>
-      </details>
+          <HelpPopover
+            className={helpTriggerClass}
+            label={t('help:triggerFor', { name: t('notifications.webpush.activate.title') })}
+            text={t('help:notifications.activateMore')}
+          />
+        </p>
+      </div>
     </section>
   )
 }

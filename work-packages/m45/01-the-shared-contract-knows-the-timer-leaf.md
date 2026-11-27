@@ -1,7 +1,7 @@
 # WP-M45-01: the shared contract knows the timer leaf
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-00
 phase: 45
 milestone: m45

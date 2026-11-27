@@ -240,7 +240,6 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
       expect(byKey.get('night_review')?.predecessor).toBe('review')
       expect(byKey.get('work_order')?.predecessor).toBe('night_review')
-      expect(body.rules.find((rule) => rule.key === 'work_order#1')?.reference).toBeNull()
     })
 
     it('writes the rule of the new stage', async () => {
@@ -249,10 +248,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'night_review',
             stageKey: 'night_review',
-            reference: null,
-            minutes: { low: 10, normal: 10, high: 10, critical: 5 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'review_started', minutes: { low: 10, normal: 10, high: 10, critical: 5 } },
+                }] },
             actions: [],
             active: true,
           },

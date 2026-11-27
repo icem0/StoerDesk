@@ -1,7 +1,7 @@
 # WP-M27-01: the sticker is a template
 
 format: ctx-256k
-status: in progress
+status: done
 depends-on: —
 phase: 27
 milestone: m27

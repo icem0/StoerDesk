@@ -52,10 +52,7 @@
     "hours": "{{value}} h",
     "pausedTickets": "{{count}} Meldungen mit Pause",
     "pauseMinutes": "{{count}} Pausenminuten",
-    "pauseHours": "{{value}} Pausenstunden",
-    "medianHint": "Die Hälfte der Meldungen war schneller, die andere Hälfte langsamer.",
-    "averageHint": "Die Zeiten aller Meldungen werden addiert und durch die Anzahl geteilt.",
-    "p90Hint": "90 % der Meldungen waren schneller, 10 % waren langsamer."
+    "pauseHours": "{{value}} Pausenstunden"
   },
   "frequency": {
     "title": "Häufigkeit",
@@ -115,6 +112,7 @@
   "chart": {
     "summary": "Gesamt {{total}} · Ø je Bucket {{average}} · Maximum {{max}}",
     "rankingTitle": "Die Objekte mit den meisten Meldungen",
-    "rankingAria": "Rangliste der Objekte mit den meisten Meldungen"
+    "rankingAria": "Rangliste der Objekte mit den meisten Meldungen",
+    "values": "Werte als Liste"
   }
 }

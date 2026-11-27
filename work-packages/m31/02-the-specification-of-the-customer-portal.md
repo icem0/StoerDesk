@@ -1,7 +1,7 @@
 # WP-M31-02: the specification of the customer portal
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-01
 phase: 31
 milestone: m31

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -6,7 +6,10 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { DEFAULT_WORKFLOW_ESCALATION_STAGES } from '@stoerdesk/shared'
+import {
+  DEFAULT_WORKFLOW_ESCALATION_RULES,
+  DEFAULT_WORKFLOW_ESCALATION_STAGES,
+} from '@stoerdesk/shared'
 
 import { migrationsFolder, openTestDatabase } from '../__tests__/helpers/testDatabase'
 import * as schema from '../schema'
@@ -102,9 +105,18 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       const newRule = rules.find((rule) => rule.key === 'new#1')
 
       expect(newRule?.stageKey).toBe('new')
-      expect(newRule?.reference).toBe('received_at')
-      expect(newRule?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
-      expect(rules.find((rule) => rule.key === 'review#1')?.reference).toBe('received_at')
+      expect(newRule?.condition).toEqual({
+        all: [
+          {
+            field: 'timer_expired',
+            operator: 'expired',
+            value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+          },
+        ],
+      })
+      expect(rules.find((rule) => rule.key === 'review#1')?.condition).toEqual(
+        DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.key === 'review#1')?.condition,
+      )
     })
 
     it('changes nothing when the chain already knows the stage', async () => {
@@ -136,16 +148,32 @@ describe.skipIf(testDatabase.status === 'unavailable')(
   },
 )
 
-/** Runs the statements of the migration `0046` on the database. */
+/**
+ * Runs the statements of the migration `0046` on the database. The migration
+ * wrote the clock of its rule in the columns `reference`, `minutes` and
+ * `percent`, which fell with `0069`: the columns come back for the run and the
+ * statements of `0069` convert the rule into its timer again, as they do on an
+ * installation that migrates through both files (WP-M45-02).
+ */
 async function runStageNewMigration(db: ReturnType<typeof drizzle>): Promise<void> {
-  const file = path.join(migrationsFolder, '0046_escalation_stage_new.sql')
-  const sql = await readFile(file, 'utf8')
+  await db.execute(
+    sql.raw(`ALTER TABLE "escalation_rules" ADD COLUMN IF NOT EXISTS "reference" text;
+ALTER TABLE "escalation_rules" ADD COLUMN IF NOT EXISTS "minutes" jsonb;
+ALTER TABLE "escalation_rules" ADD COLUMN IF NOT EXISTS "percent" integer;`),
+  )
 
-  for (const statement of sql.split('--> statement-breakpoint')) {
+  await runStatements(db, '0046_escalation_stage_new.sql')
+  await runStatements(db, '0069_escalation_rule_timer.sql')
+}
+
+async function runStatements(db: ReturnType<typeof drizzle>, name: string): Promise<void> {
+  const text = await readFile(path.join(migrationsFolder, name), 'utf8')
+
+  for (const statement of text.split('--> statement-breakpoint')) {
     const trimmed = statement.trim()
 
     if (trimmed !== '') {
-      await db.execute(trimmed)
+      await db.execute(sql.raw(trimmed))
     }
   }
 }

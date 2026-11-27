@@ -1,7 +1,7 @@
 # WP-M31-14: the customer decides about the messages of his ticket
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-13
 phase: 31
 milestone: m31

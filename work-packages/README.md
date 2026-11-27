@@ -1907,10 +1907,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M36-02 | the help popover and the info symbol exist once — `help-popover.tsx`, the name `info` in `IconName`, the namespace `help` | done | yes |
 | WP-M36-03 | an entry of the settings menu shows its name alone — no description under the name, the whole explanation opens behind the ⓘ of the row, the name is bigger, the search matches the panel text | done | yes |
 | WP-M36-04 | every guarded page names itself with one info symbol — the shell renders one page-level ⓘ beside the version, a page that explains itself renders none | done | yes |
-| WP-M36-05 | the administration names its keys and its blocks in a panel — the `title=` of the statuses, the detected errors, the text templates, the readiness page, the users, the channel form and the row menu move to the panel | planned | yes |
-| WP-M36-06 | the readiness and the tickets name their marks in a panel — the readiness cell, the shift actions, the deadline of a row and the milestones of the timeline | planned | yes |
-| WP-M36-07 | the statistics, the objects and the notification cards name their marks in a panel — the glossary of the statistics, the values of a diagram outside the hover, the sticker sheet, the web push card and the ntfy card | planned | yes |
-| WP-M36-08 | the interface reads itself one step bigger — the root font size of `styles.css`, the 11 hard `text-[Npx]` classes to rem, the meta text to `text-slate-300` | planned | yes |
+| WP-M36-05 | the administration names its keys and its blocks in a panel — the `title=` of the statuses, the detected errors, the text templates, the readiness page, the users, the channel form and the row menu move to the panel | done | yes |
+| WP-M36-06 | the readiness and the tickets name their marks in a panel — the readiness cell, the shift actions, the deadline of a row and the milestones of the timeline | done | yes |
+| WP-M36-07 | the statistics, the objects and the notification cards name their marks in a panel — the glossary of the statistics, the values of a diagram outside the hover, the sticker sheet, the web push card and the ntfy card | done | yes |
+| WP-M36-08 | the interface reads itself one step bigger — the root font size of `styles.css`, the 11 hard `text-[Npx]` classes to rem, the meta text to `text-slate-300` | done | yes |
 | WP-M36-09 | the notifications page hides its description behind the info symbol — the hint of the own-channels overview opens in the panel of its ⓘ | done | yes |
 | WP-M38-01 | the way of the code and the landing page of the customer — the ADR-0061, §7.10 of the report form and the landing page of the customer in §19.5 | done | yes |
 | WP-M38-02 | the public view of an open ticket of the object — the contract, the API and the page with the comment of the object | done | yes |
@@ -1923,10 +1923,10 @@ running phase are implemented in numeric order before the next phase starts.
 | WP-M42-01 | the failed delivery reaches the mailbox of the administration — every failed delivery writes a task for `notification.read_all` into the mailbox only, the settings page loses its warning badge | done | yes |
 | WP-M44-01 | the escalation administration names its explanations in panels — the intro of the page moves into the panel of the page-level ⓘ and the deadline, the chain, the start event, the clock, the condition, the actions and the recipient of a notification stand behind the ⓘ of their place (ADR-0060, out of band) | done | yes |
 | WP-M45-00 | the waiting clock as a condition — the decision ADR-0064, the slice `specs/07-escalation.md` §7.2–§7.7/§7.11, the plan §9/§16/§19 and the split into WP-M45-01 … WP-M45-04 (files exist in this commit) | done | yes |
-| WP-M45-01 | the shared contract knows the timer leaf — schema, evaluator, `sinceEvent`, `escalationTimerThreshold`, rule fields optional for one package | planned | yes |
-| WP-M45-02 | the migration converts the rules and the seed — `0069_escalation_rule_timer.sql`, columns fall, `DEFAULT_WORKFLOW_ESCALATION_RULES` as timer conditions, db tests | planned | yes |
-| WP-M45-03 | the engine and the configuration service read the timer — `sinceEvent`, due-ness from the timers, zero delay without a timer, normalization of old rows, exit criterion green | planned | yes |
-| WP-M45-04 | the administration puts the timer in the condition — rule form without the „Zeitliche Abfolge“ frame, condition builder offers the timer leaf, rewritten help texts with the effect after the expiry, de/en + tests | planned | yes |
+| WP-M45-01 | the shared contract knows the timer leaf — schema, evaluator, `sinceEvent`, `escalationTimerThreshold`, rule fields optional for one package | done | yes |
+| WP-M45-02 | the migration converts the rules and the seed — `0069_escalation_rule_timer.sql`, columns fall, `DEFAULT_WORKFLOW_ESCALATION_RULES` as timer conditions, db tests | done | yes |
+| WP-M45-03 | the engine and the configuration service read the timer — `sinceEvent`, due-ness from the timers, zero delay without a timer, normalization of old rows, exit criterion green | done | yes |
+| WP-M45-04 | the administration puts the timer in the condition — rule form without the „Zeitliche Abfolge“ frame, condition builder offers the timer leaf, rewritten help texts with the effect after the expiry, de/en + tests | done | yes |
 
 **Phase 41 has started (WP-M41-01, WP-M41-02, out of band).** The office
 configured the SMTP connection of Office 365 in the administration and the test

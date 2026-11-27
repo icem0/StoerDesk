@@ -1353,7 +1353,6 @@ export function TicketDetailPage() {
           >
             <button
               aria-label={t('detail.menu.send')}
-              title={t('detail.menu.send')}
               data-testid="ticket-send-button"
               className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
               onClick={() => void handleOption('send')}
@@ -1630,7 +1629,7 @@ export function TicketDetailPage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     loading="lazy"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/60 text-[10px] text-slate-200 text-center">
+                  <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/60 text-2xs text-slate-200 text-center">
                     {t('detail.photos.sizeKB', { size: (photo.sizeBytes / 1024).toFixed(1) })}
                   </div>
                 </div>

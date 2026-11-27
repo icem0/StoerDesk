@@ -11,6 +11,7 @@ import {
   escalationConditionDepth,
   escalationConditionLeafCount,
   escalationConditionSchema,
+  escalationConditionWithLegacyClock,
   escalationRuleKey,
   escalationStageClockEvents,
   escalationTimerLeaves,
@@ -231,18 +232,43 @@ describe('the default rules', () => {
     ])
   })
 
-  it('keep the deadlines of ADR-0008', () => {
-    const review = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.stageKey === 'review')
-    const offer = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'offered',
-    )
-    const assignment = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'assigned',
+  it('carry the timers of the table of §7.2 in their condition (ADR-0064)', () => {
+    const timers = Object.fromEntries(
+      DEFAULT_WORKFLOW_ESCALATION_RULES.map((rule) => [
+        rule.key,
+        escalationTimerLeaves(rule.condition).map((entry) => entry.value),
+      ]),
     )
 
-    expect(review?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
-    expect(offer?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 10 })
-    expect(assignment?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 15 })
+    expect(timers).toEqual({
+      'new#1': [{ reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } }],
+      'review#1': [
+        { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      ],
+      'work_order#1': [
+        { reference: 'review_started', minutes: { low: 30, normal: 30, high: 30, critical: 30 } },
+      ],
+      'assignment#1': [
+        { reference: 'work_order_set', minutes: { low: 30, normal: 30, high: 30, critical: 30 } },
+      ],
+      'acceptance#1': [
+        { reference: 'offered', minutes: { low: 20, normal: 20, high: 20, critical: 10 } },
+      ],
+      'acceptance#2': [
+        { reference: 'assigned', minutes: { low: 15, normal: 15, high: 15, critical: 15 } },
+      ],
+      'acknowledgement#1': [
+        { reference: 'accepted', minutes: { low: 60, normal: 60, high: 60, critical: 60 } },
+      ],
+      'deadline#1': [{ percent: 80 }],
+      'deadline#2': [{ percent: 100 }],
+    })
+  })
+
+  it('carry no clock field of their own any more', () => {
+    for (const rule of DEFAULT_WORKFLOW_ESCALATION_RULES) {
+      expect(Object.keys(rule).sort()).toEqual(['actions', 'active', 'condition', 'key', 'stageKey'])
+    }
   })
 
   it('are a valid configuration', () => {
@@ -278,9 +304,6 @@ describe('the numbered keys of the taxonomy (§7.5)', () => {
           {
             key: 'review#1',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-            percent: null,
             condition: { all: [] },
             actions: [
               {
@@ -305,9 +328,6 @@ describe('the numbered keys of the taxonomy (§7.5)', () => {
           {
             key: 'review#0',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-            percent: null,
             condition: { all: [] },
             actions: [],
             active: true,
@@ -330,9 +350,6 @@ describe('the action contract', () => {
         {
           key: 'review',
           stageKey: 'review',
-          reference: 'received_at',
-          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-          percent: null,
           condition: { all: [] },
           actions: [
             {
@@ -357,9 +374,6 @@ describe('the action contract', () => {
         {
           key: 'review',
           stageKey: 'review',
-          reference: 'received_at',
-          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-          percent: null,
           condition: { all: [] },
           actions: [
             {
@@ -395,9 +409,6 @@ describe('the offer and assign actions', () => {
         {
           key: 'review',
           stageKey: 'review',
-          reference: 'received_at',
-          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-          percent: null,
           condition: { all: [] },
           actions: [
             {
@@ -428,9 +439,6 @@ describe('the offer and assign actions', () => {
         {
           key: 'review',
           stageKey: 'review',
-          reference: 'received_at',
-          minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-          percent: null,
           condition: { all: [] },
           actions: [
             {
@@ -470,9 +478,6 @@ describe('the notify action', () => {
     return {
       key: 'review',
       stageKey: 'review',
-      reference: 'received_at',
-      minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-      percent: null,
       condition: { all: [] },
       actions: [{ key: 'notify_target', type: 'notify', condition: { all: [] }, ...action }],
       active: true,
@@ -820,9 +825,6 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
         {
           key: 'review#1',
           stageKey: 'review',
-          reference: null,
-          minutes: null,
-          percent: null,
           condition: { all: [timerLeaf({ reference: 'received_at', minutes: minutes15 })] },
           actions: [],
           active: true,
@@ -831,5 +833,69 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
     })
 
     expect(result.success).toBe(true)
+  })
+})
+
+describe('the clock of an older rule as a condition (ADR-0064 decision 8)', () => {
+  const minutes15 = { low: 15, normal: 15, high: 15, critical: 5 }
+  const timer = (value: unknown) => ({ field: 'timer_expired', operator: 'expired', value })
+
+  it('turns the reference and the minutes of a stage rule into a timer', () => {
+    expect(
+      escalationConditionWithLegacyClock(
+        { stageKey: 'acceptance', reference: 'offered', minutes: minutes15, condition: { all: [] } },
+        DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      ),
+    ).toEqual({ all: [timer({ reference: 'offered', minutes: minutes15 })] })
+  })
+
+  it('takes the clock of the stage for a rule without a reference', () => {
+    expect(
+      escalationConditionWithLegacyClock(
+        { stageKey: 'work_order', reference: null, minutes: minutes15, condition: { all: [] } },
+        DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      ),
+    ).toEqual({ all: [timer({ reference: 'review_started', minutes: minutes15 })] })
+    expect(
+      escalationConditionWithLegacyClock(
+        { stageKey: 'review', reference: null, minutes: minutes15 },
+        DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      ),
+    ).toEqual({ all: [timer({ reference: 'received_at', minutes: minutes15 })] })
+  })
+
+  it('turns the percentage of a deadline rule into the percent variant', () => {
+    expect(
+      escalationConditionWithLegacyClock(
+        { stageKey: null, reference: null, minutes: null, percent: 80, condition: { all: [] } },
+        DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      ),
+    ).toEqual({ all: [timer({ percent: 80 })] })
+  })
+
+  it('merges the timer with an old condition into one all group', () => {
+    const priority = { field: 'priority', operator: 'eq', value: 'high' }
+    const any = { any: [priority] }
+
+    expect(
+      escalationConditionWithLegacyClock(
+        { stageKey: null, percent: 100, condition: { all: [priority] } },
+        DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      ),
+    ).toEqual({ all: [timer({ percent: 100 }), priority] })
+    expect(
+      escalationConditionWithLegacyClock(
+        { stageKey: null, percent: 100, condition: any },
+        DEFAULT_WORKFLOW_ESCALATION_STAGES,
+      ),
+    ).toEqual({ all: [timer({ percent: 100 }), any] })
+  })
+
+  it('leaves a rule without an old clock untouched', () => {
+    const condition = { all: [timer({ percent: 80 })] }
+
+    expect(
+      escalationConditionWithLegacyClock({ stageKey: null, condition }, DEFAULT_WORKFLOW_ESCALATION_STAGES),
+    ).toBe(condition)
   })
 })

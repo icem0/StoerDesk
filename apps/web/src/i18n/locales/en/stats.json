@@ -52,10 +52,7 @@
     "hours": "{{value}} h",
     "pausedTickets": "{{count}} tickets with a pause",
     "pauseMinutes": "{{count}} pause minutes",
-    "pauseHours": "{{value}} pause hours",
-    "medianHint": "Half of the tickets were faster, the other half slower.",
-    "averageHint": "The times of all tickets are added and divided by the number of tickets.",
-    "p90Hint": "90 % of the tickets were faster, 10 % were slower."
+    "pauseHours": "{{value}} pause hours"
   },
   "frequency": {
     "title": "Frequency",
@@ -115,6 +112,7 @@
   "chart": {
     "summary": "Total {{total}} · average per bucket {{average}} · maximum {{max}}",
     "rankingTitle": "The objects with the most tickets",
-    "rankingAria": "The ranking of the objects with the most tickets"
+    "rankingAria": "The ranking of the objects with the most tickets",
+    "values": "Values as a list"
   }
 }

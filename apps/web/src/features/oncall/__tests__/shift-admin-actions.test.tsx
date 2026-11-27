@@ -205,7 +205,9 @@ describe('ShiftAdminActions', () => {
     const button = screen.getByRole('button', { name: 'Erinnern' }) as HTMLButtonElement
 
     expect(button.disabled).toBe(true)
-    expect(button.getAttribute('title')).toBe(
+    // The reason of the rule stays visible beside the button — no tooltip (§14.13).
+    expect(button.getAttribute('title')).toBeNull()
+    expect(screen.getByTestId('shift-remind-locked').textContent).toBe(
       'Die Schicht hat schon begonnen oder hat keinen Techniker.',
     )
   })
@@ -247,7 +249,9 @@ describe('ShiftAdminActions', () => {
     const button = screen.getByRole('button', { name: 'Löschen' }) as HTMLButtonElement
 
     expect(button.disabled).toBe(true)
-    expect(button.getAttribute('title')).toBe(
+    // The rule of ADR-0047 decides whether the action exists: it stays visible.
+    expect(button.getAttribute('title')).toBeNull()
+    expect(screen.getByTestId('shift-delete-locked').textContent).toBe(
       'Die Schicht hat schon begonnen und bleibt im Verlauf.',
     )
   })

@@ -17,7 +17,8 @@
     "copy": "Copy",
     "icalTitle": "Calendar URL",
     "icalHint": "The address of your personal calendar feed.",
-    "icalSubscribe": "Enter the address in your calendar app to subscribe to the shifts."
+    "icalSubscribe": "Enter the address in your calendar app to subscribe to the shifts.",
+    "cellName": "Cell of the readiness calendar"
   },
   "admin": {
     "back": "Back to settings",

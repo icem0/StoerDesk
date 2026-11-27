@@ -1,7 +1,7 @@
 # WP-M31-04: the data model of the customer portal
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-03
 phase: 31
 milestone: m31

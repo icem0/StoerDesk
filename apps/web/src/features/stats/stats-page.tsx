@@ -513,20 +513,35 @@ export function StatsPage() {
                 <dl className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
                   <dt className="text-slate-500">{t('reaction.count')}</dt>
                   <dd className="text-right tabular-nums text-slate-200">{phase.data.count}</dd>
-                  <dt className="text-slate-500" title={t('reaction.medianHint')}>
+                  <dt className="flex items-center gap-1 text-slate-500">
                     {t('reaction.median')}
+                    <HelpPopover
+                      className={helpTriggerClass}
+                      label={t('help:triggerFor', { name: t('reaction.median') })}
+                      text={t('help:stats.medianMore')}
+                    />
                   </dt>
                   <dd className="text-right tabular-nums text-slate-200">
                     {duration(phase.data.medianMinutes)}
                   </dd>
-                  <dt className="text-slate-500" title={t('reaction.averageHint')}>
+                  <dt className="flex items-center gap-1 text-slate-500">
                     {t('reaction.average')}
+                    <HelpPopover
+                      className={helpTriggerClass}
+                      label={t('help:triggerFor', { name: t('reaction.average') })}
+                      text={t('help:stats.averageMore')}
+                    />
                   </dt>
                   <dd className="text-right tabular-nums text-slate-200">
                     {duration(phase.data.averageMinutes)}
                   </dd>
-                  <dt className="text-slate-500" title={t('reaction.p90Hint')}>
+                  <dt className="flex items-center gap-1 text-slate-500">
                     {t('reaction.p90')}
+                    <HelpPopover
+                      className={helpTriggerClass}
+                      label={t('help:triggerFor', { name: t('reaction.p90') })}
+                      text={t('help:stats.p90More')}
+                    />
                   </dt>
                   <dd className="text-right tabular-nums text-slate-200">
                     {duration(phase.data.p90Minutes)}

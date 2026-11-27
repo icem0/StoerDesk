@@ -1,7 +1,7 @@
 # WP-M45-02: the migration converts the rules and the seed carries the timers
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-01
 phase: 45
 milestone: m45
@@ -87,8 +87,8 @@ contract of WP-M45-01 without the old fields.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `0069_escalation_rule_timer.sql` (+ journal), `db/schema.ts` (the three columns and the CHECK are gone), `db/seed-escalation.ts` (the former settings values fold into the timer minutes), `shared/schemas/escalation-config.ts` (`EscalationRuleConfig` without `reference`/`minutes`/`percent`, the defaults as timer conditions, `escalationConditionWithLegacyClock`), the tests of the migration, the seed and the contract. **Landed together with WP-M45-03:** dropping the columns breaks the row mapping of `readEscalationRules` and `readEscalationConfig`, so the API cannot compile without the engine and the configuration service of that package.
+- Interfaces added: `escalationConditionWithLegacyClock(rule, stages)` — the TypeScript twin of the SQL conversion; `DEFAULT_WORKFLOW_ESCALATION_RULES` carries `timer_expired` leaves
+- Verified: `escalation-rule-timer.integration.spec.ts` (an installation before `0069` — stage clock, explicit start value, percent rule, merged conditions, single-leaf condition — comes out with the timers, the keys and the firing log untouched and no old column left), `seed-escalation.integration.spec.ts` (the §7.2 table on the rows); typecheck of the three workspaces, `eslint .` (0 errors), the full `vitest run` against a throwaway PostgreSQL 17 (2177 of 2178 green; the one failure `web-push-esm.spec.ts` fails the same way before the change), `npm run build`, `wp:check`; `npm run i18n:check` was run with a copy of the script that splits the paths on both separators — the script itself reports 1654 phantom keys on Windows (it splits on `/`); `npm run test:e2e` was not run here (unverified)
 - Follow-up WP: WP-M45-03, WP-M45-04 exist as files since WP-M45-00
-- Open question (if any):
+- Open question: none

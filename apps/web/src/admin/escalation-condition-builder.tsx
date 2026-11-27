@@ -1,12 +1,45 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  ESCALATION_REFERENCE_EVENTS,
   ESCALATION_SOURCES,
   ESCALATION_SYSTEM_TYPES,
   escalationConditionLeafSchema,
   type EscalationCondition,
+  type EscalationMinutes,
+  type EscalationReferenceEvent,
+  type EscalationTimerValue,
 } from '@stoerdesk/shared'
 import { TICKET_PRIORITIES, TICKET_STATUS_VALUES } from '@stoerdesk/shared'
+
+import { HelpPopover } from '../components/help-popover'
+
+const popoverClass =
+  'flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400'
+
+/** The value of a new `timer_expired` leaf: the arrival of the report and the seed delay. */
+const DEFAULT_TIMER_VALUE: EscalationTimerValue = {
+  reference: 'received_at',
+  minutes: { low: 15, normal: 15, high: 15, critical: 15 },
+}
+
+/** The value a leaf starts with when its field changes (`stageReached`, `timer_expired`, …). */
+function initialValueOf(field: string): unknown {
+  switch (field) {
+    case 'timer_expired':
+      return DEFAULT_TIMER_VALUE
+    case 'priority':
+      return 'normal'
+    case 'assigned':
+    case 'paused':
+      return true
+    case 'deadlinePercent':
+    case 'elapsedMinutes':
+      return 0
+    default:
+      return ''
+  }
+}
 
 /**
  * The condition builder of the escalation administration
@@ -154,7 +187,107 @@ export function EscalationConditionBuilder({
     }
   }
 
+  /**
+   * The timer of a rule (ADR-0064): the start value as a select over the
+   * events, the delay as the four minutes fields per priority — or, for the
+   * variant of the timeline, the percentage of the ticket deadline.
+   */
+  function renderTimer(leaf: { field: string; operator: string; value: unknown }, index: number) {
+    const value = leaf.value as EscalationTimerValue
+    const percentVariant = 'percent' in value
+
+    function saveTimer(next: EscalationTimerValue) {
+      const updated = leaves.map((entry, position) =>
+        position === index ? { ...entry, value: next } : entry,
+      )
+
+      setLeaves(updated)
+      publish(buildCondition(mode, updated))
+    }
+
+    return (
+      <div className="flex flex-wrap items-end gap-2" data-testid="escalation-timer">
+        <label className="text-xs text-slate-400">
+          {t('admin.escalation.condition.timer.start')}
+          <select
+            className="w-48 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+            disabled={!canWrite}
+            value={percentVariant ? 'percent' : value.reference}
+            onChange={(event) => {
+              const chosen = event.target.value
+
+              if (chosen === 'percent') {
+                saveTimer({ percent: 80 })
+              } else if (ESCALATION_REFERENCE_EVENTS.includes(chosen as EscalationReferenceEvent)) {
+                saveTimer({
+                  reference: chosen as EscalationReferenceEvent,
+                  minutes:
+                    'minutes' in value
+                      ? value.minutes
+                      : (DEFAULT_TIMER_VALUE as { minutes: EscalationMinutes }).minutes,
+                })
+              }
+            }}
+          >
+            {ESCALATION_REFERENCE_EVENTS.map((event) => (
+              <option key={event} value={event}>
+                {t(`admin.escalation.rule.referenceEvents.${event}`)}
+              </option>
+            ))}
+            <option value="percent">{t('admin.escalation.condition.timer.percentOfDeadline')}</option>
+          </select>
+        </label>
+        {percentVariant ? (
+          <label className="text-xs text-slate-400">
+            {t('admin.escalation.condition.timer.percent')}
+            <input
+              className="w-24 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+              disabled={!canWrite}
+              max={100}
+              min={1}
+              step={1}
+              type="number"
+              value={value.percent}
+              onChange={(event) => saveTimer({ percent: Number(event.target.value) })}
+            />
+          </label>
+        ) : (
+          TICKET_PRIORITIES.map((priority) => (
+            <label key={priority} className="text-xs text-slate-400">
+              {t(`admin.escalation.rule.minutes.${priority}`)}
+              <input
+                className="w-20 rounded bg-slate-950 p-2 text-sm text-slate-100 disabled:opacity-60"
+                disabled={!canWrite}
+                max={10080}
+                min={1}
+                required
+                step={1}
+                type="number"
+                value={value.minutes[priority]}
+                onChange={(event) =>
+                  saveTimer({
+                    reference: value.reference,
+                    minutes: { ...value.minutes, [priority]: Number(event.target.value) },
+                  })
+                }
+              />
+            </label>
+          ))
+        )}
+        <HelpPopover
+          className={popoverClass}
+          label={t('help:triggerFor', { name: t('admin.escalation.condition.fields.timer_expired') })}
+          text={t('help:escalation.timerMore')}
+        />
+      </div>
+    )
+  }
+
   function renderValue(leaf: { field: string; operator: string; value: unknown }, index: number) {
+    if (leaf.field === 'timer_expired') {
+      return renderTimer(leaf, index)
+    }
+
     const options = valueOptions(leaf.field)
     const multi = leaf.operator === 'in' || leaf.operator === 'notIn'
     const current = Array.isArray(leaf.value) ? (leaf.value as string[]) : leaf.value == null ? [] : [String(leaf.value)]
@@ -236,9 +369,24 @@ export function EscalationConditionBuilder({
                 onChange={(event) => {
                   const next = event.target.value
 
-                  if (fields.some((entry) => entry.field === next)) {
+                  const known = fields.find((entry) => entry.field === next)
+
+                  if (known !== undefined) {
+                    // The operator and the value of the old field do not carry over
+                    // to a field of another kind: `timer_expired` has its own
+                    // operators and an object as its value (ADR-0064).
+                    const kindChanges = leaf.field === 'timer_expired' || next === 'timer_expired'
                     const updated = leaves.map((entry, position) =>
-                      position === index ? { ...entry, field: next } : entry,
+                      position === index
+                        ? {
+                            ...entry,
+                            field: next,
+                            operator: known.operators.includes(entry.operator)
+                              ? entry.operator
+                              : (known.operators[0] ?? 'eq'),
+                            value: kindChanges ? initialValueOf(next) : entry.value,
+                          }
+                        : entry,
                     )
 
                     setLeaves(updated)
@@ -281,10 +429,15 @@ export function EscalationConditionBuilder({
                   ))}
               </select>
             </label>
-            <label className="text-xs text-slate-400">
-              {t('admin.escalation.condition.value')}
-              {renderValue(leaf, index)}
-            </label>
+            {leaf.field === 'timer_expired' ? (
+              // The timer names its own fields: a label around them would nest labels.
+              renderValue(leaf, index)
+            ) : (
+              <label className="text-xs text-slate-400">
+                {t('admin.escalation.condition.value')}
+                {renderValue(leaf, index)}
+              </label>
+            )}
             {canWrite ? (
               <button
                 className="min-h-11 rounded border border-rose-500/60 px-3 py-2 text-sm text-rose-300 hover:bg-rose-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"

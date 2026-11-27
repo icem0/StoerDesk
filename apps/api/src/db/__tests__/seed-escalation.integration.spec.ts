@@ -70,9 +70,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
 
     const rules = await db.select().from(escalationRules)
 
-    expect(rules.map((rule) => rule.key)).toContain(
-      DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
-    )
+    const conditionByKey = new Map(rules.map((rule) => [rule.key, rule.condition]))
+
+    // Every row carries the timer of the table of §7.2 in its condition (ADR-0064).
+    for (const rule of DEFAULT_WORKFLOW_ESCALATION_RULES) {
+      expect(conditionByKey.get(rule.key)).toEqual(rule.condition)
+    }
+
+    expect(conditionByKey.get('deadline#2')).toEqual({
+      all: [{ field: 'timer_expired', operator: 'expired', value: { percent: 100 } }],
+    })
   })
 
   it('changes nothing on a second run', async () => {
@@ -106,6 +113,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
       .from(escalationRules)
       .where(eq(escalationRules.key, seededRuleKey('review')))
 
-    expect(review?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 7 })
+    expect(review?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: { reference: 'received_at', minutes: { low: 20, normal: 20, high: 20, critical: 7 } },
+        },
+      ],
+    })
   })
 })

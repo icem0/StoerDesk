@@ -1,7 +1,7 @@
 # WP-M31-11: the action that informs the reporter
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-10
 phase: 31
 milestone: m31

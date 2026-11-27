@@ -1,7 +1,7 @@
 # WP-M31-15: the customer sees the reports of his address
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-14
 phase: 31
 milestone: m31

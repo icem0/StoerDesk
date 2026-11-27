@@ -1,7 +1,7 @@
 # WP-M45-04: the administration puts the timer in the condition
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-03
 phase: 45
 milestone: m45
@@ -97,8 +97,8 @@ text exists in `de` and `en`.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `admin/escalation-page.tsx` (the frame „Zeitliche Abfolge“, the percent field, the minutes grid and `seededMinutesFor` are gone), `admin/escalation-condition-builder.tsx` (the leaf `timer_expired`), the keys in `settings.json` and `help.json` (de, en), the web tests
+- Interfaces added: the condition builder renders `timer_expired`: the start value as a select over the six events plus „Prozent der Frist“, the delay as four minutes fields or the percent field, the operators `expired`/`notExpired`; a changed field resets the operator and the value that no longer fit; `help.escalation.timerMore` replaces `timelineMore` and `referenceMore` and names the effect after the expiry
+- Verified: the rule-editor test proves the absence of the frame and opens a default rule with its seed timer, edits start value, minutes and the percent variant, offers the timer as a field and disables it read-only; typecheck of the three workspaces, `eslint .` (0 errors), the full `vitest run` against a throwaway PostgreSQL 17 (2177 of 2178 green; the one failure `web-push-esm.spec.ts` fails the same way before the change), `npm run build`, `wp:check`; `npm run i18n:check` was run with a copy of the script that splits the paths on both separators — the script itself reports 1654 phantom keys on Windows (it splits on `/`); `npm run test:e2e` was not run here (unverified)
 - Follow-up WP: none — the phase 45 is complete when this package is done
-- Open question (if any):
+- Open question: none — the phase 45 is complete

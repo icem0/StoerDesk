@@ -147,7 +147,7 @@ export function Shell() {
                bell is not here any more — since WP-M16-04 it is an entry of the
                menu below (specs/13-ui.md §14.5). */}
           <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
-            <AppVersion className="whitespace-nowrap text-[11px] text-slate-500 sm:text-xs" />
+            <AppVersion className="whitespace-nowrap text-2xs text-slate-300 sm:text-xs" />
             {me.data ? <PageHelp /> : null}
             {me.data ? <SettingsLink /> : null}
           </div>

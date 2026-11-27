@@ -1,7 +1,7 @@
 # WP-M31-06: the registration of the customer
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-05
 phase: 31
 milestone: m31

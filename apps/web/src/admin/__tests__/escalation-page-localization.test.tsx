@@ -10,10 +10,11 @@ import { EscalationPage } from '../escalation-page'
 const RULE = {
   key: 'review',
   stageKey: 'review',
-  reference: 'work_order_set',
-  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-  percent: null,
-  condition: { all: [{ field: 'priority', operator: 'eq', value: 'critical' }] },
+  condition: { all: [{
+        field: 'timer_expired',
+        operator: 'expired',
+        value: { reference: 'work_order_set', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      }, { field: 'priority', operator: 'eq', value: 'critical' }] },
   actions: [{ key: 'notify_office', type: 'notify', channels: ['ntfy', 'email'], condition: { all: [] } }],
   active: true,
 }
@@ -21,10 +22,11 @@ const RULE = {
 const STATUS_RULE = {
   key: 'status_rule',
   stageKey: 'review',
-  reference: null,
-  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-  percent: null,
-  condition: { field: 'status', operator: 'eq', value: 'NEW' },
+  condition: { all: [{
+        field: 'timer_expired',
+        operator: 'expired',
+        value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      }, { field: 'status', operator: 'eq', value: 'NEW' }] },
   actions: [],
   active: true,
 }
@@ -32,10 +34,11 @@ const STATUS_RULE = {
 const STAGE_REACHED_RULE = {
   key: 'stage_rule',
   stageKey: 'review',
-  reference: null,
-  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-  percent: null,
-  condition: { field: 'stageReached', operator: 'eq', value: 'review' },
+  condition: { all: [{
+        field: 'timer_expired',
+        operator: 'expired',
+        value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      }, { field: 'stageReached', operator: 'eq', value: 'review' }] },
   actions: [],
   active: true,
 }

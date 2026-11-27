@@ -23,10 +23,11 @@ const NOTIFY_ACTION = {
 const RULE = {
   key: 'review',
   stageKey: 'review',
-  reference: 'received_at',
-  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-  percent: null,
-  condition: { all: [] },
+  condition: { all: [{
+        field: 'timer_expired',
+        operator: 'expired',
+        value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      }] },
   actions: [NOTIFY_ACTION],
   active: true,
 }

@@ -3,7 +3,9 @@ import { like } from 'drizzle-orm'
 import {
   DEFAULT_WORKFLOW_ESCALATION_RULES,
   DEFAULT_WORKFLOW_ESCALATION_STAGES,
+  type EscalationCondition,
   type EscalationMinutes,
+  type EscalationTimerValue,
 } from '@stoerdesk/shared'
 
 import type { Database } from './client'
@@ -14,7 +16,8 @@ import { escalationRules, escalationStages, settings } from './schema'
  * ADR-0017, WP-M13-04).
  *
  * The chain of §7.1 — it opens with the stage of the arrival `new` — and the
- * rules of §7.2 are inserted the first time the API starts. The deadlines of an
+ * rules of §7.2 — their clock a `timer_expired` leaf of the condition
+ * (ADR-0064) — are inserted the first time the API starts. The deadlines of an
  * installation that changed them in the former administration are taken over:
  * the settings rows
  * `ticket.escalation.<rule>.minutes` and `.critical_minutes` hold the standard
@@ -106,6 +109,40 @@ function minutesWithLegacy(minutes: EscalationMinutes, legacy: LegacyMinutes | u
   }
 }
 
+/**
+ * The condition of a default rule with the former deadlines of the installation
+ * in its timer (ADR-0064): the minutes of the `timer_expired` leaf take the
+ * legacy values, the start value and every other leaf stay.
+ */
+function conditionWithLegacy(
+  condition: EscalationCondition,
+  legacy: LegacyMinutes | undefined,
+): EscalationCondition {
+  if (legacy === undefined) {
+    return condition
+  }
+
+  if ('all' in condition) {
+    return { all: condition.all.map((child) => conditionWithLegacy(child, legacy)) }
+  }
+
+  if ('any' in condition) {
+    return { any: condition.any.map((child) => conditionWithLegacy(child, legacy)) }
+  }
+
+  if (condition.field !== 'timer_expired') {
+    return condition
+  }
+
+  const value = condition.value as EscalationTimerValue
+
+  if (!('minutes' in value)) {
+    return condition
+  }
+
+  return { ...condition, value: { ...value, minutes: minutesWithLegacy(value.minutes, legacy) } }
+}
+
 export async function seedEscalation(database: Db): Promise<EscalationSeedResult> {
   return database.transaction(async (tx) => {
     const legacy = await readLegacyMinutes(tx as unknown as Db)
@@ -133,20 +170,17 @@ export async function seedEscalation(database: Db): Promise<EscalationSeedResult
 
     for (const [position, rule] of DEFAULT_WORKFLOW_ESCALATION_RULES.entries()) {
       const legacyKey = LEGACY_RULE_BY_RULE_KEY[rule.key]
-      const minutes =
-        rule.minutes === null
-          ? null
-          : minutesWithLegacy(rule.minutes, legacyKey === undefined ? undefined : legacy[legacyKey])
+      const condition = conditionWithLegacy(
+        rule.condition,
+        legacyKey === undefined ? undefined : legacy[legacyKey],
+      )
 
       const inserted = await tx
         .insert(escalationRules)
         .values({
           key: rule.key,
           stageKey: rule.stageKey,
-          reference: rule.reference,
-          minutes,
-          percent: rule.percent,
-          condition: rule.condition,
+          condition,
           position,
           active: rule.active,
         })

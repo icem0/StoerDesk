@@ -6,6 +6,7 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   DEFAULT_WORKFLOW_ESCALATION_RULES,
+  escalationTimerLeaves,
   DEFAULT_WORKFLOW_ESCALATION_STAGES,
 } from '@stoerdesk/shared'
 
@@ -40,9 +41,6 @@ type ConfigBody = {
   rules: {
     key: string
     stageKey: string | null
-    reference: string | null
-    minutes: Record<string, number> | null
-    percent: number | null
     condition: unknown
     actions: {
       key: string
@@ -205,7 +203,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         DEFAULT_WORKFLOW_ESCALATION_STAGES.map((stage) => stage.key),
       )
       expect(body.rules.map((rule) => rule.key)).toContain(
-        DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
+        DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) =>
+          escalationTimerLeaves(rule.condition).some(
+            (timer) => 'percent' in timer.value && timer.value.percent === 100,
+          ),
+        )?.key,
       )
     })
 
@@ -215,10 +217,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'review',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 20, normal: 20, high: 20, critical: 8 },
-            percent: null,
-            condition: { all: [{ field: 'priority', operator: 'in', value: ['high', 'critical'] }] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'received_at', minutes: { low: 20, normal: 20, high: 20, critical: 8 } },
+                }, { field: 'priority', operator: 'in', value: ['high', 'critical'] }] },
             actions: [
               {
                 key: 'office_webhook',
@@ -238,7 +241,16 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(body.rules).toHaveLength(1)
       expect(body.rules[0]?.actions[0]?.type).toBe('webhook')
-      expect(body.rules[0]?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 8 })
+      expect(body.rules[0]?.condition).toEqual({
+        all: [
+          {
+            field: 'timer_expired',
+            operator: 'expired',
+            value: { reference: 'received_at', minutes: { low: 20, normal: 20, high: 20, critical: 8 } },
+          },
+          { field: 'priority', operator: 'in', value: ['high', 'critical'] },
+        ],
+      })
     })
 
     it('numbers the rule and its actions', async () => {
@@ -247,10 +259,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'review',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 20, normal: 20, high: 20, critical: 8 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'received_at', minutes: { low: 20, normal: 20, high: 20, critical: 8 } },
+                }] },
             actions: [
               {
                 type: 'history',
@@ -279,20 +292,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'review',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 20, normal: 20, high: 20, critical: 8 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'received_at', minutes: { low: 20, normal: 20, high: 20, critical: 8 } },
+                }] },
             actions: [],
             active: true,
           },
           {
             key: 'review',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 30, normal: 30, high: 30, critical: 12 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'received_at', minutes: { low: 30, normal: 30, high: 30, critical: 12 } },
+                }] },
             actions: [],
             active: true,
           },
@@ -312,10 +327,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'broken',
             stageKey: 'office',
-            reference: 'received_at',
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'received_at', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }] },
             actions: [],
             active: true,
           },
@@ -337,10 +353,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'review',
             stageKey: 'review',
-            reference: 'received_at',
-            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+                }] },
             actions: [
               {
                 key: 'to_ghost',
@@ -382,10 +399,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'assignment',
             stageKey: 'assignment',
-            reference: 'work_order_set',
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'work_order_set', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }] },
             actions: [
               {
                 key: 'offer_the_pool',
@@ -421,10 +439,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'assignment',
             stageKey: 'assignment',
-            reference: 'work_order_set',
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'work_order_set', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }] },
             actions: [
               {
                 key: 'offer_the_ghost',
@@ -471,10 +490,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'assignment',
             stageKey: 'assignment',
-            reference: 'work_order_set',
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'work_order_set', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }] },
             actions: [
               {
                 key: 'assign_the_pool',
@@ -501,10 +521,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'assignment',
             stageKey: 'assignment',
-            reference: 'work_order_set',
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'work_order_set', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }] },
             actions: [
               {
                 key: 'assign_the_ghost',
@@ -541,10 +562,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'assignment',
             stageKey: 'assignment',
-            reference: 'work_order_set',
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [{ field: 'shift', operator: 'eq', value: poolId }] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'work_order_set', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }, { field: 'shift', operator: 'eq', value: poolId }] },
             actions: [],
             active: true,
           },
@@ -637,10 +659,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
           {
             key: 'night_shift',
             stageKey: 'night_shift',
-            reference: null,
-            minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-            percent: null,
-            condition: { all: [] },
+            condition: { all: [{
+                  field: 'timer_expired',
+                  operator: 'expired',
+                  value: { reference: 'assigned', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+                }] },
             actions: [],
             active: true,
           },

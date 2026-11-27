@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -144,5 +144,23 @@ describe('the statistics page', () => {
     expect(await screen.findAllByText('Beginn der Prüfung')).toHaveLength(2)
     expect(screen.getAllByText('Bestätigung an den Melder')).toHaveLength(2)
     expect(screen.queryByText('Erste Rückmeldung')).toBeNull()
+  })
+
+  it('explains the median, the average and the ranking in panels, not in tooltips (WP-M36-07)', async () => {
+    renderStats()
+
+    await screen.findAllByText('Beginn der Prüfung')
+
+    // A title does not exist on a touch (§14.13): no term of the glossary carries one.
+    expect(document.querySelector('dt[title]')).toBeNull()
+
+    const triggers = screen.getAllByRole('button', { name: /Median/ })
+
+    expect(triggers.length).toBeGreaterThan(0)
+    expect(screen.queryByText(/Die Hälfte der Meldungen war schneller/)).toBeNull()
+
+    fireEvent.click(triggers[0] as HTMLElement)
+
+    expect(screen.getByText(/Die Hälfte der Meldungen war schneller/)).toBeTruthy()
   })
 })

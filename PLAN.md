@@ -934,6 +934,21 @@ installed configurations. The phase is split into WP-M45-01 (the shared
 contract and evaluator), WP-M45-02 (the migration and the seed), WP-M45-03
 (the engine) and WP-M45-04 (the administration, the condition builder and the
 texts). Every file exists in the commit of the split.
+**Phase 45 is closed (WP-M45-01 … WP-M45-04).** The shared contract knows the
+leaf (WP-M45-01); migration `0069` turns the clock of every installed rule into a
+`timer_expired` leaf of its condition and drops the three columns, the seed
+carries the timers of §7.2 (WP-M45-02); the engine reads the timers — a rule is
+due when every `expired` timer has passed its delay, a stage rule without a timer
+waits with zero delay from its predecessor (WP-M45-03); the rule form of
+`/admin/escalation` shows the condition and the actions only, and the condition
+builder offers the timer (WP-M45-04). WP-M45-02 and WP-M45-03 landed together:
+dropping the columns breaks the row mapping of the engine.
+
+**Phase 36 is closed (WP-M36-05 … WP-M36-08).** The last native tooltips of the
+administration, the readiness calendar, the ticket pages and the statistics moved
+into panels or into visible text, every diagram lists its values below it, and the
+type scale grew by one step (`:root { font-size: 17px }`, `text-2xs`). The E2E run
+of the report form on 375×667 is unverified.
 
 **Phase 44 is closed (WP-M44-01, out of band).** The office looked at
 `/admin/escalation` again: „einige Erklärungen … in ein Symbol packed … für

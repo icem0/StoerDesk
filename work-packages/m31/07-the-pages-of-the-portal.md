@@ -1,7 +1,7 @@
 # WP-M31-07: the pages of the portal — the sign in, the registration and the activation
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-06
 phase: 31
 milestone: m31

@@ -37,10 +37,11 @@ const STAGES = [
 const RULE = {
   key: 'night_shift',
   stageKey: 'night_shift',
-  reference: null,
-  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-  percent: null,
-  condition: { all: [] },
+  condition: { all: [{
+        field: 'timer_expired',
+        operator: 'expired',
+        value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      }] },
   actions: [],
   active: true,
 }
@@ -108,7 +109,10 @@ describe('the stage tab of the escalation administration', () => {
     await openStagesTab('Stufen & Regeln')
 
     const list = screen.getByTestId('escalation-stage-list')
-    const items = within(list).getAllByRole('listitem')
+    // The condition of a rule lists its leaves too: only the stages are counted.
+    const items = within(list)
+      .getAllByRole('listitem')
+      .filter((item) => item.parentElement === list)
 
     expect(items).toHaveLength(3)
     expect(items[0]?.textContent).toContain('Prüfung')

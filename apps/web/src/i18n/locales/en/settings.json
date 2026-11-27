@@ -332,9 +332,6 @@
       },
       "rule": {
         "key": "Key",
-        "reference": "Start event",
-        "percent": "Percent",
-        "timeline": "Time sequence",
         "actions": "Actions",
         "referenceEvents": {
           "received_at": "Report received",
@@ -344,7 +341,6 @@
           "assigned": "Assigned",
           "accepted": "Work order accepted"
         },
-        "none": "None",
         "minutes": {
           "low": "Low",
           "normal": "Normal",
@@ -370,7 +366,8 @@
           "elapsedMinutes": "Elapsed minutes",
           "stageReached": "Stage reached",
           "shift": "Readiness shift",
-          "time_of_day": "Time of day"
+          "time_of_day": "Time of day",
+          "timer_expired": "Waiting timer"
         },
         "field": "Field",
         "operator": "Operator",
@@ -383,7 +380,9 @@
           "gte": "greater or equal",
           "lt": "less than",
           "lte": "less or equal",
-          "contains": "contains"
+          "contains": "contains",
+          "expired": "expired",
+          "notExpired": "not yet expired"
         },
         "value": "Value",
         "add": "Add condition",
@@ -423,6 +422,11 @@
         "boolean": {
           "true": "Yes",
           "false": "No"
+        },
+        "timer": {
+          "start": "Start event",
+          "percentOfDeadline": "Percent of the deadline",
+          "percent": "Percent"
         }
       },
       "action": {

@@ -1,7 +1,7 @@
 # WP-M31-01: the decisions of the customer portal
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: —
 phase: 31
 milestone: m31

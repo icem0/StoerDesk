@@ -1,7 +1,7 @@
 # WP-M31-03: the role `customer` and the contracts of the portal
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-02
 phase: 31
 milestone: m31

@@ -222,7 +222,6 @@ export function ShiftAdminActions(props: {
         <button
           className="rounded border border-slate-600 px-3 py-1 text-slate-200 hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
           disabled={busy || !remindable}
-          title={remindable ? undefined : t('admin.shiftDetail.remindLocked')}
           onClick={() => remind.mutate()}
           type="button"
         >
@@ -251,7 +250,6 @@ export function ShiftAdminActions(props: {
           <button
             className="rounded border border-rose-800 px-3 py-1 text-rose-300 hover:border-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-50"
             disabled={busy || locked}
-            title={locked ? t('admin.shiftDetail.deleteLocked') : undefined}
             onClick={() => setConfirmingDelete(true)}
             type="button"
           >
@@ -259,6 +257,19 @@ export function ShiftAdminActions(props: {
           </button>
         )}
       </div>
+
+      {/* The rule decides whether the action exists: its reason stays visible
+          beside the blocked button, not behind a tooltip (§14.13, ADR-0047). */}
+      {!remindable ? (
+        <p className="mt-2 text-xs text-slate-300" data-testid="shift-remind-locked">
+          {t('admin.shiftDetail.remindLocked')}
+        </p>
+      ) : null}
+      {locked ? (
+        <p className="mt-2 text-xs text-slate-300" data-testid="shift-delete-locked">
+          {t('admin.shiftDetail.deleteLocked')}
+        </p>
+      ) : null}
 
       {error ? (
         <p className="mt-2 text-xs text-rose-400" role="alert">

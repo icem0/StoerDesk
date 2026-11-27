@@ -332,9 +332,6 @@
       },
       "rule": {
         "key": "Schlüssel",
-        "reference": "Start-Ereignis",
-        "percent": "Prozent",
-        "timeline": "Zeitliche Abfolge",
         "actions": "Aktionen",
         "referenceEvents": {
           "received_at": "Meldung eingegangen",
@@ -344,7 +341,6 @@
           "assigned": "Zugewiesen",
           "accepted": "Auftrag angenommen"
         },
-        "none": "Keine",
         "minutes": {
           "low": "Niedrig",
           "normal": "Normal",
@@ -370,7 +366,8 @@
           "elapsedMinutes": "Verstrichene Minuten",
           "stageReached": "Erreichte Stufe",
           "shift": "Bereitschafts-Schicht",
-          "time_of_day": "Zeitfenster (Tageszeit)"
+          "time_of_day": "Zeitfenster (Tageszeit)",
+          "timer_expired": "Warte-Timer"
         },
         "field": "Feld",
         "operator": "Operator",
@@ -383,7 +380,9 @@
           "gte": "mindestens",
           "lt": "kleiner als",
           "lte": "höchstens",
-          "contains": "enthält"
+          "contains": "enthält",
+          "expired": "abgelaufen",
+          "notExpired": "noch nicht abgelaufen"
         },
         "value": "Wert",
         "add": "Bedingung hinzufügen",
@@ -423,6 +422,11 @@
         "boolean": {
           "true": "Ja",
           "false": "Nein"
+        },
+        "timer": {
+          "start": "Start-Ereignis",
+          "percentOfDeadline": "Prozent der Frist",
+          "percent": "Prozent"
         }
       },
       "action": {

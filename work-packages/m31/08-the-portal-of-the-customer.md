@@ -1,7 +1,7 @@
 # WP-M31-08: the portal of the customer — his own open tickets
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-07
 phase: 31
 milestone: m31

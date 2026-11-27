@@ -1,14 +1,14 @@
-import { asc, eq, notInArray } from 'drizzle-orm'
+import { asc, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   ESCALATION_DEADLINE_ROOT,
   escalationActionKey,
   escalationConditionLeaves,
+  escalationConditionWithLegacyClock,
   escalationConfigSchema,
   escalationFirstStageKey,
   escalationRuleConfigSchema,
   escalationRuleKey,
-  escalationStageClockEvents,
   escalationStagesBodySchema,
   validateEscalationStageChain,
   type EscalationActionConfig,
@@ -172,11 +172,11 @@ export async function readReachableStages(
  *   dropped — it can never deliver, the rule of `notify_needs_target_or_channel`;
  * - the flag `acceptance` of the former shape carried a text, the contract
  *   carries a boolean;
- * - a rule that carries both clocks keeps the clock its stage says: a stage rule
- *   waits with its minutes, a deadline rule with its percentage (§7.2, §7.5);
- * - the reference of a stage rule that does not match the clock of its stage
- *   becomes `null` — the stage clock, the fallback of `writeEscalationStages`
- *   (ADR-0023, §7.11);
+ * - the former clock fields `reference`, `minutes` and `percent` of a rule
+ *   become a `timer_expired` leaf of its condition, merged into one `all`
+ *   group — the rule of migration `0069` (ADR-0064 decision 8); a rule that
+ *   carries both clocks keeps the clock its stage says: a stage rule waits with
+ *   its minutes, a deadline rule with its percentage (§7.2, §7.5);
  * - a stage without a name for a required locale takes the key of the stage, the
  *   fallback of `localizedName`; a stage with the position of `0` (the default of
  *   the row) takes its place in the order.
@@ -217,44 +217,48 @@ export function normalizeEscalationRows(
     }))
 
   const normalizedRules = rules.map((rule) => {
-    const stageKey =
-      rule.stageKey === null || rule.stageKey === undefined ? null : String(rule.stageKey)
     const actions = ((rule.actions ?? []) as unknown as Record<string, unknown>[])
       .map(normalizeEscalationAction)
       .flatMap((action) => (action === undefined ? [] : [action]))
 
-    let minutes = rule.minutes
-    let percent = rule.percent
-
-    if (minutes !== null && percent !== null) {
-      if (stageKey === null) {
-        minutes = null
-      } else {
-        percent = null
-      }
-    }
-
-    let reference = rule.reference
-
-    if (stageKey !== null && reference !== null) {
-      const clock = escalationStageClockEvents(stageKey, clockRows)
-
-      if (!clock.includes(String(reference))) {
-        reference = null
-      }
-    }
-
     return {
-      ...rule,
+      ...ruleWithTimer(rule, clockRows),
       actions,
-      minutes,
-      percent,
-      reference,
-      condition: conditionOfRuleRow(rule.condition),
     }
   })
 
   return { stages: normalizedStages, rules: normalizedRules }
+}
+
+/**
+ * A rule of an older installation or an older body without its clock fields:
+ * `reference`/`minutes` of a stage rule and `percent` of a deadline rule
+ * become the `timer_expired` leaf of its condition (ADR-0064 decision 8). A rule
+ * that carries both clocks keeps the clock its stage says.
+ */
+function ruleWithTimer(
+  rule: Record<string, unknown>,
+  clockRows: readonly { key: string; predecessor: string | null; reachedBy: readonly string[] }[],
+): Record<string, unknown> {
+  const { reference, minutes, percent, ...rest } = rule
+  const stageKey =
+    rule.stageKey === null || rule.stageKey === undefined ? null : String(rule.stageKey)
+  const hasMinutes = minutes !== null && minutes !== undefined
+  const hasPercent = percent !== null && percent !== undefined
+
+  return {
+    ...rest,
+    condition: escalationConditionWithLegacyClock(
+      {
+        stageKey,
+        reference,
+        minutes: hasMinutes && (stageKey !== null || !hasPercent) ? minutes : null,
+        percent: hasPercent && (stageKey === null || !hasMinutes) ? percent : null,
+        condition: conditionOfRuleRow(rule.condition),
+      },
+      clockRows,
+    ),
+  }
 }
 
 /** An empty condition of a legacy row (`{}`, `null`, a missing key) is `{ all: [] }`. */
@@ -356,9 +360,6 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
   const rules = ruleRows.map((row) => ({
     key: row.key,
     stageKey: row.stageKey,
-    reference: row.reference,
-    minutes: row.minutes,
-    percent: row.percent,
     condition: row.condition,
     actions: actionsByRule.get(row.key) ?? [],
     active: row.active,
@@ -382,16 +383,32 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
  * stage that does not exist are rejected; the key of a rule is its identity,
  * so the firing log of the former rules stays readable.
  */
+/** The rules of a body with the former clock fields turned into timers. */
+function bodyWithTimers(
+  body: unknown,
+  stages: readonly { key: string; predecessor: string | null; reachedBy: readonly string[] }[],
+): unknown {
+  if (
+    typeof body !== 'object' ||
+    body === null ||
+    !Array.isArray((body as { rules?: unknown }).rules)
+  ) {
+    return body
+  }
+
+  const rules = (body as { rules: unknown[] }).rules.map((rule) =>
+    typeof rule === 'object' && rule !== null && !Array.isArray(rule)
+      ? ruleWithTimer(rule as Record<string, unknown>, stages)
+      : rule,
+  )
+
+  return { ...(body as Record<string, unknown>), rules }
+}
+
 export async function writeEscalationConfig(
   database: Db,
   body: unknown,
 ): Promise<EscalationConfig> {
-  const parsed = escalationRulesBodySchema.safeParse(body)
-
-  if (!parsed.success) {
-    throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
-  }
-
   const stageRows = await database
     .select({
       key: escalationStages.key,
@@ -399,6 +416,15 @@ export async function writeEscalationConfig(
       reachedBy: escalationStages.reachedBy,
     })
     .from(escalationStages)
+
+  // An older body still sends the clock fields of a rule; they become the timer
+  // of its condition before the contract reads it (ADR-0064 decision 8).
+  const parsed = escalationRulesBodySchema.safeParse(bodyWithTimers(body, stageRows))
+
+  if (!parsed.success) {
+    throw new EscalationConfigError(400, 'invalid_request', { fields: fieldPaths(parsed.error) })
+  }
+
   const stageByKey = new Map(stageRows.map((row) => [row.key, row]))
 
   const invalidFields: string[] = []
@@ -408,19 +434,8 @@ export async function writeEscalationConfig(
       continue
     }
 
-    const stage = stageByKey.get(rule.stageKey)
-
-    if (stage === undefined) {
+    if (!stageByKey.has(rule.stageKey)) {
       invalidFields.push(`rules.${index}.stageKey`)
-      continue
-    }
-
-    if (rule.reference !== null) {
-      const clockEvents = escalationStageClockEvents(rule.stageKey, stageRows)
-
-      if (!clockEvents.includes(rule.reference)) {
-        invalidFields.push(`rules.${index}.reference`)
-      }
     }
   }
 
@@ -567,9 +582,6 @@ export async function writeEscalationConfig(
       await tx.insert(escalationRules).values({
         key: ruleKey,
         stageKey: rule.stageKey,
-        reference: rule.reference,
-        minutes: rule.minutes,
-        percent: rule.percent,
         condition: rule.condition,
         position,
         active: rule.active,
@@ -668,41 +680,6 @@ export async function writeEscalationStages(
       await tx.delete(escalationStages)
     } else {
       await tx.delete(escalationStages).where(notInArray(escalationStages.key, keys))
-    }
-
-    // A predecessor change moves the clock of its stage. An explicit reference
-    // that no longer matches the new clock falls back to the stage clock
-    // (`reference = null`), so the written chain and the existing rules stay a
-    // readable configuration (ADR-0023, §7.11).
-    const [chainRows, ruleRows] = await Promise.all([
-      tx
-        .select({
-          key: escalationStages.key,
-          predecessor: escalationStages.predecessor,
-          reachedBy: escalationStages.reachedBy,
-        })
-        .from(escalationStages),
-      tx
-        .select({
-          key: escalationRules.key,
-          stageKey: escalationRules.stageKey,
-          reference: escalationRules.reference,
-        })
-        .from(escalationRules),
-    ])
-    for (const rule of ruleRows) {
-      if (rule.stageKey === null || rule.reference === null) {
-        continue
-      }
-
-      const clockEvents = escalationStageClockEvents(rule.stageKey, chainRows)
-
-      if (!clockEvents.includes(rule.reference)) {
-        await tx
-          .update(escalationRules)
-          .set({ reference: null, updatedAt })
-          .where(eq(escalationRules.key, rule.key))
-      }
     }
   })
 

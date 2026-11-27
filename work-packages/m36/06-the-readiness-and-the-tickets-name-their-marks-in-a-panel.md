@@ -1,7 +1,7 @@
 # WP-M36-06: the readiness and the tickets name their marks in a panel
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M36-02
 phase: 36
 milestone: m36
@@ -81,8 +81,8 @@ Expected: all green; the moved tooltips fail before the change and pass after it
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `readiness-calendar.tsx`, `shift-admin-actions.tsx`, `planning-section.tsx`, `ticket-list-page.tsx`, `ticket-detail-page.tsx`, `ticket-timeline.tsx`, `help.json`/`oncall.json` (de, en) and the tests of these pages
+- Interfaces added: `help.readiness.cellMore` and `help.tickets.timelineMore` (the panel bodies); the milestones of a ticket are listed as text below the bar (`timeline-marker-list`)
+- Verified: no `title=` carries an explanation any more (asserted); the panel of the calendar opens on a tap and closes on a second one; the reason of a blocked shift action stays visible beside the button; typecheck of the three workspaces, `eslint .` (0 errors), the full `vitest run` against a throwaway PostgreSQL 17 (2177 of 2178 green; the one failure `web-push-esm.spec.ts` fails the same way before the change), `npm run build`, `wp:check`; `npm run i18n:check` was run with a copy of the script that splits the paths on both separators — the script itself reports 1654 phantom keys on Windows (it splits on `/`); `npm run test:e2e` was not run here (unverified)
 - Follow-up WP: WP-M36-07 (the statistics, the objects and the notification cards)
-- Open question: none
+- Open question: Deviation: a calendar cell is about 10 px of text, and the trigger of the popover is 44 px high (§14.2) — so the cell carries its full name as `aria-label` (state, pool, holder are visible text, not colour alone) and ONE ⓘ at the heading explains the cell, instead of one ⓘ per cell.

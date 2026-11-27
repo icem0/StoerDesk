@@ -124,6 +124,44 @@ describe('ReadinessCalendar', () => {
     expect(screen.getByText('Unbesetzt')).toBeDefined()
   })
 
+  it('names a shift cell without a tooltip and explains the cell in a panel (WP-M36-06)', () => {
+    const today = localIsoDate(new Date())
+    const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)
+    const endsAt = new Date(startsAt.getTime() + 8 * 60 * 60 * 1000)
+
+    renderCalendar([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        poolId,
+        userId: memberId,
+        state: 'CONFIRMED',
+        startsAt,
+        endsAt,
+        createdAt: startsAt,
+        updatedAt: startsAt,
+        technician: member,
+      },
+    ])
+
+    const row = screen.getByText('Max Mustermann').closest('button') as HTMLElement
+
+    // The explanation is not a tooltip: a title does not exist on a touch (§14.2, §14.13) …
+    expect(row.getAttribute('title')).toBeNull()
+    expect(document.querySelector('[title]')).toBeNull()
+    // … the cell keeps its name for a screen reader, the state is text and a dot, not a colour alone.
+    expect(row.getAttribute('aria-label')).toBe('Bestätigt – Bereitschaft, Nord – Max Mustermann')
+    expect(row.textContent).toContain('Bestätigt')
+
+    // The panel of the cell opens on a tap and closes on a second one.
+    const trigger = screen.getByRole('button', { name: /Zelle des Bereitschaftskalenders/ })
+
+    expect(screen.queryByText(/Jede Zelle ist ein Tag/)).toBeNull()
+    fireEvent.click(trigger)
+    expect(screen.getByText(/Jede Zelle ist ein Tag/)).toBeDefined()
+    fireEvent.click(trigger)
+    expect(screen.queryByText(/Jede Zelle ist ein Tag/)).toBeNull()
+  })
+
   it('names the state and the pool on the row of an unstaffed shift', () => {
     const today = localIsoDate(new Date())
     const startsAt = fromZonedTime(`${today}T08:00:00`, ONCALL_TIMEZONE)

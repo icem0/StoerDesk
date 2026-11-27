@@ -1,7 +1,7 @@
 # WP-M31-13: the criterion and the documentation of the phase
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-12
 phase: 31
 milestone: m31

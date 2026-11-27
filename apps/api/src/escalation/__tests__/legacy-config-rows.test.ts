@@ -22,7 +22,25 @@ const NEW_STAGE = {
 }
 
 describe('the read of an escalation configuration of an older installation', () => {
-  it('answers the empty condition of an old rule', () => {
+  it('answers the empty condition of an old rule without a clock', () => {
+    const rules = [
+      {
+        key: 'review#1',
+        stageKey: 'review',
+        reference: null,
+        minutes: null,
+        percent: null,
+        condition: {},
+        actions: [],
+        active: true,
+      },
+    ]
+    const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
+
+    expect(normalized[0]?.condition).toEqual({ all: [] })
+  })
+
+  it('turns the old clock fields of a rule into a timer of its condition (ADR-0064)', () => {
     const rules = [
       {
         key: 'review#1',
@@ -37,7 +55,21 @@ describe('the read of an escalation configuration of an older installation', () 
     ]
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
-    expect(normalized[0]?.condition).toEqual({ all: [] })
+    expect(normalized[0]).not.toHaveProperty('reference')
+    expect(normalized[0]).not.toHaveProperty('minutes')
+    expect(normalized[0]).not.toHaveProperty('percent')
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
   })
 
   it('keeps an old assign action that names a technician as a target of the kind user', () => {
@@ -130,8 +162,19 @@ describe('the read of an escalation configuration of an older installation', () 
     ]
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
-    expect(normalized[0]?.percent).toBeNull()
-    expect(normalized[0]?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
+    // The stage rule keeps its minutes as a timer; the percentage is dropped.
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
   })
 
   it('answers a configuration that follows the contract after the normalization', () => {

@@ -65,7 +65,7 @@ export function NotificationBell() {
       </svg>
       {count > 0 ? (
         <span
-          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1 text-[11px] font-semibold text-slate-950"
+          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1 text-2xs font-semibold text-slate-950"
           data-testid="unread-count"
         >
           {count > 99 ? '99+' : count}

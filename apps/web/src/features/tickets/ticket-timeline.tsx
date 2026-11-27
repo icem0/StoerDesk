@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { HelpPopover } from '../../components/help-popover'
+import { helpTriggerClass } from '../../components/help-trigger'
 import {
   computeTicketTimeline,
   type TimelineState,
@@ -119,9 +122,16 @@ export function TicketTimeline({
 
   return (
     <section className="col-span-full rounded bg-slate-900/50 border border-slate-700 p-4">
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-        {t('timeline.title')}
-      </h2>
+      <div className="mb-3 flex items-center gap-1">
+        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+          {t('timeline.title')}
+        </h2>
+        <HelpPopover
+          className={helpTriggerClass}
+          label={t('help:triggerFor', { name: t('timeline.title') })}
+          text={t('help:tickets.timelineMore')}
+        />
+      </div>
 
       <div className="flex items-baseline gap-2 text-xs text-slate-400 mb-1">
         <span className="font-medium">{t('timeline.reportedAtLabel')}</span>
@@ -162,7 +172,6 @@ export function TicketTimeline({
                   data-testid="timeline-marker"
                   role="img"
                   aria-label={title}
-                  title={title}
                   className={MARKER_CLASS}
                   style={{ left: `${left}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
                 />
@@ -170,9 +179,10 @@ export function TicketTimeline({
             })}
             <div
               data-testid="timeline-deadline"
-              className="pointer-events-auto absolute h-4 w-0.5 rounded-full bg-rose-400/80"
+              className="absolute h-4 w-0.5 rounded-full bg-rose-400/80"
               style={{ left: '100%', top: '50%', transform: 'translate(-50%, -50%)' }}
-              title={t('timeline.markerTitle', {
+              role="img"
+              aria-label={t('timeline.markerTitle', {
                 label: t('timeline.deadline'),
                 time: deadlineTime,
               })}
@@ -180,6 +190,19 @@ export function TicketTimeline({
           </div>
         )}
       </div>
+
+      {markers.length > 0 && (
+        <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300" data-testid="timeline-marker-list">
+          {markers.map((marker) => (
+            <li key={`${marker.type}-${marker.at}`}>
+              {t('timeline.markerTitle', {
+                label: t(`status.events.${marker.type}`, { defaultValue: marker.type }),
+                time: formatTime(marker.at),
+              })}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {reportedMs !== undefined && deadlineMs !== undefined && span > 0 && (
         <div className="relative h-4 w-full mb-3">
@@ -200,7 +223,7 @@ export function TicketTimeline({
                 style={{ left: `${left}%`, transform: shift }}
               >
                 <div className="w-[1px] h-2 bg-slate-600" />
-                <span className="text-[10px] text-slate-500 mt-0.5 whitespace-nowrap">
+                <span className="text-2xs text-slate-400 mt-0.5 whitespace-nowrap">
                   {hours} {scaleSuffix}
                 </span>
               </div>

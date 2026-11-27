@@ -67,7 +67,7 @@ export function SettingsMenu({ sections }: SettingsMenuProps) {
   if (!hasResult) {
     return (
       <section className="flex flex-col items-center gap-2 py-6 text-center">
-        <p className="text-sm text-slate-500">{t('app.settings.empty')}</p>
+        <p className="text-sm text-slate-300">{t('app.settings.empty')}</p>
       </section>
     )
   }
@@ -75,7 +75,7 @@ export function SettingsMenu({ sections }: SettingsMenuProps) {
   return (
     <>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium uppercase tracking-wide text-slate-500" htmlFor="settings-search">
+        <label className="text-xs font-medium uppercase tracking-wide text-slate-300" htmlFor="settings-search">
           {t('app.settings.searchLabel')}
         </label>
         <input
@@ -104,7 +104,7 @@ export function SettingsMenu({ sections }: SettingsMenuProps) {
 
         return (
           <section key={section.key} className="flex flex-col gap-1">
-            <h2 className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <h2 className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-300">
               {heading}
             </h2>
             <ul className="grid gap-2">

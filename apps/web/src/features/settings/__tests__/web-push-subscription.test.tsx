@@ -379,4 +379,25 @@ describe('WebPushSubscription', () => {
       ).toBe(true),
     )
   })
+
+  it('explains the installation and the activation in panels, not in folding blocks (WP-M36-07)', async () => {
+    vi.stubGlobal('fetch', stubConfig(PUBLIC_KEY))
+
+    const { container } = renderCard()
+
+    await screen.findByText(/unterstützt keine Push-Nachrichten/)
+
+    // The two explanations are not <details> any more; the QR code is content and keeps its block.
+    expect(container.querySelectorAll('details').length).toBeLessThanOrEqual(1)
+    expect(screen.queryByText(/Öffne StörDesk in Chrome oder Edge/)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /PWA. installieren/ }))
+
+    expect(screen.getByText(/Öffne StörDesk in Chrome oder Edge/)).toBeTruthy()
+    expect(screen.getByText(/Web Push benötigt ab iOS 16.4/)).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Web Push aktivieren/ }))
+
+    expect(screen.getByText(/Dieses Gerät anmelden/, { selector: 'div *, div' })).toBeTruthy()
+  })
 })

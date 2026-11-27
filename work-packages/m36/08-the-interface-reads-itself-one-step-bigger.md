@@ -1,7 +1,7 @@
 # WP-M36-08: the interface reads itself one step bigger
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M36-03, WP-M36-04, WP-M36-05, WP-M36-06, WP-M36-07
 phase: 36
 milestone: m36
@@ -85,8 +85,8 @@ is available, it is reported as unverified.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `styles.css` (`:root { font-size: 17px }` and the scale step `text-2xs`), `Shell.tsx`, `notification-bell.tsx`, `charts.tsx`, `readiness-calendar.tsx`, `ticket-timeline.tsx`, `ticket-detail-page.tsx`, `settings-menu.tsx`
+- Interfaces added: `--text-2xs: 0.65rem` in `@theme` (utility `text-2xs`); the 11 hard `text-[10px]`/`text-[11px]` classes are gone
+- Verified: the generated CSS carries `.text-2xs` and `font-size:17px`; no `text-[Npx]` class is left in the sources; typecheck of the three workspaces, `eslint .` (0 errors), the full `vitest run` against a throwaway PostgreSQL 17 (2177 of 2178 green; the one failure `web-push-esm.spec.ts` fails the same way before the change), `npm run build`, `wp:check`; `npm run i18n:check` was run with a copy of the script that splits the paths on both separators — the script itself reports 1654 phantom keys on Windows (it splits on `/`); `npm run test:e2e` was not run here (unverified)
 - Follow-up WP: none — phase 36 is closed when WP-M36-02 … WP-M36-08 are done and the phase 36 acceptance test names the mechanism, the two tiers, the page-level ⓘ and the type scale
-- Open question: none
+- Open question: Unverified: `npm run test:e2e` (the report form on 375×667) was not run — no browser run was possible here. The meta text moved to `text-slate-300` only in the files of this package and in the settings menu; the other 130 uses of `text-slate-500` are untouched (the package forbids 1250 class edits).

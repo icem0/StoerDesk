@@ -1,7 +1,7 @@
 # WP-M31-16: the administration knows the customer
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-15
 phase: 31
 milestone: m31

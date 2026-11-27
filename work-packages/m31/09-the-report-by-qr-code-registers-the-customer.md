@@ -1,7 +1,7 @@
 # WP-M31-09: the report by QR code registers the customer
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-08
 phase: 31
 milestone: m31

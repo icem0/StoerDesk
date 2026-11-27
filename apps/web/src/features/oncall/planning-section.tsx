@@ -369,9 +369,6 @@ export function PlanningSection({
                         <select
                           aria-label={t('admin.grid.technician')}
                           className="rounded bg-slate-950 p-1 text-slate-100"
-                          title={
-                            shift.state === 'DECLINED' ? t('admin.grid.reassignHint') : undefined
-                          }
                           value={shift.userId ?? ''}
                           onChange={(event) =>
                             update.mutate({
@@ -400,6 +397,11 @@ export function PlanningSection({
                             <option value={shift.userId}>{technicianName(shift)}</option>
                           ) : null}
                         </select>
+                        {shift.state === 'DECLINED' ? (
+                          <p className="mt-1 text-xs text-slate-300" data-testid="shift-reassign-hint">
+                            {t('admin.grid.reassignHint')}
+                          </p>
+                        ) : null}
                       </td>
                       <td className="py-2">
                         <div className="flex flex-wrap gap-2">
@@ -418,9 +420,6 @@ export function PlanningSection({
                           <button
                             className="rounded border border-rose-800 px-3 py-1 text-rose-300 disabled:opacity-50"
                             type="button"
-                            title={
-                              deletable(shift) ? undefined : t('admin.grid.locked')
-                            }
                             disabled={
                               !mayAdmin ||
                               remove.isPending ||
@@ -431,6 +430,11 @@ export function PlanningSection({
                             {t('admin.grid.delete')}
                           </button>
                         </div>
+                        {deletable(shift) ? null : (
+                          <p className="mt-1 text-xs text-slate-300" data-testid="shift-grid-locked">
+                            {t('admin.grid.locked')}
+                          </p>
+                        )}
                       </td>
                     </tr>
                   )

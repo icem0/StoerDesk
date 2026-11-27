@@ -17,7 +17,8 @@
     "copy": "Kopieren",
     "icalTitle": "Kalender-URL",
     "icalHint": "Die Adresse deines persönlichen Kalender-Feeds.",
-    "icalSubscribe": "Die Adresse in die Kalender-App eintragen, um die Schichten zu abonnieren."
+    "icalSubscribe": "Die Adresse in die Kalender-App eintragen, um die Schichten zu abonnieren.",
+    "cellName": "Zelle des Bereitschaftskalenders"
   },
   "admin": {
     "back": "Zurück zu den Einstellungen",

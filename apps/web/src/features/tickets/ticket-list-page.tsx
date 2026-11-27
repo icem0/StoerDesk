@@ -132,17 +132,14 @@ function TicketRow({ ticket }: { ticket: TicketListItem }) {
               style={{ width: `${Math.min(100, Math.max(0, ticket.percent))}%` }}
             />
           </span>
-          <span className="shrink-0 whitespace-nowrap text-xs text-slate-400" title={deadline}>
+          <span className="shrink-0 whitespace-nowrap text-xs text-slate-400">
             {remainingLabel}
           </span>
         </span>
 
         <span className="flex flex-wrap items-center gap-2 md:justify-end">
           {ticket.assignedUserName && (
-            <span
-              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-700 text-slate-200"
-              title={ticket.assignedUserName}
-            >
+            <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-slate-700 text-slate-200">
               {ticket.assignedUserName}
             </span>
           )}

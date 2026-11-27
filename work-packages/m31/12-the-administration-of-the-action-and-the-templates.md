@@ -1,7 +1,7 @@
 # WP-M31-12: the administration of the action and of the templates of the portal
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M31-11
 phase: 31
 milestone: m31
