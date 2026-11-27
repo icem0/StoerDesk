@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
-import { solveChallenge } from 'altcha-lib'
+import { solveChallenge } from 'altcha-lib/v1'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { drizzle } from 'drizzle-orm/postgres-js'

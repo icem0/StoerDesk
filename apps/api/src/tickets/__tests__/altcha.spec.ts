@@ -1,4 +1,4 @@
-import { solveChallenge } from 'altcha-lib'
+import { solveChallenge } from 'altcha-lib/v1'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
