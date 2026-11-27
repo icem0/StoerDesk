@@ -21,9 +21,9 @@ const STAGES = [
 const RULE_WITHOUT_MINUTES = {
   key: 'review#1',
   stageKey: 'review',
-  reference: 'received_at',
+  reference: null,
   minutes: null,
-  percent: 50,
+  percent: null,
   condition: { all: [] },
   actions: [],
   active: true,
@@ -121,7 +121,7 @@ describe('the fallbacks of the escalation page', () => {
     expect(valuesOf(within(hours).getAllByRole('spinbutton'))).toEqual(['168', '72', '24', '8'])
   })
 
-  it('shows the seeded minutes of a rule without minutes', async () => {
+  it('shows a rule without a timer without any minutes of its own (ADR-0064)', async () => {
     void i18n.changeLanguage('de')
     stubApi({ config: { stages: STAGES, rules: [RULE_WITHOUT_MINUTES] } })
 
@@ -130,11 +130,12 @@ describe('the fallbacks of the escalation page', () => {
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Stufen & Regeln' }))
 
-    const timeline = await screen.findByTestId('escalation-rule-timeline')
+    const condition = await screen.findByTestId('escalation-rule-condition')
 
-    expect((within(timeline).getByLabelText('Niedrig') as HTMLInputElement).value).toBe('15')
-    expect((within(timeline).getByLabelText('Normal') as HTMLInputElement).value).toBe('15')
-    expect((within(timeline).getByLabelText('Hoch') as HTMLInputElement).value).toBe('15')
-    expect((within(timeline).getByLabelText('Kritisch') as HTMLInputElement).value).toBe('5')
+    // The seed fallback of the minutes left with the frame „Zeitliche Abfolge“
+    // (WP-M14-135 → WP-M45-03): a rule without a timer shows no minutes.
+    expect(screen.queryByTestId('escalation-rule-timeline')).toBeNull()
+    expect(within(condition).queryByLabelText('Niedrig')).toBeNull()
+    expect(screen.queryByText('Zeitliche Abfolge')).toBeNull()
   })
 })

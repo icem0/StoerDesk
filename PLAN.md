@@ -945,6 +945,10 @@ the facts carry `sinceEvent`, a rule without a timer waits with zero delay
 from its stage and a first-stage rule stays due with the ticket. The check
 `escalation_rules_clock_check` falls with migration `0069`; the conversion of
 WP-M45-04 is `0070`.
+**WP-M45-03 is done:** the rule form shows the condition and the actions only —
+the frame „Zeitliche Abfolge“ is gone, the condition builder edits the timer
+(start value, minutes per priority or the percentage of the deadline) and the
+help panel of the timer says what happens after the expiry.
 
 **Phase 44 is closed (WP-M44-01, out of band).** The office looked at
 `/admin/escalation` again: „einige Erklärungen … in ein Symbol packed … für

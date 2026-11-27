@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
+- **The waiting clock of a rule is edited in its condition (WP-M45-03,
+  ADR-0064).** The frame „Zeitliche Abfolge“ with the start event, the
+  percentage and the minutes is gone from the rule form of `/admin/escalation`
+  — a rule shows its condition and its actions only. The condition builder
+  offers the field „Timer abgelaufen“ with the operators „abgelaufen“ and „noch
+  nicht abgelaufen“: a start value (report received, set in review, work order
+  created, offered, assigned, accepted) with the minutes per priority, or a
+  share of the ticket deadline. The ⓘ of the timer explains the delay, the
+  pause rule and what happens after the expiry.
 - **The escalation engine reads the waiting clock from the condition
   (WP-M45-02, ADR-0064).** The clock of a rule is the `timer_expired` leaf of
   its condition: the scan fires a rule once all its `expired` timers passed the

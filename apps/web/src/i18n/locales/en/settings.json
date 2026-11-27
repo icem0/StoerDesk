@@ -332,25 +332,7 @@
       },
       "rule": {
         "key": "Key",
-        "reference": "Start event",
-        "percent": "Percent",
-        "timeline": "Time sequence",
-        "actions": "Actions",
-        "referenceEvents": {
-          "received_at": "Report received",
-          "review_started": "Set in review",
-          "work_order_set": "Work order created",
-          "offered": "Offered",
-          "assigned": "Assigned",
-          "accepted": "Work order accepted"
-        },
-        "none": "None",
-        "minutes": {
-          "low": "Low",
-          "normal": "Normal",
-          "high": "High",
-          "critical": "Critical"
-        }
+        "actions": "Actions"
       },
       "condition": {
         "modeLabel": "Condition",
@@ -370,7 +352,8 @@
           "elapsedMinutes": "Elapsed minutes",
           "stageReached": "Stage reached",
           "shift": "Readiness shift",
-          "time_of_day": "Time of day"
+          "time_of_day": "Time of day",
+          "timer_expired": "Timer expired"
         },
         "field": "Field",
         "operator": "Operator",
@@ -383,7 +366,9 @@
           "gte": "greater or equal",
           "lt": "less than",
           "lte": "less or equal",
-          "contains": "contains"
+          "contains": "contains",
+          "expired": "expired",
+          "notExpired": "not yet expired"
         },
         "value": "Value",
         "add": "Add condition",
@@ -423,6 +408,26 @@
         "boolean": {
           "true": "Yes",
           "false": "No"
+        },
+        "timer": {
+          "legend": "Timer",
+          "start": "Start event",
+          "percent": "Percent of the deadline",
+          "events": {
+            "received_at": "Report received",
+            "review_started": "Set in review",
+            "work_order_set": "Work order created",
+            "offered": "Offered",
+            "assigned": "Assigned",
+            "accepted": "Work order accepted",
+            "percent": "Share of the ticket deadline"
+          },
+          "minutes": {
+            "low": "Low",
+            "normal": "Normal",
+            "high": "High",
+            "critical": "Critical"
+          }
         }
       },
       "action": {

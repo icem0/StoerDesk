@@ -8,13 +8,21 @@ import { escalationRuleConfigSchema } from '@stoerdesk/shared'
 import { i18n } from '../../i18n'
 import { EscalationPage } from '../escalation-page'
 
+/** The seed timer of §7.2 for the stage `review` (ADR-0064). */
+const TIMER = {
+  field: 'timer_expired',
+  operator: 'expired',
+  value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+}
+
+/** A rule as the server answers it since WP-M45-02: the clock is the timer of its condition. */
 const RULE = {
   key: 'review',
   stageKey: 'review',
-  reference: 'received_at',
-  minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+  reference: null,
+  minutes: null,
   percent: null,
-  condition: { all: [] },
+  condition: { all: [TIMER] },
   actions: [],
   active: true,
 }
@@ -87,25 +95,107 @@ function openStagesTab() {
 }
 
 describe('the rule editor of the escalation page', () => {
-  it('edits the minutes of a rule and saves with one request', async () => {
+  it('edits the minutes of the timer in the condition and saves with one request', async () => {
     const saved = renderPage(['settings.read', 'settings.write'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     openStagesTab()
-    await waitFor(() => expect(screen.getByTestId('escalation-stage-list')).toBeTruthy())
+    await waitFor(() => expect(screen.getByTestId('escalation-condition-timer')).toBeTruthy())
 
-    const minutesInput = screen.getByLabelText('Niedrig', { exact: false }) as HTMLInputElement
+    const timer = screen.getByTestId('escalation-condition-timer')
+    const minutesInput = within(timer).getByLabelText('Niedrig') as HTMLInputElement
+
+    expect(minutesInput.value).toBe('15')
     fireEvent.change(minutesInput, { target: { value: '20' } })
 
-    await waitFor(() =>
-      expect(saved).toHaveLength(1)
-    )
+    await waitFor(() => expect(saved).toHaveLength(1))
     const first = saved[0] ?? { url: '', body: {} as unknown }
 
     expect(first.url).toBe('/v1/escalation/config')
     expect((first.body as Record<string, unknown>).rules).toEqual([
-      { ...RULE, minutes: { ...RULE.minutes, low: 20 } },
+      {
+        ...RULE,
+        condition: {
+          all: [
+            {
+              ...TIMER,
+              value: { reference: 'received_at', minutes: { ...TIMER.value.minutes, low: 20 } },
+            },
+          ],
+        },
+      },
     ])
+  })
+
+  it('switches the timer to another start value and to the percentage of the deadline', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-condition-timer')).toBeTruthy())
+
+    const timer = screen.getByTestId('escalation-condition-timer')
+    const start = within(timer).getByLabelText('Start-Ereignis') as HTMLSelectElement
+
+    expect(within(start).getByText('Meldung eingegangen')).toBeTruthy()
+    fireEvent.change(start, { target: { value: 'review_started' } })
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    expect(
+      ((saved[0]?.body as { rules: { condition: unknown }[] }).rules[0]?.condition as {
+        all: { value: unknown }[]
+      }).all[0]?.value,
+    ).toEqual({ reference: 'review_started', minutes: TIMER.value.minutes })
+
+    fireEvent.change(start, { target: { value: 'percent' } })
+
+    await waitFor(() => expect(saved).toHaveLength(2))
+    expect(within(timer).getByLabelText('Prozent der Frist')).toBeTruthy()
+    expect(within(timer).queryByLabelText('Niedrig')).toBeNull()
+    expect(
+      ((saved[1]?.body as { rules: { condition: unknown }[] }).rules[0]?.condition as {
+        all: { value: unknown }[]
+      }).all[0]?.value,
+    ).toEqual({ percent: 80 })
+  })
+
+  it('offers the timer as a field of a new condition with its own operators', async () => {
+    const saved = renderPage(['settings.read', 'settings.write'])
+
+    await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
+    openStagesTab()
+    await waitFor(() => expect(screen.getByTestId('escalation-condition-leaves')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
+
+    const fields = screen.getAllByLabelText('Feld') as HTMLSelectElement[]
+
+    fireEvent.change(fields[1] as HTMLSelectElement, { target: { value: 'timer_expired' } })
+
+    const operators = screen.getAllByLabelText('Operator') as HTMLSelectElement[]
+    const operator = operators[1] as HTMLSelectElement
+
+    expect([...operator.options].map((option) => option.textContent)).toEqual([
+      'abgelaufen',
+      'noch nicht abgelaufen',
+    ])
+    fireEvent.change(operator, { target: { value: 'notExpired' } })
+
+    await waitFor(() => expect(saved.length).toBeGreaterThan(1))
+    const body = (saved.at(-1) ?? { body: {} as unknown }).body as {
+      rules: { condition: unknown }[]
+    }
+
+    expect(body.rules[0]?.condition).toEqual({
+      all: [
+        TIMER,
+        {
+          field: 'timer_expired',
+          operator: 'notExpired',
+          value: { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+        },
+      ],
+    })
   })
 
   it('builds a condition and refuses an invalid value', async () => {
@@ -126,14 +216,22 @@ describe('the rule editor of the escalation page', () => {
 
     expect(edited.key).toBe(RULE.key)
     expect(edited.condition).toEqual({
-      all: [{ field: 'priority', operator: 'eq', value: 'normal' }],
+      all: [TIMER, { field: 'priority', operator: 'eq', value: 'normal' }],
     })
 
-    const minutesInput = screen.getByLabelText('Niedrig', { exact: false }) as HTMLInputElement
+    const timer = screen.getByTestId('escalation-condition-timer')
+    const minutesInput = within(timer).getByLabelText('Niedrig') as HTMLInputElement
     fireEvent.change(minutesInput, { target: { value: '0' } })
 
     await waitFor(() => expect(saved).toHaveLength(1))
-    expect(escalationRuleConfigSchema.safeParse({ ...RULE, minutes: { ...RULE.minutes, low: 0 } }).success).toBe(false)
+    expect(
+      escalationRuleConfigSchema.safeParse({
+        ...RULE,
+        condition: {
+          all: [{ ...TIMER, value: { ...TIMER.value, minutes: { ...TIMER.value.minutes, low: 0 } } }],
+        },
+      }).success,
+    ).toBe(false)
   })
 
   it('offers the readiness pool in the condition of a rule', async () => {
@@ -146,11 +244,11 @@ describe('the rule editor of the escalation page', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
 
-    const field = screen.getByLabelText('Feld') as HTMLSelectElement
+    const field = screen.getAllByLabelText('Feld')[1] as HTMLSelectElement
 
     fireEvent.change(field, { target: { value: 'shift' } })
 
-    const value = await screen.findByLabelText('Wert') as HTMLSelectElement
+    const value = (await screen.findByLabelText('Wert')) as HTMLSelectElement
 
     expect(within(value).getByText('Bereitschaft Haustechnik')).toBeTruthy()
 
@@ -163,25 +261,28 @@ describe('the rule editor of the escalation page', () => {
     const edited = rules[0] as Record<string, unknown>
 
     expect(edited.condition).toEqual({
-      all: [{ field: 'shift', operator: 'eq', value: pool.id }],
+      all: [TIMER, { field: 'shift', operator: 'eq', value: pool.id }],
     })
   })
 
-  it('groups the time fields of a rule into its own frame', async () => {
+  it('shows the condition and the actions of a rule without the frame of the clock', async () => {
     renderPage(['settings.read'])
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     openStagesTab()
-    await waitFor(() => expect(screen.getByTestId('escalation-rule-timeline')).toBeTruthy())
+    await waitFor(() => expect(screen.getByTestId('escalation-rule-condition')).toBeTruthy())
 
-    const frame = screen.getByTestId('escalation-rule-timeline')
+    expect(screen.queryByTestId('escalation-rule-timeline')).toBeNull()
+    expect(screen.queryByText('Zeitliche Abfolge')).toBeNull()
 
-    expect(frame.textContent).toContain('Zeitliche Abfolge')
-    expect(within(frame).getByLabelText('Start-Ereignis')).toBeTruthy()
-    expect(within(frame).getByLabelText('Prozent')).toBeTruthy()
-    expect(within(frame).getByLabelText('Niedrig')).toBeTruthy()
-    expect(within(frame).getByLabelText('Kritisch')).toBeTruthy()
-    expect(screen.getByLabelText('Niedrig', { exact: false })).toBeTruthy()
+    // The seed timer of §7.2 opens in the condition — read-only without the permission.
+    const timer = screen.getByTestId('escalation-condition-timer')
+    const start = within(timer).getByLabelText('Start-Ereignis') as HTMLSelectElement
+
+    expect(start.value).toBe('received_at')
+    expect(start.disabled).toBe(true)
+    expect((within(timer).getByLabelText('Kritisch') as HTMLInputElement).value).toBe('5')
+    expect((within(timer).getByLabelText('Kritisch') as HTMLInputElement).disabled).toBe(true)
   })
 
   it('shows the key of a stage before its names and its predecessor', async () => {
@@ -218,7 +319,7 @@ describe('the rule editor of the escalation page', () => {
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     openStagesTab()
-    await waitFor(() => expect(screen.getByTestId('escalation-rule-timeline')).toBeTruthy())
+    await waitFor(() => expect(screen.getByTestId('escalation-rule-condition')).toBeTruthy())
 
     expect(screen.queryByLabelText('Regel')).toBeNull()
 
@@ -237,7 +338,7 @@ describe('the rule editor of the escalation page', () => {
     openStagesTab()
     await waitFor(() => expect(screen.getByTestId('escalation-condition-leaves')).toBeTruthy())
 
-    expect(screen.queryByLabelText('Bedingung')).toBeNull()
+    expect(screen.getByLabelText('Bedingung')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Bedingung hinzufügen' }))
 
@@ -260,15 +361,15 @@ describe('the rule editor of the escalation page', () => {
 
     const operators = screen.getAllByLabelText('Operator') as HTMLSelectElement[]
 
-    fireEvent.change(operators[1] as HTMLSelectElement, { target: { value: 'ne' } })
+    fireEvent.change(operators[2] as HTMLSelectElement, { target: { value: 'ne' } })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Bedingung #1 entfernen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Bedingung #2 entfernen' }))
 
     await waitFor(() => expect(saved.length).toBeGreaterThan(2))
     const body = ((saved.at(-1) ?? {}) as { body?: { rules?: { condition?: unknown }[] } }).body
 
     expect(body?.rules?.[0]?.condition).toEqual({
-      all: [{ field: 'priority', operator: 'ne', value: 'normal' }],
+      all: [TIMER, { field: 'priority', operator: 'ne', value: 'normal' }],
     })
   })
 

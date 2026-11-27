@@ -1,7 +1,7 @@
 # WP-M45-03: the administration puts the timer in the condition
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-02
 phase: 45
 milestone: m45
@@ -29,6 +29,7 @@ files-write:
 - apps/web/src/i18n/locales/en/help.json
 - apps/web/src/admin/**tests**/escalation-rules-editor.test.tsx
 - apps/web/src/admin/**tests**/escalation-condition-builder.test.tsx
+- apps/web/src/admin/**tests**/escalation-page-fallbacks.test.tsx
 
 interfaces:
 
@@ -100,8 +101,27 @@ text exists in `de` and `en`.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `escalation-page.tsx` (the frame „Zeitliche Abfolge“,
+  `seededMinutesFor` and the minutes state are gone; `RuleForm` saves
+  `reference`/`minutes`/`percent` as `null`), `escalation-condition-builder.tsx`
+  (the timer frame), `settings.json` and `help.json` in `de` and `en`; the
+  tests `escalation-rules-editor.test.tsx`, `escalation-page-fallbacks.test.tsx`
+  and the new `escalation-condition-builder.test.tsx`
+- Interfaces added: `defaultTimerValue()` of the builder; the test ids
+  `escalation-rule-condition` and `escalation-condition-timer`; the keys
+  `admin.escalation.condition.timer.*`, `…fields.timer_expired`,
+  `…operators.expired`/`notExpired`; `help.escalation.timelineMore` is the text
+  of the timer, `help.escalation.referenceMore` and the keys
+  `admin.escalation.rule.reference`/`percent`/`timeline`/`referenceEvents`/`none`/`minutes`
+  are gone
+- Verified: `npm run check` with a real PostgreSQL 16 — 303 test files,
+  2170 tests; the E2E with the Chromium of the environment — 15 passed;
+  `i18n:check` 2286 keys in `de` and `en`
+- Deviations: a leaf that becomes or stops being a timer starts with the first
+  operator of its field and a fresh value — the timer carries an object value,
+  so keeping the old operator and value would leave an invalid leaf; the general
+  reset of every field change stays with WP-M46-01. The seed fallback test of
+  WP-M14-135 (`escalation-page-fallbacks`) now proves that a rule without a timer
+  shows no minutes. The stage-tab test needed no change.
 - Follow-up WP: WP-M45-04 exists as a file since WP-M45-00 (re-cut 2026-11-27)
-- Open question (if any):
+- Open question: none

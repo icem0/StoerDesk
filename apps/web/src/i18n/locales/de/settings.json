@@ -332,25 +332,7 @@
       },
       "rule": {
         "key": "Schlüssel",
-        "reference": "Start-Ereignis",
-        "percent": "Prozent",
-        "timeline": "Zeitliche Abfolge",
-        "actions": "Aktionen",
-        "referenceEvents": {
-          "received_at": "Meldung eingegangen",
-          "review_started": "In Prüfung gesetzt",
-          "work_order_set": "Auftrag angelegt",
-          "offered": "Angeboten",
-          "assigned": "Zugewiesen",
-          "accepted": "Auftrag angenommen"
-        },
-        "none": "Keine",
-        "minutes": {
-          "low": "Niedrig",
-          "normal": "Normal",
-          "high": "Hoch",
-          "critical": "Kritisch"
-        }
+        "actions": "Aktionen"
       },
       "condition": {
         "modeLabel": "Bedingung",
@@ -370,7 +352,8 @@
           "elapsedMinutes": "Verstrichene Minuten",
           "stageReached": "Erreichte Stufe",
           "shift": "Bereitschafts-Schicht",
-          "time_of_day": "Zeitfenster (Tageszeit)"
+          "time_of_day": "Zeitfenster (Tageszeit)",
+          "timer_expired": "Timer abgelaufen"
         },
         "field": "Feld",
         "operator": "Operator",
@@ -383,7 +366,9 @@
           "gte": "mindestens",
           "lt": "kleiner als",
           "lte": "höchstens",
-          "contains": "enthält"
+          "contains": "enthält",
+          "expired": "abgelaufen",
+          "notExpired": "noch nicht abgelaufen"
         },
         "value": "Wert",
         "add": "Bedingung hinzufügen",
@@ -423,6 +408,26 @@
         "boolean": {
           "true": "Ja",
           "false": "Nein"
+        },
+        "timer": {
+          "legend": "Timer",
+          "start": "Start-Ereignis",
+          "percent": "Prozent der Frist",
+          "events": {
+            "received_at": "Meldung eingegangen",
+            "review_started": "In Prüfung gesetzt",
+            "work_order_set": "Auftrag angelegt",
+            "offered": "Angeboten",
+            "assigned": "Zugewiesen",
+            "accepted": "Auftrag angenommen",
+            "percent": "Anteil der Ticketfrist"
+          },
+          "minutes": {
+            "low": "Niedrig",
+            "normal": "Normal",
+            "high": "Hoch",
+            "critical": "Kritisch"
+          }
         }
       },
       "action": {
