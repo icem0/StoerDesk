@@ -4795,6 +4795,11 @@ These decisions need an ADR or explicit approval before the related WP starts:
   the condition — a start value and a delay per priority or a percent of the
   timeline —, the rule fields and the frame „Zeitliche Abfolge“ are gone and
   migration `0069` converts installed configurations,
+- the ticket workflow as configuration — **proposed in ADR-0065**, draft in
+  `specs/03-ticket-workflow.md`: status and stage are independent, buttons and
+  automations share one action catalogue, a ticket ends only by a `status_change`
+  into a terminal status, the deadlines leave the workflow area; needs the
+  office's acceptance before phase 47 (proposed split in §3.12 of the slice),
 - whether shift swaps require admin approval by default (default: yes) — **resolved by
   ADR-0011**: approval defaults to `true`, the first acceptance stays atomic and the
   original technician remains responsible until approval,

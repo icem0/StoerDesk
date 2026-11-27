@@ -15,7 +15,7 @@ directly from a placeholder slice.
 | [00-conventions.md](00-conventions.md)         | Ch. 0 + 2 + 2a        | ~120 lines |
 | [01-rbac.md](01-rbac.md)                       | Ch. 3 + 4.1           | ~200 lines |
 | [02-data-model.md](02-data-model.md)           | Ch. 4                 | ~250 lines |
-| [03-ticket-workflow.md](03-ticket-workflow.md) | Ch. 5 + 5.x additions | ~200 lines |
+| [03-ticket-workflow.md](03-ticket-workflow.md) | Ch. 5 + 5.x additions — draft of ADR-0065 (the workflow as configuration), not yet reviewed | ~270 lines |
 | [04-oncall.md](04-oncall.md)                   | Ch. 5a                | ~280 lines |
 | [05-timeline.md](05-timeline.md)               | Ch. 6                 | ~80 lines  |
 | [06-report-form.md](06-report-form.md)         | Ch. 7                 | ~230 lines |
