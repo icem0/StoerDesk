@@ -11,13 +11,11 @@ import type {
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { apiFetch } from '../lib/api'
 import { localizedName } from '../lib/localized-name'
-import {
-  TranslationFields,
-  errorMessage,
-  jsonHeaders,
-} from './text-template-form-parts'
+import { TranslationFields, errorMessage, jsonHeaders } from './text-template-form-parts'
 import { AdminLayout } from '../components/admin-layout'
 
 /**
@@ -218,11 +216,17 @@ export function TextTemplatesPage() {
           <tbody>
             {alphabeticalTemplates(templates.data?.templates ?? []).map((template) => {
               const blocked = template.usageCount > 0
+              const name = localizedName(template.translations, i18n.language, template.key)
 
               return (
                 <tr key={template.id} className="border-b border-slate-800 align-top">
-                  <td className="py-2" title={template.key}>
-                    {localizedName(template.translations, i18n.language, template.key)}
+                  <td className="py-2">
+                    {name}
+                    <HelpPopover
+                      className={helpTriggerClass}
+                      label={t('help:triggerFor', { name })}
+                      text={t('help:textTemplates.keyMore', { key: template.key })}
+                    />
                   </td>
                   <td className="py-2">
                     {template.archivedAt === null
@@ -252,7 +256,7 @@ export function TextTemplatesPage() {
                             label: t('admin.textTemplates.delete'),
                             tone: 'danger',
                             disabled: blocked,
-                            title: blocked ? t('admin.textTemplates.deleteBlocked') : undefined,
+                            reason: blocked ? t('admin.textTemplates.deleteBlocked') : undefined,
                             onSelect: () => deleteMutation.mutate(template),
                           },
                         ]}

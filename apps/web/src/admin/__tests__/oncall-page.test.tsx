@@ -285,7 +285,9 @@ describe('OncallPage', () => {
 
     renderPage()
 
-    const link = (await screen.findByRole('link', { name: 'Zur Schichtplanung' })) as HTMLAnchorElement
+    const link = (await screen.findByRole('link', {
+      name: 'Zur Schichtplanung',
+    })) as HTMLAnchorElement
 
     expect(link.getAttribute('href')).toBe('/oncall')
   })
@@ -302,8 +304,7 @@ describe('OncallPage', () => {
     const remove = screen.getByRole('menuitem', { name: 'Löschen' }) as HTMLButtonElement
 
     expect(remove.disabled).toBe(true)
-    expect(remove.getAttribute('title')).toBe(
-      'Ein Pool mit Schichten kann nicht gelöscht werden.',
-    )
+    expect(remove.getAttribute('title')).toBeNull()
+    expect(screen.getByText('Ein Pool mit Schichten kann nicht gelöscht werden.')).toBeTruthy()
   })
 })

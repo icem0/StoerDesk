@@ -16,6 +16,8 @@ import {
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { ApiError, apiFetch } from '../lib/api'
 import { languageRecord, localizedName } from '../lib/localized-name'
 import { StatusForm } from './status-form'
@@ -101,8 +103,7 @@ export function StatusPage() {
   })
 
   const deleteStatus = useMutation({
-    mutationFn: (key: string) =>
-      apiFetch<void>(`/v1/admin/statuses/${key}`, { method: 'DELETE' }),
+    mutationFn: (key: string) => apiFetch<void>(`/v1/admin/statuses/${key}`, { method: 'DELETE' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['ticket-statuses'] })
     },
@@ -138,7 +139,9 @@ export function StatusPage() {
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">{t('admin.status.title')}</h1>
       <p className="mt-2 text-sm text-slate-400">{t('admin.status.hint')}</p>
-      {!canWrite ? <p className="mt-2 text-sm text-amber-300">{t('admin.status.readOnly')}</p> : null}
+      {!canWrite ? (
+        <p className="mt-2 text-sm text-amber-300">{t('admin.status.readOnly')}</p>
+      ) : null}
       {statuses.isError ? (
         <p role="alert" className="mt-2 text-sm text-red-400">
           {errorMessage(t, statuses.error)}
@@ -168,49 +171,59 @@ export function StatusPage() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.key} className="border-b border-slate-800">
-              <td title={row.key}>
-                {localizedName(
-                  languageRecord({ de: row.nameDe, en: row.nameEn }),
-                  i18n.language,
-                  row.key,
-                )}
-              </td>
-              <td>
-                <span
-                  className="inline-block h-4 w-4 rounded-full border border-slate-600"
-                  style={{ backgroundColor: row.color }}
-                >
-                  {row.color}
-                </span>
-              </td>
-              <td>{row.position}</td>
-              <td>{row.active ? t('admin.status.on') : t('admin.status.off')}</td>
-              <td>{row.isTerminal ? t('admin.status.terminalYes') : t('admin.status.terminalNo')}</td>
-              <td>{row.ticketCount}</td>
-              {canWrite ? (
-                <td>
-                  <RowMenu
-                    items={[
-                      {
-                        key: 'edit',
-                        label: t('admin.status.edit'),
-                        onSelect: () =>
-                          setEditingKey(editingKey === row.key ? null : row.key),
-                      },
-                      {
-                        key: 'delete',
-                        label: t('admin.status.delete'),
-                        tone: 'danger',
-                        onSelect: () => setRemoveCandidate(row.key),
-                      },
-                    ]}
+          {rows.map((row) => {
+            const name = localizedName(
+              languageRecord({ de: row.nameDe, en: row.nameEn }),
+              i18n.language,
+              row.key,
+            )
+
+            return (
+              <tr key={row.key} className="border-b border-slate-800">
+                <td className="py-2">
+                  {name}
+                  <HelpPopover
+                    className={helpTriggerClass}
+                    label={t('help:triggerFor', { name })}
+                    text={t('help:statuses.keyMore', { key: row.key })}
                   />
                 </td>
-              ) : null}
-            </tr>
-          ))}
+                <td>
+                  <span
+                    className="inline-block h-4 w-4 rounded-full border border-slate-600"
+                    style={{ backgroundColor: row.color }}
+                  >
+                    {row.color}
+                  </span>
+                </td>
+                <td>{row.position}</td>
+                <td>{row.active ? t('admin.status.on') : t('admin.status.off')}</td>
+                <td>
+                  {row.isTerminal ? t('admin.status.terminalYes') : t('admin.status.terminalNo')}
+                </td>
+                <td>{row.ticketCount}</td>
+                {canWrite ? (
+                  <td>
+                    <RowMenu
+                      items={[
+                        {
+                          key: 'edit',
+                          label: t('admin.status.edit'),
+                          onSelect: () => setEditingKey(editingKey === row.key ? null : row.key),
+                        },
+                        {
+                          key: 'delete',
+                          label: t('admin.status.delete'),
+                          tone: 'danger',
+                          onSelect: () => setRemoveCandidate(row.key),
+                        },
+                      ]}
+                    />
+                  </td>
+                ) : null}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
       {removeCandidate !== null ? (

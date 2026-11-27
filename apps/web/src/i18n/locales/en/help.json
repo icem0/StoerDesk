@@ -73,6 +73,19 @@
     "adminDashboard": "The tiles of the start page and the wall display for the screen in the office.",
     "adminUpdate": "The update of the installation — visible only with the matching right."
   },
+  "statuses": {
+    "keyMore": "The Key {{key}} names this status in the data of the installation. The row shows its name in the language of the surface."
+  },
+  "detectedErrors": {
+    "keyMore": "The Key {{key}} names this fault in the data of the installation. The row shows its name in the language of the surface."
+  },
+  "textTemplates": {
+    "keyMore": "The Key {{key}} names this disturbance type in the data of the installation. The row shows its name in the language of the surface."
+  },
+  "users": {
+    "okMore": "This user has the channels the rule of the administration requires — {{count}} channels reach him.",
+    "missingMore": "The channels {{channels}} are not set up for this user. He cannot be reached over them, so the rule of the administration is not met."
+  },
   "notifications": {
     "pageHint": "The channels with the state of the account connected for the signed-in user."
   }

@@ -76,7 +76,7 @@ describe('RowMenu', () => {
         label: 'Löschen',
         onSelect,
         disabled: true,
-        title: 'Wird von Vorgängen verwendet',
+        reason: 'Wird von Vorgängen verwendet',
       },
     ])
 
@@ -85,7 +85,8 @@ describe('RowMenu', () => {
     const item = screen.getByRole('menuitem', { name: 'Löschen' }) as HTMLButtonElement
 
     expect(item.disabled).toBe(true)
-    expect(item.getAttribute('title')).toBe('Wird von Vorgängen verwendet')
+    expect(item.getAttribute('title')).toBeNull()
+    expect(screen.getByText('Wird von Vorgängen verwendet')).toBeTruthy()
 
     fireEvent.click(item)
 

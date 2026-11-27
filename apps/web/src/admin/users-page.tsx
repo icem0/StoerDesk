@@ -13,6 +13,8 @@ import type {
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { apiFetch } from '../lib/api'
 import {
   RoleCheckboxes,
@@ -74,11 +76,7 @@ function useMemberships() {
  * clipboard and hands it over. The colleague replaces it with a password of
  * their own at the first login.
  */
-function TemporaryPasswordPanel(props: {
-  email: string
-  password: string
-  onClose: () => void
-}) {
+function TemporaryPasswordPanel(props: { email: string; password: string; onClose: () => void }) {
   const { t } = useTranslation('settings')
   const [copied, setCopied] = useState(false)
 
@@ -168,33 +166,31 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
           value={values.password}
           onChange={(event) => setValues({ ...values, password: event.target.value })}
         />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t('admin.users.fields.givenName')}
-            <input
-              className="rounded bg-slate-950 p-2 text-slate-100"
-              type="text"
-              maxLength={64}
-              value={values.givenName}
-              onChange={(event) =>
-                setValues({ ...values, givenName: event.target.value.trim() })}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t('admin.users.fields.familyName')}
-            <input
-              className="rounded bg-slate-950 p-2 text-slate-100"
-              type="text"
-              maxLength={64}
-              value={values.familyName}
-              onChange={(event) =>
-                setValues({ ...values, familyName: event.target.value.trim() })}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t('admin.users.fields.locale')}
-            <select
-              className="rounded bg-slate-950 p-2 text-slate-100"
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.users.fields.givenName')}
+        <input
+          className="rounded bg-slate-950 p-2 text-slate-100"
+          type="text"
+          maxLength={64}
+          value={values.givenName}
+          onChange={(event) => setValues({ ...values, givenName: event.target.value.trim() })}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.users.fields.familyName')}
+        <input
+          className="rounded bg-slate-950 p-2 text-slate-100"
+          type="text"
+          maxLength={64}
+          value={values.familyName}
+          onChange={(event) => setValues({ ...values, familyName: event.target.value.trim() })}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        {t('admin.users.fields.locale')}
+        <select
+          className="rounded bg-slate-950 p-2 text-slate-100"
           value={values.locale}
           onChange={(event) => setValues({ ...values, locale: event.target.value as UserLocale })}
         >
@@ -208,8 +204,7 @@ function EditUserForm({ user, roleKeys }: { user: UserSummary; roleKeys: string[
           className="rounded bg-slate-950 p-2 text-slate-100"
           name="theme"
           value={values.theme}
-          onChange={(event) =>
-            setValues({ ...values, theme: event.target.value as UserTheme })}
+          onChange={(event) => setValues({ ...values, theme: event.target.value as UserTheme })}
         >
           <option value="auto">{t('admin.users.themeValues.auto')}</option>
           <option value="light">{t('admin.users.themeValues.light')}</option>
@@ -395,12 +390,20 @@ export function UsersPage() {
                     }
 
                     return (
-                      <span
-                        className={entry.compliant ? 'text-emerald-400' : 'text-amber-400'}
-                        title={entry.missing.join(', ')}
-                      >
-                        {entry.compliant ? '✓' : '●'} {entry.channelCount}
-                      </span>
+                      <>
+                        <span className={entry.compliant ? 'text-emerald-400' : 'text-amber-400'}>
+                          {entry.compliant ? '✓' : '●'} {entry.channelCount}
+                        </span>
+                        <HelpPopover
+                          className={helpTriggerClass}
+                          label={t('help:triggerFor', { name: t('admin.users.table.channels') })}
+                          text={
+                            entry.compliant
+                              ? t('help:users.okMore', { count: entry.channelCount })
+                              : t('help:users.missingMore', { channels: entry.missing.join(', ') })
+                          }
+                        />
+                      </>
                     )
                   })()}
                 </td>

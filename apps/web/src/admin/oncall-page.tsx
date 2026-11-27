@@ -84,7 +84,6 @@ function formatInstant(value: string | Date, locale: string): string {
   }).format(new Date(value))
 }
 
-
 function displayName(user: UserSummary | undefined): string {
   if (user === undefined) {
     return '—'
@@ -144,7 +143,6 @@ function useSwaps(enabled: boolean) {
     enabled,
   })
 }
-
 
 function PoolSection({
   pools,
@@ -298,7 +296,7 @@ function PoolRowForm({
             ))}
           </select>
         ) : (
-          groups.find((group) => group.id === pool.groupId)?.name ?? '—'
+          (groups.find((group) => group.id === pool.groupId)?.name ?? '—')
         )}
       </td>
       <td className="py-2 pr-2">{pool.shiftCount}</td>
@@ -338,7 +336,7 @@ function PoolRowForm({
                 label: t('admin.pools.delete'),
                 tone: 'danger',
                 disabled: pool.shiftCount > 0,
-                title: pool.shiftCount > 0 ? t('admin.pools.deleteHint') : undefined,
+                reason: pool.shiftCount > 0 ? t('admin.pools.deleteHint') : undefined,
                 onSelect: onDelete,
               },
             ]}
@@ -348,7 +346,6 @@ function PoolRowForm({
     </tr>
   )
 }
-
 
 function WarningsSection({
   unstaffed,
@@ -479,7 +476,6 @@ function SwapsSection({
                   className="rounded bg-emerald-700 px-3 py-1 text-white disabled:opacity-50"
                   type="button"
                   disabled={!canAdmin || decide.isPending || swap.status !== 'ACCEPTED'}
-                  title={swap.status === 'ACCEPTED' ? undefined : t('admin.swaps.approveHint')}
                   onClick={() => decide.mutate({ id: swap.id, action: 'approve' })}
                 >
                   {t('admin.swaps.approve')}
@@ -492,6 +488,9 @@ function SwapsSection({
                 >
                   {t('admin.swaps.reject')}
                 </button>
+                {swap.status === 'ACCEPTED' ? null : (
+                  <span className="text-slate-400">{t('admin.swaps.approveHint')}</span>
+                )}
               </div>
             </li>
           ))}

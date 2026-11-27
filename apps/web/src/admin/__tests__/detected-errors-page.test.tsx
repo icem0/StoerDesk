@@ -131,7 +131,8 @@ describe('DetectedErrorsPage', () => {
     const blocked = screen.getByRole('menuitem', { name: 'Löschen' }) as HTMLButtonElement
 
     expect(blocked.disabled).toBe(true)
-    expect(blocked.getAttribute('title')).toBe('Wird von Vorgängen verwendet')
+    expect(blocked.getAttribute('title')).toBeNull()
+    expect(screen.getByText('Wird von Vorgängen verwendet')).toBeTruthy()
   })
 
   it('shows the key and every translation in the edit', async () => {

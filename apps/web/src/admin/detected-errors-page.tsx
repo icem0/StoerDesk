@@ -10,6 +10,8 @@ import type {
 
 import { useMe, usePermission } from '../auth/usePermission'
 import { RowMenu } from '../components/row-menu'
+import { HelpPopover } from '../components/help-popover'
+import { helpTriggerClass } from '../components/help-trigger'
 import { apiFetch } from '../lib/api'
 import { languageRecord, localizedName } from '../lib/localized-name'
 import { errorMessage, jsonHeaders } from './detected-error-form-parts'
@@ -41,13 +43,7 @@ function alphabetical(items: DetectedErrorResponse[]): DetectedErrorResponse[] {
   return [...items].sort((a, b) => a.key.localeCompare(b.key))
 }
 
-function EditErrorForm({
-  item,
-  onClose,
-}: {
-  item: DetectedErrorResponse
-  onClose: () => void
-}) {
+function EditErrorForm({ item, onClose }: { item: DetectedErrorResponse; onClose: () => void }) {
   const { t } = useTranslation('settings')
   const queryClient = useQueryClient()
   const [key, setKey] = useState(item.key)
@@ -75,9 +71,7 @@ function EditErrorForm({
         mutation.mutate({ key, labelDe, labelEn, archivedAt: item.archivedAt })
       }}
     >
-      <h2 className="text-lg font-semibold">
-        {t('detectedErrors.editTitle', { key: item.key })}
-      </h2>
+      <h2 className="text-lg font-semibold">{t('detectedErrors.editTitle', { key: item.key })}</h2>
       <label className="flex flex-col gap-1 text-sm">
         {t('detectedErrors.fields.key')}
         <input
@@ -145,7 +139,9 @@ export function DetectedErrorsPage() {
       apiFetch<DetectedErrorResponse>(`/v1/detected-errors/${item.key}`, {
         method: 'PATCH',
         headers: jsonHeaders,
-        body: JSON.stringify({ archivedAt: item.archivedAt === null ? new Date().toISOString() : null }),
+        body: JSON.stringify({
+          archivedAt: item.archivedAt === null ? new Date().toISOString() : null,
+        }),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['detected-errors'] })
@@ -188,9 +184,7 @@ export function DetectedErrorsPage() {
       >
         {t('admin.back')}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold">
-        {t('detectedErrors.title')}
-      </h1>
+      <h1 className="mt-2 text-2xl font-semibold">{t('detectedErrors.title')}</h1>
       <p className="mt-2 text-sm text-slate-400">{t('detectedErrors.hint')}</p>
 
       {items.isError ? (
@@ -231,15 +225,21 @@ export function DetectedErrorsPage() {
           <tbody>
             {alphabetical(items.data?.detectedErrors ?? []).map((item) => {
               const blocked = item.archivedAt !== null
+              const name = localizedName(
+                languageRecord({ de: item.labelDe, en: item.labelEn }),
+                i18n.language,
+                item.key,
+              )
 
               return (
                 <tr key={item.key} className="border-b border-slate-800 align-top">
-                  <td className="py-2" title={item.key}>
-                    {localizedName(
-                      languageRecord({ de: item.labelDe, en: item.labelEn }),
-                      i18n.language,
-                      item.key,
-                    )}
+                  <td className="py-2">
+                    {name}
+                    <HelpPopover
+                      className={helpTriggerClass}
+                      label={t('help:triggerFor', { name })}
+                      text={t('help:detectedErrors.keyMore', { key: item.key })}
+                    />
                   </td>
                   <td className="py-2">
                     {item.archivedAt === null
@@ -269,7 +269,7 @@ export function DetectedErrorsPage() {
                             label: t('detectedErrors.delete'),
                             tone: 'danger',
                             disabled: blocked,
-                            title: blocked ? t('detectedErrors.deleteBlocked') : undefined,
+                            reason: blocked ? t('detectedErrors.deleteBlocked') : undefined,
                             onSelect: () => deleteMutation.mutate(item),
                           },
                         ]}

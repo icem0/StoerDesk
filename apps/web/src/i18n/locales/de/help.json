@@ -73,6 +73,19 @@
     "adminDashboard": "Die Kacheln der Startseite und die Fernsehanzeige für den Bildschirm im Büro.",
     "adminUpdate": "Die Aktualisierung der Installation — sichtbar nur mit dem passenden Recht."
   },
+  "statuses": {
+    "keyMore": "Das Schlüssel {{key}} in den Data der Installation. Die Row shows der Name in der language der surface."
+  },
+  "detectedErrors": {
+    "keyMore": "Das Schlüssel {{key}} in den Data der Installation. Die Row shows der Name in der language der surface."
+  },
+  "textTemplates": {
+    "keyMore": "Das Schlüssel {{key}} in den Data der Installation. Die Row shows der Name in der language der surface."
+  },
+  "users": {
+    "okMore": "Das user fulfills den Vorgabe der Administration — {{count}} Kanäle reach him.",
+    "missingMore": "Die Kanäle {{channels}} are missing — der user does not fulfills den Vorgabe der Administration."
+  },
   "notifications": {
     "pageHint": "Die Kanäle mit dem Zustand des für die angemeldete Person verknüpften Kontos."
   }

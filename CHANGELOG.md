@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
+- **The administration names its keys and its blocked actions in a panel
+  (WP-M36-05, ADR-0060).** The native `title=` tooltips of the administration
+  moved to the help popover: the key of a row in the statuses, the detected
+  errors and the text templates opens behind the ⓘ of that row, the compliance
+  cell of the users page names the channels a user is missing in the panel of
+  its ⓘ, the ntfy CURL button carries its accessible name instead of a tooltip
+  and the hint of a swap stays visible beside the approve button. A blocked
+  action in the shared row menu names its reason as a visible line in the panel
+  (`RowMenuItem.reason`), never in a `title=` — the office needs the reason to
+  act. The texts live in the namespace `help` (`help.statuses.keyMore`,
+  `help.detectedErrors.keyMore`, `help.textTemplates.keyMore`, `help.users.okMore`,
+  `help.users.missingMore`) in `de` and `en`.
 - **The explanations of the escalation administration stand behind the ⓘ
   (WP-M44-01, ADR-0060).** `/admin/escalation` carried eight always-visible
   small paragraphs (the page intro, the deadline, the stages, the chain, the

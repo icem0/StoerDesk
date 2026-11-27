@@ -26,9 +26,9 @@ export interface RowMenuItem {
   onSelect: () => void
   /** A destructive action wears the rose of the interface. */
   tone?: 'default' | 'danger'
-  /** A blocked action keeps its reason in its tooltip. */
+  /** A blocked action names its reason in the panel of the menu (§14.13). */
   disabled?: boolean
-  title?: string
+  reason?: string
 }
 
 const menuWidth = 176
@@ -55,10 +55,7 @@ export function RowMenu({ items, label }: { items: RowMenuItem[]; label?: string
 
     const room = window.innerHeight - box.bottom
     const height = items.length * itemHeight + 8
-    const left = Math.max(
-      8,
-      Math.min(box.right - menuWidth, window.innerWidth - menuWidth - 8),
-    )
+    const left = Math.max(8, Math.min(box.right - menuWidth, window.innerWidth - menuWidth - 8))
     const next: MenuPosition =
       room < height
         ? { left, bottom: window.innerHeight - box.top + 4 }
@@ -68,8 +65,7 @@ export function RowMenu({ items, label }: { items: RowMenuItem[]; label?: string
       current !== null &&
       'top' in current === 'top' in next &&
       current.left === next.left &&
-      ('top' in current ? current.top : current.bottom) ===
-        ('top' in next ? next.top : next.bottom)
+      ('top' in current ? current.top : current.bottom) === ('top' in next ? next.top : next.bottom)
         ? current
         : next,
     )
@@ -146,24 +142,27 @@ export function RowMenu({ items, label }: { items: RowMenuItem[]; label?: string
               }
             >
               {items.map((item) => (
-                <button
-                  className={
-                    item.tone === 'danger'
-                      ? 'px-3 py-2 text-left text-sm text-rose-300 hover:bg-rose-950/40 disabled:opacity-40'
-                      : 'px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40'
-                  }
-                  disabled={item.disabled === true}
-                  key={item.key}
-                  onClick={() => {
-                    setOpen(false)
-                    item.onSelect()
-                  }}
-                  role="menuitem"
-                  title={item.title}
-                  type="button"
-                >
-                  {item.label}
-                </button>
+                <div className="flex flex-col gap-1 items-start" key={item.key}>
+                  <button
+                    className={`w-full rounded px-3 py-2 text-left text-sm ${
+                      item.tone === 'danger'
+                        ? 'text-rose-300 hover:bg-rose-950/40 disabled:opacity-40'
+                        : 'text-slate-200 hover:bg-slate-800 disabled:opacity-40'
+                    }`}
+                    disabled={item.disabled === true}
+                    onClick={() => {
+                      setOpen(false)
+                      item.onSelect()
+                    }}
+                    role="menuitem"
+                    type="button"
+                  >
+                    {item.label}
+                  </button>
+                  {item.reason !== undefined && item.reason !== '' ? (
+                    <span className="text-xs text-slate-400">{item.reason}</span>
+                  ) : null}
+                </div>
               ))}
             </div>,
             document.body,

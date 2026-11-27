@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter } from 'react-router-dom'
@@ -131,15 +131,17 @@ describe('StatusPage', () => {
 
     expect(await screen.findByText('In Prüfung')).toBeTruthy()
     expect(screen.queryByText('In Review')).toBeNull()
-    // The key is the tooltip of the name, no column of its own.
-    const cell = screen.getByText('Neu')
-
-    expect(cell.getAttribute('title')).toBe('NEW')
+    // The key stands in the panel of the ⓘ of the row, not in a tooltip.
     expect(screen.queryByText('NEW')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Erklärung zu Neu' }))
+    expect(screen.getByRole('note').textContent).toContain('NEW')
   })
 
   it('offers create, edit and delete controls with settings.write', async () => {
-    stubRoutes({ '/v1/me': meResponse(['settings.read', 'settings.write']), '/v1/admin/statuses': statusList })
+    stubRoutes({
+      '/v1/me': meResponse(['settings.read', 'settings.write']),
+      '/v1/admin/statuses': statusList,
+    })
     renderPage()
 
     expect(await screen.findByText('Neu')).toBeTruthy()
@@ -211,6 +213,8 @@ describe('StatusPage', () => {
     const confirm = screen.getByRole('button', { name: 'Entfernen' })
     await vi.waitFor(() => void confirm.click())
 
-    expect(await screen.findByText('The last active status can neither be switched off nor deleted.')).toBeTruthy()
+    expect(
+      await screen.findByText('The last active status can neither be switched off nor deleted.'),
+    ).toBeTruthy()
   })
 })

@@ -109,12 +109,22 @@ describe('TextTemplatesPage', () => {
     stubRoutes(['settings.read', 'settings.write'])
     renderPage()
 
-    const cells = await screen.findAllByRole('cell')
-    const keyOrder = cells
-      .map((cell: HTMLElement) => cell.getAttribute('title'))
-      .filter((title: string | null) => title === 'a_rare' || title === 'z_frequent')
+    // The rows are sorted by key: `a_rare`, `m_unused`, `z_frequent`.
+    // The key stands in the panel of the ⓘ of the row, not in a tooltip.
+    const triggers = await screen.findAllByRole('button', { name: /Erklärung zu/ })
 
-    expect(keyOrder).toEqual(['a_rare', 'z_frequent'])
+    const keysOfRows: string[] = []
+
+    for (const index of [0, 2]) {
+      const trigger = triggers[index] as HTMLElement
+
+      fireEvent.click(trigger)
+      keysOfRows.push(screen.getByRole('note').textContent ?? '')
+      fireEvent.click(trigger)
+    }
+
+    expect(keysOfRows[0]).toContain('a_rare')
+    expect(keysOfRows[1]).toContain('z_frequent')
   })
 
   it('shows the name of the interface language and no second name', async () => {
@@ -150,7 +160,8 @@ describe('TextTemplatesPage', () => {
     const blocked = screen.getByRole('menuitem', { name: 'Löschen' }) as HTMLButtonElement
 
     expect(blocked.disabled).toBe(true)
-    expect(blocked.getAttribute('title')).toBe('Wird von Vorgängen verwendet')
+    expect(blocked.getAttribute('title')).toBeNull()
+    expect(screen.getByText('Wird von Vorgängen verwendet')).toBeTruthy()
   })
 
   it('shows the key and every translation in the edit', async () => {

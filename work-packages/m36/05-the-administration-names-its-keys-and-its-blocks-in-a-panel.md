@@ -1,7 +1,7 @@
 # WP-M36-05: the administration names its keys and its blocks in a panel
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M36-02
 phase: 36
 milestone: m36
@@ -34,6 +34,11 @@ files-write:
 - apps/web/src/components/row-menu.tsx
 - apps/web/src/i18n/locales/de/help.json
 - apps/web/src/i18n/locales/en/help.json
+- apps/web/src/admin/__tests__/status-page.test.tsx
+- apps/web/src/admin/__tests__/detected-errors-page.test.tsx
+- apps/web/src/admin/__tests__/text-templates-page.test.tsx
+- apps/web/src/admin/__tests__/oncall-page.test.tsx
+- apps/web/src/components/__tests__/row-menu.test.tsx
 
 interfaces:
 
@@ -86,8 +91,14 @@ fails before the change and passes after it.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: the administration pages of the statuses, the detected errors,
+  the text templates, the readiness, the users and the channel form, the shared
+  row menu, the two locales and the five page tests
+- Interfaces added: the panel bodies `help.statuses.keyMore`, `help.detectedErrors.keyMore`,
+  `help.textTemplates.keyMore`, `help.users.okMore` and `help.users.missingMore` in `de` and
+  `en`; `RowMenuItem.reason` replaces `RowMenuItem.title` — a blocked action names its
+  reason as a visible line in the panel, never in a `title=`
+- Verified: typecheck, lint, the unit tests of the six pages and of the row menu,
+  `i18n:check` (de and en key parity) and `wp:check` are green
 - Follow-up WP: WP-M36-06 (the readiness and the tickets name their marks in a panel)
 - Open question: none

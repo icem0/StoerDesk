@@ -116,7 +116,11 @@ export function makeReasonOf(t: unknown) {
   }
 }
 
-export function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: boolean; showTitle?: boolean }) {
+export function ChannelCard(props: {
+  channel: ChannelConfiguration
+  mayWrite: boolean
+  showTitle?: boolean
+}) {
   const { t } = useTranslation('settings')
   const reasonOf = makeReasonOf(t)
   const queryClient = useQueryClient()
@@ -340,6 +344,7 @@ export function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: bo
                   )}
                 />
                 <button
+                  aria-label={t('admin.channels.copyToClipboard')}
                   className="min-h-11 rounded-lg border border-slate-600 px-3 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-60"
                   onClick={() => {
                     void navigator.clipboard.writeText(
@@ -352,7 +357,6 @@ export function ChannelCard(props: { channel: ChannelConfiguration; mayWrite: bo
                       ),
                     )
                   }}
-                  title={t('admin.channels.copyToClipboard')}
                   type="button"
                 >
                   {t('admin.channels.copy')}
