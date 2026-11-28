@@ -137,9 +137,8 @@ export function escalationTimerThreshold(
     }
 
     const { from, to } = clock.timeline
-    const point = from + ((to - from) * value.percent) / 100
 
-    return point + paused(from, point)
+    return shifted(from, ((to - from) * value.percent) / 100, paused)
   }
 
   const start = clock.startAt[value.reference]
@@ -149,7 +148,33 @@ export function escalationTimerThreshold(
   }
 
   const delay = (value.minutes as Record<string, number>)[clock.priority] ?? value.minutes.normal
-  const point = start + delay * 60 * 1000
 
-  return point + paused(start, point)
+  return shifted(start, delay * 60 * 1000, paused)
+}
+
+/**
+ * The instant the clock reaches `active` running milliseconds after `start`:
+ * every pause inside moves the instant behind it — also a pause that only
+ * begins inside the moved span — so the threshold agrees with the elapsed
+ * minutes of the facts. An open pause keeps moving it; the walk stops after a
+ * bounded number of steps with an instant behind the pause.
+ */
+function shifted(
+  start: number,
+  active: number,
+  paused: (from: number, to: number) => number,
+): number {
+  let point = start + active
+
+  for (let step = 0; step < 50; step += 1) {
+    const next = start + active + paused(start, point)
+
+    if (next === point) {
+      break
+    }
+
+    point = next
+  }
+
+  return point
 }

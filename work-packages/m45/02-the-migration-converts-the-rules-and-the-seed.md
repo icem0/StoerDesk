@@ -2,7 +2,7 @@
 
 format: ctx-256k
 status: planned
-depends-on: WP-M45-01
+depends-on: WP-M45-03
 phase: 45
 milestone: m45
 context-budget: 55k tokens

@@ -2,6 +2,7 @@ import { asc, eq, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   ESCALATION_DEADLINE_ROOT,
+  ESCALATION_REFERENCE_EVENTS,
   escalationActionKey,
   escalationConditionLeaves,
   escalationConfigSchema,
@@ -10,9 +11,12 @@ import {
   escalationRuleKey,
   escalationStageClockEvents,
   escalationStagesBodySchema,
+  escalationTimerLeaves,
   validateEscalationStageChain,
   type EscalationActionConfig,
+  type EscalationCondition,
   type EscalationConfig,
+  type EscalationReferenceEvent,
 } from '@stoerdesk/shared'
 
 import type { Database } from '../db/client'
@@ -255,6 +259,69 @@ export function normalizeEscalationRows(
   })
 
   return { stages: normalizedStages, rules: normalizedRules }
+}
+
+/**
+ * The condition of a rule with its former clock fields as a timer (ADR-0064,
+ * decision 8): the `reference` and the `minutes` of a stage rule become a
+ * `timer_expired` leaf `{ reference, minutes }`, the `percent` of a deadline
+ * rule the leaf `{ percent }` — a rule with both keeps the minutes of its stage,
+ * the rule of `normalizeEscalationRows`. A stage rule without an explicit `reference`
+ * starts at the clock of its stage (§7.11) — the first of its clock events
+ * that is a start value; a stage clock that names no start value leaves the
+ * rule without a timer. The timer joins the old condition in one `all` group:
+ * an `all` group takes the timer as its first child, any other condition
+ * becomes the second child. A condition that already carries a timer stays as
+ * it is, so the conversion is idempotent. The migration
+ * `0069_escalation_rule_timer.sql` applies the same rule to the rows.
+ */
+export function escalationRuleTimerCondition(
+  rule: {
+    stageKey: string | null
+    reference?: string | null
+    minutes?: unknown
+    percent?: number | null
+    condition: unknown
+  },
+  stages: readonly { key: string; predecessor: string | null; reachedBy: readonly string[] }[],
+): EscalationCondition {
+  const condition = conditionOfRuleRow(rule.condition) as EscalationCondition
+
+  if (escalationTimerLeaves(condition).length > 0) {
+    return condition
+  }
+
+  const startValues: readonly string[] = ESCALATION_REFERENCE_EVENTS
+  let value: Record<string, unknown> | null = null
+
+  const hasMinutes = rule.minutes !== null && rule.minutes !== undefined
+
+  if (rule.stageKey !== null && rule.stageKey !== undefined && hasMinutes) {
+    const reference =
+      typeof rule.reference === 'string' && startValues.includes(rule.reference)
+        ? rule.reference
+        : escalationStageClockEvents(rule.stageKey, stages).find((event) =>
+            startValues.includes(event),
+          )
+
+    if (reference !== undefined) {
+      value = { reference: reference as EscalationReferenceEvent, minutes: rule.minutes }
+    }
+  } else if (typeof rule.percent === 'number') {
+    value = { percent: rule.percent }
+  }
+
+  if (value === null) {
+    return condition
+  }
+
+  const timer = { field: 'timer_expired', operator: 'expired', value } as EscalationCondition
+
+  if ('all' in condition) {
+    return { all: [timer, ...condition.all] }
+  }
+
+  return { all: [timer, condition] }
 }
 
 /** An empty condition of a legacy row (`{}`, `null`, a missing key) is `{ all: [] }`. */
