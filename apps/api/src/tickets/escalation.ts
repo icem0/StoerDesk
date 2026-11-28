@@ -124,9 +124,6 @@ export async function readEscalationRules(database: Db): Promise<EscalationRuleC
     rows.map((row) => ({
       key: row.key,
       stageKey: row.stageKey,
-      reference: null,
-      minutes: null,
-      percent: null,
       condition: row.condition,
       actions: [],
       active: row.active,

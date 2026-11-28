@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
-- **The waiting clock of an escalation rule is a condition (WP-M45-01 …,
+- **The waiting clock of an escalation rule is a condition (WP-M45-01 … WP-M45-04,
   ADR-0064).** The condition of a rule knows the leaf `timer_expired`: a start
   value of the ticket (report, review, work order, offer, assignment,
   acceptance) with a delay per priority — or a percent of the timeline. The
@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   former fields `reference`, `minutes` and `percent` become the timer of the
   condition and the columns fall; a fresh installation seeds the deadlines of
   ADR-0008 as timers, the deadline rules as timers of 80 % and 100 %.
+  The rule form of `/admin/escalation` loses the frame „Zeitliche Abfolge“: a
+  rule shows its condition and its actions, and the condition builder offers
+  the timer as „Wartezeit abgelaufen“ with the start value and the minutes per
+  priority — or the percentage of the ticket deadline. Its ⓘ explains what
+  happens after the expiry: the rule fires once, writes the escalation entry
+  and runs its actions.
 - **The administration names its keys and its blocked actions in a panel
   (WP-M36-05, ADR-0060).** The native `title=` tooltips of the administration
   moved to the help popover: the key of a row in the statuses, the detected

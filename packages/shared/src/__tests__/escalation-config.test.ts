@@ -264,7 +264,7 @@ describe('the default rules', () => {
     })
 
     for (const rule of DEFAULT_WORKFLOW_ESCALATION_RULES) {
-      expect([rule.reference, rule.minutes, rule.percent]).toEqual([null, null, null])
+      expect(Object.keys(rule)).toEqual(['key', 'stageKey', 'condition', 'actions', 'active'])
     }
   })
 

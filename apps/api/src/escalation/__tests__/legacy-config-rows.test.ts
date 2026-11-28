@@ -50,8 +50,6 @@ describe('the read of an escalation configuration of an older installation', () 
         },
       ],
     })
-    expect(normalized[0]?.reference).toBeNull()
-    expect(normalized[0]?.minutes).toBeNull()
   })
 
   it('keeps an old assign action that names a technician as a target of the kind user', () => {
@@ -144,8 +142,6 @@ describe('the read of an escalation configuration of an older installation', () 
     ]
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
-    expect(normalized[0]?.percent).toBeNull()
-    expect(normalized[0]?.minutes).toBeNull()
     expect(normalized[0]?.condition).toEqual({
       all: [
         {

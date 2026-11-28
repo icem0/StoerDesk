@@ -240,7 +240,12 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       )
       expect(byKey.get('night_review')?.predecessor).toBe('review')
       expect(byKey.get('work_order')?.predecessor).toBe('night_review')
-      expect(body.rules.find((rule) => rule.key === 'work_order#1')?.reference).toBeNull()
+      // The timer of a rule names its own start value (ADR-0064): a new
+      // predecessor leaves it untouched, the former reference repair is gone.
+      const workOrder = body.rules.find((rule) => rule.key === 'work_order#1')
+
+      expect(workOrder).not.toHaveProperty('reference')
+      expect(JSON.stringify(workOrder?.condition)).toContain('review_started')
     })
 
     it('writes the rule of the new stage', async () => {

@@ -920,7 +920,22 @@ when its exit criteria and its acceptance tests pass.
 
 ### Current state and open backlog
 
-**Phase 45 has started (WP-M45-00).** The office looked at the rule form of
+**Phase 45 is closed (WP-M45-00 … WP-M45-04).** The four packages of the
+split are done: the shared contract evaluates the leaf `timer_expired` and
+derives the threshold of the firing log from it (WP-M45-01), the escalation
+scan fires a rule from its timers — a rule without a timer from the start of
+its wait, the first stage still with the ticket (WP-M45-03, run before
+WP-M45-02 so no gate stayed red between the commits), migration `0069`
+converted the installed rules and dropped the three columns, the seed writes
+the deadlines of ADR-0008 as timers (WP-M45-02), and the rule form of
+`/admin/escalation` shows the condition and the actions only — the timer is
+the frame „Wartezeit“ of the condition builder with the start value and the
+minutes per priority or the percentage of the ticket deadline, and its ⓘ says
+what happens after the expiry (WP-M45-04). The contract no longer knows
+`reference`, `minutes` or `percent`; an old body that still sends them is
+stored as the timer of its condition.
+
+**Phase 45 started with WP-M45-00.** The office looked at the rule form of
 `/admin/escalation` again: „vor allem aber soll dieser Kasten mit Zeitliche
 Abfolge aus den eskalationsstufen Feldern raus!!! nicht jede Stufe hat oder
 braucht das! also rein in die Bedingung damit … dann wird es wieder ein Stück

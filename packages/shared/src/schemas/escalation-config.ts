@@ -575,55 +575,20 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
 
-export const escalationRuleConfigSchema = z
-  .object({
-    key: z.string().regex(escalationRuleKeyPattern),
-    /** The stage of the rule; the deadline rules carry no stage. */
-    stageKey: z.string().regex(keyPattern).nullable(),
-    /**
-     * @deprecated The former clock of a rule (ADR-0064): the event that started
-     * it. The clock is a `timer_expired` leaf of the condition; WP-M45-02
-     * removes the field together with its column.
-     */
-    reference: z.enum(ESCALATION_REFERENCE_EVENTS).nullable(),
-    /** @deprecated The former waiting deadline per priority (ADR-0064). */
-    minutes: escalationMinutesSchema.nullable(),
-    /** @deprecated The former percentage of a deadline rule (ADR-0064). */
-    percent: z.number().int().min(1).max(100).nullable(),
-    condition: escalationConditionSchema,
-    actions: z.array(escalationActionConfigSchema).max(20),
-    active: z.boolean(),
-  })
-  .superRefine((rule, context) => {
-    const hasMinutes = rule.minutes !== null
-    const hasPercent = rule.percent !== null
-
-    // A rule may carry neither any more — then its clock is a
-    // `timer_expired` leaf of its condition (ADR-0064).
-    if (hasMinutes && hasPercent) {
-      context.addIssue({
-        code: 'custom',
-        path: ['minutes'],
-        message: 'a rule has either minutes or a percentage',
-      })
-    }
-
-    if (hasMinutes && rule.stageKey === null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['stageKey'],
-        message: 'a rule with minutes belongs to a stage',
-      })
-    }
-
-    if (hasPercent && rule.reference !== null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['reference'],
-        message: 'a deadline rule has no reference',
-      })
-    }
-  })
+/**
+ * A rule (§7.3): its stage, its condition and its actions. The waiting clock
+ * is the `timer_expired` leaf of the condition (ADR-0064) — the former fields
+ * `reference`, `minutes` and `percent` are gone; a body that still sends them
+ * is answered by the configuration service, which stores them as the timer.
+ */
+export const escalationRuleConfigSchema = z.object({
+  key: z.string().regex(escalationRuleKeyPattern),
+  /** The stage of the rule; the deadline rules carry no stage. */
+  stageKey: z.string().regex(keyPattern).nullable(),
+  condition: escalationConditionSchema,
+  actions: z.array(escalationActionConfigSchema).max(20),
+  active: z.boolean(),
+})
 
 export type EscalationRuleConfig = z.infer<typeof escalationRuleConfigSchema>
 
@@ -676,18 +641,6 @@ export const escalationConfigSchema = z
           path: ['rules', index, 'stageKey'],
           message: 'unknown_stage_key',
         })
-      }
-
-      if (rule.stageKey !== null && rule.reference !== null) {
-        const clockEvents = escalationStageClockEvents(rule.stageKey, config.stages)
-
-        if (!clockEvents.includes(rule.reference)) {
-          context.addIssue({
-            code: 'custom',
-            path: ['rules', index, 'reference'],
-            message: 'reference_does_not_match_stage_clock',
-          })
-        }
       }
     })
 
@@ -1010,9 +963,6 @@ const defaultRule = (
 ): EscalationRuleConfig => ({
   key,
   stageKey,
-  reference: null,
-  minutes: null,
-  percent: null,
   condition: timer(value),
   actions: [],
   active: true,

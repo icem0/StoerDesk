@@ -240,7 +240,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(body.rules[0]?.actions[0]?.type).toBe('webhook')
       // An old body that still sends the clock fields stores them as the timer
       // of the condition (ADR-0064, decision 8).
-      expect(body.rules[0]?.minutes).toBeNull()
+      expect(body.rules[0]).not.toHaveProperty('minutes')
       expect(body.rules[0]?.condition).toEqual({
         all: [
           {

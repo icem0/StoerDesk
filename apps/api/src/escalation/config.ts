@@ -229,9 +229,6 @@ export function normalizeEscalationRows(
     return {
       ...rule,
       actions,
-      reference: null,
-      minutes: null,
-      percent: null,
       condition: escalationRuleTimerCondition(
         {
           stageKey,
@@ -431,7 +428,7 @@ export async function readEscalationConfig(database: Db): Promise<EscalationConf
 /**
  * An old body that still sends the former clock fields of a rule (ADR-0064,
  * decision 8): every rule carries them as a `timer_expired` leaf of its
- * condition instead, the fields become `null`. Anything that is not a list of
+ * condition instead; the contract drops the fields. Anything that is not a list of
  * rule objects is handed to the contract unchanged, which answers it.
  */
 function bodyWithTimers(
@@ -456,9 +453,6 @@ function bodyWithTimers(
 
     return {
       ...entry,
-      reference: null,
-      minutes: null,
-      percent: null,
       condition: escalationRuleTimerCondition(
         {
           stageKey,

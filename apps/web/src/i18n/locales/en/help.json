@@ -30,10 +30,9 @@
   },
   "escalation": {
     "deadlinesMore": "The deadline is the waiting time in hours per priority. If it elapses without the condition matching, the rule does not fire.",
-    "stagesMore": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a waiting time, a condition and the actions to perform.",
-    "chainMore": "Every stage names its predecessor: its completion starts the waiting time. Without a predecessor the wait starts at the report. Stages can be added and removed; the rules of a removed stage leave with it.",
-    "referenceMore": "The start event starts the rule's waiting clock (for example 'Report received'). 'None' means: the rule waits for nothing and fires as soon as its condition matches.",
-    "timelineMore": "The minutes are the waiting time of the stage per priority. The percentage belongs to the deadline rules only: 80 % and 100 % of the ticket deadline.",
+    "stagesMore": "A stage is a workflow milestone (for example 'Review'). A rule connects a stage with a condition — the waiting time is a part of it — and the actions to perform.",
+    "chainMore": "Every stage names its predecessor: once the ticket reaches the predecessor, it waits for this stage. A rule without a waiting time of its own fires from that moment; without a predecessor from the report. Stages can be added and removed; the rules of a removed stage leave with it.",
+    "timerMore": "The waiting time is a part of the condition: it starts at the chosen start value (for example 'Report received') and lasts as many minutes as are entered for the priority of the ticket; a pause of the ticket stops it. 'Ticket deadline (percent)' measures the share of the ticket deadline instead. Once the waiting time has expired and the rest of the condition matches, the rule fires exactly once: it writes the escalation entry into the ticket history and runs its actions. Once the stage of the rule is reached, it no longer fires. A rule without a waiting time fires as soon as its stage waits and the condition matches.",
     "conditionMore": "The condition decides whether a rule fires. 'All' requires every leaf to match; 'any' is satisfied as soon as at least one matches.",
     "actionsMore": "The actions run when the rule fires: a notification via the selected channels, a webhook delivery or a note in the ticket history.",
     "notifyMore": "The target receives the message over the channels it selected itself — without a selection over its own ntfy topic."
