@@ -6,7 +6,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { DEFAULT_WORKFLOW_ESCALATION_RULES, type EscalationFacts } from '@stoerdesk/shared'
+import { DEFAULT_WORKFLOW_ESCALATION_RULES, escalationTimerLeaves, type EscalationFacts } from '@stoerdesk/shared'
 
 import { migrationsFolder, openTestDatabase } from '../../db/__tests__/helpers/testDatabase'
 import * as schema from '../../db/schema'
@@ -45,7 +45,12 @@ const MINUTE = 60 * 1000
 /** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
 function seededRuleKey(stageKey: string, reference?: string): string {
   const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-    (entry) => entry.stageKey === stageKey && (reference === undefined || entry.reference === reference),
+    (entry) =>
+      entry.stageKey === stageKey &&
+      (reference === undefined ||
+        escalationTimerLeaves(entry.condition).some(
+          (timer) => 'reference' in timer.value && timer.value.reference === reference,
+        )),
   )
 
   if (rule === undefined) {
@@ -57,7 +62,11 @@ function seededRuleKey(stageKey: string, reference?: string): string {
 
 /** The key of the seeded deadline rule of a percentage. */
 function seededPercentRuleKey(percent: number): string {
-  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.percent === percent)
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) =>
+    escalationTimerLeaves(entry.condition).some(
+      (timer) => 'percent' in timer.value && timer.value.percent === percent,
+    ),
+  )
 
   if (rule === undefined) {
     throw new Error(`expected the seeded rule of ${percent} percent`)
@@ -330,10 +339,9 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       await db.insert(escalationRules).values({
         key: ruleKey,
         stageKey: null,
-        reference: null,
-        minutes: null,
-        percent: 50,
-        condition: { all: [] },
+        condition: {
+          all: [{ field: 'timer_expired', operator: 'expired', value: { percent: 50 } }],
+        },
         position: 900,
         active: true,
       })

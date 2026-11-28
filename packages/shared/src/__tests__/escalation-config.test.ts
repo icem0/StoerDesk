@@ -240,18 +240,32 @@ describe('the default rules', () => {
     ])
   })
 
-  it('keep the deadlines of ADR-0008', () => {
-    const review = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.stageKey === 'review')
-    const offer = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'offered',
+  it('keep the deadlines of ADR-0008 as the timers of the table of §7.2', () => {
+    const timers = Object.fromEntries(
+      DEFAULT_WORKFLOW_ESCALATION_RULES.map((rule) => [
+        rule.key,
+        escalationTimerLeaves(rule.condition).map((timer) => timer.value),
+      ]),
     )
-    const assignment = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'assigned',
-    )
+    const even = (value: number) => ({ low: value, normal: value, high: value, critical: value })
 
-    expect(review?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
-    expect(offer?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 10 })
-    expect(assignment?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 15 })
+    expect(timers).toEqual({
+      'new#1': [{ reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } }],
+      'review#1': [
+        { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      ],
+      'work_order#1': [{ reference: 'review_started', minutes: even(30) }],
+      'assignment#1': [{ reference: 'work_order_set', minutes: even(30) }],
+      'acceptance#1': [{ reference: 'offered', minutes: { low: 20, normal: 20, high: 20, critical: 10 } }],
+      'acceptance#2': [{ reference: 'assigned', minutes: even(15) }],
+      'acknowledgement#1': [{ reference: 'accepted', minutes: even(60) }],
+      'deadline#1': [{ percent: 80 }],
+      'deadline#2': [{ percent: 100 }],
+    })
+
+    for (const rule of DEFAULT_WORKFLOW_ESCALATION_RULES) {
+      expect([rule.reference, rule.minutes, rule.percent]).toEqual([null, null, null])
+    }
   })
 
   it('are a valid configuration', () => {

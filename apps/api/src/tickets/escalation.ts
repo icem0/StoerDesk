@@ -14,7 +14,6 @@ import {
 
 import type { Database } from '../db/client'
 import { dispatchEscalationActions } from '../escalation/actions'
-import { escalationRuleTimerCondition } from '../escalation/config'
 import { escalateOnCallOffers, resolveStaffedPoolIds } from '../oncall/coupling'
 import {
   escalationFirings,
@@ -114,32 +113,25 @@ function pauseMillis(pauses: readonly PauseRow[], from: number, to: number): num
 }
 
 /**
- * Reads the active rules of the installation. A rule that still carries the
- * former clock fields (`reference`, `minutes`, `percent`) has them as a
- * `timer_expired` leaf in its condition (ADR-0064, decision 8), so the scan
- * reads one clock only — the timer.
+ * Reads the active rules of the installation. The waiting clock of a rule is
+ * the `timer_expired` leaf of its condition (ADR-0064); the former columns
+ * fell with the migration `0069`.
  */
 export async function readEscalationRules(database: Db): Promise<EscalationRuleConfig[]> {
-  const [rows, stages] = await Promise.all([
-    database.select().from(escalationRules).where(eq(escalationRules.active, true)),
-    readEscalationStageChain(database),
-  ])
+  const rows = await database.select().from(escalationRules).where(eq(escalationRules.active, true))
 
-  return escalationRuleConfigSchema
-    .array()
-    .parse(
-      rows.map((row) => ({
-        key: row.key,
-        stageKey: row.stageKey,
-        reference: row.reference,
-        minutes: row.minutes,
-        percent: row.percent,
-        condition: row.condition,
-        actions: [],
-        active: row.active,
-      })),
-    )
-    .map((rule) => ({ ...rule, condition: escalationRuleTimerCondition(rule, stages) }))
+  return escalationRuleConfigSchema.array().parse(
+    rows.map((row) => ({
+      key: row.key,
+      stageKey: row.stageKey,
+      reference: null,
+      minutes: null,
+      percent: null,
+      condition: row.condition,
+      actions: [],
+      active: row.active,
+    })),
+  )
 }
 
 function latestEventTime(

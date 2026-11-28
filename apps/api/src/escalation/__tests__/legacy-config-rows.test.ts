@@ -37,7 +37,21 @@ describe('the read of an escalation configuration of an older installation', () 
     ]
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
-    expect(normalized[0]?.condition).toEqual({ all: [] })
+    // The empty condition takes the timer of the former clock fields (ADR-0064).
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
+    expect(normalized[0]?.reference).toBeNull()
+    expect(normalized[0]?.minutes).toBeNull()
   })
 
   it('keeps an old assign action that names a technician as a target of the kind user', () => {
@@ -131,7 +145,19 @@ describe('the read of an escalation configuration of an older installation', () 
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
     expect(normalized[0]?.percent).toBeNull()
-    expect(normalized[0]?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
+    expect(normalized[0]?.minutes).toBeNull()
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
   })
 
   it('answers a configuration that follows the contract after the normalization', () => {

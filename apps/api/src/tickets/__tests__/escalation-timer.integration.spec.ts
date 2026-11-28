@@ -41,14 +41,11 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     const now = new Date('2026-11-27T12:00:00.000Z')
     let objectId = ''
 
-    /** A rule of the stage `work_order`; the former minutes are only the carrier of the row. */
+    /** A rule of the stage `work_order` with its condition. */
     async function rule(key: string, condition: unknown): Promise<void> {
       await db.insert(escalationRules).values({
         key,
         stageKey: 'work_order',
-        reference: null,
-        minutes: { low: 1, normal: 1, high: 1, critical: 1 },
-        percent: null,
         condition,
         position: 80,
         active: true,

@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   its condition holds; a rule without a timer is due from the start of its
   wait, the first stage still fires with the ticket. A pause that runs past the
   expiry now moves the threshold behind it.
+  Migration `0069` converts the rules of an installed configuration: the
+  former fields `reference`, `minutes` and `percent` become the timer of the
+  condition and the columns fall; a fresh installation seeds the deadlines of
+  ADR-0008 as timers, the deadline rules as timers of 80 % and 100 %.
 - **The administration names its keys and its blocked actions in a panel
   (WP-M36-05, ADR-0060).** The native `title=` tooltips of the administration
   moved to the help popover: the key of a row in the statuses, the detected

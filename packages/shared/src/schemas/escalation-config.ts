@@ -997,99 +997,59 @@ const evenMinutes = (value: number) => ({
   critical: value,
 })
 
+/** The waiting clock of a default rule: a `timer_expired` leaf (ADR-0064, §7.2). */
+const timer = (value: EscalationTimerValue): EscalationCondition => ({
+  all: [{ field: 'timer_expired', operator: 'expired', value }],
+})
+
+/** A default rule: its stage, its timer, no actions (§7.2). */
+const defaultRule = (
+  key: string,
+  stageKey: string | null,
+  value: EscalationTimerValue,
+): EscalationRuleConfig => ({
+  key,
+  stageKey,
+  reference: null,
+  minutes: null,
+  percent: null,
+  condition: timer(value),
+  actions: [],
+  active: true,
+})
+
 /**
  * The rules of a fresh installation (§7.2). The deadlines of ADR-0008 are the
- * seed; the installation changes them in the administration.
+ * seed — each one a `timer_expired` leaf of the condition of its rule, the
+ * deadline rules the percent timers of 80 % and 100 % (ADR-0064); the
+ * installation changes them in the administration.
  */
 export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] = [
-  {
-    key: 'new#1',
-    stageKey: 'new',
+  defaultRule('new#1', 'new', {
     reference: 'received_at',
     minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'review#1',
-    stageKey: 'review',
+  }),
+  defaultRule('review#1', 'review', {
     reference: 'received_at',
     minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'work_order#1',
-    stageKey: 'work_order',
+  }),
+  defaultRule('work_order#1', 'work_order', {
     reference: 'review_started',
     minutes: evenMinutes(30),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'assignment#1',
-    stageKey: 'assignment',
+  }),
+  defaultRule('assignment#1', 'assignment', {
     reference: 'work_order_set',
     minutes: evenMinutes(30),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'acceptance#1',
-    stageKey: 'acceptance',
+  }),
+  defaultRule('acceptance#1', 'acceptance', {
     reference: 'offered',
     minutes: { low: 20, normal: 20, high: 20, critical: 10 },
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'acceptance#2',
-    stageKey: 'acceptance',
-    reference: 'assigned',
-    minutes: evenMinutes(15),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'acknowledgement#1',
-    stageKey: 'acknowledgement',
+  }),
+  defaultRule('acceptance#2', 'acceptance', { reference: 'assigned', minutes: evenMinutes(15) }),
+  defaultRule('acknowledgement#1', 'acknowledgement', {
     reference: 'accepted',
     minutes: evenMinutes(60),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'deadline#1',
-    stageKey: null,
-    reference: null,
-    minutes: null,
-    percent: 80,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'deadline#2',
-    stageKey: null,
-    reference: null,
-    minutes: null,
-    percent: 100,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
+  }),
+  defaultRule('deadline#1', null, { percent: 80 }),
+  defaultRule('deadline#2', null, { percent: 100 }),
 ]

@@ -205,7 +205,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
         DEFAULT_WORKFLOW_ESCALATION_STAGES.map((stage) => stage.key),
       )
       expect(body.rules.map((rule) => rule.key)).toContain(
-        DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
+        DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.key === 'deadline#2')?.key,
       )
     })
 
@@ -238,7 +238,22 @@ describe.skipIf(testDatabase.status === 'unavailable')(
 
       expect(body.rules).toHaveLength(1)
       expect(body.rules[0]?.actions[0]?.type).toBe('webhook')
-      expect(body.rules[0]?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 8 })
+      // An old body that still sends the clock fields stores them as the timer
+      // of the condition (ADR-0064, decision 8).
+      expect(body.rules[0]?.minutes).toBeNull()
+      expect(body.rules[0]?.condition).toEqual({
+        all: [
+          {
+            field: 'timer_expired',
+            operator: 'expired',
+            value: {
+              reference: 'received_at',
+              minutes: { low: 20, normal: 20, high: 20, critical: 8 },
+            },
+          },
+          { field: 'priority', operator: 'in', value: ['high', 'critical'] },
+        ],
+      })
     })
 
     it('numbers the rule and its actions', async () => {

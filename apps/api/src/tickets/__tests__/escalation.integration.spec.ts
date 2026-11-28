@@ -7,6 +7,7 @@ import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   DEFAULT_WORKFLOW_ESCALATION_RULES,
+  escalationTimerLeaves,
   DEFAULT_WORKFLOW_ESCALATION_STAGES,
   externalTicketCreateRequestSchema,
 } from '@stoerdesk/shared'
@@ -26,6 +27,13 @@ if (testDatabase.status === 'unavailable') {
 const { objects, ticketEvents, ticketPauses, tickets, escalationRules, escalationStages } = schema
 const MINUTE = 60 * 1000
 
+/** The timer of ten minutes after the work order (ADR-0064). */
+const TEN_MINUTES_AFTER_WORK_ORDER = {
+  field: 'timer_expired',
+  operator: 'expired',
+  value: { reference: 'work_order_set', minutes: { low: 10, normal: 10, high: 10, critical: 10 } },
+}
+
 /** The key of the seeded rule of a stage; the numbering is the identity (§7.5). */
 function seededRuleKey(stageKey: string): string {
   const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.stageKey === stageKey)
@@ -39,7 +47,11 @@ function seededRuleKey(stageKey: string): string {
 
 /** The key of the seeded deadline rule of a percentage. */
 function seededPercentRuleKey(percent: number): string {
-  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.percent === percent)
+  const rule = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) =>
+    escalationTimerLeaves(entry.condition).some(
+      (timer) => 'percent' in timer.value && timer.value.percent === percent,
+    ),
+  )
 
   if (rule === undefined) {
     throw new Error(`expected the seeded rule of ${percent} percent`)
@@ -228,10 +240,16 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
     await db.insert(escalationRules).values({
       key: 'review_critical_only',
       stageKey: 'review',
-      reference: 'received_at',
-      minutes: { low: 5, normal: 5, high: 5, critical: 5 },
-      percent: null,
-      condition: { all: [{ field: 'priority', operator: 'in', value: ['critical'] }] },
+      condition: {
+        all: [
+          {
+            field: 'timer_expired',
+            operator: 'expired',
+            value: { reference: 'received_at', minutes: { low: 5, normal: 5, high: 5, critical: 5 } },
+          },
+          { field: 'priority', operator: 'in', value: ['critical'] },
+        ],
+      },
       position: 90,
       active: true,
     })
@@ -280,20 +298,14 @@ describe.skipIf(testDatabase.status === 'unavailable')('escalation scan (integra
       {
         key: 'night_shift',
         stageKey: 'night_shift',
-        reference: null,
-        minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-        percent: null,
-        condition: { all: [] },
+        condition: { all: [TEN_MINUTES_AFTER_WORK_ORDER] },
         position: 91,
         active: true,
       },
       {
         key: 'orphan',
         stageKey: 'orphan',
-        reference: null,
-        minutes: { low: 10, normal: 10, high: 10, critical: 10 },
-        percent: null,
-        condition: { all: [] },
+        condition: { all: [TEN_MINUTES_AFTER_WORK_ORDER] },
         position: 92,
         active: true,
       },

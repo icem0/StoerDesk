@@ -10,6 +10,7 @@ import {
   TICKET_PRIORITIES,
   escalationFirstStageKey,
   escalationRuleConfigSchema,
+  escalationTimerLeaves,
   type DeadlineHours,
   type DeadlineSettings,
   type EscalationConfig,
@@ -739,17 +740,22 @@ export function AddStageForm({
  * the shared seed, so this fallback cannot drift from ADR-0008.
  */
 function seededMinutesFor(ruleKey: string): EscalationMinutes {
-  const exact = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-    (entry) => entry.key === ruleKey && entry.minutes !== null,
-  )?.minutes
+  // The seed carries its minutes in the timer of its condition (ADR-0064).
+  const minutesOf = (entry: (typeof DEFAULT_WORKFLOW_ESCALATION_RULES)[number]) =>
+    escalationTimerLeaves(entry.condition).flatMap((timer) =>
+      'minutes' in timer.value ? [timer.value.minutes] : [],
+    )[0]
+  const exact = DEFAULT_WORKFLOW_ESCALATION_RULES.find((entry) => entry.key === ruleKey)
 
-  if (exact !== null && exact !== undefined) {
-    return exact
+  if (exact !== undefined && minutesOf(exact) !== undefined) {
+    return minutesOf(exact) as EscalationMinutes
   }
 
   for (const entry of DEFAULT_WORKFLOW_ESCALATION_RULES) {
-    if (entry.minutes !== null) {
-      return entry.minutes
+    const minutes = minutesOf(entry)
+
+    if (minutes !== undefined) {
+      return minutes
     }
   }
 
